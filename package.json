@@ -1,0 +1,11 @@
+{
+  "name": "bioresonance",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "frontend": "npm --prefix frontend run dev",
+    "backend": "npm --prefix backend run dev",
+    "install:all": "npm --prefix frontend install && npm --prefix backend install",
+    "build:frontend": "npm --prefix frontend run build"
+  }
+}
