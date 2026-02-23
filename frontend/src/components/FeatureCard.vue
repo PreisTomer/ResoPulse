@@ -46,13 +46,17 @@ export default defineComponent({
   padding: 1.5rem;
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
+  border-top: 2px solid var(--color-border);
   border-radius: var(--radius-lg);
   cursor: pointer;
-  transition: border-color 0.15s;
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
 }
 
 .feature:hover {
   border-color: var(--color-primary);
+  border-top-color: var(--color-primary);
+  box-shadow: 0 4px 20px rgba(0, 212, 255, 0.08);
+  transform: translateY(-2px);
 }
 
 .feature-icon {

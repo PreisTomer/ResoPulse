@@ -604,13 +604,13 @@ export default defineComponent({
         </span>
       </div>
       <div ref="oscCanvas" class="osc-canvas"></div>
-    </div>
 
-    <!-- Destroyed overlay -->
-    <div v-if="cellState === 'destroyed'" class="destroyed-overlay">
-      <span class="destroyed-text">— SIGNAL DISRUPTED —</span>
-      <button class="btn-reset" :disabled="!canReset" @click="resetToStable">Reset Cell</button>
-      <span v-if="!canReset" class="reset-locked">Move slider away to reset</span>
+      <!-- Destroyed overlay — absolute, covers card-visual without shifting card height -->
+      <div v-if="cellState === 'destroyed'" class="destroyed-overlay">
+        <span class="destroyed-text">— SIGNAL DISRUPTED —</span>
+        <button class="btn-reset" :disabled="!canReset" @click="resetToStable">Reset Cell</button>
+        <span v-if="!canReset" class="reset-locked">Move slider away to reset</span>
+      </div>
     </div>
 
     <!-- Description -->
@@ -692,6 +692,7 @@ export default defineComponent({
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   overflow: hidden;
+  position: relative;
 }
 
 /* Responsive SVG canvas — viewBox + CSS controls aspect ratio */
@@ -721,11 +722,16 @@ export default defineComponent({
 
 /* ── Destroyed overlay ────────────────────── */
 .destroyed-overlay {
-  display: flex; flex-direction: column; align-items: center; gap: 0.75rem;
-  padding: 0.75rem;
-  background-color: rgba(255, 77, 109, 0.06);
-  border: 1px solid rgba(255, 77, 109, 0.25);
-  border-radius: var(--radius);
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  background-color: rgba(6, 2, 14, 0.90);
+  backdrop-filter: blur(3px);
 }
 .destroyed-text {
   font-family: var(--font-mono); font-size: 0.75rem;

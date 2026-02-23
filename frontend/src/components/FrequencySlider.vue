@@ -17,6 +17,26 @@ export default defineComponent({
     return { store }
   },
 
+  data() {
+    return { sliderWrapHeight: 160 }
+  },
+
+  mounted() {
+    this.$nextTick(() => {
+      const wrap = this.$el?.querySelector('.slider-wrap') as HTMLElement | null
+      if (wrap) {
+        ;(this as any)._ro = new ResizeObserver(() => {
+          this.sliderWrapHeight = wrap.clientHeight
+        })
+        ;(this as any)._ro.observe(wrap)
+      }
+    })
+  },
+
+  beforeUnmount() {
+    ;(this as any)._ro?.disconnect()
+  },
+
   computed: {
     currentFreq(): number {
       return this.store.currentBroadcastFrequency
@@ -82,28 +102,38 @@ export default defineComponent({
 
     <!-- Center: slider + markers -->
     <div class="slider-wrap">
-      <div class="track-wrap" :style="{ '--track-bg': `linear-gradient(to right, ${trackGradient})` }">
-        <input
-          class="freq-slider"
-          type="range"
-          :min="400"
-          :max="600"
-          step="1"
-          :value="currentFreq"
-          @input="onInput"
-        />
+      <div
+        class="track-container"
+        :style="{ '--v-slider-height': sliderWrapHeight + 'px' }"
+      >
+        <div class="track-wrap" :style="{ '--track-bg': `linear-gradient(to right, ${trackGradient})` }">
+          <input
+            class="freq-slider"
+            type="range"
+            :min="400"
+            :max="600"
+            step="1"
+            :value="currentFreq"
+            @input="onInput"
+          />
+        </div>
+        <div class="markers">
+          <span class="marker-edge">400</span>
+          <div class="marker marker--target" :style="{ left: targetPos }">
+            <div class="marker-line"></div>
+            <span class="marker-label">417</span>
+          </div>
+          <div class="marker marker--healthy" :style="{ left: healthyPos }">
+            <div class="marker-line"></div>
+            <span class="marker-label">528</span>
+          </div>
+          <span class="marker-edge marker-edge--right">600</span>
+        </div>
       </div>
-      <div class="markers">
-        <span class="marker-edge">400</span>
-        <div class="marker marker--target" :style="{ left: targetPos }">
-          <div class="marker-line"></div>
-          <span class="marker-label">417</span>
-        </div>
-        <div class="marker marker--healthy" :style="{ left: healthyPos }">
-          <div class="marker-line"></div>
-          <span class="marker-label">528</span>
-        </div>
-        <span class="marker-edge marker-edge--right">600</span>
+      <!-- Vertical resonance ticks — mobile only -->
+      <div class="vmarkers" aria-hidden="true">
+        <div class="vmarker vmarker--target" :style="{ bottom: targetPos }"></div>
+        <div class="vmarker vmarker--healthy" :style="{ bottom: healthyPos }"></div>
       </div>
     </div>
 
@@ -166,6 +196,10 @@ export default defineComponent({
 .slider-wrap {
   flex: 1;
   min-width: 0;
+}
+
+.track-container {
+  width: 100%;
 }
 
 .track-wrap {
@@ -272,6 +306,10 @@ export default defineComponent({
 .marker--target  .marker-label { color: var(--color-danger); }
 .marker--healthy .marker-label { color: var(--color-accent); }
 
+.vmarkers {
+  display: none;
+}
+
 /* ── Right: impact readouts ──────────────── */
 .freq-right {
   display: flex;
@@ -292,4 +330,85 @@ export default defineComponent({
 
 .impact-label--target  { color: var(--color-danger); }
 .impact-label--healthy { color: var(--color-accent); }
+
+/* ── Mobile: vertical strip on the right ──── */
+@media (max-width: 768px) {
+  .freq-panel {
+    flex-direction: column;
+    width: 64px;
+    margin-top: 0;
+    margin-left: 0.6rem;
+    padding: 0.75rem 0.35rem;
+    gap: 0.5rem;
+    justify-content: space-between;
+  }
+
+  .freq-left {
+    flex-direction: column;
+    align-items: center;
+    min-width: 0;
+    gap: 0;
+  }
+
+  .freq-panel-title {
+    display: none;
+  }
+
+  .freq-display {
+    font-size: 0.8rem;
+  }
+
+  /* slider-wrap: tall flex container for the rotated track */
+  .slider-wrap {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    min-height: 0;
+    width: 100%;
+  }
+
+  /* track-container: width = slider-wrap height (measured via ResizeObserver) */
+  .track-container {
+    position: absolute;
+    width: var(--v-slider-height, 160px);
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%) rotate(90deg);
+  }
+
+  /* markers are inside the rotated container — hide them; use .vmarkers instead */
+  .markers {
+    display: none;
+  }
+
+  /* Vertical tick marks at resonance positions */
+  .vmarkers {
+    display: block;
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  .vmarker {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 1px;
+    transform: translateY(50%);
+  }
+
+  .vmarker--target  { background-color: var(--color-danger);  opacity: 0.65; }
+  .vmarker--healthy { background-color: var(--color-accent); opacity: 0.65; }
+
+  .freq-right {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.2rem;
+    min-width: 0;
+  }
+
+  .impact-label {
+    font-size: 0.58rem;
+  }
+}
 </style>
