@@ -17,9 +17,13 @@ function calcStress(naturalFreq: number, tolerance: number, broadcastFreq: numbe
 }
 
 export function setupSocketServer(httpServer: HttpServer): Server {
+  const ALLOWED_ORIGINS: string[] | true = process.env.FRONTEND_URL
+    ? [process.env.FRONTEND_URL, 'http://localhost:5173', 'http://127.0.0.1:5173']
+    : true
+
   const io = new Server(httpServer, {
     cors: {
-      origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
+      origin: ALLOWED_ORIGINS,
       methods: ['GET', 'POST'],
     },
   })
