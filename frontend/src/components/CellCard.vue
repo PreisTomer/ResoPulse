@@ -3,6 +3,7 @@ import { defineComponent } from 'vue'
 import type { PropType } from 'vue'
 import * as d3 from 'd3'
 import { useCellStore } from '../stores/cellStore'
+import { useExperimentStore } from '../stores/experimentStore'
 import type { CellRecord } from '../mockData'
 import type { CellState } from '../types/cell'
 import {
@@ -180,6 +181,7 @@ export default defineComponent({
     // ── State machine ──────────────────────────────────────────────────────
     triggerLysis() {
       this.cellState = 'lysing'
+      useExperimentStore().logReading(useCellStore(), 'lysis')
       const el = this.$refs.cellCanvas as HTMLElement
 
       this._particleInterval = setInterval(() => {

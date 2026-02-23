@@ -1,6 +1,8 @@
 {
   "nav": {
     "researchPlatform": "Research Platform",
+    "home": "Home",
+    "experiment": "Experiment Lab",
     "dashboard": "Dashboard",
     "analysis": "Analysis",
     "dataSets": "Data Sets",
@@ -47,6 +49,42 @@
     "fieldIntensity": "Field Intensity",
     "kHz": "kHz",
     "vPerCm": "V/cm"
+  },
+  "chart": {
+    "title": "Transmembrane Potential Response",
+    "legendRef": "Reference",
+    "legendCancer": "Cancer",
+    "legendBacteria": "Bacteria",
+    "legendVirus": "Virus",
+    "activeH": "Active H",
+    "activeT": "Active T"
+  },
+  "selectivity": {
+    "title": "Selectivity Analysis",
+    "ratioLabel": "Target / Healthy Vm ratio",
+    "targetBar": "T",
+    "healthyBar": "H",
+    "targetLibTitle": "Target Cell Library",
+    "healthyLibTitle": "Healthy Baseline",
+    "modeSubThreshold": "Sub-threshold",
+    "modeApproaching": "Approaching Window",
+    "modeTherapeutic": "Therapeutic Window",
+    "modeAblative": "Ablative"
+  },
+  "log": {
+    "sessionPlaceholder": "Session name…",
+    "logReading": "Log Reading",
+    "exportCsv": "CSV",
+    "clear": "Clear",
+    "colId": "#",
+    "colTime": "Time",
+    "colFreq": "Freq",
+    "colField": "Field",
+    "colTVm": "T-Vm",
+    "colHVm": "H-Vm",
+    "colSel": "Sel×",
+    "colEvent": "Event",
+    "emptyHint": "No readings yet — click Log Reading to record"
   },
   "features": {
     "visualization": {

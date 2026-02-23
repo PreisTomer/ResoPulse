@@ -1,13 +1,9 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import NavBar from './components/NavBar.vue'
-import Dashboard from './views/Dashboard.vue'
 
 export default defineComponent({
-  components: {
-    NavBar,
-    Dashboard,
-  },
+  components: { NavBar },
 })
 </script>
 
@@ -15,7 +11,7 @@ export default defineComponent({
   <div id="layout">
     <NavBar />
     <main>
-      <Dashboard />
+      <RouterView />
     </main>
   </div>
 </template>

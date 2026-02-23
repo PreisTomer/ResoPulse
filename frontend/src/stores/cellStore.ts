@@ -87,6 +87,13 @@ export const useCellStore = defineStore('cell', {
     systemReady(state): boolean {
       return state.healthyTemp < 40 && state.targetTemp < 40
     },
+
+    selectivityRatio(state): number {
+      const sigma_e = MEDIA[state.medium].conductivity
+      const vh = computeSchwan(state.healthy, state.currentBroadcastFrequency, state.fieldIntensity, sigma_e)
+      const vt = computeSchwan(state.target,  state.currentBroadcastFrequency, state.fieldIntensity, sigma_e)
+      return vh > 0 ? vt / vh : 0
+    },
   },
 
   actions: {
@@ -150,7 +157,13 @@ export const useCellStore = defineStore('cell', {
       this.resetCounter++
     },
 
-    // Legacy no-ops — Dashboard used these for feature card clicks
+    loadPreset(cellType: 'healthy' | 'target', preset: CellConfig) {
+      this[cellType] = cloneDeep(preset) as CellConfig
+      if (cellType === 'healthy') this.healthyTemp = 37
+      else this.targetTemp = 37
+    },
+
+    // Legacy no-ops
     applyResonance(_cellType: 'healthy' | 'target') {},
     applyDisruption(_cellType: 'healthy' | 'target') {},
   },
