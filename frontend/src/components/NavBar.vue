@@ -4,14 +4,10 @@ import { useCellStore } from '../stores/cellStore'
 
 export default defineComponent({
   setup() {
-    const store = useCellStore()
-    return { store }
+    return { store: useCellStore() }
   },
-
   computed: {
-    systemReady(): boolean {
-      return this.store.systemReady
-    },
+    systemReady(): boolean { return this.store.systemReady },
   },
 })
 </script>
@@ -19,25 +15,24 @@ export default defineComponent({
 <template>
   <header class="app-header">
     <div class="header-inner">
-      <div class="brand">
+      <RouterLink to="/" class="brand">
         <div class="brand-logo">
           <img src="/logo.jpg" :alt="$t('hero.title')" />
         </div>
         <span class="brand-name">{{ $t('hero.title') }}</span>
         <span class="brand-tag">{{ $t('nav.researchPlatform') }}</span>
-      </div>
+      </RouterLink>
       <nav class="nav">
-        <a class="nav-link active" href="#">{{ $t('nav.dashboard') }}</a>
-        <a class="nav-link" href="#">{{ $t('nav.analysis') }}</a>
+        <RouterLink to="/"           class="nav-link" exact-active-class="active">{{ $t('nav.home') }}</RouterLink>
+        <RouterLink to="/experiment" class="nav-link" active-class="active">{{ $t('nav.experiment') }}</RouterLink>
         <a class="nav-link" href="#">{{ $t('nav.dataSets') }}</a>
         <a class="nav-link" href="#">{{ $t('nav.reports') }}</a>
       </nav>
       <div class="header-status">
         <span class="status-dot" :class="{ 'status-dot--warning': !systemReady }"></span>
-        <span
-          class="status-label"
-          :class="{ 'status-label--warning': !systemReady }"
-        >{{ systemReady ? $t('nav.systemReady') : $t('nav.systemWarning') }}</span>
+        <span class="status-label" :class="{ 'status-label--warning': !systemReady }">
+          {{ systemReady ? $t('nav.systemReady') : $t('nav.systemWarning') }}
+        </span>
       </div>
     </div>
   </header>
@@ -53,7 +48,7 @@ export default defineComponent({
 }
 
 .header-inner {
-  max-width: 1440px;
+  max-width: 1600px;
   margin: 0 auto;
   padding: 0 2rem;
   height: 60px;
@@ -67,118 +62,61 @@ export default defineComponent({
   align-items: center;
   gap: 0.6rem;
   flex-shrink: 0;
+  text-decoration: none;
 }
 
 .brand-logo {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  overflow: hidden;
-  flex-shrink: 0;
+  width: 30px; height: 30px;
+  border-radius: 50%; overflow: hidden; flex-shrink: 0;
   outline: 1.5px solid var(--color-border);
 }
-
 .brand-logo img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transform: scale(1.7);
-  display: block;
+  width: 100%; height: 100%;
+  object-fit: cover; transform: scale(1.7); display: block;
 }
-
 .brand-name {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: var(--color-text-heading);
-  letter-spacing: 0.03em;
+  font-size: 1.1rem; font-weight: 700;
+  color: var(--color-text-heading); letter-spacing: 0.03em;
 }
-
 .brand-tag {
-  font-size: 0.65rem;
-  color: var(--color-text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  border: 1px solid var(--color-border);
-  padding: 1px 6px;
-  border-radius: 3px;
+  font-size: 0.65rem; color: var(--color-text-muted);
+  text-transform: uppercase; letter-spacing: 0.1em;
+  border: 1px solid var(--color-border); padding: 1px 6px; border-radius: 3px;
 }
 
 .nav {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  flex: 1;
+  display: flex; align-items: center; gap: 0.25rem; flex: 1;
 }
-
 .nav-link {
-  padding: 0.35rem 0.85rem;
-  border-radius: var(--radius);
-  font-size: 0.875rem;
-  color: var(--color-text-muted);
+  padding: 0.35rem 0.85rem; border-radius: var(--radius);
+  font-size: 0.875rem; color: var(--color-text-muted);
   transition: color 0.15s, background-color 0.15s;
   text-decoration: none;
 }
-
-.nav-link:hover {
-  color: var(--color-text);
-  background-color: var(--color-surface-2);
-  text-decoration: none;
-}
-
-.nav-link.active {
-  color: var(--color-primary);
-  background-color: var(--color-primary-dim);
-}
+.nav-link:hover { color: var(--color-text); background-color: var(--color-surface-2); }
+.nav-link.active { color: var(--color-primary); background-color: var(--color-primary-dim); }
 
 .header-status {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex-shrink: 0;
+  display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0;
 }
-
 .status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
+  width: 8px; height: 8px; border-radius: 50%;
   background-color: var(--color-accent);
   box-shadow: 0 0 6px var(--color-accent);
   animation: pulse 2s ease-in-out infinite;
   transition: background-color 0.4s, box-shadow 0.4s;
 }
-
-.status-dot--warning {
-  background-color: #ffb800;
-  box-shadow: 0 0 6px #ffb800;
-}
-
-.status-label--warning {
-  color: #ffb800;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
-}
-
+.status-dot--warning { background-color: #ffb800; box-shadow: 0 0 6px #ffb800; }
+.status-label--warning { color: #ffb800; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 .status-label {
-  font-size: 0.75rem;
-  color: var(--color-text-muted);
-  font-family: var(--font-mono);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  font-size: 0.75rem; color: var(--color-text-muted);
+  font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.08em;
 }
 
 @media (max-width: 600px) {
-  .header-inner {
-    gap: 0.75rem;
-    padding: 0 1rem;
-  }
-  .nav {
-    display: none;
-  }
-  .brand-tag {
-    display: none;
-  }
+  .header-inner { gap: 0.75rem; padding: 0 1rem; }
+  .nav { display: none; }
+  .brand-tag { display: none; }
 }
 </style>
