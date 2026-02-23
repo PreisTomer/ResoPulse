@@ -9,7 +9,9 @@ import type { Socket } from 'socket.io-client'
 import { useCellStore } from '../stores/cellStore'
 import type { ResonancePacket } from '../stores/cellStore'
 
-const BACKEND_URL = 'http://localhost:3001'
+// Set VITE_BACKEND_URL in Vercel environment variables once Railway is deployed.
+// Falls back to localhost for local development.
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? 'http://localhost:3001'
 
 let socket: Socket | null = null
 let localMode = false
