@@ -47,28 +47,28 @@ export default defineComponent({
       return [
         {
           id: 'visualization',
-          icon: '⬡',
+          icon: '◈',
           title: this.$t('features.visualization.title'),
           description: this.$t('features.visualization.description'),
           url: undefined,
         },
         {
           id: 'comparative',
-          icon: '⬡',
+          icon: '⇌',
           title: this.$t('features.comparative.title'),
           description: this.$t('features.comparative.description'),
           url: undefined,
         },
         {
           id: 'targeting',
-          icon: '⬡',
+          icon: '◎',
           title: this.$t('features.targeting.title'),
           description: this.$t('features.targeting.description'),
           url: undefined,
         },
         {
           id: 'profiles',
-          icon: '⬡',
+          icon: '⊞',
           title: this.$t('features.profiles.title'),
           description: this.$t('features.profiles.description'),
           url: undefined,
@@ -128,20 +128,22 @@ export default defineComponent({
       <div class="section-inner">
         <h2 class="section-title">{{ $t('cells.sectionTitle') }}</h2>
         <p class="section-sub">{{ $t('cells.sectionSub') }}</p>
-        <div class="cell-cards">
-          <CellCard
-            v-for="cell in cells"
-            :key="cell.id"
-            :type="cell.type"
-            :label="cell.label"
-            :sublabel="cell.sublabel"
-            :description="cell.description"
-            :button-text="cell.buttonText"
-            :cell-data="cell.cellData"
-            @click="onCellClick"
-          />
+        <div class="cell-workspace">
+          <div class="cell-cards">
+            <CellCard
+              v-for="cell in cells"
+              :key="cell.id"
+              :type="cell.type"
+              :label="cell.label"
+              :sublabel="cell.sublabel"
+              :description="cell.description"
+              :button-text="cell.buttonText"
+              :cell-data="cell.cellData"
+              @click="onCellClick"
+            />
+          </div>
+          <FrequencySlider />
         </div>
-        <FrequencySlider />
       </div>
     </section>
 
@@ -339,6 +341,11 @@ export default defineComponent({
   margin-bottom: 2rem;
 }
 
+.cell-workspace {
+  display: flex;
+  flex-direction: column;
+}
+
 .cell-cards {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -367,7 +374,19 @@ export default defineComponent({
     display: none;
   }
 
+  .cell-section {
+    padding: 2.5rem 1rem;
+  }
+
+  .cell-workspace {
+    flex-direction: row;
+    align-items: stretch;
+    gap: 0;
+  }
+
   .cell-cards {
+    flex: 1;
+    min-width: 0;
     grid-template-columns: 1fr;
   }
 }

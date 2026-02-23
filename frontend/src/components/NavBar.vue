@@ -168,4 +168,17 @@ export default defineComponent({
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
+
+@media (max-width: 600px) {
+  .header-inner {
+    gap: 0.75rem;
+    padding: 0 1rem;
+  }
+  .nav {
+    display: none;
+  }
+  .brand-tag {
+    display: none;
+  }
+}
 </style>
