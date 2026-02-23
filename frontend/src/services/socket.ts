@@ -4,6 +4,7 @@
  * the backend is unreachable. The store's reactive getters keep the UI
  * fully functional in either mode.
  */
+import { ref } from 'vue'
 import { io } from 'socket.io-client'
 import type { Socket } from 'socket.io-client'
 import { useCellStore } from '../stores/cellStore'
@@ -15,7 +16,9 @@ import type { MediumKey } from '../mockData'
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? 'http://localhost:3001'
 
 let socket: Socket | null = null
-let localMode = false
+
+/** Reactive connection flag — import directly in Vue components/templates */
+export const socketConnected = ref(false)
 
 export function connectSocket(): void {
   socket = io(BACKEND_URL, {
@@ -25,8 +28,12 @@ export function connectSocket(): void {
   })
 
   socket.on('connect', () => {
-    localMode = false
+    socketConnected.value = true
     console.info('[Socket] Connected to BioResonance backend')
+  })
+
+  socket.on('disconnect', () => {
+    socketConnected.value = false
   })
 
   socket.on('resonanceUpdate', (packet: FieldPacket) => {
@@ -35,8 +42,8 @@ export function connectSocket(): void {
   })
 
   socket.on('connect_error', () => {
-    if (!localMode) {
-      localMode = true
+    if (socketConnected.value) {
+      socketConnected.value = false
       console.info('[Socket] Backend unavailable — running in local mode')
     }
   })

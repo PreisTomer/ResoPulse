@@ -1,7 +1,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { useCellStore } from '../stores/cellStore'
-import { connectSocket } from '../services/socket'
+import { connectSocket, socketConnected } from '../services/socket'
 import CellCard from '../components/CellCard.vue'
 import FrequencySlider from '../components/FrequencySlider.vue'
 import FrequencyResponseChart from '../components/FrequencyResponseChart.vue'
@@ -23,7 +23,7 @@ export default defineComponent({
     const expStore = useExperimentStore()
     connectSocket()
     store.startSession()
-    return { store, expStore }
+    return { store, expStore, socketConnected }
   },
 
   computed: {
@@ -35,11 +35,6 @@ export default defineComponent({
         water:  'Water',
       }
       return labels[this.store.medium] ?? this.store.medium
-    },
-
-    connectionStatus(): { label: string; color: string } {
-      // socket service sets a flag we can read; fall back to "Local" when not connected
-      return { label: 'Local Mode', color: '#fbbf24' }
     },
 
     cells() {
@@ -94,9 +89,15 @@ export default defineComponent({
         <span class="sb-chip sb-chip--field">
           {{ store.fieldIntensity }} V/cm
         </span>
-        <span class="sb-chip sb-chip--local">
-          <span class="sb-dot sb-dot--warn"></span>
-          LOCAL
+        <span
+          class="sb-chip"
+          :class="socketConnected ? 'sb-chip--connected' : 'sb-chip--local'"
+          v-tip="socketConnected
+            ? '<strong>Backend Connected</strong>\nField params sync in real time\nacross all connected clients via Socket.IO'
+            : '<strong>Local Mode</strong>\nBackend unreachable · all Schwan physics\nrun client-side · no multi-client sync'"
+        >
+          <span class="sb-dot" :class="socketConnected ? '' : 'sb-dot--warn'"></span>
+          {{ socketConnected ? 'CONNECTED' : 'LOCAL' }}
         </span>
       </div>
     </div>
@@ -219,10 +220,11 @@ export default defineComponent({
   white-space: nowrap;
 }
 
-.sb-chip--medium { border-color: rgba(0, 212, 255, 0.3); color: #00d4ff; }
-.sb-chip--freq   { border-color: rgba(57, 255, 20, 0.25); color: #39ff14; }
-.sb-chip--field  { border-color: rgba(251, 191, 36, 0.3); color: #fbbf24; }
-.sb-chip--local  { border-color: rgba(251, 191, 36, 0.3); color: #fbbf24; }
+.sb-chip--medium    { border-color: rgba(0, 212, 255, 0.3); color: #00d4ff; }
+.sb-chip--freq      { border-color: rgba(57, 255, 20, 0.25); color: #39ff14; }
+.sb-chip--field     { border-color: rgba(251, 191, 36, 0.3); color: #fbbf24; }
+.sb-chip--local     { border-color: rgba(251, 191, 36, 0.3); color: #fbbf24; }
+.sb-chip--connected { border-color: rgba(57, 255, 20, 0.35); color: #39ff14; }
 
 .sb-dot {
   width: 5px; height: 5px;

@@ -121,7 +121,7 @@ export default defineComponent({
         .attr('text-anchor', 'middle')
         .attr('x', this._chartW / 2)
         .attr('y', this._chartH + 32)
-        .attr('fill', 'var(--color-text-muted)')
+        .attr('fill', 'var(--color-text)')
         .attr('font-size', '0.6rem')
         .attr('font-family', 'var(--font-mono)')
         .attr('letter-spacing', '0.1em')
@@ -133,7 +133,7 @@ export default defineComponent({
         .attr('transform', `rotate(-90)`)
         .attr('x', -this._chartH / 2)
         .attr('y', -40)
-        .attr('fill', 'var(--color-text-muted)')
+        .attr('fill', 'var(--color-text)')
         .attr('font-size', '0.6rem')
         .attr('font-family', 'var(--font-mono)')
         .attr('letter-spacing', '0.1em')
@@ -170,6 +170,18 @@ export default defineComponent({
         .attr('fill', 'rgba(255,255,255,0.75)')
         .attr('font-size', '0.58rem')
         .attr('font-family', 'var(--font-mono)')
+
+      // Drag-discoverability hint — appears above the cursor
+      g.append('text')
+        .attr('class', 'cursor-drag-hint')
+        .attr('y', -4)
+        .attr('text-anchor', 'middle')
+        .attr('fill', 'rgba(255,255,255,0.28)')
+        .attr('font-size', '0.5rem')
+        .attr('font-family', 'var(--font-mono)')
+        .attr('letter-spacing', '0.08em')
+        .attr('pointer-events', 'none')
+        .text('⟵ drag ⟶')
 
       // Hover overlay (captures mouse events)
       g.append('rect')
@@ -222,13 +234,13 @@ export default defineComponent({
       g.select<SVGGElement>('.x-axis')
         .call(xAxis)
         .call((a) => a.select('.domain').attr('stroke', 'rgba(255,255,255,0.15)'))
-        .call((a) => a.selectAll('text').attr('fill', 'var(--color-text-muted)').attr('font-size', '0.58rem').attr('font-family', 'var(--font-mono)'))
+        .call((a) => a.selectAll('text').attr('fill', 'var(--color-text)').attr('font-size', '0.58rem').attr('font-family', 'var(--font-mono)'))
         .call((a) => a.selectAll('line').attr('stroke', 'rgba(255,255,255,0.2)'))
 
       g.select<SVGGElement>('.y-axis')
         .call(yAxis)
         .call((a) => a.select('.domain').attr('stroke', 'rgba(255,255,255,0.15)'))
-        .call((a) => a.selectAll('text').attr('fill', 'var(--color-text-muted)').attr('font-size', '0.58rem').attr('font-family', 'var(--font-mono)'))
+        .call((a) => a.selectAll('text').attr('fill', 'var(--color-text)').attr('font-size', '0.58rem').attr('font-family', 'var(--font-mono)'))
         .call((a) => a.selectAll('line').attr('stroke', 'rgba(255,255,255,0.2)'))
 
       // Grid
@@ -337,6 +349,7 @@ export default defineComponent({
       const x = this._xScale(Math.max(F_MIN_HZ, Math.min(F_MAX_HZ, hz)))
 
       g.select('.cursor-line').attr('x1', x).attr('x2', x)
+      g.select('.cursor-drag-hint').attr('x', x)
 
       const label = `${this.store.currentBroadcastFrequency} kHz`
       const textEl = g.select<SVGTextElement>('.cursor-label')
@@ -367,14 +380,31 @@ export default defineComponent({
   <div class="chart-wrap">
     <!-- Header: title + legend -->
     <div class="chart-header">
-      <span class="chart-title">Transmembrane Potential Response</span>
+      <span
+        class="chart-title"
+        v-tip="'<strong>Transmembrane Potential vs Frequency</strong>\nSchwan equation Vm(f) = 1.5·E·R / √(1+(2πf·τ)²)\nX-axis: log scale 10 kHz → 500 MHz\nY-axis: peak Vm in millivolts\n\nFaint curves: all library presets\nBright curves: currently active cells\nDrag white cursor to set broadcast frequency'"
+      >Transmembrane Potential Response</span>
       <div class="legend">
-        <span v-for="g in groups" :key="g" class="legend-item">
+        <span
+          v-for="g in groups"
+          :key="g"
+          class="legend-item"
+          v-tip="{ reference: `<strong>Reference cells</strong>\nHealthy baseline — hepatocyte, RBC\nTypically higher threshold voltage\nand lower membrane permittivity`,
+                   cancer:    `<strong>Cancer cells</strong>\nLarger radius → lower fc → higher Vm at low frequency\nLower threshold → disrupted at lower field intensity`,
+                   bacteria:  `<strong>Bacteria</strong>\nSmall radius (0.5–1 µm) → fc in tens of MHz\nThick peptidoglycan wall raises membrane thickness`,
+                   virus:     `<strong>Viruses</strong>\nSub-micron radius (60–65 nm) → fc in GHz range\nRequires very high frequency for membrane coupling` }[g]"
+        >
           <span class="legend-dot" :style="{ background: `var(--group-${g})` }"></span>
           {{ { reference: 'Reference', cancer: 'Cancer', bacteria: 'Bacteria', virus: 'Virus' }[g] }}
         </span>
-        <span class="legend-item"><span class="legend-line legend-line--h"></span> Active H</span>
-        <span class="legend-item"><span class="legend-line legend-line--t"></span> Active T</span>
+        <span
+          class="legend-item"
+          v-tip="'<strong>Active Healthy cell</strong>\nCurrently selected healthy baseline\n(cyan, full opacity, glowing)\nShows Vm curve for selected preset and current field'"
+        ><span class="legend-line legend-line--h"></span> Active H</span>
+        <span
+          class="legend-item"
+          v-tip="'<strong>Active Target cell</strong>\nCurrently selected target (cancer / pathogen)\n(red, full opacity, glowing)\nDrag the white cursor to set broadcast frequency'"
+        ><span class="legend-line legend-line--t"></span> Active T</span>
       </div>
     </div>
 
@@ -426,8 +456,7 @@ export default defineComponent({
   font-family: var(--font-mono);
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  color: var(--color-text-muted);
-  opacity: 0.75;
+  color: var(--color-text);
   white-space: nowrap;
 }
 
@@ -443,14 +472,13 @@ export default defineComponent({
   gap: 0.3rem;
   font-size: 0.56rem;
   font-family: var(--font-mono);
-  color: var(--color-text-muted);
-  opacity: 0.7;
+  color: var(--color-text);
   white-space: nowrap;
 }
 .legend-dot {
   width: 7px; height: 7px;
   border-radius: 50%;
-  opacity: 0.5;
+  opacity: 0.75;
   flex-shrink: 0;
 }
 .legend-line {
@@ -485,7 +513,7 @@ export default defineComponent({
 .tip-freq {
   font-size: 0.58rem;
   font-family: var(--font-mono);
-  color: var(--color-text-muted);
+  color: var(--color-text);
   margin-bottom: 0.15rem;
 }
 .tip-row {
