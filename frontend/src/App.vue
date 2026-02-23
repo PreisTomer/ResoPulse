@@ -1,13 +1,21 @@
-<script setup lang="ts">
-import AppHeader from './components/AppHeader.vue'
-import HomeView from './views/HomeView.vue'
+<script lang="ts">
+import { defineComponent } from 'vue'
+import NavBar from './components/NavBar.vue'
+import Dashboard from './views/Dashboard.vue'
+
+export default defineComponent({
+  components: {
+    NavBar,
+    Dashboard,
+  },
+})
 </script>
 
 <template>
   <div id="layout">
-    <AppHeader />
+    <NavBar />
     <main>
-      <HomeView />
+      <Dashboard />
     </main>
   </div>
 </template>
