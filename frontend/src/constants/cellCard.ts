@@ -20,10 +20,12 @@ export const LYSIS_DURATION_MS = 2800   // shatter animation length
 export const FRAGMENT_INTERVAL_MS = 80  // ms between spawned fragments
 
 // ── Threshold ratios & temperatures ──────────────────────────────────────────
-export const DISRUPTION_WARN_THRESHOLD = 0.85   // disruptionRatio above which lysis arms
-export const NOURISHING_THRESHOLD      = 0.45   // healthy-cell nourishing state onset
-export const VIBRATING_MIN_THRESHOLD   = 0.08   // healthy-cell low-vibration onset
-export const TEMP_WARN_CELSIUS         = 42     // temperature above which meta turns orange
+export const DISRUPTION_WARN_THRESHOLD    = 0.85  // disruptionRatio above which lysis arms
+export const HEALTHY_CRITICAL_THRESHOLD   = 0.85  // healthy cell: electroporation pore-formation imminent
+export const HEALTHY_APPROACHING_THRESHOLD = 0.50  // healthy cell: membrane stress / ion channel perturbation onset
+export const NOURISHING_THRESHOLD         = 0.45   // healthy-cell nourishing state onset
+export const VIBRATING_MIN_THRESHOLD      = 0.08   // healthy-cell low-vibration onset
+export const TEMP_WARN_CELSIUS            = 42     // temperature above which meta turns orange
 
 // ── Per-type colors ───────────────────────────────────────────────────────────
 export const CELL_COLORS = {

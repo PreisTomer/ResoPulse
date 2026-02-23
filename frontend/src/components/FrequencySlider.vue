@@ -51,6 +51,95 @@ export default defineComponent({
     healthyDisruptPercent(): string {
       return (this.healthyDisruption * 100).toFixed(0)
     },
+
+    // ── Tooltip content ───────────────────────────────────────────────────
+    tipMedium(): string {
+      const key = this.currentMedium
+      const m = this.MEDIA[key]
+      return `<strong>Propagation Medium</strong>
+Sets external conductivity <span class="tip-val">σ_e = ${m.conductivity} S/m</span>
+Used in Schwan time constant:  τ = R·Cm / (σ_e + σ_i/2)
+Higher σ_e → stronger field coupling → higher Vm`
+    },
+
+    tipMediumKeys(): Record<string, string> {
+      const descs: Record<string, string> = {
+        saline: 'Matches physiological interstitial fluid',
+        blood:  'Whole blood — moderate coupling',
+        tissue: 'Soft tissue / DMEM culture medium',
+        water:  'Distilled water — near-zero coupling',
+      }
+      const out: Record<string, string> = {}
+      for (const key of Object.keys(this.MEDIA)) {
+        const m = this.MEDIA[key as keyof typeof this.MEDIA]
+        out[key] = `<strong>${m.name}</strong>
+σ_e = <span class="tip-val">${m.conductivity} S/m</span>
+${descs[key] ?? ''}`
+      }
+      return out
+    },
+
+    tipFreq(): string {
+      return `<strong>RF Broadcast Frequency</strong>
+Current: <span class="tip-val">${this.currentFreq} kHz</span>
+Schwan denominator: √(1 + (2πf·τ)²)
+
+<span class="tip-val">fc(T) = ${this.targetFcDisplay} kHz</span> — target roll-off frequency
+<span class="tip-val">fc(H) = ${this.healthyFcDisplay} kHz</span> — healthy roll-off frequency
+
+Below fc → quasi-DC regime, Vm at maximum
+Above fc → Vm rolls off toward zero`
+    },
+
+    tipFcSub(): string {
+      return `<strong>Characteristic Frequency  fc = 1 / (2πτ)</strong>
+At f = fc,  Vm = 0.707 × Vm_DC  (−3 dB point)
+
+Depends on cell size and membrane properties:
+  Larger cells → lower fc (cancer cells: ~1–4 MHz)
+  Bacteria → fc in tens of MHz
+  Viruses → fc in GHz range`
+    },
+
+    tipField(): string {
+      return `<strong>Applied Electric Field Intensity</strong>
+Current: <span class="tip-val">${this.currentField} V/cm</span>
+Vm scales linearly:  Vm = 1.5 × E × R / √(1+(ωτ)²)
+
+Therapeutic window (saline, quasi-DC):
+  Cancer lysis ≥ ~311 V/cm
+  Healthy lysis ≥ ~733 V/cm
+Default 150 V/cm is sub-threshold for all presets`
+    },
+
+    tipTargetBadge(): string {
+      const tVm   = (this.store.targetVm * 1000).toFixed(2)
+      const tThr  = (this.store.target.thresholdVoltage * 1000).toFixed(0)
+      const pct   = this.targetDisruptPercent
+      const warn  = this.targetDisruption > 0.85
+        ? '\n<span class="tip-warn">⚡ >85% — lysis countdown active (2.5 s)</span>' : ''
+      return `<strong>Target membrane disruption: <span class="tip-val">${pct}%</span></strong>
+Ratio = Vm / lysis threshold voltage
+
+Vm = <span class="tip-val">${tVm} mV</span>  ·  Threshold = ${tThr} mV${warn}
+>85% held for 2.5 s → irreversible membrane lysis`
+    },
+
+    tipHealthyBadge(): string {
+      const hVm  = (this.store.healthyVm * 1000).toFixed(2)
+      const hThr = (this.store.healthy.thresholdVoltage * 1000).toFixed(0)
+      const pct  = this.healthyDisruptPercent
+      const ok   = this.healthyDisruption < 0.5
+        ? '\n<span class="tip-ok">✓ Healthy cells are safe</span>'
+        : this.healthyDisruption > 0.85
+          ? '\n<span class="tip-warn">⚠ Approaching ablative — reduce field</span>'
+          : '\n<span class="tip-warn">⚠ Approaching limit — monitor closely</span>'
+      return `<strong>Healthy membrane disruption: <span class="tip-val">${pct}%</span></strong>
+Ratio = Vm / lysis threshold voltage
+
+Vm = <span class="tip-val">${hVm} mV</span>  ·  Threshold = ${hThr} mV${ok}
+Keep below 50% for a safe therapeutic window`
+    },
   },
 
   methods: {
@@ -78,13 +167,14 @@ export default defineComponent({
   <div class="field-panel">
     <!-- Row 1: Medium selector -->
     <div class="panel-row panel-row--medium">
-      <span class="row-label">Medium</span>
+      <span class="row-label" v-tip="tipMedium">Medium</span>
       <div class="medium-pills">
         <label
           v-for="key in mediaKeys"
           :key="key"
           class="pill"
           :class="{ 'pill--active': currentMedium === key }"
+          v-tip="tipMediumKeys[key]"
         >
           <input
             type="radio"
@@ -96,12 +186,15 @@ export default defineComponent({
           {{ MEDIA[key].name.split(' ')[0] }}
         </label>
       </div>
-      <span class="row-meta">σ_e {{ MEDIA[currentMedium].conductivity }} S/m</span>
+      <span
+        class="row-meta"
+        v-tip="`<strong>External conductivity σ_e = ${MEDIA[currentMedium].conductivity} S/m</strong>\nUsed in Schwan time constant:\nτ = R·Cm / (<span class=\'tip-val\'>σ_e</span> + σ_i/2)\nChange medium to shift the coupling strength`"
+      >σ_e {{ MEDIA[currentMedium].conductivity }} S/m</span>
     </div>
 
     <!-- Row 2: RF Frequency -->
     <div class="panel-row">
-      <span class="row-label">RF Frequency</span>
+      <span class="row-label" v-tip="tipFreq">RF Frequency</span>
       <div class="slider-track-wrap">
         <input
           class="ctrl-slider"
@@ -114,14 +207,14 @@ export default defineComponent({
         />
       </div>
       <div class="row-readout">
-        <span class="readout-value">{{ currentFreq }}<span class="readout-unit"> kHz</span></span>
-        <span class="readout-sub">fc(T) {{ targetFcDisplay }} kHz · fc(H) {{ healthyFcDisplay }} kHz</span>
+        <span class="readout-value" v-tip="tipFreq">{{ currentFreq }}<span class="readout-unit"> kHz</span></span>
+        <span class="readout-sub" v-tip="tipFcSub">fc(T) {{ targetFcDisplay }} kHz · fc(H) {{ healthyFcDisplay }} kHz</span>
       </div>
     </div>
 
     <!-- Row 3: Field Intensity + disruption indicators -->
     <div class="panel-row">
-      <span class="row-label">Field Intensity</span>
+      <span class="row-label" v-tip="tipField">Field Intensity</span>
       <div class="slider-track-wrap">
         <input
           class="ctrl-slider"
@@ -134,15 +227,17 @@ export default defineComponent({
         />
       </div>
       <div class="row-readout">
-        <span class="readout-value">{{ currentField }}<span class="readout-unit"> V/cm</span></span>
+        <span class="readout-value" v-tip="tipField">{{ currentField }}<span class="readout-unit"> V/cm</span></span>
         <div class="disruption-badges">
           <span
             class="badge badge--target"
             :class="{ 'badge--warn': targetDisruption > 0.85 }"
+            v-tip="tipTargetBadge"
           >T {{ targetDisruptPercent }}%</span>
           <span
             class="badge badge--healthy"
             :class="{ 'badge--warn': healthyDisruption > 0.85 }"
+            v-tip="tipHealthyBadge"
           >H {{ healthyDisruptPercent }}%</span>
         </div>
       </div>
@@ -160,7 +255,6 @@ export default defineComponent({
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   padding: 0.85rem 1.25rem;
-  margin-top: 1.5rem;
 }
 
 /* ── Row layout ──────────────────────────────────────────────────────── */

@@ -4,12 +4,15 @@ import type { PropType } from 'vue'
 import * as d3 from 'd3'
 import { useCellStore } from '../stores/cellStore'
 import { useExperimentStore } from '../stores/experimentStore'
+import { CELL_PRESETS } from '../constants/cellLibrary'
 import type { CellRecord } from '../mockData'
 import type { CellState } from '../types/cell'
 import {
   CELL_COLORS,
   EDITABLE_PARAMS,
   DISRUPTION_WARN_THRESHOLD,
+  HEALTHY_CRITICAL_THRESHOLD,
+  HEALTHY_APPROACHING_THRESHOLD,
   NOURISHING_THRESHOLD,
   VIBRATING_MIN_THRESHOLD,
   TEMP_WARN_CELSIUS,
@@ -80,6 +83,24 @@ export default defineComponent({
     },
     canReset(): boolean { return this.disruptionRatio <= DISRUPTION_WARN_THRESHOLD },
 
+    metaStateClass(): string {
+      const map: Record<string, string> = {
+        stable:      'state--stable',
+        nourishing:  'state--nourishing',
+        approaching: 'state--approaching',
+        critical:    'state--critical',
+        vibrating:   'state--vibrating',
+        lysing:      'state--lysing',
+        lysed:       'state--lysed',
+      }
+      return map[this.cellState] ?? ''
+    },
+
+    canResetToPreset(): boolean {
+      const cell = this.type === 'healthy' ? this.store.healthy : this.store.target
+      return CELL_PRESETS.some((p) => p.presetId === cell.id)
+    },
+
     // Live color interpolation driven by disruption ratio
     cellColor(): string {
       const { interpFrom, interpTo } = CELL_COLORS[this.type]
@@ -93,6 +114,65 @@ export default defineComponent({
         ...p,
         displayValue: (cell as unknown as Record<string, number>)[p.key] ?? 0,
       }))
+    },
+
+    // ── Tooltip content ───────────────────────────────────────────────────
+    tipVm(): string {
+      const cell = this.type === 'healthy' ? this.store.healthy : this.store.target
+      const thr  = (cell.thresholdVoltage * 1000).toFixed(0)
+      const pct  = (this.disruptionRatio * 100).toFixed(0)
+      return `<strong>Transmembrane Potential (Vm)</strong>
+Current: <span class="tip-val">${this.vmDisplay}</span>
+
+Peak voltage induced across the cell membrane
+by the applied electric field — Schwan equation:
+  Vm = 1.5 × E × R / √(1 + (2πf·τ)²)
+
+Lysis threshold: ${thr} mV
+Disruption: <span class="tip-val">${pct}%</span>`
+    },
+
+    tipTemp(): string {
+      const warn = this.tempWarning
+        ? '\n<span class="tip-warn">⚠ Above 42°C — thermal damage risk</span>' : ''
+      return `<strong>Cell Temperature</strong>
+Current: <span class="tip-val">${this.tempDisplay}</span>
+
+Modelled via Specific Absorption Rate (SAR):
+  SAR = σ_eff × E² / ρ  [W/kg]
+
+Cooling: Newton's law, λ = 0.02 /s toward 37°C
+Thermal damage threshold: 42°C${warn}`
+    },
+
+    tipState(): string {
+      const labels: Record<string, string> = {
+        stable:      'stable — no significant membrane response',
+        nourishing:  'nourishing — sub-threshold oscillation, membrane intact',
+        approaching: '<span class="tip-warn">⚠ approaching — membrane stress detected · ion channel perturbation onset (Vm >50% of threshold)</span>',
+        critical:    '<span class="tip-warn">⚡ critical — electroporation pore formation imminent · reduce field immediately (Vm >85% of threshold)</span>',
+        vibrating:   '<span class="tip-warn">vibrating — approaching lysis threshold</span>',
+        lysing:      '<span class="tip-warn">lysing — membrane disruption in progress</span>',
+        lysed:       '<span class="tip-warn">lysed — membrane permanently disrupted</span>',
+      }
+      const healthyTransitions = this.type === 'healthy'
+        ? `\nHealthy cell thresholds:\n  >50% Vm → approaching (membrane stress)\n  >85% Vm → critical (pore formation risk)`
+        : `\nTarget transitions:\n  vibrating → lysing → lysed\n  Lysis begins after 2.5 s above 85%`
+      return `<strong>Cell State</strong>
+${labels[this.cellState] ?? this.cellState}
+${healthyTransitions}`
+    },
+
+    tipDisruption(): string {
+      const pct = (this.disruptionRatio * 100).toFixed(0)
+      const cell = this.type === 'healthy' ? this.store.healthy : this.store.target
+      const thr  = (cell.thresholdVoltage * 1000).toFixed(0)
+      return `<strong>Membrane Disruption: <span class="tip-val">${pct}%</span></strong>
+Ratio = Vm / lysis threshold voltage
+  Vm = ${this.vmDisplay}  ·  Threshold = ${thr} mV
+
+>85% held for 2.5 s → irreversible lysis
+100% = membrane at threshold — electroporation`
     },
   },
 
@@ -136,7 +216,16 @@ export default defineComponent({
           this.cellState = impact > VIBRATING_MIN_THRESHOLD ? 'vibrating' : 'stable'
         }
       } else {
-        this.cellState = impact > NOURISHING_THRESHOLD ? 'nourishing' : 'stable'
+        // Healthy cell — escalating warning states based on electroporation risk
+        if (impact >= HEALTHY_CRITICAL_THRESHOLD) {
+          this.cellState = 'critical'       // >85 % — pore formation imminent
+        } else if (impact >= HEALTHY_APPROACHING_THRESHOLD) {
+          this.cellState = 'approaching'    // >50 % — membrane stress / ion channel perturbation
+        } else if (impact > NOURISHING_THRESHOLD) {
+          this.cellState = 'nourishing'
+        } else {
+          this.cellState = 'stable'
+        }
       }
     },
   },
@@ -203,6 +292,12 @@ export default defineComponent({
       this.store.resetCell(this.type)
     },
 
+    resetToPreset() {
+      const cell = this.type === 'healthy' ? this.store.healthy : this.store.target
+      const preset = CELL_PRESETS.find((p) => p.presetId === cell.id)
+      if (preset) this.store.loadPreset(this.type, preset)
+    },
+
     handleClick() {
       this.$emit('click', this.type)
     },
@@ -220,16 +315,21 @@ export default defineComponent({
         <div class="card-sublabel">{{ sublabel }}</div>
       </div>
       <div v-if="cellData" class="card-meta">
-        <span class="meta-item">{{ vmDisplay }}</span>
+        <span class="meta-item" v-tip="tipVm">{{ vmDisplay }}</span>
         <span class="meta-sep">·</span>
-        <span class="meta-item" :class="{ 'meta-temp-warn': tempWarning }">{{ tempDisplay }}</span>
+        <span class="meta-item" :class="{ 'meta-temp-warn': tempWarning }" v-tip="tipTemp">{{ tempDisplay }}</span>
         <span class="meta-sep">·</span>
-        <span class="meta-state">{{ cellState }}</span>
+        <span class="meta-state" :class="metaStateClass" v-tip="tipState">{{ cellState }}</span>
       </div>
     </div>
 
     <!-- Collapsible cell parameters panel -->
-    <div v-if="cellData" class="params-toggle" @click="paramsExpanded = !paramsExpanded">
+    <div
+      v-if="cellData"
+      class="params-toggle"
+      v-tip="'<strong>Cell Parameters</strong>\nEdit biophysical properties that drive the\nSchwan equation calculation in real time.\nChanges immediately update Vm, selectivity,\nand the frequency response chart.'"
+      @click="paramsExpanded = !paramsExpanded"
+    >
       <span class="params-toggle-arrow">{{ paramsExpanded ? '▾' : '▸' }}</span>
       Cell Parameters
     </div>
@@ -244,6 +344,13 @@ export default defineComponent({
           />
           <span class="param-unit">{{ p.unit }}</span>
         </div>
+        <div v-if="canResetToPreset" class="params-reset-row">
+          <button
+            class="btn-reset-params"
+            v-tip="'<strong>Reset to Preset Defaults</strong>\nRestores all parameters to the original\nvalues for this preset.\nUseful after editing to explore changes.'"
+            @click="resetToPreset"
+          >↺ Reset to defaults</button>
+        </div>
       </div>
     </Transition>
 
@@ -252,12 +359,28 @@ export default defineComponent({
       <div ref="cellCanvas" class="cell-canvas"></div>
 
       <div class="osc-divider">
-        <span class="osc-label">OSC · {{ vmDisplay }}</span>
-        <span v-if="disruptionRatio > 0.05" class="osc-impact">
+        <span class="osc-label" v-tip="tipVm">OSC · {{ vmDisplay }}</span>
+        <span v-if="disruptionRatio > 0.05" class="osc-impact" v-tip="tipDisruption">
           ⚡ {{ (disruptionRatio * 100).toFixed(0) }}% disruption
         </span>
       </div>
       <div ref="oscCanvas" class="osc-canvas"></div>
+
+      <!-- Healthy-cell warning strip — electroporation risk -->
+      <div
+        v-if="type === 'healthy' && (cellState === 'approaching' || cellState === 'critical')"
+        class="healthy-warn-strip"
+        :class="{ 'healthy-warn-strip--critical': cellState === 'critical' }"
+        v-tip="tipState"
+      >
+        <span class="warn-icon">{{ cellState === 'critical' ? '⚡' : '⚠' }}</span>
+        <span class="warn-text">
+          {{ cellState === 'critical'
+            ? 'CRITICAL — REDUCE FIELD IMMEDIATELY'
+            : 'APPROACHING THRESHOLD — MONITOR FIELD' }}
+        </span>
+        <span class="warn-pct">{{ (disruptionRatio * 100).toFixed(0) }}%</span>
+      </div>
 
       <!-- Lysis overlay — absolute, covers card-visual without shifting card height -->
       <div v-if="cellState === 'lysed'" class="destroyed-overlay">
@@ -270,11 +393,6 @@ export default defineComponent({
     <!-- Description -->
     <div class="card-body">
       <p>{{ description }}</p>
-    </div>
-
-    <!-- Action -->
-    <div class="card-footer">
-      <button class="btn-card" @click="handleClick">{{ buttonText }}</button>
     </div>
   </div>
 </template>
@@ -310,10 +428,25 @@ export default defineComponent({
   box-shadow: none;
 }
 
+/* Healthy-cell electroporation risk states */
+.cell-card--healthy.cell-card--approaching {
+  border-left-color: #fbbf24 !important;
+  box-shadow: 0 0 22px rgba(251, 191, 36, 0.22);
+}
+.cell-card--healthy.cell-card--critical {
+  border-left-color: #fb923c !important;
+  animation: card-warn-pulse 1.1s ease-in-out infinite;
+}
+
 @keyframes card-shake {
   0%, 100% { transform: translateX(0); }
   25% { transform: translateX(-2px) rotate(-0.3deg); }
   75% { transform: translateX(2px) rotate(0.3deg); }
+}
+
+@keyframes card-warn-pulse {
+  0%, 100% { box-shadow: 0 0 22px rgba(251, 130, 20, 0.3); }
+  50%       { box-shadow: 0 0 42px rgba(251, 130, 20, 0.6); }
 }
 
 /* ── Header ──────────────────────────────────────────────────────────── */
@@ -338,20 +471,42 @@ export default defineComponent({
   color: var(--color-text-muted); white-space: nowrap;
 }
 .meta-sep   { opacity: 0.4; }
-.meta-state { text-transform: uppercase; letter-spacing: 0.06em; opacity: 0.6; }
+.meta-state { text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
 .meta-temp-warn { color: #ffb800; }
+
+/* State colors */
+.state--stable     { color: #39ff14; }
+.state--nourishing { color: #00d4ff; }
+.state--approaching { color: #fbbf24; }
+.state--critical   { color: #fb923c; animation: state-blink 0.9s ease-in-out infinite; }
+.state--vibrating  { color: #ff8c00; animation: state-blink 1.1s ease-in-out infinite; }
+.state--lysing     { color: #ff4d6d; animation: state-blink 0.5s ease-in-out infinite; }
+.state--lysed      { color: #882233; }
+
+@keyframes state-blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.35; }
+}
 
 /* ── Params toggle ───────────────────────────────────────────────────── */
 .params-toggle {
-  display: flex; align-items: center; gap: 0.4rem;
+  display: flex; align-items: center; gap: 0.45rem;
   font-size: 0.62rem; font-family: var(--font-mono);
   text-transform: uppercase; letter-spacing: 0.1em;
-  color: var(--color-text-muted); cursor: pointer;
-  user-select: none; opacity: 0.65; transition: opacity 0.15s;
-  margin-bottom: -0.5rem;
+  color: var(--color-text);
+  cursor: pointer; user-select: none;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 0.3rem 0.65rem;
+  transition: border-color 0.15s, background-color 0.15s, color 0.15s;
 }
-.params-toggle:hover { opacity: 1; }
-.params-toggle-arrow { font-size: 0.7rem; }
+.params-toggle:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--color-text-heading);
+}
+.params-toggle-arrow { font-size: 0.7rem; opacity: 0.75; }
 
 /* ── Params panel ────────────────────────────────────────────────────── */
 .params-panel {
@@ -386,6 +541,32 @@ export default defineComponent({
   font-size: 0.6rem; font-family: var(--font-mono);
   color: var(--color-text-muted); opacity: 0.6;
   width: 2.5rem; text-align: left;
+}
+
+.params-reset-row {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 0.2rem;
+  border-top: 1px solid var(--color-border);
+  margin-top: 0.1rem;
+}
+
+.btn-reset-params {
+  background: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 0.18rem 0.55rem;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.btn-reset-params:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
 }
 
 /* Params panel transition */
@@ -457,14 +638,36 @@ export default defineComponent({
   text-transform: uppercase; opacity: 0.6;
 }
 
-/* ── Body & Footer ───────────────────────────────────────────────────── */
-.card-body   { color: var(--color-text-muted); font-size: 0.875rem; line-height: 1.65; flex: 1; }
-.card-footer { padding-top: 0.5rem; border-top: 1px solid var(--color-border); }
-.btn-card {
-  background: transparent; border: 1px solid var(--color-border);
-  color: var(--color-text); padding: 0.45rem 1rem;
-  border-radius: var(--radius); font-size: 0.8rem; transition: all 0.15s; cursor: pointer;
+/* ── Healthy-cell warning strip ──────────────────────────────────────── */
+.healthy-warn-strip {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.32rem 0.65rem;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #fbbf24;
+  background: rgba(251, 191, 36, 0.08);
+  border-top: 1px solid rgba(251, 191, 36, 0.3);
+  animation: warn-fade 2s ease-in-out infinite;
 }
-.cell-card--healthy .btn-card:hover { border-color: var(--color-accent); color: var(--color-accent); background-color: var(--color-accent-dim); }
-.cell-card--target  .btn-card:hover { border-color: var(--color-danger); color: var(--color-danger); background-color: var(--color-danger-dim); }
+.healthy-warn-strip--critical {
+  color: #fb923c;
+  background: rgba(251, 130, 20, 0.12);
+  border-top-color: rgba(251, 130, 20, 0.45);
+  animation: warn-fade 0.85s ease-in-out infinite;
+}
+.warn-icon { flex-shrink: 0; }
+.warn-text { flex: 1; }
+.warn-pct  { flex-shrink: 0; font-weight: 700; }
+
+@keyframes warn-fade {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.55; }
+}
+
+/* ── Body ─────────────────────────────────────────────────────────────── */
+.card-body { color: var(--color-text-muted); font-size: 0.875rem; line-height: 1.65; flex: 1; }
 </style>

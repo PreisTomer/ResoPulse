@@ -42,12 +42,18 @@ function nowHMS(): string {
   return new Date().toLocaleTimeString('en-GB', { hour12: false })
 }
 
+const LS_KEY = 'br-experiment'
+
+function loadState(): ExperimentState {
+  try {
+    const saved = localStorage.getItem(LS_KEY)
+    if (saved) return JSON.parse(saved) as ExperimentState
+  } catch { /* ignore corrupt data */ }
+  return { entries: [], nextId: 1, sessionName: 'Session 001' }
+}
+
 export const useExperimentStore = defineStore('experiment', {
-  state: (): ExperimentState => ({
-    entries: [],
-    nextId: 1,
-    sessionName: 'Session 001',
-  }),
+  state: (): ExperimentState => loadState(),
 
   actions: {
     logReading(snap: CellSnapshot, event: LogEntry['event']) {

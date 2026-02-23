@@ -1,4 +1,4 @@
-export type CellState = 'stable' | 'vibrating' | 'nourishing' | 'lysing' | 'lysed'
+export type CellState = 'stable' | 'nourishing' | 'approaching' | 'critical' | 'vibrating' | 'lysing' | 'lysed'
 
 export interface BlobPoint {
   angle: number
