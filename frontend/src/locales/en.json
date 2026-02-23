@@ -1,0 +1,53 @@
+{
+  "nav": {
+    "researchPlatform": "Research Platform",
+    "dashboard": "Dashboard",
+    "analysis": "Analysis",
+    "dataSets": "Data Sets",
+    "reports": "Reports",
+    "systemReady": "System Ready",
+    "systemWarning": "System Alert"
+  },
+  "hero": {
+    "eyebrow": "Frequency & Resonance Research",
+    "title": "BioResonance",
+    "titleAccent": "Analysis Platform",
+    "description": "A precision tool for scientists and bio-researchers exploring targeted resonance therapy. Load cellular frequency data, compare healthy and target cell signatures, and identify resonance parameters that disrupt target cells while preserving healthy tissue.",
+    "loadDataSet": "Load Data Set",
+    "viewSampleAnalysis": "View Sample Analysis"
+  },
+  "cells": {
+    "sectionTitle": "Cell Signature Profiles",
+    "sectionSub": "Load JSON data sets to begin comparative frequency analysis.",
+    "healthy": {
+      "label": "Healthy Cell",
+      "sublabel": "Reference Baseline",
+      "description": "Frequency and vibration signature of a healthy cell. Used as the preservation target during resonance tuning.",
+      "button": "Load Healthy Data"
+    },
+    "target": {
+      "label": "Target Cell",
+      "sublabel": "Target Signature",
+      "description": "Frequency and vibration signature of the target cell. The primary subject for resonance frequency analysis and disruption.",
+      "button": "Load Target Data"
+    }
+  },
+  "features": {
+    "visualization": {
+      "title": "Big Data Visualization",
+      "description": "Render large-scale frequency JSON data sets as interactive graphs and spectral charts."
+    },
+    "comparative": {
+      "title": "Comparative Analysis",
+      "description": "Side-by-side comparison of healthy vs. target cell signatures to isolate delta frequencies."
+    },
+    "targeting": {
+      "title": "Resonance Targeting",
+      "description": "Identify precise resonance frequencies that affect target cells without impacting healthy tissue."
+    },
+    "profiles": {
+      "title": "Extensible Profiles",
+      "description": "Support for multiple cell types, viruses, bacteria, and other organisms as research expands."
+    }
+  }
+}

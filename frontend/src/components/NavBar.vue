@@ -1,23 +1,43 @@
-<script setup lang="ts">
+<script lang="ts">
+import { defineComponent } from 'vue'
+import { useCellStore } from '../stores/cellStore'
+
+export default defineComponent({
+  setup() {
+    const store = useCellStore()
+    return { store }
+  },
+
+  computed: {
+    systemReady(): boolean {
+      return this.store.systemReady
+    },
+  },
+})
 </script>
 
 <template>
   <header class="app-header">
     <div class="header-inner">
       <div class="brand">
-        <span class="brand-icon">◉</span>
-        <span class="brand-name">BioResonance</span>
-        <span class="brand-tag">Research Platform</span>
+        <div class="brand-logo">
+          <img src="/logo.jpg" :alt="$t('hero.title')" />
+        </div>
+        <span class="brand-name">{{ $t('hero.title') }}</span>
+        <span class="brand-tag">{{ $t('nav.researchPlatform') }}</span>
       </div>
       <nav class="nav">
-        <a class="nav-link active" href="#">Dashboard</a>
-        <a class="nav-link" href="#">Analysis</a>
-        <a class="nav-link" href="#">Data Sets</a>
-        <a class="nav-link" href="#">Reports</a>
+        <a class="nav-link active" href="#">{{ $t('nav.dashboard') }}</a>
+        <a class="nav-link" href="#">{{ $t('nav.analysis') }}</a>
+        <a class="nav-link" href="#">{{ $t('nav.dataSets') }}</a>
+        <a class="nav-link" href="#">{{ $t('nav.reports') }}</a>
       </nav>
       <div class="header-status">
-        <span class="status-dot"></span>
-        <span class="status-label">System Ready</span>
+        <span class="status-dot" :class="{ 'status-dot--warning': !systemReady }"></span>
+        <span
+          class="status-label"
+          :class="{ 'status-label--warning': !systemReady }"
+        >{{ systemReady ? $t('nav.systemReady') : $t('nav.systemWarning') }}</span>
       </div>
     </div>
   </header>
@@ -49,16 +69,21 @@
   flex-shrink: 0;
 }
 
-.brand-icon {
-  color: var(--color-primary);
-  font-size: 1.4rem;
-  line-height: 1;
-  animation: pulse 3s ease-in-out infinite;
+.brand-logo {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  outline: 1.5px solid var(--color-border);
 }
 
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
+.brand-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1.7);
+  display: block;
 }
 
 .brand-name {
@@ -119,6 +144,21 @@
   background-color: var(--color-accent);
   box-shadow: 0 0 6px var(--color-accent);
   animation: pulse 2s ease-in-out infinite;
+  transition: background-color 0.4s, box-shadow 0.4s;
+}
+
+.status-dot--warning {
+  background-color: #ffb800;
+  box-shadow: 0 0 6px #ffb800;
+}
+
+.status-label--warning {
+  color: #ffb800;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
 }
 
 .status-label {
