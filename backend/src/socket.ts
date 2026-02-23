@@ -1,19 +1,11 @@
 import { Server } from 'socket.io'
 import type { Server as HttpServer } from 'http'
 
-interface ResonancePacket {
+interface FieldPacket {
   timestamp: number
-  activeFrequency: number
-  cells: {
-    healthy: { stress: number }
-    target: { stress: number }
-  }
-}
-
-// Lorentzian resonance: same formula as the frontend store
-function calcStress(naturalFreq: number, tolerance: number, broadcastFreq: number): number {
-  const delta = Math.abs(naturalFreq - broadcastFreq)
-  return 1 / ((delta / tolerance) ** 2 + 1)
+  activeFrequencyKHz: number
+  activeFieldIntensityVcm: number
+  activeMedium: string
 }
 
 export function setupSocketServer(httpServer: HttpServer): Server {
@@ -31,17 +23,23 @@ export function setupSocketServer(httpServer: HttpServer): Server {
   io.on('connection', (socket) => {
     console.log(`[Socket] Client connected: ${socket.id}`)
 
-    socket.on('setFrequency', (rawFreq: unknown) => {
-      const freq = Number(rawFreq)
-      if (isNaN(freq) || freq < 0 || freq > 20000) return
+    socket.on('setFieldParams', (raw: unknown) => {
+      if (!raw || typeof raw !== 'object') return
 
-      const packet: ResonancePacket = {
+      const { freqKHz, fieldVcm, medium } = raw as Record<string, unknown>
+
+      const fKHz = Number(freqKHz)
+      const fVcm = Number(fieldVcm)
+      const med  = typeof medium === 'string' ? medium : 'saline'
+
+      if (isNaN(fKHz) || fKHz < 10 || fKHz > 700) return
+      if (isNaN(fVcm) || fVcm < 0  || fVcm > 1000) return
+
+      const packet: FieldPacket = {
         timestamp: Date.now(),
-        activeFrequency: Math.round(freq),
-        cells: {
-          healthy: { stress: calcStress(528, 10, freq) },
-          target:  { stress: calcStress(417, 5,  freq) },
-        },
+        activeFrequencyKHz: Math.round(fKHz),
+        activeFieldIntensityVcm: Math.round(fVcm),
+        activeMedium: med,
       }
 
       // Broadcast to all connected clients so every tab/device stays in sync

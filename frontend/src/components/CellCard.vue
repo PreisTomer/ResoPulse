@@ -3,15 +3,20 @@ import { defineComponent } from 'vue'
 import type { PropType } from 'vue'
 import * as d3 from 'd3'
 import { useCellStore } from '../stores/cellStore'
-import { resonanceProfiles } from '../mockData'
 import type { CellRecord } from '../mockData'
-
-type CellState = 'stable' | 'vibrating' | 'nourishing' | 'shattering' | 'destroyed'
-
-interface BlobPoint {
-  angle: number
-  r: number
-}
+import type { CellState } from '../types/cell'
+import {
+  CELL_COLORS,
+  EDITABLE_PARAMS,
+  DISRUPTION_WARN_THRESHOLD,
+  NOURISHING_THRESHOLD,
+  VIBRATING_MIN_THRESHOLD,
+  TEMP_WARN_CELSIUS,
+  LYSIS_DELAY_MS,
+  LYSIS_DURATION_MS,
+  FRAGMENT_INTERVAL_MS,
+} from '../constants/cellCard'
+import { setupBlobAnimation, setupOscilloscope, spawnFragment } from '../utils/cellAnimation'
 
 export default defineComponent({
   props: {
@@ -19,10 +24,10 @@ export default defineComponent({
       type: String as PropType<'healthy' | 'target'>,
       required: true,
     },
-    label: { type: String, required: true },
-    sublabel: { type: String, required: true },
+    label:       { type: String, required: true },
+    sublabel:    { type: String, required: true },
     description: { type: String, required: true },
-    buttonText: { type: String, required: true },
+    buttonText:  { type: String, required: true },
     cellData: {
       type: Object as PropType<CellRecord | null>,
       default: null,
@@ -34,48 +39,59 @@ export default defineComponent({
   },
 
   setup() {
-    const store = useCellStore()
-    return { store }
+    return { store: useCellStore() }
   },
 
   data() {
     return {
-      liveAmplitude: this.cellData?.amplitude ?? 0.8,
-      cellState: 'stable' as CellState,
+      liveAmplitude:  this.cellData?.amplitude ?? 0.8,
+      cellState:      'stable' as CellState,
       shatterPending: false,
+      paramsExpanded: false,
+      // Animation timer handles — typed here so TypeScript can see them on `this`
+      _helixTimer:        null as d3.Timer | null,
+      _oscTimer:          null as d3.Timer | null,
+      _particleInterval:  null as number | null,
+      _shatterTimeout:    null as number | null,
+      _shatterDelayTimeout: null as number | null,
     }
   },
 
   computed: {
-    accentColor(): string {
-      return this.type === 'healthy' ? '#00d4ff' : '#ff4d6d'
+    accentColor(): string { return CELL_COLORS[this.type].accent },
+    rungColor():   string { return CELL_COLORS[this.type].rung   },
+
+    // ── Scientific readouts ────────────────────────────────────────────────
+    vm(): number {
+      return (this.type === 'healthy' ? this.store.healthyVm : this.store.targetVm) * 1000 // V → mV
     },
-    rungColor(): string {
-      return this.type === 'healthy' ? '#39ff14' : '#ff8c00'
+    temperature(): number {
+      return this.type === 'healthy' ? this.store.healthyTemp : this.store.targetTemp
     },
-    stabilityPercent(): string {
-      return this.cellData ? (this.cellData.stability * 100).toFixed(0) + '%' : '—'
-    },
-    freqLabel(): string {
-      return this.cellData ? this.cellData.baseFrequency + ' Hz' : '—'
-    },
-    resonanceImpact(): number {
+    vmDisplay():   string  { return this.vm.toFixed(3) + ' mV' },
+    tempDisplay(): string  { return this.temperature.toFixed(1) + ' °C' },
+    tempWarning(): boolean { return this.temperature > TEMP_WARN_CELSIUS },
+
+    disruptionRatio(): number {
       return this.type === 'healthy'
-        ? this.store.healthyResonanceImpact
-        : this.store.targetResonanceImpact
+        ? this.store.healthyDisruptionRatio
+        : this.store.targetDisruptionRatio
     },
-    resonanceProfile() {
-      return resonanceProfiles[this.type]
-    },
-    canReset(): boolean {
-      return this.resonanceImpact <= 0.85
-    },
-    // Live color interpolation driven by resonance impact
+    canReset(): boolean { return this.disruptionRatio <= DISRUPTION_WARN_THRESHOLD },
+
+    // Live color interpolation driven by disruption ratio
     cellColor(): string {
-      const impact = this.resonanceImpact
-      return this.type === 'target'
-        ? d3.interpolateRgb('#4d79ff', '#ff4d6d')(impact) // blue → red
-        : d3.interpolateRgb('#00d4ff', '#39ff14')(impact) // cyan → green
+      const { interpFrom, interpTo } = CELL_COLORS[this.type]
+      return d3.interpolateRgb(interpFrom, interpTo)(Math.min(1, this.disruptionRatio))
+    },
+
+    // Editable biophysical params mapped from the EDITABLE_PARAMS constant
+    editableParams() {
+      const cell = this.type === 'healthy' ? this.store.healthy : this.store.target
+      return EDITABLE_PARAMS.map((p) => ({
+        ...p,
+        displayValue: (cell as unknown as Record<string, number>)[p.key] ?? 0,
+      }))
     },
   },
 
@@ -85,51 +101,41 @@ export default defineComponent({
     },
 
     'store.resetCounter'() {
-      if (this.cellState === 'destroyed' || this.cellState === 'shattering') {
-        // Also cancel any pending shatter delay
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        clearTimeout((this as any)._shatterDelayTimeout)
-        this.shatterPending = false
-        this.cellState = 'stable'
-        this.liveAmplitude = this.cellData?.amplitude ?? 0.8
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        clearInterval((this as any)._particleInterval)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        ;(this as any)._helixTimer?.stop()
-        this.$nextTick(() => {
-          this.drawCell()
-          this.drawOscilloscope()
-        })
-      }
+      if (this.cellState !== 'lysed' && this.cellState !== 'lysing') return
+      clearTimeout(this._shatterDelayTimeout ?? undefined)
+      this.shatterPending = false
+      this.cellState = 'stable'
+      this.liveAmplitude = this.cellData?.amplitude ?? 0.8
+      clearInterval(this._particleInterval ?? undefined)
+      this._helixTimer?.stop()
+      this.$nextTick(() => {
+        this.drawCell()
+        this.drawOscilloscope()
+      })
     },
 
-    resonanceImpact(impact: number) {
-      if (this.cellState === 'destroyed' || this.cellState === 'shattering') return
+    disruptionRatio(impact: number) {
+      if (this.cellState === 'lysed' || this.cellState === 'lysing') return
 
       if (this.type === 'target') {
-        if (impact > 0.85) {
-          // Keep vibrating; arm a 2.5s delay before shattering
+        if (impact > DISRUPTION_WARN_THRESHOLD) {
           this.cellState = 'vibrating'
           if (!this.shatterPending) {
             this.shatterPending = true
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            ;(this as any)._shatterDelayTimeout = setTimeout(() => {
+            this._shatterDelayTimeout = setTimeout(() => {
               this.shatterPending = false
-              // Only shatter if still at destructive resonance
-              if (this.resonanceImpact > 0.85) this.triggerShatter()
-            }, 2500)
+              if (this.disruptionRatio > DISRUPTION_WARN_THRESHOLD) this.triggerLysis()
+            }, LYSIS_DELAY_MS) as unknown as number
           }
         } else {
-          // Slider moved away — cancel any pending shatter
           if (this.shatterPending) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            clearTimeout((this as any)._shatterDelayTimeout)
+            clearTimeout(this._shatterDelayTimeout ?? undefined)
             this.shatterPending = false
           }
-          this.cellState = impact > 0.08 ? 'vibrating' : 'stable'
+          this.cellState = impact > VIBRATING_MIN_THRESHOLD ? 'vibrating' : 'stable'
         }
       } else {
-        this.cellState = impact > 0.45 ? 'nourishing' : 'stable'
+        this.cellState = impact > NOURISHING_THRESHOLD ? 'nourishing' : 'stable'
       }
     },
   },
@@ -142,428 +148,57 @@ export default defineComponent({
   },
 
   beforeUnmount() {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ;(this as any)._helixTimer?.stop()
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ;(this as any)._oscTimer?.stop()
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    clearInterval((this as any)._particleInterval)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    clearTimeout((this as any)._shatterTimeout)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    clearTimeout((this as any)._shatterDelayTimeout)
+    this._helixTimer?.stop()
+    this._oscTimer?.stop()
+    clearInterval(this._particleInterval ?? undefined)
+    clearTimeout(this._shatterTimeout ?? undefined)
+    clearTimeout(this._shatterDelayTimeout ?? undefined)
   },
 
   methods: {
-    // ─── State machine ──────────────────────────────────────────────────
-    triggerShatter() {
-      this.cellState = 'shattering'
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ;(this as any)._shatterStartElapsed = -1
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ;(this as any)._particleInterval = setInterval(() => {
-        this.spawnFragment()
-      }, 80)
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ;(this as any)._shatterTimeout = setTimeout(() => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        clearInterval((this as any)._particleInterval)
-        this.cellState = 'destroyed'
-      }, 2800)
-    },
-
-    spawnFragment() {
+    // ── Animation setup ────────────────────────────────────────────────────
+    drawCell() {
+      if (!this.cellData) return
       const el = this.$refs.cellCanvas as HTMLElement
       if (!el) return
-      const svg = d3.select(el).select<SVGSVGElement>('svg')
-      if (svg.empty()) return
+      this._helixTimer = setupBlobAnimation(
+        el, this.type, this.accentColor, this.rungColor,
+        () => ({ impact: this.disruptionRatio, state: this.cellState, color: this.cellColor }),
+      )
+    },
 
-      const W = 280
-      const H = 210
-      const angle = Math.random() * Math.PI * 2
-      const startR = 50 + Math.random() * 20  // near membrane (BASE_R = 65)
-      const endR = 90 + Math.random() * 70
-      const len = 6 + Math.random() * 14
+    drawOscilloscope() {
+      if (!this.cellData) return
+      const el = this.$refs.oscCanvas as HTMLElement
+      if (!el) return
+      this._oscTimer = setupOscilloscope(
+        el, this.accentColor, this.cellData.naturalFrequency,
+        () => ({ state: this.cellState, impact: this.disruptionRatio, liveAmplitude: this.liveAmplitude, cellColor: this.cellColor }),
+      )
+    },
 
-      svg
-        .append('line')
-        .attr('x1', W / 2 + Math.cos(angle) * startR)
-        .attr('y1', H / 2 + Math.sin(angle) * startR)
-        .attr('x2', W / 2 + Math.cos(angle) * (startR + len))
-        .attr('y2', H / 2 + Math.sin(angle) * (startR + len))
-        .attr('stroke', '#ff4d6d')
-        .attr('stroke-width', 0.5 + Math.random() * 2)
-        .attr('stroke-opacity', 1)
-        .transition()
-        .duration(600 + Math.random() * 900)
-        .ease(d3.easeQuadOut)
-        .attr('x1', W / 2 + Math.cos(angle) * endR)
-        .attr('y1', H / 2 + Math.sin(angle) * endR)
-        .attr('x2', W / 2 + Math.cos(angle) * (endR + len))
-        .attr('y2', H / 2 + Math.sin(angle) * (endR + len))
-        .attr('stroke-opacity', 0)
-        .remove()
+    // ── State machine ──────────────────────────────────────────────────────
+    triggerLysis() {
+      this.cellState = 'lysing'
+      const el = this.$refs.cellCanvas as HTMLElement
+
+      this._particleInterval = setInterval(() => {
+        if (el) spawnFragment(el)
+      }, FRAGMENT_INTERVAL_MS) as unknown as number
+
+      this._shatterTimeout = setTimeout(() => {
+        clearInterval(this._particleInterval ?? undefined)
+        this.cellState = 'lysed'
+      }, LYSIS_DURATION_MS) as unknown as number
+    },
+
+    onParamChange(key: string, e: Event) {
+      const value = Number((e.target as HTMLInputElement).value)
+      this.store.updateCellParam(this.type, key, value)
     },
 
     resetToStable() {
       this.store.resetCell(this.type)
-    },
-
-    // ─── 3D Elastic Blob Cell Animation ────────────────────────────────
-    drawCell() {
-      const cellData = this.cellData
-      if (!cellData) return
-      const el = this.$refs.cellCanvas as HTMLElement
-      if (!el) return
-
-      // Smaller canvas — cards were too tall
-      const W = 280
-      const H = 210
-      const cx = W / 2 // 140
-      const cy = H / 2 // 105
-      const BASE_R = 65
-
-      d3.select(el).selectAll('*').remove()
-
-      // Responsive SVG — only viewBox, CSS width: 100% controls display size
-      const svg = d3.select(el).append('svg').attr('viewBox', `0 0 ${W} ${H}`)
-
-      // ── Defs ──────────────────────────────────────────────────────────
-      const defs = svg.append('defs')
-
-      // Glow filter (blob stroke)
-      const glowFilterId = `glowFilter-${this.type}`
-      const glowFilter = defs
-        .append('filter')
-        .attr('id', glowFilterId)
-        .attr('x', '-60%')
-        .attr('y', '-60%')
-        .attr('width', '220%')
-        .attr('height', '220%')
-      const glowBlur = glowFilter
-        .append('feGaussianBlur')
-        .attr('stdDeviation', '3')
-        .attr('result', 'coloredBlur')
-      const glowMerge = glowFilter.append('feMerge')
-      glowMerge.append('feMergeNode').attr('in', 'coloredBlur')
-      glowMerge.append('feMergeNode').attr('in', 'SourceGraphic')
-
-      // Radial gradient — subtle inner glow, NO dark edge (that was creating the black oval)
-      // gradient center at top-left of blob (userSpaceOnUse = blobG local coords)
-      const cellGradId = `cellGrad-${this.type}`
-      const cellGrad = defs
-        .append('radialGradient')
-        .attr('id', cellGradId)
-        .attr('gradientUnits', 'userSpaceOnUse')
-        .attr('cx', -BASE_R * 0.28)
-        .attr('cy', -BASE_R * 0.35)
-        .attr('r', BASE_R * 1.6)
-        .attr('fx', -BASE_R * 0.32)
-        .attr('fy', -BASE_R * 0.40)
-
-      // Subtle two-stop gradient: light inner highlight → very faint cell tint at edge
-      cellGrad.append('stop').attr('offset', '0%').attr('stop-color', 'white').attr('stop-opacity', 0.14)
-      const gradStop1 = cellGrad
-        .append('stop')
-        .attr('offset', '100%')
-        .attr('stop-color', this.accentColor)
-        .attr('stop-opacity', 0.08)
-
-      // ── Layer 0: Aura rings ──────────────────────────────────────────
-      const auraG = svg.append('g').attr('transform', `translate(${cx}, ${cy})`)
-      const auraRings = [
-        auraG.append('circle').attr('r', BASE_R + 14).attr('fill', 'none').attr('stroke', this.accentColor).attr('stroke-width', 1.2),
-        auraG.append('circle').attr('r', BASE_R + 26).attr('fill', 'none').attr('stroke', this.accentColor).attr('stroke-width', 0.8),
-        auraG.append('circle').attr('r', BASE_R + 40).attr('fill', 'none').attr('stroke', this.accentColor).attr('stroke-width', 0.5),
-      ]
-
-      // ── Layer 1: Nucleus helix — drawn BEFORE blob fill so it shows through ──
-      // No blur filter — keeps the helix crisp inside the transparent membrane
-      const nucleusG = svg.append('g').attr('transform', `translate(${cx}, ${cy})`)
-
-      const NW = 60  // nucleus width (proportional to smaller blob)
-      const NH = 28  // nucleus amplitude envelope
-      const NP = 20  // sample points per strand
-      const NRUNGS = 8
-
-      const nLineGen = d3
-        .line<{ x: number; y: number }>()
-        .x((d) => d.x)
-        .y((d) => d.y)
-        .curve(d3.curveBasis)
-
-      const nRungsBack  = nucleusG.append('g')
-      const nStrandBack = nucleusG.append('path').attr('fill', 'none').attr('stroke', this.accentColor).attr('stroke-width', 1.5).attr('stroke-linecap', 'round').attr('stroke-opacity', 0.28)
-      const nStrandFront= nucleusG.append('path').attr('fill', 'none').attr('stroke', this.accentColor).attr('stroke-width', 1.5).attr('stroke-linecap', 'round').attr('stroke-opacity', 0.9)
-      const nRungsFront = nucleusG.append('g')
-
-      // ── Layer 2: Blob fill — subtle gradient, helix shows through ────
-      const blobG = svg.append('g').attr('transform', `translate(${cx}, ${cy})`)
-      const blobFill = blobG.append('path').attr('fill', `url(#${cellGradId})`)
-
-      // ── Layer 3: Blob stroke — glowing membrane ───────────────────────
-      const blobStroke = blobG
-        .append('path')
-        .attr('fill', 'none')
-        .attr('stroke', this.accentColor)
-        .attr('stroke-width', 2.5)
-        .attr('filter', `url(#${glowFilterId})`)
-
-      // ── Blob control points — deterministic phases ───────────────────
-      const N = 16
-      const blobPhases = d3.range(N).map((i: number) => ({
-        baseAngle: (i / N) * Math.PI * 2,
-        phaseOffset: ((i * 7919) % 6283) / 1000,
-        speed: 0.6 + ((i * 1013) % 1000) / 2500,
-      }))
-
-      const blobLine = d3
-        .lineRadial<BlobPoint>()
-        .angle((d) => d.angle)
-        .radius((d) => d.r)
-        .curve(d3.curveBasisClosed)
-
-      // ── Animation timer ──────────────────────────────────────────────
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ;(this as any)._helixTimer = d3.timer((elapsed: number) => {
-        const impact = this.resonanceImpact
-        const state = this.cellState
-        const color = this.cellColor
-
-        // ── Destroyed ──────────────────────────────────────────────────
-        if (state === 'destroyed') {
-          blobStroke.attr('stroke-opacity', 0)
-          blobFill.attr('fill-opacity', 0)
-          auraRings.forEach((r) => r.attr('stroke-opacity', 0))
-          nStrandFront
-            .attr('d', `M${-NW / 2},0 L${NW / 2},0`)
-            .attr('stroke', '#ff4d6d')
-            .attr('stroke-opacity', 0.35)
-            .attr('stroke-width', 1)
-          nStrandBack.attr('stroke-opacity', 0)
-          nRungsFront.selectAll('*').remove()
-          nRungsBack.selectAll('*').remove()
-          glowBlur.attr('stdDeviation', '1')
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          ;(this as any)._helixTimer?.stop()
-          return
-        }
-
-        // ── Shattering ─────────────────────────────────────────────────
-        if (state === 'shattering') {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          if ((this as any)._shatterStartElapsed < 0) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            ;(this as any)._shatterStartElapsed = elapsed
-          }
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const shatterAge = elapsed - (this as any)._shatterStartElapsed
-          const progress = Math.min(1, Math.max(0, shatterAge / 2800))
-          const chaos = 12 + progress * 45
-          const expandR = BASE_R + progress * 32
-
-          const blobPts: BlobPoint[] = blobPhases.map((p) => ({
-            angle: p.baseAngle,
-            r: expandR + (Math.random() - 0.5) * chaos * 2,
-          }))
-          const blobPath = blobLine(blobPts) || ''
-
-          blobStroke
-            .attr('d', blobPath)
-            .attr('stroke', '#ff4d6d')
-            .attr('stroke-opacity', Math.max(0, 1 - progress * 0.9))
-            .attr('stroke-width', 2.5 + progress * 3)
-          blobFill
-            .attr('d', blobPath)
-            .attr('fill', '#ff4d6d')
-            .attr('fill-opacity', Math.max(0, 0.1 - progress * 0.1))
-          auraRings.forEach((ring, i) =>
-            ring.attr('stroke-opacity', Math.max(0, 0.3 - progress * 0.35 - i * 0.05)),
-          )
-          const nPts1 = d3.range(NP).map((k: number) => ({
-            x: -NW / 2 + (k / (NP - 1)) * NW,
-            y:
-              (NH / 2 - 4) *
-                Math.sin((k / NP) * Math.PI * 3 + elapsed * 0.025) *
-                (1 - progress * 0.9) +
-              (Math.random() - 0.5) * 18 * progress,
-          }))
-          nStrandFront
-            .attr('d', nLineGen(nPts1) || '')
-            .attr('stroke', '#ff4d6d')
-            .attr('stroke-opacity', Math.max(0, 1 - progress * 0.9))
-          nStrandBack.attr('stroke-opacity', 0)
-          nRungsFront.selectAll('*').remove()
-          nRungsBack.selectAll('*').remove()
-          glowBlur.attr('stdDeviation', (3 + progress * 12).toFixed(1))
-          return
-        }
-
-        // ── Normal: stable / vibrating / nourishing ────────────────────
-        const isNourishing = state === 'nourishing'
-        const isVibrating = state === 'vibrating'
-
-        // More organic stable jitter (6 instead of 3) — less circle-like
-        const jitter = isVibrating ? 4 + impact * 18 : isNourishing ? 5 : 6
-        const radiusMod = isNourishing ? 1 + impact * 0.12 : 1
-        const speedMult = isVibrating
-          ? 1 + impact * 5
-          : isNourishing
-          ? 0.4 + impact * 0.4
-          : 0.8
-
-        const blobPts: BlobPoint[] = blobPhases.map((p) => {
-          const wave =
-            Math.sin(elapsed * 0.001 * p.speed * speedMult + p.phaseOffset) * jitter
-          // Slightly higher base noise for organic irregularity
-          const noise = (Math.random() - 0.5) * (isVibrating ? jitter * 0.5 : 2.5)
-          return { angle: p.baseAngle, r: BASE_R * radiusMod + wave + noise }
-        })
-        const blobPath = blobLine(blobPts) || ''
-
-        blobStroke
-          .attr('d', blobPath)
-          .attr('stroke', color)
-          .attr('stroke-opacity', 1)
-          .attr('stroke-width', isNourishing ? 3 : 2.5)
-        blobFill.attr('d', blobPath).attr('fill', `url(#${cellGradId})`)
-
-        // Update gradient edge stop color to follow live cellColor
-        gradStop1.attr('stop-color', color)
-
-        // Aura rings
-        const auraPulseSpeed = isVibrating
-          ? 0.003 + impact * 0.006
-          : isNourishing
-          ? 0.0015 + impact * 0.003
-          : 0.0012
-        auraRings.forEach((ring, i) => {
-          const pulse = (Math.sin(elapsed * auraPulseSpeed - i * 0.9) + 1) / 2
-          const baseOpacity = isVibrating
-            ? 0.08 + impact * 0.35
-            : isNourishing
-            ? 0.08 + impact * 0.22
-            : 0.04 + impact * 0.04
-          ring
-            .attr('stroke', color)
-            .attr('stroke-opacity', baseOpacity * (0.4 + pulse * 0.6))
-            .attr('r', BASE_R + 14 + i * 13 + (isNourishing ? impact * 8 : isVibrating ? impact * 4 : 0))
-        })
-
-        // ── Pseudo-3D nucleus helix ─────────────────────────────────────
-        const nucleusPhase = elapsed * 0.001 * (isVibrating ? 1 + impact * 4 : 0.6)
-        const nAmp = NH / 2 - 3
-        const nNoise = isVibrating ? impact * 3 : 0
-
-        const nAllPts = d3.range(NP).map((k: number) => {
-          const t = k / (NP - 1)
-          const theta = t * Math.PI * 4 + nucleusPhase
-          return {
-            x: -NW / 2 + t * NW,
-            y1: nAmp * Math.sin(theta) + (Math.random() - 0.5) * nNoise,
-            y2: nAmp * Math.sin(theta + Math.PI) + (Math.random() - 0.5) * nNoise,
-            z: Math.cos(theta),
-          }
-        })
-
-        const pts1 = nAllPts.map((p) => ({ x: p.x, y: p.y1 }))
-        const pts2 = nAllPts.map((p) => ({ x: p.x, y: p.y2 }))
-        nStrandFront.attr('d', nLineGen(pts1) || '').attr('stroke', color).attr('stroke-opacity', 0.9)
-        nStrandBack.attr('d', nLineGen(pts2) || '').attr('stroke', color).attr('stroke-opacity', 0.28)
-
-        nRungsFront.selectAll('*').remove()
-        nRungsBack.selectAll('*').remove()
-        d3.range(NRUNGS).forEach((j: number) => {
-          const k = Math.min(NP - 1, Math.max(0, Math.round(((j + 0.5) / NRUNGS) * (NP - 1))))
-          const pt = nAllPts[k]!
-          const isFront = pt.z > 0
-          const targetGroup = isFront ? nRungsFront : nRungsBack
-          targetGroup
-            .append('line')
-            .attr('x1', pt.x).attr('x2', pt.x)
-            .attr('y1', pt.y1).attr('y2', pt.y2)
-            .attr('stroke', this.rungColor)
-            .attr('stroke-width', isFront ? 2 : 1)
-            .attr('stroke-opacity', isFront ? 0.85 : 0.22)
-        })
-
-        // Glow
-        const glowStd = isNourishing
-          ? (3 + impact * 10).toFixed(1)
-          : isVibrating
-          ? (3 + impact * 7).toFixed(1)
-          : '3'
-        glowBlur.attr('stdDeviation', glowStd)
-
-      })
-    },
-
-    // ─── Oscilloscope Strip ────────────────────────────────────────────
-    drawOscilloscope() {
-      const cellData = this.cellData
-      if (!cellData) return
-      const el = this.$refs.oscCanvas as HTMLElement
-      if (!el) return
-
-      const W = 280
-      const H = 44
-
-      d3.select(el).selectAll('*').remove()
-
-      // Responsive SVG — only viewBox
-      const svg = d3.select(el).append('svg').attr('viewBox', `0 0 ${W} ${H}`)
-
-      const path = svg
-        .append('path')
-        .attr('fill', 'none')
-        .attr('stroke', this.accentColor)
-        .attr('stroke-width', 1.5)
-        .attr('stroke-opacity', 0.85)
-
-      const scrollSpeed = cellData.baseFrequency * 0.00008
-      const lineGen = d3
-        .line<{ x: number; y: number }>()
-        .x((d) => d.x)
-        .y((d) => d.y)
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ;(this as any)._oscTimer = d3.timer((elapsed: number) => {
-        const state = this.cellState
-        const impact = this.resonanceImpact
-
-        if (state === 'destroyed') {
-          path
-            .attr('d', `M0,${H / 2} L${W},${H / 2}`)
-            .attr('stroke', '#ff4d6d')
-            .attr('stroke-width', 1)
-            .attr('stroke-opacity', 0.4)
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          ;(this as any)._oscTimer?.stop()
-          return
-        }
-
-        const isVibrating = state === 'vibrating'
-        const isNourishing = state === 'nourishing'
-        const isShattering = state === 'shattering'
-
-        const baseAmp = this.liveAmplitude * (H / 2 - 5)
-        const amp = isNourishing ? baseAmp * (1 + impact * 0.4) : baseAmp
-        const speedMult = isVibrating ? 1 + impact * 5 : isShattering ? 8 : 1
-
-        const pts = d3.range(120).map((i: number) => ({
-          x: (i / 119) * W,
-          y:
-            H / 2 +
-            amp * Math.sin((i / 120) * Math.PI * 8 + elapsed * scrollSpeed * speedMult) +
-            (isShattering ? (Math.random() - 0.5) * H * 0.55 : 0),
-        }))
-
-        path
-          .attr('d', lineGen(pts) || '')
-          .attr('stroke', isShattering ? '#ff4d6d' : this.cellColor)
-      })
     },
 
     handleClick() {
@@ -583,33 +218,50 @@ export default defineComponent({
         <div class="card-sublabel">{{ sublabel }}</div>
       </div>
       <div v-if="cellData" class="card-meta">
-        <span class="meta-item">{{ freqLabel }}</span>
+        <span class="meta-item">{{ vmDisplay }}</span>
         <span class="meta-sep">·</span>
-        <span class="meta-item">{{ stabilityPercent }}</span>
+        <span class="meta-item" :class="{ 'meta-temp-warn': tempWarning }">{{ tempDisplay }}</span>
         <span class="meta-sep">·</span>
         <span class="meta-state">{{ cellState }}</span>
       </div>
     </div>
 
+    <!-- Collapsible cell parameters panel -->
+    <div v-if="cellData" class="params-toggle" @click="paramsExpanded = !paramsExpanded">
+      <span class="params-toggle-arrow">{{ paramsExpanded ? '▾' : '▸' }}</span>
+      Cell Parameters
+    </div>
+    <Transition name="params">
+      <div v-if="cellData && paramsExpanded" class="params-panel">
+        <div v-for="p in editableParams" :key="p.key" class="param-row">
+          <label class="param-label">{{ p.label }}</label>
+          <input
+            type="number" class="param-input"
+            :value="p.displayValue" :step="p.step" :min="p.min"
+            @change="onParamChange(p.key, $event)"
+          />
+          <span class="param-unit">{{ p.unit }}</span>
+        </div>
+      </div>
+    </Transition>
+
     <!-- Cell Visualization -->
     <div v-if="cellData" class="card-visual">
-      <!-- 3D elastic blob + aura + nucleus -->
       <div ref="cellCanvas" class="cell-canvas"></div>
 
-      <!-- Oscilloscope strip -->
       <div class="osc-divider">
-        <span class="osc-label">OSC · {{ freqLabel }}</span>
-        <span v-if="resonanceImpact > 0.05" class="osc-impact">
-          ⚡ {{ (resonanceImpact * 100).toFixed(0) }}% resonance
+        <span class="osc-label">OSC · {{ vmDisplay }}</span>
+        <span v-if="disruptionRatio > 0.05" class="osc-impact">
+          ⚡ {{ (disruptionRatio * 100).toFixed(0) }}% disruption
         </span>
       </div>
       <div ref="oscCanvas" class="osc-canvas"></div>
 
-      <!-- Destroyed overlay — absolute, covers card-visual without shifting card height -->
-      <div v-if="cellState === 'destroyed'" class="destroyed-overlay">
-        <span class="destroyed-text">— SIGNAL DISRUPTED —</span>
+      <!-- Lysis overlay — absolute, covers card-visual without shifting card height -->
+      <div v-if="cellState === 'lysed'" class="destroyed-overlay">
+        <span class="destroyed-text">— MEMBRANE LYSED —</span>
         <button class="btn-reset" :disabled="!canReset" @click="resetToStable">Reset Cell</button>
-        <span v-if="!canReset" class="reset-locked">Move slider away to reset</span>
+        <span v-if="!canReset" class="reset-locked">Reduce field intensity to reset</span>
       </div>
     </div>
 
@@ -645,12 +297,12 @@ export default defineComponent({
 /* State-driven glow */
 .cell-card--nourishing { box-shadow: 0 0 28px rgba(0, 212, 255, 0.18); }
 .cell-card--vibrating  { box-shadow: 0 0 24px rgba(255, 77, 109, 0.14); }
-.cell-card--shattering {
+.cell-card--lysing {
   box-shadow: 0 0 36px rgba(255, 77, 109, 0.4);
   border-color: var(--color-danger) !important;
   animation: card-shake 0.08s linear infinite;
 }
-.cell-card--destroyed {
+.cell-card--lysed {
   opacity: 0.65;
   border-color: #444 !important;
   box-shadow: none;
@@ -662,7 +314,7 @@ export default defineComponent({
   75% { transform: translateX(2px) rotate(0.3deg); }
 }
 
-/* ── Header ──────────────────────────────── */
+/* ── Header ──────────────────────────────────────────────────────────── */
 .card-header {
   display: flex;
   align-items: center;
@@ -672,7 +324,7 @@ export default defineComponent({
 .cell-card--healthy .card-icon { color: var(--color-accent); }
 .cell-card--target  .card-icon { color: var(--color-danger); }
 
-.card-label { font-weight: 600; font-size: 1rem; color: var(--color-text-heading); }
+.card-label    { font-weight: 600; font-size: 1rem; color: var(--color-text-heading); }
 .card-sublabel {
   font-size: 0.75rem; color: var(--color-text-muted);
   font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.08em;
@@ -683,19 +335,68 @@ export default defineComponent({
   font-size: 0.68rem; font-family: var(--font-mono);
   color: var(--color-text-muted); white-space: nowrap;
 }
-.meta-sep { opacity: 0.4; }
+.meta-sep   { opacity: 0.4; }
 .meta-state { text-transform: uppercase; letter-spacing: 0.06em; opacity: 0.6; }
+.meta-temp-warn { color: #ffb800; }
 
-/* ── Visualization ────────────────────────── */
+/* ── Params toggle ───────────────────────────────────────────────────── */
+.params-toggle {
+  display: flex; align-items: center; gap: 0.4rem;
+  font-size: 0.62rem; font-family: var(--font-mono);
+  text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--color-text-muted); cursor: pointer;
+  user-select: none; opacity: 0.65; transition: opacity 0.15s;
+  margin-bottom: -0.5rem;
+}
+.params-toggle:hover { opacity: 1; }
+.params-toggle-arrow { font-size: 0.7rem; }
+
+/* ── Params panel ────────────────────────────────────────────────────── */
+.params-panel {
+  background-color: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 0.65rem 0.85rem;
+  display: flex; flex-direction: column; gap: 0.45rem;
+}
+.param-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center; gap: 0.5rem;
+}
+.param-label {
+  font-size: 0.6rem; font-family: var(--font-mono);
+  color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.08em;
+}
+.param-input {
+  width: 5rem;
+  background: var(--color-surface); border: 1px solid var(--color-border);
+  border-radius: 3px; color: var(--color-text-heading);
+  font-family: var(--font-mono); font-size: 0.7rem;
+  padding: 0.15rem 0.35rem; text-align: right;
+  -moz-appearance: textfield; appearance: textfield;
+}
+.param-input::-webkit-inner-spin-button,
+.param-input::-webkit-outer-spin-button { opacity: 0.3; }
+.param-input:focus { outline: none; border-color: var(--color-primary); }
+
+.param-unit {
+  font-size: 0.6rem; font-family: var(--font-mono);
+  color: var(--color-text-muted); opacity: 0.6;
+  width: 2.5rem; text-align: left;
+}
+
+/* Params panel transition */
+.params-enter-active, .params-leave-active { transition: opacity 0.2s, transform 0.2s; }
+.params-enter-from,  .params-leave-to      { opacity: 0; transform: translateY(-6px); }
+
+/* ── Visualization ────────────────────────────────────────────────────── */
 .card-visual {
   background-color: rgba(0, 0, 0, 0.45);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
-  overflow: hidden;
-  position: relative;
+  overflow: hidden; position: relative;
 }
-
-/* Responsive SVG canvas — viewBox + CSS controls aspect ratio */
 .cell-canvas { display: block; width: 100%; line-height: 0; }
 .cell-canvas svg { display: block; width: 100%; height: auto; }
 
@@ -720,18 +421,12 @@ export default defineComponent({
 .osc-canvas { display: block; width: 100%; line-height: 0; }
 .osc-canvas svg { display: block; width: 100%; height: auto; }
 
-/* ── Destroyed overlay ────────────────────── */
+/* ── Lysis overlay ───────────────────────────────────────────────────── */
 .destroyed-overlay {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  background-color: rgba(6, 2, 14, 0.90);
-  backdrop-filter: blur(3px);
+  position: absolute; inset: 0; z-index: 2;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 0.75rem;
+  background-color: rgba(6, 2, 14, 0.90); backdrop-filter: blur(3px);
 }
 .destroyed-text {
   font-family: var(--font-mono); font-size: 0.75rem;
@@ -752,24 +447,16 @@ export default defineComponent({
   cursor: pointer; transition: all 0.15s;
 }
 .btn-reset:hover:not(:disabled) { background-color: rgba(255, 77, 109, 0.12); }
-.btn-reset:disabled {
-  opacity: 0.35;
-  cursor: not-allowed;
-  border-color: #555;
-  color: #555;
-}
+.btn-reset:disabled { opacity: 0.35; cursor: not-allowed; border-color: #555; color: #555; }
 
 .reset-locked {
-  font-size: 0.62rem;
-  font-family: var(--font-mono);
-  color: var(--color-text-muted);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  opacity: 0.6;
+  font-size: 0.62rem; font-family: var(--font-mono);
+  color: var(--color-text-muted); letter-spacing: 0.06em;
+  text-transform: uppercase; opacity: 0.6;
 }
 
-/* ── Body & Footer ────────────────────────── */
-.card-body { color: var(--color-text-muted); font-size: 0.875rem; line-height: 1.65; flex: 1; }
+/* ── Body & Footer ───────────────────────────────────────────────────── */
+.card-body   { color: var(--color-text-muted); font-size: 0.875rem; line-height: 1.65; flex: 1; }
 .card-footer { padding-top: 0.5rem; border-top: 1px solid var(--color-border); }
 .btn-card {
   background: transparent; border: 1px solid var(--color-border);

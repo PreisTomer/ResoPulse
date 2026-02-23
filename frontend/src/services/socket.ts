@@ -1,13 +1,14 @@
 /**
  * Socket service — connects to the BioResonance backend.
- * Falls back to local mode (frequency math computed in the Pinia store) if
- * the backend is unreachable.  The store's reactive getters keep the UI
+ * Falls back to local mode (field params applied directly to the Pinia store) if
+ * the backend is unreachable. The store's reactive getters keep the UI
  * fully functional in either mode.
  */
 import { io } from 'socket.io-client'
 import type { Socket } from 'socket.io-client'
 import { useCellStore } from '../stores/cellStore'
-import type { ResonancePacket } from '../stores/cellStore'
+import type { FieldPacket } from '../stores/cellStore'
+import type { MediumKey } from '../mockData'
 
 // Set VITE_BACKEND_URL in Vercel environment variables once Railway is deployed.
 // Falls back to localhost for local development.
@@ -28,7 +29,7 @@ export function connectSocket(): void {
     console.info('[Socket] Connected to BioResonance backend')
   })
 
-  socket.on('resonanceUpdate', (packet: ResonancePacket) => {
+  socket.on('resonanceUpdate', (packet: FieldPacket) => {
     const store = useCellStore()
     store.handleResonancePacket(packet)
   })
@@ -42,16 +43,18 @@ export function connectSocket(): void {
 }
 
 /**
- * Broadcast a frequency.
- * If connected: forwards to the backend which echoes back a resonance packet.
- * If in local mode: updates the store directly (same math, no round-trip).
+ * Broadcast field parameters.
+ * If connected: forwards to backend which echoes back a FieldPacket to all clients.
+ * If in local mode: updates the store directly (no round-trip needed).
  */
-export function broadcastFrequency(freq: number): void {
+export function broadcastFieldParams(freqKHz: number, fieldVcm: number, medium: MediumKey): void {
   if (socket?.connected) {
-    socket.emit('setFrequency', freq)
+    socket.emit('setFieldParams', { freqKHz, fieldVcm, medium })
   } else {
     const store = useCellStore()
-    store.setBroadcastFrequency(freq)
+    store.setBroadcastFreqKHz(freqKHz)
+    store.setFieldIntensity(fieldVcm)
+    store.setMedium(medium)
   }
 }
 

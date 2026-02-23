@@ -1,40 +1,14 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { useCellStore } from '../stores/cellStore'
-import { broadcastFrequency } from '../services/socket'
-import { resonanceProfiles } from '../mockData'
-
-const MIN_HZ = 400
-const MAX_HZ = 600
-
-function hzToPercent(hz: number): number {
-  return ((hz - MIN_HZ) / (MAX_HZ - MIN_HZ)) * 100
-}
+import { broadcastFieldParams } from '../services/socket'
+import { MEDIA } from '../mockData'
+import type { MediumKey } from '../mockData'
 
 export default defineComponent({
   setup() {
     const store = useCellStore()
-    return { store }
-  },
-
-  data() {
-    return { sliderWrapHeight: 160 }
-  },
-
-  mounted() {
-    this.$nextTick(() => {
-      const wrap = this.$el?.querySelector('.slider-wrap') as HTMLElement | null
-      if (wrap) {
-        ;(this as any)._ro = new ResizeObserver(() => {
-          this.sliderWrapHeight = wrap.clientHeight
-        })
-        ;(this as any)._ro.observe(wrap)
-      }
-    })
-  },
-
-  beforeUnmount() {
-    ;(this as any)._ro?.disconnect()
+    return { store, MEDIA }
   },
 
   computed: {
@@ -42,373 +16,342 @@ export default defineComponent({
       return this.store.currentBroadcastFrequency
     },
 
-    targetPos(): string {
-      return hzToPercent(resonanceProfiles.target.naturalFrequency).toFixed(2) + '%'
+    currentField(): number {
+      return this.store.fieldIntensity
     },
 
-    healthyPos(): string {
-      return hzToPercent(resonanceProfiles.healthy.naturalFrequency).toFixed(2) + '%'
+    currentMedium(): MediumKey {
+      return this.store.medium
     },
 
-    targetImpact(): number {
-      return this.store.targetResonanceImpact
+    targetDisruption(): number {
+      return this.store.targetDisruptionRatio
     },
 
-    healthyImpact(): number {
-      return this.store.healthyResonanceImpact
+    healthyDisruption(): number {
+      return this.store.healthyDisruptionRatio
     },
 
-    // Gradient that lights up near resonance frequencies
-    trackGradient(): string {
-      const tp = hzToPercent(resonanceProfiles.target.naturalFrequency)
-      const hp = hzToPercent(resonanceProfiles.healthy.naturalFrequency)
-      const cp = hzToPercent(this.currentFreq)
-      const ti = this.targetImpact
-      const hi = this.healthyImpact
-      const targetAlpha = (ti * 0.8).toFixed(2)
-      const healthyAlpha = (hi * 0.8).toFixed(2)
-      return [
-        `rgba(var(--color-border-rgb, 60,60,80), 1) 0%`,
-        `rgba(255,77,109,${targetAlpha}) ${(tp - 4).toFixed(1)}%`,
-        `rgba(255,77,109,${targetAlpha}) ${(tp + 4).toFixed(1)}%`,
-        `rgba(var(--color-border-rgb, 60,60,80), 1) ${(tp + 10).toFixed(1)}%`,
-        `rgba(var(--color-border-rgb, 60,60,80), 1) ${(hp - 10).toFixed(1)}%`,
-        `rgba(0,212,255,${healthyAlpha}) ${(hp - 4).toFixed(1)}%`,
-        `rgba(0,212,255,${healthyAlpha}) ${(hp + 4).toFixed(1)}%`,
-        `rgba(var(--color-border-rgb, 60,60,80), 1) 100%`,
-        // thumb position line
-        `rgba(255,255,255,0.15) ${(cp - 0.5).toFixed(1)}%`,
-        `rgba(255,255,255,0.15) ${(cp + 0.5).toFixed(1)}%`,
-      ].join(', ')
+    targetFcDisplay(): string {
+      return this.store.targetFc.toFixed(0)
+    },
+
+    healthyFcDisplay(): string {
+      return this.store.healthyFc.toFixed(0)
+    },
+
+    mediaKeys(): MediumKey[] {
+      return Object.keys(this.MEDIA) as MediumKey[]
+    },
+
+    targetDisruptPercent(): string {
+      return (this.targetDisruption * 100).toFixed(0)
+    },
+
+    healthyDisruptPercent(): string {
+      return (this.healthyDisruption * 100).toFixed(0)
     },
   },
 
   methods: {
-    onInput(e: Event) {
+    onMediumChange(key: MediumKey) {
+      this.store.setMedium(key)
+      broadcastFieldParams(this.currentFreq, this.currentField, key)
+    },
+
+    onFreqInput(e: Event) {
       const freq = Number((e.target as HTMLInputElement).value)
-      broadcastFrequency(freq)
+      this.store.setBroadcastFreqKHz(freq)
+      broadcastFieldParams(freq, this.currentField, this.currentMedium)
+    },
+
+    onFieldInput(e: Event) {
+      const vcm = Number((e.target as HTMLInputElement).value)
+      this.store.setFieldIntensity(vcm)
+      broadcastFieldParams(this.currentFreq, vcm, this.currentMedium)
     },
   },
 })
 </script>
 
 <template>
-  <div class="freq-panel">
-    <!-- Left: label + freq value -->
-    <div class="freq-left">
-      <span class="freq-panel-title">⚡ Signal Generator</span>
-      <span class="freq-display">{{ currentFreq }}<span class="freq-unit"> Hz</span></span>
-    </div>
-
-    <!-- Center: slider + markers -->
-    <div class="slider-wrap">
-      <div
-        class="track-container"
-        :style="{ '--v-slider-height': sliderWrapHeight + 'px' }"
-      >
-        <div class="track-wrap" :style="{ '--track-bg': `linear-gradient(to right, ${trackGradient})` }">
+  <div class="field-panel">
+    <!-- Row 1: Medium selector -->
+    <div class="panel-row panel-row--medium">
+      <span class="row-label">Medium</span>
+      <div class="medium-pills">
+        <label
+          v-for="key in mediaKeys"
+          :key="key"
+          class="pill"
+          :class="{ 'pill--active': currentMedium === key }"
+        >
           <input
-            class="freq-slider"
-            type="range"
-            :min="400"
-            :max="600"
-            step="1"
-            :value="currentFreq"
-            @input="onInput"
+            type="radio"
+            :value="key"
+            :checked="currentMedium === key"
+            name="medium"
+            @change="onMediumChange(key)"
           />
-        </div>
-        <div class="markers">
-          <span class="marker-edge">400</span>
-          <div class="marker marker--target" :style="{ left: targetPos }">
-            <div class="marker-line"></div>
-            <span class="marker-label">417</span>
-          </div>
-          <div class="marker marker--healthy" :style="{ left: healthyPos }">
-            <div class="marker-line"></div>
-            <span class="marker-label">528</span>
-          </div>
-          <span class="marker-edge marker-edge--right">600</span>
-        </div>
+          {{ MEDIA[key].name.split(' ')[0] }}
+        </label>
       </div>
-      <!-- Vertical resonance ticks — mobile only -->
-      <div class="vmarkers" aria-hidden="true">
-        <div class="vmarker vmarker--target" :style="{ bottom: targetPos }"></div>
-        <div class="vmarker vmarker--healthy" :style="{ bottom: healthyPos }"></div>
+      <span class="row-meta">σ_e {{ MEDIA[currentMedium].conductivity }} S/m</span>
+    </div>
+
+    <!-- Row 2: RF Frequency -->
+    <div class="panel-row">
+      <span class="row-label">RF Frequency</span>
+      <div class="slider-track-wrap">
+        <input
+          class="ctrl-slider"
+          type="range"
+          :min="10"
+          :max="700"
+          step="1"
+          :value="currentFreq"
+          @input="onFreqInput"
+        />
+      </div>
+      <div class="row-readout">
+        <span class="readout-value">{{ currentFreq }}<span class="readout-unit"> kHz</span></span>
+        <span class="readout-sub">fc(T) {{ targetFcDisplay }} kHz · fc(H) {{ healthyFcDisplay }} kHz</span>
       </div>
     </div>
 
-    <!-- Right: impact indicators -->
-    <div class="freq-right">
-      <span class="impact-label impact-label--target">T {{ (targetImpact * 100).toFixed(0) }}%</span>
-      <span class="impact-label impact-label--healthy">H {{ (healthyImpact * 100).toFixed(0) }}%</span>
+    <!-- Row 3: Field Intensity + disruption indicators -->
+    <div class="panel-row">
+      <span class="row-label">Field Intensity</span>
+      <div class="slider-track-wrap">
+        <input
+          class="ctrl-slider"
+          type="range"
+          :min="10"
+          :max="1000"
+          step="1"
+          :value="currentField"
+          @input="onFieldInput"
+        />
+      </div>
+      <div class="row-readout">
+        <span class="readout-value">{{ currentField }}<span class="readout-unit"> V/cm</span></span>
+        <div class="disruption-badges">
+          <span
+            class="badge badge--target"
+            :class="{ 'badge--warn': targetDisruption > 0.85 }"
+          >T {{ targetDisruptPercent }}%</span>
+          <span
+            class="badge badge--healthy"
+            :class="{ 'badge--warn': healthyDisruption > 0.85 }"
+          >H {{ healthyDisruptPercent }}%</span>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-/* ── Panel — single horizontal strip ─────── */
-.freq-panel {
+/* ── Panel container ─────────────────────────────────────────────────── */
+.field-panel {
   display: flex;
-  align-items: center;
-  gap: 1.25rem;
+  flex-direction: column;
+  gap: 0.55rem;
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
-  padding: 0.7rem 1.25rem 0.8rem;
+  padding: 0.85rem 1.25rem;
   margin-top: 1.5rem;
 }
 
-/* ── Left: label + value ─────────────────── */
-.freq-left {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.1rem;
-  flex-shrink: 0;
-  min-width: 7rem;
+/* ── Row layout ──────────────────────────────────────────────────────── */
+.panel-row {
+  display: grid;
+  grid-template-columns: 7.5rem 1fr auto;
+  align-items: center;
+  gap: 0.85rem;
+  min-height: 2rem;
 }
 
-.freq-panel-title {
-  font-size: 0.6rem;
+.panel-row--medium {
+  grid-template-columns: 7.5rem 1fr auto;
+}
+
+/* ── Row label ───────────────────────────────────────────────────────── */
+.row-label {
+  font-size: 0.62rem;
   font-family: var(--font-mono);
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: var(--color-text-muted);
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
-.freq-display {
-  font-size: 1.1rem;
-  font-weight: 700;
+/* ── Medium pills ────────────────────────────────────────────────────── */
+.medium-pills {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.pill {
+  font-size: 0.62rem;
   font-family: var(--font-mono);
-  color: var(--color-text-heading);
-  letter-spacing: -0.02em;
-  line-height: 1;
-}
-
-.freq-unit {
-  font-size: 0.65rem;
-  font-weight: 400;
+  text-transform: capitalize;
+  padding: 0.18rem 0.55rem;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  cursor: pointer;
   color: var(--color-text-muted);
+  transition: border-color 0.15s, color 0.15s, background-color 0.15s;
+  user-select: none;
+  white-space: nowrap;
 }
 
-/* ── Center: slider + markers ─────────────── */
-.slider-wrap {
-  flex: 1;
-  min-width: 0;
+.pill input {
+  display: none;
 }
 
-.track-container {
-  width: 100%;
+.pill--active {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background-color: var(--color-primary-dim);
 }
 
-.track-wrap {
+/* ── Slider track ────────────────────────────────────────────────────── */
+.slider-track-wrap {
   position: relative;
-  height: 20px;
   display: flex;
   align-items: center;
 }
 
-.track-wrap::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 3px;
-  background: var(--track-bg);
-  pointer-events: none;
-}
-
-.freq-slider {
+.ctrl-slider {
   -webkit-appearance: none;
   appearance: none;
   width: 100%;
   height: 3px;
   border-radius: 2px;
-  background: transparent;
+  background: var(--color-border);
   outline: none;
-  position: relative;
-  z-index: 1;
 }
 
-.freq-slider::-webkit-slider-thumb {
+.ctrl-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 14px;
-  height: 14px;
+  width: 13px;
+  height: 13px;
   border-radius: 50%;
   background: var(--color-text-heading);
   border: 2px solid var(--color-surface);
-  box-shadow: 0 0 6px rgba(255, 255, 255, 0.25);
+  box-shadow: 0 0 5px rgba(255, 255, 255, 0.2);
   cursor: pointer;
   transition: box-shadow 0.15s;
 }
 
-.freq-slider::-webkit-slider-thumb:hover {
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+.ctrl-slider::-webkit-slider-thumb:hover {
+  box-shadow: 0 0 9px rgba(255, 255, 255, 0.45);
 }
 
-.freq-slider::-moz-range-thumb {
-  width: 14px;
-  height: 14px;
+.ctrl-slider::-moz-range-thumb {
+  width: 13px;
+  height: 13px;
   border-radius: 50%;
   background: var(--color-text-heading);
   border: 2px solid var(--color-surface);
   cursor: pointer;
 }
 
-/* ── Markers ─────────────────────────────── */
-.markers {
-  position: relative;
-  height: 18px;
-  margin-top: 0.15rem;
-}
-
-.marker-edge {
-  position: absolute;
-  bottom: 0;
-  font-size: 0.58rem;
-  font-family: var(--font-mono);
-  color: var(--color-text-muted);
-  opacity: 0.45;
-  left: 0;
-}
-
-.marker-edge--right {
-  left: auto;
-  right: 0;
-}
-
-.marker {
-  position: absolute;
-  transform: translateX(-50%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  top: 0;
-}
-
-.marker-line {
-  width: 1px;
-  height: 6px;
-  margin-bottom: 1px;
-}
-
-.marker--target .marker-line  { background-color: var(--color-danger); }
-.marker--healthy .marker-line { background-color: var(--color-accent); }
-
-.marker-label {
-  font-size: 0.55rem;
-  font-family: var(--font-mono);
-  letter-spacing: 0.04em;
-  white-space: nowrap;
-}
-
-.marker--target  .marker-label { color: var(--color-danger); }
-.marker--healthy .marker-label { color: var(--color-accent); }
-
-.vmarkers {
-  display: none;
-}
-
-/* ── Right: impact readouts ──────────────── */
-.freq-right {
+/* ── Right-side readout ──────────────────────────────────────────────── */
+.row-readout {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 0.2rem;
-  flex-shrink: 0;
-  min-width: 3.5rem;
+  gap: 0.12rem;
+  min-width: 8rem;
 }
 
-.impact-label {
-  font-size: 0.62rem;
+.row-meta {
+  font-size: 0.58rem;
+  font-family: var(--font-mono);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  opacity: 0.65;
+}
+
+.readout-value {
+  font-size: 1rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: var(--color-text-heading);
+  letter-spacing: -0.02em;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.readout-unit {
+  font-size: 0.6rem;
+  font-weight: 400;
+  color: var(--color-text-muted);
+}
+
+.readout-sub {
+  font-size: 0.56rem;
+  font-family: var(--font-mono);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  opacity: 0.6;
+}
+
+/* ── Disruption badges ───────────────────────────────────────────────── */
+.disruption-badges {
+  display: flex;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.badge {
+  font-size: 0.6rem;
   font-family: var(--font-mono);
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  opacity: 0.8;
+  padding: 0.1rem 0.35rem;
+  border-radius: 3px;
+  border: 1px solid transparent;
+  transition: color 0.2s, border-color 0.2s;
 }
 
-.impact-label--target  { color: var(--color-danger); }
-.impact-label--healthy { color: var(--color-accent); }
+.badge--target  { color: var(--color-danger);  border-color: rgba(255,77,109,0.3); }
+.badge--healthy { color: var(--color-accent); border-color: rgba(0,212,255,0.3); }
 
-/* ── Mobile: vertical strip on the right ──── */
+.badge--warn.badge--target  { background-color: rgba(255,77,109,0.12); border-color: var(--color-danger); }
+.badge--warn.badge--healthy { background-color: rgba(0,212,255,0.12); border-color: var(--color-accent); }
+
+/* ── Mobile ──────────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
-  .freq-panel {
-    flex-direction: column;
-    width: 64px;
-    margin-top: 0;
-    margin-left: 0.6rem;
-    padding: 0.75rem 0.35rem;
+  .field-panel {
+    margin-top: 1rem;
+    padding: 0.7rem 0.85rem;
+  }
+
+  .panel-row {
+    grid-template-columns: 5.5rem 1fr auto;
     gap: 0.5rem;
-    justify-content: space-between;
   }
 
-  .freq-left {
-    flex-direction: column;
-    align-items: center;
-    min-width: 0;
-    gap: 0;
+  .row-readout {
+    min-width: 6rem;
   }
 
-  .freq-panel-title {
+  .readout-value {
+    font-size: 0.85rem;
+  }
+
+  .readout-sub {
     display: none;
   }
 
-  .freq-display {
-    font-size: 0.8rem;
-  }
-
-  /* slider-wrap: tall flex container for the rotated track */
-  .slider-wrap {
-    flex: 1;
-    position: relative;
-    overflow: hidden;
-    min-height: 0;
-    width: 100%;
-  }
-
-  /* track-container: width = slider-wrap height (measured via ResizeObserver) */
-  .track-container {
-    position: absolute;
-    width: var(--v-slider-height, 160px);
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%) rotate(90deg);
-  }
-
-  /* markers are inside the rotated container — hide them; use .vmarkers instead */
-  .markers {
+  .row-meta {
     display: none;
-  }
-
-  /* Vertical tick marks at resonance positions */
-  .vmarkers {
-    display: block;
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-  }
-
-  .vmarker {
-    position: absolute;
-    left: 0;
-    right: 0;
-    height: 1px;
-    transform: translateY(50%);
-  }
-
-  .vmarker--target  { background-color: var(--color-danger);  opacity: 0.65; }
-  .vmarker--healthy { background-color: var(--color-accent); opacity: 0.65; }
-
-  .freq-right {
-    flex-direction: column;
-    align-items: center;
-    gap: 0.2rem;
-    min-width: 0;
-  }
-
-  .impact-label {
-    font-size: 0.58rem;
   }
 }
 </style>

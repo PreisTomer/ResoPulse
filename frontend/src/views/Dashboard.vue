@@ -16,6 +16,7 @@ export default defineComponent({
   setup() {
     const store = useCellStore()
     connectSocket() // attempt backend connection; falls back to local mode automatically
+    store.startSession() // start 100ms temperature timer
     return { store }
   },
 
