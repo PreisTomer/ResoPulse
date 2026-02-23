@@ -6,31 +6,47 @@
     "dataSets": "Data Sets",
     "reports": "Reports",
     "systemReady": "System Ready",
-    "systemWarning": "System Alert"
+    "systemWarning": "Thermal Alert"
   },
   "hero": {
-    "eyebrow": "Frequency & Resonance Research",
+    "eyebrow": "Bioelectrics & Electroporation Research",
     "title": "BioResonance",
     "titleAccent": "Analysis Platform",
-    "description": "A precision tool for scientists and bio-researchers exploring targeted resonance therapy. Load cellular frequency data, compare healthy and target cell signatures, and identify resonance parameters that disrupt target cells while preserving healthy tissue.",
+    "description": "A precision simulator for bioelectric field research. Models transmembrane potential via the Schwan equation, SAR-based thermal effects, and size-selective electroporation across user-configurable cell phenotypes and propagation media.",
     "loadDataSet": "Load Data Set",
     "viewSampleAnalysis": "View Sample Analysis"
   },
   "cells": {
     "sectionTitle": "Cell Signature Profiles",
-    "sectionSub": "Load JSON data sets to begin comparative frequency analysis.",
+    "sectionSub": "Transmembrane potential and thermal response computed via Schwan equation. Drag the Field Intensity slider to explore the therapeutic window.",
     "healthy": {
-      "label": "Healthy Cell",
+      "label": "Healthy Hepatocyte",
       "sublabel": "Reference Baseline",
-      "description": "Frequency and vibration signature of a healthy cell. Used as the preservation target during resonance tuning.",
-      "button": "Load Healthy Data"
+      "description": "Epithelial hepatocyte (R = 10 µm). Lower radius and thicker membrane yield higher Schwan threshold — preserved across the electroporation window targeting larger carcinoma cells.",
+      "button": "Cell Parameters"
     },
     "target": {
-      "label": "Target Cell",
-      "sublabel": "Target Signature",
-      "description": "Frequency and vibration signature of the target cell. The primary subject for resonance frequency analysis and disruption.",
-      "button": "Load Target Data"
-    }
+      "label": "Adenocarcinoma Cell",
+      "sublabel": "Target Phenotype",
+      "description": "Carcinoma cell (R = 15 µm). Larger radius and higher membrane permittivity produce elevated transmembrane potential under identical field conditions, enabling size-selective disruption.",
+      "button": "Cell Parameters"
+    },
+    "params": {
+      "radius": "Radius R",
+      "dielectricConstant": "Membrane ε_r",
+      "conductivity": "Conductivity σ_i",
+      "thresholdVoltage": "Threshold Vm"
+    },
+    "tempWarning": "Thermal warning — reduce field intensity",
+    "lysed": "Membrane Lysed",
+    "lysing": "Lysing"
+  },
+  "slider": {
+    "medium": "Medium",
+    "rfFrequency": "RF Frequency",
+    "fieldIntensity": "Field Intensity",
+    "kHz": "kHz",
+    "vPerCm": "V/cm"
   },
   "features": {
     "visualization": {
@@ -43,7 +59,7 @@
     },
     "targeting": {
       "title": "Resonance Targeting",
-      "description": "Identify precise resonance frequencies that affect target cells without impacting healthy tissue."
+      "description": "Identify precise field parameters that disrupt target cells without impacting healthy tissue."
     },
     "profiles": {
       "title": "Extensible Profiles",
