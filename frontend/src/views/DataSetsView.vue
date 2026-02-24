@@ -141,7 +141,7 @@ export default defineComponent({
                 <th>Key</th>
                 <th>Medium</th>
                 <th>σ<sub>e</sub> (S/m)</th>
-                <th>Effect on V<sub>m</sub> vs saline</th>
+                <th>Effect on τ / f<sub>c</sub> (quasi-DC V<sub>m</sub> unchanged)</th>
                 <th>Typical Research Use</th>
               </tr>
             </thead>
@@ -150,28 +150,28 @@ export default defineComponent({
                 <td class="mono primary-val">saline</td>
                 <td>Physiological Saline (0.9% NaCl)</td>
                 <td class="mono">1.500</td>
-                <td>Reference baseline · maximum V<sub>m</sub></td>
+                <td>Reference baseline · τ and f<sub>c</sub> reference (V<sub>m,DC</sub> independent of medium)</td>
                 <td>Standard in vitro assay medium · physiological approximation</td>
               </tr>
               <tr>
                 <td class="mono">blood</td>
                 <td>Whole Blood</td>
                 <td class="mono">0.700</td>
-                <td>−32% V<sub>m</sub> · longer τ</td>
+                <td>τ +16% · f<sub>c</sub> −14% · V<sub>m,DC</sub> unchanged · reduced V<sub>m</sub> above f<sub>c</sub></td>
                 <td>Haematological applications · in vivo tumour vasculature</td>
               </tr>
               <tr>
                 <td class="mono">tissue</td>
                 <td>Soft Tissue</td>
                 <td class="mono">0.400</td>
-                <td>−47% V<sub>m</sub> · lower f<sub>c</sub></td>
+                <td>τ +39% · f<sub>c</sub> −28% · V<sub>m,DC</sub> unchanged · increased attenuation in kHz range</td>
                 <td>Solid tumour bulk / poorly-perfused tissue (note: DMEM ≈ 1.4–1.6 S/m, not used here)</td>
               </tr>
               <tr>
                 <td class="mono warn-val">water</td>
                 <td>Distilled Water</td>
                 <td class="mono">0.001</td>
-                <td>~60× higher τ · very low V<sub>m</sub></td>
+                <td>τ ~200× longer · f<sub>c</sub> drops to ~5 kHz · V<sub>m</sub> near zero at &gt;10 kHz</td>
                 <td>Electroporation buffer · academic boundary-condition reference</td>
               </tr>
             </tbody>

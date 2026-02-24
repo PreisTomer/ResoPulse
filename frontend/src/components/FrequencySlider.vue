@@ -108,11 +108,12 @@ export default defineComponent({
 
     tipWaveform(): string {
       return `<strong>Waveform Type</strong>
-<span class="tip-val">CW (sinusoidal)</span>  — continuous wave, SAR = σ·E²_rms/ρ = σ·E²/(2ρ)
-  waveformFactor = 0.5 (RMS halving applied)
+<span class="tip-val">CW (sinusoidal)</span>  — continuous wave
+  SAR = σ_i·α²·E²/(2ρ)  [waveformFactor = 0.5, RMS halving]
+  α = 3σ_e/(2σ_e+σ_i)  (internal field factor)
 
-<span class="tip-val">Pulsed (DC)</span>  — square-wave bursts, SAR = σ·E²/ρ
-  waveformFactor = 1.0 (full peak E² used)
+<span class="tip-val">Pulsed (DC)</span>  — square-wave bursts
+  SAR = σ_i·α²·E²/ρ  [waveformFactor = 1.0, full peak field]
   Duty cycle row controls on-fraction
 
 CW is typical for TTFields (100–500 kHz sinusoidal).
@@ -190,9 +191,13 @@ At f = fc,  Vm = 0.707 × Vm_DC  (−3 dB point)
 τ = R·Cm·(2σ_e+σ_i)/(2σ_e·σ_i)  [Kotnik & Miklavcic 2000]
 
 Depends on cell size and membrane properties:
-  Cancer cells: ~0.5–1.4 MHz  (adenocarcinoma ~0.49 MHz, hepatocyte ~1.08 MHz)
-  Bacteria:     ~8–26 MHz  (E. coli ~8 MHz, MRSA ~26 MHz)
-  Virions:      fc is low (~0.4 MHz) due to very low σ_i — Schwan model limited for virions`
+  Reference cells: ~1.1–1.4 MHz  (hepatocyte ~1.08 MHz)
+  Cancer cells:    ~0.5–1.4 MHz  (adenocarcinoma ~0.49 MHz, HL-60 ~1.35 MHz)
+  Bacteria:        ~8–26 MHz  (E. coli ~8 MHz, MRSA ~26 MHz)
+  Virions:         fc ~0.6–0.75 MHz (σ_i-limited; Schwan model is approximate for virions)
+
+Note: for cancer/normal cell pairs where τ_T > τ_H (typical),
+  maximum selectivity is at quasi-DC. Above fc(T) selectivity decreases.`
     },
 
     tipField(): string {

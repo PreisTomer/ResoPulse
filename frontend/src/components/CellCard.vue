@@ -165,9 +165,9 @@ Disruption: <span class="tip-val">${pct}%</span>`
 Current: <span class="tip-val">${this.tempDisplay}</span>
 
 Modelled via Specific Absorption Rate (SAR):
-  SAR = σ_eff × E² × w_f / ρ  [W/kg]
+  SAR = σ_i × α² × E² × w_f / ρ  [W/kg]
+  α = 3σ_e/(2σ_e+σ_i)  (internal field factor — sphere in medium)
   w_f = 0.5 (CW sinusoidal) | 1.0 (pulsed DC)
-  σ_eff = (σ_e + σ_i) / 2
 
 Newton cooling: λ = 0.02 /s → T_ss = 37 + SAR_eff/(λ·cp)
 Thresholds: 42°C hyperthermic · 60°C denaturing · 100°C vaporizing${warnLine}`

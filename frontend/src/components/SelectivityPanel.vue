@@ -195,11 +195,11 @@ Peak: <span class="${cls}">${label} · ×${sel.toFixed(3)}</span>
 ${snapNote}
 
 Physics:
-  f ≪ fc_T and fc_H : sel = R_T/R_H  (quasi-DC, size ratio drives selectivity)
-  f between fc_T and fc_H : frequency tunes selectivity window
-  f ≫ fc_H : membrane transparent → selectivity collapses
+  f ≪ fc_T and fc_H : sel = R_T/R_H  (quasi-DC; maximum for typical cancer/normal pairs)
+  When τ_T > τ_H (cancer larger): sel decreases above fc(T) — target rolls off first
+  f ≫ fc_H : both membranes transparent → sel approaches R_T/R_H asymptotically
 For bacteria (fc ~8–26 MHz) → optimal frequency is above the 10 MHz slider
-Note: virion fc ~0.4 MHz per Schwan model (σ_i-limited; model approximate for virions)`
+Note: virion fc ~0.6–0.75 MHz per Schwan model (σ_i-limited; model approximate for virions)`
     },
   },
 
