@@ -400,9 +400,11 @@ export default defineComponent({
           .attr('y1', 0).attr('y2', this._chartH)
           .attr('stroke', '#fbbf24').attr('stroke-width', 1)
           .attr('stroke-dasharray', '3,4').attr('stroke-opacity', 0.45)
+        const optAnchor = ox < 60 ? 'start' : ox > this._chartW - 60 ? 'end' : 'middle'
+        const optTextX  = ox < 60 ? Math.max(4, ox) : ox > this._chartW - 60 ? Math.min(this._chartW - 4, ox) : ox
         optGroup.append('text')
-          .attr('x', ox).attr('y', -5)
-          .attr('text-anchor', 'middle')
+          .attr('x', optTextX).attr('y', -5)
+          .attr('text-anchor', optAnchor)
           .attr('fill', '#fbbf24').attr('font-size', '0.58rem')
           .attr('font-family', 'var(--font-mono)')
           .attr('letter-spacing', '0.04em')
