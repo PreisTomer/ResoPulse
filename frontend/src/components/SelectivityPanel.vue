@@ -31,10 +31,15 @@ export default defineComponent({
     modeBadge(): { label: string; color: string } {
       const t = this.targetRatio
       const h = this.healthyRatio
-      if (h >= DISRUPTION_WARN_THRESHOLD) return { label: 'Ablative',           color: '#ff4d6d' }
-      if (t >= DISRUPTION_WARN_THRESHOLD) return { label: 'Therapeutic Window', color: '#39ff14' }
-      if (t >= 0.5)                       return { label: 'Approaching Window', color: '#fbbf24' }
-      return                                     { label: 'Sub-threshold',      color: '#00d4ff' }
+      // Ablative: healthy cells already at/near lysis — non-selective
+      if (h >= DISRUPTION_WARN_THRESHOLD)        return { label: 'Ablative',           color: '#ff4d6d' }
+      // Genuine therapeutic window: target at lysis threshold, healthy safely below 50%
+      if (t >= DISRUPTION_WARN_THRESHOLD && h < 0.5) return { label: 'Therapeutic Window', color: '#39ff14' }
+      // Marginal: target at threshold but healthy cells are also significantly stressed (50–84%)
+      if (t >= DISRUPTION_WARN_THRESHOLD)        return { label: 'Marginal Window',    color: '#fbbf24' }
+      // Approaching: target disruption climbing toward threshold
+      if (t >= 0.5)                              return { label: 'Approaching Window', color: '#fbbf24' }
+      return                                            { label: 'Sub-threshold',      color: '#00d4ff' }
     },
 
     targetGroups(): CellGroup[] { return TARGET_GROUPS },
@@ -127,8 +132,12 @@ Keep below 50% for therapeutic window${status}`
       return `<strong>Therapeutic Mode</strong>
 Derived from target + healthy disruption ratios:
 
-<span class="tip-ok">Therapeutic Window</span>  T >85%, H <85%
-  Target cells at lysis threshold, healthy spared
+<span class="tip-ok">Therapeutic Window</span>  T >85%, H <50%
+  Target at lysis threshold · healthy cells safely below 50%
+
+<span class="tip-val">Marginal Window</span>  T >85%, H 50–84%
+  Target at threshold but healthy cells are also stressed.
+  Reduce field or change frequency/medium for better selectivity.
 
 <span class="tip-val">Approaching Window</span>  T 50–85%
   Increase field to reach therapeutic window
@@ -137,7 +146,7 @@ Sub-threshold  T <50%
   Field too low to affect target cells
 
 <span class="tip-warn">Ablative</span>  H >85%
-  Non-selective — both cell types disrupted`
+  Non-selective — both cell types at lysis threshold`
     },
 
     // ── Optimal frequency (max selectivity across 10 kHz – 500 MHz) ──────
@@ -197,7 +206,7 @@ ${snapNote}
 Physics:
   f ≪ fc_T and fc_H : sel = R_T/R_H  (quasi-DC; maximum for typical cancer/normal pairs)
   When τ_T > τ_H (cancer larger): sel decreases above fc(T) — target rolls off first
-  f ≫ fc_H : both membranes transparent → sel approaches R_T/R_H asymptotically
+  f ≫ fc_H : sel → (R_T·τ_H)/(R_H·τ_T)  — generally ≠ R_T/R_H; for adeno/hepatocyte ≈ 0.68× (sub-unity)
 For bacteria (fc ~8–26 MHz) → optimal frequency is above the 10 MHz slider
 Note: virion fc ~0.6–0.75 MHz per Schwan model (σ_i-limited; model approximate for virions)`
     },

@@ -56,7 +56,7 @@ export interface EditableParamDef {
 }
 
 export const EDITABLE_PARAMS: EditableParamDef[] = [
-  { label: 'Radius R',         key: 'radius',            step: 0.5,  min: 1,     unit: 'µm'  },
+  { label: 'Radius R',         key: 'radius',            step: 0.001, min: 0.001, unit: 'µm'  },
   { label: 'Membrane ε_r',     key: 'dielectricConstant', step: 0.1, min: 1,     unit: ''    },
   { label: 'Conductivity σ_i', key: 'conductivity',      step: 0.01, min: 0.001, unit: 'S/m' },
   { label: 'Threshold Vm',     key: 'thresholdVoltage',  step: 0.05, min: 0.1,   unit: 'V'   },

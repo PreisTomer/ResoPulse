@@ -118,8 +118,9 @@ export const useCellStore = defineStore('cell', {
 
     /**
      * Minimum field intensity [V/cm] at current frequency to reach lysis threshold
-     * for the target cell.  Uses quasi-DC Schwan: Vm ≈ 1.5·E·R at f ≪ fc.
-     * E_lysis = Vm_thr / (1.5 × R)
+     * for the target cell — full frequency-dependent Schwan formula:
+     *   Vm = 1.5·E·R / √(1+(ωτ)²) = Vm_thr  →  E_lysis = Vm_thr·√(1+(ωτ)²) / (1.5·R)
+     * At quasi-DC (f ≪ fc) this reduces to E_lysis = Vm_thr / (1.5·R).
      */
     targetLysisField(state): number {
       const sigma_e = MEDIA[state.medium].conductivity
@@ -132,6 +133,7 @@ export const useCellStore = defineStore('cell', {
       return (state.target.thresholdVoltage * denom) / (1.5 * R * 100)
     },
 
+    /** Same as targetLysisField but for the healthy reference cell. */
     healthyLysisField(state): number {
       const sigma_e = MEDIA[state.medium].conductivity
       const tau = state.healthy.radius * 1e-6
