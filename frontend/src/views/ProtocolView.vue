@@ -120,8 +120,8 @@ export default defineComponent({})
               cooling term representing perfusion and thermal conduction:
             </p>
             <div class="eq-block">
-              <div class="eq-main">SAR = σ<sub>eff</sub> · E² · w<sub>f</sub> / ρ</div>
-              <div class="eq-sub">σ<sub>eff</sub> = (σ<sub>e</sub> + σ<sub>i</sub>) / 2 &nbsp; [W/kg]</div>
+              <div class="eq-main">SAR = σ<sub>i</sub> · α² · E² · w<sub>f</sub> / ρ</div>
+              <div class="eq-sub">α = 3σ<sub>e</sub> / (2σ<sub>e</sub> + σ<sub>i</sub>) &nbsp; (internal field factor for sphere in medium)</div>
               <div class="eq-sub">w<sub>f</sub> = 0.5 (CW sinusoidal, E²<sub>rms</sub> = E²<sub>peak</sub>/2) &nbsp;|&nbsp; 1.0 (pulsed DC)</div>
               <div class="eq-divider"></div>
               <div class="eq-main">dT/dt = SAR / c<sub>p</sub> − λ·(T − T₀)</div>
@@ -158,10 +158,15 @@ export default defineComponent({})
               operate at low field intensities (~1–2 V/cm) via mitotic spindle disruption and do
               not rely on V<sub>m</sub> threshold crossing. The size-dependent selectivity
               modelled here (larger R → higher V<sub>m</sub>) applies to the IRE/electroporation
-              regime. For adenocarcinoma vs. hepatocyte in saline, maximum selectivity of
-              ~2.1× is achieved near 600 kHz (between f<sub>c</sub>(T) ≈ 0.49 MHz and
-              f<sub>c</sub>(H) ≈ 1.08 MHz); at 100 kHz both cells are in quasi-DC regime
-              and selectivity is ~1.5× (the geometric radius ratio).
+              regime. For adenocarcinoma vs. hepatocyte in saline, the adenocarcinoma has a
+              longer time constant (τ<sub>T</sub> = 326 ns) than the hepatocyte (τ<sub>H</sub> = 148 ns),
+              so both f<sub>c</sub>(T) ≈ 0.49 MHz and f<sub>c</sub>(H) ≈ 1.08 MHz are well above
+              the operating range. Maximum V<sub>m</sub> selectivity ≈ R<sub>T</sub>/R<sub>H</sub>
+              = <strong>1.5×</strong> occurs at quasi-DC (f ≪ f<sub>c</sub>(T)); selectivity
+              <em>decreases</em> with increasing frequency as the target rolls off before the
+              healthy cell. The Therapeutic Index (TI = (V<sub>t</sub>/V<sub>t,thr</sub>) /
+              (V<sub>h</sub>/V<sub>h,thr</sub>)), which accounts for different lysis thresholds,
+              reaches <strong>~2.4×</strong> at quasi-DC.
             </p>
           </section>
 
@@ -317,7 +322,7 @@ export default defineComponent({})
                 <tr>
                   <td>Hyperthermic onset</td>
                   <td class="mono warn-val">42 °C</td>
-                  <td>Protein denaturation onset; sustained heat causes necrosis</td>
+                  <td>Sustained thermal damage onset; cancer cells more susceptible than normal tissue (IAHT threshold)</td>
                 </tr>
                 <tr>
                   <td>IEC 60601-2-33 SAR limit</td>

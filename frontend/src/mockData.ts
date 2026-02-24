@@ -106,13 +106,19 @@ export function computeSchwan(
 }
 
 /**
- * Specific absorption rate [W/kg]:
- *   SAR = σ_eff × E² × waveformFactor / ρ   where σ_eff = (σ_e + σ_i) / 2
+ * Specific absorption rate [W/kg] — power deposited in cell interior:
+ *   E_in = E × 3σ_e / (2σ_e + σ_i)   (internal field, DC limit for sphere in medium)
+ *   SAR  = σ_i × E_in² × waveformFactor / ρ
+ *        = σ_i × (3σ_e/(2σ_e+σ_i))² × E² × waveformFactor / ρ
+ *
+ * This is the physically correct cell-interior SAR from the Maxwell/Laplace solution
+ * for a dielectric sphere in a uniform field (Schwitzer 1955; Foster & Schwan 1989).
+ * σ_eff = (σ_e + σ_i)/2 is an incorrect approximation that underestimates the
+ * conductivity ratio effect — particularly severe in low-conductivity media.
  *
  * waveformFactor:
  *   0.5 — CW sinusoidal (E²_rms = E²_peak / 2)
  *   1.0 — pulsed DC / square wave (no RMS halving)
- * Default 0.5 matches the typical CW sinusoidal electroporation regime.
  */
 export function computeSAR(
   cell: CellConfig,
@@ -121,8 +127,9 @@ export function computeSAR(
   waveformFactor = 0.5,
 ): number {
   const E = fieldVcm * 100          // V/cm → V/m
-  const sigma_eff = (sigma_e + cell.conductivity) / 2
-  return (sigma_eff * E * E * waveformFactor) / cell.density
+  // Internal field concentration factor α = 3σ_e / (2σ_e + σ_i)
+  const alpha = (3 * sigma_e) / (2 * sigma_e + cell.conductivity)
+  return (cell.conductivity * alpha * alpha * E * E * waveformFactor) / cell.density
 }
 
 /** Cell characteristic frequency fc [kHz]: fc = 1 / (2πτ) */

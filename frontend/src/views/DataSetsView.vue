@@ -203,15 +203,15 @@ export default defineComponent({
             <div class="ref-block-title">Therapeutic Window</div>
             <div class="window-stat">
               <div class="window-ratio">~1.5×</div>
-              <div class="window-label">Selectivity at 100 kHz (quasi-DC, both cells below f<sub>c</sub>)</div>
+              <div class="window-label">Max V<sub>m</sub> selectivity at quasi-DC (&lt;100 kHz) — driven by size ratio R<sub>T</sub>/R<sub>H</sub></div>
             </div>
             <div class="window-stat" style="margin-top:0.4rem">
-              <div class="window-ratio" style="font-size:1.2rem">~2.1×</div>
-              <div class="window-label">Peak selectivity near 600 kHz (between f<sub>c</sub>(T) and f<sub>c</sub>(H))</div>
+              <div class="window-ratio" style="font-size:1.2rem;color:#39ff14">~2.4×</div>
+              <div class="window-label">Therapeutic Index TI at quasi-DC — normalised by lysis thresholds (1.1 V / 0.70 V)</div>
             </div>
             <div class="window-stat" style="margin-top:0.4rem">
-              <div class="window-ratio" style="font-size:1.1rem;color:#39ff14">~3.3×</div>
-              <div class="window-label">Therapeutic Index TI at peak — accounts for threshold ratio (1.1 V / 0.70 V)</div>
+              <div class="window-ratio" style="font-size:1.1rem;color:var(--color-text-muted)">↓ freq</div>
+              <div class="window-label">Selectivity decreases above f<sub>c</sub>(T) — target rolls off before healthy cell</div>
             </div>
             <div class="window-note">
               Cancer lysis at ~311 V/cm · Healthy threshold at ~733 V/cm

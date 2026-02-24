@@ -284,7 +284,7 @@ Vm threshold = <span class="tip-val">${p.thresholdVoltage} V</span>`
     <div class="panel-sep"></div>
     <div
       class="vm-sar-grid"
-      v-tip="'<strong>Transmembrane potential and SAR</strong>\nVm — peak voltage across cell membrane (Schwan eq.)\n  Vm = 1.5·E·R / √(1+(2πf·τ)²)\n  τ = R·Cm·(2σ_e+σ_i)/(2σ_e·σ_i)\nSAR — specific absorption rate (W/kg)\n  SAR = σ_eff·E²·wf / ρ  where σ_eff=(σ_e+σ_i)/2, wf=0.5(CW) or 1.0(pulsed)\n  Proportional to thermal load deposited in the cell'"
+      v-tip="'<strong>Transmembrane potential and SAR</strong>\nVm — peak voltage across cell membrane (Schwan eq.)\n  Vm = 1.5·E·R / √(1+(2πf·τ)²)\n  τ = R·Cm·(2σ_e+σ_i)/(2σ_e·σ_i)\nSAR — specific absorption rate (W/kg) in cell interior\n  SAR = σ_i·α²·E²·wf / ρ  α = 3σ_e/(2σ_e+σ_i) (internal field factor)\n  wf=0.5(CW) or 1.0(pulsed)\n  Proportional to thermal load deposited in the cell'"
     >
       <div class="vm-sar-cell">
         <span class="vs-type vs-type--t">T-Vm</span>
