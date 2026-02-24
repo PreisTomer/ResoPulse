@@ -217,13 +217,15 @@ export default defineComponent({})
                 <div class="step-body">
                   <div class="step-title">Identify the optimal frequency window</div>
                   <p class="step-desc">
-                    On the Transmembrane Potential Response chart, locate the f<sub>c</sub>(T)
-                    and f<sub>c</sub>(H) markers. The frequency range between these two markers
-                    represents the roll-off regime for the target cell, where V<sub>m</sub>(T)
-                    is already attenuating while V<sub>m</sub>(H) remains near its DC value.
-                    Operating in this window minimises the selectivity ratio penalty from
-                    frequency-induced attenuation. Drag the broadcast cursor to this region and
-                    observe the Selectivity Panel update in real time.
+                    On the Transmembrane Potential Response chart, the golden ⭐ marker shows the
+                    optimal broadcast frequency. For cancer vs. normal cell pairs (τ<sub>T</sub> &gt;
+                    τ<sub>H</sub>), selectivity is maximised in the quasi-DC regime
+                    (f ≪ f<sub>c</sub>(T)), where V<sub>m</sub> selectivity = R<sub>T</sub>/R<sub>H</sub>.
+                    The f<sub>c</sub>(T) and f<sub>c</sub>(H) markers show where each cell's
+                    V<sub>m</sub> begins to roll off. Operating <em>above</em> f<sub>c</sub>(T)
+                    reduces selectivity — the target attenuates before the healthy cell.
+                    Drag the cursor toward the lowest frequency and observe the Selectivity Panel
+                    update in real time.
                   </p>
                 </div>
               </li>
@@ -233,10 +235,12 @@ export default defineComponent({})
                   <div class="step-title">Sweep frequency for maximum selectivity</div>
                   <p class="step-desc">
                     Drag the RF Frequency slider from 10 kHz to 500 kHz and observe the
-                    Selectivity Ratio. A ratio ≥ 1.5× is classified as a therapeutic window;
-                    ≥ 2.0× is ablative. For most cancer vs. epithelial pairings in saline,
-                    maximum selectivity occurs at frequencies between f<sub>c</sub>(T) and
-                    f<sub>c</sub>(H). Log a reading at the frequency of maximum selectivity.
+                    Selectivity Ratio. A ratio ≥ 1.5× is classified as a strong therapeutic
+                    window (green); 1.0–1.5× is marginal (amber). For most cancer vs. epithelial
+                    pairings in saline, maximum selectivity occurs at quasi-DC (well below
+                    f<sub>c</sub>(T) ≈ 0.49 MHz for adenocarcinoma). Click the ⭐ optimal note
+                    in the Selectivity Panel to snap the cursor to the optimal frequency and
+                    log a reading there.
                   </p>
                 </div>
               </li>
@@ -340,9 +344,9 @@ export default defineComponent({})
                   <td>Duration Disruption Ratio must exceed 1.0 before lysis event fires</td>
                 </tr>
                 <tr>
-                  <td>Therapeutic field range</td>
-                  <td class="mono primary-val">100–500 V/cm</td>
-                  <td>Clinically relevant range for TTFields (Kirson 2007) and IRE (Davalos 2005)</td>
+                  <td>IRE / electroporation field range</td>
+                  <td class="mono primary-val">100–1000 V/cm</td>
+                  <td>Sub-ablative to ablative IRE range (Davalos 2005). Note: TTFields (Kirson 2007) use ~1–3 V/cm via mitotic spindle disruption — a distinct, non-V<sub>m</sub>-threshold mechanism not modelled here</td>
                 </tr>
               </tbody>
             </table>

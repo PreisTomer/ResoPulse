@@ -141,7 +141,7 @@ export default defineComponent({
                 <th>Key</th>
                 <th>Medium</th>
                 <th>σ<sub>e</sub> (S/m)</th>
-                <th>Effect on τ / f<sub>c</sub> (quasi-DC V<sub>m</sub> unchanged)</th>
+                <th>Effect on τ / f<sub>c</sub> (quasi-DC V<sub>m</sub> unchanged) — epithelial ref σ<sub>i</sub> ≈ 0.5 S/m</th>
                 <th>Typical Research Use</th>
               </tr>
             </thead>
@@ -157,28 +157,29 @@ export default defineComponent({
                 <td class="mono">blood</td>
                 <td>Whole Blood</td>
                 <td class="mono">0.700</td>
-                <td>τ +16% · f<sub>c</sub> −14% · V<sub>m,DC</sub> unchanged · reduced V<sub>m</sub> above f<sub>c</sub></td>
+                <td>τ +16% · f<sub>c</sub> −14% (epithelial σ<sub>i</sub>≈0.5; bacteria ~5%; virions ~0% — low-σ<sub>i</sub> cells barely affected) · V<sub>m,DC</sub> unchanged</td>
                 <td>Haematological applications · in vivo tumour vasculature</td>
               </tr>
               <tr>
                 <td class="mono">tissue</td>
                 <td>Soft Tissue</td>
                 <td class="mono">0.400</td>
-                <td>τ +39% · f<sub>c</sub> −28% · V<sub>m,DC</sub> unchanged · increased attenuation in kHz range</td>
+                <td>τ +39% · f<sub>c</sub> −28% (epithelial σ<sub>i</sub>≈0.5; bacteria ~13%; virions ~0.5%) · V<sub>m,DC</sub> unchanged · increased τ shifts fc lower</td>
                 <td>Solid tumour bulk / poorly-perfused tissue (note: DMEM ≈ 1.4–1.6 S/m, not used here)</td>
               </tr>
               <tr>
                 <td class="mono warn-val">water</td>
                 <td>Distilled Water</td>
                 <td class="mono">0.001</td>
-                <td>τ ~200× longer · f<sub>c</sub> drops to ~5 kHz · V<sub>m</sub> near zero at &gt;10 kHz</td>
+                <td>τ ~200× longer · f<sub>c</sub> to ~5 kHz (epithelial σ<sub>i</sub>≈0.5 S/m); bacteria ~50–100×; virions ~3–5× (σ<sub>i</sub>≪σ<sub>e</sub> → medium effect collapses)</td>
                 <td>Electroporation buffer · academic boundary-condition reference</td>
               </tr>
             </tbody>
           </table>
         </div>
         <div class="table-footer">
-          τ and f<sub>c</sub> shift with σ<sub>e</sub> via τ = R·C<sub>m</sub>·(2σ<sub>e</sub>+σ<sub>i</sub>)/(2σ<sub>e</sub>·σ<sub>i</sub>) — V<sub>m</sub> at quasi-DC (f ≪ f<sub>c</sub>) is independent of medium
+          τ = R·C<sub>m</sub>·(2σ<sub>e</sub>+σ<sub>i</sub>)/(2σ<sub>e</sub>·σ<sub>i</sub>) — V<sub>m,DC</sub> independent of medium ·
+          τ shift magnitudes depend on σ<sub>i</sub>: large for σ<sub>i</sub> ≈ σ<sub>e</sub> (epithelial), negligible for σ<sub>i</sub> ≪ σ<sub>e</sub> (virions)
         </div>
       </section>
 
