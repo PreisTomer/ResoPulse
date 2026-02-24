@@ -75,6 +75,37 @@ export default defineComponent({
       return this.store.waveform
     },
 
+    // ── Thermal danger ────────────────────────────────────────────────────
+    /**
+     * Projected steady-state temperature — worst of both cells.
+     * T_ss = 37 + SAR_eff / (λ × cp)
+     */
+    maxSteadyTemp(): number {
+      return Math.max(this.store.healthySteadyStateTemp, this.store.targetSteadyStateTemp)
+    },
+
+    /**
+     * Thermal danger level based on projected T_ss.
+     * Thresholds are biologically grounded:
+     *   hyperthermic : 42°C (IAHT damage onset)
+     *   denaturing   : 60°C (collagen ~60°C, albumin ~68°C)
+     *   vaporizing   : 100°C (water boiling — instant thermal lysis)
+     */
+    thermalDangerLevel(): 'safe' | 'hyperthermic' | 'denaturing' | 'vaporizing' {
+      if (this.maxSteadyTemp >= 100) return 'vaporizing'
+      if (this.maxSteadyTemp >= 60)  return 'denaturing'
+      if (this.maxSteadyTemp >= 42)  return 'hyperthermic'
+      return 'safe'
+    },
+
+    isSafeMode(): boolean {
+      return this.store.safeMode
+    },
+
+    safeDutyCycleMaxLog(): number {
+      return Math.log10(Math.max(1e-6, this.store.maxSafeDutyCycle))
+    },
+
     tipWaveform(): string {
       return `<strong>Waveform Type</strong>
 <span class="tip-val">CW (sinusoidal)</span>  — continuous wave, SAR = σ·E²_rms/ρ = σ·E²/(2ρ)
@@ -89,8 +120,17 @@ Pulsed is typical for IRE/electroporation protocols.`
     },
 
     tipDutyCycle(): string {
-      const effT = (this.store.targetSAR  * this.store.dutyCycle).toFixed(2)
-      const effH = (this.store.healthySAR * this.store.dutyCycle).toFixed(2)
+      const effT  = (this.store.targetSAR  * this.store.dutyCycle).toFixed(2)
+      const effH  = (this.store.healthySAR * this.store.dutyCycle).toFixed(2)
+      const tss   = this.maxSteadyTemp
+      const level = this.thermalDangerLevel
+      const warnText = level === 'vaporizing'
+        ? '\n<span class="tip-warn">⚡ VAPORIZING — cells instantly destroyed at T_ss ≥ 100°C</span>'
+        : level === 'denaturing'
+          ? '\n<span class="tip-warn">⚠ DENATURING — protein coagulation at T_ss ≥ 60°C (collagen ~60°C, albumin ~68°C)</span>'
+          : level === 'hyperthermic'
+            ? '\n<span class="tip-warn">⚠ HYPERTHERMIC — thermal damage onset at T_ss ≥ 42°C (IAHT threshold)</span>'
+            : ''
       return `<strong>Pulse Duty Cycle  (t_on / period)</strong>
 Current: <span class="tip-val">${this.dutyCycleDisplay}</span>
 
@@ -100,9 +140,8 @@ Scales effective SAR → thermal load:
 
 <span class="tip-val">T: ${effT} W/kg</span>  ·  <span class="tip-val">H: ${effH} W/kg</span>
 
-Drives Newton cooling temperature model.
-Typical pulsed electroporation: 0.001%–1%
-High duty cycle → rapid heating; use caution`
+Projected T_ss = <span class="tip-val">${tss.toFixed(0)}°C</span>  (T_ss = 37 + SAR_eff/(λ·cp))
+Typical pulsed electroporation: 0.001%–1%${warnText}`
     },
 
     // ── Tooltip content ───────────────────────────────────────────────────
@@ -216,12 +255,24 @@ Keep below 50% for a safe therapeutic window`
     },
 
     onDutyCycleInput(e: Event) {
-      const logVal = Number((e.target as HTMLInputElement).value)
+      let logVal = Number((e.target as HTMLInputElement).value)
+      // In safe mode, clamp to the thermally-safe maximum
+      if (this.isSafeMode) {
+        const maxLog = this.safeDutyCycleMaxLog
+        if (logVal > maxLog) {
+          logVal = maxLog
+          ;(e.target as HTMLInputElement).value = String(logVal)
+        }
+      }
       this.store.setDutyCycle(Math.pow(10, logVal))
     },
 
     onWaveformChange(mode: 'cw' | 'pulsed') {
       this.store.setWaveform(mode)
+    },
+
+    onSafeModeChange(on: boolean) {
+      this.store.setSafeMode(on)
     },
   },
 })
@@ -229,7 +280,47 @@ Keep below 50% for a safe therapeutic window`
 
 <template>
   <div class="field-panel">
-    <div class="panel-title">Field Control</div>
+    <div class="panel-title-row">
+      <span class="panel-title">Field Control</span>
+      <!-- Safe Mode toggle -->
+      <div class="safe-mode-toggle">
+        <label
+          class="pill pill--sm"
+          :class="{ 'pill--active pill--expert': !isSafeMode }"
+          v-tip="'<strong>Expert Mode</strong>\nFull parameter range — all duty cycle values allowed.\nWarnings shown; no automatic clamping.\nRecommended for experienced users who understand\nthe thermal model.'"
+        >
+          <input type="radio" name="safemode" :checked="!isSafeMode" @change="onSafeModeChange(false)" />
+          Expert
+        </label>
+        <label
+          class="pill pill--sm"
+          :class="{ 'pill--active pill--safe': isSafeMode }"
+          v-tip="'<strong>Safe Mode</strong>\nDuty cycle is automatically clamped so that\nprojected steady-state temperature T_ss ≤ 42°C.\nRecommended for initial exploration.\nUse Expert mode to override for high-duty protocols.'"
+        >
+          <input type="radio" name="safemode" :checked="isSafeMode" @change="onSafeModeChange(true)" />
+          Safe
+        </label>
+      </div>
+    </div>
+
+    <!-- Thermal danger banner -->
+    <div
+      v-if="thermalDangerLevel !== 'safe'"
+      class="thermal-banner"
+      :class="`thermal-banner--${thermalDangerLevel}`"
+      v-tip="tipDutyCycle"
+    >
+      <span class="thermal-banner-icon">{{ thermalDangerLevel === 'vaporizing' ? '⚡' : '⚠' }}</span>
+      <span class="thermal-banner-text">
+        {{ thermalDangerLevel === 'vaporizing'
+            ? 'VAPORIZING REGIME — cells instantly destroyed'
+            : thermalDangerLevel === 'denaturing'
+              ? 'PROTEIN DENATURATION — reduce duty cycle'
+              : 'HYPERTHERMIC — thermal damage onset' }}
+      </span>
+      <span class="thermal-banner-temp">T_ss {{ maxSteadyTemp.toFixed(0) }}°C</span>
+    </div>
+
     <!-- Row 1: Medium selector -->
     <div class="panel-row panel-row--medium">
       <span class="row-label" v-tip="tipMedium">Medium</span>
@@ -278,7 +369,7 @@ Keep below 50% for a safe therapeutic window`
     </div>
 
     <!-- Row 3: Field Intensity + disruption indicators -->
-    <div class="panel-row">
+    <div class="panel-row" :class="thermalDangerLevel !== 'safe' ? `panel-row--thermal-${thermalDangerLevel}` : ''">
       <span class="row-label" v-tip="tipField">Field Intensity</span>
       <div class="slider-track-wrap">
         <input
@@ -330,23 +421,34 @@ Keep below 50% for a safe therapeutic window`
     </div>
 
     <!-- Row 5: Duty Cycle (pulsed only) -->
-    <div class="panel-row" v-if="currentWaveform === 'pulsed'">
-      <span class="row-label" v-tip="tipDutyCycle">Duty Cycle</span>
+    <div
+      v-if="currentWaveform === 'pulsed'"
+      class="panel-row"
+      :class="thermalDangerLevel !== 'safe' ? `panel-row--thermal-${thermalDangerLevel}` : ''"
+    >
+      <span class="row-label" v-tip="tipDutyCycle">
+        Duty Cycle
+        <span v-if="isSafeMode" class="safe-lock" v-tip="'Safe Mode active — duty cycle capped at T_ss ≤ 42°C'">🔒</span>
+      </span>
       <div class="slider-track-wrap">
         <input
           class="ctrl-slider"
           type="range"
           min="-6"
-          max="-1"
+          :max="isSafeMode ? safeDutyCycleMaxLog : -1"
           step="0.05"
           :value="dutyCycleLogVal"
           @input="onDutyCycleInput"
         />
       </div>
       <div class="row-readout">
-        <span class="readout-value" v-tip="tipDutyCycle">{{ dutyCycleDisplay }}</span>
+        <span
+          class="readout-value"
+          :class="thermalDangerLevel !== 'safe' ? `readout--${thermalDangerLevel}` : ''"
+          v-tip="tipDutyCycle"
+        >{{ dutyCycleDisplay }}</span>
         <span class="readout-sub" v-tip="tipDutyCycle">
-          SAR_T {{ (store.targetSAR * store.dutyCycle).toFixed(1) }} · SAR_H {{ (store.healthySAR * store.dutyCycle).toFixed(1) }} W/kg
+          T_ss {{ maxSteadyTemp.toFixed(0) }}°C · SAR_eff T {{ (store.targetSAR * store.dutyCycle).toFixed(1) }} W/kg
         </span>
       </div>
     </div>
@@ -365,14 +467,73 @@ Keep below 50% for a safe therapeutic window`
   padding: 0.85rem 1.25rem;
 }
 
-/* ── Panel title ─────────────────────────────────────────────────────── */
+/* ── Panel title row (title + safe mode toggle) ──────────────────────── */
+.panel-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.1rem;
+}
+
 .panel-title {
   font-size: 0.62rem;
   font-family: var(--font-mono);
   text-transform: uppercase;
   letter-spacing: 0.12em;
   color: var(--color-text);
-  margin-bottom: 0.1rem;
+}
+
+.safe-mode-toggle {
+  display: flex;
+  gap: 0.3rem;
+}
+
+/* ── Thermal danger banner ───────────────────────────────────────────── */
+.thermal-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0.65rem;
+  border-radius: var(--radius);
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border: 1px solid;
+  animation: thermal-pulse 2s ease-in-out infinite;
+}
+.thermal-banner--hyperthermic {
+  color: #fbbf24;
+  background: rgba(251, 191, 36, 0.07);
+  border-color: rgba(251, 191, 36, 0.3);
+}
+.thermal-banner--denaturing {
+  color: #fb923c;
+  background: rgba(251, 130, 20, 0.1);
+  border-color: rgba(251, 130, 20, 0.4);
+  animation: thermal-pulse 1s ease-in-out infinite;
+}
+.thermal-banner--vaporizing {
+  color: #ff4d6d;
+  background: rgba(255, 77, 109, 0.1);
+  border-color: rgba(255, 77, 109, 0.5);
+  animation: thermal-pulse 0.5s ease-in-out infinite;
+}
+.thermal-banner-icon { flex-shrink: 0; }
+.thermal-banner-text { flex: 1; }
+.thermal-banner-temp { flex-shrink: 0; font-weight: 700; }
+
+@keyframes thermal-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.6; }
+}
+
+/* ── Safe lock icon ──────────────────────────────────────────────────── */
+.safe-lock {
+  font-size: 0.55rem;
+  opacity: 0.7;
+  margin-left: 0.2rem;
 }
 
 /* ── Row layout ──────────────────────────────────────────────────────── */
@@ -512,6 +673,62 @@ Keep below 50% for a safe therapeutic window`
   color: var(--color-text-muted);
   white-space: nowrap;
   opacity: 0.82;
+}
+
+/* ── Thermal slider thumb coloring ──────────────────────────────────── */
+/* Thumb turns amber → orange → red as projected T_ss rises             */
+.panel-row--thermal-hyperthermic .ctrl-slider::-webkit-slider-thumb {
+  background: #fbbf24;
+  box-shadow: 0 0 6px rgba(251, 191, 36, 0.5);
+}
+.panel-row--thermal-hyperthermic .ctrl-slider::-moz-range-thumb {
+  background: #fbbf24;
+}
+.panel-row--thermal-denaturing .ctrl-slider::-webkit-slider-thumb {
+  background: #fb923c;
+  box-shadow: 0 0 8px rgba(251, 130, 20, 0.7);
+}
+.panel-row--thermal-denaturing .ctrl-slider::-moz-range-thumb {
+  background: #fb923c;
+}
+.panel-row--thermal-vaporizing .ctrl-slider::-webkit-slider-thumb {
+  background: #ff4d6d;
+  box-shadow: 0 0 10px rgba(255, 77, 109, 0.9);
+  animation: thumb-danger-pulse 0.5s ease-in-out infinite;
+}
+.panel-row--thermal-vaporizing .ctrl-slider::-moz-range-thumb {
+  background: #ff4d6d;
+}
+
+@keyframes thumb-danger-pulse {
+  0%, 100% { box-shadow: 0 0 6px rgba(255, 77, 109, 0.6); }
+  50%       { box-shadow: 0 0 16px rgba(255, 77, 109, 1.0); }
+}
+
+/* ── Thermal readout value coloring ─────────────────────────────────── */
+.readout--hyperthermic { color: #fbbf24 !important; }
+.readout--denaturing   { color: #fb923c !important; }
+.readout--vaporizing   { color: #ff4d6d !important; animation: state-blink 0.5s ease-in-out infinite; }
+
+@keyframes state-blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.35; }
+}
+
+/* ── Safe / Expert mode pill variants ───────────────────────────────── */
+.pill--safe {
+  border-color: #39ff14 !important;
+  color: #39ff14 !important;
+  background-color: rgba(57, 255, 20, 0.08) !important;
+}
+.pill--expert {
+  border-color: #fbbf24 !important;
+  color: #fbbf24 !important;
+  background-color: rgba(251, 191, 36, 0.08) !important;
+}
+.pill--sm {
+  font-size: 0.58rem;
+  padding: 0.14rem 0.45rem;
 }
 
 /* ── Disruption badges ───────────────────────────────────────────────── */

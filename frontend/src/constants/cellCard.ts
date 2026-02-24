@@ -26,6 +26,9 @@ export const HEALTHY_APPROACHING_THRESHOLD = 0.50  // healthy cell: membrane str
 export const NOURISHING_THRESHOLD         = 0.45   // healthy-cell nourishing state onset
 export const VIBRATING_MIN_THRESHOLD      = 0.08   // healthy-cell low-vibration onset
 export const TEMP_WARN_CELSIUS            = 42     // temperature above which meta turns orange
+export const TEMP_DENATURING             = 60     // °C — protein denaturation onset (irreversible; collagen ~60°C, albumin ~68°C)
+export const TEMP_VAPORIZING             = 100    // °C — water boiling / rapid steam-driven cell lysis
+export const TEMP_SIMULATION_CAP         = 150    // °C — simulation display ceiling (cells destroyed well below this)
 
 // ── Per-type colors ───────────────────────────────────────────────────────────
 export const CELL_COLORS = {

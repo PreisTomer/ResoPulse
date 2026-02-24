@@ -17,6 +17,8 @@ import {
   NOURISHING_THRESHOLD,
   VIBRATING_MIN_THRESHOLD,
   TEMP_WARN_CELSIUS,
+  TEMP_DENATURING,
+  TEMP_VAPORIZING,
   LYSIS_DELAY_MS,
   LYSIS_DURATION_MS,
   FRAGMENT_INTERVAL_MS,
@@ -52,6 +54,7 @@ export default defineComponent({
       liveAmplitude:  this.cellData?.amplitude ?? 0.8,
       cellState:      'stable' as CellState,
       shatterPending: false,
+      thermalLysis:   false,   // true when lysis was triggered by temperature, not electrical disruption
       paramsExpanded: false,
       // Animation timer handles — typed here so TypeScript can see them on `this`
       _helixTimer:        null as d3.Timer | null,
@@ -75,7 +78,9 @@ export default defineComponent({
     },
     vmDisplay():   string  { return this.vm.toFixed(3) + ' mV' },
     tempDisplay(): string  { return this.temperature.toFixed(1) + ' °C' },
-    tempWarning(): boolean { return this.temperature > TEMP_WARN_CELSIUS },
+    tempWarning():     boolean { return this.temperature > TEMP_WARN_CELSIUS },
+    tempDenaturing():  boolean { return this.temperature >= TEMP_DENATURING },
+    tempVaporizing():  boolean { return this.temperature >= TEMP_VAPORIZING },
 
     disruptionRatio(): number {
       return this.type === 'healthy'
@@ -148,8 +153,14 @@ Disruption: <span class="tip-val">${pct}%</span>`
     },
 
     tipTemp(): string {
-      const warn = this.tempWarning
-        ? '\n<span class="tip-warn">⚠ Above 42°C — thermal damage risk</span>' : ''
+      let warnLine = ''
+      if (this.tempVaporizing) {
+        warnLine = '\n<span class="tip-warn">⚡ ≥100°C — THERMAL LYSIS — water boiling / steam pressure</span>'
+      } else if (this.tempDenaturing) {
+        warnLine = '\n<span class="tip-warn">⚠ ≥60°C — protein denaturation (collagen ~60°C, albumin ~68°C) — reduce duty cycle / field</span>'
+      } else if (this.tempWarning) {
+        warnLine = '\n<span class="tip-warn">⚠ ≥42°C — hyperthermic damage onset (IAHT threshold) — monitor closely</span>'
+      }
       return `<strong>Cell Temperature</strong>
 Current: <span class="tip-val">${this.tempDisplay}</span>
 
@@ -158,26 +169,30 @@ Modelled via Specific Absorption Rate (SAR):
   w_f = 0.5 (CW sinusoidal) | 1.0 (pulsed DC)
   σ_eff = (σ_e + σ_i) / 2
 
-Cooling: Newton's law, λ = 0.02 /s toward 37°C
-Thermal damage threshold: 42°C${warn}`
+Newton cooling: λ = 0.02 /s → T_ss = 37 + SAR_eff/(λ·cp)
+Thresholds: 42°C hyperthermic · 60°C denaturing · 100°C vaporizing${warnLine}`
     },
 
     tipState(): string {
       const labels: Record<string, string> = {
-        stable:      'stable — no significant membrane response',
+        stable:      'stable — no significant membrane or thermal response',
         nourishing:  'nourishing — sub-threshold oscillation, membrane intact',
-        approaching: '<span class="tip-warn">⚠ approaching — membrane stress detected · ion channel perturbation onset (Vm >50% of threshold)</span>',
-        critical:    '<span class="tip-warn">⚡ critical — electroporation pore formation imminent · reduce field immediately (Vm >85% of threshold)</span>',
-        vibrating:   '<span class="tip-warn">vibrating — approaching lysis threshold</span>',
+        approaching: '<span class="tip-warn">⚠ approaching — membrane stress OR T ≥ 42°C · ion channel perturbation onset</span>',
+        critical:    '<span class="tip-warn">⚡ critical — Vm >85% threshold OR T ≥ 60°C (protein denaturation) · reduce field / duty cycle immediately</span>',
+        vibrating:   '<span class="tip-warn">vibrating — approaching lysis threshold (Vm >85% sustained)</span>',
         lysing:      '<span class="tip-warn">lysing — membrane disruption in progress</span>',
-        lysed:       '<span class="tip-warn">lysed — membrane permanently disrupted</span>',
+        lysed:       this.thermalLysis
+          ? '<span class="tip-warn">thermal lysis — cell vaporized (T ≥ 100°C)</span>'
+          : '<span class="tip-warn">lysed — membrane permanently disrupted by electric field</span>',
       }
-      const healthyTransitions = this.type === 'healthy'
-        ? `\nHealthy cell thresholds:\n  >50% Vm → approaching (membrane stress)\n  >85% Vm → critical (pore formation risk)`
-        : `\nTarget transitions:\n  vibrating → lysing → lysed\n  Lysis begins after 2.5 s above 85%`
+      const transitions = this.type === 'healthy'
+        ? `\nElectrical: Vm >50% → approaching · Vm >85% → critical`
+           + `\nThermal:   T ≥42°C → approaching · T ≥60°C → critical · T ≥100°C → lysis`
+        : `\nElectrical: vibrating >2.5 s → lysing → lysed`
+          + `\nThermal:   T ≥60°C → critical · T ≥100°C → instant thermal lysis`
       return `<strong>Cell State</strong>
 ${labels[this.cellState] ?? this.cellState}
-${healthyTransitions}`
+${transitions}`
     },
 
     tipDisruption(): string {
@@ -202,6 +217,7 @@ Ratio = Vm / lysis threshold voltage
       if (this.cellState !== 'lysed' && this.cellState !== 'lysing') return
       clearTimeout(this._shatterDelayTimeout ?? undefined)
       this.shatterPending = false
+      this.thermalLysis = false
       this.cellState = 'stable'
       this.liveAmplitude = this.cellData?.amplitude ?? 0.8
       clearInterval(this._particleInterval ?? undefined)
@@ -212,43 +228,9 @@ Ratio = Vm / lysis threshold voltage
       })
     },
 
-    disruptionRatio(impact: number) {
-      if (this.cellState === 'lysed' || this.cellState === 'lysing') return
-
-      if (this.type === 'target') {
-        if (impact > DISRUPTION_WARN_THRESHOLD) {
-          this.cellState = 'vibrating'
-          if (!this.shatterPending) {
-            this.shatterPending = true
-            this._shatterDelayTimeout = setTimeout(() => {
-              this.shatterPending = false
-              if (this.disruptionRatio > DISRUPTION_WARN_THRESHOLD) this.triggerLysis()
-            }, LYSIS_DELAY_MS) as unknown as number
-          }
-        } else {
-          if (this.shatterPending) {
-            clearTimeout(this._shatterDelayTimeout ?? undefined)
-            this.shatterPending = false
-          }
-          if (impact > VIBRATING_MIN_THRESHOLD) {
-            this.cellState = impact >= HEALTHY_APPROACHING_THRESHOLD ? 'vibrating' : 'approaching'
-          } else {
-            this.cellState = 'stable'
-          }
-        }
-      } else {
-        // Healthy cell — escalating warning states based on electroporation risk
-        if (impact >= HEALTHY_CRITICAL_THRESHOLD) {
-          this.cellState = 'critical'       // >85 % — pore formation imminent
-        } else if (impact >= HEALTHY_APPROACHING_THRESHOLD) {
-          this.cellState = 'approaching'    // >50 % — membrane stress / ion channel perturbation
-        } else if (impact > NOURISHING_THRESHOLD) {
-          this.cellState = 'nourishing'
-        } else {
-          this.cellState = 'stable'
-        }
-      }
-    },
+    // Unified state signal — both electrical and thermal watchers call this
+    disruptionRatio() { this.updateCellState() },
+    temperature()     { this.updateCellState() },
   },
 
   mounted() {
@@ -267,6 +249,84 @@ Ratio = Vm / lysis threshold voltage
   },
 
   methods: {
+    // ── Unified cell-state machine ──────────────────────────────────────
+    /**
+     * Evaluates both electrical (disruptionRatio) and thermal (temperature)
+     * signals and sets cellState to the more severe of the two outcomes.
+     *
+     * Priority: thermal lysis (≥100°C) > electrical lysis (vibrating >2.5 s)
+     *           > thermal critical (≥60°C) > electrical critical/approaching
+     */
+    updateCellState() {
+      if (this.cellState === 'lysed' || this.cellState === 'lysing') return
+
+      const impact = this.disruptionRatio
+      const temp   = this.temperature
+
+      // ── Thermal lysis (immediate — water vaporisation) ──────────────────
+      if (temp >= TEMP_VAPORIZING) {
+        this.thermalLysis = true
+        this.triggerLysis()
+        return
+      }
+
+      // ── Thermal floor state ─────────────────────────────────────────────
+      // 42–60°C → approaching (hyperthermic stress, IAHT threshold)
+      // ≥60°C   → critical    (protein denaturation onset)
+      let thermalFloor: CellState =
+        temp >= TEMP_DENATURING  ? 'critical'
+        : temp >= TEMP_WARN_CELSIUS ? 'approaching'
+        : 'stable'
+
+      if (this.type === 'target') {
+        // ── Electrical lysis countdown ────────────────────────────────────
+        if (impact > DISRUPTION_WARN_THRESHOLD) {
+          this.cellState = 'vibrating'
+          if (!this.shatterPending) {
+            this.shatterPending = true
+            this._shatterDelayTimeout = setTimeout(() => {
+              this.shatterPending = false
+              if (this.disruptionRatio > DISRUPTION_WARN_THRESHOLD) this.triggerLysis()
+            }, LYSIS_DELAY_MS) as unknown as number
+          }
+          return
+        }
+        // Clear countdown if field dropped
+        if (this.shatterPending) {
+          clearTimeout(this._shatterDelayTimeout ?? undefined)
+          this.shatterPending = false
+        }
+
+        // Electrical state for target below lysis threshold:
+        //   0–0.08 → stable · 0.08–0.5 → approaching · 0.5–0.85 → vibrating
+        let elState: CellState =
+          impact >= HEALTHY_APPROACHING_THRESHOLD ? 'vibrating'
+          : impact > VIBRATING_MIN_THRESHOLD      ? 'approaching'
+          : 'stable'
+
+        // Take the worse of electrical and thermal
+        // thermalFloor ∈ {'stable','approaching','critical'} — all present in ORDER
+        const ORDER: CellState[] = ['stable', 'approaching', 'vibrating', 'critical']
+        const ti = ORDER.indexOf(thermalFloor)
+        const ei = ORDER.indexOf(elState)
+        this.cellState = ORDER[Math.max(ei, ti)] as CellState
+
+      } else {
+        // ── Healthy cell — escalating electrical + thermal ────────────────
+        let elState: CellState =
+          impact >= HEALTHY_CRITICAL_THRESHOLD    ? 'critical'
+          : impact >= HEALTHY_APPROACHING_THRESHOLD ? 'approaching'
+          : impact > NOURISHING_THRESHOLD           ? 'nourishing'
+          : 'stable'
+
+        // thermalFloor ∈ {'stable','approaching','critical'} — all present in ORDER
+        const ORDER: CellState[] = ['stable', 'nourishing', 'approaching', 'critical']
+        const ti = ORDER.indexOf(thermalFloor)
+        const ei = ORDER.indexOf(elState)
+        this.cellState = ORDER[Math.max(ei, ti)] as CellState
+      }
+    },
+
     // ── Animation setup ────────────────────────────────────────────────────
     drawCell() {
       if (!this.cellData) return
@@ -400,9 +460,9 @@ Ratio = Vm / lysis threshold voltage
       </div>
       <div ref="oscCanvas" class="osc-canvas"></div>
 
-      <!-- Healthy-cell warning strip — electroporation risk -->
+      <!-- Electroporation risk warning strip — healthy cell only -->
       <div
-        v-if="type === 'healthy' && (cellState === 'approaching' || cellState === 'critical')"
+        v-if="type === 'healthy' && (cellState === 'approaching' || cellState === 'critical') && !tempWarning"
         class="healthy-warn-strip"
         :class="{ 'healthy-warn-strip--critical': cellState === 'critical' }"
         v-tip="tipState"
@@ -416,11 +476,30 @@ Ratio = Vm / lysis threshold voltage
         <span class="warn-pct">{{ (disruptionRatio * 100).toFixed(0) }}%</span>
       </div>
 
+      <!-- Thermal warning strip — both cell types, shown when temp is elevated -->
+      <div
+        v-if="tempWarning && cellState !== 'lysed' && cellState !== 'lysing'"
+        class="thermal-warn-strip"
+        :class="{
+          'thermal-warn-strip--denaturing': tempDenaturing,
+        }"
+        v-tip="tipTemp"
+      >
+        <span class="warn-icon">{{ tempDenaturing ? '⚡' : '⚠' }}</span>
+        <span class="warn-text">
+          {{ tempDenaturing
+            ? 'THERMAL CRITICAL — PROTEIN DENATURATION — REDUCE DUTY CYCLE'
+            : 'THERMAL WARNING — T > 42°C — MONITOR DUTY CYCLE / FIELD' }}
+        </span>
+        <span class="warn-pct">{{ temperature.toFixed(0) }}°C</span>
+      </div>
+
       <!-- Lysis overlay — absolute, covers card-visual without shifting card height -->
       <div v-if="cellState === 'lysed'" class="destroyed-overlay">
-        <span class="destroyed-text">— MEMBRANE LYSED —</span>
+        <span class="destroyed-text">{{ thermalLysis ? '— THERMAL LYSIS —' : '— MEMBRANE LYSED —' }}</span>
+        <span v-if="thermalLysis" class="destroyed-sub">Cell vaporized · T ≥ 100°C</span>
         <button class="btn-reset" :disabled="!canReset" @click="resetToStable">Reset Cell</button>
-        <span v-if="!canReset" class="reset-locked">Reduce field intensity to reset</span>
+        <span v-if="!canReset" class="reset-locked">{{ thermalLysis ? 'Reduce field / duty cycle to reset' : 'Reduce field intensity to reset' }}</span>
       </div>
     </div>
 
@@ -730,6 +809,48 @@ Ratio = Vm / lysis threshold voltage
 @keyframes warn-fade {
   0%, 100% { opacity: 1; }
   50%       { opacity: 0.55; }
+}
+
+/* ── Thermal warning strip ───────────────────────────────────────────── */
+.thermal-warn-strip {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.32rem 0.65rem;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #fbbf24;
+  background: rgba(251, 191, 36, 0.08);
+  border-top: 1px solid rgba(251, 191, 36, 0.3);
+  animation: warn-fade 2s ease-in-out infinite;
+}
+.thermal-warn-strip--denaturing {
+  color: #fb923c;
+  background: rgba(251, 130, 20, 0.12);
+  border-top-color: rgba(251, 130, 20, 0.45);
+  animation: warn-fade 0.85s ease-in-out infinite;
+}
+
+/* Cell-card border glow driven by thermal state */
+.cell-card--approaching.cell-card--target {
+  border-left-color: #fbbf24 !important;
+  box-shadow: 0 0 22px rgba(251, 191, 36, 0.18);
+}
+.cell-card--critical.cell-card--target {
+  border-left-color: #fb923c !important;
+  animation: card-warn-pulse 1.1s ease-in-out infinite;
+}
+
+/* Thermal lysis overlay sub-text */
+.destroyed-sub {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: #ff8c00;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.8;
 }
 
 /* ── Body ─────────────────────────────────────────────────────────────── */

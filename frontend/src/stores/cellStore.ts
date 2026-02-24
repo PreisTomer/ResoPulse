@@ -4,6 +4,7 @@ import { cellConfigs, MEDIA, computeSchwan, computeSAR, computeFc } from '../moc
 import type { CellConfig, MediumKey } from '../mockData'
 
 const LAMBDA = 0.02     // Newton cooling rate constant [1/s]
+const TEMP_SIMULATION_CAP = 150  // °C — hard ceiling; cells are destroyed long before this
 
 export interface FieldPacket {
   timestamp: number
@@ -25,6 +26,7 @@ interface CellStoreState {
   targetTemp: number              // °C
   dutyCycle: number               // dimensionless — pulsed field on-fraction (default 0.01%)
   waveform: 'cw' | 'pulsed'      // CW sinusoidal (waveformFactor 0.5) or pulsed DC (1.0)
+  safeMode: boolean               // when true, duty cycle is clamped so T_ss ≤ 42°C
   _tempTimer: number | null
   resetCounter: number
 }
@@ -40,6 +42,7 @@ export const useCellStore = defineStore('cell', {
     targetTemp: 37,
     dutyCycle: 1e-4,               // 0.01% — typical pulsed electroporation default
     waveform: 'pulsed' as const,
+    safeMode: false,               // expert mode by default (scientists need full range)
     _tempTimer: null,
     resetCounter: 0,
   }),
@@ -139,6 +142,37 @@ export const useCellStore = defineStore('cell', {
       const denom = Math.sqrt(1 + (omega * tau) ** 2)
       return (state.healthy.thresholdVoltage * denom) / (1.5 * R * 100)
     },
+
+    /**
+     * Projected steady-state temperature for healthy cell [°C]:
+     *   T_ss = 37 + SAR_eff / (λ × cp)
+     *   SAR_eff = SAR_peak × dutyCycle
+     * Capped at TEMP_SIMULATION_CAP for display.
+     */
+    healthySteadyStateTemp(): number {
+      const sar_eff = this.healthySAR * this.dutyCycle
+      const cp = this.healthy.specificHeatCapacity
+      return Math.min(37 + sar_eff / (LAMBDA * cp), TEMP_SIMULATION_CAP)
+    },
+
+    /** Projected steady-state temperature for target cell [°C], capped at TEMP_SIMULATION_CAP. */
+    targetSteadyStateTemp(): number {
+      const sar_eff = this.targetSAR * this.dutyCycle
+      const cp = this.target.specificHeatCapacity
+      return Math.min(37 + sar_eff / (LAMBDA * cp), TEMP_SIMULATION_CAP)
+    },
+
+    /**
+     * Maximum duty cycle that keeps both cells' T_ss ≤ 42°C (hyperthermic limit).
+     * dc_max = (5 × λ × cp_min) / SAR_peak_max
+     * Used by Safe Mode to clamp the duty cycle slider.
+     */
+    maxSafeDutyCycle(): number {
+      const maxSAR = Math.max(this.healthySAR, this.targetSAR)
+      if (maxSAR <= 0) return 1
+      const minCp = Math.min(this.healthy.specificHeatCapacity, this.target.specificHeatCapacity)
+      return Math.min(1, (5 * LAMBDA * minCp) / maxSAR)
+    },
   },
 
   actions: {
@@ -178,12 +212,12 @@ export const useCellStore = defineStore('cell', {
         // Healthy cell temperature update (Newton cooling, 100 ms tick)
         const hSAR = this.healthySAR
         const dTh = (hSAR * this.dutyCycle / this.healthy.specificHeatCapacity - LAMBDA * (this.healthyTemp - 37)) * 0.1
-        this.healthyTemp = Math.max(37, this.healthyTemp + dTh)
+        this.healthyTemp = Math.max(37, Math.min(TEMP_SIMULATION_CAP, this.healthyTemp + dTh))
 
         // Target cell temperature update
         const tSAR = this.targetSAR
         const dTt = (tSAR * this.dutyCycle / this.target.specificHeatCapacity - LAMBDA * (this.targetTemp - 37)) * 0.1
-        this.targetTemp = Math.max(37, this.targetTemp + dTt)
+        this.targetTemp = Math.max(37, Math.min(TEMP_SIMULATION_CAP, this.targetTemp + dTt))
       }, 100) as unknown as number
     },
 
@@ -194,6 +228,17 @@ export const useCellStore = defineStore('cell', {
     setWaveform(mode: 'cw' | 'pulsed') {
       this.waveform = mode
       if (mode === 'cw') this.dutyCycle = 1.0
+    },
+
+    /**
+     * Toggle Safe Mode — clamps duty cycle so projected T_ss ≤ 42°C.
+     * Expert mode (off) allows full parameter range with warnings shown.
+     */
+    setSafeMode(on: boolean) {
+      this.safeMode = on
+      if (on && this.dutyCycle > this.maxSafeDutyCycle) {
+        this.dutyCycle = Math.max(1e-6, this.maxSafeDutyCycle)
+      }
     },
 
     stopSession() {
