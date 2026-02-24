@@ -5,6 +5,7 @@ import * as d3 from 'd3'
 import { useCellStore } from '../stores/cellStore'
 import { useExperimentStore } from '../stores/experimentStore'
 import { CELL_PRESETS } from '../constants/cellLibrary'
+import { membraneCm, computeTau } from '../mockData'
 import type { CellRecord } from '../mockData'
 import type { CellState } from '../types/cell'
 import {
@@ -116,6 +117,20 @@ export default defineComponent({
       }))
     },
 
+    derivedParams() {
+      const cell = this.type === 'healthy' ? this.store.healthy : this.store.target
+      const sigma_e = this.store.sigma_e
+      const Cm = membraneCm(cell) * 1000         // F/m² → mF/m²
+      const tau = computeTau(cell, sigma_e) * 1e9 // s → ns
+      const fc  = this.type === 'healthy' ? this.store.healthyFc : this.store.targetFc
+      const fcLabel = fc >= 1000 ? `${(fc / 1000).toFixed(2)} MHz` : `${fc.toFixed(1)} kHz`
+      return [
+        { label: 'Membrane Cm',   value: Cm.toFixed(2),  unit: 'mF/m²' },
+        { label: 'Time const τ',  value: tau.toFixed(1), unit: 'ns'    },
+        { label: 'Char. freq fc', value: fcLabel,        unit: ''      },
+      ]
+    },
+
     // ── Tooltip content ───────────────────────────────────────────────────
     tipVm(): string {
       const cell = this.type === 'healthy' ? this.store.healthy : this.store.target
@@ -139,7 +154,9 @@ Disruption: <span class="tip-val">${pct}%</span>`
 Current: <span class="tip-val">${this.tempDisplay}</span>
 
 Modelled via Specific Absorption Rate (SAR):
-  SAR = σ_eff × E² / ρ  [W/kg]
+  SAR = σ_eff × E² × w_f / ρ  [W/kg]
+  w_f = 0.5 (CW sinusoidal) | 1.0 (pulsed DC)
+  σ_eff = (σ_e + σ_i) / 2
 
 Cooling: Newton's law, λ = 0.02 /s toward 37°C
 Thermal damage threshold: 42°C${warn}`
@@ -213,7 +230,11 @@ Ratio = Vm / lysis threshold voltage
             clearTimeout(this._shatterDelayTimeout ?? undefined)
             this.shatterPending = false
           }
-          this.cellState = impact > VIBRATING_MIN_THRESHOLD ? 'vibrating' : 'stable'
+          if (impact > VIBRATING_MIN_THRESHOLD) {
+            this.cellState = impact >= HEALTHY_APPROACHING_THRESHOLD ? 'vibrating' : 'approaching'
+          } else {
+            this.cellState = 'stable'
+          }
         }
       } else {
         // Healthy cell — escalating warning states based on electroporation risk
@@ -310,16 +331,16 @@ Ratio = Vm / lysis threshold voltage
     <!-- Header -->
     <div class="card-header">
       <span class="card-icon">◎</span>
-      <div>
+      <div class="card-name">
         <div class="card-label">{{ label }}</div>
         <div class="card-sublabel">{{ sublabel }}</div>
-      </div>
-      <div v-if="cellData" class="card-meta">
-        <span class="meta-item" v-tip="tipVm">{{ vmDisplay }}</span>
-        <span class="meta-sep">·</span>
-        <span class="meta-item" :class="{ 'meta-temp-warn': tempWarning }" v-tip="tipTemp">{{ tempDisplay }}</span>
-        <span class="meta-sep">·</span>
-        <span class="meta-state" :class="metaStateClass" v-tip="tipState">{{ cellState }}</span>
+        <div v-if="cellData" class="card-meta">
+          <span class="meta-item" v-tip="tipVm">{{ vmDisplay }}</span>
+          <span class="meta-sep">·</span>
+          <span class="meta-item" :class="{ 'meta-temp-warn': tempWarning }" v-tip="tipTemp">{{ tempDisplay }}</span>
+          <span class="meta-sep">·</span>
+          <span class="meta-state" :class="metaStateClass" v-tip="tipState">{{ cellState }}</span>
+        </div>
       </div>
     </div>
 
@@ -344,6 +365,19 @@ Ratio = Vm / lysis threshold voltage
           />
           <span class="param-unit">{{ p.unit }}</span>
         </div>
+        <!-- Derived/computed constants (read-only) -->
+        <div
+          class="params-derived-header"
+          v-tip="'<strong>Derived biophysical parameters</strong>\nComputed in real time from the editable values above.\n\n<span class=\'tip-val\'>Cm</span> = ε_r × ε₀ / d\n  Membrane specific capacitance [mF/m²]\n\n<span class=\'tip-val\'>τ</span> = R·Cm·(2σ_e+σ_i) / (2σ_e·σ_i)\n  Schwan time constant (Kotnik & Miklavcic 2000)\n  Sets the frequency roll-off\n\n<span class=\'tip-val\'>fc</span> = 1/(2πτ)\n  Characteristic frequency — Vm drops −3 dB here\n  Below fc: quasi-DC regime, Vm at maximum'"
+        >
+          <span class="params-derived-label">Derived constants</span>
+        </div>
+        <div v-for="p in derivedParams" :key="p.label" class="param-row param-row--derived">
+          <label class="param-label">{{ p.label }}</label>
+          <span class="param-derived-value">{{ p.value }}</span>
+          <span class="param-unit">{{ p.unit }}</span>
+        </div>
+
         <div v-if="canResetToPreset" class="params-reset-row">
           <button
             class="btn-reset-params"
@@ -407,6 +441,8 @@ Ratio = Vm / lysis threshold voltage
   flex-direction: column;
   gap: 1rem;
   transition: border-color 0.2s, box-shadow 0.3s;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .cell-card--healthy { border-left: 3px solid var(--color-accent); }
@@ -452,21 +488,32 @@ Ratio = Vm / lysis threshold voltage
 /* ── Header ──────────────────────────────────────────────────────────── */
 .card-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.85rem;
 }
 .card-icon { font-size: 1.8rem; line-height: 1; flex-shrink: 0; }
 .cell-card--healthy .card-icon { color: var(--color-accent); }
 .cell-card--target  .card-icon { color: var(--color-danger); }
 
-.card-label    { font-weight: 600; font-size: 1rem; color: var(--color-text-heading); }
+.card-name {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+.card-label {
+  font-weight: 600; font-size: 1rem; color: var(--color-text-heading);
+  line-height: 1.25;
+}
 .card-sublabel {
-  font-size: 0.75rem; color: var(--color-text-muted);
+  font-size: 0.72rem; color: var(--color-text-muted);
   font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.08em;
+  line-height: 1.3;
 }
 .card-meta {
-  margin-left: auto;
   display: flex; align-items: center; gap: 0.3rem;
+  margin-top: 0.3rem;
   font-size: 0.68rem; font-family: var(--font-mono);
   color: var(--color-text-muted); white-space: nowrap;
 }
@@ -543,6 +590,23 @@ Ratio = Vm / lysis threshold voltage
   width: 2.5rem; text-align: left;
 }
 
+.params-derived-header {
+  display: flex; align-items: center; gap: 0.5rem;
+  padding-top: 0.3rem; margin-top: 0.1rem;
+  border-top: 1px solid var(--color-border);
+  cursor: default;
+}
+.params-derived-label {
+  font-size: 0.52rem; font-family: var(--font-mono);
+  text-transform: uppercase; letter-spacing: 0.12em;
+  color: var(--color-text-muted); opacity: 0.65;
+}
+.param-row--derived { opacity: 0.8; pointer-events: none; }
+.param-derived-value {
+  font-size: 0.7rem; font-family: var(--font-mono);
+  color: var(--color-text); text-align: right; width: 5rem;
+}
+
 .params-reset-row {
   display: flex;
   justify-content: flex-end;
@@ -580,8 +644,8 @@ Ratio = Vm / lysis threshold voltage
   border-radius: var(--radius);
   overflow: hidden; position: relative;
 }
-.cell-canvas { display: block; width: 100%; line-height: 0; }
-.cell-canvas svg { display: block; width: 100%; height: auto; }
+.cell-canvas { display: flex; justify-content: center; line-height: 0; overflow: hidden; }
+.cell-canvas svg { display: block; width: auto; height: auto; max-width: 100%; max-height: 180px; }
 
 .osc-divider {
   display: flex; justify-content: space-between; align-items: center;

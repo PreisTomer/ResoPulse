@@ -25,8 +25,8 @@ export default defineComponent({
       <nav class="nav">
         <RouterLink to="/"           class="nav-link" exact-active-class="active">{{ $t('nav.home') }}</RouterLink>
         <RouterLink to="/experiment" class="nav-link" active-class="active">{{ $t('nav.experiment') }}</RouterLink>
-        <a class="nav-link" href="#">{{ $t('nav.dataSets') }}</a>
-        <a class="nav-link" href="#">{{ $t('nav.reports') }}</a>
+        <RouterLink to="/datasets" class="nav-link" active-class="active">{{ $t('nav.dataSets') }}</RouterLink>
+        <RouterLink to="/reports"  class="nav-link" active-class="active">{{ $t('nav.reports') }}</RouterLink>
       </nav>
       <div class="header-status">
         <span class="status-dot" :class="{ 'status-dot--warning': !systemReady }"></span>

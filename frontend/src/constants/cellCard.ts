@@ -1,16 +1,16 @@
 // ── Canvas geometry ───────────────────────────────────────────────────────────
 export const CANVAS_W   = 280
-export const CANVAS_H   = 210
+export const CANVAS_H   = 194    // must be ≥ 2×(BASE_R+40)=190 to contain aura rings
 export const OSC_W      = 280
-export const OSC_H      = 44
+export const OSC_H      = 37     // ~15 % shorter than original 44
 
 // ── Blob cell ─────────────────────────────────────────────────────────────────
-export const BASE_R       = 65    // blob base radius (SVG px)
+export const BASE_R       = 55    // blob base radius (SVG px) — ~15 % smaller than 65
 export const BLOB_POINTS  = 16    // number of perimeter control points
 
 // ── Nucleus (DNA double-helix) ────────────────────────────────────────────────
-export const NUCLEUS_W    = 60    // helix x-span
-export const NUCLEUS_H    = 28    // helix y-amplitude ×2
+export const NUCLEUS_W    = 51    // helix x-span — ~15 % smaller than 60
+export const NUCLEUS_H    = 24    // helix y-amplitude ×2 — ~15 % smaller than 28
 export const NUCLEUS_PTS  = 20    // sample points along helix
 export const NUCLEUS_RUNGS = 8   // cross-rungs drawn per tick
 

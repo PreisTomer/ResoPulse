@@ -49,7 +49,7 @@ export default defineComponent({})
         <RouterLink to="/experiment" class="btn btn-primary">
           Open Experiment Lab →
         </RouterLink>
-        <a href="#" class="btn btn-ghost">View Protocol Documentation</a>
+        <RouterLink to="/protocol" class="btn btn-ghost">View Protocol Documentation</RouterLink>
       </div>
 
       <!-- Research scope tags -->

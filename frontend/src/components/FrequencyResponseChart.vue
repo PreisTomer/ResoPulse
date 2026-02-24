@@ -10,10 +10,10 @@ import { broadcastFieldParams } from '../services/socket'
 // 200 logarithmically spaced Hz from 10 kHz to 500 MHz
 const F_MIN_HZ = 10_000
 const F_MAX_HZ = 500_000_000
-const F_CURSOR_MAX_KHZ = 700  // matches slider max
+const F_CURSOR_MAX_KHZ = 10000  // 10 MHz — covers bacteria fc range
 const N_POINTS = 200
 
-const MARGIN = { top: 18, right: 68, bottom: 38, left: 54 }
+const MARGIN = { top: 22, right: 68, bottom: 52, left: 54 }
 
 function logspace(min: number, max: number, n: number): number[] {
   const step = (Math.log10(max) - Math.log10(min)) / (n - 1)
@@ -72,6 +72,23 @@ export default defineComponent({
       return `${hz / 1e3}k`
     },
 
+    // ── Optimal frequency scan (300 log-spaced pts, returns Hz) ─────────
+    computeOptimalFreqHz(sigma_e: number): number {
+      const field = this.store.fieldIntensity
+      let maxSel = -Infinity, optHz = F_MIN_HZ
+      const logMin = Math.log10(F_MIN_HZ)
+      const logMax  = Math.log10(F_MAX_HZ)
+      for (let i = 0; i < 300; i++) {
+        const hz  = Math.pow(10, logMin + (logMax - logMin) * i / 299)
+        const khz = hz / 1000
+        const hVm = computeSchwan(this.store.healthy, khz, field, sigma_e)
+        const tVm = computeSchwan(this.store.target,  khz, field, sigma_e)
+        const sel = hVm > 0 ? tVm / hVm : 0
+        if (sel > maxSel) { maxSel = sel; optHz = hz }
+      }
+      return optHz
+    },
+
     // ── Compute Vm curve for one cell ────────────────────────────────────
     computeCurve(cell: typeof this.store.healthy, sigma_e: number): { hz: number; vm: number }[] {
       return F_POINTS_HZ.map((hz) => ({
@@ -120,9 +137,9 @@ export default defineComponent({
         .attr('class', 'axis-label-x')
         .attr('text-anchor', 'middle')
         .attr('x', this._chartW / 2)
-        .attr('y', this._chartH + 32)
+        .attr('y', this._chartH + 46)
         .attr('fill', 'var(--color-text)')
-        .attr('font-size', '0.6rem')
+        .attr('font-size', '0.62rem')
         .attr('font-family', 'var(--font-mono)')
         .attr('letter-spacing', '0.1em')
         .text('FREQUENCY (Hz)')
@@ -148,6 +165,9 @@ export default defineComponent({
 
       // fc markers
       g.append('g').attr('class', 'fc-markers')
+
+      // Optimal frequency marker
+      g.append('g').attr('class', 'opt-marker')
 
       // Cursor
       g.append('line')
@@ -234,13 +254,13 @@ export default defineComponent({
       g.select<SVGGElement>('.x-axis')
         .call(xAxis)
         .call((a) => a.select('.domain').attr('stroke', 'rgba(255,255,255,0.15)'))
-        .call((a) => a.selectAll('text').attr('fill', 'var(--color-text)').attr('font-size', '0.58rem').attr('font-family', 'var(--font-mono)'))
+        .call((a) => a.selectAll('text').attr('fill', 'var(--color-text)').attr('font-size', '0.64rem').attr('font-family', 'var(--font-mono)'))
         .call((a) => a.selectAll('line').attr('stroke', 'rgba(255,255,255,0.2)'))
 
       g.select<SVGGElement>('.y-axis')
         .call(yAxis)
         .call((a) => a.select('.domain').attr('stroke', 'rgba(255,255,255,0.15)'))
-        .call((a) => a.selectAll('text').attr('fill', 'var(--color-text)').attr('font-size', '0.58rem').attr('font-family', 'var(--font-mono)'))
+        .call((a) => a.selectAll('text').attr('fill', 'var(--color-text)').attr('font-size', '0.64rem').attr('font-family', 'var(--font-mono)'))
         .call((a) => a.selectAll('line').attr('stroke', 'rgba(255,255,255,0.2)'))
 
       // Grid
@@ -320,23 +340,74 @@ export default defineComponent({
         { fc: computeFc(this.store.healthy, sigma_e), color: '#00d4ff', label: 'fc(H)' },
         { fc: computeFc(this.store.target,  sigma_e), color: '#ff4d6d', label: 'fc(T)' },
       ]
-      fcData.forEach(({ fc, color, label }) => {
-        const hz = fc * 1000
-        if (hz < F_MIN_HZ || hz > F_MAX_HZ) return
-        const x = this._xScale!(hz)
+      // Build visible fc markers (within chart x domain)
+      const visibleFc = fcData
+        .map(({ fc, color, label }) => {
+          const hz = fc * 1000
+          if (hz < F_MIN_HZ || hz > F_MAX_HZ) return null
+          return {
+            x: this._xScale!(hz), color, label,
+            fcDisplay: fc >= 1000 ? `${(fc / 1000).toFixed(1)}M` : `${fc.toFixed(0)}k`,
+          }
+        })
+        .filter(Boolean) as { x: number; color: string; label: string; fcDisplay: string }[]
+
+      // When the two markers are within 52 px, flip text-anchor outward to avoid overlap
+      const MIN_GAP_PX = 52
+      const anchors: ('middle' | 'end' | 'start')[] = visibleFc.map(() => 'middle' as const)
+      if (visibleFc.length === 2) {
+        const v0 = visibleFc[0]!
+        const v1 = visibleFc[1]!
+        if (Math.abs(v0.x - v1.x) < MIN_GAP_PX) {
+          const [li, ri] = v0.x <= v1.x ? [0, 1] : [1, 0]
+          anchors[li] = 'end'
+          anchors[ri] = 'start'
+        }
+      }
+
+      visibleFc.forEach(({ x, color, label, fcDisplay }, i) => {
+        const anchor: 'middle' | 'end' | 'start' = anchors[i] ?? 'middle'
         fcGroup.append('text')
-          .attr('x', x).attr('y', this._chartH + 14)
+          .attr('x', x).attr('y', this._chartH + 20)
           .attr('text-anchor', 'middle')
-          .attr('fill', color).attr('font-size', '0.5rem')
+          .attr('fill', color).attr('font-size', '0.62rem')
           .attr('font-family', 'var(--font-mono)')
           .text('▲')
         fcGroup.append('text')
-          .attr('x', x).attr('y', this._chartH + 24)
-          .attr('text-anchor', 'middle')
-          .attr('fill', color).attr('font-size', '0.48rem')
+          .attr('x', x).attr('y', this._chartH + 34)
+          .attr('text-anchor', anchor)
+          .attr('fill', color).attr('font-size', '0.6rem')
           .attr('font-family', 'var(--font-mono)')
-          .text(label)
+          .attr('letter-spacing', '0.03em')
+          .text(`${label} ${fcDisplay}`)
       })
+
+      // Optimal frequency marker (golden dashed line + star label)
+      const optGroup = g.select<SVGGElement>('.opt-marker')
+      optGroup.selectAll('*').remove()
+      const optHz = this.computeOptimalFreqHz(sigma_e)
+      if (optHz >= F_MIN_HZ && optHz <= F_MAX_HZ) {
+        const ox     = this._xScale!(optHz)
+        const optKhz = optHz / 1000
+        const hVmOpt = computeSchwan(this.store.healthy, optKhz, this.store.fieldIntensity, sigma_e)
+        const tVmOpt = computeSchwan(this.store.target,  optKhz, this.store.fieldIntensity, sigma_e)
+        const optSel = hVmOpt > 0 ? tVmOpt / hVmOpt : 0
+        const optLabel = optHz >= 1e6
+          ? `⭐ ${(optHz / 1e6).toFixed(2)}M ×${optSel.toFixed(1)}`
+          : `⭐ ${(optHz / 1e3).toFixed(0)}k ×${optSel.toFixed(1)}`
+        optGroup.append('line')
+          .attr('x1', ox).attr('x2', ox)
+          .attr('y1', 0).attr('y2', this._chartH)
+          .attr('stroke', '#fbbf24').attr('stroke-width', 1)
+          .attr('stroke-dasharray', '3,4').attr('stroke-opacity', 0.45)
+        optGroup.append('text')
+          .attr('x', ox).attr('y', -5)
+          .attr('text-anchor', 'middle')
+          .attr('fill', '#fbbf24').attr('font-size', '0.58rem')
+          .attr('font-family', 'var(--font-mono)')
+          .attr('letter-spacing', '0.04em')
+          .text(optLabel)
+      }
 
       this.updateCursor()
     },
@@ -391,8 +462,8 @@ export default defineComponent({
           class="legend-item"
           v-tip="{ reference: `<strong>Reference cells</strong>\nHealthy baseline — hepatocyte, RBC\nTypically higher threshold voltage\nand lower membrane permittivity`,
                    cancer:    `<strong>Cancer cells</strong>\nLarger radius → lower fc → higher Vm at low frequency\nLower threshold → disrupted at lower field intensity`,
-                   bacteria:  `<strong>Bacteria</strong>\nSmall radius (0.5–1 µm) → fc in tens of MHz\nThick peptidoglycan wall raises membrane thickness`,
-                   virus:     `<strong>Viruses</strong>\nSub-micron radius (60–65 nm) → fc in GHz range\nRequires very high frequency for membrane coupling` }[g]"
+                   bacteria:  `<strong>Bacteria</strong>\nSmall radius (0.5–1 µm) → fc ~8–26 MHz (E. coli ~8 MHz, MRSA ~26 MHz)\nThick peptidoglycan wall raises membrane thickness`,
+                   virus:     `<strong>Viruses</strong>\nRadius ~100 nm · Schwan fc ~0.4 MHz (σ_i-limited)\nNote: single-shell model is approximate for virions` }[g]"
         >
           <span class="legend-dot" :style="{ background: `var(--group-${g})` }"></span>
           {{ { reference: 'Reference', cancer: 'Cancer', bacteria: 'Bacteria', virus: 'Virus' }[g] }}
@@ -452,7 +523,7 @@ export default defineComponent({
 }
 
 .chart-title {
-  font-size: 0.65rem;
+  font-size: 0.72rem;
   font-family: var(--font-mono);
   text-transform: uppercase;
   letter-spacing: 0.12em;
@@ -470,7 +541,7 @@ export default defineComponent({
   display: flex;
   align-items: center;
   gap: 0.3rem;
-  font-size: 0.56rem;
+  font-size: 0.62rem;
   font-family: var(--font-mono);
   color: var(--color-text);
   white-space: nowrap;
@@ -511,13 +582,13 @@ export default defineComponent({
   white-space: nowrap;
 }
 .tip-freq {
-  font-size: 0.58rem;
+  font-size: 0.65rem;
   font-family: var(--font-mono);
   color: var(--color-text);
   margin-bottom: 0.15rem;
 }
 .tip-row {
-  font-size: 0.6rem;
+  font-size: 0.68rem;
   font-family: var(--font-mono);
 }
 .tip-row--h { color: #00d4ff; }
