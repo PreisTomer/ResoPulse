@@ -5,7 +5,7 @@ const EPSILON_0 = 8.854187817e-12 // permittivity of free space [F/m]
 export const MEDIA = {
   saline: { name: 'Physiological Saline (0.9%)', conductivity: 1.5 },
   blood:  { name: 'Whole Blood',                  conductivity: 0.7 },
-  tissue: { name: 'Soft Tissue (DMEM)',            conductivity: 0.4 },
+  tissue: { name: 'Soft Tissue',                   conductivity: 0.4 },
   water:  { name: 'Distilled Water',               conductivity: 0.001 },
 } as const
 
@@ -19,7 +19,7 @@ export interface CellConfig {
   // Biophysical — user-editable
   radius: number               // µm
   membraneThickness: number    // nm
-  naturalFrequency: number     // Hz (stored for reference & oscilloscope animation)
+  naturalFrequency: number     // Hz — oscilloscope animation speed only; NOT a physics parameter
   thresholdVoltage: number     // V — Vm above which lysis is initiated
   dielectricConstant: number   // ε_r of membrane
   conductivity: number         // S/m — cytoplasm σ_i
@@ -43,7 +43,7 @@ export const simulationData = {
       label: 'Healthy Hepatocyte',
       radius: 10,
       membraneThickness: 7,
-      naturalFrequency: 528,
+      naturalFrequency: 440,
       thresholdVoltage: 1.1,
       dielectricConstant: 5.0,
       conductivity: 0.5,
@@ -54,7 +54,7 @@ export const simulationData = {
       label: 'Adenocarcinoma Cell',
       radius: 15,
       membraneThickness: 5,
-      naturalFrequency: 417,
+      naturalFrequency: 380,
       thresholdVoltage: 0.7,
       dielectricConstant: 8.5,
       conductivity: 0.9,
@@ -75,11 +75,16 @@ export function membraneCm(cell: CellConfig): number {
   return (cell.dielectricConstant * EPSILON_0) / (cell.membraneThickness * 1e-9)
 }
 
-/** Membrane time constant τ [s]: τ = R·Cm / (σ_e + σ_i/2) */
+/**
+ * Membrane time constant τ [s] — Kotnik & Miklavcic (2000) single-shell model:
+ *   τ = R·Cm · (2σ_e + σ_i) / (2σ_e · σ_i)
+ * Equivalently:  τ = R·Cm · (1/σ_i + 1/(2σ_e))
+ * NOT the simpler but incorrect form τ = R·Cm / (σ_e + σ_i/2).
+ */
 export function computeTau(cell: CellConfig, sigma_e: number): number {
   const R = cell.radius * 1e-6     // µm → m
   const Cm = membraneCm(cell)      // F/m²
-  return (R * Cm) / (sigma_e + cell.conductivity / 2)
+  return (R * Cm) * (2 * sigma_e + cell.conductivity) / (2 * sigma_e * cell.conductivity)
 }
 
 /**
@@ -101,13 +106,23 @@ export function computeSchwan(
 }
 
 /**
- * Peak specific absorption rate [W/kg]:
- *   SAR = σ_eff × E² / ρ   where σ_eff = (σ_e + σ_i) / 2
+ * Specific absorption rate [W/kg]:
+ *   SAR = σ_eff × E² × waveformFactor / ρ   where σ_eff = (σ_e + σ_i) / 2
+ *
+ * waveformFactor:
+ *   0.5 — CW sinusoidal (E²_rms = E²_peak / 2)
+ *   1.0 — pulsed DC / square wave (no RMS halving)
+ * Default 0.5 matches the typical CW sinusoidal electroporation regime.
  */
-export function computeSAR(cell: CellConfig, fieldVcm: number, sigma_e: number): number {
+export function computeSAR(
+  cell: CellConfig,
+  fieldVcm: number,
+  sigma_e: number,
+  waveformFactor = 0.5,
+): number {
   const E = fieldVcm * 100          // V/cm → V/m
   const sigma_eff = (sigma_e + cell.conductivity) / 2
-  return (sigma_eff * E * E) / cell.density
+  return (sigma_eff * E * E * waveformFactor) / cell.density
 }
 
 /** Cell characteristic frequency fc [kHz]: fc = 1 / (2πτ) */

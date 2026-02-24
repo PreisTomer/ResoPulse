@@ -4,6 +4,8 @@ import { useCellStore } from '../stores/cellStore'
 import { CELL_PRESETS, GROUP_COLORS, GROUP_LABELS } from '../constants/cellLibrary'
 import type { CellGroup } from '../constants/cellLibrary'
 import { DISRUPTION_WARN_THRESHOLD } from '../constants/cellCard'
+import { computeSchwan, MEDIA } from '../mockData'
+import { broadcastFieldParams } from '../services/socket'
 
 const TARGET_GROUPS: CellGroup[] = ['cancer', 'bacteria', 'virus']
 const HEALTHY_GROUP: CellGroup = 'reference'
@@ -35,14 +37,6 @@ export default defineComponent({
       return                                     { label: 'Sub-threshold',      color: '#00d4ff' }
     },
 
-    optimalNote(): string {
-      const targetR  = this.store.target.radius
-      const healthyR = this.store.healthy.radius
-      if (targetR > healthyR * 5) return 'Quasi-DC optimal · larger target benefits from low frequency'
-      if (targetR < healthyR)     return 'MHz range optimal · smaller target has higher fc'
-      return 'Quasi-DC preferred · size ratio drives selectivity'
-    },
-
     targetGroups(): CellGroup[] { return TARGET_GROUPS },
     healthyPresets() {
       return CELL_PRESETS.filter((p) => p.group === HEALTHY_GROUP)
@@ -57,9 +51,30 @@ export default defineComponent({
     activeTargetId(): string { return this.store.target.id },
     activeHealthyId(): string { return this.store.healthy.id },
 
+    targetVmMv(): string  { return (this.store.targetVm  * 1000).toFixed(2) },
+    healthyVmMv(): string { return (this.store.healthyVm * 1000).toFixed(2) },
+    targetSarVal(): string  { return this.store.targetSAR.toFixed(3)  },
+    healthySarVal(): string { return this.store.healthySAR.toFixed(3) },
+
+    presetComparison() {
+      const sigma_e = MEDIA[this.store.medium].conductivity
+      const freq    = this.store.currentBroadcastFrequency
+      const field   = this.store.fieldIntensity
+      const hVm     = computeSchwan(this.store.healthy, freq, field, sigma_e)
+      return CELL_PRESETS
+        .filter((p) => p.group !== 'reference')
+        .map((p) => {
+          const tVm = computeSchwan(p, freq, field, sigma_e)
+          const sel = hVm > 0 ? tVm / hVm : 0
+          return { preset: p, sel, tVmMv: (tVm * 1000).toFixed(1), isActive: this.store.target.id === p.id }
+        })
+        .sort((a, b) => b.sel - a.sel)
+    },
+
     // ── Tooltip content ───────────────────────────────────────────────────
     tipSelectivity(): string {
       const sel = this.selectivity
+      const ti  = this.therapeuticIndex
       const quality = sel >= 1.5
         ? '<span class="tip-ok">Strong therapeutic window</span>'
         : sel >= 1.0
@@ -72,6 +87,11 @@ ${quality}
 ≥ 1.5 → strong window (green)
 1.0–1.5 → marginal (amber)
 < 1.0 → non-selective (red)
+
+<strong>Therapeutic Index TI = (Vt/Vt,thr) / (Vh/Vh,thr)</strong>
+Current: <span class="tip-val">${ti.toFixed(2)}×</span>
+TI accounts for different lysis thresholds.
+TI > 1 → target proportionally closer to lysis.
 
 Physically driven by size ratio R_T/R_H
 via the Schwan equation  (Vm ∝ cell radius)`
@@ -120,16 +140,66 @@ Sub-threshold  T <50%
   Non-selective — both cell types disrupted`
     },
 
-    tipOptimal(): string {
-      return `<strong>Optimal Frequency Note</strong>
-Based on cell radii and characteristic frequencies.
+    // ── Optimal frequency (max selectivity across 10 kHz – 500 MHz) ──────
+    optimalFreqResult(): { khz: number; sel: number } {
+      const sigma_e = MEDIA[this.store.medium].conductivity
+      const field   = this.store.fieldIntensity
+      let maxSel = -Infinity, optKhz = 10
+      const logMin = Math.log10(10)
+      const logMax  = Math.log10(500_000)  // kHz units — 500 MHz
+      for (let i = 0; i < 300; i++) {
+        const khz = Math.pow(10, logMin + (logMax - logMin) * i / 299)
+        const hVm = computeSchwan(this.store.healthy, khz, field, sigma_e)
+        const tVm = computeSchwan(this.store.target,  khz, field, sigma_e)
+        const sel  = hVm > 0 ? tVm / hVm : 0
+        if (sel > maxSel) { maxSel = sel; optKhz = khz }
+      }
+      return { khz: optKhz, sel: Math.max(0, maxSel) }
+    },
 
-Quasi-DC regime (f ≪ fc):
-  Vm = 1.5 × E × R  (linear, size-selective)
-MHz range (between fc values):
-  Frequency can tune relative Vm between cells
-GHz regime (f ≫ fc):
-  Membrane becomes transparent to field`
+    optimalNote(): string {
+      const { khz, sel } = this.optimalFreqResult
+      const label = khz >= 1000 ? `${(khz / 1000).toFixed(2)} MHz` : `${khz.toFixed(0)} kHz`
+      if (khz > 10000) {
+        return `⭐ Optimal: ${label} · ×${sel.toFixed(2)} ↑ beyond slider range`
+      }
+      return `⭐ Optimal: ${label} · ×${sel.toFixed(2)}`
+    },
+
+    therapeuticIndex(): number { return this.store.therapeuticIndex },
+    targetLysisField(): string  { return this.store.targetLysisField.toFixed(0) + ' V/cm' },
+    healthyLysisField(): string { return this.store.healthyLysisField.toFixed(0) + ' V/cm' },
+
+    targetLysisProbability(): number {
+      // Sigmoid centered at 1.0 (lysis threshold), softness 0.05 (sharp at threshold)
+      return Math.round(100 / (1 + Math.exp(-(this.targetRatio - 1.0) / 0.05)))
+    },
+
+    healthyLysisProbability(): number {
+      return Math.round(100 / (1 + Math.exp(-(this.healthyRatio - 1.0) / 0.05)))
+    },
+
+    tipOptimal(): string {
+      const { khz, sel } = this.optimalFreqResult
+      const label    = khz >= 1000 ? `${(khz / 1000).toFixed(2)} MHz` : `${khz.toFixed(0)} kHz`
+      const cls      = sel >= 1.5 ? 'tip-ok' : sel >= 1.0 ? 'tip-val' : 'tip-warn'
+      const beyondRange = khz > 10000
+      const snapNote = beyondRange
+        ? `<span class="tip-warn">⚠ Optimal is beyond 10 MHz slider cap.\n  Snap sets 10 MHz (best reachable frequency).\n  Bacteria/virus targeting requires >10 MHz RF equipment.</span>`
+        : `<span class="tip-ok">Click to snap cursor to this frequency</span>`
+      return `<strong>Optimal Broadcast Frequency</strong>
+Scanned 300 log-spaced points from 10 kHz → 500 MHz.
+Maximises T-Vm / H-Vm at current field and medium.
+
+Peak: <span class="${cls}">${label} · ×${sel.toFixed(3)}</span>
+${snapNote}
+
+Physics:
+  f ≪ fc_T and fc_H : sel = R_T/R_H  (quasi-DC, size ratio drives selectivity)
+  f between fc_T and fc_H : frequency tunes selectivity window
+  f ≫ fc_H : membrane transparent → selectivity collapses
+For bacteria (fc ~8–26 MHz) → optimal frequency is above the 10 MHz slider
+Note: virion fc ~0.4 MHz per Schwan model (σ_i-limited; model approximate for virions)`
     },
   },
 
@@ -140,6 +210,12 @@ GHz regime (f ≫ fc):
     loadHealthy(preset: typeof CELL_PRESETS[0]) {
       this.store.loadPreset('healthy', preset)
     },
+    snapToOptimal() {
+      const khz = Math.round(Math.min(10000, Math.max(10, this.optimalFreqResult.khz)))
+      this.store.setBroadcastFreqKHz(khz)
+      broadcastFieldParams(khz, this.store.fieldIntensity, this.store.medium)
+    },
+
     presetTip(p: typeof CELL_PRESETS[0]): string {
       return `<strong>${p.label}</strong>
 ${p.notes}
@@ -156,15 +232,19 @@ Vm threshold = <span class="tip-val">${p.thresholdVoltage} V</span>`
   <div class="sel-panel">
     <div class="panel-title">Selectivity Analysis</div>
 
-    <!-- ── Selectivity ratio ──────────────────────────────────── -->
+    <!-- ── Selectivity ratio + TI ────────────────────────────── -->
     <div class="sel-ratio-wrap" v-tip="tipSelectivity">
       <span class="sel-ratio" :style="{ color: selectivityColor }">
         ×{{ selectivity.toFixed(2) }}
       </span>
-      <span class="sel-ratio-label">Target / Healthy Vm ratio</span>
+      <div class="sel-ratio-labels">
+        <span class="sel-ratio-label">Target / Healthy Vm ratio</span>
+        <span class="sel-ti-label">TI <span :style="{ color: selectivityColor }">{{ therapeuticIndex.toFixed(2) }}×</span></span>
+      </div>
     </div>
 
     <!-- ── Disruption progress bars ──────────────────────────── -->
+    <div class="panel-sep"></div>
     <div class="disruption-bars">
       <div class="bar-row" v-tip="tipTargetBar">
         <span class="bar-lbl">T</span>
@@ -176,6 +256,11 @@ Vm threshold = <span class="tip-val">${p.thresholdVoltage} V</span>`
           ></div>
         </div>
         <span class="bar-val">{{ targetRatioPct.toFixed(0) }}%</span>
+        <span
+          class="bar-plysis"
+          :class="{ 'bar-plysis--high': targetLysisProbability >= 50 }"
+          v-tip="'<strong>P(electroporation)</strong>\nSigmoid probability centered at 100% disruption threshold.\nP = 1 / (1 + e^−((ratio−1.0)/0.05))\n≥50% → lysis likely if held for 2.5 s'"
+        >P{{ targetLysisProbability }}%</span>
       </div>
       <div class="bar-row" v-tip="tipHealthyBar">
         <span class="bar-lbl">H</span>
@@ -187,6 +272,31 @@ Vm threshold = <span class="tip-val">${p.thresholdVoltage} V</span>`
           ></div>
         </div>
         <span class="bar-val">{{ healthyRatioPct.toFixed(0) }}%</span>
+        <span
+          class="bar-plysis"
+          :class="{ 'bar-plysis--high': healthyLysisProbability >= 50 }"
+          v-tip="'<strong>P(electroporation) — Healthy</strong>\nSigmoid probability centered at 100% disruption threshold.\nKeep this value near 0% for selective therapy'"
+        >P{{ healthyLysisProbability }}%</span>
+      </div>
+    </div>
+
+    <!-- ── Absolute Vm & SAR ──────────────────────────────────── -->
+    <div class="panel-sep"></div>
+    <div
+      class="vm-sar-grid"
+      v-tip="'<strong>Transmembrane potential and SAR</strong>\nVm — peak voltage across cell membrane (Schwan eq.)\n  Vm = 1.5·E·R / √(1+(2πf·τ)²)\n  τ = R·Cm·(2σ_e+σ_i)/(2σ_e·σ_i)\nSAR — specific absorption rate (W/kg)\n  SAR = σ_eff·E²·wf / ρ  where σ_eff=(σ_e+σ_i)/2, wf=0.5(CW) or 1.0(pulsed)\n  Proportional to thermal load deposited in the cell'"
+    >
+      <div class="vm-sar-cell">
+        <span class="vs-type vs-type--t">T-Vm</span>
+        <span class="vs-vm" style="color:#ff4d6d">{{ targetVmMv }} mV</span>
+        <span class="vs-sar">{{ targetSarVal }} W/kg</span>
+        <span class="vs-elysis" v-tip="'<strong>Target lysis field</strong>\nMinimum E required to reach lysis threshold at current frequency.\nE_lysis = Vm_thr · √(1+(ωτ)²) / (1.5·R)'">E<sub>lys</sub> {{ targetLysisField }}</span>
+      </div>
+      <div class="vm-sar-cell">
+        <span class="vs-type vs-type--h">H-Vm</span>
+        <span class="vs-vm" style="color:#00d4ff">{{ healthyVmMv }} mV</span>
+        <span class="vs-sar">{{ healthySarVal }} W/kg</span>
+        <span class="vs-elysis" v-tip="'<strong>Healthy lysis field</strong>\nMinimum E required to reach lysis threshold at current frequency.\nKeep operating field below this value for selective therapy.'">E<sub>lys</sub> {{ healthyLysisField }}</span>
       </div>
     </div>
 
@@ -199,10 +309,49 @@ Vm threshold = <span class="tip-val">${p.thresholdVoltage} V</span>`
       >
         {{ modeBadge.label }}
       </span>
-      <span class="optimal-note" v-tip="tipOptimal">{{ optimalNote }}</span>
+      <span
+        class="optimal-note optimal-note--snap"
+        :class="{ 'optimal-note--beyond': optimalFreqResult.khz > 10000 }"
+        @click="snapToOptimal"
+        v-tip="tipOptimal"
+      >{{ optimalNote }}</span>
+    </div>
+
+    <!-- ── Preset selectivity comparison ─────────────────────── -->
+    <div class="panel-sep"></div>
+    <div class="library-section">
+      <div
+        class="lib-title"
+        v-tip="'<strong>Selectivity vs All Presets</strong>\nSelectivity ratio (T-Vm / H-Vm) computed for every\ntarget preset against the current healthy baseline,\nat the current frequency and field intensity.\nSorted highest → lowest.\nActive preset is highlighted.'"
+      >Selectivity vs All Presets</div>
+      <div class="comparison-table">
+        <div
+          v-for="row in presetComparison"
+          :key="row.preset.presetId"
+          class="cmp-row"
+          :class="{ 'cmp-row--active': row.isActive }"
+          v-tip="`<strong>${row.preset.label}</strong>\n${row.preset.notes}\nVm = <span class='tip-val'>${row.tVmMv} mV</span>  ·  Selectivity = <span class='tip-val'>×${row.sel.toFixed(3)}</span>\nClick the preset pill below to switch to this cell`"
+        >
+          <span class="cmp-name" :style="{ color: GROUP_COLORS[row.preset.group] }">{{ row.preset.shortLabel }}</span>
+          <div class="cmp-bar-track">
+            <div
+              class="cmp-bar"
+              :style="{
+                width: Math.min(100, row.sel * 40) + '%',
+                background: row.sel >= 1.5 ? '#39ff14' : row.sel >= 1.0 ? '#fbbf24' : '#ff4d6d',
+              }"
+            ></div>
+          </div>
+          <span
+            class="cmp-sel"
+            :style="{ color: row.sel >= 1.5 ? '#39ff14' : row.sel >= 1.0 ? '#fbbf24' : '#ff4d6d' }"
+          >×{{ row.sel.toFixed(2) }}</span>
+        </div>
+      </div>
     </div>
 
     <!-- ── Target cell library ────────────────────────────────── -->
+    <div class="panel-sep"></div>
     <div class="library-section">
       <div
         class="lib-title"
@@ -227,6 +376,7 @@ Vm threshold = <span class="tip-val">${p.thresholdVoltage} V</span>`
     </div>
 
     <!-- ── Healthy baseline ───────────────────────────────────── -->
+    <div class="panel-sep"></div>
     <div class="library-section">
       <div
         class="lib-title"
@@ -252,10 +402,19 @@ Vm threshold = <span class="tip-val">${p.thresholdVoltage} V</span>`
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
-  padding: 0.85rem 1rem;
+  padding: 1rem 1.1rem 1.2rem;
   display: flex;
   flex-direction: column;
-  gap: 0.8rem;
+  gap: 0.75rem;
+}
+
+/* ── Section separator ────────────────────────────────────── */
+.panel-sep {
+  height: 1px;
+  background: var(--color-border);
+  opacity: 0.5;
+  margin: 0.1rem 0;
+  flex-shrink: 0;
 }
 
 /* ── Panel title ─────────────────────────────────────────────── */
@@ -280,6 +439,12 @@ Vm threshold = <span class="tip-val">${p.thresholdVoltage} V</span>`
   letter-spacing: -0.04em;
   line-height: 1;
   transition: color 0.4s;
+  flex-shrink: 0;
+}
+.sel-ratio-labels {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
 }
 .sel-ratio-label {
   font-size: 0.6rem;
@@ -288,12 +453,19 @@ Vm threshold = <span class="tip-val">${p.thresholdVoltage} V</span>`
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
+.sel-ti-label {
+  font-size: 0.6rem;
+  font-family: var(--font-mono);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
 
 /* ── Disruption bars ─────────────────────────────────────────── */
 .disruption-bars { display: flex; flex-direction: column; gap: 0.35rem; }
 .bar-row { display: flex; align-items: center; gap: 0.5rem; }
 .bar-lbl {
-  font-size: 0.6rem; font-family: var(--font-mono);
+  font-size: 0.66rem; font-family: var(--font-mono);
   color: var(--color-text); width: 1rem; text-align: right; flex-shrink: 0;
 }
 .bar-track {
@@ -311,14 +483,14 @@ Vm threshold = <span class="tip-val">${p.thresholdVoltage} V</span>`
 .bar-fill--warn { animation: bar-flash 0.6s ease-in-out infinite alternate; }
 @keyframes bar-flash { from { opacity: 1; } to { opacity: 0.5; } }
 .bar-val {
-  font-size: 0.58rem; font-family: var(--font-mono);
+  font-size: 0.66rem; font-family: var(--font-mono);
   color: var(--color-text); width: 2.2rem; text-align: right; flex-shrink: 0;
 }
 
 /* ── Mode badge ──────────────────────────────────────────────── */
 .mode-row { display: flex; flex-direction: column; gap: 0.35rem; }
 .mode-badge {
-  font-size: 0.62rem; font-family: var(--font-mono);
+  font-size: 0.68rem; font-family: var(--font-mono);
   text-transform: uppercase; letter-spacing: 0.1em;
   padding: 0.2rem 0.55rem;
   border-radius: 3px;
@@ -327,17 +499,44 @@ Vm threshold = <span class="tip-val">${p.thresholdVoltage} V</span>`
   transition: color 0.3s, border-color 0.3s;
 }
 .optimal-note {
-  font-size: 0.56rem; font-family: var(--font-mono);
+  font-size: 0.62rem; font-family: var(--font-mono);
   color: var(--color-text-muted); opacity: 0.85;
   line-height: 1.5;
 }
+.optimal-note--snap {
+  cursor: pointer;
+  color: #fbbf24;
+  opacity: 1;
+  transition: opacity 0.15s, color 0.2s;
+}
+.optimal-note--snap:hover { opacity: 0.75; }
+.optimal-note--beyond {
+  color: var(--color-text-muted);
+  opacity: 0.7;
+}
+.optimal-note--beyond:hover { opacity: 0.55; }
+
+/* ── P(lysis) probability ─────────────────────────────────── */
+.bar-plysis {
+  font-size: 0.62rem; font-family: var(--font-mono);
+  color: var(--color-text-muted); opacity: 0.7;
+  width: 2.6rem; text-align: right; flex-shrink: 0;
+  transition: color 0.3s, opacity 0.3s;
+}
+.bar-plysis--high {
+  color: #ff4d6d;
+  opacity: 1;
+  font-weight: 600;
+}
 
 /* ── Library sections ────────────────────────────────────────── */
-.library-section { display: flex; flex-direction: column; gap: 0.35rem; }
+.library-section { display: flex; flex-direction: column; gap: 0.4rem; }
 .lib-title {
-  font-size: 0.58rem; font-family: var(--font-mono);
+  font-size: 0.6rem; font-family: var(--font-mono);
   text-transform: uppercase; letter-spacing: 0.1em;
-  color: var(--color-text);
+  color: var(--color-text-heading);
+  opacity: 0.9;
+  margin-bottom: 0.1rem;
 }
 .lib-group { display: flex; flex-direction: column; gap: 0.25rem; margin-bottom: 0.25rem; }
 .lib-group-label {
@@ -359,4 +558,55 @@ Vm threshold = <span class="tip-val">${p.thresholdVoltage} V</span>`
 }
 .preset-pill:hover { border-color: var(--color-primary); color: var(--color-primary); }
 .preset-pill--active { background-color: rgba(255,255,255,0.05); }
+
+/* ── Vm / SAR readout ────────────────────────────────────────── */
+.vm-sar-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;
+  background: rgba(0,0,0,0.2); border: 1px solid var(--color-border);
+  border-radius: var(--radius); padding: 0.45rem 0.65rem;
+  cursor: default;
+}
+.vm-sar-cell { display: flex; align-items: baseline; gap: 0.35rem; flex-wrap: wrap; }
+.vs-type {
+  font-size: 0.65rem; font-family: var(--font-mono);
+  font-weight: 700; opacity: 0.85; flex-shrink: 0;
+}
+.vs-type--t { color: #ff4d6d; }
+.vs-type--h { color: #00d4ff; }
+.vs-vm {
+  font-size: 0.9rem; font-family: var(--font-mono);
+  font-weight: 700; line-height: 1;
+}
+.vs-sar {
+  font-size: 0.62rem; font-family: var(--font-mono);
+  color: var(--color-text-muted); opacity: 0.85; white-space: nowrap;
+}
+.vs-elysis {
+  font-size: 0.58rem; font-family: var(--font-mono);
+  color: var(--color-text-muted); opacity: 0.7; white-space: nowrap;
+  cursor: default;
+}
+
+/* ── Preset comparison table ─────────────────────────────────── */
+.comparison-table { display: flex; flex-direction: column; gap: 0.18rem; }
+.cmp-row {
+  display: grid; grid-template-columns: 3.2rem 1fr 2.8rem;
+  align-items: center; gap: 0.4rem; padding: 0.1rem 0.2rem;
+  border-radius: 3px; transition: background 0.1s;
+}
+.cmp-row--active { background: rgba(255,255,255,0.05); }
+.cmp-name {
+  font-size: 0.56rem; font-family: var(--font-mono);
+  text-transform: uppercase; letter-spacing: 0.04em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.cmp-bar-track {
+  height: 4px; background: rgba(255,255,255,0.08);
+  border-radius: 2px; overflow: hidden;
+}
+.cmp-bar { height: 100%; border-radius: 2px; transition: width 0.3s ease; }
+.cmp-sel {
+  font-size: 0.6rem; font-family: var(--font-mono);
+  font-weight: 600; text-align: right;
+}
 </style>

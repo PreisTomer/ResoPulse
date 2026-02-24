@@ -32,12 +32,20 @@ export default defineComponent({
       return this.store.healthyDisruptionRatio
     },
 
+    freqDisplay(): string {
+      return this.currentFreq >= 1000
+        ? `${(this.currentFreq / 1000).toFixed(2)} MHz`
+        : `${this.currentFreq} kHz`
+    },
+
     targetFcDisplay(): string {
-      return this.store.targetFc.toFixed(0)
+      const fc = this.store.targetFc
+      return fc >= 1000 ? `${(fc / 1000).toFixed(2)} MHz` : `${fc.toFixed(0)} kHz`
     },
 
     healthyFcDisplay(): string {
-      return this.store.healthyFc.toFixed(0)
+      const fc = this.store.healthyFc
+      return fc >= 1000 ? `${(fc / 1000).toFixed(2)} MHz` : `${fc.toFixed(0)} kHz`
     },
 
     mediaKeys(): MediumKey[] {
@@ -52,21 +60,67 @@ export default defineComponent({
       return (this.healthyDisruption * 100).toFixed(0)
     },
 
+    dutyCycleLogVal(): number {
+      return Math.log10(this.store.dutyCycle)
+    },
+
+    dutyCycleDisplay(): string {
+      const pct = this.store.dutyCycle * 100
+      if (pct < 0.001) return (pct * 1000).toFixed(1) + ' µ%'
+      if (pct < 0.1)   return pct.toFixed(4) + '%'
+      return pct.toFixed(2) + '%'
+    },
+
+    currentWaveform(): 'cw' | 'pulsed' {
+      return this.store.waveform
+    },
+
+    tipWaveform(): string {
+      return `<strong>Waveform Type</strong>
+<span class="tip-val">CW (sinusoidal)</span>  — continuous wave, SAR = σ·E²_rms/ρ = σ·E²/(2ρ)
+  waveformFactor = 0.5 (RMS halving applied)
+
+<span class="tip-val">Pulsed (DC)</span>  — square-wave bursts, SAR = σ·E²/ρ
+  waveformFactor = 1.0 (full peak E² used)
+  Duty cycle row controls on-fraction
+
+CW is typical for TTFields (100–500 kHz sinusoidal).
+Pulsed is typical for IRE/electroporation protocols.`
+    },
+
+    tipDutyCycle(): string {
+      const effT = (this.store.targetSAR  * this.store.dutyCycle).toFixed(2)
+      const effH = (this.store.healthySAR * this.store.dutyCycle).toFixed(2)
+      return `<strong>Pulse Duty Cycle  (t_on / period)</strong>
+Current: <span class="tip-val">${this.dutyCycleDisplay}</span>
+
+Fraction of time the field is active.
+Scales effective SAR → thermal load:
+  SAR_eff = SAR_peak × duty_cycle
+
+<span class="tip-val">T: ${effT} W/kg</span>  ·  <span class="tip-val">H: ${effH} W/kg</span>
+
+Drives Newton cooling temperature model.
+Typical pulsed electroporation: 0.001%–1%
+High duty cycle → rapid heating; use caution`
+    },
+
     // ── Tooltip content ───────────────────────────────────────────────────
     tipMedium(): string {
       const key = this.currentMedium
       const m = this.MEDIA[key]
       return `<strong>Propagation Medium</strong>
 Sets external conductivity <span class="tip-val">σ_e = ${m.conductivity} S/m</span>
-Used in Schwan time constant:  τ = R·Cm / (σ_e + σ_i/2)
-Higher σ_e → stronger field coupling → higher Vm`
+Used in Schwan time constant:
+  τ = R·Cm·(2σ_e+σ_i) / (2σ_e·σ_i)
+Higher σ_e → lower τ → higher fc → broader quasi-DC regime`
     },
 
     tipMediumKeys(): Record<string, string> {
       const descs: Record<string, string> = {
         saline: 'Matches physiological interstitial fluid',
         blood:  'Whole blood — moderate coupling',
-        tissue: 'Soft tissue / DMEM culture medium',
+        tissue: 'Soft tissue (low-perfusion) — note: DMEM has σ_e ≈ 1.4–1.6 S/m, not 0.4 S/m',
         water:  'Distilled water — near-zero coupling',
       }
       const out: Record<string, string> = {}
@@ -81,11 +135,11 @@ ${descs[key] ?? ''}`
 
     tipFreq(): string {
       return `<strong>RF Broadcast Frequency</strong>
-Current: <span class="tip-val">${this.currentFreq} kHz</span>
+Current: <span class="tip-val">${this.freqDisplay}</span>
 Schwan denominator: √(1 + (2πf·τ)²)
 
-<span class="tip-val">fc(T) = ${this.targetFcDisplay} kHz</span> — target roll-off frequency
-<span class="tip-val">fc(H) = ${this.healthyFcDisplay} kHz</span> — healthy roll-off frequency
+<span class="tip-val">fc(T) = ${this.targetFcDisplay}</span> — target roll-off frequency
+<span class="tip-val">fc(H) = ${this.healthyFcDisplay}</span> — healthy roll-off frequency
 
 Below fc → quasi-DC regime, Vm at maximum
 Above fc → Vm rolls off toward zero`
@@ -94,11 +148,12 @@ Above fc → Vm rolls off toward zero`
     tipFcSub(): string {
       return `<strong>Characteristic Frequency  fc = 1 / (2πτ)</strong>
 At f = fc,  Vm = 0.707 × Vm_DC  (−3 dB point)
+τ = R·Cm·(2σ_e+σ_i)/(2σ_e·σ_i)  [Kotnik & Miklavcic 2000]
 
 Depends on cell size and membrane properties:
-  Larger cells → lower fc (cancer cells: ~1–4 MHz)
-  Bacteria → fc in tens of MHz
-  Viruses → fc in GHz range`
+  Cancer cells: ~0.5–1.4 MHz  (adenocarcinoma ~0.49 MHz, hepatocyte ~1.08 MHz)
+  Bacteria:     ~8–26 MHz  (E. coli ~8 MHz, MRSA ~26 MHz)
+  Virions:      fc is low (~0.4 MHz) due to very low σ_i — Schwan model limited for virions`
     },
 
     tipField(): string {
@@ -159,12 +214,22 @@ Keep below 50% for a safe therapeutic window`
       this.store.setFieldIntensity(vcm)
       broadcastFieldParams(this.currentFreq, vcm, this.currentMedium)
     },
+
+    onDutyCycleInput(e: Event) {
+      const logVal = Number((e.target as HTMLInputElement).value)
+      this.store.setDutyCycle(Math.pow(10, logVal))
+    },
+
+    onWaveformChange(mode: 'cw' | 'pulsed') {
+      this.store.setWaveform(mode)
+    },
   },
 })
 </script>
 
 <template>
   <div class="field-panel">
+    <div class="panel-title">Field Control</div>
     <!-- Row 1: Medium selector -->
     <div class="panel-row panel-row--medium">
       <span class="row-label" v-tip="tipMedium">Medium</span>
@@ -188,7 +253,7 @@ Keep below 50% for a safe therapeutic window`
       </div>
       <span
         class="row-meta"
-        v-tip="`<strong>External conductivity σ_e = ${MEDIA[currentMedium].conductivity} S/m</strong>\nUsed in Schwan time constant:\nτ = R·Cm / (<span class=\'tip-val\'>σ_e</span> + σ_i/2)\nChange medium to shift the coupling strength`"
+        v-tip="`<strong>External conductivity σ_e = ${MEDIA[currentMedium].conductivity} S/m</strong>\nUsed in Schwan time constant:\nτ = R·Cm·(2·<span class=\'tip-val\'>σ_e</span>+σ_i)/(2·<span class=\'tip-val\'>σ_e</span>·σ_i)\nChange medium to shift the coupling strength`"
       >σ_e {{ MEDIA[currentMedium].conductivity }} S/m</span>
     </div>
 
@@ -200,15 +265,15 @@ Keep below 50% for a safe therapeutic window`
           class="ctrl-slider"
           type="range"
           :min="10"
-          :max="700"
+          :max="10000"
           step="1"
           :value="currentFreq"
           @input="onFreqInput"
         />
       </div>
       <div class="row-readout">
-        <span class="readout-value" v-tip="tipFreq">{{ currentFreq }}<span class="readout-unit"> kHz</span></span>
-        <span class="readout-sub" v-tip="tipFcSub">fc(T) {{ targetFcDisplay }} kHz · fc(H) {{ healthyFcDisplay }} kHz</span>
+        <span class="readout-value" v-tip="tipFreq">{{ freqDisplay }}</span>
+        <span class="readout-sub" v-tip="tipFcSub">fc(T) {{ targetFcDisplay }} · fc(H) {{ healthyFcDisplay }}</span>
       </div>
     </div>
 
@@ -242,6 +307,49 @@ Keep below 50% for a safe therapeutic window`
         </div>
       </div>
     </div>
+    <!-- Row 4: Waveform selector -->
+    <div class="panel-row panel-row--medium" v-tip="tipWaveform">
+      <span class="row-label">Waveform</span>
+      <div class="medium-pills">
+        <label
+          class="pill"
+          :class="{ 'pill--active': currentWaveform === 'pulsed' }"
+        >
+          <input type="radio" value="pulsed" :checked="currentWaveform === 'pulsed'" name="waveform" @change="onWaveformChange('pulsed')" />
+          Pulsed
+        </label>
+        <label
+          class="pill"
+          :class="{ 'pill--active': currentWaveform === 'cw' }"
+        >
+          <input type="radio" value="cw" :checked="currentWaveform === 'cw'" name="waveform" @change="onWaveformChange('cw')" />
+          CW
+        </label>
+      </div>
+      <span class="row-meta">wf×{{ currentWaveform === 'cw' ? '0.5' : '1.0' }}</span>
+    </div>
+
+    <!-- Row 5: Duty Cycle (pulsed only) -->
+    <div class="panel-row" v-if="currentWaveform === 'pulsed'">
+      <span class="row-label" v-tip="tipDutyCycle">Duty Cycle</span>
+      <div class="slider-track-wrap">
+        <input
+          class="ctrl-slider"
+          type="range"
+          min="-6"
+          max="-1"
+          step="0.05"
+          :value="dutyCycleLogVal"
+          @input="onDutyCycleInput"
+        />
+      </div>
+      <div class="row-readout">
+        <span class="readout-value" v-tip="tipDutyCycle">{{ dutyCycleDisplay }}</span>
+        <span class="readout-sub" v-tip="tipDutyCycle">
+          SAR_T {{ (store.targetSAR * store.dutyCycle).toFixed(1) }} · SAR_H {{ (store.healthySAR * store.dutyCycle).toFixed(1) }} W/kg
+        </span>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -250,11 +358,21 @@ Keep below 50% for a safe therapeutic window`
 .field-panel {
   display: flex;
   flex-direction: column;
-  gap: 0.55rem;
+  gap: 0.9rem;
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   padding: 0.85rem 1.25rem;
+}
+
+/* ── Panel title ─────────────────────────────────────────────────────── */
+.panel-title {
+  font-size: 0.62rem;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--color-text);
+  margin-bottom: 0.1rem;
 }
 
 /* ── Row layout ──────────────────────────────────────────────────────── */
@@ -263,7 +381,7 @@ Keep below 50% for a safe therapeutic window`
   grid-template-columns: 7.5rem 1fr auto;
   align-items: center;
   gap: 0.85rem;
-  min-height: 2rem;
+  min-height: 2.75rem;
 }
 
 .panel-row--medium {
@@ -360,7 +478,7 @@ Keep below 50% for a safe therapeutic window`
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 0.12rem;
+  gap: 0.25rem;
   min-width: 8rem;
 }
 
@@ -389,11 +507,11 @@ Keep below 50% for a safe therapeutic window`
 }
 
 .readout-sub {
-  font-size: 0.56rem;
+  font-size: 0.64rem;
   font-family: var(--font-mono);
   color: var(--color-text-muted);
   white-space: nowrap;
-  opacity: 0.6;
+  opacity: 0.82;
 }
 
 /* ── Disruption badges ───────────────────────────────────────────────── */

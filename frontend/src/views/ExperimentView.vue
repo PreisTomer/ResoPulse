@@ -8,6 +8,7 @@ import FrequencyResponseChart from '../components/FrequencyResponseChart.vue'
 import SelectivityPanel from '../components/SelectivityPanel.vue'
 import ExperimentLog from '../components/ExperimentLog.vue'
 import { useExperimentStore } from '../stores/experimentStore'
+import { CELL_PRESETS } from '../constants/cellLibrary'
 
 export default defineComponent({
   components: {
@@ -38,12 +39,21 @@ export default defineComponent({
     },
 
     cells() {
+      // Resolve label + sublabel from the live store cell (changes when preset loads)
+      const cellLabel = (type: 'healthy' | 'target') => {
+        return type === 'healthy' ? this.store.healthy.label : this.store.target.label
+      }
+      const cellSublabel = (type: 'healthy' | 'target') => {
+        const cell = type === 'healthy' ? this.store.healthy : this.store.target
+        const preset = CELL_PRESETS.find((p) => p.presetId === cell.id)
+        return preset ? preset.notes : this.$t(`cells.${type}.sublabel`)
+      }
       return [
         {
           id: 'healthy',
           type: 'healthy' as const,
-          label: this.$t('cells.healthy.label'),
-          sublabel: this.$t('cells.healthy.sublabel'),
+          label: cellLabel('healthy'),
+          sublabel: cellSublabel('healthy'),
           description: this.$t('cells.healthy.description'),
           buttonText: this.$t('cells.healthy.button'),
           cellData: this.store.healthy,
@@ -51,8 +61,8 @@ export default defineComponent({
         {
           id: 'target',
           type: 'target' as const,
-          label: this.$t('cells.target.label'),
-          sublabel: this.$t('cells.target.sublabel'),
+          label: cellLabel('target'),
+          sublabel: cellSublabel('target'),
           description: this.$t('cells.target.description'),
           buttonText: this.$t('cells.target.button'),
           cellData: this.store.target,
@@ -68,37 +78,39 @@ export default defineComponent({
 
     <!-- ── Session status bar ───────────────────────────────────── -->
     <div class="session-bar">
-      <div class="session-bar-left">
-        <span class="sb-brand">◎ BioResonance</span>
-        <span class="sb-sep">·</span>
-        <input
-          v-model="expStore.sessionName"
-          class="sb-session-name"
-          spellcheck="false"
-          :title="'Click to rename session'"
-        />
-      </div>
-      <div class="session-bar-right">
-        <span class="sb-chip sb-chip--medium">
-          <span class="sb-dot"></span>
-          {{ mediumLabel.toUpperCase() }}
-        </span>
-        <span class="sb-chip sb-chip--freq">
-          {{ store.currentBroadcastFrequency }} kHz
-        </span>
-        <span class="sb-chip sb-chip--field">
-          {{ store.fieldIntensity }} V/cm
-        </span>
-        <span
-          class="sb-chip"
-          :class="socketConnected ? 'sb-chip--connected' : 'sb-chip--local'"
-          v-tip="socketConnected
-            ? '<strong>Backend Connected</strong>\nField params sync in real time\nacross all connected clients via Socket.IO'
-            : '<strong>Local Mode</strong>\nBackend unreachable · all Schwan physics\nrun client-side · no multi-client sync'"
-        >
-          <span class="sb-dot" :class="socketConnected ? '' : 'sb-dot--warn'"></span>
-          {{ socketConnected ? 'CONNECTED' : 'LOCAL' }}
-        </span>
+      <div class="session-bar-inner">
+        <div class="session-bar-left">
+          <span class="sb-brand">◎ BioResonance</span>
+          <span class="sb-sep">·</span>
+          <input
+            v-model="expStore.sessionName"
+            class="sb-session-name"
+            spellcheck="false"
+            :title="'Click to rename session'"
+          />
+        </div>
+        <div class="session-bar-right">
+          <span class="sb-chip sb-chip--medium">
+            <span class="sb-dot"></span>
+            {{ mediumLabel.toUpperCase() }}
+          </span>
+          <span class="sb-chip sb-chip--freq">
+            {{ store.currentBroadcastFrequency }} kHz
+          </span>
+          <span class="sb-chip sb-chip--field">
+            {{ store.fieldIntensity }} V/cm
+          </span>
+          <span
+            class="sb-chip"
+            :class="socketConnected ? 'sb-chip--connected' : 'sb-chip--local'"
+            v-tip="socketConnected
+              ? '<strong>Backend Connected</strong>\nField params sync in real time\nacross all connected clients via Socket.IO'
+              : '<strong>Local Mode</strong>\nBackend unreachable · all Schwan physics\nrun client-side · no multi-client sync'"
+          >
+            <span class="sb-dot" :class="socketConnected ? '' : 'sb-dot--warn'"></span>
+            {{ socketConnected ? 'CONNECTED' : 'LOCAL' }}
+          </span>
+        </div>
       </div>
     </div>
 
@@ -150,14 +162,19 @@ export default defineComponent({
 
 /* ── Session bar ─────────────────────────────────────────────── */
 .session-bar {
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+  flex-shrink: 0;
+}
+
+.session-bar-inner {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 0.55rem 2rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: 0.55rem 2rem;
-  border-bottom: 1px solid var(--color-border);
-  background: var(--color-surface);
-  flex-shrink: 0;
   flex-wrap: wrap;
 }
 
@@ -243,7 +260,7 @@ export default defineComponent({
 /* ── Main grid ───────────────────────────────────────────────── */
 .exp-grid {
   display: grid;
-  grid-template-columns: 1fr 360px;
+  grid-template-columns: minmax(0, 1fr) 360px;
   gap: 1.25rem;
   padding: 1.5rem 2rem;
   max-width: 1600px;
@@ -270,8 +287,9 @@ export default defineComponent({
 
 .cell-cards {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 1.25rem;
+  overflow: hidden;
 }
 
 /* ── Responsive ──────────────────────────────────────────────── */
@@ -289,7 +307,7 @@ export default defineComponent({
 }
 
 @media (max-width: 680px) {
-  .session-bar { padding: 0.55rem 1rem; }
+  .session-bar-inner { padding: 0.55rem 1rem; }
 
   .exp-grid { padding: 0.75rem; gap: 0.85rem; }
 
