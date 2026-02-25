@@ -5,18 +5,51 @@ import { connectSocket, socketConnected } from '../services/socket'
 import CellCard from '../components/CellCard.vue'
 import FrequencySlider from '../components/FrequencySlider.vue'
 import FrequencyResponseChart from '../components/FrequencyResponseChart.vue'
+import ResonanceChart from '../components/ResonanceChart.vue'
 import SelectivityPanel from '../components/SelectivityPanel.vue'
 import ExperimentLog from '../components/ExperimentLog.vue'
 import { useExperimentStore } from '../stores/experimentStore'
 import { CELL_PRESETS } from '../constants/cellLibrary'
+
+/**
+ * Scientifically appropriate defaults per target cell category.
+ * Applied automatically when the target cell type is switched,
+ * mimicking a "new experiment" context.
+ *
+ * Values are chosen so T_ss < 38°C for the healthy reference cell (hepatocyte)
+ * at every default — researcher can slide UP from a safe starting point.
+ *
+ * Mammalian: standard IRE sub-threshold exploration.
+ *   150 V/cm pulsed dc=0.01%:  SAR_eff ≈ 1.1 W/kg → T_ss ≈ 37.02°C ✓
+ *
+ * Bacteria: nsEP regime — pulse width ≪ τ (τ_ecoli ≈ 14 ns, τ_mrsa ≈ 3 ns).
+ *   100 V/cm pulsed dc=1e-6:  SAR_eff ≈ 0.079 W/kg → T_ss ≈ 37.001°C ✓
+ *   Researcher slides field to ≥10 kV/cm to approach lysis — thermal warnings appear.
+ *
+ * Virus: Resonance mode (IRE inapplicable); capsid disruption via acoustic resonance.
+ *   400 V/cm pulsed dc=1e-6 @ 12 GHz (influenza f_res): minimal thermal footprint.
+ *   Auto-tuned to preset's resonantFreqGHz in applyTargetDefaults.
+ */
+const CATEGORY_DEFAULTS = {
+  mammalian: { fieldVcm: 150, freqKHz: 417,       waveform: 'pulsed' as const, dutyCycle: 1e-4, pulseWidthNs: 100000, medium: 'saline' as const },
+  bacteria:  { fieldVcm: 1000, freqKHz: 500000,   waveform: 'pulsed' as const, dutyCycle: 1e-6, pulseWidthNs: 10,     medium: 'saline' as const },
+  virus:     { fieldVcm: 400,  freqKHz: 12000000, waveform: 'pulsed' as const, dutyCycle: 1e-6, pulseWidthNs: 10,     medium: 'saline' as const },
+}
 
 export default defineComponent({
   components: {
     CellCard,
     FrequencySlider,
     FrequencyResponseChart,
+    ResonanceChart,
     SelectivityPanel,
     ExperimentLog,
+  },
+
+  data() {
+    return {
+      chartMode: 'schwan' as 'schwan' | 'resonance',
+    }
   },
 
   setup() {
@@ -27,15 +60,23 @@ export default defineComponent({
     return { store, expStore, socketConnected }
   },
 
+  watch: {
+    /** When the active target cell changes, reset all sliders to category-appropriate
+     *  defaults and auto-switch chart mode. Mirrors a "new experiment" context. */
+    currentTargetId(newId: string, oldId: string) {
+      if (newId !== oldId) this.applyTargetDefaults()
+    },
+  },
+
   computed: {
+    currentTargetId(): string {
+      return this.store.target.id
+    },
+
     mediumLabel(): string {
-      const labels: Record<string, string> = {
-        saline: 'Saline',
-        blood:  'Blood',
-        tissue: 'Tissue',
-        water:  'Water',
-      }
-      return labels[this.store.medium] ?? this.store.medium
+      const key = `slider.mediums.${this.store.medium}`
+      const translated = this.$t(key)
+      return translated !== key ? translated : this.store.medium
     },
 
     cells() {
@@ -48,12 +89,18 @@ export default defineComponent({
         const preset = CELL_PRESETS.find((p) => p.presetId === cell.id)
         return preset ? preset.notes : this.$t(`cells.${type}.sublabel`)
       }
+      const cellSublabelTip = (type: 'healthy' | 'target') => {
+        const cell = type === 'healthy' ? this.store.healthy : this.store.target
+        const preset = CELL_PRESETS.find((p) => p.presetId === cell.id)
+        return preset?.techNotes ?? ''
+      }
       return [
         {
           id: 'healthy',
           type: 'healthy' as const,
           label: cellLabel('healthy'),
           sublabel: cellSublabel('healthy'),
+          sublabelTip: cellSublabelTip('healthy'),
           description: this.$t('cells.healthy.description'),
           buttonText: this.$t('cells.healthy.button'),
           cellData: this.store.healthy,
@@ -63,11 +110,38 @@ export default defineComponent({
           type: 'target' as const,
           label: cellLabel('target'),
           sublabel: cellSublabel('target'),
+          sublabelTip: cellSublabelTip('target'),
           description: this.$t('cells.target.description'),
           buttonText: this.$t('cells.target.button'),
           cellData: this.store.target,
         },
       ]
+    },
+  },
+  methods: {
+    /** Reset field controls and chart mode to scientifically appropriate defaults
+     *  for the newly-selected target cell category. */
+    applyTargetDefaults() {
+      const cat = this.store.targetCellCategory
+      const d   = CATEGORY_DEFAULTS[cat]
+      // For virus/bacteria: auto-tune frequency to preset's resonant frequency if available
+      const t = this.store.target as { resonantFreqGHz?: number; resonantThresholdVcm?: number }
+      const freqKHz = (cat === 'virus' || cat === 'bacteria') && t.resonantFreqGHz
+        ? t.resonantFreqGHz * 1e6   // GHz → kHz (1 GHz = 1,000,000 kHz)
+        : d.freqKHz
+      // Start at 50% of disruption threshold for intuitive first contact
+      const fieldVcm = (cat === 'virus' || cat === 'bacteria') && t.resonantThresholdVcm
+        ? t.resonantThresholdVcm * 0.5
+        : d.fieldVcm
+      this.store.setFieldIntensity(fieldVcm)
+      this.store.setBroadcastFreqKHz(freqKHz)
+      this.store.setWaveform(d.waveform)
+      this.store.setDutyCycle(d.dutyCycle)
+      this.store.setPulseWidthNs(d.pulseWidthNs)
+      this.store.setMedium(d.medium)
+      // Always start from a thermally neutral state — clears any lysis/destruction
+      this.store.resetTemps()
+      this.chartMode = (cat === 'virus' || cat === 'bacteria') ? 'resonance' : 'schwan'
     },
   },
 })
@@ -86,29 +160,40 @@ export default defineComponent({
             v-model="expStore.sessionName"
             class="sb-session-name"
             spellcheck="false"
-            :title="'Click to rename session'"
+            :title="$t('exp.renameSession')"
           />
         </div>
         <div class="session-bar-right">
+          <!-- Chart mode toggle -->
+          <div class="sb-mode-toggle" v-tip="$t('exp.chartModeTip')">
+            <button
+              class="sb-mode-btn"
+              :class="{ 'sb-mode-btn--active': chartMode === 'schwan' }"
+              @click="chartMode = 'schwan'"
+            >{{ $t('slider.ireMode') }}</button>
+            <button
+              class="sb-mode-btn"
+              :class="{ 'sb-mode-btn--active': chartMode === 'resonance' }"
+              @click="chartMode = 'resonance'"
+            >{{ $t('slider.resonanceMode') }}</button>
+          </div>
           <span class="sb-chip sb-chip--medium">
             <span class="sb-dot"></span>
             {{ mediumLabel.toUpperCase() }}
           </span>
           <span class="sb-chip sb-chip--freq">
-            {{ store.currentBroadcastFrequency }} kHz
+            {{ store.currentBroadcastFrequency }} {{ $t('slider.kHz') }}
           </span>
           <span class="sb-chip sb-chip--field">
-            {{ store.fieldIntensity }} V/cm
+            {{ store.fieldIntensity }} {{ $t('slider.vPerCm') }}
           </span>
           <span
             class="sb-chip"
             :class="socketConnected ? 'sb-chip--connected' : 'sb-chip--local'"
-            v-tip="socketConnected
-              ? '<strong>Backend Connected</strong>\nField params sync in real time\nacross all connected clients via Socket.IO'
-              : '<strong>Local Mode</strong>\nBackend unreachable · all Schwan physics\nrun client-side · no multi-client sync'"
+            v-tip="socketConnected ? $t('exp.connectedTip') : $t('exp.localTip')"
           >
             <span class="sb-dot" :class="socketConnected ? '' : 'sb-dot--warn'"></span>
-            {{ socketConnected ? 'CONNECTED' : 'LOCAL' }}
+            {{ socketConnected ? $t('exp.connected').toUpperCase() : $t('exp.local').toUpperCase() }}
           </span>
         </div>
       </div>
@@ -120,11 +205,12 @@ export default defineComponent({
       <!-- Left column: chart + cell cards + field controls -->
       <div class="exp-left">
 
-        <!-- Frequency Response Chart -->
-        <FrequencyResponseChart />
+        <!-- Chart: IRE/Schwan transmembrane potential or Acoustic Resonance disruption -->
+        <FrequencyResponseChart v-if="chartMode === 'schwan'" />
+        <ResonanceChart v-else />
 
         <!-- Field / medium control panel -->
-        <FrequencySlider />
+        <FrequencySlider :chart-mode="chartMode" />
 
         <!-- Cell visualisation cards -->
         <div class="cell-cards">
@@ -134,6 +220,7 @@ export default defineComponent({
             :type="cell.type"
             :label="cell.label"
             :sublabel="cell.sublabel"
+            :sublabel-tip="cell.sublabelTip"
             :description="cell.description"
             :button-text="cell.buttonText"
             :cell-data="cell.cellData"
@@ -314,5 +401,42 @@ export default defineComponent({
   .cell-cards { grid-template-columns: 1fr; }
 
   .exp-right { grid-template-columns: 1fr; }
+}
+
+/* ── Chart mode toggle ───────────────────────────────────────── */
+.sb-mode-toggle {
+  display: flex;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-right: 0.2rem;
+}
+
+.sb-mode-btn {
+  background: transparent;
+  border: none;
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.08em;
+  padding: 0.2rem 0.55rem;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.sb-mode-btn:hover {
+  color: var(--color-text);
+  background: rgba(255,255,255,0.05);
+}
+
+.sb-mode-btn--active {
+  background: rgba(0, 212, 255, 0.12);
+  color: #00d4ff;
+  border-color: rgba(0, 212, 255, 0.3);
+}
+
+.sb-mode-btn + .sb-mode-btn {
+  border-left: 1px solid var(--color-border);
 }
 </style>

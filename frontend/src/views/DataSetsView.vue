@@ -1,7 +1,8 @@
 <script lang="ts">
 import { defineComponent, computed } from 'vue'
 import { CELL_PRESETS, GROUP_COLORS, GROUP_LABELS, type CellGroup } from '../constants/cellLibrary'
-import { MEDIA, membraneCm, computeFc } from '../mockData'
+import { MEDIA } from '../mockData'
+import { membraneCm, computeFc } from '../utils/physics'
 
 const SIGMA_SALINE = MEDIA.saline.conductivity // 1.5 S/m
 

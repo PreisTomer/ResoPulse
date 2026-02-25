@@ -4,7 +4,8 @@ import { useCellStore } from '../stores/cellStore'
 import { CELL_PRESETS, GROUP_COLORS, GROUP_LABELS } from '../constants/cellLibrary'
 import type { CellGroup } from '../constants/cellLibrary'
 import { DISRUPTION_WARN_THRESHOLD } from '../constants/cellCard'
-import { computeSchwan, MEDIA } from '../mockData'
+import { MEDIA } from '../mockData'
+import { computeSchwan, computeTau, computePulseStepResponse } from '../utils/physics'
 import { broadcastFieldParams } from '../services/socket'
 
 const TARGET_GROUPS: CellGroup[] = ['cancer', 'bacteria', 'virus']
@@ -65,12 +66,23 @@ export default defineComponent({
       const sigma_e = MEDIA[this.store.medium].conductivity
       const freq    = this.store.currentBroadcastFrequency
       const field   = this.store.fieldIntensity
-      const hVm     = computeSchwan(this.store.healthy, freq, field, sigma_e)
+      const pulsed  = this.store.waveform === 'pulsed'
+      const pulseNs = this.store.pulseWidthNs
+
+      // Healthy cell — DC Vm × pulse step factor
+      const hVm_dc  = computeSchwan(this.store.healthy, freq, field, sigma_e)
+      const hTau    = computeTau(this.store.healthy, sigma_e)
+      const hFactor = pulsed ? computePulseStepResponse(hTau, pulseNs) : 1.0
+      const hVm     = hVm_dc * hFactor
+
       return CELL_PRESETS
         .filter((p) => p.group !== 'reference')
         .map((p) => {
-          const tVm = computeSchwan(p, freq, field, sigma_e)
-          const sel = hVm > 0 ? tVm / hVm : 0
+          const tVm_dc  = computeSchwan(p, freq, field, sigma_e)
+          const tTau    = computeTau(p, sigma_e)
+          const tFactor = pulsed ? computePulseStepResponse(tTau, pulseNs) : 1.0
+          const tVm     = tVm_dc * tFactor
+          const sel     = hVm > 0 ? tVm / hVm : 0
           return { preset: p, sel, tVmMv: (tVm * 1000).toFixed(1), isActive: this.store.target.id === p.id }
         })
         .sort((a, b) => b.sel - a.sel)
@@ -176,8 +188,38 @@ Sub-threshold  T <50%
     },
 
     therapeuticIndex(): number { return this.store.therapeuticIndex },
-    targetLysisField(): string  { return this.store.targetLysisField.toFixed(0) + ' V/cm' },
-    healthyLysisField(): string { return this.store.healthyLysisField.toFixed(0) + ' V/cm' },
+
+    targetLysisField(): string {
+      const vcm = this.store.targetLysisField
+      return vcm >= 1000 ? `${(vcm / 1000).toFixed(1)} kV/cm` : `${vcm.toFixed(0)} V/cm`
+    },
+    healthyLysisField(): string {
+      const vcm = this.store.healthyLysisField
+      return vcm >= 1000 ? `${(vcm / 1000).toFixed(1)} kV/cm` : `${vcm.toFixed(0)} V/cm`
+    },
+
+    /**
+     * Model-validity or selectivity warning for the current target.
+     * Null → no warning displayed.
+     */
+    targetModelWarning(): string | null {
+      const cat = this.store.targetCellCategory
+      const ti  = this.therapeuticIndex
+      if (cat === 'virus') {
+        const tLysis = this.store.targetLysisField
+        return `⚠ IRE not applicable to virions — E_lysis ≈ ${(tLysis / 1000).toFixed(0)} kV/cm · Use DEP mode`
+      }
+      if (cat === 'bacteria') {
+        const tLysis = this.store.targetLysisField
+        if (tLysis > 3000) {
+          return `⚠ E_lysis ≈ ${(tLysis / 1000).toFixed(1)} kV/cm — standard IRE impractical · Consider nsEP or DEP`
+        }
+      }
+      if (ti > 0 && ti < 0.85) {
+        return `⚠ TI = ${ti.toFixed(2)}× — selectivity reversed at DC (τ_T < τ_H) · Short pulses may improve selectivity`
+      }
+      return null
+    },
 
     targetLysisProbability(): number {
       // Sigmoid centered at 1.0 (lysis threshold), softness 0.05 (sharp at threshold)
@@ -207,7 +249,7 @@ Physics:
   f ≪ fc_T and fc_H : sel = R_T/R_H  (quasi-DC; maximum for typical cancer/normal pairs)
   When τ_T > τ_H (cancer larger): sel decreases above fc(T) — target rolls off first
   f ≫ fc_H : sel → (R_T·τ_H)/(R_H·τ_T)  — generally ≠ R_T/R_H; for adeno/hepatocyte ≈ 0.68× (sub-unity)
-For bacteria (fc ~8–26 MHz) → optimal frequency is above the 10 MHz slider
+For bacteria (fc ~11–49 MHz with σ_i = 0.3 S/m) → optimal frequency is above the 10 MHz slider
 Note: virion fc ~0.6–0.75 MHz per Schwan model (σ_i-limited; model approximate for virions)`
     },
   },
@@ -324,6 +366,11 @@ Vm threshold = <span class="tip-val">${p.thresholdVoltage} V</span>`
         @click="snapToOptimal"
         v-tip="tipOptimal"
       >{{ optimalNote }}</span>
+    </div>
+
+    <!-- ── Model / selectivity warning ──────────────────────── -->
+    <div v-if="targetModelWarning" class="model-warning">
+      {{ targetModelWarning }}
     </div>
 
     <!-- ── Preset selectivity comparison ─────────────────────── -->
@@ -594,6 +641,18 @@ Vm threshold = <span class="tip-val">${p.thresholdVoltage} V</span>`
   font-size: 0.58rem; font-family: var(--font-mono);
   color: var(--color-text-muted); opacity: 0.7; white-space: nowrap;
   cursor: default;
+}
+
+/* ── Model / selectivity warning ────────────────────────────── */
+.model-warning {
+  font-size: 0.6rem;
+  font-family: var(--font-mono);
+  color: #fbbf24;
+  background: rgba(251, 191, 36, 0.07);
+  border: 1px solid rgba(251, 191, 36, 0.25);
+  border-radius: var(--radius);
+  padding: 0.3rem 0.55rem;
+  line-height: 1.55;
 }
 
 /* ── Preset comparison table ─────────────────────────────────── */

@@ -1,11 +1,15 @@
 <script lang="ts">
-import { defineComponent } from 'vue'
+import { defineComponent, type PropType } from 'vue'
 import { useCellStore } from '../stores/cellStore'
 import { broadcastFieldParams } from '../services/socket'
 import { MEDIA } from '../mockData'
 import type { MediumKey } from '../mockData'
 
 export default defineComponent({
+  props: {
+    chartMode: { type: String as PropType<'schwan' | 'resonance'>, default: 'schwan' },
+  },
+
   setup() {
     const store = useCellStore()
     return { store, MEDIA }
@@ -32,20 +36,55 @@ export default defineComponent({
       return this.store.healthyDisruptionRatio
     },
 
+    /** Per-category and per-mode slider ranges. */
+    sliderRanges(): { freqMin: number; freqMax: number; freqStep: number; fieldMin: number; fieldMax: number; fieldStep: number; pwLogMin: number; pwLogMax: number } {
+      const cat = this.store.targetCellCategory
+      if (this.chartMode === 'resonance') {
+        if (cat === 'virus') {
+          // GHz range for viral capsid resonance (Flu ~12 GHz, SARS-CoV-2 ~10 GHz)
+          // freqMax = 50 GHz = 50,000,000 kHz; step = 100 MHz = 100,000 kHz
+          return { freqMin: 1000000, freqMax: 50000000, freqStep: 100000, fieldMin: 10, fieldMax: 5000, fieldStep: 10, pwLogMin: 0, pwLogMax: 2 }
+        }
+        // Bacteria resonance (E. coli ~500 MHz, MRSA ~1.5 GHz)
+        // freqMax = 10 GHz = 10,000,000 kHz; step = 10 MHz = 10,000 kHz
+        return { freqMin: 10000, freqMax: 10000000, freqStep: 10000, fieldMin: 10, fieldMax: 10000, fieldStep: 100, pwLogMin: 0, pwLogMax: 3 }
+      }
+      if (cat === 'virus') {
+        // Schwan mode for virus (rarely used but available)
+        return { freqMin: 1, freqMax: 5000000, freqStep: 1000, fieldMin: 10, fieldMax: 100000, fieldStep: 10, pwLogMin: 0, pwLogMax: 2 }
+      }
+      if (cat === 'bacteria') {
+        // nsEP regime: high field, sub-τ pulses (τ_ecoli ≈ 14 ns, τ_mrsa ≈ 3 ns)
+        return { freqMin: 10, freqMax: 1000000, freqStep: 100, fieldMin: 10, fieldMax: 100000, fieldStep: 100, pwLogMin: 0, pwLogMax: 3 }
+      }
+      // Mammalian: standard IRE / electroporation range
+      return { freqMin: 10, freqMax: 10000, freqStep: 1, fieldMin: 10, fieldMax: 3000, fieldStep: 1, pwLogMin: 0, pwLogMax: 5 }
+    },
+
     freqDisplay(): string {
-      return this.currentFreq >= 1000
-        ? `${(this.currentFreq / 1000).toFixed(2)} MHz`
-        : `${this.currentFreq} kHz`
+      const f = this.currentFreq
+      if (f >= 1000000) return `${(f / 1000000).toFixed(2)} GHz`
+      if (f >= 1000)    return `${(f / 1000).toFixed(2)} MHz`
+      return `${f} kHz`
     },
 
     targetFcDisplay(): string {
       const fc = this.store.targetFc
-      return fc >= 1000 ? `${(fc / 1000).toFixed(2)} MHz` : `${fc.toFixed(0)} kHz`
+      if (fc >= 1000000) return `${(fc / 1000000).toFixed(2)} GHz`
+      if (fc >= 1000)    return `${(fc / 1000).toFixed(2)} MHz`
+      return `${fc.toFixed(0)} kHz`
     },
 
     healthyFcDisplay(): string {
       const fc = this.store.healthyFc
-      return fc >= 1000 ? `${(fc / 1000).toFixed(2)} MHz` : `${fc.toFixed(0)} kHz`
+      if (fc >= 1000000) return `${(fc / 1000000).toFixed(2)} GHz`
+      if (fc >= 1000)    return `${(fc / 1000).toFixed(2)} MHz`
+      return `${fc.toFixed(0)} kHz`
+    },
+
+    fieldDisplay(): string {
+      const vcm = this.currentField
+      return vcm >= 10000 ? `${(vcm / 1000).toFixed(1)} kV/cm` : `${vcm} V/cm`
     },
 
     mediaKeys(): MediumKey[] {
@@ -107,22 +146,26 @@ export default defineComponent({
     },
 
     tipWaveform(): string {
+      const tssNow = this.maxSteadyTemp
+      const cwWarn = tssNow > 42
+        ? `\n\n<span class="tip-warn">⚠ At current field (${this.currentField} V/cm), CW would heat cells to T_ss ≈ ${Math.min(tssNow, 150).toFixed(0)}°C — reduce field before switching to CW.</span>`
+        : ''
       return `<strong>Waveform Type</strong>
-<span class="tip-val">CW (sinusoidal)</span>  — continuous wave
+<span class="tip-val">CW (sinusoidal)</span>  — continuous wave, always on
   SAR = σ_i·α²·E²/(2ρ)  [waveformFactor = 0.5, RMS halving]
-  α = 3σ_e/(2σ_e+σ_i)  (internal field factor)
+  Thermal: effective duty cycle = 1.0 (full continuous heating)
+  Typical for TTFields (1–3 V/cm, 100–500 kHz sinusoidal)
 
 <span class="tip-val">Pulsed (DC)</span>  — square-wave bursts
   SAR = σ_i·α²·E²/ρ  [waveformFactor = 1.0, full peak field]
-  Duty cycle row controls on-fraction
-
-CW is typical for TTFields (100–500 kHz sinusoidal).
-Pulsed is typical for IRE/electroporation protocols.`
+  Thermal load = SAR_peak × duty cycle (use low dc to limit heating)
+  Typical for IRE / electroporation protocols${cwWarn}`
     },
 
     tipDutyCycle(): string {
-      const effT  = (this.store.targetSAR  * this.store.dutyCycle).toFixed(2)
-      const effH  = (this.store.healthySAR * this.store.dutyCycle).toFixed(2)
+      const dc    = this.store.effectiveDutyCycle
+      const effT  = (this.store.targetSAR  * dc).toFixed(2)
+      const effH  = (this.store.healthySAR * dc).toFixed(2)
       const tss   = this.maxSteadyTemp
       const level = this.thermalDangerLevel
       const warnText = level === 'vaporizing'
@@ -193,28 +236,85 @@ At f = fc,  Vm = 0.707 × Vm_DC  (−3 dB point)
 Depends on cell size and membrane properties:
   Reference cells: ~1.1–1.4 MHz  (hepatocyte ~1.08 MHz)
   Cancer cells:    ~0.5–1.4 MHz  (adenocarcinoma ~0.49 MHz, HL-60 ~1.35 MHz)
-  Bacteria:        ~8–26 MHz  (E. coli ~8 MHz, MRSA ~26 MHz)
+  Bacteria:        ~11–49 MHz  (E. coli ~11 MHz, MRSA ~49 MHz; σ_i = 0.3 S/m)
   Virions:         fc ~0.6–0.75 MHz (σ_i-limited; Schwan model is approximate for virions)
 
 Note: for cancer/normal cell pairs where τ_T > τ_H (typical),
   maximum selectivity is at quasi-DC. Above fc(T) selectivity decreases.`
     },
 
-    tipField(): string {
-      return `<strong>Applied Electric Field Intensity</strong>
-Current: <span class="tip-val">${this.currentField} V/cm</span>
-Vm scales linearly:  Vm = 1.5 × E × R / √(1+(ωτ)²)
+    /** Sub-text below frequency readout: shows f_res in resonance mode, fc in Schwan mode. */
+    freqSubDisplay(): string {
+      if (this.chartMode === 'resonance') {
+        const t = this.store.target as { resonantFreqGHz?: number }
+        if (t.resonantFreqGHz) {
+          const f0 = t.resonantFreqGHz
+          const fStr = f0 >= 1 ? `${f0.toFixed(1)} GHz` : `${(f0 * 1000).toFixed(0)} MHz`
+          return `f_res(T) ${fStr}`
+        }
+        return this.$t('resonance.noResonance')
+      }
+      return `fc(T) ${this.targetFcDisplay} · fc(H) ${this.healthyFcDisplay}`
+    },
 
-Therapeutic window (saline, quasi-DC):
-  Cancer lysis ≥ ~311 V/cm
-  Healthy lysis ≥ ~733 V/cm
-Default 150 V/cm is sub-threshold for all presets`
+    tipField(): string {
+      if (this.chartMode === 'resonance') {
+        const t = this.store.target as { resonantFreqGHz?: number; capsidQ?: number; resonantThresholdVcm?: number }
+        if (t.resonantFreqGHz && t.resonantThresholdVcm) {
+          const fStr = t.resonantFreqGHz >= 1 ? `${t.resonantFreqGHz.toFixed(1)} GHz` : `${(t.resonantFreqGHz * 1000).toFixed(0)} MHz`
+          const thrStr = `${t.resonantThresholdVcm} V/cm`
+          const pct = (this.targetDisruption * 100).toFixed(0) + '%'
+          const warn = this.targetDisruption >= 1.0
+            ? '\n<span class="tip-warn">⚡ Disruption threshold exceeded — capsid/cell-wall rupture</span>'
+            : this.targetDisruption > 0.85
+              ? '\n<span class="tip-warn">⚠ Approaching disruption threshold</span>'
+              : ''
+          return `<strong>${this.$t('resonance.tipFieldTitle')}</strong>
+${this.$t('slider.fieldIntensity')}: <span class="tip-val">${this.fieldDisplay}</span>
+
+${this.$t('resonance.tipFieldFormula')}
+f_res(T) = <span class="tip-val">${fStr}</span>  ·  E_threshold = <span class="tip-val">${thrStr}</span>  ·  Q = ${t.capsidQ ?? 20}
+
+${this.$t('resonance.tipFieldRatio')}: <span class="tip-val">${pct}</span>
+${this.$t('resonance.tipFieldDisruptNote')}${warn}`
+        }
+        return `<strong>${this.$t('slider.fieldIntensity')}</strong>\n${this.$t('resonance.noResonance')}`
+      }
+      const cat    = this.store.targetCellCategory
+      const tLysis = this.store.targetLysisField
+      const hLysis = this.store.healthyLysisField
+      const tStr   = tLysis >= 1000 ? `${(tLysis / 1000).toFixed(1)} kV/cm` : `${tLysis.toFixed(0)} V/cm`
+      const hStr   = hLysis >= 1000 ? `${(hLysis / 1000).toFixed(1)} kV/cm` : `${hLysis.toFixed(0)} V/cm`
+      const contextNote = cat === 'virus'
+        ? `\n<span class="tip-warn">⚠ Virion IRE threshold ≈ ${tStr} — impractical at any safe field.\nSwitch to Resonance mode for virion disruption.</span>`
+        : cat === 'bacteria'
+          ? `\n<span class="tip-warn">⚠ Bacterial IRE threshold ≈ ${tStr}.\nUse nsEP: short pulse width (≪ τ) lowers effective E_lysis by reducing charge time.</span>`
+          : `\nTherapeutic window at current frequency:\n  Target lysis ≥ <span class="tip-val">${tStr}</span>  ·  Healthy lysis ≥ <span class="tip-val">${hStr}</span>`
+      return `<strong>Applied Electric Field Intensity</strong>
+Current: <span class="tip-val">${this.fieldDisplay}</span>
+Vm scales linearly:  Vm = 1.5 × E × R / √(1+(ωτ)²)
+${contextNote}`
     },
 
     tipTargetBadge(): string {
+      const pct = this.targetDisruptPercent
+      if (this.chartMode === 'resonance') {
+        const t = this.store.target as { resonantFreqGHz?: number; capsidQ?: number; resonantThresholdVcm?: number; label: string }
+        const fStr = t.resonantFreqGHz
+          ? (t.resonantFreqGHz >= 1 ? `${t.resonantFreqGHz.toFixed(1)} GHz` : `${(t.resonantFreqGHz * 1000).toFixed(0)} MHz`)
+          : '—'
+        const warn = this.targetDisruption >= 1.0
+          ? '\n<span class="tip-warn">⚡ Disruption threshold exceeded — capsid/cell-wall rupture imminent</span>'
+          : this.targetDisruption > 0.85
+            ? '\n<span class="tip-warn">⚠ >85% — approaching disruption threshold (2.5 s countdown)</span>'
+            : ''
+        return `<strong>${this.$t('resonance.tipTargetBadgeTitle', { pct })}</strong>
+${this.$t('resonance.tipTargetBadgeFormula')}
+f_res = <span class="tip-val">${fStr}</span>  ·  Q = ${t.capsidQ ?? 20}${warn}
+${this.$t('resonance.tipTargetBadgeNote')}`
+      }
       const tVm   = (this.store.targetVm * 1000).toFixed(2)
       const tThr  = (this.store.target.thresholdVoltage * 1000).toFixed(0)
-      const pct   = this.targetDisruptPercent
       const warn  = this.targetDisruption > 0.85
         ? '\n<span class="tip-warn">⚡ >85% — lysis countdown active (2.5 s)</span>' : ''
       return `<strong>Target membrane disruption: <span class="tip-val">${pct}%</span></strong>
@@ -225,9 +325,14 @@ Vm = <span class="tip-val">${tVm} mV</span>  ·  Threshold = ${tThr} mV${warn}
     },
 
     tipHealthyBadge(): string {
+      const pct  = this.healthyDisruptPercent
+      if (this.chartMode === 'resonance') {
+        return `<strong>${this.$t('resonance.tipHealthyBadgeTitle')}</strong>
+${this.$t('resonance.tipHealthyBadgeBody')}
+<span class="tip-ok">✓ ${this.$t('resonance.tipHealthyBadgeSafe')}</span>`
+      }
       const hVm  = (this.store.healthyVm * 1000).toFixed(2)
       const hThr = (this.store.healthy.thresholdVoltage * 1000).toFixed(0)
-      const pct  = this.healthyDisruptPercent
       const ok   = this.healthyDisruption < 0.5
         ? '\n<span class="tip-ok">✓ Healthy cells are safe</span>'
         : this.healthyDisruption > 0.85
@@ -238,6 +343,49 @@ Ratio = Vm / lysis threshold voltage
 
 Vm = <span class="tip-val">${hVm} mV</span>  ·  Threshold = ${hThr} mV${ok}
 Keep below 50% for a safe therapeutic window`
+    },
+
+    pulseWidthLogVal(): number {
+      return Math.log10(this.store.pulseWidthNs)
+    },
+
+    pulseWidthDisplay(): string {
+      const ns = this.store.pulseWidthNs
+      if (ns >= 1000) return (ns / 1000).toFixed(ns >= 10000 ? 0 : 1) + ' µs'
+      return ns.toFixed(0) + ' ns'
+    },
+
+    tipPulseWidth(): string {
+      const tFactor = (this.store.targetPulseStepFactor * 100).toFixed(1)
+      const hFactor = (this.store.healthyPulseStepFactor * 100).toFixed(1)
+      const tTau_ns = this.store.targetFc > 0 ? (1 / (2 * Math.PI * this.store.targetFc * 1e3) * 1e9) : 0
+      const hTau_ns = this.store.healthyFc > 0 ? (1 / (2 * Math.PI * this.store.healthyFc * 1e3) * 1e9) : 0
+      const tTauStr = tTau_ns > 0 ? tTau_ns.toFixed(0) + ' ns' : '—'
+      const hTauStr = hTau_ns > 0 ? hTau_ns.toFixed(0) + ' ns' : '—'
+      const pw      = this.pulseWidthDisplay
+      const tLabel  = this.store.target.label
+      const hLabel  = this.store.healthy.label
+      // Selectivity direction: if τ_T < τ_H, short pulses FAVOUR the target (bacteria case)
+      //                        if τ_T > τ_H, short pulses HURT selectivity (typical cancer case)
+      const selNote = tTau_ns > 0 && hTau_ns > 0
+        ? tTau_ns < hTau_ns
+          ? `<span class="tip-ok">▲ Short pulses INCREASE selectivity for this target (τ_T ${tTau_ns.toFixed(0)} ns &lt; τ_H ${hTau_ns.toFixed(0)} ns)</span>`
+          : `<span class="tip-warn">▼ Short pulses DECREASE selectivity for this target (τ_T ${tTau_ns.toFixed(0)} ns &gt; τ_H ${hTau_ns.toFixed(0)} ns)\n  Use quasi-DC (long pulse width) for maximum cancer selectivity</span>`
+        : ''
+      return `<strong>Pulse Width  t_p</strong>
+Current: <span class="tip-val">${pw}</span>
+
+Membrane charges exponentially after field onset:
+  <span class="tip-val">Vm_eff = Vm_DC × (1 − e^(−t_p / τ))</span>
+At t_p ≫ τ → factor → 1 (quasi-DC limit)
+At t_p ≪ τ → cells with shorter τ charge proportionally more
+
+τ(${tLabel}) = <span class="tip-val">${tTauStr}</span>  ·  charging: <span class="tip-val">${tFactor}%</span>
+τ(${hLabel}) = <span class="tip-val">${hTauStr}</span>  ·  charging: <span class="tip-val">${hFactor}%</span>
+
+${selNote}
+
+Ref: Beebe et al. 2003 (nsEP); Batista Napotnik et al. 2016`
     },
   },
 
@@ -270,6 +418,11 @@ Keep below 50% for a safe therapeutic window`
         }
       }
       this.store.setDutyCycle(Math.pow(10, logVal))
+    },
+
+    onPulseWidthInput(e: Event) {
+      const logVal = Number((e.target as HTMLInputElement).value)
+      this.store.setPulseWidthNs(Math.round(Math.pow(10, logVal)))
     },
 
     onWaveformChange(mode: 'cw' | 'pulsed') {
@@ -308,9 +461,9 @@ Keep below 50% for a safe therapeutic window`
       </div>
     </div>
 
-    <!-- Thermal danger banner -->
+    <!-- Thermal danger banner (IRE/Schwan mode only — not applicable in DEP) -->
     <div
-      v-if="thermalDangerLevel !== 'safe'"
+      v-if="chartMode !== 'resonance' && thermalDangerLevel !== 'safe'"
       class="thermal-banner"
       :class="`thermal-banner--${thermalDangerLevel}`"
       v-tip="tipDutyCycle"
@@ -360,35 +513,39 @@ Keep below 50% for a safe therapeutic window`
         <input
           class="ctrl-slider"
           type="range"
-          :min="10"
-          :max="10000"
-          step="1"
+          :min="sliderRanges.freqMin"
+          :max="sliderRanges.freqMax"
+          :step="sliderRanges.freqStep"
           :value="currentFreq"
           @input="onFreqInput"
         />
       </div>
       <div class="row-readout">
         <span class="readout-value" v-tip="tipFreq">{{ freqDisplay }}</span>
-        <span class="readout-sub" v-tip="tipFcSub">fc(T) {{ targetFcDisplay }} · fc(H) {{ healthyFcDisplay }}</span>
+        <span class="readout-sub" v-tip="tipFcSub">{{ freqSubDisplay }}</span>
       </div>
     </div>
 
     <!-- Row 3: Field Intensity + disruption indicators -->
-    <div class="panel-row" :class="thermalDangerLevel !== 'safe' ? `panel-row--thermal-${thermalDangerLevel}` : ''">
+    <div
+      class="panel-row"
+      :class="chartMode !== 'resonance' && thermalDangerLevel !== 'safe' ? `panel-row--thermal-${thermalDangerLevel}` : ''"
+    >
       <span class="row-label" v-tip="tipField">Field Intensity</span>
       <div class="slider-track-wrap">
         <input
           class="ctrl-slider"
           type="range"
-          :min="10"
-          :max="1000"
-          step="1"
+          :min="sliderRanges.fieldMin"
+          :max="sliderRanges.fieldMax"
+          :step="sliderRanges.fieldStep"
           :value="currentField"
           @input="onFieldInput"
         />
       </div>
       <div class="row-readout">
-        <span class="readout-value" v-tip="tipField">{{ currentField }}<span class="readout-unit"> V/cm</span></span>
+        <span class="readout-value" v-tip="tipField">{{ fieldDisplay }}</span>
+        <!-- Disruption badges: Vm-based (Schwan mode) or resonant ratio (Resonance mode) -->
         <div class="disruption-badges">
           <span
             class="badge badge--target"
@@ -403,8 +560,16 @@ Keep below 50% for a safe therapeutic window`
         </div>
       </div>
     </div>
-    <!-- Row 4: Waveform selector -->
-    <div class="panel-row panel-row--medium" v-tip="tipWaveform">
+    <!-- Resonance mode note (replaces waveform/duty-cycle/pulse-width rows) -->
+    <div v-if="chartMode === 'resonance'" class="resonance-mode-note">
+      <span class="resonance-mode-note-icon">ℹ</span>
+      <span class="resonance-mode-note-text">
+        <strong>{{ $t('resonance.noteTitle') }}</strong> — {{ $t('resonance.noteBody') }}
+      </span>
+    </div>
+
+    <!-- Row 4: Waveform selector (IRE/Schwan mode only) -->
+    <div v-if="chartMode !== 'resonance'" class="panel-row panel-row--medium" v-tip="tipWaveform">
       <span class="row-label">Waveform</span>
       <div class="medium-pills">
         <label
@@ -425,9 +590,9 @@ Keep below 50% for a safe therapeutic window`
       <span class="row-meta">wf×{{ currentWaveform === 'cw' ? '0.5' : '1.0' }}</span>
     </div>
 
-    <!-- Row 5: Duty Cycle (pulsed only) -->
+    <!-- Row 5: Duty Cycle (pulsed + IRE mode only) -->
     <div
-      v-if="currentWaveform === 'pulsed'"
+      v-if="chartMode !== 'resonance' && currentWaveform === 'pulsed'"
       class="panel-row"
       :class="thermalDangerLevel !== 'safe' ? `panel-row--thermal-${thermalDangerLevel}` : ''"
     >
@@ -454,6 +619,32 @@ Keep below 50% for a safe therapeutic window`
         >{{ dutyCycleDisplay }}</span>
         <span class="readout-sub" v-tip="tipDutyCycle">
           T_ss {{ maxSteadyTemp.toFixed(0) }}°C · SAR_eff T {{ (store.targetSAR * store.dutyCycle).toFixed(1) }} W/kg
+        </span>
+      </div>
+    </div>
+
+    <!-- Row 6: Pulse Width (pulsed + IRE mode only) -->
+    <div
+      v-if="chartMode !== 'resonance' && currentWaveform === 'pulsed'"
+      class="panel-row"
+    >
+      <span class="row-label" v-tip="tipPulseWidth">Pulse Width</span>
+      <div class="slider-track-wrap">
+        <input
+          class="ctrl-slider"
+          type="range"
+          :min="sliderRanges.pwLogMin"
+          :max="sliderRanges.pwLogMax"
+          step="0.05"
+          :value="pulseWidthLogVal"
+          @input="onPulseWidthInput"
+        />
+      </div>
+      <div class="row-readout">
+        <span class="readout-value" v-tip="tipPulseWidth">{{ pulseWidthDisplay }}</span>
+        <span class="readout-sub" v-tip="tipPulseWidth">
+          T {{ (store.targetPulseStepFactor * 100).toFixed(1) }}%
+          · H {{ (store.healthyPulseStepFactor * 100).toFixed(1) }}% charging
         </span>
       </div>
     </div>
@@ -759,6 +950,31 @@ Keep below 50% for a safe therapeutic window`
 
 .badge--warn.badge--target  { background-color: rgba(255,77,109,0.12); border-color: var(--color-danger); }
 .badge--warn.badge--healthy { background-color: rgba(0,212,255,0.12); border-color: var(--color-accent); }
+
+/* ── DEP mode info note ──────────────────────────────────────────────── */
+.resonance-mode-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.45rem 0.65rem;
+  border-radius: var(--radius);
+  border: 1px solid rgba(167, 139, 250, 0.3);
+  background: rgba(167, 139, 250, 0.06);
+  color: #a78bfa;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  line-height: 1.5;
+}
+
+.resonance-mode-note-icon {
+  flex-shrink: 0;
+  margin-top: 0.05rem;
+  opacity: 0.8;
+}
+
+.resonance-mode-note-text strong {
+  color: #c4b5fd;
+}
 
 /* ── Mobile ──────────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
