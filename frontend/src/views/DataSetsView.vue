@@ -1,6 +1,6 @@
 <script lang="ts">
 import { defineComponent, computed } from 'vue'
-import { CELL_PRESETS, GROUP_COLORS, GROUP_LABELS, type CellGroup } from '../constants/cellLibrary'
+import { CELL_PRESETS, GROUP_COLORS, GROUP_LABELS, type CellGroup, type CellPreset } from '../constants/cellLibrary'
 import { MEDIA } from '../mockData'
 import { membraneCm, computeFc } from '../utils/physics'
 
@@ -8,21 +8,36 @@ const SIGMA_SALINE = MEDIA.saline.conductivity // 1.5 S/m
 
 const GROUPS: CellGroup[] = ['reference', 'cancer', 'bacteria', 'virus']
 
+type ResonantPreset = CellPreset & { resonantFreqGHz?: number; capsidQ?: number; resonantThresholdVcm?: number }
+
 export default defineComponent({
   setup() {
-    // Augment each preset with computed Cm and fc in saline
+    // Augment each preset with computed Cm, fc in saline, and resonance params
     const presets = computed(() =>
       CELL_PRESETS.map((p) => {
+        const pr = p as ResonantPreset
         const cm = membraneCm(p) * 1e3               // F/m² → mF/m²
         const fc = computeFc(p, SIGMA_SALINE)         // kHz
         const fcDisplay =
           fc >= 1000
             ? `${(fc / 1000).toFixed(2)} MHz`
             : `${fc.toFixed(1)} kHz`
+        // Resonance parameters (bacteria/virus only)
+        const resFreqDisplay = pr.resonantFreqGHz
+          ? `${pr.resonantFreqGHz} GHz`
+          : '—'
+        const resQDisplay = pr.capsidQ ? `${pr.capsidQ}` : '—'
+        const resEthrDisplay = pr.resonantThresholdVcm
+          ? `${pr.resonantThresholdVcm}`
+          : '—'
         return {
           ...p,
           cmDisplay: cm.toFixed(2),
           fcDisplay,
+          resFreqDisplay,
+          resQDisplay,
+          resEthrDisplay,
+          hasResonance: !!pr.resonantFreqGHz,
           color: GROUP_COLORS[p.group],
           groupLabel: GROUP_LABELS[p.group],
         }
@@ -52,8 +67,8 @@ export default defineComponent({
         </div>
         <h1 class="page-title">Cell &amp; Pathogen Data Sets</h1>
         <p class="page-subtitle">
-          Biophysical parameters for all presets · computed in physiological saline
-          (σ<sub>e</sub> = 1.5 S/m) · Schwan single-shell model
+          Biophysical parameters for all presets · Schwan single-shell model · acoustic resonance (bacteria/virus)
+          <br>Computed in physiological saline (σ<sub>e</sub> = 1.5 S/m)
         </p>
       </div>
 
@@ -90,6 +105,9 @@ export default defineComponent({
                 <th>f<sub>c</sub> in saline</th>
                 <th>V<sub>m,thr</sub> (V)</th>
                 <th>ρ (kg/m³)</th>
+                <th title="Acoustic resonance frequency — bacteria/virus only">f<sub>res</sub></th>
+                <th title="Mechanical quality factor — sharpness of resonance peak">Q</th>
+                <th title="Minimum field amplitude for capsid/cell-wall disruption at resonance">E<sub>thr</sub> (V/cm)</th>
                 <th>Notes</th>
               </tr>
             </thead>
@@ -117,6 +135,9 @@ export default defineComponent({
                   :class="p.group === 'reference' ? 'ref-val' : 'cancer-val'"
                 >{{ p.thresholdVoltage.toFixed(2) }}</td>
                 <td class="mono muted">{{ p.density }}</td>
+                <td class="mono" :class="p.hasResonance ? 'primary-val' : 'muted'">{{ p.resFreqDisplay }}</td>
+                <td class="mono" :class="p.hasResonance ? '' : 'muted'">{{ p.resQDisplay }}</td>
+                <td class="mono" :class="p.hasResonance ? 'warn-val' : 'muted'">{{ p.resEthrDisplay }}</td>
                 <td class="notes-cell">{{ p.notes }}</td>
               </tr>
             </tbody>
@@ -125,7 +146,8 @@ export default defineComponent({
         <div class="table-footer">
           C<sub>m</sub> = ε<sub>r</sub>·ε₀/d &nbsp;·&nbsp;
           f<sub>c</sub> = 1/(2πτ), τ = R·C<sub>m</sub>·(2σ<sub>e</sub>+σ<sub>i</sub>)/(2σ<sub>e</sub>·σ<sub>i</sub>) &nbsp;·&nbsp;
-          Computed at σ<sub>e</sub> = 1.5 S/m (saline) · Kotnik &amp; Miklavcic (2000)
+          Computed at σ<sub>e</sub> = 1.5 S/m (saline) · Kotnik &amp; Miklavcic (2000) &nbsp;·&nbsp;
+          f<sub>res</sub> / Q / E<sub>thr</sub>: acoustic resonance parameters (bacteria/virus only) · Tsen et al. (2007); Dykeman &amp; Sankey (2008)
         </div>
       </section>
 
@@ -237,6 +259,52 @@ export default defineComponent({
           Quasi-DC: E<sub>lysis</sub> = V<sub>m,thr</sub>/(1.5·R) ·
           f<sub>c</sub> from Kotnik &amp; Miklavcic (2000) τ formula ·
           TI = (V<sub>t</sub>/V<sub>t,thr</sub>) / (V<sub>h</sub>/V<sub>h,thr</sub>)
+        </div>
+      </section>
+
+      <!-- Acoustic resonance reference -->
+      <section class="ds-card">
+        <div class="card-hdr">
+          <h2 class="card-title">Acoustic Resonance Reference</h2>
+          <span class="card-tag">Virus &amp; Bacteria · Resonance mode</span>
+        </div>
+        <div class="ref-grid ref-grid--res">
+          <div class="ref-block ref-block--virus">
+            <div class="ref-block-title">Viral Capsids (R ≈ 60 nm)</div>
+            <div class="ref-block-params">
+              <div class="rp-row"><span>Influenza A f<sub>res</sub></span><span class="mono primary-val">~12 GHz</span></div>
+              <div class="rp-row"><span>SARS-CoV-2 f<sub>res</sub></span><span class="mono primary-val">~10 GHz</span></div>
+              <div class="rp-row"><span>E<sub>thr</sub> range</span><span class="mono warn-val">800–1000 V/cm</span></div>
+              <div class="rp-row"><span>Q factor</span><span class="mono">25–30</span></div>
+            </div>
+          </div>
+          <div class="ref-block ref-block--window">
+            <div class="ref-block-title">Selectivity Principle</div>
+            <div class="window-stat">
+              <div class="window-ratio">∞</div>
+              <div class="window-label">Theoretical selectivity at f<sub>res</sub> — healthy Schwan Vm → 0 at GHz</div>
+            </div>
+            <div class="window-stat" style="margin-top:0.6rem">
+              <div class="window-ratio" style="font-size:1.2rem">Lorentzian</div>
+              <div class="window-label">Disruption = (E / E<sub>thr</sub>) × L(f, f<sub>res</sub>, Q)<br>L peaks at 1.0 at f<sub>res</sub></div>
+            </div>
+            <div class="window-note" style="margin-top:0.6rem">
+              Ref: Tsen et al. (2007, 2012) · Dykeman &amp; Sankey (2008)
+            </div>
+          </div>
+          <div class="ref-block ref-block--bacteria">
+            <div class="ref-block-title">Bacteria (R ≈ 0.5–1 µm)</div>
+            <div class="ref-block-params">
+              <div class="rp-row"><span>E. coli f<sub>res</sub></span><span class="mono primary-val">~0.5 GHz</span></div>
+              <div class="rp-row"><span>MRSA f<sub>res</sub></span><span class="mono primary-val">~1.5 GHz</span></div>
+              <div class="rp-row"><span>E<sub>thr</sub> range</span><span class="mono warn-val">2000–3000 V/cm</span></div>
+              <div class="rp-row"><span>Q factor</span><span class="mono">12–15</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="table-footer">
+          f<sub>res</sub> ≈ v<sub>protein</sub>/(2R) · v<sub>wall</sub> ≈ 1000–1500 m/s (protein/peptidoglycan) ·
+          Healthy cells (R ≈ 10 µm): f<sub>res</sub> ≈ 100 kHz — no GHz coupling
         </div>
       </section>
 
@@ -496,9 +564,12 @@ export default defineComponent({
   color: var(--color-text-muted);
 }
 
-.ref-block--cancer .ref-block-title { color: #ff4d6d; }
+.ref-block--cancer .ref-block-title  { color: #ff4d6d; }
 .ref-block--healthy .ref-block-title { color: #00d4ff; }
-.ref-block--window .ref-block-title { color: #39ff14; }
+.ref-block--window .ref-block-title  { color: #39ff14; }
+.ref-block--virus .ref-block-title   { color: #a78bfa; }
+.ref-block--bacteria .ref-block-title { color: #fbbf24; }
+.ref-grid--res { grid-template-columns: 1fr 1.2fr 1fr; }
 
 .ref-block-params {
   display: flex;

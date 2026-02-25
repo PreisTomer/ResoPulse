@@ -5,7 +5,7 @@ import { CELL_PRESETS, GROUP_COLORS, GROUP_LABELS } from '../constants/cellLibra
 import type { CellGroup } from '../constants/cellLibrary'
 import { DISRUPTION_WARN_THRESHOLD } from '../constants/cellCard'
 import { MEDIA } from '../mockData'
-import { computeSchwan, computeTau, computePulseStepResponse } from '../utils/physics'
+import { computeSchwan, computeTau, computePulseStepResponse, computeResonantDisruption } from '../utils/physics'
 import { broadcastFieldParams } from '../services/socket'
 
 const TARGET_GROUPS: CellGroup[] = ['cancer', 'bacteria', 'virus']
@@ -33,14 +33,14 @@ export default defineComponent({
       const t = this.targetRatio
       const h = this.healthyRatio
       // Ablative: healthy cells already at/near lysis — non-selective
-      if (h >= DISRUPTION_WARN_THRESHOLD)        return { label: 'Ablative',           color: '#ff4d6d' }
+      if (h >= DISRUPTION_WARN_THRESHOLD)            return { label: this.$t('selectivity.modeAblative'),    color: '#ff4d6d' }
       // Genuine therapeutic window: target at lysis threshold, healthy safely below 50%
-      if (t >= DISRUPTION_WARN_THRESHOLD && h < 0.5) return { label: 'Therapeutic Window', color: '#39ff14' }
+      if (t >= DISRUPTION_WARN_THRESHOLD && h < 0.5) return { label: this.$t('selectivity.modeTherapeutic'), color: '#39ff14' }
       // Marginal: target at threshold but healthy cells are also significantly stressed (50–84%)
-      if (t >= DISRUPTION_WARN_THRESHOLD)        return { label: 'Marginal Window',    color: '#fbbf24' }
+      if (t >= DISRUPTION_WARN_THRESHOLD)            return { label: this.$t('selectivity.modeMarginal'),    color: '#fbbf24' }
       // Approaching: target disruption climbing toward threshold
-      if (t >= 0.5)                              return { label: 'Approaching Window', color: '#fbbf24' }
-      return                                            { label: 'Sub-threshold',      color: '#00d4ff' }
+      if (t >= 0.5)                                  return { label: this.$t('selectivity.modeApproaching'), color: '#fbbf24' }
+      return                                                { label: this.$t('selectivity.modeSubThreshold'), color: '#00d4ff' }
     },
 
     targetGroups(): CellGroup[] { return TARGET_GROUPS },
@@ -62,6 +62,29 @@ export default defineComponent({
     targetSarVal(): string  { return this.store.targetSAR.toFixed(3)  },
     healthySarVal(): string { return this.store.healthySAR.toFixed(3) },
 
+    /** True when the active target uses the acoustic resonance model (bacteria/virus with resonance params). */
+    isResonanceTarget(): boolean {
+      const cat = this.store.targetCellCategory
+      const t = this.store.target as { resonantFreqGHz?: number; resonantThresholdVcm?: number }
+      return (cat === 'virus' || cat === 'bacteria') && !!t.resonantFreqGHz && !!t.resonantThresholdVcm
+    },
+
+    /** Formatted E_threshold for resonance target display. */
+    targetResonanceEthr(): string {
+      const t = this.store.target as { resonantThresholdVcm?: number }
+      if (!t.resonantThresholdVcm) return '—'
+      const v = t.resonantThresholdVcm
+      return v >= 1000 ? `${(v / 1000).toFixed(1)} kV/cm` : `${v.toFixed(0)} V/cm`
+    },
+
+    /** Mode-aware tooltip for the Vm / SAR readout grid. */
+    tipVmSar(): string {
+      if (this.isResonanceTarget) {
+        return '<strong>Disruption &amp; Thermal (Resonance Mode)</strong>\nT-Disr: target capsid/cell-wall disruption % = (E / E_thr) × L(f, f_res, Q)\nH-Safe: healthy Schwan Vm → 0 at GHz — no coupling, unperturbed\nSAR (W/kg) — Ohmic heating, valid in all modes\n  SAR = σ_i·α²·E²·wf / ρ — use duty cycle to limit thermal load'
+      }
+      return '<strong>Transmembrane potential and SAR</strong>\nVm — peak voltage across cell membrane (Schwan eq.)\n  Vm = 1.5·E·R / √(1+(2πf·τ)²)\n  τ = R·Cm·(2σ_e+σ_i)/(2σ_e·σ_i)\nSAR — specific absorption rate (W/kg) in cell interior\n  SAR = σ_i·α²·E²·wf / ρ  α = 3σ_e/(2σ_e+σ_i) (internal field factor)\n  wf=0.5(CW) or 1.0(pulsed)\n  Proportional to thermal load deposited in the cell'
+    },
+
     presetComparison() {
       const sigma_e = MEDIA[this.store.medium].conductivity
       const freq    = this.store.currentBroadcastFrequency
@@ -69,21 +92,42 @@ export default defineComponent({
       const pulsed  = this.store.waveform === 'pulsed'
       const pulseNs = this.store.pulseWidthNs
 
-      // Healthy cell — DC Vm × pulse step factor
+      // Healthy cell — Schwan Vm × pulse step factor → disruption ratio
       const hVm_dc  = computeSchwan(this.store.healthy, freq, field, sigma_e)
       const hTau    = computeTau(this.store.healthy, sigma_e)
       const hFactor = pulsed ? computePulseStepResponse(hTau, pulseNs) : 1.0
       const hVm     = hVm_dc * hFactor
+      const hDr     = hVm / this.store.healthy.thresholdVoltage  // healthy disruption ratio
 
       return CELL_PRESETS
         .filter((p) => p.group !== 'reference')
         .map((p) => {
-          const tVm_dc  = computeSchwan(p, freq, field, sigma_e)
-          const tTau    = computeTau(p, sigma_e)
-          const tFactor = pulsed ? computePulseStepResponse(tTau, pulseNs) : 1.0
-          const tVm     = tVm_dc * tFactor
-          const sel     = hVm > 0 ? tVm / hVm : 0
-          return { preset: p, sel, tVmMv: (tVm * 1000).toFixed(1), isActive: this.store.target.id === p.id }
+          const pr = p as typeof p & { resonantFreqGHz?: number; capsidQ?: number; resonantThresholdVcm?: number }
+          const hasRes = (p.group === 'bacteria' || p.group === 'virus') && !!pr.resonantFreqGHz && !!pr.resonantThresholdVcm
+          let sel: number, tVmMv: string
+
+          if (hasRes) {
+            // Acoustic resonance model: disruption ratio for bacteria/virus
+            const ratio = computeResonantDisruption(
+              pr.resonantFreqGHz!,
+              pr.capsidQ ?? 20,
+              pr.resonantThresholdVcm!,
+              freq * 1e3,   // kHz → Hz
+              field,
+            )
+            sel = hDr > 1e-9 ? Math.min(99.9, ratio / hDr) : (ratio > 0 ? 99.9 : 0)
+            tVmMv = `D:${(ratio * 100).toFixed(0)}%`
+          } else {
+            // Schwan model: Vm-based disruption ratio
+            const tVm_dc  = computeSchwan(p, freq, field, sigma_e)
+            const tTau    = computeTau(p, sigma_e)
+            const tFactor = pulsed ? computePulseStepResponse(tTau, pulseNs) : 1.0
+            const tVm     = tVm_dc * tFactor
+            const tDr     = tVm / p.thresholdVoltage
+            sel = hDr > 1e-9 ? Math.min(99.9, tDr / hDr) : 0
+            tVmMv = (tVm * 1000).toFixed(1)
+          }
+          return { preset: p, sel, tVmMv, isActive: this.store.target.id === p.id, hasRes }
         })
         .sort((a, b) => b.sel - a.sel)
     },
@@ -91,14 +135,31 @@ export default defineComponent({
     // ── Tooltip content ───────────────────────────────────────────────────
     tipSelectivity(): string {
       const sel = this.selectivity
-      const ti  = this.therapeuticIndex
       const quality = sel >= 1.5
         ? '<span class="tip-ok">Strong therapeutic window</span>'
         : sel >= 1.0
           ? '<span class="tip-warn">Marginal window — adjust field or preset</span>'
           : '<span class="tip-warn">Non-selective — healthy cells equally at risk</span>'
-      return `<strong>Selectivity Ratio = T-Vm / H-Vm</strong>
-Current: <span class="tip-val">×${sel.toFixed(3)}</span>
+      const selStr = sel >= 99 ? '∞' : sel.toFixed(3)
+
+      if (this.isResonanceTarget) {
+        return `<strong>Selectivity = Target / Healthy disruption ratio</strong>
+Current: <span class="tip-val">×${selStr}</span>
+
+${quality}
+≥ 1.5 → strong window (green)  ·  < 1.0 → non-selective (red)
+
+<strong>Resonance mode selectivity:</strong>
+Healthy cells (R ≈ 10 µm) resonate at ~100 kHz — no GHz coupling.
+At f_res(target), healthy disruption ≈ 0 → selectivity → ∞
+
+<span class="tip-ok">Frequency-selective — healthy tissue unperturbed at GHz fields</span>
+Ref: Tsen et al. (2007); Dykeman &amp; Sankey (2008)`
+      }
+
+      const ti = this.therapeuticIndex
+      return `<strong>Selectivity = Target / Healthy disruption ratio</strong>
+Current: <span class="tip-val">×${selStr}</span>
 
 ${quality}
 ≥ 1.5 → strong window (green)
@@ -107,7 +168,6 @@ ${quality}
 
 <strong>Therapeutic Index TI = (Vt/Vt,thr) / (Vh/Vh,thr)</strong>
 Current: <span class="tip-val">${ti.toFixed(2)}×</span>
-TI accounts for different lysis thresholds.
 TI > 1 → target proportionally closer to lysis.
 
 Physically driven by size ratio R_T/R_H
@@ -115,11 +175,18 @@ via the Schwan equation  (Vm ∝ cell radius)`
     },
 
     tipTargetBar(): string {
-      const tVm  = (this.store.targetVm * 1000).toFixed(2)
-      const tThr = (this.store.target.thresholdVoltage * 1000).toFixed(0)
       const pct  = this.targetRatioPct.toFixed(0)
       const warn = this.targetRatio >= DISRUPTION_WARN_THRESHOLD
-        ? '\n<span class="tip-warn">⚡ >85% — lysis countdown active (2.5 s)</span>' : ''
+        ? '\n<span class="tip-warn">⚡ >85% — disruption countdown active (2.5 s)</span>' : ''
+      if (this.isResonanceTarget) {
+        const t = this.store.target as { resonantFreqGHz?: number; resonantThresholdVcm?: number }
+        return `<strong>Target resonant disruption: <span class="tip-val">${pct}%</span></strong>
+Disruption ratio = (E / E_threshold) × L(f, f_res, Q)
+E_threshold = ${t.resonantThresholdVcm} V/cm  ·  f_res = ${t.resonantFreqGHz} GHz${warn}
+≥100% → capsid/cell-wall disruption threshold exceeded`
+      }
+      const tVm  = (this.store.targetVm * 1000).toFixed(2)
+      const tThr = (this.store.target.thresholdVoltage * 1000).toFixed(0)
       return `<strong>Target membrane disruption: <span class="tip-val">${pct}%</span></strong>
 Induced Vm = <span class="tip-val">${tVm} mV</span>
 Lysis threshold = ${tThr} mV
@@ -128,9 +195,16 @@ Ratio = Vm / threshold${warn}
     },
 
     tipHealthyBar(): string {
+      const pct    = this.healthyRatioPct.toFixed(0)
+      if (this.isResonanceTarget) {
+        return `<strong>Healthy cell: <span class="tip-val">${pct}% disruption (≈0)</span></strong>
+Mammalian cells (R ≈ 10 µm) resonate at ~100 kHz.
+At GHz field frequencies, Schwan Vm → 0 — no membrane coupling.
+<span class="tip-ok">✓ Frequency-selective — healthy tissue unperturbed</span>
+Ref: Tsen et al. (2007)`
+      }
       const hVm  = (this.store.healthyVm * 1000).toFixed(2)
       const hThr = (this.store.healthy.thresholdVoltage * 1000).toFixed(0)
-      const pct  = this.healthyRatioPct.toFixed(0)
       const status = this.healthyRatio < 0.5
         ? '\n<span class="tip-ok">✓ Healthy cells are safe</span>'
         : '\n<span class="tip-warn">⚠ Approaching threshold — reduce field</span>'
@@ -161,18 +235,29 @@ Sub-threshold  T <50%
   Non-selective — both cell types at lysis threshold`
     },
 
-    // ── Optimal frequency (max selectivity across 10 kHz – 500 MHz) ──────
+    // ── Optimal frequency ─────────────────────────────────────────────────
     optimalFreqResult(): { khz: number; sel: number } {
+      // For resonance targets: optimal frequency IS the preset's resonant frequency
+      if (this.isResonanceTarget) {
+        const t = this.store.target as { resonantFreqGHz?: number }
+        const khz = (t.resonantFreqGHz ?? 0) * 1e6  // GHz → kHz
+        return { khz, sel: 99.9 }  // healthy ≈ 0 at GHz → selectivity → ∞
+      }
+      // Schwan mode: scan 300 log-spaced points 10 kHz → 500 MHz
       const sigma_e = MEDIA[this.store.medium].conductivity
       const field   = this.store.fieldIntensity
+      const hThr    = this.store.healthy.thresholdVoltage
+      const tThr    = this.store.target.thresholdVoltage
       let maxSel = -Infinity, optKhz = 10
       const logMin = Math.log10(10)
-      const logMax  = Math.log10(500_000)  // kHz units — 500 MHz
+      const logMax  = Math.log10(500_000)  // kHz — 500 MHz
       for (let i = 0; i < 300; i++) {
         const khz = Math.pow(10, logMin + (logMax - logMin) * i / 299)
         const hVm = computeSchwan(this.store.healthy, khz, field, sigma_e)
         const tVm = computeSchwan(this.store.target,  khz, field, sigma_e)
-        const sel  = hVm > 0 ? tVm / hVm : 0
+        const hDr = hVm / hThr
+        const tDr = tVm / tThr
+        const sel  = hDr > 0 ? tDr / hDr : 0
         if (sel > maxSel) { maxSel = sel; optKhz = khz }
       }
       return { khz: optKhz, sel: Math.max(0, maxSel) }
@@ -180,7 +265,12 @@ Sub-threshold  T <50%
 
     optimalNote(): string {
       const { khz, sel } = this.optimalFreqResult
-      const label = khz >= 1000 ? `${(khz / 1000).toFixed(2)} MHz` : `${khz.toFixed(0)} kHz`
+      const label = khz >= 1_000_000
+        ? `${(khz / 1_000_000).toFixed(2)} GHz`
+        : khz >= 1000 ? `${(khz / 1000).toFixed(2)} MHz` : `${khz.toFixed(0)} kHz`
+      if (this.isResonanceTarget) {
+        return `⭐ f_res: ${label} · ×${sel >= 99 ? '∞' : sel.toFixed(2)} (resonance peak)`
+      }
       if (khz > 10000) {
         return `⭐ Optimal: ${label} · ×${sel.toFixed(2)} ↑ beyond slider range`
       }
@@ -205,14 +295,19 @@ Sub-threshold  T <50%
     targetModelWarning(): string | null {
       const cat = this.store.targetCellCategory
       const ti  = this.therapeuticIndex
+      const t = this.store.target as { resonantFreqGHz?: number; resonantThresholdVcm?: number }
       if (cat === 'virus') {
+        if (t.resonantFreqGHz) {
+          return `⚠ IRE model inapplicable for virions (R < 0.1 µm) · Switch to Resonance mode above for acoustic capsid disruption at ${t.resonantFreqGHz} GHz`
+        }
         const tLysis = this.store.targetLysisField
-        return `⚠ IRE not applicable to virions — E_lysis ≈ ${(tLysis / 1000).toFixed(0)} kV/cm · Use DEP mode`
+        return `⚠ IRE not applicable to virions — E_lysis ≈ ${(tLysis / 1000).toFixed(0)} kV/cm · Use Resonance mode`
       }
       if (cat === 'bacteria') {
         const tLysis = this.store.targetLysisField
         if (tLysis > 3000) {
-          return `⚠ E_lysis ≈ ${(tLysis / 1000).toFixed(1)} kV/cm — standard IRE impractical · Consider nsEP or DEP`
+          const res = t.resonantFreqGHz ? ` · Resonance mode (${t.resonantFreqGHz} GHz) available` : ''
+          return `⚠ E_lysis ≈ ${(tLysis / 1000).toFixed(1)} kV/cm — standard IRE impractical · Consider nsEP (pulse width slider)${res}`
         }
       }
       if (ti > 0 && ti < 0.85) {
@@ -231,6 +326,20 @@ Sub-threshold  T <50%
     },
 
     tipOptimal(): string {
+      if (this.isResonanceTarget) {
+        const t = this.store.target as { resonantFreqGHz?: number; resonantThresholdVcm?: number; capsidQ?: number }
+        const fRes = t.resonantFreqGHz ?? 0
+        const label = fRes >= 1 ? `${fRes.toFixed(1)} GHz` : `${(fRes * 1000).toFixed(0)} MHz`
+        return `<strong>Resonant Frequency — f_res = ${label}</strong>
+Acoustic/mechanical resonance: disruption ratio peaks at 1.0 at f_res.
+Lorentzian lineshape L(f) = 1 / √(1 + (Q·(f/f₀ − f₀/f))²)
+
+E_threshold = ${t.resonantThresholdVcm} V/cm  ·  Q = ${t.capsidQ ?? 20}
+Healthy cells (R ≈ 10 µm) have no GHz resonance → selectivity → ∞
+
+<span class="tip-ok">Click to snap cursor to f_res</span>
+Ref: Tsen et al. (2007); Dykeman &amp; Sankey (2008)`
+      }
       const { khz, sel } = this.optimalFreqResult
       const label    = khz >= 1000 ? `${(khz / 1000).toFixed(2)} MHz` : `${khz.toFixed(0)} kHz`
       const cls      = sel >= 1.5 ? 'tip-ok' : sel >= 1.0 ? 'tip-val' : 'tip-warn'
@@ -238,18 +347,17 @@ Sub-threshold  T <50%
       const snapNote = beyondRange
         ? `<span class="tip-warn">⚠ Optimal is beyond 10 MHz slider cap.\n  Snap sets 10 MHz (best reachable frequency).\n  Bacteria/virus targeting requires >10 MHz RF equipment.</span>`
         : `<span class="tip-ok">Click to snap cursor to this frequency</span>`
-      return `<strong>Optimal Broadcast Frequency</strong>
+      return `<strong>Optimal Broadcast Frequency (Schwan mode)</strong>
 Scanned 300 log-spaced points from 10 kHz → 500 MHz.
-Maximises T-Vm / H-Vm at current field and medium.
+Maximises target / healthy disruption ratio at current field and medium.
 
 Peak: <span class="${cls}">${label} · ×${sel.toFixed(3)}</span>
 ${snapNote}
 
 Physics:
-  f ≪ fc_T and fc_H : sel = R_T/R_H  (quasi-DC; maximum for typical cancer/normal pairs)
+  f ≪ fc_T and fc_H : sel = R_T/R_H  (quasi-DC; maximum for cancer/normal pairs)
   When τ_T > τ_H (cancer larger): sel decreases above fc(T) — target rolls off first
-  f ≫ fc_H : sel → (R_T·τ_H)/(R_H·τ_T)  — generally ≠ R_T/R_H; for adeno/hepatocyte ≈ 0.68× (sub-unity)
-For bacteria (fc ~11–49 MHz with σ_i = 0.3 S/m) → optimal frequency is above the 10 MHz slider
+  f ≫ fc_H : sel → (R_T·τ_H)/(R_H·τ_T)  — for adeno/hepatocyte ≈ 0.68× (sub-unity)
 Note: virion fc ~0.6–0.75 MHz per Schwan model (σ_i-limited; model approximate for virions)`
     },
   },
@@ -262,18 +370,40 @@ Note: virion fc ~0.6–0.75 MHz per Schwan model (σ_i-limited; model approximat
       this.store.loadPreset('healthy', preset)
     },
     snapToOptimal() {
-      const khz = Math.round(Math.min(10000, Math.max(10, this.optimalFreqResult.khz)))
-      this.store.setBroadcastFreqKHz(khz)
-      broadcastFieldParams(khz, this.store.fieldIntensity, this.store.medium)
+      const { khz } = this.optimalFreqResult
+      // Resonance targets: snap to f_res (may be GHz — resonance slider supports full range)
+      // Schwan targets: cap at 10 MHz (Schwan slider max)
+      const maxKhz = this.isResonanceTarget ? 50_000_000 : 10_000
+      const snapped = Math.round(Math.max(10, Math.min(maxKhz, khz)))
+      this.store.setBroadcastFreqKHz(snapped)
+      broadcastFieldParams(snapped, this.store.fieldIntensity, this.store.medium)
     },
 
     presetTip(p: typeof CELL_PRESETS[0]): string {
+      const pr = p as typeof p & { resonantFreqGHz?: number; capsidQ?: number; resonantThresholdVcm?: number }
+      const res = pr.resonantFreqGHz
+        ? `\nf_res = <span class="tip-val">${pr.resonantFreqGHz} GHz</span>  ·  Q = ${pr.capsidQ ?? 20}  ·  E_thr = ${pr.resonantThresholdVcm} V/cm`
+        : ''
       return `<strong>${p.label}</strong>
 ${p.notes}
 
 R = <span class="tip-val">${p.radius} µm</span>  ·  membrane = ${p.membraneThickness} nm
 ε_r = ${p.dielectricConstant}  ·  σ_i = ${p.conductivity} S/m
-Vm threshold = <span class="tip-val">${p.thresholdVoltage} V</span>`
+Vm threshold = <span class="tip-val">${p.thresholdVoltage} V</span>${res}`
+    },
+
+    cmpTip(row: { preset: typeof CELL_PRESETS[0]; sel: number; tVmMv: string; hasRes: boolean }): string {
+      const selStr = row.sel >= 99 ? '∞' : row.sel.toFixed(3)
+      if (row.hasRes) {
+        return `<strong>${row.preset.label}</strong>
+${row.preset.notes}
+Disruption = <span class='tip-val'>${row.tVmMv}</span>  ·  Selectivity = <span class='tip-val'>×${selStr}</span>
+Click the preset pill below to switch to this cell`
+      }
+      return `<strong>${row.preset.label}</strong>
+${row.preset.notes}
+Vm = <span class='tip-val'>${row.tVmMv} mV</span>  ·  Selectivity = <span class='tip-val'>×${selStr}</span>
+Click the preset pill below to switch to this cell`
     },
   },
 })
@@ -281,7 +411,7 @@ Vm threshold = <span class="tip-val">${p.thresholdVoltage} V</span>`
 
 <template>
   <div class="sel-panel">
-    <div class="panel-title">Selectivity Analysis</div>
+    <div class="panel-title">{{ $t('selectivity.title') }}</div>
 
     <!-- ── Selectivity ratio + TI ────────────────────────────── -->
     <div class="sel-ratio-wrap" v-tip="tipSelectivity">
@@ -289,7 +419,7 @@ Vm threshold = <span class="tip-val">${p.thresholdVoltage} V</span>`
         ×{{ selectivity.toFixed(2) }}
       </span>
       <div class="sel-ratio-labels">
-        <span class="sel-ratio-label">Target / Healthy Vm ratio</span>
+        <span class="sel-ratio-label">{{ $t('selectivity.ratioLabel') }}</span>
         <span class="sel-ti-label">TI <span :style="{ color: selectivityColor }">{{ therapeuticIndex.toFixed(2) }}×</span></span>
       </div>
     </div>
@@ -331,24 +461,43 @@ Vm threshold = <span class="tip-val">${p.thresholdVoltage} V</span>`
       </div>
     </div>
 
-    <!-- ── Absolute Vm & SAR ──────────────────────────────────── -->
+    <!-- ── Vm / Disruption & SAR ─────────────────────────────── -->
     <div class="panel-sep"></div>
-    <div
-      class="vm-sar-grid"
-      v-tip="'<strong>Transmembrane potential and SAR</strong>\nVm — peak voltage across cell membrane (Schwan eq.)\n  Vm = 1.5·E·R / √(1+(2πf·τ)²)\n  τ = R·Cm·(2σ_e+σ_i)/(2σ_e·σ_i)\nSAR — specific absorption rate (W/kg) in cell interior\n  SAR = σ_i·α²·E²·wf / ρ  α = 3σ_e/(2σ_e+σ_i) (internal field factor)\n  wf=0.5(CW) or 1.0(pulsed)\n  Proportional to thermal load deposited in the cell'"
-    >
-      <div class="vm-sar-cell">
-        <span class="vs-type vs-type--t">T-Vm</span>
-        <span class="vs-vm" style="color:#ff4d6d">{{ targetVmMv }} mV</span>
-        <span class="vs-sar">{{ targetSarVal }} W/kg</span>
-        <span class="vs-elysis" v-tip="'<strong>Target lysis field</strong>\nMinimum E required to reach lysis threshold at current frequency.\nE_lysis = Vm_thr · √(1+(ωτ)²) / (1.5·R)'">E<sub>lys</sub> {{ targetLysisField }}</span>
-      </div>
-      <div class="vm-sar-cell">
-        <span class="vs-type vs-type--h">H-Vm</span>
-        <span class="vs-vm" style="color:#00d4ff">{{ healthyVmMv }} mV</span>
-        <span class="vs-sar">{{ healthySarVal }} W/kg</span>
-        <span class="vs-elysis" v-tip="'<strong>Healthy lysis field</strong>\nMinimum E required to reach lysis threshold at current frequency.\nKeep operating field below this value for selective therapy.'">E<sub>lys</sub> {{ healthyLysisField }}</span>
-      </div>
+    <div class="vm-sar-grid" v-tip="tipVmSar">
+      <!-- Resonance mode: show disruption % and resonance threshold -->
+      <template v-if="isResonanceTarget">
+        <div class="vm-sar-cell">
+          <span class="vs-type vs-type--t">{{ $t('selectivity.tDisr') }}</span>
+          <span class="vs-vm" style="color:#ff4d6d">{{ targetRatioPct.toFixed(1) }}%</span>
+          <span class="vs-sar">{{ targetSarVal }} W/kg</span>
+          <span class="vs-elysis"
+            v-tip="'<strong>' + $t('selectivity.tipEthr') + '</strong>\n' + $t('selectivity.tipEthrBody')"
+          >E<sub>thr</sub> {{ targetResonanceEthr }}</span>
+        </div>
+        <div class="vm-sar-cell">
+          <span class="vs-type vs-type--h">{{ $t('selectivity.hSafe') }}</span>
+          <span class="vs-vm" style="color:#39ff14">≈0%</span>
+          <span class="vs-sar">{{ healthySarVal }} W/kg</span>
+          <span class="vs-elysis" style="color:#39ff14"
+            v-tip="'<strong>' + $t('selectivity.tipNoGhzRes') + '</strong>\n' + $t('selectivity.tipNoGhzResBody')"
+          >{{ $t('selectivity.noGhzRes') }}</span>
+        </div>
+      </template>
+      <!-- Schwan mode: show Vm and lysis field -->
+      <template v-else>
+        <div class="vm-sar-cell">
+          <span class="vs-type vs-type--t">{{ $t('selectivity.targetBar') }}-Vm</span>
+          <span class="vs-vm" style="color:#ff4d6d">{{ targetVmMv }} mV</span>
+          <span class="vs-sar">{{ targetSarVal }} W/kg</span>
+          <span class="vs-elysis" v-tip="'<strong>Target lysis field</strong>\nMinimum E required to reach lysis threshold at current frequency.\nE_lysis = Vm_thr · √(1+(ωτ)²) / (1.5·R)'">E<sub>lys</sub> {{ targetLysisField }}</span>
+        </div>
+        <div class="vm-sar-cell">
+          <span class="vs-type vs-type--h">{{ $t('selectivity.healthyBar') }}-Vm</span>
+          <span class="vs-vm" style="color:#00d4ff">{{ healthyVmMv }} mV</span>
+          <span class="vs-sar">{{ healthySarVal }} W/kg</span>
+          <span class="vs-elysis" v-tip="'<strong>Healthy lysis field</strong>\nMinimum E required to reach lysis threshold at current frequency.\nKeep operating field below this value for selective therapy.'">E<sub>lys</sub> {{ healthyLysisField }}</span>
+        </div>
+      </template>
     </div>
 
     <!-- ── Mode badge ─────────────────────────────────────────── -->
@@ -378,15 +527,15 @@ Vm threshold = <span class="tip-val">${p.thresholdVoltage} V</span>`
     <div class="library-section">
       <div
         class="lib-title"
-        v-tip="'<strong>Selectivity vs All Presets</strong>\nSelectivity ratio (T-Vm / H-Vm) computed for every\ntarget preset against the current healthy baseline,\nat the current frequency and field intensity.\nSorted highest → lowest.\nActive preset is highlighted.'"
-      >Selectivity vs All Presets</div>
+        v-tip="'<strong>' + $t('selectivity.presetCompTitle') + '</strong>\n' + $t('selectivity.presetCompTip')"
+      >{{ $t('selectivity.presetCompTitle') }}</div>
       <div class="comparison-table">
         <div
           v-for="row in presetComparison"
           :key="row.preset.presetId"
           class="cmp-row"
           :class="{ 'cmp-row--active': row.isActive }"
-          v-tip="`<strong>${row.preset.label}</strong>\n${row.preset.notes}\nVm = <span class='tip-val'>${row.tVmMv} mV</span>  ·  Selectivity = <span class='tip-val'>×${row.sel.toFixed(3)}</span>\nClick the preset pill below to switch to this cell`"
+          v-tip="cmpTip(row)"
         >
           <span class="cmp-name" :style="{ color: GROUP_COLORS[row.preset.group] }">{{ row.preset.shortLabel }}</span>
           <div class="cmp-bar-track">
@@ -411,8 +560,8 @@ Vm threshold = <span class="tip-val">${p.thresholdVoltage} V</span>`
     <div class="library-section">
       <div
         class="lib-title"
-        v-tip="'<strong>Target Cell Library</strong>\nSelect a pathogen or cancer cell type to use\nas the target in selectivity calculations.\nEach preset has biologically realistic parameters\nfrom bioelectromagnetics literature.'"
-      >Target Cell Library</div>
+        v-tip="'<strong>' + $t('selectivity.targetLibTitle') + '</strong>\n' + $t('selectivity.targetLibTip')"
+      >{{ $t('selectivity.targetLibTitle') }}</div>
       <div v-for="grp in targetGroups" :key="grp" class="lib-group">
         <span class="lib-group-label" :style="{ color: GROUP_COLORS[grp] }">
           {{ GROUP_LABELS[grp] }}
@@ -436,8 +585,8 @@ Vm threshold = <span class="tip-val">${p.thresholdVoltage} V</span>`
     <div class="library-section">
       <div
         class="lib-title"
-        v-tip="'<strong>Healthy Baseline</strong>\nReference cell used to compute the selectivity ratio.\nSwitch between cell types to model different tissue contexts.'"
-      >Healthy Baseline</div>
+        v-tip="'<strong>' + $t('selectivity.healthyLibTitle') + '</strong>\n' + $t('selectivity.healthyLibTip')"
+      >{{ $t('selectivity.healthyLibTitle') }}</div>
       <div class="lib-pills">
         <button
           v-for="p in healthyPresets"

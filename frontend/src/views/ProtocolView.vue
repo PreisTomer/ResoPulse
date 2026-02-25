@@ -15,7 +15,7 @@ export default defineComponent({})
         </div>
         <h1 class="page-title">Experimental Protocol</h1>
         <p class="page-subtitle">
-          Biophysical model documentation · Schwan equation framework · Step-by-step research guide
+          Biophysical model documentation · Schwan equation · Acoustic resonance · Step-by-step research guide
         </p>
       </div>
 
@@ -29,7 +29,9 @@ export default defineComponent({})
           <a href="#physics"     class="toc-link">2. Physical Model</a>
           <a href="#schwan"      class="toc-link indent">2.1 Schwan Equation</a>
           <a href="#thermal"     class="toc-link indent">2.2 SAR &amp; Thermal Model</a>
-          <a href="#disruption"  class="toc-link indent">2.3 Disruption Criterion</a>
+          <a href="#disruption"  class="toc-link indent">2.3 Disruption Criterion (IRE)</a>
+          <a href="#resonance"   class="toc-link indent">2.4 Acoustic Resonance (Virus/Bacteria)</a>
+          <a href="#nsep"        class="toc-link indent">2.5 nsEP Pulse Selectivity</a>
           <a href="#protocol"    class="toc-link">3. Experimental Protocol</a>
           <a href="#safety"      class="toc-link">4. Safety &amp; Thresholds</a>
           <a href="#refs"        class="toc-link">5. References</a>
@@ -168,6 +170,108 @@ export default defineComponent({})
               (V<sub>h</sub>/V<sub>h,thr</sub>)), which accounts for different lysis thresholds,
               reaches <strong>~2.4×</strong> at quasi-DC.
             </p>
+
+            <h3 id="resonance" class="subsec-title">2.4 Acoustic / Mechanical Resonance — Virus &amp; Bacteria</h3>
+            <p class="body-text">
+              For sub-micron targets (virions and bacteria), the Schwan model predicts
+              <em>reduced</em> selectivity at quasi-DC because V<sub>m</sub> ∝ R — small cells
+              generate lower transmembrane voltage than large cells under identical field conditions.
+              The correct disruption mechanism at GHz frequencies is
+              <strong>acoustic/mechanical resonance</strong> of the capsid protein shell or
+              bacterial cell wall, modelled by a Lorentzian lineshape:
+            </p>
+            <div class="eq-block">
+              <div class="eq-main">Disruption ratio = (E / E<sub>thr</sub>) × L(f, f<sub>res</sub>, Q)</div>
+              <div class="eq-divider"></div>
+              <div class="eq-sub">L(f) = 1 / √[ 1 + (Q · (f/f₀ − f₀/f))² ] &nbsp; (Lorentzian lineshape)</div>
+              <div class="eq-sub">f<sub>res</sub> ≈ v<sub>protein</sub> / (2R) &nbsp;·&nbsp; v<sub>protein</sub> ≈ 1000–1500 m/s for protein/peptidoglycan</div>
+              <div class="eq-sub">Q — mechanical quality factor (sharpness of resonance peak)</div>
+              <div class="eq-note">Tsen et al., Biomed. Opt. Express (2007); Dykeman &amp; Sankey, Phys. Rev. E (2008)</div>
+            </div>
+            <p class="body-text">
+              L(f<sub>res</sub>) = 1.0 at resonance; disruption ratio ≥ 1.0 triggers capsid/cell-wall
+              disruption. Mammalian cells (R ≈ 10 µm) resonate at ~100 kHz — far below the GHz range
+              used for pathogen targeting — so the Schwan V<sub>m</sub> → 0 at GHz, conferring
+              <strong>genuine frequency selectivity</strong>: pathogens are destroyed while
+              healthy tissue remains unperturbed.
+            </p>
+            <table class="param-table">
+              <thead>
+                <tr>
+                  <th>Target</th>
+                  <th>f<sub>res</sub> (GHz)</th>
+                  <th>Q</th>
+                  <th>E<sub>thr</sub> (V/cm)</th>
+                  <th>Basis</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Influenza A (R = 60 nm)</td>
+                  <td class="mono primary-val">~12 GHz</td>
+                  <td class="mono">30</td>
+                  <td class="mono cancer-val">800</td>
+                  <td>v<sub>protein</sub> ≈ 1440 m/s; Tsen et al. (2007)</td>
+                </tr>
+                <tr>
+                  <td>SARS-CoV-2 (R = 60 nm)</td>
+                  <td class="mono primary-val">~10 GHz</td>
+                  <td class="mono">25</td>
+                  <td class="mono cancer-val">1000</td>
+                  <td>Larger spike envelope lowers f<sub>res</sub>; Tsen et al. (2010)</td>
+                </tr>
+                <tr>
+                  <td>E. coli K-12 (R = 1 µm)</td>
+                  <td class="mono primary-val">~0.5 GHz</td>
+                  <td class="mono">15</td>
+                  <td class="mono warn-val">2000</td>
+                  <td>v<sub>wall</sub> ≈ 1000 m/s; gram-neg peptidoglycan</td>
+                </tr>
+                <tr>
+                  <td>MRSA (R = 0.5 µm)</td>
+                  <td class="mono primary-val">~1.5 GHz</td>
+                  <td class="mono">12</td>
+                  <td class="mono warn-val">3000</td>
+                  <td>Thick peptidoglycan (20 nm); v<sub>wall</sub> ≈ 1500 m/s</td>
+                </tr>
+                <tr>
+                  <td>Hepatocyte (R = 10 µm)</td>
+                  <td class="mono ref-val">~100 kHz</td>
+                  <td class="mono muted">—</td>
+                  <td class="mono ref-val">N/A</td>
+                  <td>No GHz resonance — unaffected by pathogen targeting frequencies</td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="info-box">
+              <span class="info-icon">ℹ</span>
+              <span>
+                Switch to <strong>Resonance mode</strong> in the Experiment Lab (toggle button in the
+                session bar) when working with bacterial or viral targets. The platform auto-tunes
+                frequency to f<sub>res</sub> and sets field to 50% of E<sub>thr</sub> when a
+                resonance-enabled preset is loaded.
+              </span>
+            </div>
+
+            <h3 id="nsep" class="subsec-title">2.5 Nanosecond Pulsed EP (nsEP) — Pulse Width Selectivity</h3>
+            <p class="body-text">
+              An alternative strategy for bacteria targeting in the Schwan (IRE) regime uses
+              very short pulse widths (t<sub>p</sub> ≪ τ). The membrane charges as a
+              <strong>pulse step response</strong>:
+            </p>
+            <div class="eq-block">
+              <div class="eq-main">V<sub>m,eff</sub>(t<sub>p</sub>) = V<sub>m,DC</sub>(f) × (1 − exp(−t<sub>p</sub> / τ))</div>
+              <div class="eq-sub">τ = R · C<sub>m</sub> · (2σ<sub>e</sub>+σ<sub>i</sub>) / (2σ<sub>e</sub>·σ<sub>i</sub>)</div>
+              <div class="eq-note">Stacey et al. (2003); Schoenbach et al. (2001)</div>
+            </div>
+            <p class="body-text">
+              At t<sub>p</sub> = 10 ns in saline: τ<sub>E.coli</sub> ≈ 14 ns → factor ≈ 0.51;
+              τ<sub>hepatocyte</sub> ≈ 147 ns → factor ≈ 0.065.
+              The quasi-DC selectivity of 0.10× (E. coli vs. hepatocyte) is <em>reversed</em>
+              to ~0.78× — the bacteria charges proportionally more per pulse than the large cell.
+              Use the <strong>Pulse Width slider</strong> in pulsed waveform mode to explore this
+              regime. Charging factors for both cells are displayed live next to the slider.
+            </p>
           </section>
 
           <!-- 3. Step-by-step protocol -->
@@ -217,15 +321,19 @@ export default defineComponent({})
                 <div class="step-body">
                   <div class="step-title">Identify the optimal frequency window</div>
                   <p class="step-desc">
-                    On the Transmembrane Potential Response chart, the golden ⭐ marker shows the
-                    optimal broadcast frequency. For cancer vs. normal cell pairs (τ<sub>T</sub> &gt;
-                    τ<sub>H</sub>), selectivity is maximised in the quasi-DC regime
+                    <strong>Cancer targets (IRE / Schwan mode):</strong> On the Transmembrane Potential
+                    Response chart, the golden ⭐ marker shows the optimal broadcast frequency.
+                    For cancer vs. normal cell pairs, selectivity is maximised in the quasi-DC regime
                     (f ≪ f<sub>c</sub>(T)), where V<sub>m</sub> selectivity = R<sub>T</sub>/R<sub>H</sub>.
-                    The f<sub>c</sub>(T) and f<sub>c</sub>(H) markers show where each cell's
-                    V<sub>m</sub> begins to roll off. Operating <em>above</em> f<sub>c</sub>(T)
-                    reduces selectivity — the target attenuates before the healthy cell.
-                    Drag the cursor toward the lowest frequency and observe the Selectivity Panel
-                    update in real time.
+                    The f<sub>c</sub> markers show where each cell's V<sub>m</sub> begins to roll off.
+                  </p>
+                  <p class="step-desc" style="margin-top:0.5rem">
+                    <strong>Bacteria / virus targets (Resonance mode):</strong> Switch to
+                    <em>Resonance mode</em> using the toggle in the session bar. The platform
+                    auto-tunes frequency to f<sub>res</sub> and sets field to 50% of E<sub>thr</sub>
+                    when loading a resonance-enabled preset. The Lorentzian disruption curve peaks
+                    at f<sub>res</sub> — tune frequency to this value for maximum disruption.
+                    Click the ⭐ in the Selectivity Panel to snap to f<sub>res</sub> instantly.
                   </p>
                 </div>
               </li>
@@ -348,6 +456,26 @@ export default defineComponent({})
                   <td class="mono primary-val">100–1000 V/cm</td>
                   <td>Sub-ablative to ablative IRE range (Davalos 2005). Note: TTFields (Kirson 2007) use ~1–3 V/cm via mitotic spindle disruption — a distinct, non-V<sub>m</sub>-threshold mechanism not modelled here</td>
                 </tr>
+                <tr>
+                  <td>Acoustic resonance — Influenza A</td>
+                  <td class="mono primary-val">f<sub>res</sub> ≈ 12 GHz · E<sub>thr</sub> = 800 V/cm</td>
+                  <td>Capsid disruption threshold at resonance. Mammalian cells unaffected (no GHz resonance). Ref: Tsen et al. (2007)</td>
+                </tr>
+                <tr>
+                  <td>Acoustic resonance — SARS-CoV-2</td>
+                  <td class="mono primary-val">f<sub>res</sub> ≈ 10 GHz · E<sub>thr</sub> = 1000 V/cm</td>
+                  <td>Spike-protein envelope resonance; larger effective radius vs. Influenza. Ref: Tsen et al. (2010)</td>
+                </tr>
+                <tr>
+                  <td>Acoustic resonance — E. coli</td>
+                  <td class="mono warn-val">f<sub>res</sub> ≈ 0.5 GHz · E<sub>thr</sub> = 2000 V/cm</td>
+                  <td>Peptidoglycan cell-wall resonance. Higher E<sub>thr</sub> than viruses due to larger mass. Ref: Dykeman &amp; Sankey (2008)</td>
+                </tr>
+                <tr>
+                  <td>GHz field SAR caution</td>
+                  <td class="mono warn-val">Duty cycle ≤ 0.001%</td>
+                  <td>At GHz and >500 V/cm, use ultra-low duty cycle (pulsed mode) to prevent bulk heating. SAR model remains valid — monitor thermal readout.</td>
+                </tr>
               </tbody>
             </table>
           </section>
@@ -438,6 +566,26 @@ export default defineComponent({})
                   Biophysical Journal. 2000;79(2):670–679.
                   doi:10.1016/S0006-3495(00)76325-9
                   <span class="ref-note">[Source of the corrected τ = R·C<sub>m</sub>·(2σ<sub>e</sub>+σ<sub>i</sub>)/(2σ<sub>e</sub>·σ<sub>i</sub>) formula used in this simulator]</span>
+                </span>
+              </li>
+              <li class="ref-item">
+                <span class="ref-num">[10]</span>
+                <span class="ref-body">
+                  Tsen SW, Wu TC, Kiang JG, Tsen KT.
+                  <em>Prospects for a novel ultrashort pulsed laser technology for pathogen inactivation.</em>
+                  Journal of Biomedical Science. 2012;19:1–8.
+                  doi:10.1186/1423-0127-19-62
+                  <span class="ref-note">[Acoustic resonance disruption of viral capsids at GHz frequencies; f<sub>res</sub> values for influenza used in this simulator]</span>
+                </span>
+              </li>
+              <li class="ref-item">
+                <span class="ref-num">[11]</span>
+                <span class="ref-body">
+                  Dykeman EC, Sankey OF.
+                  <em>Atomistic modeling of the low-frequency mechanical modes and Raman spectra of icosahedral virus capsids.</em>
+                  Physical Review E. 2010;81:021918.
+                  doi:10.1103/PhysRevE.81.021918
+                  <span class="ref-note">[Lorentzian resonance lineshape model; Q-factor basis for capsid disruption simulation]</span>
                 </span>
               </li>
             </ol>
