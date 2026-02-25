@@ -5,8 +5,8 @@ import * as d3 from 'd3'
 import { useCellStore } from '../stores/cellStore'
 import { useExperimentStore } from '../stores/experimentStore'
 import { CELL_PRESETS } from '../constants/cellLibrary'
-import { membraneCm, computeTau } from '../mockData'
 import type { CellRecord } from '../mockData'
+import { membraneCm, computeTau } from '../utils/physics'
 import type { CellState } from '../types/cell'
 import {
   CELL_COLORS,
@@ -31,10 +31,11 @@ export default defineComponent({
       type: String as PropType<'healthy' | 'target'>,
       required: true,
     },
-    label:       { type: String, required: true },
-    sublabel:    { type: String, required: true },
-    description: { type: String, required: true },
-    buttonText:  { type: String, required: true },
+    label:        { type: String, required: true },
+    sublabel:     { type: String, required: true },
+    sublabelTip:  { type: String, default: '' },
+    description:  { type: String, required: true },
+    buttonText:   { type: String, required: true },
     cellData: {
       type: Object as PropType<CellRecord | null>,
       default: null,
@@ -393,7 +394,11 @@ Ratio = Vm / lysis threshold voltage
       <span class="card-icon">◎</span>
       <div class="card-name">
         <div class="card-label">{{ label }}</div>
-        <div class="card-sublabel">{{ sublabel }}</div>
+        <div
+          class="card-sublabel"
+          :class="{ 'card-sublabel--has-tip': sublabelTip }"
+          v-tip="sublabelTip || undefined"
+        >{{ sublabel }}</div>
         <div v-if="cellData" class="card-meta">
           <span class="meta-item" v-tip="tipVm">{{ vmDisplay }}</span>
           <span class="meta-sep">·</span>
@@ -589,6 +594,11 @@ Ratio = Vm / lysis threshold voltage
   font-size: 0.72rem; color: var(--color-text-muted);
   font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.08em;
   line-height: 1.3;
+}
+.card-sublabel--has-tip {
+  cursor: help;
+  border-bottom: 1px dotted rgba(255,255,255,0.25);
+  text-decoration-skip-ink: none;
 }
 .card-meta {
   display: flex; align-items: center; gap: 0.3rem;

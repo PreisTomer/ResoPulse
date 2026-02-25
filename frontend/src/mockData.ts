@@ -1,13 +1,26 @@
-// ── Physical constants ────────────────────────────────────────────────────────
-const EPSILON_0 = 8.854187817e-12 // permittivity of free space [F/m]
+/**
+ * Mock data — cell configurations and propagation media.
+ * Physics helper functions live in utils/physics.ts.
+ */
 
 // ── Propagation media ─────────────────────────────────────────────────────────
-export const MEDIA = {
-  saline: { name: 'Physiological Saline (0.9%)', conductivity: 1.5 },
-  blood:  { name: 'Whole Blood',                  conductivity: 0.7 },
-  tissue: { name: 'Soft Tissue',                   conductivity: 0.4 },
-  water:  { name: 'Distilled Water',               conductivity: 0.001 },
-} as const
+export interface MediaEntry {
+  name: string
+  conductivity: number
+  permittivity: number  // relative permittivity (ε_r)
+}
+
+export const MEDIA: {
+  saline: MediaEntry
+  blood:  MediaEntry
+  tissue: MediaEntry
+  water:  MediaEntry
+} = {
+  saline: { name: 'Physiological Saline (0.9%)', conductivity: 1.5,   permittivity: 75 },
+  blood:  { name: 'Whole Blood',                  conductivity: 0.7,   permittivity: 70 },
+  tissue: { name: 'Soft Tissue',                   conductivity: 0.4,   permittivity: 50 },
+  water:  { name: 'Distilled Water',               conductivity: 0.001, permittivity: 80 },
+}
 
 export type MediumKey = keyof typeof MEDIA
 
@@ -21,8 +34,13 @@ export interface CellConfig {
   membraneThickness: number    // nm
   naturalFrequency: number     // Hz — oscilloscope animation speed only; NOT a physics parameter
   thresholdVoltage: number     // V — Vm above which lysis is initiated
-  dielectricConstant: number   // ε_r of membrane
+  dielectricConstant: number   // ε_r of membrane (used in Schwan τ)
   conductivity: number         // S/m — cytoplasm σ_i
+  cytoplasmPermittivity: number // ε_r of cytoplasm
+  // Acoustic/mechanical resonance (virus/bacteria capsid & cell-wall targeting)
+  resonantFreqGHz?: number       // Capsid/cell-wall fundamental resonant frequency (GHz)
+  capsidQ?: number               // Mechanical quality factor
+  resonantThresholdVcm?: number  // Field amplitude at resonance required for disruption (V/cm)
   // Thermal — added defaults (not in user spec)
   density: number              // kg/m³
   specificHeatCapacity: number // J/(kg·K)
@@ -38,7 +56,7 @@ export const simulationData = {
   medium: { name: 'Interstitial Fluid', conductivity: 1.5, permittivity: 80 },
   cells: [
     {
-      id: 'healthy-01',
+      id: 'hepatocyte',
       type: 'healthy' as const,
       label: 'Healthy Hepatocyte',
       radius: 10,
@@ -49,7 +67,7 @@ export const simulationData = {
       conductivity: 0.5,
     },
     {
-      id: 'target-01',
+      id: 'adenocarcinoma',
       type: 'target' as const,
       label: 'Adenocarcinoma Cell',
       radius: 15,
@@ -64,76 +82,6 @@ export const simulationData = {
 
 // Extended cell configs with thermal and animation defaults
 export const cellConfigs: [CellConfig, CellConfig] = [
-  { ...simulationData.cells[0]!, density: 1050, specificHeatCapacity: 3500, amplitude: 0.8 },
-  { ...simulationData.cells[1]!, density: 1080, specificHeatCapacity: 3200, amplitude: 0.5 },
+  { ...simulationData.cells[0]!, density: 1050, specificHeatCapacity: 3500, amplitude: 0.8, cytoplasmPermittivity: 60 },
+  { ...simulationData.cells[1]!, density: 1080, specificHeatCapacity: 3200, amplitude: 0.5, cytoplasmPermittivity: 62 },
 ]
-
-// ── Physics helper functions ──────────────────────────────────────────────────
-
-/** Membrane capacitance per unit area [F/m²]: Cm = ε_r × ε₀ / d */
-export function membraneCm(cell: CellConfig): number {
-  return (cell.dielectricConstant * EPSILON_0) / (cell.membraneThickness * 1e-9)
-}
-
-/**
- * Membrane time constant τ [s] — Kotnik & Miklavcic (2000) single-shell model:
- *   τ = R·Cm · (2σ_e + σ_i) / (2σ_e · σ_i)
- * Equivalently:  τ = R·Cm · (1/σ_i + 1/(2σ_e))
- * NOT the simpler but incorrect form τ = R·Cm / (σ_e + σ_i/2).
- */
-export function computeTau(cell: CellConfig, sigma_e: number): number {
-  const R = cell.radius * 1e-6     // µm → m
-  const Cm = membraneCm(cell)      // F/m²
-  return (R * Cm) * (2 * sigma_e + cell.conductivity) / (2 * sigma_e * cell.conductivity)
-}
-
-/**
- * Schwan transmembrane potential [V]:
- *   Vm(f) = (1.5 × E × R) / √(1 + (ωτ)²)
- *   E [V/m] = fieldVcm × 100
- */
-export function computeSchwan(
-  cell: CellConfig,
-  freqKHz: number,
-  fieldVcm: number,
-  sigma_e: number,
-): number {
-  const E = fieldVcm * 100          // V/cm → V/m
-  const R = cell.radius * 1e-6      // µm → m
-  const tau = computeTau(cell, sigma_e)
-  const omega = 2 * Math.PI * freqKHz * 1e3
-  return (1.5 * E * R) / Math.sqrt(1 + (omega * tau) ** 2)
-}
-
-/**
- * Specific absorption rate [W/kg] — power deposited in cell interior:
- *   E_in = E × 3σ_e / (2σ_e + σ_i)   (internal field, DC limit for sphere in medium)
- *   SAR  = σ_i × E_in² × waveformFactor / ρ
- *        = σ_i × (3σ_e/(2σ_e+σ_i))² × E² × waveformFactor / ρ
- *
- * This is the physically correct cell-interior SAR from the Maxwell/Laplace solution
- * for a dielectric sphere in a uniform field (Schwitzer 1955; Foster & Schwan 1989).
- * σ_eff = (σ_e + σ_i)/2 is an incorrect approximation that underestimates the
- * conductivity ratio effect — particularly severe in low-conductivity media.
- *
- * waveformFactor:
- *   0.5 — CW sinusoidal (E²_rms = E²_peak / 2)
- *   1.0 — pulsed DC / square wave (no RMS halving)
- */
-export function computeSAR(
-  cell: CellConfig,
-  fieldVcm: number,
-  sigma_e: number,
-  waveformFactor = 0.5,
-): number {
-  const E = fieldVcm * 100          // V/cm → V/m
-  // Internal field concentration factor α = 3σ_e / (2σ_e + σ_i)
-  const alpha = (3 * sigma_e) / (2 * sigma_e + cell.conductivity)
-  return (cell.conductivity * alpha * alpha * E * E * waveformFactor) / cell.density
-}
-
-/** Cell characteristic frequency fc [kHz]: fc = 1 / (2πτ) */
-export function computeFc(cell: CellConfig, sigma_e: number): number {
-  const tau = computeTau(cell, sigma_e)
-  return 1 / (2 * Math.PI * tau * 1e3)
-}
