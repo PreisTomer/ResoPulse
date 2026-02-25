@@ -187,11 +187,11 @@ export default defineComponent({
                 <th>Freq (kHz)</th>
                 <th>Field (V/cm)</th>
                 <th>Medium</th>
-                <th>T-Vm (mV)</th>
-                <th>H-Vm (mV)</th>
-                <th>Selectivity</th>
-                <th>T-Ratio %</th>
-                <th>H-Ratio %</th>
+                <th title="Schwan transmembrane potential — ≈0 in Resonance mode (see T-Ratio %)">T-Vm (mV) ¹</th>
+                <th title="Schwan transmembrane potential — ≈0 in Resonance mode (see H-Ratio %)">H-Vm (mV) ¹</th>
+                <th title="Selectivity = targetDisruptionRatio / healthyDisruptionRatio — valid in both IRE and Resonance mode">Selectivity</th>
+                <th title="Target disruption ratio — uses acoustic resonance model for bacteria/virus, Schwan model for cancer">T-Ratio %</th>
+                <th title="Healthy cell disruption ratio — always Schwan-based (≈0 at GHz for Resonance mode)">H-Ratio %</th>
                 <th>T-Temp (°C)</th>
                 <th>H-Temp (°C)</th>
                 <th>Event</th>
@@ -246,6 +246,9 @@ export default defineComponent({
           </span>
           <span class="legend-item">
             <span class="lc warn-val">■</span> Selectivity 1.0–1.5× or temperature warning
+          </span>
+          <span class="legend-item footnote-item">
+            ¹ T-Vm / H-Vm: Schwan transmembrane potential (mV). In Resonance mode (bacteria/virus at GHz), these are ≈ 0 — use T-Ratio % / H-Ratio % as the primary disruption metrics.
           </span>
         </div>
       </div>
@@ -602,6 +605,15 @@ export default defineComponent({
 }
 
 .lc { font-size: 0.85rem; }
+
+.footnote-item {
+  width: 100%;
+  font-size: 0.65rem;
+  color: var(--color-text-muted);
+  opacity: 0.65;
+  margin-top: 0.15rem;
+  line-height: 1.5;
+}
 
 /* ── Responsive ───────────────────────────────────────────────────────────── */
 @media (max-width: 1100px) {

@@ -138,8 +138,16 @@ export const useCellStore = defineStore('cell', {
       return state.healthyTemp < 40 && state.targetTemp < 40
     },
 
+    /**
+     * Mode-aware selectivity: targetDisruptionRatio / healthyDisruptionRatio.
+     * Works correctly for both Schwan (mammalian IRE) and resonance (virus/bacteria)
+     * modes. In resonance mode, healthy disruption ≈ 0 at GHz — selectivity caps at 99.9×.
+     * In Schwan mode this equals the Therapeutic Index (threshold-normalised ratio).
+     */
     selectivityRatio(): number {
-      return this.healthyVm > 0 ? this.targetVm / this.healthyVm : 0
+      const hDr = this.healthyDisruptionRatio
+      if (hDr < 1e-9) return this.targetDisruptionRatio > 0 ? 99.9 : 0
+      return Math.min(99.9, this.targetDisruptionRatio / hDr)
     },
 
     /**
@@ -155,14 +163,15 @@ export const useCellStore = defineStore('cell', {
     },
 
     /**
-     * True therapeutic index TI = (Vt/Vt,thr) / (Vh/Vh,thr)
-     * Accounts for the different lysis thresholds of target vs healthy cells.
-     * Pulse step-response is already included in healthyVm/targetVm.
-     * TI > 1 means target cells are proportionally closer to lysis than healthy cells.
+     * Therapeutic Index TI = targetDisruptionRatio / healthyDisruptionRatio.
+     * Mode-aware: in Schwan mode = (Vt/Vt,thr) / (Vh/Vh,thr).
+     * In resonance mode: target uses acoustic disruption formula, healthy ≈ 0 at GHz → TI caps at 99.9.
+     * TI > 1 means target cells are proportionally closer to disruption threshold than healthy cells.
      */
     therapeuticIndex(): number {
-      if (this.healthyVm <= 0 || this.healthy.thresholdVoltage <= 0) return 0
-      return (this.targetVm / this.target.thresholdVoltage) / (this.healthyVm / this.healthy.thresholdVoltage)
+      const hDr = this.healthyDisruptionRatio
+      if (hDr < 1e-9) return this.targetDisruptionRatio > 0 ? 99.9 : 0
+      return Math.min(99.9, this.targetDisruptionRatio / hDr)
     },
 
     /**
