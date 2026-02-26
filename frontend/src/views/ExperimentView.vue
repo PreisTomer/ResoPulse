@@ -178,15 +178,8 @@ export default defineComponent({
     <!-- ── Main grid ────────────────────────────────────────────── -->
     <div class="exp-grid">
 
-      <!-- Left column: chart + cell cards + field controls -->
+      <!-- Left column: cell cards + sliders + chart -->
       <div class="exp-left">
-
-        <!-- Chart: IRE/Schwan transmembrane potential or Acoustic Resonance disruption -->
-        <FrequencyResponseChart v-if="chartMode === 'schwan'" />
-        <ResonanceChart v-else />
-
-        <!-- Field / medium control panel -->
-        <FrequencySlider :chart-mode="chartMode" />
 
         <!-- Cell visualisation cards -->
         <div class="cell-cards">
@@ -202,6 +195,14 @@ export default defineComponent({
             :cell-data="cell.cellData"
           />
         </div>
+
+        <!-- Field / medium control panel -->
+        <FrequencySlider :chart-mode="chartMode" />
+
+        <!-- Chart: IRE/Schwan transmembrane potential or Acoustic Resonance disruption -->
+        <FrequencyResponseChart v-if="chartMode === 'schwan'" />
+        <ResonanceChart v-else />
+
       </div>
 
       <!-- Right column: selectivity + experiment log -->
