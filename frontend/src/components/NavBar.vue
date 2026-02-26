@@ -106,8 +106,8 @@ export default defineComponent({
   animation: pulse 2s ease-in-out infinite;
   transition: background-color 0.4s, box-shadow 0.4s;
 }
-.status-dot--warning { background-color: #ffb800; box-shadow: 0 0 6px #ffb800; }
-.status-label--warning { color: #ffb800; }
+.status-dot--warning { background-color: var(--color-amber-warm); box-shadow: 0 0 6px var(--color-amber-warm); }
+.status-label--warning { color: var(--color-amber-warm); }
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 .status-label {
   font-size: 0.75rem; color: var(--color-text-muted);

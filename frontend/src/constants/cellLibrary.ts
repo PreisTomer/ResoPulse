@@ -16,12 +16,9 @@ export interface CellPreset extends CellConfig {
   techNotes?: string
 }
 
-export const GROUP_COLORS: Record<CellGroup, string> = {
-  reference: '#00d4ff',
-  cancer:    '#ff4d6d',
-  bacteria:  '#fbbf24',
-  virus:     '#a78bfa',
-}
+// GROUP_COLORS defined in theme/colors.ts — re-exported here for back-compat
+import { GROUP_COLORS as _GROUP_COLORS } from '../theme/colors'
+export const GROUP_COLORS: Record<CellGroup, string> = _GROUP_COLORS
 
 export const GROUP_LABELS: Record<CellGroup, string> = {
   reference: 'Reference',

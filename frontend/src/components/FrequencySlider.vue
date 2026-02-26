@@ -700,18 +700,18 @@ Ref: Beebe et al. 2003 (nsEP); Batista Napotnik et al. 2016`
   animation: thermal-pulse 2s ease-in-out infinite;
 }
 .thermal-banner--hyperthermic {
-  color: #fbbf24;
+  color: var(--color-amber);
   background: rgba(251, 191, 36, 0.07);
   border-color: rgba(251, 191, 36, 0.3);
 }
 .thermal-banner--denaturing {
-  color: #fb923c;
+  color: var(--color-orange);
   background: rgba(251, 130, 20, 0.1);
   border-color: rgba(251, 130, 20, 0.4);
   animation: thermal-pulse 1s ease-in-out infinite;
 }
 .thermal-banner--vaporizing {
-  color: #ff4d6d;
+  color: var(--color-danger);
   background: rgba(255, 77, 109, 0.1);
   border-color: rgba(255, 77, 109, 0.5);
   animation: thermal-pulse 0.5s ease-in-out infinite;
@@ -874,26 +874,26 @@ Ref: Beebe et al. 2003 (nsEP); Batista Napotnik et al. 2016`
 /* ── Thermal slider thumb coloring ──────────────────────────────────── */
 /* Thumb turns amber → orange → red as projected T_ss rises             */
 .panel-row--thermal-hyperthermic .ctrl-slider::-webkit-slider-thumb {
-  background: #fbbf24;
+  background: var(--color-amber);
   box-shadow: 0 0 6px rgba(251, 191, 36, 0.5);
 }
 .panel-row--thermal-hyperthermic .ctrl-slider::-moz-range-thumb {
-  background: #fbbf24;
+  background: var(--color-amber);
 }
 .panel-row--thermal-denaturing .ctrl-slider::-webkit-slider-thumb {
-  background: #fb923c;
+  background: var(--color-orange);
   box-shadow: 0 0 8px rgba(251, 130, 20, 0.7);
 }
 .panel-row--thermal-denaturing .ctrl-slider::-moz-range-thumb {
-  background: #fb923c;
+  background: var(--color-orange);
 }
 .panel-row--thermal-vaporizing .ctrl-slider::-webkit-slider-thumb {
-  background: #ff4d6d;
+  background: var(--color-danger);
   box-shadow: 0 0 10px rgba(255, 77, 109, 0.9);
   animation: thumb-danger-pulse 0.5s ease-in-out infinite;
 }
 .panel-row--thermal-vaporizing .ctrl-slider::-moz-range-thumb {
-  background: #ff4d6d;
+  background: var(--color-danger);
 }
 
 @keyframes thumb-danger-pulse {
@@ -902,9 +902,9 @@ Ref: Beebe et al. 2003 (nsEP); Batista Napotnik et al. 2016`
 }
 
 /* ── Thermal readout value coloring ─────────────────────────────────── */
-.readout--hyperthermic { color: #fbbf24 !important; }
-.readout--denaturing   { color: #fb923c !important; }
-.readout--vaporizing   { color: #ff4d6d !important; animation: state-blink 0.5s ease-in-out infinite; }
+.readout--hyperthermic { color: var(--color-amber)  !important; }
+.readout--denaturing   { color: var(--color-orange) !important; }
+.readout--vaporizing   { color: var(--color-danger) !important; animation: state-blink 0.5s ease-in-out infinite; }
 
 @keyframes state-blink {
   0%, 100% { opacity: 1; }
@@ -913,13 +913,13 @@ Ref: Beebe et al. 2003 (nsEP); Batista Napotnik et al. 2016`
 
 /* ── Safe / Expert mode pill variants ───────────────────────────────── */
 .pill--safe {
-  border-color: #39ff14 !important;
-  color: #39ff14 !important;
+  border-color: var(--color-lime) !important;
+  color: var(--color-lime) !important;
   background-color: rgba(57, 255, 20, 0.08) !important;
 }
 .pill--expert {
-  border-color: #fbbf24 !important;
-  color: #fbbf24 !important;
+  border-color: var(--color-amber) !important;
+  color: var(--color-amber) !important;
   background-color: rgba(251, 191, 36, 0.08) !important;
 }
 .pill--sm {
@@ -960,7 +960,7 @@ Ref: Beebe et al. 2003 (nsEP); Batista Napotnik et al. 2016`
   border-radius: var(--radius);
   border: 1px solid rgba(167, 139, 250, 0.3);
   background: rgba(167, 139, 250, 0.06);
-  color: #a78bfa;
+  color: var(--color-purple);
   font-family: var(--font-mono);
   font-size: 0.62rem;
   line-height: 1.5;
@@ -973,7 +973,7 @@ Ref: Beebe et al. 2003 (nsEP); Batista Napotnik et al. 2016`
 }
 
 .resonance-mode-note-text strong {
-  color: #c4b5fd;
+  color: var(--color-purple-light);
 }
 
 /* ── Mobile ──────────────────────────────────────────────────────────── */

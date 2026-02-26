@@ -263,10 +263,10 @@ export default defineComponent({})
   border-radius: 3px;
   border: 1px solid transparent;
 }
-.scope-tag--cancer   { color: #ff4d6d; border-color: rgba(255,77,109,0.35); background: rgba(255,77,109,0.07); }
-.scope-tag--bacteria { color: #fbbf24; border-color: rgba(251,191,36,0.35); background: rgba(251,191,36,0.07); }
-.scope-tag--virus    { color: #a78bfa; border-color: rgba(167,139,250,0.35); background: rgba(167,139,250,0.07); }
-.scope-tag--ref      { color: #00d4ff; border-color: rgba(0,212,255,0.35); background: rgba(0,212,255,0.07); }
+.scope-tag--cancer   { color: var(--color-danger);  border-color: rgba(255,77,109,0.35);  background: rgba(255,77,109,0.07); }
+.scope-tag--bacteria { color: var(--color-amber);   border-color: rgba(251,191,36,0.35);  background: rgba(251,191,36,0.07); }
+.scope-tag--virus    { color: var(--color-purple);  border-color: rgba(167,139,250,0.35); background: rgba(167,139,250,0.07); }
+.scope-tag--ref      { color: var(--color-primary); border-color: rgba(0,212,255,0.35);   background: rgba(0,212,255,0.07); }
 
 /* ── Disclaimer ──────────────────────────────────────────────────────── */
 .disclaimer {
