@@ -207,12 +207,12 @@ export default defineComponent({})
   color: #0a2e58;
   -webkit-text-stroke: 1.5px var(--color-primary);
   paint-order: stroke fill;
-  animation: res-glow 3.5s ease-in-out infinite;
+  animation: res-glow 9s ease-in-out infinite;
 }
 
 @keyframes res-glow {
-  0%, 100% { text-shadow: 0 0 28px rgba(0, 212, 255, 0.25); }
-  50%       { text-shadow: 0 0 55px rgba(0, 212, 255, 0.65), 0 0 90px rgba(0, 212, 255, 0.2); }
+  0%, 100% { text-shadow: 0 0 22px rgba(0, 212, 255, 0.2); }
+  50%       { text-shadow: 0 0 44px rgba(0, 212, 255, 0.52); }
 }
 
 /* ── Tagline ─────────────────────────────────────────────────────────── */
