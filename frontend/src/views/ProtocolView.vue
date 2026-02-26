@@ -131,8 +131,9 @@ export default defineComponent({})
             </div>
             <p class="body-text">
               The cooling coefficient λ approximates combined perfusion and thermal conduction
-              losses. At steady state (dT/dt = 0):
-              T<sub>ss</sub> = T₀ + SAR / (λ · c<sub>p</sub>).
+              losses. For pulsed waveforms, the effective SAR is scaled by duty cycle:
+              SAR<sub>eff</sub> = SAR<sub>peak</sub> × dc. At steady state (dT/dt = 0):
+              T<sub>ss</sub> = T₀ + SAR<sub>eff</sub> / (λ · c<sub>p</sub>).
               A hyperthermic warning is issued when T exceeds 42 °C. Sustained application above
               ~700 V/cm in saline approaches protein denaturation thresholds for most tissue types.
             </p>
@@ -190,10 +191,11 @@ export default defineComponent({})
             </div>
             <p class="body-text">
               L(f<sub>res</sub>) = 1.0 at resonance; disruption ratio ≥ 1.0 triggers capsid/cell-wall
-              disruption. Mammalian cells (R ≈ 10 µm) resonate at ~100 kHz — far below the GHz range
-              used for pathogen targeting — so the Schwan V<sub>m</sub> → 0 at GHz, conferring
-              <strong>genuine frequency selectivity</strong>: pathogens are destroyed while
-              healthy tissue remains unperturbed.
+              disruption. Mammalian cells lack the rigid protein/peptidoglycan shell required for
+              acoustic capsid/cell-wall resonance — their Schwan V<sub>m</sub> rolls off above
+              ~1 MHz (ωτ ≫ 1) and approaches zero at GHz frequencies, leaving healthy tissue
+              unperturbed at pathogen-targeting frequencies and conferring
+              <strong>genuine frequency selectivity</strong>.
             </p>
             <table class="param-table">
               <thead>
@@ -236,10 +238,10 @@ export default defineComponent({})
                 </tr>
                 <tr>
                   <td>Hepatocyte (R = 10 µm)</td>
-                  <td class="mono ref-val">~100 kHz</td>
+                  <td class="mono muted">N/A</td>
                   <td class="mono muted">—</td>
-                  <td class="mono ref-val">N/A</td>
-                  <td>No GHz resonance — unaffected by pathogen targeting frequencies</td>
+                  <td class="mono muted">N/A</td>
+                  <td>No rigid-shell resonance — Schwan V<sub>m</sub> → 0 at GHz (ωτ ≫ 1); unaffected at pathogen frequencies</td>
                 </tr>
               </tbody>
             </table>
@@ -267,8 +269,12 @@ export default defineComponent({})
             <p class="body-text">
               At t<sub>p</sub> = 10 ns in saline: τ<sub>E.coli</sub> ≈ 14 ns → factor ≈ 0.51;
               τ<sub>hepatocyte</sub> ≈ 147 ns → factor ≈ 0.065.
-              The quasi-DC selectivity of 0.10× (E. coli vs. hepatocyte) is <em>reversed</em>
-              to ~0.78× — the bacteria charges proportionally more per pulse than the large cell.
+              The quasi-DC V<sub>m</sub> ratio of 0.10× (E. coli vs. hepatocyte) <em>improves</em>
+              to ~0.78× — the small cell charges proportionally more per pulse than the large cell.
+              The theoretical limit as t<sub>p</sub> → 0 is (τ<sub>H</sub>·R<sub>E</sub>) /
+              (τ<sub>E</sub>·R<sub>H</sub>) ≈ 1.05×; even at this limit the Therapeutic Index
+              remains &lt;1 because V<sub>m,thr,bacteria</sub> &gt; V<sub>m,thr,hepatocyte</sub>
+              (cell-wall reinforcement raises the lysis threshold).
               Use the <strong>Pulse Width slider</strong> in pulsed waveform mode to explore this
               regime. Charging factors for both cells are displayed live next to the slider.
             </p>
@@ -327,7 +333,7 @@ export default defineComponent({})
                     (f ≪ f<sub>c</sub>(T)), where V<sub>m</sub> selectivity = R<sub>T</sub>/R<sub>H</sub>.
                     The f<sub>c</sub> markers show where each cell's V<sub>m</sub> begins to roll off.
                   </p>
-                  <p class="step-desc" style="margin-top:0.5rem">
+                  <p class="step-desc step-desc--spaced">
                     <strong>Bacteria / virus targets (Resonance mode):</strong> Switch to
                     <em>Resonance mode</em> using the toggle in the session bar. The platform
                     auto-tunes frequency to f<sub>res</sub> and sets field to 50% of E<sub>thr</sub>
@@ -439,7 +445,7 @@ export default defineComponent({})
                 <tr>
                   <td>IEC 60601-2-33 SAR limit</td>
                   <td class="mono warn-val">4 W/kg</td>
-                  <td>Regulatory whole-body average SAR limit for RF medical devices</td>
+                  <td>Regulatory whole-body average SAR limit for MRI equipment (IEC 60601-2-33); used here as a reference upper bound for pulsed RF</td>
                 </tr>
                 <tr>
                   <td>IEEE C95.1 SAR limit</td>
@@ -835,11 +841,11 @@ export default defineComponent({})
 .param-table tr:last-child td { border-bottom: none; }
 .param-table tr:hover td { background: rgba(255, 255, 255, 0.025); }
 
-.mono      { font-family: var(--font-mono); font-size: 0.8rem; }
-.cancer-val { color: #ff4d6d; }
-.ref-val    { color: #00d4ff; }
-.warn-val   { color: #fbbf24; }
-.mono-val   { color: var(--color-text-muted); }
+.mono        { font-family: var(--font-mono); font-size: 0.8rem; }
+.cancer-val  { color: var(--color-danger);  }
+.ref-val     { color: var(--color-primary); }
+.warn-val    { color: var(--color-amber);   }
+.mono-val    { color: var(--color-text-muted); }
 .primary-val { color: var(--color-primary); }
 
 /* ── Protocol steps ───────────────────────────────────────────────────────── */
@@ -897,6 +903,7 @@ export default defineComponent({})
   color: var(--color-primary);
   font-style: normal;
 }
+.step-desc--spaced { margin-top: 0.5rem; }
 
 /* ── References ───────────────────────────────────────────────────────────── */
 .refs-list {

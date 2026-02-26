@@ -113,8 +113,10 @@ export function computePulseStepResponse(tau_s: number, pulseWidthNs: number): n
  *   E. coli    (R=1 µm):   f_res ≈ 0.5 GHz (v_wall    ≈ 1000 m/s)
  *   MRSA       (R=0.5 µm): f_res ≈ 1.5 GHz (v_wall    ≈ 1500 m/s, thick peptidoglycan)
  *
- * Mammalian cells (R=10 µm) would resonate at ~100 kHz — well outside the GHz
- * window, giving genuine frequency selectivity.
+ * Mammalian cells lack the rigid protein/peptidoglycan shell required for this
+ * resonance mechanism. Their Schwan Vm rolls off above fc ≈ 1 MHz (ωτ ≫ 1)
+ * and approaches zero at GHz frequencies — leaving healthy tissue unperturbed
+ * at the pathogen-targeting frequencies used here.
  *
  * Ref: Tsen et al. (2007, 2010) — acoustic resonance inactivation of viruses;
  *      Dykeman & Sankey (2008) — capsid normal-mode calculations.

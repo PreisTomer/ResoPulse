@@ -24,7 +24,7 @@ export default defineComponent({})
       <!-- Eyebrow -->
       <div class="eyebrow">
         <span class="eyebrow-dot"></span>
-        Bioelectric Field Research Platform
+        Membrane Biophysics · Electric Field Simulator
       </div>
 
       <!-- Title -->
@@ -32,16 +32,17 @@ export default defineComponent({})
         Bio<span class="title-accent">Resonance</span>
       </h1>
       <p class="tagline">
-        Precision visualisation of transmembrane potential, selective disruption,
-        and thermal response across cancer cells, bacteria, and viral particles.
+        A computational platform for studying how pulsed electric fields interact with
+        biological membranes. Model cancer cell selective disruption, viral acoustic
+        resonance, and SAR thermal response — built on the Schwan single-shell dielectric model.
       </p>
 
       <!-- Capability pills -->
       <div class="caps">
         <span class="cap">◈ Schwan Equation Model</span>
-        <span class="cap">◎ Size-Selective Disruption</span>
-        <span class="cap">⊞ Multi-Pathogen Library</span>
-        <span class="cap">⇌ Real-Time Instrument Sync</span>
+        <span class="cap">◎ Membrane Disruption Windows</span>
+        <span class="cap">⊞ 10-Preset Cell Library</span>
+        <span class="cap">⇌ Socket.IO Instrument Sync</span>
       </div>
 
       <!-- CTA -->
@@ -50,6 +51,30 @@ export default defineComponent({})
           Open Experiment Lab →
         </RouterLink>
         <RouterLink to="/protocol" class="btn btn-ghost">View Protocol Documentation</RouterLink>
+      </div>
+
+      <!-- Feature cards -->
+      <div class="feature-cards">
+        <RouterLink to="/experiment" class="feature-card">
+          <span class="fc-icon">⚗</span>
+          <span class="fc-title">Experiment Lab</span>
+          <span class="fc-desc">Configure frequency, field intensity, waveform, and propagation medium. Observe live Schwan transmembrane potential, disruption ratios, and SAR thermal response for any target–reference cell pair.</span>
+        </RouterLink>
+        <RouterLink to="/datasets" class="feature-card">
+          <span class="fc-icon">⊞</span>
+          <span class="fc-title">Cell Library</span>
+          <span class="fc-desc">Ten biologically-realistic presets: reference epithelials, four cancer lines (Adeno, GBM, MCF-7, HL-60), gram-negative and gram-positive bacteria, and two enveloped RNA viruses.</span>
+        </RouterLink>
+        <RouterLink to="/protocol" class="feature-card">
+          <span class="fc-icon">§</span>
+          <span class="fc-title">Physics &amp; Protocol</span>
+          <span class="fc-desc">Full derivation of the Schwan equation, SAR thermal model, Lorentzian acoustic resonance, and nsEP pulse-width selectivity — with a 9-step experimental protocol.</span>
+        </RouterLink>
+        <RouterLink to="/reports" class="feature-card">
+          <span class="fc-icon">◎</span>
+          <span class="fc-title">Session Reports</span>
+          <span class="fc-desc">Log experiment readings, track selectivity ratios across frequency sweeps, and export structured CSV data with all Schwan parameters for downstream statistical analysis.</span>
+        </RouterLink>
       </div>
 
       <!-- Research scope tags -->
@@ -103,7 +128,7 @@ export default defineComponent({})
   text-align: center;
   gap: 1.5rem;
   padding: 3rem 2rem;
-  max-width: 720px;
+  max-width: 780px;
 }
 
 /* ── Logo + ring animation ───────────────────────────────────────────── */
@@ -178,8 +203,10 @@ export default defineComponent({})
   margin: 0;
 }
 .title-accent {
-  color: var(--color-primary);
-  text-shadow: 0 0 40px rgba(0, 212, 255, 0.4);
+  color: #0a2e58;
+  -webkit-text-stroke: 1.5px var(--color-primary);
+  paint-order: stroke fill;
+  text-shadow: 0 0 40px rgba(0, 212, 255, 0.35);
 }
 
 /* ── Tagline ─────────────────────────────────────────────────────────── */
@@ -187,7 +214,7 @@ export default defineComponent({})
   font-size: 1rem;
   color: var(--color-text-muted);
   line-height: 1.75;
-  max-width: 560px;
+  max-width: 600px;
   margin: 0;
 }
 
@@ -247,6 +274,37 @@ export default defineComponent({})
 }
 .btn-ghost:hover { border-color: var(--color-primary); color: var(--color-primary); text-decoration: none; }
 
+/* ── Feature cards ───────────────────────────────────────────────────── */
+.feature-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.85rem;
+  width: 100%;
+  max-width: 640px;
+}
+
+.feature-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 1rem 1.1rem;
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  text-align: left;
+  transition: border-color 0.18s, box-shadow 0.18s;
+}
+.feature-card:hover {
+  border-color: rgba(0, 212, 255, 0.4);
+  box-shadow: 0 0 16px rgba(0, 212, 255, 0.08);
+  text-decoration: none;
+}
+
+.fc-icon  { font-size: 1rem; opacity: 0.75; }
+.fc-title { font-size: 0.82rem; font-weight: 600; color: var(--color-text-heading); }
+.fc-desc  { font-size: 0.72rem; color: var(--color-text-muted); line-height: 1.6; }
+
 /* ── Scope tags ──────────────────────────────────────────────────────── */
 .scope-tags {
   display: flex;
@@ -280,6 +338,10 @@ export default defineComponent({})
 }
 
 /* ── Responsive ──────────────────────────────────────────────────────── */
+@media (max-width: 580px) {
+  .feature-cards { grid-template-columns: 1fr; }
+}
+
 @media (max-width: 600px) {
   .logo-ring-wrap { width: 140px; height: 140px; }
   .logo-circle    { width: 70px; height: 70px; }

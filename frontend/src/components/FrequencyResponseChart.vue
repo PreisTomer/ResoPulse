@@ -395,8 +395,8 @@ export default defineComponent({
         const tVmOpt = computeSchwan(this.store.target,  optKhz, this.store.fieldIntensity, sigma_e)
         const optSel = hVmOpt > 0 ? tVmOpt / hVmOpt : 0
         const optLabel = optHz >= 1e6
-          ? `⭐ ${(optHz / 1e6).toFixed(2)}M ×${optSel.toFixed(1)}`
-          : `⭐ ${(optHz / 1e3).toFixed(0)}k ×${optSel.toFixed(1)}`
+          ? `⭐ ${(optHz / 1e6).toFixed(2)}M Vm×${optSel.toFixed(1)}`
+          : `⭐ ${(optHz / 1e3).toFixed(0)}k Vm×${optSel.toFixed(1)}`
         optGroup.append('line')
           .attr('x1', ox).attr('x2', ox)
           .attr('y1', 0).attr('y2', this._chartH)
