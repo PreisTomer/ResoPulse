@@ -33,8 +33,9 @@ export default defineComponent({})
       </h1>
       <p class="tagline">
         A computational platform for studying how pulsed electric fields interact with
-        biological membranes. Model cancer cell selective disruption, viral acoustic
-        resonance, and SAR thermal response — built on the Schwan single-shell dielectric model.
+        biological membranes. Model cancer cell selective disruption, acoustic resonance
+        targeting of viral capsids and bacterial cell walls, and SAR thermal response —
+        built on the Schwan single-shell dielectric model and Lorentzian acoustic resonance theory.
       </p>
 
       <!-- Capability pills -->
@@ -206,7 +207,12 @@ export default defineComponent({})
   color: #0a2e58;
   -webkit-text-stroke: 1.5px var(--color-primary);
   paint-order: stroke fill;
-  text-shadow: 0 0 40px rgba(0, 212, 255, 0.35);
+  animation: res-glow 3.5s ease-in-out infinite;
+}
+
+@keyframes res-glow {
+  0%, 100% { text-shadow: 0 0 28px rgba(0, 212, 255, 0.25); }
+  50%       { text-shadow: 0 0 55px rgba(0, 212, 255, 0.65), 0 0 90px rgba(0, 212, 255, 0.2); }
 }
 
 /* ── Tagline ─────────────────────────────────────────────────────────── */
