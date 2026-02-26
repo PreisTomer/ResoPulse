@@ -30,21 +30,8 @@ export const TEMP_DENATURING             = 60     // °C — protein denaturatio
 export const TEMP_VAPORIZING             = 100    // °C — water boiling / rapid steam-driven cell lysis
 export const TEMP_SIMULATION_CAP         = 150    // °C — simulation display ceiling (cells destroyed well below this)
 
-// ── Per-type colors ───────────────────────────────────────────────────────────
-export const CELL_COLORS = {
-  healthy: {
-    accent:     '#00d4ff',
-    rung:       '#39ff14',
-    interpFrom: '#00d4ff',  // cellColor gradient start
-    interpTo:   '#39ff14',  // cellColor gradient end
-  },
-  target: {
-    accent:     '#ff4d6d',
-    rung:       '#ff8c00',
-    interpFrom: '#4d79ff',
-    interpTo:   '#ff4d6d',
-  },
-} as const
+// ── Per-type colors (defined in theme/colors.ts — re-exported here for back-compat) ──
+export { CELL_COLORS } from '../theme/colors'
 
 // ── Editable biophysical parameter definitions ────────────────────────────────
 export interface EditableParamDef {

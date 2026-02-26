@@ -7,13 +7,14 @@ import { DISRUPTION_WARN_THRESHOLD } from '../constants/cellCard'
 import { MEDIA } from '../mockData'
 import { computeSchwan, computeTau, computePulseStepResponse, computeResonantDisruption } from '../utils/physics'
 import { broadcastFieldParams } from '../services/socket'
+import { SELECTIVITY_COLORS } from '../theme/colors'
 
 const TARGET_GROUPS: CellGroup[] = ['cancer', 'bacteria', 'virus']
 const HEALTHY_GROUP: CellGroup = 'reference'
 
 export default defineComponent({
   setup() {
-    return { store: useCellStore(), CELL_PRESETS, GROUP_COLORS, GROUP_LABELS }
+    return { store: useCellStore(), CELL_PRESETS, GROUP_COLORS, GROUP_LABELS, SELECTIVITY_COLORS }
   },
 
   computed: {
@@ -23,24 +24,31 @@ export default defineComponent({
     targetRatioPct(): number { return Math.min(100, this.targetRatio * 100) },
     healthyRatioPct(): number { return Math.min(100, this.healthyRatio * 100) },
 
-    selectivityColor(): string {
-      if (this.selectivity >= 1.5) return '#39ff14'
-      if (this.selectivity >= 1.0) return '#fbbf24'
-      return '#ff4d6d'
+    /** CSS class name for selectivity-dependent color (sel-ratio, cmp-bar, cmp-sel) */
+    selectivityClass(): string {
+      if (this.selectivity >= 1.5) return 'sel--strong'
+      if (this.selectivity >= 1.0) return 'sel--marginal'
+      return 'sel--weak'
     },
 
-    modeBadge(): { label: string; color: string } {
+    modeBadge(): { label: string } {
       const t = this.targetRatio
       const h = this.healthyRatio
-      // Ablative: healthy cells already at/near lysis — non-selective
-      if (h >= DISRUPTION_WARN_THRESHOLD)            return { label: this.$t('selectivity.modeAblative'),    color: '#ff4d6d' }
-      // Genuine therapeutic window: target at lysis threshold, healthy safely below 50%
-      if (t >= DISRUPTION_WARN_THRESHOLD && h < 0.5) return { label: this.$t('selectivity.modeTherapeutic'), color: '#39ff14' }
-      // Marginal: target at threshold but healthy cells are also significantly stressed (50–84%)
-      if (t >= DISRUPTION_WARN_THRESHOLD)            return { label: this.$t('selectivity.modeMarginal'),    color: '#fbbf24' }
-      // Approaching: target disruption climbing toward threshold
-      if (t >= 0.5)                                  return { label: this.$t('selectivity.modeApproaching'), color: '#fbbf24' }
-      return                                                { label: this.$t('selectivity.modeSubThreshold'), color: '#00d4ff' }
+      if (h >= DISRUPTION_WARN_THRESHOLD)            return { label: this.$t('selectivity.modeAblative')    }
+      if (t >= DISRUPTION_WARN_THRESHOLD && h < 0.5) return { label: this.$t('selectivity.modeTherapeutic') }
+      if (t >= DISRUPTION_WARN_THRESHOLD)            return { label: this.$t('selectivity.modeMarginal')    }
+      if (t >= 0.5)                                  return { label: this.$t('selectivity.modeApproaching') }
+      return                                                { label: this.$t('selectivity.modeSubThreshold') }
+    },
+
+    /** CSS class for mode badge border + color */
+    modeBadgeClass(): string {
+      const t = this.targetRatio, h = this.healthyRatio
+      if (h >= DISRUPTION_WARN_THRESHOLD)            return 'badge--ablative'
+      if (t >= DISRUPTION_WARN_THRESHOLD && h < 0.5) return 'badge--therapeutic'
+      if (t >= DISRUPTION_WARN_THRESHOLD)            return 'badge--marginal'
+      if (t >= 0.5)                                  return 'badge--approaching'
+      return                                                'badge--subthreshold'
     },
 
     targetGroups(): CellGroup[] { return TARGET_GROUPS },
@@ -363,6 +371,11 @@ Note: virion fc ~0.6–0.75 MHz per Schwan model (σ_i-limited; model approximat
   },
 
   methods: {
+    /** Returns a CSS class name based on selectivity value (for cmp-bar + cmp-sel). */
+    selClass(sel: number): string {
+      return sel >= 1.5 ? 'sel--strong' : sel >= 1.0 ? 'sel--marginal' : 'sel--weak'
+    },
+
     loadTarget(preset: typeof CELL_PRESETS[0]) {
       this.store.loadPreset('target', preset)
     },
@@ -415,12 +428,12 @@ Click the preset pill below to switch to this cell`
 
     <!-- ── Selectivity ratio + TI ────────────────────────────── -->
     <div class="sel-ratio-wrap" v-tip="tipSelectivity">
-      <span class="sel-ratio" :style="{ color: selectivityColor }">
+      <span class="sel-ratio" :class="selectivityClass">
         ×{{ selectivity.toFixed(2) }}
       </span>
       <div class="sel-ratio-labels">
         <span class="sel-ratio-label">{{ $t('selectivity.ratioLabel') }}</span>
-        <span class="sel-ti-label">TI <span :style="{ color: selectivityColor }">{{ therapeuticIndex.toFixed(2) }}×</span></span>
+        <span class="sel-ti-label">TI <span :class="selectivityClass">{{ therapeuticIndex.toFixed(2) }}×</span></span>
       </div>
     </div>
 
@@ -468,7 +481,7 @@ Click the preset pill below to switch to this cell`
       <template v-if="isResonanceTarget">
         <div class="vm-sar-cell">
           <span class="vs-type vs-type--t">{{ $t('selectivity.tDisr') }}</span>
-          <span class="vs-vm" style="color:#ff4d6d">{{ targetRatioPct.toFixed(1) }}%</span>
+          <span class="vs-vm vs-vm--t">{{ targetRatioPct.toFixed(1) }}%</span>
           <span class="vs-sar">{{ targetSarVal }} W/kg</span>
           <span class="vs-elysis"
             v-tip="'<strong>' + $t('selectivity.tipEthr') + '</strong>\n' + $t('selectivity.tipEthrBody')"
@@ -476,9 +489,9 @@ Click the preset pill below to switch to this cell`
         </div>
         <div class="vm-sar-cell">
           <span class="vs-type vs-type--h">{{ $t('selectivity.hSafe') }}</span>
-          <span class="vs-vm" style="color:#39ff14">≈0%</span>
+          <span class="vs-vm vs-vm--res">≈0%</span>
           <span class="vs-sar">{{ healthySarVal }} W/kg</span>
-          <span class="vs-elysis" style="color:#39ff14"
+          <span class="vs-elysis vs-elysis--safe"
             v-tip="'<strong>' + $t('selectivity.tipNoGhzRes') + '</strong>\n' + $t('selectivity.tipNoGhzResBody')"
           >{{ $t('selectivity.noGhzRes') }}</span>
         </div>
@@ -487,13 +500,13 @@ Click the preset pill below to switch to this cell`
       <template v-else>
         <div class="vm-sar-cell">
           <span class="vs-type vs-type--t">{{ $t('selectivity.targetBar') }}-Vm</span>
-          <span class="vs-vm" style="color:#ff4d6d">{{ targetVmMv }} mV</span>
+          <span class="vs-vm vs-vm--t">{{ targetVmMv }} mV</span>
           <span class="vs-sar">{{ targetSarVal }} W/kg</span>
           <span class="vs-elysis" v-tip="'<strong>Target lysis field</strong>\nMinimum E required to reach lysis threshold at current frequency.\nE_lysis = Vm_thr · √(1+(ωτ)²) / (1.5·R)'">E<sub>lys</sub> {{ targetLysisField }}</span>
         </div>
         <div class="vm-sar-cell">
           <span class="vs-type vs-type--h">{{ $t('selectivity.healthyBar') }}-Vm</span>
-          <span class="vs-vm" style="color:#00d4ff">{{ healthyVmMv }} mV</span>
+          <span class="vs-vm vs-vm--h">{{ healthyVmMv }} mV</span>
           <span class="vs-sar">{{ healthySarVal }} W/kg</span>
           <span class="vs-elysis" v-tip="'<strong>Healthy lysis field</strong>\nMinimum E required to reach lysis threshold at current frequency.\nKeep operating field below this value for selective therapy.'">E<sub>lys</sub> {{ healthyLysisField }}</span>
         </div>
@@ -504,7 +517,7 @@ Click the preset pill below to switch to this cell`
     <div class="mode-row">
       <span
         class="mode-badge"
-        :style="{ color: modeBadge.color, borderColor: modeBadge.color + '55' }"
+        :class="modeBadgeClass"
         v-tip="tipModeBadge"
       >
         {{ modeBadge.label }}
@@ -537,20 +550,15 @@ Click the preset pill below to switch to this cell`
           :class="{ 'cmp-row--active': row.isActive }"
           v-tip="cmpTip(row)"
         >
-          <span class="cmp-name" :style="{ color: GROUP_COLORS[row.preset.group] }">{{ row.preset.shortLabel }}</span>
+          <span class="cmp-name" :style="{ '--gc': GROUP_COLORS[row.preset.group] }">{{ row.preset.shortLabel }}</span>
           <div class="cmp-bar-track">
             <div
               class="cmp-bar"
-              :style="{
-                width: Math.min(100, row.sel * 40) + '%',
-                background: row.sel >= 1.5 ? '#39ff14' : row.sel >= 1.0 ? '#fbbf24' : '#ff4d6d',
-              }"
+              :class="selClass(row.sel)"
+              :style="{ width: Math.min(100, row.sel * 40) + '%' }"
             ></div>
           </div>
-          <span
-            class="cmp-sel"
-            :style="{ color: row.sel >= 1.5 ? '#39ff14' : row.sel >= 1.0 ? '#fbbf24' : '#ff4d6d' }"
-          >×{{ row.sel.toFixed(2) }}</span>
+          <span class="cmp-sel" :class="selClass(row.sel)">×{{ row.sel.toFixed(2) }}</span>
         </div>
       </div>
     </div>
@@ -562,17 +570,15 @@ Click the preset pill below to switch to this cell`
         class="lib-title"
         v-tip="'<strong>' + $t('selectivity.targetLibTitle') + '</strong>\n' + $t('selectivity.targetLibTip')"
       >{{ $t('selectivity.targetLibTitle') }}</div>
-      <div v-for="grp in targetGroups" :key="grp" class="lib-group">
-        <span class="lib-group-label" :style="{ color: GROUP_COLORS[grp] }">
-          {{ GROUP_LABELS[grp] }}
-        </span>
+      <!-- --pill-c sets the group accent color for the active pill via CSS -->
+      <div v-for="grp in targetGroups" :key="grp" class="lib-group" :style="{ '--pill-c': GROUP_COLORS[grp] }">
+        <span class="lib-group-label">{{ GROUP_LABELS[grp] }}</span>
         <div class="lib-pills">
           <button
             v-for="p in presetsByGroup[grp]"
             :key="p.presetId"
             class="preset-pill"
             :class="{ 'preset-pill--active': activeTargetId === p.id }"
-            :style="activeTargetId === p.id ? { borderColor: GROUP_COLORS[grp], color: GROUP_COLORS[grp] } : {}"
             v-tip="presetTip(p)"
             @click="loadTarget(p)"
           >{{ p.shortLabel }}</button>
@@ -587,13 +593,12 @@ Click the preset pill below to switch to this cell`
         class="lib-title"
         v-tip="'<strong>' + $t('selectivity.healthyLibTitle') + '</strong>\n' + $t('selectivity.healthyLibTip')"
       >{{ $t('selectivity.healthyLibTitle') }}</div>
-      <div class="lib-pills">
+      <div class="lib-pills" :style="{ '--pill-c': GROUP_COLORS.reference }">
         <button
           v-for="p in healthyPresets"
           :key="p.presetId"
           class="preset-pill"
           :class="{ 'preset-pill--active': activeHealthyId === p.id }"
-          :style="activeHealthyId === p.id ? { borderColor: GROUP_COLORS.reference, color: GROUP_COLORS.reference } : {}"
           v-tip="presetTip(p)"
           @click="loadHealthy(p)"
         >{{ p.shortLabel }}</button>
@@ -683,8 +688,8 @@ Click the preset pill below to switch to this cell`
   border-radius: 3px;
   transition: width 0.3s ease;
 }
-.bar-fill--t { background: #ff4d6d; }
-.bar-fill--h { background: #00d4ff; }
+.bar-fill--t { background: var(--color-danger); }
+.bar-fill--h { background: var(--color-primary); }
 .bar-fill--warn { animation: bar-flash 0.6s ease-in-out infinite alternate; }
 @keyframes bar-flash { from { opacity: 1; } to { opacity: 0.5; } }
 .bar-val {
@@ -710,7 +715,7 @@ Click the preset pill below to switch to this cell`
 }
 .optimal-note--snap {
   cursor: pointer;
-  color: #fbbf24;
+  color: var(--color-amber);
   opacity: 1;
   transition: opacity 0.15s, color 0.2s;
 }
@@ -729,7 +734,7 @@ Click the preset pill below to switch to this cell`
   transition: color 0.3s, opacity 0.3s;
 }
 .bar-plysis--high {
-  color: #ff4d6d;
+  color: var(--color-danger);
   opacity: 1;
   font-weight: 600;
 }
@@ -776,8 +781,8 @@ Click the preset pill below to switch to this cell`
   font-size: 0.65rem; font-family: var(--font-mono);
   font-weight: 700; opacity: 0.85; flex-shrink: 0;
 }
-.vs-type--t { color: #ff4d6d; }
-.vs-type--h { color: #00d4ff; }
+.vs-type--t { color: var(--color-danger); }
+.vs-type--h { color: var(--color-primary); }
 .vs-vm {
   font-size: 0.9rem; font-family: var(--font-mono);
   font-weight: 700; line-height: 1;
@@ -796,7 +801,7 @@ Click the preset pill below to switch to this cell`
 .model-warning {
   font-size: 0.6rem;
   font-family: var(--font-mono);
-  color: #fbbf24;
+  color: var(--color-amber);
   background: rgba(251, 191, 36, 0.07);
   border: 1px solid rgba(251, 191, 36, 0.25);
   border-radius: var(--radius);
@@ -825,5 +830,36 @@ Click the preset pill below to switch to this cell`
 .cmp-sel {
   font-size: 0.6rem; font-family: var(--font-mono);
   font-weight: 600; text-align: right;
+}
+
+/* ── Selectivity state classes ───────────────────────────────── */
+.sel--strong  { color: var(--color-lime); }
+.sel--marginal { color: var(--color-amber); }
+.sel--weak    { color: var(--color-danger); }
+
+/* cmp-bar background (same three states) */
+.cmp-bar.sel--strong  { background: var(--color-lime); }
+.cmp-bar.sel--marginal { background: var(--color-amber); }
+.cmp-bar.sel--weak    { background: var(--color-danger); }
+
+/* ── Mode badge state classes ─────────────────────────────────── */
+.badge--therapeutic { color: var(--color-lime);    border-color: rgba(57, 255, 20, 0.33); }
+.badge--ablative    { color: var(--color-danger);  border-color: rgba(255, 77, 109, 0.33); }
+.badge--marginal    { color: var(--color-amber);   border-color: rgba(251, 191, 36, 0.33); }
+.badge--approaching { color: var(--color-amber);   border-color: rgba(251, 191, 36, 0.33); }
+.badge--subthreshold{ color: var(--color-primary); border-color: rgba(0, 212, 255, 0.33); }
+
+/* ── Vm display state classes ─────────────────────────────────── */
+.vs-vm--t   { color: var(--color-danger); }
+.vs-vm--h   { color: var(--color-primary); }
+.vs-vm--res { color: var(--color-lime); }     /* resonance mode healthy ≈0% */
+.vs-elysis--safe { color: var(--color-lime); }
+
+/* ── Group-colored elements via CSS custom property --gc / --pill-c ── */
+.cmp-name       { color: var(--gc, var(--color-text)); }
+.lib-group-label { color: var(--pill-c, var(--color-text-muted)); }
+.preset-pill--active {
+  border-color: var(--pill-c, var(--color-primary));
+  color: var(--pill-c, var(--color-primary));
 }
 </style>

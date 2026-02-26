@@ -217,8 +217,8 @@ export default defineComponent({
 
 .td-id     { text-align: left; opacity: 0.6; }
 .td-mono   { text-align: left; }
-.td-target { color: #ff4d6d; }
-.td-healthy { color: #00d4ff; }
+.td-target  { color: var(--color-danger); }
+.td-healthy { color: var(--color-primary); }
 .td-sel    { color: var(--color-text-heading); font-weight: 600; }
 .td-event  { text-transform: uppercase; opacity: 0.8; }
 .td-empty  { text-align: center; opacity: 0.6; padding: 1rem; }

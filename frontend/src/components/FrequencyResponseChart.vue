@@ -7,6 +7,7 @@ import { computeSchwan, computeFc } from '../utils/physics'
 import { CELL_PRESETS, GROUP_COLORS } from '../constants/cellLibrary'
 import type { CellGroup } from '../constants/cellLibrary'
 import { broadcastFieldParams } from '../services/socket'
+import { C } from '../theme/colors'
 
 // 200 logarithmically spaced Hz from 10 kHz to 500 MHz
 const F_MIN_HZ = 10_000
@@ -297,27 +298,27 @@ export default defineComponent({
       activeGroup.append('path')
         .datum(healthyCurve)
         .attr('fill', 'none')
-        .attr('stroke', '#00d4ff')
+        .attr('stroke', C.primary)
         .attr('stroke-width', 2.5)
         .attr('stroke-opacity', 1)
-        .attr('filter', 'drop-shadow(0 0 4px #00d4ff88)')
+        .attr('filter', `drop-shadow(0 0 4px ${C.primary}88)`)
         .attr('d', lineGen)
 
       activeGroup.append('path')
         .datum(targetCurve)
         .attr('fill', 'none')
-        .attr('stroke', '#ff4d6d')
+        .attr('stroke', C.danger)
         .attr('stroke-width', 2.5)
         .attr('stroke-opacity', 1)
-        .attr('filter', 'drop-shadow(0 0 4px #ff4d6d88)')
+        .attr('filter', `drop-shadow(0 0 4px ${C.danger}88)`)
         .attr('d', lineGen)
 
       // Threshold lines
       const thrGroup = g.select<SVGGElement>('.thresholds')
       thrGroup.selectAll('*').remove()
       const thrData = [
-        { label: 'thr H', vm: this.store.healthy.thresholdVoltage * 1000, color: '#00d4ff' },
-        { label: 'thr T', vm: this.store.target.thresholdVoltage * 1000,  color: '#ff4d6d' },
+        { label: 'thr H', vm: this.store.healthy.thresholdVoltage * 1000, color: C.primary },
+        { label: 'thr T', vm: this.store.target.thresholdVoltage * 1000,  color: C.danger },
       ]
       thrData.forEach(({ label, vm, color }) => {
         if (vm > maxVm) return
@@ -338,8 +339,8 @@ export default defineComponent({
       const fcGroup = g.select<SVGGElement>('.fc-markers')
       fcGroup.selectAll('*').remove()
       const fcData = [
-        { fc: computeFc(this.store.healthy, sigma_e), color: '#00d4ff', label: 'fc(H)' },
-        { fc: computeFc(this.store.target,  sigma_e), color: '#ff4d6d', label: 'fc(T)' },
+        { fc: computeFc(this.store.healthy, sigma_e), color: C.primary, label: 'fc(H)' },
+        { fc: computeFc(this.store.target,  sigma_e), color: C.danger,  label: 'fc(T)' },
       ]
       // Build visible fc markers (within chart x domain)
       const visibleFc = fcData
@@ -399,14 +400,14 @@ export default defineComponent({
         optGroup.append('line')
           .attr('x1', ox).attr('x2', ox)
           .attr('y1', 0).attr('y2', this._chartH)
-          .attr('stroke', '#fbbf24').attr('stroke-width', 1)
+          .attr('stroke', C.amber).attr('stroke-width', 1)
           .attr('stroke-dasharray', '3,4').attr('stroke-opacity', 0.45)
         const optAnchor = ox < 60 ? 'start' : ox > this._chartW - 60 ? 'end' : 'middle'
         const optTextX  = ox < 60 ? Math.max(4, ox) : ox > this._chartW - 60 ? Math.min(this._chartW - 4, ox) : ox
         optGroup.append('text')
           .attr('x', optTextX).attr('y', -5)
           .attr('text-anchor', optAnchor)
-          .attr('fill', '#fbbf24').attr('font-size', '0.58rem')
+          .attr('fill', C.amber).attr('font-size', '0.58rem')
           .attr('font-family', 'var(--font-mono)')
           .attr('letter-spacing', '0.04em')
           .text(optLabel)
@@ -503,10 +504,10 @@ export default defineComponent({
 <style scoped>
 /* Expose group colors as CSS vars for the legend dots */
 .chart-wrap {
-  --group-reference: #00d4ff;
-  --group-cancer:    #ff4d6d;
-  --group-bacteria:  #fbbf24;
-  --group-virus:     #a78bfa;
+  --group-reference: var(--color-group-reference);
+  --group-cancer:    var(--color-group-cancer);
+  --group-bacteria:  var(--color-group-bacteria);
+  --group-virus:     var(--color-group-virus);
 
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -560,8 +561,8 @@ export default defineComponent({
   border-radius: 1px;
   flex-shrink: 0;
 }
-.legend-line--h { background: #00d4ff; box-shadow: 0 0 4px #00d4ff88; }
-.legend-line--t { background: #ff4d6d; box-shadow: 0 0 4px #ff4d6d88; }
+.legend-line--h { background: var(--color-primary); box-shadow: 0 0 4px var(--color-primary); }
+.legend-line--t { background: var(--color-danger);  box-shadow: 0 0 4px var(--color-danger); }
 
 /* ── Chart container ─────────────────────────────────────────────────── */
 .chart-el {
@@ -594,8 +595,8 @@ export default defineComponent({
   font-size: 0.68rem;
   font-family: var(--font-mono);
 }
-.tip-row--h { color: #00d4ff; }
-.tip-row--t { color: #ff4d6d; }
+.tip-row--h { color: var(--color-primary); }
+.tip-row--t { color: var(--color-danger); }
 
 .tip-enter-active, .tip-leave-active { transition: opacity 0.1s; }
 .tip-enter-from, .tip-leave-to { opacity: 0; }

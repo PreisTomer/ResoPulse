@@ -10,31 +10,7 @@ import SelectivityPanel from '../components/SelectivityPanel.vue'
 import ExperimentLog from '../components/ExperimentLog.vue'
 import { useExperimentStore } from '../stores/experimentStore'
 import { CELL_PRESETS } from '../constants/cellLibrary'
-
-/**
- * Scientifically appropriate defaults per target cell category.
- * Applied automatically when the target cell type is switched,
- * mimicking a "new experiment" context.
- *
- * Values are chosen so T_ss < 38°C for the healthy reference cell (hepatocyte)
- * at every default — researcher can slide UP from a safe starting point.
- *
- * Mammalian: standard IRE sub-threshold exploration.
- *   150 V/cm pulsed dc=0.01%:  SAR_eff ≈ 1.1 W/kg → T_ss ≈ 37.02°C ✓
- *
- * Bacteria: nsEP regime — pulse width ≪ τ (τ_ecoli ≈ 14 ns, τ_mrsa ≈ 3 ns).
- *   100 V/cm pulsed dc=1e-6:  SAR_eff ≈ 0.079 W/kg → T_ss ≈ 37.001°C ✓
- *   Researcher slides field to ≥10 kV/cm to approach lysis — thermal warnings appear.
- *
- * Virus: Resonance mode (IRE inapplicable); capsid disruption via acoustic resonance.
- *   400 V/cm pulsed dc=1e-6 @ 12 GHz (influenza f_res): minimal thermal footprint.
- *   Auto-tuned to preset's resonantFreqGHz in applyTargetDefaults.
- */
-const CATEGORY_DEFAULTS = {
-  mammalian: { fieldVcm: 150, freqKHz: 417,       waveform: 'pulsed' as const, dutyCycle: 1e-4, pulseWidthNs: 100000, medium: 'saline' as const },
-  bacteria:  { fieldVcm: 1000, freqKHz: 500000,   waveform: 'pulsed' as const, dutyCycle: 1e-6, pulseWidthNs: 10,     medium: 'saline' as const },
-  virus:     { fieldVcm: 400,  freqKHz: 12000000, waveform: 'pulsed' as const, dutyCycle: 1e-6, pulseWidthNs: 10,     medium: 'saline' as const },
-}
+import { CATEGORY_DEFAULTS } from '../constants/experimentDefaults'
 
 export default defineComponent({
   components: {
@@ -324,20 +300,20 @@ export default defineComponent({
   white-space: nowrap;
 }
 
-.sb-chip--medium    { border-color: rgba(0, 212, 255, 0.3); color: #00d4ff; }
-.sb-chip--freq      { border-color: rgba(57, 255, 20, 0.25); color: #39ff14; }
-.sb-chip--field     { border-color: rgba(251, 191, 36, 0.3); color: #fbbf24; }
-.sb-chip--local     { border-color: rgba(251, 191, 36, 0.3); color: #fbbf24; }
-.sb-chip--connected { border-color: rgba(57, 255, 20, 0.35); color: #39ff14; }
+.sb-chip--medium    { border-color: rgba(0, 212, 255, 0.3);   color: var(--color-primary); }
+.sb-chip--freq      { border-color: rgba(57, 255, 20, 0.25);  color: var(--color-lime); }
+.sb-chip--field     { border-color: rgba(251, 191, 36, 0.3);  color: var(--color-amber); }
+.sb-chip--local     { border-color: rgba(251, 191, 36, 0.3);  color: var(--color-amber); }
+.sb-chip--connected { border-color: rgba(57, 255, 20, 0.35);  color: var(--color-lime); }
 
 .sb-dot {
   width: 5px; height: 5px;
   border-radius: 50%;
-  background: #00d4ff;
+  background: var(--color-primary);
   flex-shrink: 0;
   animation: pulse-dot 2s ease-in-out infinite;
 }
-.sb-dot--warn { background: #fbbf24; animation: none; }
+.sb-dot--warn { background: var(--color-amber); animation: none; }
 
 @keyframes pulse-dot {
   0%, 100% { opacity: 1; }
@@ -432,7 +408,7 @@ export default defineComponent({
 
 .sb-mode-btn--active {
   background: rgba(0, 212, 255, 0.12);
-  color: #00d4ff;
+  color: var(--color-primary);
   border-color: rgba(0, 212, 255, 0.3);
 }
 

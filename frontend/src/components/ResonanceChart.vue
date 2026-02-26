@@ -7,6 +7,7 @@ import { CELL_PRESETS, GROUP_COLORS } from '../constants/cellLibrary'
 import type { CellGroup } from '../constants/cellLibrary'
 import type { CellConfig } from '../mockData'
 import { broadcastFieldParams } from '../services/socket'
+import { C } from '../theme/colors'
 
 // Frequency range: 10 MHz – 50 GHz
 const F_MIN_HZ = 10_000_000
@@ -283,14 +284,14 @@ export default defineComponent({
       activeG.append('line')
         .attr('x1', 0).attr('x2', this._chartW)
         .attr('y1', y0).attr('y2', y0)
-        .attr('stroke', '#00d4ff')
+        .attr('stroke', C.primary)
         .attr('stroke-width', 1.5)
         .attr('stroke-dasharray', '6,4')
         .attr('opacity', 0.55)
       activeG.append('text')
         .attr('x', this._chartW + 4)
         .attr('y', y0 + 4)
-        .attr('fill', '#00d4ff')
+        .attr('fill', C.primary)
         .attr('opacity', 0.6)
         .attr('font-size', '0.52rem')
         .attr('font-family', 'var(--font-mono)')
@@ -300,7 +301,7 @@ export default defineComponent({
       const t = this.store.target as ResonantCell
       if (t.resonantFreqGHz && t.resonantThresholdVcm) {
         const targetPts = this.computeCurve(t)
-        const targetColor = t.group ? GROUP_COLORS[t.group] : '#a78bfa'
+        const targetColor = t.group ? GROUP_COLORS[t.group] : C.purple
         activeG.append('path')
           .datum(targetPts)
           .attr('d', line)
@@ -328,7 +329,7 @@ export default defineComponent({
       if (fHz < F_MIN_HZ || fHz > F_MAX_HZ) return
 
       const cx = this._xScale(fHz)
-      const color = t.group ? GROUP_COLORS[t.group] : '#a78bfa'
+      const color = t.group ? GROUP_COLORS[t.group] : C.purple
 
       markG.append('line')
         .attr('x1', cx).attr('x2', cx)
@@ -434,7 +435,7 @@ export default defineComponent({
   letter-spacing: 0.04em;
 }
 
-.legend-target  { color: #a78bfa; }
+.legend-target  { color: var(--color-purple); }
 .legend-healthy { color: rgba(0,212,255,0.7); }
 .legend-dim     { color: rgba(255,255,255,0.35); }
 .legend-disrupt { color: rgba(255,77,109,0.7); }
