@@ -87,7 +87,7 @@
     "tipTargetBadgeFormula": "ratio = (E / E_threshold) × L(f, f_res, Q)",
     "tipTargetBadgeNote": "≥100% at resonance → capsid/cell-wall disruption threshold exceeded",
     "tipHealthyBadgeTitle": "Healthy cell: no GHz resonance",
-    "tipHealthyBadgeBody": "Mammalian cells (R ≈ 10 µm) resonate at ~100 kHz — no coupling in GHz range.\nAt f_res(target) in GHz, healthy cell disruption ≈ 0.",
+    "tipHealthyBadgeBody": "Mammalian cells lack rigid-shell resonance — Schwan Vm → 0 at GHz (ωτ ≫ 1).\nAt f_res(target) in GHz, healthy cell disruption ≈ 0.",
     "tipHealthyBadgeSafe": "Frequency-selective — healthy tissue is unperturbed"
   },
   "chart": {
@@ -101,7 +101,7 @@
   },
   "selectivity": {
     "title": "Selectivity Analysis",
-    "ratioLabel": "Selectivity ratio",
+    "ratioLabel": "TI — Selectivity",
     "targetBar": "T",
     "healthyBar": "H",
     "tDisr": "T-Disr",
@@ -110,7 +110,7 @@
     "tipEthr": "Target disruption threshold",
     "tipEthrBody": "Resonant field amplitude at which capsid/cell-wall disruption is triggered.\nDisruption ratio = (E / E_thr) × L(f, f_res, Q) ≥ 1.0 → disruption",
     "tipNoGhzRes": "Healthy cell — no GHz resonance",
-    "tipNoGhzResBody": "Mammalian cells (R ≈ 10 µm) resonate at ~100 kHz.\nAt GHz frequencies, Schwan Vm → 0 — healthy tissue unperturbed.",
+    "tipNoGhzResBody": "Mammalian cells lack rigid-shell resonance — Schwan Vm → 0 at GHz (ωτ ≫ 1).\nAt GHz pathogen-targeting frequencies, healthy tissue is unperturbed.",
     "targetLibTitle": "Target Cell Library",
     "targetLibTip": "Select a pathogen or cancer cell type to use\nas the target in selectivity calculations.\nEach preset has biologically realistic parameters\nfrom bioelectromagnetics literature.",
     "healthyLibTitle": "Healthy Baseline",

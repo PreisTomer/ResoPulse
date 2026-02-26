@@ -151,22 +151,23 @@ export default defineComponent({
       const selStr = sel >= 99 ? '∞' : sel.toFixed(3)
 
       if (this.isResonanceTarget) {
-        return `<strong>Selectivity = Target / Healthy disruption ratio</strong>
+        return `<strong>TI (Therapeutic Index) = Target / Healthy disruption ratio</strong>
 Current: <span class="tip-val">×${selStr}</span>
 
 ${quality}
 ≥ 1.5 → strong window (green)  ·  < 1.0 → non-selective (red)
 
 <strong>Resonance mode selectivity:</strong>
-Healthy cells (R ≈ 10 µm) resonate at ~100 kHz — no GHz coupling.
-At f_res(target), healthy disruption ≈ 0 → selectivity → ∞
+Mammalian cells lack rigid-shell resonance — Schwan Vm → 0 at GHz (ωτ ≫ 1).
+At f_res(target), healthy disruption ≈ 0 → TI → ∞
 
 <span class="tip-ok">Frequency-selective — healthy tissue unperturbed at GHz fields</span>
 Ref: Tsen et al. (2007); Dykeman &amp; Sankey (2008)`
       }
 
-      const ti = this.therapeuticIndex
-      return `<strong>Selectivity = Target / Healthy disruption ratio</strong>
+      const vmSel = this.vmSelectivityRatio
+      const vmStr = vmSel >= 99 ? '∞' : vmSel.toFixed(2)
+      return `<strong>TI (Therapeutic Index) = (Vm_T/Vth_T) / (Vm_H/Vth_H)</strong>
 Current: <span class="tip-val">×${selStr}</span>
 
 ${quality}
@@ -174,12 +175,12 @@ ${quality}
 1.0–1.5 → marginal (amber)
 < 1.0 → non-selective (red)
 
-<strong>Therapeutic Index TI = (Vt/Vt,thr) / (Vh/Vh,thr)</strong>
-Current: <span class="tip-val">${ti.toFixed(2)}×</span>
-TI > 1 → target proportionally closer to lysis.
+TI > 1 → target proportionally closer to lysis threshold than healthy cell.
+For adeno/hepatocyte at DC: TI = (15µm×1.1V)/(10µm×0.70V) = <span class="tip-val">2.36×</span>
 
-Physically driven by size ratio R_T/R_H
-via the Schwan equation  (Vm ∝ cell radius)`
+<strong>Raw Vm selectivity</strong> = Vm_T / Vm_H = R_T/R_H at quasi-DC
+Current: <span class="tip-val">×${vmStr}</span>  (cancer/normal DC limit: 1.5×)
+TI incorporates lysis thresholds — more clinically relevant than Vm ratio alone.`
     },
 
     tipTargetBar(): string {
@@ -206,8 +207,8 @@ Ratio = Vm / threshold${warn}
       const pct    = this.healthyRatioPct.toFixed(0)
       if (this.isResonanceTarget) {
         return `<strong>Healthy cell: <span class="tip-val">${pct}% disruption (≈0)</span></strong>
-Mammalian cells (R ≈ 10 µm) resonate at ~100 kHz.
-At GHz field frequencies, Schwan Vm → 0 — no membrane coupling.
+Mammalian cells lack rigid-shell resonance — Schwan Vm → 0 at GHz (ωτ ≫ 1).
+No membrane coupling at pathogen-targeting frequencies.
 <span class="tip-ok">✓ Frequency-selective — healthy tissue unperturbed</span>
 Ref: Tsen et al. (2007)`
       }
@@ -286,6 +287,13 @@ Sub-threshold  T <50%
     },
 
     therapeuticIndex(): number { return this.store.therapeuticIndex },
+
+    /** Raw Vm selectivity = Vm_T / Vm_H (not threshold-normalised, unlike TI). */
+    vmSelectivityRatio(): number {
+      const hVm = this.store.healthyVm
+      if (hVm < 1e-12) return this.store.targetVm > 0 ? 99.9 : 0
+      return Math.min(99.9, this.store.targetVm / hVm)
+    },
 
     targetLysisField(): string {
       const vcm = this.store.targetLysisField
@@ -433,7 +441,7 @@ Click the preset pill below to switch to this cell`
       </span>
       <div class="sel-ratio-labels">
         <span class="sel-ratio-label">{{ $t('selectivity.ratioLabel') }}</span>
-        <span class="sel-ti-label">TI <span :class="selectivityClass">{{ therapeuticIndex.toFixed(2) }}×</span></span>
+        <span class="sel-ti-label">Vm ×<span>{{ vmSelectivityRatio >= 99 ? '∞' : vmSelectivityRatio.toFixed(2) }}</span></span>
       </div>
     </div>
 

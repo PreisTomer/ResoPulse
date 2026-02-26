@@ -229,12 +229,12 @@ export default defineComponent({
               <div class="window-ratio">~1.5×</div>
               <div class="window-label">Max V<sub>m</sub> selectivity at quasi-DC (&lt;100 kHz) — driven by size ratio R<sub>T</sub>/R<sub>H</sub></div>
             </div>
-            <div class="window-stat" style="margin-top:0.4rem">
-              <div class="window-ratio" style="font-size:1.2rem;color:#39ff14">~2.4×</div>
+            <div class="window-stat window-stat--spaced">
+              <div class="window-ratio window-ratio--sm">~2.4×</div>
               <div class="window-label">Therapeutic Index TI at quasi-DC — normalised by lysis thresholds (1.1 V / 0.70 V)</div>
             </div>
-            <div class="window-stat" style="margin-top:0.4rem">
-              <div class="window-ratio" style="font-size:1.1rem;color:var(--color-text-muted)">↓ freq</div>
+            <div class="window-stat window-stat--spaced">
+              <div class="window-ratio window-ratio--sm window-ratio--muted">↓ freq</div>
               <div class="window-label">Selectivity decreases above f<sub>c</sub>(T) — target rolls off before healthy cell</div>
             </div>
             <div class="window-note">
@@ -284,11 +284,11 @@ export default defineComponent({
               <div class="window-ratio">∞</div>
               <div class="window-label">Theoretical selectivity at f<sub>res</sub> — healthy Schwan Vm → 0 at GHz</div>
             </div>
-            <div class="window-stat" style="margin-top:0.6rem">
-              <div class="window-ratio" style="font-size:1.2rem">Lorentzian</div>
+            <div class="window-stat window-stat--spaced">
+              <div class="window-ratio window-ratio--sm">Lorentzian</div>
               <div class="window-label">Disruption = (E / E<sub>thr</sub>) × L(f, f<sub>res</sub>, Q)<br>L peaks at 1.0 at f<sub>res</sub></div>
             </div>
-            <div class="window-note" style="margin-top:0.6rem">
+            <div class="window-note window-note--spaced">
               Ref: Tsen et al. (2007, 2012) · Dykeman &amp; Sankey (2008)
             </div>
           </div>
@@ -304,7 +304,7 @@ export default defineComponent({
         </div>
         <div class="table-footer">
           f<sub>res</sub> ≈ v<sub>protein</sub>/(2R) · v<sub>wall</sub> ≈ 1000–1500 m/s (protein/peptidoglycan) ·
-          Healthy cells (R ≈ 10 µm): f<sub>res</sub> ≈ 100 kHz — no GHz coupling
+          Healthy mammalian cells have no rigid-shell resonance — Schwan V<sub>m</sub> rolls off via f<sub>c</sub> ≈ 1 MHz (ωτ ≫ 1), approaching zero at GHz
         </div>
       </section>
 
@@ -510,9 +510,9 @@ export default defineComponent({
 
 .mono        { font-family: var(--font-mono); font-size: 0.78rem; }
 .primary-val { color: var(--color-primary); }
-.cancer-val  { color: #ff4d6d; }
-.ref-val     { color: #00d4ff; }
-.warn-val    { color: #fbbf24; }
+.cancer-val  { color: var(--color-danger);  }
+.ref-val     { color: var(--color-primary); }
+.warn-val    { color: var(--color-amber);   }
 .muted       { color: var(--color-text-muted); }
 .cell-name   { font-weight: 500; color: var(--color-text-heading); }
 .notes-cell  { font-size: 0.71rem; color: var(--color-text-muted); min-width: 160px; }
@@ -564,11 +564,11 @@ export default defineComponent({
   color: var(--color-text-muted);
 }
 
-.ref-block--cancer .ref-block-title  { color: #ff4d6d; }
-.ref-block--healthy .ref-block-title { color: #00d4ff; }
-.ref-block--window .ref-block-title  { color: #39ff14; }
-.ref-block--virus .ref-block-title   { color: #a78bfa; }
-.ref-block--bacteria .ref-block-title { color: #fbbf24; }
+.ref-block--cancer .ref-block-title   { color: var(--color-danger);  }
+.ref-block--healthy .ref-block-title  { color: var(--color-primary); }
+.ref-block--window .ref-block-title   { color: var(--color-lime);    }
+.ref-block--virus .ref-block-title    { color: var(--color-purple);  }
+.ref-block--bacteria .ref-block-title { color: var(--color-amber);   }
 .ref-grid--res { grid-template-columns: 1fr 1.2fr 1fr; }
 
 .ref-block-params {
@@ -590,9 +590,12 @@ export default defineComponent({
   font-size: 2.5rem;
   font-weight: 800;
   font-family: var(--font-mono);
-  color: #39ff14;
+  color: var(--color-lime);
   line-height: 1;
 }
+.window-ratio--sm    { font-size: 1.1rem; }
+.window-ratio--muted { color: var(--color-text-muted); }
+.window-stat--spaced { margin-top: 0.4rem; }
 
 .window-label {
   font-size: 0.7rem;
@@ -605,6 +608,7 @@ export default defineComponent({
   color: var(--color-text-muted);
   line-height: 1.5;
 }
+.window-note--spaced { margin-top: 0.6rem; }
 
 .window-range {
   font-size: 0.78rem;

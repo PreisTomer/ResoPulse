@@ -349,7 +349,7 @@ export default defineComponent({
 }
 
 .btn-clear {
-  color: #ff4d6d;
+  color: var(--color-danger);
   border-color: rgba(255, 77, 109, 0.35);
 }
 
@@ -419,11 +419,11 @@ export default defineComponent({
   line-height: 1;
 }
 
-.stat-value.stat-empty { color: var(--color-text-muted); opacity: 0.35; }
-.stat-value.stat-lysis { color: #ff4d6d; }
+.stat-value.stat-empty   { color: var(--color-text-muted); opacity: 0.35; }
+.stat-value.stat-lysis   { color: var(--color-danger); }
 .stat-value.stat-primary { color: var(--color-primary); }
-.stat-value.stat-green { color: #39ff14; }
-.stat-value.stat-red { color: #ff4d6d; }
+.stat-value.stat-green   { color: var(--color-lime);   }
+.stat-value.stat-red     { color: var(--color-danger); }
 .stat-value.stat-small {
   font-size: 0.82rem;
   line-height: 1.4;
@@ -556,12 +556,12 @@ export default defineComponent({
 .row-lysis:hover td { background: rgba(255, 77, 109, 0.08) !important; }
 
 /* Utility colours */
-.mono      { font-family: var(--font-mono); }
-.muted     { color: var(--color-text-muted); }
-.cancer-val { color: #ff4d6d; }
-.ref-val    { color: #00d4ff; }
-.green-val  { color: #39ff14; }
-.warn-val   { color: #fbbf24; }
+.mono       { font-family: var(--font-mono); }
+.muted      { color: var(--color-text-muted); }
+.cancer-val { color: var(--color-danger);  }
+.ref-val    { color: var(--color-primary); }
+.green-val  { color: var(--color-lime);   }
+.warn-val   { color: var(--color-amber);  }
 
 /* Event badges */
 .ev-badge {
@@ -575,13 +575,13 @@ export default defineComponent({
 }
 
 .ev-manual {
-  color: #00d4ff;
+  color: var(--color-primary);
   border-color: rgba(0, 212, 255, 0.35);
   background: rgba(0, 212, 255, 0.08);
 }
 
 .ev-lysis {
-  color: #ff4d6d;
+  color: var(--color-danger);
   border-color: rgba(255, 77, 109, 0.35);
   background: rgba(255, 77, 109, 0.08);
 }

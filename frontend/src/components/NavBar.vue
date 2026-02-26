@@ -19,7 +19,7 @@ export default defineComponent({
         <div class="brand-logo">
           <img src="/logo.jpg" :alt="$t('hero.title')" />
         </div>
-        <span class="brand-name">{{ $t('hero.title') }}</span>
+        <span class="brand-name">Bio<span class="brand-resonance">Resonance</span></span>
         <span class="brand-tag">{{ $t('nav.researchPlatform') }}</span>
       </RouterLink>
       <nav class="nav">
@@ -77,6 +77,11 @@ export default defineComponent({
 .brand-name {
   font-size: 1.1rem; font-weight: 700;
   color: var(--color-text-heading); letter-spacing: 0.03em;
+}
+.brand-resonance {
+  color: #0a2e58;
+  -webkit-text-stroke: 0.8px var(--color-primary);
+  paint-order: stroke fill;
 }
 .brand-tag {
   font-size: 0.65rem; color: var(--color-text-muted);
