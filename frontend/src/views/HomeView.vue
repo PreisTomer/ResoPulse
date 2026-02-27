@@ -98,8 +98,7 @@ export default defineComponent({})
 
       <!-- Disclaimer -->
       <p class="disclaimer">
-        Schwan equation biophysics model · for research visualisation only ·
-        not a medical device
+        for research visualisation only · not a medical device
       </p>
     </div>
   </div>
