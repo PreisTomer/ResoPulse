@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { cloneDeep } from 'lodash'
 import { cellConfigs, MEDIA } from '../mockData'
 import type { CellConfig, MediumKey } from '../mockData'
-import { computeSchwan, computeSAR, computeFc, computeTau, computePulseStepResponse, computeResonantDisruption } from '../utils/physics'
+import { computeSchwan, computeSAR, computeFc, computeTau, computePulseStepResponse, computeResonantDisruption, computeNuclearVm } from '../utils/physics'
 
 const LAMBDA = 0.02     // Newton cooling rate constant [1/s]
 const TEMP_SIMULATION_CAP = 150  // °C — hard ceiling; cells are destroyed long before this
@@ -29,6 +29,10 @@ interface CellStoreState {
   waveform: 'cw' | 'pulsed'      // CW sinusoidal (waveformFactor 0.5) or pulsed DC (1.0)
   pulseWidthNs: number            // pulse width in nanoseconds (pulsed mode only; default 1000 ns = 1 µs)
   safeMode: boolean               // when true, duty cycle is clamped so T_ss ≤ 42°C
+  orientationDeg: number          // field-cell axis angle θ [0–90°]; default 0° (field-aligned = max Vm)
+  lysisNPulses: number            // number of above-threshold pulses before lysis; default 10
+  chartMode: 'schwan' | 'resonance'  // active chart/simulation mode (moved from ExperimentView local state)
+  doubleShellEnabled: boolean     // opt-in two-shell nuclear envelope model (Kotnik & Miklavcic 2006)
   _tempTimer: number | null
   resetCounter: number
 }
@@ -46,36 +50,79 @@ export const useCellStore = defineStore('cell', {
     waveform: 'pulsed' as const,
     pulseWidthNs: 1000,            // 1 µs — sub-µs range reveals nsEP selectivity for bacteria
     safeMode: false,               // expert mode by default (scientists need full range)
+    orientationDeg: 0,             // 0° = field-aligned = maximum transmembrane coupling
+    lysisNPulses: 10,              // 10 above-threshold pulses ≈ typical IRE clinical protocol
+    chartMode: 'schwan' as const,  // default: Schwan/IRE transmembrane potential model
+    doubleShellEnabled: false,     // double-shell model off by default
     _tempTimer: null,
     resetCounter: 0,
   }),
 
   getters: {
+    /** Base (reference-temperature) extracellular conductivity [S/m]. Used for display only. */
     sigma_e: (state): number => MEDIA[state.medium].conductivity,
+
+    /**
+     * |cos(θ)| — field-cell coupling factor [0–1].
+     * θ = orientationDeg: angle between the applied field vector and the cell axis.
+     * θ = 0° (field-aligned) → factor = 1 → maximum Vm.
+     * θ = 90° (perpendicular) → factor = 0 → Vm → 0.
+     * Note: cos(θ) cancels in the Vm selectivity ratio (Vm_T/Vm_H) for any θ,
+     * since both cells share the same field orientation. Selectivity is θ-independent.
+     */
+    cosThetaFactor(state): number {
+      return Math.abs(Math.cos(state.orientationDeg * Math.PI / 180))
+    },
+
+    /**
+     * Temperature-corrected extracellular conductivity [S/m].
+     * σ_e(T) = σ_e0 × (1 + 0.02 × (T_mean − 37))
+     * Ionic conductivity rises ~2%/°C. At hyperthermic limit (42°C), σ_e increases ~10%,
+     * shifting τ and fc — a physically correct closed feedback loop.
+     * T_mean = mean of healthy and target cell temperatures.
+     */
+    effectiveSigmaE(state): number {
+      const sigma_e0 = MEDIA[state.medium].conductivity
+      const T_mean = (state.healthyTemp + state.targetTemp) / 2
+      return sigma_e0 * (1 + 0.02 * (T_mean - 37))
+    },
+
+    /**
+     * Physically grounded lysis countdown duration [ms].
+     * In CW mode: 2500 ms (time-based, no pulse count concept).
+     * In pulsed mode: N_pulses × pulse_period where period = pulseWidthNs / dutyCycle.
+     * Clamped to [200 ms, 30 000 ms] for visual validity.
+     * Replaces the former hardcoded LYSIS_DELAY_MS = 2500 constant.
+     */
+    lysisDelayMs(state): number {
+      if (state.waveform === 'cw' || state.dutyCycle >= 1) return 2500
+      const pulsePeriodMs = (state.pulseWidthNs * 1e-6) / state.dutyCycle
+      return Math.max(200, Math.min(30_000, state.lysisNPulses * pulsePeriodMs))
+    },
 
     /**
      * Pulse step-response factor for the healthy cell [0–1].
      * = 1 − exp(−t_p/τ) in pulsed mode; = 1.0 in CW mode.
-     * At t_p ≪ τ_healthy, small-τ cells (bacteria) charge proportionally more.
+     * Uses temperature-corrected σ_e so τ reflects current heating state.
      */
-    healthyPulseStepFactor(state): number {
-      if (state.waveform !== 'pulsed') return 1.0
-      const sigma_e = MEDIA[state.medium].conductivity
-      const tau = computeTau(state.healthy, sigma_e)
-      return computePulseStepResponse(tau, state.pulseWidthNs)
+    healthyPulseStepFactor(): number {
+      if ((this as unknown as CellStoreState).waveform !== 'pulsed') return 1.0
+      const tau = computeTau((this as unknown as CellStoreState).healthy, this.effectiveSigmaE)
+      return computePulseStepResponse(tau, (this as unknown as CellStoreState).pulseWidthNs)
     },
 
-    /** Pulse step-response factor for the target cell [0–1]. */
-    targetPulseStepFactor(state): number {
-      if (state.waveform !== 'pulsed') return 1.0
-      const sigma_e = MEDIA[state.medium].conductivity
-      const tau = computeTau(state.target, sigma_e)
-      return computePulseStepResponse(tau, state.pulseWidthNs)
+    /** Pulse step-response factor for the target cell [0–1]. Uses temperature-corrected σ_e. */
+    targetPulseStepFactor(): number {
+      if ((this as unknown as CellStoreState).waveform !== 'pulsed') return 1.0
+      const tau = computeTau((this as unknown as CellStoreState).target, this.effectiveSigmaE)
+      return computePulseStepResponse(tau, (this as unknown as CellStoreState).pulseWidthNs)
     },
 
-    healthyVm(state): number {
-      const sigma_e = MEDIA[state.medium].conductivity
-      const vm_dc = computeSchwan(state.healthy, state.currentBroadcastFrequency, state.fieldIntensity, sigma_e)
+    healthyVm(): number {
+      const state = this as unknown as CellStoreState
+      const sigma_e = this.effectiveSigmaE
+      const cosT = this.cosThetaFactor
+      const vm_dc = computeSchwan(state.healthy, state.currentBroadcastFrequency, state.fieldIntensity, sigma_e, cosT)
       const tau = computeTau(state.healthy, sigma_e)
       const factor = state.waveform === 'pulsed'
         ? computePulseStepResponse(tau, state.pulseWidthNs)
@@ -83,9 +130,11 @@ export const useCellStore = defineStore('cell', {
       return vm_dc * factor
     },
 
-    targetVm(state): number {
-      const sigma_e = MEDIA[state.medium].conductivity
-      const vm_dc = computeSchwan(state.target, state.currentBroadcastFrequency, state.fieldIntensity, sigma_e)
+    targetVm(): number {
+      const state = this as unknown as CellStoreState
+      const sigma_e = this.effectiveSigmaE
+      const cosT = this.cosThetaFactor
+      const vm_dc = computeSchwan(state.target, state.currentBroadcastFrequency, state.fieldIntensity, sigma_e, cosT)
       const tau = computeTau(state.target, sigma_e)
       const factor = state.waveform === 'pulsed'
         ? computePulseStepResponse(tau, state.pulseWidthNs)
@@ -112,26 +161,24 @@ export const useCellStore = defineStore('cell', {
       return this.targetVm / this.target.thresholdVoltage
     },
 
-    healthySAR(state): number {
-      const sigma_e = MEDIA[state.medium].conductivity
+    healthySAR(): number {
+      const state = this as unknown as CellStoreState
       const wf = state.waveform === 'cw' ? 0.5 : 1.0
-      return computeSAR(state.healthy, state.fieldIntensity, sigma_e, wf)
+      return computeSAR(state.healthy, state.fieldIntensity, this.effectiveSigmaE, wf)
     },
 
-    targetSAR(state): number {
-      const sigma_e = MEDIA[state.medium].conductivity
+    targetSAR(): number {
+      const state = this as unknown as CellStoreState
       const wf = state.waveform === 'cw' ? 0.5 : 1.0
-      return computeSAR(state.target, state.fieldIntensity, sigma_e, wf)
+      return computeSAR(state.target, state.fieldIntensity, this.effectiveSigmaE, wf)
     },
 
-    healthyFc(state): number {
-      const sigma_e = MEDIA[state.medium].conductivity
-      return computeFc(state.healthy, sigma_e)
+    healthyFc(): number {
+      return computeFc((this as unknown as CellStoreState).healthy, this.effectiveSigmaE)
     },
 
-    targetFc(state): number {
-      const sigma_e = MEDIA[state.medium].conductivity
-      return computeFc(state.target, sigma_e)
+    targetFc(): number {
+      return computeFc((this as unknown as CellStoreState).target, this.effectiveSigmaE)
     },
 
     systemReady(state): boolean {
@@ -175,28 +222,94 @@ export const useCellStore = defineStore('cell', {
     },
 
     /**
-     * Minimum field intensity [V/cm] at current frequency to reach lysis threshold
-     * for the target cell — full frequency-dependent Schwan formula:
-     *   Vm = 1.5·E·R / √(1+(ωτ)²) = Vm_thr  →  E_lysis = Vm_thr·√(1+(ωτ)²) / (1.5·R)
-     * At quasi-DC (f ≪ fc) this reduces to E_lysis = Vm_thr / (1.5·R).
+     * True if at least one of the active cells has nuclear envelope parameters.
+     * Used to conditionally show the double-shell model toggle in the UI.
+     * Only mammalian nucleated cells have nuclearRadius defined.
      */
-    targetLysisField(state): number {
-      const sigma_e = MEDIA[state.medium].conductivity
+    hasNuclearParams(state): boolean {
+      return !!state.healthy.nuclearRadius || !!state.target.nuclearRadius
+    },
+
+    /**
+     * Nuclear transmembrane potential for the healthy cell [V].
+     * Uses the two-shell bandpass formula (Kotnik & Miklavcic 2006).
+     * Returns 0 if the healthy cell has no nuclear envelope parameters.
+     */
+    healthyNuclearVm(): number {
+      const state = this as unknown as CellStoreState
+      if (!state.healthy.nuclearRadius) return 0
+      const sigma_e = this.effectiveSigmaE
+      const cosT    = this.cosThetaFactor
+      const vm_dc   = computeNuclearVm(state.healthy, state.currentBroadcastFrequency, state.fieldIntensity, sigma_e, cosT)
+      const factor  = this.healthyPulseStepFactor
+      return vm_dc * factor
+    },
+
+    /** Nuclear transmembrane potential for the target cell [V]. Returns 0 if no nuclear params. */
+    targetNuclearVm(): number {
+      const state = this as unknown as CellStoreState
+      if (!state.target.nuclearRadius) return 0
+      const sigma_e = this.effectiveSigmaE
+      const cosT    = this.cosThetaFactor
+      const vm_dc   = computeNuclearVm(state.target, state.currentBroadcastFrequency, state.fieldIntensity, sigma_e, cosT)
+      const factor  = this.targetPulseStepFactor
+      return vm_dc * factor
+    },
+
+    /** Nuclear disruption ratio for healthy cell: Vm_nuc / nuclear threshold voltage. */
+    healthyNuclearDisruptionRatio(): number {
+      const state = this as unknown as CellStoreState
+      const vth = state.healthy.nuclearThresholdVoltage ?? 0.5
+      return this.healthyNuclearVm / vth
+    },
+
+    /** Nuclear disruption ratio for target cell: Vm_nuc / nuclear threshold voltage. */
+    targetNuclearDisruptionRatio(): number {
+      const state = this as unknown as CellStoreState
+      const vth = state.target.nuclearThresholdVoltage ?? 0.5
+      return this.targetNuclearVm / vth
+    },
+
+    /**
+     * Nuclear selectivity ratio: target nuclear disruption / healthy nuclear disruption.
+     * Caps at 99.9 when healthy nuclear disruption is negligible.
+     */
+    nuclearSelectivityRatio(): number {
+      const hDr = this.healthyNuclearDisruptionRatio
+      if (hDr < 1e-9) return this.targetNuclearDisruptionRatio > 0 ? 99.9 : 0
+      return Math.min(99.9, this.targetNuclearDisruptionRatio / hDr)
+    },
+
+    /**
+     * Minimum field intensity [V/cm] at current frequency to reach lysis threshold
+     * for the target cell — full frequency-dependent Schwan formula including cos(θ):
+     *   Vm = 1.5·E·R·cosθ / √(1+(ωτ)²) = Vm_thr
+     *   → E_lysis = Vm_thr·√(1+(ωτ)²) / (1.5·R·cosθ)
+     * Near-perpendicular (cosθ < 0.01): returns 1e6 V/cm (effectively unreachable).
+     */
+    targetLysisField(): number {
+      const state = this as unknown as CellStoreState
+      const cosT = this.cosThetaFactor
+      if (cosT < 0.01) return 1e6
+      const sigma_e = this.effectiveSigmaE
       const tau   = computeTau(state.target, sigma_e)
       const omega = 2 * Math.PI * state.currentBroadcastFrequency * 1e3
       const R     = state.target.radius * 1e-6
       const denom = Math.sqrt(1 + (omega * tau) ** 2)
-      return (state.target.thresholdVoltage * denom) / (1.5 * R * 100)
+      return (state.target.thresholdVoltage * denom) / (1.5 * R * cosT * 100)
     },
 
     /** Same as targetLysisField but for the healthy reference cell. */
-    healthyLysisField(state): number {
-      const sigma_e = MEDIA[state.medium].conductivity
+    healthyLysisField(): number {
+      const state = this as unknown as CellStoreState
+      const cosT = this.cosThetaFactor
+      if (cosT < 0.01) return 1e6
+      const sigma_e = this.effectiveSigmaE
       const tau   = computeTau(state.healthy, sigma_e)
       const omega = 2 * Math.PI * state.currentBroadcastFrequency * 1e3
       const R     = state.healthy.radius * 1e-6
       const denom = Math.sqrt(1 + (omega * tau) ** 2)
-      return (state.healthy.thresholdVoltage * denom) / (1.5 * R * 100)
+      return (state.healthy.thresholdVoltage * denom) / (1.5 * R * cosT * 100)
     },
 
     /**
@@ -341,6 +454,32 @@ export const useCellStore = defineStore('cell', {
     resetTemps() {
       this.healthyTemp = 37
       this.targetTemp = 37
+    },
+
+    /** Set field-cell orientation angle θ [0°–90°]. 0° = field-aligned = maximum Vm coupling. */
+    setOrientationDeg(deg: number) {
+      this.orientationDeg = Math.max(0, Math.min(90, deg))
+    },
+
+    /** Set number of above-threshold pulses required to trigger lysis [1–1000]. */
+    setLysisNPulses(n: number) {
+      this.lysisNPulses = Math.max(1, Math.min(1000, Math.round(n)))
+    },
+
+    /**
+     * Set the active chart/simulation mode.
+     * 'schwan' — Schwan/IRE transmembrane potential model (mammalian cells).
+     * 'resonance' — Acoustic resonance model (virus/bacteria capsid/cell-wall).
+     * Auto-disables double-shell model when switching to resonance (nuclear model is Schwan-only).
+     */
+    setChartMode(mode: 'schwan' | 'resonance') {
+      this.chartMode = mode
+      if (mode === 'resonance') this.doubleShellEnabled = false
+    },
+
+    /** Toggle the double-shell nuclear envelope model on/off. Only meaningful in Schwan mode. */
+    toggleDoubleShell() {
+      this.doubleShellEnabled = !this.doubleShellEnabled
     },
 
   },

@@ -93,12 +93,24 @@ export default defineComponent({
       return '<strong>Transmembrane potential and SAR</strong>\nVm — peak voltage across cell membrane (Schwan eq.)\n  Vm = 1.5·E·R / √(1+(2πf·τ)²)\n  τ = R·Cm·(2σ_e+σ_i)/(2σ_e·σ_i)\nSAR — specific absorption rate (W/kg) in cell interior\n  SAR = σ_i·α²·E²·wf / ρ  α = 3σ_e/(2σ_e+σ_i) (internal field factor)\n  wf=0.5(CW) or 1.0(pulsed)\n  Proportional to thermal load deposited in the cell'
     },
 
+    /** Category-aware label for the comparison section. */
+    presetCompTitleDynamic(): string {
+      const cat = this.store.targetCellCategory
+      if (cat === 'bacteria') return 'Alternative Bacteria'
+      if (cat === 'virus')    return 'Alternative Viruses'
+      return 'Alternative Cancer Targets'
+    },
+
     presetComparison() {
       const sigma_e = MEDIA[this.store.medium].conductivity
       const freq    = this.store.currentBroadcastFrequency
       const field   = this.store.fieldIntensity
       const pulsed  = this.store.waveform === 'pulsed'
       const pulseNs = this.store.pulseWidthNs
+
+      // Only compare presets in the same category as the active target
+      const cat = this.store.targetCellCategory
+      const relevantGroup = cat === 'mammalian' ? 'cancer' : cat  // 'bacteria' | 'virus'
 
       // Healthy cell — Schwan Vm × pulse step factor → disruption ratio
       const hVm_dc  = computeSchwan(this.store.healthy, freq, field, sigma_e)
@@ -108,7 +120,7 @@ export default defineComponent({
       const hDr     = hVm / this.store.healthy.thresholdVoltage  // healthy disruption ratio
 
       return CELL_PRESETS
-        .filter((p) => p.group !== 'reference')
+        .filter((p) => p.group === relevantGroup)
         .map((p) => {
           const pr = p as typeof p & { resonantFreqGHz?: number; capsidQ?: number; resonantThresholdVcm?: number }
           const hasRes = (p.group === 'bacteria' || p.group === 'virus') && !!pr.resonantFreqGHz && !!pr.resonantThresholdVcm
@@ -312,9 +324,10 @@ Sub-threshold  T <50%
       const cat = this.store.targetCellCategory
       const ti  = this.therapeuticIndex
       const t = this.store.target as { resonantFreqGHz?: number; resonantThresholdVcm?: number }
+      const ghzCaveat = ' · f_res from fs-laser experiments (Tsen et al. [10]); RF delivery at GHz is skin-depth limited (~1–2 mm in saline)'
       if (cat === 'virus') {
         if (t.resonantFreqGHz) {
-          return `⚠ IRE model inapplicable for virions (R < 0.1 µm) · Switch to Resonance mode above for acoustic capsid disruption at ${t.resonantFreqGHz} GHz`
+          return `⚠ IRE model inapplicable for virions (R < 0.1 µm) · Acoustic capsid disruption at ${t.resonantFreqGHz} GHz${ghzCaveat}`
         }
         const tLysis = this.store.targetLysisField
         return `⚠ IRE not applicable to virions — E_lysis ≈ ${(tLysis / 1000).toFixed(0)} kV/cm · Use Resonance mode`
@@ -322,7 +335,7 @@ Sub-threshold  T <50%
       if (cat === 'bacteria') {
         const tLysis = this.store.targetLysisField
         if (tLysis > 3000) {
-          const res = t.resonantFreqGHz ? ` · Resonance mode (${t.resonantFreqGHz} GHz) available` : ''
+          const res = t.resonantFreqGHz ? ` · Resonance mode (${t.resonantFreqGHz} GHz) available${ghzCaveat}` : ''
           return `⚠ E_lysis ≈ ${(tLysis / 1000).toFixed(1)} kV/cm — standard IRE impractical · Consider nsEP (pulse width slider)${res}`
         }
       }
@@ -330,6 +343,15 @@ Sub-threshold  T <50%
         return `⚠ TI = ${ti.toFixed(2)}× — selectivity reversed at DC (τ_T < τ_H) · Short pulses may improve selectivity`
       }
       return null
+    },
+
+    /** True when the warning should include an inline "Switch to Resonance Mode" button. */
+    showResonanceSwitchBtn(): boolean {
+      const cat = this.store.targetCellCategory
+      const t = this.store.target as { resonantFreqGHz?: number }
+      return !!(cat === 'virus' || cat === 'bacteria') &&
+        !!t.resonantFreqGHz &&
+        this.store.chartMode === 'schwan'
     },
 
     targetLysisProbability(): number {
@@ -541,6 +563,11 @@ Click the preset pill below to switch to this cell`
     <!-- ── Model / selectivity warning ──────────────────────── -->
     <div v-if="targetModelWarning" class="model-warning">
       {{ targetModelWarning }}
+      <button
+        v-if="showResonanceSwitchBtn"
+        class="model-warning-btn"
+        @click="store.setChartMode('resonance')"
+      >→ Switch to Resonance Mode</button>
     </div>
 
     <!-- ── Preset selectivity comparison ─────────────────────── -->
@@ -548,8 +575,8 @@ Click the preset pill below to switch to this cell`
     <div class="library-section">
       <div
         class="lib-title"
-        v-tip="'<strong>' + $t('selectivity.presetCompTitle') + '</strong>\n' + $t('selectivity.presetCompTip')"
-      >{{ $t('selectivity.presetCompTitle') }}</div>
+        v-tip="'<strong>' + presetCompTitleDynamic + '</strong>\n' + $t('selectivity.presetCompTip')"
+      >{{ presetCompTitleDynamic }}</div>
       <div class="comparison-table">
         <div
           v-for="row in presetComparison"
@@ -815,6 +842,25 @@ Click the preset pill below to switch to this cell`
   border-radius: var(--radius);
   padding: 0.3rem 0.55rem;
   line-height: 1.55;
+}
+
+.model-warning-btn {
+  display: block;
+  margin-top: 0.4rem;
+  background: rgba(251, 191, 36, 0.12);
+  border: 1px solid rgba(251, 191, 36, 0.4);
+  border-radius: 3px;
+  color: var(--color-amber);
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.08em;
+  padding: 0.2rem 0.55rem;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.model-warning-btn:hover {
+  background: rgba(251, 191, 36, 0.22);
+  border-color: rgba(251, 191, 36, 0.65);
 }
 
 /* ── Preset comparison table ─────────────────────────────────── */

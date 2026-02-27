@@ -32,6 +32,7 @@ export default defineComponent({})
           <a href="#disruption"  class="toc-link indent">2.3 Disruption Criterion (IRE)</a>
           <a href="#resonance"   class="toc-link indent">2.4 Acoustic Resonance (Virus/Bacteria)</a>
           <a href="#nsep"        class="toc-link indent">2.5 nsEP Pulse Selectivity</a>
+          <a href="#doubleshell" class="toc-link indent">2.6 Double-Shell Nuclear Envelope</a>
           <a href="#protocol"    class="toc-link">3. Experimental Protocol</a>
           <a href="#safety"      class="toc-link">4. Safety &amp; Thresholds</a>
           <a href="#refs"        class="toc-link">5. References</a>
@@ -255,6 +256,20 @@ export default defineComponent({})
               </span>
             </div>
 
+            <div class="warn-box">
+              <span class="warn-icon">⚠</span>
+              <span>
+                <strong>Excitation mechanism caveat:</strong> The f<sub>res</sub> and
+                E<sub>thr</sub> values above are derived from <em>femtosecond pulsed laser</em>
+                (near-IR, ~800 nm) experiments in which acoustic capsid modes are excited via
+                impulsive stimulated Raman scattering — not direct RF/microwave delivery
+                (Tsen et al. [10]). Direct microwave excitation at 10–12 GHz in bulk tissue
+                remains experimentally unverified. Penetration depth in saline at these
+                frequencies is ~1–2 mm (skin-depth limited). The simulation uses these
+                parameters as theoretical research targets only.
+              </span>
+            </div>
+
             <h3 id="nsep" class="subsec-title">2.5 Nanosecond Pulsed EP (nsEP) — Pulse Width Selectivity</h3>
             <p class="body-text">
               An alternative strategy for bacteria targeting in the Schwan (IRE) regime uses
@@ -279,6 +294,46 @@ export default defineComponent({})
               regime. Charging factors for both cells are displayed live next to the slider.
             </p>
           </section>
+
+          <h3 id="doubleshell" class="subsec-title">2.6 Double-Shell Nuclear Envelope Model</h3>
+            <p class="body-text">
+              For mammalian nucleated cells, an optional <strong>double-shell model</strong>
+              (Kotnik &amp; Miklavcic 2006 [13]) adds the nuclear membrane as a second
+              concentric dielectric shell. The nuclear membrane Vm is a two-pole bandpass
+              function of frequency:
+            </p>
+            <div class="eq-block">
+              <div class="eq-main">V<sub>m,nuc</sub>(f) = (1.5 · E · R<sub>nuc</sub> · ω·τ<sub>out</sub>) / √[(1+(ωτ<sub>out</sub>)²) · (1+(ωτ<sub>ne</sub>)²)]</div>
+              <div class="eq-divider"></div>
+              <div class="eq-sub">τ<sub>out</sub> = R·C<sub>m</sub>·(2σ<sub>e</sub>+σ<sub>i</sub>)/(2σ<sub>e</sub>·σ<sub>i</sub>) &nbsp;(existing outer shell τ)</div>
+              <div class="eq-sub">τ<sub>ne</sub> = R<sub>nuc</sub>·C<sub>m,ne</sub>·(σ<sub>i</sub>+σ<sub>np</sub>)/(σ<sub>i</sub>·σ<sub>np</sub>) &nbsp;·&nbsp; C<sub>m,ne</sub> = ε<sub>ne</sub>·ε₀/d<sub>ne</sub></div>
+              <div class="eq-sub">f<sub>peak</sub> = 1/(2π√(τ<sub>out</sub>·τ<sub>ne</sub>)) &nbsp;·&nbsp; peak gain = τ<sub>out</sub>/(τ<sub>out</sub>+τ<sub>ne</sub>)</div>
+              <div class="eq-note">Kotnik &amp; Miklavcic, Biophys. J. 90:480 (2006) [13]</div>
+            </div>
+            <p class="body-text">
+              The bandpass shape arises because at low frequencies both shells short-circuit
+              (no voltage division across the nuclear membrane), and at high frequencies
+              the outer membrane shields the interior. The peak is typically in the
+              <strong>0.5–2 MHz</strong> range for mammalian cells.
+              Cancer cells have a higher nuclear-to-cytoplasmic (N/C) ratio, thinner and
+              more conductive nuclear envelopes, and lower nuclear V<sub>m</sub> thresholds —
+              creating an additional cancer-selectivity axis. Enable this model via the
+              <strong>Shell Model</strong> toggle in the Field Control panel (visible for
+              nucleated mammalian presets only; hidden for bacteria, viruses, and RBC).
+            </p>
+            <table class="param-table">
+              <thead>
+                <tr><th>Cell</th><th>R<sub>nuc</sub> (µm)</th><th>d<sub>ne</sub> (nm)</th><th>σ<sub>ne</sub> (S/m)</th><th>V<sub>thr,nuc</sub> (V)</th><th>f<sub>peak</sub> (saline)</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Hepatocyte</td><td class="mono">5.0</td><td class="mono">15</td><td class="mono">0.010</td><td class="mono">0.50</td><td class="mono primary-val">~1.4 MHz</td></tr>
+                <tr><td>Adenocarcinoma</td><td class="mono">8.0</td><td class="mono">12</td><td class="mono">0.020</td><td class="mono cancer-val">0.40</td><td class="mono cancer-val">~0.74 MHz</td></tr>
+                <tr><td>GBM</td><td class="mono">7.0</td><td class="mono">11</td><td class="mono">0.020</td><td class="mono cancer-val">0.35</td><td class="mono cancer-val">~0.58 MHz</td></tr>
+                <tr><td>MCF-7</td><td class="mono">6.0</td><td class="mono">13</td><td class="mono">0.015</td><td class="mono cancer-val">0.42</td><td class="mono cancer-val">~0.88 MHz</td></tr>
+                <tr><td>HL-60</td><td class="mono">4.0</td><td class="mono">14</td><td class="mono">0.015</td><td class="mono cancer-val">0.45</td><td class="mono cancer-val">~1.1 MHz</td></tr>
+                <tr><td>RBC</td><td class="mono muted">—</td><td class="mono muted">—</td><td class="mono muted">—</td><td class="mono muted">—</td><td class="mono muted">Anucleate — not applicable</td></tr>
+              </tbody>
+            </table>
 
           <!-- 3. Step-by-step protocol -->
           <section id="protocol" class="doc-section">
@@ -604,6 +659,16 @@ export default defineComponent({})
                   <span class="ref-note">[Foundational nsEP paper; pulse step-response charging of membranes with t<sub>p</sub> ≪ τ; basis for nsEP selectivity model in Section 2.5]</span>
                 </span>
               </li>
+              <li class="ref-item">
+                <span class="ref-num">[13]</span>
+                <span class="ref-body">
+                  Kotnik T, Miklavcic D.
+                  <em>Theoretical evaluation of voltage inducement on internal membranes of biological cells exposed to electric fields.</em>
+                  Biophysical Journal. 2006;90(2):480–491.
+                  doi:10.1529/biophysj.105.070771
+                  <span class="ref-note">[Double-shell nuclear envelope model; two-pole bandpass formula for nuclear membrane Vm; f<sub>peak</sub> and nuclear Vm values used in Section 2.6 and the "+ Nuclear Envelope" toggle]</span>
+                </span>
+              </li>
             </ol>
           </section>
 
@@ -778,6 +843,27 @@ export default defineComponent({})
 
 .info-icon {
   color: var(--color-primary);
+  font-weight: 700;
+  flex-shrink: 0;
+  margin-top: 0.05rem;
+}
+
+/* ── Warn box (amber — for caveats and experimental limitations) ─────────── */
+.warn-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  background: rgba(251, 191, 36, 0.06);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  border-radius: var(--radius);
+  padding: 0.85rem 1rem;
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+  line-height: 1.6;
+}
+
+.warn-icon {
+  color: var(--color-amber);
   font-weight: 700;
   flex-shrink: 0;
   margin-top: 0.05rem;

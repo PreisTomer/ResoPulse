@@ -22,12 +22,6 @@ export default defineComponent({
     ExperimentLog,
   },
 
-  data() {
-    return {
-      chartMode: 'schwan' as 'schwan' | 'resonance',
-    }
-  },
-
   setup() {
     const store = useCellStore()
     const expStore = useExperimentStore()
@@ -117,7 +111,7 @@ export default defineComponent({
       this.store.setMedium(d.medium)
       // Always start from a thermally neutral state — clears any lysis/destruction
       this.store.resetTemps()
-      this.chartMode = (cat === 'virus' || cat === 'bacteria') ? 'resonance' : 'schwan'
+      this.store.setChartMode((cat === 'virus' || cat === 'bacteria') ? 'resonance' : 'schwan')
     },
   },
 })
@@ -144,13 +138,13 @@ export default defineComponent({
           <div class="sb-mode-toggle" v-tip="$t('exp.chartModeTip')">
             <button
               class="sb-mode-btn"
-              :class="{ 'sb-mode-btn--active': chartMode === 'schwan' }"
-              @click="chartMode = 'schwan'"
+              :class="{ 'sb-mode-btn--active': store.chartMode === 'schwan' }"
+              @click="store.setChartMode('schwan')"
             >{{ $t('slider.ireMode') }}</button>
             <button
               class="sb-mode-btn"
-              :class="{ 'sb-mode-btn--active': chartMode === 'resonance' }"
-              @click="chartMode = 'resonance'"
+              :class="{ 'sb-mode-btn--active': store.chartMode === 'resonance' }"
+              @click="store.setChartMode('resonance')"
             >{{ $t('slider.resonanceMode') }}</button>
           </div>
           <span class="sb-chip sb-chip--medium">
@@ -197,10 +191,10 @@ export default defineComponent({
         </div>
 
         <!-- Field / medium control panel -->
-        <FrequencySlider :chart-mode="chartMode" />
+        <FrequencySlider />
 
         <!-- Chart: IRE/Schwan transmembrane potential or Acoustic Resonance disruption -->
-        <FrequencyResponseChart v-if="chartMode === 'schwan'" />
+        <FrequencyResponseChart v-if="store.chartMode === 'schwan'" />
         <ResonanceChart v-else />
 
       </div>

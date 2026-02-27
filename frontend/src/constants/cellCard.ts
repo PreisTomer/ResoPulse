@@ -15,7 +15,7 @@ export const NUCLEUS_PTS  = 20    // sample points along helix
 export const NUCLEUS_RUNGS = 8   // cross-rungs drawn per tick
 
 // ── Lysis / shatter timing (ms) ───────────────────────────────────────────────
-export const LYSIS_DELAY_MS    = 2500   // countdown before lysis triggers
+// LYSIS_DELAY_MS removed — replaced by store.lysisDelayMs (N_pulses × pulse_period, physically grounded)
 export const LYSIS_DURATION_MS = 2800   // shatter animation length
 export const FRAGMENT_INTERVAL_MS = 80  // ms between spawned fragments
 
