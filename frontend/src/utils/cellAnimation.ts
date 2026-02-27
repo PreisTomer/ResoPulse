@@ -159,10 +159,11 @@ export function setupBlobAnimation(
     m: { x: number; y: number; rx: number; ry: number; angle: number }
   }
   let mitoEls: MitoEl[] = []
-  let nucG:      d3.Selection<SVGGElement, unknown, null, undefined> | null = null
-  let nucBlob:   d3.Selection<SVGPathElement, unknown, null, undefined> | null = null
-  let nucleolus: d3.Selection<SVGCircleElement, unknown, null, undefined> | null = null
-  let cortexRing: d3.Selection<SVGCircleElement, unknown, null, undefined> | null = null
+  let nucG:           d3.Selection<SVGGElement, unknown, null, undefined> | null = null
+  let nucBlob:        d3.Selection<SVGPathElement, unknown, null, undefined> | null = null
+  let nucOuterEnv:    d3.Selection<SVGPathElement, unknown, null, undefined> | null = null
+  let nucleolus:      d3.Selection<SVGCircleElement, unknown, null, undefined> | null = null
+  let cortexRing:     d3.Selection<SVGCircleElement, unknown, null, undefined> | null = null
   let nucPhases: Array<{ baseAngle: number; phaseOffset: number; speed: number }> = []
   const nucLineGen = d3.lineRadial<BlobPoint>().angle((d) => d.angle).radius((d) => d.r).curve(d3.curveBasisClosed)
 
@@ -209,6 +210,12 @@ export function setupBlobAnimation(
 
     // Nucleus (organic blob with nuclear envelope — elongates along field axis)
     nucG      = cellG.append('g')
+    // Outer nuclear envelope (double-membrane dashed ring — drawn first, behind nucBlob)
+    // Represents the two nuclear membranes (inner + outer) visible in electron microscopy.
+    // Brightens and changes color when nuclear disruption ratio is elevated.
+    nucOuterEnv = nucG.append('path')
+      .attr('fill', 'none').attr('stroke', accentColor)
+      .attr('stroke-width', 0.9).attr('stroke-dasharray', '3,2').attr('stroke-opacity', 0.15)
     nucBlob   = nucG.append('path')
       .attr('fill', accentColor).attr('fill-opacity', 0.12)
       .attr('stroke', accentColor).attr('stroke-width', 1.2).attr('stroke-opacity', 0.42)
@@ -392,7 +399,7 @@ export function setupBlobAnimation(
 
   // ── D3 timer loop ──────────────────────────────────────────────────────────
   const timer = d3.timer((elapsed: number) => {
-    const { impact, state, color, temperature, fieldVcm, freqKHz } = getFrame()
+    const { impact, state, color, temperature, fieldVcm, freqKHz, nuclearDisruptionRatio } = getFrame()
 
     // ── Field ray color + intensity (constant per tick, shared by all states) ─
     // freqKHz log-scale 10 kHz → 30 GHz: cyan (#00d4ff) → violet (#a78bfa)
@@ -416,6 +423,7 @@ export function setupBlobAnimation(
       blobFill.attr('fill-opacity', 0)
       auraRings.forEach((r) => r.attr('stroke-opacity', 0))
       nucBlob?.attr('fill-opacity', 0).attr('stroke-opacity', 0)
+      nucOuterEnv?.attr('stroke-opacity', 0)
       nucleolus?.attr('fill-opacity', 0)
       cortexRing?.attr('stroke-opacity', 0)
       mitoEls.forEach(({ g }) => g.attr('opacity', 0))
@@ -458,6 +466,8 @@ export function setupBlobAnimation(
       nucBlob?.attr('stroke', '#ff4d6d')
         .attr('stroke-opacity', Math.max(0, 0.42 - progress * 0.42))
         .attr('fill-opacity', Math.max(0, 0.12 - progress * 0.12))
+      nucOuterEnv?.attr('stroke', '#ff4d6d')
+        .attr('stroke-opacity', Math.max(0, 0.25 - progress * 0.25))
       nucleoidBlob?.attr('fill-opacity', Math.max(0, 0.11 - progress * 0.11))
       nucleolus?.attr('fill-opacity', Math.max(0, 0.28 - progress * 0.28))
       cortexRing?.attr('stroke-opacity', Math.max(0, 0.09 - progress * 0.09))
@@ -560,11 +570,24 @@ export function setupBlobAnimation(
         const noise = (Math.random() - 0.5) * nucNoise
         return { angle: p.baseAngle, r: NUC_R + wave + noise }
       })
+      // Outer nuclear envelope — drawn 3.5px outside the blob boundary
+      const nucEnvPts: BlobPoint[] = nucPts.map((p) => ({ angle: p.angle, r: p.r + 3.5 }))
       nucG!.attr('transform',
         `translate(0,${NUC_DY}) scale(${nucScaleX.toFixed(3)},${nucScaleY.toFixed(3)})`)
       nucBlob!.attr('d', nucLineGen(nucPts) || '')
         .attr('fill', color).attr('fill-opacity', 0.12)
         .attr('stroke', color).attr('stroke-opacity', isNourishing ? 0.60 : 0.42)
+      // Nuclear outer envelope: color interpolates based on nuclear disruption ratio
+      // accentColor → amber (#fbbf24) at >50%, amber → red (#ff4d6d) at >85%
+      const nucDr = nuclearDisruptionRatio ?? 0
+      const nucEnvColor = nucDr < 0.5
+        ? accentColor
+        : nucDr < 0.85
+          ? d3.interpolateRgb(accentColor, '#fbbf24')((nucDr - 0.5) / 0.35)
+          : d3.interpolateRgb('#fbbf24', '#ff4d6d')((nucDr - 0.85) / 0.15)
+      const nucEnvOpacity = 0.12 + Math.min(0.50, nucDr * 0.55)
+      nucOuterEnv!.attr('d', nucLineGen(nucEnvPts) || '')
+        .attr('stroke', nucEnvColor).attr('stroke-opacity', nucEnvOpacity)
 
       // Nucleolus: slow drift inside nucleus
       const nlDx = Math.sin(elapsed * 0.0004) * 3.5

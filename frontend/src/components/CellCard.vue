@@ -19,7 +19,6 @@ import {
   TEMP_WARN_CELSIUS,
   TEMP_DENATURING,
   TEMP_VAPORIZING,
-  LYSIS_DELAY_MS,
   LYSIS_DURATION_MS,
   FRAGMENT_INTERVAL_MS,
 } from '../constants/cellCard'
@@ -89,6 +88,22 @@ export default defineComponent({
         : this.store.targetDisruptionRatio
     },
     canReset(): boolean { return this.disruptionRatio <= DISRUPTION_WARN_THRESHOLD },
+
+    // ── Double-shell (nuclear envelope) readouts ───────────────────────────
+    hasNuclearParams(): boolean {
+      const cell = this.type === 'healthy' ? this.store.healthy : this.store.target
+      return !!cell.nuclearRadius
+    },
+
+    nuclearVmMv(): number {
+      return (this.type === 'healthy' ? this.store.healthyNuclearVm : this.store.targetNuclearVm) * 1000
+    },
+
+    nuclearDisruptionRatio(): number {
+      return this.type === 'healthy'
+        ? this.store.healthyNuclearDisruptionRatio
+        : this.store.targetNuclearDisruptionRatio
+    },
 
     metaStateClass(): string {
       const map: Record<string, string> = {
@@ -200,12 +215,20 @@ ${transitions}`
       const pct = (this.disruptionRatio * 100).toFixed(0)
       const cell = this.type === 'healthy' ? this.store.healthy : this.store.target
       const thr  = (cell.thresholdVoltage * 1000).toFixed(0)
+      const n    = this.store.lysisNPulses
+      const t    = this.formatLysisTime(this.store.lysisDelayMs)
       return `<strong>Membrane Disruption: <span class="tip-val">${pct}%</span></strong>
 Ratio = Vm / lysis threshold voltage
   Vm = ${this.vmDisplay}  ·  Threshold = ${thr} mV
 
->85% held for 2.5 s → irreversible lysis
+>85% → lysis after ${n} pulses (est. ${t})
 100% = membrane at threshold — electroporation`
+    },
+
+    lysisProtocolStr(): string {
+      const n = this.store.lysisNPulses
+      const t = this.formatLysisTime(this.store.lysisDelayMs)
+      return `${n} pulse${n === 1 ? '' : 's'} — est. ${t}`
     },
   },
 
@@ -239,6 +262,17 @@ Ratio = Vm / lysis threshold voltage
     // Unified state signal — both electrical and thermal watchers call this
     disruptionRatio() { this.updateCellState() },
     temperature()     { this.updateCellState() },
+
+    // When lysisDelayMs changes mid-countdown (N-pulses, dutyCycle, pulseWidth, waveform),
+    // restart timer so the new duration takes effect immediately.
+    'store.lysisDelayMs'() {
+      if (this.type !== 'target' || !this.shatterPending) return
+      clearTimeout(this._shatterDelayTimeout ?? undefined)
+      this._shatterDelayTimeout = setTimeout(() => {
+        this.shatterPending = false
+        if (this.disruptionRatio > DISRUPTION_WARN_THRESHOLD) this.triggerLysis()
+      }, this.store.lysisDelayMs) as unknown as number
+    },
   },
 
   mounted() {
@@ -295,7 +329,7 @@ Ratio = Vm / lysis threshold voltage
             this._shatterDelayTimeout = setTimeout(() => {
               this.shatterPending = false
               if (this.disruptionRatio > DISRUPTION_WARN_THRESHOLD) this.triggerLysis()
-            }, LYSIS_DELAY_MS) as unknown as number
+            }, this.store.lysisDelayMs) as unknown as number
           }
           return
         }
@@ -351,6 +385,7 @@ Ratio = Vm / lysis threshold voltage
           temperature: this.temperature,
           fieldVcm: this.store.fieldIntensity,
           freqKHz: this.store.currentBroadcastFrequency,
+          nuclearDisruptionRatio: this.store.doubleShellEnabled ? this.nuclearDisruptionRatio : 0,
         }),
       )
     },
@@ -379,6 +414,10 @@ Ratio = Vm / lysis threshold voltage
         clearInterval(this._particleInterval ?? undefined)
         this.cellState = 'lysed'
       }, LYSIS_DURATION_MS) as unknown as number
+    },
+
+    formatLysisTime(ms: number): string {
+      return ms < 1000 ? `${ms}ms` : `${(ms / 1000).toFixed(1)}s`
     },
 
     onParamChange(key: string, e: Event) {
@@ -421,6 +460,14 @@ Ratio = Vm / lysis threshold voltage
           <span class="meta-item" :class="{ 'meta-temp-warn': tempWarning }" v-tip="tipTemp">{{ tempDisplay }}</span>
           <span class="meta-sep">·</span>
           <span class="meta-state" :class="metaStateClass" v-tip="tipState">{{ cellState }}</span>
+        </div>
+        <!-- Nuclear Vm readout — shown when double-shell model is active and cell has nuclear params -->
+        <div v-if="store.doubleShellEnabled && hasNuclearParams" class="nuclear-meta">
+          <span class="nuclear-meta-label">&#x26AC; Nucleus Vm</span>
+          <span class="nuclear-meta-value">{{ nuclearVmMv.toFixed(3) }} mV</span>
+          <span class="nuclear-meta-ratio" :class="nuclearDisruptionRatio >= 0.85 ? 'nuclear-ratio--warn' : nuclearDisruptionRatio >= 0.5 ? 'nuclear-ratio--caution' : ''">
+            {{ (nuclearDisruptionRatio * 100).toFixed(0) }}%
+          </span>
         </div>
       </div>
     </div>
@@ -479,7 +526,37 @@ Ratio = Vm / lysis threshold voltage
           ⚡ {{ (disruptionRatio * 100).toFixed(0) }}% disruption
         </span>
       </div>
+      <!-- Nuclear disruption sub-bar — visible when double-shell model active -->
+      <div
+        v-if="store.doubleShellEnabled && hasNuclearParams"
+        class="nuclear-bar-row"
+        v-tip="'<strong>Nuclear Envelope Disruption (Double-Shell Model)</strong>\nVm_nuc / V_threshold_nuc\nBandpass peak at f_peak = 1/(2π√(τ_pm·τ_ne))\nKotnik &amp; Miklavcic (2006, Biophys J 90:480)'"
+      >
+        <span class="nuclear-bar-label">&#x26AC; NE</span>
+        <div class="nuclear-bar-track">
+          <div
+            class="nuclear-bar-fill"
+            :style="{ width: Math.min(100, nuclearDisruptionRatio * 100) + '%' }"
+            :class="{
+              'nuclear-bar-fill--caution': nuclearDisruptionRatio >= 0.5 && nuclearDisruptionRatio < 0.85,
+              'nuclear-bar-fill--warn':    nuclearDisruptionRatio >= 0.85,
+            }"
+          ></div>
+        </div>
+        <span class="nuclear-bar-pct">{{ (nuclearDisruptionRatio * 100).toFixed(0) }}%</span>
+      </div>
       <div ref="oscCanvas" class="osc-canvas"></div>
+
+      <!-- Lysis protocol strip — target cell vibrating state -->
+      <div
+        v-if="type === 'target' && cellState === 'vibrating'"
+        class="lysis-protocol-strip"
+        v-tip="tipDisruption"
+      >
+        <span class="warn-icon">↯</span>
+        <span class="warn-text">LYSIS ARMED · {{ lysisProtocolStr }}</span>
+        <span class="warn-pct">{{ (disruptionRatio * 100).toFixed(0) }}%</span>
+      </div>
 
       <!-- Electroporation risk warning strip — healthy cell only -->
       <div
@@ -625,6 +702,62 @@ Ratio = Vm / lysis threshold voltage
 .meta-sep   { opacity: 0.4; }
 .meta-state { text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
 .meta-temp-warn { color: #ffb800; }
+
+/* ── Nuclear envelope readout (double-shell model) ──────────────────── */
+.nuclear-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  color: #a78bfa;
+  margin-top: 0.1rem;
+}
+.nuclear-meta-label { opacity: 0.65; letter-spacing: 0.06em; }
+.nuclear-meta-value { font-weight: 600; }
+.nuclear-meta-ratio { opacity: 0.8; }
+.nuclear-ratio--caution { color: #fbbf24; }
+.nuclear-ratio--warn    { color: #ff4d6d; animation: state-blink 1s ease-in-out infinite; }
+
+.nuclear-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.25rem;
+}
+.nuclear-bar-label {
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  color: #a78bfa;
+  opacity: 0.75;
+  white-space: nowrap;
+  width: 1.8rem;
+  flex-shrink: 0;
+}
+.nuclear-bar-track {
+  flex: 1;
+  height: 3px;
+  background: rgba(167, 139, 250, 0.12);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.nuclear-bar-fill {
+  height: 100%;
+  background: #a78bfa;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+.nuclear-bar-fill--caution { background: #fbbf24; }
+.nuclear-bar-fill--warn    { background: #ff4d6d; }
+.nuclear-bar-pct {
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  color: #a78bfa;
+  opacity: 0.75;
+  width: 2rem;
+  text-align: right;
+  flex-shrink: 0;
+}
 
 /* State colors */
 .state--stable     { color: #39ff14; }
@@ -805,6 +938,23 @@ Ratio = Vm / lysis threshold voltage
   font-size: 0.62rem; font-family: var(--font-mono);
   color: var(--color-text-muted); letter-spacing: 0.06em;
   text-transform: uppercase; opacity: 0.6;
+}
+
+/* ── Lysis protocol strip (target cell vibrating) ────────────────────── */
+.lysis-protocol-strip {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.32rem 0.65rem;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-danger);
+  background: rgba(255, 77, 109, 0.08);
+  border-top: 1px solid rgba(255, 77, 109, 0.3);
+  animation: warn-fade 1.1s ease-in-out infinite;
+  cursor: help;
 }
 
 /* ── Healthy-cell warning strip ──────────────────────────────────────── */

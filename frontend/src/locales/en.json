@@ -53,12 +53,20 @@
     "stepFactorLabel": "Charging",
     "resonanceMode": "Resonance",
     "ireMode": "IRE / Vm",
+    "orientationAngle": "Cell Orientation θ",
+    "orientationSub": "θ = 0° (field-aligned) maximises Vm · cos(θ) cancels in selectivity ratio",
+    "lysisNPulses": "Pulses to Lysis",
+    "lysisNSub": "N × (t_p / dc) = total protocol time above threshold",
     "mediums": {
       "saline": "Saline",
       "blood": "Blood",
       "tissue": "Tissue",
       "water": "Water"
-    }
+    },
+    "doubleShell": "Shell Model",
+    "doubleShellSingle": "Single-Shell",
+    "doubleShellDouble": "+ Nuclear Envelope",
+    "doubleShellSub": "Kotnik & Miklavcic (2006) · bandpass nuclear Vm · f_peak ≈ 0.7–2 MHz"
   },
   "exp": {
     "renameSession": "Click to rename session",

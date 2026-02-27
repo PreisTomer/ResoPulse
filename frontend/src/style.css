@@ -82,9 +82,16 @@ a:hover {
   text-decoration: underline;
 }
 
-button {
+button,
+label,
+select {
   cursor: pointer;
   font-family: inherit;
+}
+
+input[type="radio"],
+input[type="checkbox"] {
+  cursor: pointer;
 }
 
 ::-webkit-scrollbar {

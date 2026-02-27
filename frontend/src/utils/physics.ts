@@ -34,20 +34,29 @@ export function computeTau(cell: CellConfig, sigma_e: number): number {
 
 /**
  * Schwan transmembrane potential [V]:
- *   Vm(f) = (1.5 × E × R) / √(1 + (ωτ)²)
+ *   Vm(f) = (1.5 × E × R × cosTheta) / √(1 + (ωτ)²)
  *   E [V/m] = fieldVcm × 100
+ *
+ * cosTheta = |cos(θ)| where θ is the angle between the applied field vector and the
+ * cell's axis of symmetry. For a spherical cell in a uniform field:
+ *   θ = 0° (field-aligned): cosTheta = 1 → maximum Vm
+ *   θ = 90° (perpendicular): cosTheta = 0 → no net transmembrane drive
+ * In a random suspension the orientation is uniformly distributed; this parameter
+ * lets the user model a specific cell orientation or an oriented monolayer.
+ * Default cosTheta = 1.0 preserves backward compatibility.
  */
 export function computeSchwan(
   cell: CellConfig,
   freqKHz: number,
   fieldVcm: number,
   sigma_e: number,
+  cosTheta = 1.0,   // |cos(θ)| — field-to-cell-axis coupling factor [0–1]
 ): number {
   const E = fieldVcm * 100          // V/cm → V/m
   const R = cell.radius * 1e-6      // µm → m
   const tau = computeTau(cell, sigma_e)
   const omega = 2 * Math.PI * freqKHz * 1e3
-  return (1.5 * E * R) / Math.sqrt(1 + (omega * tau) ** 2)
+  return (1.5 * E * R * cosTheta) / Math.sqrt(1 + (omega * tau) ** 2)
 }
 
 /**
@@ -79,6 +88,72 @@ export function computeSAR(
 export function computeFc(cell: CellConfig, sigma_e: number): number {
   const tau = computeTau(cell, sigma_e)
   return 1 / (2 * Math.PI * tau * 1e3)
+}
+
+// ── Double-shell nuclear envelope model (Kotnik & Miklavcic 2006) ─────────────
+
+/**
+ * Nuclear envelope membrane time constant τ_ne [s]:
+ *   τ_ne = R_nuc × Cm_ne × (σ_i + σ_np) / (σ_i × σ_np)
+ *   Cm_ne = ε_ne × ε₀ / d_ne
+ *
+ * This is analogous to the plasma-membrane time constant computeTau(), but for
+ * the inner shell (nuclear envelope + nucleoplasm) of the two-shell model.
+ * Returns 0 if the cell has no nuclearRadius (safe no-op for single-shell cells).
+ */
+export function computeNuclearTau(cell: CellConfig, _sigma_e: number): number {
+  if (!cell.nuclearRadius) return 0
+  const R_nuc   = cell.nuclearRadius * 1e-6                        // µm → m
+  const d_ne    = (cell.nuclearMembraneThickness ?? 15) * 1e-9     // nm → m
+  const eps_ne  = cell.nuclearMembraneEps ?? 10
+  const sigma_i = cell.conductivity                                  // cytoplasm
+  const sigma_np = cell.nucleoplasmConductivity ?? 0.9
+  const Cm_ne   = (eps_ne * EPSILON_0) / d_ne                      // F/m²
+  return (R_nuc * Cm_ne) * (sigma_i + sigma_np) / (sigma_i * sigma_np)
+}
+
+/**
+ * Nuclear membrane transmembrane potential [V] — two-pole bandpass transfer function.
+ *
+ * In the thin-shell double-shell approximation (Kotnik & Miklavcic 2006, Biophys J 90:480):
+ *
+ *   Vm_nuc(ω) = (1.5 × E × R_nuc × cosTheta × ω × τ_out) /
+ *               √[ (1 + (ωτ_out)²) × (1 + (ωτ_ne)²) ]
+ *
+ * Physical behaviour:
+ *   ω → 0  (DC):   Vm_nuc → 0 (DC blocked by insulating membrane; NPC shunts are finite σ_ne)
+ *   ω → ∞  (HF):   Vm_nuc → 0 (capacitive short-circuit of both membranes)
+ *   ω_peak = 1/√(τ_out × τ_ne) → bandpass peak
+ *   Peak gain = τ_out / (τ_out + τ_ne)
+ *
+ * For typical mammalian cells at 150 V/cm, saline:
+ *   Hepatocyte    (R=10µm, R_nuc=5µm):  f_peak ≈ 1.37 MHz, Vm_nuc(417kHz) ≈ 40 mV
+ *   Adenocarcinoma(R=15µm, R_nuc=8µm):  f_peak ≈ 0.74 MHz, Vm_nuc(417kHz) ≈ 110 mV
+ *
+ * Returns 0 if the cell has no nuclearRadius.
+ *
+ * @param cosTheta |cos(θ)| field-cell alignment factor (same as Schwan; cancels in selectivity ratio)
+ */
+export function computeNuclearVm(
+  cell: CellConfig,
+  freqKHz: number,
+  fieldVcm: number,
+  sigma_e: number,
+  cosTheta = 1.0,
+): number {
+  if (!cell.nuclearRadius) return 0
+  const E     = fieldVcm * 100                // V/cm → V/m
+  const R_nuc = cell.nuclearRadius * 1e-6     // µm → m
+  const omega = 2 * Math.PI * freqKHz * 1e3  // rad/s
+
+  const tau_out = computeTau(cell, sigma_e)         // outer (plasma) membrane τ
+  const tau_ne  = computeNuclearTau(cell, sigma_e)  // nuclear envelope τ
+  if (tau_ne === 0) return 0
+
+  const wt_out = omega * tau_out
+  const wt_ne  = omega * tau_ne
+  return (1.5 * E * R_nuc * cosTheta * wt_out) /
+    Math.sqrt((1 + wt_out ** 2) * (1 + wt_ne ** 2))
 }
 
 // ── Nanosecond pulsed electroporation ─────────────────────────────────────────
@@ -118,8 +193,8 @@ export function computePulseStepResponse(tau_s: number, pulseWidthNs: number): n
  * and approaches zero at GHz frequencies — leaving healthy tissue unperturbed
  * at the pathogen-targeting frequencies used here.
  *
- * Ref: Tsen et al. (2007, 2010) — acoustic resonance inactivation of viruses;
- *      Dykeman & Sankey (2008) — capsid normal-mode calculations.
+ * Ref: Tsen et al. (2007–2012) [10] — acoustic resonance inactivation of viruses;
+ *      Dykeman & Sankey (2010) [11] — capsid normal-mode calculations.
  *
  * @param resonantFreqGHz  Fundamental resonant frequency (GHz)
  * @param Q                Mechanical quality factor (viral shells: 20–50; bacterial walls: 10–20)

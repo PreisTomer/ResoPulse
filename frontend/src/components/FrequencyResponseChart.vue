@@ -2,8 +2,7 @@
 import { defineComponent } from 'vue'
 import * as d3 from 'd3'
 import { useCellStore } from '../stores/cellStore'
-import { MEDIA } from '../mockData'
-import { computeSchwan, computeFc } from '../utils/physics'
+import { computeSchwan, computeFc, computeNuclearVm } from '../utils/physics'
 import { CELL_PRESETS, GROUP_COLORS } from '../constants/cellLibrary'
 import type { CellGroup } from '../constants/cellLibrary'
 import { broadcastFieldParams } from '../services/socket'
@@ -15,7 +14,7 @@ const F_MAX_HZ = 500_000_000
 const F_CURSOR_MAX_KHZ = 10000  // 10 MHz — covers bacteria fc range
 const N_POINTS = 200
 
-const MARGIN = { top: 22, right: 68, bottom: 52, left: 54 }
+const MARGIN = { top: 22, right: 88, bottom: 52, left: 54 }  // right 68→88 for secondary axis
 
 function logspace(min: number, max: number, n: number): number[] {
   const step = (Math.log10(max) - Math.log10(min)) / (n - 1)
@@ -34,6 +33,7 @@ export default defineComponent({
       _svg: null as d3.Selection<SVGSVGElement, unknown, null, undefined> | null,
       _xScale: null as d3.ScaleLogarithmic<number, number> | null,
       _yScale: null as d3.ScaleLinear<number, number> | null,
+      _yRightScale: null as d3.ScaleLinear<number, number> | null,
       _chartW: 0,
       _chartH: 0,
       _resizeObserver: null as ResizeObserver | null,
@@ -48,11 +48,17 @@ export default defineComponent({
   },
 
   watch: {
-    'store.healthy': { handler() { this.updateChart() }, deep: true },
-    'store.target':  { handler() { this.updateChart() }, deep: true },
-    'store.fieldIntensity':  { handler() { this.updateChart() } },
-    'store.medium':          { handler() { this.updateChart() } },
+    'store.healthy':                   { handler() { this.updateChart() }, deep: true },
+    'store.target':                    { handler() { this.updateChart() }, deep: true },
+    'store.fieldIntensity':            { handler() { this.updateChart() } },
+    'store.medium':                    { handler() { this.updateChart() } },
+    'store.effectiveSigmaE':           { handler() { this.updateChart() } },
+    'store.cosThetaFactor':            { handler() { this.updateChart() } },
+    'store.waveform':                  { handler() { this.updateChart() } },
+    'store.pulseWidthNs':              { handler() { this.updateChart() } },
+    'store.dutyCycle':                 { handler() { this.updateChart() } },
     'store.currentBroadcastFrequency': { handler() { this.updateCursor() } },
+    'store.doubleShellEnabled':        { handler() { this.updateChart() } },
   },
 
   mounted() {
@@ -91,12 +97,31 @@ export default defineComponent({
       return optHz
     },
 
-    // ── Compute Vm curve for one cell ────────────────────────────────────
-    computeCurve(cell: typeof this.store.healthy, sigma_e: number): { hz: number; vm: number }[] {
+    // ── Compute nuclear Vm curve for one cell (double-shell) ─────────────
+    computeNuclearCurve(cell: typeof this.store.healthy, sigma_e: number, cosTheta = 1.0): { hz: number; vm: number }[] {
       return F_POINTS_HZ.map((hz) => ({
         hz,
-        vm: computeSchwan(cell, hz / 1000, this.store.fieldIntensity, sigma_e) * 1000, // mV
+        vm: computeNuclearVm(cell, hz / 1000, this.store.fieldIntensity, sigma_e, cosTheta) * 1000, // mV
       }))
+    },
+
+    // ── Compute Vm curve for one cell ────────────────────────────────────
+    computeCurve(cell: typeof this.store.healthy, sigma_e: number, cosTheta = 1.0): { hz: number; vm: number }[] {
+      return F_POINTS_HZ.map((hz) => ({
+        hz,
+        vm: computeSchwan(cell, hz / 1000, this.store.fieldIntensity, sigma_e, cosTheta) * 1000, // mV
+      }))
+    },
+
+    // ── Selectivity ratio curve Vm_T/Vm_H (cos θ cancels in ratio) ──────
+    computeSelCurve(sigma_e: number): { hz: number; ratio: number }[] {
+      const psfT = this.store.targetPulseStepFactor
+      const psfH = this.store.healthyPulseStepFactor
+      return F_POINTS_HZ.map((hz) => {
+        const vmH = computeSchwan(this.store.healthy, hz / 1000, this.store.fieldIntensity, sigma_e) * psfH
+        const vmT = computeSchwan(this.store.target,  hz / 1000, this.store.fieldIntensity, sigma_e) * psfT
+        return { hz, ratio: vmH < 1e-12 ? 0 : vmT / vmH }
+      })
     },
 
     // ── Full chart init (called on mount + resize) ───────────────────────
@@ -124,8 +149,9 @@ export default defineComponent({
         .attr('class', 'chart-g')
 
       // Scales
-      this._xScale = d3.scaleLog().domain([F_MIN_HZ, F_MAX_HZ]).range([0, this._chartW])
-      this._yScale = d3.scaleLinear().domain([0, 100]).range([this._chartH, 0])
+      this._xScale     = d3.scaleLog().domain([F_MIN_HZ, F_MAX_HZ]).range([0, this._chartW])
+      this._yScale     = d3.scaleLinear().domain([0, 100]).range([this._chartH, 0])
+      this._yRightScale = d3.scaleLinear().domain([0, 2]).range([this._chartH, 0])
 
       // Grid lines (horizontal)
       g.append('g').attr('class', 'grid-h')
@@ -133,6 +159,7 @@ export default defineComponent({
       // Axes
       g.append('g').attr('class', 'x-axis').attr('transform', `translate(0,${this._chartH})`)
       g.append('g').attr('class', 'y-axis')
+      g.append('g').attr('class', 'y-right-axis').attr('transform', `translate(${this._chartW},0)`)
 
       // Axis labels
       g.append('text')
@@ -162,8 +189,14 @@ export default defineComponent({
       g.append('g').attr('class', 'curves-library')
       g.append('g').attr('class', 'curves-active')
 
-      // Threshold lines
+      // Threshold lines + rev-EP lines
       g.append('g').attr('class', 'thresholds')
+
+      // Nuclear envelope Vm curves (double-shell model — below active curves)
+      g.append('g').attr('class', 'curves-nuclear')
+
+      // Selectivity ratio curve (above thresholds)
+      g.append('g').attr('class', 'sel-curve')
 
       // fc markers
       g.append('g').attr('class', 'fc-markers')
@@ -231,12 +264,13 @@ export default defineComponent({
     updateChart() {
       if (!this._svg || !this._xScale || !this._yScale) return
 
-      const sigma_e = MEDIA[this.store.medium].conductivity
+      const sigma_e  = this.store.effectiveSigmaE
+      const cosTheta = this.store.cosThetaFactor
       const g = this._svg.select<SVGGElement>('.chart-g')
 
-      // Compute active-cell curves
-      const healthyCurve = this.computeCurve(this.store.healthy, sigma_e)
-      const targetCurve  = this.computeCurve(this.store.target,  sigma_e)
+      // Compute active-cell curves (include orientation factor)
+      const healthyCurve = this.computeCurve(this.store.healthy, sigma_e, cosTheta)
+      const targetCurve  = this.computeCurve(this.store.target,  sigma_e, cosTheta)
 
       // Auto-scale y
       const allVm = [...healthyCurve.map((d) => d.vm), ...targetCurve.map((d) => d.vm)]
@@ -273,13 +307,59 @@ export default defineComponent({
         .call((a) => a.select('.domain').remove())
         .call((a) => a.selectAll('line').attr('stroke', 'rgba(255,255,255,0.06)'))
 
-      // Line generator
+      // ── Selectivity ratio curve + right Y-axis ──────────────────────────
+      const selData   = this.computeSelCurve(sigma_e)
+      const maxRatio  = Math.max(...selData.map((d) => d.ratio), 2.0)
+      const rightDomainMax = Math.ceil(maxRatio * 10) / 10
+      this._yRightScale!.domain([0, rightDomainMax])
+
+      const yRightAxis = d3.axisRight<number>(this._yRightScale!)
+        .ticks(4)
+        .tickSize(3)
+        .tickFormat((d) => `×${(+d).toFixed(1)}`)
+
+      g.select<SVGGElement>('.y-right-axis')
+        .call(yRightAxis)
+        .call((a) => a.select('.domain').attr('stroke', C.amber + '55'))
+        .call((a) => a.selectAll('text').attr('fill', C.amber).attr('font-size', '0.58rem').attr('font-family', 'var(--font-mono)'))
+        .call((a) => a.selectAll('line').attr('stroke', C.amber + '55'))
+
+      const selLineGen = d3.line<{ hz: number; ratio: number }>()
+        .x((d) => this._xScale!(d.hz))
+        .y((d) => this._yRightScale!(d.ratio))
+        .curve(d3.curveBasis)
+
+      const selGroup = g.select<SVGGElement>('.sel-curve')
+      selGroup.selectAll('*').remove()
+
+      // Ratio=1 reference line (faint dotted)
+      const y1 = this._yRightScale!(1)
+      if (y1 >= 0 && y1 <= this._chartH) {
+        selGroup.append('line')
+          .attr('x1', 0).attr('x2', this._chartW)
+          .attr('y1', y1).attr('y2', y1)
+          .attr('stroke', 'rgba(255,255,255,0.12)')
+          .attr('stroke-width', 1)
+          .attr('stroke-dasharray', '2,4')
+      }
+
+      // Selectivity ratio curve (amber dashed)
+      selGroup.append('path')
+        .datum(selData)
+        .attr('fill', 'none')
+        .attr('stroke', C.amber)
+        .attr('stroke-width', 1.5)
+        .attr('stroke-opacity', 0.75)
+        .attr('stroke-dasharray', '6,3')
+        .attr('d', selLineGen)
+
+      // Line generator (for Vm curves)
       const lineGen = d3.line<{ hz: number; vm: number }>()
         .x((d) => this._xScale!(d.hz))
         .y((d) => this._yScale!(d.vm))
         .curve(d3.curveBasis)
 
-      // Library preset curves (faint background)
+      // Library preset curves (faint background — no cosTheta, use default 1.0)
       const libGroup = g.select<SVGGElement>('.curves-library')
       libGroup.selectAll<SVGPathElement, typeof CELL_PRESETS[0]>('path.lib-curve')
         .data(CELL_PRESETS, (d) => d.presetId)
@@ -313,26 +393,73 @@ export default defineComponent({
         .attr('filter', `drop-shadow(0 0 4px ${C.danger}88)`)
         .attr('d', lineGen)
 
-      // Threshold lines
+      // ── Nuclear Vm curves (Kotnik & Miklavcic 2006 double-shell) ────────
+      const nucGroup = g.select<SVGGElement>('.curves-nuclear')
+      nucGroup.selectAll('path').remove()
+
+      if (this.store.doubleShellEnabled) {
+        const hNucCurve = this.computeNuclearCurve(this.store.healthy, sigma_e, cosTheta)
+        const tNucCurve = this.computeNuclearCurve(this.store.target,  sigma_e, cosTheta)
+
+        nucGroup.append('path')
+          .datum(hNucCurve)
+          .attr('fill', 'none')
+          .attr('stroke', C.primary)
+          .attr('stroke-width', 1.5)
+          .attr('stroke-opacity', 0.45)
+          .attr('stroke-dasharray', '5,4')
+          .attr('d', lineGen)
+
+        nucGroup.append('path')
+          .datum(tNucCurve)
+          .attr('fill', 'none')
+          .attr('stroke', C.danger)
+          .attr('stroke-width', 1.5)
+          .attr('stroke-opacity', 0.45)
+          .attr('stroke-dasharray', '5,4')
+          .attr('d', lineGen)
+      }
+
+      // ── Threshold lines: lysis + reversible EP (50%) ───────────────────
       const thrGroup = g.select<SVGGElement>('.thresholds')
       thrGroup.selectAll('*').remove()
+
       const thrData = [
         { label: 'thr H', vm: this.store.healthy.thresholdVoltage * 1000, color: C.primary },
-        { label: 'thr T', vm: this.store.target.thresholdVoltage * 1000,  color: C.danger },
+        { label: 'thr T', vm: this.store.target.thresholdVoltage * 1000,  color: C.danger  },
       ]
       thrData.forEach(({ label, vm, color }) => {
-        if (vm > maxVm) return
-        const y = this._yScale!(vm)
-        thrGroup.append('line')
-          .attr('x1', 0).attr('x2', this._chartW)
-          .attr('y1', y).attr('y2', y)
-          .attr('stroke', color).attr('stroke-width', 0.75)
-          .attr('stroke-dasharray', '4,3').attr('stroke-opacity', 0.5)
-        thrGroup.append('text')
-          .attr('x', this._chartW + 4).attr('y', y + 4)
-          .attr('fill', color).attr('font-size', '0.52rem')
-          .attr('font-family', 'var(--font-mono)')
-          .text(label)
+        // Lysis threshold line
+        if (vm <= maxVm) {
+          const y = this._yScale!(vm)
+          thrGroup.append('line')
+            .attr('x1', 0).attr('x2', this._chartW)
+            .attr('y1', y).attr('y2', y)
+            .attr('stroke', color).attr('stroke-width', 0.75)
+            .attr('stroke-dasharray', '4,3').attr('stroke-opacity', 0.5)
+          thrGroup.append('text')
+            .attr('x', this._chartW + 4).attr('y', y + 4)
+            .attr('fill', color).attr('font-size', '0.52rem')
+            .attr('font-family', 'var(--font-mono)')
+            .text(label)
+        }
+
+        // Reversible EP threshold at 50% of lysis threshold
+        const vmRev = vm * 0.5
+        if (vmRev <= maxVm) {
+          const yRev = this._yScale!(vmRev)
+          thrGroup.append('line')
+            .attr('x1', 0).attr('x2', this._chartW)
+            .attr('y1', yRev).attr('y2', yRev)
+            .attr('stroke', color).attr('stroke-width', 0.6)
+            .attr('stroke-dasharray', '3,4').attr('stroke-opacity', 0.28)
+          thrGroup.append('text')
+            .attr('x', this._chartW + 4).attr('y', yRev + 4)
+            .attr('fill', color).attr('font-size', '0.48rem')
+            .attr('font-family', 'var(--font-mono)')
+            .attr('opacity', 0.6)
+            .text('Rev.EP')
+        }
       })
 
       // fc markers
@@ -442,9 +569,10 @@ export default defineComponent({
       const [mx] = d3.pointer(event)
       const hz = this._xScale.invert(mx)
       const khz = hz / 1000
-      const sigma_e = MEDIA[this.store.medium].conductivity
-      const hVm = computeSchwan(this.store.healthy, khz, this.store.fieldIntensity, sigma_e) * 1000
-      const tVm = computeSchwan(this.store.target,  khz, this.store.fieldIntensity, sigma_e) * 1000
+      const sigma_e  = this.store.effectiveSigmaE
+      const cosTheta = this.store.cosThetaFactor
+      const hVm = computeSchwan(this.store.healthy, khz, this.store.fieldIntensity, sigma_e, cosTheta) * 1000
+      const tVm = computeSchwan(this.store.target,  khz, this.store.fieldIntensity, sigma_e, cosTheta) * 1000
       this._tooltipData = { x: mx, freqHz: hz, healthyVm: hVm, targetVm: tVm }
     },
   },
@@ -457,7 +585,7 @@ export default defineComponent({
     <div class="chart-header">
       <span
         class="chart-title"
-        v-tip="'<strong>Transmembrane Potential vs Frequency</strong>\nSchwan equation Vm(f) = 1.5·E·R / √(1+(2πf·τ)²)\nX-axis: log scale 10 kHz → 500 MHz\nY-axis: peak Vm in millivolts\n\nFaint curves: all library presets\nBright curves: currently active cells\nDrag white cursor to set broadcast frequency'"
+        v-tip="'<strong>Transmembrane Potential vs Frequency</strong>\nSchwan equation Vm(f) = 1.5·E·R·cos(θ) / √(1+(2πf·τ)²)\nX-axis: log scale 10 kHz → 500 MHz\nY-axis: peak Vm in millivolts\n\nFaint curves: all library presets\nBright curves: currently active cells\nAmber dashed: Vm selectivity ratio T/H (right axis)\nDotted threshold lines: lysis (bright) · Rev.EP at 50% (faint)\nDrag white cursor to set broadcast frequency'"
       >Transmembrane Potential Response</span>
       <div class="legend">
         <span
@@ -480,6 +608,20 @@ export default defineComponent({
           class="legend-item"
           v-tip="'<strong>Active Target cell</strong>\nCurrently selected target (cancer / pathogen)\n(red, full opacity, glowing)\nDrag the white cursor to set broadcast frequency'"
         ><span class="legend-line legend-line--t"></span> Active T</span>
+        <span
+          class="legend-item"
+          v-tip="'<strong>Vm selectivity ratio</strong> (amber dashed · right axis)\nVm_T(f) × psf_T / (Vm_H(f) × psf_H) — orientation-independent (cos θ cancels).\n>1× → target accumulates more Vm than healthy at that frequency.\nPulse step factor (psf) accounts for ns-pulse charging fraction.'"
+        ><span class="legend-line legend-line--sel"></span> Vm ratio T/H</span>
+        <span
+          v-if="store.doubleShellEnabled"
+          class="legend-item"
+          v-tip="'<strong>Nuclear Vm — Healthy</strong> (dashed, half opacity)\nDouble-shell model (Kotnik &amp; Miklavcic 2006).\nVm_nuc is a bandpass function peaking near f_peak = 1/(2π√(τ_out·τ_ne)).\nTypical: hepatocyte f_peak ≈ 1.4 MHz · Vm_nuc ≈ 40 mV at 417 kHz / 150 V/cm'"
+        ><span class="legend-line legend-line--nuc-h"></span> Nucleus H</span>
+        <span
+          v-if="store.doubleShellEnabled"
+          class="legend-item"
+          v-tip="'<strong>Nuclear Vm — Target</strong> (dashed, half opacity)\nDouble-shell model (Kotnik &amp; Miklavcic 2006).\nCancer nuclei have thinner/leakier NE → higher Vm_nuc and lower threshold.\nTypical: adenocarcinoma f_peak ≈ 0.74 MHz · Vm_nuc ≈ 110 mV at 417 kHz / 150 V/cm'"
+        ><span class="legend-line legend-line--nuc-t"></span> Nucleus T</span>
       </div>
     </div>
 
@@ -561,8 +703,27 @@ export default defineComponent({
   border-radius: 1px;
   flex-shrink: 0;
 }
-.legend-line--h { background: var(--color-primary); box-shadow: 0 0 4px var(--color-primary); }
-.legend-line--t { background: var(--color-danger);  box-shadow: 0 0 4px var(--color-danger); }
+.legend-line--h   { background: var(--color-primary); box-shadow: 0 0 4px var(--color-primary); }
+.legend-line--t   { background: var(--color-danger);  box-shadow: 0 0 4px var(--color-danger); }
+.legend-line--sel {
+  width: 18px;
+  height: 0;
+  border-top: 2px dashed #fbbf24;
+  background: transparent;
+  opacity: 0.8;
+}
+.legend-line--nuc-h {
+  width: 18px;
+  height: 0;
+  border-top: 2px dashed rgba(0, 212, 255, 0.55);
+  background: transparent;
+}
+.legend-line--nuc-t {
+  width: 18px;
+  height: 0;
+  border-top: 2px dashed rgba(255, 77, 109, 0.55);
+  background: transparent;
+}
 
 /* ── Chart container ─────────────────────────────────────────────────── */
 .chart-el {

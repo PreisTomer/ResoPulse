@@ -39,6 +39,14 @@ export interface CellConfig {
   resonantFreqGHz?: number       // Capsid/cell-wall fundamental resonant frequency (GHz)
   capsidQ?: number               // Mechanical quality factor
   resonantThresholdVcm?: number  // Field amplitude at resonance required for disruption (V/cm)
+  // Nuclear envelope — double-shell model (Kotnik & Miklavcic 2006)
+  // Absent for anucleate cells (RBC) and prokaryotes (bacteria/virus).
+  nuclearRadius?: number               // µm  — nuclear radius (~50% of cell radius for most mammalian cells)
+  nuclearMembraneThickness?: number    // nm  — effective double-membrane thickness (inner + outer leaflets + lumen, ~15 nm)
+  nuclearMembraneEps?: number          // ε_r — effective relative permittivity (incl. nuclear pore complex contribution)
+  nuclearMembraneConductivity?: number // S/m — effective conductivity (partially shunted by NPC; ~0.01 S/m)
+  nucleoplasmConductivity?: number     // S/m — nucleoplasm ionic conductivity (typically > cytoplasm)
+  nuclearThresholdVoltage?: number     // V   — Vm_nuc required for nuclear envelope disruption (lower than plasma membrane)
   // Thermal — added defaults (not in user spec)
   density: number              // kg/m³
   specificHeatCapacity: number // J/(kg·K)
@@ -78,8 +86,20 @@ export const simulationData = {
   ],
 }
 
-// Extended cell configs with thermal and animation defaults
+// Extended cell configs with thermal, animation, and nuclear defaults
 export const cellConfigs: [CellConfig, CellConfig] = [
-  { ...simulationData.cells[0]!, density: 1050, specificHeatCapacity: 3500, amplitude: 0.8 },
-  { ...simulationData.cells[1]!, density: 1080, specificHeatCapacity: 3200, amplitude: 0.5 },
+  {
+    ...simulationData.cells[0]!,
+    density: 1050, specificHeatCapacity: 3500, amplitude: 0.8,
+    // Hepatocyte nuclear envelope (large liver nucleus, well-differentiated)
+    nuclearRadius: 5.0, nuclearMembraneThickness: 15, nuclearMembraneEps: 10,
+    nuclearMembraneConductivity: 0.010, nucleoplasmConductivity: 0.9, nuclearThresholdVoltage: 0.50,
+  },
+  {
+    ...simulationData.cells[1]!,
+    density: 1080, specificHeatCapacity: 3200, amplitude: 0.5,
+    // Adenocarcinoma nuclear envelope (large nucleus, thin/leaky NE, low threshold)
+    nuclearRadius: 8.0, nuclearMembraneThickness: 12, nuclearMembraneEps: 12,
+    nuclearMembraneConductivity: 0.020, nucleoplasmConductivity: 1.1, nuclearThresholdVoltage: 0.40,
+  },
 ]
