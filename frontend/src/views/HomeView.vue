@@ -24,7 +24,7 @@ export default defineComponent({})
       <!-- Eyebrow -->
       <div class="eyebrow">
         <span class="eyebrow-dot"></span>
-        Membrane Biophysics · Electric Field Simulator
+        Membrane Biophysics · Electric Fields · Acoustic Resonance
       </div>
 
       <!-- Title -->
@@ -35,15 +35,16 @@ export default defineComponent({})
         A computational platform for studying how pulsed electric fields interact with
         biological membranes. Model cancer cell selective disruption, acoustic resonance
         targeting of viral capsids and bacterial cell walls, and SAR thermal response —
-        built on the Schwan single-shell dielectric model and Lorentzian acoustic resonance theory.
+        built on the Schwan dielectric model and Lorentzian acoustic resonance theory.
       </p>
 
       <!-- Capability pills -->
       <div class="caps">
-        <span class="cap">◈ Schwan Equation Model</span>
-        <span class="cap">◎ Membrane Disruption Windows</span>
-        <span class="cap">⊞ 10-Preset Cell Library</span>
+        <span class="cap">◈ Schwan Dielectric Model</span>
+        <span class="cap">◎ Lorentzian Acoustic Resonance</span>
         <span class="cap">⇌ Socket.IO Instrument Sync</span>
+        <span class="cap">⊕ SAR Thermal Model</span>
+        <span class="cap">⊞ 10-Preset Cell Library</span>
       </div>
 
       <!-- CTA -->
@@ -57,23 +58,31 @@ export default defineComponent({})
       <!-- Feature cards -->
       <div class="feature-cards">
         <RouterLink to="/experiment" class="feature-card">
-          <span class="fc-icon">⚗</span>
-          <span class="fc-title">Experiment Lab</span>
+          <div class="fc-header">
+            <span class="fc-icon">⚗</span>
+            <span class="fc-title">Experiment Lab</span>
+          </div>
           <span class="fc-desc">Configure frequency, field intensity, waveform, and propagation medium. Observe live Schwan transmembrane potential, disruption ratios, and SAR thermal response for any target–reference cell pair.</span>
         </RouterLink>
         <RouterLink to="/datasets" class="feature-card">
-          <span class="fc-icon">⊞</span>
-          <span class="fc-title">Cell Library</span>
+          <div class="fc-header">
+            <span class="fc-icon">⊞</span>
+            <span class="fc-title">Cell Library</span>
+          </div>
           <span class="fc-desc">Ten biologically-realistic presets: reference epithelials, four cancer lines (Adeno, GBM, MCF-7, HL-60), gram-negative and gram-positive bacteria, and two enveloped RNA viruses.</span>
         </RouterLink>
         <RouterLink to="/protocol" class="feature-card">
-          <span class="fc-icon">§</span>
-          <span class="fc-title">Physics &amp; Protocol</span>
+          <div class="fc-header">
+            <span class="fc-icon">§</span>
+            <span class="fc-title">Physics &amp; Protocol</span>
+          </div>
           <span class="fc-desc">Full derivation of the Schwan equation, SAR thermal model, Lorentzian acoustic resonance, and nsEP pulse-width selectivity — with a 9-step experimental protocol.</span>
         </RouterLink>
         <RouterLink to="/reports" class="feature-card">
-          <span class="fc-icon">◎</span>
-          <span class="fc-title">Session Reports</span>
+          <div class="fc-header">
+            <span class="fc-icon">◎</span>
+            <span class="fc-title">Session Reports</span>
+          </div>
           <span class="fc-desc">Log experiment readings, track selectivity ratios across frequency sweeps, and export structured CSV data with all Schwan parameters for downstream statistical analysis.</span>
         </RouterLink>
       </div>
@@ -307,9 +316,10 @@ export default defineComponent({})
   text-decoration: none;
 }
 
-.fc-icon  { font-size: 1rem; opacity: 0.75; }
-.fc-title { font-size: 0.82rem; font-weight: 600; color: var(--color-text-heading); }
-.fc-desc  { font-size: 0.72rem; color: var(--color-text-muted); line-height: 1.6; }
+.fc-header { display: flex; align-items: center; gap: 0.45rem; }
+.fc-icon   { font-size: 1rem; opacity: 0.75; flex-shrink: 0; }
+.fc-title  { font-size: 0.82rem; font-weight: 600; color: var(--color-text-heading); }
+.fc-desc   { font-size: 0.72rem; color: var(--color-text-muted); line-height: 1.6; }
 
 /* ── Scope tags ──────────────────────────────────────────────────────── */
 .scope-tags {
