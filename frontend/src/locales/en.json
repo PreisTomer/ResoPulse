@@ -7,6 +7,7 @@
     "analysis": "Analysis",
     "dataSets": "Data Sets",
     "reports": "Reports",
+    "protocol": "Protocol",
     "systemReady": "System Ready",
     "systemWarning": "Thermal Alert"
   },
