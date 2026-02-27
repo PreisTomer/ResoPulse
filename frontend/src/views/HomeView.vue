@@ -17,7 +17,7 @@ export default defineComponent({})
         <div class="ring ring--3"></div>
         <div class="ring ring--4"></div>
         <div class="logo-circle">
-          <img src="/logo.jpg" alt="BioResonance" />
+          <img src="/logo.png" alt="BioResonance" />
         </div>
       </div>
 
@@ -178,6 +178,7 @@ export default defineComponent({})
   z-index: 1;
   box-shadow: 0 0 36px rgba(0, 212, 255, 0.5), 0 0 72px rgba(0, 212, 255, 0.2);
   border: 1.5px solid var(--color-primary);
+  background-color: var(--color-bg);
 }
 .logo-circle img {
   width: 100%; height: 100%;

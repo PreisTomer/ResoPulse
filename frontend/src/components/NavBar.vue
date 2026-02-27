@@ -17,7 +17,7 @@ export default defineComponent({
     <div class="header-inner">
       <RouterLink to="/" class="brand">
         <div class="brand-logo">
-          <img src="/logo.jpg" :alt="$t('hero.title')" />
+          <img src="/logo.png" :alt="$t('hero.title')" />
         </div>
         <div class="brand-text">
           <span class="brand-name">Bio<span class="brand-resonance">Resonance</span></span>
@@ -72,6 +72,7 @@ export default defineComponent({
   width: 30px; height: 30px;
   border-radius: 50%; overflow: hidden; flex-shrink: 0;
   outline: 1.5px solid var(--color-border);
+  background-color: var(--color-bg);
 }
 .brand-logo img {
   width: 100%; height: 100%;
