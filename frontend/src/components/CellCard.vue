@@ -214,6 +214,13 @@ Ratio = Vm / lysis threshold voltage
       this.liveAmplitude = newVal
     },
 
+    // Re-draw anatomy when the target preset changes (category may change: mammalian ↔ bacteria ↔ virus)
+    'store.target.id'() {
+      if (this.type !== 'target') return
+      this._helixTimer?.stop()
+      this.$nextTick(() => this.drawCell())
+    },
+
     'store.resetCounter'() {
       if (this.cellState !== 'lysed' && this.cellState !== 'lysing') return
       clearTimeout(this._shatterDelayTimeout ?? undefined)
@@ -333,9 +340,18 @@ Ratio = Vm / lysis threshold voltage
       if (!this.cellData) return
       const el = this.$refs.cellCanvas as HTMLElement
       if (!el) return
+      const cellCategory = this.type === 'healthy' ? 'mammalian' : this.store.targetCellCategory
+      const presetId = this.type === 'healthy' ? this.store.healthy.id : this.store.target.id
       this._helixTimer = setupBlobAnimation(
-        el, this.type, this.accentColor, this.rungColor,
-        () => ({ impact: this.disruptionRatio, state: this.cellState, color: this.cellColor }),
+        el, this.type, this.accentColor, cellCategory, presetId,
+        () => ({
+          impact: this.disruptionRatio,
+          state: this.cellState,
+          color: this.cellColor,
+          temperature: this.temperature,
+          fieldVcm: this.store.fieldIntensity,
+          freqKHz: this.store.currentBroadcastFrequency,
+        }),
       )
     },
 
