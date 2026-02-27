@@ -73,15 +73,7 @@ export const CELL_COLORS = {
   },
 } as const
 
-// ── Selectivity / mode badge colors ───────────────────────────────────────────
-export const MODE_BADGE_COLORS = {
-  subthreshold: C.primary,
-  approaching:  C.amber,
-  therapeutic:  C.lime,
-  marginal:     C.amber,
-  ablative:     C.danger,
-} as const
-
+// ── Selectivity colors ────────────────────────────────────────────────────────
 export const SELECTIVITY_COLORS = {
   strong:   C.lime,    // selectivity ≥ 1.5
   marginal: C.amber,   // selectivity ≥ 1.0

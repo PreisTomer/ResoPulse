@@ -7,7 +7,6 @@
 export interface MediaEntry {
   name: string
   conductivity: number
-  permittivity: number  // relative permittivity (ε_r)
 }
 
 export const MEDIA: {
@@ -16,10 +15,10 @@ export const MEDIA: {
   tissue: MediaEntry
   water:  MediaEntry
 } = {
-  saline: { name: 'Physiological Saline (0.9%)', conductivity: 1.5,   permittivity: 75 },
-  blood:  { name: 'Whole Blood',                  conductivity: 0.7,   permittivity: 70 },
-  tissue: { name: 'Soft Tissue',                   conductivity: 0.4,   permittivity: 50 },
-  water:  { name: 'Distilled Water',               conductivity: 0.001, permittivity: 80 },
+  saline: { name: 'Physiological Saline (0.9%)', conductivity: 1.5   },
+  blood:  { name: 'Whole Blood',                  conductivity: 0.7   },
+  tissue: { name: 'Soft Tissue',                   conductivity: 0.4   },
+  water:  { name: 'Distilled Water',               conductivity: 0.001 },
 }
 
 export type MediumKey = keyof typeof MEDIA
@@ -36,7 +35,6 @@ export interface CellConfig {
   thresholdVoltage: number     // V — Vm above which lysis is initiated
   dielectricConstant: number   // ε_r of membrane (used in Schwan τ)
   conductivity: number         // S/m — cytoplasm σ_i
-  cytoplasmPermittivity: number // ε_r of cytoplasm
   // Acoustic/mechanical resonance (virus/bacteria capsid & cell-wall targeting)
   resonantFreqGHz?: number       // Capsid/cell-wall fundamental resonant frequency (GHz)
   capsidQ?: number               // Mechanical quality factor
@@ -82,6 +80,6 @@ export const simulationData = {
 
 // Extended cell configs with thermal and animation defaults
 export const cellConfigs: [CellConfig, CellConfig] = [
-  { ...simulationData.cells[0]!, density: 1050, specificHeatCapacity: 3500, amplitude: 0.8, cytoplasmPermittivity: 60 },
-  { ...simulationData.cells[1]!, density: 1080, specificHeatCapacity: 3200, amplitude: 0.5, cytoplasmPermittivity: 62 },
+  { ...simulationData.cells[0]!, density: 1050, specificHeatCapacity: 3500, amplitude: 0.8 },
+  { ...simulationData.cells[1]!, density: 1080, specificHeatCapacity: 3200, amplitude: 0.5 },
 ]

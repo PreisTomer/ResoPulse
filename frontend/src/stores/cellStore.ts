@@ -343,8 +343,5 @@ export const useCellStore = defineStore('cell', {
       this.targetTemp = 37
     },
 
-    // Legacy no-ops
-    applyResonance(_cellType: 'healthy' | 'target') {},
-    applyDisruption(_cellType: 'healthy' | 'target') {},
   },
 })
