@@ -19,14 +19,17 @@ export default defineComponent({
         <div class="brand-logo">
           <img src="/logo.jpg" :alt="$t('hero.title')" />
         </div>
-        <span class="brand-name">Bio<span class="brand-resonance">Resonance</span></span>
-        <span class="brand-tag">{{ $t('nav.researchPlatform') }}</span>
+        <div class="brand-text">
+          <span class="brand-name">Bio<span class="brand-resonance">Resonance</span></span>
+          <span class="brand-tag">{{ $t('nav.researchPlatform') }}</span>
+        </div>
       </RouterLink>
       <nav class="nav">
         <RouterLink to="/"           class="nav-link" exact-active-class="active">{{ $t('nav.home') }}</RouterLink>
         <RouterLink to="/experiment" class="nav-link" active-class="active">{{ $t('nav.experiment') }}</RouterLink>
         <RouterLink to="/datasets" class="nav-link" active-class="active">{{ $t('nav.dataSets') }}</RouterLink>
-        <RouterLink to="/reports"  class="nav-link" active-class="active">{{ $t('nav.reports') }}</RouterLink>
+        <RouterLink to="/reports"   class="nav-link" active-class="active">{{ $t('nav.reports') }}</RouterLink>
+        <RouterLink to="/protocol"  class="nav-link" active-class="active">{{ $t('nav.protocol') }}</RouterLink>
       </nav>
       <div class="header-status">
         <span class="status-dot" :class="{ 'status-dot--warning': !systemReady }"></span>
@@ -52,9 +55,9 @@ export default defineComponent({
   margin: 0 auto;
   padding: 0 2rem;
   height: 60px;
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  gap: 2rem;
 }
 
 .brand {
@@ -74,9 +77,13 @@ export default defineComponent({
   width: 100%; height: 100%;
   object-fit: cover; transform: scale(1.7); display: block;
 }
+.brand-text {
+  display: flex; flex-direction: column; gap: 2px;
+}
 .brand-name {
   font-size: 1.1rem; font-weight: 700;
   color: var(--color-text-heading); letter-spacing: 0.03em;
+  line-height: 1;
 }
 .brand-resonance {
   color: #0a2e58;
@@ -84,13 +91,12 @@ export default defineComponent({
   paint-order: stroke fill;
 }
 .brand-tag {
-  font-size: 0.65rem; color: var(--color-text-muted);
+  font-size: 0.6rem; color: var(--color-text-muted);
   text-transform: uppercase; letter-spacing: 0.1em;
-  border: 1px solid var(--color-border); padding: 1px 6px; border-radius: 3px;
 }
 
 .nav {
-  display: flex; align-items: center; gap: 0.25rem; flex: 1;
+  display: flex; align-items: center; gap: 0.25rem; justify-content: center;
 }
 .nav-link {
   padding: 0.35rem 0.85rem; border-radius: var(--radius);
@@ -102,7 +108,7 @@ export default defineComponent({
 .nav-link.active { color: var(--color-primary); background-color: var(--color-primary-dim); }
 
 .header-status {
-  display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0;
+  display: flex; align-items: center; gap: 0.5rem; justify-self: end;
 }
 .status-dot {
   width: 8px; height: 8px; border-radius: 50%;
