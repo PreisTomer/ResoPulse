@@ -83,7 +83,7 @@ export default defineComponent({})
               <div class="eq-divider"></div>
               <div class="eq-sub">ω = 2πf &nbsp;&nbsp; τ = R · C<sub>m</sub> · (2σ<sub>e</sub> + σ<sub>i</sub>) / (2σ<sub>e</sub> · σ<sub>i</sub>)</div>
               <div class="eq-sub">C<sub>m</sub> = ε<sub>r</sub> · ε₀ / d &nbsp;&nbsp; f<sub>c</sub> = 1 / (2πτ)</div>
-              <div class="eq-note">Kotnik &amp; Miklavcic, Biophys. J. 79:670 (2000)</div>
+              <div class="eq-note">Kotnik &amp; Miklavcic, Biophys. J. 79:670 (2000) [9]</div>
             </div>
             <p class="body-text">
               The membrane time constant τ determines the characteristic frequency
@@ -140,7 +140,7 @@ export default defineComponent({})
 
             <h3 id="disruption" class="subsec-title">2.3 Disruption Criterion</h3>
             <p class="body-text">
-              Membrane disruption (electroporation / lysis) is initiated when the disruption ratio
+              Membrane disruption (electroporation / lysis; Neumann et al. [7]) is initiated when the disruption ratio
               exceeds unity for a sustained period:
             </p>
             <div class="eq-block">
@@ -150,14 +150,14 @@ export default defineComponent({})
             <p class="body-text">
               Cancer cells exhibit lower V<sub>m,threshold</sub> (~0.65–0.85 V) than healthy tissue
               (~1.0–1.1 V), creating a therapeutic window where tumour cell disruption occurs at
-              sub-lethal field intensities for normal cells.
+              sub-lethal field intensities for normal cells (Dimova et al. [6]).
             </p>
             <p class="body-text">
               <strong>Note — IRE vs TTFields:</strong> This simulator models
               <em>irreversible electroporation</em> (IRE) — a high-field pulsed modality
               (200–3000 V/cm) in which the transmembrane potential exceeds the V<sub>m</sub>
-              electroporation threshold, causing permanent membrane disruption. It is
-              <em>distinct</em> from Tumour Treating Fields (TTFields, Kirson et al. 2007), which
+              electroporation threshold, causing permanent membrane disruption (Weaver &amp; Chizmadzhev [3]). It is
+              <em>distinct</em> from Tumour Treating Fields (TTFields, Kirson et al. [2]), which
               operate at low field intensities (~1–2 V/cm) via mitotic spindle disruption and do
               not rely on V<sub>m</sub> threshold crossing. The size-dependent selectivity
               modelled here (larger R → higher V<sub>m</sub>) applies to the IRE/electroporation
@@ -187,7 +187,7 @@ export default defineComponent({})
               <div class="eq-sub">L(f) = 1 / √[ 1 + (Q · (f/f₀ − f₀/f))² ] &nbsp; (Lorentzian lineshape)</div>
               <div class="eq-sub">f<sub>res</sub> ≈ v<sub>protein</sub> / (2R) &nbsp;·&nbsp; v<sub>protein</sub> ≈ 1000–1500 m/s for protein/peptidoglycan</div>
               <div class="eq-sub">Q — mechanical quality factor (sharpness of resonance peak)</div>
-              <div class="eq-note">Tsen et al., Biomed. Opt. Express (2007); Dykeman &amp; Sankey, Phys. Rev. E (2008)</div>
+              <div class="eq-note">Tsen et al., J. Biomed. Sci. (2007–2012) [10]; Dykeman &amp; Sankey, Phys. Rev. E (2010) [11]</div>
             </div>
             <p class="body-text">
               L(f<sub>res</sub>) = 1.0 at resonance; disruption ratio ≥ 1.0 triggers capsid/cell-wall
@@ -213,14 +213,14 @@ export default defineComponent({})
                   <td class="mono primary-val">~12 GHz</td>
                   <td class="mono">30</td>
                   <td class="mono cancer-val">800</td>
-                  <td>v<sub>protein</sub> ≈ 1440 m/s; Tsen et al. (2007)</td>
+                  <td>v<sub>protein</sub> ≈ 1440 m/s; Tsen et al. [10]</td>
                 </tr>
                 <tr>
                   <td>SARS-CoV-2 (R = 60 nm)</td>
                   <td class="mono primary-val">~10 GHz</td>
                   <td class="mono">25</td>
                   <td class="mono cancer-val">1000</td>
-                  <td>Larger spike envelope lowers f<sub>res</sub>; Tsen et al. (2010)</td>
+                  <td>Larger spike envelope lowers f<sub>res</sub>; Tsen et al. [10]</td>
                 </tr>
                 <tr>
                   <td>E. coli K-12 (R = 1 µm)</td>
@@ -264,7 +264,7 @@ export default defineComponent({})
             <div class="eq-block">
               <div class="eq-main">V<sub>m,eff</sub>(t<sub>p</sub>) = V<sub>m,DC</sub>(f) × (1 − exp(−t<sub>p</sub> / τ))</div>
               <div class="eq-sub">τ = R · C<sub>m</sub> · (2σ<sub>e</sub>+σ<sub>i</sub>) / (2σ<sub>e</sub>·σ<sub>i</sub>)</div>
-              <div class="eq-note">Stacey et al. (2003); Schoenbach et al. (2001)</div>
+              <div class="eq-note">Stacey et al. [8]; Schoenbach et al. [12]</div>
             </div>
             <p class="body-text">
               At t<sub>p</sub> = 10 ns in saline: τ<sub>E.coli</sub> ≈ 14 ns → factor ≈ 0.51;
@@ -460,22 +460,22 @@ export default defineComponent({})
                 <tr>
                   <td>IRE / electroporation field range</td>
                   <td class="mono primary-val">100–1000 V/cm</td>
-                  <td>Sub-ablative to ablative IRE range (Davalos 2005). Note: TTFields (Kirson 2007) use ~1–3 V/cm via mitotic spindle disruption — a distinct, non-V<sub>m</sub>-threshold mechanism not modelled here</td>
+                  <td>Sub-ablative to ablative IRE range (Davalos et al. [4]). Note: TTFields (Kirson et al. [2]) use ~1–3 V/cm via mitotic spindle disruption — a distinct, non-V<sub>m</sub>-threshold mechanism not modelled here</td>
                 </tr>
                 <tr>
                   <td>Acoustic resonance — Influenza A</td>
                   <td class="mono primary-val">f<sub>res</sub> ≈ 12 GHz · E<sub>thr</sub> = 800 V/cm</td>
-                  <td>Capsid disruption threshold at resonance. Mammalian cells unaffected (no GHz resonance). Ref: Tsen et al. (2007)</td>
+                  <td>Capsid disruption threshold at resonance. Mammalian cells unaffected (no GHz resonance). Ref: Tsen et al. [10]</td>
                 </tr>
                 <tr>
                   <td>Acoustic resonance — SARS-CoV-2</td>
                   <td class="mono primary-val">f<sub>res</sub> ≈ 10 GHz · E<sub>thr</sub> = 1000 V/cm</td>
-                  <td>Spike-protein envelope resonance; larger effective radius vs. Influenza. Ref: Tsen et al. (2010)</td>
+                  <td>Spike-protein envelope resonance; larger effective radius vs. Influenza. Ref: Tsen et al. [10]</td>
                 </tr>
                 <tr>
                   <td>Acoustic resonance — E. coli</td>
                   <td class="mono warn-val">f<sub>res</sub> ≈ 0.5 GHz · E<sub>thr</sub> = 2000 V/cm</td>
-                  <td>Peptidoglycan cell-wall resonance. Higher E<sub>thr</sub> than viruses due to larger mass. Ref: Dykeman &amp; Sankey (2008)</td>
+                  <td>Peptidoglycan cell-wall resonance. Higher E<sub>thr</sub> than viruses due to larger mass. Ref: Dykeman &amp; Sankey (2010) [11]</td>
                 </tr>
                 <tr>
                   <td>GHz field SAR caution</td>
@@ -581,7 +581,7 @@ export default defineComponent({})
                   <em>Prospects for a novel ultrashort pulsed laser technology for pathogen inactivation.</em>
                   Journal of Biomedical Science. 2012;19:1–8.
                   doi:10.1186/1423-0127-19-62
-                  <span class="ref-note">[Acoustic resonance disruption of viral capsids at GHz frequencies; f<sub>res</sub> values for influenza used in this simulator]</span>
+                  <span class="ref-note">[Review consolidating 2007–2012 experimental data on acoustic resonance disruption of viral capsids; f<sub>res</sub> and E<sub>thr</sub> values for Influenza A and SARS-CoV-2 used in this simulator]</span>
                 </span>
               </li>
               <li class="ref-item">
@@ -592,6 +592,16 @@ export default defineComponent({})
                   Physical Review E. 2010;81:021918.
                   doi:10.1103/PhysRevE.81.021918
                   <span class="ref-note">[Lorentzian resonance lineshape model; Q-factor basis for capsid disruption simulation]</span>
+                </span>
+              </li>
+              <li class="ref-item">
+                <span class="ref-num">[12]</span>
+                <span class="ref-body">
+                  Schoenbach KH, Beebe SJ, Buescher ES.
+                  <em>Intracellular effect of ultrashort electrical pulses.</em>
+                  Bioelectromagnetics. 2001;22(6):440–448.
+                  doi:10.1002/bem.71
+                  <span class="ref-note">[Foundational nsEP paper; pulse step-response charging of membranes with t<sub>p</sub> ≪ τ; basis for nsEP selectivity model in Section 2.5]</span>
                 </span>
               </li>
             </ol>
