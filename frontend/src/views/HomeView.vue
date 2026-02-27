@@ -42,17 +42,18 @@ export default defineComponent({})
       <div class="caps">
         <span class="cap">◈ Schwan Dielectric Model</span>
         <span class="cap">◎ Lorentzian Acoustic Resonance</span>
-        <span class="cap">⇌ Socket.IO Instrument Sync</span>
         <span class="cap">⊕ SAR Thermal Model</span>
+        <span class="cap">⇌ Socket.IO Instrument Sync</span>
         <span class="cap">⊞ 10-Preset Cell Library</span>
+        <span class="cap">↯ nsEP Pulse Selectivity</span>
       </div>
 
       <!-- CTA -->
       <div class="actions">
         <RouterLink to="/experiment" class="btn btn-primary">
-          Open Experiment Lab →
+          Run Simulation <span class="btn-arrow">⟶</span>
         </RouterLink>
-        <RouterLink to="/protocol" class="btn btn-ghost">View Protocol Documentation</RouterLink>
+        <RouterLink to="/protocol" class="btn btn-ghost">Read the Science <span class="btn-arrow">⟶</span></RouterLink>
       </div>
 
       <!-- Feature cards -->
@@ -136,7 +137,7 @@ export default defineComponent({})
   flex-direction: column;
   align-items: center;
   text-align: center;
-  gap: 1.5rem;
+  gap: 1.8rem;
   padding: 3rem 2rem;
   max-width: 780px;
 }
@@ -235,17 +236,17 @@ export default defineComponent({})
 
 /* ── Capability pills ────────────────────────────────────────────────── */
 .caps {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(3, auto);
   justify-content: center;
   gap: 0.55rem;
 }
 .cap {
-  font-size: 0.72rem;
+  font-size: 0.67rem;
   font-family: var(--font-mono);
   text-transform: uppercase;
-  letter-spacing: 0.1em;
-  padding: 0.3rem 0.75rem;
+  letter-spacing: 0.07em;
+  padding: 0.25rem 0.6rem;
   border: 1px solid var(--color-border);
   border-radius: 20px;
   color: var(--color-text-muted);
@@ -255,10 +256,11 @@ export default defineComponent({})
 
 /* ── CTA buttons ─────────────────────────────────────────────────────── */
 .actions {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 0.85rem;
-  flex-wrap: wrap;
-  justify-content: center;
+  width: 100%;
+  max-width: 640px;
 }
 .btn {
   padding: 0.75rem 1.75rem;
@@ -269,8 +271,9 @@ export default defineComponent({})
   transition: all 0.18s;
   cursor: pointer;
   border: none;
-  display: inline-flex;
+  display: flex;
   align-items: center;
+  justify-content: center;
 }
 .btn-primary {
   background-color: var(--color-primary);
@@ -288,6 +291,13 @@ export default defineComponent({})
   border: 1px solid var(--color-border);
 }
 .btn-ghost:hover { border-color: var(--color-primary); color: var(--color-primary); text-decoration: none; }
+
+.btn-arrow {
+  display: inline-block;
+  margin-left: 0.3rem;
+  transition: transform 0.18s ease;
+}
+.btn:hover .btn-arrow { transform: translateX(4px); }
 
 /* ── Feature cards ───────────────────────────────────────────────────── */
 .feature-cards {
@@ -356,6 +366,8 @@ export default defineComponent({})
 /* ── Responsive ──────────────────────────────────────────────────────── */
 @media (max-width: 580px) {
   .feature-cards { grid-template-columns: 1fr; }
+  .actions { grid-template-columns: 1fr; }
+  .caps { grid-template-columns: repeat(2, auto); }
 }
 
 @media (max-width: 600px) {
