@@ -615,12 +615,12 @@ export default defineComponent({
         <span
           v-if="store.doubleShellEnabled"
           class="legend-item"
-          v-tip="'<strong>Nuclear Vm — Healthy</strong> (dashed, half opacity)\nDouble-shell model (Kotnik &amp; Miklavcic 2006).\nVm_nuc is a bandpass function peaking near f_peak = 1/(2π√(τ_out·τ_ne)).\nTypical: hepatocyte f_peak ≈ 1.4 MHz · Vm_nuc ≈ 40 mV at 417 kHz / 150 V/cm'"
+          v-tip="'<strong>Nuclear Vm — Healthy</strong> (dashed, half opacity)\nDouble-shell model (Kotnik &amp; Miklavcic 2006).\nVm_nuc is a bandpass function peaking near f_peak = 1/(2π√(τ_out·τ_ne)).\nTypical: hepatocyte f_peak ≈ 1.66 MHz · Vm_nuc ≈ 40 mV at 417 kHz / 150 V/cm'"
         ><span class="legend-line legend-line--nuc-h"></span> Nucleus H</span>
         <span
           v-if="store.doubleShellEnabled"
           class="legend-item"
-          v-tip="'<strong>Nuclear Vm — Target</strong> (dashed, half opacity)\nDouble-shell model (Kotnik &amp; Miklavcic 2006).\nCancer nuclei have thinner/leakier NE → higher Vm_nuc and lower threshold.\nTypical: adenocarcinoma f_peak ≈ 0.74 MHz · Vm_nuc ≈ 110 mV at 417 kHz / 150 V/cm'"
+          v-tip="'<strong>Nuclear Vm — Target</strong> (dashed, half opacity)\nDouble-shell model (Kotnik &amp; Miklavcic 2006).\nCancer nuclei have thinner/leakier NE → higher Vm_nuc and lower threshold.\nTypical: adenocarcinoma f_peak ≈ 0.87 MHz · Vm_nuc ≈ 110 mV at 417 kHz / 150 V/cm'"
         ><span class="legend-line legend-line--nuc-t"></span> Nucleus T</span>
       </div>
     </div>

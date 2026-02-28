@@ -723,7 +723,7 @@ Ratio = Vm / lysis threshold voltage
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  margin-top: 0.25rem;
+  padding: 0.2rem 0.6rem;
 }
 .nuclear-bar-label {
   font-family: var(--font-mono);

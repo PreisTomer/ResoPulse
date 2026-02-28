@@ -41,6 +41,12 @@ export default defineComponent({
           // freqMax = 50 GHz = 50,000,000 kHz; step = 100 MHz = 100,000 kHz
           return { freqMin: 1000000, freqMax: 50000000, freqStep: 100000, fieldMin: 10, fieldMax: 5000, fieldStep: 10, pwLogMin: 0, pwLogMax: 2 }
         }
+        if (cat === 'mammalian') {
+          // Resonance mode is disabled for mammalian cells (no rigid capsid resonance).
+          // Fallback to standard IRE range — button should be disabled, but defend against any
+          // state inconsistency (e.g. loading a cancer preset while chartMode is already 'resonance').
+          return { freqMin: 10, freqMax: 10000, freqStep: 1, fieldMin: 10, fieldMax: 3000, fieldStep: 1, pwLogMin: 0, pwLogMax: 5 }
+        }
         // Bacteria resonance (E. coli ~500 MHz, MRSA ~1.5 GHz)
         // freqMax = 10 GHz = 10,000,000 kHz; step = 10 MHz = 10,000 kHz
         return { freqMin: 10000, freqMax: 10000000, freqStep: 10000, fieldMin: 10, fieldMax: 10000, fieldStep: 100, pwLogMin: 0, pwLogMax: 3 }
@@ -761,9 +767,9 @@ Ref: Beebe et al. 2003 (nsEP); Batista Napotnik et al. 2016`
       </div>
     </div>
 
-    <!-- Row 9: Double-Shell Model toggle (mammalian nucleated cells + Schwan mode only) -->
+    <!-- Row 9: Double-Shell Model toggle (mammalian target + nucleated cells + Schwan mode only) -->
     <div
-      v-if="store.hasNuclearParams && store.chartMode !== 'resonance'"
+      v-if="store.targetCellCategory === 'mammalian' && store.hasNuclearParams && store.chartMode !== 'resonance'"
       class="panel-row panel-row--medium"
     >
       <span
@@ -782,7 +788,7 @@ Ref: Beebe et al. 2003 (nsEP); Batista Napotnik et al. 2016`
         <label
           class="pill pill--nuclear"
           :class="{ 'pill--active': store.doubleShellEnabled }"
-          v-tip="'<strong>+ Nuclear Envelope (Double-Shell)</strong>\nAdds nuclear membrane Vm as a two-pole bandpass function.\nVm_nuc peaks at f_peak = 1/(2π√(τ_out·τ_ne))\nτ_ne = R_nuc·Cm_ne·(σ_i+σ_np)/(σ_i·σ_np)\nCancer nuclei: thinner NE, higher σ_ne → higher Vm_nuc and lower threshold.\n\nExpected at 417 kHz / 150 V/cm / saline:\n  Hepatocyte:    Vm_nuc ≈ 40 mV  (f_peak ≈ 1.4 MHz)\n  Adeno CA:      Vm_nuc ≈ 110 mV (f_peak ≈ 0.74 MHz)\n  GBM:           Vm_nuc ≈ 135 mV (f_peak ≈ 0.58 MHz)\n\nRef: Kotnik &amp; Miklavcic, Biophys. J. 90:480 (2006)'"
+          v-tip="'<strong>+ Nuclear Envelope (Double-Shell)</strong>\nAdds nuclear membrane Vm as a two-pole bandpass function.\nVm_nuc peaks at f_peak = 1/(2π√(τ_out·τ_ne))\nτ_ne = R_nuc·Cm_ne·(2σ_i+σ_np)/(2σ_i·σ_np)  [σ_i = cytoplasm, external medium for nucleus]\nCancer nuclei: thinner NE, lower σ_ne threshold → additional selectivity axis.\n\nExpected at 417 kHz / 150 V/cm / saline:\n  Hepatocyte:    Vm_nuc ≈ 40 mV  (f_peak ≈ 1.66 MHz)\n  Adeno CA:      Vm_nuc ≈ 113 mV (f_peak ≈ 0.87 MHz)\n  GBM:           Vm_nuc ≈ 87 mV  (f_peak ≈ 1.05 MHz)\n\nRef: Kotnik &amp; Miklavcic, Biophys. J. 90:480 (2006)'"
         >
           <input type="radio" name="shellModel" :checked="store.doubleShellEnabled" @change="!store.doubleShellEnabled && store.toggleDoubleShell()" />
           {{ $t('slider.doubleShellDouble') }}

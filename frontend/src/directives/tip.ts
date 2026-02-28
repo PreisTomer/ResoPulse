@@ -116,7 +116,12 @@ export const vTip: Directive<HTMLElement & { _tip?: TipHandlers }, string> = {
     el.addEventListener('mouseenter', handlers.enter)
     el.addEventListener('mousemove',  handlers.move)
     el.addEventListener('mouseleave', handlers.leave)
-    el.style.cursor = el.style.cursor || 'default'
+    const tag = el.tagName.toLowerCase()
+    const isInteractive = ['button', 'a', 'label', 'select', 'input', 'textarea'].includes(tag) ||
+      el.getAttribute('role') === 'button' || el.getAttribute('tabindex') != null
+    if (!isInteractive && !el.style.cursor) {
+      el.style.cursor = 'default'
+    }
   },
 
   beforeUnmount(el) {

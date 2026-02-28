@@ -325,6 +325,10 @@ Sub-threshold  T <50%
       const ti  = this.therapeuticIndex
       const t = this.store.target as { resonantFreqGHz?: number; resonantThresholdVcm?: number }
       const ghzCaveat = ' · f_res from fs-laser experiments (Tsen et al. [10]); RF delivery at GHz is skin-depth limited (~1–2 mm in saline)'
+      // Defensive: if resonance mode is somehow active for a mammalian target, warn and redirect
+      if (this.store.chartMode === 'resonance' && cat === 'mammalian') {
+        return '⚠ Resonance mode has no physical meaning for mammalian cells — they have no rigid protein capsid or peptidoglycan cell wall. Switch back to IRE/Vm mode.'
+      }
       if (cat === 'virus') {
         if (t.resonantFreqGHz) {
           return `⚠ IRE model inapplicable for virions (R < 0.1 µm) · Acoustic capsid disruption at ${t.resonantFreqGHz} GHz${ghzCaveat}`
@@ -503,6 +507,40 @@ Click the preset pill below to switch to this cell`
         >P{{ healthyLysisProbability }}%</span>
       </div>
     </div>
+
+    <!-- ── Nuclear envelope disruption bars (double-shell model) ─ -->
+    <template v-if="store.doubleShellEnabled && store.targetCellCategory === 'mammalian'">
+      <div class="nuc-bar-section"
+        v-tip="'<strong>Nuclear Envelope Disruption (Double-Shell Model)</strong>\nVm_nuc / V_threshold_nuc for each cell.\nBandpass peak at f_peak = 1/(2π√(τ_pm·τ_ne)) — typically 0.87–2.1 MHz.\nCancer nuclei have thinner/leakier NE and lower thresholds → higher disruption ratio.\nKotnik &amp; Miklavcic, Biophys. J. 90:480 (2006)'"
+      >
+        <div class="nuc-bar-row">
+          <span class="nuc-bar-lbl">&#x26AC; NE-T</span>
+          <div class="nuc-bar-track">
+            <div class="nuc-bar-fill nuc-bar-fill--t"
+              :style="{ width: Math.min(100, store.targetNuclearDisruptionRatio * 100) + '%' }"
+              :class="{ 'nuc-bar-fill--warn': store.targetNuclearDisruptionRatio >= 0.85 }"
+            ></div>
+          </div>
+          <span class="nuc-bar-val">{{ (store.targetNuclearDisruptionRatio * 100).toFixed(0) }}%</span>
+        </div>
+        <div class="nuc-bar-row">
+          <span class="nuc-bar-lbl">&#x26AC; NE-H</span>
+          <div class="nuc-bar-track">
+            <div class="nuc-bar-fill nuc-bar-fill--h"
+              :style="{ width: Math.min(100, store.healthyNuclearDisruptionRatio * 100) + '%' }"
+              :class="{ 'nuc-bar-fill--warn': store.healthyNuclearDisruptionRatio >= 0.85 }"
+            ></div>
+          </div>
+          <span class="nuc-bar-val">{{ (store.healthyNuclearDisruptionRatio * 100).toFixed(0) }}%</span>
+        </div>
+        <div class="nuc-sel-row">
+          <span class="nuc-sel-label">NE Selectivity</span>
+          <span class="nuc-sel-val" :class="store.nuclearSelectivityRatio >= 1.5 ? 'nuc-sel--good' : store.nuclearSelectivityRatio >= 1.0 ? 'nuc-sel--ok' : 'nuc-sel--low'">
+            ×{{ store.nuclearSelectivityRatio >= 99 ? '∞' : store.nuclearSelectivityRatio.toFixed(2) }}
+          </span>
+        </div>
+      </div>
+    </template>
 
     <!-- ── Vm / Disruption & SAR ─────────────────────────────── -->
     <div class="panel-sep"></div>
@@ -760,6 +798,44 @@ Click the preset pill below to switch to this cell`
   opacity: 0.7;
 }
 .optimal-note--beyond:hover { opacity: 0.55; }
+
+/* ── Nuclear envelope disruption bars (double-shell) ─────── */
+.nuc-bar-section {
+  margin-top: 0.5rem;
+  padding: 0.35rem 0.5rem;
+  background: rgba(167, 139, 250, 0.05);
+  border-left: 2px solid rgba(167, 139, 250, 0.3);
+  border-radius: 0 4px 4px 0;
+  display: flex; flex-direction: column; gap: 0.28rem;
+}
+.nuc-bar-row { display: flex; align-items: center; gap: 0.5rem; }
+.nuc-bar-lbl {
+  font-size: 0.58rem; font-family: var(--font-mono);
+  color: #a78bfa; width: 3rem; flex-shrink: 0;
+}
+.nuc-bar-track {
+  flex: 1; height: 3px;
+  background: rgba(167, 139, 250, 0.12);
+  border-radius: 2px; overflow: hidden;
+}
+.nuc-bar-fill { height: 100%; border-radius: 2px; transition: width 0.3s ease; }
+.nuc-bar-fill--t { background: #a78bfa; }
+.nuc-bar-fill--h { background: rgba(0, 212, 255, 0.7); }
+.nuc-bar-fill--warn { background: #ff4d6d !important; animation: bar-flash 0.6s ease-in-out infinite alternate; }
+.nuc-bar-val {
+  font-size: 0.58rem; font-family: var(--font-mono);
+  color: #a78bfa; width: 2rem; text-align: right; flex-shrink: 0;
+}
+.nuc-sel-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding-top: 0.15rem; border-top: 1px solid rgba(167, 139, 250, 0.12);
+  margin-top: 0.05rem;
+}
+.nuc-sel-label { font-size: 0.58rem; color: rgba(167, 139, 250, 0.7); }
+.nuc-sel-val   { font-size: 0.68rem; font-family: var(--font-mono); font-weight: 600; color: #a78bfa; }
+.nuc-sel--good { color: #4ade80; }
+.nuc-sel--ok   { color: #fbbf24; }
+.nuc-sel--low  { color: #ff4d6d; }
 
 /* ── P(lysis) probability ─────────────────────────────────── */
 .bar-plysis {

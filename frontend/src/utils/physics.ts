@@ -94,22 +94,26 @@ export function computeFc(cell: CellConfig, sigma_e: number): number {
 
 /**
  * Nuclear envelope membrane time constant τ_ne [s]:
- *   τ_ne = R_nuc × Cm_ne × (σ_i + σ_np) / (σ_i × σ_np)
+ *   τ_ne = R_nuc × Cm_ne × (2σ_i + σ_np) / (2σ_i × σ_np)
  *   Cm_ne = ε_ne × ε₀ / d_ne
  *
- * This is analogous to the plasma-membrane time constant computeTau(), but for
- * the inner shell (nuclear envelope + nucleoplasm) of the two-shell model.
+ * By strict analogy with computeTau() for the outer (plasma) membrane, where σ_e acts
+ * as the "external" medium:  τ_pm = R·Cm·(2σ_e + σ_i)/(2σ_e·σ_i).
+ * Here cytoplasm (σ_i) is the "external" medium for the nucleus, and nucleoplasm (σ_np)
+ * is the interior.  The factor of 2 on σ_i comes from the Clausius-Mossotti solution
+ * of the Laplace equation for a sphere in a uniform field (Kotnik & Miklavcic 2006).
+ *
  * Returns 0 if the cell has no nuclearRadius (safe no-op for single-shell cells).
  */
 export function computeNuclearTau(cell: CellConfig, _sigma_e: number): number {
   if (!cell.nuclearRadius) return 0
-  const R_nuc   = cell.nuclearRadius * 1e-6                        // µm → m
-  const d_ne    = (cell.nuclearMembraneThickness ?? 15) * 1e-9     // nm → m
-  const eps_ne  = cell.nuclearMembraneEps ?? 10
-  const sigma_i = cell.conductivity                                  // cytoplasm
+  const R_nuc    = cell.nuclearRadius * 1e-6                        // µm → m
+  const d_ne     = (cell.nuclearMembraneThickness ?? 15) * 1e-9    // nm → m
+  const eps_ne   = cell.nuclearMembraneEps ?? 10
+  const sigma_i  = cell.conductivity                                 // cytoplasm (external medium for nucleus)
   const sigma_np = cell.nucleoplasmConductivity ?? 0.9
-  const Cm_ne   = (eps_ne * EPSILON_0) / d_ne                      // F/m²
-  return (R_nuc * Cm_ne) * (sigma_i + sigma_np) / (sigma_i * sigma_np)
+  const Cm_ne    = (eps_ne * EPSILON_0) / d_ne                     // F/m²
+  return (R_nuc * Cm_ne) * (2 * sigma_i + sigma_np) / (2 * sigma_i * sigma_np)
 }
 
 /**
@@ -126,9 +130,11 @@ export function computeNuclearTau(cell: CellConfig, _sigma_e: number): number {
  *   ω_peak = 1/√(τ_out × τ_ne) → bandpass peak
  *   Peak gain = τ_out / (τ_out + τ_ne)
  *
- * For typical mammalian cells at 150 V/cm, saline:
- *   Hepatocyte    (R=10µm, R_nuc=5µm):  f_peak ≈ 1.37 MHz, Vm_nuc(417kHz) ≈ 40 mV
- *   Adenocarcinoma(R=15µm, R_nuc=8µm):  f_peak ≈ 0.74 MHz, Vm_nuc(417kHz) ≈ 110 mV
+ * For typical mammalian cells at 150 V/cm, saline (corrected τ_ne with factor of 2):
+ *   Hepatocyte    (R=10µm, R_nuc=5µm):  f_peak ≈ 1.66 MHz, Vm_nuc(417kHz) ≈ 40 mV
+ *   Adenocarcinoma(R=15µm, R_nuc=8µm):  f_peak ≈ 0.87 MHz, Vm_nuc(417kHz) ≈ 113 mV
+ *   GBM           (R=12µm, R_nuc=7µm):  f_peak ≈ 1.05 MHz, Vm_nuc(417kHz) ≈ 87 mV
+ *   MCF-7         (R=11µm, R_nuc=6µm):  f_peak ≈ 1.28 MHz, Vm_nuc(417kHz) ≈ 64 mV
  *
  * Returns 0 if the cell has no nuclearRadius.
  *
