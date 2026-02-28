@@ -566,7 +566,7 @@ export default defineComponent({})
                 </tr>
                 <tr>
                   <td>Lysis hold time</td>
-                  <td class="protocol__mono protocol__mono">2.5 s</td>
+                  <td class="protocol__mono">2.5 s</td>
                   <td>Duration Disruption Ratio must exceed 1.0 before lysis event fires</td>
                 </tr>
                 <tr>
