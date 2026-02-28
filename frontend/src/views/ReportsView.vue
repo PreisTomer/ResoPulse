@@ -43,13 +43,13 @@ export default defineComponent({
     })
 
     function eventClass(event: string) {
-      return event === 'lysis' ? 'ev-lysis' : 'ev-manual'
+      return event === 'lysis' ? 'reports__ev-badge--lysis' : 'reports__ev-badge--manual'
     }
 
     function selClass(sel: number) {
-      if (sel >= 1.5) return 'green-val'
-      if (sel >= 1.0) return 'warn-val'
-      return 'cancer-val'
+      if (sel >= 1.5) return 'reports__green-val'
+      if (sel >= 1.0) return 'reports__warn-val'
+      return 'reports__cancer-val'
     }
 
     return {
@@ -70,32 +70,32 @@ export default defineComponent({
 </script>
 
 <template>
-  <div class="reports-page">
-    <div class="reports-inner">
+  <div class="reports">
+    <div class="reports__inner">
 
       <!-- Page header -->
-      <div class="page-header">
-        <div class="page-eyebrow">
-          <span class="eyebrow-dot"></span>
+      <div class="reports__header">
+        <div class="reports__eyebrow">
+          <span class="reports__eyebrow-dot"></span>
           Session History
         </div>
-        <div class="header-row">
+        <div class="reports__header-row">
           <div>
-            <h1 class="page-title">Experiment Reports</h1>
-            <p class="page-subtitle">
+            <h1 class="reports__title">Experiment Reports</h1>
+            <p class="reports__subtitle">
               Session log · recorded readings · lysis events · CSV export
             </p>
           </div>
-          <div class="header-actions">
+          <div class="reports__header-actions">
             <button
-              class="btn-action btn-export"
+              class="reports__btn reports__btn--export"
               :disabled="totalReadings === 0"
               @click="store.exportCSV()"
             >
               ↓ Export CSV
             </button>
             <button
-              class="btn-action btn-clear"
+              class="reports__btn reports__btn--clear"
               :disabled="totalReadings === 0"
               @click="store.clearLog()"
             >
@@ -106,79 +106,79 @@ export default defineComponent({
       </div>
 
       <!-- Session name -->
-      <div class="session-row">
-        <label class="session-label">Session Name</label>
+      <div class="reports__session-row">
+        <label class="reports__session-label">Session Name</label>
         <input
           v-model="store.sessionName"
-          class="session-input"
+          class="reports__session-input"
           placeholder="Session 001"
           spellcheck="false"
         />
       </div>
 
       <!-- Stats row -->
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-value" :class="{ 'stat-empty': totalReadings === 0 }">
+      <div class="reports__stats-grid">
+        <div class="reports__stat-card">
+          <div class="reports__stat-value" :class="{ 'reports__stat-empty': totalReadings === 0 }">
             {{ totalReadings }}
           </div>
-          <div class="stat-label">Total Readings</div>
+          <div class="reports__stat-label">Total Readings</div>
         </div>
-        <div class="stat-card">
-          <div class="stat-value stat-lysis">{{ lysisEvents }}</div>
-          <div class="stat-label">Lysis Events</div>
+        <div class="reports__stat-card">
+          <div class="reports__stat-value reports__stat-lysis">{{ lysisEvents }}</div>
+          <div class="reports__stat-label">Lysis Events</div>
         </div>
-        <div class="stat-card">
-          <div class="stat-value">{{ manualReadings }}</div>
-          <div class="stat-label">Manual Logs</div>
+        <div class="reports__stat-card">
+          <div class="reports__stat-value">{{ manualReadings }}</div>
+          <div class="reports__stat-label">Manual Logs</div>
         </div>
-        <div class="stat-card">
-          <div class="stat-value stat-primary">{{ avgSelectivity ?? '—' }}</div>
-          <div class="stat-label">Avg Selectivity</div>
+        <div class="reports__stat-card">
+          <div class="reports__stat-value reports__stat-primary">{{ avgSelectivity ?? '—' }}</div>
+          <div class="reports__stat-label">Avg Selectivity</div>
         </div>
-        <div class="stat-card">
-          <div class="stat-value stat-green">{{ peakSelectivity ?? '—' }}</div>
-          <div class="stat-label">Peak Selectivity</div>
+        <div class="reports__stat-card">
+          <div class="reports__stat-value reports__stat-green">{{ peakSelectivity ?? '—' }}</div>
+          <div class="reports__stat-label">Peak Selectivity</div>
         </div>
-        <div class="stat-card">
-          <div class="stat-value stat-red">{{ peakTargetRatio ?? '—' }}</div>
-          <div class="stat-label">Peak T-Disruption</div>
+        <div class="reports__stat-card">
+          <div class="reports__stat-value reports__stat-red">{{ peakTargetRatio ?? '—' }}</div>
+          <div class="reports__stat-label">Peak T-Disruption</div>
         </div>
-        <div class="stat-card stat-card--wide">
-          <div class="stat-value stat-small">{{ freqRange ?? '—' }}</div>
-          <div class="stat-label">Frequency Range</div>
+        <div class="reports__stat-card reports__stat-card--wide">
+          <div class="reports__stat-value reports__stat-small">{{ freqRange ?? '—' }}</div>
+          <div class="reports__stat-label">Frequency Range</div>
         </div>
-        <div class="stat-card stat-card--wide">
-          <div class="stat-value stat-small">{{ fieldRange ?? '—' }}</div>
-          <div class="stat-label">Field Range</div>
+        <div class="reports__stat-card reports__stat-card--wide">
+          <div class="reports__stat-value reports__stat-small">{{ fieldRange ?? '—' }}</div>
+          <div class="reports__stat-label">Field Range</div>
         </div>
       </div>
 
       <!-- Log table -->
-      <div class="log-card">
-        <div class="log-card-hdr">
-          <span class="log-title">Experiment Log</span>
-          <span class="log-count">
+      <div class="reports__log-card">
+        <div class="reports__log-card-hdr">
+          <span class="reports__log-title">Experiment Log</span>
+          <span class="reports__log-count">
             {{ totalReadings }} {{ totalReadings === 1 ? 'entry' : 'entries' }}
           </span>
         </div>
 
         <!-- Empty state -->
-        <div v-if="totalReadings === 0" class="log-empty">
-          <div class="empty-icon">◎</div>
-          <div class="empty-text">No readings recorded yet</div>
-          <p class="empty-sub">
+        <div v-if="totalReadings === 0" class="reports__log-empty">
+          <div class="reports__empty-icon">◎</div>
+          <div class="reports__empty-text">No readings recorded yet</div>
+          <p class="reports__empty-sub">
             Go to the Experiment Lab and click "Log Reading", or trigger a lysis event to
             automatically record a session entry.
           </p>
-          <RouterLink to="/experiment" class="empty-btn">
+          <RouterLink to="/experiment" class="reports__empty-btn">
             Open Experiment Lab →
           </RouterLink>
         </div>
 
         <!-- Data table -->
-        <div v-else class="table-wrap">
-          <table class="log-table">
+        <div v-else class="reports__table-wrap">
+          <table class="reports__table">
             <thead>
               <tr>
                 <th>#</th>
@@ -201,32 +201,32 @@ export default defineComponent({
               <tr
                 v-for="e in store.entries"
                 :key="e.id"
-                :class="{ 'row-lysis': e.event === 'lysis' }"
+                :class="{ 'reports__row--lysis': e.event === 'lysis' }"
               >
-                <td class="mono muted">{{ e.id }}</td>
-                <td class="mono">{{ e.timestamp }}</td>
-                <td class="mono">{{ e.targetPreset }}</td>
-                <td class="mono">{{ e.freqKHz }}</td>
-                <td class="mono">{{ e.fieldVcm }}</td>
-                <td class="mono muted">{{ e.medium }}</td>
-                <td class="mono cancer-val">{{ e.targetVm.toFixed(3) }}</td>
-                <td class="mono ref-val">{{ e.healthyVm.toFixed(3) }}</td>
-                <td class="mono" :class="selClass(e.selectivity)">
+                <td class="reports__mono reports__muted">{{ e.id }}</td>
+                <td class="reports__mono">{{ e.timestamp }}</td>
+                <td class="reports__mono">{{ e.targetPreset }}</td>
+                <td class="reports__mono">{{ e.freqKHz }}</td>
+                <td class="reports__mono">{{ e.fieldVcm }}</td>
+                <td class="reports__mono reports__muted">{{ e.medium }}</td>
+                <td class="reports__mono reports__cancer-val">{{ e.targetVm.toFixed(3) }}</td>
+                <td class="reports__mono reports__ref-val">{{ e.healthyVm.toFixed(3) }}</td>
+                <td class="reports__mono" :class="selClass(e.selectivity)">
                   {{ e.selectivity.toFixed(3) }}
                 </td>
                 <td
-                  class="mono"
-                  :class="e.targetRatio >= 1 ? 'cancer-val' : e.targetRatio >= 0.5 ? 'warn-val' : ''"
+                  class="reports__mono"
+                  :class="e.targetRatio >= 1 ? 'reports__cancer-val' : e.targetRatio >= 0.5 ? 'reports__warn-val' : ''"
                 >{{ (e.targetRatio * 100).toFixed(1) }}%</td>
-                <td class="mono ref-val">{{ (e.healthyRatio * 100).toFixed(1) }}%</td>
-                <td class="mono" :class="e.targetTemp > 42 ? 'warn-val' : ''">
+                <td class="reports__mono reports__ref-val">{{ (e.healthyRatio * 100).toFixed(1) }}%</td>
+                <td class="reports__mono" :class="e.targetTemp > 42 ? 'reports__warn-val' : ''">
                   {{ e.targetTemp.toFixed(1) }}
                 </td>
-                <td class="mono" :class="e.healthyTemp > 42 ? 'warn-val' : ''">
+                <td class="reports__mono" :class="e.healthyTemp > 42 ? 'reports__warn-val' : ''">
                   {{ e.healthyTemp.toFixed(1) }}
                 </td>
                 <td>
-                  <span class="ev-badge" :class="eventClass(e.event)">{{ e.event }}</span>
+                  <span class="reports__ev-badge" :class="eventClass(e.event)">{{ e.event }}</span>
                 </td>
               </tr>
             </tbody>
@@ -234,20 +234,20 @@ export default defineComponent({
         </div>
 
         <!-- Legend -->
-        <div v-if="totalReadings > 0" class="log-legend">
-          <span class="legend-item">
-            <span class="lc cancer-val">■</span> Target value / high disruption
+        <div v-if="totalReadings > 0" class="reports__legend">
+          <span class="reports__legend-item">
+            <span class="reports__legend-color reports__cancer-val">■</span> Target value / high disruption
           </span>
-          <span class="legend-item">
-            <span class="lc ref-val">■</span> Healthy / reference value
+          <span class="reports__legend-item">
+            <span class="reports__legend-color reports__ref-val">■</span> Healthy / reference value
           </span>
-          <span class="legend-item">
-            <span class="lc green-val">■</span> Selectivity ≥ 1.5× (therapeutic window)
+          <span class="reports__legend-item">
+            <span class="reports__legend-color reports__green-val">■</span> Selectivity ≥ 1.5× (therapeutic window)
           </span>
-          <span class="legend-item">
-            <span class="lc warn-val">■</span> Selectivity 1.0–1.5× or temperature warning
+          <span class="reports__legend-item">
+            <span class="reports__legend-color reports__warn-val">■</span> Selectivity 1.0–1.5× or temperature warning
           </span>
-          <span class="legend-item footnote-item">
+          <span class="reports__legend-item reports__footnote">
             ¹ T-Vm / H-Vm: Schwan transmembrane potential (mV). In Resonance mode (bacteria/virus at GHz), these are ≈ 0 — use T-Ratio % / H-Ratio % as the primary disruption metrics.
           </span>
         </div>
@@ -257,372 +257,376 @@ export default defineComponent({
   </div>
 </template>
 
-<style scoped>
+<style lang="scss" scoped>
 /* ── Page shell ───────────────────────────────────────────────────────────── */
-.reports-page {
+.reports {
   flex: 1;
   overflow-y: auto;
   background-color: var(--color-bg);
-}
 
-.reports-inner {
-  max-width: 1600px;
-  margin: 0 auto;
-  padding: 2rem 2rem 4rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
+  &__inner {
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 2rem 2rem 4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
 
-/* ── Page header ──────────────────────────────────────────────────────────── */
-.page-eyebrow {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.72rem;
-  color: var(--color-primary);
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  font-family: var(--font-mono);
-  margin-bottom: 0.75rem;
-}
+  /* ── Page header ──────────────────────────────────────────────────────────── */
+  &__eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.72rem;
+    color: var(--color-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-family: var(--font-mono);
+    margin-bottom: 0.75rem;
+  }
 
-.eyebrow-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background-color: var(--color-primary);
-  box-shadow: 0 0 8px var(--color-primary);
-}
+  &__eyebrow-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: var(--color-primary);
+    box-shadow: 0 0 8px var(--color-primary);
+  }
 
-.header-row {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
+  &__header-row {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
 
-.page-title {
-  font-size: 2rem;
-  font-weight: 800;
-  color: var(--color-text-heading);
-  margin: 0 0 0.5rem;
-}
+  &__title {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--color-text-heading);
+    margin: 0 0 0.5rem;
+  }
 
-.page-subtitle {
-  font-size: 0.875rem;
-  color: var(--color-text-muted);
-  margin: 0;
-  font-family: var(--font-mono);
-}
+  &__subtitle {
+    font-size: 0.875rem;
+    color: var(--color-text-muted);
+    margin: 0;
+    font-family: var(--font-mono);
+  }
 
-.header-actions {
-  display: flex;
-  gap: 0.5rem;
-  flex-shrink: 0;
-}
+  &__header-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-shrink: 0;
+  }
 
-.btn-action {
-  padding: 0.5rem 1.1rem;
-  border-radius: var(--radius);
-  font-size: 0.82rem;
-  font-family: var(--font-mono);
-  font-weight: 600;
-  border: 1px solid;
-  cursor: pointer;
-  transition: all 0.15s;
-  background: transparent;
-}
+  &__btn {
+    padding: 0.5rem 1.1rem;
+    border-radius: var(--radius);
+    font-size: 0.82rem;
+    font-family: var(--font-mono);
+    font-weight: 600;
+    border: 1px solid;
+    cursor: pointer;
+    transition: all 0.15s;
+    background: transparent;
 
-.btn-action:disabled { opacity: 0.3; cursor: not-allowed; }
+    &:disabled { opacity: 0.3; cursor: not-allowed; }
 
-.btn-export {
-  color: var(--color-primary);
-  border-color: rgba(0, 212, 255, 0.35);
-  background: var(--color-primary-dim);
-}
+    &--export {
+      color: var(--color-primary);
+      border-color: rgba(0, 212, 255, 0.35);
+      background: var(--color-primary-dim);
 
-.btn-export:hover:not(:disabled) {
-  background: rgba(0, 212, 255, 0.2);
-  border-color: var(--color-primary);
-}
+      &:hover:not(:disabled) {
+        background: rgba(0, 212, 255, 0.2);
+        border-color: var(--color-primary);
+      }
+    }
 
-.btn-clear {
-  color: var(--color-danger);
-  border-color: rgba(255, 77, 109, 0.35);
-}
+    &--clear {
+      color: var(--color-danger);
+      border-color: rgba(255, 77, 109, 0.35);
 
-.btn-clear:hover:not(:disabled) {
-  background: rgba(255, 77, 109, 0.1);
-}
+      &:hover:not(:disabled) {
+        background: rgba(255, 77, 109, 0.1);
+      }
+    }
+  }
 
-/* ── Session name ─────────────────────────────────────────────────────────── */
-.session-row {
-  display: flex;
-  align-items: center;
-  gap: 0.85rem;
-}
+  /* ── Session name ─────────────────────────────────────────────────────────── */
+  &__session-row {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+  }
 
-.session-label {
-  font-size: 0.72rem;
-  font-family: var(--font-mono);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--color-text-muted);
-  flex-shrink: 0;
-}
+  &__session-label {
+    font-size: 0.72rem;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--color-text-muted);
+    flex-shrink: 0;
+  }
 
-.session-input {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  padding: 0.45rem 0.85rem;
-  font-size: 0.9rem;
-  font-family: var(--font-mono);
-  color: var(--color-text-heading);
-  width: 240px;
-  transition: border-color 0.15s;
-}
+  &__session-input {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    padding: 0.45rem 0.85rem;
+    font-size: 0.9rem;
+    font-family: var(--font-mono);
+    color: var(--color-text-heading);
+    width: 240px;
+    transition: border-color 0.15s;
 
-.session-input:focus {
-  outline: none;
-  border-color: var(--color-primary);
-}
+    &:focus {
+      outline: none;
+      border-color: var(--color-primary);
+    }
+  }
 
-/* ── Stats ────────────────────────────────────────────────────────────────── */
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 0.75rem;
-}
+  /* ── Stats ────────────────────────────────────────────────────────────────── */
+  &__stats-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 0.75rem;
+  }
 
-.stat-card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  padding: 1rem 1.1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
+  &__stat-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    padding: 1rem 1.1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
 
-.stat-card--wide {
-  grid-column: span 1;
-}
+    &--wide { grid-column: span 1; }
+  }
 
-.stat-value {
-  font-size: 1.55rem;
-  font-weight: 800;
-  font-family: var(--font-mono);
-  color: var(--color-text-heading);
-  line-height: 1;
-}
+  &__stat-value {
+    font-size: 1.55rem;
+    font-weight: 800;
+    font-family: var(--font-mono);
+    color: var(--color-text-heading);
+    line-height: 1;
 
-.stat-value.stat-empty   { color: var(--color-text-muted); opacity: 0.35; }
-.stat-value.stat-lysis   { color: var(--color-danger); }
-.stat-value.stat-primary { color: var(--color-primary); }
-.stat-value.stat-green   { color: var(--color-lime);   }
-.stat-value.stat-red     { color: var(--color-danger); }
-.stat-value.stat-small {
-  font-size: 0.82rem;
-  line-height: 1.4;
-  padding-top: 0.2rem;
-  color: var(--color-text);
-}
+    &.reports__stat-empty   { color: var(--color-text-muted); opacity: 0.35; }
+    &.reports__stat-lysis   { color: var(--color-danger); }
+    &.reports__stat-primary { color: var(--color-primary); }
+    &.reports__stat-green   { color: var(--color-lime);   }
+    &.reports__stat-red     { color: var(--color-danger); }
+  }
 
-.stat-label {
-  font-size: 0.64rem;
-  font-family: var(--font-mono);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--color-text-muted);
-}
+  &__stat-small {
+    font-size: 0.82rem;
+    line-height: 1.4;
+    padding-top: 0.2rem;
+    color: var(--color-text);
+  }
 
-/* ── Log card ─────────────────────────────────────────────────────────────── */
-.log-card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-}
+  &__stat-label {
+    font-size: 0.64rem;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--color-text-muted);
+  }
 
-.log-card-hdr {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1rem 1.5rem;
-  border-bottom: 1px solid var(--color-border);
-}
+  /* ── Log card ─────────────────────────────────────────────────────────────── */
+  &__log-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
 
-.log-title {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--color-text-heading);
-}
+  &__log-card-hdr {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--color-border);
+  }
 
-.log-count {
-  font-size: 0.68rem;
-  font-family: var(--font-mono);
-  color: var(--color-text-muted);
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--color-border);
-  border-radius: 4px;
-  padding: 0.15rem 0.5rem;
-}
+  &__log-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--color-text-heading);
+  }
 
-/* ── Empty state ──────────────────────────────────────────────────────────── */
-.log-empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 4rem 2rem;
-  gap: 0.75rem;
-  text-align: center;
-}
+  &__log-count {
+    font-size: 0.68rem;
+    font-family: var(--font-mono);
+    color: var(--color-text-muted);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    padding: 0.15rem 0.5rem;
+  }
 
-.empty-icon {
-  font-size: 2.5rem;
-  color: var(--color-border);
-}
+  /* ── Empty state ──────────────────────────────────────────────────────────── */
+  &__log-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+    gap: 0.75rem;
+    text-align: center;
+  }
 
-.empty-text {
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--color-text-muted);
-}
+  &__empty-icon {
+    font-size: 2.5rem;
+    color: var(--color-border);
+  }
 
-.empty-sub {
-  font-size: 0.82rem;
-  color: var(--color-text-muted);
-  opacity: 0.65;
-  max-width: 380px;
-  line-height: 1.6;
-  margin: 0;
-}
+  &__empty-text {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+  }
 
-.empty-btn {
-  margin-top: 0.5rem;
-  display: inline-flex;
-  padding: 0.55rem 1.25rem;
-  background: var(--color-primary-dim);
-  color: var(--color-primary);
-  border: 1px solid rgba(0, 212, 255, 0.3);
-  border-radius: var(--radius);
-  text-decoration: none;
-  font-size: 0.85rem;
-  font-weight: 600;
-  transition: all 0.15s;
-}
+  &__empty-sub {
+    font-size: 0.82rem;
+    color: var(--color-text-muted);
+    opacity: 0.65;
+    max-width: 380px;
+    line-height: 1.6;
+    margin: 0;
+  }
 
-.empty-btn:hover {
-  background: rgba(0, 212, 255, 0.15);
-  border-color: var(--color-primary);
-}
+  &__empty-btn {
+    margin-top: 0.5rem;
+    display: inline-flex;
+    padding: 0.55rem 1.25rem;
+    background: var(--color-primary-dim);
+    color: var(--color-primary);
+    border: 1px solid rgba(0, 212, 255, 0.3);
+    border-radius: var(--radius);
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.15s;
 
-/* ── Log table ────────────────────────────────────────────────────────────── */
-.table-wrap { overflow-x: auto; }
+    &:hover {
+      background: rgba(0, 212, 255, 0.15);
+      border-color: var(--color-primary);
+    }
+  }
 
-.log-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.78rem;
-  min-width: 1060px;
-}
+  /* ── Log table ────────────────────────────────────────────────────────────── */
+  &__table-wrap {
+    overflow-x: auto;
+  }
 
-.log-table th {
-  text-align: left;
-  padding: 0.5rem 0.75rem;
-  font-size: 0.62rem;
-  font-family: var(--font-mono);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--color-text-muted);
-  background: rgba(255, 255, 255, 0.02);
-  border-bottom: 1px solid var(--color-border);
-  white-space: nowrap;
-}
+  &__table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.78rem;
+    min-width: 1060px;
 
-.log-table td {
-  padding: 0.52rem 0.75rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-  white-space: nowrap;
-}
+    th {
+      text-align: left;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.62rem;
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--color-text-muted);
+      background: rgba(255, 255, 255, 0.02);
+      border-bottom: 1px solid var(--color-border);
+      white-space: nowrap;
+    }
 
-.log-table tr:last-child td { border-bottom: none; }
-.log-table tr:hover td { background: rgba(255, 255, 255, 0.025); }
-.row-lysis td { background: rgba(255, 77, 109, 0.04); }
-.row-lysis:hover td { background: rgba(255, 77, 109, 0.08) !important; }
+    td {
+      padding: 0.52rem 0.75rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      white-space: nowrap;
+    }
 
-/* Utility colours */
-.mono       { font-family: var(--font-mono); }
-.muted      { color: var(--color-text-muted); }
-.cancer-val { color: var(--color-danger);  }
-.ref-val    { color: var(--color-primary); }
-.green-val  { color: var(--color-lime);   }
-.warn-val   { color: var(--color-amber);  }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255, 255, 255, 0.025); }
+  }
 
-/* Event badges */
-.ev-badge {
-  font-size: 0.62rem;
-  font-family: var(--font-mono);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  padding: 0.15rem 0.45rem;
-  border-radius: 3px;
-  border: 1px solid;
-}
+  &__row--lysis td { background: rgba(255, 77, 109, 0.04); }
+  &__row--lysis:hover td { background: rgba(255, 77, 109, 0.08) !important; }
 
-.ev-manual {
-  color: var(--color-primary);
-  border-color: rgba(0, 212, 255, 0.35);
-  background: rgba(0, 212, 255, 0.08);
-}
+  /* Utility colours */
+  &__mono       { font-family: var(--font-mono); }
+  &__muted      { color: var(--color-text-muted); }
+  &__cancer-val { color: var(--color-danger);  }
+  &__ref-val    { color: var(--color-primary); }
+  &__green-val  { color: var(--color-lime);   }
+  &__warn-val   { color: var(--color-amber);  }
 
-.ev-lysis {
-  color: var(--color-danger);
-  border-color: rgba(255, 77, 109, 0.35);
-  background: rgba(255, 77, 109, 0.08);
-}
+  /* Event badges */
+  &__ev-badge {
+    font-size: 0.62rem;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 0.15rem 0.45rem;
+    border-radius: 3px;
+    border: 1px solid;
 
-/* ── Legend ───────────────────────────────────────────────────────────────── */
-.log-legend {
-  display: flex;
-  gap: 1.25rem;
-  flex-wrap: wrap;
-  padding: 0.75rem 1.5rem;
-  border-top: 1px solid var(--color-border);
-  font-size: 0.7rem;
-  font-family: var(--font-mono);
-  color: var(--color-text-muted);
-}
+    &--manual {
+      color: var(--color-primary);
+      border-color: rgba(0, 212, 255, 0.35);
+      background: rgba(0, 212, 255, 0.08);
+    }
 
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-}
+    &--lysis {
+      color: var(--color-danger);
+      border-color: rgba(255, 77, 109, 0.35);
+      background: rgba(255, 77, 109, 0.08);
+    }
+  }
 
-.lc { font-size: 0.85rem; }
+  /* ── Legend ───────────────────────────────────────────────────────────────── */
+  &__legend {
+    display: flex;
+    gap: 1.25rem;
+    flex-wrap: wrap;
+    padding: 0.75rem 1.5rem;
+    border-top: 1px solid var(--color-border);
+    font-size: 0.7rem;
+    font-family: var(--font-mono);
+    color: var(--color-text-muted);
+  }
 
-.footnote-item {
-  width: 100%;
-  font-size: 0.65rem;
-  color: var(--color-text-muted);
-  opacity: 0.65;
-  margin-top: 0.15rem;
-  line-height: 1.5;
+  &__legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  &__legend-color {
+    font-size: 0.85rem;
+  }
+
+  &__footnote {
+    width: 100%;
+    font-size: 0.65rem;
+    color: var(--color-text-muted);
+    opacity: 0.65;
+    margin-top: 0.15rem;
+    line-height: 1.5;
+  }
 }
 
 /* ── Responsive ───────────────────────────────────────────────────────────── */
 @media (max-width: 1100px) {
-  .stats-grid { grid-template-columns: repeat(4, 1fr); }
+  .reports__stats-grid { grid-template-columns: repeat(4, 1fr); }
 }
 
 @media (max-width: 700px) {
-  .stats-grid { grid-template-columns: repeat(2, 1fr); }
-  .reports-inner { padding: 1rem 1rem 3rem; }
-  .header-row { flex-direction: column; align-items: flex-start; }
+  .reports__stats-grid  { grid-template-columns: repeat(2, 1fr); }
+  .reports__inner       { padding: 1rem 1rem 3rem; }
+  .reports__header-row  { flex-direction: column; align-items: flex-start; }
 }
 </style>
