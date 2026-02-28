@@ -24,11 +24,11 @@ export default defineComponent({
     targetRatioPct(): number { return Math.min(100, this.targetRatio * 100) },
     healthyRatioPct(): number { return Math.min(100, this.healthyRatio * 100) },
 
-    /** CSS class name for selectivity-dependent color (sel-ratio, cmp-bar, cmp-sel) */
+    /** CSS class name for selectivity-dependent color (sel-ratio) */
     selectivityClass(): string {
-      if (this.selectivity >= 1.5) return 'sel--strong'
-      if (this.selectivity >= 1.0) return 'sel--marginal'
-      return 'sel--weak'
+      if (this.selectivity >= 1.5) return 'sel-panel__ratio--strong'
+      if (this.selectivity >= 1.0) return 'sel-panel__ratio--marginal'
+      return 'sel-panel__ratio--weak'
     },
 
     modeBadge(): { label: string } {
@@ -44,11 +44,11 @@ export default defineComponent({
     /** CSS class for mode badge border + color */
     modeBadgeClass(): string {
       const t = this.targetRatio, h = this.healthyRatio
-      if (h >= DISRUPTION_WARN_THRESHOLD)            return 'badge--ablative'
-      if (t >= DISRUPTION_WARN_THRESHOLD && h < 0.5) return 'badge--therapeutic'
-      if (t >= DISRUPTION_WARN_THRESHOLD)            return 'badge--marginal'
-      if (t >= 0.5)                                  return 'badge--approaching'
-      return                                                'badge--subthreshold'
+      if (h >= DISRUPTION_WARN_THRESHOLD)            return 'sel-panel__mode-badge--ablative'
+      if (t >= DISRUPTION_WARN_THRESHOLD && h < 0.5) return 'sel-panel__mode-badge--therapeutic'
+      if (t >= DISRUPTION_WARN_THRESHOLD)            return 'sel-panel__mode-badge--marginal'
+      if (t >= 0.5)                                  return 'sel-panel__mode-badge--approaching'
+      return                                                'sel-panel__mode-badge--subthreshold'
     },
 
     targetGroups(): CellGroup[] { return TARGET_GROUPS },
@@ -405,9 +405,9 @@ Note: virion fc ~0.6–0.75 MHz per Schwan model (σ_i-limited; model approximat
   },
 
   methods: {
-    /** Returns a CSS class name based on selectivity value (for cmp-bar + cmp-sel). */
+    /** Returns a CSS class name for comparison elements (cmp-bar + cmp-sel). */
     selClass(sel: number): string {
-      return sel >= 1.5 ? 'sel--strong' : sel >= 1.0 ? 'sel--marginal' : 'sel--weak'
+      return sel >= 1.5 ? 'sel-panel__cmp--strong' : sel >= 1.0 ? 'sel-panel__cmp--marginal' : 'sel-panel__cmp--weak'
     },
 
     loadTarget(preset: typeof CELL_PRESETS[0]) {
@@ -458,51 +458,51 @@ Click the preset pill below to switch to this cell`
 
 <template>
   <div class="sel-panel">
-    <div class="panel-title">{{ $t('selectivity.title') }}</div>
+    <div class="sel-panel__title">{{ $t('selectivity.title') }}</div>
 
     <!-- ── Selectivity ratio + TI ────────────────────────────── -->
-    <div class="sel-ratio-wrap" v-tip="tipSelectivity">
-      <span class="sel-ratio" :class="selectivityClass">
+    <div class="sel-panel__ratio-wrap" v-tip="tipSelectivity">
+      <span class="sel-panel__ratio" :class="selectivityClass">
         ×{{ selectivity.toFixed(2) }}
       </span>
-      <div class="sel-ratio-labels">
-        <span class="sel-ratio-label">{{ $t('selectivity.ratioLabel') }}</span>
-        <span class="sel-ti-label">Vm ×<span>{{ vmSelectivityRatio >= 99 ? '∞' : vmSelectivityRatio.toFixed(2) }}</span></span>
+      <div class="sel-panel__ratio-labels">
+        <span class="sel-panel__ratio-label">{{ $t('selectivity.ratioLabel') }}</span>
+        <span class="sel-panel__ti-label">Vm ×<span>{{ vmSelectivityRatio >= 99 ? '∞' : vmSelectivityRatio.toFixed(2) }}</span></span>
       </div>
     </div>
 
     <!-- ── Disruption progress bars ──────────────────────────── -->
-    <div class="panel-sep"></div>
-    <div class="disruption-bars">
-      <div class="bar-row" v-tip="tipTargetBar">
-        <span class="bar-lbl">T</span>
-        <div class="bar-track">
+    <div class="sel-panel__sep"></div>
+    <div class="sel-panel__bars">
+      <div class="sel-panel__bar-row" v-tip="tipTargetBar">
+        <span class="sel-panel__bar-label">T</span>
+        <div class="sel-panel__bar-track">
           <div
-            class="bar-fill bar-fill--t"
+            class="sel-panel__bar-fill sel-panel__bar-fill--t"
             :style="{ width: targetRatioPct + '%' }"
-            :class="{ 'bar-fill--warn': targetRatio >= 0.85 }"
+            :class="{ 'sel-panel__bar-fill--warn': targetRatio >= 0.85 }"
           ></div>
         </div>
-        <span class="bar-val">{{ targetRatioPct.toFixed(0) }}%</span>
+        <span class="sel-panel__bar-val">{{ targetRatioPct.toFixed(0) }}%</span>
         <span
-          class="bar-plysis"
-          :class="{ 'bar-plysis--high': targetLysisProbability >= 50 }"
+          class="sel-panel__bar-plysis"
+          :class="{ 'sel-panel__bar-plysis--high': targetLysisProbability >= 50 }"
           v-tip="'<strong>P(electroporation)</strong>\nSigmoid probability centered at 100% disruption threshold.\nP = 1 / (1 + e^−((ratio−1.0)/0.05))\n≥50% → lysis likely if held for 2.5 s'"
         >P{{ targetLysisProbability }}%</span>
       </div>
-      <div class="bar-row" v-tip="tipHealthyBar">
-        <span class="bar-lbl">H</span>
-        <div class="bar-track">
+      <div class="sel-panel__bar-row" v-tip="tipHealthyBar">
+        <span class="sel-panel__bar-label">H</span>
+        <div class="sel-panel__bar-track">
           <div
-            class="bar-fill bar-fill--h"
+            class="sel-panel__bar-fill sel-panel__bar-fill--h"
             :style="{ width: healthyRatioPct + '%' }"
-            :class="{ 'bar-fill--warn': healthyRatio >= 0.85 }"
+            :class="{ 'sel-panel__bar-fill--warn': healthyRatio >= 0.85 }"
           ></div>
         </div>
-        <span class="bar-val">{{ healthyRatioPct.toFixed(0) }}%</span>
+        <span class="sel-panel__bar-val">{{ healthyRatioPct.toFixed(0) }}%</span>
         <span
-          class="bar-plysis"
-          :class="{ 'bar-plysis--high': healthyLysisProbability >= 50 }"
+          class="sel-panel__bar-plysis"
+          :class="{ 'sel-panel__bar-plysis--high': healthyLysisProbability >= 50 }"
           v-tip="'<strong>P(electroporation) — Healthy</strong>\nSigmoid probability centered at 100% disruption threshold.\nKeep this value near 0% for selective therapy'"
         >P{{ healthyLysisProbability }}%</span>
       </div>
@@ -510,32 +510,32 @@ Click the preset pill below to switch to this cell`
 
     <!-- ── Nuclear envelope disruption bars (double-shell model) ─ -->
     <template v-if="store.doubleShellEnabled && store.targetCellCategory === 'mammalian'">
-      <div class="nuc-bar-section"
+      <div class="sel-panel__nuc-section"
         v-tip="'<strong>Nuclear Envelope Disruption (Double-Shell Model)</strong>\nVm_nuc / V_threshold_nuc for each cell.\nBandpass peak at f_peak = 1/(2π√(τ_pm·τ_ne)) — typically 0.87–2.1 MHz.\nCancer nuclei have thinner/leakier NE and lower thresholds → higher disruption ratio.\nKotnik &amp; Miklavcic, Biophys. J. 90:480 (2006)'"
       >
-        <div class="nuc-bar-row">
-          <span class="nuc-bar-lbl">&#x26AC; NE-T</span>
-          <div class="nuc-bar-track">
-            <div class="nuc-bar-fill nuc-bar-fill--t"
+        <div class="sel-panel__nuc-bar-row">
+          <span class="sel-panel__nuc-bar-label">&#x26AC; NE-T</span>
+          <div class="sel-panel__nuc-bar-track">
+            <div class="sel-panel__nuc-bar-fill sel-panel__nuc-bar-fill--t"
               :style="{ width: Math.min(100, store.targetNuclearDisruptionRatio * 100) + '%' }"
-              :class="{ 'nuc-bar-fill--warn': store.targetNuclearDisruptionRatio >= 0.85 }"
+              :class="{ 'sel-panel__nuc-bar-fill--warn': store.targetNuclearDisruptionRatio >= 0.85 }"
             ></div>
           </div>
-          <span class="nuc-bar-val">{{ (store.targetNuclearDisruptionRatio * 100).toFixed(0) }}%</span>
+          <span class="sel-panel__nuc-bar-val">{{ (store.targetNuclearDisruptionRatio * 100).toFixed(0) }}%</span>
         </div>
-        <div class="nuc-bar-row">
-          <span class="nuc-bar-lbl">&#x26AC; NE-H</span>
-          <div class="nuc-bar-track">
-            <div class="nuc-bar-fill nuc-bar-fill--h"
+        <div class="sel-panel__nuc-bar-row">
+          <span class="sel-panel__nuc-bar-label">&#x26AC; NE-H</span>
+          <div class="sel-panel__nuc-bar-track">
+            <div class="sel-panel__nuc-bar-fill sel-panel__nuc-bar-fill--h"
               :style="{ width: Math.min(100, store.healthyNuclearDisruptionRatio * 100) + '%' }"
-              :class="{ 'nuc-bar-fill--warn': store.healthyNuclearDisruptionRatio >= 0.85 }"
+              :class="{ 'sel-panel__nuc-bar-fill--warn': store.healthyNuclearDisruptionRatio >= 0.85 }"
             ></div>
           </div>
-          <span class="nuc-bar-val">{{ (store.healthyNuclearDisruptionRatio * 100).toFixed(0) }}%</span>
+          <span class="sel-panel__nuc-bar-val">{{ (store.healthyNuclearDisruptionRatio * 100).toFixed(0) }}%</span>
         </div>
-        <div class="nuc-sel-row">
-          <span class="nuc-sel-label">NE Selectivity</span>
-          <span class="nuc-sel-val" :class="store.nuclearSelectivityRatio >= 1.5 ? 'nuc-sel--good' : store.nuclearSelectivityRatio >= 1.0 ? 'nuc-sel--ok' : 'nuc-sel--low'">
+        <div class="sel-panel__nuc-sel-row">
+          <span class="sel-panel__nuc-sel-label">NE Selectivity</span>
+          <span class="sel-panel__nuc-sel-val" :class="store.nuclearSelectivityRatio >= 1.5 ? 'sel-panel__nuc-sel--good' : store.nuclearSelectivityRatio >= 1.0 ? 'sel-panel__nuc-sel--ok' : 'sel-panel__nuc-sel--low'">
             ×{{ store.nuclearSelectivityRatio >= 99 ? '∞' : store.nuclearSelectivityRatio.toFixed(2) }}
           </span>
         </div>
@@ -543,115 +543,115 @@ Click the preset pill below to switch to this cell`
     </template>
 
     <!-- ── Vm / Disruption & SAR ─────────────────────────────── -->
-    <div class="panel-sep"></div>
-    <div class="vm-sar-grid" v-tip="tipVmSar">
+    <div class="sel-panel__sep"></div>
+    <div class="sel-panel__vm-sar-grid" v-tip="tipVmSar">
       <!-- Resonance mode: show disruption % and resonance threshold -->
       <template v-if="isResonanceTarget">
-        <div class="vm-sar-cell">
-          <span class="vs-type vs-type--t">{{ $t('selectivity.tDisr') }}</span>
-          <span class="vs-vm vs-vm--t">{{ targetRatioPct.toFixed(1) }}%</span>
-          <span class="vs-sar">{{ targetSarVal }} W/kg</span>
-          <span class="vs-elysis"
+        <div class="sel-panel__vm-sar-cell">
+          <span class="sel-panel__vs-type sel-panel__vs-type--t">{{ $t('selectivity.tDisr') }}</span>
+          <span class="sel-panel__vs-vm sel-panel__vs-vm--t">{{ targetRatioPct.toFixed(1) }}%</span>
+          <span class="sel-panel__vs-sar">{{ targetSarVal }} W/kg</span>
+          <span class="sel-panel__vs-elysis"
             v-tip="'<strong>' + $t('selectivity.tipEthr') + '</strong>\n' + $t('selectivity.tipEthrBody')"
           >E<sub>thr</sub> {{ targetResonanceEthr }}</span>
         </div>
-        <div class="vm-sar-cell">
-          <span class="vs-type vs-type--h">{{ $t('selectivity.hSafe') }}</span>
-          <span class="vs-vm vs-vm--res">≈0%</span>
-          <span class="vs-sar">{{ healthySarVal }} W/kg</span>
-          <span class="vs-elysis vs-elysis--safe"
+        <div class="sel-panel__vm-sar-cell">
+          <span class="sel-panel__vs-type sel-panel__vs-type--h">{{ $t('selectivity.hSafe') }}</span>
+          <span class="sel-panel__vs-vm sel-panel__vs-vm--res">≈0%</span>
+          <span class="sel-panel__vs-sar">{{ healthySarVal }} W/kg</span>
+          <span class="sel-panel__vs-elysis sel-panel__vs-elysis--safe"
             v-tip="'<strong>' + $t('selectivity.tipNoGhzRes') + '</strong>\n' + $t('selectivity.tipNoGhzResBody')"
           >{{ $t('selectivity.noGhzRes') }}</span>
         </div>
       </template>
       <!-- Schwan mode: show Vm and lysis field -->
       <template v-else>
-        <div class="vm-sar-cell">
-          <span class="vs-type vs-type--t">{{ $t('selectivity.targetBar') }}-Vm</span>
-          <span class="vs-vm vs-vm--t">{{ targetVmMv }} mV</span>
-          <span class="vs-sar">{{ targetSarVal }} W/kg</span>
-          <span class="vs-elysis" v-tip="'<strong>Target lysis field</strong>\nMinimum E required to reach lysis threshold at current frequency.\nE_lysis = Vm_thr · √(1+(ωτ)²) / (1.5·R)'">E<sub>lys</sub> {{ targetLysisField }}</span>
+        <div class="sel-panel__vm-sar-cell">
+          <span class="sel-panel__vs-type sel-panel__vs-type--t">{{ $t('selectivity.targetBar') }}-Vm</span>
+          <span class="sel-panel__vs-vm sel-panel__vs-vm--t">{{ targetVmMv }} mV</span>
+          <span class="sel-panel__vs-sar">{{ targetSarVal }} W/kg</span>
+          <span class="sel-panel__vs-elysis" v-tip="'<strong>Target lysis field</strong>\nMinimum E required to reach lysis threshold at current frequency.\nE_lysis = Vm_thr · √(1+(ωτ)²) / (1.5·R)'">E<sub>lys</sub> {{ targetLysisField }}</span>
         </div>
-        <div class="vm-sar-cell">
-          <span class="vs-type vs-type--h">{{ $t('selectivity.healthyBar') }}-Vm</span>
-          <span class="vs-vm vs-vm--h">{{ healthyVmMv }} mV</span>
-          <span class="vs-sar">{{ healthySarVal }} W/kg</span>
-          <span class="vs-elysis" v-tip="'<strong>Healthy lysis field</strong>\nMinimum E required to reach lysis threshold at current frequency.\nKeep operating field below this value for selective therapy.'">E<sub>lys</sub> {{ healthyLysisField }}</span>
+        <div class="sel-panel__vm-sar-cell">
+          <span class="sel-panel__vs-type sel-panel__vs-type--h">{{ $t('selectivity.healthyBar') }}-Vm</span>
+          <span class="sel-panel__vs-vm sel-panel__vs-vm--h">{{ healthyVmMv }} mV</span>
+          <span class="sel-panel__vs-sar">{{ healthySarVal }} W/kg</span>
+          <span class="sel-panel__vs-elysis" v-tip="'<strong>Healthy lysis field</strong>\nMinimum E required to reach lysis threshold at current frequency.\nKeep operating field below this value for selective therapy.'">E<sub>lys</sub> {{ healthyLysisField }}</span>
         </div>
       </template>
     </div>
 
     <!-- ── Mode badge ─────────────────────────────────────────── -->
-    <div class="mode-row">
+    <div class="sel-panel__mode-row">
       <span
-        class="mode-badge"
+        class="sel-panel__mode-badge"
         :class="modeBadgeClass"
         v-tip="tipModeBadge"
       >
         {{ modeBadge.label }}
       </span>
       <span
-        class="optimal-note optimal-note--snap"
-        :class="{ 'optimal-note--beyond': optimalFreqResult.khz > 10000 }"
+        class="sel-panel__optimal-note sel-panel__optimal-note--snap"
+        :class="{ 'sel-panel__optimal-note--beyond': optimalFreqResult.khz > 10000 }"
         @click="snapToOptimal"
         v-tip="tipOptimal"
       >{{ optimalNote }}</span>
     </div>
 
     <!-- ── Model / selectivity warning ──────────────────────── -->
-    <div v-if="targetModelWarning" class="model-warning">
+    <div v-if="targetModelWarning" class="sel-panel__model-warning">
       {{ targetModelWarning }}
       <button
         v-if="showResonanceSwitchBtn"
-        class="model-warning-btn"
+        class="sel-panel__model-warning-btn"
         @click="store.setChartMode('resonance')"
       >→ Switch to Resonance Mode</button>
     </div>
 
     <!-- ── Preset selectivity comparison ─────────────────────── -->
-    <div class="panel-sep"></div>
-    <div class="library-section">
+    <div class="sel-panel__sep"></div>
+    <div class="sel-panel__library">
       <div
-        class="lib-title"
+        class="sel-panel__lib-title"
         v-tip="'<strong>' + presetCompTitleDynamic + '</strong>\n' + $t('selectivity.presetCompTip')"
       >{{ presetCompTitleDynamic }}</div>
-      <div class="comparison-table">
+      <div class="sel-panel__comparison-table">
         <div
           v-for="row in presetComparison"
           :key="row.preset.presetId"
-          class="cmp-row"
-          :class="{ 'cmp-row--active': row.isActive }"
+          class="sel-panel__cmp-row"
+          :class="{ 'sel-panel__cmp-row--active': row.isActive }"
           v-tip="cmpTip(row)"
         >
-          <span class="cmp-name" :style="{ '--gc': GROUP_COLORS[row.preset.group] }">{{ row.preset.shortLabel }}</span>
-          <div class="cmp-bar-track">
+          <span class="sel-panel__cmp-name" :style="{ '--gc': GROUP_COLORS[row.preset.group] }">{{ row.preset.shortLabel }}</span>
+          <div class="sel-panel__cmp-bar-track">
             <div
-              class="cmp-bar"
+              class="sel-panel__cmp-bar"
               :class="selClass(row.sel)"
               :style="{ width: Math.min(100, row.sel * 40) + '%' }"
             ></div>
           </div>
-          <span class="cmp-sel" :class="selClass(row.sel)">×{{ row.sel.toFixed(2) }}</span>
+          <span class="sel-panel__cmp-sel" :class="selClass(row.sel)">×{{ row.sel.toFixed(2) }}</span>
         </div>
       </div>
     </div>
 
     <!-- ── Target cell library ────────────────────────────────── -->
-    <div class="panel-sep"></div>
-    <div class="library-section">
+    <div class="sel-panel__sep"></div>
+    <div class="sel-panel__library">
       <div
-        class="lib-title"
+        class="sel-panel__lib-title"
         v-tip="'<strong>' + $t('selectivity.targetLibTitle') + '</strong>\n' + $t('selectivity.targetLibTip')"
       >{{ $t('selectivity.targetLibTitle') }}</div>
       <!-- --pill-c sets the group accent color for the active pill via CSS -->
-      <div v-for="grp in targetGroups" :key="grp" class="lib-group" :style="{ '--pill-c': GROUP_COLORS[grp] }">
-        <span class="lib-group-label">{{ GROUP_LABELS[grp] }}</span>
-        <div class="lib-pills">
+      <div v-for="grp in targetGroups" :key="grp" class="sel-panel__lib-group" :style="{ '--pill-c': GROUP_COLORS[grp] }">
+        <span class="sel-panel__lib-group-label">{{ GROUP_LABELS[grp] }}</span>
+        <div class="sel-panel__lib-pills">
           <button
             v-for="p in presetsByGroup[grp]"
             :key="p.presetId"
-            class="preset-pill"
-            :class="{ 'preset-pill--active': activeTargetId === p.id }"
+            class="sel-panel__preset-pill"
+            :class="{ 'sel-panel__preset-pill--active': activeTargetId === p.id }"
             v-tip="presetTip(p)"
             @click="loadTarget(p)"
           >{{ p.shortLabel }}</button>
@@ -660,18 +660,18 @@ Click the preset pill below to switch to this cell`
     </div>
 
     <!-- ── Healthy baseline ───────────────────────────────────── -->
-    <div class="panel-sep"></div>
-    <div class="library-section">
+    <div class="sel-panel__sep"></div>
+    <div class="sel-panel__library">
       <div
-        class="lib-title"
+        class="sel-panel__lib-title"
         v-tip="'<strong>' + $t('selectivity.healthyLibTitle') + '</strong>\n' + $t('selectivity.healthyLibTip')"
       >{{ $t('selectivity.healthyLibTitle') }}</div>
-      <div class="lib-pills" :style="{ '--pill-c': GROUP_COLORS.reference }">
+      <div class="sel-panel__lib-pills" :style="{ '--pill-c': GROUP_COLORS.reference }">
         <button
           v-for="p in healthyPresets"
           :key="p.presetId"
-          class="preset-pill"
-          :class="{ 'preset-pill--active': activeHealthyId === p.id }"
+          class="sel-panel__preset-pill"
+          :class="{ 'sel-panel__preset-pill--active': activeHealthyId === p.id }"
           v-tip="presetTip(p)"
           @click="loadHealthy(p)"
         >{{ p.shortLabel }}</button>
@@ -680,7 +680,12 @@ Click the preset pill below to switch to this cell`
   </div>
 </template>
 
-<style scoped>
+<style lang="scss" scoped>
+@keyframes bar-flash {
+  from { opacity: 1; }
+  to   { opacity: 0.5; }
+}
+
 .sel-panel {
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -689,307 +694,429 @@ Click the preset pill below to switch to this cell`
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-}
 
-/* ── Section separator ────────────────────────────────────── */
-.panel-sep {
-  height: 1px;
-  background: var(--color-border);
-  opacity: 0.5;
-  margin: 0.1rem 0;
-  flex-shrink: 0;
-}
+  /* ── Section separator ─────────────────────────────────────── */
+  &__sep {
+    height: 1px;
+    background: var(--color-border);
+    opacity: 0.5;
+    margin: 0.1rem 0;
+    flex-shrink: 0;
+  }
 
-/* ── Panel title ─────────────────────────────────────────────── */
-.panel-title {
-  font-size: 0.62rem;
-  font-family: var(--font-mono);
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--color-text);
-}
+  /* ── Title ─────────────────────────────────────────────────── */
+  &__title {
+    font-size: 0.62rem;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--color-text);
+  }
 
-/* ── Selectivity ratio ───────────────────────────────────────── */
-.sel-ratio-wrap {
-  display: flex;
-  align-items: baseline;
-  gap: 0.6rem;
-}
-.sel-ratio {
-  font-size: 2rem;
-  font-weight: 800;
-  font-family: var(--font-mono);
-  letter-spacing: -0.04em;
-  line-height: 1;
-  transition: color 0.4s;
-  flex-shrink: 0;
-}
-.sel-ratio-labels {
-  display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
-}
-.sel-ratio-label {
-  font-size: 0.6rem;
-  font-family: var(--font-mono);
-  color: var(--color-text);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-.sel-ti-label {
-  font-size: 0.6rem;
-  font-family: var(--font-mono);
-  color: var(--color-text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
+  /* ── Selectivity ratio ─────────────────────────────────────── */
+  &__ratio-wrap {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+  }
 
-/* ── Disruption bars ─────────────────────────────────────────── */
-.disruption-bars { display: flex; flex-direction: column; gap: 0.35rem; }
-.bar-row { display: flex; align-items: center; gap: 0.5rem; }
-.bar-lbl {
-  font-size: 0.66rem; font-family: var(--font-mono);
-  color: var(--color-text); width: 1rem; text-align: right; flex-shrink: 0;
-}
-.bar-track {
-  flex: 1; height: 6px;
-  background: rgba(255,255,255,0.08);
-  border-radius: 3px; overflow: hidden;
-}
-.bar-fill {
-  height: 100%;
-  border-radius: 3px;
-  transition: width 0.3s ease;
-}
-.bar-fill--t { background: var(--color-danger); }
-.bar-fill--h { background: var(--color-primary); }
-.bar-fill--warn { animation: bar-flash 0.6s ease-in-out infinite alternate; }
-@keyframes bar-flash { from { opacity: 1; } to { opacity: 0.5; } }
-.bar-val {
-  font-size: 0.66rem; font-family: var(--font-mono);
-  color: var(--color-text); width: 2.2rem; text-align: right; flex-shrink: 0;
-}
+  &__ratio {
+    font-size: 2rem;
+    font-weight: 800;
+    font-family: var(--font-mono);
+    letter-spacing: -0.04em;
+    line-height: 1;
+    transition: color 0.4s;
+    flex-shrink: 0;
 
-/* ── Mode badge ──────────────────────────────────────────────── */
-.mode-row { display: flex; flex-direction: column; gap: 0.35rem; }
-.mode-badge {
-  font-size: 0.68rem; font-family: var(--font-mono);
-  text-transform: uppercase; letter-spacing: 0.1em;
-  padding: 0.2rem 0.55rem;
-  border-radius: 3px;
-  border: 1px solid transparent;
-  align-self: flex-start;
-  transition: color 0.3s, border-color 0.3s;
-}
-.optimal-note {
-  font-size: 0.62rem; font-family: var(--font-mono);
-  color: var(--color-text-muted); opacity: 0.85;
-  line-height: 1.5;
-}
-.optimal-note--snap {
-  cursor: pointer;
-  color: var(--color-amber);
-  opacity: 1;
-  transition: opacity 0.15s, color 0.2s;
-}
-.optimal-note--snap:hover { opacity: 0.75; }
-.optimal-note--beyond {
-  color: var(--color-text-muted);
-  opacity: 0.7;
-}
-.optimal-note--beyond:hover { opacity: 0.55; }
+    &--strong  { color: var(--color-lime); }
+    &--marginal { color: var(--color-amber); }
+    &--weak    { color: var(--color-danger); }
+  }
 
-/* ── Nuclear envelope disruption bars (double-shell) ─────── */
-.nuc-bar-section {
-  margin-top: 0.5rem;
-  padding: 0.35rem 0.5rem;
-  background: rgba(167, 139, 250, 0.05);
-  border-left: 2px solid rgba(167, 139, 250, 0.3);
-  border-radius: 0 4px 4px 0;
-  display: flex; flex-direction: column; gap: 0.28rem;
-}
-.nuc-bar-row { display: flex; align-items: center; gap: 0.5rem; }
-.nuc-bar-lbl {
-  font-size: 0.58rem; font-family: var(--font-mono);
-  color: #a78bfa; width: 3rem; flex-shrink: 0;
-}
-.nuc-bar-track {
-  flex: 1; height: 3px;
-  background: rgba(167, 139, 250, 0.12);
-  border-radius: 2px; overflow: hidden;
-}
-.nuc-bar-fill { height: 100%; border-radius: 2px; transition: width 0.3s ease; }
-.nuc-bar-fill--t { background: #a78bfa; }
-.nuc-bar-fill--h { background: rgba(0, 212, 255, 0.7); }
-.nuc-bar-fill--warn { background: #ff4d6d !important; animation: bar-flash 0.6s ease-in-out infinite alternate; }
-.nuc-bar-val {
-  font-size: 0.58rem; font-family: var(--font-mono);
-  color: #a78bfa; width: 2rem; text-align: right; flex-shrink: 0;
-}
-.nuc-sel-row {
-  display: flex; justify-content: space-between; align-items: center;
-  padding-top: 0.15rem; border-top: 1px solid rgba(167, 139, 250, 0.12);
-  margin-top: 0.05rem;
-}
-.nuc-sel-label { font-size: 0.58rem; color: rgba(167, 139, 250, 0.7); }
-.nuc-sel-val   { font-size: 0.68rem; font-family: var(--font-mono); font-weight: 600; color: #a78bfa; }
-.nuc-sel--good { color: #4ade80; }
-.nuc-sel--ok   { color: #fbbf24; }
-.nuc-sel--low  { color: #ff4d6d; }
+  &__ratio-labels {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+  }
 
-/* ── P(lysis) probability ─────────────────────────────────── */
-.bar-plysis {
-  font-size: 0.62rem; font-family: var(--font-mono);
-  color: var(--color-text-muted); opacity: 0.7;
-  width: 2.6rem; text-align: right; flex-shrink: 0;
-  transition: color 0.3s, opacity 0.3s;
-}
-.bar-plysis--high {
-  color: var(--color-danger);
-  opacity: 1;
-  font-weight: 600;
-}
+  &__ratio-label {
+    font-size: 0.6rem;
+    font-family: var(--font-mono);
+    color: var(--color-text);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
 
-/* ── Library sections ────────────────────────────────────────── */
-.library-section { display: flex; flex-direction: column; gap: 0.4rem; }
-.lib-title {
-  font-size: 0.6rem; font-family: var(--font-mono);
-  text-transform: uppercase; letter-spacing: 0.1em;
-  color: var(--color-text-heading);
-  opacity: 0.9;
-  margin-bottom: 0.1rem;
-}
-.lib-group { display: flex; flex-direction: column; gap: 0.25rem; margin-bottom: 0.25rem; }
-.lib-group-label {
-  font-size: 0.55rem; font-family: var(--font-mono);
-  text-transform: uppercase; letter-spacing: 0.1em;
-  opacity: 0.9;
-}
-.lib-pills { display: flex; flex-wrap: wrap; gap: 0.3rem; }
-.preset-pill {
-  font-size: 0.58rem; font-family: var(--font-mono);
-  padding: 0.18rem 0.5rem;
-  border: 1px solid var(--color-border);
-  border-radius: 10px;
-  background: transparent;
-  color: var(--color-text);
-  cursor: pointer;
-  transition: border-color 0.15s, color 0.15s, background-color 0.15s;
-  white-space: nowrap;
-}
-.preset-pill:hover { border-color: var(--color-primary); color: var(--color-primary); }
-.preset-pill--active { background-color: rgba(255,255,255,0.05); }
+  &__ti-label {
+    font-size: 0.6rem;
+    font-family: var(--font-mono);
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
 
-/* ── Vm / SAR readout ────────────────────────────────────────── */
-.vm-sar-grid {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;
-  background: rgba(0,0,0,0.2); border: 1px solid var(--color-border);
-  border-radius: var(--radius); padding: 0.45rem 0.65rem;
-  cursor: default;
-}
-.vm-sar-cell { display: flex; align-items: baseline; gap: 0.35rem; flex-wrap: wrap; }
-.vs-type {
-  font-size: 0.65rem; font-family: var(--font-mono);
-  font-weight: 700; opacity: 0.85; flex-shrink: 0;
-}
-.vs-type--t { color: var(--color-danger); }
-.vs-type--h { color: var(--color-primary); }
-.vs-vm {
-  font-size: 0.9rem; font-family: var(--font-mono);
-  font-weight: 700; line-height: 1;
-}
-.vs-sar {
-  font-size: 0.62rem; font-family: var(--font-mono);
-  color: var(--color-text-muted); opacity: 0.85; white-space: nowrap;
-}
-.vs-elysis {
-  font-size: 0.58rem; font-family: var(--font-mono);
-  color: var(--color-text-muted); opacity: 0.7; white-space: nowrap;
-  cursor: default;
-}
+  /* ── Disruption bars ───────────────────────────────────────── */
+  &__bars { display: flex; flex-direction: column; gap: 0.35rem; }
 
-/* ── Model / selectivity warning ────────────────────────────── */
-.model-warning {
-  font-size: 0.6rem;
-  font-family: var(--font-mono);
-  color: var(--color-amber);
-  background: rgba(251, 191, 36, 0.07);
-  border: 1px solid rgba(251, 191, 36, 0.25);
-  border-radius: var(--radius);
-  padding: 0.3rem 0.55rem;
-  line-height: 1.55;
-}
+  &__bar-row { display: flex; align-items: center; gap: 0.5rem; }
 
-.model-warning-btn {
-  display: block;
-  margin-top: 0.4rem;
-  background: rgba(251, 191, 36, 0.12);
-  border: 1px solid rgba(251, 191, 36, 0.4);
-  border-radius: 3px;
-  color: var(--color-amber);
-  font-family: var(--font-mono);
-  font-size: 0.58rem;
-  letter-spacing: 0.08em;
-  padding: 0.2rem 0.55rem;
-  cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
-}
-.model-warning-btn:hover {
-  background: rgba(251, 191, 36, 0.22);
-  border-color: rgba(251, 191, 36, 0.65);
-}
+  &__bar-label {
+    font-size: 0.66rem;
+    font-family: var(--font-mono);
+    color: var(--color-text);
+    width: 1rem;
+    text-align: right;
+    flex-shrink: 0;
+  }
 
-/* ── Preset comparison table ─────────────────────────────────── */
-.comparison-table { display: flex; flex-direction: column; gap: 0.18rem; }
-.cmp-row {
-  display: grid; grid-template-columns: 3.2rem 1fr 2.8rem;
-  align-items: center; gap: 0.4rem; padding: 0.1rem 0.2rem;
-  border-radius: 3px; transition: background 0.1s;
-}
-.cmp-row--active { background: rgba(255,255,255,0.05); }
-.cmp-name {
-  font-size: 0.56rem; font-family: var(--font-mono);
-  text-transform: uppercase; letter-spacing: 0.04em;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.cmp-bar-track {
-  height: 4px; background: rgba(255,255,255,0.08);
-  border-radius: 2px; overflow: hidden;
-}
-.cmp-bar { height: 100%; border-radius: 2px; transition: width 0.3s ease; }
-.cmp-sel {
-  font-size: 0.6rem; font-family: var(--font-mono);
-  font-weight: 600; text-align: right;
-}
+  &__bar-track {
+    flex: 1;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 3px;
+    overflow: hidden;
+  }
 
-/* ── Selectivity state classes ───────────────────────────────── */
-.sel--strong  { color: var(--color-lime); }
-.sel--marginal { color: var(--color-amber); }
-.sel--weak    { color: var(--color-danger); }
+  &__bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.3s ease;
 
-/* cmp-bar background (same three states) */
-.cmp-bar.sel--strong  { background: var(--color-lime); }
-.cmp-bar.sel--marginal { background: var(--color-amber); }
-.cmp-bar.sel--weak    { background: var(--color-danger); }
+    &--t    { background: var(--color-danger); }
+    &--h    { background: var(--color-primary); }
+    &--warn { animation: bar-flash 0.6s ease-in-out infinite alternate; }
+  }
 
-/* ── Mode badge state classes ─────────────────────────────────── */
-.badge--therapeutic { color: var(--color-lime);    border-color: rgba(57, 255, 20, 0.33); }
-.badge--ablative    { color: var(--color-danger);  border-color: rgba(255, 77, 109, 0.33); }
-.badge--marginal    { color: var(--color-amber);   border-color: rgba(251, 191, 36, 0.33); }
-.badge--approaching { color: var(--color-amber);   border-color: rgba(251, 191, 36, 0.33); }
-.badge--subthreshold{ color: var(--color-primary); border-color: rgba(0, 212, 255, 0.33); }
+  &__bar-val {
+    font-size: 0.66rem;
+    font-family: var(--font-mono);
+    color: var(--color-text);
+    width: 2.2rem;
+    text-align: right;
+    flex-shrink: 0;
+  }
 
-/* ── Vm display state classes ─────────────────────────────────── */
-.vs-vm--t   { color: var(--color-danger); }
-.vs-vm--h   { color: var(--color-primary); }
-.vs-vm--res { color: var(--color-lime); }     /* resonance mode healthy ≈0% */
-.vs-elysis--safe { color: var(--color-lime); }
+  &__bar-plysis {
+    font-size: 0.62rem;
+    font-family: var(--font-mono);
+    color: var(--color-text-muted);
+    opacity: 0.7;
+    width: 2.6rem;
+    text-align: right;
+    flex-shrink: 0;
+    transition: color 0.3s, opacity 0.3s;
 
-/* ── Group-colored elements via CSS custom property --gc / --pill-c ── */
-.cmp-name       { color: var(--gc, var(--color-text)); }
-.lib-group-label { color: var(--pill-c, var(--color-text-muted)); }
-.preset-pill--active {
-  border-color: var(--pill-c, var(--color-primary));
-  color: var(--pill-c, var(--color-primary));
+    &--high {
+      color: var(--color-danger);
+      opacity: 1;
+      font-weight: 600;
+    }
+  }
+
+  /* ── Nuclear envelope bars (double-shell) ──────────────────── */
+  &__nuc-section {
+    margin-top: 0.5rem;
+    padding: 0.35rem 0.5rem;
+    background: rgba(167, 139, 250, 0.05);
+    border-left: 2px solid rgba(167, 139, 250, 0.3);
+    border-radius: 0 4px 4px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.28rem;
+  }
+
+  &__nuc-bar-row { display: flex; align-items: center; gap: 0.5rem; }
+
+  &__nuc-bar-label {
+    font-size: 0.58rem;
+    font-family: var(--font-mono);
+    color: #a78bfa;
+    width: 3rem;
+    flex-shrink: 0;
+  }
+
+  &__nuc-bar-track {
+    flex: 1;
+    height: 3px;
+    background: rgba(167, 139, 250, 0.12);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  &__nuc-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.3s ease;
+
+    &--t    { background: #a78bfa; }
+    &--h    { background: rgba(0, 212, 255, 0.7); }
+    &--warn { background: #ff4d6d !important; animation: bar-flash 0.6s ease-in-out infinite alternate; }
+  }
+
+  &__nuc-bar-val {
+    font-size: 0.58rem;
+    font-family: var(--font-mono);
+    color: #a78bfa;
+    width: 2rem;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  &__nuc-sel-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 0.15rem;
+    border-top: 1px solid rgba(167, 139, 250, 0.12);
+    margin-top: 0.05rem;
+  }
+
+  &__nuc-sel-label { font-size: 0.58rem; color: rgba(167, 139, 250, 0.7); }
+
+  &__nuc-sel-val {
+    font-size: 0.68rem;
+    font-family: var(--font-mono);
+    font-weight: 600;
+    color: #a78bfa;
+  }
+
+  &__nuc-sel--good { color: #4ade80; }
+  &__nuc-sel--ok   { color: #fbbf24; }
+  &__nuc-sel--low  { color: #ff4d6d; }
+
+  /* ── Vm / SAR readout ──────────────────────────────────────── */
+  &__vm-sar-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    padding: 0.45rem 0.65rem;
+    cursor: default;
+  }
+
+  &__vm-sar-cell { display: flex; align-items: baseline; gap: 0.35rem; flex-wrap: wrap; }
+
+  &__vs-type {
+    font-size: 0.65rem;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    opacity: 0.85;
+    flex-shrink: 0;
+
+    &--t { color: var(--color-danger); }
+    &--h { color: var(--color-primary); }
+  }
+
+  &__vs-vm {
+    font-size: 0.9rem;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    line-height: 1;
+
+    &--t   { color: var(--color-danger); }
+    &--h   { color: var(--color-primary); }
+    &--res { color: var(--color-lime); }
+  }
+
+  &__vs-sar {
+    font-size: 0.62rem;
+    font-family: var(--font-mono);
+    color: var(--color-text-muted);
+    opacity: 0.85;
+    white-space: nowrap;
+  }
+
+  &__vs-elysis {
+    font-size: 0.58rem;
+    font-family: var(--font-mono);
+    color: var(--color-text-muted);
+    opacity: 0.7;
+    white-space: nowrap;
+    cursor: default;
+
+    &--safe { color: var(--color-lime); }
+  }
+
+  /* ── Mode badge ────────────────────────────────────────────── */
+  &__mode-row { display: flex; flex-direction: column; gap: 0.35rem; }
+
+  &__mode-badge {
+    font-size: 0.68rem;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 0.2rem 0.55rem;
+    border-radius: 3px;
+    border: 1px solid transparent;
+    align-self: flex-start;
+    transition: color 0.3s, border-color 0.3s;
+
+    &--therapeutic { color: var(--color-lime);    border-color: rgba(57, 255, 20, 0.33); }
+    &--ablative    { color: var(--color-danger);  border-color: rgba(255, 77, 109, 0.33); }
+    &--marginal    { color: var(--color-amber);   border-color: rgba(251, 191, 36, 0.33); }
+    &--approaching { color: var(--color-amber);   border-color: rgba(251, 191, 36, 0.33); }
+    &--subthreshold { color: var(--color-primary); border-color: rgba(0, 212, 255, 0.33); }
+  }
+
+  /* ── Optimal note ──────────────────────────────────────────── */
+  &__optimal-note {
+    font-size: 0.62rem;
+    font-family: var(--font-mono);
+    color: var(--color-text-muted);
+    opacity: 0.85;
+    line-height: 1.5;
+
+    &--snap {
+      cursor: pointer;
+      color: var(--color-amber);
+      opacity: 1;
+      transition: opacity 0.15s, color 0.2s;
+
+      &:hover { opacity: 0.75; }
+    }
+
+    &--beyond {
+      color: var(--color-text-muted);
+      opacity: 0.7;
+
+      &:hover { opacity: 0.55; }
+    }
+  }
+
+  /* ── Model warning ─────────────────────────────────────────── */
+  &__model-warning {
+    font-size: 0.6rem;
+    font-family: var(--font-mono);
+    color: var(--color-amber);
+    background: rgba(251, 191, 36, 0.07);
+    border: 1px solid rgba(251, 191, 36, 0.25);
+    border-radius: var(--radius);
+    padding: 0.3rem 0.55rem;
+    line-height: 1.55;
+  }
+
+  &__model-warning-btn {
+    display: block;
+    margin-top: 0.4rem;
+    background: rgba(251, 191, 36, 0.12);
+    border: 1px solid rgba(251, 191, 36, 0.4);
+    border-radius: 3px;
+    color: var(--color-amber);
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    letter-spacing: 0.08em;
+    padding: 0.2rem 0.55rem;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+
+    &:hover {
+      background: rgba(251, 191, 36, 0.22);
+      border-color: rgba(251, 191, 36, 0.65);
+    }
+  }
+
+  /* ── Comparison table ──────────────────────────────────────── */
+  &__comparison-table { display: flex; flex-direction: column; gap: 0.18rem; }
+
+  &__cmp-row {
+    display: grid;
+    grid-template-columns: 3.2rem 1fr 2.8rem;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.1rem 0.2rem;
+    border-radius: 3px;
+    transition: background 0.1s;
+
+    &--active { background: rgba(255, 255, 255, 0.05); }
+  }
+
+  &__cmp-name {
+    font-size: 0.56rem;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--gc, var(--color-text));
+  }
+
+  &__cmp-bar-track {
+    height: 4px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  &__cmp-bar {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.3s ease;
+
+    &.sel-panel__cmp--strong  { background: var(--color-lime); }
+    &.sel-panel__cmp--marginal { background: var(--color-amber); }
+    &.sel-panel__cmp--weak    { background: var(--color-danger); }
+  }
+
+  &__cmp-sel {
+    font-size: 0.6rem;
+    font-family: var(--font-mono);
+    font-weight: 600;
+    text-align: right;
+
+    &.sel-panel__cmp--strong  { color: var(--color-lime); }
+    &.sel-panel__cmp--marginal { color: var(--color-amber); }
+    &.sel-panel__cmp--weak    { color: var(--color-danger); }
+  }
+
+  /* ── Library sections ──────────────────────────────────────── */
+  &__library { display: flex; flex-direction: column; gap: 0.4rem; }
+
+  &__lib-title {
+    font-size: 0.6rem;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--color-text-heading);
+    opacity: 0.9;
+    margin-bottom: 0.1rem;
+  }
+
+  &__lib-group { display: flex; flex-direction: column; gap: 0.25rem; margin-bottom: 0.25rem; }
+
+  &__lib-group-label {
+    font-size: 0.55rem;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    opacity: 0.9;
+    color: var(--pill-c, var(--color-text-muted));
+  }
+
+  &__lib-pills { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+
+  &__preset-pill {
+    font-size: 0.58rem;
+    font-family: var(--font-mono);
+    padding: 0.18rem 0.5rem;
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    background: transparent;
+    color: var(--color-text);
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s, background-color 0.15s;
+    white-space: nowrap;
+
+    &:hover { border-color: var(--color-primary); color: var(--color-primary); }
+
+    &--active {
+      background-color: rgba(255, 255, 255, 0.05);
+      border-color: var(--pill-c, var(--color-primary));
+      color: var(--pill-c, var(--color-primary));
+    }
+  }
 }
 </style>
