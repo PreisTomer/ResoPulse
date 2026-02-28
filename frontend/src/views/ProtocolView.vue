@@ -138,6 +138,29 @@ export default defineComponent({})
               A hyperthermic warning is issued when T exceeds 42 °C. Sustained application above
               ~700 V/cm in saline approaches protein denaturation thresholds for most tissue types.
             </p>
+            <div class="warn-box">
+              <span class="warn-icon">⚠</span>
+              <span>
+                <strong>SAR model limits:</strong>
+                The internal field factor α = 3σ<sub>e</sub>/(2σ<sub>e</sub>+σ<sub>i</sub>) is the
+                exact DC (quasi-static) Clausius-Mossotti solution for a sphere in a uniform field
+                (Foster &amp; Schwan 1989 [5]). At frequencies above the characteristic frequency
+                f<sub>c</sub>, the membrane capacitance increasingly shields the cell interior,
+                so the true internal field — and therefore the true SAR — is lower than this
+                model predicts. The SAR displayed here is an upper bound; the overestimate
+                grows substantially at f ≫ f<sub>c</sub>.
+                <br><br>
+                <strong>Thermal model scope:</strong>
+                The Newton cooling coefficient λ = 0.02 s⁻¹ (time constant τ<sub>th</sub> ≈ 50 s)
+                represents <em>tissue-level</em> lumped heat dissipation via perfusion and thermal
+                conduction, as appropriate for macroscopic electroporation applicators
+                (Foster &amp; Schwan 1989 [5]). It is <strong>not</strong> a single-cell thermal
+                model: a free cell in solution has τ<sub>th</sub> ≈ R²/(κ/ρc<sub>p</sub>) ≈ 0.6 µs
+                and equilibrates with its medium essentially instantaneously on the timescale of
+                pulsed protocols. The temperature displayed reflects bulk medium heating, not
+                local membrane temperature.
+              </span>
+            </div>
 
             <h3 id="disruption" class="subsec-title">2.3 Disruption Criterion</h3>
             <p class="body-text">
@@ -269,6 +292,22 @@ export default defineComponent({})
                 parameters as theoretical research targets only.
               </span>
             </div>
+            <div class="warn-box">
+              <span class="warn-icon">⚠</span>
+              <span>
+                <strong>Enveloped vs. non-enveloped virus caveat:</strong>
+                The Tsen et al. [10] and Dykeman &amp; Sankey [11] acoustic resonance model
+                was experimentally validated on <em>non-enveloped</em> icosahedral protein-capsid
+                viruses (M13 bacteriophage, TMV, CCMV). Influenza A and SARS-CoV-2 are
+                <em>lipid-enveloped</em> RNA viruses — their envelope is a fluid lipid bilayer
+                with embedded spike proteins, <strong>not</strong> a rigid protein capsid.
+                A fluid lipid membrane has no well-defined mechanical resonance Q (Q ≈ 1,
+                highly damped); the f<sub>res</sub>, Q, and E<sub>thr</sub> parameters
+                for enveloped viruses in this table are theoretical extrapolations that are
+                <strong>not supported by published experimental data</strong>. They are included
+                as exploratory research targets only.
+              </span>
+            </div>
 
             <h3 id="nsep" class="subsec-title">2.5 Nanosecond Pulsed EP (nsEP) — Pulse Width Selectivity</h3>
             <p class="body-text">
@@ -306,7 +345,8 @@ export default defineComponent({})
               <div class="eq-main">V<sub>m,nuc</sub>(f) = (1.5 · E · R<sub>nuc</sub> · ω·τ<sub>out</sub>) / √[(1+(ωτ<sub>out</sub>)²) · (1+(ωτ<sub>ne</sub>)²)]</div>
               <div class="eq-divider"></div>
               <div class="eq-sub">τ<sub>out</sub> = R·C<sub>m</sub>·(2σ<sub>e</sub>+σ<sub>i</sub>)/(2σ<sub>e</sub>·σ<sub>i</sub>) &nbsp;(existing outer shell τ)</div>
-              <div class="eq-sub">τ<sub>ne</sub> = R<sub>nuc</sub>·C<sub>m,ne</sub>·(σ<sub>i</sub>+σ<sub>np</sub>)/(σ<sub>i</sub>·σ<sub>np</sub>) &nbsp;·&nbsp; C<sub>m,ne</sub> = ε<sub>ne</sub>·ε₀/d<sub>ne</sub></div>
+              <div class="eq-sub">τ<sub>ne</sub> = R<sub>nuc</sub>·C<sub>m,ne</sub>·(2σ<sub>i</sub>+σ<sub>np</sub>)/(2σ<sub>i</sub>·σ<sub>np</sub>) &nbsp;·&nbsp; C<sub>m,ne</sub> = ε<sub>ne</sub>·ε₀/d<sub>ne</sub></div>
+              <div class="eq-note-sub">σ<sub>i</sub> = cytoplasm conductivity (external medium for nucleus); σ<sub>np</sub> = nucleoplasm</div>
               <div class="eq-sub">f<sub>peak</sub> = 1/(2π√(τ<sub>out</sub>·τ<sub>ne</sub>)) &nbsp;·&nbsp; peak gain = τ<sub>out</sub>/(τ<sub>out</sub>+τ<sub>ne</sub>)</div>
               <div class="eq-note">Kotnik &amp; Miklavcic, Biophys. J. 90:480 (2006) [13]</div>
             </div>
@@ -314,23 +354,40 @@ export default defineComponent({})
               The bandpass shape arises because at low frequencies both shells short-circuit
               (no voltage division across the nuclear membrane), and at high frequencies
               the outer membrane shields the interior. The peak is typically in the
-              <strong>0.5–2 MHz</strong> range for mammalian cells.
+              <strong>0.87–2.1 MHz</strong> range for the presets in this library.
               Cancer cells have a higher nuclear-to-cytoplasmic (N/C) ratio, thinner and
               more conductive nuclear envelopes, and lower nuclear V<sub>m</sub> thresholds —
               creating an additional cancer-selectivity axis. Enable this model via the
               <strong>Shell Model</strong> toggle in the Field Control panel (visible for
               nucleated mammalian presets only; hidden for bacteria, viruses, and RBC).
             </p>
+            <div class="warn-box">
+              <span class="warn-icon">⚠</span>
+              <span>
+                <strong>Thin-shell / sphere-in-infinite-medium approximation:</strong>
+                The Kotnik &amp; Miklavcic (2006) double-shell model assumes the nuclear
+                radius R<sub>nuc</sub> is small relative to the cell radius R (thin-shell,
+                dilute-nucleus limit). For the adenocarcinoma preset,
+                R<sub>nuc</sub>/R = 8/15 ≈ 0.53 — near the boundary of the approximation's
+                validity (N/C ratio ≈ 0.28 by volume). At this N/C ratio the cytoplasmic
+                volume is comparable to the nuclear volume, and the sphere-in-infinite-medium
+                assumption underestimates the electric field concentration around the nuclear
+                envelope by up to ~15%. The model remains a useful qualitative predictor of
+                bandpass frequency and cancer/normal selectivity trends, but quantitative
+                Vm<sub>nuc</sub> values for high N/C ratio cells should be interpreted
+                with corresponding uncertainty.
+              </span>
+            </div>
             <table class="param-table">
               <thead>
                 <tr><th>Cell</th><th>R<sub>nuc</sub> (µm)</th><th>d<sub>ne</sub> (nm)</th><th>σ<sub>ne</sub> (S/m)</th><th>V<sub>thr,nuc</sub> (V)</th><th>f<sub>peak</sub> (saline)</th></tr>
               </thead>
               <tbody>
-                <tr><td>Hepatocyte</td><td class="mono">5.0</td><td class="mono">15</td><td class="mono">0.010</td><td class="mono">0.50</td><td class="mono primary-val">~1.4 MHz</td></tr>
-                <tr><td>Adenocarcinoma</td><td class="mono">8.0</td><td class="mono">12</td><td class="mono">0.020</td><td class="mono cancer-val">0.40</td><td class="mono cancer-val">~0.74 MHz</td></tr>
-                <tr><td>GBM</td><td class="mono">7.0</td><td class="mono">11</td><td class="mono">0.020</td><td class="mono cancer-val">0.35</td><td class="mono cancer-val">~0.58 MHz</td></tr>
-                <tr><td>MCF-7</td><td class="mono">6.0</td><td class="mono">13</td><td class="mono">0.015</td><td class="mono cancer-val">0.42</td><td class="mono cancer-val">~0.88 MHz</td></tr>
-                <tr><td>HL-60</td><td class="mono">4.0</td><td class="mono">14</td><td class="mono">0.015</td><td class="mono cancer-val">0.45</td><td class="mono cancer-val">~1.1 MHz</td></tr>
+                <tr><td>Hepatocyte</td><td class="mono">5.0</td><td class="mono">15</td><td class="mono">0.010</td><td class="mono">0.50</td><td class="mono primary-val">~1.66 MHz</td></tr>
+                <tr><td>Adenocarcinoma</td><td class="mono">8.0</td><td class="mono">12</td><td class="mono">0.020</td><td class="mono cancer-val">0.40</td><td class="mono cancer-val">~0.87 MHz</td></tr>
+                <tr><td>GBM</td><td class="mono">7.0</td><td class="mono">11</td><td class="mono">0.020</td><td class="mono cancer-val">0.35</td><td class="mono cancer-val">~1.05 MHz</td></tr>
+                <tr><td>MCF-7</td><td class="mono">6.0</td><td class="mono">13</td><td class="mono">0.015</td><td class="mono cancer-val">0.42</td><td class="mono cancer-val">~1.28 MHz</td></tr>
+                <tr><td>HL-60</td><td class="mono">4.0</td><td class="mono">14</td><td class="mono">0.015</td><td class="mono cancer-val">0.45</td><td class="mono cancer-val">~2.12 MHz</td></tr>
                 <tr><td>RBC</td><td class="mono muted">—</td><td class="mono muted">—</td><td class="mono muted">—</td><td class="mono muted">—</td><td class="mono muted">Anucleate — not applicable</td></tr>
               </tbody>
             </table>

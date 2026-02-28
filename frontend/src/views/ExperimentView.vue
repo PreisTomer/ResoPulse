@@ -36,6 +36,14 @@ export default defineComponent({
     currentTargetId(newId: string, oldId: string) {
       if (newId !== oldId) this.applyTargetDefaults()
     },
+    /** If the target category becomes mammalian (e.g. via radius edit) while resonance mode
+     *  is active, immediately revert to Schwan mode. Resonance has no physical meaning for
+     *  mammalian cells — the button is disabled but state drift can still occur via param editing. */
+    'store.targetCellCategory'(cat: string) {
+      if (cat === 'mammalian' && this.store.chartMode === 'resonance') {
+        this.store.setChartMode('schwan')
+      }
+    },
   },
 
   computed: {
@@ -144,6 +152,8 @@ export default defineComponent({
             <button
               class="sb-mode-btn"
               :class="{ 'sb-mode-btn--active': store.chartMode === 'resonance' }"
+              :disabled="store.targetCellCategory === 'mammalian'"
+              :title="store.targetCellCategory === 'mammalian' ? 'Resonance mode applies only to bacteria and virus targets. Mammalian cells have no rigid capsid or cell-wall acoustic resonance — use IRE/Vm mode.' : ''"
               @click="store.setChartMode('resonance')"
             >{{ $t('slider.resonanceMode') }}</button>
           </div>
@@ -409,5 +419,11 @@ export default defineComponent({
 
 .sb-mode-btn + .sb-mode-btn {
   border-left: 1px solid var(--color-border);
+}
+
+.sb-mode-btn:disabled {
+  opacity: 0.32;
+  cursor: not-allowed;
+  pointer-events: auto; /* keep hover for native :title tooltip */
 }
 </style>
