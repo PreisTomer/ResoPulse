@@ -2,13 +2,23 @@
 import { defineComponent, computed } from 'vue'
 import { CELL_PRESETS, GROUP_COLORS, GROUP_LABELS, type CellGroup, type CellPreset } from '../constants/cellLibrary'
 import { MEDIA } from '../mockData'
-import { membraneCm, computeFc } from '../utils/physics'
+import { membraneCm, computeFc, computeTau, computeNuclearTau } from '../utils/physics'
 
 const SIGMA_SALINE = MEDIA.saline.conductivity // 1.5 S/m
 
 const GROUPS: CellGroup[] = ['reference', 'cancer', 'bacteria', 'virus']
 
-type ResonantPreset = CellPreset & { resonantFreqGHz?: number; capsidQ?: number; resonantThresholdVcm?: number }
+type ResonantPreset = CellPreset & {
+  resonantFreqGHz?: number
+  capsidQ?: number
+  resonantThresholdVcm?: number
+  nuclearRadius?: number
+  nuclearMembraneThickness?: number
+  nuclearMembraneEps?: number
+  nuclearMembraneConductivity?: number
+  nucleoplasmConductivity?: number
+  nuclearThresholdVoltage?: number
+}
 
 export default defineComponent({
   setup() {
@@ -30,6 +40,20 @@ export default defineComponent({
         const resEthrDisplay = pr.resonantThresholdVcm
           ? `${pr.resonantThresholdVcm}`
           : '—'
+        // Nuclear envelope parameters (mammalian nucleated cells)
+        const hasNuclear = !!pr.nuclearRadius
+        const nucRDisplay = pr.nuclearRadius ? `${pr.nuclearRadius}` : '—'
+        // f_peak for nuclear section: 1 / (2π × √(τ_out × τ_ne))
+        let nucFpeakDisplay = '—'
+        if (hasNuclear) {
+          const tau_out = computeTau(p, SIGMA_SALINE)
+          const tau_ne  = computeNuclearTau(p, SIGMA_SALINE)
+          if (tau_out > 0 && tau_ne > 0) {
+            const fpeak_Hz  = 1 / (2 * Math.PI * Math.sqrt(tau_out * tau_ne))
+            const fpeak_MHz = fpeak_Hz / 1e6
+            nucFpeakDisplay = `${fpeak_MHz.toFixed(2)} MHz`
+          }
+        }
         return {
           ...p,
           cmDisplay: cm.toFixed(2),
@@ -38,11 +62,16 @@ export default defineComponent({
           resQDisplay,
           resEthrDisplay,
           hasResonance: !!pr.resonantFreqGHz,
+          hasNuclear,
+          nucRDisplay,
+          nucFpeakDisplay,
           color: GROUP_COLORS[p.group],
           groupLabel: GROUP_LABELS[p.group],
         }
       })
     )
+
+    const nuclearPresets = computed(() => presets.value.filter(p => p.hasNuclear))
 
     const mediaEntries = Object.entries(MEDIA).map(([key, val]) => ({
       key,
@@ -50,7 +79,7 @@ export default defineComponent({
       conductivity: val.conductivity,
     }))
 
-    return { presets, mediaEntries, GROUPS, GROUP_COLORS, GROUP_LABELS }
+    return { presets, nuclearPresets, mediaEntries, GROUPS, GROUP_COLORS, GROUP_LABELS }
   },
 })
 </script>
@@ -67,8 +96,8 @@ export default defineComponent({
         </div>
         <h1 class="page-title">Cell &amp; Pathogen Data Sets</h1>
         <p class="page-subtitle">
-          Biophysical parameters for all presets · Schwan single-shell model · acoustic resonance (bacteria/virus)
-          <br>Computed in physiological saline (σ<sub>e</sub> = 1.5 S/m)
+          Biophysical parameters for all presets · Schwan single-shell model · double-shell nuclear envelope (mammalian) · acoustic resonance (bacteria/virus)
+          <br>Computed in physiological saline (σ<sub>e</sub> = 1.5 S/m) · Kotnik &amp; Miklavcic (2000, 2006)
         </p>
       </div>
 
@@ -104,6 +133,7 @@ export default defineComponent({
                 <th>C<sub>m</sub> (mF/m²)</th>
                 <th>f<sub>c</sub> in saline</th>
                 <th>V<sub>m,thr</sub> (V)</th>
+                <th title="Nuclear radius — double-shell model (mammalian nucleated cells only; RBC and bacteria/virus have no nucleus)">R<sub>nuc</sub> (µm)</th>
                 <th>ρ (kg/m³)</th>
                 <th title="Acoustic resonance frequency — bacteria/virus only">f<sub>res</sub></th>
                 <th title="Mechanical quality factor — sharpness of resonance peak">Q</th>
@@ -134,6 +164,7 @@ export default defineComponent({
                   class="mono"
                   :class="p.group === 'reference' ? 'ref-val' : 'cancer-val'"
                 >{{ p.thresholdVoltage.toFixed(2) }}</td>
+                <td class="mono" :class="p.hasNuclear ? 'nuc-val' : 'muted'">{{ p.nucRDisplay }}</td>
                 <td class="mono muted">{{ p.density }}</td>
                 <td class="mono" :class="p.hasResonance ? 'primary-val' : 'muted'">{{ p.resFreqDisplay }}</td>
                 <td class="mono" :class="p.hasResonance ? '' : 'muted'">{{ p.resQDisplay }}</td>
@@ -262,6 +293,56 @@ export default defineComponent({
         </div>
       </section>
 
+      <!-- Double-shell nuclear envelope parameters -->
+      <section class="ds-card">
+        <div class="card-hdr">
+          <h2 class="card-title">Double-Shell Nuclear Envelope Parameters</h2>
+          <span class="card-tag">Mammalian nucleated cells only · Kotnik &amp; Miklavcic (2006)</span>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Cell</th>
+                <th title="Nuclear radius — typically 40–60% of cell radius for mammalian cells">R<sub>nuc</sub> (µm)</th>
+                <th title="Nuclear envelope thickness (inner + outer membrane + lumen ≈ 40 nm total; d here is electrical effective thickness)">d<sub>ne</sub> (nm)</th>
+                <th title="Relative permittivity of nuclear envelope — elevated vs lipid bilayer due to nuclear pore complex contribution">ε<sub>ne</sub></th>
+                <th title="Conductivity of nuclear envelope — partial shunting by nuclear pore complexes raises σ_ne above pure lipid bilayer">σ<sub>ne</sub> (S/m)</th>
+                <th title="Nucleoplasm conductivity — typically higher than cytoplasm due to dissolved chromatin and RNA">σ<sub>np</sub> (S/m)</th>
+                <th title="Nuclear membrane disruption threshold voltage — cancer nuclei have thinner/leakier NE, lower threshold">V<sub>thr,nuc</sub> (V)</th>
+                <th title="Peak frequency of nuclear Vm bandpass: f_peak = 1 / (2π × √(τ_out × τ_ne)) — nuclear Vm is maximised here, not at DC">f<sub>peak</sub> in saline</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="p in nuclearPresets" :key="p.presetId">
+                <td class="cell-name">
+                  <span
+                    class="group-badge"
+                    :style="{ color: p.color, borderColor: p.color + '55', background: p.color + '11' }"
+                  >{{ p.groupLabel }}</span>
+                  {{ p.label }}
+                </td>
+                <td class="mono nuc-val">{{ p.nuclearRadius }}</td>
+                <td class="mono">{{ p.nuclearMembraneThickness ?? 15 }}</td>
+                <td class="mono">{{ p.nuclearMembraneEps ?? 10 }}</td>
+                <td class="mono">{{ p.nuclearMembraneConductivity ?? 0.010 }}</td>
+                <td class="mono">{{ p.nucleoplasmConductivity ?? 0.9 }}</td>
+                <td
+                  class="mono"
+                  :class="p.group === 'reference' ? 'ref-val' : 'cancer-val'"
+                >{{ p.nuclearThresholdVoltage ?? 0.50 }}</td>
+                <td class="mono nuc-val">{{ p.nucFpeakDisplay }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="table-footer">
+          τ<sub>ne</sub> = R<sub>nuc</sub>·C<sub>m,ne</sub>·(2σ<sub>i</sub>+σ<sub>np</sub>)/(2σ<sub>i</sub>·σ<sub>np</sub>)  ·  C<sub>m,ne</sub> = ε<sub>ne</sub>·ε₀/d<sub>ne</sub>  ·
+          f<sub>peak</sub> = 1/(2π√(τ<sub>out</sub>·τ<sub>ne</sub>))  ·  Nuclear Vm is bandpass — zero at DC &amp; GHz, peaks near f<sub>peak</sub>  ·
+          Cancer nuclei: higher N/C ratio, thinner NE, lower σ<sub>ne</sub> threshold → additional selectivity axis at f<sub>peak</sub>
+        </div>
+      </section>
+
       <!-- Acoustic resonance reference -->
       <section class="ds-card">
         <div class="card-hdr">
@@ -326,7 +407,7 @@ export default defineComponent({
           <div class="geo-assumptions">
             <div class="geo-item">
               <span class="geo-icon">◈</span>
-              <span>Spherical single-shell cell model</span>
+              <span>Single-shell (Schwan) or double-shell (nuclear envelope) cell model</span>
             </div>
             <div class="geo-item">
               <span class="geo-icon">◈</span>
@@ -513,6 +594,7 @@ export default defineComponent({
 .cancer-val  { color: var(--color-danger);  }
 .ref-val     { color: var(--color-primary); }
 .warn-val    { color: var(--color-amber);   }
+.nuc-val     { color: #a78bfa; }
 .muted       { color: var(--color-text-muted); }
 .cell-name   { font-weight: 500; color: var(--color-text-heading); }
 .notes-cell  { font-size: 0.71rem; color: var(--color-text-muted); min-width: 160px; }

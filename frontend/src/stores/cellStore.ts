@@ -367,11 +367,6 @@ export const useCellStore = defineStore('cell', {
       this.currentBroadcastFrequency = khz
     },
 
-    // Legacy alias — called from local-mode broadcastFieldParams
-    setBroadcastFrequency(khz: number) {
-      this.currentBroadcastFrequency = khz
-    },
-
     handleResonancePacket(packet: FieldPacket) {
       this.currentBroadcastFrequency = packet.activeFrequencyKHz
       this.fieldIntensity = packet.activeFieldIntensityVcm
