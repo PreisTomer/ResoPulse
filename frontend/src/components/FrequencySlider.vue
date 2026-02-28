@@ -4,11 +4,33 @@ import { useCellStore } from '../stores/cellStore'
 import { broadcastFieldParams } from '../services/socket'
 import { MEDIA } from '../mockData'
 import type { MediumKey } from '../mockData'
+import {
+  formatLysisTime,
+  tipWaveform,
+  tipDutyCycle,
+  tipMedium,
+  tipMediumKeys,
+  tipFreq,
+  tipFcSub,
+  tipField,
+  tipTargetBadge,
+  tipHealthyBadge,
+  tipOrientation,
+  tipLysisN,
+  tipPulseWidth,
+} from '../utils/sliderTooltips'
 
 export default defineComponent({
   setup() {
     const store = useCellStore()
     return { store, MEDIA }
+  },
+
+  data() {
+    return {
+      protocolOpen: true,
+      advancedOpen: false,
+    }
   },
 
   computed: {
@@ -148,101 +170,35 @@ export default defineComponent({
     },
 
     tipWaveform(): string {
-      const tssNow = this.maxSteadyTemp
-      const cwWarn = tssNow > 42
-        ? `\n\n<span class="tip-warn">⚠ At current field (${this.currentField} V/cm), CW would heat cells to T_ss ≈ ${Math.min(tssNow, 150).toFixed(0)}°C — reduce field before switching to CW.</span>`
-        : ''
-      return `<strong>Waveform Type</strong>
-<span class="tip-val">CW (sinusoidal)</span>  — continuous wave, always on
-  SAR = σ_i·α²·E²/(2ρ)  [waveformFactor = 0.5, RMS halving]
-  Thermal: effective duty cycle = 1.0 (full continuous heating)
-  Typical for TTFields (1–3 V/cm, 100–500 kHz sinusoidal)
-
-<span class="tip-val">Pulsed (DC)</span>  — square-wave bursts
-  SAR = σ_i·α²·E²/ρ  [waveformFactor = 1.0, full peak field]
-  Thermal load = SAR_peak × duty cycle (use low dc to limit heating)
-  Typical for IRE / electroporation protocols${cwWarn}`
+      return tipWaveform(this.currentField, this.maxSteadyTemp)
     },
 
     tipDutyCycle(): string {
-      const dc    = this.store.effectiveDutyCycle
-      const effT  = (this.store.targetSAR  * dc).toFixed(2)
-      const effH  = (this.store.healthySAR * dc).toFixed(2)
-      const tss   = this.maxSteadyTemp
-      const level = this.thermalDangerLevel
-      const warnText = level === 'vaporizing'
-        ? '\n<span class="tip-warn">⚡ VAPORIZING — cells instantly destroyed at T_ss ≥ 100°C</span>'
-        : level === 'denaturing'
-          ? '\n<span class="tip-warn">⚠ DENATURING — protein coagulation at T_ss ≥ 60°C (collagen ~60°C, albumin ~68°C)</span>'
-          : level === 'hyperthermic'
-            ? '\n<span class="tip-warn">⚠ HYPERTHERMIC — thermal damage onset at T_ss ≥ 42°C (IAHT threshold)</span>'
-            : ''
-      return `<strong>Pulse Duty Cycle  (t_on / period)</strong>
-Current: <span class="tip-val">${this.dutyCycleDisplay}</span>
-
-Fraction of time the field is active.
-Scales effective SAR → thermal load:
-  SAR_eff = SAR_peak × duty_cycle
-
-<span class="tip-val">T: ${effT} W/kg</span>  ·  <span class="tip-val">H: ${effH} W/kg</span>
-
-Projected T_ss = <span class="tip-val">${tss.toFixed(0)}°C</span>  (T_ss = 37 + SAR_eff/(λ·cp))
-Typical pulsed electroporation: 0.001%–1%${warnText}`
+      return tipDutyCycle({
+        effectiveDutyCycle: this.store.effectiveDutyCycle,
+        targetSAR:          this.store.targetSAR,
+        healthySAR:         this.store.healthySAR,
+        maxSteadyTemp:      this.maxSteadyTemp,
+        thermalDangerLevel: this.thermalDangerLevel,
+        dutyCycleDisplay:   this.dutyCycleDisplay,
+      })
     },
 
     // ── Tooltip content ───────────────────────────────────────────────────
     tipMedium(): string {
-      const key = this.currentMedium
-      const m = this.MEDIA[key]
-      return `<strong>Propagation Medium</strong>
-Sets external conductivity <span class="tip-val">σ_e = ${m.conductivity} S/m</span>
-Used in Schwan time constant:
-  τ = R·Cm·(2σ_e+σ_i) / (2σ_e·σ_i)
-Higher σ_e → lower τ → higher fc → broader quasi-DC regime`
+      return tipMedium(this.currentMedium)
     },
 
     tipMediumKeys(): Record<string, string> {
-      const descs: Record<string, string> = {
-        saline: 'Matches physiological interstitial fluid',
-        blood:  'Whole blood — moderate coupling',
-        tissue: 'Soft tissue (low-perfusion) — note: DMEM has σ_e ≈ 1.4–1.6 S/m, not 0.4 S/m',
-        water:  'Distilled water — near-zero coupling',
-      }
-      const out: Record<string, string> = {}
-      for (const key of Object.keys(this.MEDIA)) {
-        const m = this.MEDIA[key as keyof typeof this.MEDIA]
-        out[key] = `<strong>${m.name}</strong>
-σ_e = <span class="tip-val">${m.conductivity} S/m</span>
-${descs[key] ?? ''}`
-      }
-      return out
+      return tipMediumKeys()
     },
 
     tipFreq(): string {
-      return `<strong>RF Broadcast Frequency</strong>
-Current: <span class="tip-val">${this.freqDisplay}</span>
-Schwan denominator: √(1 + (2πf·τ)²)
-
-<span class="tip-val">fc(T) = ${this.targetFcDisplay}</span> — target roll-off frequency
-<span class="tip-val">fc(H) = ${this.healthyFcDisplay}</span> — healthy roll-off frequency
-
-Below fc → quasi-DC regime, Vm at maximum
-Above fc → Vm rolls off toward zero`
+      return tipFreq(this.freqDisplay, this.targetFcDisplay, this.healthyFcDisplay)
     },
 
     tipFcSub(): string {
-      return `<strong>Characteristic Frequency  fc = 1 / (2πτ)</strong>
-At f = fc,  Vm = 0.707 × Vm_DC  (−3 dB point)
-τ = R·Cm·(2σ_e+σ_i)/(2σ_e·σ_i)  [Kotnik & Miklavcic 2000]
-
-Depends on cell size and membrane properties:
-  Reference cells: ~1.1–1.4 MHz  (hepatocyte ~1.08 MHz)
-  Cancer cells:    ~0.5–1.4 MHz  (adenocarcinoma ~0.49 MHz, HL-60 ~1.35 MHz)
-  Bacteria:        ~11–49 MHz  (E. coli ~11 MHz, MRSA ~49 MHz; σ_i = 0.3 S/m)
-  Virions:         fc ~0.6–0.75 MHz (σ_i-limited; Schwan model is approximate for virions)
-
-Note: for cancer/normal cell pairs where τ_T > τ_H (typical),
-  maximum selectivity is at quasi-DC. Above fc(T) selectivity decreases.`
+      return tipFcSub()
     },
 
     /** Sub-text below frequency readout: shows f_res in resonance mode, fc in Schwan mode. */
@@ -260,91 +216,38 @@ Note: for cancer/normal cell pairs where τ_T > τ_H (typical),
     },
 
     tipField(): string {
-      if (this.store.chartMode === 'resonance') {
-        const t = this.store.target as { resonantFreqGHz?: number; capsidQ?: number; resonantThresholdVcm?: number }
-        if (t.resonantFreqGHz && t.resonantThresholdVcm) {
-          const fStr = t.resonantFreqGHz >= 1 ? `${t.resonantFreqGHz.toFixed(1)} GHz` : `${(t.resonantFreqGHz * 1000).toFixed(0)} MHz`
-          const thrStr = `${t.resonantThresholdVcm} V/cm`
-          const pct = (this.targetDisruption * 100).toFixed(0) + '%'
-          const warn = this.targetDisruption >= 1.0
-            ? '\n<span class="tip-warn">⚡ Disruption threshold exceeded — capsid/cell-wall rupture</span>'
-            : this.targetDisruption > 0.85
-              ? '\n<span class="tip-warn">⚠ Approaching disruption threshold</span>'
-              : ''
-          return `<strong>${this.$t('resonance.tipFieldTitle')}</strong>
-${this.$t('slider.fieldIntensity')}: <span class="tip-val">${this.fieldDisplay}</span>
-
-${this.$t('resonance.tipFieldFormula')}
-f_res(T) = <span class="tip-val">${fStr}</span>  ·  E_threshold = <span class="tip-val">${thrStr}</span>  ·  Q = ${t.capsidQ ?? 20}
-
-${this.$t('resonance.tipFieldRatio')}: <span class="tip-val">${pct}</span>
-${this.$t('resonance.tipFieldDisruptNote')}${warn}`
-        }
-        return `<strong>${this.$t('slider.fieldIntensity')}</strong>\n${this.$t('resonance.noResonance')}`
-      }
-      const cat    = this.store.targetCellCategory
-      const tLysis = this.store.targetLysisField
-      const hLysis = this.store.healthyLysisField
-      const tStr   = tLysis >= 1000 ? `${(tLysis / 1000).toFixed(1)} kV/cm` : `${tLysis.toFixed(0)} V/cm`
-      const hStr   = hLysis >= 1000 ? `${(hLysis / 1000).toFixed(1)} kV/cm` : `${hLysis.toFixed(0)} V/cm`
-      const contextNote = cat === 'virus'
-        ? `\n<span class="tip-warn">⚠ Virion IRE threshold ≈ ${tStr} — impractical at any safe field.\nSwitch to Resonance mode for virion disruption.</span>`
-        : cat === 'bacteria'
-          ? `\n<span class="tip-warn">⚠ Bacterial IRE threshold ≈ ${tStr}.\nUse nsEP: short pulse width (≪ τ) lowers effective E_lysis by reducing charge time.</span>`
-          : `\nTherapeutic window at current frequency:\n  Target lysis ≥ <span class="tip-val">${tStr}</span>  ·  Healthy lysis ≥ <span class="tip-val">${hStr}</span>`
-      return `<strong>Applied Electric Field Intensity</strong>
-Current: <span class="tip-val">${this.fieldDisplay}</span>
-Vm scales linearly:  Vm = 1.5 × E × R / √(1+(ωτ)²)
-${contextNote}`
+      return tipField({
+        chartMode:          this.store.chartMode,
+        target:             this.store.target as Parameters<typeof tipField>[0]['target'],
+        fieldDisplay:       this.fieldDisplay,
+        targetDisruption:   this.targetDisruption,
+        targetCellCategory: this.store.targetCellCategory,
+        targetLysisField:   this.store.targetLysisField,
+        healthyLysisField:  this.store.healthyLysisField,
+        t:                  this.$t.bind(this),
+      })
     },
 
     tipTargetBadge(): string {
-      const pct = this.targetDisruptPercent
-      if (this.store.chartMode === 'resonance') {
-        const t = this.store.target as { resonantFreqGHz?: number; capsidQ?: number; resonantThresholdVcm?: number; label: string }
-        const fStr = t.resonantFreqGHz
-          ? (t.resonantFreqGHz >= 1 ? `${t.resonantFreqGHz.toFixed(1)} GHz` : `${(t.resonantFreqGHz * 1000).toFixed(0)} MHz`)
-          : '—'
-        const warn = this.targetDisruption >= 1.0
-          ? '\n<span class="tip-warn">⚡ Disruption threshold exceeded — capsid/cell-wall rupture imminent</span>'
-          : this.targetDisruption > 0.85
-            ? '\n<span class="tip-warn">⚠ >85% — approaching disruption threshold (2.5 s countdown)</span>'
-            : ''
-        return `<strong>${this.$t('resonance.tipTargetBadgeTitle', { pct })}</strong>
-${this.$t('resonance.tipTargetBadgeFormula')}
-f_res = <span class="tip-val">${fStr}</span>  ·  Q = ${t.capsidQ ?? 20}${warn}
-${this.$t('resonance.tipTargetBadgeNote')}`
-      }
-      const tVm   = (this.store.targetVm * 1000).toFixed(2)
-      const tThr  = (this.store.target.thresholdVoltage * 1000).toFixed(0)
-      const warn  = this.targetDisruption > 0.85
-        ? '\n<span class="tip-warn">⚡ >85% — lysis countdown active (2.5 s)</span>' : ''
-      return `<strong>Target membrane disruption: <span class="tip-val">${pct}%</span></strong>
-Ratio = Vm / lysis threshold voltage
-
-Vm = <span class="tip-val">${tVm} mV</span>  ·  Threshold = ${tThr} mV${warn}
->85% held for 2.5 s → irreversible membrane lysis`
+      return tipTargetBadge({
+        chartMode:          this.store.chartMode,
+        target:             this.store.target as Parameters<typeof tipTargetBadge>[0]['target'],
+        targetDisruptPercent: this.targetDisruptPercent,
+        targetDisruption:   this.targetDisruption,
+        targetVmMv:         this.store.targetVm * 1000,
+        t:                  this.$t.bind(this),
+      })
     },
 
     tipHealthyBadge(): string {
-      const pct  = this.healthyDisruptPercent
-      if (this.store.chartMode === 'resonance') {
-        return `<strong>${this.$t('resonance.tipHealthyBadgeTitle')}</strong>
-${this.$t('resonance.tipHealthyBadgeBody')}
-<span class="tip-ok">✓ ${this.$t('resonance.tipHealthyBadgeSafe')}</span>`
-      }
-      const hVm  = (this.store.healthyVm * 1000).toFixed(2)
-      const hThr = (this.store.healthy.thresholdVoltage * 1000).toFixed(0)
-      const ok   = this.healthyDisruption < 0.5
-        ? '\n<span class="tip-ok">✓ Healthy cells are safe</span>'
-        : this.healthyDisruption > 0.85
-          ? '\n<span class="tip-warn">⚠ Approaching ablative — reduce field</span>'
-          : '\n<span class="tip-warn">⚠ Approaching limit — monitor closely</span>'
-      return `<strong>Healthy membrane disruption: <span class="tip-val">${pct}%</span></strong>
-Ratio = Vm / lysis threshold voltage
-
-Vm = <span class="tip-val">${hVm} mV</span>  ·  Threshold = ${hThr} mV${ok}
-Keep below 50% for a safe therapeutic window`
+      return tipHealthyBadge({
+        chartMode:            this.store.chartMode,
+        healthyDisruptPercent: this.healthyDisruptPercent,
+        healthyDisruption:    this.healthyDisruption,
+        healthyVmMv:          this.store.healthyVm * 1000,
+        thresholdVoltage:     this.store.healthy.thresholdVoltage,
+        t:                    this.$t.bind(this),
+      })
     },
 
     orientationDeg(): number {
@@ -362,45 +265,20 @@ Keep below 50% for a safe therapeutic window`
 
     lysisNDisplay(): string {
       const n = this.store.lysisNPulses
-      const t = this.formatLysisTime(this.store.lysisDelayMs)
-      return `${n} pulse${n === 1 ? '' : 's'} — est. ${t}`
+      return `${n} pulse${n === 1 ? '' : 's'} — est. ${formatLysisTime(this.store.lysisDelayMs)}`
     },
 
     tipOrientation(): string {
-      const deg  = this.store.orientationDeg
-      const cosT = (this.store.cosThetaFactor * 100).toFixed(0)
-      return `<strong>Cell Orientation  θ = ${deg}°</strong>
-|cos(θ)| = <span class="tip-val">${cosT}%</span> of maximum Vm coupling
-
-Schwan equation:  Vm = 1.5·E·R·<span class="tip-val">cos(θ)</span> / √(1+(ωτ)²)
-θ = angle between applied field vector and cell symmetry axis.
-
-<span class="tip-val">θ = 0°</span>  (field-aligned) → maximum Vm, fastest pore-formation onset
-<span class="tip-val">θ = 90°</span> (perpendicular) → Vm → 0, field cannot charge the membrane
-
-cos(θ) cancels in the Vm_T/Vm_H selectivity ratio — orientation does
-not change the relative advantage between target and healthy cells.`
+      return tipOrientation(this.store.orientationDeg, this.store.cosThetaFactor)
     },
 
     tipLysisN(): string {
-      const n         = this.store.lysisNPulses
-      const periodMs  = this.store.dutyCycle > 0
-        ? (this.store.pulseWidthNs * 1e-6) / this.store.dutyCycle
-        : 0
-      const periodStr = periodMs > 0
-        ? (periodMs < 1 ? `${(periodMs * 1000).toFixed(1)} µs` : `${periodMs.toFixed(3)} ms`)
-        : '—'
-      return `<strong>Pulses to Lysis  N = ${n}</strong>
-Estimated protocol time: <span class="tip-val">${this.formatLysisTime(this.store.lysisDelayMs)}</span>
-
-Number of above-threshold pulses required for irreversible lysis.
-Based on cumulative electroporation pore-formation kinetics.
-
-Protocol time = N × t_period = N × (t_p / dc)
-  t_period = <span class="tip-val">${periodStr}</span>  ·  N = <span class="tip-val">${n}</span>
-
-Lysis countdown in the cell card resets immediately when N changes.
-At CW waveform a fixed 2.5 s delay is used instead.`
+      return tipLysisN({
+        lysisNPulses: this.store.lysisNPulses,
+        lysisDelayMs: this.store.lysisDelayMs,
+        dutyCycle:    this.store.dutyCycle,
+        pulseWidthNs: this.store.pulseWidthNs,
+      })
     },
 
     pulseWidthLogVal(): number {
@@ -414,36 +292,15 @@ At CW waveform a fixed 2.5 s delay is used instead.`
     },
 
     tipPulseWidth(): string {
-      const tFactor = (this.store.targetPulseStepFactor * 100).toFixed(1)
-      const hFactor = (this.store.healthyPulseStepFactor * 100).toFixed(1)
-      const tTau_ns = this.store.targetFc > 0 ? (1 / (2 * Math.PI * this.store.targetFc * 1e3) * 1e9) : 0
-      const hTau_ns = this.store.healthyFc > 0 ? (1 / (2 * Math.PI * this.store.healthyFc * 1e3) * 1e9) : 0
-      const tTauStr = tTau_ns > 0 ? tTau_ns.toFixed(0) + ' ns' : '—'
-      const hTauStr = hTau_ns > 0 ? hTau_ns.toFixed(0) + ' ns' : '—'
-      const pw      = this.pulseWidthDisplay
-      const tLabel  = this.store.target.label
-      const hLabel  = this.store.healthy.label
-      // Selectivity direction: if τ_T < τ_H, short pulses FAVOUR the target (bacteria case)
-      //                        if τ_T > τ_H, short pulses HURT selectivity (typical cancer case)
-      const selNote = tTau_ns > 0 && hTau_ns > 0
-        ? tTau_ns < hTau_ns
-          ? `<span class="tip-ok">▲ Short pulses INCREASE selectivity for this target (τ_T ${tTau_ns.toFixed(0)} ns &lt; τ_H ${hTau_ns.toFixed(0)} ns)</span>`
-          : `<span class="tip-warn">▼ Short pulses DECREASE selectivity for this target (τ_T ${tTau_ns.toFixed(0)} ns &gt; τ_H ${hTau_ns.toFixed(0)} ns)\n  Use quasi-DC (long pulse width) for maximum cancer selectivity</span>`
-        : ''
-      return `<strong>Pulse Width  t_p</strong>
-Current: <span class="tip-val">${pw}</span>
-
-Membrane charges exponentially after field onset:
-  <span class="tip-val">Vm_eff = Vm_DC × (1 − e^(−t_p / τ))</span>
-At t_p ≫ τ → factor → 1 (quasi-DC limit)
-At t_p ≪ τ → cells with shorter τ charge proportionally more
-
-τ(${tLabel}) = <span class="tip-val">${tTauStr}</span>  ·  charging: <span class="tip-val">${tFactor}%</span>
-τ(${hLabel}) = <span class="tip-val">${hTauStr}</span>  ·  charging: <span class="tip-val">${hFactor}%</span>
-
-${selNote}
-
-Ref: Beebe et al. 2003 (nsEP); Batista Napotnik et al. 2016`
+      return tipPulseWidth({
+        targetPulseStepFactor:  this.store.targetPulseStepFactor,
+        healthyPulseStepFactor: this.store.healthyPulseStepFactor,
+        targetFc:               this.store.targetFc,
+        healthyFc:              this.store.healthyFc,
+        pulseWidthDisplay:      this.pulseWidthDisplay,
+        targetLabel:            this.store.target.label,
+        healthyLabel:           this.store.healthy.label,
+      })
     },
   },
 
@@ -491,10 +348,6 @@ Ref: Beebe et al. 2003 (nsEP); Batista Napotnik et al. 2016`
     onLysisNInput(e: Event) {
       const logVal = Number((e.target as HTMLInputElement).value)
       this.store.setLysisNPulses(Math.round(Math.pow(10, logVal)))
-    },
-
-    formatLysisTime(ms: number): string {
-      return ms < 1000 ? `${ms}ms` : `${(ms / 1000).toFixed(1)}s`
     },
 
     onWaveformChange(mode: 'cw' | 'pulsed') {
@@ -632,7 +485,7 @@ Ref: Beebe et al. 2003 (nsEP); Batista Napotnik et al. 2016`
         </div>
       </div>
     </div>
-    <!-- Resonance mode note (replaces waveform/duty-cycle/pulse-width rows) -->
+    <!-- Resonance mode note (replaces protocol/advanced sections in resonance mode) -->
     <div v-if="store.chartMode === 'resonance'" class="resonance-mode-note">
       <span class="resonance-mode-note-icon">ℹ</span>
       <span class="resonance-mode-note-text">
@@ -640,161 +493,164 @@ Ref: Beebe et al. 2003 (nsEP); Batista Napotnik et al. 2016`
       </span>
     </div>
 
-    <!-- Row 4: Waveform selector (IRE/Schwan mode only) -->
-    <div v-if="store.chartMode !== 'resonance'" class="panel-row panel-row--medium" v-tip="tipWaveform">
-      <span class="row-label">Waveform</span>
-      <div class="medium-pills">
-        <label
-          class="pill"
-          :class="{ 'pill--active': currentWaveform === 'pulsed' }"
+    <!-- ── Protocol accordion (IRE/Schwan mode only) ──────────── -->
+    <template v-if="store.chartMode !== 'resonance'">
+      <button class="accordion-header" @click="protocolOpen = !protocolOpen">
+        <span class="accordion-label">Protocol</span>
+        <span class="accordion-chevron" :class="{ 'accordion-chevron--open': protocolOpen }">›</span>
+      </button>
+
+      <div v-show="protocolOpen" class="accordion-body">
+        <!-- Row 4: Waveform selector -->
+        <div class="panel-row panel-row--medium" v-tip="tipWaveform">
+          <span class="row-label">Waveform</span>
+          <div class="medium-pills">
+            <label class="pill" :class="{ 'pill--active': currentWaveform === 'pulsed' }">
+              <input type="radio" value="pulsed" :checked="currentWaveform === 'pulsed'" name="waveform" @change="onWaveformChange('pulsed')" />
+              Pulsed
+            </label>
+            <label class="pill" :class="{ 'pill--active': currentWaveform === 'cw' }">
+              <input type="radio" value="cw" :checked="currentWaveform === 'cw'" name="waveform" @change="onWaveformChange('cw')" />
+              CW
+            </label>
+          </div>
+          <span class="row-meta">wf×{{ currentWaveform === 'cw' ? '0.5' : '1.0' }}</span>
+        </div>
+
+        <!-- Row 5: Duty Cycle (pulsed only) -->
+        <div
+          v-if="currentWaveform === 'pulsed'"
+          class="panel-row"
+          :class="thermalDangerLevel !== 'safe' ? `panel-row--thermal-${thermalDangerLevel}` : ''"
         >
-          <input type="radio" value="pulsed" :checked="currentWaveform === 'pulsed'" name="waveform" @change="onWaveformChange('pulsed')" />
-          Pulsed
-        </label>
-        <label
-          class="pill"
-          :class="{ 'pill--active': currentWaveform === 'cw' }"
+          <span class="row-label" v-tip="tipDutyCycle">
+            Duty Cycle
+            <span v-if="isSafeMode" class="safe-lock" v-tip="'Safe Mode active — duty cycle capped at T_ss ≤ 42°C'">🔒</span>
+          </span>
+          <div class="slider-track-wrap">
+            <input
+              class="ctrl-slider"
+              type="range"
+              min="-6"
+              :max="isSafeMode ? safeDutyCycleMaxLog : -1"
+              step="0.05"
+              :value="dutyCycleLogVal"
+              @input="onDutyCycleInput"
+            />
+          </div>
+          <div class="row-readout">
+            <span
+              class="readout-value"
+              :class="thermalDangerLevel !== 'safe' ? `readout--${thermalDangerLevel}` : ''"
+              v-tip="tipDutyCycle"
+            >{{ dutyCycleDisplay }}</span>
+            <span class="readout-sub" v-tip="tipDutyCycle">
+              T_ss {{ maxSteadyTemp.toFixed(0) }}°C · SAR_eff T {{ (store.targetSAR * store.dutyCycle).toFixed(1) }} W/kg
+            </span>
+          </div>
+        </div>
+
+        <!-- Row 6: Pulse Width (pulsed only) -->
+        <div v-if="currentWaveform === 'pulsed'" class="panel-row">
+          <span class="row-label" v-tip="tipPulseWidth">Pulse Width</span>
+          <div class="slider-track-wrap">
+            <input
+              class="ctrl-slider"
+              type="range"
+              :min="sliderRanges.pwLogMin"
+              :max="sliderRanges.pwLogMax"
+              step="0.05"
+              :value="pulseWidthLogVal"
+              @input="onPulseWidthInput"
+            />
+          </div>
+          <div class="row-readout">
+            <span class="readout-value" v-tip="tipPulseWidth">{{ pulseWidthDisplay }}</span>
+            <span class="readout-sub" v-tip="tipPulseWidth">
+              T {{ (store.targetPulseStepFactor * 100).toFixed(1) }}%
+              · H {{ (store.healthyPulseStepFactor * 100).toFixed(1) }}% charging
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Advanced accordion ───────────────────────────────── -->
+      <button class="accordion-header" @click="advancedOpen = !advancedOpen">
+        <span class="accordion-label">Advanced</span>
+        <span class="accordion-chevron" :class="{ 'accordion-chevron--open': advancedOpen }">›</span>
+      </button>
+
+      <div v-show="advancedOpen" class="accordion-body">
+        <!-- Row 7: Cell Orientation θ -->
+        <div class="panel-row">
+          <span class="row-label" v-tip="tipOrientation">{{ $t('slider.orientationAngle') }}</span>
+          <div class="slider-track-wrap">
+            <input
+              class="ctrl-slider"
+              type="range"
+              min="0"
+              max="90"
+              step="1"
+              :value="orientationDeg"
+              @input="onOrientationInput"
+            />
+          </div>
+          <div class="row-readout">
+            <span class="readout-value" v-tip="tipOrientation">{{ cosThetaDisplay }}</span>
+            <span class="readout-sub" v-tip="tipOrientation">{{ $t('slider.orientationSub') }}</span>
+          </div>
+        </div>
+
+        <!-- Row 8: Pulses to Lysis N (pulsed only) -->
+        <div v-if="currentWaveform === 'pulsed'" class="panel-row">
+          <span class="row-label" v-tip="tipLysisN">{{ $t('slider.lysisNPulses') }}</span>
+          <div class="slider-track-wrap">
+            <input
+              class="ctrl-slider"
+              type="range"
+              min="0"
+              max="3"
+              step="0.05"
+              :value="lysisNLogVal"
+              @input="onLysisNInput"
+            />
+          </div>
+          <div class="row-readout">
+            <span class="readout-value" v-tip="tipLysisN">{{ lysisNDisplay }}</span>
+            <span class="readout-sub" v-tip="tipLysisN">{{ $t('slider.lysisNSub') }}</span>
+          </div>
+        </div>
+
+        <!-- Row 9: Double-Shell Model toggle (mammalian nucleated cells only) -->
+        <div
+          v-if="store.targetCellCategory === 'mammalian' && store.hasNuclearParams"
+          class="panel-row panel-row--medium"
         >
-          <input type="radio" value="cw" :checked="currentWaveform === 'cw'" name="waveform" @change="onWaveformChange('cw')" />
-          CW
-        </label>
+          <span
+            class="row-label"
+            v-tip="'<strong>Shell Model</strong>\nChoose the membrane model used to compute transmembrane potential.\nSingle-Shell: standard Schwan (plasma membrane only).\n+ Nuclear Envelope: adds nuclear Vm bandpass — Kotnik &amp; Miklavcic (2006).'"
+          >{{ $t('slider.doubleShell') }}</span>
+          <div class="medium-pills">
+            <label
+              class="pill"
+              :class="{ 'pill--active': !store.doubleShellEnabled }"
+              v-tip="'<strong>Single-Shell (Schwan)</strong>\nStandard single-shell model — only plasma membrane Vm is computed.\nτ = R·Cm·(2σ_e+σ_i)/(2σ_e·σ_i)  ·  Vm = 1.5·E·R / √(1+(ωτ)²)\nDefault mode. Applicable to all cell types.\nRef: Kotnik &amp; Miklavcic, Biophys. J. 79:670 (2000)'"
+            >
+              <input type="radio" name="shellModel" :checked="!store.doubleShellEnabled" @change="store.doubleShellEnabled && store.toggleDoubleShell()" />
+              {{ $t('slider.doubleShellSingle') }}
+            </label>
+            <label
+              class="pill pill--nuclear"
+              :class="{ 'pill--active': store.doubleShellEnabled }"
+              v-tip="'<strong>+ Nuclear Envelope (Double-Shell)</strong>\nAdds nuclear membrane Vm as a two-pole bandpass function.\nVm_nuc peaks at f_peak = 1/(2π√(τ_out·τ_ne))\nτ_ne = R_nuc·Cm_ne·(2σ_i+σ_np)/(2σ_i·σ_np)  [σ_i = cytoplasm, external medium for nucleus]\nCancer nuclei: thinner NE, lower σ_ne threshold → additional selectivity axis.\n\nExpected at 417 kHz / 150 V/cm / saline:\n  Hepatocyte:    Vm_nuc ≈ 40 mV  (f_peak ≈ 1.66 MHz)\n  Adeno CA:      Vm_nuc ≈ 113 mV (f_peak ≈ 0.87 MHz)\n  GBM:           Vm_nuc ≈ 87 mV  (f_peak ≈ 1.05 MHz)\n\nRef: Kotnik &amp; Miklavcic, Biophys. J. 90:480 (2006)'"
+            >
+              <input type="radio" name="shellModel" :checked="store.doubleShellEnabled" @change="!store.doubleShellEnabled && store.toggleDoubleShell()" />
+              {{ $t('slider.doubleShellDouble') }}
+            </label>
+          </div>
+        </div>
       </div>
-      <span class="row-meta">wf×{{ currentWaveform === 'cw' ? '0.5' : '1.0' }}</span>
-    </div>
-
-    <!-- Row 5: Duty Cycle (pulsed + IRE mode only) -->
-    <div
-      v-if="store.chartMode !== 'resonance' && currentWaveform === 'pulsed'"
-      class="panel-row"
-      :class="thermalDangerLevel !== 'safe' ? `panel-row--thermal-${thermalDangerLevel}` : ''"
-    >
-      <span class="row-label" v-tip="tipDutyCycle">
-        Duty Cycle
-        <span v-if="isSafeMode" class="safe-lock" v-tip="'Safe Mode active — duty cycle capped at T_ss ≤ 42°C'">🔒</span>
-      </span>
-      <div class="slider-track-wrap">
-        <input
-          class="ctrl-slider"
-          type="range"
-          min="-6"
-          :max="isSafeMode ? safeDutyCycleMaxLog : -1"
-          step="0.05"
-          :value="dutyCycleLogVal"
-          @input="onDutyCycleInput"
-        />
-      </div>
-      <div class="row-readout">
-        <span
-          class="readout-value"
-          :class="thermalDangerLevel !== 'safe' ? `readout--${thermalDangerLevel}` : ''"
-          v-tip="tipDutyCycle"
-        >{{ dutyCycleDisplay }}</span>
-        <span class="readout-sub" v-tip="tipDutyCycle">
-          T_ss {{ maxSteadyTemp.toFixed(0) }}°C · SAR_eff T {{ (store.targetSAR * store.dutyCycle).toFixed(1) }} W/kg
-        </span>
-      </div>
-    </div>
-
-    <!-- Row 6: Pulse Width (pulsed + IRE mode only) -->
-    <div
-      v-if="store.chartMode !== 'resonance' && currentWaveform === 'pulsed'"
-      class="panel-row"
-    >
-      <span class="row-label" v-tip="tipPulseWidth">Pulse Width</span>
-      <div class="slider-track-wrap">
-        <input
-          class="ctrl-slider"
-          type="range"
-          :min="sliderRanges.pwLogMin"
-          :max="sliderRanges.pwLogMax"
-          step="0.05"
-          :value="pulseWidthLogVal"
-          @input="onPulseWidthInput"
-        />
-      </div>
-      <div class="row-readout">
-        <span class="readout-value" v-tip="tipPulseWidth">{{ pulseWidthDisplay }}</span>
-        <span class="readout-sub" v-tip="tipPulseWidth">
-          T {{ (store.targetPulseStepFactor * 100).toFixed(1) }}%
-          · H {{ (store.healthyPulseStepFactor * 100).toFixed(1) }}% charging
-        </span>
-      </div>
-    </div>
-
-    <!-- Row 7: Cell Orientation θ (Schwan/IRE mode — orientation not applicable to acoustic resonance) -->
-    <div
-      v-if="store.chartMode !== 'resonance'"
-      class="panel-row"
-    >
-      <span class="row-label" v-tip="tipOrientation">{{ $t('slider.orientationAngle') }}</span>
-      <div class="slider-track-wrap">
-        <input
-          class="ctrl-slider"
-          type="range"
-          min="0"
-          max="90"
-          step="1"
-          :value="orientationDeg"
-          @input="onOrientationInput"
-        />
-      </div>
-      <div class="row-readout">
-        <span class="readout-value" v-tip="tipOrientation">{{ cosThetaDisplay }}</span>
-        <span class="readout-sub" v-tip="tipOrientation">{{ $t('slider.orientationSub') }}</span>
-      </div>
-    </div>
-
-    <!-- Row 8: Pulses to Lysis N (pulsed + Schwan mode only) -->
-    <div
-      v-if="store.chartMode !== 'resonance' && currentWaveform === 'pulsed'"
-      class="panel-row"
-    >
-      <span class="row-label" v-tip="tipLysisN">{{ $t('slider.lysisNPulses') }}</span>
-      <div class="slider-track-wrap">
-        <input
-          class="ctrl-slider"
-          type="range"
-          min="0"
-          max="3"
-          step="0.05"
-          :value="lysisNLogVal"
-          @input="onLysisNInput"
-        />
-      </div>
-      <div class="row-readout">
-        <span class="readout-value" v-tip="tipLysisN">{{ lysisNDisplay }}</span>
-        <span class="readout-sub" v-tip="tipLysisN">{{ $t('slider.lysisNSub') }}</span>
-      </div>
-    </div>
-
-    <!-- Row 9: Double-Shell Model toggle (mammalian target + nucleated cells + Schwan mode only) -->
-    <div
-      v-if="store.targetCellCategory === 'mammalian' && store.hasNuclearParams && store.chartMode !== 'resonance'"
-      class="panel-row panel-row--medium"
-    >
-      <span
-        class="row-label"
-        v-tip="'<strong>Shell Model</strong>\nChoose the membrane model used to compute transmembrane potential.\nSingle-Shell: standard Schwan (plasma membrane only).\n+ Nuclear Envelope: adds nuclear Vm bandpass — Kotnik &amp; Miklavcic (2006).'"
-      >{{ $t('slider.doubleShell') }}</span>
-      <div class="medium-pills">
-        <label
-          class="pill"
-          :class="{ 'pill--active': !store.doubleShellEnabled }"
-          v-tip="'<strong>Single-Shell (Schwan)</strong>\nStandard single-shell model — only plasma membrane Vm is computed.\nτ = R·Cm·(2σ_e+σ_i)/(2σ_e·σ_i)  ·  Vm = 1.5·E·R / √(1+(ωτ)²)\nDefault mode. Applicable to all cell types.\nRef: Kotnik &amp; Miklavcic, Biophys. J. 79:670 (2000)'"
-        >
-          <input type="radio" name="shellModel" :checked="!store.doubleShellEnabled" @change="store.doubleShellEnabled && store.toggleDoubleShell()" />
-          {{ $t('slider.doubleShellSingle') }}
-        </label>
-        <label
-          class="pill pill--nuclear"
-          :class="{ 'pill--active': store.doubleShellEnabled }"
-          v-tip="'<strong>+ Nuclear Envelope (Double-Shell)</strong>\nAdds nuclear membrane Vm as a two-pole bandpass function.\nVm_nuc peaks at f_peak = 1/(2π√(τ_out·τ_ne))\nτ_ne = R_nuc·Cm_ne·(2σ_i+σ_np)/(2σ_i·σ_np)  [σ_i = cytoplasm, external medium for nucleus]\nCancer nuclei: thinner NE, lower σ_ne threshold → additional selectivity axis.\n\nExpected at 417 kHz / 150 V/cm / saline:\n  Hepatocyte:    Vm_nuc ≈ 40 mV  (f_peak ≈ 1.66 MHz)\n  Adeno CA:      Vm_nuc ≈ 113 mV (f_peak ≈ 0.87 MHz)\n  GBM:           Vm_nuc ≈ 87 mV  (f_peak ≈ 1.05 MHz)\n\nRef: Kotnik &amp; Miklavcic, Biophys. J. 90:480 (2006)'"
-        >
-          <input type="radio" name="shellModel" :checked="store.doubleShellEnabled" @change="!store.doubleShellEnabled && store.toggleDoubleShell()" />
-          {{ $t('slider.doubleShellDouble') }}
-        </label>
-      </div>
-    </div>
+    </template>
   </div>
 </template>
 
@@ -808,6 +664,27 @@ Ref: Beebe et al. 2003 (nsEP); Batista Napotnik et al. 2016`
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   padding: 0.85rem 1.25rem;
+  container-type: inline-size;
+}
+
+/* ── Narrow-column compact layout (container query) ─────────────────── */
+@container (max-width: 320px) {
+  .panel-row {
+    grid-template-columns: 5rem 1fr auto;
+    gap: 0.5rem;
+  }
+  .row-readout {
+    min-width: 5.5rem;
+  }
+  .readout-sub {
+    display: none;
+  }
+  .row-meta {
+    display: none;
+  }
+  .row-label {
+    font-size: 0.58rem;
+  }
 }
 
 /* ── Panel title row (title + safe mode toggle) ──────────────────────── */
@@ -1158,5 +1035,55 @@ Ref: Beebe et al. 2003 (nsEP); Batista Napotnik et al. 2016`
   .row-meta {
     display: none;
   }
+}
+
+/* ── Accordion headers ─────────────────────────────────────────────── */
+.accordion-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.3rem 0;
+  background: none;
+  border: none;
+  border-top: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  font-size: 0.6rem;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  text-align: left;
+  transition: color 0.15s;
+  margin-top: 0.1rem;
+}
+
+.accordion-header:hover {
+  color: var(--color-text);
+}
+
+.accordion-label {
+  flex: 1;
+}
+
+.accordion-chevron {
+  font-size: 1rem;
+  line-height: 1;
+  display: inline-block;
+  transform: rotate(0deg);
+  transition: transform 0.2s ease;
+  opacity: 0.55;
+}
+
+.accordion-chevron--open {
+  transform: rotate(90deg);
+}
+
+/* ── Accordion body ────────────────────────────────────────────────── */
+.accordion-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  padding-top: 0.4rem;
 }
 </style>

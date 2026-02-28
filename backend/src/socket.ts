@@ -32,8 +32,8 @@ export function setupSocketServer(httpServer: HttpServer): Server {
       const fVcm = Number(fieldVcm)
       const med  = typeof medium === 'string' ? medium : 'saline'
 
-      if (isNaN(fKHz) || fKHz < 10 || fKHz > 700) return
-      if (isNaN(fVcm) || fVcm < 0  || fVcm > 1000) return
+      if (isNaN(fKHz) || fKHz < 10 || fKHz > 50_000_000) return  // 50 GHz ceiling
+      if (isNaN(fVcm) || fVcm < 0  || fVcm > 100_000) return     // 100 kV/cm ceiling
 
       const packet: FieldPacket = {
         timestamp: Date.now(),
