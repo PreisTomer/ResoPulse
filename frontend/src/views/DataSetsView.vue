@@ -85,43 +85,43 @@ export default defineComponent({
 </script>
 
 <template>
-  <div class="datasets-page">
-    <div class="datasets-inner">
+  <div class="datasets">
+    <div class="datasets__inner">
 
       <!-- Page header -->
-      <div class="page-header">
-        <div class="page-eyebrow">
-          <span class="eyebrow-dot"></span>
+      <div class="datasets__header">
+        <div class="datasets__eyebrow">
+          <span class="datasets__eyebrow-dot"></span>
           Reference Database
         </div>
-        <h1 class="page-title">Cell &amp; Pathogen Data Sets</h1>
-        <p class="page-subtitle">
+        <h1 class="datasets__title">Cell &amp; Pathogen Data Sets</h1>
+        <p class="datasets__subtitle">
           Biophysical parameters for all presets · Schwan single-shell model · double-shell nuclear envelope (mammalian) · acoustic resonance (bacteria/virus)
           <br>Computed in physiological saline (σ<sub>e</sub> = 1.5 S/m) · Kotnik &amp; Miklavcic (2000, 2006)
         </p>
       </div>
 
       <!-- Group legend -->
-      <div class="legend-row">
+      <div class="datasets__legend-row">
         <div
           v-for="g in GROUPS"
           :key="g"
-          class="legend-item"
+          class="datasets__legend-item"
           :style="{ '--g-color': GROUP_COLORS[g] }"
         >
-          <span class="legend-dot"></span>
+          <span class="datasets__legend-dot"></span>
           {{ GROUP_LABELS[g] }}
         </div>
       </div>
 
       <!-- Cell library table -->
-      <section class="ds-card">
-        <div class="card-hdr">
-          <h2 class="card-title">Cell Library</h2>
-          <span class="card-tag">{{ presets.length }} presets</span>
+      <section class="datasets__card">
+        <div class="datasets__card-hdr">
+          <h2 class="datasets__card-title">Cell Library</h2>
+          <span class="datasets__card-tag">{{ presets.length }} presets</span>
         </div>
-        <div class="table-wrap">
-          <table class="data-table">
+        <div class="datasets__table-wrap">
+          <table class="datasets__table">
             <thead>
               <tr>
                 <th>Group</th>
@@ -145,7 +145,7 @@ export default defineComponent({
               <tr v-for="p in presets" :key="p.presetId">
                 <td>
                   <span
-                    class="group-badge"
+                    class="datasets__group-badge"
                     :style="{
                       color: p.color,
                       borderColor: p.color + '55',
@@ -153,28 +153,28 @@ export default defineComponent({
                     }"
                   >{{ p.groupLabel }}</span>
                 </td>
-                <td class="cell-name">{{ p.label }}</td>
-                <td class="mono">{{ p.radius }}</td>
-                <td class="mono">{{ p.membraneThickness }}</td>
-                <td class="mono">{{ p.dielectricConstant.toFixed(1) }}</td>
-                <td class="mono">{{ p.conductivity }}</td>
-                <td class="mono primary-val">{{ p.cmDisplay }}</td>
-                <td class="mono primary-val">{{ p.fcDisplay }}</td>
+                <td class="datasets__cell-name">{{ p.label }}</td>
+                <td class="datasets__mono">{{ p.radius }}</td>
+                <td class="datasets__mono">{{ p.membraneThickness }}</td>
+                <td class="datasets__mono">{{ p.dielectricConstant.toFixed(1) }}</td>
+                <td class="datasets__mono">{{ p.conductivity }}</td>
+                <td class="datasets__mono datasets__primary-val">{{ p.cmDisplay }}</td>
+                <td class="datasets__mono datasets__primary-val">{{ p.fcDisplay }}</td>
                 <td
-                  class="mono"
-                  :class="p.group === 'reference' ? 'ref-val' : 'cancer-val'"
+                  class="datasets__mono"
+                  :class="p.group === 'reference' ? 'datasets__ref-val' : 'datasets__cancer-val'"
                 >{{ p.thresholdVoltage.toFixed(2) }}</td>
-                <td class="mono" :class="p.hasNuclear ? 'nuc-val' : 'muted'">{{ p.nucRDisplay }}</td>
-                <td class="mono muted">{{ p.density }}</td>
-                <td class="mono" :class="p.hasResonance ? 'primary-val' : 'muted'">{{ p.resFreqDisplay }}</td>
-                <td class="mono" :class="p.hasResonance ? '' : 'muted'">{{ p.resQDisplay }}</td>
-                <td class="mono" :class="p.hasResonance ? 'warn-val' : 'muted'">{{ p.resEthrDisplay }}</td>
-                <td class="notes-cell">{{ p.notes }}</td>
+                <td class="datasets__mono" :class="p.hasNuclear ? 'datasets__nuc-val' : 'datasets__muted'">{{ p.nucRDisplay }}</td>
+                <td class="datasets__mono datasets__muted">{{ p.density }}</td>
+                <td class="datasets__mono" :class="p.hasResonance ? 'datasets__primary-val' : 'datasets__muted'">{{ p.resFreqDisplay }}</td>
+                <td class="datasets__mono" :class="p.hasResonance ? '' : 'datasets__muted'">{{ p.resQDisplay }}</td>
+                <td class="datasets__mono" :class="p.hasResonance ? 'datasets__warn-val' : 'datasets__muted'">{{ p.resEthrDisplay }}</td>
+                <td class="datasets__notes-cell">{{ p.notes }}</td>
               </tr>
             </tbody>
           </table>
         </div>
-        <div class="table-footer">
+        <div class="datasets__table-footer">
           C<sub>m</sub> = ε<sub>r</sub>·ε₀/d &nbsp;·&nbsp;
           f<sub>c</sub> = 1/(2πτ), τ = R·C<sub>m</sub>·(2σ<sub>e</sub>+σ<sub>i</sub>)/(2σ<sub>e</sub>·σ<sub>i</sub>) &nbsp;·&nbsp;
           Computed at σ<sub>e</sub> = 1.5 S/m (saline) · Kotnik &amp; Miklavcic (2000) &nbsp;·&nbsp;
@@ -183,13 +183,13 @@ export default defineComponent({
       </section>
 
       <!-- Propagation media -->
-      <section class="ds-card">
-        <div class="card-hdr">
-          <h2 class="card-title">Propagation Media</h2>
-          <span class="card-tag">Extracellular conductivity σ<sub>e</sub> shifts τ and V<sub>m</sub></span>
+      <section class="datasets__card">
+        <div class="datasets__card-hdr">
+          <h2 class="datasets__card-title">Propagation Media</h2>
+          <span class="datasets__card-tag">Extracellular conductivity σ<sub>e</sub> shifts τ and V<sub>m</sub></span>
         </div>
-        <div class="table-wrap">
-          <table class="data-table">
+        <div class="datasets__table-wrap">
+          <table class="datasets__table">
             <thead>
               <tr>
                 <th>Key</th>
@@ -201,92 +201,92 @@ export default defineComponent({
             </thead>
             <tbody>
               <tr>
-                <td class="mono primary-val">saline</td>
+                <td class="datasets__mono datasets__primary-val">saline</td>
                 <td>Physiological Saline (0.9% NaCl)</td>
-                <td class="mono">1.500</td>
+                <td class="datasets__mono">1.500</td>
                 <td>Reference baseline · τ and f<sub>c</sub> reference (V<sub>m,DC</sub> independent of medium)</td>
                 <td>Standard in vitro assay medium · physiological approximation</td>
               </tr>
               <tr>
-                <td class="mono">blood</td>
+                <td class="datasets__mono">blood</td>
                 <td>Whole Blood</td>
-                <td class="mono">0.700</td>
+                <td class="datasets__mono">0.700</td>
                 <td>τ +16% · f<sub>c</sub> −14% (epithelial σ<sub>i</sub>≈0.5; bacteria ~5%; virions ~0% — low-σ<sub>i</sub> cells barely affected) · V<sub>m,DC</sub> unchanged</td>
                 <td>Haematological applications · in vivo tumour vasculature</td>
               </tr>
               <tr>
-                <td class="mono">tissue</td>
+                <td class="datasets__mono">tissue</td>
                 <td>Soft Tissue</td>
-                <td class="mono">0.400</td>
+                <td class="datasets__mono">0.400</td>
                 <td>τ +39% · f<sub>c</sub> −28% (epithelial σ<sub>i</sub>≈0.5; bacteria ~13%; virions ~0.5%) · V<sub>m,DC</sub> unchanged · increased τ shifts fc lower</td>
                 <td>Solid tumour bulk / poorly-perfused tissue (note: DMEM ≈ 1.4–1.6 S/m, not used here)</td>
               </tr>
               <tr>
-                <td class="mono warn-val">water</td>
+                <td class="datasets__mono datasets__warn-val">water</td>
                 <td>Distilled Water</td>
-                <td class="mono">0.001</td>
+                <td class="datasets__mono">0.001</td>
                 <td>τ ~200× longer · f<sub>c</sub> to ~5 kHz (epithelial σ<sub>i</sub>≈0.5 S/m); bacteria ~50–100×; virions ~3–5× (σ<sub>i</sub>≪σ<sub>e</sub> → medium effect collapses)</td>
                 <td>Electroporation buffer · academic boundary-condition reference</td>
               </tr>
             </tbody>
           </table>
         </div>
-        <div class="table-footer">
+        <div class="datasets__table-footer">
           τ = R·C<sub>m</sub>·(2σ<sub>e</sub>+σ<sub>i</sub>)/(2σ<sub>e</sub>·σ<sub>i</sub>) — V<sub>m,DC</sub> independent of medium ·
           τ shift magnitudes depend on σ<sub>i</sub>: large for σ<sub>i</sub> ≈ σ<sub>e</sub> (epithelial), negligible for σ<sub>i</sub> ≪ σ<sub>e</sub> (virions)
         </div>
       </section>
 
       <!-- Therapeutic window reference -->
-      <section class="ds-card">
-        <div class="card-hdr">
-          <h2 class="card-title">Therapeutic Window Reference</h2>
-          <span class="card-tag">Adenocarcinoma vs Hepatocyte · saline (σ<sub>e</sub> = 1.5 S/m)</span>
+      <section class="datasets__card">
+        <div class="datasets__card-hdr">
+          <h2 class="datasets__card-title">Therapeutic Window Reference</h2>
+          <span class="datasets__card-tag">Adenocarcinoma vs Hepatocyte · saline (σ<sub>e</sub> = 1.5 S/m)</span>
         </div>
-        <div class="ref-grid">
-          <div class="ref-block ref-block--cancer">
-            <div class="ref-block-title">Target — Adenocarcinoma</div>
-            <div class="ref-block-params">
-              <div class="rp-row"><span>Radius R</span><span class="mono">15 µm</span></div>
-              <div class="rp-row"><span>f<sub>c</sub> (saline)</span><span class="mono cancer-val">~0.49 MHz</span></div>
-              <div class="rp-row"><span>V<sub>m,thr</sub></span><span class="mono">0.70 V</span></div>
-              <div class="rp-row"><span>C<sub>m</sub></span><span class="mono">~15.1 mF/m²</span></div>
-              <div class="rp-row"><span>Lysis threshold</span><span class="mono cancer-val">~311 V/cm</span></div>
+        <div class="datasets__ref-grid">
+          <div class="datasets__ref-block datasets__ref-block--cancer">
+            <div class="datasets__ref-block-title">Target — Adenocarcinoma</div>
+            <div class="datasets__ref-block-params">
+              <div class="datasets__rp-row"><span>Radius R</span><span class="datasets__mono">15 µm</span></div>
+              <div class="datasets__rp-row"><span>f<sub>c</sub> (saline)</span><span class="datasets__mono datasets__cancer-val">~0.49 MHz</span></div>
+              <div class="datasets__rp-row"><span>V<sub>m,thr</sub></span><span class="datasets__mono">0.70 V</span></div>
+              <div class="datasets__rp-row"><span>C<sub>m</sub></span><span class="datasets__mono">~15.1 mF/m²</span></div>
+              <div class="datasets__rp-row"><span>Lysis threshold</span><span class="datasets__mono datasets__cancer-val">~311 V/cm</span></div>
             </div>
           </div>
-          <div class="ref-block ref-block--window">
-            <div class="ref-block-title">Therapeutic Window</div>
-            <div class="window-stat">
-              <div class="window-ratio">~1.5×</div>
-              <div class="window-label">Max V<sub>m</sub> selectivity at quasi-DC (&lt;100 kHz) — driven by size ratio R<sub>T</sub>/R<sub>H</sub></div>
+          <div class="datasets__ref-block datasets__ref-block--window">
+            <div class="datasets__ref-block-title">Therapeutic Window</div>
+            <div class="datasets__window-stat">
+              <div class="datasets__window-ratio">~1.5×</div>
+              <div class="datasets__window-label">Max V<sub>m</sub> selectivity at quasi-DC (&lt;100 kHz) — driven by size ratio R<sub>T</sub>/R<sub>H</sub></div>
             </div>
-            <div class="window-stat window-stat--spaced">
-              <div class="window-ratio window-ratio--sm">~2.4×</div>
-              <div class="window-label">Therapeutic Index TI at quasi-DC — normalised by lysis thresholds (1.1 V / 0.70 V)</div>
+            <div class="datasets__window-stat datasets__window-stat--spaced">
+              <div class="datasets__window-ratio datasets__window-ratio--sm">~2.4×</div>
+              <div class="datasets__window-label">Therapeutic Index TI at quasi-DC — normalised by lysis thresholds (1.1 V / 0.70 V)</div>
             </div>
-            <div class="window-stat window-stat--spaced">
-              <div class="window-ratio window-ratio--sm window-ratio--muted">↓ freq</div>
-              <div class="window-label">Selectivity decreases above f<sub>c</sub>(T) — target rolls off before healthy cell</div>
+            <div class="datasets__window-stat datasets__window-stat--spaced">
+              <div class="datasets__window-ratio datasets__window-ratio--sm datasets__window-ratio--muted">↓ freq</div>
+              <div class="datasets__window-label">Selectivity decreases above f<sub>c</sub>(T) — target rolls off before healthy cell</div>
             </div>
-            <div class="window-note">
+            <div class="datasets__window-note">
               Cancer lysis at ~311 V/cm · Healthy threshold at ~733 V/cm
             </div>
-            <div class="window-range">
-              Safe operating range: <span class="mono primary-val">311–733 V/cm</span>
+            <div class="datasets__window-range">
+              Safe operating range: <span class="datasets__mono datasets__primary-val">311–733 V/cm</span>
             </div>
           </div>
-          <div class="ref-block ref-block--healthy">
-            <div class="ref-block-title">Reference — Hepatocyte</div>
-            <div class="ref-block-params">
-              <div class="rp-row"><span>Radius R</span><span class="mono">10 µm</span></div>
-              <div class="rp-row"><span>f<sub>c</sub> (saline)</span><span class="mono ref-val">~1.08 MHz</span></div>
-              <div class="rp-row"><span>V<sub>m,thr</sub></span><span class="mono">1.10 V</span></div>
-              <div class="rp-row"><span>C<sub>m</sub></span><span class="mono">~6.3 mF/m²</span></div>
-              <div class="rp-row"><span>Lysis threshold</span><span class="mono ref-val">~733 V/cm</span></div>
+          <div class="datasets__ref-block datasets__ref-block--healthy">
+            <div class="datasets__ref-block-title">Reference — Hepatocyte</div>
+            <div class="datasets__ref-block-params">
+              <div class="datasets__rp-row"><span>Radius R</span><span class="datasets__mono">10 µm</span></div>
+              <div class="datasets__rp-row"><span>f<sub>c</sub> (saline)</span><span class="datasets__mono datasets__ref-val">~1.08 MHz</span></div>
+              <div class="datasets__rp-row"><span>V<sub>m,thr</sub></span><span class="datasets__mono">1.10 V</span></div>
+              <div class="datasets__rp-row"><span>C<sub>m</sub></span><span class="datasets__mono">~6.3 mF/m²</span></div>
+              <div class="datasets__rp-row"><span>Lysis threshold</span><span class="datasets__mono datasets__ref-val">~733 V/cm</span></div>
             </div>
           </div>
         </div>
-        <div class="table-footer">
+        <div class="datasets__table-footer">
           Quasi-DC: E<sub>lysis</sub> = V<sub>m,thr</sub>/(1.5·R) ·
           f<sub>c</sub> from Kotnik &amp; Miklavcic (2000) τ formula ·
           TI = (V<sub>t</sub>/V<sub>t,thr</sub>) / (V<sub>h</sub>/V<sub>h,thr</sub>)
@@ -294,13 +294,13 @@ export default defineComponent({
       </section>
 
       <!-- Double-shell nuclear envelope parameters -->
-      <section class="ds-card">
-        <div class="card-hdr">
-          <h2 class="card-title">Double-Shell Nuclear Envelope Parameters</h2>
-          <span class="card-tag">Mammalian nucleated cells only · Kotnik &amp; Miklavcic (2006)</span>
+      <section class="datasets__card">
+        <div class="datasets__card-hdr">
+          <h2 class="datasets__card-title">Double-Shell Nuclear Envelope Parameters</h2>
+          <span class="datasets__card-tag">Mammalian nucleated cells only · Kotnik &amp; Miklavcic (2006)</span>
         </div>
-        <div class="table-wrap">
-          <table class="data-table">
+        <div class="datasets__table-wrap">
+          <table class="datasets__table">
             <thead>
               <tr>
                 <th>Cell</th>
@@ -315,28 +315,28 @@ export default defineComponent({
             </thead>
             <tbody>
               <tr v-for="p in nuclearPresets" :key="p.presetId">
-                <td class="cell-name">
+                <td class="datasets__cell-name">
                   <span
-                    class="group-badge"
+                    class="datasets__group-badge"
                     :style="{ color: p.color, borderColor: p.color + '55', background: p.color + '11' }"
                   >{{ p.groupLabel }}</span>
                   {{ p.label }}
                 </td>
-                <td class="mono nuc-val">{{ p.nuclearRadius }}</td>
-                <td class="mono">{{ p.nuclearMembraneThickness ?? 15 }}</td>
-                <td class="mono">{{ p.nuclearMembraneEps ?? 10 }}</td>
-                <td class="mono">{{ p.nuclearMembraneConductivity ?? 0.010 }}</td>
-                <td class="mono">{{ p.nucleoplasmConductivity ?? 0.9 }}</td>
+                <td class="datasets__mono datasets__nuc-val">{{ p.nuclearRadius }}</td>
+                <td class="datasets__mono">{{ p.nuclearMembraneThickness ?? 15 }}</td>
+                <td class="datasets__mono">{{ p.nuclearMembraneEps ?? 10 }}</td>
+                <td class="datasets__mono">{{ p.nuclearMembraneConductivity ?? 0.010 }}</td>
+                <td class="datasets__mono">{{ p.nucleoplasmConductivity ?? 0.9 }}</td>
                 <td
-                  class="mono"
-                  :class="p.group === 'reference' ? 'ref-val' : 'cancer-val'"
+                  class="datasets__mono"
+                  :class="p.group === 'reference' ? 'datasets__ref-val' : 'datasets__cancer-val'"
                 >{{ p.nuclearThresholdVoltage ?? 0.50 }}</td>
-                <td class="mono nuc-val">{{ p.nucFpeakDisplay }}</td>
+                <td class="datasets__mono datasets__nuc-val">{{ p.nucFpeakDisplay }}</td>
               </tr>
             </tbody>
           </table>
         </div>
-        <div class="table-footer">
+        <div class="datasets__table-footer">
           τ<sub>ne</sub> = R<sub>nuc</sub>·C<sub>m,ne</sub>·(2σ<sub>i</sub>+σ<sub>np</sub>)/(2σ<sub>i</sub>·σ<sub>np</sub>)  ·  C<sub>m,ne</sub> = ε<sub>ne</sub>·ε₀/d<sub>ne</sub>  ·
           f<sub>peak</sub> = 1/(2π√(τ<sub>out</sub>·τ<sub>ne</sub>))  ·  Nuclear Vm is bandpass — zero at DC &amp; GHz, peaks near f<sub>peak</sub>  ·
           Cancer nuclei: higher N/C ratio, thinner NE, lower σ<sub>ne</sub> threshold → additional selectivity axis at f<sub>peak</sub>
@@ -344,58 +344,58 @@ export default defineComponent({
       </section>
 
       <!-- Acoustic resonance reference -->
-      <section class="ds-card">
-        <div class="card-hdr">
-          <h2 class="card-title">Acoustic Resonance Reference</h2>
-          <span class="card-tag">Virus &amp; Bacteria · Resonance mode</span>
+      <section class="datasets__card">
+        <div class="datasets__card-hdr">
+          <h2 class="datasets__card-title">Acoustic Resonance Reference</h2>
+          <span class="datasets__card-tag">Virus &amp; Bacteria · Resonance mode</span>
         </div>
-        <div class="ref-grid ref-grid--res">
-          <div class="ref-block ref-block--virus">
-            <div class="ref-block-title">Viral Capsids (R ≈ 60 nm)</div>
-            <div class="ref-block-params">
-              <div class="rp-row"><span>Influenza A f<sub>res</sub></span><span class="mono primary-val">~12 GHz</span></div>
-              <div class="rp-row"><span>SARS-CoV-2 f<sub>res</sub></span><span class="mono primary-val">~10 GHz</span></div>
-              <div class="rp-row"><span>E<sub>thr</sub> range</span><span class="mono warn-val">800–1000 V/cm</span></div>
-              <div class="rp-row"><span>Q factor</span><span class="mono">25–30</span></div>
+        <div class="datasets__ref-grid datasets__ref-grid--res">
+          <div class="datasets__ref-block datasets__ref-block--virus">
+            <div class="datasets__ref-block-title">Viral Capsids (R ≈ 60 nm)</div>
+            <div class="datasets__ref-block-params">
+              <div class="datasets__rp-row"><span>Influenza A f<sub>res</sub></span><span class="datasets__mono datasets__primary-val">~12 GHz</span></div>
+              <div class="datasets__rp-row"><span>SARS-CoV-2 f<sub>res</sub></span><span class="datasets__mono datasets__primary-val">~10 GHz</span></div>
+              <div class="datasets__rp-row"><span>E<sub>thr</sub> range</span><span class="datasets__mono datasets__warn-val">800–1000 V/cm</span></div>
+              <div class="datasets__rp-row"><span>Q factor</span><span class="datasets__mono">25–30</span></div>
             </div>
           </div>
-          <div class="ref-block ref-block--window">
-            <div class="ref-block-title">Selectivity Principle</div>
-            <div class="window-stat">
-              <div class="window-ratio">∞</div>
-              <div class="window-label">Theoretical selectivity at f<sub>res</sub> — healthy Schwan Vm → 0 at GHz</div>
+          <div class="datasets__ref-block datasets__ref-block--window">
+            <div class="datasets__ref-block-title">Selectivity Principle</div>
+            <div class="datasets__window-stat">
+              <div class="datasets__window-ratio">∞</div>
+              <div class="datasets__window-label">Theoretical selectivity at f<sub>res</sub> — healthy Schwan Vm → 0 at GHz</div>
             </div>
-            <div class="window-stat window-stat--spaced">
-              <div class="window-ratio window-ratio--sm">Lorentzian</div>
-              <div class="window-label">Disruption = (E / E<sub>thr</sub>) × L(f, f<sub>res</sub>, Q)<br>L peaks at 1.0 at f<sub>res</sub></div>
+            <div class="datasets__window-stat datasets__window-stat--spaced">
+              <div class="datasets__window-ratio datasets__window-ratio--sm">Lorentzian</div>
+              <div class="datasets__window-label">Disruption = (E / E<sub>thr</sub>) × L(f, f<sub>res</sub>, Q)<br>L peaks at 1.0 at f<sub>res</sub></div>
             </div>
-            <div class="window-note window-note--spaced">
+            <div class="datasets__window-note datasets__window-note--spaced">
               Ref: Tsen et al. (2007, 2012) · Dykeman &amp; Sankey (2008)
             </div>
           </div>
-          <div class="ref-block ref-block--bacteria">
-            <div class="ref-block-title">Bacteria (R ≈ 0.5–1 µm)</div>
-            <div class="ref-block-params">
-              <div class="rp-row"><span>E. coli f<sub>res</sub></span><span class="mono primary-val">~0.5 GHz</span></div>
-              <div class="rp-row"><span>MRSA f<sub>res</sub></span><span class="mono primary-val">~1.5 GHz</span></div>
-              <div class="rp-row"><span>E<sub>thr</sub> range</span><span class="mono warn-val">2000–3000 V/cm</span></div>
-              <div class="rp-row"><span>Q factor</span><span class="mono">12–15</span></div>
+          <div class="datasets__ref-block datasets__ref-block--bacteria">
+            <div class="datasets__ref-block-title">Bacteria (R ≈ 0.5–1 µm)</div>
+            <div class="datasets__ref-block-params">
+              <div class="datasets__rp-row"><span>E. coli f<sub>res</sub></span><span class="datasets__mono datasets__primary-val">~0.5 GHz</span></div>
+              <div class="datasets__rp-row"><span>MRSA f<sub>res</sub></span><span class="datasets__mono datasets__primary-val">~1.5 GHz</span></div>
+              <div class="datasets__rp-row"><span>E<sub>thr</sub> range</span><span class="datasets__mono datasets__warn-val">2000–3000 V/cm</span></div>
+              <div class="datasets__rp-row"><span>Q factor</span><span class="datasets__mono">12–15</span></div>
             </div>
           </div>
         </div>
-        <div class="table-footer">
+        <div class="datasets__table-footer">
           f<sub>res</sub> ≈ v<sub>protein</sub>/(2R) · v<sub>wall</sub> ≈ 1000–1500 m/s (protein/peptidoglycan) ·
           Healthy mammalian cells have no rigid-shell resonance — Schwan V<sub>m</sub> rolls off via f<sub>c</sub> ≈ 1 MHz (ωτ ≫ 1), approaching zero at GHz
         </div>
       </section>
 
       <!-- Electrode / field geometry note -->
-      <section class="ds-card ds-card--flat">
-        <div class="card-hdr">
-          <h2 class="card-title">Field Geometry Assumptions</h2>
+      <section class="datasets__card datasets__card--flat">
+        <div class="datasets__card-hdr">
+          <h2 class="datasets__card-title">Field Geometry Assumptions</h2>
         </div>
-        <div class="geo-body">
-          <p class="geo-text">
+        <div class="datasets__geo-body">
+          <p class="datasets__geo-text">
             The Schwan model assumes a <strong>uniform, quasi-static electric field</strong> applied
             to a suspension of non-interacting spherical cells at low volume fraction. In clinical
             TTField devices (Optune®), 4 electrode arrays generate a rotating field at 100–300 kHz
@@ -404,25 +404,25 @@ export default defineComponent({
             Schwan equation and is appropriate for well-mixed in vitro geometries (parallel-plate
             or four-electrode chambers).
           </p>
-          <div class="geo-assumptions">
-            <div class="geo-item">
-              <span class="geo-icon">◈</span>
+          <div class="datasets__geo-assumptions">
+            <div class="datasets__geo-item">
+              <span class="datasets__geo-icon">◈</span>
               <span>Single-shell (Schwan) or double-shell (nuclear envelope) cell model</span>
             </div>
-            <div class="geo-item">
-              <span class="geo-icon">◈</span>
+            <div class="datasets__geo-item">
+              <span class="datasets__geo-icon">◈</span>
               <span>Uniform applied field (E constant in space)</span>
             </div>
-            <div class="geo-item">
-              <span class="geo-icon">◈</span>
+            <div class="datasets__geo-item">
+              <span class="datasets__geo-icon">◈</span>
               <span>Dilute suspension — cell-cell interactions neglected</span>
             </div>
-            <div class="geo-item">
-              <span class="geo-icon">◈</span>
+            <div class="datasets__geo-item">
+              <span class="datasets__geo-icon">◈</span>
               <span>Linear membrane response — below pore-formation threshold</span>
             </div>
-            <div class="geo-item">
-              <span class="geo-icon">◈</span>
+            <div class="datasets__geo-item">
+              <span class="datasets__geo-icon">◈</span>
               <span>Isotropic, homogeneous cytoplasm and extracellular medium</span>
             </div>
           </div>
@@ -430,349 +430,355 @@ export default defineComponent({
       </section>
 
       <!-- CTA -->
-      <div class="open-lab">
-        <RouterLink to="/experiment" class="btn-lab">
+      <div class="datasets__open-lab">
+        <RouterLink to="/experiment" class="datasets__btn-lab">
           Open Experiment Lab →
         </RouterLink>
-        <span class="open-lab-note">Apply these parameters interactively in the simulation</span>
+        <span class="datasets__open-lab-note">Apply these parameters interactively in the simulation</span>
       </div>
 
     </div>
   </div>
 </template>
 
-<style scoped>
+<style lang="scss" scoped>
 /* ── Page shell ───────────────────────────────────────────────────────────── */
-.datasets-page {
+.datasets {
   flex: 1;
   overflow-y: auto;
   background-color: var(--color-bg);
-}
 
-.datasets-inner {
-  max-width: 1600px;
-  margin: 0 auto;
-  padding: 2rem 2rem 4rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1.75rem;
-}
+  &__inner {
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 2rem 2rem 4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+  }
 
-/* ── Page header ──────────────────────────────────────────────────────────── */
-.page-eyebrow {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.72rem;
-  color: var(--color-primary);
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  font-family: var(--font-mono);
-  margin-bottom: 0.75rem;
-}
+  /* ── Page header ──────────────────────────────────────────────────────────── */
+  &__eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.72rem;
+    color: var(--color-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-family: var(--font-mono);
+    margin-bottom: 0.75rem;
+  }
 
-.eyebrow-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background-color: var(--color-primary);
-  box-shadow: 0 0 8px var(--color-primary);
-}
+  &__eyebrow-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: var(--color-primary);
+    box-shadow: 0 0 8px var(--color-primary);
+  }
 
-.page-title {
-  font-size: 2rem;
-  font-weight: 800;
-  color: var(--color-text-heading);
-  margin: 0 0 0.5rem;
-}
+  &__title {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--color-text-heading);
+    margin: 0 0 0.5rem;
+  }
 
-.page-subtitle {
-  font-size: 0.875rem;
-  color: var(--color-text-muted);
-  margin: 0;
-  font-family: var(--font-mono);
-  line-height: 1.6;
-}
+  &__subtitle {
+    font-size: 0.875rem;
+    color: var(--color-text-muted);
+    margin: 0;
+    font-family: var(--font-mono);
+    line-height: 1.6;
+  }
 
-/* ── Legend ───────────────────────────────────────────────────────────────── */
-.legend-row {
-  display: flex;
-  gap: 1.25rem;
-  flex-wrap: wrap;
-}
+  /* ── Legend ───────────────────────────────────────────────────────────────── */
+  &__legend-row {
+    display: flex;
+    gap: 1.25rem;
+    flex-wrap: wrap;
+  }
 
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-  font-size: 0.78rem;
-  color: var(--color-text-muted);
-  font-family: var(--font-mono);
-}
+  &__legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.78rem;
+    color: var(--color-text-muted);
+    font-family: var(--font-mono);
+  }
 
-.legend-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background-color: var(--g-color);
-  box-shadow: 0 0 6px var(--g-color);
-}
+  &__legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--g-color);
+    box-shadow: 0 0 6px var(--g-color);
+  }
 
-/* ── Card ─────────────────────────────────────────────────────────────────── */
-.ds-card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-}
+  /* ── Card ─────────────────────────────────────────────────────────────────── */
+  &__card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
 
-.ds-card--flat .geo-body {
-  padding: 1.5rem;
-}
+    &--flat .datasets__geo-body {
+      padding: 1.5rem;
+    }
+  }
 
-.card-hdr {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 1.1rem 1.5rem;
-  border-bottom: 1px solid var(--color-border);
-  flex-wrap: wrap;
-}
+  &__card-hdr {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.1rem 1.5rem;
+    border-bottom: 1px solid var(--color-border);
+    flex-wrap: wrap;
+  }
 
-.card-title {
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--color-text-heading);
-  margin: 0;
-}
+  &__card-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--color-text-heading);
+    margin: 0;
+  }
 
-.card-tag {
-  font-size: 0.68rem;
-  font-family: var(--font-mono);
-  color: var(--color-text-muted);
-  background: var(--color-surface-2, #0a1628);
-  border: 1px solid var(--color-border);
-  border-radius: 4px;
-  padding: 0.2rem 0.55rem;
-}
+  &__card-tag {
+    font-size: 0.68rem;
+    font-family: var(--font-mono);
+    color: var(--color-text-muted);
+    background: var(--color-surface-2, #0a1628);
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    padding: 0.2rem 0.55rem;
+  }
 
-/* ── Data table ───────────────────────────────────────────────────────────── */
-.table-wrap { overflow-x: auto; }
+  /* ── Data table ───────────────────────────────────────────────────────────── */
+  &__table-wrap {
+    overflow-x: auto;
+  }
 
-.data-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.8rem;
-  min-width: 820px;
-}
+  &__table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+    min-width: 820px;
 
-.data-table th {
-  text-align: left;
-  padding: 0.55rem 0.8rem;
-  font-size: 0.63rem;
-  font-family: var(--font-mono);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--color-text-muted);
-  background: rgba(255, 255, 255, 0.02);
-  border-bottom: 1px solid var(--color-border);
-  white-space: nowrap;
-}
+    th {
+      text-align: left;
+      padding: 0.55rem 0.8rem;
+      font-size: 0.63rem;
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--color-text-muted);
+      background: rgba(255, 255, 255, 0.02);
+      border-bottom: 1px solid var(--color-border);
+      white-space: nowrap;
+    }
 
-.data-table td {
-  padding: 0.6rem 0.8rem;
-  color: var(--color-text);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-  vertical-align: middle;
-}
+    td {
+      padding: 0.6rem 0.8rem;
+      color: var(--color-text);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      vertical-align: middle;
+    }
 
-.data-table tr:last-child td { border-bottom: none; }
-.data-table tr:hover td { background: rgba(255, 255, 255, 0.025); }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255, 255, 255, 0.025); }
+  }
 
-.mono        { font-family: var(--font-mono); font-size: 0.78rem; }
-.primary-val { color: var(--color-primary); }
-.cancer-val  { color: var(--color-danger);  }
-.ref-val     { color: var(--color-primary); }
-.warn-val    { color: var(--color-amber);   }
-.nuc-val     { color: #a78bfa; }
-.muted       { color: var(--color-text-muted); }
-.cell-name   { font-weight: 500; color: var(--color-text-heading); }
-.notes-cell  { font-size: 0.71rem; color: var(--color-text-muted); min-width: 160px; }
+  &__mono        { font-family: var(--font-mono); font-size: 0.78rem; }
+  &__primary-val { color: var(--color-primary); }
+  &__cancer-val  { color: var(--color-danger);  }
+  &__ref-val     { color: var(--color-primary); }
+  &__warn-val    { color: var(--color-amber);   }
+  &__nuc-val     { color: #a78bfa; }
+  &__muted       { color: var(--color-text-muted); }
+  &__cell-name   { font-weight: 500; color: var(--color-text-heading); }
+  &__notes-cell  { font-size: 0.71rem; color: var(--color-text-muted); min-width: 160px; }
 
-.group-badge {
-  font-size: 0.63rem;
-  font-family: var(--font-mono);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  padding: 0.15rem 0.5rem;
-  border-radius: 3px;
-  border: 1px solid;
-  white-space: nowrap;
-}
+  &__group-badge {
+    font-size: 0.63rem;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 0.15rem 0.5rem;
+    border-radius: 3px;
+    border: 1px solid;
+    white-space: nowrap;
+  }
 
-.table-footer {
-  padding: 0.7rem 1.5rem;
-  font-size: 0.66rem;
-  font-family: var(--font-mono);
-  color: var(--color-text-muted);
-  opacity: 0.7;
-  border-top: 1px solid var(--color-border);
-  line-height: 1.6;
-}
+  &__table-footer {
+    padding: 0.7rem 1.5rem;
+    font-size: 0.66rem;
+    font-family: var(--font-mono);
+    color: var(--color-text-muted);
+    opacity: 0.7;
+    border-top: 1px solid var(--color-border);
+    line-height: 1.6;
+  }
 
-/* ── Therapeutic window ───────────────────────────────────────────────────── */
-.ref-grid {
-  display: grid;
-  grid-template-columns: 1fr 1.2fr 1fr;
-  gap: 0;
-}
+  /* ── Therapeutic window ───────────────────────────────────────────────────── */
+  &__ref-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr 1fr;
+    gap: 0;
 
-.ref-block {
-  padding: 1.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
+    &--res { grid-template-columns: 1fr 1.2fr 1fr; }
+  }
 
-.ref-block + .ref-block {
-  border-left: 1px solid var(--color-border);
-}
+  &__ref-block {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
 
-.ref-block-title {
-  font-size: 0.7rem;
-  font-family: var(--font-mono);
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--color-text-muted);
-}
+    & + & {
+      border-left: 1px solid var(--color-border);
+    }
 
-.ref-block--cancer .ref-block-title   { color: var(--color-danger);  }
-.ref-block--healthy .ref-block-title  { color: var(--color-primary); }
-.ref-block--window .ref-block-title   { color: var(--color-lime);    }
-.ref-block--virus .ref-block-title    { color: var(--color-purple);  }
-.ref-block--bacteria .ref-block-title { color: var(--color-amber);   }
-.ref-grid--res { grid-template-columns: 1fr 1.2fr 1fr; }
+    &--cancer &-title   { color: var(--color-danger);  }
+    &--healthy &-title  { color: var(--color-primary); }
+    &--window &-title   { color: var(--color-lime);    }
+    &--virus &-title    { color: var(--color-purple);  }
+    &--bacteria &-title { color: var(--color-amber);   }
+  }
 
-.ref-block-params {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
+  &__ref-block-title {
+    font-size: 0.7rem;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--color-text-muted);
+  }
 
-.rp-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 0.8rem;
-  color: var(--color-text-muted);
-  gap: 0.5rem;
-}
+  &__ref-block-params {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
 
-.window-ratio {
-  font-size: 2.5rem;
-  font-weight: 800;
-  font-family: var(--font-mono);
-  color: var(--color-lime);
-  line-height: 1;
-}
-.window-ratio--sm    { font-size: 1.1rem; }
-.window-ratio--muted { color: var(--color-text-muted); }
-.window-stat--spaced { margin-top: 0.4rem; }
+  &__rp-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    gap: 0.5rem;
+  }
 
-.window-label {
-  font-size: 0.7rem;
-  color: var(--color-text-muted);
-  line-height: 1.4;
-}
+  &__window-ratio {
+    font-size: 2.5rem;
+    font-weight: 800;
+    font-family: var(--font-mono);
+    color: var(--color-lime);
+    line-height: 1;
 
-.window-note {
-  font-size: 0.78rem;
-  color: var(--color-text-muted);
-  line-height: 1.5;
-}
-.window-note--spaced { margin-top: 0.6rem; }
+    &--sm    { font-size: 1.1rem; }
+    &--muted { color: var(--color-text-muted); }
+  }
 
-.window-range {
-  font-size: 0.78rem;
-  color: var(--color-text-muted);
-}
+  &__window-stat {
+    &--spaced { margin-top: 0.4rem; }
+  }
 
-/* ── Geometry note ────────────────────────────────────────────────────────── */
-.geo-text {
-  font-size: 0.88rem;
-  color: var(--color-text);
-  line-height: 1.8;
-  margin: 0 0 1.25rem;
-}
+  &__window-label {
+    font-size: 0.7rem;
+    color: var(--color-text-muted);
+    line-height: 1.4;
+  }
 
-.geo-text strong {
-  color: var(--color-text-heading);
-}
+  &__window-note {
+    font-size: 0.78rem;
+    color: var(--color-text-muted);
+    line-height: 1.5;
 
-.geo-assumptions {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 0.5rem;
-}
+    &--spaced { margin-top: 0.6rem; }
+  }
 
-.geo-item {
-  display: flex;
-  align-items: center;
-  gap: 0.55rem;
-  font-size: 0.8rem;
-  color: var(--color-text-muted);
-}
+  &__window-range {
+    font-size: 0.78rem;
+    color: var(--color-text-muted);
+  }
 
-.geo-icon {
-  color: var(--color-primary);
-  flex-shrink: 0;
-}
+  /* ── Geometry note ────────────────────────────────────────────────────────── */
+  &__geo-text {
+    font-size: 0.88rem;
+    color: var(--color-text);
+    line-height: 1.8;
+    margin: 0 0 1.25rem;
 
-/* ── Open lab CTA ─────────────────────────────────────────────────────────── */
-.open-lab {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
+    strong { color: var(--color-text-heading); }
+  }
 
-.btn-lab {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.65rem 1.5rem;
-  background-color: var(--color-primary);
-  color: #060e1a;
-  font-weight: 600;
-  font-size: 0.9rem;
-  border-radius: var(--radius);
-  text-decoration: none;
-  box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
-  transition: all 0.18s;
-}
+  &__geo-assumptions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 0.5rem;
+  }
 
-.btn-lab:hover {
-  filter: brightness(1.1);
-  box-shadow: 0 0 32px rgba(0, 212, 255, 0.5);
-}
+  &__geo-item {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+  }
 
-.open-lab-note {
-  font-size: 0.78rem;
-  color: var(--color-text-muted);
-  font-family: var(--font-mono);
+  &__geo-icon {
+    color: var(--color-primary);
+    flex-shrink: 0;
+  }
+
+  /* ── Open lab CTA ─────────────────────────────────────────────────────────── */
+  &__open-lab {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  &__btn-lab {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.65rem 1.5rem;
+    background-color: var(--color-primary);
+    color: #060e1a;
+    font-weight: 600;
+    font-size: 0.9rem;
+    border-radius: var(--radius);
+    text-decoration: none;
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+    transition: all 0.18s;
+
+    &:hover {
+      filter: brightness(1.1);
+      box-shadow: 0 0 32px rgba(0, 212, 255, 0.5);
+    }
+  }
+
+  &__open-lab-note {
+    font-size: 0.78rem;
+    color: var(--color-text-muted);
+    font-family: var(--font-mono);
+  }
 }
 
 /* ── Responsive ───────────────────────────────────────────────────────────── */
 @media (max-width: 900px) {
-  .ref-grid {
+  .datasets__ref-grid {
     grid-template-columns: 1fr;
   }
-  .ref-block + .ref-block {
+  .datasets__ref-block + .datasets__ref-block {
     border-left: none;
     border-top: 1px solid var(--color-border);
   }
 }
 
 @media (max-width: 600px) {
-  .datasets-inner { padding: 1rem 1rem 3rem; }
+  .datasets__inner { padding: 1rem 1rem 3rem; }
 }
 </style>

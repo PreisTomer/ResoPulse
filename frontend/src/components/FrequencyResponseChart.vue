@@ -580,72 +580,72 @@ export default defineComponent({
 </script>
 
 <template>
-  <div class="chart-wrap">
+  <div class="freq-chart">
     <!-- Header: title + legend -->
-    <div class="chart-header">
+    <div class="freq-chart__header">
       <span
-        class="chart-title"
+        class="freq-chart__title"
         v-tip="'<strong>Transmembrane Potential vs Frequency</strong>\nSchwan equation Vm(f) = 1.5·E·R·cos(θ) / √(1+(2πf·τ)²)\nX-axis: log scale 10 kHz → 500 MHz\nY-axis: peak Vm in millivolts\n\nFaint curves: all library presets\nBright curves: currently active cells\nAmber dashed: Vm selectivity ratio T/H (right axis)\nDotted threshold lines: lysis (bright) · Rev.EP at 50% (faint)\nDrag white cursor to set broadcast frequency'"
       >Transmembrane Potential Response</span>
-      <div class="legend">
+      <div class="freq-chart__legend">
         <span
           v-for="g in groups"
           :key="g"
-          class="legend-item"
+          class="freq-chart__legend-item"
           v-tip="{ reference: `<strong>Reference cells</strong>\nHealthy baseline — hepatocyte, RBC\nTypically higher threshold voltage\nand lower membrane permittivity`,
                    cancer:    `<strong>Cancer cells</strong>\nLarger radius → lower fc → higher Vm at low frequency\nLower threshold → disrupted at lower field intensity`,
                    bacteria:  `<strong>Bacteria</strong>\nSmall radius (0.5–1 µm) → fc ~8–26 MHz (E. coli ~8 MHz, MRSA ~26 MHz)\nThick peptidoglycan wall raises membrane thickness`,
                    virus:     `<strong>Viruses</strong>\nRadius ~100 nm · Schwan fc ~0.4 MHz (σ_i-limited)\nNote: single-shell model is approximate for virions` }[g]"
         >
-          <span class="legend-dot" :style="{ background: `var(--group-${g})` }"></span>
+          <span class="freq-chart__legend-dot" :style="{ background: `var(--group-${g})` }"></span>
           {{ { reference: 'Reference', cancer: 'Cancer', bacteria: 'Bacteria', virus: 'Virus' }[g] }}
         </span>
         <span
-          class="legend-item"
+          class="freq-chart__legend-item"
           v-tip="'<strong>Active Healthy cell</strong>\nCurrently selected healthy baseline\n(cyan, full opacity, glowing)\nShows Vm curve for selected preset and current field'"
-        ><span class="legend-line legend-line--h"></span> Active H</span>
+        ><span class="freq-chart__legend-line freq-chart__legend-line--h"></span> Active H</span>
         <span
-          class="legend-item"
+          class="freq-chart__legend-item"
           v-tip="'<strong>Active Target cell</strong>\nCurrently selected target (cancer / pathogen)\n(red, full opacity, glowing)\nDrag the white cursor to set broadcast frequency'"
-        ><span class="legend-line legend-line--t"></span> Active T</span>
+        ><span class="freq-chart__legend-line freq-chart__legend-line--t"></span> Active T</span>
         <span
-          class="legend-item"
+          class="freq-chart__legend-item"
           v-tip="'<strong>Vm selectivity ratio</strong> (amber dashed · right axis)\nVm_T(f) × psf_T / (Vm_H(f) × psf_H) — orientation-independent (cos θ cancels).\n>1× → target accumulates more Vm than healthy at that frequency.\nPulse step factor (psf) accounts for ns-pulse charging fraction.'"
-        ><span class="legend-line legend-line--sel"></span> Vm ratio T/H</span>
+        ><span class="freq-chart__legend-line freq-chart__legend-line--sel"></span> Vm ratio T/H</span>
         <span
           v-if="store.doubleShellEnabled"
-          class="legend-item"
+          class="freq-chart__legend-item"
           v-tip="'<strong>Nuclear Vm — Healthy</strong> (dashed, half opacity)\nDouble-shell model (Kotnik &amp; Miklavcic 2006).\nVm_nuc is a bandpass function peaking near f_peak = 1/(2π√(τ_out·τ_ne)).\nTypical: hepatocyte f_peak ≈ 1.66 MHz · Vm_nuc ≈ 40 mV at 417 kHz / 150 V/cm'"
-        ><span class="legend-line legend-line--nuc-h"></span> Nucleus H</span>
+        ><span class="freq-chart__legend-line freq-chart__legend-line--nuc-h"></span> Nucleus H</span>
         <span
           v-if="store.doubleShellEnabled"
-          class="legend-item"
+          class="freq-chart__legend-item"
           v-tip="'<strong>Nuclear Vm — Target</strong> (dashed, half opacity)\nDouble-shell model (Kotnik &amp; Miklavcic 2006).\nCancer nuclei have thinner/leakier NE → higher Vm_nuc and lower threshold.\nTypical: adenocarcinoma f_peak ≈ 0.87 MHz · Vm_nuc ≈ 110 mV at 417 kHz / 150 V/cm'"
-        ><span class="legend-line legend-line--nuc-t"></span> Nucleus T</span>
+        ><span class="freq-chart__legend-line freq-chart__legend-line--nuc-t"></span> Nucleus T</span>
       </div>
     </div>
 
     <!-- D3 SVG container -->
-    <div ref="chartEl" class="chart-el"></div>
+    <div ref="chartEl" class="freq-chart__svg-wrap"></div>
 
     <!-- Hover tooltip -->
     <Transition name="tip">
       <div
         v-if="_tooltipData"
-        class="hover-tip"
+        class="freq-chart__tooltip"
         :style="{ left: (_tooltipData.x + 54) + 'px' }"
       >
-        <div class="tip-freq">{{ formatHz(_tooltipData.freqHz) }}Hz</div>
-        <div class="tip-row tip-row--h">H {{ _tooltipData.healthyVm.toFixed(2) }} mV</div>
-        <div class="tip-row tip-row--t">T {{ _tooltipData.targetVm.toFixed(2) }} mV</div>
+        <div class="freq-chart__tooltip-freq">{{ formatHz(_tooltipData.freqHz) }}Hz</div>
+        <div class="freq-chart__tooltip-row freq-chart__tooltip-row--h">H {{ _tooltipData.healthyVm.toFixed(2) }} mV</div>
+        <div class="freq-chart__tooltip-row freq-chart__tooltip-row--t">T {{ _tooltipData.targetVm.toFixed(2) }} mV</div>
       </div>
     </Transition>
   </div>
 </template>
 
-<style scoped>
+<style lang="scss" scoped>
 /* Expose group colors as CSS vars for the legend dots */
-.chart-wrap {
+.freq-chart {
   --group-reference: var(--color-group-reference);
   --group-cancer:    var(--color-group-cancer);
   --group-bacteria:  var(--color-group-bacteria);
@@ -656,108 +656,110 @@ export default defineComponent({
   border-radius: var(--radius);
   overflow: visible;
   position: relative;
-}
 
-/* ── Header ──────────────────────────────────────────────────────────── */
-.chart-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.6rem 0.85rem 0.2rem;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.6rem 0.85rem 0.2rem;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
 
-.chart-title {
-  font-size: 0.72rem;
-  font-family: var(--font-mono);
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--color-text);
-  white-space: nowrap;
-}
+  &__title {
+    font-size: 0.72rem;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--color-text);
+    white-space: nowrap;
+  }
 
-.legend {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-}
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
-  font-size: 0.62rem;
-  font-family: var(--font-mono);
-  color: var(--color-text);
-  white-space: nowrap;
-}
-.legend-dot {
-  width: 7px; height: 7px;
-  border-radius: 50%;
-  opacity: 0.75;
-  flex-shrink: 0;
-}
-.legend-line {
-  width: 14px; height: 2px;
-  border-radius: 1px;
-  flex-shrink: 0;
-}
-.legend-line--h   { background: var(--color-primary); box-shadow: 0 0 4px var(--color-primary); }
-.legend-line--t   { background: var(--color-danger);  box-shadow: 0 0 4px var(--color-danger); }
-.legend-line--sel {
-  width: 18px;
-  height: 0;
-  border-top: 2px dashed #fbbf24;
-  background: transparent;
-  opacity: 0.8;
-}
-.legend-line--nuc-h {
-  width: 18px;
-  height: 0;
-  border-top: 2px dashed rgba(0, 212, 255, 0.55);
-  background: transparent;
-}
-.legend-line--nuc-t {
-  width: 18px;
-  height: 0;
-  border-top: 2px dashed rgba(255, 77, 109, 0.55);
-  background: transparent;
-}
+  &__legend {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
 
-/* ── Chart container ─────────────────────────────────────────────────── */
-.chart-el {
-  width: 100%;
-  height: 260px;
-  position: relative;
-}
-.chart-el svg { display: block; }
+    &-item {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      font-size: 0.62rem;
+      font-family: var(--font-mono);
+      color: var(--color-text);
+      white-space: nowrap;
+    }
 
-/* ── Hover tooltip ───────────────────────────────────────────────────── */
-.hover-tip {
-  position: absolute;
-  top: 32px;
-  transform: translateX(-50%);
-  background: var(--color-surface-2);
-  border: 1px solid var(--color-border);
-  border-radius: 4px;
-  padding: 0.35rem 0.55rem;
-  pointer-events: none;
-  z-index: 10;
-  white-space: nowrap;
+    &-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      opacity: 0.75;
+      flex-shrink: 0;
+    }
+
+    &-line {
+      width: 14px; height: 2px;
+      border-radius: 1px;
+      flex-shrink: 0;
+
+      &--h   { background: var(--color-primary); box-shadow: 0 0 4px var(--color-primary); }
+      &--t   { background: var(--color-danger);  box-shadow: 0 0 4px var(--color-danger); }
+      &--sel {
+        width: 18px; height: 0;
+        border-top: 2px dashed #fbbf24;
+        background: transparent;
+        opacity: 0.8;
+      }
+      &--nuc-h {
+        width: 18px; height: 0;
+        border-top: 2px dashed rgba(0, 212, 255, 0.55);
+        background: transparent;
+      }
+      &--nuc-t {
+        width: 18px; height: 0;
+        border-top: 2px dashed rgba(255, 77, 109, 0.55);
+        background: transparent;
+      }
+    }
+  }
+
+  &__svg-wrap {
+    width: 100%;
+    height: 260px;
+    position: relative;
+
+    svg { display: block; }
+  }
+
+  &__tooltip {
+    position: absolute;
+    top: 32px;
+    transform: translateX(-50%);
+    background: var(--color-surface-2);
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    padding: 0.35rem 0.55rem;
+    pointer-events: none;
+    z-index: 10;
+    white-space: nowrap;
+
+    &-freq {
+      font-size: 0.65rem;
+      font-family: var(--font-mono);
+      color: var(--color-text);
+      margin-bottom: 0.15rem;
+    }
+
+    &-row {
+      font-size: 0.68rem;
+      font-family: var(--font-mono);
+
+      &--h { color: var(--color-primary); }
+      &--t { color: var(--color-danger); }
+    }
+  }
 }
-.tip-freq {
-  font-size: 0.65rem;
-  font-family: var(--font-mono);
-  color: var(--color-text);
-  margin-bottom: 0.15rem;
-}
-.tip-row {
-  font-size: 0.68rem;
-  font-family: var(--font-mono);
-}
-.tip-row--h { color: var(--color-primary); }
-.tip-row--t { color: var(--color-danger); }
 
 .tip-enter-active, .tip-leave-active { transition: opacity 0.1s; }
 .tip-enter-from, .tip-leave-to { opacity: 0; }

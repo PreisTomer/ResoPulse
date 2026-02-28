@@ -370,23 +370,23 @@ export default defineComponent({
 </script>
 
 <template>
-  <div class="resonance-chart-wrapper">
-    <div class="chart-header">
-      <span class="chart-title">{{ $t('resonance.chartTitle') }}</span>
-      <span class="chart-note">{{ $t('resonance.chartNote') }}</span>
+  <div class="resonance-chart">
+    <div class="resonance-chart__header">
+      <span class="resonance-chart__title">{{ $t('resonance.chartTitle') }}</span>
+      <span class="resonance-chart__note">{{ $t('resonance.chartNote') }}</span>
     </div>
-    <div ref="chartEl" class="chart-el" />
-    <div class="chart-legend">
-      <span class="legend-item legend-target">— {{ $t('resonance.legendTarget') }}</span>
-      <span class="legend-item legend-healthy">- - {{ $t('resonance.legendHealthy') }}</span>
-      <span class="legend-item legend-dim">— {{ $t('resonance.legendLibrary') }}</span>
-      <span class="legend-item legend-disrupt">— {{ $t('resonance.legendThreshold') }}</span>
+    <div ref="chartEl" class="resonance-chart__svg-wrap" />
+    <div class="resonance-chart__legend">
+      <span class="resonance-chart__legend-item resonance-chart__legend-target">— {{ $t('resonance.legendTarget') }}</span>
+      <span class="resonance-chart__legend-item resonance-chart__legend-healthy">- - {{ $t('resonance.legendHealthy') }}</span>
+      <span class="resonance-chart__legend-item resonance-chart__legend-dim">— {{ $t('resonance.legendLibrary') }}</span>
+      <span class="resonance-chart__legend-item resonance-chart__legend-disrupt">— {{ $t('resonance.legendThreshold') }}</span>
     </div>
   </div>
 </template>
 
-<style scoped>
-.resonance-chart-wrapper {
+<style lang="scss" scoped>
+.resonance-chart {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
@@ -394,49 +394,49 @@ export default defineComponent({
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
-}
 
-.chart-header {
-  display: flex;
-  align-items: baseline;
-  gap: 0.75rem;
-  padding: 0 0.5rem;
-}
+  &__header {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    padding: 0 0.5rem;
+  }
 
-.chart-title {
-  font-family: var(--font-mono);
-  font-size: 0.62rem;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--color-text);
-}
+  &__title {
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--color-text);
+  }
 
-.chart-note {
-  font-family: var(--font-mono);
-  font-size: 0.55rem;
-  color: rgba(255,255,255,0.4);
-}
+  &__note {
+    font-family: var(--font-mono);
+    font-size: 0.55rem;
+    color: rgba(255,255,255,0.4);
+  }
 
-.chart-el {
-  width: 100%;
-  min-height: 240px;
-}
+  &__svg-wrap {
+    width: 100%;
+    min-height: 240px;
+  }
 
-.chart-legend {
-  display: flex;
-  gap: 1rem;
-  padding: 0 0.5rem;
-  flex-wrap: wrap;
-}
+  &__legend {
+    display: flex;
+    gap: 1rem;
+    padding: 0 0.5rem;
+    flex-wrap: wrap;
 
-.legend-item {
-  font-family: var(--font-mono);
-  font-size: 0.58rem;
-  letter-spacing: 0.04em;
-}
+    &-item {
+      font-family: var(--font-mono);
+      font-size: 0.58rem;
+      letter-spacing: 0.04em;
+    }
 
-.legend-target  { color: var(--color-purple); }
-.legend-healthy { color: rgba(0,212,255,0.7); }
-.legend-dim     { color: rgba(255,255,255,0.35); }
-.legend-disrupt { color: rgba(255,77,109,0.7); }
+    &-target  { color: var(--color-purple); }
+    &-healthy { color: rgba(0,212,255,0.7); }
+    &-dim     { color: rgba(255,255,255,0.35); }
+    &-disrupt { color: rgba(255,77,109,0.7); }
+  }
+}
 </style>

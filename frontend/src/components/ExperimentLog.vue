@@ -29,29 +29,29 @@ export default defineComponent({
 </script>
 
 <template>
-  <div class="log-panel">
+  <div class="exp-log">
     <!-- Header row -->
-    <div class="log-header">
+    <div class="exp-log__header">
       <input
         v-model="expStore.sessionName"
-        class="session-name-input"
+        class="exp-log__name-input"
         placeholder="Session name…"
         spellcheck="false"
       />
-      <div class="log-actions">
+      <div class="exp-log__actions">
         <button
-          class="log-btn log-btn--primary"
+          class="exp-log__btn exp-log__btn--primary"
           v-tip="'<strong>Log Reading</strong>\nCapture a snapshot of the current experiment state:\nfrequency, field, Vm values, selectivity ratio,\ncell temperatures, and disruption ratios.'"
           @click="logReading"
         >Log Reading</button>
         <button
-          class="log-btn"
+          class="exp-log__btn"
           :disabled="!hasEntries"
           v-tip="'<strong>Export CSV</strong>\nDownload all log entries as a comma-separated file.\nIncludes all columns: time, freq, field, Vm,\nselectivity, temps, ratios, and event type.'"
           @click="exportCSV"
         >CSV</button>
         <button
-          class="log-btn"
+          class="exp-log__btn"
           :disabled="!hasEntries"
           v-tip="'Clear all log entries from this session.\nThis cannot be undone.'"
           @click="clearLog"
@@ -60,8 +60,8 @@ export default defineComponent({
     </div>
 
     <!-- Table -->
-    <div class="log-table-wrap">
-      <table class="log-table">
+    <div class="exp-log__table-wrap">
+      <table class="exp-log__table">
         <thead>
           <tr>
             <th v-tip="'Entry number\n(newest entries shown first)'">#</th>
@@ -78,37 +78,37 @@ export default defineComponent({
           <tr
             v-for="e in entries"
             :key="e.id"
-            :class="{ 'row--lysis': e.event === 'lysis' }"
+            :class="{ 'exp-log__row--lysis': e.event === 'lysis' }"
           >
-            <td class="td-id">{{ e.id }}</td>
-            <td class="td-mono">{{ e.timestamp }}</td>
+            <td class="exp-log__td-id">{{ e.id }}</td>
+            <td class="exp-log__td-mono">{{ e.timestamp }}</td>
             <td
-              class="td-mono"
+              class="exp-log__td-mono"
               v-tip="`<strong>Frequency: ${e.freqKHz} kHz</strong>\nBroadcast frequency at time of reading`"
             >{{ e.freqKHz }}k</td>
             <td
-              class="td-mono"
+              class="exp-log__td-mono"
               v-tip="`<strong>Field: ${e.fieldVcm} V/cm</strong>\nApplied electric field intensity`"
             >{{ e.fieldVcm }}</td>
             <td
-              class="td-target"
+              class="exp-log__td-target"
               v-tip="`<strong>Target Vm: ${e.targetVm} mV</strong>\nTransmembrane potential of ${e.targetPreset}\nT-ratio: ${(e.targetRatio * 100).toFixed(1)}% of lysis threshold`"
             >{{ e.targetVm }}</td>
             <td
-              class="td-healthy"
+              class="exp-log__td-healthy"
               v-tip="`<strong>Healthy Vm: ${e.healthyVm} mV</strong>\nTransmembrane potential of healthy reference cell\nH-ratio: ${(e.healthyRatio * 100).toFixed(1)}% of lysis threshold`"
             >{{ e.healthyVm }}</td>
             <td
-              class="td-sel"
+              class="exp-log__td-sel"
               v-tip="`<strong>Selectivity: ×${e.selectivity.toFixed(3)}</strong>\nT-Vm / H-Vm ratio\nT-temp: ${e.targetTemp}°C  ·  H-temp: ${e.healthyTemp}°C`"
             >{{ e.selectivity.toFixed(2) }}</td>
             <td
-              class="td-event"
+              class="exp-log__td-event"
               v-tip="e.event === 'lysis' ? '<span class=\'tip-warn\'>Lysis event</span>\nTarget membrane was irreversibly disrupted\n(auto-logged by system)' : 'Manual reading\nLogged by user at this timestamp'"
             >{{ e.event }}</td>
           </tr>
           <tr v-if="!hasEntries">
-            <td colspan="8" class="td-empty">No readings yet — click Log Reading to record</td>
+            <td colspan="8" class="exp-log__td-empty">No readings yet — click Log Reading to record</td>
           </tr>
         </tbody>
       </table>
@@ -116,8 +116,8 @@ export default defineComponent({
   </div>
 </template>
 
-<style scoped>
-.log-panel {
+<style lang="scss" scoped>
+.exp-log {
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
@@ -126,100 +126,110 @@ export default defineComponent({
   overflow: hidden;
   flex: 1;
   min-height: 0;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.65rem 0.85rem;
+    border-bottom: 1px solid var(--color-border);
+    flex-wrap: wrap;
+  }
+
+  &__name-input {
+    flex: 1;
+    min-width: 100px;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--color-border);
+    color: var(--color-text-heading);
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    padding: 0.1rem 0.2rem;
+    outline: none;
+    letter-spacing: 0.06em;
+
+    &:focus { border-bottom-color: var(--color-primary); }
+  }
+
+  &__actions { display: flex; gap: 0.35rem; flex-shrink: 0; }
+
+  &__btn {
+    font-size: 0.58rem;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 0.22rem 0.6rem;
+    border: 1px solid var(--color-border);
+    border-radius: 3px;
+    background: transparent;
+    color: var(--color-text);
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+
+    &:hover:not(:disabled) { border-color: var(--color-primary); color: var(--color-primary); }
+    &:disabled { opacity: 0.3; cursor: not-allowed; }
+
+    &--primary {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+
+      &:hover { background: var(--color-primary-dim); }
+    }
+  }
+
+  &__table-wrap {
+    overflow-y: auto;
+    flex: 1;
+    max-height: 220px;
+  }
+
+  &__table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.58rem;
+    font-family: var(--font-mono);
+
+    thead th {
+      position: sticky;
+      top: 0;
+      background: var(--color-surface-2);
+      padding: 0.3rem 0.45rem;
+      text-align: right;
+      color: var(--color-text);
+      font-weight: 400;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      white-space: nowrap;
+      border-bottom: 1px solid var(--color-border);
+
+      &:first-child { text-align: left; }
+    }
+
+    tbody {
+      td {
+        padding: 0.28rem 0.45rem;
+        text-align: right;
+        color: var(--color-text);
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+        white-space: nowrap;
+      }
+      tr:hover td { background: rgba(255,255,255,0.025); }
+    }
+  }
+
+  &__row--lysis {
+    td { background: rgba(255,77,109,0.06); }
+    &:hover td { background: rgba(255,77,109,0.10); }
+  }
+
+  &__td-id     { text-align: left; opacity: 0.6; }
+  &__td-mono   { text-align: left; }
+  &__td-target  { color: var(--color-danger); }
+  &__td-healthy { color: var(--color-primary); }
+  &__td-sel    { color: var(--color-text-heading); font-weight: 600; }
+  &__td-event  { text-transform: uppercase; opacity: 0.8; }
+  &__td-empty  { text-align: center; opacity: 0.6; padding: 1rem; }
 }
-
-/* ── Header ──────────────────────────────────────────────────── */
-.log-header {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 0.65rem 0.85rem;
-  border-bottom: 1px solid var(--color-border);
-  flex-wrap: wrap;
-}
-
-.session-name-input {
-  flex: 1;
-  min-width: 100px;
-  background: transparent;
-  border: none;
-  border-bottom: 1px solid var(--color-border);
-  color: var(--color-text-heading);
-  font-family: var(--font-mono);
-  font-size: 0.68rem;
-  padding: 0.1rem 0.2rem;
-  outline: none;
-  letter-spacing: 0.06em;
-}
-.session-name-input:focus { border-bottom-color: var(--color-primary); }
-
-.log-actions { display: flex; gap: 0.35rem; flex-shrink: 0; }
-
-.log-btn {
-  font-size: 0.58rem;
-  font-family: var(--font-mono);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  padding: 0.22rem 0.6rem;
-  border: 1px solid var(--color-border);
-  border-radius: 3px;
-  background: transparent;
-  color: var(--color-text);
-  cursor: pointer;
-  transition: all 0.15s;
-  white-space: nowrap;
-}
-.log-btn:hover:not(:disabled) { border-color: var(--color-primary); color: var(--color-primary); }
-.log-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-.log-btn--primary { border-color: var(--color-primary); color: var(--color-primary); }
-.log-btn--primary:hover { background: var(--color-primary-dim); }
-
-/* ── Table ───────────────────────────────────────────────────── */
-.log-table-wrap {
-  overflow-y: auto;
-  flex: 1;
-  max-height: 220px;
-}
-
-.log-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.58rem;
-  font-family: var(--font-mono);
-}
-
-.log-table thead th {
-  position: sticky;
-  top: 0;
-  background: var(--color-surface-2);
-  padding: 0.3rem 0.45rem;
-  text-align: right;
-  color: var(--color-text);
-  font-weight: 400;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  white-space: nowrap;
-  border-bottom: 1px solid var(--color-border);
-}
-.log-table thead th:first-child { text-align: left; }
-
-.log-table tbody td {
-  padding: 0.28rem 0.45rem;
-  text-align: right;
-  color: var(--color-text);
-  border-bottom: 1px solid rgba(255,255,255,0.04);
-  white-space: nowrap;
-}
-.log-table tbody tr:hover td { background: rgba(255,255,255,0.025); }
-
-.row--lysis td { background: rgba(255,77,109,0.06); }
-.row--lysis:hover td { background: rgba(255,77,109,0.10); }
-
-.td-id     { text-align: left; opacity: 0.6; }
-.td-mono   { text-align: left; }
-.td-target  { color: var(--color-danger); }
-.td-healthy { color: var(--color-primary); }
-.td-sel    { color: var(--color-text-heading); font-weight: 600; }
-.td-event  { text-transform: uppercase; opacity: 0.8; }
-.td-empty  { text-align: center; opacity: 0.6; padding: 1rem; }
 </style>
