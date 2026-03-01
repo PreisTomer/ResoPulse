@@ -1,4 +1,4 @@
-export type CellState = 'stable' | 'nourishing' | 'approaching' | 'critical' | 'vibrating' | 'lysing' | 'lysed'
+export type CellState = 'stable' | 'nourishing' | 'approaching' | 'rev-ep' | 'critical' | 'vibrating' | 'lysing' | 'lysed'
 
 // ── Cell configuration ────────────────────────────────────────────────────────
 
@@ -15,8 +15,13 @@ export interface CellConfig {
   conductivity: number         // S/m — cytoplasm σ_i
   // Acoustic/mechanical resonance (virus/bacteria capsid & cell-wall targeting)
   resonantFreqGHz?: number       // Capsid/cell-wall fundamental resonant frequency (GHz)
-  capsidQ?: number               // Mechanical quality factor
+  capsidQ?: number               // Mechanical quality factor (nominal)
   resonantThresholdVcm?: number  // Field amplitude at resonance required for disruption (V/cm)
+  // Resonance model uncertainty & experimental provenance
+  resonantFreqUncertaintyPct?: number   // ±% uncertainty on f_res (from v_sound literature range)
+  capsidQMin?: number                   // Lower Q bound for Lorentzian uncertainty band
+  capsidQMax?: number                   // Upper Q bound
+  experimentalBasis?: 'laser-validated' | 'rf-extrapolated' | 'speculative'
   // Nuclear envelope — double-shell model (Kotnik & Miklavcic 2006)
   // Absent for anucleate cells (RBC) and prokaryotes (bacteria/virus).
   nuclearRadius?: number               // µm  — nuclear radius (~50% of cell radius for most mammalian cells)

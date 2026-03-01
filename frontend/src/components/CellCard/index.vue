@@ -105,6 +105,7 @@ export default defineComponent({
         stable:      'cell-card__state--stable',
         nourishing:  'cell-card__state--nourishing',
         approaching: 'cell-card__state--approaching',
+        'rev-ep':    'cell-card__state--rev-ep',
         critical:    'cell-card__state--critical',
         vibrating:   'cell-card__state--vibrating',
         lysing:      'cell-card__state--lysing',
@@ -189,9 +190,10 @@ Thresholds: 42°C hyperthermic · 60°C denaturing · 100°C vaporizing${warnLin
         stable:      'stable — no significant membrane or thermal response',
         nourishing:  'nourishing — sub-threshold oscillation, membrane intact',
         approaching: '<span class="tip-warn">⚠ approaching — membrane stress OR T ≥ 42°C · ion channel perturbation onset</span>',
+        'rev-ep':    '<span class="tip-warn">⚡ reversible EP window (50–85%) — membrane transiently permeabilized each pulse.\nPores open and re-seal after the field is removed.\nThis is the drug/gene delivery window — cells survive.\nSustained or increasing field progresses to irreversible lysis.</span>',
         critical:    '<span class="tip-warn">⚡ critical — Vm >85% threshold OR T ≥ 60°C (protein denaturation) · reduce field / duty cycle immediately</span>',
-        vibrating:   '<span class="tip-warn">vibrating — approaching lysis threshold (Vm >85% sustained)</span>',
-        lysing:      '<span class="tip-warn">lysing — membrane disruption in progress</span>',
+        vibrating:   '<span class="tip-warn">⚡ LYSIS ARMED — Vm >85% of threshold · irreversible electroporation imminent</span>',
+        lysing:      '<span class="tip-warn">lysing — irreversible membrane disruption in progress</span>',
         lysed:       this.thermalLysis
           ? '<span class="tip-warn">thermal lysis — cell vaporized (T ≥ 100°C)</span>'
           : '<span class="tip-warn">lysed — membrane permanently disrupted by electric field</span>',
@@ -199,7 +201,7 @@ Thresholds: 42°C hyperthermic · 60°C denaturing · 100°C vaporizing${warnLin
       const transitions = this.type === 'healthy'
         ? `\nElectrical: Vm >50% → approaching · Vm >85% → critical`
            + `\nThermal:   T ≥42°C → approaching · T ≥60°C → critical · T ≥100°C → lysis`
-        : `\nElectrical: vibrating >${this.formatLysisTime(this.store.lysisDelayMs)} → lysing → lysed`
+        : `\nElectrical: 50–85% → rev-ep (reversible) · >85% → armed (${this.formatLysisTime(this.store.lysisDelayMs)}) → lysed`
           + `\nThermal:   T ≥60°C → critical · T ≥100°C → instant thermal lysis`
       return `<strong>Cell State</strong>
 ${labels[this.cellState] ?? this.cellState}
@@ -212,12 +214,30 @@ ${transitions}`
       const thr  = (cell.thresholdVoltage * 1000).toFixed(0)
       const n    = this.store.lysisNPulses
       const t    = this.formatLysisTime(this.store.lysisDelayMs)
+
+      const pef     = this.type === 'healthy'
+        ? this.store.pulseEnvelopeFactorHealthy
+        : this.store.pulseEnvelopeFactorTarget
+      const sigma_e = this.store.effectiveSigmaE
+      const tau_ns  = (computeTau(cell, sigma_e) * 1e9).toFixed(1)
+      const isResonance = this.type === 'target' && this.store.chartMode === 'resonance'
+      const pefNote = (this.store.waveform === 'pulsed' && pef < 0.99 && !isResonance)
+        ? `\n<span class="tip-note">Pulse factor: ${(pef * 100).toFixed(1)}% (t_p = ${this.store.pulseWidthNs} ns vs τ = ${tau_ns} ns).\nMembrane charges to ${(pef * 100).toFixed(1)}% of Schwan Vm per pulse.\nEffective threshold is ${(1 / pef).toFixed(1)}× higher at this pulse width.\nRef: Weaver &amp; Chizmadzhev (1996).</span>`
+        : ''
+
+      const revEpNote = (this.type === 'target' && this.disruptionRatio >= 0.50 && this.disruptionRatio < 0.85)
+        ? `\n<span class="tip-note">Reversible EP window: pores open transiently and re-seal.\nThis is the drug/gene delivery regime — cells survive.\nIncrease field or hold to progress to irreversible lysis.</span>`
+        : ''
+
+      const formulaLine = isResonance
+        ? 'Ratio = (E / E_thr) × L(f, f_res, Q)  — acoustic Lorentzian'
+        : `Ratio = Vm × pulse_factor / lysis threshold\n  Vm = ${this.vmDisplay}  ·  Threshold = ${thr} mV`
+
       return `<strong>Membrane Disruption: <span class="tip-val">${pct}%</span></strong>
-Ratio = Vm / lysis threshold voltage
-  Vm = ${this.vmDisplay}  ·  Threshold = ${thr} mV
+${formulaLine}
 
 >85% → lysis after ${n} pulses (est. ${t})
-100% = membrane at threshold — electroporation`
+100% = at disruption threshold${pefNote}${revEpNote}`
     },
 
     lysisProtocolStr(): string {
@@ -301,6 +321,7 @@ Ratio = Vm / lysis threshold voltage
 
       if (this.type === 'target') {
         if (impact > DISRUPTION_WARN_THRESHOLD) {
+          // >85% — lysis is now armed; 'vibrating' exclusively means "lysis imminent"
           this.cellState = 'vibrating'
           if (!this.shatterPending) {
             this.shatterPending = true
@@ -315,11 +336,16 @@ Ratio = Vm / lysis threshold voltage
           clearTimeout(this._shatterDelayTimeout ?? undefined)
           this.shatterPending = false
         }
+        // 50–85% → 'rev-ep': reversible electroporation window (Weaver & Chizmadzhev 1996).
+        // Pores open transiently and re-seal — membrane is permeabilized but cells survive.
+        // Distinct from 'vibrating' (>85%, lysis armed) and from 'approaching' (<50%).
         const elState: CellState =
-          impact >= HEALTHY_APPROACHING_THRESHOLD ? 'vibrating'
+          impact >= HEALTHY_APPROACHING_THRESHOLD ? 'rev-ep'
           : impact > VIBRATING_MIN_THRESHOLD      ? 'approaching'
           : 'stable'
-        const ORDER: CellState[] = ['stable', 'approaching', 'vibrating', 'critical']
+        // ORDER defines severity for thermal vs electrical state arbitration.
+        // 'critical' (T≥60°C) overrides 'rev-ep'; hyperthermic approaching does not.
+        const ORDER: CellState[] = ['stable', 'approaching', 'rev-ep', 'critical']
         this.cellState = ORDER[Math.max(ORDER.indexOf(elState), ORDER.indexOf(thermalFloor))] as CellState
       } else {
         const elState: CellState =
@@ -385,7 +411,13 @@ Ratio = Vm / lysis threshold voltage
     },
 
     resetToStable() {
-      this.store.resetCell(this.type)
+      const cell   = this.type === 'healthy' ? this.store.healthy : this.store.target
+      const preset = CELL_PRESETS.find((p) => p.presetId === cell.id)
+      if (preset) {
+        this.store.loadPreset(this.type, preset)
+      } else {
+        this.store.resetCell(this.type)
+      }
     },
 
     resetToPreset() {
@@ -461,7 +493,18 @@ Ratio = Vm / lysis threshold voltage
 
       <div ref="oscCanvas" class="cell-card__osc-canvas"></div>
 
-      <!-- Lysis protocol strip — target cell vibrating state -->
+      <!-- Reversible EP strip — target cell 50–85% disruption (pores open/re-seal) -->
+      <div
+        v-if="type === 'target' && cellState === 'rev-ep'"
+        class="cell-card__rev-ep-strip"
+        v-tip="tipDisruption"
+      >
+        <span class="cell-card__warn-icon">⚡</span>
+        <span class="cell-card__warn-text">REV. EP WINDOW — MEMBRANE PERMEABILIZED</span>
+        <span class="cell-card__warn-pct">{{ (disruptionRatio * 100).toFixed(0) }}%</span>
+      </div>
+
+      <!-- Lysis protocol strip — target cell vibrating state (>85%, lysis armed) -->
       <div
         v-if="type === 'target' && cellState === 'vibrating'"
         class="cell-card__lysis-strip"
@@ -580,6 +623,13 @@ Ratio = Vm / lysis threshold voltage
 
   /* ── State modifiers ───────────────────────────────────────────────── */
   &--nourishing { box-shadow: 0 0 28px rgba(0, 212, 255, 0.18); }
+
+  /* Reversible EP window (target, 50–85%): amber glow — permeabilized but survivable */
+  &--rev-ep.cell-card--target {
+    border-left-color: #fbbf24 !important;
+    box-shadow: 0 0 22px rgba(251, 191, 36, 0.28);
+    animation: card-warn-pulse 1.8s ease-in-out infinite;
+  }
 
   &--vibrating { box-shadow: 0 0 24px rgba(255, 77, 109, 0.14); }
 
@@ -746,6 +796,7 @@ Ratio = Vm / lysis threshold voltage
   &__state--stable     { color: #39ff14; }
   &__state--nourishing { color: #00d4ff; }
   &__state--approaching { color: #fbbf24; }
+  &__state--rev-ep     { color: #fbbf24; animation: state-blink 1.6s ease-in-out infinite; }
   &__state--critical   { color: #fb923c; animation: state-blink 0.9s ease-in-out infinite; }
   &__state--vibrating  { color: #ff8c00; animation: state-blink 1.1s ease-in-out infinite; }
   &__state--lysing     { color: #ff4d6d; animation: state-blink 0.5s ease-in-out infinite; }
@@ -940,6 +991,23 @@ Ratio = Vm / lysis threshold voltage
     line-height: 0;
 
     svg { display: block; width: 100%; height: auto; }
+  }
+
+  /* ── Reversible EP strip (target, 50–85%) ──────────────────────────── */
+  &__rev-ep-strip {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.32rem 0.65rem;
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #fbbf24;
+    background: rgba(251, 191, 36, 0.08);
+    border-top: 1px solid rgba(251, 191, 36, 0.3);
+    animation: warn-fade 1.8s ease-in-out infinite;
+    cursor: help;
   }
 
   /* ── Lysis strip ───────────────────────────────────────────────────── */

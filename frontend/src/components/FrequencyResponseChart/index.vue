@@ -2,7 +2,7 @@
 import { defineComponent } from 'vue'
 import * as d3 from 'd3'
 import { useCellStore } from '../../stores/cellStore'
-import { computeSchwan, computeFc, computeNuclearVm } from '../../utils/physics'
+import { computeSchwan, computeFc, computeNuclearVm, computeResonantLineshape } from '../../utils/physics'
 import { CELL_PRESETS, GROUP_COLORS } from '../../constants/cellLibrary'
 import { broadcastFieldParams } from '../../services/socket'
 import { C } from '../../theme/colors'
@@ -52,6 +52,7 @@ export default defineComponent({
     'store.cosThetaFactor':            { handler() { this.updateChart() } },
     'store.currentBroadcastFrequency': { handler() { this.updateCursor() } },
     'store.doubleShellEnabled':        { handler() { this.updateChart() } },
+    'store.chartMode':                 { handler() { this.updateChart() } },
   },
 
   mounted() {
@@ -251,13 +252,210 @@ export default defineComponent({
       g.select<SVGLineElement>('.cursor-line').call(dragBehavior)
     },
 
+    // ── Resonance mode: Lorentzian disruption chart ──────────────────────
+    updateChartResonance() {
+      if (!this._svg || !this._xScale || !this._yScale) return
+      const t = this.store.target
+      if (!t.resonantFreqGHz || !t.resonantThresholdVcm) return
+
+      const g = this._svg.select<SVGGElement>('.chart-g')
+      const f0_hz = t.resonantFreqGHz * 1e9
+      const Q    = t.capsidQ ?? 20
+      const Qmin = t.capsidQMin ?? Q
+      const Qmax = t.capsidQMax ?? Q
+      const E    = this.store.fieldIntensity
+      const Ethr = t.resonantThresholdVcm
+
+      // Frequency range: 2 decades below and above f_res
+      const fMin = f0_hz * 0.01
+      const fMax = f0_hz * 100
+      const freqPoints = logspace(fMin, fMax, 200)
+      this._xScale!.domain([fMin, fMax])
+
+      // Lorentzian disruption curves
+      const lorCurve = freqPoints.map((hz) => ({
+        hz, dr: computeResonantLineshape(t.resonantFreqGHz!, Q, hz) * (E / Ethr),
+      }))
+      const lorQmin = freqPoints.map((hz) => ({
+        hz, dr: computeResonantLineshape(t.resonantFreqGHz!, Qmin, hz) * (E / Ethr),
+      }))
+      const lorQmax = freqPoints.map((hz) => ({
+        hz, dr: computeResonantLineshape(t.resonantFreqGHz!, Qmax, hz) * (E / Ethr),
+      }))
+
+      // Y scale: disruption ratio
+      const maxDr = Math.max(...lorQmin.map((d) => d.dr), 1.2)
+      this._yScale!.domain([0, Math.ceil(maxDr * 10) / 10])
+
+      // Tick values: integer powers of 10 plus f_res
+      const logMin = Math.floor(Math.log10(fMin))
+      const logMax = Math.ceil(Math.log10(fMax))
+      const tickVals: number[] = []
+      for (let exp = logMin; exp <= logMax; exp++) {
+        const p = Math.pow(10, exp)
+        if (p >= fMin && p <= fMax) tickVals.push(p)
+      }
+      if (!tickVals.some((v) => Math.abs(v - f0_hz) / f0_hz < 0.05)) tickVals.push(f0_hz)
+      tickVals.sort((a, b) => a - b)
+
+      const formatResHz = (hz: number): string => {
+        if (hz >= 1e9) return `${(hz / 1e9).toFixed(hz >= 10e9 ? 0 : 1)}G`
+        if (hz >= 1e6) return `${(hz / 1e6).toFixed(hz >= 100e6 ? 0 : 1)}M`
+        return `${(hz / 1e3).toFixed(0)}k`
+      }
+
+      g.select<SVGGElement>('.x-axis')
+        .call(d3.axisBottom<number>(this._xScale!).tickValues(tickVals).tickFormat(formatResHz).tickSize(4))
+        .call((a) => a.select('.domain').attr('stroke', 'rgba(255,255,255,0.15)'))
+        .call((a) => a.selectAll('text').attr('fill', 'var(--color-text)').attr('font-size', '0.64rem').attr('font-family', 'var(--font-mono)'))
+        .call((a) => a.selectAll('line').attr('stroke', 'rgba(255,255,255,0.2)'))
+
+      g.select<SVGGElement>('.y-axis')
+        .call(d3.axisLeft<number>(this._yScale!).ticks(5).tickSize(4))
+        .call((a) => a.select('.domain').attr('stroke', 'rgba(255,255,255,0.15)'))
+        .call((a) => a.selectAll('text').attr('fill', 'var(--color-text)').attr('font-size', '0.64rem').attr('font-family', 'var(--font-mono)'))
+        .call((a) => a.selectAll('line').attr('stroke', 'rgba(255,255,255,0.2)'))
+
+      g.select<SVGGElement>('.grid-h')
+        .call(d3.axisLeft<number>(this._yScale!).ticks(5).tickSize(-this._chartW).tickFormat(() => ''))
+        .call((a) => a.select('.domain').remove())
+        .call((a) => a.selectAll('line').attr('stroke', 'rgba(255,255,255,0.06)'))
+
+      // Hide selectivity curve and right axis (TI → ∞ in resonance, not useful to plot)
+      g.select<SVGGElement>('.sel-curve').selectAll('*').remove()
+      g.select<SVGGElement>('.y-right-axis').selectAll('*').remove()
+      g.select<SVGGElement>('.curves-library').selectAll('*').remove()
+      g.select<SVGGElement>('.curves-nuclear').selectAll('*').remove()
+
+      // Lorentzian line generator
+      const drLineGen = d3.line<{ hz: number; dr: number }>()
+        .x((d) => this._xScale!(d.hz))
+        .y((d) => this._yScale!(d.dr))
+        .curve(d3.curveBasis)
+
+      const activeGroup = g.select<SVGGElement>('.curves-active')
+      activeGroup.selectAll('*').remove()
+
+      // Q uncertainty band (filled area + dashed bounds)
+      if (Qmin !== Qmax) {
+        const areaGen = d3.area<{ hz: number; drLow: number; drHigh: number }>()
+          .x((d) => this._xScale!(d.hz))
+          .y0((d) => this._yScale!(d.drLow))
+          .y1((d) => this._yScale!(d.drHigh))
+          .curve(d3.curveBasis)
+
+        const bandData = freqPoints.map((hz, i) => ({
+          hz,
+          drLow:  lorQmax[i]!.dr,  // higher Q → narrower → smaller off-resonance values
+          drHigh: lorQmin[i]!.dr,  // lower Q  → broader  → larger off-resonance values
+        }))
+
+        activeGroup.append('path')
+          .datum(bandData)
+          .attr('fill', C.danger)
+          .attr('fill-opacity', 0.08)
+          .attr('d', areaGen)
+
+        activeGroup.append('path')
+          .datum(lorQmax)
+          .attr('fill', 'none').attr('stroke', C.danger)
+          .attr('stroke-width', 1).attr('stroke-opacity', 0.35)
+          .attr('stroke-dasharray', '3,4').attr('d', drLineGen)
+
+        activeGroup.append('path')
+          .datum(lorQmin)
+          .attr('fill', 'none').attr('stroke', C.danger)
+          .attr('stroke-width', 1).attr('stroke-opacity', 0.35)
+          .attr('stroke-dasharray', '3,4').attr('d', drLineGen)
+      }
+
+      // Main Lorentzian (nominal Q) — solid red
+      activeGroup.append('path')
+        .datum(lorCurve)
+        .attr('fill', 'none')
+        .attr('stroke', C.danger).attr('stroke-width', 2.5).attr('stroke-opacity', 1)
+        .attr('filter', `drop-shadow(0 0 4px ${C.danger}88)`)
+        .attr('d', drLineGen)
+
+      // DR = 1.0 threshold line
+      const thrGroup = g.select<SVGGElement>('.thresholds')
+      thrGroup.selectAll('*').remove()
+      const y1 = this._yScale!(1)
+      if (y1 >= 0 && y1 <= this._chartH) {
+        thrGroup.append('line')
+          .attr('x1', 0).attr('x2', this._chartW)
+          .attr('y1', y1).attr('y2', y1)
+          .attr('stroke', C.danger).attr('stroke-width', 0.75)
+          .attr('stroke-dasharray', '4,3').attr('stroke-opacity', 0.5)
+        thrGroup.append('text')
+          .attr('x', this._chartW + 4).attr('y', y1 + 4)
+          .attr('fill', C.danger).attr('font-size', '0.52rem')
+          .attr('font-family', 'var(--font-mono)').text('DR=1')
+      }
+
+      // f_res vertical marker + label
+      const fcGroup = g.select<SVGGElement>('.fc-markers')
+      fcGroup.selectAll('*').remove()
+      const xRes = this._xScale!(f0_hz)
+      const fResLabel = t.resonantFreqGHz >= 1
+        ? `f_res ${t.resonantFreqGHz.toFixed(1)} GHz`
+        : `f_res ${(t.resonantFreqGHz * 1000).toFixed(0)} MHz`
+      fcGroup.append('line')
+        .attr('x1', xRes).attr('x2', xRes).attr('y1', 0).attr('y2', this._chartH)
+        .attr('stroke', C.danger).attr('stroke-width', 1)
+        .attr('stroke-dasharray', '4,3').attr('stroke-opacity', 0.4)
+      fcGroup.append('text').attr('x', xRes).attr('y', this._chartH + 20)
+        .attr('text-anchor', 'middle').attr('fill', C.danger)
+        .attr('font-size', '0.62rem').attr('font-family', 'var(--font-mono)').text('▲')
+      fcGroup.append('text').attr('x', xRes).attr('y', this._chartH + 34)
+        .attr('text-anchor', 'middle').attr('fill', C.danger)
+        .attr('font-size', '0.6rem').attr('font-family', 'var(--font-mono)').text(fResLabel)
+
+      // f_res ± uncertainty range markers (amber dashed)
+      const pct = t.resonantFreqUncertaintyPct
+      if (pct) {
+        for (const f of [f0_hz * (1 - pct / 100), f0_hz * (1 + pct / 100)]) {
+          if (f >= fMin && f <= fMax) {
+            fcGroup.append('line')
+              .attr('x1', this._xScale!(f)).attr('x2', this._xScale!(f))
+              .attr('y1', 0).attr('y2', this._chartH)
+              .attr('stroke', C.amber).attr('stroke-width', 0.75)
+              .attr('stroke-dasharray', '2,4').attr('stroke-opacity', 0.35)
+          }
+        }
+      }
+
+      // Clear optimal marker (not applicable in resonance mode)
+      g.select<SVGGElement>('.opt-marker').selectAll('*').remove()
+
+      this.updateCursor()
+    },
+
     // ── Full chart update (curves + axes + thresholds) ───────────────────
     updateChart() {
       if (!this._svg || !this._xScale || !this._yScale) return
 
+      const g = this._svg.select<SVGGElement>('.chart-g')
+
+      // Branch: resonance mode shows Lorentzian disruption chart
+      const cat = this.store.targetCellCategory
+      const t = this.store.target
+      if (
+        this.store.chartMode === 'resonance' &&
+        (cat === 'virus' || cat === 'bacteria') &&
+        t.resonantFreqGHz && t.resonantThresholdVcm
+      ) {
+        g.select('.axis-label-y').text('DISRUPTION RATIO')
+        this.updateChartResonance()
+        return
+      }
+
+      // Schwan mode: reset x domain and y-axis label
+      this._xScale!.domain([F_MIN_HZ, F_MAX_HZ])
+      g.select('.axis-label-y').text('Vm (mV)')
+
       const sigma_e  = this.store.effectiveSigmaE
       const cosTheta = this.store.cosThetaFactor
-      const g = this._svg.select<SVGGElement>('.chart-g')
 
       // Compute active-cell curves (include orientation factor)
       const healthyCurve = this.computeCurve(this.store.healthy, sigma_e, cosTheta)
@@ -539,7 +737,9 @@ export default defineComponent({
       if (!this._svg || !this._xScale) return
       const g = this._svg.select<SVGGElement>('.chart-g')
       const hz = this.store.currentBroadcastFrequency * 1000
-      const x = this._xScale(Math.max(F_MIN_HZ, Math.min(F_MAX_HZ, hz)))
+      // Use dynamic domain (changes in resonance mode)
+      const [domMin, domMax] = this._xScale.domain() as [number, number]
+      const x = this._xScale(Math.max(domMin, Math.min(domMax, hz)))
 
       g.select('.cursor-line').attr('x1', x).attr('x2', x)
       g.select('.cursor-drag-hint').attr('x', x)
