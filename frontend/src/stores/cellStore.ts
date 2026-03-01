@@ -4,7 +4,7 @@ import { cellConfigs } from '../mockData'
 import { MEDIA } from '../constants/media'
 import type { CellConfig } from '../types/cell'
 import type { MediumKey } from '../types/media'
-import { computeSchwan, computeSAR, computeFc, computeTau, computeResonantDisruption, computeNuclearVm } from '../utils/physics'
+import { computeSchwan, computeSAR, computeFc, computeTau, computeResonantDisruption, computeNuclearVm, computePulseStepResponse, computeSkinDepthMm } from '../utils/physics'
 
 const LAMBDA = 0.02     // Newton cooling rate constant [1/s]
 const TEMP_SIMULATION_CAP = 150  // °C — hard ceiling; cells are destroyed long before this
@@ -93,6 +93,41 @@ export const useCellStore = defineStore('cell', {
     },
 
     /**
+     * Pulse-envelope charging factor for the healthy cell [0–1].
+     * For pulsed waveforms with pulse width t_p and membrane time constant τ:
+     *   factor = 1 − exp(−t_p / τ)
+     * Represents the fraction of the Schwan steady-state Vm that the membrane
+     * actually reaches per pulse. At t_p ≫ τ → factor ≈ 1 (full charge, no correction).
+     * At t_p ≪ τ (nsEP regime) → factor ≪ 1 → membrane barely charges per pulse →
+     * effective Vm is lower → more field needed for lysis (higher effective threshold).
+     * CW mode always returns 1.0 (continuous field, steady-state Vm applies).
+     * Ref: Weaver & Chizmadzhev (1996); Stacey et al. (2003); Schoenbach et al. (2001).
+     */
+    pulseEnvelopeFactorHealthy(): number {
+      const state = this as unknown as CellStoreState
+      if (state.waveform !== 'pulsed') return 1.0
+      const tau_s = computeTau(state.healthy, this.effectiveSigmaE)
+      return computePulseStepResponse(tau_s, state.pulseWidthNs)
+    },
+
+    /**
+     * Pulse-envelope charging factor for the target cell [0–1].
+     * See pulseEnvelopeFactorHealthy for the physical model.
+     * Returns 1.0 unconditionally in resonance mode (acoustic/mechanical disruption
+     * does not involve membrane capacitive charging via Schwan τ — the coupling
+     * mechanism is electromagnetic→acoustic, not the RC charging of the membrane).
+     * In Schwan/IRE mode, applies the same (1−exp(−t_p/τ)) correction as the healthy cell.
+     */
+    pulseEnvelopeFactorTarget(): number {
+      const state = this as unknown as CellStoreState
+      if (state.waveform !== 'pulsed') return 1.0
+      // Resonance mode: acoustic disruption — pulse envelope factor does not apply
+      if (state.chartMode === 'resonance') return 1.0
+      const tau_s = computeTau(state.target, this.effectiveSigmaE)
+      return computePulseStepResponse(tau_s, state.pulseWidthNs)
+    },
+
+    /**
      * Temperature-corrected extracellular conductivity [S/m].
      * σ_e(T) = σ_e0 × (1 + α × (T_mean − 37))
      * where α is medium-specific (saline 2.0%/°C, blood 1.7%/°C, tissue 1.5%/°C,
@@ -154,10 +189,25 @@ export const useCellStore = defineStore('cell', {
       return computeSchwan(state.target, state.currentBroadcastFrequency, state.fieldIntensity, sigma_e, cosT)
     },
 
+    /**
+     * Healthy cell disruption ratio: (Vm × pulseEnvelopeFactor) / Vm_threshold.
+     *
+     * In pulsed mode with t_p ≪ τ, the membrane only charges to a fraction of the
+     * Schwan steady-state Vm per pulse. The effective Vm for pore nucleation is
+     * Vm_schwan × (1 − exp(−t_p/τ)), so an equivalently higher field is required to
+     * cross the threshold. This captures the pulse-width dependence of the
+     * electroporation threshold (Weaver & Chizmadzhev 1996, stochastic pore model).
+     */
     healthyDisruptionRatio(): number {
-      return this.healthyVm / this.healthy.thresholdVoltage
+      return (this.healthyVm * this.pulseEnvelopeFactorHealthy) / this.healthy.thresholdVoltage
     },
 
+    /**
+     * Target cell disruption ratio.
+     * Resonance mode (virus/bacteria): uses acoustic Lorentzian formula — pulse envelope
+     *   does not apply (different coupling mechanism; factor held at 1.0 by getter).
+     * Schwan/IRE mode: (Vm × pulseEnvelopeFactor) / Vm_threshold, identical to healthy cell.
+     */
     targetDisruptionRatio(): number {
       const cat = this.targetCellCategory
       const t = this.target as CellConfig & { resonantFreqGHz?: number; capsidQ?: number; resonantThresholdVcm?: number }
@@ -170,7 +220,7 @@ export const useCellStore = defineStore('cell', {
           this.fieldIntensity,
         )
       }
-      return this.targetVm / this.target.thresholdVoltage
+      return (this.targetVm * this.pulseEnvelopeFactorTarget) / this.target.thresholdVoltage
     },
 
     healthySAR(): number {
@@ -286,11 +336,12 @@ export const useCellStore = defineStore('cell', {
     },
 
     /**
-     * Minimum field intensity [V/cm] at current frequency to reach lysis threshold
-     * for the target cell — full frequency-dependent Schwan formula including cos(θ):
-     *   Vm = 1.5·E·R·cosθ / √(1+(ωτ)²) = Vm_thr
-     *   → E_lysis = Vm_thr·√(1+(ωτ)²) / (1.5·R·cosθ)
-     * Near-perpendicular (cosθ < 0.01): returns 1e6 V/cm (effectively unreachable).
+     * Minimum field intensity [V/cm] at current frequency and pulse width to reach lysis
+     * threshold for the target cell (Schwan/IRE mode only).
+     *   Vm_eff = 1.5·E·R·cosθ / √(1+(ωτ)²) × pulseEnvelopeFactor = Vm_thr
+     *   → E_lysis = Vm_thr·√(1+(ωτ)²) / (1.5·R·cosθ·pulseEnvelopeFactor)
+     * In pulsed mode with short pulses, E_lysis is higher (membrane charges fractionally
+     * per pulse → more field needed). Near-perpendicular (cosθ < 0.01): 1e6 V/cm.
      */
     targetLysisField(): number {
       const state = this as unknown as CellStoreState
@@ -301,10 +352,16 @@ export const useCellStore = defineStore('cell', {
       const omega = 2 * Math.PI * state.currentBroadcastFrequency * 1e3
       const R     = state.target.radius * 1e-6
       const denom = Math.sqrt(1 + (omega * tau) ** 2)
-      return (state.target.thresholdVoltage * denom) / (1.5 * R * cosT * 100)
+      const baseLysisField = (state.target.thresholdVoltage * denom) / (1.5 * R * cosT * 100)
+      // Divide by pulse envelope factor: shorter pulses require proportionally more field
+      const pef = Math.max(1e-4, this.pulseEnvelopeFactorTarget)
+      return baseLysisField / pef
     },
 
-    /** Same as targetLysisField but for the healthy reference cell. */
+    /**
+     * Same as targetLysisField but for the healthy reference cell.
+     * Pulse-envelope corrected: E_lysis,H = base / pulseEnvelopeFactorHealthy.
+     */
     healthyLysisField(): number {
       const state = this as unknown as CellStoreState
       const cosT = this.cosThetaFactor
@@ -314,7 +371,9 @@ export const useCellStore = defineStore('cell', {
       const omega = 2 * Math.PI * state.currentBroadcastFrequency * 1e3
       const R     = state.healthy.radius * 1e-6
       const denom = Math.sqrt(1 + (omega * tau) ** 2)
-      return (state.healthy.thresholdVoltage * denom) / (1.5 * R * cosT * 100)
+      const baseLysisField = (state.healthy.thresholdVoltage * denom) / (1.5 * R * cosT * 100)
+      const pef = Math.max(1e-4, this.pulseEnvelopeFactorHealthy)
+      return baseLysisField / pef
     },
 
     /**
@@ -344,6 +403,17 @@ export const useCellStore = defineStore('cell', {
       const sar_eff = this.targetSAR * this.effectiveDutyCycle
       const cp = this.target.specificHeatCapacity
       return Math.min(37 + sar_eff / (LAMBDA * cp), TEMP_SIMULATION_CAP)
+    },
+
+    /**
+     * Electromagnetic skin (penetration) depth [mm] at the current broadcast frequency.
+     * δ = √(1/(π·f·μ₀·σ_e)) — depth at which the GHz field amplitude decays to 1/e (~37%).
+     * Key values in saline (σ_e ≈ 1.5 S/m): 1 GHz→7 mm · 5 GHz→3 mm · 12 GHz→2 mm.
+     * In vivo GHz resonance delivery requires near-field or intracavitary applicators.
+     */
+    skinDepthMm(): number {
+      const state = this as unknown as CellStoreState
+      return computeSkinDepthMm(state.currentBroadcastFrequency, this.effectiveSigmaE)
     },
 
     /**

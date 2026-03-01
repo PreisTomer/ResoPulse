@@ -162,6 +162,66 @@ export default defineComponent({
       return `⭐ Optimal: ${label} · ×${sel.toFixed(2)}`
     },
 
+    skinDepthMm(): number { return this.store.skinDepthMm },
+
+    skinDepthLabel(): string {
+      const d = this.skinDepthMm
+      if (!isFinite(d)) return '∞'
+      return d >= 10 ? `${d.toFixed(0)} mm` : `${d.toFixed(1)} mm`
+    },
+
+    skinDepthClass(): string {
+      const d = this.skinDepthMm
+      if (d >= 10) return 'sel-panel__res-depth--deep'
+      if (d >= 2)  return 'sel-panel__res-depth--medium'
+      return 'sel-panel__res-depth--shallow'
+    },
+
+    freqDisplayLabel(): string {
+      const khz = this.store.currentBroadcastFrequency
+      if (khz >= 1e6) return `${(khz / 1e6).toFixed(2)} GHz`
+      if (khz >= 1e3) return `${(khz / 1e3).toFixed(2)} MHz`
+      return `${khz} kHz`
+    },
+
+    resonantFreqRange(): string {
+      const t = this.store.target
+      const f0 = t.resonantFreqGHz
+      const pct = t.resonantFreqUncertaintyPct
+      if (!f0) return '—'
+      const label = (ghz: number) => ghz >= 1 ? `${ghz.toFixed(2)} GHz` : `${(ghz * 1000).toFixed(0)} MHz`
+      if (!pct) return label(f0)
+      const lo = f0 * (1 - pct / 100)
+      const hi = f0 * (1 + pct / 100)
+      return `${label(lo)} – ${label(hi)}`
+    },
+
+    resonantQRange(): string {
+      const t = this.store.target
+      if (t.capsidQMin !== undefined && t.capsidQMax !== undefined) {
+        return `${t.capsidQMin} – ${t.capsidQMax}  (nominal Q = ${t.capsidQ ?? '?'})`
+      }
+      if (t.capsidQ !== undefined) return `${t.capsidQ}`
+      return ''
+    },
+
+    experimentalBasisLabel(): string {
+      switch (this.store.target.experimentalBasis) {
+        case 'laser-validated': return 'LASER-VALIDATED'
+        case 'rf-extrapolated': return 'RF-EXTRAPOLATED'
+        case 'speculative':     return 'SPECULATIVE'
+        default: return 'UNCLASSIFIED'
+      }
+    },
+
+    experimentalBasisClass(): string {
+      switch (this.store.target.experimentalBasis) {
+        case 'laser-validated': return 'sel-panel__res-badge--validated'
+        case 'rf-extrapolated': return 'sel-panel__res-badge--extrapolated'
+        default:                return 'sel-panel__res-badge--speculative'
+      }
+    },
+
     tipSelectivity(): string {
       const sel = this.selectivity
       const quality = sel >= 1.5
@@ -330,6 +390,36 @@ Note: virion fc ~0.6–0.75 MHz per Schwan model (σ_i-limited; model approximat
           <span class="sel-panel__vs-elysis" v-tip="'<strong>Healthy lysis field</strong>\nMinimum E required to reach lysis threshold at current frequency.\nKeep operating field below this value for selective therapy.'">E<sub>lys</sub> {{ healthyLysisField }}</span>
         </div>
       </template>
+    </div>
+
+    <!-- ── Resonance physics info (resonance mode only) ─────────── -->
+    <div v-if="isResonanceTarget && store.chartMode === 'resonance'" class="sel-panel__resonance-info">
+      <div class="sel-panel__res-title">RESONANCE PARAMETERS</div>
+      <div class="sel-panel__res-row"
+        v-tip="'<strong>EM Skin Depth</strong>\nδ = √(1/(π·f·μ₀·σ_e))\nDepth at which GHz field amplitude decays to 1/e (~37%).\n≥10 mm: tissue-penetrating · 2–10 mm: surface region · <2 mm: near-surface only.\nIn vivo GHz delivery requires near-field applicators or intracavitary probes for deep tissue.\nRef: Gabriel et al. (1996) Phys. Med. Biol. 41:2271'"
+      >
+        <span class="sel-panel__res-label">δ skin depth</span>
+        <span class="sel-panel__res-val" :class="skinDepthClass">{{ skinDepthLabel }}</span>
+        <span class="sel-panel__res-note">at {{ freqDisplayLabel }}</span>
+      </div>
+      <div class="sel-panel__res-row"
+        v-tip="'<strong>f_res Uncertainty Range</strong>\nf_res = v_sound / (2R) — uncertainty driven by v_sound literature range.\nBacteria peptidoglycan: v_wall ≈ 800–1200 m/s → ±25–30%.\nEnveloped viruses: v_eff poorly defined → ±40%.\nTune frequency experimentally within this range.'"
+      >
+        <span class="sel-panel__res-label">f_res range</span>
+        <span class="sel-panel__res-val">{{ resonantFreqRange }}</span>
+      </div>
+      <div v-if="resonantQRange" class="sel-panel__res-row"
+        v-tip="'<strong>Q-Factor Uncertainty</strong>\nMechanical quality factor Q sets the resonance linewidth.\nLower Q → broader resonance → easier frequency matching but weaker peak amplitude.\nDykeman & Sankey (2010) validated Q on rigid icosahedral protein capsids only.\nBacterial peptidoglycan and viral lipid envelopes have substantially lower Q.'"
+      >
+        <span class="sel-panel__res-label">Q range</span>
+        <span class="sel-panel__res-val">{{ resonantQRange }}</span>
+      </div>
+      <div class="sel-panel__res-row"
+        v-tip="'<strong>Experimental Basis</strong>\nLASER-VALIDATED: capsid disruption confirmed by pulsed laser acoustic excitation (Tsen 2007–2012).\nRF-EXTRAPOLATED: acoustic mechanism plausible for rigid walls; GHz RF delivery is not yet experimentally validated — laser experiments only.\nSPECULATIVE: enveloped viruses / peptidoglycan — no experimental validation of resonance disruption by any method.\nRef: Tsen et al. (2007) Biophys. J.; Dykeman &amp; Sankey (2010) Phys. Rev. Lett.'"
+      >
+        <span class="sel-panel__res-label">Basis</span>
+        <span class="sel-panel__res-badge" :class="experimentalBasisClass">{{ experimentalBasisLabel }}</span>
+      </div>
     </div>
 
     <!-- ── Mode badge ─────────────────────────────────────────── -->
@@ -670,6 +760,75 @@ Note: virion fc ~0.6–0.75 MHz per Schwan model (σ_i-limited; model approximat
 
       &:hover { opacity: 0.55; }
     }
+  }
+
+  /* ── Resonance physics info ────────────────────────────────── */
+  &__resonance-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.28rem;
+    padding: 0.4rem 0.6rem;
+    background: rgba(0, 212, 255, 0.04);
+    border: 1px solid rgba(0, 212, 255, 0.15);
+    border-radius: var(--radius);
+  }
+
+  &__res-title {
+    font-size: 0.53rem;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--color-text-muted);
+    opacity: 0.7;
+    margin-bottom: 0.05rem;
+  }
+
+  &__res-row {
+    display: flex;
+    align-items: baseline;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+    cursor: default;
+  }
+
+  &__res-label {
+    font-size: 0.58rem;
+    font-family: var(--font-mono);
+    color: var(--color-text-muted);
+    min-width: 5.5rem;
+    flex-shrink: 0;
+  }
+
+  &__res-val {
+    font-size: 0.65rem;
+    font-family: var(--font-mono);
+    font-weight: 600;
+    color: var(--color-text);
+
+    &--deep    { color: var(--color-lime); }
+    &--medium  { color: var(--color-amber); }
+    &--shallow { color: var(--color-danger); }
+  }
+
+  &__res-note {
+    font-size: 0.55rem;
+    font-family: var(--font-mono);
+    color: var(--color-text-muted);
+    opacity: 0.65;
+  }
+
+  &__res-badge {
+    font-size: 0.55rem;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    padding: 0.1rem 0.4rem;
+    border-radius: 2px;
+    border: 1px solid;
+
+    &--validated    { color: var(--color-lime);   border-color: rgba(57, 255, 20, 0.3);   background: rgba(57, 255, 20, 0.06); }
+    &--extrapolated { color: var(--color-amber);  border-color: rgba(251, 191, 36, 0.3);  background: rgba(251, 191, 36, 0.06); }
+    &--speculative  { color: var(--color-danger); border-color: rgba(255, 77, 109, 0.3);  background: rgba(255, 77, 109, 0.06); }
   }
 
   /* ── Model warning ─────────────────────────────────────────── */

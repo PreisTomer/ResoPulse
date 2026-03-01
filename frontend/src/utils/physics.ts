@@ -173,17 +173,23 @@ export function computeNuclearVm(
 // ── Nanosecond pulsed electroporation ─────────────────────────────────────────
 
 /**
- * Pulse step-response charging factor: fraction of steady-state Vm reached after
- * a rectangular pulse of width `pulseWidthNs` nanoseconds.
+ * Pulse-envelope charging factor: fraction of steady-state Vm the membrane reaches
+ * during a single pulse of width `pulseWidthNs` nanoseconds.
  *   factor = 1 − exp(−t_p / τ)
- * At t_p ≫ τ → factor ≈ 1 (full DC Vm).
- * At short ns pulses, small cells (short τ) charge proportionally more than large
- * mammalian cells (long τ), enabling size-selective nanosecond electroporation.
+ * At t_p ≫ τ → factor ≈ 1 (full Schwan steady-state Vm per pulse).
+ * At t_p ≪ τ (nsEP regime) → factor ≪ 1 → membrane barely charges per pulse →
+ * more field required to reach lysis threshold.
  *
- * NOTE: This function is a reference utility for DC-pulse (nsEP) analysis only.
- * The live simulation uses AC sinusoidal Schwan Vm (computeSchwan), which is
- * independent of pulse width. This factor is NOT applied to Vm in the simulation.
- * For true nsEP analysis, see Protocol page §2.5.
+ * Applied in the live simulation to the disruption ratio (Schwan/IRE mode, pulsed
+ * waveform): DR = (Vm_schwan × factor) / Vm_threshold.
+ * This captures the pulse-width dependence of the electroporation threshold
+ * documented by Weaver & Chizmadzhev (1996) — stochastic pore nucleation requires
+ * the membrane to reach a minimum potential per pulse; shorter pulses require a
+ * proportionally higher applied field.
+ *
+ * NOT applied in resonance mode — acoustic/mechanical disruption uses a different
+ * coupling mechanism (Lorentzian field-to-mechanical-mode coupling, not RC charging).
+ * Ref: Weaver & Chizmadzhev (1996); Stacey et al. (2003); Schoenbach et al. (2001).
  */
 export function computePulseStepResponse(tau_s: number, pulseWidthNs: number): number {
   const t_p = pulseWidthNs * 1e-9
@@ -216,7 +222,12 @@ export function computePulseStepResponse(tau_s: number, pulseWidthNs: number): n
  *      Dykeman & Sankey (2010) [11] — capsid normal-mode calculations.
  *
  * @param resonantFreqGHz  Fundamental resonant frequency (GHz)
- * @param Q                Mechanical quality factor (viral shells: 20–50; bacterial walls: 10–20)
+ * @param Q                Mechanical quality factor.
+ *                         Icosahedral protein-capsid viruses (Tsen/Dykeman validated): Q ≈ 20–50.
+ *                         Enveloped viruses (lipid bilayer, highly damped): Q ≈ 1–5 (speculative).
+ *                         Bacterial peptidoglycan walls (viscoelastic polymer mesh): Q ≈ 2–5
+ *                           (substantially lower than rigid protein capsids; Dykeman & Sankey
+ *                           (2010) was validated on icosahedral capsids, NOT bacterial walls).
  * @param freqHz           Applied field frequency (Hz)
  */
 export function computeResonantLineshape(
@@ -247,6 +258,37 @@ export function computeResonantLineshape(
  * @param freqHz           Applied frequency (Hz)
  * @param fieldVcm         Applied field intensity (V/cm)
  */
+// ── EM penetration depth ─────────────────────────────────────────────────────
+
+/**
+ * Electromagnetic skin (penetration) depth [mm] in a conductive medium.
+ *   δ = √(1 / (π × f × μ₀ × σ_e))
+ *
+ * Validity: high-conductivity regime (σ_e >> 2πf × ε_r × ε₀), which holds for
+ * physiological saline/tissue up to ~100 GHz.
+ *
+ * Reference values in saline (σ_e = 1.5 S/m):
+ *   100 MHz: δ ≈ 23 mm  — penetrates through cm-scale tissue
+ *     1 GHz: δ ≈  7 mm  — bacteria resonance range; surface layer accessible
+ *     5 GHz: δ ≈  3 mm  — deep tissue delivery impractical
+ *    12 GHz: δ ≈  2 mm  — influenza/CoV-2 capsid resonance; mm-depth only
+ *
+ * Clinical implication: resonance targeting at GHz requires near-field applicators
+ * or intracavitary probes for cm-depth tissue (skin depth limits far-field delivery).
+ *
+ * Ref: Gabriel et al. (1996) Phys. Med. Biol. 41:2271; Griffiths §9.4.
+ *
+ * @param freqKHz  Applied frequency [kHz]
+ * @param sigma_e  Extracellular medium conductivity [S/m]
+ * @returns Skin depth in mm (returns Infinity if f or σ_e ≤ 0)
+ */
+export function computeSkinDepthMm(freqKHz: number, sigma_e: number): number {
+  const MU_0 = 4 * Math.PI * 1e-7   // permeability of free space [H/m]
+  const f    = freqKHz * 1e3         // kHz → Hz
+  if (f <= 0 || sigma_e <= 0) return Infinity
+  return 1000 * Math.sqrt(1 / (Math.PI * f * MU_0 * sigma_e)) // m → mm
+}
+
 export function computeResonantDisruption(
   resonantFreqGHz: number,
   Q: number,

@@ -185,7 +185,9 @@ export default defineComponent({})
               exceeds unity for a sustained period:
             </p>
             <div class="protocol__eq-block">
-              <div class="protocol__eq-main">Disruption Ratio = V<sub>m</sub>(f) / V<sub>m,threshold</sub></div>
+              <div class="protocol__eq-main">Disruption Ratio = V<sub>m</sub>(f) × f<sub>pulse</sub> / V<sub>m,threshold</sub></div>
+              <div class="protocol__eq-sub">f<sub>pulse</sub> = 1 − exp(−t<sub>p</sub> / τ) &nbsp; (pulse-envelope charging factor; pulsed mode only; 1.0 for CW)</div>
+              <div class="protocol__eq-sub">50–85% → reversible EP window (Rev-EP): pores open transiently and re-seal — drug/gene delivery regime</div>
               <div class="protocol__eq-sub">Simulation arms lysis countdown when Disruption Ratio &gt; 0.85 (85% of threshold)</div>
               <div class="protocol__eq-sub">Lysis fires after protocol time: t<sub>lysis</sub> = N × t<sub>p</sub>/dc (pulsed) or 2.5 s (CW)</div>
             </div>
@@ -194,6 +196,23 @@ export default defineComponent({})
               (~1.0–1.1 V), creating a therapeutic window where tumour cell disruption occurs at
               sub-lethal field intensities for normal cells (Dimova et al. [6]).
             </p>
+            <div class="protocol__warn-box">
+              <span class="protocol__warn-icon">⚠</span>
+              <span>
+                <strong>Pulse-width dependent threshold:</strong>
+                V<sub>m,threshold</sub> is not a fixed material constant — it depends on pulse
+                width. In the Weaver &amp; Chizmadzhev (1996) [3] stochastic pore-nucleation model,
+                the membrane must reach a minimum potential per pulse for pore formation to occur.
+                The pulse-envelope factor f<sub>pulse</sub> = 1 − exp(−t<sub>p</sub>/τ) captures
+                this: at t<sub>p</sub> ≫ τ (standard IRE), f<sub>pulse</sub> ≈ 1 and the listed
+                V<sub>m,threshold</sub> values apply. At t<sub>p</sub> ≪ τ (nsEP regime, e.g.
+                10 ns), f<sub>pulse</sub> ≈ 0.07 for a hepatocyte (τ = 148 ns) — the effective
+                threshold is ~14× higher, requiring proportionally more field for lysis. The live
+                simulation applies this correction automatically in pulsed mode; the Pulse Width
+                tooltip on each cell card shows the active f<sub>pulse</sub> factor. The threshold
+                values in the safety table (§4) are calibrated for microsecond-range pulsing.
+              </span>
+            </div>
             <p class="protocol__body-text">
               <strong>Note — IRE vs TTFields:</strong> This simulator models
               <em>irreversible electroporation</em> (IRE) — a high-field pulsed modality
@@ -267,16 +286,16 @@ export default defineComponent({})
                 <tr>
                   <td>E. coli K-12 (R = 1 µm)</td>
                   <td class="protocol__mono protocol__primary-val">~0.5 GHz</td>
-                  <td class="protocol__mono">15</td>
+                  <td class="protocol__mono">4 <span class="protocol__ref-note">(viscoelastic)</span></td>
                   <td class="protocol__mono protocol__warn-val">2000</td>
-                  <td>v<sub>wall</sub> ≈ 1000 m/s; gram-neg peptidoglycan</td>
+                  <td>v<sub>wall</sub> ≈ 1000 m/s; gram-neg peptidoglycan; Q greatly reduced vs protein capsid</td>
                 </tr>
                 <tr>
                   <td>MRSA (R = 0.5 µm)</td>
                   <td class="protocol__mono protocol__primary-val">~1.5 GHz</td>
-                  <td class="protocol__mono">12</td>
+                  <td class="protocol__mono">3 <span class="protocol__ref-note">(thick wall)</span></td>
                   <td class="protocol__mono protocol__warn-val">3000</td>
-                  <td>Thick peptidoglycan (20 nm); v<sub>wall</sub> ≈ 1500 m/s</td>
+                  <td>Thick peptidoglycan (20 nm); v<sub>wall</sub> ≈ 1500 m/s; near overdamped limit</td>
                 </tr>
                 <tr>
                   <td>Hepatocyte (R = 10 µm)</td>
@@ -294,6 +313,24 @@ export default defineComponent({})
                 session bar) when working with bacterial or viral targets. The platform auto-tunes
                 frequency to f<sub>res</sub> and sets field to 50% of E<sub>thr</sub> when a
                 resonance-enabled preset is loaded.
+              </span>
+            </div>
+
+            <div class="protocol__warn-box">
+              <span class="protocol__warn-icon">⚠</span>
+              <span>
+                <strong>Bacterial peptidoglycan Q-factor caveat:</strong>
+                The Dykeman &amp; Sankey (2010) [11] atomistic models were computed for
+                <em>icosahedral protein-capsid viruses</em> (CCMV, HBV), not bacterial cell walls.
+                Peptidoglycan is a cross-linked viscoelastic polymer mesh — its mechanical damping is
+                substantially higher than a rigid protein-shell. Published acoustic spectroscopy data
+                for isolated E. coli sacculi (Arnoldi et al. 2000; Deng et al. 2011) suggest an
+                effective Q in the range <strong>2–5</strong> at GHz frequencies, compared with
+                Q = 20–50 for protein-capsid viruses. The values Q = 4 (E. coli) and Q = 3 (MRSA)
+                used here represent the upper end of this range; the true resonance peak may be
+                substantially broader and flatter — requiring higher fields or closer frequency
+                tuning to achieve disruption. In the near-overdamped limit (Q ≈ 1–2), the concept
+                of a sharp resonance frequency breaks down entirely.
               </span>
             </div>
 
@@ -393,6 +430,21 @@ export default defineComponent({})
               <strong>Shell Model</strong> toggle in the Field Control panel (visible for
               nucleated mammalian presets only; hidden for bacteria, viruses, and RBC).
             </p>
+            <div class="protocol__warn-box">
+              <span class="protocol__warn-icon">⚠</span>
+              <span>
+                <strong>f<sub>peak</sub> accuracy — geometric mean approximation:</strong>
+                The formula f<sub>peak</sub> = 1/(2π√(τ<sub>out</sub>·τ<sub>ne</sub>)) is the
+                geometric mean approximation, exact only when τ<sub>out</sub> ≫ τ<sub>ne</sub>
+                or τ<sub>ne</sub> ≫ τ<sub>out</sub>. For intermediate ratios
+                (0.1 &lt; τ<sub>out</sub>/τ<sub>ne</sub> &lt; 10) — which includes all presets
+                in this library — the true peak frequency from the full transfer function deviates
+                from this approximation by up to ±30%. The displayed f<sub>peak</sub> values
+                should be treated as estimates with ±30% uncertainty. Consult the full two-pole
+                transfer function (Kotnik &amp; Miklavcic 2006, Eq. 12) for precise computation.
+              </span>
+            </div>
+
             <div class="protocol__warn-box">
               <span class="protocol__warn-icon">⚠</span>
               <span>
@@ -624,8 +676,8 @@ export default defineComponent({})
                 </tr>
                 <tr>
                   <td>Acoustic resonance — E. coli</td>
-                  <td class="protocol__mono protocol__warn-val">f<sub>res</sub> ≈ 0.5 GHz · E<sub>thr</sub> = 2000 V/cm</td>
-                  <td>Peptidoglycan cell-wall resonance. Higher E<sub>thr</sub> than viruses due to larger mass. Ref: Dykeman &amp; Sankey (2010) [11]</td>
+                  <td class="protocol__mono protocol__warn-val">f<sub>res</sub> ≈ 0.5 GHz · E<sub>thr</sub> = 2000 V/cm · Q ≈ 4</td>
+                  <td>Peptidoglycan cell-wall resonance (viscoelastic; Q substantially lower than protein capsid Q ≈ 20–50). Broad peak. Ref: Dykeman &amp; Sankey (2010) [11]</td>
                 </tr>
                 <tr>
                   <td>GHz field SAR caution</td>
