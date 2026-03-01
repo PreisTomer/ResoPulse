@@ -140,7 +140,7 @@ export default defineComponent({})
             <div class="protocol__eq-block">
               <div class="protocol__eq-main">SAR = σ<sub>i</sub> · α² · E² · w<sub>f</sub> / ρ</div>
               <div class="protocol__eq-sub">α = 3σ<sub>e</sub> / (2σ<sub>e</sub> + σ<sub>i</sub>) &nbsp; (internal field factor for sphere in medium)</div>
-              <div class="protocol__eq-sub">w<sub>f</sub> = 0.5 (CW sinusoidal, E²<sub>rms</sub> = E²<sub>peak</sub>/2) &nbsp;|&nbsp; 1.0 (pulsed AC — square-envelope burst; no RMS halving during on-time)</div>
+              <div class="protocol__eq-sub">w<sub>f</sub> = 0.5 (CW sinusoidal, E²<sub>rms</sub> = E²<sub>peak</sub>/2) &nbsp;|&nbsp; 1.0 (pulsed bipolar square wave / H-FIRE; E²<sub>rms</sub> = E²<sub>peak</sub> during on-time)</div>
               <div class="protocol__eq-divider"></div>
               <div class="protocol__eq-main">dT/dt = SAR / c<sub>p</sub> − λ·(T − T₀)</div>
               <div class="protocol__eq-sub">λ = 0.02 s⁻¹ · T₀ = 37 °C · updated every 100 ms</div>
@@ -603,9 +603,9 @@ export default defineComponent({})
                   <td>FCC/IEEE partial-body SAR limit (1 g tissue average)</td>
                 </tr>
                 <tr>
-                  <td>Lysis hold time</td>
-                  <td class="protocol__mono">2.5 s</td>
-                  <td>Duration Disruption Ratio must exceed 1.0 before lysis event fires</td>
+                  <td>Lysis protocol time</td>
+                  <td class="protocol__mono">N × t<sub>p</sub>/dc (pulsed) · 2.5 s (CW)</td>
+                  <td>Arms when Disruption Ratio &gt; 0.85; fires after N<sub>pulses</sub> complete pulse cycles (pulsed) or 2.5 s (CW). Clamped to [0.2 s, 30 s]. N and pulse width set in Advanced panel.</td>
                 </tr>
                 <tr>
                   <td>IRE / electroporation field range</td>
