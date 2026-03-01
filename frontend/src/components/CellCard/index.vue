@@ -2,12 +2,12 @@
 import { defineComponent } from 'vue'
 import type { PropType } from 'vue'
 import * as d3 from 'd3'
-import { useCellStore } from '../stores/cellStore'
-import { useExperimentStore } from '../stores/experimentStore'
-import { CELL_PRESETS } from '../constants/cellLibrary'
-import type { CellRecord } from '../mockData'
-import { membraneCm, computeTau } from '../utils/physics'
-import type { CellState } from '../types/cell'
+import { useCellStore } from '../../stores/cellStore'
+import { useExperimentStore } from '../../stores/experimentStore'
+import { CELL_PRESETS } from '../../constants/cellLibrary'
+import type { CellRecord } from '../../types/cell'
+import { membraneCm, computeTau } from '../../utils/physics'
+import type { CellState } from '../../types/cell'
 import {
   CELL_COLORS,
   EDITABLE_PARAMS,
@@ -21,28 +21,27 @@ import {
   TEMP_VAPORIZING,
   LYSIS_DURATION_MS,
   FRAGMENT_INTERVAL_MS,
-} from '../constants/cellCard'
-import { setupBlobAnimation, setupOscilloscope, spawnFragment } from '../utils/cellAnimation'
+} from '../../constants/cellCard'
+import { setupBlobAnimation, setupOscilloscope, spawnFragment } from '../../utils/cellAnimation'
+import CellHeader from './CellHeader.vue'
+import CellParamsPanel from './CellParamsPanel.vue'
 
 export default defineComponent({
+  components: { CellHeader, CellParamsPanel },
+
   props: {
     type: {
       type: String as PropType<'healthy' | 'target'>,
       required: true,
     },
-    label:        { type: String, required: true },
-    sublabel:     { type: String, required: true },
-    sublabelTip:  { type: String, default: '' },
-    description:  { type: String, required: true },
-    buttonText:   { type: String, required: true },
+    label:       { type: String, required: true },
+    sublabel:    { type: String, required: true },
+    sublabelTip: { type: String, default: '' },
+    description: { type: String, required: true },
     cellData: {
       type: Object as PropType<CellRecord | null>,
       default: null,
     },
-  },
-
-  emits: {
-    click: (_type: 'healthy' | 'target') => true,
   },
 
   setup() {
@@ -54,13 +53,11 @@ export default defineComponent({
       liveAmplitude:  this.cellData?.amplitude ?? 0.8,
       cellState:      'stable' as CellState,
       shatterPending: false,
-      thermalLysis:   false,   // true when lysis was triggered by temperature, not electrical disruption
-      paramsExpanded: false,
-      // Animation timer handles — typed here so TypeScript can see them on `this`
-      _helixTimer:        null as d3.Timer | null,
-      _oscTimer:          null as d3.Timer | null,
-      _particleInterval:  null as number | null,
-      _shatterTimeout:    null as number | null,
+      thermalLysis:   false,
+      _helixTimer:          null as d3.Timer | null,
+      _oscTimer:            null as d3.Timer | null,
+      _particleInterval:    null as number | null,
+      _shatterTimeout:      null as number | null,
       _shatterDelayTimeout: null as number | null,
     }
   },
@@ -69,9 +66,8 @@ export default defineComponent({
     accentColor(): string { return CELL_COLORS[this.type].accent },
     rungColor():   string { return CELL_COLORS[this.type].rung   },
 
-    // ── Scientific readouts ────────────────────────────────────────────────
     vm(): number {
-      return (this.type === 'healthy' ? this.store.healthyVm : this.store.targetVm) * 1000 // V → mV
+      return (this.type === 'healthy' ? this.store.healthyVm : this.store.targetVm) * 1000
     },
     temperature(): number {
       return this.type === 'healthy' ? this.store.healthyTemp : this.store.targetTemp
@@ -89,7 +85,6 @@ export default defineComponent({
     },
     canReset(): boolean { return this.disruptionRatio <= DISRUPTION_WARN_THRESHOLD },
 
-    // ── Double-shell (nuclear envelope) readouts ───────────────────────────
     hasNuclearParams(): boolean {
       const cell = this.type === 'healthy' ? this.store.healthy : this.store.target
       return !!cell.nuclearRadius
@@ -123,13 +118,11 @@ export default defineComponent({
       return CELL_PRESETS.some((p) => p.presetId === cell.id)
     },
 
-    // Live color interpolation driven by disruption ratio
     cellColor(): string {
       const { interpFrom, interpTo } = CELL_COLORS[this.type]
       return d3.interpolateRgb(interpFrom, interpTo)(Math.min(1, this.disruptionRatio))
     },
 
-    // Editable biophysical params mapped from the EDITABLE_PARAMS constant
     editableParams() {
       const cell = this.type === 'healthy' ? this.store.healthy : this.store.target
       return EDITABLE_PARAMS.map((p) => ({
@@ -140,9 +133,9 @@ export default defineComponent({
 
     derivedParams() {
       const cell = this.type === 'healthy' ? this.store.healthy : this.store.target
-      const sigma_e = this.store.sigma_e
-      const Cm = membraneCm(cell) * 1000         // F/m² → mF/m²
-      const tau = computeTau(cell, sigma_e) * 1e9 // s → ns
+      const sigma_e = this.store.effectiveSigmaE
+      const Cm  = membraneCm(cell) * 1000
+      const tau = computeTau(cell, sigma_e) * 1e9
       const fc  = this.type === 'healthy' ? this.store.healthyFc : this.store.targetFc
       const fcLabel = fc >= 1000 ? `${(fc / 1000).toFixed(2)} MHz` : `${fc.toFixed(1)} kHz`
       return [
@@ -152,20 +145,22 @@ export default defineComponent({
       ]
     },
 
-    // ── Tooltip content ───────────────────────────────────────────────────
     tipVm(): string {
       const cell = this.type === 'healthy' ? this.store.healthy : this.store.target
       const thr  = (cell.thresholdVoltage * 1000).toFixed(0)
       const pct  = (this.disruptionRatio * 100).toFixed(0)
+      const pulsedNote = this.store.waveform === 'pulsed'
+        ? '\n<span class="tip-note">Pulsed mode (H-FIRE/IRE): Vm uses E_peak as standard approx.\nTrue square-wave fundamental ≈ 4/π × shown (+27%). Cancels in selectivity ratio.</span>'
+        : ''
       return `<strong>Transmembrane Potential (Vm)</strong>
 Current: <span class="tip-val">${this.vmDisplay}</span>
 
 Peak voltage induced across the cell membrane
 by the applied electric field — Schwan equation:
-  Vm = 1.5 × E × R / √(1 + (2πf·τ)²)
+  Vm = 1.5 × E × R × cos θ / √(1 + (2πf·τ)²)
 
 Lysis threshold: ${thr} mV
-Disruption: <span class="tip-val">${pct}%</span>`
+Disruption: <span class="tip-val">${pct}%</span>${pulsedNote}`
     },
 
     tipTemp(): string {
@@ -183,7 +178,7 @@ Current: <span class="tip-val">${this.tempDisplay}</span>
 Modelled via Specific Absorption Rate (SAR):
   SAR = σ_i × α² × E² × w_f / ρ  [W/kg]
   α = 3σ_e/(2σ_e+σ_i)  (internal field factor — sphere in medium)
-  w_f = 0.5 (CW sinusoidal) | 1.0 (pulsed DC)
+  w_f = 0.5 (CW sinusoidal, E²_rms = E²_peak/2) | 1.0 (pulsed bipolar square wave, E²_rms = E²_peak)
 
 Newton cooling: λ = 0.02 /s → T_ss = 37 + SAR_eff/(λ·cp)
 Thresholds: 42°C hyperthermic · 60°C denaturing · 100°C vaporizing${warnLine}`
@@ -204,7 +199,7 @@ Thresholds: 42°C hyperthermic · 60°C denaturing · 100°C vaporizing${warnLin
       const transitions = this.type === 'healthy'
         ? `\nElectrical: Vm >50% → approaching · Vm >85% → critical`
            + `\nThermal:   T ≥42°C → approaching · T ≥60°C → critical · T ≥100°C → lysis`
-        : `\nElectrical: vibrating >2.5 s → lysing → lysed`
+        : `\nElectrical: vibrating >${this.formatLysisTime(this.store.lysisDelayMs)} → lysing → lysed`
           + `\nThermal:   T ≥60°C → critical · T ≥100°C → instant thermal lysis`
       return `<strong>Cell State</strong>
 ${labels[this.cellState] ?? this.cellState}
@@ -212,7 +207,7 @@ ${transitions}`
     },
 
     tipDisruption(): string {
-      const pct = (this.disruptionRatio * 100).toFixed(0)
+      const pct  = (this.disruptionRatio * 100).toFixed(0)
       const cell = this.type === 'healthy' ? this.store.healthy : this.store.target
       const thr  = (cell.thresholdVoltage * 1000).toFixed(0)
       const n    = this.store.lysisNPulses
@@ -237,7 +232,6 @@ Ratio = Vm / lysis threshold voltage
       this.liveAmplitude = newVal
     },
 
-    // Re-draw anatomy when the target preset changes (category may change: mammalian ↔ bacteria ↔ virus)
     'store.target.id'() {
       if (this.type !== 'target') return
       this._helixTimer?.stop()
@@ -248,9 +242,9 @@ Ratio = Vm / lysis threshold voltage
       if (this.cellState !== 'lysed' && this.cellState !== 'lysing') return
       clearTimeout(this._shatterDelayTimeout ?? undefined)
       this.shatterPending = false
-      this.thermalLysis = false
-      this.cellState = 'stable'
-      this.liveAmplitude = this.cellData?.amplitude ?? 0.8
+      this.thermalLysis   = false
+      this.cellState      = 'stable'
+      this.liveAmplitude  = this.cellData?.amplitude ?? 0.8
       clearInterval(this._particleInterval ?? undefined)
       this._helixTimer?.stop()
       this.$nextTick(() => {
@@ -259,12 +253,9 @@ Ratio = Vm / lysis threshold voltage
       })
     },
 
-    // Unified state signal — both electrical and thermal watchers call this
     disruptionRatio() { this.updateCellState() },
     temperature()     { this.updateCellState() },
 
-    // When lysisDelayMs changes mid-countdown (N-pulses, dutyCycle, pulseWidth, waveform),
-    // restart timer so the new duration takes effect immediately.
     'store.lysisDelayMs'() {
       if (this.type !== 'target' || !this.shatterPending) return
       clearTimeout(this._shatterDelayTimeout ?? undefined)
@@ -291,37 +282,24 @@ Ratio = Vm / lysis threshold voltage
   },
 
   methods: {
-    // ── Unified cell-state machine ──────────────────────────────────────
-    /**
-     * Evaluates both electrical (disruptionRatio) and thermal (temperature)
-     * signals and sets cellState to the more severe of the two outcomes.
-     *
-     * Priority: thermal lysis (≥100°C) > electrical lysis (vibrating >2.5 s)
-     *           > thermal critical (≥60°C) > electrical critical/approaching
-     */
     updateCellState() {
       if (this.cellState === 'lysed' || this.cellState === 'lysing') return
 
       const impact = this.disruptionRatio
       const temp   = this.temperature
 
-      // ── Thermal lysis (immediate — water vaporisation) ──────────────────
       if (temp >= TEMP_VAPORIZING) {
         this.thermalLysis = true
         this.triggerLysis()
         return
       }
 
-      // ── Thermal floor state ─────────────────────────────────────────────
-      // 42–60°C → approaching (hyperthermic stress, IAHT threshold)
-      // ≥60°C   → critical    (protein denaturation onset)
-      let thermalFloor: CellState =
-        temp >= TEMP_DENATURING  ? 'critical'
+      const thermalFloor: CellState =
+        temp >= TEMP_DENATURING   ? 'critical'
         : temp >= TEMP_WARN_CELSIUS ? 'approaching'
         : 'stable'
 
       if (this.type === 'target') {
-        // ── Electrical lysis countdown ────────────────────────────────────
         if (impact > DISRUPTION_WARN_THRESHOLD) {
           this.cellState = 'vibrating'
           if (!this.shatterPending) {
@@ -333,58 +311,42 @@ Ratio = Vm / lysis threshold voltage
           }
           return
         }
-        // Clear countdown if field dropped
         if (this.shatterPending) {
           clearTimeout(this._shatterDelayTimeout ?? undefined)
           this.shatterPending = false
         }
-
-        // Electrical state for target below lysis threshold:
-        //   0–0.08 → stable · 0.08–0.5 → approaching · 0.5–0.85 → vibrating
-        let elState: CellState =
+        const elState: CellState =
           impact >= HEALTHY_APPROACHING_THRESHOLD ? 'vibrating'
           : impact > VIBRATING_MIN_THRESHOLD      ? 'approaching'
           : 'stable'
-
-        // Take the worse of electrical and thermal
-        // thermalFloor ∈ {'stable','approaching','critical'} — all present in ORDER
         const ORDER: CellState[] = ['stable', 'approaching', 'vibrating', 'critical']
-        const ti = ORDER.indexOf(thermalFloor)
-        const ei = ORDER.indexOf(elState)
-        this.cellState = ORDER[Math.max(ei, ti)] as CellState
-
+        this.cellState = ORDER[Math.max(ORDER.indexOf(elState), ORDER.indexOf(thermalFloor))] as CellState
       } else {
-        // ── Healthy cell — escalating electrical + thermal ────────────────
-        let elState: CellState =
-          impact >= HEALTHY_CRITICAL_THRESHOLD    ? 'critical'
+        const elState: CellState =
+          impact >= HEALTHY_CRITICAL_THRESHOLD      ? 'critical'
           : impact >= HEALTHY_APPROACHING_THRESHOLD ? 'approaching'
-          : impact > NOURISHING_THRESHOLD           ? 'nourishing'
+          : impact > NOURISHING_THRESHOLD            ? 'nourishing'
           : 'stable'
-
-        // thermalFloor ∈ {'stable','approaching','critical'} — all present in ORDER
         const ORDER: CellState[] = ['stable', 'nourishing', 'approaching', 'critical']
-        const ti = ORDER.indexOf(thermalFloor)
-        const ei = ORDER.indexOf(elState)
-        this.cellState = ORDER[Math.max(ei, ti)] as CellState
+        this.cellState = ORDER[Math.max(ORDER.indexOf(elState), ORDER.indexOf(thermalFloor))] as CellState
       }
     },
 
-    // ── Animation setup ────────────────────────────────────────────────────
     drawCell() {
       if (!this.cellData) return
       const el = this.$refs.cellCanvas as HTMLElement
       if (!el) return
       const cellCategory = this.type === 'healthy' ? 'mammalian' : this.store.targetCellCategory
-      const presetId = this.type === 'healthy' ? this.store.healthy.id : this.store.target.id
+      const presetId     = this.type === 'healthy' ? this.store.healthy.id : this.store.target.id
       this._helixTimer = setupBlobAnimation(
         el, this.type, this.accentColor, cellCategory, presetId,
         () => ({
-          impact: this.disruptionRatio,
-          state: this.cellState,
-          color: this.cellColor,
-          temperature: this.temperature,
-          fieldVcm: this.store.fieldIntensity,
-          freqKHz: this.store.currentBroadcastFrequency,
+          impact:                 this.disruptionRatio,
+          state:                  this.cellState,
+          color:                  this.cellColor,
+          temperature:            this.temperature,
+          fieldVcm:               this.store.fieldIntensity,
+          freqKHz:                this.store.currentBroadcastFrequency,
           nuclearDisruptionRatio: this.store.doubleShellEnabled ? this.nuclearDisruptionRatio : 0,
         }),
       )
@@ -400,16 +362,13 @@ Ratio = Vm / lysis threshold voltage
       )
     },
 
-    // ── State machine ──────────────────────────────────────────────────────
     triggerLysis() {
       this.cellState = 'lysing'
       useExperimentStore().logReading(useCellStore(), 'lysis')
       const el = this.$refs.cellCanvas as HTMLElement
-
       this._particleInterval = setInterval(() => {
         if (el) spawnFragment(el)
       }, FRAGMENT_INTERVAL_MS) as unknown as number
-
       this._shatterTimeout = setTimeout(() => {
         clearInterval(this._particleInterval ?? undefined)
         this.cellState = 'lysed'
@@ -430,13 +389,9 @@ Ratio = Vm / lysis threshold voltage
     },
 
     resetToPreset() {
-      const cell = this.type === 'healthy' ? this.store.healthy : this.store.target
+      const cell   = this.type === 'healthy' ? this.store.healthy : this.store.target
       const preset = CELL_PRESETS.find((p) => p.presetId === cell.id)
       if (preset) this.store.loadPreset(this.type, preset)
-    },
-
-    handleClick() {
-      this.$emit('click', this.type)
     },
   },
 })
@@ -444,77 +399,34 @@ Ratio = Vm / lysis threshold voltage
 
 <template>
   <div :class="['cell-card', `cell-card--${type}`, `cell-card--${cellState}`]">
-    <!-- Header -->
-    <div class="cell-card__header">
-      <span class="cell-card__icon">◎</span>
-      <div class="cell-card__name">
-        <div class="cell-card__label">{{ label }}</div>
-        <div
-          class="cell-card__sublabel"
-          :class="{ 'cell-card__sublabel--has-tip': sublabelTip }"
-          v-tip="sublabelTip || undefined"
-        >{{ sublabel }}</div>
-        <div v-if="cellData" class="cell-card__meta">
-          <span class="cell-card__meta-item" v-tip="tipVm">{{ vmDisplay }}</span>
-          <span class="cell-card__meta-sep">·</span>
-          <span class="cell-card__meta-item" :class="{ 'cell-card__meta-temp-warn': tempWarning }" v-tip="tipTemp">{{ tempDisplay }}</span>
-          <span class="cell-card__meta-sep">·</span>
-          <span class="cell-card__meta-state" :class="metaStateClass" v-tip="tipState">{{ cellState }}</span>
-        </div>
-        <!-- Nuclear Vm readout — shown when double-shell model is active and cell has nuclear params -->
-        <div v-if="store.doubleShellEnabled && hasNuclearParams" class="cell-card__nuclear-meta">
-          <span class="cell-card__nuclear-label">&#x26AC; Nucleus Vm</span>
-          <span class="cell-card__nuclear-value">{{ nuclearVmMv.toFixed(3) }} mV</span>
-          <span class="cell-card__nuclear-ratio" :class="nuclearDisruptionRatio >= 0.85 ? 'cell-card__nuclear-ratio--warn' : nuclearDisruptionRatio >= 0.5 ? 'cell-card__nuclear-ratio--caution' : ''">
-            {{ (nuclearDisruptionRatio * 100).toFixed(0) }}%
-          </span>
-        </div>
-      </div>
-    </div>
+    <CellHeader
+      :type="type"
+      :label="label"
+      :sublabel="sublabel"
+      :sublabel-tip="sublabelTip"
+      :vm-display="vmDisplay"
+      :temp-display="tempDisplay"
+      :temp-warning="tempWarning"
+      :cell-state="cellState"
+      :meta-state-class="metaStateClass"
+      :tip-vm="tipVm"
+      :tip-temp="tipTemp"
+      :tip-state="tipState"
+      :double-shell-enabled="store.doubleShellEnabled"
+      :has-nuclear-params="hasNuclearParams"
+      :nuclear-vm-mv="nuclearVmMv"
+      :nuclear-disruption-ratio="nuclearDisruptionRatio"
+      :has-cell-data="!!cellData"
+    />
 
-    <!-- Collapsible cell parameters panel -->
-    <div
-      v-if="cellData"
-      class="cell-card__params-toggle"
-      v-tip="'<strong>Cell Parameters</strong>\nEdit biophysical properties that drive the\nSchwan equation calculation in real time.\nChanges immediately update Vm, selectivity,\nand the frequency response chart.'"
-      @click="paramsExpanded = !paramsExpanded"
-    >
-      <span class="cell-card__params-toggle-arrow">{{ paramsExpanded ? '▾' : '▸' }}</span>
-      Cell Parameters
-    </div>
-    <Transition name="params">
-      <div v-if="cellData && paramsExpanded" class="cell-card__params-panel">
-        <div v-for="p in editableParams" :key="p.key" class="cell-card__param-row">
-          <label class="cell-card__param-label">{{ p.label }}</label>
-          <input
-            type="number" class="cell-card__param-input"
-            :value="p.displayValue" :step="p.step" :min="p.min"
-            @change="onParamChange(p.key, $event)"
-          />
-          <span class="cell-card__param-unit">{{ p.unit }}</span>
-        </div>
-        <!-- Derived/computed constants (read-only) -->
-        <div
-          class="cell-card__params-derived-hdr"
-          v-tip="'<strong>Derived biophysical parameters</strong>\nComputed in real time from the editable values above.\n\n<span class=\'tip-val\'>Cm</span> = ε_r × ε₀ / d\n  Membrane specific capacitance [mF/m²]\n\n<span class=\'tip-val\'>τ</span> = R·Cm·(2σ_e+σ_i) / (2σ_e·σ_i)\n  Schwan time constant (Kotnik & Miklavcic 2000)\n  Sets the frequency roll-off\n\n<span class=\'tip-val\'>fc</span> = 1/(2πτ)\n  Characteristic frequency — Vm drops −3 dB here\n  Below fc: quasi-DC regime, Vm at maximum'"
-        >
-          <span class="cell-card__params-derived-label">Derived constants</span>
-        </div>
-        <div v-for="p in derivedParams" :key="p.label" class="cell-card__param-row cell-card__param-row--derived">
-          <label class="cell-card__param-label">{{ p.label }}</label>
-          <span class="cell-card__param-derived-value">{{ p.value }}</span>
-          <span class="cell-card__param-unit">{{ p.unit }}</span>
-        </div>
-
-        <div v-if="canResetToPreset" class="cell-card__params-reset-row">
-          <button
-            class="cell-card__params-btn"
-            v-tip="'<strong>Reset to Preset Defaults</strong>\nRestores all parameters to the original\nvalues for this preset.\nUseful after editing to explore changes.'"
-            @click="resetToPreset"
-          >↺ Reset to defaults</button>
-        </div>
-      </div>
-    </Transition>
+    <CellParamsPanel
+      :cell-data="cellData"
+      :editable-params="editableParams"
+      :derived-params="derivedParams"
+      :can-reset-to-preset="canResetToPreset"
+      @param-change="onParamChange"
+      @reset-to-preset="resetToPreset"
+    />
 
     <!-- Cell Visualization -->
     <div v-if="cellData" class="cell-card__visual">
@@ -526,6 +438,7 @@ Ratio = Vm / lysis threshold voltage
           ⚡ {{ (disruptionRatio * 100).toFixed(0) }}% disruption
         </span>
       </div>
+
       <!-- Nuclear disruption sub-bar — visible when double-shell model active -->
       <div
         v-if="store.doubleShellEnabled && hasNuclearParams"
@@ -545,6 +458,7 @@ Ratio = Vm / lysis threshold voltage
         </div>
         <span class="cell-card__nuclear-bar-pct">{{ (nuclearDisruptionRatio * 100).toFixed(0) }}%</span>
       </div>
+
       <div ref="oscCanvas" class="cell-card__osc-canvas"></div>
 
       <!-- Lysis protocol strip — target cell vibrating state -->
@@ -574,13 +488,11 @@ Ratio = Vm / lysis threshold voltage
         <span class="cell-card__warn-pct">{{ (disruptionRatio * 100).toFixed(0) }}%</span>
       </div>
 
-      <!-- Thermal warning strip — both cell types, shown when temp is elevated -->
+      <!-- Thermal warning strip — both cell types -->
       <div
         v-if="tempWarning && cellState !== 'lysed' && cellState !== 'lysing'"
         class="cell-card__thermal-warn"
-        :class="{
-          'cell-card__thermal-warn--denaturing': tempDenaturing,
-        }"
+        :class="{ 'cell-card__thermal-warn--denaturing': tempDenaturing }"
         v-tip="tipTemp"
       >
         <span class="cell-card__warn-icon">{{ tempDenaturing ? '⚡' : '⚠' }}</span>
@@ -608,7 +520,7 @@ Ratio = Vm / lysis threshold voltage
   </div>
 </template>
 
-<style lang="scss" scoped>
+<style lang="scss">
 /* ── Keyframes ───────────────────────────────────────────────────────── */
 @keyframes card-shake {
   0%, 100% { transform: translateX(0); }
@@ -638,7 +550,7 @@ Ratio = Vm / lysis threshold voltage
   50%       { opacity: 0.55; }
 }
 
-/* ── Vue Transition classes (name="params") — must stay as-is ────────── */
+/* ── Vue Transition classes (name="params") ──────────────────────────── */
 .params-enter-active, .params-leave-active { transition: opacity 0.2s, transform 0.2s; }
 .params-enter-from,  .params-leave-to      { opacity: 0; transform: translateY(-6px); }
 

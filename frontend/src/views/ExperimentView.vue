@@ -1,12 +1,12 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { useCellStore } from '../stores/cellStore'
-import { connectSocket, socketConnected } from '../services/socket'
-import CellCard from '../components/CellCard.vue'
-import FrequencySlider from '../components/FrequencySlider.vue'
-import FrequencyResponseChart from '../components/FrequencyResponseChart.vue'
-import ResonanceChart from '../components/ResonanceChart.vue'
-import SelectivityPanel from '../components/SelectivityPanel.vue'
+import { connectSocket, socketConnected, broadcastFieldParams } from '../services/socket'
+import CellCard from '../components/CellCard/index.vue'
+import FrequencySlider from '../components/FrequencySlider/index.vue'
+import FrequencyResponseChart from '../components/FrequencyResponseChart/index.vue'
+import ResonanceChart from '../components/ResonanceChart/index.vue'
+import SelectivityPanel from '../components/SelectivityPanel/index.vue'
 import ExperimentLog from '../components/ExperimentLog.vue'
 import { useExperimentStore } from '../stores/experimentStore'
 import { CELL_PRESETS, GROUP_COLORS, GROUP_LABELS } from '../constants/cellLibrary'
@@ -67,12 +67,6 @@ export default defineComponent({
       return this.store.target.id
     },
 
-    mediumLabel(): string {
-      const key = `slider.mediums.${this.store.medium}`
-      const translated = this.$t(key)
-      return translated !== key ? translated : this.store.medium
-    },
-
     healthyReferencePresets(): CellPreset[] {
       return CELL_PRESETS.filter((p) => p.group === 'reference')
     },
@@ -82,7 +76,7 @@ export default defineComponent({
     },
 
     targetPickerCategories(): CellGroup[] {
-      return ['cancer', 'bacteria', 'virus', 'reference']
+      return ['cancer', 'bacteria', 'virus']
     },
 
     healthyFcSetup(): string {
@@ -120,7 +114,6 @@ export default defineComponent({
           sublabel: cellSublabel('healthy'),
           sublabelTip: cellSublabelTip('healthy'),
           description: this.$t('cells.healthy.description'),
-          buttonText: this.$t('cells.healthy.button'),
           cellData: this.store.healthy,
         },
         {
@@ -130,7 +123,6 @@ export default defineComponent({
           sublabel: cellSublabel('target'),
           sublabelTip: cellSublabelTip('target'),
           description: this.$t('cells.target.description'),
-          buttonText: this.$t('cells.target.button'),
           cellData: this.store.target,
         },
       ]
@@ -178,9 +170,14 @@ export default defineComponent({
       this.store.setDutyCycle(d.dutyCycle)
       this.store.setPulseWidthNs(d.pulseWidthNs)
       this.store.setMedium(d.medium)
+      // Reset advanced orientation + lysis-count to category-neutral defaults
+      this.store.setOrientationDeg(0)
+      this.store.setLysisNPulses(10)
       // Always start from a thermally neutral state — clears any lysis/destruction
       this.store.resetTemps()
       this.store.setChartMode((cat === 'virus' || cat === 'bacteria') ? 'resonance' : 'schwan')
+      // Sync backend — ensures socket subscribers see the new field parameters immediately
+      broadcastFieldParams(freqKHz, fieldVcm, d.medium)
     },
   },
 })
@@ -324,7 +321,6 @@ export default defineComponent({
             :sublabel="cell.sublabel"
             :sublabel-tip="cell.sublabelTip"
             :description="cell.description"
-            :button-text="cell.buttonText"
             :cell-data="cell.cellData"
           />
         </div>

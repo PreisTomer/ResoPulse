@@ -3,7 +3,7 @@
  * All Schwan model parameters are approximate values from bioelectromagnetics literature.
  * Bacterial and viral values use a spherical single-shell approximation.
  */
-import type { CellConfig } from '../mockData'
+import type { CellConfig } from '../types/cell'
 
 export type CellGroup = 'reference' | 'cancer' | 'bacteria' | 'virus'
 
@@ -48,9 +48,9 @@ export const CELL_PRESETS: CellPreset[] = [
     density: 1050,
     specificHeatCapacity: 3500,
     amplitude: 0.8,
-    // Nuclear envelope (double-shell model)
+    // Nuclear envelope (double-shell model): capacitive-limit formula used (σ_ne → 0 assumption)
     nuclearRadius: 5.0, nuclearMembraneThickness: 15, nuclearMembraneEps: 10,
-    nuclearMembraneConductivity: 0.010, nucleoplasmConductivity: 0.9, nuclearThresholdVoltage: 0.50,
+    nucleoplasmConductivity: 0.9, nuclearThresholdVoltage: 0.50,
   },
   {
     presetId: 'rbc',
@@ -89,9 +89,9 @@ export const CELL_PRESETS: CellPreset[] = [
     density: 1080,
     specificHeatCapacity: 3200,
     amplitude: 0.5,
-    // Nuclear envelope (high N/C ratio, thinner/leakier NE, lower threshold)
+    // Nuclear envelope (high N/C ratio, thinner NE → lower f_peak, lower threshold)
     nuclearRadius: 8.0, nuclearMembraneThickness: 12, nuclearMembraneEps: 12,
-    nuclearMembraneConductivity: 0.020, nucleoplasmConductivity: 1.1, nuclearThresholdVoltage: 0.40,
+    nucleoplasmConductivity: 1.1, nuclearThresholdVoltage: 0.40,
   },
   {
     presetId: 'gbm',
@@ -110,9 +110,9 @@ export const CELL_PRESETS: CellPreset[] = [
     density: 1060,
     specificHeatCapacity: 3200,
     amplitude: 0.5,
-    // Nuclear envelope (large aggressive nucleus, irregular NE)
+    // Nuclear envelope (large aggressive nucleus, irregular NE, lower f_peak)
     nuclearRadius: 7.0, nuclearMembraneThickness: 11, nuclearMembraneEps: 12,
-    nuclearMembraneConductivity: 0.020, nucleoplasmConductivity: 1.2, nuclearThresholdVoltage: 0.35,
+    nucleoplasmConductivity: 1.2, nuclearThresholdVoltage: 0.35,
   },
   {
     presetId: 'mcf7',
@@ -133,7 +133,7 @@ export const CELL_PRESETS: CellPreset[] = [
     amplitude: 0.5,
     // Nuclear envelope
     nuclearRadius: 6.0, nuclearMembraneThickness: 13, nuclearMembraneEps: 11,
-    nuclearMembraneConductivity: 0.015, nucleoplasmConductivity: 1.0, nuclearThresholdVoltage: 0.42,
+    nucleoplasmConductivity: 1.0, nuclearThresholdVoltage: 0.42,
   },
   {
     presetId: 'hl60',
@@ -154,7 +154,7 @@ export const CELL_PRESETS: CellPreset[] = [
     amplitude: 0.5,
     // Nuclear envelope
     nuclearRadius: 4.0, nuclearMembraneThickness: 14, nuclearMembraneEps: 11,
-    nuclearMembraneConductivity: 0.015, nucleoplasmConductivity: 1.0, nuclearThresholdVoltage: 0.45,
+    nucleoplasmConductivity: 1.0, nuclearThresholdVoltage: 0.45,
   },
 
   // ── Bacteria (spherical-shell approximation) ────────────────────────────────

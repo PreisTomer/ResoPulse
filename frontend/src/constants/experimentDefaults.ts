@@ -7,14 +7,19 @@
  * at every default — researcher can slide UP from a safe starting point.
  *
  * Mammalian: standard IRE sub-threshold exploration.
- *   150 V/cm pulsed dc=0.01%:  SAR_eff ≈ 1.1 W/kg → T_ss ≈ 37.02°C ✓
+ *   150 V/cm pulsed (bipolar sq-wave) dc=0.01%:
+ *   α = 3σ_e/(2σ_e+σ_i) = 1.286  (hepatocyte, saline)
+ *   SAR_peak = σ_i·α²·E²·wf/ρ ≈ 177 kW/kg  ·  SAR_eff = SAR_peak×dc ≈ 17.7 W/kg
+ *   T_ss = 37 + 17.7/(λ·cp) = 37 + 17.7/70 ≈ 37.25°C ✓  (λ=0.02 s⁻¹, cp=3500 J/kg·K)
  *
- * Bacteria: nsEP regime — pulse width ≪ τ (τ_ecoli ≈ 14 ns, τ_mrsa ≈ 3 ns).
- *   1000 V/cm pulsed dc=1e-6: SAR_eff ≈ 0.079 W/kg → T_ss ≈ 37.001°C ✓
+ * Bacteria: nsEP regime — pulse width ≪ τ (τ_ecoli ≈ 14 ns, τ_mrsa ≈ 3.2 ns).
+ *   1000 V/cm pulsed dc=1e-6:
+ *   α ≈ 1.36  (E. coli, saline)  ·  SAR_eff ≈ 5.1 W/kg  ·  T_ss ≈ 37.06°C ✓
  *   Researcher slides field to ≥10 kV/cm to approach lysis — thermal warnings appear.
  *
  * Virus: Resonance mode (IRE inapplicable); capsid disruption via acoustic resonance.
- *   400 V/cm pulsed dc=1e-6 @ 12 GHz (influenza f_res): minimal thermal footprint.
+ *   400 V/cm pulsed dc=1e-6 @ f_res (influenza 12 GHz):
+ *   σ_i ≈ 0.005 S/m (lipid envelope)  ·  SAR_eff ≈ 0.014 W/kg  ·  T_ss ≈ 37.000°C ✓
  *   Auto-tuned to preset's resonantFreqGHz in applyTargetDefaults.
  */
 export const CATEGORY_DEFAULTS = {

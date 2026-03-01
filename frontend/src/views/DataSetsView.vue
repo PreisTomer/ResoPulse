@@ -1,7 +1,7 @@
 <script lang="ts">
 import { defineComponent, computed } from 'vue'
 import { CELL_PRESETS, GROUP_COLORS, GROUP_LABELS, type CellGroup, type CellPreset } from '../constants/cellLibrary'
-import { MEDIA } from '../mockData'
+import { MEDIA } from '../constants/media'
 import { membraneCm, computeFc, computeTau, computeNuclearTau } from '../utils/physics'
 
 const SIGMA_SALINE = MEDIA.saline.conductivity // 1.5 S/m
@@ -15,7 +15,6 @@ type ResonantPreset = CellPreset & {
   nuclearRadius?: number
   nuclearMembraneThickness?: number
   nuclearMembraneEps?: number
-  nuclearMembraneConductivity?: number
   nucleoplasmConductivity?: number
   nuclearThresholdVoltage?: number
 }
@@ -128,7 +127,7 @@ export default defineComponent({
                 <th>Cell / Pathogen</th>
                 <th>R (µm)</th>
                 <th>d (nm)</th>
-                <th>ε<sub>r</sub></th>
+                <th title="Effective membrane relative permittivity. Physical lipid bilayer ε_r ≈ 2–5; protein channels and pore contributions raise the effective value. Used in Cm = ε_r·ε₀/d.">Eff. ε<sub>r</sub></th>
                 <th>σ<sub>i</sub> (S/m)</th>
                 <th>C<sub>m</sub> (mF/m²)</th>
                 <th>f<sub>c</sub> in saline</th>
@@ -137,7 +136,7 @@ export default defineComponent({
                 <th>ρ (kg/m³)</th>
                 <th title="Acoustic resonance frequency — bacteria/virus only">f<sub>res</sub></th>
                 <th title="Mechanical quality factor — sharpness of resonance peak">Q</th>
-                <th title="Minimum field amplitude for capsid/cell-wall disruption at resonance">E<sub>thr</sub> (V/cm)</th>
+                <th title="Theoretical RF field amplitude for capsid/cell-wall disruption at resonance. Tsen et al. experiments used femtosecond laser excitation, not RF; these V/cm values are extrapolations with no direct experimental basis.">E<sub>thr</sub>† (V/cm)</th>
                 <th>Notes</th>
               </tr>
             </thead>
@@ -307,7 +306,6 @@ export default defineComponent({
                 <th title="Nuclear radius — typically 40–60% of cell radius for mammalian cells">R<sub>nuc</sub> (µm)</th>
                 <th title="Nuclear envelope thickness (inner + outer membrane + lumen ≈ 40 nm total; d here is electrical effective thickness)">d<sub>ne</sub> (nm)</th>
                 <th title="Relative permittivity of nuclear envelope — elevated vs lipid bilayer due to nuclear pore complex contribution">ε<sub>ne</sub></th>
-                <th title="Conductivity of nuclear envelope — partial shunting by nuclear pore complexes raises σ_ne above pure lipid bilayer">σ<sub>ne</sub> (S/m)</th>
                 <th title="Nucleoplasm conductivity — typically higher than cytoplasm due to dissolved chromatin and RNA">σ<sub>np</sub> (S/m)</th>
                 <th title="Nuclear membrane disruption threshold voltage — cancer nuclei have thinner/leakier NE, lower threshold">V<sub>thr,nuc</sub> (V)</th>
                 <th title="Peak frequency of nuclear Vm bandpass: f_peak = 1 / (2π × √(τ_out × τ_ne)) — nuclear Vm is maximised here, not at DC">f<sub>peak</sub> in saline</th>
@@ -325,7 +323,6 @@ export default defineComponent({
                 <td class="datasets__mono datasets__nuc-val">{{ p.nuclearRadius }}</td>
                 <td class="datasets__mono">{{ p.nuclearMembraneThickness ?? 15 }}</td>
                 <td class="datasets__mono">{{ p.nuclearMembraneEps ?? 10 }}</td>
-                <td class="datasets__mono">{{ p.nuclearMembraneConductivity ?? 0.010 }}</td>
                 <td class="datasets__mono">{{ p.nucleoplasmConductivity ?? 0.9 }}</td>
                 <td
                   class="datasets__mono"
@@ -339,7 +336,7 @@ export default defineComponent({
         <div class="datasets__table-footer">
           τ<sub>ne</sub> = R<sub>nuc</sub>·C<sub>m,ne</sub>·(2σ<sub>i</sub>+σ<sub>np</sub>)/(2σ<sub>i</sub>·σ<sub>np</sub>)  ·  C<sub>m,ne</sub> = ε<sub>ne</sub>·ε₀/d<sub>ne</sub>  ·
           f<sub>peak</sub> = 1/(2π√(τ<sub>out</sub>·τ<sub>ne</sub>))  ·  Nuclear Vm is bandpass — zero at DC &amp; GHz, peaks near f<sub>peak</sub>  ·
-          Cancer nuclei: higher N/C ratio, thinner NE, lower σ<sub>ne</sub> threshold → additional selectivity axis at f<sub>peak</sub>
+          Cancer nuclei: higher N/C ratio, thinner NE, lower V<sub>thr,nuc</sub> → additional selectivity axis at f<sub>peak</sub>  ·  σ<sub>ne</sub> not stored (capacitive limit σ<sub>ne</sub>→0 assumed)
         </div>
       </section>
 

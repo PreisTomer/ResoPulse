@@ -8,7 +8,7 @@
  *  - Acoustic/mechanical resonance disruption for viral capsids and bacterial
  *    cell walls (Tsen et al. 2007; Dykeman & Sankey 2008)
  */
-import type { CellConfig } from '../mockData'
+import type { CellConfig } from '../types/cell'
 
 // ── Physical constants ────────────────────────────────────────────────────────
 export const EPSILON_0 = 8.854187817e-12 // permittivity of free space [F/m]
@@ -44,6 +44,14 @@ export function computeTau(cell: CellConfig, sigma_e: number): number {
  * In a random suspension the orientation is uniformly distributed; this parameter
  * lets the user model a specific cell orientation or an oriented monolayer.
  * Default cosTheta = 1.0 preserves backward compatibility.
+ *
+ * Waveform note (pulsed / H-FIRE mode):
+ *   fieldVcm is treated as the peak amplitude E_peak. For bipolar square-wave carriers
+ *   (H-FIRE/IRE regime), the sinusoidal-equivalent fundamental is E_1 = (4/π)×E_peak ≈ 1.27×E_peak.
+ *   Using E_peak directly (standard H-FIRE convention) underestimates Vm by ~21%.
+ *   This factor cancels exactly in the Vm_T/Vm_H selectivity ratio and Therapeutic Index.
+ *   Absolute Vm values in pulsed mode are lower-bound estimates.
+ *   Ref: Arena et al. (2011) IEEE Trans. Biomed. Eng.; Dong et al. (2021) Bioelectrochemistry.
  */
 export function computeSchwan(
   cell: CellConfig,
@@ -70,7 +78,7 @@ export function computeSchwan(
  *
  * waveformFactor:
  *   0.5 — CW sinusoidal (E²_rms = E²_peak / 2)
- *   1.0 — pulsed DC / square wave (no RMS halving)
+ *   1.0 — pulsed bipolar square wave / H-FIRE (E²_rms = E²_peak; no RMS halving during on-time)
  */
 export function computeSAR(
   cell: CellConfig,
@@ -171,6 +179,11 @@ export function computeNuclearVm(
  * At t_p ≫ τ → factor ≈ 1 (full DC Vm).
  * At short ns pulses, small cells (short τ) charge proportionally more than large
  * mammalian cells (long τ), enabling size-selective nanosecond electroporation.
+ *
+ * NOTE: This function is a reference utility for DC-pulse (nsEP) analysis only.
+ * The live simulation uses AC sinusoidal Schwan Vm (computeSchwan), which is
+ * independent of pulse width. This factor is NOT applied to Vm in the simulation.
+ * For true nsEP analysis, see Protocol page §2.5.
  */
 export function computePulseStepResponse(tau_s: number, pulseWidthNs: number): number {
   const t_p = pulseWidthNs * 1e-9

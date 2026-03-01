@@ -1,13 +1,13 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import * as d3 from 'd3'
-import { useCellStore } from '../stores/cellStore'
-import { computeResonantDisruption } from '../utils/physics'
-import { CELL_PRESETS, GROUP_COLORS } from '../constants/cellLibrary'
-import type { CellGroup } from '../constants/cellLibrary'
-import type { CellConfig } from '../mockData'
-import { broadcastFieldParams } from '../services/socket'
-import { C } from '../theme/colors'
+import { useCellStore } from '../../stores/cellStore'
+import { computeResonantDisruption } from '../../utils/physics'
+import { CELL_PRESETS, GROUP_COLORS } from '../../constants/cellLibrary'
+import type { CellGroup } from '../../constants/cellLibrary'
+import type { CellConfig } from '../../types/cell'
+import { broadcastFieldParams } from '../../services/socket'
+import { C } from '../../theme/colors'
 
 // Frequency range: 10 MHz – 50 GHz
 const F_MIN_HZ = 10_000_000
@@ -209,7 +209,7 @@ export default defineComponent({
               const xScale = self._xScale
               if (!xScale) return
               const hz = Math.max(F_MIN_HZ, Math.min(F_MAX_HZ, xScale.invert(event.x)))
-              const khz = Math.min(hz / 1000, F_CURSOR_MAX_KHZ)
+              const khz = Math.round(Math.min(hz / 1000, F_CURSOR_MAX_KHZ))
               self.store.setBroadcastFreqKHz(khz)
               broadcastFieldParams(khz, self.store.fieldIntensity, self.store.medium)
             })

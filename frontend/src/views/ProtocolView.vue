@@ -55,10 +55,21 @@ export default defineComponent({})
             <p class="protocol__body-text">
               The underlying model is based on the classic Schwan equation (1957), extended to include
               frequency-dependent membrane responses across the 10 kHz–500 MHz range relevant to
-              tumour treating fields (TTFields), electroporation, and high-frequency selective
-              disruption. Cancer cells, bacteria, and enveloped viruses each exhibit distinct
+              <strong>irreversible electroporation (IRE)</strong> and <strong>acoustic/mechanical resonance</strong>
+              disruption of pathogens. Two simulation modes are provided: <em>Schwan/IRE mode</em>
+              for cancer vs. healthy cell targeting via transmembrane potential, and
+              <em>Resonance mode</em> for bacterial/viral capsid or cell-wall disruption at MHz–GHz
+              frequencies. Cancer cells, bacteria, and enveloped viruses each exhibit distinct
               characteristic frequencies (f<sub>c</sub>) set by their size and membrane capacitance,
               enabling frequency-selective targeting.
+              <br><br>
+              <strong>Note on Tumour Treating Fields (TTFields):</strong> TTFields (Kirson et al. [2])
+              operate at ~1–2 V/cm at 100–300 kHz and disrupt mitosis via dielectrophoretic forces
+              on the mitotic spindle — a sub-threshold mechanism that does <em>not</em> rely on
+              V<sub>m</sub> threshold crossing. This platform models the <em>IRE/electroporation</em>
+              regime (200–10 000 V/cm), not the TTFields regime. The Schwan frequency response is
+              mathematically valid across both regimes, but the disruption and selectivity
+              computations shown here apply to IRE only.
             </p>
             <div class="protocol__info-box">
               <span class="protocol__info-icon">ℹ</span>
@@ -80,10 +91,11 @@ export default defineComponent({})
               field, the peak induced transmembrane potential is given by:
             </p>
             <div class="protocol__eq-block">
-              <div class="protocol__eq-main">V<sub>m</sub>(f) = (1.5 · E · R) / √[1 + (ωτ)²]</div>
+              <div class="protocol__eq-main">V<sub>m</sub>(f) = (1.5 · E · R · cos θ) / √[1 + (ωτ)²]</div>
               <div class="protocol__eq-divider"></div>
               <div class="protocol__eq-sub">ω = 2πf &nbsp;&nbsp; τ = R · C<sub>m</sub> · (2σ<sub>e</sub> + σ<sub>i</sub>) / (2σ<sub>e</sub> · σ<sub>i</sub>)</div>
               <div class="protocol__eq-sub">C<sub>m</sub> = ε<sub>r</sub> · ε₀ / d &nbsp;&nbsp; f<sub>c</sub> = 1 / (2πτ)</div>
+              <div class="protocol__eq-sub">cos θ = |cos(θ)| — field-to-cell-axis coupling factor; θ = 0° (field-aligned) → max V<sub>m</sub></div>
               <div class="protocol__eq-note">Kotnik &amp; Miklavcic, Biophys. J. 79:670 (2000) [9]</div>
             </div>
             <p class="protocol__body-text">
@@ -92,6 +104,8 @@ export default defineComponent({})
               Cells with large radius R, high membrane permittivity ε<sub>r</sub>, or thin membrane
               d exhibit a larger C<sub>m</sub> and lower f<sub>c</sub>, making them preferentially
               disrupted at lower frequencies relative to smaller reference cells.
+              Note that cos θ cancels exactly in the selectivity ratio V<sub>m,T</sub>/V<sub>m,H</sub>,
+              so field orientation does not affect the therapeutic index — it scales both cells equally.
             </p>
 
             <table class="protocol__param-table">
@@ -106,12 +120,13 @@ export default defineComponent({})
               <tbody>
                 <tr><td class="protocol__mono">E</td><td>Applied electric field</td><td class="protocol__mono">V/m (= V/cm × 100)</td><td>User-controlled · Field Intensity slider</td></tr>
                 <tr><td class="protocol__mono">R</td><td>Cell radius</td><td class="protocol__mono">m (µm × 10⁻⁶)</td><td>Cell-type specific · user-editable</td></tr>
+                <tr><td class="protocol__mono">cos θ</td><td>Field-cell alignment factor</td><td class="protocol__mono">—</td><td>θ = angle between field and cell axis; 0° = max coupling; cancels in selectivity ratio</td></tr>
                 <tr><td class="protocol__mono">f</td><td>Field frequency</td><td class="protocol__mono">Hz (kHz × 10³)</td><td>User-controlled · RF Frequency slider</td></tr>
-                <tr><td class="protocol__mono">τ</td><td>Membrane time constant</td><td class="protocol__mono">s</td><td>Computed from C<sub>m</sub> and conductivities</td></tr>
+                <tr><td class="protocol__mono">τ</td><td>Membrane time constant</td><td class="protocol__mono">s</td><td>Computed from C<sub>m</sub> and conductivities; temperature-corrected σ<sub>e</sub> used</td></tr>
                 <tr><td class="protocol__mono">C<sub>m</sub></td><td>Membrane capacitance density</td><td class="protocol__mono">F/m²</td><td>ε<sub>r</sub>·ε₀ / d</td></tr>
-                <tr><td class="protocol__mono">ε<sub>r</sub></td><td>Membrane relative permittivity</td><td class="protocol__mono">—</td><td>4.5 (RBC) to 25 (enveloped virus)</td></tr>
+                <tr><td class="protocol__mono">ε<sub>r</sub></td><td>Effective membrane permittivity</td><td class="protocol__mono">—</td><td>4.5 (RBC) to 25 (enveloped virus). <em>Effective</em> parameter — physical lipid bilayer ε<sub>r</sub> ≈ 2–5; protein channels and pore-forming proteins raise the effective value</td></tr>
                 <tr><td class="protocol__mono">d</td><td>Membrane thickness</td><td class="protocol__mono">nm</td><td>4.5–20 nm depending on cell type</td></tr>
-                <tr><td class="protocol__mono">σ<sub>e</sub></td><td>Extracellular conductivity</td><td class="protocol__mono">S/m</td><td>Medium-dependent (0.001–1.5 S/m)</td></tr>
+                <tr><td class="protocol__mono">σ<sub>e</sub></td><td>Extracellular conductivity</td><td class="protocol__mono">S/m</td><td>Medium-dependent (0.001–1.5 S/m); temperature-corrected: σ<sub>e</sub>(T) = σ<sub>e0</sub>·(1+α·(T−37°C)), α = 1.5–2.8 %/°C by medium</td></tr>
                 <tr><td class="protocol__mono">σ<sub>i</sub></td><td>Cytoplasm conductivity</td><td class="protocol__mono">S/m</td><td>Cell-type specific · user-editable</td></tr>
                 <tr><td class="protocol__mono">f<sub>c</sub></td><td>Characteristic frequency</td><td class="protocol__mono">kHz / MHz</td><td>Shown as ▼ markers on the Bode chart</td></tr>
               </tbody>
@@ -125,7 +140,7 @@ export default defineComponent({})
             <div class="protocol__eq-block">
               <div class="protocol__eq-main">SAR = σ<sub>i</sub> · α² · E² · w<sub>f</sub> / ρ</div>
               <div class="protocol__eq-sub">α = 3σ<sub>e</sub> / (2σ<sub>e</sub> + σ<sub>i</sub>) &nbsp; (internal field factor for sphere in medium)</div>
-              <div class="protocol__eq-sub">w<sub>f</sub> = 0.5 (CW sinusoidal, E²<sub>rms</sub> = E²<sub>peak</sub>/2) &nbsp;|&nbsp; 1.0 (pulsed DC)</div>
+              <div class="protocol__eq-sub">w<sub>f</sub> = 0.5 (CW sinusoidal, E²<sub>rms</sub> = E²<sub>peak</sub>/2) &nbsp;|&nbsp; 1.0 (pulsed AC — square-envelope burst; no RMS halving during on-time)</div>
               <div class="protocol__eq-divider"></div>
               <div class="protocol__eq-main">dT/dt = SAR / c<sub>p</sub> − λ·(T − T₀)</div>
               <div class="protocol__eq-sub">λ = 0.02 s⁻¹ · T₀ = 37 °C · updated every 100 ms</div>
@@ -155,10 +170,12 @@ export default defineComponent({})
                 represents <em>tissue-level</em> lumped heat dissipation via perfusion and thermal
                 conduction, as appropriate for macroscopic electroporation applicators
                 (Foster &amp; Schwan 1989 [5]). It is <strong>not</strong> a single-cell thermal
-                model: a free cell in solution has τ<sub>th</sub> ≈ R²/(κ/ρc<sub>p</sub>) ≈ 0.6 µs
-                and equilibrates with its medium essentially instantaneously on the timescale of
-                pulsed protocols. The temperature displayed reflects bulk medium heating, not
-                local membrane temperature.
+                model: a free cell in solution has τ<sub>th</sub> ≈ R²/(κ/ρc<sub>p</sub>) ≈ 0.6 ms
+                (R = 10 µm, κ ≈ 0.6 W/m·K, ρc<sub>p</sub> ≈ 3.7 MJ/m³·K),
+                and equilibrates with its medium on the timescale of milliseconds — fast
+                relative to continuous pulsed protocols (period ≫ 1 ms) but not relative
+                to individual nanosecond or microsecond pulses. The temperature displayed
+                reflects bulk medium heating, not local membrane temperature.
               </span>
             </div>
 
@@ -169,7 +186,8 @@ export default defineComponent({})
             </p>
             <div class="protocol__eq-block">
               <div class="protocol__eq-main">Disruption Ratio = V<sub>m</sub>(f) / V<sub>m,threshold</sub></div>
-              <div class="protocol__eq-sub">Lysis triggered when Disruption Ratio &gt; 1.0 sustained for ≥ 2.5 s</div>
+              <div class="protocol__eq-sub">Simulation arms lysis countdown when Disruption Ratio &gt; 0.85 (85% of threshold)</div>
+              <div class="protocol__eq-sub">Lysis fires after protocol time: t<sub>lysis</sub> = N × t<sub>p</sub>/dc (pulsed) or 2.5 s (CW)</div>
             </div>
             <p class="protocol__body-text">
               Cancer cells exhibit lower V<sub>m,threshold</sub> (~0.65–0.85 V) than healthy tissue
@@ -282,14 +300,16 @@ export default defineComponent({})
             <div class="protocol__warn-box">
               <span class="protocol__warn-icon">⚠</span>
               <span>
-                <strong>Excitation mechanism caveat:</strong> The f<sub>res</sub> and
-                E<sub>thr</sub> values above are derived from <em>femtosecond pulsed laser</em>
-                (near-IR, ~800 nm) experiments in which acoustic capsid modes are excited via
-                impulsive stimulated Raman scattering — not direct RF/microwave delivery
-                (Tsen et al. [10]). Direct microwave excitation at 10–12 GHz in bulk tissue
-                remains experimentally unverified. Penetration depth in saline at these
-                frequencies is ~1–2 mm (skin-depth limited). The simulation uses these
-                parameters as theoretical research targets only.
+                <strong>Excitation mechanism caveat:</strong> The f<sub>res</sub> values above
+                are derived from <em>femtosecond pulsed laser</em> (near-IR, ~800 nm) experiments
+                in which acoustic capsid normal modes are excited via impulsive stimulated Raman
+                scattering (Tsen et al. [10]) — <strong>not direct RF/microwave delivery</strong>.
+                The E<sub>thr</sub> values (V/cm) for RF excitation have <em>no experimental basis</em>
+                and are theoretical extrapolations included as research targets only. The physical
+                coupling mechanism between an RF electromagnetic field and GHz acoustic capsid modes
+                is not established in the literature. Additionally, direct microwave excitation at
+                10–12 GHz in bulk tissue faces a penetration depth of only ~1–2 mm (skin-depth
+                limited in saline), making in vivo delivery an unsolved engineering challenge.
               </span>
             </div>
             <div class="protocol__warn-box">
@@ -309,14 +329,14 @@ export default defineComponent({})
               </span>
             </div>
 
-            <h3 id="nsep" class="protocol__subsection-title">2.5 Nanosecond Pulsed EP (nsEP) — Pulse Width Selectivity</h3>
+            <h3 id="nsep" class="protocol__subsection-title">2.5 Nanosecond Pulsed EP (nsEP) — Reference Model</h3>
             <p class="protocol__body-text">
-              An alternative strategy for bacteria targeting in the Schwan (IRE) regime uses
-              very short pulse widths (t<sub>p</sub> ≪ τ). The membrane charges as a
-              <strong>pulse step response</strong>:
+              Nanosecond pulsed electroporation (nsEP) uses <em>DC rectangular pulses</em>
+              (not sinusoidal RF) applied from specialised pulsed-power generators.
+              The membrane charges as a first-order RC step response:
             </p>
             <div class="protocol__eq-block">
-              <div class="protocol__eq-main">V<sub>m,eff</sub>(t<sub>p</sub>) = V<sub>m,DC</sub>(f) × (1 − exp(−t<sub>p</sub> / τ))</div>
+              <div class="protocol__eq-main">V<sub>m,eff</sub>(t<sub>p</sub>) = 1.5 · E · R · cos θ × (1 − exp(−t<sub>p</sub> / τ))</div>
               <div class="protocol__eq-sub">τ = R · C<sub>m</sub> · (2σ<sub>e</sub>+σ<sub>i</sub>) / (2σ<sub>e</sub>·σ<sub>i</sub>)</div>
               <div class="protocol__eq-note">Stacey et al. [8]; Schoenbach et al. [12]</div>
             </div>
@@ -329,9 +349,21 @@ export default defineComponent({})
               (τ<sub>E</sub>·R<sub>H</sub>) ≈ 1.05×; even at this limit the Therapeutic Index
               remains &lt;1 because V<sub>m,thr,bacteria</sub> &gt; V<sub>m,thr,hepatocyte</sub>
               (cell-wall reinforcement raises the lysis threshold).
-              Use the <strong>Pulse Width slider</strong> in pulsed waveform mode to explore this
-              regime. Charging factors for both cells are displayed live next to the slider.
             </p>
+            <div class="protocol__warn-box">
+              <span class="protocol__warn-icon">⚠</span>
+              <span>
+                <strong>Live simulation scope:</strong> The Experiment Lab simulates
+                <em>duty-cycled AC sinusoidal</em> fields — the Schwan Vm(f) model is evaluated at
+                the RF carrier frequency. This is the correct model for continuous-wave RF or
+                pulse-modulated RF bursts. True nsEP (DC rectangular pulses, pulsed-power hardware)
+                uses a different excitation mechanism where the membrane charging obeys the step
+                response above, and the AC frequency is not a meaningful parameter. The Pulse Width
+                slider in the lab controls lysis protocol timing (N × t<sub>p</sub>/dc) and the SAR
+                waveform factor, not the Vm per se. For dedicated nsEP modelling, use the DC formula
+                above directly.
+              </span>
+            </div>
           </section>
 
           <h3 id="doubleshell" class="protocol__subsection-title">2.6 Double-Shell Nuclear Envelope Model</h3>
@@ -342,7 +374,7 @@ export default defineComponent({})
               function of frequency:
             </p>
             <div class="protocol__eq-block">
-              <div class="protocol__eq-main">V<sub>m,nuc</sub>(f) = (1.5 · E · R<sub>nuc</sub> · ω·τ<sub>out</sub>) / √[(1+(ωτ<sub>out</sub>)²) · (1+(ωτ<sub>ne</sub>)²)]</div>
+              <div class="protocol__eq-main">V<sub>m,nuc</sub>(f) = (1.5 · E · R<sub>nuc</sub> · cos θ · ω·τ<sub>out</sub>) / √[(1+(ωτ<sub>out</sub>)²) · (1+(ωτ<sub>ne</sub>)²)]</div>
               <div class="protocol__eq-divider"></div>
               <div class="protocol__eq-sub">τ<sub>out</sub> = R·C<sub>m</sub>·(2σ<sub>e</sub>+σ<sub>i</sub>)/(2σ<sub>e</sub>·σ<sub>i</sub>) &nbsp;(existing outer shell τ)</div>
               <div class="protocol__eq-sub">τ<sub>ne</sub> = R<sub>nuc</sub>·C<sub>m,ne</sub>·(2σ<sub>i</sub>+σ<sub>np</sub>)/(2σ<sub>i</sub>·σ<sub>np</sub>) &nbsp;·&nbsp; C<sub>m,ne</sub> = ε<sub>ne</sub>·ε₀/d<sub>ne</sub></div>
@@ -378,16 +410,22 @@ export default defineComponent({})
                 with corresponding uncertainty.
               </span>
             </div>
+            <p class="protocol__body-text">
+              σ<sub>ne</sub> is not stored or used in the simulation. The implementation operates
+              in the <em>thin-membrane capacitive limit</em> (σ<sub>ne</sub> → 0), per
+              Kotnik &amp; Miklavcic (2006) Eq. (14). Including a finite σ<sub>ne</sub> requires
+              the full complex admittance transfer function and is left for future work.
+            </p>
             <table class="protocol__param-table">
               <thead>
-                <tr><th>Cell</th><th>R<sub>nuc</sub> (µm)</th><th>d<sub>ne</sub> (nm)</th><th>σ<sub>ne</sub> (S/m)</th><th>V<sub>thr,nuc</sub> (V)</th><th>f<sub>peak</sub> (saline)</th></tr>
+                <tr><th>Cell</th><th>R<sub>nuc</sub> (µm)</th><th>d<sub>ne</sub> (nm)</th><th>ε<sub>ne</sub> (eff.)</th><th>V<sub>thr,nuc</sub> (V)</th><th>f<sub>peak</sub> (saline)</th></tr>
               </thead>
               <tbody>
-                <tr><td>Hepatocyte</td><td class="protocol__mono">5.0</td><td class="protocol__mono">15</td><td class="protocol__mono">0.010</td><td class="protocol__mono">0.50</td><td class="protocol__mono protocol__primary-val">~1.66 MHz</td></tr>
-                <tr><td>Adenocarcinoma</td><td class="protocol__mono">8.0</td><td class="protocol__mono">12</td><td class="protocol__mono">0.020</td><td class="protocol__mono protocol__cancer-val">0.40</td><td class="protocol__mono protocol__cancer-val">~0.87 MHz</td></tr>
-                <tr><td>GBM</td><td class="protocol__mono">7.0</td><td class="protocol__mono">11</td><td class="protocol__mono">0.020</td><td class="protocol__mono protocol__cancer-val">0.35</td><td class="protocol__mono protocol__cancer-val">~1.05 MHz</td></tr>
-                <tr><td>MCF-7</td><td class="protocol__mono">6.0</td><td class="protocol__mono">13</td><td class="protocol__mono">0.015</td><td class="protocol__mono protocol__cancer-val">0.42</td><td class="protocol__mono protocol__cancer-val">~1.28 MHz</td></tr>
-                <tr><td>HL-60</td><td class="protocol__mono">4.0</td><td class="protocol__mono">14</td><td class="protocol__mono">0.015</td><td class="protocol__mono protocol__cancer-val">0.45</td><td class="protocol__mono protocol__cancer-val">~2.12 MHz</td></tr>
+                <tr><td>Hepatocyte</td><td class="protocol__mono">5.0</td><td class="protocol__mono">15</td><td class="protocol__mono">10</td><td class="protocol__mono">0.50</td><td class="protocol__mono protocol__primary-val">~1.66 MHz</td></tr>
+                <tr><td>Adenocarcinoma</td><td class="protocol__mono">8.0</td><td class="protocol__mono">12</td><td class="protocol__mono">12</td><td class="protocol__mono protocol__cancer-val">0.40</td><td class="protocol__mono protocol__cancer-val">~0.87 MHz</td></tr>
+                <tr><td>GBM</td><td class="protocol__mono">7.0</td><td class="protocol__mono">11</td><td class="protocol__mono">12</td><td class="protocol__mono protocol__cancer-val">0.35</td><td class="protocol__mono protocol__cancer-val">~1.05 MHz</td></tr>
+                <tr><td>MCF-7</td><td class="protocol__mono">6.0</td><td class="protocol__mono">13</td><td class="protocol__mono">11</td><td class="protocol__mono protocol__cancer-val">0.42</td><td class="protocol__mono protocol__cancer-val">~1.28 MHz</td></tr>
+                <tr><td>HL-60</td><td class="protocol__mono">4.0</td><td class="protocol__mono">14</td><td class="protocol__mono">11</td><td class="protocol__mono protocol__cancer-val">0.45</td><td class="protocol__mono protocol__cancer-val">~2.12 MHz</td></tr>
                 <tr><td>RBC</td><td class="protocol__mono protocol__muted">—</td><td class="protocol__mono protocol__muted">—</td><td class="protocol__mono protocol__muted">—</td><td class="protocol__mono protocol__muted">—</td><td class="protocol__mono protocol__muted">Anucleate — not applicable</td></tr>
               </tbody>
             </table>
