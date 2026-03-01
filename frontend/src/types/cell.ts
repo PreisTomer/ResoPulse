@@ -1,5 +1,43 @@
 export type CellState = 'stable' | 'nourishing' | 'approaching' | 'critical' | 'vibrating' | 'lysing' | 'lysed'
 
+// ── Cell configuration ────────────────────────────────────────────────────────
+
+export interface CellConfig {
+  id: string
+  type: 'healthy' | 'target'
+  label: string
+  // Biophysical — user-editable
+  radius: number               // µm
+  membraneThickness: number    // nm
+  naturalFrequency: number     // Hz — oscilloscope animation speed only; NOT a physics parameter
+  thresholdVoltage: number     // V — Vm above which lysis is initiated
+  dielectricConstant: number   // ε_r of membrane (used in Schwan τ)
+  conductivity: number         // S/m — cytoplasm σ_i
+  // Acoustic/mechanical resonance (virus/bacteria capsid & cell-wall targeting)
+  resonantFreqGHz?: number       // Capsid/cell-wall fundamental resonant frequency (GHz)
+  capsidQ?: number               // Mechanical quality factor
+  resonantThresholdVcm?: number  // Field amplitude at resonance required for disruption (V/cm)
+  // Nuclear envelope — double-shell model (Kotnik & Miklavcic 2006)
+  // Absent for anucleate cells (RBC) and prokaryotes (bacteria/virus).
+  nuclearRadius?: number               // µm  — nuclear radius (~50% of cell radius for most mammalian cells)
+  nuclearMembraneThickness?: number    // nm  — effective double-membrane thickness (inner + outer leaflets + lumen, ~15 nm)
+  nuclearMembraneEps?: number          // ε_r — effective permittivity; lipid bilayer ~2–5, NPC contribution raises to ~10–12
+  nucleoplasmConductivity?: number     // S/m — nucleoplasm ionic conductivity (typically > cytoplasm)
+  nuclearThresholdVoltage?: number     // V   — Vm_nuc required for nuclear envelope disruption (lower than plasma membrane)
+  // Note: nuclear membrane conductivity σ_ne is NOT stored or used. The Kotnik & Miklavcic (2006)
+  // double-shell formula used in computeNuclearVm() operates in the thin-membrane capacitive limit
+  // (σ_ne → 0). Including σ_ne requires the full complex admittance transfer function which changes
+  // the DC response; this is left for future work. See physics.ts computeNuclearTau().
+  // Thermal — added defaults (not in user spec)
+  density: number              // kg/m³
+  specificHeatCapacity: number // J/(kg·K)
+  // Animation
+  amplitude: number            // 0–1, drives oscilloscope wave height
+}
+
+// Type alias for backward compatibility with existing CellCard / store references
+export type CellRecord = CellConfig
+
 export interface BlobPoint {
   angle: number
   r: number

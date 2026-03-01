@@ -1,12 +1,12 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import * as d3 from 'd3'
-import { useCellStore } from '../stores/cellStore'
-import { computeSchwan, computeFc, computeNuclearVm } from '../utils/physics'
-import { CELL_PRESETS, GROUP_COLORS } from '../constants/cellLibrary'
-import type { CellGroup } from '../constants/cellLibrary'
-import { broadcastFieldParams } from '../services/socket'
-import { C } from '../theme/colors'
+import { useCellStore } from '../../stores/cellStore'
+import { computeSchwan, computeFc, computeNuclearVm } from '../../utils/physics'
+import { CELL_PRESETS, GROUP_COLORS } from '../../constants/cellLibrary'
+import { broadcastFieldParams } from '../../services/socket'
+import { C } from '../../theme/colors'
+import ChartLegend from './ChartLegend.vue'
 
 // 200 logarithmically spaced Hz from 10 kHz to 500 MHz
 const F_MIN_HZ = 10_000
@@ -24,6 +24,8 @@ function logspace(min: number, max: number, n: number): number[] {
 const F_POINTS_HZ = logspace(F_MIN_HZ, F_MAX_HZ, N_POINTS)
 
 export default defineComponent({
+  components: { ChartLegend },
+
   setup() {
     return { store: useCellStore() }
   },
@@ -41,12 +43,6 @@ export default defineComponent({
     }
   },
 
-  computed: {
-    groups(): CellGroup[] {
-      return ['reference', 'cancer', 'bacteria', 'virus']
-    },
-  },
-
   watch: {
     'store.healthy':                   { handler() { this.updateChart() }, deep: true },
     'store.target':                    { handler() { this.updateChart() }, deep: true },
@@ -54,9 +50,6 @@ export default defineComponent({
     'store.medium':                    { handler() { this.updateChart() } },
     'store.effectiveSigmaE':           { handler() { this.updateChart() } },
     'store.cosThetaFactor':            { handler() { this.updateChart() } },
-    'store.waveform':                  { handler() { this.updateChart() } },
-    'store.pulseWidthNs':              { handler() { this.updateChart() } },
-    'store.dutyCycle':                 { handler() { this.updateChart() } },
     'store.currentBroadcastFrequency': { handler() { this.updateCursor() } },
     'store.doubleShellEnabled':        { handler() { this.updateChart() } },
   },
@@ -115,11 +108,9 @@ export default defineComponent({
 
     // ── Selectivity ratio curve Vm_T/Vm_H (cos θ cancels in ratio) ──────
     computeSelCurve(sigma_e: number): { hz: number; ratio: number }[] {
-      const psfT = this.store.targetPulseStepFactor
-      const psfH = this.store.healthyPulseStepFactor
       return F_POINTS_HZ.map((hz) => {
-        const vmH = computeSchwan(this.store.healthy, hz / 1000, this.store.fieldIntensity, sigma_e) * psfH
-        const vmT = computeSchwan(this.store.target,  hz / 1000, this.store.fieldIntensity, sigma_e) * psfT
+        const vmH = computeSchwan(this.store.healthy, hz / 1000, this.store.fieldIntensity, sigma_e)
+        const vmT = computeSchwan(this.store.target,  hz / 1000, this.store.fieldIntensity, sigma_e)
         return { hz, ratio: vmH < 1e-12 ? 0 : vmT / vmH }
       })
     },
@@ -553,7 +544,10 @@ export default defineComponent({
       g.select('.cursor-line').attr('x1', x).attr('x2', x)
       g.select('.cursor-drag-hint').attr('x', x)
 
-      const label = `${this.store.currentBroadcastFrequency} kHz`
+      const freqKHz = this.store.currentBroadcastFrequency
+      const label = freqKHz >= 1e6 ? `${(freqKHz / 1e6).toFixed(2)} GHz`
+                  : freqKHz >= 1000 ? `${(freqKHz / 1000).toFixed(1)} MHz`
+                  : `${freqKHz} kHz`
       const textEl = g.select<SVGTextElement>('.cursor-label')
       textEl.attr('x', x).text(label)
 
@@ -587,42 +581,7 @@ export default defineComponent({
         class="freq-chart__title"
         v-tip="'<strong>Transmembrane Potential vs Frequency</strong>\nSchwan equation Vm(f) = 1.5·E·R·cos(θ) / √(1+(2πf·τ)²)\nX-axis: log scale 10 kHz → 500 MHz\nY-axis: peak Vm in millivolts\n\nFaint curves: all library presets\nBright curves: currently active cells\nAmber dashed: Vm selectivity ratio T/H (right axis)\nDotted threshold lines: lysis (bright) · Rev.EP at 50% (faint)\nDrag white cursor to set broadcast frequency'"
       >Transmembrane Potential Response</span>
-      <div class="freq-chart__legend">
-        <span
-          v-for="g in groups"
-          :key="g"
-          class="freq-chart__legend-item"
-          v-tip="{ reference: `<strong>Reference cells</strong>\nHealthy baseline — hepatocyte, RBC\nTypically higher threshold voltage\nand lower membrane permittivity`,
-                   cancer:    `<strong>Cancer cells</strong>\nLarger radius → lower fc → higher Vm at low frequency\nLower threshold → disrupted at lower field intensity`,
-                   bacteria:  `<strong>Bacteria</strong>\nSmall radius (0.5–1 µm) → fc ~8–26 MHz (E. coli ~8 MHz, MRSA ~26 MHz)\nThick peptidoglycan wall raises membrane thickness`,
-                   virus:     `<strong>Viruses</strong>\nRadius ~100 nm · Schwan fc ~0.4 MHz (σ_i-limited)\nNote: single-shell model is approximate for virions` }[g]"
-        >
-          <span class="freq-chart__legend-dot" :style="{ background: `var(--group-${g})` }"></span>
-          {{ { reference: 'Reference', cancer: 'Cancer', bacteria: 'Bacteria', virus: 'Virus' }[g] }}
-        </span>
-        <span
-          class="freq-chart__legend-item"
-          v-tip="'<strong>Active Healthy cell</strong>\nCurrently selected healthy baseline\n(cyan, full opacity, glowing)\nShows Vm curve for selected preset and current field'"
-        ><span class="freq-chart__legend-line freq-chart__legend-line--h"></span> Active H</span>
-        <span
-          class="freq-chart__legend-item"
-          v-tip="'<strong>Active Target cell</strong>\nCurrently selected target (cancer / pathogen)\n(red, full opacity, glowing)\nDrag the white cursor to set broadcast frequency'"
-        ><span class="freq-chart__legend-line freq-chart__legend-line--t"></span> Active T</span>
-        <span
-          class="freq-chart__legend-item"
-          v-tip="'<strong>Vm selectivity ratio</strong> (amber dashed · right axis)\nVm_T(f) × psf_T / (Vm_H(f) × psf_H) — orientation-independent (cos θ cancels).\n>1× → target accumulates more Vm than healthy at that frequency.\nPulse step factor (psf) accounts for ns-pulse charging fraction.'"
-        ><span class="freq-chart__legend-line freq-chart__legend-line--sel"></span> Vm ratio T/H</span>
-        <span
-          v-if="store.doubleShellEnabled"
-          class="freq-chart__legend-item"
-          v-tip="'<strong>Nuclear Vm — Healthy</strong> (dashed, half opacity)\nDouble-shell model (Kotnik &amp; Miklavcic 2006).\nVm_nuc is a bandpass function peaking near f_peak = 1/(2π√(τ_out·τ_ne)).\nTypical: hepatocyte f_peak ≈ 1.66 MHz · Vm_nuc ≈ 40 mV at 417 kHz / 150 V/cm'"
-        ><span class="freq-chart__legend-line freq-chart__legend-line--nuc-h"></span> Nucleus H</span>
-        <span
-          v-if="store.doubleShellEnabled"
-          class="freq-chart__legend-item"
-          v-tip="'<strong>Nuclear Vm — Target</strong> (dashed, half opacity)\nDouble-shell model (Kotnik &amp; Miklavcic 2006).\nCancer nuclei have thinner/leakier NE → higher Vm_nuc and lower threshold.\nTypical: adenocarcinoma f_peak ≈ 0.87 MHz · Vm_nuc ≈ 110 mV at 417 kHz / 150 V/cm'"
-        ><span class="freq-chart__legend-line freq-chart__legend-line--nuc-t"></span> Nucleus T</span>
-      </div>
+      <ChartLegend />
     </div>
 
     <!-- D3 SVG container -->
@@ -643,7 +602,7 @@ export default defineComponent({
   </div>
 </template>
 
-<style lang="scss" scoped>
+<style lang="scss">
 /* Expose group colors as CSS vars for the legend dots */
 .freq-chart {
   --group-reference: var(--color-group-reference);

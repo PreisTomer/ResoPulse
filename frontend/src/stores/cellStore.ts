@@ -1,11 +1,29 @@
 import { defineStore } from 'pinia'
 import { cloneDeep } from 'lodash'
-import { cellConfigs, MEDIA } from '../mockData'
-import type { CellConfig, MediumKey } from '../mockData'
-import { computeSchwan, computeSAR, computeFc, computeTau, computePulseStepResponse, computeResonantDisruption, computeNuclearVm } from '../utils/physics'
+import { cellConfigs } from '../mockData'
+import { MEDIA } from '../constants/media'
+import type { CellConfig } from '../types/cell'
+import type { MediumKey } from '../types/media'
+import { computeSchwan, computeSAR, computeFc, computeTau, computeResonantDisruption, computeNuclearVm } from '../utils/physics'
 
 const LAMBDA = 0.02     // Newton cooling rate constant [1/s]
 const TEMP_SIMULATION_CAP = 150  // °C — hard ceiling; cells are destroyed long before this
+
+/**
+ * Medium-specific ionic conductivity temperature coefficient [1/°C].
+ * σ_e(T) = σ_e0 × (1 + α × (T − 37))
+ * Sources: Coulter & Koenig 1953; Stogryn 1971; IEC 60601 series.
+ *   saline:  2.0 %/°C  — 0.9% NaCl, near-linear across 20–60°C
+ *   blood:   1.7 %/°C  — plasma-dominated, slightly lower due to protein buffering
+ *   tissue:  1.5 %/°C  — heterogeneous soft tissue, averaged over protein/lipid content
+ *   water:   2.8 %/°C  — pure water dissociation equilibrium; highly temp-sensitive
+ */
+const SIGMA_TEMP_COEFF: Record<string, number> = {
+  saline:  0.020,
+  blood:   0.017,
+  tissue:  0.015,
+  water:   0.028,
+}
 
 export interface FieldPacket {
   timestamp: number
@@ -26,7 +44,7 @@ interface CellStoreState {
   healthyTemp: number             // °C
   targetTemp: number              // °C
   dutyCycle: number               // dimensionless — pulsed field on-fraction (default 0.01%)
-  waveform: 'cw' | 'pulsed'      // CW sinusoidal (waveformFactor 0.5) or pulsed DC (1.0)
+  waveform: 'cw' | 'pulsed'      // CW sinusoidal (waveformFactor 0.5) or pulsed bipolar square-wave bursts at carrier freq — H-FIRE/IRE regime (waveformFactor 1.0, E²_rms = E²_peak)
   pulseWidthNs: number            // pulse width in nanoseconds (pulsed mode only; default 1000 ns = 1 µs)
   safeMode: boolean               // when true, duty cycle is clamped so T_ss ≤ 42°C
   orientationDeg: number          // field-cell axis angle θ [0–90°]; default 0° (field-aligned = max Vm)
@@ -76,15 +94,17 @@ export const useCellStore = defineStore('cell', {
 
     /**
      * Temperature-corrected extracellular conductivity [S/m].
-     * σ_e(T) = σ_e0 × (1 + 0.02 × (T_mean − 37))
-     * Ionic conductivity rises ~2%/°C. At hyperthermic limit (42°C), σ_e increases ~10%,
-     * shifting τ and fc — a physically correct closed feedback loop.
-     * T_mean = mean of healthy and target cell temperatures.
+     * σ_e(T) = σ_e0 × (1 + α × (T_mean − 37))
+     * where α is medium-specific (saline 2.0%/°C, blood 1.7%/°C, tissue 1.5%/°C,
+     * water 2.8%/°C). At hyperthermic limit (42°C), σ_e increases 7–14% depending
+     * on medium, shifting τ and fc — a physically correct closed feedback loop.
+     * T_mean = mean of healthy and target cell temperatures (bulk medium approximation).
      */
     effectiveSigmaE(state): number {
       const sigma_e0 = MEDIA[state.medium].conductivity
-      const T_mean = (state.healthyTemp + state.targetTemp) / 2
-      return sigma_e0 * (1 + 0.02 * (T_mean - 37))
+      const alpha    = SIGMA_TEMP_COEFF[state.medium] ?? 0.020
+      const T_mean   = (state.healthyTemp + state.targetTemp) / 2
+      return sigma_e0 * (1 + alpha * (T_mean - 37))
     },
 
     /**
@@ -101,45 +121,37 @@ export const useCellStore = defineStore('cell', {
     },
 
     /**
-     * Pulse step-response factor for the healthy cell [0–1].
-     * = 1 − exp(−t_p/τ) in pulsed mode; = 1.0 in CW mode.
-     * Uses temperature-corrected σ_e so τ reflects current heating state.
+     * Peak induced transmembrane potential for the healthy cell [V].
+     * Uses the Schwan single-shell AC model at the current broadcast frequency.
+     *
+     * Pulsed mode in this app models bipolar square-wave bursts at the carrier frequency
+     * (the H-FIRE/IRE convention — Arena et al. 2011; Dong et al. 2021).
+     * Schwan at the fundamental frequency is the standard first-order approximation:
+     *   waveformFactor = 1.0  (E²_rms = E²_peak for a bipolar square wave; no RMS halving)
+     *   SAR_eff = SAR_peak × dc  (duty cycle scales time-averaged heating)
+     *
+     * Note: the displayed Vm uses E_peak directly. The true square-wave fundamental is
+     * E_1 = 4E_peak/π ≈ 1.27 × E_peak, so Vm is underestimated by ~21% in pulsed mode.
+     * This factor cancels exactly in the Vm_T/Vm_H selectivity ratio and in the TI.
+     * Duty cycle affects heating (via SAR × dc) and lysis timing (via lysisDelayMs), not Vm.
      */
-    healthyPulseStepFactor(): number {
-      if ((this as unknown as CellStoreState).waveform !== 'pulsed') return 1.0
-      const tau = computeTau((this as unknown as CellStoreState).healthy, this.effectiveSigmaE)
-      return computePulseStepResponse(tau, (this as unknown as CellStoreState).pulseWidthNs)
-    },
-
-    /** Pulse step-response factor for the target cell [0–1]. Uses temperature-corrected σ_e. */
-    targetPulseStepFactor(): number {
-      if ((this as unknown as CellStoreState).waveform !== 'pulsed') return 1.0
-      const tau = computeTau((this as unknown as CellStoreState).target, this.effectiveSigmaE)
-      return computePulseStepResponse(tau, (this as unknown as CellStoreState).pulseWidthNs)
-    },
-
     healthyVm(): number {
       const state = this as unknown as CellStoreState
       const sigma_e = this.effectiveSigmaE
       const cosT = this.cosThetaFactor
-      const vm_dc = computeSchwan(state.healthy, state.currentBroadcastFrequency, state.fieldIntensity, sigma_e, cosT)
-      const tau = computeTau(state.healthy, sigma_e)
-      const factor = state.waveform === 'pulsed'
-        ? computePulseStepResponse(tau, state.pulseWidthNs)
-        : 1.0
-      return vm_dc * factor
+      return computeSchwan(state.healthy, state.currentBroadcastFrequency, state.fieldIntensity, sigma_e, cosT)
     },
 
+    /**
+     * Peak induced transmembrane potential for the target cell [V].
+     * See healthyVm for model notes. In resonance mode the targetDisruptionRatio getter
+     * overrides the Schwan Vm with the acoustic/mechanical disruption formula.
+     */
     targetVm(): number {
       const state = this as unknown as CellStoreState
       const sigma_e = this.effectiveSigmaE
       const cosT = this.cosThetaFactor
-      const vm_dc = computeSchwan(state.target, state.currentBroadcastFrequency, state.fieldIntensity, sigma_e, cosT)
-      const tau = computeTau(state.target, sigma_e)
-      const factor = state.waveform === 'pulsed'
-        ? computePulseStepResponse(tau, state.pulseWidthNs)
-        : 1.0
-      return vm_dc * factor
+      return computeSchwan(state.target, state.currentBroadcastFrequency, state.fieldIntensity, sigma_e, cosT)
     },
 
     healthyDisruptionRatio(): number {
@@ -182,19 +194,15 @@ export const useCellStore = defineStore('cell', {
     },
 
     systemReady(state): boolean {
-      return state.healthyTemp < 40 && state.targetTemp < 40
+      return state.healthyTemp < 42 && state.targetTemp < 42
     },
 
     /**
-     * Mode-aware selectivity: targetDisruptionRatio / healthyDisruptionRatio.
-     * Works correctly for both Schwan (mammalian IRE) and resonance (virus/bacteria)
-     * modes. In resonance mode, healthy disruption ≈ 0 at GHz — selectivity caps at 99.9×.
-     * In Schwan mode this equals the Therapeutic Index (threshold-normalised ratio).
+     * Mode-aware selectivity alias → delegates to therapeuticIndex.
+     * Kept for backward compatibility with experimentStore and chart components.
      */
     selectivityRatio(): number {
-      const hDr = this.healthyDisruptionRatio
-      if (hDr < 1e-9) return this.targetDisruptionRatio > 0 ? 99.9 : 0
-      return Math.min(99.9, this.targetDisruptionRatio / hDr)
+      return this.therapeuticIndex
     },
 
     /**
@@ -232,17 +240,16 @@ export const useCellStore = defineStore('cell', {
 
     /**
      * Nuclear transmembrane potential for the healthy cell [V].
-     * Uses the two-shell bandpass formula (Kotnik & Miklavcic 2006).
-     * Returns 0 if the healthy cell has no nuclear envelope parameters.
+     * Uses the Kotnik & Miklavcic (2006) two-shell bandpass formula — a zero at DC and
+     * at high frequency, with a bandpass peak at f_peak = 1/(2π√(τ_out·τ_ne)).
+     * Returns 0 if the healthy cell has no nuclear envelope parameters (anucleate / prokaryotes).
      */
     healthyNuclearVm(): number {
       const state = this as unknown as CellStoreState
       if (!state.healthy.nuclearRadius) return 0
       const sigma_e = this.effectiveSigmaE
       const cosT    = this.cosThetaFactor
-      const vm_dc   = computeNuclearVm(state.healthy, state.currentBroadcastFrequency, state.fieldIntensity, sigma_e, cosT)
-      const factor  = this.healthyPulseStepFactor
-      return vm_dc * factor
+      return computeNuclearVm(state.healthy, state.currentBroadcastFrequency, state.fieldIntensity, sigma_e, cosT)
     },
 
     /** Nuclear transmembrane potential for the target cell [V]. Returns 0 if no nuclear params. */
@@ -251,9 +258,7 @@ export const useCellStore = defineStore('cell', {
       if (!state.target.nuclearRadius) return 0
       const sigma_e = this.effectiveSigmaE
       const cosT    = this.cosThetaFactor
-      const vm_dc   = computeNuclearVm(state.target, state.currentBroadcastFrequency, state.fieldIntensity, sigma_e, cosT)
-      const factor  = this.targetPulseStepFactor
-      return vm_dc * factor
+      return computeNuclearVm(state.target, state.currentBroadcastFrequency, state.fieldIntensity, sigma_e, cosT)
     },
 
     /** Nuclear disruption ratio for healthy cell: Vm_nuc / nuclear threshold voltage. */
@@ -443,6 +448,8 @@ export const useCellStore = defineStore('cell', {
       // Reset both temperatures — loading a preset starts a fresh experiment context.
       this.healthyTemp = 37
       this.targetTemp = 37
+      // Signal CellCard components to reset visual state (lysis animation, state machine).
+      this.resetCounter++
     },
 
     /** Reset both cell temperatures to physiological baseline (37°C). */

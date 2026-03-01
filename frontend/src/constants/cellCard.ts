@@ -8,12 +8,6 @@ export const OSC_H      = 37     // ~15 % shorter than original 44
 export const BASE_R       = 55    // blob base radius (SVG px) — ~15 % smaller than 65
 export const BLOB_POINTS  = 16    // number of perimeter control points
 
-// ── Nucleus (DNA double-helix) ────────────────────────────────────────────────
-export const NUCLEUS_W    = 51    // helix x-span — ~15 % smaller than 60
-export const NUCLEUS_H    = 24    // helix y-amplitude ×2 — ~15 % smaller than 28
-export const NUCLEUS_PTS  = 20    // sample points along helix
-export const NUCLEUS_RUNGS = 8   // cross-rungs drawn per tick
-
 // ── Lysis / shatter timing (ms) ───────────────────────────────────────────────
 // LYSIS_DELAY_MS removed — replaced by store.lysisDelayMs (N_pulses × pulse_period, physically grounded)
 export const LYSIS_DURATION_MS = 2800   // shatter animation length
@@ -44,7 +38,7 @@ export interface EditableParamDef {
 
 export const EDITABLE_PARAMS: EditableParamDef[] = [
   { label: 'Radius R',         key: 'radius',            step: 0.001, min: 0.001, unit: 'µm'  },
-  { label: 'Membrane ε_r',     key: 'dielectricConstant', step: 0.1, min: 1,     unit: ''    },
+  { label: 'Eff. membrane ε_r', key: 'dielectricConstant', step: 0.1, min: 1,     unit: ''    },
   { label: 'Conductivity σ_i', key: 'conductivity',      step: 0.01, min: 0.001, unit: 'S/m' },
   { label: 'Threshold Vm',     key: 'thresholdVoltage',  step: 0.05, min: 0.1,   unit: 'V'   },
 ]

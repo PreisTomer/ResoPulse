@@ -6,8 +6,8 @@
  * Functions that render i18n strings receive a `t` translator.
  */
 
-import { MEDIA } from '../mockData'
-import type { MediumKey } from '../mockData'
+import { MEDIA } from '../constants/media'
+import type { MediumKey } from '../types/media'
 
 /** i18n translator signature (matches vue-i18n's `useI18n().t`) */
 type T = (key: string, params?: Record<string, unknown>) => string
@@ -37,12 +37,13 @@ export function tipWaveform(currentField: number, maxSteadyTemp: number): string
 <span class="tip-val">CW (sinusoidal)</span>  — continuous wave, always on
   SAR = σ_i·α²·E²/(2ρ)  [waveformFactor = 0.5, RMS halving]
   Thermal: effective duty cycle = 1.0 (full continuous heating)
-  Typical for TTFields (1–3 V/cm, 100–500 kHz sinusoidal)
+  Use case: continuous RF sinusoidal exposure (e.g. unmodulated carrier)
 
-<span class="tip-val">Pulsed (DC)</span>  — square-wave bursts
-  SAR = σ_i·α²·E²/ρ  [waveformFactor = 1.0, full peak field]
+<span class="tip-val">Pulsed</span>  — bipolar square-wave bursts at carrier frequency (H-FIRE/IRE regime)
+  SAR = σ_i·α²·E²/ρ  [waveformFactor = 1.0; bipolar square wave: E²_rms = E²_peak during on-time]
   Thermal load = SAR_peak × duty cycle (use low dc to limit heating)
-  Typical for IRE / electroporation protocols${cwWarn}`
+  Vm: Schwan at carrier freq — standard H-FIRE first-order approx
+    True square-wave fundamental Vm ≈ 4/π × shown (+27%); cancels in selectivity ratios${cwWarn}`
 }
 
 export function tipDutyCycle(opts: {
@@ -174,7 +175,7 @@ ${t('resonance.tipFieldDisruptNote')}${warn}`
       : `\nTherapeutic window at current frequency:\n  Target lysis ≥ <span class="tip-val">${tStr}</span>  ·  Healthy lysis ≥ <span class="tip-val">${hStr}</span>`
   return `<strong>Applied Electric Field Intensity</strong>
 Current: <span class="tip-val">${fieldDisplay}</span>
-Vm scales linearly:  Vm = 1.5 × E × R / √(1+(ωτ)²)
+Vm scales linearly:  Vm = 1.5 × E × R × cos θ / √(1+(ωτ)²)
 ${contextNote}`
 }
 
@@ -184,9 +185,11 @@ export function tipTargetBadge(opts: {
   targetDisruptPercent: string
   targetDisruption: number
   targetVmMv: number
+  lysisDelayMs: number
   t: T
 }): string {
-  const { chartMode, target, targetDisruptPercent: pct, targetDisruption, targetVmMv, t } = opts
+  const { chartMode, target, targetDisruptPercent: pct, targetDisruption, targetVmMv, lysisDelayMs, t } = opts
+  const lysisStr = formatLysisTime(lysisDelayMs)
   if (chartMode === 'resonance') {
     const fStr = target.resonantFreqGHz
       ? (target.resonantFreqGHz >= 1 ? `${target.resonantFreqGHz.toFixed(1)} GHz` : `${(target.resonantFreqGHz * 1000).toFixed(0)} MHz`)
@@ -194,7 +197,7 @@ export function tipTargetBadge(opts: {
     const warn = targetDisruption >= 1.0
       ? '\n<span class="tip-warn">⚡ Disruption threshold exceeded — capsid/cell-wall rupture imminent</span>'
       : targetDisruption > 0.85
-        ? '\n<span class="tip-warn">⚠ >85% — approaching disruption threshold (2.5 s countdown)</span>'
+        ? `\n<span class="tip-warn">⚠ >85% — approaching disruption threshold (${lysisStr} countdown)</span>`
         : ''
     return `<strong>${t('resonance.tipTargetBadgeTitle', { pct })}</strong>
 ${t('resonance.tipTargetBadgeFormula')}
@@ -203,12 +206,12 @@ ${t('resonance.tipTargetBadgeNote')}`
   }
   const tThr  = (target.thresholdVoltage * 1000).toFixed(0)
   const warn  = targetDisruption > 0.85
-    ? '\n<span class="tip-warn">⚡ >85% — lysis countdown active (2.5 s)</span>' : ''
+    ? `\n<span class="tip-warn">⚡ >85% — lysis countdown active (${lysisStr})</span>` : ''
   return `<strong>Target membrane disruption: <span class="tip-val">${pct}%</span></strong>
 Ratio = Vm / lysis threshold voltage
 
 Vm = <span class="tip-val">${targetVmMv.toFixed(2)} mV</span>  ·  Threshold = ${tThr} mV${warn}
->85% held for 2.5 s → irreversible membrane lysis`
+>85% held for ${lysisStr} → irreversible membrane lysis`
 }
 
 export function tipHealthyBadge(opts: {
@@ -278,38 +281,35 @@ At CW waveform a fixed 2.5 s delay is used instead.`
 }
 
 export function tipPulseWidth(opts: {
-  targetPulseStepFactor: number
-  healthyPulseStepFactor: number
   targetFc: number
   healthyFc: number
   pulseWidthDisplay: string
-  targetLabel: string
-  healthyLabel: string
+  lysisDelayMs: number
+  lysisNPulses: number
+  dutyCycle: number
 }): string {
-  const { targetPulseStepFactor, healthyPulseStepFactor, targetFc, healthyFc, pulseWidthDisplay, targetLabel, healthyLabel } = opts
-  const tFactor = (targetPulseStepFactor  * 100).toFixed(1)
-  const hFactor = (healthyPulseStepFactor * 100).toFixed(1)
+  const { targetFc, healthyFc, pulseWidthDisplay, lysisDelayMs, lysisNPulses, dutyCycle } = opts
   const tTau_ns = targetFc  > 0 ? (1 / (2 * Math.PI * targetFc  * 1e3) * 1e9) : 0
   const hTau_ns = healthyFc > 0 ? (1 / (2 * Math.PI * healthyFc * 1e3) * 1e9) : 0
   const tTauStr = tTau_ns > 0 ? tTau_ns.toFixed(0) + ' ns' : '—'
   const hTauStr = hTau_ns > 0 ? hTau_ns.toFixed(0) + ' ns' : '—'
-  const selNote = tTau_ns > 0 && hTau_ns > 0
-    ? tTau_ns < hTau_ns
-      ? `<span class="tip-ok">▲ Short pulses INCREASE selectivity for this target (τ_T ${tTau_ns.toFixed(0)} ns &lt; τ_H ${hTau_ns.toFixed(0)} ns)</span>`
-      : `<span class="tip-warn">▼ Short pulses DECREASE selectivity for this target (τ_T ${tTau_ns.toFixed(0)} ns &gt; τ_H ${hTau_ns.toFixed(0)} ns)\n  Use quasi-DC (long pulse width) for maximum cancer selectivity</span>`
-    : ''
+  const dcPct   = (dutyCycle * 100).toFixed(4)
   return `<strong>Pulse Width  t_p</strong>
 Current: <span class="tip-val">${pulseWidthDisplay}</span>
 
-Membrane charges exponentially after field onset:
-  <span class="tip-val">Vm_eff = Vm_DC × (1 − e^(−t_p / τ))</span>
-At t_p ≫ τ → factor → 1 (quasi-DC limit)
-At t_p ≪ τ → cells with shorter τ charge proportionally more
+This simulation uses AC sinusoidal fields — Vm is set by carrier
+frequency and field amplitude via the Schwan equation. Pulse width
+does NOT alter Vm in this model.
 
-τ(${targetLabel}) = <span class="tip-val">${tTauStr}</span>  ·  charging: <span class="tip-val">${tFactor}%</span>
-τ(${healthyLabel}) = <span class="tip-val">${hTauStr}</span>  ·  charging: <span class="tip-val">${hFactor}%</span>
+Pulse width controls:
+  1. <span class="tip-val">Lysis protocol timing</span>  →  Protocol time = N × (t_p / dc)
+       N = ${lysisNPulses}  ·  dc = ${dcPct}%  →  <span class="tip-val">${formatLysisTime(lysisDelayMs)}</span>
+  2. <span class="tip-val">SAR thermal load</span>  — waveformFactor = 1.0 (bipolar square wave; E²_rms = E²_peak during on-time)
 
-${selNote}
+Reference time constants (Schwan model):
+  τ(target)  = <span class="tip-val">${tTauStr}</span>
+  τ(healthy) = <span class="tip-val">${hTauStr}</span>
 
-Ref: Beebe et al. 2003 (nsEP); Batista Napotnik et al. 2016`
+For true nsEP (t_p ≪ τ, DC pulse model), see §2.5 of the Protocol page.
+Ref: Beebe et al. 2003; Batista Napotnik et al. 2016`
 }

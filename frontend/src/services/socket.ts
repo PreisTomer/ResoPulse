@@ -9,7 +9,7 @@ import { io } from 'socket.io-client'
 import type { Socket } from 'socket.io-client'
 import { useCellStore } from '../stores/cellStore'
 import type { FieldPacket } from '../stores/cellStore'
-import type { MediumKey } from '../mockData'
+import type { MediumKey } from '../types/media'
 
 // Set VITE_BACKEND_URL in Vercel environment variables once Railway is deployed.
 // Falls back to localhost for local development.
