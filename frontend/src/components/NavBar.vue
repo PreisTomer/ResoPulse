@@ -31,7 +31,12 @@ export default defineComponent({
         <RouterLink to="/reports"    class="nav-bar__link" active-class="active">{{ $t('nav.reports') }}</RouterLink>
         <RouterLink to="/protocol"   class="nav-bar__link" active-class="active">{{ $t('nav.protocol') }}</RouterLink>
       </nav>
-      <div class="nav-bar__status">
+      <div
+        class="nav-bar__status"
+        v-tip="systemReady
+          ? '<strong>System Ready</strong>\nAll physics running client-side.\nNo thermal warnings active.'
+          : '<strong>Thermal Alert</strong>\nSteady-state temperature exceeds 42°C.\nReduce duty cycle or field intensity.'"
+      >
         <span class="nav-bar__status-dot" :class="{ 'nav-bar__status-dot--warning': !systemReady }"></span>
         <span class="nav-bar__status-label" :class="{ 'nav-bar__status-label--warning': !systemReady }">
           {{ systemReady ? $t('nav.systemReady') : $t('nav.systemWarning') }}

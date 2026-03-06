@@ -16,8 +16,8 @@ export default defineComponent({
     orientationDeg(): number { return this.store.orientationDeg },
 
     cosThetaDisplay(): string {
-      const cosT = this.store.cosThetaFactor
-      return `${this.store.orientationDeg}° — ${(cosT * 100).toFixed(0)}% Vm coupling`
+      const pct = (this.store.cosThetaFactor * 100).toFixed(0)
+      return `${this.store.orientationDeg}° · cos ${pct}%`
     },
 
     lysisNLogVal(): number {
@@ -26,7 +26,7 @@ export default defineComponent({
 
     lysisNDisplay(): string {
       const n = this.store.lysisNPulses
-      return `${n} pulse${n === 1 ? '' : 's'} — est. ${formatLysisTime(this.store.lysisDelayMs)}`
+      return `×${n} · ~${formatLysisTime(this.store.lysisDelayMs)}`
     },
 
     tipOrientation(): string {
@@ -65,8 +65,8 @@ export default defineComponent({
 
   <div v-show="open" class="field-panel__accordion-body">
     <!-- Row 7: Cell Orientation θ -->
-    <div class="field-panel__row">
-      <span class="field-panel__row-label" v-tip="tipOrientation">{{ $t('slider.orientationAngle') }}</span>
+    <div class="field-panel__row field-panel__row--compact-readout">
+      <span class="field-panel__row-label" v-tip="tipOrientation">Orientation θ</span>
       <div class="field-panel__track">
         <input
           class="field-panel__slider"
@@ -78,15 +78,14 @@ export default defineComponent({
           @input="onOrientationInput"
         />
       </div>
-      <div class="field-panel__readout">
-        <span class="field-panel__readout-value" v-tip="tipOrientation">{{ cosThetaDisplay }}</span>
-        <span class="field-panel__readout-sub" v-tip="tipOrientation">{{ $t('slider.orientationSub') }}</span>
+      <div class="field-panel__readout" v-tip="tipOrientation">
+        <span class="field-panel__readout-value">{{ cosThetaDisplay }}</span>
       </div>
     </div>
 
     <!-- Row 8: Pulses to Lysis N (pulsed only) -->
-    <div v-if="store.waveform === 'pulsed'" class="field-panel__row">
-      <span class="field-panel__row-label" v-tip="tipLysisN">{{ $t('slider.lysisNPulses') }}</span>
+    <div v-if="store.waveform === 'pulsed'" class="field-panel__row field-panel__row--compact-readout">
+      <span class="field-panel__row-label" v-tip="tipLysisN">Pulses N</span>
       <div class="field-panel__track">
         <input
           class="field-panel__slider"
@@ -98,9 +97,8 @@ export default defineComponent({
           @input="onLysisNInput"
         />
       </div>
-      <div class="field-panel__readout">
-        <span class="field-panel__readout-value" v-tip="tipLysisN">{{ lysisNDisplay }}</span>
-        <span class="field-panel__readout-sub" v-tip="tipLysisN">{{ $t('slider.lysisNSub') }}</span>
+      <div class="field-panel__readout" v-tip="tipLysisN">
+        <span class="field-panel__readout-value">{{ lysisNDisplay }}</span>
       </div>
     </div>
 

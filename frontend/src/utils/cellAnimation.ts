@@ -163,27 +163,30 @@ export function setupBlobAnimation(
   let nucBlob:        d3.Selection<SVGPathElement, unknown, null, undefined> | null = null
   let nucOuterEnv:    d3.Selection<SVGPathElement, unknown, null, undefined> | null = null
   let nucleolus:      d3.Selection<SVGCircleElement, unknown, null, undefined> | null = null
+  let nucleolus2:     d3.Selection<SVGCircleElement, unknown, null, undefined> | null = null
   let cortexRing:     d3.Selection<SVGCircleElement, unknown, null, undefined> | null = null
   let nucPhases: Array<{ baseAngle: number; phaseOffset: number; speed: number }> = []
   const nucLineGen = d3.lineRadial<BlobPoint>().angle((d) => d.angle).radius((d) => d.r).curve(d3.curveBasisClosed)
 
   if (cellCategory === 'mammalian') {
-    const NUC_PTS = 10
-    const NUCL_R  = 6.5
+    const NUC_PTS  = type === 'target' ? 14 : 10  // cancer: more control points → jagged nuclear envelope
+    const NUCL_R   = type === 'target' ? 8.0 : 6.5 // cancer: large prominent nucleolus
 
     // Cell cortex ring (actin cortex, just inside plasma membrane — gives depth)
     cortexRing = cellG.append('circle').attr('r', BASE_R * 0.90)
       .attr('fill', 'none').attr('stroke', accentColor)
       .attr('stroke-width', 0.7).attr('stroke-opacity', 0.09)
 
-    // Mitochondria: cancer cells have more (3), healthy has 2; each has inner cristae marks
+    // Mitochondria: cancer has 5 small fragmented mito (Warburg effect); healthy has 2 elongated
     const mitoData = type === 'target'
-      ? [
-          { x: -20, y: -14, rx: 9,  ry: 4, angle: 20  },
-          { x:  19, y:  16, rx: 8,  ry: 4, angle: -25 },
-          { x:  -5, y:  22, rx: 7,  ry: 3, angle: 55  },
+      ? [  // 5 fragmented mitochondria — smaller, more numerous, scattered
+          { x: -20, y: -14, rx: 7,  ry: 2.8, angle: 20  },
+          { x:  19, y:  16, rx: 6,  ry: 2.5, angle: -25 },
+          { x:  -5, y:  22, rx: 5,  ry: 2.2, angle: 55  },
+          { x:  13, y:  -9, rx: 6,  ry: 2.2, angle: -40 },
+          { x: -14, y:   9, rx: 5,  ry: 2.0, angle: 80  },
         ]
-      : [
+      : [  // 2 healthy elongated mitochondria with prominent cristae
           { x: -18, y: -15, rx: 10, ry: 4, angle: 15  },
           { x:  20, y:  16, rx:  9, ry: 4, angle: -20 },
         ]
@@ -224,6 +227,13 @@ export function setupBlobAnimation(
     // Inner nucleolus suggestion
     nucG.append('circle').attr('r', NUCL_R * 0.45)
       .attr('fill', accentColor).attr('fill-opacity', 0.45)
+    // Second nucleolus — cancer cells characteristically have multiple prominent nucleoli
+    if (type === 'target') {
+      nucleolus2 = nucG.append('circle').attr('r', NUCL_R * 0.78)
+        .attr('fill', accentColor).attr('fill-opacity', 0.20)
+      nucG.append('circle').attr('r', NUCL_R * 0.30)
+        .attr('fill', accentColor).attr('fill-opacity', 0.38)
+    }
 
     nucG.attr('transform', 'translate(0,4)')
 
@@ -397,6 +407,16 @@ export function setupBlobAnimation(
 
   let shatterStartElapsed = -1
 
+  // Pre-baked membrane irregularity for cancer (mammalian target) cells.
+  // Biologically: loss of contact inhibition → invasive pseudopods → irregular membrane outline.
+  // Range: -3 to +7 px asymmetric bumps on top of BASE_R.
+  const cancerBaseOffsets: number[] = []
+  if (cellCategory === 'mammalian' && type === 'target') {
+    for (let i = 0; i < N; i++) {
+      cancerBaseOffsets.push(((i * 2971 + 1777) % 2000) / 200 - 3)
+    }
+  }
+
   // ── D3 timer loop ──────────────────────────────────────────────────────────
   const timer = d3.timer((elapsed: number) => {
     const { impact, state, color, temperature, fieldVcm, freqKHz, nuclearDisruptionRatio } = getFrame()
@@ -425,6 +445,7 @@ export function setupBlobAnimation(
       nucBlob?.attr('fill-opacity', 0).attr('stroke-opacity', 0)
       nucOuterEnv?.attr('stroke-opacity', 0)
       nucleolus?.attr('fill-opacity', 0)
+      nucleolus2?.attr('fill-opacity', 0)
       cortexRing?.attr('stroke-opacity', 0)
       mitoEls.forEach(({ g }) => g.attr('opacity', 0))
       bacteriaWallElOuter?.attr('stroke-opacity', 0)
@@ -470,6 +491,7 @@ export function setupBlobAnimation(
         .attr('stroke-opacity', Math.max(0, 0.25 - progress * 0.25))
       nucleoidBlob?.attr('fill-opacity', Math.max(0, 0.11 - progress * 0.11))
       nucleolus?.attr('fill-opacity', Math.max(0, 0.28 - progress * 0.28))
+      nucleolus2?.attr('fill-opacity', Math.max(0, 0.20 - progress * 0.20))
       cortexRing?.attr('stroke-opacity', Math.max(0, 0.09 - progress * 0.09))
       mitoEls.forEach(({ g }, i) => g.attr('opacity', Math.max(0, 1 - progress * 1.3 - i * 0.12)))
       ribosomeDots.forEach((d, i) => d.attr('opacity', Math.max(0, 1 - progress * 1.5 - i * 0.05)))
@@ -502,8 +524,8 @@ export function setupBlobAnimation(
     const radiusMod = isNourishing ? 1 + impact * 0.12 : 1
     const speedMult = isVibrating ? 1 + impact * 5 : isNourishing ? 0.4 + impact * 0.4 : 0.8
 
-    const blobPts: BlobPoint[] = blobPhases.map((p) => {
-      const baseR = shapeBaseR(p.baseAngle)
+    const blobPts: BlobPoint[] = blobPhases.map((p, idx) => {
+      const baseR = shapeBaseR(p.baseAngle) + (cancerBaseOffsets[idx] ?? 0)
       const wave  = Math.sin(elapsed * 0.001 * p.speed * speedMult + p.phaseOffset) * jitter
       const noise = (Math.random() - 0.5) * (isVibrating ? jitter * 0.5 : 2.5) * rigidityFactor
       return { angle: p.baseAngle, r: baseR * radiusMod + wave + noise }
@@ -560,20 +582,22 @@ export function setupBlobAnimation(
       })
 
       // ── Nucleus (organic blob, elongates along applied field axis) ─────────
-      const NUC_R  = 20
-      const NUC_DY = 4
+      const NUC_R  = type === 'target' ? 26 : 20  // cancer: enlarged nucleus (high N/C ratio)
+      const NUC_DX = type === 'target' ? -2 : 0   // cancer: slight nuclear displacement
+      const NUC_DY = type === 'target' ?  6 : 4   // cancer: more off-centre
       const nucScaleY = 1 + impact * 0.28
       const nucScaleX = 1 - impact * 0.10
-      const nucNoise  = isVibrating ? impact * 1.8 : 0
+      const nucNoise    = isVibrating ? impact * 1.8 : 0
+      const nucWaveAmp  = type === 'target' ? 4.5 : 2.5  // cancer: pleomorphic, irregular nucleus
       const nucPts: BlobPoint[] = nucPhases.map((p) => {
-        const wave  = Math.sin(elapsed * 0.0006 * p.speed + p.phaseOffset) * 2.5
+        const wave  = Math.sin(elapsed * 0.0006 * p.speed + p.phaseOffset) * nucWaveAmp
         const noise = (Math.random() - 0.5) * nucNoise
         return { angle: p.baseAngle, r: NUC_R + wave + noise }
       })
       // Outer nuclear envelope — drawn 3.5px outside the blob boundary
       const nucEnvPts: BlobPoint[] = nucPts.map((p) => ({ angle: p.angle, r: p.r + 3.5 }))
       nucG!.attr('transform',
-        `translate(0,${NUC_DY}) scale(${nucScaleX.toFixed(3)},${nucScaleY.toFixed(3)})`)
+        `translate(${NUC_DX},${NUC_DY}) scale(${nucScaleX.toFixed(3)},${nucScaleY.toFixed(3)})`)
       nucBlob!.attr('d', nucLineGen(nucPts) || '')
         .attr('fill', color).attr('fill-opacity', 0.12)
         .attr('stroke', color).attr('stroke-opacity', isNourishing ? 0.60 : 0.42)
@@ -594,6 +618,13 @@ export function setupBlobAnimation(
       const nlDy = Math.cos(elapsed * 0.0003) * 2.5
       nucleolus!.attr('cx', -3 + nlDx).attr('cy', -2 + nlDy)
         .attr('fill', color).attr('fill-opacity', 0.28)
+      // Second nucleolus drifts independently (cancer cells only)
+      if (nucleolus2) {
+        const nl2Dx = Math.sin(elapsed * 0.00035 + 2.1) * 4.5
+        const nl2Dy = Math.cos(elapsed * 0.00045 + 1.4) * 3.5
+        nucleolus2.attr('cx', 6 + nl2Dx).attr('cy', 4 + nl2Dy)
+          .attr('fill', color).attr('fill-opacity', 0.20)
+      }
     }
 
     if (cellCategory === 'bacteria') {
