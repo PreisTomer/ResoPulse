@@ -111,6 +111,31 @@ export default defineComponent({
       return `fc(T) ${this.targetFcDisplay} · fc(H) ${this.healthyFcDisplay}`
     },
 
+    optimalFreqResult(): { khz: number; sel: number } {
+      return this.store.optimalFreqResult
+    },
+
+    optimalFreqLabel(): string {
+      const { khz, sel } = this.optimalFreqResult
+      const label = khz >= 1_000_000
+        ? `${(khz / 1_000_000).toFixed(2)} GHz`
+        : khz >= 1000 ? `${(khz / 1000).toFixed(2)} MHz` : `${khz.toFixed(0)} kHz`
+      const beyond = khz > this.sliderRanges.freqMax
+      return `⭐ ${label} · ×${sel >= 99 ? '∞' : sel.toFixed(2)}${beyond ? ' ↑' : ''}`
+    },
+
+    optimalBeyondRange(): boolean {
+      return this.optimalFreqResult.khz > this.sliderRanges.freqMax
+    },
+
+    tipOptimalBtn(): string {
+      const beyond = this.optimalBeyondRange
+      const beyondNote = beyond
+        ? '\n<span class="tip-warn">Optimal lies beyond current slider range — slider clamped to maximum.</span>'
+        : '\nClick to set frequency to optimal.'
+      return `<strong>⭐ Snap to Optimal Frequency</strong>\nFrequency that maximises selectivity ratio TI = T-DR / H-DR.\n300-point log scan 10 kHz – 500 MHz at current field &amp; medium.${beyondNote}`
+    },
+
     tipMedium(): string    { return tipMedium(this.currentMedium) },
     tipMediumKeys(): Record<string, string> { return tipMediumKeys() },
     tipFreq(): string      { return tipFreq(this.freqDisplay, this.targetFcDisplay, this.healthyFcDisplay) },
@@ -174,6 +199,13 @@ export default defineComponent({
     onSafeModeChange(on: boolean) {
       this.store.setSafeMode(on)
     },
+
+    snapToOptimal() {
+      const { khz } = this.optimalFreqResult
+      const snapped = Math.round(Math.max(this.sliderRanges.freqMin, Math.min(this.sliderRanges.freqMax, khz)))
+      this.store.setBroadcastFreqKHz(snapped)
+      broadcastFieldParams(snapped, this.currentField, this.currentMedium)
+    },
   },
 })
 </script>
@@ -201,6 +233,17 @@ export default defineComponent({
           Safe
         </label>
       </div>
+    </div>
+
+    <!-- Scope legend: which controls affect which cell -->
+    <div
+      class="field-panel__scope-note"
+      v-tip="'<strong>Applied field parameters</strong>\nMedium · RF Frequency · Field Intensity · Waveform · Duty Cycle · Pulse Width · Orientation θ\nare <strong>shared</strong> — the same field is applied to both healthy (H) and target (T) cells simultaneously.\nDifferent Vm responses arise purely from each cell\'s biophysical parameters (R, ε_r, σ_i, τ).\n\n<strong>Cell-specific parameters</strong> (Radius, ε_r, σ_i, Threshold Vm) are edited individually\non each cell card and determine how each cell responds to the shared applied field.\n\n<strong>Pulses to Lysis N</strong> controls target-cell lysis timing only — it has no effect on the healthy cell.'"
+    >
+      <span class="field-panel__scope-chip field-panel__scope-chip--both">H + T</span>
+      <span class="field-panel__scope-sep">shared field</span>
+      <span class="field-panel__scope-chip field-panel__scope-chip--card">card params</span>
+      <span class="field-panel__scope-sep">cell-specific</span>
     </div>
 
     <!-- Thermal danger banner (IRE/Schwan mode only) -->
@@ -268,7 +311,14 @@ export default defineComponent({
       </div>
       <div class="field-panel__readout">
         <span class="field-panel__readout-value" v-tip="tipFreq">{{ freqDisplay }}</span>
-        <span class="field-panel__readout-sub" v-tip="tipFcSub">{{ freqSubDisplay }}</span>
+        <span
+          v-if="store.chartMode !== 'resonance'"
+          class="field-panel__optimal-btn"
+          :class="{ 'field-panel__optimal-btn--beyond': optimalBeyondRange }"
+          v-tip="tipOptimalBtn"
+          @click="snapToOptimal"
+        >{{ optimalFreqLabel }}</span>
+        <span v-else class="field-panel__readout-sub" v-tip="tipFcSub">{{ freqSubDisplay }}</span>
       </div>
     </div>
 
@@ -401,6 +451,43 @@ export default defineComponent({
     color: var(--color-text);
   }
 
+  &__scope-note {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: -0.45rem;  /* pull closer to title row */
+    cursor: help;
+  }
+
+  &__scope-chip {
+    font-family: var(--font-mono);
+    font-size: 0.5rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    padding: 0.08rem 0.32rem;
+    border-radius: 2px;
+
+    &--both {
+      background: rgba(0, 212, 255, 0.10);
+      color: var(--color-accent);
+      border: 1px solid rgba(0, 212, 255, 0.20);
+    }
+
+    &--card {
+      background: rgba(167, 139, 250, 0.10);
+      color: #a78bfa;
+      border: 1px solid rgba(167, 139, 250, 0.20);
+    }
+  }
+
+  &__scope-sep {
+    font-family: var(--font-mono);
+    font-size: 0.48rem;
+    color: var(--color-text-muted);
+    opacity: 0.55;
+    white-space: nowrap;
+  }
+
   &__safe-toggle {
     display: flex;
     gap: 0.3rem;
@@ -410,6 +497,31 @@ export default defineComponent({
     font-size: 0.55rem;
     opacity: 0.7;
     margin-left: 0.2rem;
+  }
+
+  &__scope-tag {
+    display: inline-block;
+    font-size: 0.44rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    padding: 0.04rem 0.25rem;
+    border-radius: 2px;
+    vertical-align: middle;
+    margin-left: 0.2rem;
+    position: relative;
+    top: -0.5px;
+
+    &--target {
+      background: rgba(255, 77, 109, 0.12);
+      color: #ff4d6d;
+      border: 1px solid rgba(255, 77, 109, 0.22);
+    }
+
+    &--healthy {
+      background: rgba(0, 212, 255, 0.10);
+      color: var(--color-accent);
+      border: 1px solid rgba(0, 212, 255, 0.20);
+    }
   }
 
   /* ── Thermal banner ──────────────────────────────────────────────── */
@@ -645,6 +757,28 @@ export default defineComponent({
     &--hyperthermic { color: var(--color-amber)  !important; }
     &--denaturing   { color: var(--color-orange) !important; }
     &--vaporizing   { color: var(--color-danger) !important; animation: state-blink 0.5s ease-in-out infinite; }
+  }
+
+  /* ── Optimal frequency snap button ──────────────────────────────── */
+  &__optimal-btn {
+    font-size: 0.62rem;
+    font-family: var(--font-mono);
+    color: var(--color-primary);
+    white-space: nowrap;
+    cursor: pointer;
+    opacity: 0.88;
+    transition: opacity 0.15s, color 0.15s;
+    border-bottom: 1px dotted rgba(99, 102, 241, 0.4);
+
+    &:hover {
+      opacity: 1;
+      color: #818cf8;
+    }
+
+    &--beyond {
+      color: var(--color-text-muted);
+      border-bottom-color: rgba(148, 163, 184, 0.3);
+    }
   }
 
   /* ── Disruption badges ───────────────────────────────────────────── */

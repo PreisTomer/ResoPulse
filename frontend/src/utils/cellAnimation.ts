@@ -545,14 +545,14 @@ export function setupBlobAnimation(
 
     // ── Aura rings ──────────────────────────────────────────────────────────
     const auraPulseSpeed = isVibrating ? 0.003 + impact * 0.006
-      : isNourishing ? 0.0015 + impact * 0.003 : 0.0012
+      : isNourishing ? 0.0018 + impact * 0.004 : 0.0012
     auraRings.forEach((ring, i) => {
       const pulse       = (Math.sin(elapsed * auraPulseSpeed - i * 0.9) + 1) / 2
       const baseOpacity = isVibrating ? 0.08 + impact * 0.35
-        : isNourishing ? 0.08 + impact * 0.22 : 0.04 + impact * 0.04
+        : isNourishing ? 0.14 + impact * 0.28 : 0.04 + impact * 0.04
       ring.attr('stroke', color)
-        .attr('stroke-opacity', baseOpacity * (0.4 + pulse * 0.6))
-        .attr('r', BASE_R + 14 + i * 13 + (isNourishing ? impact * 8 : isVibrating ? impact * 4 : 0))
+        .attr('stroke-opacity', baseOpacity * (0.45 + pulse * 0.55))
+        .attr('r', BASE_R + 14 + i * 13 + (isNourishing ? 4 + impact * 14 : isVibrating ? impact * 4 : 0))
     })
 
     // ─────────────────────────────────────────────────────────────────────

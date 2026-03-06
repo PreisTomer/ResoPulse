@@ -2,7 +2,6 @@
 import { defineComponent } from 'vue'
 import { useCellStore } from '../../stores/cellStore'
 import { DISRUPTION_WARN_THRESHOLD } from '../../constants/cellCard'
-import { computeSchwan } from '../../utils/physics'
 import { broadcastFieldParams } from '../../services/socket'
 import DisruptionBars from './DisruptionBars.vue'
 import ComparisonTable from './ComparisonTable.vue'
@@ -124,28 +123,7 @@ export default defineComponent({
     },
 
     optimalFreqResult(): { khz: number; sel: number } {
-      if (this.isResonanceTarget) {
-        const t = this.store.target as { resonantFreqGHz?: number }
-        const khz = (t.resonantFreqGHz ?? 0) * 1e6
-        return { khz, sel: 99.9 }
-      }
-      const sigma_e = this.store.effectiveSigmaE
-      const field   = this.store.fieldIntensity
-      const hThr    = this.store.healthy.thresholdVoltage
-      const tThr    = this.store.target.thresholdVoltage
-      let maxSel = -Infinity, optKhz = 10
-      const logMin = Math.log10(10)
-      const logMax  = Math.log10(500_000)
-      for (let i = 0; i < 300; i++) {
-        const khz = Math.pow(10, logMin + (logMax - logMin) * i / 299)
-        const hVm = computeSchwan(this.store.healthy, khz, field, sigma_e)
-        const tVm = computeSchwan(this.store.target,  khz, field, sigma_e)
-        const hDr = hVm / hThr
-        const tDr = tVm / tThr
-        const sel  = hDr > 0 ? tDr / hDr : 0
-        if (sel > maxSel) { maxSel = sel; optKhz = khz }
-      }
-      return { khz: optKhz, sel: Math.max(0, maxSel) }
+      return this.store.optimalFreqResult
     },
 
     optimalNote(): string {

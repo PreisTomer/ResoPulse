@@ -83,9 +83,12 @@ export default defineComponent({
       </div>
     </div>
 
-    <!-- Row 8: Pulses to Lysis N (pulsed only) -->
+    <!-- Row 8: Pulses to Lysis N (pulsed only) — target cell lysis timing only -->
     <div v-if="store.waveform === 'pulsed'" class="field-panel__row field-panel__row--compact-readout">
-      <span class="field-panel__row-label" v-tip="tipLysisN">Pulses N</span>
+      <span
+        class="field-panel__row-label"
+        v-tip="tipLysisN + '\n<span class=\'tip-note\'>Affects target cell lysis countdown only.\nHas no effect on the healthy cell disruption model.</span>'"
+      >Pulses N <span class="field-panel__scope-tag field-panel__scope-tag--target">T</span></span>
       <div class="field-panel__track">
         <input
           class="field-panel__slider"
