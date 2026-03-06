@@ -79,6 +79,10 @@ export default defineComponent({
       return ['cancer', 'bacteria', 'virus']
     },
 
+    healthyLabelShort(): string {
+      return this.store.healthy.label.replace(/^Healthy\s+/i, '')
+    },
+
     healthyFcSetup(): string {
       const fc = this.store.healthyFc
       if (fc >= 1000) return `${(fc / 1000).toFixed(1)} MHz`
@@ -189,10 +193,8 @@ export default defineComponent({
     <!-- ── Combined header bar ───────────────────────────────────── -->
     <div class="experiment__header">
 
-      <!-- Far left: brand + session name -->
+      <!-- Far left: session name -->
       <div class="experiment__header-left">
-        <span class="experiment__brand">◎ BioResonance</span>
-        <span class="experiment__brand-sep">·</span>
         <input
           v-model="expStore.sessionName"
           class="experiment__session-name"
@@ -211,9 +213,9 @@ export default defineComponent({
             @click="toggleHealthyPicker"
             v-tip="'Healthy baseline · R ' + store.healthy.radius + ' µm · fc ≈ ' + healthyFcSetup"
           >
-            <div class="experiment__cell-badge-label">HEALTHY BASELINE</div>
             <div class="experiment__cell-badge-row" :class="{ 'experiment__cell-badge-row--open': healthyPickerOpen }">
-              <span class="experiment__cell-badge-selected experiment__cell-badge-selected--healthy">{{ store.healthy.label }}</span>
+              <span class="experiment__cell-badge-type">Healthy ·</span>
+              <span class="experiment__cell-badge-selected experiment__cell-badge-selected--healthy">{{ healthyLabelShort }}</span>
               <span class="experiment__cell-badge-caret" :class="{ 'experiment__cell-badge-caret--open': healthyPickerOpen }">▼</span>
             </div>
           </button>
@@ -241,8 +243,8 @@ export default defineComponent({
             @click="toggleTargetPicker"
             v-tip="'Target cell · R ' + store.target.radius + ' µm · fc ≈ ' + targetFcSetup"
           >
-            <div class="experiment__cell-badge-label">TARGET CELL</div>
             <div class="experiment__cell-badge-row" :class="{ 'experiment__cell-badge-row--open': targetPickerOpen }">
+              <span class="experiment__cell-badge-type">Target ·</span>
               <span class="experiment__cell-badge-selected experiment__cell-badge-selected--target">{{ store.target.label }}</span>
               <span class="experiment__cell-badge-caret" :class="{ 'experiment__cell-badge-caret--open': targetPickerOpen }">▼</span>
             </div>
@@ -281,20 +283,6 @@ export default defineComponent({
 
       <!-- Far right: mode toggle + connection status -->
       <div class="experiment__header-right">
-        <div class="experiment__mode-toggle" v-tip="$t('exp.chartModeTip')">
-          <button
-            class="experiment__mode-btn"
-            :class="{ 'experiment__mode-btn--active': store.chartMode === 'schwan' }"
-            @click="store.setChartMode('schwan')"
-          >{{ $t('slider.ireMode') }}</button>
-          <button
-            class="experiment__mode-btn"
-            :class="{ 'experiment__mode-btn--active': store.chartMode === 'resonance' }"
-            :disabled="store.targetCellCategory === 'mammalian'"
-            :title="store.targetCellCategory === 'mammalian' ? 'Resonance mode applies only to bacteria and virus targets.' : ''"
-            @click="store.setChartMode('resonance')"
-          >{{ $t('slider.resonanceMode') }}</button>
-        </div>
         <span
           class="experiment__chip"
           :class="socketConnected ? 'experiment__chip--connected' : 'experiment__chip--local'"
@@ -377,20 +365,6 @@ export default defineComponent({
     flex-shrink: 0;
   }
 
-  &__brand {
-    font-family: var(--font-mono);
-    font-size: 0.68rem;
-    color: var(--color-primary);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    white-space: nowrap;
-  }
-
-  &__brand-sep {
-    color: var(--color-border);
-    font-size: 0.75rem;
-  }
-
   &__session-name {
     background: transparent;
     border: none;
@@ -451,8 +425,6 @@ export default defineComponent({
 
   &__cell-badge {
     display: inline-flex;
-    flex-direction: column;
-    gap: 0.22rem;
     padding: 0;
     background: transparent;
     border: none;
@@ -465,12 +437,13 @@ export default defineComponent({
     }
   }
 
-  &__cell-badge-label {
+  &__cell-badge-type {
     font-family: var(--font-mono);
     font-size: 0.56rem;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
+    letter-spacing: 0.08em;
     color: var(--color-text-muted);
+    white-space: nowrap;
+    flex-shrink: 0;
   }
 
   &__cell-badge-row {
@@ -523,46 +496,6 @@ export default defineComponent({
     flex-shrink: 0;
 
     &--open { transform: rotate(180deg); }
-  }
-
-  &__mode-toggle {
-    display: flex;
-    border: 1px solid var(--color-border);
-    border-radius: 4px;
-    overflow: hidden;
-  }
-
-  &__mode-btn {
-    background: transparent;
-    border: none;
-    color: var(--color-text-muted);
-    font-family: var(--font-mono);
-    font-size: 0.6rem;
-    letter-spacing: 0.08em;
-    padding: 0.3rem 0.75rem;
-    cursor: pointer;
-    transition: background 0.15s, color 0.15s;
-    white-space: nowrap;
-
-    &:hover {
-      color: var(--color-text);
-      background: rgba(255,255,255,0.05);
-    }
-
-    &--active {
-      background: rgba(0, 212, 255, 0.12);
-      color: var(--color-primary);
-    }
-
-    & + & {
-      border-left: 1px solid var(--color-border);
-    }
-
-    &:disabled {
-      opacity: 0.32;
-      cursor: not-allowed;
-      pointer-events: auto;
-    }
   }
 
   /* ── Preset pickers ──────────────────────────────────────────── */
@@ -685,7 +618,7 @@ export default defineComponent({
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(420px, 520px);
     gap: 1.25rem;
-    align-items: start;
+    align-items: stretch;
   }
 
   &__cells {
@@ -697,6 +630,8 @@ export default defineComponent({
 
   &__field {
     min-width: 0;
+    display: flex;
+    flex-direction: column;
   }
 }
 

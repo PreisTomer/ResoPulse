@@ -208,7 +208,11 @@ export default defineComponent({
       v-if="store.chartMode !== 'resonance' && thermalDangerLevel !== 'safe'"
       class="field-panel__thermal-banner"
       :class="`field-panel__thermal-banner--${thermalDangerLevel}`"
-      v-tip="''"
+      v-tip="thermalDangerLevel === 'vaporizing'
+        ? '<strong>Vaporizing Regime — T ≥ 100°C</strong>\nWater boiling · rapid steam-pressure lysis\nReduce duty cycle or field intensity immediately'
+        : thermalDangerLevel === 'denaturing'
+          ? '<strong>Protein Denaturation — T ≥ 60°C</strong>\nIrreversible protein damage onset\n(collagen ~60°C · albumin ~68°C)\nReduce duty cycle or field intensity'
+          : '<strong>Hyperthermic Regime — T ≥ 42°C</strong>\nIAHT thermal damage onset\nMonitor and reduce duty cycle if sustained'"
     >
       <span class="field-panel__thermal-icon">{{ thermalDangerLevel === 'vaporizing' ? '⚡' : '⚠' }}</span>
       <span class="field-panel__thermal-text">
@@ -379,6 +383,7 @@ export default defineComponent({
   border-radius: var(--radius);
   padding: 0.85rem 1.25rem;
   container-type: inline-size;
+  flex: 1;  /* fills __field column height → matches cell card height */
 
   &__title-row {
     display: flex;
@@ -456,6 +461,12 @@ export default defineComponent({
 
     &--medium {
       grid-template-columns: 7.5rem 1fr auto;
+    }
+
+    /* Advanced rows: shorter label column + narrower readout → more slider room */
+    &--compact-readout {
+      grid-template-columns: 5.5rem 1fr auto;
+      .field-panel__readout { min-width: 6rem; }
     }
 
     &--hyperthermic .field-panel__slider {
@@ -577,8 +588,8 @@ export default defineComponent({
     &::-webkit-slider-thumb {
       -webkit-appearance: none;
       appearance: none;
-      width: 13px;
-      height: 13px;
+      width: 15px;
+      height: 15px;
       border-radius: 50%;
       background: var(--color-text-heading);
       border: 2px solid var(--color-surface);
@@ -590,8 +601,8 @@ export default defineComponent({
     }
 
     &::-moz-range-thumb {
-      width: 13px;
-      height: 13px;
+      width: 15px;
+      height: 15px;
       border-radius: 50%;
       background: var(--color-text-heading);
       border: 2px solid var(--color-surface);

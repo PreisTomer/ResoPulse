@@ -672,6 +672,7 @@ ${formulaLine}
     display: flex;
     align-items: flex-start;
     gap: 0.85rem;
+    min-height: 5.5rem;  /* ensures canvas/params start at same Y in both cards */
   }
 
   &__icon {

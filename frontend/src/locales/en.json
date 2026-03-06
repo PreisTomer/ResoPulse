@@ -70,7 +70,6 @@
   },
   "exp": {
     "renameSession": "Click to rename session",
-    "chartModeTip": "Switch between IRE/Schwan transmembrane potential model and Acoustic Resonance capsid/cell-wall disruption model",
     "connected": "Connected",
     "local": "Local",
     "connectedTip": "<strong>Backend Connected</strong>\nField params sync in real time\nacross all connected clients via Socket.IO",
