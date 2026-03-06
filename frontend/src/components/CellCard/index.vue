@@ -14,7 +14,6 @@ import {
   DISRUPTION_WARN_THRESHOLD,
   HEALTHY_CRITICAL_THRESHOLD,
   HEALTHY_APPROACHING_THRESHOLD,
-  NOURISHING_THRESHOLD,
   VIBRATING_MIN_THRESHOLD,
   TEMP_WARN_CELSIUS,
   TEMP_DENATURING,
@@ -25,9 +24,10 @@ import {
 import { setupBlobAnimation, setupOscilloscope, spawnFragment } from '../../utils/cellAnimation'
 import CellHeader from './CellHeader.vue'
 import CellParamsPanel from './CellParamsPanel.vue'
+import BiostimPanel from './BiostimPanel.vue'
 
 export default defineComponent({
-  components: { CellHeader, CellParamsPanel },
+  components: { CellHeader, CellParamsPanel, BiostimPanel },
 
   props: {
     type: {
@@ -188,7 +188,7 @@ Thresholds: 42°C hyperthermic · 60°C denaturing · 100°C vaporizing${warnLin
     tipState(): string {
       const labels: Record<string, string> = {
         stable:      'stable — no significant membrane or thermal response',
-        nourishing:  'nourishing — sub-threshold oscillation, membrane intact',
+        nourishing:  '<span class="tip-ok">nourishing — sub-threshold Ca²⁺ stimulation window (DR 8–50%)\nMembrane intact · PIEZO1 + voltage-gated Ca²⁺ channels activated\nOptimal biomodulation at DR ≈ 20–40% of lysis threshold</span>',
         approaching: '<span class="tip-warn">⚠ approaching — membrane stress OR T ≥ 42°C · ion channel perturbation onset</span>',
         'rev-ep':    '<span class="tip-warn">⚡ reversible EP window (50–85%) — membrane transiently permeabilized each pulse.\nPores open and re-seal after the field is removed.\nThis is the drug/gene delivery window — cells survive.\nSustained or increasing field progresses to irreversible lysis.</span>',
         critical:    '<span class="tip-warn">⚡ critical — Vm >85% threshold OR T ≥ 60°C (protein denaturation) · reduce field / duty cycle immediately</span>',
@@ -245,6 +245,23 @@ ${formulaLine}
       const t = this.formatLysisTime(this.store.lysisDelayMs)
       return `${n} pulse${n === 1 ? '' : 's'} — est. ${t}`
     },
+
+    // ── Biomodulation metrics (healthy cell only) ──────────────────────────
+    // Visible when DR < 0.45 — the stimulatory sub-threshold window.
+    // All three getters delegate to cellStore computations that share the same
+    // Schwan physics used for the disruption model on the target cell.
+    showBiostim(): boolean {
+      return this.type === 'healthy'
+        && this.disruptionRatio < 0.45
+        && this.cellState !== 'lysed'
+        && this.cellState !== 'lysing'
+    },
+    biostimStimIndex():    number { return this.store.healthyStimIndex },
+    biostimMechTransd():   number { return this.store.healthyMechTransductionEff },
+    biostimMildThermal():  number { return this.store.healthyMildThermalActivation },
+    biostimScore():        number { return this.store.healthyBiomodScore },
+    biostimFcKHz():        number { return this.store.healthyFc },
+    biostimSteadyTemp():   number { return this.store.healthySteadyStateTemp },
   },
 
   watch: {
@@ -348,10 +365,13 @@ ${formulaLine}
         const ORDER: CellState[] = ['stable', 'approaching', 'rev-ep', 'critical']
         this.cellState = ORDER[Math.max(ORDER.indexOf(elState), ORDER.indexOf(thermalFloor))] as CellState
       } else {
+        // 'nourishing': DR > 8% (VIBRATING_MIN_THRESHOLD) — sub-threshold membrane oscillations
+        // activate PIEZO1 / Ca²⁺ channels; SI peaks at ~22% of lysis threshold.
+        // 'stable': DR ≤ 8% — field too weak for significant membrane coupling.
         const elState: CellState =
           impact >= HEALTHY_CRITICAL_THRESHOLD      ? 'critical'
           : impact >= HEALTHY_APPROACHING_THRESHOLD ? 'approaching'
-          : impact > NOURISHING_THRESHOLD            ? 'nourishing'
+          : impact > VIBRATING_MIN_THRESHOLD        ? 'nourishing'
           : 'stable'
         const ORDER: CellState[] = ['stable', 'nourishing', 'approaching', 'critical']
         this.cellState = ORDER[Math.max(ORDER.indexOf(elState), ORDER.indexOf(thermalFloor))] as CellState
@@ -493,6 +513,31 @@ ${formulaLine}
 
       <div ref="oscCanvas" class="cell-card__osc-canvas"></div>
 
+      <!-- Nourishing strip — healthy cell in active biomodulation window (DR 8–45%) -->
+      <div
+        v-if="type === 'healthy' && cellState === 'nourishing'"
+        class="cell-card__nourishing-strip"
+        v-tip="tipState"
+      >
+        <span class="cell-card__warn-icon">⊕</span>
+        <span class="cell-card__warn-text">NOURISHING · BMS {{ (biostimScore * 100).toFixed(0) }}%</span>
+        <span class="cell-card__warn-pct">{{ (disruptionRatio * 100).toFixed(0) }}%</span>
+      </div>
+
+      <!-- Biomodulation panel — healthy cell only, sub-threshold regime (DR < 45%) -->
+      <BiostimPanel
+        v-if="showBiostim"
+        :stim-index="biostimStimIndex"
+        :mech-transd-eff="biostimMechTransd"
+        :mild-thermal="biostimMildThermal"
+        :biomod-score="biostimScore"
+        :disruption-ratio="disruptionRatio"
+        :freq-k-hz="store.currentBroadcastFrequency"
+        :fc-k-hz="biostimFcKHz"
+        :steady-state-temp="biostimSteadyTemp"
+        :class="{ 'cell-card__biostim--nourishing': cellState === 'nourishing' }"
+      />
+
       <!-- Reversible EP strip — target cell 50–85% disruption (pores open/re-seal) -->
       <div
         v-if="type === 'target' && cellState === 'rev-ep'"
@@ -576,6 +621,16 @@ ${formulaLine}
   50%       { box-shadow: 0 0 42px rgba(251, 130, 20, 0.6); }
 }
 
+@keyframes nourishing-pulse {
+  0%, 100% { box-shadow: 0 0 28px rgba(0, 212, 255, 0.22), 0 0 0 1px rgba(0, 212, 255, 0.10); }
+  50%       { box-shadow: 0 0 52px rgba(0, 212, 255, 0.42), 0 0 0 1px rgba(0, 212, 255, 0.22); }
+}
+
+@keyframes nourish-text-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.65; }
+}
+
 @keyframes state-blink {
   0%, 100% { opacity: 1; }
   50%       { opacity: 0.35; }
@@ -622,7 +677,10 @@ ${formulaLine}
   }
 
   /* ── State modifiers ───────────────────────────────────────────────── */
-  &--nourishing { box-shadow: 0 0 28px rgba(0, 212, 255, 0.18); }
+  &--nourishing {
+    animation: nourishing-pulse 2.8s ease-in-out infinite;
+    border-left-color: var(--color-accent) !important;
+  }
 
   /* Reversible EP window (target, 50–85%): amber glow — permeabilized but survivable */
   &--rev-ep.cell-card--target {
@@ -791,6 +849,92 @@ ${formulaLine}
     width: 2rem;
     text-align: right;
     flex-shrink: 0;
+  }
+
+  /* ── Biomodulation panel (healthy cell, sub-threshold) ─────────────── */
+  &__biostim {
+    background: rgba(0, 212, 255, 0.045);
+    border: 1px solid rgba(0, 212, 255, 0.13);
+    border-radius: var(--radius);
+    padding: 0.5rem 0.65rem;
+    cursor: help;
+    margin: 0 0.15rem;
+    transition: border-color 0.3s, background 0.3s;
+
+    &--nourishing {
+      background: rgba(0, 212, 255, 0.08);
+      border-color: rgba(0, 212, 255, 0.30);
+    }
+
+    &-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.4rem;
+    }
+
+    &-title {
+      font-size: 0.6rem;
+      font-family: var(--font-mono);
+      color: var(--color-accent);
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      opacity: 0.80;
+    }
+
+    &-score {
+      font-size: 0.68rem;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      transition: color 0.3s;
+
+      &--low    { color: var(--color-accent); opacity: 0.40; }
+      &--medium { color: var(--color-accent); opacity: 0.75; }
+      &--high   { color: #39ff14; }
+      &--active { animation: nourish-text-pulse 2.2s ease-in-out infinite; }
+    }
+
+    &-bars { display: flex; flex-direction: column; gap: 0.22rem; }
+
+    &-row {
+      display: grid;
+      grid-template-columns: 4.8rem 1fr 2.2rem;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    &-label {
+      font-size: 0.54rem;
+      font-family: var(--font-mono);
+      color: var(--color-text-muted);
+      white-space: nowrap;
+      opacity: 0.80;
+    }
+
+    &-track {
+      height: 3px;
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    &-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width 0.25s ease;
+
+      &--si  { background: var(--color-accent); }
+      &--mte { background: #7c6cff; }
+      &--ma  { background: #fbbf24; }
+    }
+
+    &-val {
+      font-size: 0.54rem;
+      font-family: var(--font-mono);
+      color: var(--color-text-muted);
+      text-align: right;
+      opacity: 0.75;
+    }
   }
 
   /* ── State colors ──────────────────────────────────────────────────── */
@@ -992,6 +1136,24 @@ ${formulaLine}
     line-height: 0;
 
     svg { display: block; width: 100%; height: auto; }
+  }
+
+  /* ── Nourishing strip (healthy, DR 8–45%) ──────────────────────────── */
+  &__nourishing-strip {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.32rem 0.65rem;
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-accent);
+    background: rgba(0, 212, 255, 0.06);
+    border-top: 1px solid rgba(0, 212, 255, 0.22);
+    border-bottom: 1px solid rgba(0, 212, 255, 0.12);
+    animation: nourish-text-pulse 2.8s ease-in-out infinite;
+    cursor: help;
   }
 
   /* ── Reversible EP strip (target, 50–85%) ──────────────────────────── */

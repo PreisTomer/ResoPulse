@@ -427,6 +427,141 @@ export const useCellStore = defineStore('cell', {
       const minCp = Math.min(this.healthy.specificHeatCapacity, this.target.specificHeatCapacity)
       return Math.min(1, (5 * LAMBDA * minCp) / maxSAR)
     },
+
+    // ── Healthy-cell biomodulation metrics ────────────────────────────────────
+    // These model the constructive/stimulatory effects of sub-threshold EM fields
+    // on healthy mammalian cells — distinct from the electroporation/disruption model
+    // applied to target (cancer / pathogen) cells.
+
+    /**
+     * Sub-threshold stimulation index (SI) for the healthy cell [0–1].
+     *
+     * When the applied field produces a Vm that is 5–45% of the electroporation
+     * threshold, sub-threshold membrane oscillations activate mechanosensitive and
+     * voltage-gated Ca²⁺ channels (PIEZO1, L-type VGCC) without breaching the
+     * membrane. Peak Ca²⁺ influx and downstream growth-factor signalling occur
+     * at ~20–40% of the lysis threshold.
+     *
+     * Model: SI = 4·r·(1−r), quadratic bell peaking at r = 0.5 → DR ≈ 22.5%
+     *   where r = clamp(healthyDisruptionRatio / 0.45, 0, 1)
+     * SI → 0 when DR < 5% (too weak) or DR > 45% (membrane stress begins).
+     *
+     * Refs: Pilla AA (2006) JRSE 8:72; Lee DH et al. (2018) Sci Rep 8:8184;
+     *       Bhatt DL et al. (1990) Bioelectromagnetics 11:3–15.
+     */
+    healthyStimIndex(): number {
+      const r = Math.min(1, this.healthyDisruptionRatio / 0.45)
+      return Math.max(0, 4 * r * (1 - r))
+    },
+
+    /**
+     * Mechanotransduction coupling efficiency (MTE) for the healthy cell [0–1].
+     *
+     * Quantifies how effectively the applied RF frequency couples to the plasma
+     * membrane for sub-threshold mechanostimulation (distinct from ablative IRE).
+     * Uses the Schwan frequency roll-off factor: MTE = 1/√(1 + (f/fc)²).
+     *
+     *   f ≪ fc : MTE ≈ 1.0 — full quasi-DC coupling; optimal for PEMF and low-RF
+     *            mechanostimulation (LITUS equivalent at MHz in soft tissue).
+     *   f = fc : MTE = 0.707 — half-power point; membrane partially shields cytoplasm.
+     *   f ≫ fc : MTE → 0   — field bypasses membrane (ωτ ≫ 1); no Vm coupling.
+     *
+     * For RF biomodulation (Schwan model), f < fc/3 maximises coupling efficiency.
+     * LITUS (1 MHz therapeutic ultrasound) operates via acoustic pressure / stable
+     * cavitation — a distinct mechanism not modelled here.
+     *
+     * Refs: Ikai Y et al. (2008) J Orthop Sci 13:550; Shirane R et al. (2001)
+     *       Ultrasound Med Biol 27:563.
+     */
+    healthyMechTransductionEff(): number {
+      const f  = (this as unknown as CellStoreState).currentBroadcastFrequency  // kHz
+      const fc = this.healthyFc                                                  // kHz
+      return 1 / Math.sqrt(1 + (f / fc) ** 2)
+    },
+
+    /**
+     * Mild thermal activation score (MA) for the healthy cell [0–1].
+     *
+     * Mild, SAR-driven hyperthermia in the 37–42°C window upregulates healthy
+     * cell metabolism via:
+     *   - Q₁₀ ≈ 1.07 enzyme kinetics: +7%/°C in the 37–41°C range (van't Hoff rule)
+     *   - HSP70 cytoprotective expression: peak induction at 38–41°C (Morimoto 1998)
+     *   - Increased membrane fluidity → enhanced receptor mobility and nutrient transport
+     *
+     * Model: piecewise bell centred on 40°C:
+     *   T ≤ 37°C : 0    — homeostatic baseline; no SAR-driven thermal benefit
+     *   37–41°C  : (T − 37) / 4  — linear ramp (+25% per °C over baseline)
+     *   41–42°C  : 42 − T        — rapid fall as heat-stress onset approaches
+     *   > 42°C   : 0    — hyperthermic damage (IAHT limit); NOT beneficial
+     *
+     * Note: the thermal simulation (Newton cooling) reaches T_ss at steady state.
+     * MA is computed from healthySteadyStateTemp, NOT the live tracked healthyTemp.
+     *
+     * Refs: Lepock JR (2003) Int J Hyperthermia 19:252; Morimoto RI (1998) Genes Dev 12:3788.
+     */
+    healthyMildThermalActivation(): number {
+      const T = this.healthySteadyStateTemp
+      if (T <= 37) return 0
+      if (T <= 41) return (T - 37) / 4
+      if (T <= 42) return 42 - T
+      return 0
+    },
+
+    /**
+     * Optimal RF frequency and selectivity for the current cell pair and field conditions.
+     * 300-point log-space scan over 10 kHz – 500 MHz (Schwan/IRE mode).
+     * For resonance-targeted pathogens (virus/bacteria with resonantFreqGHz), returns
+     * the resonant frequency directly at TI = 99.9.
+     * Shared by FrequencySlider (⭐ snap button) and SelectivityPanel (optimal note).
+     */
+    optimalFreqResult(): { khz: number; sel: number } {
+      const state  = this as unknown as CellStoreState
+      const target = state.target as CellConfig & { resonantFreqGHz?: number }
+      const cat    = this.targetCellCategory
+      if ((cat === 'virus' || cat === 'bacteria') && target.resonantFreqGHz && state.chartMode === 'schwan') {
+        return { khz: target.resonantFreqGHz * 1e6, sel: 99.9 }
+      }
+      const sigma_e = this.effectiveSigmaE
+      const field   = state.fieldIntensity
+      const hThr    = state.healthy.thresholdVoltage
+      const tThr    = state.target.thresholdVoltage
+      let maxSel = -Infinity, optKhz = 10
+      const logMin = Math.log10(10), logMax = Math.log10(500_000)
+      for (let i = 0; i < 300; i++) {
+        const khz = Math.pow(10, logMin + (logMax - logMin) * i / 299)
+        const hVm = computeSchwan(state.healthy, khz, field, sigma_e)
+        const tVm = computeSchwan(state.target,  khz, field, sigma_e)
+        const hDr = hVm / hThr, tDr = tVm / tThr
+        const sel  = hDr > 0 ? tDr / hDr : 0
+        if (sel > maxSel) { maxSel = sel; optKhz = khz }
+      }
+      return { khz: optKhz, sel: Math.max(0, maxSel) }
+    },
+
+    /**
+     * Composite Biomodulation Score (BMS) for the healthy cell [0–1].
+     *
+     * Weighted combination of three independent stimulatory mechanisms:
+     *   BMS = 0.55 × SI + 0.25 × MTE + 0.20 × MA
+     *
+     * Weighting rationale:
+     *   SI  (55%) — dominant: direct Vm-driven Ca²⁺ signalling is the primary
+     *               documented mechanism for EM biomodulation (Pilla 2006)
+     *   MTE (25%) — modulates how efficiently the carrier frequency delivers Vm
+     *               to the membrane (Schwan coupling; falls above fc)
+     *   MA  (20%) — thermal bonus; mild SAR can augment metabolic activity when
+     *               T_ss is carefully controlled in the 38–41°C window
+     *
+     * BMS > 0.30 is considered a meaningful stimulatory regime in this model.
+     * This is an approximate research indicator, not a validated clinical index.
+     */
+    healthyBiomodScore(): number {
+      return (
+        0.55 * this.healthyStimIndex +
+        0.25 * this.healthyMechTransductionEff +
+        0.20 * this.healthyMildThermalActivation
+      )
+    },
   },
 
   actions: {
