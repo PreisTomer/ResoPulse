@@ -2,7 +2,7 @@
  * Shared display formatters used across FrequencySlider, CellCard, SelectivityPanel, etc.
  */
 
-import { UNIT } from '../constants/units'
+import { UNIT } from '@/constants/units'
 
 /**
  * Format a frequency value [kHz] to a human-readable string.

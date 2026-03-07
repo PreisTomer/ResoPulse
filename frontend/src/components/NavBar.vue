@@ -34,7 +34,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
-import { useCellStore } from '../stores/cellStore'
+import { useCellStore } from '@/stores/cellStore'
 
 export default defineComponent({
   setup() {

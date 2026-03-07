@@ -6,9 +6,9 @@
  * Functions that render i18n strings receive a `t` translator.
  */
 
-import { MEDIA } from '../constants/media'
-import { CHART_MODE, CELL_CATEGORY, THERMAL_LEVEL } from '../constants/strings'
-import type { MediumKey } from '../types/media'
+import { MEDIA } from '@/constants/media'
+import { CHART_MODE, CELL_CATEGORY, THERMAL_LEVEL } from '@/constants/strings'
+import type { MediumKey } from '@/types/media'
 
 /** i18n translator signature (matches vue-i18n's `useI18n().t`) */
 type T = (key: string, params?: Record<string, unknown>) => string

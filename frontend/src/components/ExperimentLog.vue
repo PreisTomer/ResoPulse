@@ -48,7 +48,7 @@
           <tr
             v-for="e in entries"
             :key="e.id"
-            :class="{ 'exp-log__row--lysis': e.event === 'lysis' }"
+            :class="{ 'exp-log__row--lysis': e.event === LOG_EVENT.LYSIS }"
           >
             <td class="exp-log__td-id">{{ e.id }}</td>
             <td class="exp-log__td-mono">{{ e.timestamp }}</td>
@@ -74,7 +74,7 @@
             >{{ e.selectivity.toFixed(2) }}</td>
             <td
               class="exp-log__td-event"
-              v-tip="e.event === 'lysis' ? '<span class=\'tip-warn\'>Lysis event</span>\nTarget membrane was irreversibly disrupted\n(auto-logged by system)' : 'Manual reading\nLogged by user at this timestamp'"
+              v-tip="e.event === LOG_EVENT.LYSIS ? '<span class=\'tip-warn\'>Lysis event</span>\nTarget membrane was irreversibly disrupted\n(auto-logged by system)' : 'Manual reading\nLogged by user at this timestamp'"
             >{{ e.event }}</td>
           </tr>
           <tr v-if="!hasEntries">
@@ -88,14 +88,16 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
-import { useExperimentStore } from '../stores/experimentStore'
-import { useCellStore } from '../stores/cellStore'
+import { useExperimentStore } from '@/stores/experimentStore'
+import { useCellStore } from '@/stores/cellStore'
+import { LOG_EVENT } from '@/constants/strings'
 
 export default defineComponent({
   setup() {
     return {
       expStore: useExperimentStore(),
       cellStore: useCellStore(),
+      LOG_EVENT,
     }
   },
 
@@ -108,7 +110,7 @@ export default defineComponent({
 
   methods: {
     logReading() {
-      this.expStore.logReading(this.cellStore as Parameters<typeof this.expStore.logReading>[0], 'manual')
+      this.expStore.logReading(this.cellStore as Parameters<typeof this.expStore.logReading>[0], LOG_EVENT.MANUAL)
     },
     exportCSV()  { this.expStore.exportCSV() },
     clearLog()   { this.expStore.clearLog() },

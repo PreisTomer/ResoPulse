@@ -8,7 +8,7 @@
  *  - Acoustic/mechanical resonance disruption for viral capsids and bacterial
  *    cell walls (Tsen et al. 2007; Dykeman & Sankey 2008)
  */
-import type { CellConfig } from '../types/cell'
+import type { CellConfig } from '@/types/cell'
 
 // ── Physical constants ────────────────────────────────────────────────────────
 export const EPSILON_0 = 8.854187817e-12 // permittivity of free space [F/m]

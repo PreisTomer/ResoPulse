@@ -1,11 +1,11 @@
 import { defineStore } from 'pinia'
 import { cloneDeep } from 'lodash'
-import { cellConfigs } from '../mockData'
-import { MEDIA } from '../constants/media'
-import type { CellConfig } from '../types/cell'
-import type { MediumKey } from '../types/media'
-import { computeSchwan, computeSAR, computeFc, computeTau, computeResonantDisruption, computeNuclearVm, computePulseStepResponse, computeSkinDepthMm } from '../utils/physics'
-import { CELL_CATEGORY, CHART_MODE, WAVEFORM } from '../constants/strings'
+import { cellConfigs } from '@/mockData'
+import { MEDIA } from '@/constants/media'
+import type { CellConfig } from '@/types/cell'
+import type { MediumKey } from '@/types/media'
+import { computeSchwan, computeSAR, computeFc, computeTau, computeResonantDisruption, computeNuclearVm, computePulseStepResponse, computeSkinDepthMm } from '@/utils/physics'
+import { CELL_CATEGORY, CHART_MODE, WAVEFORM, CELL_TYPE } from '@/constants/strings'
 
 const LAMBDA = 0.02     // Newton cooling rate constant [1/s]
 const TEMP_SIMULATION_CAP = 150  // °C — hard ceiling; cells are destroyed long before this
@@ -586,8 +586,7 @@ export const useCellStore = defineStore('cell', {
     },
 
     updateCellParam(cellType: 'healthy' | 'target', key: string, value: number) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ;(this[cellType] as any)[key] = value
+      ;(this[cellType] as unknown as Record<string, number>)[key] = value
     },
 
     startSession() {
@@ -641,9 +640,9 @@ export const useCellStore = defineStore('cell', {
     },
 
     resetCell(cellType: 'healthy' | 'target') {
-      const defaultCfg = cellType === 'healthy' ? cellConfigs[0] : cellConfigs[1]
+      const defaultCfg = cellType === CELL_TYPE.HEALTHY ? cellConfigs[0] : cellConfigs[1]
       this[cellType] = cloneDeep(defaultCfg) as CellConfig
-      if (cellType === 'healthy') this.healthyTemp = 37
+      if (cellType === CELL_TYPE.HEALTHY) this.healthyTemp = 37
       else this.targetTemp = 37
       this.resetCounter++
     },

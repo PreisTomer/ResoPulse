@@ -3,7 +3,7 @@
  * All Schwan model parameters are approximate values from bioelectromagnetics literature.
  * Bacterial and viral values use a spherical single-shell approximation.
  */
-import type { CellConfig } from '../types/cell'
+import type { CellConfig } from '@/types/cell'
 
 export type CellGroup = 'reference' | 'cancer' | 'bacteria' | 'virus'
 
@@ -17,7 +17,7 @@ export interface CellPreset extends CellConfig {
 }
 
 // GROUP_COLORS defined in theme/colors.ts — re-exported here for back-compat
-import { GROUP_COLORS as _GROUP_COLORS } from '../theme/colors'
+import { GROUP_COLORS as _GROUP_COLORS } from '@/theme/colors'
 export const GROUP_COLORS: Record<CellGroup, string> = _GROUP_COLORS
 
 export const GROUP_LABELS: Record<CellGroup, string> = {

@@ -3,9 +3,9 @@
  * Pure functions — no Vue component dependency.
  */
 
-import { CELL_STATE, CELL_TYPE, CHART_MODE, WAVEFORM } from '../constants/strings'
+import { CELL_STATE, CELL_TYPE, CHART_MODE, WAVEFORM } from '@/constants/strings'
 import { computeTau } from './physics'
-import type { CellConfig } from '../types/cell'
+import type { CellConfig } from '@/types/cell'
 
 export function formatLysisTimeLocal(ms: number): string {
   return ms < 1000 ? `${ms}ms` : `${(ms / 1000).toFixed(1)}s`
@@ -89,6 +89,13 @@ export function tipState(opts: {
   return `<strong>Cell State</strong>
 ${labels[cellState] ?? cellState}
 ${transitions}`
+}
+
+export function tipNuclearBar(): string {
+  return `<strong>Nuclear Envelope Disruption (Double-Shell Model)</strong>
+Vm_nuc / V_threshold_nuc
+Bandpass peak at f_peak = 1/(2π√(τ_pm·τ_ne))
+Kotnik &amp; Miklavcic (2006, Biophys J 90:480)`
 }
 
 export function tipDisruption(opts: {

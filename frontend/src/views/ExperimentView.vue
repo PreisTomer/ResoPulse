@@ -129,7 +129,7 @@
       </div>
 
       <!-- Row 2: Chart (full width) -->
-      <FrequencyResponseChart v-if="store.chartMode === 'schwan'" />
+      <FrequencyResponseChart v-if="store.chartMode === CHART_MODE.SCHWAN" />
       <ResonanceChart v-else />
 
       <!-- Row 3: Selectivity (full width) -->
@@ -144,18 +144,20 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
-import { useCellStore } from '../stores/cellStore'
-import { connectSocket, socketConnected, broadcastFieldParams } from '../services/socket'
-import CellCard from '../components/CellCard/index.vue'
-import FrequencySlider from '../components/FrequencySlider/index.vue'
-import FrequencyResponseChart from '../components/FrequencyResponseChart/index.vue'
-import ResonanceChart from '../components/ResonanceChart/index.vue'
-import SelectivityPanel from '../components/SelectivityPanel/index.vue'
-import ExperimentLog from '../components/ExperimentLog.vue'
-import { useExperimentStore } from '../stores/experimentStore'
-import { CELL_PRESETS, GROUP_COLORS, GROUP_LABELS } from '../constants/cellLibrary'
-import type { CellPreset, CellGroup } from '../constants/cellLibrary'
-import { CATEGORY_DEFAULTS } from '../constants/experimentDefaults'
+import { useCellStore } from '@/stores/cellStore'
+import { connectSocket, socketConnected, broadcastFieldParams } from '@/services/socket'
+import CellCard from '@/components/CellCard/index.vue'
+import FrequencySlider from '@/components/FrequencySlider/index.vue'
+import FrequencyResponseChart from '@/components/FrequencyResponseChart/index.vue'
+import ResonanceChart from '@/components/ResonanceChart/index.vue'
+import SelectivityPanel from '@/components/SelectivityPanel/index.vue'
+import ExperimentLog from '@/components/ExperimentLog.vue'
+import { useExperimentStore } from '@/stores/experimentStore'
+import { CELL_PRESETS, GROUP_COLORS, GROUP_LABELS } from '@/constants/cellLibrary'
+import type { CellPreset, CellGroup } from '@/constants/cellLibrary'
+import { CATEGORY_DEFAULTS } from '@/constants/experimentDefaults'
+import { CELL_CATEGORY, CELL_TYPE, CELL_GROUP, CHART_MODE } from '@/constants/strings'
+import { formatFreqKHz } from '@/utils/format'
 
 export default defineComponent({
   components: {
@@ -174,6 +176,7 @@ export default defineComponent({
       socketConnected,
       GROUP_COLORS,
       GROUP_LABELS,
+      CHART_MODE,
     }
   },
 
@@ -186,7 +189,7 @@ export default defineComponent({
     return {
       healthyPickerOpen: false,
       targetPickerOpen: false,
-      targetPickerCategory: 'cancer' as CellGroup,
+      targetPickerCategory: CELL_GROUP.CANCER as CellGroup,
     }
   },
 
@@ -200,8 +203,8 @@ export default defineComponent({
      *  is active, immediately revert to Schwan mode. Resonance has no physical meaning for
      *  mammalian cells — the button is disabled but state drift can still occur via param editing. */
     'store.targetCellCategory'(cat: string) {
-      if (cat === 'mammalian' && this.store.chartMode === 'resonance') {
-        this.store.setChartMode('schwan')
+      if (cat === CELL_CATEGORY.MAMMALIAN && this.store.chartMode === CHART_MODE.RESONANCE) {
+        this.store.setChartMode(CHART_MODE.SCHWAN)
       }
     },
   },
@@ -212,7 +215,7 @@ export default defineComponent({
     },
 
     healthyReferencePresets(): CellPreset[] {
-      return CELL_PRESETS.filter((p) => p.group === 'reference')
+      return CELL_PRESETS.filter((p) => p.group === CELL_GROUP.REFERENCE)
     },
 
     targetPresetsForCategory(): CellPreset[] {
@@ -220,37 +223,28 @@ export default defineComponent({
     },
 
     targetPickerCategories(): CellGroup[] {
-      return ['cancer', 'bacteria', 'virus']
+      return [CELL_GROUP.CANCER, CELL_GROUP.BACTERIA, CELL_GROUP.VIRUS] as CellGroup[]
     },
 
     healthyLabelShort(): string {
       return this.store.healthy.label.replace(/^Healthy\s+/i, '')
     },
 
-    healthyFcSetup(): string {
-      const fc = this.store.healthyFc
-      if (fc >= 1000) return `${(fc / 1000).toFixed(1)} MHz`
-      return `${fc.toFixed(0)} kHz`
-    },
-
-    targetFcSetup(): string {
-      const fc = this.store.targetFc
-      if (fc >= 1000) return `${(fc / 1000).toFixed(1)} MHz`
-      return `${fc.toFixed(0)} kHz`
-    },
+    healthyFcSetup(): string { return formatFreqKHz(this.store.healthyFc, 1) },
+    targetFcSetup(): string  { return formatFreqKHz(this.store.targetFc, 1) },
 
     cells() {
       // Resolve label + sublabel from the live store cell (changes when preset loads)
       const cellLabel = (type: 'healthy' | 'target') => {
-        return type === 'healthy' ? this.store.healthy.label : this.store.target.label
+        return type === CELL_TYPE.HEALTHY ? this.store.healthy.label : this.store.target.label
       }
       const cellSublabel = (type: 'healthy' | 'target') => {
-        const cell = type === 'healthy' ? this.store.healthy : this.store.target
+        const cell = type === CELL_TYPE.HEALTHY ? this.store.healthy : this.store.target
         const preset = CELL_PRESETS.find((p) => p.presetId === cell.id)
         return preset ? preset.notes : this.$t(`cells.${type}.sublabel`)
       }
       const cellSublabelTip = (type: 'healthy' | 'target') => {
-        const cell = type === 'healthy' ? this.store.healthy : this.store.target
+        const cell = type === CELL_TYPE.HEALTHY ? this.store.healthy : this.store.target
         const preset = CELL_PRESETS.find((p) => p.presetId === cell.id)
         return preset?.techNotes ?? ''
       }
@@ -305,11 +299,11 @@ export default defineComponent({
       const d   = CATEGORY_DEFAULTS[cat]
       // For virus/bacteria: auto-tune frequency to preset's resonant frequency if available
       const t = this.store.target as { resonantFreqGHz?: number; resonantThresholdVcm?: number }
-      const freqKHz = (cat === 'virus' || cat === 'bacteria') && t.resonantFreqGHz
+      const freqKHz = (cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) && t.resonantFreqGHz
         ? t.resonantFreqGHz * 1e6   // GHz → kHz (1 GHz = 1,000,000 kHz)
         : d.freqKHz
       // Start at 50% of disruption threshold for intuitive first contact
-      const fieldVcm = (cat === 'virus' || cat === 'bacteria') && t.resonantThresholdVcm
+      const fieldVcm = (cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) && t.resonantThresholdVcm
         ? t.resonantThresholdVcm * 0.5
         : d.fieldVcm
       this.store.setFieldIntensity(fieldVcm)
@@ -323,7 +317,7 @@ export default defineComponent({
       this.store.setLysisNPulses(10)
       // Always start from a thermally neutral state — clears any lysis/destruction
       this.store.resetTemps()
-      this.store.setChartMode((cat === 'virus' || cat === 'bacteria') ? 'resonance' : 'schwan')
+      this.store.setChartMode((cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) ? CHART_MODE.RESONANCE : CHART_MODE.SCHWAN)
       // Sync backend — ensures socket subscribers see the new field parameters immediately
       broadcastFieldParams(freqKHz, fieldVcm, d.medium)
     },

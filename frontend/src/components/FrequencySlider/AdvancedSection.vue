@@ -76,11 +76,11 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
-import { useCellStore } from '../../stores/cellStore'
-import { WAVEFORM } from '../../constants/strings'
-import { CELL_CATEGORY } from '../../constants/strings'
-import { ICON } from '../../constants/icons'
-import { tipOrientation, tipLysisN, tipLysisNNote, tipShellModel, tipSingleShell, tipDoubleShell, formatLysisTime } from '../../utils/sliderTooltips'
+import { useCellStore } from '@/stores/cellStore'
+import { WAVEFORM } from '@/constants/strings'
+import { CELL_CATEGORY } from '@/constants/strings'
+import { ICON } from '@/constants/icons'
+import { tipOrientation, tipLysisN, tipLysisNNote, tipShellModel, tipSingleShell, tipDoubleShell, formatLysisTime } from '@/utils/sliderTooltips'
 
 export default defineComponent({
   setup() {

@@ -28,9 +28,11 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
-import { useCellStore } from '../../stores/cellStore'
-import { CELL_PRESETS, GROUP_COLORS } from '../../constants/cellLibrary'
-import { computeSchwan, computeResonantDisruption } from '../../utils/physics'
+import { useCellStore } from '@/stores/cellStore'
+import { CELL_PRESETS, GROUP_COLORS } from '@/constants/cellLibrary'
+import { CELL_CATEGORY, CELL_GROUP } from '@/constants/strings'
+import { ICON } from '@/constants/icons'
+import { computeSchwan, computeResonantDisruption } from '@/utils/physics'
 
 export default defineComponent({
   setup() {
@@ -40,9 +42,9 @@ export default defineComponent({
   computed: {
     presetCompTitleDynamic(): string {
       const cat = this.store.targetCellCategory
-      if (cat === 'bacteria') return 'Alternative Bacteria'
-      if (cat === 'virus')    return 'Alternative Viruses'
-      return 'Alternative Cancer Targets'
+      if (cat === CELL_CATEGORY.BACTERIA) return this.$t('selectivity.compAltBacteria')
+      if (cat === CELL_CATEGORY.VIRUS)    return this.$t('selectivity.compAltViruses')
+      return this.$t('selectivity.compAltCancer')
     },
 
     presetComparison() {
@@ -51,7 +53,7 @@ export default defineComponent({
       const field   = this.store.fieldIntensity
 
       const cat = this.store.targetCellCategory
-      const relevantGroup = cat === 'mammalian' ? 'cancer' : cat
+      const relevantGroup = cat === CELL_CATEGORY.MAMMALIAN ? CELL_GROUP.CANCER : cat
 
       const hVm = computeSchwan(this.store.healthy, freq, field, sigma_e)
       const hDr = hVm / this.store.healthy.thresholdVoltage
@@ -60,7 +62,7 @@ export default defineComponent({
         .filter((p) => p.group === relevantGroup)
         .map((p) => {
           const pr = p as typeof p & { resonantFreqGHz?: number; capsidQ?: number; resonantThresholdVcm?: number }
-          const hasRes = (p.group === 'bacteria' || p.group === 'virus') && !!pr.resonantFreqGHz && !!pr.resonantThresholdVcm
+          const hasRes = (p.group === CELL_GROUP.BACTERIA || p.group === CELL_GROUP.VIRUS) && !!pr.resonantFreqGHz && !!pr.resonantThresholdVcm
           let sel: number, tVmMv: string
 
           if (hasRes) {
@@ -95,7 +97,7 @@ export default defineComponent({
     },
 
     cmpTip(row: { preset: typeof CELL_PRESETS[0]; sel: number; tVmMv: string; hasRes: boolean }): string {
-      const selStr = row.sel >= 99 ? '∞' : row.sel.toFixed(3)
+      const selStr = row.sel >= 99 ? ICON.INFINITY : row.sel.toFixed(3)
       if (row.hasRes) {
         return `<strong>${row.preset.label}</strong>
 ${row.preset.notes}

@@ -17,13 +17,13 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import * as d3 from 'd3'
-import { useCellStore } from '../../stores/cellStore'
-import { computeResonantDisruption } from '../../utils/physics'
-import { CELL_PRESETS, GROUP_COLORS } from '../../constants/cellLibrary'
-import type { CellGroup } from '../../constants/cellLibrary'
-import type { CellConfig } from '../../types/cell'
-import { broadcastFieldParams } from '../../services/socket'
-import { C } from '../../theme/colors'
+import { useCellStore } from '@/stores/cellStore'
+import { computeResonantDisruption } from '@/utils/physics'
+import { CELL_PRESETS, GROUP_COLORS } from '@/constants/cellLibrary'
+import type { CellGroup } from '@/constants/cellLibrary'
+import type { CellConfig } from '@/types/cell'
+import { broadcastFieldParams } from '@/services/socket'
+import { C } from '@/theme/colors'
 
 // Frequency range: 10 MHz – 50 GHz
 const F_MIN_HZ = 10_000_000

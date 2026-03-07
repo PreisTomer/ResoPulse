@@ -130,7 +130,7 @@
               <tr
                 v-for="e in store.entries"
                 :key="e.id"
-                :class="{ 'reports__row--lysis': e.event === 'lysis' }"
+                :class="{ 'reports__row--lysis': e.event === LOG_EVENT.LYSIS }"
               >
                 <td class="reports__mono reports__muted">{{ e.id }}</td>
                 <td class="reports__mono">{{ e.timestamp }}</td>
@@ -188,15 +188,16 @@
 
 <script lang="ts">
 import { defineComponent, computed } from 'vue'
-import { useExperimentStore } from '../stores/experimentStore'
+import { useExperimentStore } from '@/stores/experimentStore'
+import { LOG_EVENT } from '@/constants/strings'
 
 export default defineComponent({
   setup() {
     const store = useExperimentStore()
 
     const totalReadings = computed(() => store.entries.length)
-    const lysisEvents = computed(() => store.entries.filter((e) => e.event === 'lysis').length)
-    const manualReadings = computed(() => store.entries.filter((e) => e.event === 'manual').length)
+    const lysisEvents = computed(() => store.entries.filter((e) => e.event === LOG_EVENT.LYSIS).length)
+    const manualReadings = computed(() => store.entries.filter((e) => e.event === LOG_EVENT.MANUAL).length)
 
     const avgSelectivity = computed(() => {
       if (!store.entries.length) return null
@@ -231,7 +232,7 @@ export default defineComponent({
     })
 
     function eventClass(event: string) {
-      return event === 'lysis' ? 'reports__ev-badge--lysis' : 'reports__ev-badge--manual'
+      return event === LOG_EVENT.LYSIS ? 'reports__ev-badge--lysis' : 'reports__ev-badge--manual'
     }
 
     function selClass(sel: number) {
@@ -252,6 +253,7 @@ export default defineComponent({
       peakTargetRatio,
       eventClass,
       selClass,
+      LOG_EVENT,
     }
   },
 })

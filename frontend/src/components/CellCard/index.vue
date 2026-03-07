@@ -36,7 +36,7 @@
       <div class="cell-card__osc-divider">
         <span class="cell-card__osc-label" v-tip="tipVm">OSC · {{ vmDisplay }}</span>
         <span v-if="disruptionRatio > 0.05" class="cell-card__osc-impact" v-tip="tipDisruption">
-          ⚡ {{ (disruptionRatio * 100).toFixed(0) }}% disruption
+          {{ ICON.LIGHTNING }} {{ (disruptionRatio * 100).toFixed(0) }}% disruption
         </span>
       </div>
 
@@ -44,7 +44,7 @@
       <div
         v-if="store.doubleShellEnabled && hasNuclearParams"
         class="cell-card__nuclear-bar-row"
-        v-tip="'<strong>Nuclear Envelope Disruption (Double-Shell Model)</strong>\nVm_nuc / V_threshold_nuc\nBandpass peak at f_peak = 1/(2π√(τ_pm·τ_ne))\nKotnik &amp; Miklavcic (2006, Biophys J 90:480)'"
+        v-tip="tipNuclearBar"
       >
         <span class="cell-card__nuclear-bar-label">&#x26AC; NE</span>
         <div class="cell-card__nuclear-bar-track">
@@ -68,7 +68,7 @@
         class="cell-card__nourishing-strip"
         v-tip="tipState"
       >
-        <span class="cell-card__warn-icon">⊕</span>
+        <span class="cell-card__warn-icon">{{ ICON.NOURISH }}</span>
         <span class="cell-card__warn-text">{{ $t('cells.states.nourishing', { bms: (biostimScore * 100).toFixed(0) }) }}</span>
         <span class="cell-card__warn-pct">{{ (disruptionRatio * 100).toFixed(0) }}%</span>
       </div>
@@ -93,7 +93,7 @@
         class="cell-card__rev-ep-strip"
         v-tip="tipDisruption"
       >
-        <span class="cell-card__warn-icon">⚡</span>
+        <span class="cell-card__warn-icon">{{ ICON.LIGHTNING }}</span>
         <span class="cell-card__warn-text">{{ $t('cells.states.revEp') }}</span>
         <span class="cell-card__warn-pct">{{ (disruptionRatio * 100).toFixed(0) }}%</span>
       </div>
@@ -104,7 +104,7 @@
         class="cell-card__lysis-strip"
         v-tip="tipDisruption"
       >
-        <span class="cell-card__warn-icon">↯</span>
+        <span class="cell-card__warn-icon">{{ ICON.LYSIS_BOLT }}</span>
         <span class="cell-card__warn-text">{{ $t('cells.states.lysisArmed', { protocol: lysisProtocolStr }) }}</span>
         <span class="cell-card__warn-pct">{{ (disruptionRatio * 100).toFixed(0) }}%</span>
       </div>
@@ -138,11 +138,11 @@
             ? $t('cells.states.thermalCritical')
             : $t('cells.states.thermalWarning') }}
         </span>
-        <span class="cell-card__warn-pct">{{ temperature.toFixed(0) }}°C</span>
+        <span class="cell-card__warn-pct">{{ temperature.toFixed(0) }}{{ UNIT.DEG_C }}</span>
       </div>
 
       <!-- Lysis overlay — absolute, covers cell-card__visual without shifting card height -->
-      <div v-if="cellState === 'lysed'" class="cell-card__destroyed">
+      <div v-if="cellState === CELL_STATE.LYSED" class="cell-card__destroyed">
         <span class="cell-card__destroyed-text">{{ thermalLysis ? $t('cells.states.thermalLysis') : $t('cells.states.membraneLysed') }}</span>
         <span v-if="thermalLysis" class="cell-card__destroyed-sub">{{ $t('cells.states.vaporized') }}</span>
         <button class="cell-card__lysis-btn" :disabled="!canReset" @click="resetToStable">{{ $t('cells.states.resetCell') }}</button>
@@ -161,12 +161,12 @@
 import { defineComponent } from 'vue'
 import type { PropType } from 'vue'
 import * as d3 from 'd3'
-import { useCellStore } from '../../stores/cellStore'
-import { useExperimentStore } from '../../stores/experimentStore'
-import { CELL_PRESETS } from '../../constants/cellLibrary'
-import type { CellRecord } from '../../types/cell'
-import { membraneCm, computeTau } from '../../utils/physics'
-import type { CellState } from '../../types/cell'
+import { useCellStore } from '@/stores/cellStore'
+import { useExperimentStore } from '@/stores/experimentStore'
+import { CELL_PRESETS } from '@/constants/cellLibrary'
+import type { CellRecord } from '@/types/cell'
+import { membraneCm, computeTau } from '@/utils/physics'
+import type { CellState } from '@/types/cell'
 import {
   CELL_COLORS,
   EDITABLE_PARAMS,
@@ -179,10 +179,14 @@ import {
   TEMP_VAPORIZING,
   LYSIS_DURATION_MS,
   FRAGMENT_INTERVAL_MS,
-} from '../../constants/cellCard'
-import { setupBlobAnimation, setupOscilloscope, spawnFragment } from '../../utils/cellAnimation'
-import { CELL_STATE, CELL_TYPE, CELL_CATEGORY, WAVEFORM, CHART_MODE } from '../../constants/strings'
-import { ICON } from '../../constants/icons'
+} from '@/constants/cellCard'
+import { setupBlobAnimation, setupOscilloscope, spawnFragment } from '@/utils/cellAnimation'
+import { CELL_STATE, CELL_TYPE, CELL_CATEGORY } from '@/constants/strings'
+import { ICON } from '@/constants/icons'
+import { UNIT } from '@/constants/units'
+import { formatFreqKHz } from '@/utils/format'
+import { tipVm as tipVmFn, tipTemp as tipTempFn, tipState as tipStateFn, tipDisruption as tipDisruptionFn, tipNuclearBar as tipNuclearBarFn } from '@/utils/cellCardTooltips'
+
 import CellHeader from './CellHeader.vue'
 import CellParamsPanel from './CellParamsPanel.vue'
 import BiostimPanel from './BiostimPanel.vue'
@@ -206,7 +210,7 @@ export default defineComponent({
   },
 
   setup() {
-    return { store: useCellStore(), CELL_STATE, CELL_TYPE, ICON }
+    return { store: useCellStore(), CELL_STATE, CELL_TYPE, ICON, UNIT }
   },
 
   data() {
@@ -233,8 +237,8 @@ export default defineComponent({
     temperature(): number {
       return this.type === CELL_TYPE.HEALTHY ? this.store.healthyTemp : this.store.targetTemp
     },
-    vmDisplay():   string  { return this.vm.toFixed(3) + ' mV' },
-    tempDisplay(): string  { return this.temperature.toFixed(1) + ' °C' },
+    vmDisplay():   string  { return `${this.vm.toFixed(3)} ${UNIT.MV}` },
+    tempDisplay(): string  { return `${this.temperature.toFixed(1)} ${UNIT.DEG_C}` },
     tempWarning():     boolean { return this.temperature > TEMP_WARN_CELSIUS },
     tempDenaturing():  boolean { return this.temperature >= TEMP_DENATURING },
     tempVaporizing():  boolean { return this.temperature >= TEMP_VAPORIZING },
@@ -263,14 +267,14 @@ export default defineComponent({
 
     metaStateClass(): string {
       const map: Record<string, string> = {
-        stable:      'cell-card__state--stable',
-        nourishing:  'cell-card__state--nourishing',
-        approaching: 'cell-card__state--approaching',
-        'rev-ep':    'cell-card__state--rev-ep',
-        critical:    'cell-card__state--critical',
-        vibrating:   'cell-card__state--vibrating',
-        lysing:      'cell-card__state--lysing',
-        lysed:       'cell-card__state--lysed',
+        [CELL_STATE.STABLE]:      'cell-card__state--stable',
+        [CELL_STATE.NOURISHING]:  'cell-card__state--nourishing',
+        [CELL_STATE.APPROACHING]: 'cell-card__state--approaching',
+        [CELL_STATE.REV_EP]:      'cell-card__state--rev-ep',
+        [CELL_STATE.CRITICAL]:    'cell-card__state--critical',
+        [CELL_STATE.VIBRATING]:   'cell-card__state--vibrating',
+        [CELL_STATE.LYSING]:      'cell-card__state--lysing',
+        [CELL_STATE.LYSED]:       'cell-card__state--lysed',
       }
       return map[this.cellState] ?? ''
     },
@@ -299,106 +303,64 @@ export default defineComponent({
       const Cm  = membraneCm(cell) * 1000
       const tau = computeTau(cell, sigma_e) * 1e9
       const fc  = this.type === CELL_TYPE.HEALTHY ? this.store.healthyFc : this.store.targetFc
-      const fcLabel = fc >= 1000 ? `${(fc / 1000).toFixed(2)} MHz` : `${fc.toFixed(1)} kHz`
       return [
-        { label: 'Membrane Cm',   value: Cm.toFixed(2),  unit: 'mF/m²' },
-        { label: 'Time const τ',  value: tau.toFixed(1), unit: 'ns'    },
-        { label: 'Char. freq fc', value: fcLabel,        unit: ''      },
+        { label: 'Membrane Cm',   value: Cm.toFixed(2),           unit: 'mF/m²' },
+        { label: 'Time const τ',  value: tau.toFixed(1),          unit: 'ns'    },
+        { label: 'Char. freq fc', value: formatFreqKHz(fc, 2),    unit: ''      },
       ]
+    },
+
+    tipNuclearBar(): string {
+      return tipNuclearBarFn()
     },
 
     tipVm(): string {
       const cell = this.type === CELL_TYPE.HEALTHY ? this.store.healthy : this.store.target
-      const thr  = (cell.thresholdVoltage * 1000).toFixed(0)
-      const pct  = (this.disruptionRatio * 100).toFixed(0)
-      const pulsedNote = this.store.waveform === WAVEFORM.PULSED
-        ? '\n<span class="tip-note">Pulsed mode (H-FIRE/IRE): Vm uses E_peak as standard approx.\nTrue square-wave fundamental ≈ 4/π × shown (+27%). Cancels in selectivity ratio.</span>'
-        : ''
-      return `<strong>Transmembrane Potential (Vm)</strong>
-Current: <span class="tip-val">${this.vmDisplay}</span>
-
-Peak voltage induced across the cell membrane
-by the applied electric field — Schwan equation:
-  Vm = 1.5 × E × R × cos θ / √(1 + (2πf·τ)²)
-
-Lysis threshold: ${thr} mV
-Disruption: <span class="tip-val">${pct}%</span>${pulsedNote}`
+      return tipVmFn({
+        vmDisplay:        this.vmDisplay,
+        disruptionRatio:  this.disruptionRatio,
+        thresholdVoltage: cell.thresholdVoltage,
+        waveform:         this.store.waveform,
+      })
     },
 
     tipTemp(): string {
-      let warnLine = ''
-      if (this.tempVaporizing) {
-        warnLine = '\n<span class="tip-warn">⚡ ≥100°C — THERMAL LYSIS — water boiling / steam pressure</span>'
-      } else if (this.tempDenaturing) {
-        warnLine = '\n<span class="tip-warn">⚠ ≥60°C — protein denaturation (collagen ~60°C, albumin ~68°C) — reduce duty cycle / field</span>'
-      } else if (this.tempWarning) {
-        warnLine = '\n<span class="tip-warn">⚠ ≥42°C — hyperthermic damage onset (IAHT threshold) — monitor closely</span>'
-      }
-      return `<strong>Cell Temperature</strong>
-Current: <span class="tip-val">${this.tempDisplay}</span>
-
-Modelled via Specific Absorption Rate (SAR):
-  SAR = σ_i × α² × E² × w_f / ρ  [W/kg]
-  α = 3σ_e/(2σ_e+σ_i)  (internal field factor — sphere in medium)
-  w_f = 0.5 (CW sinusoidal, E²_rms = E²_peak/2) | 1.0 (pulsed bipolar square wave, E²_rms = E²_peak)
-
-Newton cooling: λ = 0.02 /s → T_ss = 37 + SAR_eff/(λ·cp)
-Thresholds: 42°C hyperthermic · 60°C denaturing · 100°C vaporizing${warnLine}`
+      return tipTempFn({
+        tempDisplay:   this.tempDisplay,
+        tempVaporizing: this.tempVaporizing,
+        tempDenaturing: this.tempDenaturing,
+        tempWarning:    this.tempWarning,
+      })
     },
 
     tipState(): string {
-      const labels: Record<string, string> = {
-        stable:      'stable — no significant membrane or thermal response',
-        nourishing:  '<span class="tip-ok">nourishing — sub-threshold Ca²⁺ stimulation window (DR 8–50%)\nMembrane intact · PIEZO1 + voltage-gated Ca²⁺ channels activated\nOptimal biomodulation at DR ≈ 20–40% of lysis threshold</span>',
-        approaching: '<span class="tip-warn">⚠ approaching — membrane stress OR T ≥ 42°C · ion channel perturbation onset</span>',
-        'rev-ep':    '<span class="tip-warn">⚡ reversible EP window (50–85%) — membrane transiently permeabilized each pulse.\nPores open and re-seal after the field is removed.\nThis is the drug/gene delivery window — cells survive.\nSustained or increasing field progresses to irreversible lysis.</span>',
-        critical:    '<span class="tip-warn">⚡ critical — Vm >85% threshold OR T ≥ 60°C (protein denaturation) · reduce field / duty cycle immediately</span>',
-        vibrating:   '<span class="tip-warn">⚡ LYSIS ARMED — Vm >85% of threshold · irreversible electroporation imminent</span>',
-        lysing:      '<span class="tip-warn">lysing — irreversible membrane disruption in progress</span>',
-        lysed:       this.thermalLysis
-          ? '<span class="tip-warn">thermal lysis — cell vaporized (T ≥ 100°C)</span>'
-          : '<span class="tip-warn">lysed — membrane permanently disrupted by electric field</span>',
-      }
-      const transitions = this.type === CELL_TYPE.HEALTHY
-        ? `\nElectrical: Vm >50% → approaching · Vm >85% → critical`
-           + `\nThermal:   T ≥42°C → approaching · T ≥60°C → critical · T ≥100°C → lysis`
-        : `\nElectrical: 50–85% → rev-ep (reversible) · >85% → armed (${this.formatLysisTime(this.store.lysisDelayMs)}) → lysed`
-          + `\nThermal:   T ≥60°C → critical · T ≥100°C → instant thermal lysis`
-      return `<strong>Cell State</strong>
-${labels[this.cellState] ?? this.cellState}
-${transitions}`
+      return tipStateFn({
+        cellState:   this.cellState,
+        thermalLysis: this.thermalLysis,
+        cellType:    this.type,
+        lysisDelayMs: this.store.lysisDelayMs,
+      })
     },
 
     tipDisruption(): string {
-      const pct  = (this.disruptionRatio * 100).toFixed(0)
       const cell = this.type === CELL_TYPE.HEALTHY ? this.store.healthy : this.store.target
-      const thr  = (cell.thresholdVoltage * 1000).toFixed(0)
-      const n    = this.store.lysisNPulses
-      const t    = this.formatLysisTime(this.store.lysisDelayMs)
-
-      const pef     = this.type === CELL_TYPE.HEALTHY
+      const pef  = this.type === CELL_TYPE.HEALTHY
         ? this.store.pulseEnvelopeFactorHealthy
         : this.store.pulseEnvelopeFactorTarget
-      const sigma_e = this.store.effectiveSigmaE
-      const tau_ns  = (computeTau(cell, sigma_e) * 1e9).toFixed(1)
-      const isResonance = this.type === CELL_TYPE.TARGET && this.store.chartMode === CHART_MODE.RESONANCE
-      const pefNote = (this.store.waveform === WAVEFORM.PULSED && pef < 0.99 && !isResonance)
-        ? `\n<span class="tip-note">Pulse factor: ${(pef * 100).toFixed(1)}% (t_p = ${this.store.pulseWidthNs} ns vs τ = ${tau_ns} ns).\nMembrane charges to ${(pef * 100).toFixed(1)}% of Schwan Vm per pulse.\nEffective threshold is ${(1 / pef).toFixed(1)}× higher at this pulse width.\nRef: Weaver &amp; Chizmadzhev (1996).</span>`
-        : ''
-
-      const revEpNote = (this.type === CELL_TYPE.TARGET && this.disruptionRatio >= 0.50 && this.disruptionRatio < 0.85)
-        ? `\n<span class="tip-note">Reversible EP window: pores open transiently and re-seal.\nThis is the drug/gene delivery regime — cells survive.\nIncrease field or hold to progress to irreversible lysis.</span>`
-        : ''
-
-      const formulaLine = isResonance
-        ? 'Ratio = (E / E_thr) × L(f, f_res, Q)  — acoustic Lorentzian'
-        : `Ratio = Vm × pulse_factor / lysis threshold\n  Vm = ${this.vmDisplay}  ·  Threshold = ${thr} mV`
-
-      return `<strong>Membrane Disruption: <span class="tip-val">${pct}%</span></strong>
-${formulaLine}
-
->85% → lysis after ${n} pulses (est. ${t})
-100% = at disruption threshold${pefNote}${revEpNote}`
+      return tipDisruptionFn({
+        disruptionRatio:     this.disruptionRatio,
+        thresholdVoltage:    cell.thresholdVoltage,
+        lysisNPulses:        this.store.lysisNPulses,
+        lysisDelayMs:        this.store.lysisDelayMs,
+        pulseEnvelopeFactor: pef,
+        waveform:            this.store.waveform,
+        chartMode:           this.store.chartMode,
+        pulseWidthNs:        this.store.pulseWidthNs,
+        effectiveSigmaE:     this.store.effectiveSigmaE,
+        vmDisplay:           this.vmDisplay,
+        cellType:            this.type,
+        cell,
+      })
     },
 
     lysisProtocolStr(): string {

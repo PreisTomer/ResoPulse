@@ -1,10 +1,11 @@
-export type CellState = 'stable' | 'nourishing' | 'approaching' | 'rev-ep' | 'critical' | 'vibrating' | 'lysing' | 'lysed'
+import type { CellState, CellType, ExperimentalBasis } from '@/constants/strings'
+export type { CellState, CellType }
 
 // ── Cell configuration ────────────────────────────────────────────────────────
 
 export interface CellConfig {
   id: string
-  type: 'healthy' | 'target'
+  type: CellType
   label: string
   // Biophysical — user-editable
   radius: number               // µm
@@ -21,7 +22,7 @@ export interface CellConfig {
   resonantFreqUncertaintyPct?: number   // ±% uncertainty on f_res (from v_sound literature range)
   capsidQMin?: number                   // Lower Q bound for Lorentzian uncertainty band
   capsidQMax?: number                   // Upper Q bound
-  experimentalBasis?: 'laser-validated' | 'rf-extrapolated' | 'speculative'
+  experimentalBasis?: ExperimentalBasis
   // Nuclear envelope — double-shell model (Kotnik & Miklavcic 2006)
   // Absent for anucleate cells (RBC) and prokaryotes (bacteria/virus).
   nuclearRadius?: number               // µm  — nuclear radius (~50% of cell radius for most mammalian cells)

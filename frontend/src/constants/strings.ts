@@ -57,6 +57,35 @@ export const CELL_GROUP = {
   VIRUS:     'virus',
 } as const
 
+/** Experimental validation basis for resonance presets */
+export const EXPERIMENTAL_BASIS = {
+  LASER_VALIDATED: 'laser-validated',
+  RF_EXTRAPOLATED: 'rf-extrapolated',
+  SPECULATIVE:     'speculative',
+} as const
+
+// ── Derived types from constants (single source of truth) ──────────────────
+/** All valid cell lifecycle states */
+export type CellState         = typeof CELL_STATE[keyof typeof CELL_STATE]
+/** Cell role in an experiment pair: 'healthy' | 'target' */
+export type CellType          = typeof CELL_TYPE[keyof typeof CELL_TYPE]
+/** Active simulation chart mode */
+export type ChartMode         = typeof CHART_MODE[keyof typeof CHART_MODE]
+/** Biological category of the target cell */
+export type CellCategory      = typeof CELL_CATEGORY[keyof typeof CELL_CATEGORY]
+/** Applied waveform mode */
+export type WaveformMode      = typeof WAVEFORM[keyof typeof WAVEFORM]
+/** Thermal hazard level */
+export type ThermalLevel      = typeof THERMAL_LEVEL[keyof typeof THERMAL_LEVEL]
+/** Experiment log event type */
+export type LogEventType      = typeof LOG_EVENT[keyof typeof LOG_EVENT]
+/** Cell preset group identifier */
+export type CellGroupType     = typeof CELL_GROUP[keyof typeof CELL_GROUP]
+/** Experimental validation basis for resonance presets */
+export type ExperimentalBasis = typeof EXPERIMENTAL_BASIS[keyof typeof EXPERIMENTAL_BASIS]
+/** Cell preset identifier */
+export type PresetId          = typeof PRESET_ID[keyof typeof PRESET_ID]
+
 /** Cell preset IDs (aligns with CellPreset.id field in cellLibrary.ts) */
 export const PRESET_ID = {
   HEPATOCYTE:     'hepatocyte',

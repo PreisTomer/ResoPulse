@@ -16,13 +16,13 @@
  * violet, log-scaled 10 kHz–30 GHz). Opacity encodes field intensity (log V/cm).
  */
 import * as d3 from 'd3'
-import type { BlobPoint, BlobFrame, OscFrame } from '../types/cell'
+import type { BlobPoint, BlobFrame, OscFrame } from '@/types/cell'
 import {
   CANVAS_W, CANVAS_H, BASE_R, BLOB_POINTS,
   LYSIS_DURATION_MS,
   OSC_W, OSC_H,
-} from '../constants/cellCard'
-import { CELL_STATE, CELL_CATEGORY, CELL_TYPE } from '../constants/strings'
+} from '@/constants/cellCard'
+import { CELL_STATE, CELL_CATEGORY, CELL_TYPE } from '@/constants/strings'
 
 // ── Shape helper ──────────────────────────────────────────────────────────────
 
@@ -412,7 +412,7 @@ export function setupBlobAnimation(
   // Biologically: loss of contact inhibition → invasive pseudopods → irregular membrane outline.
   // Range: -3 to +7 px asymmetric bumps on top of BASE_R.
   const cancerBaseOffsets: number[] = []
-  if (cellCategory === 'mammalian' && type === CELL_TYPE.TARGET) {
+  if (cellCategory === CELL_CATEGORY.MAMMALIAN && type === CELL_TYPE.TARGET) {
     for (let i = 0; i < N; i++) {
       cancerBaseOffsets.push(((i * 2971 + 1777) % 2000) / 200 - 3)
     }

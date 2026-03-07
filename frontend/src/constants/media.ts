@@ -1,4 +1,4 @@
-import type { MediaEntry, MediumKey } from '../types/media'
+import type { MediaEntry, MediumKey } from '@/types/media'
 
 export const MEDIA: Record<MediumKey, MediaEntry> = {
   saline: { name: 'Physiological Saline (0.9%)', conductivity: 1.5   },
