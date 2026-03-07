@@ -165,13 +165,13 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
-import { useCellStore } from '../../stores/cellStore'
-import { broadcastFieldParams } from '../../services/socket'
-import { MEDIA } from '../../constants/media'
-import { CHART_MODE, CELL_CATEGORY, THERMAL_LEVEL } from '../../constants/strings'
-import { ICON } from '../../constants/icons'
-import type { MediumKey } from '../../types/media'
-import { formatFreqKHz, formatFieldVcm } from '../../utils/format'
+import { useCellStore } from '@/stores/cellStore'
+import { broadcastFieldParams } from '@/services/socket'
+import { MEDIA } from '@/constants/media'
+import { CHART_MODE, CELL_CATEGORY, THERMAL_LEVEL } from '@/constants/strings'
+import { ICON } from '@/constants/icons'
+import type { MediumKey } from '@/types/media'
+import { formatFreqKHz, formatFieldVcm } from '@/utils/format'
 import {
   tipMedium,
   tipMediumKeys,
@@ -186,7 +186,7 @@ import {
   tipScopeNote,
   tipThermalBanner,
   tipSigmaE,
-} from '../../utils/sliderTooltips'
+} from '@/utils/sliderTooltips'
 import ProtocolSection from './ProtocolSection.vue'
 import AdvancedSection from './AdvancedSection.vue'
 

@@ -81,10 +81,10 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import type { PropType } from 'vue'
-import { useCellStore } from '../../stores/cellStore'
-import { WAVEFORM, THERMAL_LEVEL } from '../../constants/strings'
-import { ICON } from '../../constants/icons'
-import { tipWaveform, tipDutyCycle, tipPulseWidth, tipSafeModeLock } from '../../utils/sliderTooltips'
+import { useCellStore } from '@/stores/cellStore'
+import { WAVEFORM, THERMAL_LEVEL } from '@/constants/strings'
+import { ICON } from '@/constants/icons'
+import { tipWaveform, tipDutyCycle, tipPulseWidth, tipSafeModeLock } from '@/utils/sliderTooltips'
 
 export default defineComponent({
   props: {

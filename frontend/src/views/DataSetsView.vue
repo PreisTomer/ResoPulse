@@ -76,7 +76,7 @@
                 <td class="datasets__mono datasets__primary-val">{{ p.fcDisplay }}</td>
                 <td
                   class="datasets__mono"
-                  :class="p.group === 'reference' ? 'datasets__ref-val' : 'datasets__cancer-val'"
+                  :class="p.group === CELL_GROUP.REFERENCE ? 'datasets__ref-val' : 'datasets__cancer-val'"
                 >{{ p.thresholdVoltage.toFixed(2) }}</td>
                 <td class="datasets__mono" :class="p.hasNuclear ? 'datasets__nuc-val' : 'datasets__muted'">{{ p.nucRDisplay }}</td>
                 <td class="datasets__mono datasets__muted">{{ p.density }}</td>
@@ -241,7 +241,7 @@
                 <td class="datasets__mono">{{ p.nucleoplasmConductivity ?? 0.9 }}</td>
                 <td
                   class="datasets__mono"
-                  :class="p.group === 'reference' ? 'datasets__ref-val' : 'datasets__cancer-val'"
+                  :class="p.group === CELL_GROUP.REFERENCE ? 'datasets__ref-val' : 'datasets__cancer-val'"
                 >{{ p.nuclearThresholdVoltage ?? 0.50 }}</td>
                 <td class="datasets__mono datasets__nuc-val">{{ p.nucFpeakDisplay }}</td>
               </tr>
@@ -355,13 +355,14 @@
 
 <script lang="ts">
 import { defineComponent, computed } from 'vue'
-import { CELL_PRESETS, GROUP_COLORS, GROUP_LABELS, type CellGroup, type CellPreset } from '../constants/cellLibrary'
-import { MEDIA } from '../constants/media'
-import { membraneCm, computeFc, computeTau, computeNuclearTau } from '../utils/physics'
+import { CELL_PRESETS, GROUP_COLORS, GROUP_LABELS, type CellGroup, type CellPreset } from '@/constants/cellLibrary'
+import { MEDIA } from '@/constants/media'
+import { CELL_GROUP } from '@/constants/strings'
+import { membraneCm, computeFc, computeTau, computeNuclearTau } from '@/utils/physics'
 
 const SIGMA_SALINE = MEDIA.saline.conductivity // 1.5 S/m
 
-const GROUPS: CellGroup[] = ['reference', 'cancer', 'bacteria', 'virus']
+const GROUPS: CellGroup[] = [CELL_GROUP.REFERENCE, CELL_GROUP.CANCER, CELL_GROUP.BACTERIA, CELL_GROUP.VIRUS] as CellGroup[]
 
 type ResonantPreset = CellPreset & {
   resonantFreqGHz?: number
@@ -433,7 +434,7 @@ export default defineComponent({
       conductivity: val.conductivity,
     }))
 
-    return { presets, nuclearPresets, mediaEntries, GROUPS, GROUP_COLORS, GROUP_LABELS }
+    return { presets, nuclearPresets, mediaEntries, GROUPS, GROUP_COLORS, GROUP_LABELS, CELL_GROUP }
   },
 })
 </script>

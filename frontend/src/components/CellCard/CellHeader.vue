@@ -34,7 +34,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import type { PropType } from 'vue'
-import type { CellState } from '../../types/cell'
+import type { CellState } from '@/types/cell'
 
 export default defineComponent({
   props: {

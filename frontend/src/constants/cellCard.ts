@@ -14,18 +14,34 @@ export const LYSIS_DURATION_MS = 2800   // shatter animation length
 export const FRAGMENT_INTERVAL_MS = 80  // ms between spawned fragments
 
 // ── Threshold ratios & temperatures ──────────────────────────────────────────
-export const DISRUPTION_WARN_THRESHOLD    = 0.85  // disruptionRatio above which lysis arms
-export const HEALTHY_CRITICAL_THRESHOLD   = 0.85  // healthy cell: electroporation pore-formation imminent
-export const HEALTHY_APPROACHING_THRESHOLD = 0.50  // healthy cell: membrane stress / ion channel perturbation onset
-export const NOURISHING_THRESHOLD         = 0.45   // healthy-cell nourishing state onset
-export const VIBRATING_MIN_THRESHOLD      = 0.08   // healthy-cell low-vibration onset
-export const TEMP_WARN_CELSIUS            = 42     // temperature above which meta turns orange
-export const TEMP_DENATURING             = 60     // °C — protein denaturation onset (irreversible; collagen ~60°C, albumin ~68°C)
-export const TEMP_VAPORIZING             = 100    // °C — water boiling / rapid steam-driven cell lysis
-export const TEMP_SIMULATION_CAP         = 150    // °C — simulation display ceiling (cells destroyed well below this)
+/** All disruption ratio and temperature thresholds used by the cell state machine */
+export const THRESHOLDS = {
+  DISRUPTION_WARN:     0.85,  // disruptionRatio above which lysis arms
+  HEALTHY_CRITICAL:    0.85,  // healthy cell: electroporation pore-formation imminent
+  HEALTHY_APPROACHING: 0.50,  // healthy cell: membrane stress / ion channel perturbation onset
+  NOURISHING:          0.45,  // healthy-cell nourishing state onset
+  VIBRATING_MIN:       0.08,  // healthy-cell low-vibration onset
+  TEMP_WARN:           42,    // °C — temperature above which meta turns orange
+  TEMP_DENATURING:     60,    // °C — protein denaturation onset (collagen ~60°C, albumin ~68°C)
+  TEMP_VAPORIZING:     100,   // °C — water boiling / rapid steam-driven cell lysis
+  TEMP_CAP:            150,   // °C — simulation display ceiling
+} as const
+
+export type ThresholdKey = keyof typeof THRESHOLDS
+
+// Individual named exports — derived from THRESHOLDS for backward compatibility
+export const DISRUPTION_WARN_THRESHOLD     = THRESHOLDS.DISRUPTION_WARN
+export const HEALTHY_CRITICAL_THRESHOLD    = THRESHOLDS.HEALTHY_CRITICAL
+export const HEALTHY_APPROACHING_THRESHOLD = THRESHOLDS.HEALTHY_APPROACHING
+export const NOURISHING_THRESHOLD          = THRESHOLDS.NOURISHING
+export const VIBRATING_MIN_THRESHOLD       = THRESHOLDS.VIBRATING_MIN
+export const TEMP_WARN_CELSIUS             = THRESHOLDS.TEMP_WARN
+export const TEMP_DENATURING               = THRESHOLDS.TEMP_DENATURING
+export const TEMP_VAPORIZING               = THRESHOLDS.TEMP_VAPORIZING
+export const TEMP_SIMULATION_CAP           = THRESHOLDS.TEMP_CAP
 
 // ── Per-type colors (defined in theme/colors.ts — re-exported here for back-compat) ──
-export { CELL_COLORS } from '../theme/colors'
+export { CELL_COLORS } from '@/theme/colors'
 
 // ── Editable biophysical parameter definitions ────────────────────────────────
 export interface EditableParamDef {

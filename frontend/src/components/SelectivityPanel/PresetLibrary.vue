@@ -1,6 +1,6 @@
 <template>
   <!-- Target cell library -->
-  <div v-if="type === 'target'" class="sel-panel__library">
+  <div v-if="type === CELL_TYPE.TARGET" class="sel-panel__library">
     <div
       class="sel-panel__lib-title"
       v-tip="'<strong>' + $t('selectivity.targetLibTitle') + '</strong>\n' + $t('selectivity.targetLibTip')"
@@ -26,7 +26,7 @@
       class="sel-panel__lib-title"
       v-tip="'<strong>' + $t('selectivity.healthyLibTitle') + '</strong>\n' + $t('selectivity.healthyLibTip')"
     >{{ $t('selectivity.healthyLibTitle') }}</div>
-    <div class="sel-panel__lib-pills" :style="{ '--pill-c': GROUP_COLORS.reference }">
+    <div class="sel-panel__lib-pills" :style="{ '--pill-c': GROUP_COLORS[CELL_GROUP.REFERENCE] }">
       <button
         v-for="p in healthyPresets"
         :key="p.presetId"
@@ -42,12 +42,13 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import type { PropType } from 'vue'
-import { useCellStore } from '../../stores/cellStore'
-import { CELL_PRESETS, GROUP_COLORS, GROUP_LABELS } from '../../constants/cellLibrary'
-import type { CellGroup } from '../../constants/cellLibrary'
+import { useCellStore } from '@/stores/cellStore'
+import { CELL_PRESETS, GROUP_COLORS, GROUP_LABELS } from '@/constants/cellLibrary'
+import type { CellGroup } from '@/constants/cellLibrary'
+import { CELL_TYPE, CELL_GROUP } from '@/constants/strings'
 
-const TARGET_GROUPS: CellGroup[] = ['cancer', 'bacteria', 'virus']
-const HEALTHY_GROUP: CellGroup = 'reference'
+const TARGET_GROUPS: CellGroup[] = [CELL_GROUP.CANCER, CELL_GROUP.BACTERIA, CELL_GROUP.VIRUS] as CellGroup[]
+const HEALTHY_GROUP: CellGroup = CELL_GROUP.REFERENCE as CellGroup
 
 export default defineComponent({
   props: {
@@ -58,7 +59,7 @@ export default defineComponent({
   },
 
   setup() {
-    return { store: useCellStore(), CELL_PRESETS, GROUP_COLORS, GROUP_LABELS }
+    return { store: useCellStore(), CELL_PRESETS, GROUP_COLORS, GROUP_LABELS, CELL_TYPE, CELL_GROUP }
   },
 
   computed: {

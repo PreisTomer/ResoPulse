@@ -29,16 +29,14 @@
       <span
         class="sel-panel__bar-plysis"
         :class="{ 'sel-panel__bar-plysis--high': healthyLysisProbability >= 50 }"
-        v-tip="'<strong>P(electroporation) — Healthy</strong>\nSigmoid probability centered at 100% disruption threshold.\nKeep this value near 0% for selective therapy'"
+        v-tip="tipHealthyPlysis"
       >P{{ healthyLysisProbability }}%</span>
     </div>
   </div>
 
   <!-- Nuclear envelope disruption bars (double-shell model) -->
-  <template v-if="store.doubleShellEnabled && store.targetCellCategory === 'mammalian'">
-    <div class="sel-panel__nuc-section"
-      v-tip="'<strong>Nuclear Envelope Disruption (Double-Shell Model)</strong>\nVm_nuc / V_threshold_nuc for each cell.\nBandpass peak at f_peak = 1/(2π√(τ_pm·τ_ne)) — typically 0.87–2.1 MHz.\nCancer nuclei have thinner/leakier NE and lower thresholds → higher disruption ratio.\nKotnik &amp; Miklavcic, Biophys. J. 90:480 (2006)'"
-    >
+  <template v-if="store.doubleShellEnabled && store.targetCellCategory === CELL_CATEGORY.MAMMALIAN">
+    <div class="sel-panel__nuc-section" v-tip="tipNuclearSection">
       <div class="sel-panel__nuc-bar-row">
         <span class="sel-panel__nuc-bar-label">&#x26AC; NE-T</span>
         <div class="sel-panel__nuc-bar-track">
@@ -62,7 +60,7 @@
       <div class="sel-panel__nuc-sel-row">
         <span class="sel-panel__nuc-sel-label">NE Selectivity</span>
         <span class="sel-panel__nuc-sel-val" :class="store.nuclearSelectivityRatio >= 1.5 ? 'sel-panel__nuc-sel--good' : store.nuclearSelectivityRatio >= 1.0 ? 'sel-panel__nuc-sel--ok' : 'sel-panel__nuc-sel--low'">
-          ×{{ store.nuclearSelectivityRatio >= 99 ? '∞' : store.nuclearSelectivityRatio.toFixed(2) }}
+          ×{{ store.nuclearSelectivityRatio >= 99 ? ICON.INFINITY : store.nuclearSelectivityRatio.toFixed(2) }}
         </span>
       </div>
     </div>
@@ -71,13 +69,15 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
-import { useCellStore } from '../../stores/cellStore'
-import { DISRUPTION_WARN_THRESHOLD } from '../../constants/cellCard'
-import { formatLysisTime } from '../../utils/sliderTooltips'
+import { useCellStore } from '@/stores/cellStore'
+import { DISRUPTION_WARN_THRESHOLD } from '@/constants/cellCard'
+import { CELL_CATEGORY } from '@/constants/strings'
+import { ICON } from '@/constants/icons'
+import { formatLysisTime } from '@/utils/sliderTooltips'
 
 export default defineComponent({
   setup() {
-    return { store: useCellStore() }
+    return { store: useCellStore(), CELL_CATEGORY, ICON }
   },
 
   computed: {
@@ -104,13 +104,21 @@ export default defineComponent({
     isResonanceTarget(): boolean {
       const cat = this.store.targetCellCategory
       const t = this.store.target as { resonantFreqGHz?: number; resonantThresholdVcm?: number }
-      return (cat === 'virus' || cat === 'bacteria') && !!t.resonantFreqGHz && !!t.resonantThresholdVcm
+      return (cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) && !!t.resonantFreqGHz && !!t.resonantThresholdVcm
+    },
+
+    tipHealthyPlysis(): string {
+      return `<strong>P(electroporation) — Healthy</strong>\nSigmoid probability centered at 100% disruption threshold.\nKeep this value near 0% for selective therapy`
+    },
+
+    tipNuclearSection(): string {
+      return `<strong>Nuclear Envelope Disruption (Double-Shell Model)</strong>\nVm_nuc / V_threshold_nuc for each cell.\nBandpass peak at f_peak = 1/(2π√(τ_pm·τ_ne)) — typically 0.87–2.1 MHz.\nCancer nuclei have thinner/leakier NE and lower thresholds → higher disruption ratio.\nKotnik &amp; Miklavcic, Biophys. J. 90:480 (2006)`
     },
 
     tipTargetBar(): string {
       const pct  = this.targetRatioPct.toFixed(0)
       const warn = this.targetRatio >= DISRUPTION_WARN_THRESHOLD
-        ? `\n<span class="tip-warn">⚡ >85% — disruption countdown active (${this.lysisTimeDisplay})</span>` : ''
+        ? `\n<span class="tip-warn">${ICON.LIGHTNING} >85% — disruption countdown active (${this.lysisTimeDisplay})</span>` : ''
       if (this.isResonanceTarget) {
         const t = this.store.target as { resonantFreqGHz?: number; resonantThresholdVcm?: number }
         return `<strong>Target resonant disruption: <span class="tip-val">${pct}%</span></strong>
@@ -133,14 +141,14 @@ Ratio = Vm / threshold${warn}
         return `<strong>Healthy cell: <span class="tip-val">${pct}% disruption (≈0)</span></strong>
 Mammalian cells lack rigid-shell resonance — Schwan Vm → 0 at GHz (ωτ ≫ 1).
 No membrane coupling at pathogen-targeting frequencies.
-<span class="tip-ok">✓ Frequency-selective — healthy tissue unperturbed</span>
+<span class="tip-ok">${ICON.CHECK} Frequency-selective — healthy tissue unperturbed</span>
 Ref: Tsen et al. (2007)`
       }
       const hVm  = (this.store.healthyVm * 1000).toFixed(2)
       const hThr = (this.store.healthy.thresholdVoltage * 1000).toFixed(0)
       const status = this.healthyRatio < 0.5
-        ? '\n<span class="tip-ok">✓ Healthy cells are safe</span>'
-        : '\n<span class="tip-warn">⚠ Approaching threshold — reduce field</span>'
+        ? `\n<span class="tip-ok">${ICON.CHECK} Healthy cells are safe</span>`
+        : `\n<span class="tip-warn">${ICON.WARNING} Approaching threshold — reduce field</span>`
       return `<strong>Healthy membrane disruption: <span class="tip-val">${pct}%</span></strong>
 Induced Vm = <span class="tip-val">${hVm} mV</span>
 Lysis threshold = ${hThr} mV

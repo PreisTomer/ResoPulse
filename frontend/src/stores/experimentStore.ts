@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import type { LogEventType } from '@/constants/strings'
 
 export interface LogEntry {
   id: number
@@ -14,7 +15,7 @@ export interface LogEntry {
   targetRatio: number
   healthyTemp: number     // °C
   targetTemp: number
-  event: 'manual' | 'lysis'
+  event: LogEventType
 }
 
 interface ExperimentState {

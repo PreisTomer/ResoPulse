@@ -45,7 +45,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import type { PropType } from 'vue'
-import type { CellRecord } from '../../types/cell'
+import type { CellRecord } from '@/types/cell'
 
 export default defineComponent({
   props: {

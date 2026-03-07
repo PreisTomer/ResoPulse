@@ -39,9 +39,9 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
-import { useCellStore } from '../../stores/cellStore'
-import { GROUP_COLORS } from '../../constants/cellLibrary'
-import type { CellGroup } from '../../constants/cellLibrary'
+import { useCellStore } from '@/stores/cellStore'
+import { GROUP_COLORS } from '@/constants/cellLibrary'
+import type { CellGroup } from '@/constants/cellLibrary'
 
 export default defineComponent({
   setup() {

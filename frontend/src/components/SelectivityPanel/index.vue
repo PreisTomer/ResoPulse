@@ -9,7 +9,7 @@
       </span>
       <div class="sel-panel__ratio-labels">
         <span class="sel-panel__ratio-label">{{ $t('selectivity.ratioLabel') }}</span>
-        <span class="sel-panel__ti-label">Vm ×<span>{{ vmSelectivityRatio >= 99 ? '∞' : vmSelectivityRatio.toFixed(2) }}</span></span>
+        <span class="sel-panel__ti-label">Vm ×<span>{{ vmSelectivityRatio >= 99 ? ICON.INFINITY : vmSelectivityRatio.toFixed(2) }}</span></span>
       </div>
     </div>
 
@@ -25,17 +25,13 @@
           <span class="sel-panel__vs-type sel-panel__vs-type--t">{{ $t('selectivity.tDisr') }}</span>
           <span class="sel-panel__vs-vm sel-panel__vs-vm--t">{{ targetRatioPct.toFixed(1) }}%</span>
           <span class="sel-panel__vs-sar">{{ targetSarVal }} W/kg</span>
-          <span class="sel-panel__vs-elysis"
-            v-tip="'<strong>' + $t('selectivity.tipEthr') + '</strong>\n' + $t('selectivity.tipEthrBody')"
-          >E<sub>thr</sub> {{ targetResonanceEthr }}</span>
+          <span class="sel-panel__vs-elysis" v-tip="tipEthr">E<sub>thr</sub> {{ targetResonanceEthr }}</span>
         </div>
         <div class="sel-panel__vm-sar-cell">
           <span class="sel-panel__vs-type sel-panel__vs-type--h">{{ $t('selectivity.hSafe') }}</span>
           <span class="sel-panel__vs-vm sel-panel__vs-vm--res">≈0%</span>
           <span class="sel-panel__vs-sar">{{ healthySarVal }} W/kg</span>
-          <span class="sel-panel__vs-elysis sel-panel__vs-elysis--safe"
-            v-tip="'<strong>' + $t('selectivity.tipNoGhzRes') + '</strong>\n' + $t('selectivity.tipNoGhzResBody')"
-          >{{ $t('selectivity.noGhzRes') }}</span>
+          <span class="sel-panel__vs-elysis sel-panel__vs-elysis--safe" v-tip="tipNoGhzRes">{{ $t('selectivity.noGhzRes') }}</span>
         </div>
       </template>
       <template v-else>
@@ -43,42 +39,34 @@
           <span class="sel-panel__vs-type sel-panel__vs-type--t">{{ $t('selectivity.targetBar') }}-Vm</span>
           <span class="sel-panel__vs-vm sel-panel__vs-vm--t">{{ targetVmMv }} mV</span>
           <span class="sel-panel__vs-sar">{{ targetSarVal }} W/kg</span>
-          <span class="sel-panel__vs-elysis" v-tip="'<strong>Target lysis field</strong>\nMinimum E required to reach lysis threshold at current frequency.\nE_lysis = Vm_thr · √(1+(ωτ)²) / (1.5·R)'">E<sub>lys</sub> {{ targetLysisField }}</span>
+          <span class="sel-panel__vs-elysis" v-tip="tipTargetLysisField">E<sub>lys</sub> {{ targetLysisField }}</span>
         </div>
         <div class="sel-panel__vm-sar-cell">
           <span class="sel-panel__vs-type sel-panel__vs-type--h">{{ $t('selectivity.healthyBar') }}-Vm</span>
           <span class="sel-panel__vs-vm sel-panel__vs-vm--h">{{ healthyVmMv }} mV</span>
           <span class="sel-panel__vs-sar">{{ healthySarVal }} W/kg</span>
-          <span class="sel-panel__vs-elysis" v-tip="'<strong>Healthy lysis field</strong>\nMinimum E required to reach lysis threshold at current frequency.\nKeep operating field below this value for selective therapy.'">E<sub>lys</sub> {{ healthyLysisField }}</span>
+          <span class="sel-panel__vs-elysis" v-tip="tipHealthyLysisField">E<sub>lys</sub> {{ healthyLysisField }}</span>
         </div>
       </template>
     </div>
 
     <!-- ── Resonance physics info (resonance mode only) ─────────── -->
-    <div v-if="isResonanceTarget && store.chartMode === 'resonance'" class="sel-panel__resonance-info">
+    <div v-if="isResonanceTarget && store.chartMode === CHART_MODE.RESONANCE" class="sel-panel__resonance-info">
       <div class="sel-panel__res-title">RESONANCE PARAMETERS</div>
-      <div class="sel-panel__res-row"
-        v-tip="'<strong>EM Skin Depth</strong>\nδ = √(1/(π·f·μ₀·σ_e))\nDepth at which GHz field amplitude decays to 1/e (~37%).\n≥10 mm: tissue-penetrating · 2–10 mm: surface region · <2 mm: near-surface only.\nIn vivo GHz delivery requires near-field applicators or intracavitary probes for deep tissue.\nRef: Gabriel et al. (1996) Phys. Med. Biol. 41:2271'"
-      >
+      <div class="sel-panel__res-row" v-tip="tipSkinDepth">
         <span class="sel-panel__res-label">δ skin depth</span>
         <span class="sel-panel__res-val" :class="skinDepthClass">{{ skinDepthLabel }}</span>
         <span class="sel-panel__res-note">at {{ freqDisplayLabel }}</span>
       </div>
-      <div class="sel-panel__res-row"
-        v-tip="'<strong>f_res Uncertainty Range</strong>\nf_res = v_sound / (2R) — uncertainty driven by v_sound literature range.\nBacteria peptidoglycan: v_wall ≈ 800–1200 m/s → ±25–30%.\nEnveloped viruses: v_eff poorly defined → ±40%.\nTune frequency experimentally within this range.'"
-      >
+      <div class="sel-panel__res-row" v-tip="tipFresRange">
         <span class="sel-panel__res-label">f_res range</span>
         <span class="sel-panel__res-val">{{ resonantFreqRange }}</span>
       </div>
-      <div v-if="resonantQRange" class="sel-panel__res-row"
-        v-tip="'<strong>Q-Factor Uncertainty</strong>\nMechanical quality factor Q sets the resonance linewidth.\nLower Q → broader resonance → easier frequency matching but weaker peak amplitude.\nDykeman & Sankey (2010) validated Q on rigid icosahedral protein capsids only.\nBacterial peptidoglycan and viral lipid envelopes have substantially lower Q.'"
-      >
+      <div v-if="resonantQRange" class="sel-panel__res-row" v-tip="tipQFactor">
         <span class="sel-panel__res-label">Q range</span>
         <span class="sel-panel__res-val">{{ resonantQRange }}</span>
       </div>
-      <div class="sel-panel__res-row"
-        v-tip="'<strong>Experimental Basis</strong>\nLASER-VALIDATED: capsid disruption confirmed by pulsed laser acoustic excitation (Tsen 2007–2012).\nRF-EXTRAPOLATED: acoustic mechanism plausible for rigid walls; GHz RF delivery is not yet experimentally validated — laser experiments only.\nSPECULATIVE: enveloped viruses / peptidoglycan — no experimental validation of resonance disruption by any method.\nRef: Tsen et al. (2007) Biophys. J.; Dykeman &amp; Sankey (2010) Phys. Rev. Lett.'"
-      >
+      <div class="sel-panel__res-row" v-tip="tipBasis">
         <span class="sel-panel__res-label">Basis</span>
         <span class="sel-panel__res-badge" :class="experimentalBasisClass">{{ experimentalBasisLabel }}</span>
       </div>
@@ -107,7 +95,7 @@
       <button
         v-if="showResonanceSwitchBtn"
         class="sel-panel__model-warning-btn"
-        @click="store.setChartMode('resonance')"
+        @click="store.setChartMode(CHART_MODE.RESONANCE)"
       >→ Switch to Resonance Mode</button>
     </div>
 
@@ -120,9 +108,12 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
-import { useCellStore } from '../../stores/cellStore'
-import { DISRUPTION_WARN_THRESHOLD } from '../../constants/cellCard'
-import { broadcastFieldParams } from '../../services/socket'
+import { useCellStore } from '@/stores/cellStore'
+import { DISRUPTION_WARN_THRESHOLD } from '@/constants/cellCard'
+import { CELL_CATEGORY, CHART_MODE, EXPERIMENTAL_BASIS } from '@/constants/strings'
+import { ICON } from '@/constants/icons'
+import { formatFreqKHz, formatFieldVcm } from '@/utils/format'
+import { broadcastFieldParams } from '@/services/socket'
 import DisruptionBars from './DisruptionBars.vue'
 import ComparisonTable from './ComparisonTable.vue'
 import PresetLibrary from './PresetLibrary.vue'
@@ -131,7 +122,7 @@ export default defineComponent({
   components: { DisruptionBars, ComparisonTable, PresetLibrary },
 
   setup() {
-    return { store: useCellStore() }
+    return { store: useCellStore(), CHART_MODE, ICON }
   },
 
   computed: {
@@ -172,14 +163,13 @@ export default defineComponent({
     isResonanceTarget(): boolean {
       const cat = this.store.targetCellCategory
       const t = this.store.target as { resonantFreqGHz?: number; resonantThresholdVcm?: number }
-      return (cat === 'virus' || cat === 'bacteria') && !!t.resonantFreqGHz && !!t.resonantThresholdVcm
+      return (cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) && !!t.resonantFreqGHz && !!t.resonantThresholdVcm
     },
 
     targetResonanceEthr(): string {
       const t = this.store.target as { resonantThresholdVcm?: number }
       if (!t.resonantThresholdVcm) return '—'
-      const v = t.resonantThresholdVcm
-      return v >= 1000 ? `${(v / 1000).toFixed(1)} kV/cm` : `${v.toFixed(0)} V/cm`
+      return formatFieldVcm(t.resonantThresholdVcm)
     },
 
     tipVmSar(): string {
@@ -197,39 +187,33 @@ export default defineComponent({
       return Math.min(99.9, this.store.targetVm / hVm)
     },
 
-    targetLysisField(): string {
-      const vcm = this.store.targetLysisField
-      return vcm >= 1000 ? `${(vcm / 1000).toFixed(1)} kV/cm` : `${vcm.toFixed(0)} V/cm`
-    },
-    healthyLysisField(): string {
-      const vcm = this.store.healthyLysisField
-      return vcm >= 1000 ? `${(vcm / 1000).toFixed(1)} kV/cm` : `${vcm.toFixed(0)} V/cm`
-    },
+    targetLysisField(): string { return formatFieldVcm(this.store.targetLysisField) },
+    healthyLysisField(): string { return formatFieldVcm(this.store.healthyLysisField) },
 
     targetModelWarning(): string | null {
       const cat = this.store.targetCellCategory
       const ti  = this.therapeuticIndex
       const t = this.store.target as { resonantFreqGHz?: number; resonantThresholdVcm?: number }
       const ghzCaveat = ' · f_res from fs-laser experiments (Tsen et al. [10]); RF delivery at GHz is skin-depth limited (~1–2 mm in saline)'
-      if (this.store.chartMode === 'resonance' && cat === 'mammalian') {
-        return '⚠ Resonance mode has no physical meaning for mammalian cells — they have no rigid protein capsid or peptidoglycan cell wall. Switch back to IRE/Vm mode.'
+      if (this.store.chartMode === CHART_MODE.RESONANCE && cat === CELL_CATEGORY.MAMMALIAN) {
+        return `${ICON.WARNING} Resonance mode has no physical meaning for mammalian cells — they have no rigid protein capsid or peptidoglycan cell wall. Switch back to IRE/Vm mode.`
       }
-      if (cat === 'virus') {
+      if (cat === CELL_CATEGORY.VIRUS) {
         if (t.resonantFreqGHz) {
-          return `⚠ IRE model inapplicable for virions (R < 0.1 µm) · Acoustic capsid disruption at ${t.resonantFreqGHz} GHz${ghzCaveat}`
+          return `${ICON.WARNING} IRE model inapplicable for virions (R < 0.1 µm) · Acoustic capsid disruption at ${t.resonantFreqGHz} GHz${ghzCaveat}`
         }
         const tLysis = this.store.targetLysisField
-        return `⚠ IRE not applicable to virions — E_lysis ≈ ${(tLysis / 1000).toFixed(0)} kV/cm · Use Resonance mode`
+        return `${ICON.WARNING} IRE not applicable to virions — E_lysis ≈ ${(tLysis / 1000).toFixed(0)} kV/cm · Use Resonance mode`
       }
-      if (cat === 'bacteria') {
+      if (cat === CELL_CATEGORY.BACTERIA) {
         const tLysis = this.store.targetLysisField
         if (tLysis > 3000) {
           const res = t.resonantFreqGHz ? ` · Resonance mode (${t.resonantFreqGHz} GHz) available${ghzCaveat}` : ''
-          return `⚠ E_lysis ≈ ${(tLysis / 1000).toFixed(1)} kV/cm — standard IRE impractical · Consider nsEP (pulse width slider)${res}`
+          return `${ICON.WARNING} E_lysis ≈ ${(tLysis / 1000).toFixed(1)} kV/cm — standard IRE impractical · Consider nsEP (pulse width slider)${res}`
         }
       }
       if (ti > 0 && ti < 0.85) {
-        return `⚠ TI = ${ti.toFixed(2)}× — selectivity reversed at DC (τ_T < τ_H) · Short pulses may improve selectivity`
+        return `${ICON.WARNING} TI = ${ti.toFixed(2)}× — selectivity reversed at DC (τ_T < τ_H) · Short pulses may improve selectivity`
       }
       return null
     },
@@ -237,9 +221,9 @@ export default defineComponent({
     showResonanceSwitchBtn(): boolean {
       const cat = this.store.targetCellCategory
       const t = this.store.target as { resonantFreqGHz?: number }
-      return !!(cat === 'virus' || cat === 'bacteria') &&
+      return !!(cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) &&
         !!t.resonantFreqGHz &&
-        this.store.chartMode === 'schwan'
+        this.store.chartMode === CHART_MODE.SCHWAN
     },
 
     optimalFreqResult(): { khz: number; sel: number } {
@@ -248,23 +232,21 @@ export default defineComponent({
 
     optimalNote(): string {
       const { khz, sel } = this.optimalFreqResult
-      const label = khz >= 1_000_000
-        ? `${(khz / 1_000_000).toFixed(2)} GHz`
-        : khz >= 1000 ? `${(khz / 1000).toFixed(2)} MHz` : `${khz.toFixed(0)} kHz`
+      const label = formatFreqKHz(khz)
       if (this.isResonanceTarget) {
-        return `⭐ f_res: ${label} · ×${sel >= 99 ? '∞' : sel.toFixed(2)} (resonance peak)`
+        return `${ICON.STAR} f_res: ${label} · ×${sel >= 99 ? ICON.INFINITY : sel.toFixed(2)} (resonance peak)`
       }
       if (khz > 10000) {
-        return `⭐ Optimal: ${label} · ×${sel.toFixed(2)} ↑ beyond slider range`
+        return `${ICON.STAR} Optimal: ${label} · ×${sel.toFixed(2)} ${ICON.BEYOND}`
       }
-      return `⭐ Optimal: ${label} · ×${sel.toFixed(2)}`
+      return `${ICON.STAR} Optimal: ${label} · ×${sel.toFixed(2)}`
     },
 
     skinDepthMm(): number { return this.store.skinDepthMm },
 
     skinDepthLabel(): string {
       const d = this.skinDepthMm
-      if (!isFinite(d)) return '∞'
+      if (!isFinite(d)) return ICON.INFINITY
       return d >= 10 ? `${d.toFixed(0)} mm` : `${d.toFixed(1)} mm`
     },
 
@@ -276,10 +258,7 @@ export default defineComponent({
     },
 
     freqDisplayLabel(): string {
-      const khz = this.store.currentBroadcastFrequency
-      if (khz >= 1e6) return `${(khz / 1e6).toFixed(2)} GHz`
-      if (khz >= 1e3) return `${(khz / 1e3).toFixed(2)} MHz`
-      return `${khz} kHz`
+      return formatFreqKHz(this.store.currentBroadcastFrequency)
     },
 
     resonantFreqRange(): string {
@@ -287,7 +266,7 @@ export default defineComponent({
       const f0 = t.resonantFreqGHz
       const pct = t.resonantFreqUncertaintyPct
       if (!f0) return '—'
-      const label = (ghz: number) => ghz >= 1 ? `${ghz.toFixed(2)} GHz` : `${(ghz * 1000).toFixed(0)} MHz`
+      const label = (ghz: number) => formatFreqKHz(ghz * 1e6)
       if (!pct) return label(f0)
       const lo = f0 * (1 - pct / 100)
       const hi = f0 * (1 + pct / 100)
@@ -305,19 +284,51 @@ export default defineComponent({
 
     experimentalBasisLabel(): string {
       switch (this.store.target.experimentalBasis) {
-        case 'laser-validated': return 'LASER-VALIDATED'
-        case 'rf-extrapolated': return 'RF-EXTRAPOLATED'
-        case 'speculative':     return 'SPECULATIVE'
+        case EXPERIMENTAL_BASIS.LASER_VALIDATED: return 'LASER-VALIDATED'
+        case EXPERIMENTAL_BASIS.RF_EXTRAPOLATED: return 'RF-EXTRAPOLATED'
+        case EXPERIMENTAL_BASIS.SPECULATIVE:     return 'SPECULATIVE'
         default: return 'UNCLASSIFIED'
       }
     },
 
     experimentalBasisClass(): string {
       switch (this.store.target.experimentalBasis) {
-        case 'laser-validated': return 'sel-panel__res-badge--validated'
-        case 'rf-extrapolated': return 'sel-panel__res-badge--extrapolated'
-        default:                return 'sel-panel__res-badge--speculative'
+        case EXPERIMENTAL_BASIS.LASER_VALIDATED: return 'sel-panel__res-badge--validated'
+        case EXPERIMENTAL_BASIS.RF_EXTRAPOLATED: return 'sel-panel__res-badge--extrapolated'
+        default:                                  return 'sel-panel__res-badge--speculative'
       }
+    },
+
+    tipEthr(): string {
+      return `<strong>${this.$t('selectivity.tipEthr')}</strong>\n${this.$t('selectivity.tipEthrBody')}`
+    },
+
+    tipNoGhzRes(): string {
+      return `<strong>${this.$t('selectivity.tipNoGhzRes')}</strong>\n${this.$t('selectivity.tipNoGhzResBody')}`
+    },
+
+    tipTargetLysisField(): string {
+      return `<strong>Target lysis field</strong>\nMinimum E required to reach lysis threshold at current frequency.\nE_lysis = Vm_thr · √(1+(ωτ)²) / (1.5·R)`
+    },
+
+    tipHealthyLysisField(): string {
+      return `<strong>Healthy lysis field</strong>\nMinimum E required to reach lysis threshold at current frequency.\nKeep operating field below this value for selective therapy.`
+    },
+
+    tipSkinDepth(): string {
+      return `<strong>EM Skin Depth</strong>\nδ = √(1/(π·f·μ₀·σ_e))\nDepth at which GHz field amplitude decays to 1/e (~37%).\n≥10 mm: tissue-penetrating · 2–10 mm: surface region · <2 mm: near-surface only.\nIn vivo GHz delivery requires near-field applicators or intracavitary probes for deep tissue.\nRef: Gabriel et al. (1996) Phys. Med. Biol. 41:2271`
+    },
+
+    tipFresRange(): string {
+      return `<strong>f_res Uncertainty Range</strong>\nf_res = v_sound / (2R) — uncertainty driven by v_sound literature range.\nBacteria peptidoglycan: v_wall ≈ 800–1200 m/s → ±25–30%.\nEnveloped viruses: v_eff poorly defined → ±40%.\nTune frequency experimentally within this range.`
+    },
+
+    tipQFactor(): string {
+      return `<strong>Q-Factor Uncertainty</strong>\nMechanical quality factor Q sets the resonance linewidth.\nLower Q → broader resonance → easier frequency matching but weaker peak amplitude.\nDykeman & Sankey (2010) validated Q on rigid icosahedral protein capsids only.\nBacterial peptidoglycan and viral lipid envelopes have substantially lower Q.`
+    },
+
+    tipBasis(): string {
+      return `<strong>Experimental Basis</strong>\nLASER-VALIDATED: capsid disruption confirmed by pulsed laser acoustic excitation (Tsen 2007–2012).\nRF-EXTRAPOLATED: acoustic mechanism plausible for rigid walls; GHz RF delivery is not yet experimentally validated — laser experiments only.\nSPECULATIVE: enveloped viruses / peptidoglycan — no experimental validation of resonance disruption by any method.\nRef: Tsen et al. (2007) Biophys. J.; Dykeman &amp; Sankey (2010) Phys. Rev. Lett.`
     },
 
     tipSelectivity(): string {
@@ -327,7 +338,7 @@ export default defineComponent({
         : sel >= 1.0
           ? '<span class="tip-warn">Marginal window — adjust field or preset</span>'
           : '<span class="tip-warn">Non-selective — healthy cells equally at risk</span>'
-      const selStr = sel >= 99 ? '∞' : sel.toFixed(3)
+      const selStr = sel >= 99 ? ICON.INFINITY : sel.toFixed(3)
 
       if (this.isResonanceTarget) {
         return `<strong>TI (Therapeutic Index) = Target / Healthy disruption ratio</strong>
@@ -342,11 +353,11 @@ At f_res(target), healthy disruption ≈ 0 → TI → ∞
 
 <span class="tip-ok">Frequency-selective — healthy tissue unperturbed at GHz fields</span>
 Ref: Tsen et al. (2007); Dykeman &amp; Sankey (2008)
-<span class="tip-warn">⚠ Enveloped viruses (Influenza, SARS-CoV-2): lipid envelope has no rigid-shell resonance (Q≈1). f_res/Q/E_thr values are theoretical extrapolations — not experimentally validated.</span>`
+<span class="tip-warn">${ICON.WARNING} Enveloped viruses (Influenza, SARS-CoV-2): lipid envelope has no rigid-shell resonance (Q≈1). f_res/Q/E_thr values are theoretical extrapolations — not experimentally validated.</span>`
       }
 
       const vmSel = this.vmSelectivityRatio
-      const vmStr = vmSel >= 99 ? '∞' : vmSel.toFixed(2)
+      const vmStr = vmSel >= 99 ? ICON.INFINITY : vmSel.toFixed(2)
       return `<strong>TI (Therapeutic Index) = (Vm_T/Vth_T) / (Vm_H/Vth_H)</strong>
 Current: <span class="tip-val">×${selStr}</span>
 
@@ -388,24 +399,24 @@ Sub-threshold  T <50%
       if (this.isResonanceTarget) {
         const t = this.store.target as { resonantFreqGHz?: number; resonantThresholdVcm?: number; capsidQ?: number }
         const fRes = t.resonantFreqGHz ?? 0
-        const label = fRes >= 1 ? `${fRes.toFixed(1)} GHz` : `${(fRes * 1000).toFixed(0)} MHz`
+        const label = formatFreqKHz(fRes * 1e6)
         return `<strong>Resonant Frequency — f_res = ${label}</strong>
 Acoustic/mechanical resonance: disruption ratio peaks at 1.0 at f_res.
 Lorentzian lineshape L(f) = 1 / √(1 + (Q·(f/f₀ − f₀/f))²)
 
 E_threshold = ${t.resonantThresholdVcm} V/cm  ·  Q = ${t.capsidQ ?? 20}
-Healthy cells (R ≈ 10 µm) have no GHz resonance → selectivity → ∞
+Healthy cells (R ≈ 10 µm) have no GHz resonance → selectivity → ${ICON.INFINITY}
 
 <span class="tip-ok">Click to snap cursor to f_res</span>
 Ref: Tsen et al. (2007); Dykeman &amp; Sankey (2008)
-<span class="tip-warn">⚠ Enveloped viruses (Influenza, SARS-CoV-2): lipid envelope — no rigid-shell resonance. Extrapolated values only.</span>`
+<span class="tip-warn">${ICON.WARNING} Enveloped viruses (Influenza, SARS-CoV-2): lipid envelope — no rigid-shell resonance. Extrapolated values only.</span>`
       }
       const { khz, sel } = this.optimalFreqResult
-      const label    = khz >= 1000 ? `${(khz / 1000).toFixed(2)} MHz` : `${khz.toFixed(0)} kHz`
+      const label    = formatFreqKHz(khz)
       const cls      = sel >= 1.5 ? 'tip-ok' : sel >= 1.0 ? 'tip-val' : 'tip-warn'
       const beyondRange = khz > 10000
       const snapNote = beyondRange
-        ? `<span class="tip-warn">⚠ Optimal is beyond 10 MHz slider cap.\n  Snap sets 10 MHz (best reachable frequency).\n  Bacteria/virus targeting requires >10 MHz RF equipment.</span>`
+        ? `<span class="tip-warn">${ICON.WARNING} Optimal is beyond 10 MHz slider cap.\n  Snap sets 10 MHz (best reachable frequency).\n  Bacteria/virus targeting requires >10 MHz RF equipment.</span>`
         : `<span class="tip-ok">Click to snap cursor to this frequency</span>`
       return `<strong>Optimal Broadcast Frequency (Schwan mode)</strong>
 Scanned 300 log-spaced points from 10 kHz → 500 MHz.
