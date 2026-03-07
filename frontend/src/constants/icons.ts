@@ -13,6 +13,7 @@ export const ICON = {
   LOCK:      '🔒',
   NOURISH:   '⊕',
   LYSIS_BOLT:'↯',
+  NUCLEUS:   '⚬',
 } as const
 
 export type Icon = typeof ICON[keyof typeof ICON]

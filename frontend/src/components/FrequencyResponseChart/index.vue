@@ -19,9 +19,9 @@
         class="freq-chart__tooltip"
         :style="{ left: (_tooltipData.x + 54) + 'px' }"
       >
-        <div class="freq-chart__tooltip-freq">{{ formatHz(_tooltipData.freqHz) }}Hz</div>
-        <div class="freq-chart__tooltip-row freq-chart__tooltip-row--h">H {{ _tooltipData.healthyVm.toFixed(2) }} mV</div>
-        <div class="freq-chart__tooltip-row freq-chart__tooltip-row--t">T {{ _tooltipData.targetVm.toFixed(2) }} mV</div>
+        <div class="freq-chart__tooltip-freq">{{ formatHz(_tooltipData.freqHz) }}{{ UNIT.HZ }}</div>
+        <div class="freq-chart__tooltip-row freq-chart__tooltip-row--h">H {{ _tooltipData.healthyVm.toFixed(2) }} {{ UNIT.MV }}</div>
+        <div class="freq-chart__tooltip-row freq-chart__tooltip-row--t">T {{ _tooltipData.targetVm.toFixed(2) }} {{ UNIT.MV }}</div>
       </div>
     </Transition>
   </div>
@@ -35,6 +35,7 @@ import { computeSchwan, computeFc, computeNuclearVm, computeResonantLineshape } 
 import { CELL_PRESETS, GROUP_COLORS } from '@/constants/cellLibrary'
 import { CELL_CATEGORY, CHART_MODE } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
+import { UNIT } from '@/constants/units'
 import { broadcastFieldParams } from '@/services/socket'
 import { C } from '@/theme/colors'
 import ChartLegend from './ChartLegend.vue'
@@ -58,7 +59,7 @@ export default defineComponent({
   components: { ChartLegend },
 
   setup() {
-    return { store: useCellStore() }
+    return { store: useCellStore(), UNIT }
   },
 
   data() {

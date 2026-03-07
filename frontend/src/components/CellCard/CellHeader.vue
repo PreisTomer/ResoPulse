@@ -20,7 +20,7 @@
         <span class="cell-card__meta-state" :class="metaStateClass" v-tip="tipState">{{ cellState }}</span>
       </div>
       <div v-if="doubleShellEnabled && hasNuclearParams" class="cell-card__nuclear-meta">
-        <span class="cell-card__nuclear-label">&#x26AC; Nucleus Vm</span>
+        <span class="cell-card__nuclear-label">{{ ICON.NUCLEUS }} Nucleus Vm</span>
         <span class="cell-card__nuclear-value">{{ nuclearVmMv.toFixed(3) }} mV</span>
         <span
           class="cell-card__nuclear-ratio"
@@ -35,8 +35,11 @@
 import { defineComponent } from 'vue'
 import type { PropType } from 'vue'
 import type { CellState } from '@/types/cell'
+import { ICON } from '@/constants/icons'
 
 export default defineComponent({
+  setup() { return { ICON } },
+
   props: {
     type:               { type: String as PropType<'healthy' | 'target'>, required: true },
     label:              { type: String, required: true },

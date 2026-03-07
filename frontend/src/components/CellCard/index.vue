@@ -46,7 +46,7 @@
         class="cell-card__nuclear-bar-row"
         v-tip="tipNuclearBar"
       >
-        <span class="cell-card__nuclear-bar-label">&#x26AC; NE</span>
+        <span class="cell-card__nuclear-bar-label">{{ ICON.NUCLEUS }} NE</span>
         <div class="cell-card__nuclear-bar-track">
           <div
             class="cell-card__nuclear-bar-fill"
@@ -185,7 +185,7 @@ import { CELL_STATE, CELL_TYPE, CELL_CATEGORY } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'
 import { formatFreqKHz } from '@/utils/format'
-import { tipVm as tipVmFn, tipTemp as tipTempFn, tipState as tipStateFn, tipDisruption as tipDisruptionFn, tipNuclearBar as tipNuclearBarFn } from '@/utils/cellCardTooltips'
+import { tipVm as tipVmFn, tipTemp as tipTempFn, tipState as tipStateFn, tipDisruption as tipDisruptionFn, tipNuclearBar as tipNuclearBarFn, formatLysisTimeLocal } from '@/utils/cellCardTooltips'
 
 import CellHeader from './CellHeader.vue'
 import CellParamsPanel from './CellParamsPanel.vue'
@@ -229,7 +229,6 @@ export default defineComponent({
 
   computed: {
     accentColor(): string { return CELL_COLORS[this.type].accent },
-    rungColor():   string { return CELL_COLORS[this.type].rung   },
 
     vm(): number {
       return (this.type === CELL_TYPE.HEALTHY ? this.store.healthyVm : this.store.targetVm) * 1000
@@ -365,7 +364,7 @@ export default defineComponent({
 
     lysisProtocolStr(): string {
       const n = this.store.lysisNPulses
-      const t = this.formatLysisTime(this.store.lysisDelayMs)
+      const t = formatLysisTimeLocal(this.store.lysisDelayMs)
       return `${n} pulse${n === 1 ? '' : 's'} — est. ${t}`
     },
 
@@ -540,10 +539,6 @@ export default defineComponent({
         clearInterval(this._particleInterval ?? undefined)
         this.cellState = CELL_STATE.LYSED
       }, LYSIS_DURATION_MS) as unknown as number
-    },
-
-    formatLysisTime(ms: number): string {
-      return ms < 1000 ? `${ms}ms` : `${(ms / 1000).toFixed(1)}s`
     },
 
     onParamChange(key: string, e: Event) {
