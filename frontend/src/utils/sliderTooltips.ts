@@ -7,6 +7,7 @@
  */
 
 import { MEDIA } from '../constants/media'
+import { CHART_MODE, CELL_CATEGORY, THERMAL_LEVEL } from '../constants/strings'
 import type { MediumKey } from '../types/media'
 
 /** i18n translator signature (matches vue-i18n's `useI18n().t`) */
@@ -57,11 +58,11 @@ export function tipDutyCycle(opts: {
   const { effectiveDutyCycle, targetSAR, healthySAR, maxSteadyTemp, thermalDangerLevel, dutyCycleDisplay } = opts
   const effT = (targetSAR  * effectiveDutyCycle).toFixed(2)
   const effH = (healthySAR * effectiveDutyCycle).toFixed(2)
-  const warnText = thermalDangerLevel === 'vaporizing'
+  const warnText = thermalDangerLevel === THERMAL_LEVEL.VAPORIZING
     ? '\n<span class="tip-warn">⚡ VAPORIZING — cells instantly destroyed at T_ss ≥ 100°C</span>'
-    : thermalDangerLevel === 'denaturing'
+    : thermalDangerLevel === THERMAL_LEVEL.DENATURING
       ? '\n<span class="tip-warn">⚠ DENATURING — protein coagulation at T_ss ≥ 60°C (collagen ~60°C, albumin ~68°C)</span>'
-      : thermalDangerLevel === 'hyperthermic'
+      : thermalDangerLevel === THERMAL_LEVEL.HYPERTHERMIC
         ? '\n<span class="tip-warn">⚠ HYPERTHERMIC — thermal damage onset at T_ss ≥ 42°C (IAHT threshold)</span>'
         : ''
   return `<strong>Pulse Duty Cycle  (t_on / period)</strong>
@@ -141,7 +142,7 @@ export function tipField(opts: {
   t: T
 }): string {
   const { chartMode, target, fieldDisplay, targetDisruption, targetCellCategory, targetLysisField, healthyLysisField, t } = opts
-  if (chartMode === 'resonance') {
+  if (chartMode === CHART_MODE.RESONANCE) {
     if (target.resonantFreqGHz && target.resonantThresholdVcm) {
       const fStr = target.resonantFreqGHz >= 1
         ? `${target.resonantFreqGHz.toFixed(1)} GHz`
@@ -168,9 +169,9 @@ ${t('resonance.tipFieldDisruptNote')}${warn}`
   const hLysis = healthyLysisField
   const tStr   = tLysis >= 1000 ? `${(tLysis / 1000).toFixed(1)} kV/cm` : `${tLysis.toFixed(0)} V/cm`
   const hStr   = hLysis >= 1000 ? `${(hLysis / 1000).toFixed(1)} kV/cm` : `${hLysis.toFixed(0)} V/cm`
-  const contextNote = targetCellCategory === 'virus'
+  const contextNote = targetCellCategory === CELL_CATEGORY.VIRUS
     ? `\n<span class="tip-warn">⚠ Virion IRE threshold ≈ ${tStr} — impractical at any safe field.\nSwitch to Resonance mode for virion disruption.</span>`
-    : targetCellCategory === 'bacteria'
+    : targetCellCategory === CELL_CATEGORY.BACTERIA
       ? `\n<span class="tip-warn">⚠ Bacterial IRE threshold ≈ ${tStr}.\nUse nsEP: short pulse width (≪ τ) lowers effective E_lysis by reducing charge time.</span>`
       : `\nTherapeutic window at current frequency:\n  Target lysis ≥ <span class="tip-val">${tStr}</span>  ·  Healthy lysis ≥ <span class="tip-val">${hStr}</span>`
   return `<strong>Applied Electric Field Intensity</strong>
@@ -190,7 +191,7 @@ export function tipTargetBadge(opts: {
 }): string {
   const { chartMode, target, targetDisruptPercent: pct, targetDisruption, targetVmMv, lysisDelayMs, t } = opts
   const lysisStr = formatLysisTime(lysisDelayMs)
-  if (chartMode === 'resonance') {
+  if (chartMode === CHART_MODE.RESONANCE) {
     const fStr = target.resonantFreqGHz
       ? (target.resonantFreqGHz >= 1 ? `${target.resonantFreqGHz.toFixed(1)} GHz` : `${(target.resonantFreqGHz * 1000).toFixed(0)} MHz`)
       : '—'
@@ -223,7 +224,7 @@ export function tipHealthyBadge(opts: {
   t: T
 }): string {
   const { chartMode, healthyDisruptPercent: pct, healthyDisruption, healthyVmMv, thresholdVoltage, t } = opts
-  if (chartMode === 'resonance') {
+  if (chartMode === CHART_MODE.RESONANCE) {
     return `<strong>${t('resonance.tipHealthyBadgeTitle')}</strong>
 ${t('resonance.tipHealthyBadgeBody')}
 <span class="tip-ok">✓ ${t('resonance.tipHealthyBadgeSafe')}</span>`
@@ -278,6 +279,105 @@ Protocol time = N × t_period = N × (t_p / dc)
 
 Lysis countdown in the cell card resets immediately when N changes.
 At CW waveform a fixed 2.5 s delay is used instead.`
+}
+
+export function tipOptimalBtn(beyondRange: boolean): string {
+  const beyondNote = beyondRange
+    ? '\n<span class="tip-warn">Optimal lies beyond current slider range — slider clamped to maximum.</span>'
+    : '\nClick to set frequency to optimal.'
+  return `<strong>⭐ Snap to Optimal Frequency</strong>
+Frequency that maximises selectivity ratio TI = T-DR / H-DR.
+300-point log scan 10 kHz – 500 MHz at current field &amp; medium.${beyondNote}`
+}
+
+export function tipExpertMode(): string {
+  return `<strong>Expert Mode</strong>
+Full parameter range — all duty cycle values allowed.
+Warnings shown; no automatic clamping.
+Recommended for experienced users who understand
+the thermal model.`
+}
+
+export function tipSafeMode(): string {
+  return `<strong>Safe Mode</strong>
+Duty cycle is automatically clamped so that
+projected steady-state temperature T_ss ≤ 42°C.
+Recommended for initial exploration.
+Use Expert mode to override for high-duty protocols.`
+}
+
+export function tipScopeNote(): string {
+  return `<strong>Applied field parameters</strong>
+Medium · RF Frequency · Field Intensity · Waveform · Duty Cycle · Pulse Width · Orientation θ
+are <strong>shared</strong> — the same field is applied to both healthy (H) and target (T) cells simultaneously.
+Different Vm responses arise purely from each cell's biophysical parameters (R, ε_r, σ_i, τ).
+
+<strong>Cell-specific parameters</strong> (Radius, ε_r, σ_i, Threshold Vm) are edited individually
+on each cell card and determine how each cell responds to the shared applied field.
+
+<strong>Pulses to Lysis N</strong> controls target-cell lysis timing only — it has no effect on the healthy cell.`
+}
+
+export function tipThermalBanner(level: 'vaporizing' | 'denaturing' | 'hyperthermic'): string {
+  if (level === 'vaporizing') {
+    return `<strong>Vaporizing Regime — T ≥ 100°C</strong>
+Water boiling · rapid steam-pressure lysis
+Reduce duty cycle or field intensity immediately`
+  }
+  if (level === 'denaturing') {
+    return `<strong>Protein Denaturation — T ≥ 60°C</strong>
+Irreversible protein damage onset
+(collagen ~60°C · albumin ~68°C)
+Reduce duty cycle or field intensity`
+  }
+  return `<strong>Hyperthermic Regime — T ≥ 42°C</strong>
+IAHT thermal damage onset
+Monitor and reduce duty cycle if sustained`
+}
+
+export function tipSigmaE(conductivity: number): string {
+  return `<strong>External conductivity σ_e = ${conductivity} S/m</strong>
+Used in Schwan time constant:
+τ = R·Cm·(2·<span class="tip-val">σ_e</span>+σ_i)/(2·<span class="tip-val">σ_e</span>·σ_i)
+Change medium to shift the coupling strength`
+}
+
+export function tipSafeModeLock(): string {
+  return 'Safe Mode active — duty cycle capped at T_ss ≤ 42°C'
+}
+
+export function tipShellModel(): string {
+  return `<strong>Shell Model</strong>
+Choose the membrane model used to compute transmembrane potential.
+Single-Shell: standard Schwan (plasma membrane only).
++ Nuclear Envelope: adds nuclear Vm bandpass — Kotnik &amp; Miklavcic (2006).`
+}
+
+export function tipSingleShell(): string {
+  return `<strong>Single-Shell (Schwan)</strong>
+Standard single-shell model — only plasma membrane Vm is computed.
+τ = R·Cm·(2σ_e+σ_i)/(2σ_e·σ_i)  ·  Vm = 1.5·E·R·cos θ / √(1+(ωτ)²)
+Default mode. Applicable to all cell types.
+Ref: Kotnik &amp; Miklavcic, Biophys. J. 79:670 (2000)`
+}
+
+export function tipDoubleShell(): string {
+  return `<strong>+ Nuclear Envelope (Double-Shell)</strong>
+Adds nuclear membrane Vm as a two-pole bandpass function.
+Vm_nuc peaks at f_peak = 1/(2π√(τ_out·τ_ne))
+τ_ne = R_nuc·Cm_ne·(2σ_i+σ_np)/(2σ_i·σ_np)  [σ_i = cytoplasm, external medium for nucleus]
+Cancer nuclei: thinner NE, lower σ_ne threshold → additional selectivity axis.
+
+Expected at 417 kHz / 150 V/cm / saline:
+  Hepatocyte:    Vm_nuc ≈ 40 mV  (f_peak ≈ 1.66 MHz)
+  Adeno CA:      Vm_nuc ≈ 113 mV (f_peak ≈ 0.87 MHz)
+  GBM:           Vm_nuc ≈ 87 mV  (f_peak ≈ 1.05 MHz)
+
+Ref: Kotnik &amp; Miklavcic, Biophys. J. 90:480 (2006)`
+}
+
+export function tipLysisNNote(): string {
+  return `\n<span class="tip-note">Affects target cell lysis countdown only.\nHas no effect on the healthy cell disruption model.</span>`
 }
 
 export function tipPulseWidth(opts: {

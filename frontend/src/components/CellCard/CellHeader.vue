@@ -1,31 +1,3 @@
-<script lang="ts">
-import { defineComponent } from 'vue'
-import type { PropType } from 'vue'
-import type { CellState } from '../../types/cell'
-
-export default defineComponent({
-  props: {
-    type:               { type: String as PropType<'healthy' | 'target'>, required: true },
-    label:              { type: String, required: true },
-    sublabel:           { type: String, required: true },
-    sublabelTip:        { type: String, default: '' },
-    vmDisplay:          { type: String, required: true },
-    tempDisplay:        { type: String, required: true },
-    tempWarning:        { type: Boolean, required: true },
-    cellState:          { type: String as PropType<CellState>, required: true },
-    metaStateClass:     { type: String, required: true },
-    tipVm:              { type: String, required: true },
-    tipTemp:            { type: String, required: true },
-    tipState:           { type: String, required: true },
-    doubleShellEnabled: { type: Boolean, required: true },
-    hasNuclearParams:   { type: Boolean, required: true },
-    nuclearVmMv:        { type: Number, required: true },
-    nuclearDisruptionRatio: { type: Number, required: true },
-    hasCellData:        { type: Boolean, required: true },
-  },
-})
-</script>
-
 <template>
   <div class="cell-card__header">
     <span class="cell-card__icon">◎</span>
@@ -58,3 +30,31 @@ export default defineComponent({
     </div>
   </div>
 </template>
+
+<script lang="ts">
+import { defineComponent } from 'vue'
+import type { PropType } from 'vue'
+import type { CellState } from '../../types/cell'
+
+export default defineComponent({
+  props: {
+    type:               { type: String as PropType<'healthy' | 'target'>, required: true },
+    label:              { type: String, required: true },
+    sublabel:           { type: String, required: true },
+    sublabelTip:        { type: String, default: '' },
+    vmDisplay:          { type: String, required: true },
+    tempDisplay:        { type: String, required: true },
+    tempWarning:        { type: Boolean, required: true },
+    cellState:          { type: String as PropType<CellState>, required: true },
+    metaStateClass:     { type: String, required: true },
+    tipVm:              { type: String, required: true },
+    tipTemp:            { type: String, required: true },
+    tipState:           { type: String, required: true },
+    doubleShellEnabled: { type: Boolean, required: true },
+    hasNuclearParams:   { type: Boolean, required: true },
+    nuclearVmMv:        { type: Number, required: true },
+    nuclearDisruptionRatio: { type: Number, required: true },
+    hasCellData:        { type: Boolean, required: true },
+  },
+})
+</script>

@@ -1,8 +1,90 @@
+<template>
+  <button class="field-panel__accordion" @click="open = !open">
+    <span class="field-panel__accordion-label">{{ $t('slider.protocol') }}</span>
+    <span class="field-panel__accordion-chevron" :class="{ 'field-panel__accordion-chevron--open': open }">{{ ICON.CHEVRON }}</span>
+  </button>
+
+  <div v-show="open" class="field-panel__accordion-body">
+    <!-- Row 4: Waveform selector -->
+    <div class="field-panel__row field-panel__row--medium" v-tip="tipWaveform">
+      <span class="field-panel__row-label">{{ $t('slider.waveform') }}</span>
+      <div class="field-panel__pills">
+        <label class="field-panel__pill" :class="{ 'field-panel__pill--active': currentWaveform === WAVEFORM.PULSED }">
+          <input type="radio" :value="WAVEFORM.PULSED" :checked="currentWaveform === WAVEFORM.PULSED" name="waveform" @change="onWaveformChange(WAVEFORM.PULSED)" />
+          {{ $t('slider.pulsed') }}
+        </label>
+        <label class="field-panel__pill" :class="{ 'field-panel__pill--active': currentWaveform === WAVEFORM.CW }">
+          <input type="radio" :value="WAVEFORM.CW" :checked="currentWaveform === WAVEFORM.CW" name="waveform" @change="onWaveformChange(WAVEFORM.CW)" />
+          {{ $t('slider.cw') }}
+        </label>
+      </div>
+      <span class="field-panel__row-meta">wf×{{ currentWaveform === WAVEFORM.CW ? '0.5' : '1.0' }}</span>
+    </div>
+
+    <!-- Row 5: Duty Cycle (pulsed only) -->
+    <div
+      v-if="currentWaveform === WAVEFORM.PULSED"
+      class="field-panel__row"
+      :class="thermalDangerLevel !== THERMAL_LEVEL.SAFE ? `field-panel__row--${thermalDangerLevel}` : ''"
+    >
+      <span class="field-panel__row-label" v-tip="tipDutyCycle">
+        {{ $t('slider.dutyCycle') }}
+        <span v-if="isSafeMode" class="field-panel__safe-lock" v-tip="tipSafeModeLock">{{ ICON.LOCK }}</span>
+      </span>
+      <div class="field-panel__track">
+        <input
+          class="field-panel__slider"
+          type="range"
+          min="-6"
+          :max="isSafeMode ? safeDutyCycleMaxLog : -1"
+          step="0.05"
+          :value="dutyCycleLogVal"
+          @input="onDutyCycleInput"
+        />
+      </div>
+      <div class="field-panel__readout">
+        <span
+          class="field-panel__readout-value"
+          :class="thermalDangerLevel !== THERMAL_LEVEL.SAFE ? `field-panel__readout--${thermalDangerLevel}` : ''"
+          v-tip="tipDutyCycle"
+        >{{ dutyCycleDisplay }}</span>
+        <span class="field-panel__readout-sub" v-tip="tipDutyCycle">
+          T_ss {{ maxSteadyTemp.toFixed(0) }}°C · SAR_eff T {{ (store.targetSAR * store.dutyCycle).toFixed(1) }} W/kg
+        </span>
+      </div>
+    </div>
+
+    <!-- Row 6: Pulse Width (pulsed only) -->
+    <div v-if="currentWaveform === WAVEFORM.PULSED" class="field-panel__row">
+      <span class="field-panel__row-label" v-tip="tipPulseWidth">{{ $t('slider.pulseWidth') }}</span>
+      <div class="field-panel__track">
+        <input
+          class="field-panel__slider"
+          type="range"
+          :min="sliderRanges.pwLogMin"
+          :max="sliderRanges.pwLogMax"
+          step="0.05"
+          :value="pulseWidthLogVal"
+          @input="onPulseWidthInput"
+        />
+      </div>
+      <div class="field-panel__readout">
+        <span class="field-panel__readout-value" v-tip="tipPulseWidth">{{ pulseWidthDisplay }}</span>
+        <span class="field-panel__readout-sub" v-tip="tipPulseWidth">
+          Lysis {{ store.lysisDelayMs >= 1000 ? (store.lysisDelayMs / 1000).toFixed(1) + 's' : store.lysisDelayMs + 'ms' }}
+        </span>
+      </div>
+    </div>
+  </div>
+</template>
+
 <script lang="ts">
 import { defineComponent } from 'vue'
 import type { PropType } from 'vue'
 import { useCellStore } from '../../stores/cellStore'
-import { tipWaveform, tipDutyCycle, tipPulseWidth } from '../../utils/sliderTooltips'
+import { WAVEFORM, THERMAL_LEVEL } from '../../constants/strings'
+import { ICON } from '../../constants/icons'
+import { tipWaveform, tipDutyCycle, tipPulseWidth, tipSafeModeLock } from '../../utils/sliderTooltips'
 
 export default defineComponent({
   props: {
@@ -24,7 +106,7 @@ export default defineComponent({
   },
 
   setup() {
-    return { store: useCellStore() }
+    return { store: useCellStore(), WAVEFORM, THERMAL_LEVEL, ICON }
   },
 
   data() {
@@ -76,10 +158,12 @@ export default defineComponent({
         dutyCycle:         this.store.dutyCycle,
       })
     },
+
+    tipSafeModeLock(): string { return tipSafeModeLock() },
   },
 
   methods: {
-    onWaveformChange(mode: 'cw' | 'pulsed') {
+    onWaveformChange(mode: typeof WAVEFORM[keyof typeof WAVEFORM]) {
       this.store.setWaveform(mode)
     },
 
@@ -102,83 +186,3 @@ export default defineComponent({
   },
 })
 </script>
-
-<template>
-  <button class="field-panel__accordion" @click="open = !open">
-    <span class="field-panel__accordion-label">Protocol</span>
-    <span class="field-panel__accordion-chevron" :class="{ 'field-panel__accordion-chevron--open': open }">›</span>
-  </button>
-
-  <div v-show="open" class="field-panel__accordion-body">
-    <!-- Row 4: Waveform selector -->
-    <div class="field-panel__row field-panel__row--medium" v-tip="tipWaveform">
-      <span class="field-panel__row-label">Waveform</span>
-      <div class="field-panel__pills">
-        <label class="field-panel__pill" :class="{ 'field-panel__pill--active': currentWaveform === 'pulsed' }">
-          <input type="radio" value="pulsed" :checked="currentWaveform === 'pulsed'" name="waveform" @change="onWaveformChange('pulsed')" />
-          Pulsed
-        </label>
-        <label class="field-panel__pill" :class="{ 'field-panel__pill--active': currentWaveform === 'cw' }">
-          <input type="radio" value="cw" :checked="currentWaveform === 'cw'" name="waveform" @change="onWaveformChange('cw')" />
-          CW
-        </label>
-      </div>
-      <span class="field-panel__row-meta">wf×{{ currentWaveform === 'cw' ? '0.5' : '1.0' }}</span>
-    </div>
-
-    <!-- Row 5: Duty Cycle (pulsed only) -->
-    <div
-      v-if="currentWaveform === 'pulsed'"
-      class="field-panel__row"
-      :class="thermalDangerLevel !== 'safe' ? `field-panel__row--${thermalDangerLevel}` : ''"
-    >
-      <span class="field-panel__row-label" v-tip="tipDutyCycle">
-        Duty Cycle
-        <span v-if="isSafeMode" class="field-panel__safe-lock" v-tip="'Safe Mode active — duty cycle capped at T_ss ≤ 42°C'">🔒</span>
-      </span>
-      <div class="field-panel__track">
-        <input
-          class="field-panel__slider"
-          type="range"
-          min="-6"
-          :max="isSafeMode ? safeDutyCycleMaxLog : -1"
-          step="0.05"
-          :value="dutyCycleLogVal"
-          @input="onDutyCycleInput"
-        />
-      </div>
-      <div class="field-panel__readout">
-        <span
-          class="field-panel__readout-value"
-          :class="thermalDangerLevel !== 'safe' ? `field-panel__readout--${thermalDangerLevel}` : ''"
-          v-tip="tipDutyCycle"
-        >{{ dutyCycleDisplay }}</span>
-        <span class="field-panel__readout-sub" v-tip="tipDutyCycle">
-          T_ss {{ maxSteadyTemp.toFixed(0) }}°C · SAR_eff T {{ (store.targetSAR * store.dutyCycle).toFixed(1) }} W/kg
-        </span>
-      </div>
-    </div>
-
-    <!-- Row 6: Pulse Width (pulsed only) -->
-    <div v-if="currentWaveform === 'pulsed'" class="field-panel__row">
-      <span class="field-panel__row-label" v-tip="tipPulseWidth">Pulse Width</span>
-      <div class="field-panel__track">
-        <input
-          class="field-panel__slider"
-          type="range"
-          :min="sliderRanges.pwLogMin"
-          :max="sliderRanges.pwLogMax"
-          step="0.05"
-          :value="pulseWidthLogVal"
-          @input="onPulseWidthInput"
-        />
-      </div>
-      <div class="field-panel__readout">
-        <span class="field-panel__readout-value" v-tip="tipPulseWidth">{{ pulseWidthDisplay }}</span>
-        <span class="field-panel__readout-sub" v-tip="tipPulseWidth">
-          Lysis {{ store.lysisDelayMs >= 1000 ? (store.lysisDelayMs / 1000).toFixed(1) + 's' : store.lysisDelayMs + 'ms' }}
-        </span>
-      </div>
-    </div>
-  </div>
-</template>

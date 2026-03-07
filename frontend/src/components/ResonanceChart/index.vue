@@ -1,3 +1,19 @@
+<template>
+  <div class="resonance-chart">
+    <div class="resonance-chart__header">
+      <span class="resonance-chart__title">{{ $t('resonance.chartTitle') }}</span>
+      <span class="resonance-chart__note">{{ $t('resonance.chartNote') }}</span>
+    </div>
+    <div ref="chartEl" class="resonance-chart__svg-wrap" />
+    <div class="resonance-chart__legend">
+      <span class="resonance-chart__legend-item resonance-chart__legend-target">— {{ $t('resonance.legendTarget') }}</span>
+      <span class="resonance-chart__legend-item resonance-chart__legend-healthy">- - {{ $t('resonance.legendHealthy') }}</span>
+      <span class="resonance-chart__legend-item resonance-chart__legend-dim">— {{ $t('resonance.legendLibrary') }}</span>
+      <span class="resonance-chart__legend-item resonance-chart__legend-disrupt">— {{ $t('resonance.legendThreshold') }}</span>
+    </div>
+  </div>
+</template>
+
 <script lang="ts">
 import { defineComponent } from 'vue'
 import * as d3 from 'd3'
@@ -369,31 +385,15 @@ export default defineComponent({
 })
 </script>
 
-<template>
-  <div class="resonance-chart">
-    <div class="resonance-chart__header">
-      <span class="resonance-chart__title">{{ $t('resonance.chartTitle') }}</span>
-      <span class="resonance-chart__note">{{ $t('resonance.chartNote') }}</span>
-    </div>
-    <div ref="chartEl" class="resonance-chart__svg-wrap" />
-    <div class="resonance-chart__legend">
-      <span class="resonance-chart__legend-item resonance-chart__legend-target">— {{ $t('resonance.legendTarget') }}</span>
-      <span class="resonance-chart__legend-item resonance-chart__legend-healthy">- - {{ $t('resonance.legendHealthy') }}</span>
-      <span class="resonance-chart__legend-item resonance-chart__legend-dim">— {{ $t('resonance.legendLibrary') }}</span>
-      <span class="resonance-chart__legend-item resonance-chart__legend-disrupt">— {{ $t('resonance.legendThreshold') }}</span>
-    </div>
-  </div>
-</template>
-
 <style lang="scss" scoped>
+@use '../../styles/mixins' as *;
+
 .resonance-chart {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   padding: 0.75rem 0.5rem 0.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
+  @include flex-col(0.4rem);
 
   &__header {
     display: flex;
@@ -403,10 +403,7 @@ export default defineComponent({
   }
 
   &__title {
-    font-family: var(--font-mono);
-    font-size: 0.62rem;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
+    @include mono-upper(0.62rem, 0.1em);
     color: var(--color-text);
   }
 

@@ -1,17 +1,3 @@
-<script lang="ts">
-import { defineComponent } from 'vue'
-import { useCellStore } from '../stores/cellStore'
-
-export default defineComponent({
-  setup() {
-    return { store: useCellStore() }
-  },
-  computed: {
-    systemReady(): boolean { return this.store.systemReady },
-  },
-})
-</script>
-
 <template>
   <header class="nav-bar">
     <div class="nav-bar__inner">
@@ -46,7 +32,23 @@ export default defineComponent({
   </header>
 </template>
 
+<script lang="ts">
+import { defineComponent } from 'vue'
+import { useCellStore } from '../stores/cellStore'
+
+export default defineComponent({
+  setup() {
+    return { store: useCellStore() }
+  },
+  computed: {
+    systemReady(): boolean { return this.store.systemReady },
+  },
+})
+</script>
+
 <style lang="scss" scoped>
+@use '../styles/mixins' as *;
+
 .nav-bar {
   background-color: var(--color-surface);
   border-bottom: 1px solid var(--color-border);
@@ -65,9 +67,7 @@ export default defineComponent({
   }
 
   &__brand {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
+    @include flex-row(0.6rem);
     flex-shrink: 0;
     text-decoration: none;
 
@@ -133,8 +133,8 @@ export default defineComponent({
     }
 
     &-label {
-      font-size: 0.75rem; color: var(--color-text-muted);
-      font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.08em;
+      @include mono-upper(0.75rem);
+      color: var(--color-text-muted);
 
       &--warning { color: var(--color-amber-warm); }
     }

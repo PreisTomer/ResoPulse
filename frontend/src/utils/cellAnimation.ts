@@ -22,6 +22,7 @@ import {
   LYSIS_DURATION_MS,
   OSC_W, OSC_H,
 } from '../constants/cellCard'
+import { CELL_STATE, CELL_CATEGORY, CELL_TYPE } from '../constants/strings'
 
 // ── Shape helper ──────────────────────────────────────────────────────────────
 
@@ -168,9 +169,9 @@ export function setupBlobAnimation(
   let nucPhases: Array<{ baseAngle: number; phaseOffset: number; speed: number }> = []
   const nucLineGen = d3.lineRadial<BlobPoint>().angle((d) => d.angle).radius((d) => d.r).curve(d3.curveBasisClosed)
 
-  if (cellCategory === 'mammalian') {
-    const NUC_PTS  = type === 'target' ? 14 : 10  // cancer: more control points → jagged nuclear envelope
-    const NUCL_R   = type === 'target' ? 8.0 : 6.5 // cancer: large prominent nucleolus
+  if (cellCategory === CELL_CATEGORY.MAMMALIAN) {
+    const NUC_PTS  = type === CELL_TYPE.TARGET ? 14 : 10  // cancer: more control points → jagged nuclear envelope
+    const NUCL_R   = type === CELL_TYPE.TARGET ? 8.0 : 6.5 // cancer: large prominent nucleolus
 
     // Cell cortex ring (actin cortex, just inside plasma membrane — gives depth)
     cortexRing = cellG.append('circle').attr('r', BASE_R * 0.90)
@@ -178,7 +179,7 @@ export function setupBlobAnimation(
       .attr('stroke-width', 0.7).attr('stroke-opacity', 0.09)
 
     // Mitochondria: cancer has 5 small fragmented mito (Warburg effect); healthy has 2 elongated
-    const mitoData = type === 'target'
+    const mitoData = type === CELL_TYPE.TARGET
       ? [  // 5 fragmented mitochondria — smaller, more numerous, scattered
           { x: -20, y: -14, rx: 7,  ry: 2.8, angle: 20  },
           { x:  19, y:  16, rx: 6,  ry: 2.5, angle: -25 },
@@ -228,7 +229,7 @@ export function setupBlobAnimation(
     nucG.append('circle').attr('r', NUCL_R * 0.45)
       .attr('fill', accentColor).attr('fill-opacity', 0.45)
     // Second nucleolus — cancer cells characteristically have multiple prominent nucleoli
-    if (type === 'target') {
+    if (type === CELL_TYPE.TARGET) {
       nucleolus2 = nucG.append('circle').attr('r', NUCL_R * 0.78)
         .attr('fill', accentColor).attr('fill-opacity', 0.20)
       nucG.append('circle').attr('r', NUCL_R * 0.30)
@@ -258,7 +259,7 @@ export function setupBlobAnimation(
   let nucleoidPhases: Array<{ baseAngle: number; phaseOffset: number; speed: number }> = []
   const flagLineGen = d3.line<[number, number]>().x((d) => d[0]).y((d) => d[1]).curve(d3.curveCatmullRom.alpha(0.5))
 
-  if (cellCategory === 'bacteria') {
+  if (cellCategory === CELL_CATEGORY.BACTERIA) {
     const NUCL_PTS = 8
 
     if (isRod) {
@@ -341,7 +342,7 @@ export function setupBlobAnimation(
   let virusCore: d3.Selection<SVGCircleElement, unknown, null, undefined> | null = null
   let virusSpikes: SpikeEl[] = []
 
-  if (cellCategory === 'virus') {
+  if (cellCategory === CELL_CATEGORY.VIRUS) {
     const isCov2    = presetId === 'sarscov2'
     const N_SPIKES  = isCov2 ? 16 : 12
     const STALK_LEN = isCov2 ? 13 : 9    // stalk length beyond blob surface
@@ -411,7 +412,7 @@ export function setupBlobAnimation(
   // Biologically: loss of contact inhibition → invasive pseudopods → irregular membrane outline.
   // Range: -3 to +7 px asymmetric bumps on top of BASE_R.
   const cancerBaseOffsets: number[] = []
-  if (cellCategory === 'mammalian' && type === 'target') {
+  if (cellCategory === 'mammalian' && type === CELL_TYPE.TARGET) {
     for (let i = 0; i < N; i++) {
       cancerBaseOffsets.push(((i * 2971 + 1777) % 2000) / 200 - 3)
     }
@@ -429,7 +430,7 @@ export function setupBlobAnimation(
     const rayColor = d3.interpolateRgbBasis(['#00d4ff', '#4a9eff', '#7c6cff', '#a78bfa'])(freqNorm)
     // fieldVcm log-scale 10–10,000 V/cm → opacity 0.05–0.72
     const fieldNorm = Math.max(0, Math.min(1, (Math.log10(Math.max(1, fieldVcm)) - 1) / 3))
-    const rayOpacity = state === 'lysed' ? 0 : Math.max(0.04, 0.06 + fieldNorm * 0.66)
+    const rayOpacity = state === CELL_STATE.LYSED ? 0 : Math.max(0.04, 0.06 + fieldNorm * 0.66)
 
     // Color via gradient stop-color; intensity via rect opacity (more reliably reactive)
     rayNBrightStop.attr('stop-color', rayColor)
@@ -438,7 +439,7 @@ export function setupBlobAnimation(
     rayNR.attr('opacity', rayOpacity * 0.38)
 
     // ── Lysed ──────────────────────────────────────────────────────────────
-    if (state === 'lysed') {
+    if (state === CELL_STATE.LYSED) {
       blobStroke.attr('stroke-opacity', 0)
       blobFill.attr('fill-opacity', 0)
       auraRings.forEach((r) => r.attr('stroke-opacity', 0))
@@ -470,7 +471,7 @@ export function setupBlobAnimation(
     }
 
     // ── Lysing (progressive shatter) ───────────────────────────────────────
-    if (state === 'lysing') {
+    if (state === CELL_STATE.LYSING) {
       if (shatterStartElapsed < 0) shatterStartElapsed = elapsed
       const progress = Math.min(1, Math.max(0, (elapsed - shatterStartElapsed) / LYSIS_DURATION_MS))
       const chaos    = 12 + progress * 45
@@ -515,11 +516,11 @@ export function setupBlobAnimation(
     }
 
     // ── Normal: stable / nourishing / approaching / vibrating ──────────────
-    const isVibrating  = state === 'vibrating'
-    const isNourishing = state === 'nourishing'
+    const isVibrating  = state === CELL_STATE.VIBRATING
+    const isNourishing = state === CELL_STATE.NOURISHING
 
     // Rigid-shell pathogens deform less per unit impact
-    const rigidityFactor = cellCategory === 'virus' ? 0.40 : cellCategory === 'bacteria' ? 0.60 : 1.0
+    const rigidityFactor = cellCategory === CELL_CATEGORY.VIRUS ? 0.40 : cellCategory === CELL_CATEGORY.BACTERIA ? 0.60 : 1.0
     const jitter    = (isVibrating ? 4 + impact * 18 : isNourishing ? 5 : 6) * rigidityFactor
     const radiusMod = isNourishing ? 1 + impact * 0.12 : 1
     const speedMult = isVibrating ? 1 + impact * 5 : isNourishing ? 0.4 + impact * 0.4 : 0.8
@@ -559,7 +560,7 @@ export function setupBlobAnimation(
     // CATEGORY-SPECIFIC INTERIOR UPDATE
     // ─────────────────────────────────────────────────────────────────────
 
-    if (cellCategory === 'mammalian') {
+    if (cellCategory === CELL_CATEGORY.MAMMALIAN) {
       // ── Cell cortex ring ───────────────────────────────────────────────────
       cortexRing!.attr('stroke', color)
         .attr('stroke-opacity', 0.09 + impact * 0.04)
@@ -582,13 +583,13 @@ export function setupBlobAnimation(
       })
 
       // ── Nucleus (organic blob, elongates along applied field axis) ─────────
-      const NUC_R  = type === 'target' ? 26 : 20  // cancer: enlarged nucleus (high N/C ratio)
-      const NUC_DX = type === 'target' ? -2 : 0   // cancer: slight nuclear displacement
-      const NUC_DY = type === 'target' ?  6 : 4   // cancer: more off-centre
+      const NUC_R  = type === CELL_TYPE.TARGET ? 26 : 20  // cancer: enlarged nucleus (high N/C ratio)
+      const NUC_DX = type === CELL_TYPE.TARGET ? -2 : 0   // cancer: slight nuclear displacement
+      const NUC_DY = type === CELL_TYPE.TARGET ?  6 : 4   // cancer: more off-centre
       const nucScaleY = 1 + impact * 0.28
       const nucScaleX = 1 - impact * 0.10
       const nucNoise    = isVibrating ? impact * 1.8 : 0
-      const nucWaveAmp  = type === 'target' ? 4.5 : 2.5  // cancer: pleomorphic, irregular nucleus
+      const nucWaveAmp  = type === CELL_TYPE.TARGET ? 4.5 : 2.5  // cancer: pleomorphic, irregular nucleus
       const nucPts: BlobPoint[] = nucPhases.map((p) => {
         const wave  = Math.sin(elapsed * 0.0006 * p.speed + p.phaseOffset) * nucWaveAmp
         const noise = (Math.random() - 0.5) * nucNoise
@@ -627,7 +628,7 @@ export function setupBlobAnimation(
       }
     }
 
-    if (cellCategory === 'bacteria') {
+    if (cellCategory === CELL_CATEGORY.BACTERIA) {
       const wallOpacity = Math.max(0.05, 0.28 - impact * 0.22)
 
       if (isRod) {
@@ -672,7 +673,7 @@ export function setupBlobAnimation(
       ribosomeDots.forEach((dot) => dot.attr('fill', color).attr('fill-opacity', 0.32))
     }
 
-    if (cellCategory === 'virus') {
+    if (cellCategory === CELL_CATEGORY.VIRUS) {
       // ── Inner rings (matrix protein layer + nucleocapsid) ─────────────────
       const ringPulse = (Math.sin(elapsed * 0.0008) + 1) / 2
       virusInnerRings.forEach((ring, i) => {
@@ -752,15 +753,15 @@ export function setupOscilloscope(
   const timer = d3.timer((elapsed: number) => {
     const { state, impact, liveAmplitude, cellColor } = getFrame()
 
-    if (state === 'lysed') {
+    if (state === CELL_STATE.LYSED) {
       path.attr('d', `M0,${H / 2} L${W},${H / 2}`).attr('stroke', '#ff4d6d').attr('stroke-width', 1).attr('stroke-opacity', 0.4)
       timer.stop()
       return
     }
 
-    const isVibrating  = state === 'vibrating'
-    const isNourishing = state === 'nourishing'
-    const isLysing     = state === 'lysing'
+    const isVibrating  = state === CELL_STATE.VIBRATING
+    const isNourishing = state === CELL_STATE.NOURISHING
+    const isLysing     = state === CELL_STATE.LYSING
 
     const baseAmp  = liveAmplitude * (H / 2 - 5)
     const amp      = isNourishing ? baseAmp * (1 + impact * 0.4) : baseAmp

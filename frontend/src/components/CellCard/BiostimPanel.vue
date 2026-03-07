@@ -1,3 +1,46 @@
+<template>
+  <div class="cell-card__biostim" v-tip="tooltip">
+    <div class="cell-card__biostim-header">
+      <span class="cell-card__biostim-title">⊕ Biomodulation</span>
+      <span class="cell-card__biostim-score" :class="scoreClass">
+        {{ (biomodScore * 100).toFixed(0) }}%
+      </span>
+    </div>
+    <div class="cell-card__biostim-bars">
+      <div class="cell-card__biostim-row">
+        <span class="cell-card__biostim-label">Sub-thr SI</span>
+        <div class="cell-card__biostim-track">
+          <div
+            class="cell-card__biostim-fill cell-card__biostim-fill--si"
+            :style="{ width: (stimIndex * 100) + '%' }"
+          ></div>
+        </div>
+        <span class="cell-card__biostim-val">{{ (stimIndex * 100).toFixed(0) }}%</span>
+      </div>
+      <div class="cell-card__biostim-row">
+        <span class="cell-card__biostim-label">Freq coupl.</span>
+        <div class="cell-card__biostim-track">
+          <div
+            class="cell-card__biostim-fill cell-card__biostim-fill--mte"
+            :style="{ width: (mechTransdEff * 100) + '%' }"
+          ></div>
+        </div>
+        <span class="cell-card__biostim-val">{{ (mechTransdEff * 100).toFixed(0) }}%</span>
+      </div>
+      <div class="cell-card__biostim-row">
+        <span class="cell-card__biostim-label">Mild heat</span>
+        <div class="cell-card__biostim-track">
+          <div
+            class="cell-card__biostim-fill cell-card__biostim-fill--ma"
+            :style="{ width: (mildThermal * 100) + '%' }"
+          ></div>
+        </div>
+        <span class="cell-card__biostim-val">{{ (mildThermal * 100).toFixed(0) }}%</span>
+      </div>
+    </div>
+  </div>
+</template>
+
 <script lang="ts">
 import { defineComponent } from 'vue'
 
@@ -85,46 +128,3 @@ Model: piecewise bell — 0 at 37°C, peak at 41°C, zero above 42°C
   },
 })
 </script>
-
-<template>
-  <div class="cell-card__biostim" v-tip="tooltip">
-    <div class="cell-card__biostim-header">
-      <span class="cell-card__biostim-title">⊕ Biomodulation</span>
-      <span class="cell-card__biostim-score" :class="scoreClass">
-        {{ (biomodScore * 100).toFixed(0) }}%
-      </span>
-    </div>
-    <div class="cell-card__biostim-bars">
-      <div class="cell-card__biostim-row">
-        <span class="cell-card__biostim-label">Sub-thr SI</span>
-        <div class="cell-card__biostim-track">
-          <div
-            class="cell-card__biostim-fill cell-card__biostim-fill--si"
-            :style="{ width: (stimIndex * 100) + '%' }"
-          ></div>
-        </div>
-        <span class="cell-card__biostim-val">{{ (stimIndex * 100).toFixed(0) }}%</span>
-      </div>
-      <div class="cell-card__biostim-row">
-        <span class="cell-card__biostim-label">Freq coupl.</span>
-        <div class="cell-card__biostim-track">
-          <div
-            class="cell-card__biostim-fill cell-card__biostim-fill--mte"
-            :style="{ width: (mechTransdEff * 100) + '%' }"
-          ></div>
-        </div>
-        <span class="cell-card__biostim-val">{{ (mechTransdEff * 100).toFixed(0) }}%</span>
-      </div>
-      <div class="cell-card__biostim-row">
-        <span class="cell-card__biostim-label">Mild heat</span>
-        <div class="cell-card__biostim-track">
-          <div
-            class="cell-card__biostim-fill cell-card__biostim-fill--ma"
-            :style="{ width: (mildThermal * 100) + '%' }"
-          ></div>
-        </div>
-        <span class="cell-card__biostim-val">{{ (mildThermal * 100).toFixed(0) }}%</span>
-      </div>
-    </div>
-  </div>
-</template>

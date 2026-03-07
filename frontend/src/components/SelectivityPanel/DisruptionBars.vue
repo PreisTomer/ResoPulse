@@ -1,3 +1,74 @@
+<template>
+  <div class="sel-panel__bars">
+    <div class="sel-panel__bar-row" v-tip="tipTargetBar">
+      <span class="sel-panel__bar-label">T</span>
+      <div class="sel-panel__bar-track">
+        <div
+          class="sel-panel__bar-fill sel-panel__bar-fill--t"
+          :style="{ width: targetRatioPct + '%' }"
+          :class="{ 'sel-panel__bar-fill--warn': targetRatio >= 0.85 }"
+        ></div>
+      </div>
+      <span class="sel-panel__bar-val">{{ targetRatioPct.toFixed(0) }}%</span>
+      <span
+        class="sel-panel__bar-plysis"
+        :class="{ 'sel-panel__bar-plysis--high': targetLysisProbability >= 50 }"
+        v-tip="tipTargetPlysis"
+      >P{{ targetLysisProbability }}%</span>
+    </div>
+    <div class="sel-panel__bar-row" v-tip="tipHealthyBar">
+      <span class="sel-panel__bar-label">H</span>
+      <div class="sel-panel__bar-track">
+        <div
+          class="sel-panel__bar-fill sel-panel__bar-fill--h"
+          :style="{ width: healthyRatioPct + '%' }"
+          :class="{ 'sel-panel__bar-fill--warn': healthyRatio >= 0.85 }"
+        ></div>
+      </div>
+      <span class="sel-panel__bar-val">{{ healthyRatioPct.toFixed(0) }}%</span>
+      <span
+        class="sel-panel__bar-plysis"
+        :class="{ 'sel-panel__bar-plysis--high': healthyLysisProbability >= 50 }"
+        v-tip="'<strong>P(electroporation) — Healthy</strong>\nSigmoid probability centered at 100% disruption threshold.\nKeep this value near 0% for selective therapy'"
+      >P{{ healthyLysisProbability }}%</span>
+    </div>
+  </div>
+
+  <!-- Nuclear envelope disruption bars (double-shell model) -->
+  <template v-if="store.doubleShellEnabled && store.targetCellCategory === 'mammalian'">
+    <div class="sel-panel__nuc-section"
+      v-tip="'<strong>Nuclear Envelope Disruption (Double-Shell Model)</strong>\nVm_nuc / V_threshold_nuc for each cell.\nBandpass peak at f_peak = 1/(2π√(τ_pm·τ_ne)) — typically 0.87–2.1 MHz.\nCancer nuclei have thinner/leakier NE and lower thresholds → higher disruption ratio.\nKotnik &amp; Miklavcic, Biophys. J. 90:480 (2006)'"
+    >
+      <div class="sel-panel__nuc-bar-row">
+        <span class="sel-panel__nuc-bar-label">&#x26AC; NE-T</span>
+        <div class="sel-panel__nuc-bar-track">
+          <div class="sel-panel__nuc-bar-fill sel-panel__nuc-bar-fill--t"
+            :style="{ width: Math.min(100, store.targetNuclearDisruptionRatio * 100) + '%' }"
+            :class="{ 'sel-panel__nuc-bar-fill--warn': store.targetNuclearDisruptionRatio >= 0.85 }"
+          ></div>
+        </div>
+        <span class="sel-panel__nuc-bar-val">{{ (store.targetNuclearDisruptionRatio * 100).toFixed(0) }}%</span>
+      </div>
+      <div class="sel-panel__nuc-bar-row">
+        <span class="sel-panel__nuc-bar-label">&#x26AC; NE-H</span>
+        <div class="sel-panel__nuc-bar-track">
+          <div class="sel-panel__nuc-bar-fill sel-panel__nuc-bar-fill--h"
+            :style="{ width: Math.min(100, store.healthyNuclearDisruptionRatio * 100) + '%' }"
+            :class="{ 'sel-panel__nuc-bar-fill--warn': store.healthyNuclearDisruptionRatio >= 0.85 }"
+          ></div>
+        </div>
+        <span class="sel-panel__nuc-bar-val">{{ (store.healthyNuclearDisruptionRatio * 100).toFixed(0) }}%</span>
+      </div>
+      <div class="sel-panel__nuc-sel-row">
+        <span class="sel-panel__nuc-sel-label">NE Selectivity</span>
+        <span class="sel-panel__nuc-sel-val" :class="store.nuclearSelectivityRatio >= 1.5 ? 'sel-panel__nuc-sel--good' : store.nuclearSelectivityRatio >= 1.0 ? 'sel-panel__nuc-sel--ok' : 'sel-panel__nuc-sel--low'">
+          ×{{ store.nuclearSelectivityRatio >= 99 ? '∞' : store.nuclearSelectivityRatio.toFixed(2) }}
+        </span>
+      </div>
+    </div>
+  </template>
+</template>
+
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { useCellStore } from '../../stores/cellStore'
@@ -78,74 +149,3 @@ Keep below 50% for therapeutic window${status}`
   },
 })
 </script>
-
-<template>
-  <div class="sel-panel__bars">
-    <div class="sel-panel__bar-row" v-tip="tipTargetBar">
-      <span class="sel-panel__bar-label">T</span>
-      <div class="sel-panel__bar-track">
-        <div
-          class="sel-panel__bar-fill sel-panel__bar-fill--t"
-          :style="{ width: targetRatioPct + '%' }"
-          :class="{ 'sel-panel__bar-fill--warn': targetRatio >= 0.85 }"
-        ></div>
-      </div>
-      <span class="sel-panel__bar-val">{{ targetRatioPct.toFixed(0) }}%</span>
-      <span
-        class="sel-panel__bar-plysis"
-        :class="{ 'sel-panel__bar-plysis--high': targetLysisProbability >= 50 }"
-        v-tip="tipTargetPlysis"
-      >P{{ targetLysisProbability }}%</span>
-    </div>
-    <div class="sel-panel__bar-row" v-tip="tipHealthyBar">
-      <span class="sel-panel__bar-label">H</span>
-      <div class="sel-panel__bar-track">
-        <div
-          class="sel-panel__bar-fill sel-panel__bar-fill--h"
-          :style="{ width: healthyRatioPct + '%' }"
-          :class="{ 'sel-panel__bar-fill--warn': healthyRatio >= 0.85 }"
-        ></div>
-      </div>
-      <span class="sel-panel__bar-val">{{ healthyRatioPct.toFixed(0) }}%</span>
-      <span
-        class="sel-panel__bar-plysis"
-        :class="{ 'sel-panel__bar-plysis--high': healthyLysisProbability >= 50 }"
-        v-tip="'<strong>P(electroporation) — Healthy</strong>\nSigmoid probability centered at 100% disruption threshold.\nKeep this value near 0% for selective therapy'"
-      >P{{ healthyLysisProbability }}%</span>
-    </div>
-  </div>
-
-  <!-- Nuclear envelope disruption bars (double-shell model) -->
-  <template v-if="store.doubleShellEnabled && store.targetCellCategory === 'mammalian'">
-    <div class="sel-panel__nuc-section"
-      v-tip="'<strong>Nuclear Envelope Disruption (Double-Shell Model)</strong>\nVm_nuc / V_threshold_nuc for each cell.\nBandpass peak at f_peak = 1/(2π√(τ_pm·τ_ne)) — typically 0.87–2.1 MHz.\nCancer nuclei have thinner/leakier NE and lower thresholds → higher disruption ratio.\nKotnik &amp; Miklavcic, Biophys. J. 90:480 (2006)'"
-    >
-      <div class="sel-panel__nuc-bar-row">
-        <span class="sel-panel__nuc-bar-label">&#x26AC; NE-T</span>
-        <div class="sel-panel__nuc-bar-track">
-          <div class="sel-panel__nuc-bar-fill sel-panel__nuc-bar-fill--t"
-            :style="{ width: Math.min(100, store.targetNuclearDisruptionRatio * 100) + '%' }"
-            :class="{ 'sel-panel__nuc-bar-fill--warn': store.targetNuclearDisruptionRatio >= 0.85 }"
-          ></div>
-        </div>
-        <span class="sel-panel__nuc-bar-val">{{ (store.targetNuclearDisruptionRatio * 100).toFixed(0) }}%</span>
-      </div>
-      <div class="sel-panel__nuc-bar-row">
-        <span class="sel-panel__nuc-bar-label">&#x26AC; NE-H</span>
-        <div class="sel-panel__nuc-bar-track">
-          <div class="sel-panel__nuc-bar-fill sel-panel__nuc-bar-fill--h"
-            :style="{ width: Math.min(100, store.healthyNuclearDisruptionRatio * 100) + '%' }"
-            :class="{ 'sel-panel__nuc-bar-fill--warn': store.healthyNuclearDisruptionRatio >= 0.85 }"
-          ></div>
-        </div>
-        <span class="sel-panel__nuc-bar-val">{{ (store.healthyNuclearDisruptionRatio * 100).toFixed(0) }}%</span>
-      </div>
-      <div class="sel-panel__nuc-sel-row">
-        <span class="sel-panel__nuc-sel-label">NE Selectivity</span>
-        <span class="sel-panel__nuc-sel-val" :class="store.nuclearSelectivityRatio >= 1.5 ? 'sel-panel__nuc-sel--good' : store.nuclearSelectivityRatio >= 1.0 ? 'sel-panel__nuc-sel--ok' : 'sel-panel__nuc-sel--low'">
-          ×{{ store.nuclearSelectivityRatio >= 99 ? '∞' : store.nuclearSelectivityRatio.toFixed(2) }}
-        </span>
-      </div>
-    </div>
-  </template>
-</template>

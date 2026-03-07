@@ -1,8 +1,3 @@
-<script lang="ts">
-import { defineComponent } from 'vue'
-export default defineComponent({})
-</script>
-
 <template>
   <div class="protocol">
     <div class="protocol__inner">
@@ -825,8 +820,14 @@ export default defineComponent({})
   </div>
 </template>
 
+<script lang="ts">
+import { defineComponent } from 'vue'
+export default defineComponent({})
+</script>
+
 <style lang="scss" scoped>
-/* ── Page shell ───────────────────────────────────────────────────────────── */
+@use '../styles/mixins' as *;
+
 .protocol {
   flex: 1;
   overflow-y: auto;
@@ -838,20 +839,14 @@ export default defineComponent({})
     padding: 2rem 2rem 4rem;
   }
 
-  /* ── Page header ──────────────────────────────────────────────────────────── */
   &__header {
     margin-bottom: 2.5rem;
   }
 
   &__eyebrow {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.72rem;
+    @include flex-row(0.5rem);
+    @include mono-upper(0.72rem, 0.14em);
     color: var(--color-primary);
-    text-transform: uppercase;
-    letter-spacing: 0.14em;
-    font-family: var(--font-mono);
     margin-bottom: 0.75rem;
   }
 
@@ -877,7 +872,6 @@ export default defineComponent({})
     font-family: var(--font-mono);
   }
 
-  /* ── Two-column layout ────────────────────────────────────────────────────── */
   &__layout {
     display: grid;
     grid-template-columns: 220px minmax(0, 1fr);
@@ -885,24 +879,18 @@ export default defineComponent({})
     align-items: start;
   }
 
-  /* ── TOC ──────────────────────────────────────────────────────────────────── */
   &__toc {
+    @include flex-col(0.05rem);
     position: sticky;
     top: 80px;
     background: var(--color-surface);
     border: 1px solid var(--color-border);
     border-radius: var(--radius);
     padding: 1.25rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.05rem;
   }
 
   &__toc-title {
-    font-size: 0.65rem;
-    font-family: var(--font-mono);
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
+    @include mono-upper(0.65rem, 0.12em);
     color: var(--color-text-muted);
     margin-bottom: 0.65rem;
   }
@@ -927,21 +915,16 @@ export default defineComponent({})
     font-size: 0.75rem;
   }
 
-  /* ── Article ──────────────────────────────────────────────────────────────── */
   &__doc {
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
+    @include flex-col(2rem);
   }
 
   &__section {
+    @include flex-col(1.25rem);
     background: var(--color-surface);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-lg);
     padding: 2rem;
-    display: flex;
-    flex-direction: column;
-    gap: 1.25rem;
   }
 
   &__section-title {
@@ -971,11 +954,9 @@ export default defineComponent({})
     strong { color: var(--color-text-heading); }
   }
 
-  /* ── Info box ─────────────────────────────────────────────────────────────── */
   &__info-box {
-    display: flex;
+    @include flex-row(0.75rem);
     align-items: flex-start;
-    gap: 0.75rem;
     background: var(--color-primary-dim);
     border: 1px solid rgba(0, 212, 255, 0.25);
     border-radius: var(--radius);
@@ -992,11 +973,9 @@ export default defineComponent({})
     margin-top: 0.05rem;
   }
 
-  /* ── Warn box ─────────────────────────────────────────────────────────────── */
   &__warn-box {
-    display: flex;
+    @include flex-row(0.75rem);
     align-items: flex-start;
-    gap: 0.75rem;
     background: rgba(251, 191, 36, 0.06);
     border: 1px solid rgba(251, 191, 36, 0.3);
     border-radius: var(--radius);
@@ -1013,16 +992,13 @@ export default defineComponent({})
     margin-top: 0.05rem;
   }
 
-  /* ── Equation blocks ──────────────────────────────────────────────────────── */
   &__eq-block {
+    @include flex-col(0.4rem);
     background: var(--color-surface-2, #0a1628);
     border: 1px solid var(--color-border);
     border-left: 3px solid var(--color-primary);
     border-radius: var(--radius);
     padding: 1.25rem 1.5rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.4rem;
   }
 
   &__eq-main {
@@ -1060,7 +1036,6 @@ export default defineComponent({})
     margin-top: 0.15rem;
   }
 
-  /* ── Parameter table ──────────────────────────────────────────────────────── */
   &__param-table {
     width: 100%;
     border-collapse: collapse;
@@ -1096,14 +1071,11 @@ export default defineComponent({})
   &__muted       { color: var(--color-text-muted); }
   &__primary-val { color: var(--color-primary); }
 
-  /* ── Protocol steps ───────────────────────────────────────────────────────── */
   &__steps {
+    @include flex-col(0);
     list-style: none;
     margin: 0;
     padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0;
   }
 
   &__step {
@@ -1129,9 +1101,7 @@ export default defineComponent({})
   }
 
   &__step-body {
-    display: flex;
-    flex-direction: column;
-    gap: 0.35rem;
+    @include flex-col(0.35rem);
   }
 
   &__step-title {
@@ -1154,14 +1124,11 @@ export default defineComponent({})
     &--spaced { margin-top: 0.5rem; }
   }
 
-  /* ── References ───────────────────────────────────────────────────────────── */
   &__refs-list {
+    @include flex-col(0);
     list-style: none;
     margin: 0;
     padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0;
   }
 
   &__ref-item {
@@ -1203,7 +1170,6 @@ export default defineComponent({})
   }
 }
 
-/* ── Responsive ───────────────────────────────────────────────────────────── */
 @media (max-width: 900px) {
   .protocol__layout {
     grid-template-columns: 1fr;

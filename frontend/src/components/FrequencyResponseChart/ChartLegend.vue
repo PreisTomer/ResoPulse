@@ -1,22 +1,3 @@
-<script lang="ts">
-import { defineComponent } from 'vue'
-import { useCellStore } from '../../stores/cellStore'
-import { GROUP_COLORS } from '../../constants/cellLibrary'
-import type { CellGroup } from '../../constants/cellLibrary'
-
-export default defineComponent({
-  setup() {
-    return { store: useCellStore(), GROUP_COLORS }
-  },
-
-  computed: {
-    groups(): CellGroup[] {
-      return ['reference', 'cancer', 'bacteria', 'virus']
-    },
-  },
-})
-</script>
-
 <template>
   <div class="freq-chart__legend">
     <span
@@ -55,3 +36,22 @@ export default defineComponent({
     ><span class="freq-chart__legend-line freq-chart__legend-line--nuc-t"></span> Nucleus T</span>
   </div>
 </template>
+
+<script lang="ts">
+import { defineComponent } from 'vue'
+import { useCellStore } from '../../stores/cellStore'
+import { GROUP_COLORS } from '../../constants/cellLibrary'
+import type { CellGroup } from '../../constants/cellLibrary'
+
+export default defineComponent({
+  setup() {
+    return { store: useCellStore(), GROUP_COLORS }
+  },
+
+  computed: {
+    groups(): CellGroup[] {
+      return ['reference', 'cancer', 'bacteria', 'virus']
+    },
+  },
+})
+</script>

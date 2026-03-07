@@ -1,9 +1,177 @@
+<template>
+  <div class="field-panel">
+    <div class="field-panel__title-row">
+      <span class="field-panel__title">{{ $t('slider.title') }}</span>
+      <!-- Safe Mode toggle -->
+      <div class="field-panel__safe-toggle">
+        <label
+          class="field-panel__pill field-panel__pill--sm"
+          :class="{ 'field-panel__pill--active field-panel__pill--expert': !isSafeMode }"
+          v-tip="tipExpertMode"
+        >
+          <input type="radio" name="safemode" :checked="!isSafeMode" @change="onSafeModeChange(false)" />
+          {{ $t('slider.expert') }}
+        </label>
+        <label
+          class="field-panel__pill field-panel__pill--sm"
+          :class="{ 'field-panel__pill--active field-panel__pill--safe': isSafeMode }"
+          v-tip="tipSafeMode"
+        >
+          <input type="radio" name="safemode" :checked="isSafeMode" @change="onSafeModeChange(true)" />
+          {{ $t('slider.safe') }}
+        </label>
+      </div>
+    </div>
+
+    <!-- Scope legend: which controls affect which cell -->
+    <div
+      class="field-panel__scope-note"
+      v-tip="tipScopeNote"
+    >
+      <span class="field-panel__scope-chip field-panel__scope-chip--both">H + T</span>
+      <span class="field-panel__scope-sep">{{ $t('slider.sharedField') }}</span>
+      <span class="field-panel__scope-chip field-panel__scope-chip--card">{{ $t('slider.cardParams') }}</span>
+      <span class="field-panel__scope-sep">{{ $t('slider.cellSpecific') }}</span>
+    </div>
+
+    <!-- Thermal danger banner (IRE/Schwan mode only) -->
+    <div
+      v-if="!isResonanceMode && thermalDangerLevel !== THERMAL_LEVEL.SAFE"
+      class="field-panel__thermal-banner"
+      :class="`field-panel__thermal-banner--${thermalDangerLevel}`"
+      v-tip="tipThermalBanner"
+    >
+      <span class="field-panel__thermal-icon">{{ thermalDangerLevel === THERMAL_LEVEL.VAPORIZING ? ICON.LIGHTNING : ICON.WARNING }}</span>
+      <span class="field-panel__thermal-text">
+        {{ thermalDangerLevel === THERMAL_LEVEL.VAPORIZING
+            ? $t('slider.thermalVaporizing')
+            : thermalDangerLevel === THERMAL_LEVEL.DENATURING
+              ? $t('slider.thermalDenaturing')
+              : $t('slider.thermalHyperthermic') }}
+      </span>
+      <span class="field-panel__thermal-temp">T_ss {{ maxSteadyTemp.toFixed(0) }}°C</span>
+    </div>
+
+    <!-- Row 1: Medium selector -->
+    <div class="field-panel__row field-panel__row--medium">
+      <span class="field-panel__row-label" v-tip="tipMedium">{{ $t('slider.medium') }}</span>
+      <div class="field-panel__pills">
+        <label
+          v-for="key in mediaKeys"
+          :key="key"
+          class="field-panel__pill"
+          :class="{ 'field-panel__pill--active': currentMedium === key }"
+          v-tip="tipMediumKeys[key]"
+        >
+          <input
+            type="radio"
+            :value="key"
+            :checked="currentMedium === key"
+            name="medium"
+            @change="onMediumChange(key)"
+          />
+          {{ MEDIA[key].name.split(' ')[0] }}
+        </label>
+      </div>
+      <span
+        class="field-panel__row-meta"
+        v-tip="tipSigmaE"
+      >σ_e {{ MEDIA[currentMedium].conductivity }} S/m</span>
+    </div>
+
+    <!-- Row 2: RF Frequency -->
+    <div class="field-panel__row">
+      <span class="field-panel__row-label" v-tip="tipFreq">{{ $t('slider.rfFrequency') }}</span>
+      <div class="field-panel__track">
+        <input
+          class="field-panel__slider"
+          type="range"
+          :min="sliderRanges.freqMin"
+          :max="sliderRanges.freqMax"
+          :step="sliderRanges.freqStep"
+          :value="currentFreq"
+          @input="onFreqInput"
+        />
+      </div>
+      <div class="field-panel__readout">
+        <span class="field-panel__readout-value" v-tip="tipFreq">{{ freqDisplay }}</span>
+        <button
+          v-if="!isResonanceMode"
+          class="field-panel__optimal-btn"
+          :class="{ 'field-panel__optimal-btn--beyond': optimalBeyondRange }"
+          v-tip="tipOptimalBtn"
+          @click="snapToOptimal"
+          type="button"
+        >{{ $t('slider.snapOptimal') }} {{ optimalFreqLabel }}</button>
+        <span v-else class="field-panel__readout-sub" v-tip="tipFcSub">{{ freqSubDisplay }}</span>
+      </div>
+    </div>
+
+    <!-- Row 3: Field Intensity + disruption indicators -->
+    <div
+      class="field-panel__row"
+      :class="!isResonanceMode && thermalDangerLevel !== THERMAL_LEVEL.SAFE ? `field-panel__row--${thermalDangerLevel}` : ''"
+    >
+      <span class="field-panel__row-label" v-tip="tipField">{{ $t('slider.fieldIntensity') }}</span>
+      <div class="field-panel__track">
+        <input
+          class="field-panel__slider"
+          type="range"
+          :min="sliderRanges.fieldMin"
+          :max="sliderRanges.fieldMax"
+          :step="sliderRanges.fieldStep"
+          :value="currentField"
+          @input="onFieldInput"
+        />
+      </div>
+      <div class="field-panel__readout">
+        <span class="field-panel__readout-value" v-tip="tipField">{{ fieldDisplay }}</span>
+        <div class="field-panel__badges">
+          <span
+            class="field-panel__badge field-panel__badge--target"
+            :class="{ 'field-panel__badge--warn': targetDisruption > 0.85 }"
+            v-tip="tipTargetBadge"
+          >T {{ targetDisruptPercent }}%</span>
+          <span
+            class="field-panel__badge field-panel__badge--healthy"
+            :class="{ 'field-panel__badge--warn': healthyDisruption > 0.85 }"
+            v-tip="tipHealthyBadge"
+          >H {{ healthyDisruptPercent }}%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Resonance mode note -->
+    <div v-if="isResonanceMode" class="field-panel__resonance-note">
+      <span class="field-panel__resonance-note-icon">{{ ICON.INFO }}</span>
+      <span class="field-panel__resonance-note-text">
+        <strong>{{ $t('resonance.noteTitle') }}</strong> — {{ $t('resonance.noteBody') }}
+      </span>
+    </div>
+
+    <!-- Protocol + Advanced accordions (IRE/Schwan mode only) -->
+    <template v-if="!isResonanceMode">
+      <ProtocolSection
+        :slider-ranges="sliderRanges"
+        :thermal-danger-level="thermalDangerLevel"
+        :max-steady-temp="maxSteadyTemp"
+        :is-safe-mode="isSafeMode"
+        :safe-duty-cycle-max-log="safeDutyCycleMaxLog"
+      />
+      <AdvancedSection />
+    </template>
+  </div>
+</template>
+
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { useCellStore } from '../../stores/cellStore'
 import { broadcastFieldParams } from '../../services/socket'
 import { MEDIA } from '../../constants/media'
+import { CHART_MODE, CELL_CATEGORY, THERMAL_LEVEL } from '../../constants/strings'
+import { ICON } from '../../constants/icons'
 import type { MediumKey } from '../../types/media'
+import { formatFreqKHz, formatFieldVcm } from '../../utils/format'
 import {
   tipMedium,
   tipMediumKeys,
@@ -12,6 +180,12 @@ import {
   tipField,
   tipTargetBadge,
   tipHealthyBadge,
+  tipOptimalBtn,
+  tipExpertMode,
+  tipSafeMode,
+  tipScopeNote,
+  tipThermalBanner,
+  tipSigmaE,
 } from '../../utils/sliderTooltips'
 import ProtocolSection from './ProtocolSection.vue'
 import AdvancedSection from './AdvancedSection.vue'
@@ -21,62 +195,40 @@ export default defineComponent({
 
   setup() {
     const store = useCellStore()
-    return { store, MEDIA }
+    return { store, MEDIA, ICON, THERMAL_LEVEL }
   },
 
   computed: {
-    currentFreq(): number   { return this.store.currentBroadcastFrequency },
-    currentField(): number  { return this.store.fieldIntensity },
+    currentFreq(): number      { return this.store.currentBroadcastFrequency },
+    currentField(): number     { return this.store.fieldIntensity },
     currentMedium(): MediumKey { return this.store.medium },
+
+    isResonanceMode(): boolean { return this.store.chartMode === CHART_MODE.RESONANCE },
 
     targetDisruption(): number  { return this.store.targetDisruptionRatio },
     healthyDisruption(): number { return this.store.healthyDisruptionRatio },
 
     sliderRanges(): { freqMin: number; freqMax: number; freqStep: number; fieldMin: number; fieldMax: number; fieldStep: number; pwLogMin: number; pwLogMax: number } {
       const cat = this.store.targetCellCategory
-      if (this.store.chartMode === 'resonance') {
-        if (cat === 'virus')
+      if (this.isResonanceMode) {
+        if (cat === CELL_CATEGORY.VIRUS)
           return { freqMin: 1000000, freqMax: 50000000, freqStep: 100000, fieldMin: 10, fieldMax: 5000, fieldStep: 10, pwLogMin: 0, pwLogMax: 2 }
-        if (cat === 'mammalian')
+        if (cat === CELL_CATEGORY.MAMMALIAN)
           return { freqMin: 10, freqMax: 10000, freqStep: 1, fieldMin: 10, fieldMax: 3000, fieldStep: 1, pwLogMin: 0, pwLogMax: 5 }
         return { freqMin: 10000, freqMax: 10000000, freqStep: 10000, fieldMin: 10, fieldMax: 10000, fieldStep: 100, pwLogMin: 0, pwLogMax: 3 }
       }
-      if (cat === 'virus')
+      if (cat === CELL_CATEGORY.VIRUS)
         return { freqMin: 1, freqMax: 5000000, freqStep: 1000, fieldMin: 10, fieldMax: 100000, fieldStep: 10, pwLogMin: 0, pwLogMax: 2 }
-      if (cat === 'bacteria')
+      if (cat === CELL_CATEGORY.BACTERIA)
         return { freqMin: 10, freqMax: 1000000, freqStep: 100, fieldMin: 10, fieldMax: 100000, fieldStep: 100, pwLogMin: 0, pwLogMax: 3 }
       return { freqMin: 10, freqMax: 10000, freqStep: 1, fieldMin: 10, fieldMax: 3000, fieldStep: 1, pwLogMin: 0, pwLogMax: 5 }
     },
 
-    freqDisplay(): string {
-      const f = this.currentFreq
-      if (f >= 1000000) return `${(f / 1000000).toFixed(2)} GHz`
-      if (f >= 1000)    return `${(f / 1000).toFixed(2)} MHz`
-      return `${f} kHz`
-    },
-
-    targetFcDisplay(): string {
-      const fc = this.store.targetFc
-      if (fc >= 1000000) return `${(fc / 1000000).toFixed(2)} GHz`
-      if (fc >= 1000)    return `${(fc / 1000).toFixed(2)} MHz`
-      return `${fc.toFixed(0)} kHz`
-    },
-
-    healthyFcDisplay(): string {
-      const fc = this.store.healthyFc
-      if (fc >= 1000000) return `${(fc / 1000000).toFixed(2)} GHz`
-      if (fc >= 1000)    return `${(fc / 1000).toFixed(2)} MHz`
-      return `${fc.toFixed(0)} kHz`
-    },
-
-    fieldDisplay(): string {
-      const vcm = this.currentField
-      return vcm >= 10000 ? `${(vcm / 1000).toFixed(1)} kV/cm` : `${vcm} V/cm`
-    },
-
-    mediaKeys(): MediumKey[] {
-      return Object.keys(this.MEDIA) as MediumKey[]
-    },
+    freqDisplay(): string      { return formatFreqKHz(this.currentFreq) },
+    targetFcDisplay(): string  { return formatFreqKHz(this.store.targetFc) },
+    healthyFcDisplay(): string { return formatFreqKHz(this.store.healthyFc) },
+    fieldDisplay(): string     { return formatFieldVcm(this.currentField) },
+    mediaKeys(): MediumKey[]   { return Object.keys(this.MEDIA) as MediumKey[] },
 
     targetDisruptPercent(): string  { return (this.targetDisruption * 100).toFixed(0) },
     healthyDisruptPercent(): string { return (this.healthyDisruption * 100).toFixed(0) },
@@ -86,10 +238,10 @@ export default defineComponent({
     },
 
     thermalDangerLevel(): 'safe' | 'hyperthermic' | 'denaturing' | 'vaporizing' {
-      if (this.maxSteadyTemp >= 100) return 'vaporizing'
-      if (this.maxSteadyTemp >= 60)  return 'denaturing'
-      if (this.maxSteadyTemp >= 42)  return 'hyperthermic'
-      return 'safe'
+      if (this.maxSteadyTemp >= 100) return THERMAL_LEVEL.VAPORIZING
+      if (this.maxSteadyTemp >= 60)  return THERMAL_LEVEL.DENATURING
+      if (this.maxSteadyTemp >= 42)  return THERMAL_LEVEL.HYPERTHERMIC
+      return THERMAL_LEVEL.SAFE
     },
 
     isSafeMode(): boolean { return this.store.safeMode },
@@ -99,43 +251,40 @@ export default defineComponent({
     },
 
     freqSubDisplay(): string {
-      if (this.store.chartMode === 'resonance') {
+      if (this.isResonanceMode) {
         const t = this.store.target as { resonantFreqGHz?: number }
         if (t.resonantFreqGHz) {
-          const f0 = t.resonantFreqGHz
-          const fStr = f0 >= 1 ? `${f0.toFixed(1)} GHz` : `${(f0 * 1000).toFixed(0)} MHz`
-          return `f_res(T) ${fStr}`
+          return this.$t('slider.fResSub', { freq: formatFreqKHz(t.resonantFreqGHz * 1_000_000) })
         }
         return this.$t('resonance.noResonance')
       }
-      return `fc(T) ${this.targetFcDisplay} · fc(H) ${this.healthyFcDisplay}`
+      return this.$t('slider.fcSub', { target: this.targetFcDisplay, healthy: this.healthyFcDisplay })
     },
 
     optimalFreqResult(): { khz: number; sel: number } {
       return this.store.optimalFreqResult
     },
 
-    optimalFreqLabel(): string {
-      const { khz, sel } = this.optimalFreqResult
-      const label = khz >= 1_000_000
-        ? `${(khz / 1_000_000).toFixed(2)} GHz`
-        : khz >= 1000 ? `${(khz / 1000).toFixed(2)} MHz` : `${khz.toFixed(0)} kHz`
-      const beyond = khz > this.sliderRanges.freqMax
-      return `⭐ ${label} · ×${sel >= 99 ? '∞' : sel.toFixed(2)}${beyond ? ' ↑' : ''}`
-    },
-
     optimalBeyondRange(): boolean {
       return this.optimalFreqResult.khz > this.sliderRanges.freqMax
     },
 
-    tipOptimalBtn(): string {
+    optimalFreqLabel(): string {
+      const { khz, sel } = this.optimalFreqResult
       const beyond = this.optimalBeyondRange
-      const beyondNote = beyond
-        ? '\n<span class="tip-warn">Optimal lies beyond current slider range — slider clamped to maximum.</span>'
-        : '\nClick to set frequency to optimal.'
-      return `<strong>⭐ Snap to Optimal Frequency</strong>\nFrequency that maximises selectivity ratio TI = T-DR / H-DR.\n300-point log scan 10 kHz – 500 MHz at current field &amp; medium.${beyondNote}`
+      return ` ${formatFreqKHz(khz)} · ×${sel >= 99 ? ICON.INFINITY : sel.toFixed(2)}${beyond ? ICON.BEYOND : ''}`
     },
 
+    tipOptimalBtn(): string    { return tipOptimalBtn(this.optimalBeyondRange) },
+    tipExpertMode(): string    { return tipExpertMode() },
+    tipSafeMode(): string      { return tipSafeMode() },
+    tipScopeNote(): string     { return tipScopeNote() },
+    tipSigmaE(): string        { return tipSigmaE(this.MEDIA[this.currentMedium].conductivity) },
+    tipThermalBanner(): string {
+      return this.thermalDangerLevel !== THERMAL_LEVEL.SAFE
+        ? tipThermalBanner(this.thermalDangerLevel as typeof THERMAL_LEVEL.VAPORIZING | typeof THERMAL_LEVEL.DENATURING | typeof THERMAL_LEVEL.HYPERTHERMIC)
+        : ''
+    },
     tipMedium(): string    { return tipMedium(this.currentMedium) },
     tipMediumKeys(): Record<string, string> { return tipMediumKeys() },
     tipFreq(): string      { return tipFreq(this.freqDisplay, this.targetFcDisplay, this.healthyFcDisplay) },
@@ -210,176 +359,8 @@ export default defineComponent({
 })
 </script>
 
-<template>
-  <div class="field-panel">
-    <div class="field-panel__title-row">
-      <span class="field-panel__title">Field Control</span>
-      <!-- Safe Mode toggle -->
-      <div class="field-panel__safe-toggle">
-        <label
-          class="field-panel__pill field-panel__pill--sm"
-          :class="{ 'field-panel__pill--active field-panel__pill--expert': !isSafeMode }"
-          v-tip="'<strong>Expert Mode</strong>\nFull parameter range — all duty cycle values allowed.\nWarnings shown; no automatic clamping.\nRecommended for experienced users who understand\nthe thermal model.'"
-        >
-          <input type="radio" name="safemode" :checked="!isSafeMode" @change="onSafeModeChange(false)" />
-          Expert
-        </label>
-        <label
-          class="field-panel__pill field-panel__pill--sm"
-          :class="{ 'field-panel__pill--active field-panel__pill--safe': isSafeMode }"
-          v-tip="'<strong>Safe Mode</strong>\nDuty cycle is automatically clamped so that\nprojected steady-state temperature T_ss ≤ 42°C.\nRecommended for initial exploration.\nUse Expert mode to override for high-duty protocols.'"
-        >
-          <input type="radio" name="safemode" :checked="isSafeMode" @change="onSafeModeChange(true)" />
-          Safe
-        </label>
-      </div>
-    </div>
-
-    <!-- Scope legend: which controls affect which cell -->
-    <div
-      class="field-panel__scope-note"
-      v-tip="'<strong>Applied field parameters</strong>\nMedium · RF Frequency · Field Intensity · Waveform · Duty Cycle · Pulse Width · Orientation θ\nare <strong>shared</strong> — the same field is applied to both healthy (H) and target (T) cells simultaneously.\nDifferent Vm responses arise purely from each cell\'s biophysical parameters (R, ε_r, σ_i, τ).\n\n<strong>Cell-specific parameters</strong> (Radius, ε_r, σ_i, Threshold Vm) are edited individually\non each cell card and determine how each cell responds to the shared applied field.\n\n<strong>Pulses to Lysis N</strong> controls target-cell lysis timing only — it has no effect on the healthy cell.'"
-    >
-      <span class="field-panel__scope-chip field-panel__scope-chip--both">H + T</span>
-      <span class="field-panel__scope-sep">shared field</span>
-      <span class="field-panel__scope-chip field-panel__scope-chip--card">card params</span>
-      <span class="field-panel__scope-sep">cell-specific</span>
-    </div>
-
-    <!-- Thermal danger banner (IRE/Schwan mode only) -->
-    <div
-      v-if="store.chartMode !== 'resonance' && thermalDangerLevel !== 'safe'"
-      class="field-panel__thermal-banner"
-      :class="`field-panel__thermal-banner--${thermalDangerLevel}`"
-      v-tip="thermalDangerLevel === 'vaporizing'
-        ? '<strong>Vaporizing Regime — T ≥ 100°C</strong>\nWater boiling · rapid steam-pressure lysis\nReduce duty cycle or field intensity immediately'
-        : thermalDangerLevel === 'denaturing'
-          ? '<strong>Protein Denaturation — T ≥ 60°C</strong>\nIrreversible protein damage onset\n(collagen ~60°C · albumin ~68°C)\nReduce duty cycle or field intensity'
-          : '<strong>Hyperthermic Regime — T ≥ 42°C</strong>\nIAHT thermal damage onset\nMonitor and reduce duty cycle if sustained'"
-    >
-      <span class="field-panel__thermal-icon">{{ thermalDangerLevel === 'vaporizing' ? '⚡' : '⚠' }}</span>
-      <span class="field-panel__thermal-text">
-        {{ thermalDangerLevel === 'vaporizing'
-            ? 'VAPORIZING REGIME — cells instantly destroyed'
-            : thermalDangerLevel === 'denaturing'
-              ? 'PROTEIN DENATURATION — reduce duty cycle'
-              : 'HYPERTHERMIC — thermal damage onset' }}
-      </span>
-      <span class="field-panel__thermal-temp">T_ss {{ maxSteadyTemp.toFixed(0) }}°C</span>
-    </div>
-
-    <!-- Row 1: Medium selector -->
-    <div class="field-panel__row field-panel__row--medium">
-      <span class="field-panel__row-label" v-tip="tipMedium">Medium</span>
-      <div class="field-panel__pills">
-        <label
-          v-for="key in mediaKeys"
-          :key="key"
-          class="field-panel__pill"
-          :class="{ 'field-panel__pill--active': currentMedium === key }"
-          v-tip="tipMediumKeys[key]"
-        >
-          <input
-            type="radio"
-            :value="key"
-            :checked="currentMedium === key"
-            name="medium"
-            @change="onMediumChange(key)"
-          />
-          {{ MEDIA[key].name.split(' ')[0] }}
-        </label>
-      </div>
-      <span
-        class="field-panel__row-meta"
-        v-tip="`<strong>External conductivity σ_e = ${MEDIA[currentMedium].conductivity} S/m</strong>\nUsed in Schwan time constant:\nτ = R·Cm·(2·<span class='tip-val'>σ_e</span>+σ_i)/(2·<span class='tip-val'>σ_e</span>·σ_i)\nChange medium to shift the coupling strength`"
-      >σ_e {{ MEDIA[currentMedium].conductivity }} S/m</span>
-    </div>
-
-    <!-- Row 2: RF Frequency -->
-    <div class="field-panel__row">
-      <span class="field-panel__row-label" v-tip="tipFreq">RF Frequency</span>
-      <div class="field-panel__track">
-        <input
-          class="field-panel__slider"
-          type="range"
-          :min="sliderRanges.freqMin"
-          :max="sliderRanges.freqMax"
-          :step="sliderRanges.freqStep"
-          :value="currentFreq"
-          @input="onFreqInput"
-        />
-      </div>
-      <div class="field-panel__readout">
-        <span class="field-panel__readout-value" v-tip="tipFreq">{{ freqDisplay }}</span>
-        <span
-          v-if="store.chartMode !== 'resonance'"
-          class="field-panel__optimal-btn"
-          :class="{ 'field-panel__optimal-btn--beyond': optimalBeyondRange }"
-          v-tip="tipOptimalBtn"
-          @click="snapToOptimal"
-        >{{ optimalFreqLabel }}</span>
-        <span v-else class="field-panel__readout-sub" v-tip="tipFcSub">{{ freqSubDisplay }}</span>
-      </div>
-    </div>
-
-    <!-- Row 3: Field Intensity + disruption indicators -->
-    <div
-      class="field-panel__row"
-      :class="store.chartMode !== 'resonance' && thermalDangerLevel !== 'safe' ? `field-panel__row--${thermalDangerLevel}` : ''"
-    >
-      <span class="field-panel__row-label" v-tip="tipField">Field Intensity</span>
-      <div class="field-panel__track">
-        <input
-          class="field-panel__slider"
-          type="range"
-          :min="sliderRanges.fieldMin"
-          :max="sliderRanges.fieldMax"
-          :step="sliderRanges.fieldStep"
-          :value="currentField"
-          @input="onFieldInput"
-        />
-      </div>
-      <div class="field-panel__readout">
-        <span class="field-panel__readout-value" v-tip="tipField">{{ fieldDisplay }}</span>
-        <div class="field-panel__badges">
-          <span
-            class="field-panel__badge field-panel__badge--target"
-            :class="{ 'field-panel__badge--warn': targetDisruption > 0.85 }"
-            v-tip="tipTargetBadge"
-          >T {{ targetDisruptPercent }}%</span>
-          <span
-            class="field-panel__badge field-panel__badge--healthy"
-            :class="{ 'field-panel__badge--warn': healthyDisruption > 0.85 }"
-            v-tip="tipHealthyBadge"
-          >H {{ healthyDisruptPercent }}%</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Resonance mode note -->
-    <div v-if="store.chartMode === 'resonance'" class="field-panel__resonance-note">
-      <span class="field-panel__resonance-note-icon">ℹ</span>
-      <span class="field-panel__resonance-note-text">
-        <strong>{{ $t('resonance.noteTitle') }}</strong> — {{ $t('resonance.noteBody') }}
-      </span>
-    </div>
-
-    <!-- Protocol + Advanced accordions (IRE/Schwan mode only) -->
-    <template v-if="store.chartMode !== 'resonance'">
-      <ProtocolSection
-        :slider-ranges="sliderRanges"
-        :thermal-danger-level="thermalDangerLevel"
-        :max-steady-temp="maxSteadyTemp"
-        :is-safe-mode="isSafeMode"
-        :safe-duty-cycle-max-log="safeDutyCycleMaxLog"
-      />
-      <AdvancedSection />
-    </template>
-  </div>
-</template>
-
 <style lang="scss">
-/* ── Container query (top-level, cannot be nested) ───────────────────── */
+/* ── Container query ───────────────────── */
 @container (max-width: 320px) {
   .field-panel__row {
     grid-template-columns: 5rem 1fr auto;
@@ -455,7 +436,7 @@ export default defineComponent({
     display: flex;
     align-items: center;
     gap: 0.4rem;
-    margin-top: -0.45rem;  /* pull closer to title row */
+    margin-top: -0.45rem;
     cursor: help;
   }
 
@@ -759,25 +740,44 @@ export default defineComponent({
     &--vaporizing   { color: var(--color-danger) !important; animation: state-blink 0.5s ease-in-out infinite; }
   }
 
-  /* ── Optimal frequency snap button ──────────────────────────────── */
   &__optimal-btn {
-    font-size: 0.62rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    padding: 0.18rem 0.55rem;
+    font-size: 0.58rem;
     font-family: var(--font-mono);
-    color: var(--color-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #a78bfa;
+    background: rgba(167, 139, 250, 0.1);
+    border: 1px solid rgba(167, 139, 250, 0.35);
+    border-radius: 4px;
     white-space: nowrap;
     cursor: pointer;
-    opacity: 0.88;
-    transition: opacity 0.15s, color 0.15s;
-    border-bottom: 1px dotted rgba(99, 102, 241, 0.4);
+    transition: background 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s;
 
     &:hover {
-      opacity: 1;
-      color: #818cf8;
+      background: rgba(167, 139, 250, 0.18);
+      border-color: rgba(167, 139, 250, 0.6);
+      color: #c4b5fd;
+      box-shadow: 0 0 8px rgba(167, 139, 250, 0.25);
+    }
+
+    &:active {
+      background: rgba(167, 139, 250, 0.25);
     }
 
     &--beyond {
       color: var(--color-text-muted);
-      border-bottom-color: rgba(148, 163, 184, 0.3);
+      background: rgba(148, 163, 184, 0.06);
+      border-color: rgba(148, 163, 184, 0.2);
+      &:hover {
+        background: rgba(148, 163, 184, 0.12);
+        border-color: rgba(148, 163, 184, 0.35);
+        box-shadow: none;
+        color: var(--color-text-muted);
+      }
     }
   }
 

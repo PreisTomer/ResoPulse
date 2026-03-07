@@ -1,3 +1,32 @@
+<template>
+  <div class="freq-chart">
+    <!-- Header: title + legend -->
+    <div class="freq-chart__header">
+      <span
+        class="freq-chart__title"
+        v-tip="'<strong>Transmembrane Potential vs Frequency</strong>\nSchwan equation Vm(f) = 1.5·E·R·cos(θ) / √(1+(2πf·τ)²)\nX-axis: log scale 10 kHz → 500 MHz\nY-axis: peak Vm in millivolts\n\nFaint curves: all library presets\nBright curves: currently active cells\nAmber dashed: Vm selectivity ratio T/H (right axis)\nDotted threshold lines: lysis (bright) · Rev.EP at 50% (faint)\nDrag white cursor to set broadcast frequency'"
+      >Transmembrane Potential Response</span>
+      <ChartLegend />
+    </div>
+
+    <!-- D3 SVG container -->
+    <div ref="chartEl" class="freq-chart__svg-wrap"></div>
+
+    <!-- Hover tooltip -->
+    <Transition name="tip">
+      <div
+        v-if="_tooltipData"
+        class="freq-chart__tooltip"
+        :style="{ left: (_tooltipData.x + 54) + 'px' }"
+      >
+        <div class="freq-chart__tooltip-freq">{{ formatHz(_tooltipData.freqHz) }}Hz</div>
+        <div class="freq-chart__tooltip-row freq-chart__tooltip-row--h">H {{ _tooltipData.healthyVm.toFixed(2) }} mV</div>
+        <div class="freq-chart__tooltip-row freq-chart__tooltip-row--t">T {{ _tooltipData.targetVm.toFixed(2) }} mV</div>
+      </div>
+    </Transition>
+  </div>
+</template>
+
 <script lang="ts">
 import { defineComponent } from 'vue'
 import * as d3 from 'd3'
@@ -773,36 +802,9 @@ export default defineComponent({
 })
 </script>
 
-<template>
-  <div class="freq-chart">
-    <!-- Header: title + legend -->
-    <div class="freq-chart__header">
-      <span
-        class="freq-chart__title"
-        v-tip="'<strong>Transmembrane Potential vs Frequency</strong>\nSchwan equation Vm(f) = 1.5·E·R·cos(θ) / √(1+(2πf·τ)²)\nX-axis: log scale 10 kHz → 500 MHz\nY-axis: peak Vm in millivolts\n\nFaint curves: all library presets\nBright curves: currently active cells\nAmber dashed: Vm selectivity ratio T/H (right axis)\nDotted threshold lines: lysis (bright) · Rev.EP at 50% (faint)\nDrag white cursor to set broadcast frequency'"
-      >Transmembrane Potential Response</span>
-      <ChartLegend />
-    </div>
-
-    <!-- D3 SVG container -->
-    <div ref="chartEl" class="freq-chart__svg-wrap"></div>
-
-    <!-- Hover tooltip -->
-    <Transition name="tip">
-      <div
-        v-if="_tooltipData"
-        class="freq-chart__tooltip"
-        :style="{ left: (_tooltipData.x + 54) + 'px' }"
-      >
-        <div class="freq-chart__tooltip-freq">{{ formatHz(_tooltipData.freqHz) }}Hz</div>
-        <div class="freq-chart__tooltip-row freq-chart__tooltip-row--h">H {{ _tooltipData.healthyVm.toFixed(2) }} mV</div>
-        <div class="freq-chart__tooltip-row freq-chart__tooltip-row--t">T {{ _tooltipData.targetVm.toFixed(2) }} mV</div>
-      </div>
-    </Transition>
-  </div>
-</template>
-
 <style lang="scss">
+@use '../../styles/mixins' as *;
+
 /* Expose group colors as CSS vars for the legend dots */
 .freq-chart {
   --group-reference: var(--color-group-reference);
@@ -826,24 +828,17 @@ export default defineComponent({
   }
 
   &__title {
-    font-size: 0.72rem;
-    font-family: var(--font-mono);
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
+    @include mono-upper(0.72rem, 0.12em);
     color: var(--color-text);
     white-space: nowrap;
   }
 
   &__legend {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
+    @include flex-row(0.75rem);
     flex-wrap: wrap;
 
     &-item {
-      display: flex;
-      align-items: center;
-      gap: 0.3rem;
+      @include flex-row(0.3rem);
       font-size: 0.62rem;
       font-family: var(--font-mono);
       color: var(--color-text);

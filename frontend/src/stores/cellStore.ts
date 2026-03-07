@@ -5,6 +5,7 @@ import { MEDIA } from '../constants/media'
 import type { CellConfig } from '../types/cell'
 import type { MediumKey } from '../types/media'
 import { computeSchwan, computeSAR, computeFc, computeTau, computeResonantDisruption, computeNuclearVm, computePulseStepResponse, computeSkinDepthMm } from '../utils/physics'
+import { CELL_CATEGORY, CHART_MODE, WAVEFORM } from '../constants/strings'
 
 const LAMBDA = 0.02     // Newton cooling rate constant [1/s]
 const TEMP_SIMULATION_CAP = 150  // °C — hard ceiling; cells are destroyed long before this
@@ -105,7 +106,7 @@ export const useCellStore = defineStore('cell', {
      */
     pulseEnvelopeFactorHealthy(): number {
       const state = this as unknown as CellStoreState
-      if (state.waveform !== 'pulsed') return 1.0
+      if (state.waveform !== WAVEFORM.PULSED) return 1.0
       const tau_s = computeTau(state.healthy, this.effectiveSigmaE)
       return computePulseStepResponse(tau_s, state.pulseWidthNs)
     },
@@ -120,9 +121,8 @@ export const useCellStore = defineStore('cell', {
      */
     pulseEnvelopeFactorTarget(): number {
       const state = this as unknown as CellStoreState
-      if (state.waveform !== 'pulsed') return 1.0
-      // Resonance mode: acoustic disruption — pulse envelope factor does not apply
-      if (state.chartMode === 'resonance') return 1.0
+      if (state.waveform !== WAVEFORM.PULSED) return 1.0
+      if (state.chartMode === CHART_MODE.RESONANCE) return 1.0
       const tau_s = computeTau(state.target, this.effectiveSigmaE)
       return computePulseStepResponse(tau_s, state.pulseWidthNs)
     },
@@ -150,7 +150,7 @@ export const useCellStore = defineStore('cell', {
      * Replaces the former hardcoded LYSIS_DELAY_MS = 2500 constant.
      */
     lysisDelayMs(state): number {
-      if (state.waveform === 'cw' || state.dutyCycle >= 1) return 2500
+      if (state.waveform === WAVEFORM.CW || state.dutyCycle >= 1) return 2500
       const pulsePeriodMs = (state.pulseWidthNs * 1e-6) / state.dutyCycle
       return Math.max(200, Math.min(30_000, state.lysisNPulses * pulsePeriodMs))
     },
@@ -211,7 +211,7 @@ export const useCellStore = defineStore('cell', {
     targetDisruptionRatio(): number {
       const cat = this.targetCellCategory
       const t = this.target as CellConfig & { resonantFreqGHz?: number; capsidQ?: number; resonantThresholdVcm?: number }
-      if ((cat === 'virus' || cat === 'bacteria') && t.resonantFreqGHz && t.resonantThresholdVcm) {
+      if ((cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) && t.resonantFreqGHz && t.resonantThresholdVcm) {
         return computeResonantDisruption(
           t.resonantFreqGHz,
           t.capsidQ ?? 20,
@@ -225,13 +225,13 @@ export const useCellStore = defineStore('cell', {
 
     healthySAR(): number {
       const state = this as unknown as CellStoreState
-      const wf = state.waveform === 'cw' ? 0.5 : 1.0
+      const wf = state.waveform === WAVEFORM.CW ? 0.5 : 1.0
       return computeSAR(state.healthy, state.fieldIntensity, this.effectiveSigmaE, wf)
     },
 
     targetSAR(): number {
       const state = this as unknown as CellStoreState
-      const wf = state.waveform === 'cw' ? 0.5 : 1.0
+      const wf = state.waveform === WAVEFORM.CW ? 0.5 : 1.0
       return computeSAR(state.target, state.fieldIntensity, this.effectiveSigmaE, wf)
     },
 
@@ -262,9 +262,9 @@ export const useCellStore = defineStore('cell', {
      *   mammalian — radius ≥ 2.0 µm (cancer + reference cells)
      */
     targetCellCategory(state): 'mammalian' | 'bacteria' | 'virus' {
-      if (state.target.radius < 0.1) return 'virus'
-      if (state.target.radius < 2.0) return 'bacteria'
-      return 'mammalian'
+      if (state.target.radius < 0.1) return CELL_CATEGORY.VIRUS
+      if (state.target.radius < 2.0) return CELL_CATEGORY.BACTERIA
+      return CELL_CATEGORY.MAMMALIAN
     },
 
     /**
@@ -383,7 +383,7 @@ export const useCellStore = defineStore('cell', {
      * to CW, the user's pulsed setting is preserved when they switch back.
      */
     effectiveDutyCycle(state): number {
-      return state.waveform === 'cw' ? 1.0 : state.dutyCycle
+      return state.waveform === WAVEFORM.CW ? 1.0 : state.dutyCycle
     },
 
     /**
@@ -518,7 +518,7 @@ export const useCellStore = defineStore('cell', {
       const state  = this as unknown as CellStoreState
       const target = state.target as CellConfig & { resonantFreqGHz?: number }
       const cat    = this.targetCellCategory
-      if ((cat === 'virus' || cat === 'bacteria') && target.resonantFreqGHz && state.chartMode === 'schwan') {
+      if ((cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) && target.resonantFreqGHz && state.chartMode === CHART_MODE.SCHWAN) {
         return { khz: target.resonantFreqGHz * 1e6, sel: 99.9 }
       }
       const sigma_e = this.effectiveSigmaE
@@ -681,7 +681,7 @@ export const useCellStore = defineStore('cell', {
      */
     setChartMode(mode: 'schwan' | 'resonance') {
       this.chartMode = mode
-      if (mode === 'resonance') this.doubleShellEnabled = false
+      if (mode === CHART_MODE.RESONANCE) this.doubleShellEnabled = false
     },
 
     /** Toggle the double-shell nuclear envelope model on/off. Only meaningful in Schwan mode. */
