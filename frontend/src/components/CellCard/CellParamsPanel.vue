@@ -1,33 +1,3 @@
-<script lang="ts">
-import { defineComponent } from 'vue'
-import type { PropType } from 'vue'
-import type { CellRecord } from '../../types/cell'
-
-export default defineComponent({
-  props: {
-    cellData: { type: Object as PropType<CellRecord | null>, default: null },
-    editableParams: {
-      type: Array as PropType<Array<{ key: string; label: string; unit: string; step: number; min: number; displayValue: number }>>,
-      required: true,
-    },
-    derivedParams: {
-      type: Array as PropType<Array<{ label: string; value: string; unit: string }>>,
-      required: true,
-    },
-    canResetToPreset: { type: Boolean, required: true },
-  },
-
-  emits: {
-    'param-change':    (_key: string, _event: Event) => true,
-    'reset-to-preset': () => true,
-  },
-
-  data() {
-    return { paramsExpanded: false }
-  },
-})
-</script>
-
 <template>
   <template v-if="cellData">
     <div
@@ -71,3 +41,33 @@ export default defineComponent({
     </Transition>
   </template>
 </template>
+
+<script lang="ts">
+import { defineComponent } from 'vue'
+import type { PropType } from 'vue'
+import type { CellRecord } from '../../types/cell'
+
+export default defineComponent({
+  props: {
+    cellData: { type: Object as PropType<CellRecord | null>, default: null },
+    editableParams: {
+      type: Array as PropType<Array<{ key: string; label: string; unit: string; step: number; min: number; displayValue: number }>>,
+      required: true,
+    },
+    derivedParams: {
+      type: Array as PropType<Array<{ label: string; value: string; unit: string }>>,
+      required: true,
+    },
+    canResetToPreset: { type: Boolean, required: true },
+  },
+
+  emits: {
+    'param-change':    (_key: string, _event: Event) => true,
+    'reset-to-preset': () => true,
+  },
+
+  data() {
+    return { paramsExpanded: false }
+  },
+})
+</script>

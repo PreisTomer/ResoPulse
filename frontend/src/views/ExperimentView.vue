@@ -1,3 +1,147 @@
+<template>
+  <div class="experiment" @click.self="healthyPickerOpen = false; targetPickerOpen = false">
+
+    <!-- ── Combined header bar ───────────────────────────────────── -->
+    <div class="experiment__header">
+
+      <!-- Far left: session name -->
+      <div class="experiment__header-left">
+        <input
+          v-model="expStore.sessionName"
+          class="experiment__session-name"
+          spellcheck="false"
+          :title="$t('exp.renameSession')"
+        />
+      </div>
+
+      <!-- Center: cell selectors -->
+      <div class="experiment__cell-badges">
+
+        <!-- Healthy baseline badge + picker -->
+        <div class="experiment__cell-slot">
+          <button
+            class="experiment__cell-badge experiment__cell-badge--healthy"
+            @click="toggleHealthyPicker"
+            v-tip="'Healthy baseline · R ' + store.healthy.radius + ' µm · fc ≈ ' + healthyFcSetup"
+          >
+            <div class="experiment__cell-badge-row" :class="{ 'experiment__cell-badge-row--open': healthyPickerOpen }">
+              <span class="experiment__cell-badge-type">Healthy ·</span>
+              <span class="experiment__cell-badge-selected experiment__cell-badge-selected--healthy">{{ healthyLabelShort }}</span>
+              <span class="experiment__cell-badge-caret" :class="{ 'experiment__cell-badge-caret--open': healthyPickerOpen }">▼</span>
+            </div>
+          </button>
+          <div v-if="healthyPickerOpen" class="experiment__cell-picker">
+            <div class="experiment__cell-picker-title">Select Healthy Baseline</div>
+            <div class="experiment__cell-picker-grid">
+              <button
+                v-for="p in healthyReferencePresets"
+                :key="p.presetId"
+                class="experiment__preset-btn experiment__preset-btn--healthy"
+                :class="{ 'experiment__preset-btn--active': store.healthy.id === p.presetId }"
+                @click="loadHealthyPreset(p)"
+              >
+                <span class="experiment__preset-btn-name">{{ p.shortLabel }}</span>
+                <span class="experiment__preset-btn-sub">{{ p.notes }}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Target cell badge + picker -->
+        <div class="experiment__cell-slot">
+          <button
+            class="experiment__cell-badge experiment__cell-badge--target"
+            @click="toggleTargetPicker"
+            v-tip="'Target cell · R ' + store.target.radius + ' µm · fc ≈ ' + targetFcSetup"
+          >
+            <div class="experiment__cell-badge-row" :class="{ 'experiment__cell-badge-row--open': targetPickerOpen }">
+              <span class="experiment__cell-badge-type">Target ·</span>
+              <span class="experiment__cell-badge-selected experiment__cell-badge-selected--target">{{ store.target.label }}</span>
+              <span class="experiment__cell-badge-caret" :class="{ 'experiment__cell-badge-caret--open': targetPickerOpen }">▼</span>
+            </div>
+          </button>
+          <div v-if="targetPickerOpen" class="experiment__cell-picker">
+            <div class="experiment__cell-picker-hdr">
+              <div class="experiment__cell-picker-title">Select Target Cell</div>
+              <div class="experiment__cell-picker-tabs">
+                <button
+                  v-for="cat in targetPickerCategories"
+                  :key="cat"
+                  class="experiment__cell-picker-tab"
+                  :class="{ 'experiment__cell-picker-tab--active': targetPickerCategory === cat }"
+                  :style="targetPickerCategory === cat ? { borderColor: GROUP_COLORS[cat], color: GROUP_COLORS[cat] } : {}"
+                  @click.stop="targetPickerCategory = cat"
+                >{{ GROUP_LABELS[cat] }}</button>
+              </div>
+            </div>
+            <div class="experiment__cell-picker-grid">
+              <button
+                v-for="p in targetPresetsForCategory"
+                :key="p.presetId"
+                class="experiment__preset-btn"
+                :class="{ 'experiment__preset-btn--active': store.target.id === p.presetId }"
+                :style="store.target.id === p.presetId ? { borderColor: GROUP_COLORS[targetPickerCategory], color: GROUP_COLORS[targetPickerCategory] } : {}"
+                @click="loadTargetPreset(p)"
+              >
+                <span class="experiment__preset-btn-name">{{ p.shortLabel }}</span>
+                <span class="experiment__preset-btn-sub">{{ p.notes }}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /experiment__cell-badges -->
+
+      <!-- Far right: mode toggle + connection status -->
+      <div class="experiment__header-right">
+        <span
+          class="experiment__chip"
+          :class="socketConnected ? 'experiment__chip--connected' : 'experiment__chip--local'"
+          v-tip="socketConnected ? $t('exp.connectedTip') : $t('exp.localTip')"
+        >
+          <span class="experiment__chip-dot" :class="socketConnected ? '' : 'experiment__chip-dot--warn'"></span>
+          {{ socketConnected ? $t('exp.connected').toUpperCase() : $t('exp.local').toUpperCase() }}
+        </span>
+      </div>
+
+    </div>
+
+    <!-- ── Main content ──────────────────────────────────────────── -->
+    <div class="experiment__main">
+
+      <!-- Row 1: Cell cards side-by-side + field controls -->
+      <div class="experiment__top">
+        <div class="experiment__cells">
+          <CellCard
+            v-for="cell in cells"
+            :key="cell.id"
+            :type="cell.type"
+            :label="cell.label"
+            :sublabel="cell.sublabel"
+            :sublabel-tip="cell.sublabelTip"
+            :description="cell.description"
+            :cell-data="cell.cellData"
+          />
+        </div>
+        <div class="experiment__field">
+          <FrequencySlider />
+        </div>
+      </div>
+
+      <!-- Row 2: Chart (full width) -->
+      <FrequencyResponseChart v-if="store.chartMode === 'schwan'" />
+      <ResonanceChart v-else />
+
+      <!-- Row 3: Selectivity (full width) -->
+      <SelectivityPanel />
+
+      <!-- Row 4: Log (full width) -->
+      <ExperimentLog />
+
+    </div>
+  </div>
+</template>
+
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { useCellStore } from '../stores/cellStore'
@@ -187,151 +331,9 @@ export default defineComponent({
 })
 </script>
 
-<template>
-  <div class="experiment" @click.self="healthyPickerOpen = false; targetPickerOpen = false">
-
-    <!-- ── Combined header bar ───────────────────────────────────── -->
-    <div class="experiment__header">
-
-      <!-- Far left: session name -->
-      <div class="experiment__header-left">
-        <input
-          v-model="expStore.sessionName"
-          class="experiment__session-name"
-          spellcheck="false"
-          :title="$t('exp.renameSession')"
-        />
-      </div>
-
-      <!-- Center: cell selectors -->
-      <div class="experiment__cell-badges">
-
-        <!-- Healthy baseline badge + picker -->
-        <div class="experiment__cell-slot">
-          <button
-            class="experiment__cell-badge experiment__cell-badge--healthy"
-            @click="toggleHealthyPicker"
-            v-tip="'Healthy baseline · R ' + store.healthy.radius + ' µm · fc ≈ ' + healthyFcSetup"
-          >
-            <div class="experiment__cell-badge-row" :class="{ 'experiment__cell-badge-row--open': healthyPickerOpen }">
-              <span class="experiment__cell-badge-type">Healthy ·</span>
-              <span class="experiment__cell-badge-selected experiment__cell-badge-selected--healthy">{{ healthyLabelShort }}</span>
-              <span class="experiment__cell-badge-caret" :class="{ 'experiment__cell-badge-caret--open': healthyPickerOpen }">▼</span>
-            </div>
-          </button>
-          <div v-if="healthyPickerOpen" class="experiment__cell-picker">
-            <div class="experiment__cell-picker-title">Select Healthy Baseline</div>
-            <div class="experiment__cell-picker-grid">
-              <button
-                v-for="p in healthyReferencePresets"
-                :key="p.presetId"
-                class="experiment__preset-btn experiment__preset-btn--healthy"
-                :class="{ 'experiment__preset-btn--active': store.healthy.id === p.presetId }"
-                @click="loadHealthyPreset(p)"
-              >
-                <span class="experiment__preset-btn-name">{{ p.shortLabel }}</span>
-                <span class="experiment__preset-btn-sub">{{ p.notes }}</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Target cell badge + picker -->
-        <div class="experiment__cell-slot">
-          <button
-            class="experiment__cell-badge experiment__cell-badge--target"
-            @click="toggleTargetPicker"
-            v-tip="'Target cell · R ' + store.target.radius + ' µm · fc ≈ ' + targetFcSetup"
-          >
-            <div class="experiment__cell-badge-row" :class="{ 'experiment__cell-badge-row--open': targetPickerOpen }">
-              <span class="experiment__cell-badge-type">Target ·</span>
-              <span class="experiment__cell-badge-selected experiment__cell-badge-selected--target">{{ store.target.label }}</span>
-              <span class="experiment__cell-badge-caret" :class="{ 'experiment__cell-badge-caret--open': targetPickerOpen }">▼</span>
-            </div>
-          </button>
-          <div v-if="targetPickerOpen" class="experiment__cell-picker">
-            <div class="experiment__cell-picker-hdr">
-              <div class="experiment__cell-picker-title">Select Target Cell</div>
-              <div class="experiment__cell-picker-tabs">
-                <button
-                  v-for="cat in targetPickerCategories"
-                  :key="cat"
-                  class="experiment__cell-picker-tab"
-                  :class="{ 'experiment__cell-picker-tab--active': targetPickerCategory === cat }"
-                  :style="targetPickerCategory === cat ? { borderColor: GROUP_COLORS[cat], color: GROUP_COLORS[cat] } : {}"
-                  @click.stop="targetPickerCategory = cat"
-                >{{ GROUP_LABELS[cat] }}</button>
-              </div>
-            </div>
-            <div class="experiment__cell-picker-grid">
-              <button
-                v-for="p in targetPresetsForCategory"
-                :key="p.presetId"
-                class="experiment__preset-btn"
-                :class="{ 'experiment__preset-btn--active': store.target.id === p.presetId }"
-                :style="store.target.id === p.presetId ? { borderColor: GROUP_COLORS[targetPickerCategory], color: GROUP_COLORS[targetPickerCategory] } : {}"
-                @click="loadTargetPreset(p)"
-              >
-                <span class="experiment__preset-btn-name">{{ p.shortLabel }}</span>
-                <span class="experiment__preset-btn-sub">{{ p.notes }}</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-      </div><!-- /experiment__cell-badges -->
-
-      <!-- Far right: mode toggle + connection status -->
-      <div class="experiment__header-right">
-        <span
-          class="experiment__chip"
-          :class="socketConnected ? 'experiment__chip--connected' : 'experiment__chip--local'"
-          v-tip="socketConnected ? $t('exp.connectedTip') : $t('exp.localTip')"
-        >
-          <span class="experiment__chip-dot" :class="socketConnected ? '' : 'experiment__chip-dot--warn'"></span>
-          {{ socketConnected ? $t('exp.connected').toUpperCase() : $t('exp.local').toUpperCase() }}
-        </span>
-      </div>
-
-    </div>
-
-    <!-- ── Main content ──────────────────────────────────────────── -->
-    <div class="experiment__main">
-
-      <!-- Row 1: Cell cards side-by-side + field controls -->
-      <div class="experiment__top">
-        <div class="experiment__cells">
-          <CellCard
-            v-for="cell in cells"
-            :key="cell.id"
-            :type="cell.type"
-            :label="cell.label"
-            :sublabel="cell.sublabel"
-            :sublabel-tip="cell.sublabelTip"
-            :description="cell.description"
-            :cell-data="cell.cellData"
-          />
-        </div>
-        <div class="experiment__field">
-          <FrequencySlider />
-        </div>
-      </div>
-
-      <!-- Row 2: Chart (full width) -->
-      <FrequencyResponseChart v-if="store.chartMode === 'schwan'" />
-      <ResonanceChart v-else />
-
-      <!-- Row 3: Selectivity (full width) -->
-      <SelectivityPanel />
-
-      <!-- Row 4: Log (full width) -->
-      <ExperimentLog />
-
-    </div>
-  </div>
-</template>
-
 <style lang="scss" scoped>
+@use '../styles/mixins' as *;
+
 .experiment {
   display: flex;
   flex-direction: column;
@@ -344,7 +346,7 @@ export default defineComponent({
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 1.5rem;
+    gap: 1.5rem;  /* justify-content: space-between prevents flex-row() use here */
     padding: 0.5rem 1.75rem;
     border-bottom: 1px solid var(--color-border);
     background: var(--color-surface);
@@ -352,16 +354,12 @@ export default defineComponent({
   }
 
   &__header-left {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
+    @include flex-row(0.6rem);
     flex-shrink: 0;
   }
 
   &__header-right {
-    display: flex;
-    align-items: center;
-    gap: 0.85rem;
+    @include flex-row(0.85rem);
     flex-shrink: 0;
   }
 
@@ -385,9 +383,7 @@ export default defineComponent({
   }
 
   &__chip {
-    display: flex;
-    align-items: center;
-    gap: 0.3rem;
+    @include flex-row(0.3rem);
     font-family: var(--font-mono);
     font-size: 0.58rem;
     letter-spacing: 0.1em;
@@ -413,9 +409,7 @@ export default defineComponent({
   }
 
   &__cell-badges {
-    display: flex;
-    gap: 1rem;
-    align-items: center;
+    @include flex-row(1rem);
   }
 
   /* ── Cell badge wrappers ─────────────────────────────────────── */
@@ -514,10 +508,7 @@ export default defineComponent({
   }
 
   &__cell-picker-title {
-    font-family: var(--font-mono);
-    font-size: 0.58rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
+    @include mono-upper(0.58rem, 0.1em);
     color: var(--color-text-muted);
     margin-bottom: 0.6rem;
   }
@@ -527,8 +518,7 @@ export default defineComponent({
   }
 
   &__cell-picker-tabs {
-    display: flex;
-    gap: 0.3rem;
+    @include flex-row(0.3rem);
     flex-wrap: wrap;
     margin-top: 0.4rem;
   }
@@ -555,15 +545,11 @@ export default defineComponent({
   }
 
   &__cell-picker-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 0.35rem;
+    @include flex-col(0.35rem);
   }
 
   &__preset-btn {
-    display: flex;
-    flex-direction: column;
-    gap: 0.15rem;
+    @include flex-col(0.15rem);
     padding: 0.45rem 0.65rem;
     background: transparent;
     border: 1px solid var(--color-border);

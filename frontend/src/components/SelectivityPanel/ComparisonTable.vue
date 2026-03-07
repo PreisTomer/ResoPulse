@@ -1,3 +1,31 @@
+<template>
+  <div class="sel-panel__library">
+    <div
+      class="sel-panel__lib-title"
+      v-tip="'<strong>' + presetCompTitleDynamic + '</strong>\n' + $t('selectivity.presetCompTip')"
+    >{{ presetCompTitleDynamic }}</div>
+    <div class="sel-panel__comparison-table">
+      <div
+        v-for="row in presetComparison"
+        :key="row.preset.presetId"
+        class="sel-panel__cmp-row"
+        :class="{ 'sel-panel__cmp-row--active': row.isActive }"
+        v-tip="cmpTip(row)"
+      >
+        <span class="sel-panel__cmp-name" :style="{ '--gc': GROUP_COLORS[row.preset.group] }">{{ row.preset.shortLabel }}</span>
+        <div class="sel-panel__cmp-bar-track">
+          <div
+            class="sel-panel__cmp-bar"
+            :class="selClass(row.sel)"
+            :style="{ width: Math.min(100, row.sel * 40) + '%' }"
+          ></div>
+        </div>
+        <span class="sel-panel__cmp-sel" :class="selClass(row.sel)">×{{ row.sel.toFixed(2) }}</span>
+      </div>
+    </div>
+  </div>
+</template>
+
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { useCellStore } from '../../stores/cellStore'
@@ -82,31 +110,3 @@ Click the preset pill below to switch to this cell`
   },
 })
 </script>
-
-<template>
-  <div class="sel-panel__library">
-    <div
-      class="sel-panel__lib-title"
-      v-tip="'<strong>' + presetCompTitleDynamic + '</strong>\n' + $t('selectivity.presetCompTip')"
-    >{{ presetCompTitleDynamic }}</div>
-    <div class="sel-panel__comparison-table">
-      <div
-        v-for="row in presetComparison"
-        :key="row.preset.presetId"
-        class="sel-panel__cmp-row"
-        :class="{ 'sel-panel__cmp-row--active': row.isActive }"
-        v-tip="cmpTip(row)"
-      >
-        <span class="sel-panel__cmp-name" :style="{ '--gc': GROUP_COLORS[row.preset.group] }">{{ row.preset.shortLabel }}</span>
-        <div class="sel-panel__cmp-bar-track">
-          <div
-            class="sel-panel__cmp-bar"
-            :class="selClass(row.sel)"
-            :style="{ width: Math.min(100, row.sel * 40) + '%' }"
-          ></div>
-        </div>
-        <span class="sel-panel__cmp-sel" :class="selClass(row.sel)">×{{ row.sel.toFixed(2) }}</span>
-      </div>
-    </div>
-  </div>
-</template>

@@ -1,74 +1,3 @@
-<script lang="ts">
-import { defineComponent, computed } from 'vue'
-import { useExperimentStore } from '../stores/experimentStore'
-
-export default defineComponent({
-  setup() {
-    const store = useExperimentStore()
-
-    const totalReadings = computed(() => store.entries.length)
-    const lysisEvents = computed(() => store.entries.filter((e) => e.event === 'lysis').length)
-    const manualReadings = computed(() => store.entries.filter((e) => e.event === 'manual').length)
-
-    const avgSelectivity = computed(() => {
-      if (!store.entries.length) return null
-      const sum = store.entries.reduce((acc, e) => acc + e.selectivity, 0)
-      return (sum / store.entries.length).toFixed(3)
-    })
-
-    const peakSelectivity = computed(() => {
-      if (!store.entries.length) return null
-      return Math.max(...store.entries.map((e) => e.selectivity)).toFixed(3)
-    })
-
-    const freqRange = computed(() => {
-      if (!store.entries.length) return null
-      const freqs = store.entries.map((e) => e.freqKHz)
-      const lo = Math.min(...freqs)
-      const hi = Math.max(...freqs)
-      return lo === hi ? `${lo} kHz` : `${lo} – ${hi} kHz`
-    })
-
-    const fieldRange = computed(() => {
-      if (!store.entries.length) return null
-      const fields = store.entries.map((e) => e.fieldVcm)
-      const lo = Math.min(...fields)
-      const hi = Math.max(...fields)
-      return lo === hi ? `${lo} V/cm` : `${lo} – ${hi} V/cm`
-    })
-
-    const peakTargetRatio = computed(() => {
-      if (!store.entries.length) return null
-      return (Math.max(...store.entries.map((e) => e.targetRatio)) * 100).toFixed(1) + '%'
-    })
-
-    function eventClass(event: string) {
-      return event === 'lysis' ? 'reports__ev-badge--lysis' : 'reports__ev-badge--manual'
-    }
-
-    function selClass(sel: number) {
-      if (sel >= 1.5) return 'reports__green-val'
-      if (sel >= 1.0) return 'reports__warn-val'
-      return 'reports__cancer-val'
-    }
-
-    return {
-      store,
-      totalReadings,
-      lysisEvents,
-      manualReadings,
-      avgSelectivity,
-      peakSelectivity,
-      freqRange,
-      fieldRange,
-      peakTargetRatio,
-      eventClass,
-      selClass,
-    }
-  },
-})
-</script>
-
 <template>
   <div class="reports">
     <div class="reports__inner">
@@ -257,7 +186,80 @@ export default defineComponent({
   </div>
 </template>
 
+<script lang="ts">
+import { defineComponent, computed } from 'vue'
+import { useExperimentStore } from '../stores/experimentStore'
+
+export default defineComponent({
+  setup() {
+    const store = useExperimentStore()
+
+    const totalReadings = computed(() => store.entries.length)
+    const lysisEvents = computed(() => store.entries.filter((e) => e.event === 'lysis').length)
+    const manualReadings = computed(() => store.entries.filter((e) => e.event === 'manual').length)
+
+    const avgSelectivity = computed(() => {
+      if (!store.entries.length) return null
+      const sum = store.entries.reduce((acc, e) => acc + e.selectivity, 0)
+      return (sum / store.entries.length).toFixed(3)
+    })
+
+    const peakSelectivity = computed(() => {
+      if (!store.entries.length) return null
+      return Math.max(...store.entries.map((e) => e.selectivity)).toFixed(3)
+    })
+
+    const freqRange = computed(() => {
+      if (!store.entries.length) return null
+      const freqs = store.entries.map((e) => e.freqKHz)
+      const lo = Math.min(...freqs)
+      const hi = Math.max(...freqs)
+      return lo === hi ? `${lo} kHz` : `${lo} – ${hi} kHz`
+    })
+
+    const fieldRange = computed(() => {
+      if (!store.entries.length) return null
+      const fields = store.entries.map((e) => e.fieldVcm)
+      const lo = Math.min(...fields)
+      const hi = Math.max(...fields)
+      return lo === hi ? `${lo} V/cm` : `${lo} – ${hi} V/cm`
+    })
+
+    const peakTargetRatio = computed(() => {
+      if (!store.entries.length) return null
+      return (Math.max(...store.entries.map((e) => e.targetRatio)) * 100).toFixed(1) + '%'
+    })
+
+    function eventClass(event: string) {
+      return event === 'lysis' ? 'reports__ev-badge--lysis' : 'reports__ev-badge--manual'
+    }
+
+    function selClass(sel: number) {
+      if (sel >= 1.5) return 'reports__green-val'
+      if (sel >= 1.0) return 'reports__warn-val'
+      return 'reports__cancer-val'
+    }
+
+    return {
+      store,
+      totalReadings,
+      lysisEvents,
+      manualReadings,
+      avgSelectivity,
+      peakSelectivity,
+      freqRange,
+      fieldRange,
+      peakTargetRatio,
+      eventClass,
+      selClass,
+    }
+  },
+})
+</script>
+
 <style lang="scss" scoped>
+@use '../styles/mixins' as *;
+
 /* ── Page shell ───────────────────────────────────────────────────────────── */
 .reports {
   flex: 1;
@@ -268,21 +270,14 @@ export default defineComponent({
     max-width: 1600px;
     margin: 0 auto;
     padding: 2rem 2rem 4rem;
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
+    @include flex-col(1.5rem);
   }
 
   /* ── Page header ──────────────────────────────────────────────────────────── */
   &__eyebrow {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.72rem;
+    @include flex-row(0.5rem);
+    @include mono-upper(0.72rem, 0.14em);
     color: var(--color-primary);
-    text-transform: uppercase;
-    letter-spacing: 0.14em;
-    font-family: var(--font-mono);
     margin-bottom: 0.75rem;
   }
 
@@ -358,16 +353,11 @@ export default defineComponent({
 
   /* ── Session name ─────────────────────────────────────────────────────────── */
   &__session-row {
-    display: flex;
-    align-items: center;
-    gap: 0.85rem;
+    @include flex-row(0.85rem);
   }
 
   &__session-label {
-    font-size: 0.72rem;
-    font-family: var(--font-mono);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
+    @include mono-upper(0.72rem, 0.1em);
     color: var(--color-text-muted);
     flex-shrink: 0;
   }

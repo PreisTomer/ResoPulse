@@ -1,88 +1,3 @@
-<script lang="ts">
-import { defineComponent, computed } from 'vue'
-import { CELL_PRESETS, GROUP_COLORS, GROUP_LABELS, type CellGroup, type CellPreset } from '../constants/cellLibrary'
-import { MEDIA } from '../constants/media'
-import { membraneCm, computeFc, computeTau, computeNuclearTau } from '../utils/physics'
-
-const SIGMA_SALINE = MEDIA.saline.conductivity // 1.5 S/m
-
-const GROUPS: CellGroup[] = ['reference', 'cancer', 'bacteria', 'virus']
-
-type ResonantPreset = CellPreset & {
-  resonantFreqGHz?: number
-  capsidQ?: number
-  resonantThresholdVcm?: number
-  nuclearRadius?: number
-  nuclearMembraneThickness?: number
-  nuclearMembraneEps?: number
-  nucleoplasmConductivity?: number
-  nuclearThresholdVoltage?: number
-}
-
-export default defineComponent({
-  setup() {
-    // Augment each preset with computed Cm, fc in saline, and resonance params
-    const presets = computed(() =>
-      CELL_PRESETS.map((p) => {
-        const pr = p as ResonantPreset
-        const cm = membraneCm(p) * 1e3               // F/m² → mF/m²
-        const fc = computeFc(p, SIGMA_SALINE)         // kHz
-        const fcDisplay =
-          fc >= 1000
-            ? `${(fc / 1000).toFixed(2)} MHz`
-            : `${fc.toFixed(1)} kHz`
-        // Resonance parameters (bacteria/virus only)
-        const resFreqDisplay = pr.resonantFreqGHz
-          ? `${pr.resonantFreqGHz} GHz`
-          : '—'
-        const resQDisplay = pr.capsidQ ? `${pr.capsidQ}` : '—'
-        const resEthrDisplay = pr.resonantThresholdVcm
-          ? `${pr.resonantThresholdVcm}`
-          : '—'
-        // Nuclear envelope parameters (mammalian nucleated cells)
-        const hasNuclear = !!pr.nuclearRadius
-        const nucRDisplay = pr.nuclearRadius ? `${pr.nuclearRadius}` : '—'
-        // f_peak for nuclear section: 1 / (2π × √(τ_out × τ_ne))
-        let nucFpeakDisplay = '—'
-        if (hasNuclear) {
-          const tau_out = computeTau(p, SIGMA_SALINE)
-          const tau_ne  = computeNuclearTau(p, SIGMA_SALINE)
-          if (tau_out > 0 && tau_ne > 0) {
-            const fpeak_Hz  = 1 / (2 * Math.PI * Math.sqrt(tau_out * tau_ne))
-            const fpeak_MHz = fpeak_Hz / 1e6
-            nucFpeakDisplay = `${fpeak_MHz.toFixed(2)} MHz`
-          }
-        }
-        return {
-          ...p,
-          cmDisplay: cm.toFixed(2),
-          fcDisplay,
-          resFreqDisplay,
-          resQDisplay,
-          resEthrDisplay,
-          hasResonance: !!pr.resonantFreqGHz,
-          hasNuclear,
-          nucRDisplay,
-          nucFpeakDisplay,
-          color: GROUP_COLORS[p.group],
-          groupLabel: GROUP_LABELS[p.group],
-        }
-      })
-    )
-
-    const nuclearPresets = computed(() => presets.value.filter(p => p.hasNuclear))
-
-    const mediaEntries = Object.entries(MEDIA).map(([key, val]) => ({
-      key,
-      name: val.name,
-      conductivity: val.conductivity,
-    }))
-
-    return { presets, nuclearPresets, mediaEntries, GROUPS, GROUP_COLORS, GROUP_LABELS }
-  },
-})
-</script>
-
 <template>
   <div class="datasets">
     <div class="datasets__inner">
@@ -438,7 +353,94 @@ export default defineComponent({
   </div>
 </template>
 
+<script lang="ts">
+import { defineComponent, computed } from 'vue'
+import { CELL_PRESETS, GROUP_COLORS, GROUP_LABELS, type CellGroup, type CellPreset } from '../constants/cellLibrary'
+import { MEDIA } from '../constants/media'
+import { membraneCm, computeFc, computeTau, computeNuclearTau } from '../utils/physics'
+
+const SIGMA_SALINE = MEDIA.saline.conductivity // 1.5 S/m
+
+const GROUPS: CellGroup[] = ['reference', 'cancer', 'bacteria', 'virus']
+
+type ResonantPreset = CellPreset & {
+  resonantFreqGHz?: number
+  capsidQ?: number
+  resonantThresholdVcm?: number
+  nuclearRadius?: number
+  nuclearMembraneThickness?: number
+  nuclearMembraneEps?: number
+  nucleoplasmConductivity?: number
+  nuclearThresholdVoltage?: number
+}
+
+export default defineComponent({
+  setup() {
+    // Augment each preset with computed Cm, fc in saline, and resonance params
+    const presets = computed(() =>
+      CELL_PRESETS.map((p) => {
+        const pr = p as ResonantPreset
+        const cm = membraneCm(p) * 1e3               // F/m² → mF/m²
+        const fc = computeFc(p, SIGMA_SALINE)         // kHz
+        const fcDisplay =
+          fc >= 1000
+            ? `${(fc / 1000).toFixed(2)} MHz`
+            : `${fc.toFixed(1)} kHz`
+        // Resonance parameters (bacteria/virus only)
+        const resFreqDisplay = pr.resonantFreqGHz
+          ? `${pr.resonantFreqGHz} GHz`
+          : '—'
+        const resQDisplay = pr.capsidQ ? `${pr.capsidQ}` : '—'
+        const resEthrDisplay = pr.resonantThresholdVcm
+          ? `${pr.resonantThresholdVcm}`
+          : '—'
+        // Nuclear envelope parameters (mammalian nucleated cells)
+        const hasNuclear = !!pr.nuclearRadius
+        const nucRDisplay = pr.nuclearRadius ? `${pr.nuclearRadius}` : '—'
+        // f_peak for nuclear section: 1 / (2π × √(τ_out × τ_ne))
+        let nucFpeakDisplay = '—'
+        if (hasNuclear) {
+          const tau_out = computeTau(p, SIGMA_SALINE)
+          const tau_ne  = computeNuclearTau(p, SIGMA_SALINE)
+          if (tau_out > 0 && tau_ne > 0) {
+            const fpeak_Hz  = 1 / (2 * Math.PI * Math.sqrt(tau_out * tau_ne))
+            const fpeak_MHz = fpeak_Hz / 1e6
+            nucFpeakDisplay = `${fpeak_MHz.toFixed(2)} MHz`
+          }
+        }
+        return {
+          ...p,
+          cmDisplay: cm.toFixed(2),
+          fcDisplay,
+          resFreqDisplay,
+          resQDisplay,
+          resEthrDisplay,
+          hasResonance: !!pr.resonantFreqGHz,
+          hasNuclear,
+          nucRDisplay,
+          nucFpeakDisplay,
+          color: GROUP_COLORS[p.group],
+          groupLabel: GROUP_LABELS[p.group],
+        }
+      })
+    )
+
+    const nuclearPresets = computed(() => presets.value.filter(p => p.hasNuclear))
+
+    const mediaEntries = Object.entries(MEDIA).map(([key, val]) => ({
+      key,
+      name: val.name,
+      conductivity: val.conductivity,
+    }))
+
+    return { presets, nuclearPresets, mediaEntries, GROUPS, GROUP_COLORS, GROUP_LABELS }
+  },
+})
+</script>
+
 <style lang="scss" scoped>
+@use '../styles/mixins' as *;
+
 /* ── Page shell ───────────────────────────────────────────────────────────── */
 .datasets {
   flex: 1;
@@ -449,21 +451,14 @@ export default defineComponent({
     max-width: 1600px;
     margin: 0 auto;
     padding: 2rem 2rem 4rem;
-    display: flex;
-    flex-direction: column;
-    gap: 1.75rem;
+    @include flex-col(1.75rem);
   }
 
   /* ── Page header ──────────────────────────────────────────────────────────── */
   &__eyebrow {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.72rem;
+    @include flex-row(0.5rem);
+    @include mono-upper(0.72rem, 0.14em);
     color: var(--color-primary);
-    text-transform: uppercase;
-    letter-spacing: 0.14em;
-    font-family: var(--font-mono);
     margin-bottom: 0.75rem;
   }
 
@@ -498,9 +493,7 @@ export default defineComponent({
   }
 
   &__legend-item {
-    display: flex;
-    align-items: center;
-    gap: 0.45rem;
+    @include flex-row(0.45rem);
     font-size: 0.78rem;
     color: var(--color-text-muted);
     font-family: var(--font-mono);
@@ -527,9 +520,7 @@ export default defineComponent({
   }
 
   &__card-hdr {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
+    @include flex-row(1rem);
     padding: 1.1rem 1.5rem;
     border-bottom: 1px solid var(--color-border);
     flex-wrap: wrap;

@@ -1,33 +1,3 @@
-<script lang="ts">
-import { defineComponent } from 'vue'
-import { useExperimentStore } from '../stores/experimentStore'
-import { useCellStore } from '../stores/cellStore'
-
-export default defineComponent({
-  setup() {
-    return {
-      expStore: useExperimentStore(),
-      cellStore: useCellStore(),
-    }
-  },
-
-  computed: {
-    entries() {
-      return [...this.expStore.entries].reverse().slice(0, 20)
-    },
-    hasEntries(): boolean { return this.expStore.entries.length > 0 },
-  },
-
-  methods: {
-    logReading() {
-      this.expStore.logReading(this.cellStore as Parameters<typeof this.expStore.logReading>[0], 'manual')
-    },
-    exportCSV()  { this.expStore.exportCSV() },
-    clearLog()   { this.expStore.clearLog() },
-  },
-})
-</script>
-
 <template>
   <div class="exp-log">
     <!-- Header row -->
@@ -116,7 +86,39 @@ export default defineComponent({
   </div>
 </template>
 
+<script lang="ts">
+import { defineComponent } from 'vue'
+import { useExperimentStore } from '../stores/experimentStore'
+import { useCellStore } from '../stores/cellStore'
+
+export default defineComponent({
+  setup() {
+    return {
+      expStore: useExperimentStore(),
+      cellStore: useCellStore(),
+    }
+  },
+
+  computed: {
+    entries() {
+      return [...this.expStore.entries].reverse().slice(0, 20)
+    },
+    hasEntries(): boolean { return this.expStore.entries.length > 0 },
+  },
+
+  methods: {
+    logReading() {
+      this.expStore.logReading(this.cellStore as Parameters<typeof this.expStore.logReading>[0], 'manual')
+    },
+    exportCSV()  { this.expStore.exportCSV() },
+    clearLog()   { this.expStore.clearLog() },
+  },
+})
+</script>
+
 <style lang="scss" scoped>
+@use '../styles/mixins' as *;
+
 .exp-log {
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -128,9 +130,7 @@ export default defineComponent({
   min-height: 0;
 
   &__header {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
+    @include flex-row(0.6rem);
     padding: 0.65rem 0.85rem;
     border-bottom: 1px solid var(--color-border);
     flex-wrap: wrap;
@@ -152,13 +152,10 @@ export default defineComponent({
     &:focus { border-bottom-color: var(--color-primary); }
   }
 
-  &__actions { display: flex; gap: 0.35rem; flex-shrink: 0; }
+  &__actions { @include flex-row(0.35rem); flex-shrink: 0; }
 
   &__btn {
-    font-size: 0.58rem;
-    font-family: var(--font-mono);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
+    @include mono-upper(0.58rem);
     padding: 0.22rem 0.6rem;
     border: 1px solid var(--color-border);
     border-radius: 3px;

@@ -1,3 +1,123 @@
+<template>
+  <div class="sel-panel">
+    <div class="sel-panel__title">{{ $t('selectivity.title') }}</div>
+
+    <!-- ── Selectivity ratio + TI ────────────────────────────── -->
+    <div class="sel-panel__ratio-wrap" v-tip="tipSelectivity">
+      <span class="sel-panel__ratio" :class="selectivityClass">
+        ×{{ selectivity.toFixed(2) }}
+      </span>
+      <div class="sel-panel__ratio-labels">
+        <span class="sel-panel__ratio-label">{{ $t('selectivity.ratioLabel') }}</span>
+        <span class="sel-panel__ti-label">Vm ×<span>{{ vmSelectivityRatio >= 99 ? '∞' : vmSelectivityRatio.toFixed(2) }}</span></span>
+      </div>
+    </div>
+
+    <!-- ── Disruption progress bars ──────────────────────────── -->
+    <div class="sel-panel__sep"></div>
+    <DisruptionBars />
+
+    <!-- ── Vm / Disruption & SAR ─────────────────────────────── -->
+    <div class="sel-panel__sep"></div>
+    <div class="sel-panel__vm-sar-grid" v-tip="tipVmSar">
+      <template v-if="isResonanceTarget">
+        <div class="sel-panel__vm-sar-cell">
+          <span class="sel-panel__vs-type sel-panel__vs-type--t">{{ $t('selectivity.tDisr') }}</span>
+          <span class="sel-panel__vs-vm sel-panel__vs-vm--t">{{ targetRatioPct.toFixed(1) }}%</span>
+          <span class="sel-panel__vs-sar">{{ targetSarVal }} W/kg</span>
+          <span class="sel-panel__vs-elysis"
+            v-tip="'<strong>' + $t('selectivity.tipEthr') + '</strong>\n' + $t('selectivity.tipEthrBody')"
+          >E<sub>thr</sub> {{ targetResonanceEthr }}</span>
+        </div>
+        <div class="sel-panel__vm-sar-cell">
+          <span class="sel-panel__vs-type sel-panel__vs-type--h">{{ $t('selectivity.hSafe') }}</span>
+          <span class="sel-panel__vs-vm sel-panel__vs-vm--res">≈0%</span>
+          <span class="sel-panel__vs-sar">{{ healthySarVal }} W/kg</span>
+          <span class="sel-panel__vs-elysis sel-panel__vs-elysis--safe"
+            v-tip="'<strong>' + $t('selectivity.tipNoGhzRes') + '</strong>\n' + $t('selectivity.tipNoGhzResBody')"
+          >{{ $t('selectivity.noGhzRes') }}</span>
+        </div>
+      </template>
+      <template v-else>
+        <div class="sel-panel__vm-sar-cell">
+          <span class="sel-panel__vs-type sel-panel__vs-type--t">{{ $t('selectivity.targetBar') }}-Vm</span>
+          <span class="sel-panel__vs-vm sel-panel__vs-vm--t">{{ targetVmMv }} mV</span>
+          <span class="sel-panel__vs-sar">{{ targetSarVal }} W/kg</span>
+          <span class="sel-panel__vs-elysis" v-tip="'<strong>Target lysis field</strong>\nMinimum E required to reach lysis threshold at current frequency.\nE_lysis = Vm_thr · √(1+(ωτ)²) / (1.5·R)'">E<sub>lys</sub> {{ targetLysisField }}</span>
+        </div>
+        <div class="sel-panel__vm-sar-cell">
+          <span class="sel-panel__vs-type sel-panel__vs-type--h">{{ $t('selectivity.healthyBar') }}-Vm</span>
+          <span class="sel-panel__vs-vm sel-panel__vs-vm--h">{{ healthyVmMv }} mV</span>
+          <span class="sel-panel__vs-sar">{{ healthySarVal }} W/kg</span>
+          <span class="sel-panel__vs-elysis" v-tip="'<strong>Healthy lysis field</strong>\nMinimum E required to reach lysis threshold at current frequency.\nKeep operating field below this value for selective therapy.'">E<sub>lys</sub> {{ healthyLysisField }}</span>
+        </div>
+      </template>
+    </div>
+
+    <!-- ── Resonance physics info (resonance mode only) ─────────── -->
+    <div v-if="isResonanceTarget && store.chartMode === 'resonance'" class="sel-panel__resonance-info">
+      <div class="sel-panel__res-title">RESONANCE PARAMETERS</div>
+      <div class="sel-panel__res-row"
+        v-tip="'<strong>EM Skin Depth</strong>\nδ = √(1/(π·f·μ₀·σ_e))\nDepth at which GHz field amplitude decays to 1/e (~37%).\n≥10 mm: tissue-penetrating · 2–10 mm: surface region · <2 mm: near-surface only.\nIn vivo GHz delivery requires near-field applicators or intracavitary probes for deep tissue.\nRef: Gabriel et al. (1996) Phys. Med. Biol. 41:2271'"
+      >
+        <span class="sel-panel__res-label">δ skin depth</span>
+        <span class="sel-panel__res-val" :class="skinDepthClass">{{ skinDepthLabel }}</span>
+        <span class="sel-panel__res-note">at {{ freqDisplayLabel }}</span>
+      </div>
+      <div class="sel-panel__res-row"
+        v-tip="'<strong>f_res Uncertainty Range</strong>\nf_res = v_sound / (2R) — uncertainty driven by v_sound literature range.\nBacteria peptidoglycan: v_wall ≈ 800–1200 m/s → ±25–30%.\nEnveloped viruses: v_eff poorly defined → ±40%.\nTune frequency experimentally within this range.'"
+      >
+        <span class="sel-panel__res-label">f_res range</span>
+        <span class="sel-panel__res-val">{{ resonantFreqRange }}</span>
+      </div>
+      <div v-if="resonantQRange" class="sel-panel__res-row"
+        v-tip="'<strong>Q-Factor Uncertainty</strong>\nMechanical quality factor Q sets the resonance linewidth.\nLower Q → broader resonance → easier frequency matching but weaker peak amplitude.\nDykeman & Sankey (2010) validated Q on rigid icosahedral protein capsids only.\nBacterial peptidoglycan and viral lipid envelopes have substantially lower Q.'"
+      >
+        <span class="sel-panel__res-label">Q range</span>
+        <span class="sel-panel__res-val">{{ resonantQRange }}</span>
+      </div>
+      <div class="sel-panel__res-row"
+        v-tip="'<strong>Experimental Basis</strong>\nLASER-VALIDATED: capsid disruption confirmed by pulsed laser acoustic excitation (Tsen 2007–2012).\nRF-EXTRAPOLATED: acoustic mechanism plausible for rigid walls; GHz RF delivery is not yet experimentally validated — laser experiments only.\nSPECULATIVE: enveloped viruses / peptidoglycan — no experimental validation of resonance disruption by any method.\nRef: Tsen et al. (2007) Biophys. J.; Dykeman &amp; Sankey (2010) Phys. Rev. Lett.'"
+      >
+        <span class="sel-panel__res-label">Basis</span>
+        <span class="sel-panel__res-badge" :class="experimentalBasisClass">{{ experimentalBasisLabel }}</span>
+      </div>
+    </div>
+
+    <!-- ── Mode badge ─────────────────────────────────────────── -->
+    <div class="sel-panel__mode-row">
+      <span
+        class="sel-panel__mode-badge"
+        :class="modeBadgeClass"
+        v-tip="tipModeBadge"
+      >
+        {{ modeBadge.label }}
+      </span>
+      <span
+        class="sel-panel__optimal-note sel-panel__optimal-note--snap"
+        :class="{ 'sel-panel__optimal-note--beyond': optimalFreqResult.khz > 10000 }"
+        @click="snapToOptimal"
+        v-tip="tipOptimal"
+      >{{ optimalNote }}</span>
+    </div>
+
+    <!-- ── Model / selectivity warning ──────────────────────── -->
+    <div v-if="targetModelWarning" class="sel-panel__model-warning">
+      {{ targetModelWarning }}
+      <button
+        v-if="showResonanceSwitchBtn"
+        class="sel-panel__model-warning-btn"
+        @click="store.setChartMode('resonance')"
+      >→ Switch to Resonance Mode</button>
+    </div>
+
+    <!-- ── Preset selectivity comparison ─────────────────────── -->
+    <div class="sel-panel__sep"></div>
+    <ComparisonTable />
+
+  </div>
+</template>
+
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { useCellStore } from '../../stores/cellStore'
@@ -313,126 +433,6 @@ Note: virion fc ~0.6–0.75 MHz per Schwan model (σ_i-limited; model approximat
   },
 })
 </script>
-
-<template>
-  <div class="sel-panel">
-    <div class="sel-panel__title">{{ $t('selectivity.title') }}</div>
-
-    <!-- ── Selectivity ratio + TI ────────────────────────────── -->
-    <div class="sel-panel__ratio-wrap" v-tip="tipSelectivity">
-      <span class="sel-panel__ratio" :class="selectivityClass">
-        ×{{ selectivity.toFixed(2) }}
-      </span>
-      <div class="sel-panel__ratio-labels">
-        <span class="sel-panel__ratio-label">{{ $t('selectivity.ratioLabel') }}</span>
-        <span class="sel-panel__ti-label">Vm ×<span>{{ vmSelectivityRatio >= 99 ? '∞' : vmSelectivityRatio.toFixed(2) }}</span></span>
-      </div>
-    </div>
-
-    <!-- ── Disruption progress bars ──────────────────────────── -->
-    <div class="sel-panel__sep"></div>
-    <DisruptionBars />
-
-    <!-- ── Vm / Disruption & SAR ─────────────────────────────── -->
-    <div class="sel-panel__sep"></div>
-    <div class="sel-panel__vm-sar-grid" v-tip="tipVmSar">
-      <template v-if="isResonanceTarget">
-        <div class="sel-panel__vm-sar-cell">
-          <span class="sel-panel__vs-type sel-panel__vs-type--t">{{ $t('selectivity.tDisr') }}</span>
-          <span class="sel-panel__vs-vm sel-panel__vs-vm--t">{{ targetRatioPct.toFixed(1) }}%</span>
-          <span class="sel-panel__vs-sar">{{ targetSarVal }} W/kg</span>
-          <span class="sel-panel__vs-elysis"
-            v-tip="'<strong>' + $t('selectivity.tipEthr') + '</strong>\n' + $t('selectivity.tipEthrBody')"
-          >E<sub>thr</sub> {{ targetResonanceEthr }}</span>
-        </div>
-        <div class="sel-panel__vm-sar-cell">
-          <span class="sel-panel__vs-type sel-panel__vs-type--h">{{ $t('selectivity.hSafe') }}</span>
-          <span class="sel-panel__vs-vm sel-panel__vs-vm--res">≈0%</span>
-          <span class="sel-panel__vs-sar">{{ healthySarVal }} W/kg</span>
-          <span class="sel-panel__vs-elysis sel-panel__vs-elysis--safe"
-            v-tip="'<strong>' + $t('selectivity.tipNoGhzRes') + '</strong>\n' + $t('selectivity.tipNoGhzResBody')"
-          >{{ $t('selectivity.noGhzRes') }}</span>
-        </div>
-      </template>
-      <template v-else>
-        <div class="sel-panel__vm-sar-cell">
-          <span class="sel-panel__vs-type sel-panel__vs-type--t">{{ $t('selectivity.targetBar') }}-Vm</span>
-          <span class="sel-panel__vs-vm sel-panel__vs-vm--t">{{ targetVmMv }} mV</span>
-          <span class="sel-panel__vs-sar">{{ targetSarVal }} W/kg</span>
-          <span class="sel-panel__vs-elysis" v-tip="'<strong>Target lysis field</strong>\nMinimum E required to reach lysis threshold at current frequency.\nE_lysis = Vm_thr · √(1+(ωτ)²) / (1.5·R)'">E<sub>lys</sub> {{ targetLysisField }}</span>
-        </div>
-        <div class="sel-panel__vm-sar-cell">
-          <span class="sel-panel__vs-type sel-panel__vs-type--h">{{ $t('selectivity.healthyBar') }}-Vm</span>
-          <span class="sel-panel__vs-vm sel-panel__vs-vm--h">{{ healthyVmMv }} mV</span>
-          <span class="sel-panel__vs-sar">{{ healthySarVal }} W/kg</span>
-          <span class="sel-panel__vs-elysis" v-tip="'<strong>Healthy lysis field</strong>\nMinimum E required to reach lysis threshold at current frequency.\nKeep operating field below this value for selective therapy.'">E<sub>lys</sub> {{ healthyLysisField }}</span>
-        </div>
-      </template>
-    </div>
-
-    <!-- ── Resonance physics info (resonance mode only) ─────────── -->
-    <div v-if="isResonanceTarget && store.chartMode === 'resonance'" class="sel-panel__resonance-info">
-      <div class="sel-panel__res-title">RESONANCE PARAMETERS</div>
-      <div class="sel-panel__res-row"
-        v-tip="'<strong>EM Skin Depth</strong>\nδ = √(1/(π·f·μ₀·σ_e))\nDepth at which GHz field amplitude decays to 1/e (~37%).\n≥10 mm: tissue-penetrating · 2–10 mm: surface region · <2 mm: near-surface only.\nIn vivo GHz delivery requires near-field applicators or intracavitary probes for deep tissue.\nRef: Gabriel et al. (1996) Phys. Med. Biol. 41:2271'"
-      >
-        <span class="sel-panel__res-label">δ skin depth</span>
-        <span class="sel-panel__res-val" :class="skinDepthClass">{{ skinDepthLabel }}</span>
-        <span class="sel-panel__res-note">at {{ freqDisplayLabel }}</span>
-      </div>
-      <div class="sel-panel__res-row"
-        v-tip="'<strong>f_res Uncertainty Range</strong>\nf_res = v_sound / (2R) — uncertainty driven by v_sound literature range.\nBacteria peptidoglycan: v_wall ≈ 800–1200 m/s → ±25–30%.\nEnveloped viruses: v_eff poorly defined → ±40%.\nTune frequency experimentally within this range.'"
-      >
-        <span class="sel-panel__res-label">f_res range</span>
-        <span class="sel-panel__res-val">{{ resonantFreqRange }}</span>
-      </div>
-      <div v-if="resonantQRange" class="sel-panel__res-row"
-        v-tip="'<strong>Q-Factor Uncertainty</strong>\nMechanical quality factor Q sets the resonance linewidth.\nLower Q → broader resonance → easier frequency matching but weaker peak amplitude.\nDykeman & Sankey (2010) validated Q on rigid icosahedral protein capsids only.\nBacterial peptidoglycan and viral lipid envelopes have substantially lower Q.'"
-      >
-        <span class="sel-panel__res-label">Q range</span>
-        <span class="sel-panel__res-val">{{ resonantQRange }}</span>
-      </div>
-      <div class="sel-panel__res-row"
-        v-tip="'<strong>Experimental Basis</strong>\nLASER-VALIDATED: capsid disruption confirmed by pulsed laser acoustic excitation (Tsen 2007–2012).\nRF-EXTRAPOLATED: acoustic mechanism plausible for rigid walls; GHz RF delivery is not yet experimentally validated — laser experiments only.\nSPECULATIVE: enveloped viruses / peptidoglycan — no experimental validation of resonance disruption by any method.\nRef: Tsen et al. (2007) Biophys. J.; Dykeman &amp; Sankey (2010) Phys. Rev. Lett.'"
-      >
-        <span class="sel-panel__res-label">Basis</span>
-        <span class="sel-panel__res-badge" :class="experimentalBasisClass">{{ experimentalBasisLabel }}</span>
-      </div>
-    </div>
-
-    <!-- ── Mode badge ─────────────────────────────────────────── -->
-    <div class="sel-panel__mode-row">
-      <span
-        class="sel-panel__mode-badge"
-        :class="modeBadgeClass"
-        v-tip="tipModeBadge"
-      >
-        {{ modeBadge.label }}
-      </span>
-      <span
-        class="sel-panel__optimal-note sel-panel__optimal-note--snap"
-        :class="{ 'sel-panel__optimal-note--beyond': optimalFreqResult.khz > 10000 }"
-        @click="snapToOptimal"
-        v-tip="tipOptimal"
-      >{{ optimalNote }}</span>
-    </div>
-
-    <!-- ── Model / selectivity warning ──────────────────────── -->
-    <div v-if="targetModelWarning" class="sel-panel__model-warning">
-      {{ targetModelWarning }}
-      <button
-        v-if="showResonanceSwitchBtn"
-        class="sel-panel__model-warning-btn"
-        @click="store.setChartMode('resonance')"
-      >→ Switch to Resonance Mode</button>
-    </div>
-
-    <!-- ── Preset selectivity comparison ─────────────────────── -->
-    <div class="sel-panel__sep"></div>
-    <ComparisonTable />
-
-  </div>
-</template>
 
 <style lang="scss">
 @keyframes bar-flash {

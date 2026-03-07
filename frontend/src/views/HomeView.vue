@@ -1,9 +1,3 @@
-<script lang="ts">
-import { defineComponent } from 'vue'
-
-export default defineComponent({})
-</script>
-
 <template>
   <div class="home">
     <!-- Animated background grid -->
@@ -104,7 +98,15 @@ export default defineComponent({})
   </div>
 </template>
 
+<script lang="ts">
+import { defineComponent } from 'vue'
+
+export default defineComponent({})
+</script>
+
 <style lang="scss" scoped>
+@use '../styles/mixins' as *;
+
 /* ── Layout ──────────────────────────────────────────────────────────── */
 .home {
   flex: 1;
@@ -178,14 +180,9 @@ export default defineComponent({})
   }
 
   &__eyebrow {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.75rem;
+    @include flex-row(0.5rem);
+    @include mono-upper(0.75rem, 0.14em);
     color: var(--color-primary);
-    text-transform: uppercase;
-    letter-spacing: 0.14em;
-    font-family: var(--font-mono);
 
     &-dot {
       width: 6px; height: 6px;
@@ -228,10 +225,7 @@ export default defineComponent({})
   }
 
   &__cap {
-    font-size: 0.67rem;
-    font-family: var(--font-mono);
-    text-transform: uppercase;
-    letter-spacing: 0.07em;
+    @include mono-upper(0.67rem, 0.07em);
     padding: 0.25rem 0.6rem;
     border: 1px solid var(--color-border);
     border-radius: 20px;

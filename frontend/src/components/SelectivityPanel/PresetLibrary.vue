@@ -1,3 +1,44 @@
+<template>
+  <!-- Target cell library -->
+  <div v-if="type === 'target'" class="sel-panel__library">
+    <div
+      class="sel-panel__lib-title"
+      v-tip="'<strong>' + $t('selectivity.targetLibTitle') + '</strong>\n' + $t('selectivity.targetLibTip')"
+    >{{ $t('selectivity.targetLibTitle') }}</div>
+    <div v-for="grp in targetGroups" :key="grp" class="sel-panel__lib-group" :style="{ '--pill-c': GROUP_COLORS[grp] }">
+      <span class="sel-panel__lib-group-label">{{ GROUP_LABELS[grp] }}</span>
+      <div class="sel-panel__lib-pills">
+        <button
+          v-for="p in presetsByGroup[grp]"
+          :key="p.presetId"
+          class="sel-panel__preset-pill"
+          :class="{ 'sel-panel__preset-pill--active': activeTargetId === p.id }"
+          v-tip="presetTip(p)"
+          @click="loadTarget(p)"
+        >{{ p.shortLabel }}</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Healthy baseline library -->
+  <div v-else class="sel-panel__library">
+    <div
+      class="sel-panel__lib-title"
+      v-tip="'<strong>' + $t('selectivity.healthyLibTitle') + '</strong>\n' + $t('selectivity.healthyLibTip')"
+    >{{ $t('selectivity.healthyLibTitle') }}</div>
+    <div class="sel-panel__lib-pills" :style="{ '--pill-c': GROUP_COLORS.reference }">
+      <button
+        v-for="p in healthyPresets"
+        :key="p.presetId"
+        class="sel-panel__preset-pill"
+        :class="{ 'sel-panel__preset-pill--active': activeHealthyId === p.id }"
+        v-tip="presetTip(p)"
+        @click="loadHealthy(p)"
+      >{{ p.shortLabel }}</button>
+    </div>
+  </div>
+</template>
+
 <script lang="ts">
 import { defineComponent } from 'vue'
 import type { PropType } from 'vue'
@@ -62,44 +103,3 @@ Vm threshold = <span class="tip-val">${p.thresholdVoltage} V</span>${res}`
   },
 })
 </script>
-
-<template>
-  <!-- Target cell library -->
-  <div v-if="type === 'target'" class="sel-panel__library">
-    <div
-      class="sel-panel__lib-title"
-      v-tip="'<strong>' + $t('selectivity.targetLibTitle') + '</strong>\n' + $t('selectivity.targetLibTip')"
-    >{{ $t('selectivity.targetLibTitle') }}</div>
-    <div v-for="grp in targetGroups" :key="grp" class="sel-panel__lib-group" :style="{ '--pill-c': GROUP_COLORS[grp] }">
-      <span class="sel-panel__lib-group-label">{{ GROUP_LABELS[grp] }}</span>
-      <div class="sel-panel__lib-pills">
-        <button
-          v-for="p in presetsByGroup[grp]"
-          :key="p.presetId"
-          class="sel-panel__preset-pill"
-          :class="{ 'sel-panel__preset-pill--active': activeTargetId === p.id }"
-          v-tip="presetTip(p)"
-          @click="loadTarget(p)"
-        >{{ p.shortLabel }}</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Healthy baseline library -->
-  <div v-else class="sel-panel__library">
-    <div
-      class="sel-panel__lib-title"
-      v-tip="'<strong>' + $t('selectivity.healthyLibTitle') + '</strong>\n' + $t('selectivity.healthyLibTip')"
-    >{{ $t('selectivity.healthyLibTitle') }}</div>
-    <div class="sel-panel__lib-pills" :style="{ '--pill-c': GROUP_COLORS.reference }">
-      <button
-        v-for="p in healthyPresets"
-        :key="p.presetId"
-        class="sel-panel__preset-pill"
-        :class="{ 'sel-panel__preset-pill--active': activeHealthyId === p.id }"
-        v-tip="presetTip(p)"
-        @click="loadHealthy(p)"
-      >{{ p.shortLabel }}</button>
-    </div>
-  </div>
-</template>
