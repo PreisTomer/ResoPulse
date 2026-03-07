@@ -1,4 +1,5 @@
 export const UNIT = {
+  HZ:        'Hz',
   GHZ:       'GHz',
   MHZ:       'MHz',
   KHZ:       'kHz',
