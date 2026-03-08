@@ -6,7 +6,7 @@
         <div
           class="sel-panel__bar-fill sel-panel__bar-fill--t"
           :style="{ width: targetRatioPct + '%' }"
-          :class="{ 'sel-panel__bar-fill--warn': targetRatio >= 0.85 }"
+          :class="{ 'sel-panel__bar-fill--warn': targetRatio >= THRESHOLDS.DISRUPTION_WARN }"
         ></div>
       </div>
       <span class="sel-panel__bar-val">{{ targetRatioPct.toFixed(0) }}%</span>
@@ -22,7 +22,7 @@
         <div
           class="sel-panel__bar-fill sel-panel__bar-fill--h"
           :style="{ width: healthyRatioPct + '%' }"
-          :class="{ 'sel-panel__bar-fill--warn': healthyRatio >= 0.85 }"
+          :class="{ 'sel-panel__bar-fill--warn': healthyRatio >= THRESHOLDS.DISRUPTION_WARN }"
         ></div>
       </div>
       <span class="sel-panel__bar-val">{{ healthyRatioPct.toFixed(0) }}%</span>
@@ -42,7 +42,7 @@
         <div class="sel-panel__nuc-bar-track">
           <div class="sel-panel__nuc-bar-fill sel-panel__nuc-bar-fill--t"
             :style="{ width: Math.min(100, store.targetNuclearDisruptionRatio * 100) + '%' }"
-            :class="{ 'sel-panel__nuc-bar-fill--warn': store.targetNuclearDisruptionRatio >= 0.85 }"
+            :class="{ 'sel-panel__nuc-bar-fill--warn': store.targetNuclearDisruptionRatio >= THRESHOLDS.DISRUPTION_WARN }"
           ></div>
         </div>
         <span class="sel-panel__nuc-bar-val">{{ (store.targetNuclearDisruptionRatio * 100).toFixed(0) }}%</span>
@@ -52,14 +52,14 @@
         <div class="sel-panel__nuc-bar-track">
           <div class="sel-panel__nuc-bar-fill sel-panel__nuc-bar-fill--h"
             :style="{ width: Math.min(100, store.healthyNuclearDisruptionRatio * 100) + '%' }"
-            :class="{ 'sel-panel__nuc-bar-fill--warn': store.healthyNuclearDisruptionRatio >= 0.85 }"
+            :class="{ 'sel-panel__nuc-bar-fill--warn': store.healthyNuclearDisruptionRatio >= THRESHOLDS.DISRUPTION_WARN }"
           ></div>
         </div>
         <span class="sel-panel__nuc-bar-val">{{ (store.healthyNuclearDisruptionRatio * 100).toFixed(0) }}%</span>
       </div>
       <div class="sel-panel__nuc-sel-row">
         <span class="sel-panel__nuc-sel-label">NE Selectivity</span>
-        <span class="sel-panel__nuc-sel-val" :class="store.nuclearSelectivityRatio >= 1.5 ? 'sel-panel__nuc-sel--good' : store.nuclearSelectivityRatio >= 1.0 ? 'sel-panel__nuc-sel--ok' : 'sel-panel__nuc-sel--low'">
+        <span class="sel-panel__nuc-sel-val" :class="store.nuclearSelectivityRatio >= THRESHOLDS.SEL_STRONG ? 'sel-panel__nuc-sel--good' : store.nuclearSelectivityRatio >= THRESHOLDS.SEL_MARGINAL ? 'sel-panel__nuc-sel--ok' : 'sel-panel__nuc-sel--low'">
           ×{{ store.nuclearSelectivityRatio >= 99 ? ICON.INFINITY : store.nuclearSelectivityRatio.toFixed(2) }}
         </span>
       </div>
@@ -70,14 +70,14 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { useCellStore } from '@/stores/cellStore'
-import { DISRUPTION_WARN_THRESHOLD } from '@/constants/cellCard'
+import { THRESHOLDS, DISRUPTION_WARN_THRESHOLD } from '@/constants/cellCard'
 import { CELL_CATEGORY } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
 import { formatLysisTime } from '@/utils/sliderTooltips'
 
 export default defineComponent({
   setup() {
-    return { store: useCellStore(), CELL_CATEGORY, ICON }
+    return { store: useCellStore(), CELL_CATEGORY, ICON, THRESHOLDS }
   },
 
   computed: {
@@ -87,10 +87,10 @@ export default defineComponent({
     healthyRatioPct(): number { return Math.min(100, this.healthyRatio * 100) },
 
     targetLysisProbability(): number {
-      return Math.round(100 / (1 + Math.exp(-(this.targetRatio - 1.0) / 0.05)))
+      return Math.round(100 / (1 + Math.exp(-(this.targetRatio - THRESHOLDS.LYSIS_PROB_CENTER) / THRESHOLDS.LYSIS_PROB_SLOPE)))
     },
     healthyLysisProbability(): number {
-      return Math.round(100 / (1 + Math.exp(-(this.healthyRatio - 1.0) / 0.05)))
+      return Math.round(100 / (1 + Math.exp(-(this.healthyRatio - THRESHOLDS.LYSIS_PROB_CENTER) / THRESHOLDS.LYSIS_PROB_SLOPE)))
     },
 
     lysisTimeDisplay(): string {
@@ -146,7 +146,7 @@ Ref: Tsen et al. (2007)`
       }
       const hVm  = (this.store.healthyVm * 1000).toFixed(2)
       const hThr = (this.store.healthy.thresholdVoltage * 1000).toFixed(0)
-      const status = this.healthyRatio < 0.5
+      const status = this.healthyRatio < THRESHOLDS.HEALTHY_APPROACHING
         ? `\n<span class="tip-ok">${ICON.CHECK} Healthy cells are safe</span>`
         : `\n<span class="tip-warn">${ICON.WARNING} Approaching threshold — reduce field</span>`
       return `<strong>Healthy membrane disruption: <span class="tip-val">${pct}%</span></strong>

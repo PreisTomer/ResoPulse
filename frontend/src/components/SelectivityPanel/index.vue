@@ -132,7 +132,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { useCellStore } from '@/stores/cellStore'
-import { DISRUPTION_WARN_THRESHOLD } from '@/constants/cellCard'
+import { THRESHOLDS, DISRUPTION_WARN_THRESHOLD } from '@/constants/cellCard'
 import { CELL_CATEGORY, CHART_MODE, EXPERIMENTAL_BASIS } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
 import { formatFreqKHz, formatFieldVcm } from '@/utils/format'
@@ -163,28 +163,28 @@ export default defineComponent({
     targetRatioPct(): number { return Math.min(100, this.targetRatio * 100) },
 
     selectivityClass(): string {
-      if (this.selectivity >= 1.5) return 'sel-panel__ratio--strong'
-      if (this.selectivity >= 1.0) return 'sel-panel__ratio--marginal'
+      if (this.selectivity >= THRESHOLDS.SEL_STRONG)   return 'sel-panel__ratio--strong'
+      if (this.selectivity >= THRESHOLDS.SEL_MARGINAL) return 'sel-panel__ratio--marginal'
       return 'sel-panel__ratio--weak'
     },
 
     modeBadge(): { label: string } {
       const t = this.targetRatio
       const h = this.store.healthyDisruptionRatio
-      if (h >= DISRUPTION_WARN_THRESHOLD)            return { label: this.$t('selectivity.modeAblative')    }
-      if (t >= DISRUPTION_WARN_THRESHOLD && h < 0.5) return { label: this.$t('selectivity.modeTherapeutic') }
-      if (t >= DISRUPTION_WARN_THRESHOLD)            return { label: this.$t('selectivity.modeMarginal')    }
-      if (t >= 0.5)                                  return { label: this.$t('selectivity.modeApproaching') }
-      return                                                { label: this.$t('selectivity.modeSubThreshold') }
+      if (h >= DISRUPTION_WARN_THRESHOLD)                                          return { label: this.$t('selectivity.modeAblative')    }
+      if (t >= DISRUPTION_WARN_THRESHOLD && h < THRESHOLDS.HEALTHY_APPROACHING)   return { label: this.$t('selectivity.modeTherapeutic') }
+      if (t >= DISRUPTION_WARN_THRESHOLD)                                          return { label: this.$t('selectivity.modeMarginal')    }
+      if (t >= THRESHOLDS.HEALTHY_APPROACHING)                                     return { label: this.$t('selectivity.modeApproaching') }
+      return                                                                               { label: this.$t('selectivity.modeSubThreshold') }
     },
 
     modeBadgeClass(): string {
       const t = this.targetRatio, h = this.store.healthyDisruptionRatio
-      if (h >= DISRUPTION_WARN_THRESHOLD)            return 'sel-panel__mode-badge--ablative'
-      if (t >= DISRUPTION_WARN_THRESHOLD && h < 0.5) return 'sel-panel__mode-badge--therapeutic'
-      if (t >= DISRUPTION_WARN_THRESHOLD)            return 'sel-panel__mode-badge--marginal'
-      if (t >= 0.5)                                  return 'sel-panel__mode-badge--approaching'
-      return                                                'sel-panel__mode-badge--subthreshold'
+      if (h >= DISRUPTION_WARN_THRESHOLD)                                        return 'sel-panel__mode-badge--ablative'
+      if (t >= DISRUPTION_WARN_THRESHOLD && h < THRESHOLDS.HEALTHY_APPROACHING) return 'sel-panel__mode-badge--therapeutic'
+      if (t >= DISRUPTION_WARN_THRESHOLD)                                        return 'sel-panel__mode-badge--marginal'
+      if (t >= THRESHOLDS.HEALTHY_APPROACHING)                                   return 'sel-panel__mode-badge--approaching'
+      return                                                                             'sel-panel__mode-badge--subthreshold'
     },
 
     targetVmMv(): string  { return (this.store.targetVm  * 1000).toFixed(2) },
@@ -249,7 +249,7 @@ the exact σ_i value used. Validate with measured cell impedance (patch clamp / 
       const cat = this.store.targetCellCategory
       const ti  = this.therapeuticIndex
       const t = this.store.target as { resonantFreqGHz?: number; resonantThresholdVcm?: number }
-      const ghzCaveat = ' · f_res from fs-laser experiments (Tsen et al. [10]); RF delivery at GHz is skin-depth limited (~1–2 mm in saline)'
+      const ghzCaveat = ' · f_res from fs-laser experiments (Tsen et al. [10]); RF delivery at GHz is skin-depth limited (~4–13 mm in saline at 1–12 GHz)'
       if (this.store.chartMode === CHART_MODE.RESONANCE && cat === CELL_CATEGORY.MAMMALIAN) {
         return `${ICON.WARNING} Resonance mode has no physical meaning for mammalian cells — they have no rigid protein capsid or peptidoglycan cell wall. Switch back to IRE/Vm mode.`
       }
@@ -307,9 +307,9 @@ the exact σ_i value used. Validate with measured cell impedance (patch clamp / 
 
     skinDepthClass(): string {
       const d = this.skinDepthMm
-      if (d >= 10) return 'sel-panel__res-depth--deep'
-      if (d >= 2)  return 'sel-panel__res-depth--medium'
-      return 'sel-panel__res-depth--shallow'
+      if (d >= 20) return 'sel-panel__res-depth--deep'    // ≥20 mm — tissue-penetrating
+      if (d >= 5)  return 'sel-panel__res-depth--medium'  // 5–20 mm — cm-depth accessible
+      return 'sel-panel__res-depth--shallow'              // <5 mm — near-surface / intracavitary
     },
 
     freqDisplayLabel(): string {
@@ -371,7 +371,7 @@ the exact σ_i value used. Validate with measured cell impedance (patch clamp / 
     },
 
     tipSkinDepth(): string {
-      return `<strong>EM Skin Depth</strong>\nδ = √(1/(π·f·μ₀·σ_e))\nDepth at which GHz field amplitude decays to 1/e (~37%).\n≥10 mm: tissue-penetrating · 2–10 mm: surface region · <2 mm: near-surface only.\nIn vivo GHz delivery requires near-field applicators or intracavitary probes for deep tissue.\nRef: Gabriel et al. (1996) Phys. Med. Biol. 41:2271`
+      return `<strong>EM Skin Depth</strong>\nδ = √(1/(π·f·μ₀·σ_e))\nDepth at which field amplitude decays to 1/e (~37%) in saline (σ_e = 1.5 S/m).\n  100 MHz → 41 mm  ·  1 GHz → 13 mm  ·  5 GHz → 5.8 mm  ·  12 GHz → 3.8 mm\n≥20 mm: tissue-penetrating · 5–20 mm: cm-depth accessible · <5 mm: near-surface / intracavitary.\nIn vivo GHz resonance delivery requires near-field or intracavitary applicators.\nRef: Gabriel et al. (1996) Phys. Med. Biol. 41:2271`
     },
 
     tipFresRange(): string {
@@ -388,9 +388,10 @@ the exact σ_i value used. Validate with measured cell impedance (patch clamp / 
 
     tipSelectivity(): string {
       const sel = this.selectivity
-      const quality = sel >= 1.5
+      const { SEL_STRONG: ss, SEL_MARGINAL: sm } = THRESHOLDS
+      const quality = sel >= ss
         ? '<span class="tip-ok">Strong therapeutic window</span>'
-        : sel >= 1.0
+        : sel >= sm
           ? '<span class="tip-warn">Marginal window — adjust field or preset</span>'
           : '<span class="tip-warn">Non-selective — healthy cells equally at risk</span>'
       const selStr = sel >= 99 ? ICON.INFINITY : sel.toFixed(3)
@@ -400,7 +401,7 @@ the exact σ_i value used. Validate with measured cell impedance (patch clamp / 
 Current: <span class="tip-val">×${selStr}</span>
 
 ${quality}
-≥ 1.5 → strong window (green)  ·  < 1.0 → non-selective (red)
+≥ ${ss} → strong window (green)  ·  < ${sm} → non-selective (red)
 
 <strong>Resonance mode selectivity:</strong>
 Mammalian cells lack rigid-shell resonance — Schwan Vm → 0 at GHz (ωτ ≫ 1).
@@ -417,9 +418,9 @@ Ref: Tsen et al. (2007); Dykeman &amp; Sankey (2008)
 Current: <span class="tip-val">×${selStr}</span>
 
 ${quality}
-≥ 1.5 → strong window (green)
-1.0–1.5 → marginal (amber)
-< 1.0 → non-selective (red)
+≥ ${ss} → strong window (green)
+${sm}–${ss} → marginal (amber)
+< ${sm} → non-selective (red)
 
 TI > 1 → target proportionally closer to lysis threshold than healthy cell.
 For adeno/hepatocyte at DC: TI = (15µm×1.1V)/(10µm×0.70V) = <span class="tip-val">2.36×</span>

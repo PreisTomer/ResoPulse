@@ -24,7 +24,7 @@
         <span class="cell-card__nuclear-value">{{ nuclearVmMv.toFixed(3) }} mV</span>
         <span
           class="cell-card__nuclear-ratio"
-          :class="nuclearDisruptionRatio >= 0.85 ? 'cell-card__nuclear-ratio--warn' : nuclearDisruptionRatio >= 0.5 ? 'cell-card__nuclear-ratio--caution' : ''"
+          :class="nuclearDisruptionRatio >= THRESHOLDS.DISRUPTION_WARN ? 'cell-card__nuclear-ratio--warn' : nuclearDisruptionRatio >= THRESHOLDS.HEALTHY_APPROACHING ? 'cell-card__nuclear-ratio--caution' : ''"
         >{{ (nuclearDisruptionRatio * 100).toFixed(0) }}%</span>
       </div>
     </div>
@@ -36,9 +36,10 @@ import { defineComponent } from 'vue'
 import type { PropType } from 'vue'
 import type { CellState } from '@/types/cell'
 import { ICON } from '@/constants/icons'
+import { THRESHOLDS } from '@/constants/cellCard'
 
 export default defineComponent({
-  setup() { return { ICON } },
+  setup() { return { ICON, THRESHOLDS } },
 
   props: {
     type:               { type: String as PropType<'healthy' | 'target'>, required: true },

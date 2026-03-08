@@ -6,19 +6,11 @@ import type { CellConfig } from '@/types/cell'
 import type { MediumKey } from '@/types/media'
 import { computeSchwan, computeSAR, computeFc, computeTau, computeResonantDisruption, computeNuclearVm, computePulseStepResponse, computeSkinDepthMm } from '@/utils/physics'
 import { CELL_CATEGORY, CHART_MODE, WAVEFORM, CELL_TYPE } from '@/constants/strings'
+import { THRESHOLDS } from '@/constants/cellCard'
 
-const LAMBDA = 0.02     // Newton cooling rate constant [1/s]
-const TEMP_SIMULATION_CAP = 150  // °C — hard ceiling; cells are destroyed long before this
+const LAMBDA = 0.02     // Newton cooling rate [1/s]
 
-/**
- * Medium-specific ionic conductivity temperature coefficient [1/°C].
- * σ_e(T) = σ_e0 × (1 + α × (T − 37))
- * Sources: Coulter & Koenig 1953; Stogryn 1971; IEC 60601 series.
- *   saline:  2.0 %/°C  — 0.9% NaCl, near-linear across 20–60°C
- *   blood:   1.7 %/°C  — plasma-dominated, slightly lower due to protein buffering
- *   tissue:  1.5 %/°C  — heterogeneous soft tissue, averaged over protein/lipid content
- *   water:   2.8 %/°C  — pure water dissociation equilibrium; highly temp-sensitive
- */
+// σ_e(T) = σ_e0 × (1 + α × (T−37)) — medium-specific coefficients [1/°C]
 const SIGMA_TEMP_COEFF: Record<string, number> = {
   saline:  0.020,
   blood:   0.017,
@@ -44,16 +36,16 @@ interface CellStoreState {
   currentBroadcastFrequency: number // kHz
   healthyTemp: number             // °C
   targetTemp: number              // °C
-  dutyCycle: number               // dimensionless — pulsed field on-fraction (default 0.01%)
-  waveform: 'cw' | 'pulsed'      // CW sinusoidal (waveformFactor 0.5) or pulsed bipolar square-wave bursts at carrier freq — H-FIRE/IRE regime (waveformFactor 1.0, E²_rms = E²_peak)
-  pulseWidthNs: number            // pulse width in nanoseconds (pulsed mode only; default 1000 ns = 1 µs)
-  safeMode: boolean               // when true, duty cycle is clamped so T_ss ≤ 42°C
-  orientationDeg: number          // field-cell axis angle θ [0–90°]; default 0° (field-aligned = max Vm)
-  lysisNPulses: number            // number of above-threshold pulses before lysis; default 10
-  chartMode: 'schwan' | 'resonance'  // active chart/simulation mode (moved from ExperimentView local state)
-  doubleShellEnabled: boolean     // opt-in two-shell nuclear envelope model (Kotnik & Miklavcic 2006)
-  perfusionRate: number           // ω_b [mL/(g·min)]; 0 = in vitro; Pennes bioheat blood perfusion cooling
-  cellPackingFraction: number     // φ [0–0.9]; Maxwell-Garnett correction to σ_e for dense cell suspensions
+  dutyCycle: number               // pulsed on-fraction [0–1]
+  waveform: 'cw' | 'pulsed'      // CW (wf=0.5) or pulsed bipolar square-wave H-FIRE (wf=1.0)
+  pulseWidthNs: number            // pulse width [ns]
+  safeMode: boolean               // clamps dc so T_ss ≤ 42°C
+  orientationDeg: number          // field-cell axis θ [0–90°]
+  lysisNPulses: number            // above-threshold pulses before lysis
+  chartMode: 'schwan' | 'resonance'
+  doubleShellEnabled: boolean     // two-shell nuclear envelope model (Kotnik 2006)
+  perfusionRate: number           // ω_b [mL/(g·min)]; 0 = in vitro
+  cellPackingFraction: number     // φ [0–0.9]; Maxwell-Garnett σ_e correction
   _tempTimer: number | null
   resetCounter: number
 }
@@ -82,32 +74,15 @@ export const useCellStore = defineStore('cell', {
   }),
 
   getters: {
-    /** Base (reference-temperature) extracellular conductivity [S/m]. Used for display only. */
+    /** σ_e at reference temperature [S/m] — display only */
     sigma_e: (state): number => MEDIA[state.medium].conductivity,
 
-    /**
-     * |cos(θ)| — field-cell coupling factor [0–1].
-     * θ = orientationDeg: angle between the applied field vector and the cell axis.
-     * θ = 0° (field-aligned) → factor = 1 → maximum Vm.
-     * θ = 90° (perpendicular) → factor = 0 → Vm → 0.
-     * Note: cos(θ) cancels in the Vm selectivity ratio (Vm_T/Vm_H) for any θ,
-     * since both cells share the same field orientation. Selectivity is θ-independent.
-     */
+    /** |cos θ| field-cell axis coupling [0–1]; cancels in Vm_T/Vm_H ratio */
     cosThetaFactor(state): number {
       return Math.abs(Math.cos(state.orientationDeg * Math.PI / 180))
     },
 
-    /**
-     * Pulse-envelope charging factor for the healthy cell [0–1].
-     * For pulsed waveforms with pulse width t_p and membrane time constant τ:
-     *   factor = 1 − exp(−t_p / τ)
-     * Represents the fraction of the Schwan steady-state Vm that the membrane
-     * actually reaches per pulse. At t_p ≫ τ → factor ≈ 1 (full charge, no correction).
-     * At t_p ≪ τ (nsEP regime) → factor ≪ 1 → membrane barely charges per pulse →
-     * effective Vm is lower → more field needed for lysis (higher effective threshold).
-     * CW mode always returns 1.0 (continuous field, steady-state Vm applies).
-     * Ref: Weaver & Chizmadzhev (1996); Stacey et al. (2003); Schoenbach et al. (2001).
-     */
+    /** Membrane charging fraction per pulse: 1−exp(−t_p/τ). CW → 1.0. */
     pulseEnvelopeFactorHealthy(): number {
       const state = this as unknown as CellStoreState
       if (state.waveform !== WAVEFORM.PULSED) return 1.0
@@ -115,14 +90,7 @@ export const useCellStore = defineStore('cell', {
       return computePulseStepResponse(tau_s, state.pulseWidthNs)
     },
 
-    /**
-     * Pulse-envelope charging factor for the target cell [0–1].
-     * See pulseEnvelopeFactorHealthy for the physical model.
-     * Returns 1.0 unconditionally in resonance mode (acoustic/mechanical disruption
-     * does not involve membrane capacitive charging via Schwan τ — the coupling
-     * mechanism is electromagnetic→acoustic, not the RC charging of the membrane).
-     * In Schwan/IRE mode, applies the same (1−exp(−t_p/τ)) correction as the healthy cell.
-     */
+    /** Same as pulseEnvelopeFactorHealthy; always 1.0 in resonance mode (acoustic coupling). */
     pulseEnvelopeFactorTarget(): number {
       const state = this as unknown as CellStoreState
       if (state.waveform !== WAVEFORM.PULSED) return 1.0
@@ -131,54 +99,25 @@ export const useCellStore = defineStore('cell', {
       return computePulseStepResponse(tau_s, state.pulseWidthNs)
     },
 
-    /**
-     * Temperature-corrected extracellular conductivity [S/m].
-     * σ_e(T) = σ_e0 × (1 + α × (T_mean − 37))
-     * where α is medium-specific (saline 2.0%/°C, blood 1.7%/°C, tissue 1.5%/°C,
-     * water 2.8%/°C). At hyperthermic limit (42°C), σ_e increases 7–14% depending
-     * on medium, shifting τ and fc — a physically correct closed feedback loop.
-     * T_mean = mean of healthy and target cell temperatures (bulk medium approximation).
-     */
+    /** σ_e corrected for temperature and cell packing fraction [S/m].
+     *  σ_e(T) = σ_e0·(1+α·(T_mean−37)); Maxwell-Garnett: σ_eff = σ_T·(1−φ)/(1+φ/2). */
     effectiveSigmaE(state): number {
       const sigma_e0 = MEDIA[state.medium].conductivity
       const alpha    = SIGMA_TEMP_COEFF[state.medium] ?? 0.020
       const T_mean   = (state.healthyTemp + state.targetTemp) / 2
       const sigma_T  = sigma_e0 * (1 + alpha * (T_mean - 37))
-      // Maxwell-Garnett correction for cell packing fraction φ (insulating-sphere DC limit):
-      // σ_e_eff = σ_T × (1 − φ) / (1 + φ/2)  [Garnett 1904; Foster & Schwan 1989]
-      // Valid at f ≪ fc; reduces effective medium conductivity seen by the applied field.
       const phi = Math.min(0.9, Math.max(0, state.cellPackingFraction))
       return sigma_T * (1 - phi) / (1 + phi / 2)
     },
 
-    /**
-     * Physically grounded lysis countdown duration [ms].
-     * In CW mode: 2500 ms (time-based, no pulse count concept).
-     * In pulsed mode: N_pulses × pulse_period where period = pulseWidthNs / dutyCycle.
-     * Clamped to [200 ms, 30 000 ms] for visual validity.
-     * Replaces the former hardcoded LYSIS_DELAY_MS = 2500 constant.
-     */
+    /** Lysis countdown [ms]: CW→2500 ms; pulsed→N_pulses × (t_p/dc), clamped [200–30000] ms. */
     lysisDelayMs(state): number {
       if (state.waveform === WAVEFORM.CW || state.dutyCycle >= 1) return 2500
       const pulsePeriodMs = (state.pulseWidthNs * 1e-6) / state.dutyCycle
       return Math.max(200, Math.min(30_000, state.lysisNPulses * pulsePeriodMs))
     },
 
-    /**
-     * Peak induced transmembrane potential for the healthy cell [V].
-     * Uses the Schwan single-shell AC model at the current broadcast frequency.
-     *
-     * Pulsed mode in this app models bipolar square-wave bursts at the carrier frequency
-     * (the H-FIRE/IRE convention — Arena et al. 2011; Dong et al. 2021).
-     * Schwan at the fundamental frequency is the standard first-order approximation:
-     *   waveformFactor = 1.0  (E²_rms = E²_peak for a bipolar square wave; no RMS halving)
-     *   SAR_eff = SAR_peak × dc  (duty cycle scales time-averaged heating)
-     *
-     * Note: the displayed Vm uses E_peak directly. The true square-wave fundamental is
-     * E_1 = 4E_peak/π ≈ 1.27 × E_peak, so Vm is underestimated by ~21% in pulsed mode.
-     * This factor cancels exactly in the Vm_T/Vm_H selectivity ratio and in the TI.
-     * Duty cycle affects heating (via SAR × dc) and lysis timing (via lysisDelayMs), not Vm.
-     */
+    /** Schwan Vm for healthy cell [V]. Pulsed mode uses E_peak (lower-bound; cancels in TI). */
     healthyVm(): number {
       const state = this as unknown as CellStoreState
       const sigma_e = this.effectiveSigmaE
@@ -186,11 +125,7 @@ export const useCellStore = defineStore('cell', {
       return computeSchwan(state.healthy, state.currentBroadcastFrequency, state.fieldIntensity, sigma_e, cosT)
     },
 
-    /**
-     * Peak induced transmembrane potential for the target cell [V].
-     * See healthyVm for model notes. In resonance mode the targetDisruptionRatio getter
-     * overrides the Schwan Vm with the acoustic/mechanical disruption formula.
-     */
+    /** Schwan Vm for target cell [V]. Resonance mode overrides DR formula separately. */
     targetVm(): number {
       const state = this as unknown as CellStoreState
       const sigma_e = this.effectiveSigmaE
@@ -198,25 +133,12 @@ export const useCellStore = defineStore('cell', {
       return computeSchwan(state.target, state.currentBroadcastFrequency, state.fieldIntensity, sigma_e, cosT)
     },
 
-    /**
-     * Healthy cell disruption ratio: (Vm × pulseEnvelopeFactor) / Vm_threshold.
-     *
-     * In pulsed mode with t_p ≪ τ, the membrane only charges to a fraction of the
-     * Schwan steady-state Vm per pulse. The effective Vm for pore nucleation is
-     * Vm_schwan × (1 − exp(−t_p/τ)), so an equivalently higher field is required to
-     * cross the threshold. This captures the pulse-width dependence of the
-     * electroporation threshold (Weaver & Chizmadzhev 1996, stochastic pore model).
-     */
+    /** DR_H = (Vm·pulseEnvelope) / Vm_threshold */
     healthyDisruptionRatio(): number {
       return (this.healthyVm * this.pulseEnvelopeFactorHealthy) / this.healthy.thresholdVoltage
     },
 
-    /**
-     * Target cell disruption ratio.
-     * Resonance mode (virus/bacteria): uses acoustic Lorentzian formula — pulse envelope
-     *   does not apply (different coupling mechanism; factor held at 1.0 by getter).
-     * Schwan/IRE mode: (Vm × pulseEnvelopeFactor) / Vm_threshold, identical to healthy cell.
-     */
+    /** DR_T: acoustic Lorentzian for bacteria/virus; (Vm·pulseEnvelope)/Vm_thr for mammalian. */
     targetDisruptionRatio(): number {
       const cat = this.targetCellCategory
       const t = this.target as CellConfig & { resonantFreqGHz?: number; capsidQ?: number; resonantThresholdVcm?: number }
@@ -253,55 +175,30 @@ export const useCellStore = defineStore('cell', {
     },
 
     systemReady(state): boolean {
-      return state.healthyTemp < 42 && state.targetTemp < 42
+      return state.healthyTemp < THRESHOLDS.TEMP_WARN && state.targetTemp < THRESHOLDS.TEMP_WARN
     },
 
-    /**
-     * Mode-aware selectivity alias → delegates to therapeuticIndex.
-     * Kept for backward compatibility with experimentStore and chart components.
-     */
+    /** Alias for therapeuticIndex — backward compat */
     selectivityRatio(): number {
       return this.therapeuticIndex
     },
 
-    /**
-     * Classifies the current target cell by size:
-     *   virus    — radius < 0.1 µm  (virions: 20–150 nm; Schwan model inapplicable)
-     *   bacteria — radius < 2.0 µm  (E. coli ~1 µm, MRSA ~0.5 µm; nsEP regime)
-     *   mammalian — radius ≥ 2.0 µm (cancer + reference cells)
-     */
+    /** virus: R<0.1µm · bacteria: R<2µm · mammalian: R≥2µm */
     targetCellCategory(state): 'mammalian' | 'bacteria' | 'virus' {
-      if (state.target.radius < 0.1) return CELL_CATEGORY.VIRUS
-      if (state.target.radius < 2.0) return CELL_CATEGORY.BACTERIA
+      if (state.target.radius < THRESHOLDS.RADIUS_VIRUS_MAX)    return CELL_CATEGORY.VIRUS
+      if (state.target.radius < THRESHOLDS.RADIUS_BACTERIA_MAX) return CELL_CATEGORY.BACTERIA
       return CELL_CATEGORY.MAMMALIAN
     },
 
-    /**
-     * Therapeutic Index TI = targetDisruptionRatio / healthyDisruptionRatio.
-     * Mode-aware: in Schwan mode = (Vt/Vt,thr) / (Vh/Vh,thr).
-     * In resonance mode: target uses acoustic disruption formula, healthy ≈ 0 at GHz → TI caps at 99.9.
-     * TI > 1 means target cells are proportionally closer to disruption threshold than healthy cells.
-     */
+    /** TI = DR_T / DR_H. Caps at 99.9 when healthy DR ≈ 0 (resonance selectivity). */
     therapeuticIndex(): number {
       const hDr = this.healthyDisruptionRatio
       if (hDr < 1e-9) return this.targetDisruptionRatio > 0 ? 99.9 : 0
       return Math.min(99.9, this.targetDisruptionRatio / hDr)
     },
 
-    /**
-     * σ_i uncertainty bounds on the Therapeutic Index (Schwan/IRE mode only).
-     * Computes worst-case TI_low and TI_high by propagating ±σ_i uncertainty through
-     * the Schwan model. The uncertainty is category-dependent (literature range widths):
-     *   mammalian: ±20%  (well-characterised reference ranges)
-     *   bacteria:  ±35%  (complex cell-wall composition variability)
-     *   virus:     ±45%  (membrane conductivity in virion extrapolations)
-     *
-     * TI_low  = TI with (σ_i_T × (1−pct), σ_i_H × (1+pct))  — lower target coupling, higher healthy
-     * TI_high = TI with (σ_i_T × (1+pct), σ_i_H × (1−pct))  — higher target coupling, lower healthy
-     *
-     * Returns nominal { low, high } = { TI, TI } in resonance mode (acoustic uncertainty
-     * is characterised by Q-range, which is shown separately in SelectivityPanel).
-     */
+    /** TI worst-case bounds from ±σ_i uncertainty: mammalian ±20%, bacteria ±35%, virus ±45%.
+     *  Resonance mode returns nominal {TI,TI} — Q-range shown separately. */
     tiUncertaintyRange(): { low: number; high: number } {
       const state = this as unknown as CellStoreState
       const nominal = this.therapeuticIndex
@@ -310,9 +207,9 @@ export const useCellStore = defineStore('cell', {
       const field   = state.fieldIntensity
       const freq    = state.currentBroadcastFrequency
       const cosT    = this.cosThetaFactor
-      const uncH    = state.healthy.radius < 2.0 ? 0.35 : 0.20
-      const uncT    = state.target.radius < 0.1 ? 0.45 : state.target.radius < 2.0 ? 0.35 : 0.20
-      // TI_low: target weakly coupled (σ_i_T low), healthy strongly coupled (σ_i_H high)
+      const uncH    = state.healthy.radius < THRESHOLDS.RADIUS_BACTERIA_MAX ? 0.35 : 0.20
+      const uncT    = state.target.radius < THRESHOLDS.RADIUS_VIRUS_MAX ? 0.45 : state.target.radius < THRESHOLDS.RADIUS_BACTERIA_MAX ? 0.35 : 0.20
+      // TI_low: weakest target + strongest healthy coupling
       const vmTLow  = computeSchwan({ ...state.target,  conductivity: state.target.conductivity  * (1 - uncT) }, freq, field, sigma_e, cosT)
       const vmHHigh = computeSchwan({ ...state.healthy, conductivity: state.healthy.conductivity * (1 + uncH) }, freq, field, sigma_e, cosT)
       const pefT    = this.pulseEnvelopeFactorTarget
@@ -320,7 +217,7 @@ export const useCellStore = defineStore('cell', {
       const drTLow  = (vmTLow  * pefT) / state.target.thresholdVoltage
       const drHHigh = (vmHHigh * pefH) / state.healthy.thresholdVoltage
       const tiLow   = drHHigh < 1e-9 ? 0 : Math.max(0, Math.min(99.9, drTLow / drHHigh))
-      // TI_high: target strongly coupled (σ_i_T high), healthy weakly coupled (σ_i_H low)
+      // TI_high: strongest target + weakest healthy coupling
       const vmTHigh = computeSchwan({ ...state.target,  conductivity: state.target.conductivity  * (1 + uncT) }, freq, field, sigma_e, cosT)
       const vmHLow  = computeSchwan({ ...state.healthy, conductivity: state.healthy.conductivity * (1 - uncH) }, freq, field, sigma_e, cosT)
       const drTHigh = (vmTHigh * pefT) / state.target.thresholdVoltage
@@ -329,21 +226,11 @@ export const useCellStore = defineStore('cell', {
       return { low: tiLow, high: tiHigh }
     },
 
-    /**
-     * True if at least one of the active cells has nuclear envelope parameters.
-     * Used to conditionally show the double-shell model toggle in the UI.
-     * Only mammalian nucleated cells have nuclearRadius defined.
-     */
     hasNuclearParams(state): boolean {
       return !!state.healthy.nuclearRadius || !!state.target.nuclearRadius
     },
 
-    /**
-     * Nuclear transmembrane potential for the healthy cell [V].
-     * Uses the Kotnik & Miklavcic (2006) two-shell bandpass formula — a zero at DC and
-     * at high frequency, with a bandpass peak at f_peak = 1/(2π√(τ_out·τ_ne)).
-     * Returns 0 if the healthy cell has no nuclear envelope parameters (anucleate / prokaryotes).
-     */
+    /** Nuclear Vm for healthy cell [V] — Kotnik 2006 bandpass. 0 if no nuclear params. */
     healthyNuclearVm(): number {
       const state = this as unknown as CellStoreState
       if (!state.healthy.nuclearRadius) return 0
@@ -385,14 +272,7 @@ export const useCellStore = defineStore('cell', {
       return Math.min(99.9, this.targetNuclearDisruptionRatio / hDr)
     },
 
-    /**
-     * Minimum field intensity [V/cm] at current frequency and pulse width to reach lysis
-     * threshold for the target cell (Schwan/IRE mode only).
-     *   Vm_eff = 1.5·E·R·cosθ / √(1+(ωτ)²) × pulseEnvelopeFactor = Vm_thr
-     *   → E_lysis = Vm_thr·√(1+(ωτ)²) / (1.5·R·cosθ·pulseEnvelopeFactor)
-     * In pulsed mode with short pulses, E_lysis is higher (membrane charges fractionally
-     * per pulse → more field needed). Near-perpendicular (cosθ < 0.01): 1e6 V/cm.
-     */
+    /** E_lysis for target [V/cm]: Vm_thr·√(1+(ωτ)²)/(1.5·R·cosθ·pef). Returns 1e6 near θ=90°. */
     targetLysisField(): number {
       const state = this as unknown as CellStoreState
       const cosT = this.cosThetaFactor
@@ -408,10 +288,7 @@ export const useCellStore = defineStore('cell', {
       return baseLysisField / pef
     },
 
-    /**
-     * Same as targetLysisField but for the healthy reference cell.
-     * Pulse-envelope corrected: E_lysis,H = base / pulseEnvelopeFactorHealthy.
-     */
+    /** E_lysis for healthy cell [V/cm] — same formula as targetLysisField. */
     healthyLysisField(): number {
       const state = this as unknown as CellStoreState
       const cosT = this.cosThetaFactor
@@ -426,57 +303,36 @@ export const useCellStore = defineStore('cell', {
       return baseLysisField / pef
     },
 
-    /**
-     * Effective duty cycle for thermal calculations.
-     * CW mode is by definition always-on (dc = 1.0) — the user's stored dutyCycle
-     * value is only used in pulsed mode.  By NOT overwriting dutyCycle when switching
-     * to CW, the user's pulsed setting is preserved when they switch back.
-     */
+    /** dc for thermal calc: CW→1.0, pulsed→stored value */
     effectiveDutyCycle(state): number {
       return state.waveform === WAVEFORM.CW ? 1.0 : state.dutyCycle
     },
 
-    /**
-     * Projected steady-state temperature for healthy cell [°C]:
-     *   T_ss = 37 + SAR_eff / (λ × cp)
-     *   SAR_eff = SAR_peak × effectiveDutyCycle
-     * Capped at TEMP_SIMULATION_CAP for display.
-     */
+    /** T_ss = 37 + SAR·dc / (λ_eff·cp)  [°C].  λ_eff = λ_Newton + ω_b·63.9/cp (Pennes). */
     healthySteadyStateTemp(): number {
       const state = this as unknown as CellStoreState
       const sar_eff = this.healthySAR * this.effectiveDutyCycle
       const cp = state.healthy.specificHeatCapacity
-      // Pennes bioheat: perfusion adds blood-cooling term λ_perf = ω_b × 63.9 / cp [1/s]
-      // Derivation: ω_b [mL/(g·min)] → [m³/(kg·s)] × ρ_b(1060) × c_b(3617) / cp
-      const lambda_perf = state.perfusionRate * 63.9 / cp
-      return Math.min(37 + sar_eff / ((LAMBDA + lambda_perf) * cp), TEMP_SIMULATION_CAP)
+      const lambda_perf = state.perfusionRate * 63.9 / cp   // ω_b [mL/(g·min)] × ρ_b·c_b/60000
+      return Math.min(37 + sar_eff / ((LAMBDA + lambda_perf) * cp), THRESHOLDS.TEMP_CAP)
     },
 
-    /** Projected steady-state temperature for target cell [°C], capped at TEMP_SIMULATION_CAP. */
+    /** Projected steady-state temperature for target cell [°C], capped at THRESHOLDS.TEMP_CAP. */
     targetSteadyStateTemp(): number {
       const state = this as unknown as CellStoreState
       const sar_eff = this.targetSAR * this.effectiveDutyCycle
       const cp = state.target.specificHeatCapacity
       const lambda_perf = state.perfusionRate * 63.9 / cp
-      return Math.min(37 + sar_eff / ((LAMBDA + lambda_perf) * cp), TEMP_SIMULATION_CAP)
+      return Math.min(37 + sar_eff / ((LAMBDA + lambda_perf) * cp), THRESHOLDS.TEMP_CAP)
     },
 
-    /**
-     * Electromagnetic skin (penetration) depth [mm] at the current broadcast frequency.
-     * δ = √(1/(π·f·μ₀·σ_e)) — depth at which the GHz field amplitude decays to 1/e (~37%).
-     * Key values in saline (σ_e ≈ 1.5 S/m): 1 GHz→7 mm · 5 GHz→3 mm · 12 GHz→2 mm.
-     * In vivo GHz resonance delivery requires near-field or intracavitary applicators.
-     */
+    /** δ = √(1/(π·f·μ₀·σ_e)) [mm].  Saline: 100MHz→41mm · 1GHz→13mm · 12GHz→3.8mm. */
     skinDepthMm(): number {
       const state = this as unknown as CellStoreState
       return computeSkinDepthMm(state.currentBroadcastFrequency, this.effectiveSigmaE)
     },
 
-    /**
-     * Maximum duty cycle that keeps both cells' T_ss ≤ 42°C (hyperthermic limit).
-     * dc_max = (5 × λ × cp_min) / SAR_peak_max
-     * Used by Safe Mode to clamp the duty cycle slider. Only meaningful in pulsed mode.
-     */
+    /** dc_max = 5·λ·cp_min / SAR_max — keeps T_ss ≤ 42°C in safe mode. */
     maxSafeDutyCycle(): number {
       const maxSAR = Math.max(this.healthySAR, this.targetSAR)
       if (maxSAR <= 0) return 1
@@ -484,77 +340,22 @@ export const useCellStore = defineStore('cell', {
       return Math.min(1, (5 * LAMBDA * minCp) / maxSAR)
     },
 
-    // ── Healthy-cell biomodulation metrics ────────────────────────────────────
-    // These model the constructive/stimulatory effects of sub-threshold EM fields
-    // on healthy mammalian cells — distinct from the electroporation/disruption model
-    // applied to target (cancer / pathogen) cells.
+    // ── Sub-threshold healthy-cell biomodulation ──────────────────────────────
 
-    /**
-     * Sub-threshold stimulation index (SI) for the healthy cell [0–1].
-     *
-     * When the applied field produces a Vm that is 5–45% of the electroporation
-     * threshold, sub-threshold membrane oscillations activate mechanosensitive and
-     * voltage-gated Ca²⁺ channels (PIEZO1, L-type VGCC) without breaching the
-     * membrane. Peak Ca²⁺ influx and downstream growth-factor signalling occur
-     * at ~20–40% of the lysis threshold.
-     *
-     * Model: SI = 4·r·(1−r), quadratic bell peaking at r = 0.5 → DR ≈ 22.5%
-     *   where r = clamp(healthyDisruptionRatio / 0.45, 0, 1)
-     * SI → 0 when DR < 5% (too weak) or DR > 45% (membrane stress begins).
-     *
-     * Refs: Pilla AA (2006) JRSE 8:72; Lee DH et al. (2018) Sci Rep 8:8184;
-     *       Bhatt DL et al. (1990) Bioelectromagnetics 11:3–15.
-     */
+    /** SI = 4·r·(1−r), r = DR/0.45.  Bell peaking at DR≈22.5%; zero above NOURISHING threshold. */
     healthyStimIndex(): number {
       const r = Math.min(1, this.healthyDisruptionRatio / 0.45)
       return Math.max(0, 4 * r * (1 - r))
     },
 
-    /**
-     * Mechanotransduction coupling efficiency (MTE) for the healthy cell [0–1].
-     *
-     * Quantifies how effectively the applied RF frequency couples to the plasma
-     * membrane for sub-threshold mechanostimulation (distinct from ablative IRE).
-     * Uses the Schwan frequency roll-off factor: MTE = 1/√(1 + (f/fc)²).
-     *
-     *   f ≪ fc : MTE ≈ 1.0 — full quasi-DC coupling; optimal for PEMF and low-RF
-     *            mechanostimulation (LITUS equivalent at MHz in soft tissue).
-     *   f = fc : MTE = 0.707 — half-power point; membrane partially shields cytoplasm.
-     *   f ≫ fc : MTE → 0   — field bypasses membrane (ωτ ≫ 1); no Vm coupling.
-     *
-     * For RF biomodulation (Schwan model), f < fc/3 maximises coupling efficiency.
-     * LITUS (1 MHz therapeutic ultrasound) operates via acoustic pressure / stable
-     * cavitation — a distinct mechanism not modelled here.
-     *
-     * Refs: Ikai Y et al. (2008) J Orthop Sci 13:550; Shirane R et al. (2001)
-     *       Ultrasound Med Biol 27:563.
-     */
+    /** MTE = 1/√(1+(f/fc)²) — Schwan roll-off; peaks at f≪fc. */
     healthyMechTransductionEff(): number {
       const f  = (this as unknown as CellStoreState).currentBroadcastFrequency  // kHz
       const fc = this.healthyFc                                                  // kHz
       return 1 / Math.sqrt(1 + (f / fc) ** 2)
     },
 
-    /**
-     * Mild thermal activation score (MA) for the healthy cell [0–1].
-     *
-     * Mild, SAR-driven hyperthermia in the 37–42°C window upregulates healthy
-     * cell metabolism via:
-     *   - Q₁₀ ≈ 1.07 enzyme kinetics: +7%/°C in the 37–41°C range (van't Hoff rule)
-     *   - HSP70 cytoprotective expression: peak induction at 38–41°C (Morimoto 1998)
-     *   - Increased membrane fluidity → enhanced receptor mobility and nutrient transport
-     *
-     * Model: piecewise bell centred on 40°C:
-     *   T ≤ 37°C : 0    — homeostatic baseline; no SAR-driven thermal benefit
-     *   37–41°C  : (T − 37) / 4  — linear ramp (+25% per °C over baseline)
-     *   41–42°C  : 42 − T        — rapid fall as heat-stress onset approaches
-     *   > 42°C   : 0    — hyperthermic damage (IAHT limit); NOT beneficial
-     *
-     * Note: the thermal simulation (Newton cooling) reaches T_ss at steady state.
-     * MA is computed from healthySteadyStateTemp, NOT the live tracked healthyTemp.
-     *
-     * Refs: Lepock JR (2003) Int J Hyperthermia 19:252; Morimoto RI (1998) Genes Dev 12:3788.
-     */
+    /** MA: piecewise bell 37–42°C. 0 below 37 or above 42; peak at 41°C. Uses T_ss. */
     healthyMildThermalActivation(): number {
       const T = this.healthySteadyStateTemp
       if (T <= 37) return 0
@@ -563,18 +364,12 @@ export const useCellStore = defineStore('cell', {
       return 0
     },
 
-    /**
-     * Optimal RF frequency and selectivity for the current cell pair and field conditions.
-     * 300-point log-space scan over 10 kHz – 500 MHz (Schwan/IRE mode).
-     * For resonance-targeted pathogens (virus/bacteria with resonantFreqGHz), returns
-     * the resonant frequency directly at TI = 99.9.
-     * Shared by FrequencySlider (⭐ snap button) and SelectivityPanel (optimal note).
-     */
+    /** Optimal frequency for max TI: bacteria/virus→f_res; mammalian→300-pt log scan 10kHz–500MHz. */
     optimalFreqResult(): { khz: number; sel: number } {
       const state  = this as unknown as CellStoreState
-      const target = state.target as CellConfig & { resonantFreqGHz?: number }
+      const target = state.target as CellConfig & { resonantFreqGHz?: number; resonantThresholdVcm?: number }
       const cat    = this.targetCellCategory
-      if ((cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) && target.resonantFreqGHz && state.chartMode === CHART_MODE.SCHWAN) {
+      if ((cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) && target.resonantFreqGHz && target.resonantThresholdVcm) {
         return { khz: target.resonantFreqGHz * 1e6, sel: 99.9 }
       }
       const sigma_e = this.effectiveSigmaE
@@ -594,23 +389,7 @@ export const useCellStore = defineStore('cell', {
       return { khz: optKhz, sel: Math.max(0, maxSel) }
     },
 
-    /**
-     * Composite Biomodulation Score (BMS) for the healthy cell [0–1].
-     *
-     * Weighted combination of three independent stimulatory mechanisms:
-     *   BMS = 0.55 × SI + 0.25 × MTE + 0.20 × MA
-     *
-     * Weighting rationale:
-     *   SI  (55%) — dominant: direct Vm-driven Ca²⁺ signalling is the primary
-     *               documented mechanism for EM biomodulation (Pilla 2006)
-     *   MTE (25%) — modulates how efficiently the carrier frequency delivers Vm
-     *               to the membrane (Schwan coupling; falls above fc)
-     *   MA  (20%) — thermal bonus; mild SAR can augment metabolic activity when
-     *               T_ss is carefully controlled in the 38–41°C window
-     *
-     * BMS > 0.30 is considered a meaningful stimulatory regime in this model.
-     * This is an approximate research indicator, not a validated clinical index.
-     */
+    /** BMS = 0.55·SI + 0.25·MTE + 0.20·MA — research indicator, not a clinical index. */
     healthyBiomodScore(): number {
       return (
         0.55 * this.healthyStimIndex +
@@ -648,21 +427,15 @@ export const useCellStore = defineStore('cell', {
     startSession() {
       if (this._tempTimer !== null) return
       this._tempTimer = setInterval(() => {
-        // Effective duty cycle: CW is always-on (1.0); pulsed uses slider value
         const dc = this.effectiveDutyCycle
-        // Healthy cell temperature update (Newton + Pennes blood-perfusion cooling, 100 ms tick)
-        const hSAR   = this.healthySAR
-        const hCp    = this.healthy.specificHeatCapacity
-        const hLambda = LAMBDA + this.perfusionRate * 63.9 / hCp  // λ_eff = λ_Newton + λ_perf
-        const dTh = (hSAR * dc / hCp - hLambda * (this.healthyTemp - 37)) * 0.1
-        this.healthyTemp = Math.max(37, Math.min(TEMP_SIMULATION_CAP, this.healthyTemp + dTh))
-
-        // Target cell temperature update
-        const tSAR   = this.targetSAR
-        const tCp    = this.target.specificHeatCapacity
-        const tLambda = LAMBDA + this.perfusionRate * 63.9 / tCp
-        const dTt = (tSAR * dc / tCp - tLambda * (this.targetTemp - 37)) * 0.1
-        this.targetTemp = Math.max(37, Math.min(TEMP_SIMULATION_CAP, this.targetTemp + dTt))
+        const hCp = this.healthy.specificHeatCapacity
+        const hL  = LAMBDA + this.perfusionRate * 63.9 / hCp
+        const dTh = (this.healthySAR * dc / hCp - hL * (this.healthyTemp - 37)) * 0.1
+        this.healthyTemp = Math.max(37, Math.min(THRESHOLDS.TEMP_CAP, this.healthyTemp + dTh))
+        const tCp = this.target.specificHeatCapacity
+        const tL  = LAMBDA + this.perfusionRate * 63.9 / tCp
+        const dTt = (this.targetSAR * dc / tCp - tL * (this.targetTemp - 37)) * 0.1
+        this.targetTemp = Math.max(37, Math.min(THRESHOLDS.TEMP_CAP, this.targetTemp + dTt))
       }, 100) as unknown as number
     },
 
@@ -675,16 +448,9 @@ export const useCellStore = defineStore('cell', {
     },
 
     setWaveform(mode: 'cw' | 'pulsed') {
-      this.waveform = mode
-      // Do NOT overwrite dutyCycle — CW always uses effectiveDutyCycle=1.0 in the thermal
-      // model regardless, and preserving the pulsed dutyCycle lets the user switch back
-      // to pulsed mode without losing their setting.
+      this.waveform = mode  // dutyCycle not overwritten — CW uses effectiveDutyCycle=1.0
     },
 
-    /**
-     * Toggle Safe Mode — clamps duty cycle so projected T_ss ≤ 42°C.
-     * Expert mode (off) allows full parameter range with warnings shown.
-     */
     setSafeMode(on: boolean) {
       this.safeMode = on
       if (on && this.dutyCycle > this.maxSafeDutyCycle) {
@@ -709,59 +475,37 @@ export const useCellStore = defineStore('cell', {
 
     loadPreset(cellType: 'healthy' | 'target', preset: CellConfig) {
       this[cellType] = cloneDeep(preset) as CellConfig
-      // Reset both temperatures — loading a preset starts a fresh experiment context.
       this.healthyTemp = 37
       this.targetTemp = 37
-      // Signal CellCard components to reset visual state (lysis animation, state machine).
-      this.resetCounter++
+      this.resetCounter++  // signals CellCard to reset visual state
     },
 
-    /** Reset both cell temperatures to physiological baseline (37°C). */
     resetTemps() {
       this.healthyTemp = 37
       this.targetTemp = 37
     },
 
-    /** Set field-cell orientation angle θ [0°–90°]. 0° = field-aligned = maximum Vm coupling. */
     setOrientationDeg(deg: number) {
       this.orientationDeg = Math.max(0, Math.min(90, deg))
     },
 
-    /** Set number of above-threshold pulses required to trigger lysis [1–1000]. */
     setLysisNPulses(n: number) {
       this.lysisNPulses = Math.max(1, Math.min(1000, Math.round(n)))
     },
 
-    /**
-     * Set the active chart/simulation mode.
-     * 'schwan' — Schwan/IRE transmembrane potential model (mammalian cells).
-     * 'resonance' — Acoustic resonance model (virus/bacteria capsid/cell-wall).
-     * Auto-disables double-shell model when switching to resonance (nuclear model is Schwan-only).
-     */
     setChartMode(mode: 'schwan' | 'resonance') {
       this.chartMode = mode
-      if (mode === CHART_MODE.RESONANCE) this.doubleShellEnabled = false
+      if (mode === CHART_MODE.RESONANCE) this.doubleShellEnabled = false  // nuclear model is Schwan-only
     },
 
-    /** Toggle the double-shell nuclear envelope model on/off. Only meaningful in Schwan mode. */
     toggleDoubleShell() {
       this.doubleShellEnabled = !this.doubleShellEnabled
     },
 
-    /**
-     * Set blood perfusion rate ω_b [mL/(g·min)] for Pennes bioheat cooling.
-     * 0 = in vitro (default). Representative values: 0.5 muscle · 1.0 brain · 5.0 kidney.
-     * Added to Newton cooling rate: λ_eff = λ_Newton + ω_b × 63.9 / cp
-     */
     setPerfusionRate(rate: number) {
       this.perfusionRate = Math.max(0, Math.min(10, rate))
     },
 
-    /**
-     * Set cell packing fraction φ [0–0.9] for Maxwell-Garnett effective medium correction.
-     * 0 = isolated cell (default). Representative values: ~0.3 sparse · ~0.7 dense tissue.
-     * Reduces effective extracellular conductivity: σ_e_eff = σ_e × (1−φ)/(1+φ/2).
-     */
     setCellPackingFraction(phi: number) {
       this.cellPackingFraction = Math.max(0, Math.min(0.9, phi))
     },

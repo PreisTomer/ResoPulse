@@ -145,13 +145,13 @@
                 </td>
                 <td
                   class="reports__mono"
-                  :class="e.targetRatio >= 1 ? 'reports__cancer-val' : e.targetRatio >= 0.5 ? 'reports__warn-val' : ''"
+                  :class="e.targetRatio >= THRESHOLDS.LYSIS_PROB_CENTER ? 'reports__cancer-val' : e.targetRatio >= THRESHOLDS.HEALTHY_APPROACHING ? 'reports__warn-val' : ''"
                 >{{ (e.targetRatio * 100).toFixed(1) }}%</td>
                 <td class="reports__mono reports__ref-val">{{ (e.healthyRatio * 100).toFixed(1) }}%</td>
-                <td class="reports__mono" :class="e.targetTemp > 42 ? 'reports__warn-val' : ''">
+                <td class="reports__mono" :class="e.targetTemp > THRESHOLDS.TEMP_WARN ? 'reports__warn-val' : ''">
                   {{ e.targetTemp.toFixed(1) }}
                 </td>
-                <td class="reports__mono" :class="e.healthyTemp > 42 ? 'reports__warn-val' : ''">
+                <td class="reports__mono" :class="e.healthyTemp > THRESHOLDS.TEMP_WARN ? 'reports__warn-val' : ''">
                   {{ e.healthyTemp.toFixed(1) }}
                 </td>
                 <td>
@@ -171,10 +171,10 @@
             <span class="reports__legend-color reports__ref-val">■</span> Healthy / reference value
           </span>
           <span class="reports__legend-item">
-            <span class="reports__legend-color reports__green-val">■</span> Selectivity ≥ 1.5× (therapeutic window)
+            <span class="reports__legend-color reports__green-val">■</span> Selectivity ≥ {{ THRESHOLDS.SEL_STRONG }}× (therapeutic window)
           </span>
           <span class="reports__legend-item">
-            <span class="reports__legend-color reports__warn-val">■</span> Selectivity 1.0–1.5× or temperature warning
+            <span class="reports__legend-color reports__warn-val">■</span> Selectivity {{ THRESHOLDS.SEL_MARGINAL }}–{{ THRESHOLDS.SEL_STRONG }}× or temperature warning
           </span>
           <span class="reports__legend-item reports__footnote">
             ¹ T-Vm / H-Vm: Schwan transmembrane potential (mV). In Resonance mode (bacteria/virus at GHz), these are ≈ 0 — use T-Ratio % / H-Ratio % as the primary disruption metrics.
@@ -190,6 +190,7 @@
 import { defineComponent, computed } from 'vue'
 import { useExperimentStore } from '@/stores/experimentStore'
 import { LOG_EVENT } from '@/constants/strings'
+import { THRESHOLDS } from '@/constants/cellCard'
 
 export default defineComponent({
   setup() {
@@ -236,8 +237,8 @@ export default defineComponent({
     }
 
     function selClass(sel: number) {
-      if (sel >= 1.5) return 'reports__green-val'
-      if (sel >= 1.0) return 'reports__warn-val'
+      if (sel >= THRESHOLDS.SEL_STRONG)   return 'reports__green-val'
+      if (sel >= THRESHOLDS.SEL_MARGINAL) return 'reports__warn-val'
       return 'reports__cancer-val'
     }
 
@@ -254,6 +255,7 @@ export default defineComponent({
       eventClass,
       selClass,
       LOG_EVENT,
+      THRESHOLDS,
     }
   },
 })

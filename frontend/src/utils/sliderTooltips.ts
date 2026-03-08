@@ -449,14 +449,19 @@ export function tipPulseWidth(opts: {
   return `<strong>Pulse Width  t_p</strong>
 Current: <span class="tip-val">${pulseWidthDisplay}</span>
 
-This simulation uses AC sinusoidal fields — Vm is set by carrier
-frequency and field amplitude via the Schwan equation. Pulse width
-does NOT alter Vm in this model.
+Vm (raw Schwan) is set by carrier frequency and field amplitude — it
+does not depend on pulse width. However, pulse width DOES scale the
+effective disruption ratio in IRE mode via the pulse envelope factor:
+  <span class="tip-val">f_pulse = 1 − exp(−t_p / τ)</span>
+At t_p ≪ τ the membrane barely charges → lower effective DR and
+higher apparent lysis threshold. At t_p ≥ 3τ the membrane fully
+charges → f_pulse → 1 (same as quasi-static Schwan result).
 
 Pulse width controls:
-  1. <span class="tip-val">Lysis protocol timing</span>  →  Protocol time = N × (t_p / dc)
+  1. <span class="tip-val">Effective disruption ratio</span>  →  DR_eff = DR_Schwan × f_pulse
+  2. <span class="tip-val">Lysis protocol timing</span>  →  Protocol time = N × (t_p / dc)
        N = ${lysisNPulses}  ·  dc = ${dcPct}%  →  <span class="tip-val">${formatLysisTime(lysisDelayMs)}</span>
-  2. <span class="tip-val">SAR thermal load</span>  — waveformFactor = 1.0 (bipolar square wave; E²_rms = E²_peak during on-time)
+  3. <span class="tip-val">SAR thermal load</span>  — waveformFactor = 1.0 (bipolar square wave; E²_rms = E²_peak during on-time)
 
 Reference time constants (Schwan model):
   τ(target)  = <span class="tip-val">${tTauStr}</span>

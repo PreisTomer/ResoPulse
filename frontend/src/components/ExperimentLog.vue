@@ -4,11 +4,11 @@
     <!-- Accordion toggle -->
     <button class="exp-log__toggle" @click="open = !open">
       <span class="exp-log__toggle-left">
-        <span class="exp-log__toggle-icon">≡</span>
-        <span class="exp-log__toggle-title">Experiment Log</span>
-        <span class="exp-log__toggle-sub">{{ hasEntries ? `${expStore.entries.length} readings` : 'No readings yet' }}</span>
+        <span class="exp-log__toggle-icon">{{ ICON.LINES }}</span>
+        <span class="exp-log__toggle-title">{{ $t('exp.logTitle') }}</span>
+        <span class="exp-log__toggle-sub">{{ hasEntries ? $t('exp.logReadingsCount', { n: expStore.entries.length }) : $t('exp.logNoReadings') }}</span>
       </span>
-      <span class="exp-log__chevron" :class="{ 'exp-log__chevron--open': open }">›</span>
+      <span class="exp-log__chevron" :class="{ 'exp-log__chevron--open': open }">{{ ICON.CHEVRON }}</span>
     </button>
 
     <div v-show="open">
@@ -18,27 +18,27 @@
       <input
         v-model="expStore.sessionName"
         class="exp-log__name-input"
-        placeholder="Session name…"
+        :placeholder="$t('exp.logSessionPlaceholder')"
         spellcheck="false"
       />
       <div class="exp-log__actions">
         <button
           class="exp-log__btn exp-log__btn--primary"
-          v-tip="'<strong>Log Reading</strong>\nCapture a snapshot of the current experiment state:\nfrequency, field, Vm values, selectivity ratio,\ncell temperatures, and disruption ratios.'"
+          v-tip="tipLogReading"
           @click="logReading"
-        >Log Reading</button>
+        >{{ $t('exp.logReadingBtn') }}</button>
         <button
           class="exp-log__btn"
           :disabled="!hasEntries"
-          v-tip="'<strong>Export CSV</strong>\nDownload all log entries as a comma-separated file.\nIncludes all columns: time, freq, field, Vm,\nselectivity, temps, ratios, and event type.'"
+          v-tip="tipExportCsv"
           @click="exportCSV"
-        >CSV</button>
+        >{{ $t('exp.logCsvBtn') }}</button>
         <button
           class="exp-log__btn"
           :disabled="!hasEntries"
-          v-tip="'Clear all log entries from this session.\nThis cannot be undone.'"
+          v-tip="tipClearLog"
           @click="clearLog"
-        >Clear</button>
+        >{{ $t('exp.logClearBtn') }}</button>
       </div>
     </div>
 
@@ -47,14 +47,14 @@
       <table class="exp-log__table">
         <thead>
           <tr>
-            <th v-tip="'Entry number\n(newest entries shown first)'">#</th>
-            <th v-tip="'Timestamp of the reading\n(HH:MM:SS local time)'">Time</th>
-            <th v-tip="'<strong>RF Frequency</strong>\nBroadcast frequency at time of reading (kHz)\nAffects transmembrane potential via Schwan eq.\nBelow fc → quasi-DC maximum Vm'">Freq</th>
-            <th v-tip="'<strong>Field Intensity</strong>\nApplied electric field strength (V/cm)\nVm scales linearly with this value\nDefault 150 V/cm = sub-threshold'">Field</th>
-            <th v-tip="'<strong>T-Vm — Target Transmembrane Potential</strong>\nPeak voltage induced across the target\n(cancer / pathogen) cell membrane (mV)\nComputed via Schwan equation\nHigher = greater disruption potential'">T-Vm</th>
-            <th v-tip="'<strong>H-Vm — Healthy Transmembrane Potential</strong>\nPeak voltage induced across the healthy\nreference cell membrane (mV)\nShould be kept low for tissue safety'">H-Vm</th>
-            <th v-tip="'<strong>Sel× — Selectivity Ratio</strong>\nT-Vm / H-Vm\n>1.5 = strong therapeutic window (green)\n1.0–1.5 = marginal window\n<1.0 = non-selective'">Sel×</th>
-            <th v-tip="'<strong>Event type</strong>\nmanual — user clicked Log Reading\nlysis — target membrane was disrupted\n(auto-logged when lysis countdown completes)'">Event</th>
+            <th v-tip="tipThNumber">{{ $t('exp.logThNumber') }}</th>
+            <th v-tip="tipThTime">{{ $t('exp.logThTime') }}</th>
+            <th v-tip="tipThFreq">{{ $t('exp.logThFreq') }}</th>
+            <th v-tip="tipThField">{{ $t('exp.logThField') }}</th>
+            <th v-tip="tipThTargetVm">{{ $t('exp.logThTargetVm') }}</th>
+            <th v-tip="tipThHealthyVm">{{ $t('exp.logThHealthyVm') }}</th>
+            <th v-tip="tipThSel">{{ $t('exp.logThSel') }}</th>
+            <th v-tip="tipThEvent">{{ $t('exp.logThEvent') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -65,33 +65,15 @@
           >
             <td class="exp-log__td-id">{{ e.id }}</td>
             <td class="exp-log__td-mono">{{ e.timestamp }}</td>
-            <td
-              class="exp-log__td-mono"
-              v-tip="`<strong>Frequency: ${e.freqKHz} kHz</strong>\nBroadcast frequency at time of reading`"
-            >{{ e.freqKHz }}k</td>
-            <td
-              class="exp-log__td-mono"
-              v-tip="`<strong>Field: ${e.fieldVcm} V/cm</strong>\nApplied electric field intensity`"
-            >{{ e.fieldVcm }}</td>
-            <td
-              class="exp-log__td-target"
-              v-tip="`<strong>Target Vm: ${e.targetVm} mV</strong>\nTransmembrane potential of ${e.targetPreset}\nT-ratio: ${(e.targetRatio * 100).toFixed(1)}% of lysis threshold`"
-            >{{ e.targetVm }}</td>
-            <td
-              class="exp-log__td-healthy"
-              v-tip="`<strong>Healthy Vm: ${e.healthyVm} mV</strong>\nTransmembrane potential of healthy reference cell\nH-ratio: ${(e.healthyRatio * 100).toFixed(1)}% of lysis threshold`"
-            >{{ e.healthyVm }}</td>
-            <td
-              class="exp-log__td-sel"
-              v-tip="`<strong>Selectivity: ×${e.selectivity.toFixed(3)}</strong>\nT-Vm / H-Vm ratio\nT-temp: ${e.targetTemp}°C  ·  H-temp: ${e.healthyTemp}°C`"
-            >{{ e.selectivity.toFixed(2) }}</td>
-            <td
-              class="exp-log__td-event"
-              v-tip="e.event === LOG_EVENT.LYSIS ? '<span class=\'tip-warn\'>Lysis event</span>\nTarget membrane was irreversibly disrupted\n(auto-logged by system)' : 'Manual reading\nLogged by user at this timestamp'"
-            >{{ e.event }}</td>
+            <td class="exp-log__td-mono" v-tip="tipCellFreq(e)">{{ e.freqKHz }}k</td>
+            <td class="exp-log__td-mono" v-tip="tipCellField(e)">{{ e.fieldVcm }}</td>
+            <td class="exp-log__td-target" v-tip="tipCellTargetVm(e)">{{ e.targetVm }}</td>
+            <td class="exp-log__td-healthy" v-tip="tipCellHealthyVm(e)">{{ e.healthyVm }}</td>
+            <td class="exp-log__td-sel" v-tip="tipCellSel(e)">{{ e.selectivity.toFixed(2) }}</td>
+            <td class="exp-log__td-event" v-tip="tipCellEvent(e)">{{ e.event }}</td>
           </tr>
           <tr v-if="!hasEntries">
-            <td colspan="8" class="exp-log__td-empty">No readings yet — click Log Reading to record</td>
+            <td colspan="8" class="exp-log__td-empty">{{ $t('exp.logEmpty') }}</td>
           </tr>
         </tbody>
       </table>
@@ -106,6 +88,8 @@ import { defineComponent } from 'vue'
 import { useExperimentStore } from '@/stores/experimentStore'
 import { useCellStore } from '@/stores/cellStore'
 import { LOG_EVENT } from '@/constants/strings'
+import { ICON } from '@/constants/icons'
+import { THRESHOLDS } from '@/constants/cellCard'
 
 export default defineComponent({
   setup() {
@@ -113,11 +97,13 @@ export default defineComponent({
       expStore: useExperimentStore(),
       cellStore: useCellStore(),
       LOG_EVENT,
+      ICON,
+      THRESHOLDS,
     }
   },
 
   data() {
-    return { open: true }
+    return { open: false }
   },
 
   computed: {
@@ -125,6 +111,72 @@ export default defineComponent({
       return [...this.expStore.entries].reverse().slice(0, 20)
     },
     hasEntries(): boolean { return this.expStore.entries.length > 0 },
+
+    // ── Button tooltips ────────────────────────────────────────────────────────
+    tipLogReading(): string {
+      return `<strong>Log Reading</strong>
+Capture a snapshot of the current experiment state:
+RF frequency, field intensity, transmembrane potentials (Vm),
+selectivity ratio, cell temperatures, and disruption ratios.
+Auto-logged on lysis events.`
+    },
+    tipExportCsv(): string {
+      return `<strong>Export CSV</strong>
+Download all log entries as a comma-separated file.
+Columns: #, timestamp, frequency (kHz), field (V/cm),
+target Vm (mV), healthy Vm (mV), selectivity, event type.`
+    },
+    tipClearLog(): string {
+      return `<strong>Clear Log</strong>
+Remove all readings from this session.
+This action cannot be undone.`
+    },
+
+    // ── Column header tooltips ─────────────────────────────────────────────────
+    tipThNumber(): string {
+      return `<strong>#  — Entry Index</strong>
+Sequential reading number (newest first).`
+    },
+    tipThTime(): string {
+      return `<strong>Time — Timestamp</strong>
+Local time (HH:MM:SS) when the reading was logged.`
+    },
+    tipThFreq(): string {
+      return `<strong>Freq — RF Frequency (kHz)</strong>
+Broadcast frequency at the time of reading.
+Below fc → quasi-DC regime, Vm is at its maximum.
+Above fc → Schwan roll-off reduces Vm.`
+    },
+    tipThField(): string {
+      return `<strong>Field — Applied Electric Field (V/cm)</strong>
+Field intensity at the time of reading.
+Transmembrane potential Vm scales linearly with E.`
+    },
+    tipThTargetVm(): string {
+      return `<strong>T-Vm — Target Transmembrane Potential (mV)</strong>
+Peak voltage induced across the target cell membrane,
+computed via the Schwan equation.
+Higher values → greater disruption potential.`
+    },
+    tipThHealthyVm(): string {
+      return `<strong>H-Vm — Healthy Transmembrane Potential (mV)</strong>
+Peak voltage induced across the healthy reference
+cell membrane. Should remain below 50% of threshold
+for a safe therapeutic window.`
+    },
+    tipThSel(): string {
+      const { SEL_STRONG: s, SEL_MARGINAL: m } = THRESHOLDS
+      return `<strong>Sel× — Vm Selectivity Ratio</strong>
+T-Vm / H-Vm — raw membrane potential ratio.
+<span class="tip-ok">≥ ${s}×</span> Strong therapeutic window
+<span class="tip-val">${m}–${s}×</span> Marginal window
+<span class="tip-warn">&lt; ${m}×</span> Non-selective`
+    },
+    tipThEvent(): string {
+      return `<strong>Event Type</strong>
+manual — snapshot triggered by user
+lysis — target membrane disrupted (auto-logged)`
+    },
   },
 
   methods: {
@@ -133,6 +185,38 @@ export default defineComponent({
     },
     exportCSV()  { this.expStore.exportCSV() },
     clearLog()   { this.expStore.clearLog() },
+
+    // ── Row cell tooltips ──────────────────────────────────────────────────────
+    tipCellFreq(e: { freqKHz: number }): string {
+      return `<strong>Frequency: ${e.freqKHz} kHz</strong>
+Carrier frequency at the time of this reading.`
+    },
+    tipCellField(e: { fieldVcm: number }): string {
+      return `<strong>Field Intensity: ${e.fieldVcm} V/cm</strong>
+Applied electric field at the time of this reading.`
+    },
+    tipCellTargetVm(e: { targetVm: number; targetPreset: string; targetRatio: number }): string {
+      return `<strong>Target Vm: ${e.targetVm} mV</strong>
+Cell: ${e.targetPreset}
+Disruption ratio: ${(e.targetRatio * 100).toFixed(1)}% of lysis threshold`
+    },
+    tipCellHealthyVm(e: { healthyVm: number; healthyRatio: number }): string {
+      return `<strong>Healthy Vm: ${e.healthyVm} mV</strong>
+Disruption ratio: ${(e.healthyRatio * 100).toFixed(1)}% of lysis threshold`
+    },
+    tipCellSel(e: { selectivity: number; targetTemp: number; healthyTemp: number }): string {
+      return `<strong>Selectivity: ×${e.selectivity.toFixed(3)}</strong>
+T-Vm / H-Vm ratio at this reading.
+Target temp: ${e.targetTemp}°C  ·  Healthy temp: ${e.healthyTemp}°C`
+    },
+    tipCellEvent(e: { event: string }): string {
+      return e.event === LOG_EVENT.LYSIS
+        ? `<span class="tip-warn">⚡ Lysis event</span>
+Target membrane was irreversibly disrupted.
+Automatically logged when the lysis countdown completed.`
+        : `Manual snapshot
+Logged by user click at this timestamp.`
+    },
   },
 })
 </script>

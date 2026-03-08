@@ -22,16 +22,16 @@
           <button
             class="experiment__cell-badge experiment__cell-badge--healthy"
             @click="toggleHealthyPicker"
-            v-tip="'Healthy baseline · R ' + store.healthy.radius + ' µm · fc ≈ ' + healthyFcSetup"
+            v-tip="tipHealthyBadge"
           >
             <div class="experiment__cell-badge-row" :class="{ 'experiment__cell-badge-row--open': healthyPickerOpen }">
-              <span class="experiment__cell-badge-type">Healthy ·</span>
+              <span class="experiment__cell-badge-type">{{ $t('exp.badgeHealthy') }}</span>
               <span class="experiment__cell-badge-selected experiment__cell-badge-selected--healthy">{{ healthyLabelShort }}</span>
               <span class="experiment__cell-badge-caret" :class="{ 'experiment__cell-badge-caret--open': healthyPickerOpen }">▼</span>
             </div>
           </button>
           <div v-if="healthyPickerOpen" class="experiment__cell-picker">
-            <div class="experiment__cell-picker-title">Select Healthy Baseline</div>
+            <div class="experiment__cell-picker-title">{{ $t('exp.pickerHealthyTitle') }}</div>
             <div class="experiment__cell-picker-grid">
               <button
                 v-for="p in healthyReferencePresets"
@@ -52,17 +52,17 @@
           <button
             class="experiment__cell-badge experiment__cell-badge--target"
             @click="toggleTargetPicker"
-            v-tip="'Target cell · R ' + store.target.radius + ' µm · fc ≈ ' + targetFcSetup"
+            v-tip="tipTargetBadge"
           >
             <div class="experiment__cell-badge-row" :class="{ 'experiment__cell-badge-row--open': targetPickerOpen }">
-              <span class="experiment__cell-badge-type">Target ·</span>
+              <span class="experiment__cell-badge-type">{{ $t('exp.badgeTarget') }}</span>
               <span class="experiment__cell-badge-selected experiment__cell-badge-selected--target">{{ store.target.label }}</span>
               <span class="experiment__cell-badge-caret" :class="{ 'experiment__cell-badge-caret--open': targetPickerOpen }">▼</span>
             </div>
           </button>
           <div v-if="targetPickerOpen" class="experiment__cell-picker">
             <div class="experiment__cell-picker-hdr">
-              <div class="experiment__cell-picker-title">Select Target Cell</div>
+              <div class="experiment__cell-picker-title">{{ $t('exp.pickerTargetTitle') }}</div>
               <div class="experiment__cell-picker-tabs">
                 <button
                   v-for="cat in targetPickerCategories"
@@ -132,11 +132,11 @@
       <div class="experiment__chart-section">
         <button class="experiment__chart-toggle" @click="chartOpen = !chartOpen">
           <span class="experiment__chart-toggle-left">
-            <span class="experiment__chart-toggle-icon">∿</span>
-            <span class="experiment__chart-toggle-title">Frequency Response</span>
+            <span class="experiment__chart-toggle-icon">{{ ICON.WAVE }}</span>
+            <span class="experiment__chart-toggle-title">{{ $t('exp.chartSectionTitle') }}</span>
             <span class="experiment__chart-toggle-sub">{{ chartModeLabel }}</span>
           </span>
-          <span class="experiment__chart-chevron" :class="{ 'experiment__chart-chevron--open': chartOpen }">›</span>
+          <span class="experiment__chart-chevron" :class="{ 'experiment__chart-chevron--open': chartOpen }">{{ ICON.CHEVRON }}</span>
         </button>
         <div v-show="chartOpen">
           <FrequencyResponseChart v-if="store.chartMode === CHART_MODE.SCHWAN" />
@@ -148,8 +148,21 @@
       <SelectivityPanel />
 
       <!-- Row 4 & 5: Research analysis tools — sweep + population (collapsible, full width) -->
-      <SweepPanel />
-      <PopulationPanel />
+      <SweepPanel @window-change="onSweepWindowChange" @open-change="sweepPanelOpen = $event" />
+
+      <!-- Global therapeutic window snap bar — visible only when at least one analysis panel is
+           open (so the user can see the effect), and a therapeutic window has been found. -->
+      <div v-if="sweepWindow && (sweepPanelOpen || populationPanelOpen)" class="experiment__snap-bar" v-tip="tipSnapBar">
+        <span class="experiment__snap-bar-label">{{ $t('exp.snapBarLabel') }}</span>
+        <span class="experiment__snap-bar-range">
+          {{ sweepWindow.lo.toFixed(0) }}–{{ sweepWindow.hi.toFixed(0) }}
+          {{ sweepWindow.param === 'field' ? $t('sweep.fieldUnit') : $t('sweep.freqUnit') }}
+        </span>
+        <span class="experiment__snap-bar-affects">{{ sweepWindow.param === 'field' ? $t('exp.snapBarSubField') : $t('exp.snapBarSubFreq') }} {{ Math.round((sweepWindow.lo + sweepWindow.hi) / 2) }} {{ sweepWindow.param === 'field' ? $t('sweep.fieldUnit') : $t('sweep.freqUnit') }}</span>
+        <button class="experiment__snap-bar-btn" @click="snapToWindow">{{ $t('exp.snapBarBtn') }}</button>
+      </div>
+
+      <PopulationPanel @open-change="populationPanelOpen = $event" />
 
       <!-- Row 6: Log (full width) -->
       <ExperimentLog />
@@ -175,6 +188,7 @@ import { CELL_PRESETS, GROUP_COLORS, GROUP_LABELS } from '@/constants/cellLibrar
 import type { CellPreset, CellGroup } from '@/constants/cellLibrary'
 import { CATEGORY_DEFAULTS } from '@/constants/experimentDefaults'
 import { CELL_CATEGORY, CELL_TYPE, CELL_GROUP, CHART_MODE } from '@/constants/strings'
+import { ICON } from '@/constants/icons'
 import { formatFreqKHz } from '@/utils/format'
 
 export default defineComponent({
@@ -197,6 +211,7 @@ export default defineComponent({
       GROUP_COLORS,
       GROUP_LABELS,
       CHART_MODE,
+      ICON,
     }
   },
 
@@ -211,6 +226,9 @@ export default defineComponent({
       targetPickerOpen: false,
       chartOpen: true,
       targetPickerCategory: CELL_GROUP.CANCER as CellGroup,
+      sweepWindow: null as { lo: number; hi: number; param: 'field' | 'freq' } | null,
+      sweepPanelOpen: false,
+      populationPanelOpen: false,
     }
   },
 
@@ -235,6 +253,45 @@ export default defineComponent({
       return this.store.target.id
     },
 
+    tipSnapBar(): string {
+      if (!this.sweepWindow) return ''
+      const isField = this.sweepWindow.param === 'field'
+      const unit    = isField ? 'V/cm' : 'kHz'
+      const param   = isField ? 'field intensity' : 'RF frequency'
+      const center  = Math.round((this.sweepWindow.lo + this.sweepWindow.hi) / 2)
+      return `<strong>⭐ Therapeutic Window</strong>
+The sweep analysis has found a parameter range where:
+  DR_target ≥ 85% — target membrane is at lysis threshold
+  DR_healthy &lt; 50% — healthy cells remain below Rev-EP onset
+
+Window: <span class="tip-val">${this.sweepWindow.lo.toFixed(0)}–${this.sweepWindow.hi.toFixed(0)} ${unit}</span>
+Center: <span class="tip-val">${center} ${unit}</span>
+
+Clicking this button sets the active ${param} to the
+window center, which maximises the selectivity margin —
+the distance from both disruption boundaries simultaneously.
+This is the operating point with the highest safety buffer
+between target lysis and healthy cell injury.`
+    },
+
+    tipHealthyBadge(): string {
+      const cell = this.store.healthy
+      return `<strong>Healthy Reference Cell</strong>
+${cell.label}
+Radius: ${cell.radius} µm · Membrane: ${cell.membraneThickness} nm
+Characteristic frequency fc ≈ ${this.healthyFcSetup}
+At quasi-DC this cell's Vm is at its Schwan maximum.`
+    },
+
+    tipTargetBadge(): string {
+      const cell = this.store.target
+      return `<strong>Target Cell</strong>
+${cell.label}
+Radius: ${cell.radius} µm · Membrane: ${cell.membraneThickness} nm
+Characteristic frequency fc ≈ ${this.targetFcSetup}
+Larger radius raises Vm and lowers the lysis field threshold.`
+    },
+
     healthyReferencePresets(): CellPreset[] {
       return CELL_PRESETS.filter((p) => p.group === CELL_GROUP.REFERENCE)
     },
@@ -256,8 +313,8 @@ export default defineComponent({
 
     chartModeLabel(): string {
       return this.store.chartMode === CHART_MODE.SCHWAN
-        ? 'Schwan · Vm vs Frequency'
-        : 'Resonance · Acoustic Lineshape'
+        ? this.$t('exp.chartModeSchwan')
+        : this.$t('exp.chartModeResonance')
     },
 
     cells() {
@@ -298,6 +355,22 @@ export default defineComponent({
     },
   },
   methods: {
+    onSweepWindowChange(w: { lo: number; hi: number; param: 'field' | 'freq' } | null) {
+      this.sweepWindow = w
+    },
+
+    snapToWindow() {
+      if (!this.sweepWindow) return
+      const center = Math.round((this.sweepWindow.lo + this.sweepWindow.hi) / 2)
+      if (this.sweepWindow.param === 'field') {
+        this.store.setFieldIntensity(center)
+        broadcastFieldParams(this.store.currentBroadcastFrequency, center, this.store.medium)
+      } else {
+        this.store.setBroadcastFreqKHz(center)
+        broadcastFieldParams(center, this.store.fieldIntensity, this.store.medium)
+      }
+    },
+
     loadHealthyPreset(preset: CellPreset) {
       this.store.loadPreset('healthy', preset)
       this.healthyPickerOpen = false
@@ -639,6 +712,65 @@ export default defineComponent({
     min-width: 0;
     display: flex;
     flex-direction: column;
+  }
+
+  /* ── Therapeutic window snap bar (between SweepPanel & PopulationPanel) ── */
+  &__snap-bar {
+    @include flex-row(0.75rem);
+    align-items: center;
+    padding: 0.55rem 1.1rem;
+    background: linear-gradient(90deg, rgba(34, 197, 94, 0.08) 0%, rgba(34, 197, 94, 0.04) 100%);
+    border: 1px solid rgba(34, 197, 94, 0.28);
+    border-radius: var(--radius);
+    flex-wrap: wrap;
+    gap: 0.4rem 0.75rem;
+  }
+
+  &__snap-bar-label {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: rgba(34, 197, 94, 0.9);
+    white-space: nowrap;
+  }
+
+  &__snap-bar-range {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--color-text-heading);
+    background: rgba(34, 197, 94, 0.12);
+    border: 1px solid rgba(34, 197, 94, 0.25);
+    border-radius: 3px;
+    padding: 0.1rem 0.45rem;
+    white-space: nowrap;
+  }
+
+  &__snap-bar-affects {
+    font-size: 0.66rem;
+    color: var(--color-text-muted);
+    flex: 1;
+    white-space: nowrap;
+  }
+
+  &__snap-bar-btn {
+    margin-left: auto;
+    padding: 0.22rem 0.75rem;
+    background: rgba(34, 197, 94, 0.14);
+    border: 1px solid rgba(34, 197, 94, 0.4);
+    border-radius: 4px;
+    color: rgba(34, 197, 94, 0.95);
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+    white-space: nowrap;
+
+    &:hover {
+      background: rgba(34, 197, 94, 0.24);
+      border-color: rgba(34, 197, 94, 0.65);
+    }
   }
 
   /* ── Chart section (collapsible) ─────────────────────────────── */
