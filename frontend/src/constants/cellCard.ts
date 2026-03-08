@@ -14,17 +14,32 @@ export const LYSIS_DURATION_MS = 2800   // shatter animation length
 export const FRAGMENT_INTERVAL_MS = 80  // ms between spawned fragments
 
 // ── Threshold ratios & temperatures ──────────────────────────────────────────
-/** All disruption ratio and temperature thresholds used by the cell state machine */
+/** All disruption ratio, temperature, selectivity, and classification thresholds.
+ *  Single source of truth — change a value here to propagate everywhere. */
 export const THRESHOLDS = {
-  DISRUPTION_WARN:     0.85,  // disruptionRatio above which lysis arms
+  // ── Disruption ratio (DR = Vm × f_pulse / V_threshold) ──────────────────────
+  DISRUPTION_WARN:     0.85,  // DR above which lysis countdown arms (IRE onset)
   HEALTHY_CRITICAL:    0.85,  // healthy cell: electroporation pore-formation imminent
   HEALTHY_APPROACHING: 0.50,  // healthy cell: membrane stress / ion channel perturbation onset
-  NOURISHING:          0.45,  // healthy-cell nourishing state onset
+  NOURISHING:          0.45,  // healthy-cell nourishing state onset (sub-threshold biomodulation)
   VIBRATING_MIN:       0.08,  // healthy-cell low-vibration onset
-  TEMP_WARN:           42,    // °C — temperature above which meta turns orange
-  TEMP_DENATURING:     60,    // °C — protein denaturation onset (collagen ~60°C, albumin ~68°C)
-  TEMP_VAPORIZING:     100,   // °C — water boiling / rapid steam-driven cell lysis
-  TEMP_CAP:            150,   // °C — simulation display ceiling
+  // ── Temperature (°C) ────────────────────────────────────────────────────────
+  TEMP_WARN:           42,    // hyperthermic safety limit (IAHT standard)
+  TEMP_DENATURING:     60,    // protein denaturation onset (collagen ~60°C, albumin ~68°C)
+  TEMP_VAPORIZING:     100,   // water boiling / rapid steam-driven cell lysis
+  TEMP_CAP:            150,   // simulation display ceiling
+  // ── Therapeutic Index TI = DR_T / DR_H  (sweep analysis) ───────────────────
+  TI_STRONG:           2.0,   // TI above which the sweep window is therapeutically strong
+  TI_MARGINAL:         1.2,   // TI above which the window is marginal (below = poor selectivity)
+  // ── Vm selectivity Sel = Vm_T / Vm_H  (panel badges & reports) ─────────────
+  SEL_STRONG:          1.5,   // Sel above which selectivity badge is green
+  SEL_MARGINAL:        1.0,   // Sel above which badge is amber (below = non-selective)
+  // ── Lysis probability sigmoid  P = 1 / (1 + exp(−(DR − center) / slope)) ───
+  LYSIS_PROB_CENTER:   1.0,   // DR at which P(lysis) = 50%
+  LYSIS_PROB_SLOPE:    0.05,  // sigmoid steepness — smaller = sharper transition
+  // ── Cell category radius boundaries (µm) ───────────────────────────────────
+  RADIUS_VIRUS_MAX:    0.1,   // R < 0.1 µm → VIRUS classification
+  RADIUS_BACTERIA_MAX: 2.0,   // 0.1 ≤ R < 2.0 µm → BACTERIA; R ≥ 2.0 µm → MAMMALIAN
 } as const
 
 export type ThresholdKey = keyof typeof THRESHOLDS

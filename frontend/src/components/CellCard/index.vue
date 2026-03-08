@@ -52,8 +52,8 @@
             class="cell-card__nuclear-bar-fill"
             :style="{ width: Math.min(100, nuclearDisruptionRatio * 100) + '%' }"
             :class="{
-              'cell-card__nuclear-bar-fill--caution': nuclearDisruptionRatio >= 0.5 && nuclearDisruptionRatio < 0.85,
-              'cell-card__nuclear-bar-fill--warn':    nuclearDisruptionRatio >= 0.85,
+              'cell-card__nuclear-bar-fill--caution': nuclearDisruptionRatio >= THRESHOLDS.HEALTHY_APPROACHING && nuclearDisruptionRatio < THRESHOLDS.DISRUPTION_WARN,
+              'cell-card__nuclear-bar-fill--warn':    nuclearDisruptionRatio >= THRESHOLDS.DISRUPTION_WARN,
             }"
           ></div>
         </div>
@@ -170,6 +170,7 @@ import type { CellState } from '@/types/cell'
 import {
   CELL_COLORS,
   EDITABLE_PARAMS,
+  THRESHOLDS,
   DISRUPTION_WARN_THRESHOLD,
   HEALTHY_CRITICAL_THRESHOLD,
   HEALTHY_APPROACHING_THRESHOLD,
@@ -210,7 +211,7 @@ export default defineComponent({
   },
 
   setup() {
-    return { store: useCellStore(), CELL_STATE, CELL_TYPE, ICON, UNIT }
+    return { store: useCellStore(), CELL_STATE, CELL_TYPE, ICON, UNIT, THRESHOLDS }
   },
 
   data() {

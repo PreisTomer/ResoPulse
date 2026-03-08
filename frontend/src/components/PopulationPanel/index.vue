@@ -4,11 +4,11 @@
     <!-- Accordion toggle -->
     <button class="pop-panel__toggle" @click="open = !open">
       <span class="pop-panel__toggle-left">
-        <span class="pop-panel__toggle-icon">⊞</span>
-        <span class="pop-panel__toggle-title">Cell Population Model</span>
+        <span class="pop-panel__toggle-icon">{{ ICON.GRID }}</span>
+        <span class="pop-panel__toggle-title">{{ $t('population.title') }}</span>
         <span class="pop-panel__toggle-sub">{{ subtitle }}</span>
       </span>
-      <span class="pop-panel__chevron" :class="{ 'pop-panel__chevron--open': open }">›</span>
+      <span class="pop-panel__chevron" :class="{ 'pop-panel__chevron--open': open }">{{ ICON.CHEVRON }}</span>
     </button>
 
     <div v-show="open" class="pop-panel__body">
@@ -16,67 +16,91 @@
       <!-- Controls -->
       <div class="pop-panel__controls">
         <div class="pop-panel__ctrl-group">
-          <span class="pop-panel__ctrl-label">Population size</span>
+          <span class="pop-panel__ctrl-label"
+            v-tip="tipPopSize"
+          >{{ $t('population.ctrlSizeLabel') }}</span>
           <div class="pop-panel__pills">
             <button v-for="n in [100, 300, 1000]" :key="n"
               class="pop-panel__pill"
               :class="{ 'pop-panel__pill--active': nCells === n }"
+              v-tip="tipNPill(n)"
               @click="nCells = n; resample()"
             >N={{ n }}</button>
           </div>
         </div>
         <div class="pop-panel__ctrl-group">
-          <span class="pop-panel__ctrl-label">R variance</span>
-          <input class="pop-panel__input" type="number" v-model.number="rVariancePct" min="1" max="30" step="1" />
-          <span class="pop-panel__ctrl-unit">%</span>
+          <span class="pop-panel__ctrl-label"
+            v-tip="tipRVariance"
+          >{{ $t('population.ctrlVarianceLabel') }}</span>
+          <input class="pop-panel__input" type="number" v-model.number="rVariancePct"
+            min="1" max="30" step="1"
+            v-tip="tipRVariance"
+          />
+          <span class="pop-panel__ctrl-unit">{{ $t('population.varianceUnit') }}</span>
         </div>
-        <button class="pop-panel__resample-btn" @click="resample">⟳ Resample</button>
-        <button class="pop-panel__export-btn" @click="exportCSV">↓ Export CSV</button>
+        <button class="pop-panel__resample-btn"
+          v-tip="tipResample"
+          @click="resample"
+        >{{ $t('population.resampleBtn') }}</button>
+        <button class="pop-panel__export-btn"
+          v-tip="tipExport"
+          @click="exportCSV"
+        >{{ $t('population.exportBtn') }}</button>
       </div>
 
       <!-- Stats cards -->
       <div class="pop-panel__stats">
-        <div class="pop-panel__stat pop-panel__stat--target">
-          <div class="pop-panel__stat-label">Target ({{ store.target.label }})</div>
+        <div class="pop-panel__stat pop-panel__stat--target" v-tip="tipTargetCard">
+          <div class="pop-panel__stat-label">{{ store.target.label }}</div>
           <div class="pop-panel__stat-row">
-            <span class="pop-panel__stat-badge pop-panel__stat-badge--lysed">Lysed {{ targetStats.pctLysed }}%</span>
-            <span class="pop-panel__stat-badge pop-panel__stat-badge--revep">Rev-EP {{ targetStats.pctRevEp }}%</span>
-            <span class="pop-panel__stat-badge pop-panel__stat-badge--nour">Nourishing {{ targetStats.pctNour }}%</span>
+            <span class="pop-panel__stat-badge pop-panel__stat-badge--lysed"
+              v-tip="tipLysedTarget"
+            >{{ $t('population.badgeLysed', { pct: targetStats.pctLysed }) }}</span>
+            <span class="pop-panel__stat-badge pop-panel__stat-badge--revep"
+              v-tip="tipRevEpTarget"
+            >{{ $t('population.badgeRevEp', { pct: targetStats.pctRevEp }) }}</span>
+            <span class="pop-panel__stat-badge pop-panel__stat-badge--nour"
+              v-tip="tipNourTarget"
+            >{{ $t('population.badgeNour', { pct: targetStats.pctNour }) }}</span>
           </div>
-          <div class="pop-panel__stat-sub">
-            Mean DR {{ targetStats.meanDr.toFixed(2) }} ± {{ targetStats.stdDr.toFixed(2) }} &nbsp;·&nbsp;
+          <div class="pop-panel__stat-sub" v-tip="tipMeanDr(targetStats, targetUncPct)">
+            {{ $t('population.statMeanDr') }} {{ targetStats.meanDr.toFixed(2) }} ± {{ targetStats.stdDr.toFixed(2) }} &nbsp;·&nbsp;
             σ<sub>i</sub> ±{{ targetUncPct }}%
           </div>
         </div>
-        <div class="pop-panel__stat pop-panel__stat--healthy">
-          <div class="pop-panel__stat-label">Healthy ({{ store.healthy.label }})</div>
+        <div class="pop-panel__stat pop-panel__stat--healthy" v-tip="tipHealthyCard">
+          <div class="pop-panel__stat-label">{{ store.healthy.label }}</div>
           <div class="pop-panel__stat-row">
-            <span class="pop-panel__stat-badge pop-panel__stat-badge--lysed">Lysed {{ healthyStats.pctLysed }}%</span>
-            <span class="pop-panel__stat-badge pop-panel__stat-badge--revep">Rev-EP {{ healthyStats.pctRevEp }}%</span>
-            <span class="pop-panel__stat-badge pop-panel__stat-badge--nour">Nourishing {{ healthyStats.pctNour }}%</span>
+            <span class="pop-panel__stat-badge pop-panel__stat-badge--lysed"
+              v-tip="tipLysedHealthy"
+            >{{ $t('population.badgeLysed', { pct: healthyStats.pctLysed }) }}</span>
+            <span class="pop-panel__stat-badge pop-panel__stat-badge--revep"
+              v-tip="tipRevEpHealthy"
+            >{{ $t('population.badgeRevEp', { pct: healthyStats.pctRevEp }) }}</span>
+            <span class="pop-panel__stat-badge pop-panel__stat-badge--nour"
+              v-tip="tipNourHealthy"
+            >{{ $t('population.badgeNour', { pct: healthyStats.pctNour }) }}</span>
           </div>
-          <div class="pop-panel__stat-sub">
-            Mean DR {{ healthyStats.meanDr.toFixed(2) }} ± {{ healthyStats.stdDr.toFixed(2) }} &nbsp;·&nbsp;
+          <div class="pop-panel__stat-sub" v-tip="tipMeanDr(healthyStats, healthyUncPct)">
+            {{ $t('population.statMeanDr') }} {{ healthyStats.meanDr.toFixed(2) }} ± {{ healthyStats.stdDr.toFixed(2) }} &nbsp;·&nbsp;
             σ<sub>i</sub> ±{{ healthyUncPct }}%
           </div>
         </div>
       </div>
 
       <!-- D3 histogram -->
-      <div ref="chartWrap" class="pop-panel__chart-wrap">
+      <div ref="chartWrap" class="pop-panel__chart-wrap" v-tip="tipChart">
         <svg ref="svgEl" class="pop-panel__svg"></svg>
       </div>
 
       <!-- Collateral damage note -->
       <div class="pop-panel__note" v-if="healthyStats.pctLysed > 0">
-        <span class="pop-panel__note-warn">⚠</span>
-        {{ healthyStats.pctLysed }}% of the healthy cell population crosses the lysis threshold at current settings —
-        increase selectivity by reducing field intensity or tuning frequency.
+        <span class="pop-panel__note-warn">{{ $t('population.warnIcon') }}</span>
+        {{ $t('population.warnCollateral', { pct: healthyStats.pctLysed }) }}
       </div>
       <div class="pop-panel__note pop-panel__note--ok" v-else-if="targetStats.pctLysed > 50">
-        <span class="pop-panel__note-ok">✓</span>
-        {{ targetStats.pctLysed }}% of target cells lysed · 0% healthy cell collateral damage.
-        Therapeutic window is effective across this population.
+        <span class="pop-panel__note-ok">{{ $t('population.okIcon') }}</span>
+        {{ $t('population.okWindow', { pct: targetStats.pctLysed }) }}
       </div>
 
     </div>
@@ -89,6 +113,8 @@ import * as d3 from 'd3'
 import { useCellStore } from '@/stores/cellStore'
 import { computeSchwan, computeTau, computePulseStepResponse, computeResonantDisruption } from '@/utils/physics'
 import { WAVEFORM, CHART_MODE, CELL_CATEGORY } from '@/constants/strings'
+import { THRESHOLDS } from '@/constants/cellCard'
+import { ICON } from '@/constants/icons'
 import type { CellConfig } from '@/types/cell'
 
 type ResizeObserverInstance = InstanceType<typeof ResizeObserver>
@@ -117,8 +143,9 @@ const MARGIN = { top: 14, right: 16, bottom: 40, left: 50 }
 const N_BINS = 20
 
 export default defineComponent({
+  emits: ['openChange'],
   setup() {
-    return { store: useCellStore() }
+    return { store: useCellStore(), THRESHOLDS, ICON }
   },
 
   data() {
@@ -148,7 +175,6 @@ export default defineComponent({
     },
 
     healthyUncPct(): number {
-      // Healthy is always mammalian in this tool
       return 20
     },
 
@@ -159,15 +185,129 @@ export default defineComponent({
       const { nCells, store } = this
       return `N=${nCells} · ${store.fieldIntensity} V/cm · ${store.currentBroadcastFrequency} kHz`
     },
+
+    // ── Tooltips ──────────────────────────────────────────────────────────────
+    tipPopSize(): string {
+      return `<strong>Population Size N</strong>
+Number of cells sampled per Monte Carlo run.
+<span class="tip-val">N=100</span>  Fast · coarse histogram — quick parameter scans
+<span class="tip-val">N=300</span>  Balanced default — smooth histogram, moderate speed
+<span class="tip-val">N=1000</span> High-fidelity — ideal for final analysis, slower sampling`
+    },
+
+    tipRVariance(): string {
+      return `<strong>Radius Variance  σ_R / R</strong>
+Gaussian spread of cell radius as % of mean R.
+Models natural cell-to-cell size heterogeneity.
+
+  Mammalian: ~10% · Bacteria: ~20% · Virus: ~30%
+
+Since Vm ∝ R (Schwan), larger cells receive higher Vm
+and are closer to the lysis threshold at a given field.`
+    },
+
+    tipResample(): string {
+      return `<strong>⟳ Resample</strong>
+Generate a new random population.
+Each cell's radius R and cytoplasm conductivity σ_i are
+independently drawn from Gaussian distributions.
+
+  σ_R = R × (variance%) · σ(σ_i) = σ_i × uncertainty
+  Uncertainty: mammalian 20% · bacteria 35% · virus 45%
+
+Histogram and stats update immediately.`
+    },
+
+    tipExport(): string {
+      return `<strong>↓ Export CSV</strong>
+Download all sampled DR values as CSV.
+Columns: cell_type · sample_index · DR`
+    },
+
+    tipTargetCard(): string {
+      return `<strong>Target Cell Population  (${this.store.target.label})</strong>
+Outcome distribution for the current field settings.
+Cells are sampled with Gaussian radius and σ_i variation
+(σ_i uncertainty: ±${this.targetUncPct}%).
+
+DR = Vm × f_pulse / V_threshold  (pulse envelope applied in IRE mode)`
+    },
+
+    tipHealthyCard(): string {
+      return `<strong>Healthy Reference Population  (${this.store.healthy.label})</strong>
+Outcome distribution under the same shared field.
+Ideally: 0% Lysed · low Rev-EP · high Stable fraction.
+
+DR = Vm × f_pulse / V_threshold
+σ_i uncertainty: ±${this.healthyUncPct}%`
+    },
+
+    tipLysedTarget(): string {
+      return `<strong>Target Lysed: ${this.targetStats.pctLysed}%</strong>
+Fraction of target cells with DR ≥ 1.0.
+Lysis threshold crossed → irreversible membrane disruption.
+<span class="tip-ok">Goal: maximise this fraction</span>`
+    },
+
+    tipRevEpTarget(): string {
+      return `<strong>Target Rev-EP: ${this.targetStats.pctRevEp}%</strong>
+Fraction with DR 0.50–1.0 — reversible electroporation zone.
+Membrane is permeabilised but may recover.
+Repeated pulses accumulate pore damage toward lysis.`
+    },
+
+    tipNourTarget(): string {
+      return `<strong>Target Nourishing: ${this.targetStats.pctNour}%</strong>
+Fraction with DR 0.08–0.50 — sub-EP Schwan coupling.
+Membrane partially stressed but cell is intact.`
+    },
+
+    tipLysedHealthy(): string {
+      return `<strong>Healthy Lysed: ${this.healthyStats.pctLysed}%</strong>
+<span class="tip-warn">⚠ Collateral damage — healthy cells with DR ≥ 1.0.</span>
+Keep this at 0% for a safe therapeutic window.
+Increase selectivity: reduce field or tune frequency.`
+    },
+
+    tipRevEpHealthy(): string {
+      return `<strong>Healthy Rev-EP: ${this.healthyStats.pctRevEp}%</strong>
+Healthy cells in the reversible EP zone (DR 0.50–1.0).
+Membrane stress; typically reversible at low duty cycle.
+Monitor closely — repeated pulses may accumulate.`
+    },
+
+    tipNourHealthy(): string {
+      return `<strong>Healthy Nourishing: ${this.healthyStats.pctNour}%</strong>
+Healthy cells with sub-lytic Schwan coupling (DR 0.08–0.50).
+Low-level membrane activity — generally considered safe.`
+    },
+
+    tipChart(): string {
+      return `<strong>Population DR Histogram</strong>
+Monte Carlo distribution of disruption ratios across the sampled population.
+
+<span class="tip-val">Red</span> = Target cells  ·  <span class="tip-val">Cyan</span> = Healthy cells
+
+Threshold lines:
+  <span class="tip-val">50%</span> — Rev-EP onset (reversible pore formation)
+  <span class="tip-val">85%</span> — Lysis armed (irreversible pore accumulation onset)
+  <span class="tip-val">100%</span> — Lysis threshold (membrane rupture)
+
+Overlap of target and healthy bars = reduced therapeutic selectivity.
+Ideal: target bars clustered near 100% · healthy bars near 0%.`
+    },
   },
 
   watch: {
     open(v: boolean) {
+      this.$emit('openChange', v)
       if (v) {
         if (this.targetDRs.length === 0) this.resample()
         this.$nextTick(() => { this._initChart(); this._drawChart() })
       }
     },
+    // Redraw chart whenever data changes (fixes resample button not updating histogram)
+    targetDRs() { if (this.open) this._drawChart() },
     // Auto-resample when store physics change
     'store.fieldIntensity'()              { if (this.open) this.resample() },
     'store.currentBroadcastFrequency'()   { if (this.open) this.resample() },
@@ -185,6 +325,23 @@ export default defineComponent({
   },
 
   methods: {
+    tipNPill(n: number): string {
+      if (n === 100)  return '<strong>N=100</strong>\nFast sampling — coarse histogram. Best for quick parameter scans.'
+      if (n === 300)  return '<strong>N=300</strong>\nBalanced default — smooth histogram, moderate computation time.'
+      return '<strong>N=1000</strong>\nHigh-fidelity histogram — slow sampling. Ideal for final analysis.'
+    },
+
+    tipMeanDr(stats: PopStats, uncPct: number): string {
+      return `<strong>Mean DR ± σ</strong>
+Population mean disruption ratio ± standard deviation.
+  DR = Vm × f_pulse / V_threshold
+
+Mean: <span class="tip-val">${stats.meanDr.toFixed(3)}</span>  ·  σ: <span class="tip-val">${stats.stdDr.toFixed(3)}</span>
+
+σ_i uncertainty ±${uncPct}% added to radius variance
+to model natural biophysical heterogeneity.`
+    },
+
     resample() {
       const { store } = this
       const sigma_e  = store.effectiveSigmaE
@@ -203,7 +360,6 @@ export default defineComponent({
       const rVar = this.rVariancePct  / 100
 
       const sampleDR = (base: CellConfig, sigmaUnc: number, isTarget: boolean): number => {
-        // Sample radius and conductivity from Gaussian distributions
         const R    = sampleGaussian(base.radius, base.radius * rVar, base.radius * 0.4, base.radius * 2.0)
         const sigI = sampleGaussian(base.conductivity, base.conductivity * sigmaUnc, base.conductivity * 0.2, base.conductivity * 3.0)
         const cell = { ...base, radius: R, conductivity: sigI }
@@ -222,17 +378,16 @@ export default defineComponent({
 
       this.targetDRs  = Array.from({ length: this.nCells }, () => sampleDR(target,  uncT, true))
       this.healthyDRs = Array.from({ length: this.nCells }, () => sampleDR(healthy, uncH, false))
-
-      if (this.open) this.$nextTick(() => this._drawChart())
+      // Chart redraws via targetDRs watcher
     },
 
     _calcStats(drs: number[]): PopStats {
       if (drs.length === 0) return { pctLysed: 0, pctRevEp: 0, pctNour: 0, pctStable: 0, meanDr: 0, stdDr: 0 }
-      const n = drs.length
+      const n        = drs.length
       const pctLysed = +((drs.filter(d => d >= 1.0).length / n * 100).toFixed(0))
-      const pctRevEp = +((drs.filter(d => d >= 0.50 && d < 1.0).length / n * 100).toFixed(0))
-      const pctNour  = +((drs.filter(d => d >= 0.08 && d < 0.50).length / n * 100).toFixed(0))
-      const pctStable= +((drs.filter(d => d < 0.08).length / n * 100).toFixed(0))
+      const pctRevEp = +((drs.filter(d => d >= THRESHOLDS.HEALTHY_APPROACHING && d < 1.0).length / n * 100).toFixed(0))
+      const pctNour  = +((drs.filter(d => d >= THRESHOLDS.VIBRATING_MIN && d < THRESHOLDS.HEALTHY_APPROACHING).length / n * 100).toFixed(0))
+      const pctStable= +((drs.filter(d => d < THRESHOLDS.VIBRATING_MIN).length / n * 100).toFixed(0))
       const mean     = drs.reduce((s, d) => s + d, 0) / n
       const std      = Math.sqrt(drs.reduce((s, d) => s + (d - mean) ** 2, 0) / n)
       return { pctLysed, pctRevEp, pctNour, pctStable, meanDr: mean, stdDr: std }
@@ -247,8 +402,8 @@ export default defineComponent({
     },
 
     _drawChart() {
-      const wrap = this.$refs.chartWrap as HTMLElement
-      const svgEl = this.$refs.svgEl as SVGSVGElement
+      const wrap  = this.$refs.chartWrap as HTMLElement
+      const svgEl = this.$refs.svgEl    as SVGSVGElement
       if (!wrap || !svgEl || (this.targetDRs.length === 0)) return
 
       const W  = wrap.clientWidth
@@ -264,7 +419,6 @@ export default defineComponent({
       const xMax   = Math.max(1.6, d3.max(allDRs) ?? 1.6)
       const xScale = d3.scaleLinear().domain([0, xMax]).range([0, iW])
 
-      // Build histogram bins
       const thresholds = d3.range(0, xMax + xMax / N_BINS, xMax / N_BINS)
       const histGen = d3.histogram<number, number>()
         .value(d => d)
@@ -300,9 +454,9 @@ export default defineComponent({
 
       // Threshold lines
       const lines = [
-        { x: 0.50, label: 'Rev-EP', color: 'rgba(251,191,36,0.7)', dash: '3,2' },
-        { x: 0.85, label: '85%',    color: CSS_DANGER,             dash: '3,2' },
-        { x: 1.00, label: 'Lysis',  color: CSS_DANGER,             dash: '2,2' },
+        { x: THRESHOLDS.HEALTHY_APPROACHING, label: 'Rev-EP', color: 'rgba(251,191,36,0.7)', dash: '3,2' },
+        { x: THRESHOLDS.DISRUPTION_WARN,     label: '85%',    color: CSS_DANGER,             dash: '3,2' },
+        { x: 1.00,                           label: 'Lysis',  color: CSS_DANGER,             dash: '2,2' },
       ]
       for (const { x, label, color, dash } of lines) {
         if (x > xMax) continue
@@ -452,6 +606,7 @@ export default defineComponent({
     font-family: var(--font-mono);
     color: var(--color-text-muted);
     white-space: nowrap;
+    cursor: help;
   }
 
   &__ctrl-unit {
@@ -522,6 +677,7 @@ export default defineComponent({
     padding: 0.65rem 0.8rem;
     border-radius: var(--radius);
     border: 1px solid var(--color-border);
+    cursor: help;
 
     &--target  { border-color: rgba(239,68,68,0.25); background: rgba(239,68,68,0.04); }
     &--healthy { border-color: rgba(0,212,255,0.2);  background: rgba(0,212,255,0.03); }
@@ -545,6 +701,7 @@ export default defineComponent({
     font-family: var(--font-mono);
     padding: 0.15rem 0.4rem;
     border-radius: 3px;
+    cursor: help;
 
     &--lysed { background: rgba(239,68,68,0.15);  color: var(--color-danger); }
     &--revep { background: rgba(251,191,36,0.12); color: var(--color-amber);  }
@@ -555,11 +712,13 @@ export default defineComponent({
     font-size: 0.68rem;
     color: var(--color-text-muted);
     font-family: var(--font-mono);
+    cursor: help;
   }
 
   &__chart-wrap {
     width: 100%;
     min-height: 196px;
+    cursor: help;
   }
 
   &__svg {

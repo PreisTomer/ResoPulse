@@ -79,6 +79,17 @@
       >σ_e {{ MEDIA[currentMedium].conductivity }} S/m</span>
     </div>
 
+    <!-- Snap to Optimal (Schwan/IRE mode only) — above RF Frequency slider -->
+    <div v-if="!isResonanceMode" class="field-panel__optimal-row">
+      <button
+        class="field-panel__optimal-btn"
+        :class="{ 'field-panel__optimal-btn--beyond': optimalBeyondRange }"
+        v-tip="tipOptimalBtn"
+        @click="snapToOptimal"
+        type="button"
+      >{{ $t('slider.snapOptimal') }} {{ optimalFreqLabel }}</button>
+    </div>
+
     <!-- Row 2: RF Frequency -->
     <div class="field-panel__row">
       <span class="field-panel__row-label" v-tip="tipFreq">{{ $t('slider.rfFrequency') }}</span>
@@ -95,15 +106,7 @@
       </div>
       <div class="field-panel__readout">
         <span class="field-panel__readout-value" v-tip="tipFreq">{{ freqDisplay }}</span>
-        <button
-          v-if="!isResonanceMode"
-          class="field-panel__optimal-btn"
-          :class="{ 'field-panel__optimal-btn--beyond': optimalBeyondRange }"
-          v-tip="tipOptimalBtn"
-          @click="snapToOptimal"
-          type="button"
-        >{{ $t('slider.snapOptimal') }} {{ optimalFreqLabel }}</button>
-        <span v-else class="field-panel__readout-sub" v-tip="tipFcSub">{{ freqSubDisplay }}</span>
+        <span class="field-panel__readout-sub" v-tip="tipFcSub">{{ freqSubDisplay }}</span>
       </div>
     </div>
 
@@ -129,12 +132,12 @@
         <div class="field-panel__badges">
           <span
             class="field-panel__badge field-panel__badge--target"
-            :class="{ 'field-panel__badge--warn': targetDisruption > 0.85 }"
+            :class="{ 'field-panel__badge--warn': targetDisruption > THRESHOLDS.DISRUPTION_WARN }"
             v-tip="tipTargetBadge"
           >T {{ targetDisruptPercent }}%</span>
           <span
             class="field-panel__badge field-panel__badge--healthy"
-            :class="{ 'field-panel__badge--warn': healthyDisruption > 0.85 }"
+            :class="{ 'field-panel__badge--warn': healthyDisruption > THRESHOLDS.DISRUPTION_WARN }"
             v-tip="tipHealthyBadge"
           >H {{ healthyDisruptPercent }}%</span>
         </div>
@@ -169,6 +172,7 @@ import { useCellStore } from '@/stores/cellStore'
 import { broadcastFieldParams } from '@/services/socket'
 import { MEDIA } from '@/constants/media'
 import { CHART_MODE, CELL_CATEGORY, THERMAL_LEVEL } from '@/constants/strings'
+import { THRESHOLDS } from '@/constants/cellCard'
 import { ICON } from '@/constants/icons'
 import type { MediumKey } from '@/types/media'
 import { formatFreqKHz, formatFieldVcm } from '@/utils/format'
@@ -195,7 +199,7 @@ export default defineComponent({
 
   setup() {
     const store = useCellStore()
-    return { store, MEDIA, ICON, THERMAL_LEVEL }
+    return { store, MEDIA, ICON, THERMAL_LEVEL, THRESHOLDS }
   },
 
   computed: {
@@ -738,6 +742,13 @@ export default defineComponent({
     &--hyperthermic { color: var(--color-amber)  !important; }
     &--denaturing   { color: var(--color-orange) !important; }
     &--vaporizing   { color: var(--color-danger) !important; animation: state-blink 0.5s ease-in-out infinite; }
+  }
+
+  &__optimal-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: -0.35rem;  /* pull closer to the freq slider below */
+    margin-bottom: -0.2rem;
   }
 
   &__optimal-btn {

@@ -73,8 +73,8 @@
     </div>
 
     <!-- Row 10: Blood Perfusion Rate ω_b (Pennes bioheat) -->
-    <div class="field-panel__row field-panel__row--compact-readout">
-      <span class="field-panel__row-label" v-tip="tipPerfusionFull">Blood Perfusion ω_b</span>
+    <div class="field-panel__row">
+      <span class="field-panel__row-label" v-tip="tipPerfusionFull">{{ $t('slider.bloodPerfusion') }}</span>
       <div class="field-panel__track">
         <input
           class="field-panel__slider"
@@ -92,8 +92,8 @@
     </div>
 
     <!-- Row 11: Cell Packing Fraction φ (Maxwell-Garnett) -->
-    <div class="field-panel__row field-panel__row--compact-readout">
-      <span class="field-panel__row-label" v-tip="tipCellPackingFull">Cell Packing φ</span>
+    <div class="field-panel__row">
+      <span class="field-panel__row-label" v-tip="tipCellPackingFull">{{ $t('slider.cellPacking') }}</span>
       <div class="field-panel__track">
         <input
           class="field-panel__slider"

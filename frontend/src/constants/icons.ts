@@ -14,6 +14,10 @@ export const ICON = {
   NOURISH:   '⊕',
   LYSIS_BOLT:'↯',
   NUCLEUS:   '⚬',
+  LINES:     '≡',   // hamburger / log header
+  RELOAD:    '⟳',   // sweep / resample
+  GRID:      '⊞',   // population panel
+  WAVE:      '∿',   // frequency response chart
 } as const
 
 export type Icon = typeof ICON[keyof typeof ICON]

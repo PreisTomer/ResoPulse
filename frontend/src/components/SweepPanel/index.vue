@@ -4,11 +4,11 @@
     <!-- Accordion toggle -->
     <button class="sweep-panel__toggle" @click="open = !open">
       <span class="sweep-panel__toggle-left">
-        <span class="sweep-panel__toggle-icon">⟳</span>
-        <span class="sweep-panel__toggle-title">Field Sweep Analysis</span>
+        <span class="sweep-panel__toggle-icon">{{ ICON.RELOAD }}</span>
+        <span class="sweep-panel__toggle-title">{{ $t('sweep.title') }}</span>
         <span class="sweep-panel__toggle-sub">{{ sweepSubtitle }}</span>
       </span>
-      <span class="sweep-panel__chevron" :class="{ 'sweep-panel__chevron--open': open }">›</span>
+      <span class="sweep-panel__chevron" :class="{ 'sweep-panel__chevron--open': open }">{{ ICON.CHEVRON }}</span>
     </button>
 
     <div v-show="open" class="sweep-panel__body">
@@ -16,71 +16,81 @@
       <!-- Controls row -->
       <div class="sweep-panel__controls">
         <div class="sweep-panel__ctrl-group">
-          <span class="sweep-panel__ctrl-label">Sweep</span>
+          <span class="sweep-panel__ctrl-label" v-tip="tipSweepLabel">{{ $t('sweep.ctrlSweepLabel') }}</span>
           <div class="sweep-panel__pills">
             <button
               class="sweep-panel__pill"
               :class="{ 'sweep-panel__pill--active': sweepParam === 'field' }"
+              v-tip="tipFieldPill"
               @click="sweepParam = 'field'; sweepMax = 1000"
-            >E-field (V/cm)</button>
+            >{{ $t('sweep.sweepFieldPill') }}</button>
             <button
               class="sweep-panel__pill"
               :class="{ 'sweep-panel__pill--active': sweepParam === 'freq' }"
+              v-tip="tipFreqPill"
               @click="sweepParam = 'freq'; sweepMax = 5000"
-            >Frequency (kHz)</button>
+            >{{ $t('sweep.sweepFreqPill') }}</button>
           </div>
         </div>
         <div class="sweep-panel__ctrl-group">
-          <span class="sweep-panel__ctrl-label">Max</span>
+          <span class="sweep-panel__ctrl-label" v-tip="tipMaxLabel">{{ $t('sweep.ctrlMaxLabel') }}</span>
           <input
             class="sweep-panel__input"
             type="number"
             v-model.number="sweepMax"
+            v-tip="tipMaxLabel"
             :step="sweepParam === 'field' ? 100 : 1000"
             :min="sweepParam === 'field' ? 100 : 100"
           />
-          <span class="sweep-panel__ctrl-unit">{{ sweepParam === 'field' ? 'V/cm' : 'kHz' }}</span>
+          <span class="sweep-panel__ctrl-unit">{{ sweepParam === 'field' ? $t('sweep.fieldUnit') : $t('sweep.freqUnit') }}</span>
         </div>
-        <button class="sweep-panel__export-btn" @click="exportCSV">↓ Export CSV</button>
+        <button class="sweep-panel__export-btn" v-tip="tipExport" @click="exportCSV">{{ $t('sweep.exportBtn') }}</button>
       </div>
 
       <!-- D3 chart -->
-      <div ref="chartWrap" class="sweep-panel__chart-wrap">
+      <div ref="chartWrap" class="sweep-panel__chart-wrap" v-tip="tipChart">
         <svg ref="svgEl" class="sweep-panel__svg"></svg>
       </div>
 
       <!-- Therapeutic window info -->
-      <div v-if="windowRange" class="sweep-panel__window-row">
-        <span class="sweep-panel__window-label">Therapeutic window:</span>
+      <div v-if="windowRange" class="sweep-panel__window-row" v-tip="tipWindow">
+        <span class="sweep-panel__window-label">{{ $t('sweep.windowLabel') }}</span>
         <span class="sweep-panel__window-val">
           {{ windowRange.lo.toFixed(0) }}–{{ windowRange.hi.toFixed(0) }}
-          {{ sweepParam === 'field' ? 'V/cm' : 'kHz' }}
+          {{ sweepParam === 'field' ? $t('sweep.fieldUnit') : $t('sweep.freqUnit') }}
         </span>
-        <span class="sweep-panel__window-sub">DR<sub>target</sub> &gt; 85% · DR<sub>healthy</sub> &lt; 50%</span>
-        <button class="sweep-panel__snap-btn" @click="snapToWindow">⭐ Snap to center</button>
+        <span class="sweep-panel__window-sub" v-html="$t('sweep.windowSub')"></span>
       </div>
-      <div v-else class="sweep-panel__window-row sweep-panel__window-row--none">
-        No therapeutic window found in this range — increase max or adjust pulse/frequency settings.
+      <div v-else class="sweep-panel__window-row sweep-panel__window-row--none" v-tip="tipNoWindow">
+        {{ $t('sweep.windowNone') }}
       </div>
 
       <!-- Key operating points table -->
       <table class="sweep-panel__table">
         <thead>
           <tr>
-            <th>Threshold</th>
-            <th>DR<sub>T</sub></th>
-            <th>DR<sub>H</sub></th>
-            <th>TI</th>
-            <th>T<sub>target</sub></th>
+            <th v-tip="tipThThreshold">{{ $t('sweep.tableThreshold') }}</th>
+            <th v-tip="tipThDrT" v-html="$t('sweep.tableDrT')"></th>
+            <th v-tip="tipThDrH" v-html="$t('sweep.tableDrH')"></th>
+            <th v-tip="tipThTI">{{ $t('sweep.tableTI') }}</th>
+            <th v-tip="tipThTemp" v-html="$t('sweep.tableTemp')"></th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="kp in keyPoints" :key="kp.label">
-            <td class="sweep-panel__td-label">{{ kp.label }}</td>
-            <td :class="kp.drT >= 1 ? 'sweep-panel__td--danger' : kp.drT >= 0.85 ? 'sweep-panel__td--warn' : ''">{{ kp.drT.toFixed(2) }}</td>
-            <td :class="kp.drH >= 0.50 ? 'sweep-panel__td--warn' : ''">{{ kp.drH.toFixed(2) }}</td>
-            <td :class="kp.ti >= 2 ? 'sweep-panel__td--ok' : kp.ti >= 1.2 ? 'sweep-panel__td--warn' : 'sweep-panel__td--danger'">{{ kp.ti.toFixed(2) }}×</td>
-            <td :class="kp.tT >= 60 ? 'sweep-panel__td--danger' : kp.tT >= 42 ? 'sweep-panel__td--warn' : ''">{{ kp.tT.toFixed(1) }}°C</td>
+            <td class="sweep-panel__td-label" v-tip="tipKpLabel(kp)">{{ kp.label }}</td>
+            <td :class="kp.drT >= 1 ? 'sweep-panel__td--danger' : kp.drT >= THRESHOLDS.DISRUPTION_WARN ? 'sweep-panel__td--warn' : ''"
+              v-tip="tipKpDrT(kp)"
+            >{{ kp.drT.toFixed(2) }}</td>
+            <td :class="kp.drH >= THRESHOLDS.HEALTHY_APPROACHING ? 'sweep-panel__td--warn' : ''"
+              v-tip="tipKpDrH(kp)"
+            >{{ kp.drH.toFixed(2) }}</td>
+            <td :class="kp.ti >= THRESHOLDS.TI_STRONG ? 'sweep-panel__td--ok' : kp.ti >= THRESHOLDS.TI_MARGINAL ? 'sweep-panel__td--warn' : 'sweep-panel__td--danger'"
+              v-tip="tipKpTI(kp)"
+            >{{ kp.ti.toFixed(2) }}×</td>
+            <td :class="kp.tT >= THRESHOLDS.TEMP_DENATURING ? 'sweep-panel__td--danger' : kp.tT >= THRESHOLDS.TEMP_WARN ? 'sweep-panel__td--warn' : ''"
+              v-tip="tipKpTemp(kp)"
+            >{{ kp.tT.toFixed(1) }}°C</td>
           </tr>
         </tbody>
       </table>
@@ -98,8 +108,9 @@ import {
   computeResonantDisruption,
 } from '@/utils/physics'
 import { WAVEFORM, CHART_MODE, CELL_CATEGORY } from '@/constants/strings'
+import { THRESHOLDS } from '@/constants/cellCard'
+import { ICON } from '@/constants/icons'
 import type { CellConfig } from '@/types/cell'
-import { broadcastFieldParams } from '@/services/socket'
 import { formatFreqKHz } from '@/utils/format'
 
 const LAMBDA   = 0.02  // Newton cooling [1/s]
@@ -131,8 +142,10 @@ function computeTemp(cell: CellConfig, E: number, sigma_e: number, wf: number, d
 const MARGIN = { top: 18, right: 76, bottom: 38, left: 54 }
 
 export default defineComponent({
+  emits: ['windowChange', 'openChange'],
+
   setup() {
-    return { store: useCellStore() }
+    return { store: useCellStore(), THRESHOLDS, ICON }
   },
 
   data() {
@@ -166,7 +179,6 @@ export default defineComponent({
       const perfRate = store.perfusionRate
       const wf       = waveform === WAVEFORM.CW ? 0.5 : 1.0
 
-      // Pulse envelope factors — tau is independent of E and f (only cell params + sigma_e)
       const tauH = computeTau(healthy, sigma_e)
       const tauT = computeTau(target,  sigma_e)
       const pefH = waveform === WAVEFORM.PULSED ? computePulseStepResponse(tauH, pwNs) : 1.0
@@ -180,13 +192,9 @@ export default defineComponent({
       for (let i = 0; i <= N_POINTS; i++) {
         const x = (i / N_POINTS) * this.sweepMax
 
-        let drH: number
-        let drT: number
-        let tH: number
-        let tT: number
+        let drH: number, drT: number, tH: number, tT: number
 
         if (this.sweepParam === 'field') {
-          // Sweep E; frequency fixed
           const vmH = computeSchwan(healthy, freqKHz, x, sigma_e, cosTheta)
           drH = (vmH * pefH) / healthy.thresholdVoltage
 
@@ -201,7 +209,6 @@ export default defineComponent({
           tT = computeTemp(target,  x, sigma_e, wf, dc, perfRate)
 
         } else {
-          // Sweep frequency; E fixed
           const vmH = computeSchwan(healthy, x, E, sigma_e, cosTheta)
           drH = (vmH * pefH) / healthy.thresholdVoltage
 
@@ -212,7 +219,6 @@ export default defineComponent({
             drT = (vmT * pefT) / target.thresholdVoltage
           }
 
-          // Temperature doesn't vary with freq (SAR is freq-independent)
           tH = computeTemp(healthy, E, sigma_e, wf, dc, perfRate)
           tT = computeTemp(target,  E, sigma_e, wf, dc, perfRate)
         }
@@ -234,7 +240,7 @@ export default defineComponent({
       const pts = this.sweepData
       let lo = -1, hi = -1
       for (const p of pts) {
-        if (p.drT >= 0.85 && p.drH < 0.50) {
+        if (p.drT >= THRESHOLDS.DISRUPTION_WARN && p.drH < THRESHOLDS.HEALTHY_APPROACHING) {
           if (lo < 0) lo = p.x
           hi = p.x
         }
@@ -245,25 +251,142 @@ export default defineComponent({
     keyPoints(): KeyPoint[] {
       const pts = this.sweepData
       const thresholds = [
-        { label: 'Target Rev-EP (50%)', drTMin: 0.50 },
-        { label: 'Target lysis armed (85%)', drTMin: 0.85 },
-        { label: 'Target lysis (100%)', drTMin: 1.00 },
+        { label: this.$t('sweep.keyRevEp'),      drTMin: THRESHOLDS.HEALTHY_APPROACHING },
+        { label: this.$t('sweep.keyLysisArmed'), drTMin: THRESHOLDS.DISRUPTION_WARN     },
+        { label: this.$t('sweep.keyLysis'),      drTMin: 1.00                           },
       ]
       return thresholds.flatMap(({ label, drTMin }) => {
         const pt = pts.find(p => p.drT >= drTMin)
         if (!pt) return []
-        const unit = this.sweepParam === 'field' ? 'V/cm' : 'kHz'
+        const unit = this.sweepParam === 'field' ? this.$t('sweep.fieldUnit') : this.$t('sweep.freqUnit')
         return [{ ...pt, label: `${label} @ ${pt.x.toFixed(0)} ${unit}` }]
       })
+    },
+
+    // ── Tooltips ──────────────────────────────────────────────────────────────
+    tipSweepLabel(): string {
+      return `<strong>Sweep Parameter</strong>
+Choose which physical quantity to vary across the sweep axis.`
+    },
+
+    tipFieldPill(): string {
+      return `<strong>E-field Sweep</strong>
+Varies field intensity from 0 to max at the current fixed RF frequency.
+Shows how DR and TI change with field amplitude.
+Useful for finding the minimum lysis field and therapeutic window.`
+    },
+
+    tipFreqPill(): string {
+      return `<strong>Frequency Sweep</strong>
+Varies RF frequency from 0 to max at the current fixed field intensity.
+Shows Schwan roll-off shape and fc-dependent selectivity.
+Note: SAR (temperature) is frequency-independent in this model.`
+    },
+
+    tipMaxLabel(): string {
+      const unit = this.sweepParam === 'field' ? 'V/cm' : 'kHz'
+      return `<strong>Sweep Maximum</strong>
+Upper limit of the sweep axis (${unit}).
+Increase to extend the sweep range and find higher-field/frequency operating points.`
+    },
+
+    tipExport(): string {
+      return `<strong>↓ Export CSV</strong>
+Download all sweep data points as CSV.
+Columns: x-axis value · DR_H · DR_T · TI · T_H · T_T · in_window (0/1)`
+    },
+
+    tipChart(): string {
+      return `<strong>Field Sweep Chart</strong>
+<span class="tip-val">Solid red</span> = Target DR
+<span class="tip-val">Solid cyan</span> = Healthy DR
+<span class="tip-val">Dashed amber</span> = Therapeutic Index (TI, right axis)
+
+<span class="tip-val">Green fill</span> = Therapeutic window (DR_T ≥ 85% · DR_H &lt; 50%)
+<span class="tip-val">White dashed cursor</span> = Current active parameter value
+
+Left Y-axis: Disruption Ratio (%)
+Right Y-axis: Therapeutic Index TI = DR_T / DR_H`
+    },
+
+    tipWindow(): string {
+      const wr = this.windowRange
+      if (!wr) return ''
+      const unit   = this.sweepParam === 'field' ? 'V/cm' : 'kHz'
+      const center = ((wr.lo + wr.hi) / 2).toFixed(0)
+      return `<strong>Therapeutic Window</strong>
+Range where DR_target ≥ 85% AND DR_healthy &lt; 50% simultaneously.
+
+  Lo: ${wr.lo.toFixed(0)} ${unit}  ·  Hi: ${wr.hi.toFixed(0)} ${unit}
+  Center: <span class="tip-val">${center} ${unit}</span>
+
+Operating within this window maximises therapeutic selectivity.
+Click "Snap to center" to set the active parameter to ${center} ${unit}.`
+    },
+
+    tipNoWindow(): string {
+      return `<strong>No Therapeutic Window</strong>
+No ${this.sweepParam === 'field' ? 'field intensity' : 'frequency'} range found where:
+  DR_target ≥ 85%  AND  DR_healthy &lt; 50%
+
+Try increasing the sweep maximum, adjusting pulse width,
+or switching from CW to pulsed mode for better selectivity.`
+    },
+
+    tipThThreshold(): string {
+      return `<strong>Operating Threshold</strong>
+Key ${this.sweepParam === 'field' ? 'field' : 'frequency'} value where target DR crosses a biophysical milestone:
+  50% — reversible electroporation onset
+  85% — lysis countdown arms (irreversible pore accumulation)
+  100% — lysis threshold reached`
+    },
+
+    tipThDrT(): string {
+      return `<strong>DR<sub>T</sub> — Target Disruption Ratio</strong>
+Target cell disruption ratio at this operating point.
+DR = Vm × f_pulse / V_threshold
+1.0 = lysis threshold crossed`
+    },
+
+    tipThDrH(): string {
+      return `<strong>DR<sub>H</sub> — Healthy Disruption Ratio</strong>
+Healthy reference cell DR at the same operating point.
+Should stay below 0.50 for a safe therapeutic window.`
+    },
+
+    tipThTI(): string {
+      const s = THRESHOLDS.TI_STRONG, m = THRESHOLDS.TI_MARGINAL
+      return `<strong>TI — Therapeutic Index</strong>
+TI = DR_T / DR_H — selectivity ratio at this operating point.
+<span class="tip-ok">≥ ${s}×</span> — strong therapeutic window
+<span class="tip-val">${m}–${s}×</span> — marginal window
+<span class="tip-warn">&lt; ${m}×</span> — poor selectivity`
+    },
+
+    tipThTemp(): string {
+      return `<strong>T<sub>target</sub> — Target Steady-State Temperature</strong>
+T_ss = 37 + SAR_eff / (λ × cp)
+Coloured: amber ≥ ${THRESHOLDS.TEMP_WARN}°C · red ≥ ${THRESHOLDS.TEMP_DENATURING}°C (denaturation onset)`
     },
   },
 
   watch: {
     open(v: boolean) {
+      this.$emit('openChange', v)
       if (v) this.$nextTick(() => { this._initChart(); this._drawChart() })
     },
     sweepData() {
       if (this.open) this._drawChart()
+    },
+    // Redraw cursor when active param changes but sweepData may not have changed
+    'store.fieldIntensity'()            { if (this.open) this._drawChart() },
+    'store.currentBroadcastFrequency'() { if (this.open) this._drawChart() },
+    // Emit therapeutic window to parent (ExperimentView) for the global snap bar
+    windowRange(val: { lo: number; hi: number } | null) {
+      this.$emit('windowChange', val ? { ...val, param: this.sweepParam } : null)
+    },
+    sweepParam() {
+      this.$emit('windowChange', this.windowRange ? { ...this.windowRange, param: this.sweepParam } : null)
     },
   },
 
@@ -272,6 +395,39 @@ export default defineComponent({
   },
 
   methods: {
+    tipKpLabel(kp: KeyPoint): string {
+      return `<strong>Operating Point</strong>\n${kp.label}`
+    },
+
+    tipKpDrT(kp: KeyPoint): string {
+      return `<strong>Target DR = ${kp.drT.toFixed(3)}</strong>
+Disruption ratio at this operating point.
+${kp.drT >= 1.0 ? '<span class="tip-warn">⚡ Lysis threshold crossed</span>' : kp.drT >= THRESHOLDS.DISRUPTION_WARN ? '<span class="tip-warn">⚠ Lysis armed (&gt;85%)</span>' : 'Sub-lysis operating point.'}`
+    },
+
+    tipKpDrH(kp: KeyPoint): string {
+      return `<strong>Healthy DR = ${kp.drH.toFixed(3)}</strong>
+${kp.drH >= THRESHOLDS.HEALTHY_APPROACHING ? '<span class="tip-warn">⚠ Healthy cells in Rev-EP zone (≥50%)</span>' : '<span class="tip-ok">✓ Healthy cells below Rev-EP threshold</span>'}`
+    },
+
+    tipKpTI(kp: KeyPoint): string {
+      const { TI_STRONG: s, TI_MARGINAL: m } = THRESHOLDS
+      const cls = kp.ti >= s ? 'tip-ok' : kp.ti >= m ? '' : 'tip-warn'
+      return `<strong>TI = ${kp.ti.toFixed(3)}×</strong>
+<span class="${cls}">${kp.ti >= s ? '✓ Strong selectivity' : kp.ti >= m ? 'Marginal selectivity' : '⚠ Poor selectivity'}</span>
+TI = DR_T / DR_H at this threshold crossing.`
+    },
+
+    tipKpTemp(kp: KeyPoint): string {
+      const warn = kp.tT >= THRESHOLDS.TEMP_DENATURING
+        ? '\n<span class="tip-warn">⚠ Denaturation zone (≥60°C)</span>'
+        : kp.tT >= THRESHOLDS.TEMP_WARN
+          ? '\n<span class="tip-warn">⚠ Hyperthermic (≥42°C)</span>'
+          : '\n<span class="tip-ok">✓ Safe thermal zone</span>'
+      return `<strong>T_ss (target) = ${kp.tT.toFixed(1)}°C</strong>
+Steady-state temperature via Pennes bioheat.${warn}`
+    },
+
     _initChart() {
       const wrap = this.$refs.chartWrap as HTMLElement
       if (!wrap || (this._resizeObs as ResizeObserverInstance | null)) return
@@ -281,8 +437,8 @@ export default defineComponent({
     },
 
     _drawChart() {
-      const wrap = this.$refs.chartWrap as HTMLElement
-      const svgEl = this.$refs.svgEl as SVGSVGElement
+      const wrap  = this.$refs.chartWrap as HTMLElement
+      const svgEl = this.$refs.svgEl    as SVGSVGElement
       if (!wrap || !svgEl) return
 
       const W = wrap.clientWidth
@@ -291,14 +447,11 @@ export default defineComponent({
       const iH = H - MARGIN.top - MARGIN.bottom
       const pts = this.sweepData
 
-      const svg = d3.select(svgEl)
-        .attr('width', W)
-        .attr('height', H)
+      const svg = d3.select(svgEl).attr('width', W).attr('height', H)
       svg.selectAll('*').remove()
 
       const g = svg.append('g').attr('transform', `translate(${MARGIN.left},${MARGIN.top})`)
 
-      // Scales
       const xScale = d3.scaleLinear().domain([0, this.sweepMax]).range([0, iW])
       const drMax  = Math.max(1.5, d3.max(pts, p => Math.max(p.drH, p.drT)) ?? 1.5) * 1.05
       const yScale = d3.scaleLinear().domain([0, drMax]).range([iH, 0]).clamp(true)
@@ -309,8 +462,8 @@ export default defineComponent({
       const CSS_AMBER    = getComputedStyle(document.documentElement).getPropertyValue('--color-amber').trim()   || '#fbbf24'
       const CSS_BORDER   = getComputedStyle(document.documentElement).getPropertyValue('--color-border').trim()  || 'rgba(255,255,255,0.1)'
 
-      // Therapeutic window fill (drT > 0.85 AND drH < 0.50)
-      const windowPts = pts.filter(p => p.drT >= 0.85 && p.drH < 0.50)
+      // Therapeutic window fill
+      const windowPts = pts.filter(p => p.drT >= THRESHOLDS.DISRUPTION_WARN && p.drH < THRESHOLDS.HEALTHY_APPROACHING)
       if (windowPts.length >= 2 && windowPts[0] && windowPts[windowPts.length - 1]) {
         const x0 = xScale(windowPts[0]!.x)
         const x1 = xScale(windowPts[windowPts.length - 1]!.x)
@@ -325,9 +478,9 @@ export default defineComponent({
 
       // Threshold lines
       const threshLines = [
-        { dr: 0.50, label: 'Rev-EP', color: CSS_AMBER,  dash: '4,3' },
-        { dr: 0.85, label: '85%',    color: CSS_DANGER,  dash: '4,3' },
-        { dr: 1.00, label: 'Lysis',  color: CSS_DANGER,  dash: '2,2' },
+        { dr: THRESHOLDS.HEALTHY_APPROACHING, label: 'Rev-EP', color: CSS_AMBER,  dash: '4,3' },
+        { dr: THRESHOLDS.DISRUPTION_WARN,     label: '85%',    color: CSS_DANGER,  dash: '4,3' },
+        { dr: 1.00,                           label: 'Lysis',  color: CSS_DANGER,  dash: '2,2' },
       ]
       for (const { dr, label, color, dash } of threshLines) {
         if (dr > drMax) continue
@@ -363,67 +516,47 @@ export default defineComponent({
       const lineGen = (yAcc: (p: SweepPoint) => number) =>
         d3.line<SweepPoint>().x(p => xScale(p.x)).y(p => yAcc(p)).curve(d3.curveBasis)
 
-      // TI line (right axis, scaled to fit)
-      g.append('path')
-        .datum(pts)
-        .attr('d', lineGen(p => yTI(p.ti)))
-        .attr('fill', 'none')
-        .attr('stroke', CSS_AMBER)
-        .attr('stroke-width', 1.2)
-        .attr('stroke-dasharray', '5,3')
-        .attr('opacity', 0.65)
+      // TI line
+      g.append('path').datum(pts).attr('d', lineGen(p => yTI(p.ti)))
+        .attr('fill', 'none').attr('stroke', CSS_AMBER)
+        .attr('stroke-width', 1.2).attr('stroke-dasharray', '5,3').attr('opacity', 0.65)
 
       // Healthy DR line
-      g.append('path')
-        .datum(pts)
-        .attr('d', lineGen(p => yScale(p.drH)))
-        .attr('fill', 'none')
-        .attr('stroke', CSS_PRIMARY)
-        .attr('stroke-width', 1.8)
+      g.append('path').datum(pts).attr('d', lineGen(p => yScale(p.drH)))
+        .attr('fill', 'none').attr('stroke', CSS_PRIMARY).attr('stroke-width', 1.8)
 
       // Target DR line
-      g.append('path')
-        .datum(pts)
-        .attr('d', lineGen(p => yScale(p.drT)))
-        .attr('fill', 'none')
-        .attr('stroke', CSS_DANGER)
-        .attr('stroke-width', 2)
+      g.append('path').datum(pts).attr('d', lineGen(p => yScale(p.drT)))
+        .attr('fill', 'none').attr('stroke', CSS_DANGER).attr('stroke-width', 2)
 
       // X-axis
-      g.append('g')
-        .attr('transform', `translate(0,${iH})`)
+      g.append('g').attr('transform', `translate(0,${iH})`)
         .call(d3.axisBottom(xScale).ticks(6).tickSize(3))
         .call(ax => ax.select('.domain').attr('stroke', CSS_BORDER))
         .call(ax => ax.selectAll('text').attr('fill', 'rgba(255,255,255,0.55)').attr('font-size', 10))
         .call(ax => ax.selectAll('.tick line').attr('stroke', CSS_BORDER))
 
-      // Y-axis (left — DR)
+      // Y-axis left (DR)
       g.append('g')
         .call(d3.axisLeft(yScale).ticks(5).tickSize(3).tickFormat(d => `${(+d * 100).toFixed(0)}%`))
         .call(ax => ax.select('.domain').attr('stroke', CSS_BORDER))
         .call(ax => ax.selectAll('text').attr('fill', 'rgba(255,255,255,0.55)').attr('font-size', 10))
         .call(ax => ax.selectAll('.tick line').attr('stroke', CSS_BORDER))
 
-      // Y-axis (right — TI)
-      g.append('g')
-        .attr('transform', `translate(${iW},0)`)
+      // Y-axis right (TI)
+      g.append('g').attr('transform', `translate(${iW},0)`)
         .call(d3.axisRight(yTI).ticks(5).tickSize(3).tickFormat(d => `${d}×`))
         .call(ax => ax.select('.domain').attr('stroke', CSS_BORDER))
         .call(ax => ax.selectAll('text').attr('fill', CSS_AMBER).attr('font-size', 9).attr('opacity', 0.7))
         .call(ax => ax.selectAll('.tick line').attr('stroke', CSS_BORDER))
 
       // Axis labels
-      g.append('text')
-        .attr('x', iW / 2).attr('y', iH + 30)
-        .attr('text-anchor', 'middle')
-        .attr('font-size', 10).attr('fill', 'rgba(255,255,255,0.4)')
+      g.append('text').attr('x', iW / 2).attr('y', iH + 30)
+        .attr('text-anchor', 'middle').attr('font-size', 10).attr('fill', 'rgba(255,255,255,0.4)')
         .text(this.sweepParam === 'field' ? 'Field Intensity (V/cm)' : 'Frequency (kHz)')
 
-      g.append('text')
-        .attr('transform', 'rotate(-90)')
-        .attr('x', -iH / 2).attr('y', -40)
-        .attr('text-anchor', 'middle')
-        .attr('font-size', 10).attr('fill', 'rgba(255,255,255,0.4)')
+      g.append('text').attr('transform', 'rotate(-90)').attr('x', -iH / 2).attr('y', -40)
+        .attr('text-anchor', 'middle').attr('font-size', 10).attr('fill', 'rgba(255,255,255,0.4)')
         .text('Disruption Ratio')
 
       // Legend
@@ -435,27 +568,11 @@ export default defineComponent({
       legend.forEach(({ color, label, dash }, i) => {
         const lx = i * 90
         const lg = g.append('g').attr('transform', `translate(${lx},${iH + 30})`)
-        lg.append('line')
-          .attr('x1', 0).attr('x2', 16).attr('y1', -9).attr('y2', -9)
-          .attr('stroke', color).attr('stroke-width', 2)
-          .attr('stroke-dasharray', dash || 'none')
-        lg.append('text')
-          .attr('x', 20).attr('y', -5)
-          .attr('font-size', 9).attr('fill', 'rgba(255,255,255,0.5)')
-          .text(label)
+        lg.append('line').attr('x1', 0).attr('x2', 16).attr('y1', -9).attr('y2', -9)
+          .attr('stroke', color).attr('stroke-width', 2).attr('stroke-dasharray', dash || 'none')
+        lg.append('text').attr('x', 20).attr('y', -5)
+          .attr('font-size', 9).attr('fill', 'rgba(255,255,255,0.5)').text(label)
       })
-    },
-
-    snapToWindow() {
-      if (!this.windowRange) return
-      const center = (this.windowRange.lo + this.windowRange.hi) / 2
-      if (this.sweepParam === 'field') {
-        this.store.setFieldIntensity(Math.round(center))
-        broadcastFieldParams(this.store.currentBroadcastFrequency, Math.round(center), this.store.medium)
-      } else {
-        this.store.setBroadcastFreqKHz(Math.round(center))
-        broadcastFieldParams(Math.round(center), this.store.fieldIntensity, this.store.medium)
-      }
     },
 
     exportCSV() {
@@ -463,7 +580,7 @@ export default defineComponent({
         ? 'E_field_Vcm,DR_healthy,DR_target,TI,T_healthy_C,T_target_C,therapeutic_window\n'
         : 'freq_kHz,DR_healthy,DR_target,TI,T_healthy_C,T_target_C,therapeutic_window\n'
       const rows = this.sweepData.map(p => {
-        const inWindow = p.drT >= 0.85 && p.drH < 0.50 ? 1 : 0
+        const inWindow = p.drT >= THRESHOLDS.DISRUPTION_WARN && p.drH < THRESHOLDS.HEALTHY_APPROACHING ? 1 : 0
         return `${p.x.toFixed(2)},${p.drH.toFixed(4)},${p.drT.toFixed(4)},${p.ti.toFixed(4)},${p.tH.toFixed(2)},${p.tT.toFixed(2)},${inWindow}`
       })
       const blob = new Blob([header + rows.join('\n')], { type: 'text/csv' })
@@ -555,6 +672,7 @@ export default defineComponent({
     font-family: var(--font-mono);
     color: var(--color-text-muted);
     white-space: nowrap;
+    cursor: help;
   }
 
   &__ctrl-unit {
@@ -620,6 +738,7 @@ export default defineComponent({
   &__chart-wrap {
     width: 100%;
     min-height: 224px;
+    cursor: help;
   }
 
   &__svg {
@@ -693,6 +812,7 @@ export default defineComponent({
       letter-spacing: 0.08em;
       color: var(--color-text-muted);
       border-bottom: 1px solid var(--color-border);
+      cursor: help;
     }
 
     td {
@@ -700,14 +820,15 @@ export default defineComponent({
       color: var(--color-text);
       border-bottom: 1px solid rgba(255,255,255,0.04);
       font-family: var(--font-mono);
+      cursor: help;
     }
 
     tr:last-child td { border-bottom: none; }
   }
 
-  &__td-label { color: var(--color-text-muted); font-family: inherit; font-size: 0.75rem; }
-  &__td--ok      { color: rgb(34,197,94); }
-  &__td--warn    { color: var(--color-amber); }
-  &__td--danger  { color: var(--color-danger); }
+  &__td-label  { color: var(--color-text-muted); font-family: inherit; font-size: 0.75rem; }
+  &__td--ok    { color: rgb(34,197,94); }
+  &__td--warn  { color: var(--color-amber); }
+  &__td--danger{ color: var(--color-danger); }
 }
 </style>
