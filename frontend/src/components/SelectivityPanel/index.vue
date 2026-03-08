@@ -1,6 +1,17 @@
 <template>
   <div class="sel-panel">
-    <div class="sel-panel__title">{{ $t('selectivity.title') }}</div>
+
+    <!-- ── Accordion toggle ─────────────────────────────────── -->
+    <button class="sel-panel__toggle" @click="open = !open">
+      <span class="sel-panel__toggle-left">
+        <span class="sel-panel__toggle-icon">⊕</span>
+        <span class="sel-panel__toggle-title">{{ $t('selectivity.title') }}</span>
+        <span class="sel-panel__toggle-sub">{{ toggleSubtitle }}</span>
+      </span>
+      <span class="sel-panel__chevron" :class="{ 'sel-panel__chevron--open': open }">›</span>
+    </button>
+
+    <div v-show="open">
 
     <!-- ── Selectivity ratio + TI ────────────────────────────── -->
     <div class="sel-panel__ratio-wrap" v-tip="tipSelectivity">
@@ -11,6 +22,17 @@
         <span class="sel-panel__ratio-label">{{ $t('selectivity.ratioLabel') }}</span>
         <span class="sel-panel__ti-label">Vm ×<span>{{ vmSelectivityRatio >= 99 ? ICON.INFINITY : vmSelectivityRatio.toFixed(2) }}</span></span>
       </div>
+    </div>
+    <!-- ── σ_i uncertainty band on TI (Schwan mode only) ─────── -->
+    <div
+      v-if="showTiUncertainty"
+      class="sel-panel__ti-range"
+      v-tip="tipTiRange"
+    >
+      <span class="sel-panel__ti-range-label">σ_i range:</span>
+      <span class="sel-panel__ti-range-val">
+        [×{{ tiRange.low.toFixed(2) }} – ×{{ tiRange.high >= 99 ? ICON.INFINITY : tiRange.high.toFixed(2) }}]
+      </span>
     </div>
 
     <!-- ── Disruption progress bars ──────────────────────────── -->
@@ -103,6 +125,7 @@
     <div class="sel-panel__sep"></div>
     <ComparisonTable />
 
+    </div><!-- /v-show="open" -->
   </div>
 </template>
 
@@ -125,7 +148,16 @@ export default defineComponent({
     return { store: useCellStore(), CHART_MODE, ICON }
   },
 
+  data() {
+    return { open: true }
+  },
+
   computed: {
+    toggleSubtitle(): string {
+      const sel = this.store.selectivityRatio
+      const selStr = sel >= 99 ? ICON.INFINITY : `×${sel.toFixed(2)}`
+      return `TI ${selStr} · ${this.modeBadge.label}`
+    },
     selectivity(): number    { return this.store.selectivityRatio },
     targetRatio(): number    { return this.store.targetDisruptionRatio },
     targetRatioPct(): number { return Math.min(100, this.targetRatio * 100) },
@@ -180,6 +212,29 @@ export default defineComponent({
     },
 
     therapeuticIndex(): number { return this.store.therapeuticIndex },
+
+    tiRange(): { low: number; high: number } { return this.store.tiUncertaintyRange },
+
+    showTiUncertainty(): boolean {
+      // Only meaningful in Schwan mode (resonance mode uses Q-range in the resonance info section)
+      return this.store.chartMode !== 'resonance' && Math.abs(this.tiRange.high - this.tiRange.low) > 0.01
+    },
+
+    tipTiRange(): string {
+      const { low, high } = this.tiRange
+      const uncH = this.store.healthy.radius < 2.0 ? '35%' : '20%'
+      const uncT = this.store.target.radius < 0.1 ? '45%' : this.store.target.radius < 2.0 ? '35%' : '20%'
+      return `<strong>TI Uncertainty from σ_i Variability</strong>
+TI_low  = ×${low.toFixed(2)} (worst case: target σ_i at −${uncT}, healthy at +${uncH})
+TI_high = ×${high >= 99 ? '∞' : high.toFixed(2)} (best case: target σ_i at +${uncT}, healthy at −${uncH})
+
+σ_i (cytoplasm conductivity) is a literature range, not a single measured value.
+Variability: healthy (±${uncH}) · target (±${uncT})
+These bounds propagate through τ → fc → Vm → DR → TI.
+
+<span class="tip-note">A wide uncertainty band means the TI claim depends strongly on
+the exact σ_i value used. Validate with measured cell impedance (patch clamp / DEP).</span>`
+    },
 
     vmSelectivityRatio(): number {
       const hVm = this.store.healthyVm
@@ -469,13 +524,66 @@ Note: virion fc ~0.6–0.75 MHz per Schwan model (σ_i-limited; model approximat
     flex-shrink: 0;
   }
 
-  /* ── Title ─────────────────────────────────────────────────── */
-  &__title {
+  /* ── Accordion toggle ──────────────────────────────────────── */
+  &__toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--color-border);
+    padding: 0.5rem 0 0.5rem;
+    margin-bottom: 0.5rem;
+    cursor: pointer;
+    gap: 0.5rem;
+
+    &:hover .sel-panel__toggle-title { color: var(--color-primary); }
+  }
+
+  &__toggle-left {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+  }
+
+  &__toggle-icon {
+    font-size: 0.75rem;
+    color: var(--color-primary);
+    flex-shrink: 0;
+    opacity: 0.7;
+  }
+
+  &__toggle-title {
     font-size: 0.62rem;
     font-family: var(--font-mono);
     text-transform: uppercase;
     letter-spacing: 0.12em;
     color: var(--color-text);
+    flex-shrink: 0;
+    transition: color 0.15s;
+  }
+
+  &__toggle-sub {
+    font-size: 0.58rem;
+    font-family: var(--font-mono);
+    color: var(--color-text-muted);
+    opacity: 0.7;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__chevron {
+    font-size: 1rem;
+    color: var(--color-text-muted);
+    opacity: 0.5;
+    flex-shrink: 0;
+    transition: transform 0.2s;
+    transform: rotate(0deg);
+
+    &--open { transform: rotate(90deg); }
   }
 
   /* ── Selectivity ratio ─────────────────────────────────────── */
@@ -519,6 +627,28 @@ Note: virion fc ~0.6–0.75 MHz per Schwan model (σ_i-limited; model approximat
     color: var(--color-text-muted);
     text-transform: uppercase;
     letter-spacing: 0.06em;
+  }
+
+  &__ti-range {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: -0.3rem;
+  }
+
+  &__ti-range-label {
+    font-size: 0.56rem;
+    font-family: var(--font-mono);
+    color: var(--color-text-muted);
+    opacity: 0.7;
+  }
+
+  &__ti-range-val {
+    font-size: 0.58rem;
+    font-family: var(--font-mono);
+    color: var(--color-text-muted);
+    letter-spacing: 0.02em;
+    cursor: help;
   }
 
   /* ── Disruption bars ───────────────────────────────────────── */

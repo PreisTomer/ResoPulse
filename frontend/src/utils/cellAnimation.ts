@@ -737,7 +737,6 @@ export function setupBlobAnimation(
 export function setupOscilloscope(
   el: HTMLElement,
   accentColor: string,
-  naturalFrequency: number,
   getFrame: () => OscFrame,
 ): d3.Timer {
   const W = OSC_W, H = OSC_H
@@ -747,11 +746,11 @@ export function setupOscilloscope(
 
   const path = svg.append('path').attr('fill', 'none').attr('stroke', accentColor).attr('stroke-width', 1.5).attr('stroke-opacity', 0.85)
 
-  const scrollSpeed = naturalFrequency * 0.00008
-  const lineGen     = d3.line<{ x: number; y: number }>().x((d) => d.x).y((d) => d.y)
+  const lineGen = d3.line<{ x: number; y: number }>().x((d) => d.x).y((d) => d.y)
 
   const timer = d3.timer((elapsed: number) => {
-    const { state, impact, liveAmplitude, cellColor } = getFrame()
+    const { state, impact, liveAmplitude, cellColor, naturalFrequency } = getFrame()
+    const scrollSpeed = naturalFrequency * 0.00008
 
     if (state === CELL_STATE.LYSED) {
       path.attr('d', `M0,${H / 2} L${W},${H / 2}`).attr('stroke', '#ff4d6d').attr('stroke-width', 1).attr('stroke-opacity', 0.4)

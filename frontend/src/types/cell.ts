@@ -66,4 +66,7 @@ export interface OscFrame {
   impact: number
   liveAmplitude: number
   cellColor: string
+  /** Oscilloscope scroll-speed frequency [kHz]. For acoustic targets this tracks the
+   *  live broadcast frequency so the waveform responds to the slider in real time. */
+  naturalFrequency: number
 }

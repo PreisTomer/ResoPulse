@@ -57,7 +57,9 @@ Modelled via Specific Absorption Rate (SAR):
   α = 3σ_e/(2σ_e+σ_i)  (internal field factor — sphere in medium)
   w_f = 0.5 (CW sinusoidal, E²_rms = E²_peak/2) | 1.0 (pulsed bipolar square wave, E²_rms = E²_peak)
 
-Newton cooling: λ = 0.02 /s → T_ss = 37 + SAR_eff/(λ·cp)
+Pennes bioheat: T_ss = 37 + SAR_eff / ((λ_Newton + λ_perf) × cp)
+  λ_Newton = 0.02 /s (surface/diffusion cooling)
+  λ_perf   = ω_b × 63.9 / cp  (blood perfusion — Advanced → Blood Perfusion ω_b)
 Thresholds: 42°C hyperthermic · 60°C denaturing · 100°C vaporizing${warnLine}`
 }
 
@@ -89,6 +91,38 @@ export function tipState(opts: {
   return `<strong>Cell State</strong>
 ${labels[cellState] ?? cellState}
 ${transitions}`
+}
+
+export function tipAcousticVm(opts: {
+  disruptionRatio: number
+  resonantFreqGHz: number
+  capsidQ: number
+  freqKHz: number
+  fieldVcm: number
+  experimentalBasis?: string
+}): string {
+  const { disruptionRatio, resonantFreqGHz, capsidQ, freqKHz, fieldVcm, experimentalBasis } = opts
+  const pct = (disruptionRatio * 100).toFixed(0)
+  const freqGHz = (freqKHz / 1e6).toFixed(3)
+  const basisNote = experimentalBasis === 'speculative'
+    ? '\n<span class="tip-warn">⚠ ENVELOPED VIRUS: lipid bilayer has no rigid resonance.\nParameters are theoretical extrapolations — not RF-validated.</span>'
+    : experimentalBasis === 'rf-extrapolated'
+      ? '\n<span class="tip-note">Acoustic resonance extrapolated from RF data.\nTsen et al. (2007) experiments used femtosecond laser pulses, not RF.\nRF coupling mechanism is the unvalidated extrapolation.</span>'
+      : ''
+  return `<strong>Acoustic Disruption Ratio (DR)</strong>
+Current: <span class="tip-val">${pct}%</span>
+
+Acoustic shell resonance (Lorentzian) model:
+  DR = (E / E_thr) × L(f, f_res, Q)
+  L(f) = 1/√(1 + Q²·(f/f₀ − f₀/f)²)
+
+f_res: <span class="tip-val">${resonantFreqGHz} GHz</span>  ·  Q: ${capsidQ}
+Current f: ${freqGHz} GHz  ·  E: ${fieldVcm.toFixed(0)} V/cm
+
+Schwan Vm ≈ 0 at GHz — capacitive charging
+is negligible at these frequencies.
+Disruption is via mechanical shell resonance.
+Ref: Tsen et al. (2007); Dykeman &amp; Sankey (2010)${basisNote}`
 }
 
 export function tipNuclearBar(): string {

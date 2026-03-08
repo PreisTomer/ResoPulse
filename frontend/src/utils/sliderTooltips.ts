@@ -380,6 +380,58 @@ export function tipLysisNNote(): string {
   return `\n<span class="tip-note">Affects target cell lysis countdown only.\nHas no effect on the healthy cell disruption model.</span>`
 }
 
+export function tipPerfusion(perfusionRate: number, effLambdaH: number): string {
+  const label = perfusionRate === 0
+    ? 'in vitro (no perfusion)'
+    : perfusionRate < 0.5 ? 'low perfusion (fat/cartilage)'
+    : perfusionRate < 1.5 ? 'moderate perfusion (muscle/liver)'
+    : perfusionRate < 3   ? 'high perfusion (brain/heart)'
+    : 'very high perfusion (kidney/tumour)'
+  const pct = ((effLambdaH - 0.02) / 0.02 * 100).toFixed(0)
+  return `<strong>Blood Perfusion Rate ω_b</strong>
+Current: <span class="tip-val">${perfusionRate.toFixed(2)} mL/(g·min)</span> — ${label}
+
+Pennes bioheat equation (1948):
+  λ_eff = λ_Newton + λ_perf
+  λ_perf = ω_b × ρ_b × c_b / cp
+         = ω_b × 63.9 / cp  [1/s]
+  ρ_b = 1060 kg/m³  ·  c_b = 3617 J/(kg·K)
+
+λ_Newton = 0.02 /s  (surface/diffusion cooling)
+λ_perf   = ${(effLambdaH - 0.02).toFixed(4)} /s  (+${pct}% additional cooling)
+
+T_ss = 37 + SAR_eff / (λ_eff × cp)
+
+<span class="tip-note">0 = in vitro default (no blood supply)
+Typical values: muscle 0.5 · brain 1.0 · kidney 5.0 mL/(g·min)
+Higher ω_b → stronger cooling → lower T_ss → higher safe duty cycle</span>`
+}
+
+export function tipCellPacking(phi: number, sigma_e0: number, sigma_eff: number): string {
+  const reduction = ((1 - sigma_eff / sigma_e0) * 100).toFixed(1)
+  const context = phi === 0 ? 'isolated cell (no correction)'
+    : phi < 0.3 ? 'sparse suspension'
+    : phi < 0.5 ? 'moderate tissue packing'
+    : phi < 0.7 ? 'dense tissue (~in vivo)'
+    : 'very dense / tumour core'
+  return `<strong>Cell Packing Fraction φ</strong>
+Current: <span class="tip-val">φ = ${(phi * 100).toFixed(0)}%</span> — ${context}
+
+Maxwell-Garnett effective medium (DC insulating-sphere limit):
+  σ_e_eff = σ_e × (1 − φ) / (1 + φ/2)
+  [Garnett 1904; Foster &amp; Schwan 1989]
+
+  σ_e₀ = ${sigma_e0.toFixed(3)} S/m  →  σ_e_eff = ${sigma_eff.toFixed(3)} S/m (−${reduction}%)
+
+Effect: reduces τ (faster fc rolloff) and internal field α.
+At high packing fractions, cells shadow each other — the
+effective field delivering Vm to each cell is lower.
+
+<span class="tip-note">Valid for f ≪ fc. At f > fc the membrane polarises less and
+the MG correction approaches the bare-medium limit.
+φ = 0 (default) = isolated-cell in-vitro conditions.</span>`
+}
+
 export function tipPulseWidth(opts: {
   targetFc: number
   healthyFc: number

@@ -71,6 +71,44 @@
         </label>
       </div>
     </div>
+
+    <!-- Row 10: Blood Perfusion Rate ω_b (Pennes bioheat) -->
+    <div class="field-panel__row field-panel__row--compact-readout">
+      <span class="field-panel__row-label" v-tip="tipPerfusionFull">Blood Perfusion ω_b</span>
+      <div class="field-panel__track">
+        <input
+          class="field-panel__slider"
+          type="range"
+          min="0"
+          max="5"
+          step="0.05"
+          :value="store.perfusionRate"
+          @input="onPerfusionInput"
+        />
+      </div>
+      <div class="field-panel__readout" v-tip="tipPerfusionFull">
+        <span class="field-panel__readout-value">{{ perfusionDisplay }}</span>
+      </div>
+    </div>
+
+    <!-- Row 11: Cell Packing Fraction φ (Maxwell-Garnett) -->
+    <div class="field-panel__row field-panel__row--compact-readout">
+      <span class="field-panel__row-label" v-tip="tipCellPackingFull">Cell Packing φ</span>
+      <div class="field-panel__track">
+        <input
+          class="field-panel__slider"
+          type="range"
+          min="0"
+          max="0.9"
+          step="0.01"
+          :value="store.cellPackingFraction"
+          @input="onCellPackingInput"
+        />
+      </div>
+      <div class="field-panel__readout" v-tip="tipCellPackingFull">
+        <span class="field-panel__readout-value">{{ cellPackingDisplay }}</span>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -80,7 +118,7 @@ import { useCellStore } from '@/stores/cellStore'
 import { WAVEFORM } from '@/constants/strings'
 import { CELL_CATEGORY } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
-import { tipOrientation, tipLysisN, tipLysisNNote, tipShellModel, tipSingleShell, tipDoubleShell, formatLysisTime } from '@/utils/sliderTooltips'
+import { tipOrientation, tipLysisN, tipLysisNNote, tipShellModel, tipSingleShell, tipDoubleShell, tipPerfusion, tipCellPacking, formatLysisTime } from '@/utils/sliderTooltips'
 
 export default defineComponent({
   setup() {
@@ -125,6 +163,28 @@ export default defineComponent({
     tipShellModel(): string  { return tipShellModel() },
     tipSingleShell(): string { return tipSingleShell() },
     tipDoubleShell(): string { return tipDoubleShell() },
+
+    perfusionDisplay(): string {
+      const r = this.store.perfusionRate
+      return r === 0 ? '0 (in vitro)' : `${r.toFixed(2)} mL/(g·min)`
+    },
+
+    cellPackingDisplay(): string {
+      const phi = this.store.cellPackingFraction
+      return phi === 0 ? '0% (isolated)' : `${(phi * 100).toFixed(0)}%`
+    },
+
+    tipPerfusionFull(): string {
+      const cp_h = this.store.healthy.specificHeatCapacity
+      const lambdaH = 0.02 + this.store.perfusionRate * 63.9 / cp_h
+      return tipPerfusion(this.store.perfusionRate, lambdaH)
+    },
+
+    tipCellPackingFull(): string {
+      const sigma_e0 = this.store.sigma_e
+      const sigma_eff = this.store.effectiveSigmaE
+      return tipCellPacking(this.store.cellPackingFraction, sigma_e0, sigma_eff)
+    },
   },
 
   methods: {
@@ -136,6 +196,14 @@ export default defineComponent({
     onLysisNInput(e: Event) {
       const logVal = Number((e.target as HTMLInputElement).value)
       this.store.setLysisNPulses(Math.round(Math.pow(10, logVal)))
+    },
+
+    onPerfusionInput(e: Event) {
+      this.store.setPerfusionRate(Number((e.target as HTMLInputElement).value))
+    },
+
+    onCellPackingInput(e: Event) {
+      this.store.setCellPackingFraction(Number((e.target as HTMLInputElement).value))
     },
   },
 })
