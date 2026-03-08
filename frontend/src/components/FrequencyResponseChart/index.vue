@@ -4,7 +4,7 @@
     <div class="freq-chart__header">
       <span
         class="freq-chart__title"
-        v-tip="'<strong>Transmembrane Potential vs Frequency</strong>\nSchwan equation Vm(f) = 1.5·E·R·cos(θ) / √(1+(2πf·τ)²)\nX-axis: log scale 10 kHz → 500 MHz\nY-axis: peak Vm in millivolts\n\nFaint curves: all library presets\nBright curves: currently active cells\nAmber dashed: Vm selectivity ratio T/H (right axis)\nDotted threshold lines: lysis (bright) · Rev.EP at 50% (faint)\nDrag white cursor to set broadcast frequency'"
+        v-tip="'<strong>Transmembrane Potential vs Frequency</strong>\nSchwan equation Vm(f) = 1.5·E·R·cos(θ) / √(1+(2πf·τ)²)\nX-axis: log scale 10 kHz → 500 MHz\nY-axis: peak Vm in millivolts\n\nFaint curves: all library presets\nBright curves: currently active cells\nShaded band: ±σ_i uncertainty (mammalian ±20% · bacteria ±35% · virus ±45%)\nAmber dashed: Vm selectivity ratio T/H (right axis)\nDotted threshold lines: lysis (bright) · Rev.EP at 50% (faint)\nDrag white cursor to set broadcast frequency'"
       >Transmembrane Potential Response</span>
       <ChartLegend />
     </div>
@@ -595,6 +595,60 @@ export default defineComponent({
       // Active curves
       const activeGroup = g.select<SVGGElement>('.curves-active')
       activeGroup.selectAll('path').remove()
+
+      // ── σ_i uncertainty bands ──────────────────────────────────────────────
+      // ±pct% variation in internal conductivity σ_i propagates through τ → fc,
+      // producing a shaded region representing literature parameter uncertainty.
+      // Uncertainty scales with cell category: mammalian 20%, bacteria 35%, virus 45%.
+      const sigmaUncPct = (radius: number): number => {
+        if (radius < 0.1) return 45  // virus — lipid bilayer σ_i highly variable
+        if (radius < 2.0) return 35  // bacteria — complex wall composition
+        return 20                     // mammalian — well-characterised reference ranges
+      }
+
+      const computeUncBand = (
+        cell: typeof this.store.healthy,
+        pct: number,
+      ): { hz: number; vmLow: number; vmHigh: number }[] => {
+        const field = this.store.fieldIntensity
+        return F_POINTS_HZ.map((hz) => {
+          const khz    = hz / 1000
+          const sigma_i = cell.conductivity  // σ_i = cytoplasm conductivity [S/m]
+          const vmLow  = computeSchwan(
+            { ...cell, conductivity: sigma_i * (1 - pct / 100) },
+            khz, field, sigma_e, cosTheta,
+          ) * 1000
+          const vmHigh = computeSchwan(
+            { ...cell, conductivity: sigma_i * (1 + pct / 100) },
+            khz, field, sigma_e, cosTheta,
+          ) * 1000
+          return { hz, vmLow, vmHigh }
+        })
+      }
+
+      const areaGen = d3.area<{ hz: number; vmLow: number; vmHigh: number }>()
+        .x((d) => this._xScale!(d.hz))
+        .y0((d) => this._yScale!(Math.max(0, d.vmLow)))
+        .y1((d) => this._yScale!(Math.min(maxVm, d.vmHigh)))
+        .curve(d3.curveBasis)
+
+      const hPct = sigmaUncPct(this.store.healthy.radius)
+      const tPct = sigmaUncPct(this.store.target.radius)
+
+      activeGroup.append('path')
+        .datum(computeUncBand(this.store.healthy, hPct))
+        .attr('fill', C.primary)
+        .attr('fill-opacity', 0.10)
+        .attr('stroke', 'none')
+        .attr('d', areaGen)
+
+      activeGroup.append('path')
+        .datum(computeUncBand(this.store.target, tPct))
+        .attr('fill', C.danger)
+        .attr('fill-opacity', 0.10)
+        .attr('stroke', 'none')
+        .attr('d', areaGen)
+      // ── End uncertainty bands ─────────────────────────────────────────────
 
       activeGroup.append('path')
         .datum(healthyCurve)

@@ -52,6 +52,8 @@ interface CellStoreState {
   lysisNPulses: number            // number of above-threshold pulses before lysis; default 10
   chartMode: 'schwan' | 'resonance'  // active chart/simulation mode (moved from ExperimentView local state)
   doubleShellEnabled: boolean     // opt-in two-shell nuclear envelope model (Kotnik & Miklavcic 2006)
+  perfusionRate: number           // ω_b [mL/(g·min)]; 0 = in vitro; Pennes bioheat blood perfusion cooling
+  cellPackingFraction: number     // φ [0–0.9]; Maxwell-Garnett correction to σ_e for dense cell suspensions
   _tempTimer: number | null
   resetCounter: number
 }
@@ -73,6 +75,8 @@ export const useCellStore = defineStore('cell', {
     lysisNPulses: 10,              // 10 above-threshold pulses ≈ typical IRE clinical protocol
     chartMode: 'schwan' as const,  // default: Schwan/IRE transmembrane potential model
     doubleShellEnabled: false,     // double-shell model off by default
+    perfusionRate: 0,              // mL/(g·min); 0 = isolated cell / in-vitro default
+    cellPackingFraction: 0,        // φ = 0 (isolated cell); set >0 for dense tissue context
     _tempTimer: null,
     resetCounter: 0,
   }),
@@ -139,7 +143,12 @@ export const useCellStore = defineStore('cell', {
       const sigma_e0 = MEDIA[state.medium].conductivity
       const alpha    = SIGMA_TEMP_COEFF[state.medium] ?? 0.020
       const T_mean   = (state.healthyTemp + state.targetTemp) / 2
-      return sigma_e0 * (1 + alpha * (T_mean - 37))
+      const sigma_T  = sigma_e0 * (1 + alpha * (T_mean - 37))
+      // Maxwell-Garnett correction for cell packing fraction φ (insulating-sphere DC limit):
+      // σ_e_eff = σ_T × (1 − φ) / (1 + φ/2)  [Garnett 1904; Foster & Schwan 1989]
+      // Valid at f ≪ fc; reduces effective medium conductivity seen by the applied field.
+      const phi = Math.min(0.9, Math.max(0, state.cellPackingFraction))
+      return sigma_T * (1 - phi) / (1 + phi / 2)
     },
 
     /**
@@ -280,6 +289,47 @@ export const useCellStore = defineStore('cell', {
     },
 
     /**
+     * σ_i uncertainty bounds on the Therapeutic Index (Schwan/IRE mode only).
+     * Computes worst-case TI_low and TI_high by propagating ±σ_i uncertainty through
+     * the Schwan model. The uncertainty is category-dependent (literature range widths):
+     *   mammalian: ±20%  (well-characterised reference ranges)
+     *   bacteria:  ±35%  (complex cell-wall composition variability)
+     *   virus:     ±45%  (membrane conductivity in virion extrapolations)
+     *
+     * TI_low  = TI with (σ_i_T × (1−pct), σ_i_H × (1+pct))  — lower target coupling, higher healthy
+     * TI_high = TI with (σ_i_T × (1+pct), σ_i_H × (1−pct))  — higher target coupling, lower healthy
+     *
+     * Returns nominal { low, high } = { TI, TI } in resonance mode (acoustic uncertainty
+     * is characterised by Q-range, which is shown separately in SelectivityPanel).
+     */
+    tiUncertaintyRange(): { low: number; high: number } {
+      const state = this as unknown as CellStoreState
+      const nominal = this.therapeuticIndex
+      if (state.chartMode === CHART_MODE.RESONANCE) return { low: nominal, high: nominal }
+      const sigma_e = this.effectiveSigmaE
+      const field   = state.fieldIntensity
+      const freq    = state.currentBroadcastFrequency
+      const cosT    = this.cosThetaFactor
+      const uncH    = state.healthy.radius < 2.0 ? 0.35 : 0.20
+      const uncT    = state.target.radius < 0.1 ? 0.45 : state.target.radius < 2.0 ? 0.35 : 0.20
+      // TI_low: target weakly coupled (σ_i_T low), healthy strongly coupled (σ_i_H high)
+      const vmTLow  = computeSchwan({ ...state.target,  conductivity: state.target.conductivity  * (1 - uncT) }, freq, field, sigma_e, cosT)
+      const vmHHigh = computeSchwan({ ...state.healthy, conductivity: state.healthy.conductivity * (1 + uncH) }, freq, field, sigma_e, cosT)
+      const pefT    = this.pulseEnvelopeFactorTarget
+      const pefH    = this.pulseEnvelopeFactorHealthy
+      const drTLow  = (vmTLow  * pefT) / state.target.thresholdVoltage
+      const drHHigh = (vmHHigh * pefH) / state.healthy.thresholdVoltage
+      const tiLow   = drHHigh < 1e-9 ? 0 : Math.max(0, Math.min(99.9, drTLow / drHHigh))
+      // TI_high: target strongly coupled (σ_i_T high), healthy weakly coupled (σ_i_H low)
+      const vmTHigh = computeSchwan({ ...state.target,  conductivity: state.target.conductivity  * (1 + uncT) }, freq, field, sigma_e, cosT)
+      const vmHLow  = computeSchwan({ ...state.healthy, conductivity: state.healthy.conductivity * (1 - uncH) }, freq, field, sigma_e, cosT)
+      const drTHigh = (vmTHigh * pefT) / state.target.thresholdVoltage
+      const drHLow  = (vmHLow  * pefH) / state.healthy.thresholdVoltage
+      const tiHigh  = drHLow  < 1e-9 ? 99.9 : Math.min(99.9, drTHigh / drHLow)
+      return { low: tiLow, high: tiHigh }
+    },
+
+    /**
      * True if at least one of the active cells has nuclear envelope parameters.
      * Used to conditionally show the double-shell model toggle in the UI.
      * Only mammalian nucleated cells have nuclearRadius defined.
@@ -393,16 +443,22 @@ export const useCellStore = defineStore('cell', {
      * Capped at TEMP_SIMULATION_CAP for display.
      */
     healthySteadyStateTemp(): number {
+      const state = this as unknown as CellStoreState
       const sar_eff = this.healthySAR * this.effectiveDutyCycle
-      const cp = this.healthy.specificHeatCapacity
-      return Math.min(37 + sar_eff / (LAMBDA * cp), TEMP_SIMULATION_CAP)
+      const cp = state.healthy.specificHeatCapacity
+      // Pennes bioheat: perfusion adds blood-cooling term λ_perf = ω_b × 63.9 / cp [1/s]
+      // Derivation: ω_b [mL/(g·min)] → [m³/(kg·s)] × ρ_b(1060) × c_b(3617) / cp
+      const lambda_perf = state.perfusionRate * 63.9 / cp
+      return Math.min(37 + sar_eff / ((LAMBDA + lambda_perf) * cp), TEMP_SIMULATION_CAP)
     },
 
     /** Projected steady-state temperature for target cell [°C], capped at TEMP_SIMULATION_CAP. */
     targetSteadyStateTemp(): number {
+      const state = this as unknown as CellStoreState
       const sar_eff = this.targetSAR * this.effectiveDutyCycle
-      const cp = this.target.specificHeatCapacity
-      return Math.min(37 + sar_eff / (LAMBDA * cp), TEMP_SIMULATION_CAP)
+      const cp = state.target.specificHeatCapacity
+      const lambda_perf = state.perfusionRate * 63.9 / cp
+      return Math.min(37 + sar_eff / ((LAMBDA + lambda_perf) * cp), TEMP_SIMULATION_CAP)
     },
 
     /**
@@ -594,14 +650,18 @@ export const useCellStore = defineStore('cell', {
       this._tempTimer = setInterval(() => {
         // Effective duty cycle: CW is always-on (1.0); pulsed uses slider value
         const dc = this.effectiveDutyCycle
-        // Healthy cell temperature update (Newton cooling, 100 ms tick)
-        const hSAR = this.healthySAR
-        const dTh = (hSAR * dc / this.healthy.specificHeatCapacity - LAMBDA * (this.healthyTemp - 37)) * 0.1
+        // Healthy cell temperature update (Newton + Pennes blood-perfusion cooling, 100 ms tick)
+        const hSAR   = this.healthySAR
+        const hCp    = this.healthy.specificHeatCapacity
+        const hLambda = LAMBDA + this.perfusionRate * 63.9 / hCp  // λ_eff = λ_Newton + λ_perf
+        const dTh = (hSAR * dc / hCp - hLambda * (this.healthyTemp - 37)) * 0.1
         this.healthyTemp = Math.max(37, Math.min(TEMP_SIMULATION_CAP, this.healthyTemp + dTh))
 
         // Target cell temperature update
-        const tSAR = this.targetSAR
-        const dTt = (tSAR * dc / this.target.specificHeatCapacity - LAMBDA * (this.targetTemp - 37)) * 0.1
+        const tSAR   = this.targetSAR
+        const tCp    = this.target.specificHeatCapacity
+        const tLambda = LAMBDA + this.perfusionRate * 63.9 / tCp
+        const dTt = (tSAR * dc / tCp - tLambda * (this.targetTemp - 37)) * 0.1
         this.targetTemp = Math.max(37, Math.min(TEMP_SIMULATION_CAP, this.targetTemp + dTt))
       }, 100) as unknown as number
     },
@@ -686,6 +746,24 @@ export const useCellStore = defineStore('cell', {
     /** Toggle the double-shell nuclear envelope model on/off. Only meaningful in Schwan mode. */
     toggleDoubleShell() {
       this.doubleShellEnabled = !this.doubleShellEnabled
+    },
+
+    /**
+     * Set blood perfusion rate ω_b [mL/(g·min)] for Pennes bioheat cooling.
+     * 0 = in vitro (default). Representative values: 0.5 muscle · 1.0 brain · 5.0 kidney.
+     * Added to Newton cooling rate: λ_eff = λ_Newton + ω_b × 63.9 / cp
+     */
+    setPerfusionRate(rate: number) {
+      this.perfusionRate = Math.max(0, Math.min(10, rate))
+    },
+
+    /**
+     * Set cell packing fraction φ [0–0.9] for Maxwell-Garnett effective medium correction.
+     * 0 = isolated cell (default). Representative values: ~0.3 sparse · ~0.7 dense tissue.
+     * Reduces effective extracellular conductivity: σ_e_eff = σ_e × (1−φ)/(1+φ/2).
+     */
+    setCellPackingFraction(phi: number) {
+      this.cellPackingFraction = Math.max(0, Math.min(0.9, phi))
     },
 
   },

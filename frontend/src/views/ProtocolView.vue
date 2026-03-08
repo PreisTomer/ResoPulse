@@ -6,12 +6,10 @@
       <div class="protocol__header">
         <div class="protocol__eyebrow">
           <span class="protocol__eyebrow-dot"></span>
-          Scientific Protocol
+          {{ $t('protocol.header.eyebrow') }}
         </div>
-        <h1 class="protocol__title">Experimental Protocol</h1>
-        <p class="protocol__subtitle">
-          Biophysical model documentation · Schwan equation · Acoustic resonance · Step-by-step research guide
-        </p>
+        <h1 class="protocol__title">{{ $t('protocol.header.title') }}</h1>
+        <p class="protocol__subtitle" v-html="$t('protocol.header.subtitle')"></p>
       </div>
 
       <!-- Two-column layout: TOC + content -->
@@ -19,18 +17,21 @@
 
         <!-- Sidebar TOC -->
         <nav class="protocol__toc" aria-label="Table of contents">
-          <div class="protocol__toc-title">Contents</div>
-          <a href="#overview"    class="protocol__toc-link">1. Overview</a>
-          <a href="#physics"     class="protocol__toc-link">2. Physical Model</a>
-          <a href="#schwan"      class="protocol__toc-link protocol__toc-indent">2.1 Schwan Equation</a>
-          <a href="#thermal"     class="protocol__toc-link protocol__toc-indent">2.2 SAR &amp; Thermal Model</a>
-          <a href="#disruption"  class="protocol__toc-link protocol__toc-indent">2.3 Disruption Criterion (IRE)</a>
-          <a href="#resonance"   class="protocol__toc-link protocol__toc-indent">2.4 Acoustic Resonance (Virus/Bacteria)</a>
-          <a href="#nsep"        class="protocol__toc-link protocol__toc-indent">2.5 nsEP Pulse Selectivity</a>
-          <a href="#doubleshell" class="protocol__toc-link protocol__toc-indent">2.6 Double-Shell Nuclear Envelope</a>
-          <a href="#protocol"    class="protocol__toc-link">3. Experimental Protocol</a>
-          <a href="#safety"      class="protocol__toc-link">4. Safety &amp; Thresholds</a>
-          <a href="#refs"        class="protocol__toc-link">5. References</a>
+          <div class="protocol__toc-title" v-html="$t('protocol.toc.title')"></div>
+          <a href="#overview"       class="protocol__toc-link" v-html="$t('protocol.toc.overview')"></a>
+          <a href="#physics"        class="protocol__toc-link" v-html="$t('protocol.toc.physics')"></a>
+          <a href="#schwan"         class="protocol__toc-link protocol__toc-indent" v-html="$t('protocol.toc.schwan')"></a>
+          <a href="#thermal"        class="protocol__toc-link protocol__toc-indent" v-html="$t('protocol.toc.thermal')"></a>
+          <a href="#maxwell"        class="protocol__toc-link protocol__toc-indent" v-html="$t('protocol.toc.maxwell')"></a>
+          <a href="#disruption"     class="protocol__toc-link protocol__toc-indent" v-html="$t('protocol.toc.disruption')"></a>
+          <a href="#resonance"      class="protocol__toc-link protocol__toc-indent" v-html="$t('protocol.toc.resonance')"></a>
+          <a href="#nsep"           class="protocol__toc-link protocol__toc-indent" v-html="$t('protocol.toc.nsep')"></a>
+          <a href="#doubleshell"    class="protocol__toc-link protocol__toc-indent" v-html="$t('protocol.toc.doubleshell')"></a>
+          <a href="#uncertainty"    class="protocol__toc-link protocol__toc-indent" v-html="$t('protocol.toc.uncertainty')"></a>
+          <a href="#biomodulation"  class="protocol__toc-link protocol__toc-indent" v-html="$t('protocol.toc.biomodulation')"></a>
+          <a href="#protocol-steps" class="protocol__toc-link" v-html="$t('protocol.toc.protocol')"></a>
+          <a href="#safety"         class="protocol__toc-link" v-html="$t('protocol.toc.safety')"></a>
+          <a href="#refs"           class="protocol__toc-link" v-html="$t('protocol.toc.refs')"></a>
         </nav>
 
         <!-- Main document -->
@@ -38,646 +39,258 @@
 
           <!-- 1. Overview -->
           <section id="overview" class="protocol__section">
-            <h2 class="protocol__section-title">1. Overview</h2>
-            <p class="protocol__body-text">
-              The BioResonance platform is a research visualisation tool for studying the effects of
-              applied electric fields on biological membranes using the
-              <strong>Schwan single-shell dielectric model</strong>. It computes the transmembrane
-              potential (V<sub>m</sub>) induced by a uniform alternating electric field, the specific
-              absorption rate (SAR) for thermal modelling, and the resulting disruption ratio for
-              each cell or pathogen type.
-            </p>
-            <p class="protocol__body-text">
-              The underlying model is based on the classic Schwan equation (1957), extended to include
-              frequency-dependent membrane responses across the 10 kHz–500 MHz range relevant to
-              <strong>irreversible electroporation (IRE)</strong> and <strong>acoustic/mechanical resonance</strong>
-              disruption of pathogens. Two simulation modes are provided: <em>Schwan/IRE mode</em>
-              for cancer vs. healthy cell targeting via transmembrane potential, and
-              <em>Resonance mode</em> for bacterial/viral capsid or cell-wall disruption at MHz–GHz
-              frequencies. Cancer cells, bacteria, and enveloped viruses each exhibit distinct
-              characteristic frequencies (f<sub>c</sub>) set by their size and membrane capacitance,
-              enabling frequency-selective targeting.
-              <br><br>
-              <strong>Note on Tumour Treating Fields (TTFields):</strong> TTFields (Kirson et al. [2])
-              operate at ~1–2 V/cm at 100–300 kHz and disrupt mitosis via dielectrophoretic forces
-              on the mitotic spindle — a sub-threshold mechanism that does <em>not</em> rely on
-              V<sub>m</sub> threshold crossing. This platform models the <em>IRE/electroporation</em>
-              regime (200–10 000 V/cm), not the TTFields regime. The Schwan frequency response is
-              mathematically valid across both regimes, but the disruption and selectivity
-              computations shown here apply to IRE only.
-            </p>
+            <h2 class="protocol__section-title" v-html="$t('protocol.overview.title')"></h2>
+            <p class="protocol__body-text" v-html="$t('protocol.overview.p1')"></p>
+            <p class="protocol__body-text" v-html="$t('protocol.overview.p2')"></p>
             <div class="protocol__info-box">
               <span class="protocol__info-icon">ℹ</span>
-              <span>
-                This platform is intended for research visualisation only and does not constitute
-                clinical guidance or a validated medical device. All biophysical parameters are
-                approximate values derived from the bioelectromagnetics literature.
-              </span>
+              <span v-html="$t('protocol.overview.disclaimer')"></span>
             </div>
           </section>
 
           <!-- 2. Physical Model -->
           <section id="physics" class="protocol__section">
-            <h2 class="protocol__section-title">2. Physical Model</h2>
+            <h2 class="protocol__section-title" v-html="$t('protocol.physics.title')"></h2>
 
-            <h3 id="schwan" class="protocol__subsection-title">2.1 Schwan Equation</h3>
-            <p class="protocol__body-text">
-              For a spherical cell modelled as a single-shell dielectric in a uniform AC electric
-              field, the peak induced transmembrane potential is given by:
-            </p>
+            <!-- 2.1 Schwan Equation -->
+            <h3 id="schwan" class="protocol__subsection-title" v-html="$t('protocol.physics.schwan.title')"></h3>
+            <p class="protocol__body-text" v-html="$t('protocol.physics.schwan.p1')"></p>
             <div class="protocol__eq-block">
-              <div class="protocol__eq-main">V<sub>m</sub>(f) = (1.5 · E · R · cos θ) / √[1 + (ωτ)²]</div>
+              <div class="protocol__eq-main" v-html="$t('protocol.physics.schwan.eqMain')"></div>
               <div class="protocol__eq-divider"></div>
-              <div class="protocol__eq-sub">ω = 2πf &nbsp;&nbsp; τ = R · C<sub>m</sub> · (2σ<sub>e</sub> + σ<sub>i</sub>) / (2σ<sub>e</sub> · σ<sub>i</sub>)</div>
-              <div class="protocol__eq-sub">C<sub>m</sub> = ε<sub>r</sub> · ε₀ / d &nbsp;&nbsp; f<sub>c</sub> = 1 / (2πτ)</div>
-              <div class="protocol__eq-sub">cos θ = |cos(θ)| — field-to-cell-axis coupling factor; θ = 0° (field-aligned) → max V<sub>m</sub></div>
-              <div class="protocol__eq-note">Kotnik &amp; Miklavcic, Biophys. J. 79:670 (2000) [9]</div>
+              <div class="protocol__eq-sub" v-html="$t('protocol.physics.schwan.eqSub1')"></div>
+              <div class="protocol__eq-sub" v-html="$t('protocol.physics.schwan.eqSub2')"></div>
+              <div class="protocol__eq-sub" v-html="$t('protocol.physics.schwan.eqSub3')"></div>
+              <div class="protocol__eq-note" v-html="$t('protocol.physics.schwan.eqNote')"></div>
             </div>
-            <p class="protocol__body-text">
-              The membrane time constant τ determines the characteristic frequency
-              f<sub>c</sub> = 1/(2πτ), above which V<sub>m</sub> falls at −20 dB/decade.
-              Cells with large radius R, high membrane permittivity ε<sub>r</sub>, or thin membrane
-              d exhibit a larger C<sub>m</sub> and lower f<sub>c</sub>, making them preferentially
-              disrupted at lower frequencies relative to smaller reference cells.
-              Note that cos θ cancels exactly in the selectivity ratio V<sub>m,T</sub>/V<sub>m,H</sub>,
-              so field orientation does not affect the therapeutic index — it scales both cells equally.
-            </p>
+            <p class="protocol__body-text" v-html="$t('protocol.physics.schwan.p2')"></p>
 
             <table class="protocol__param-table">
               <thead>
                 <tr>
-                  <th>Symbol</th>
-                  <th>Parameter</th>
-                  <th>Unit</th>
-                  <th>Notes</th>
+                  <th v-html="$t('protocol.physics.schwan.thSym')"></th>
+                  <th v-html="$t('protocol.physics.schwan.thParam')"></th>
+                  <th v-html="$t('protocol.physics.schwan.thUnit')"></th>
+                  <th v-html="$t('protocol.physics.schwan.thNote')"></th>
                 </tr>
               </thead>
               <tbody>
-                <tr><td class="protocol__mono">E</td><td>Applied electric field</td><td class="protocol__mono">V/m (= V/cm × 100)</td><td>User-controlled · Field Intensity slider</td></tr>
-                <tr><td class="protocol__mono">R</td><td>Cell radius</td><td class="protocol__mono">m (µm × 10⁻⁶)</td><td>Cell-type specific · user-editable</td></tr>
-                <tr><td class="protocol__mono">cos θ</td><td>Field-cell alignment factor</td><td class="protocol__mono">—</td><td>θ = angle between field and cell axis; 0° = max coupling; cancels in selectivity ratio</td></tr>
-                <tr><td class="protocol__mono">f</td><td>Field frequency</td><td class="protocol__mono">Hz (kHz × 10³)</td><td>User-controlled · RF Frequency slider</td></tr>
-                <tr><td class="protocol__mono">τ</td><td>Membrane time constant</td><td class="protocol__mono">s</td><td>Computed from C<sub>m</sub> and conductivities; temperature-corrected σ<sub>e</sub> used</td></tr>
-                <tr><td class="protocol__mono">C<sub>m</sub></td><td>Membrane capacitance density</td><td class="protocol__mono">F/m²</td><td>ε<sub>r</sub>·ε₀ / d</td></tr>
-                <tr><td class="protocol__mono">ε<sub>r</sub></td><td>Effective membrane permittivity</td><td class="protocol__mono">—</td><td>4.5 (RBC) to 25 (enveloped virus). <em>Effective</em> parameter — physical lipid bilayer ε<sub>r</sub> ≈ 2–5; protein channels and pore-forming proteins raise the effective value</td></tr>
-                <tr><td class="protocol__mono">d</td><td>Membrane thickness</td><td class="protocol__mono">nm</td><td>4.5–20 nm depending on cell type</td></tr>
-                <tr><td class="protocol__mono">σ<sub>e</sub></td><td>Extracellular conductivity</td><td class="protocol__mono">S/m</td><td>Medium-dependent (0.001–1.5 S/m); temperature-corrected: σ<sub>e</sub>(T) = σ<sub>e0</sub>·(1+α·(T−37°C)), α = 1.5–2.8 %/°C by medium</td></tr>
-                <tr><td class="protocol__mono">σ<sub>i</sub></td><td>Cytoplasm conductivity</td><td class="protocol__mono">S/m</td><td>Cell-type specific · user-editable</td></tr>
-                <tr><td class="protocol__mono">f<sub>c</sub></td><td>Characteristic frequency</td><td class="protocol__mono">kHz / MHz</td><td>Shown as ▼ markers on the Bode chart</td></tr>
+                <tr v-for="row in schwanParams" :key="row.sym">
+                  <td class="protocol__mono" v-html="row.sym"></td>
+                  <td v-html="row.param"></td>
+                  <td class="protocol__mono" v-html="row.unit"></td>
+                  <td v-html="row.note"></td>
+                </tr>
               </tbody>
             </table>
 
-            <h3 id="thermal" class="protocol__subsection-title">2.2 SAR &amp; Thermal Model</h3>
-            <p class="protocol__body-text">
-              Ohmic heating is modelled via the specific absorption rate (SAR), with a Newton
-              cooling term representing perfusion and thermal conduction:
-            </p>
+            <!-- 2.2 SAR & Pennes Bioheat -->
+            <h3 id="thermal" class="protocol__subsection-title" v-html="$t('protocol.physics.thermal.title')"></h3>
+            <p class="protocol__body-text" v-html="$t('protocol.physics.thermal.p1')"></p>
             <div class="protocol__eq-block">
-              <div class="protocol__eq-main">SAR = σ<sub>i</sub> · α² · E² · w<sub>f</sub> / ρ</div>
-              <div class="protocol__eq-sub">α = 3σ<sub>e</sub> / (2σ<sub>e</sub> + σ<sub>i</sub>) &nbsp; (internal field factor for sphere in medium)</div>
-              <div class="protocol__eq-sub">w<sub>f</sub> = 0.5 (CW sinusoidal, E²<sub>rms</sub> = E²<sub>peak</sub>/2) &nbsp;|&nbsp; 1.0 (pulsed bipolar square wave / H-FIRE; E²<sub>rms</sub> = E²<sub>peak</sub> during on-time)</div>
+              <div class="protocol__eq-main" v-html="$t('protocol.physics.thermal.eqSar')"></div>
+              <div class="protocol__eq-sub" v-html="$t('protocol.physics.thermal.eqSarSub1')"></div>
+              <div class="protocol__eq-sub" v-html="$t('protocol.physics.thermal.eqSarSub2')"></div>
               <div class="protocol__eq-divider"></div>
-              <div class="protocol__eq-main">dT/dt = SAR / c<sub>p</sub> − λ·(T − T₀)</div>
-              <div class="protocol__eq-sub">λ = 0.02 s⁻¹ · T₀ = 37 °C · updated every 100 ms</div>
+              <div class="protocol__eq-main" v-html="$t('protocol.physics.thermal.eqTss')"></div>
+              <div class="protocol__eq-sub" v-html="$t('protocol.physics.thermal.eqTssSub1')"></div>
+              <div class="protocol__eq-sub" v-html="$t('protocol.physics.thermal.eqTssSub2')"></div>
+              <div class="protocol__eq-note" v-html="$t('protocol.physics.thermal.eqNote')"></div>
             </div>
-            <p class="protocol__body-text">
-              The cooling coefficient λ approximates combined perfusion and thermal conduction
-              losses. For pulsed waveforms, the effective SAR is scaled by duty cycle:
-              SAR<sub>eff</sub> = SAR<sub>peak</sub> × dc. At steady state (dT/dt = 0):
-              T<sub>ss</sub> = T₀ + SAR<sub>eff</sub> / (λ · c<sub>p</sub>).
-              A hyperthermic warning is issued when T exceeds 42 °C. Sustained application above
-              ~700 V/cm in saline approaches protein denaturation thresholds for most tissue types.
-            </p>
-            <div class="protocol__warn-box">
-              <span class="protocol__warn-icon">⚠</span>
-              <span>
-                <strong>SAR model limits:</strong>
-                The internal field factor α = 3σ<sub>e</sub>/(2σ<sub>e</sub>+σ<sub>i</sub>) is the
-                exact DC (quasi-static) Clausius-Mossotti solution for a sphere in a uniform field
-                (Foster &amp; Schwan 1989 [5]). At frequencies above the characteristic frequency
-                f<sub>c</sub>, the membrane capacitance increasingly shields the cell interior,
-                so the true internal field — and therefore the true SAR — is lower than this
-                model predicts. The SAR displayed here is an upper bound; the overestimate
-                grows substantially at f ≫ f<sub>c</sub>.
-                <br><br>
-                <strong>Thermal model scope:</strong>
-                The Newton cooling coefficient λ = 0.02 s⁻¹ (time constant τ<sub>th</sub> ≈ 50 s)
-                represents <em>tissue-level</em> lumped heat dissipation via perfusion and thermal
-                conduction, as appropriate for macroscopic electroporation applicators
-                (Foster &amp; Schwan 1989 [5]). It is <strong>not</strong> a single-cell thermal
-                model: a free cell in solution has τ<sub>th</sub> ≈ R²/(κ/ρc<sub>p</sub>) ≈ 0.6 ms
-                (R = 10 µm, κ ≈ 0.6 W/m·K, ρc<sub>p</sub> ≈ 3.7 MJ/m³·K),
-                and equilibrates with its medium on the timescale of milliseconds — fast
-                relative to continuous pulsed protocols (period ≫ 1 ms) but not relative
-                to individual nanosecond or microsecond pulses. The temperature displayed
-                reflects bulk medium heating, not local membrane temperature.
-              </span>
+            <p class="protocol__body-text" v-html="$t('protocol.physics.thermal.p2')"></p>
+            <div class="protocol__note">
+              <span v-html="$t('protocol.physics.thermal.scope')"></span>
             </div>
 
-            <h3 id="disruption" class="protocol__subsection-title">2.3 Disruption Criterion</h3>
-            <p class="protocol__body-text">
-              Membrane disruption (electroporation / lysis; Neumann et al. [7]) is initiated when the disruption ratio
-              exceeds unity for a sustained period:
-            </p>
+            <!-- 2.3 Maxwell-Garnett -->
+            <h3 id="maxwell" class="protocol__subsection-title" v-html="$t('protocol.physics.maxwell.title')"></h3>
+            <p class="protocol__body-text" v-html="$t('protocol.physics.maxwell.p1')"></p>
             <div class="protocol__eq-block">
-              <div class="protocol__eq-main">Disruption Ratio = V<sub>m</sub>(f) × f<sub>pulse</sub> / V<sub>m,threshold</sub></div>
-              <div class="protocol__eq-sub">f<sub>pulse</sub> = 1 − exp(−t<sub>p</sub> / τ) &nbsp; (pulse-envelope charging factor; pulsed mode only; 1.0 for CW)</div>
-              <div class="protocol__eq-sub">50–85% → reversible EP window (Rev-EP): pores open transiently and re-seal — drug/gene delivery regime</div>
-              <div class="protocol__eq-sub">Simulation arms lysis countdown when Disruption Ratio &gt; 0.85 (85% of threshold)</div>
-              <div class="protocol__eq-sub">Lysis fires after protocol time: t<sub>lysis</sub> = N × t<sub>p</sub>/dc (pulsed) or 2.5 s (CW)</div>
+              <div class="protocol__eq-main" v-html="$t('protocol.physics.maxwell.eqMain')"></div>
+              <div class="protocol__eq-sub" v-html="$t('protocol.physics.maxwell.eqSub1')"></div>
+              <div class="protocol__eq-sub" v-html="$t('protocol.physics.maxwell.eqSub2')"></div>
+              <div class="protocol__eq-note" v-html="$t('protocol.physics.maxwell.eqNote')"></div>
             </div>
-            <p class="protocol__body-text">
-              Cancer cells exhibit lower V<sub>m,threshold</sub> (~0.65–0.85 V) than healthy tissue
-              (~1.0–1.1 V), creating a therapeutic window where tumour cell disruption occurs at
-              sub-lethal field intensities for normal cells (Dimova et al. [6]).
-            </p>
-            <div class="protocol__warn-box">
-              <span class="protocol__warn-icon">⚠</span>
-              <span>
-                <strong>Pulse-width dependent threshold:</strong>
-                V<sub>m,threshold</sub> is not a fixed material constant — it depends on pulse
-                width. In the Weaver &amp; Chizmadzhev (1996) [3] stochastic pore-nucleation model,
-                the membrane must reach a minimum potential per pulse for pore formation to occur.
-                The pulse-envelope factor f<sub>pulse</sub> = 1 − exp(−t<sub>p</sub>/τ) captures
-                this: at t<sub>p</sub> ≫ τ (standard IRE), f<sub>pulse</sub> ≈ 1 and the listed
-                V<sub>m,threshold</sub> values apply. At t<sub>p</sub> ≪ τ (nsEP regime, e.g.
-                10 ns), f<sub>pulse</sub> ≈ 0.07 for a hepatocyte (τ = 148 ns) — the effective
-                threshold is ~14× higher, requiring proportionally more field for lysis. The live
-                simulation applies this correction automatically in pulsed mode; the Pulse Width
-                tooltip on each cell card shows the active f<sub>pulse</sub> factor. The threshold
-                values in the safety table (§4) are calibrated for microsecond-range pulsing.
-              </span>
-            </div>
-            <p class="protocol__body-text">
-              <strong>Note — IRE vs TTFields:</strong> This simulator models
-              <em>irreversible electroporation</em> (IRE) — a high-field pulsed modality
-              (200–3000 V/cm) in which the transmembrane potential exceeds the V<sub>m</sub>
-              electroporation threshold, causing permanent membrane disruption (Weaver &amp; Chizmadzhev [3]). It is
-              <em>distinct</em> from Tumour Treating Fields (TTFields, Kirson et al. [2]), which
-              operate at low field intensities (~1–2 V/cm) via mitotic spindle disruption and do
-              not rely on V<sub>m</sub> threshold crossing. The size-dependent selectivity
-              modelled here (larger R → higher V<sub>m</sub>) applies to the IRE/electroporation
-              regime. For adenocarcinoma vs. hepatocyte in saline, the adenocarcinoma has a
-              longer time constant (τ<sub>T</sub> = 326 ns) than the hepatocyte (τ<sub>H</sub> = 148 ns),
-              so both f<sub>c</sub>(T) ≈ 0.49 MHz and f<sub>c</sub>(H) ≈ 1.08 MHz are well above
-              the operating range. Maximum V<sub>m</sub> selectivity ≈ R<sub>T</sub>/R<sub>H</sub>
-              = <strong>1.5×</strong> occurs at quasi-DC (f ≪ f<sub>c</sub>(T)); selectivity
-              <em>decreases</em> with increasing frequency as the target rolls off before the
-              healthy cell. The Therapeutic Index (TI = (V<sub>t</sub>/V<sub>t,thr</sub>) /
-              (V<sub>h</sub>/V<sub>h,thr</sub>)), which accounts for different lysis thresholds,
-              reaches <strong>~2.4×</strong> at quasi-DC.
-            </p>
+            <p class="protocol__body-text" v-html="$t('protocol.physics.maxwell.p2')"></p>
 
-            <h3 id="resonance" class="protocol__subsection-title">2.4 Acoustic / Mechanical Resonance — Virus &amp; Bacteria</h3>
-            <p class="protocol__body-text">
-              For sub-micron targets (virions and bacteria), the Schwan model predicts
-              <em>reduced</em> selectivity at quasi-DC because V<sub>m</sub> ∝ R — small cells
-              generate lower transmembrane voltage than large cells under identical field conditions.
-              The correct disruption mechanism at GHz frequencies is
-              <strong>acoustic/mechanical resonance</strong> of the capsid protein shell or
-              bacterial cell wall, modelled by a Lorentzian lineshape:
-            </p>
+            <!-- 2.4 Disruption Criterion -->
+            <h3 id="disruption" class="protocol__subsection-title" v-html="$t('protocol.physics.disruption.title')"></h3>
+            <p class="protocol__body-text" v-html="$t('protocol.physics.disruption.p1')"></p>
             <div class="protocol__eq-block">
-              <div class="protocol__eq-main">Disruption ratio = (E / E<sub>thr</sub>) × L(f, f<sub>res</sub>, Q)</div>
-              <div class="protocol__eq-divider"></div>
-              <div class="protocol__eq-sub">L(f) = 1 / √[ 1 + (Q · (f/f₀ − f₀/f))² ] &nbsp; (Lorentzian lineshape)</div>
-              <div class="protocol__eq-sub">f<sub>res</sub> ≈ v<sub>protein</sub> / (2R) &nbsp;·&nbsp; v<sub>protein</sub> ≈ 1000–1500 m/s for protein/peptidoglycan</div>
-              <div class="protocol__eq-sub">Q — mechanical quality factor (sharpness of resonance peak)</div>
-              <div class="protocol__eq-note">Tsen et al., J. Biomed. Sci. (2007–2012) [10]; Dykeman &amp; Sankey, Phys. Rev. E (2010) [11]</div>
+              <div class="protocol__eq-main" v-html="$t('protocol.physics.disruption.eqMain')"></div>
+              <div class="protocol__eq-sub" v-html="$t('protocol.physics.disruption.eqSub1')"></div>
+              <div class="protocol__eq-sub" v-html="$t('protocol.physics.disruption.eqSub2')"></div>
+              <div class="protocol__eq-sub" v-html="$t('protocol.physics.disruption.eqSub3')"></div>
+              <div class="protocol__eq-sub" v-html="$t('protocol.physics.disruption.eqSub4')"></div>
+              <div class="protocol__eq-sub" v-html="$t('protocol.physics.disruption.eqSub5')"></div>
+              <div class="protocol__eq-note" v-html="$t('protocol.physics.disruption.eqNote')"></div>
             </div>
-            <p class="protocol__body-text">
-              L(f<sub>res</sub>) = 1.0 at resonance; disruption ratio ≥ 1.0 triggers capsid/cell-wall
-              disruption. Mammalian cells lack the rigid protein/peptidoglycan shell required for
-              acoustic capsid/cell-wall resonance — their Schwan V<sub>m</sub> rolls off above
-              ~1 MHz (ωτ ≫ 1) and approaches zero at GHz frequencies, leaving healthy tissue
-              unperturbed at pathogen-targeting frequencies and conferring
-              <strong>genuine frequency selectivity</strong>.
-            </p>
+            <p class="protocol__body-text" v-html="$t('protocol.physics.disruption.p2')"></p>
+            <p class="protocol__body-text" v-html="$t('protocol.physics.disruption.revEp')"></p>
+
+            <!-- 2.5 Acoustic Resonance -->
+            <h3 id="resonance" class="protocol__subsection-title" v-html="$t('protocol.physics.resonance.title')"></h3>
+            <p class="protocol__body-text" v-html="$t('protocol.physics.resonance.p1')"></p>
+            <div class="protocol__eq-block">
+              <div class="protocol__eq-main" v-html="$t('protocol.physics.resonance.eqMain')"></div>
+              <div class="protocol__eq-divider"></div>
+              <div class="protocol__eq-sub" v-html="$t('protocol.physics.resonance.eqSub1')"></div>
+              <div class="protocol__eq-sub" v-html="$t('protocol.physics.resonance.eqSub2')"></div>
+              <div class="protocol__eq-sub" v-html="$t('protocol.physics.resonance.eqSub3')"></div>
+              <div class="protocol__eq-note" v-html="$t('protocol.physics.resonance.eqNote')"></div>
+            </div>
+
             <table class="protocol__param-table">
               <thead>
                 <tr>
-                  <th>Target</th>
-                  <th>f<sub>res</sub> (GHz)</th>
-                  <th>Q</th>
-                  <th>E<sub>thr</sub> (V/cm)</th>
-                  <th>Basis</th>
+                  <th v-html="$t('protocol.physics.resonance.thTarget')"></th>
+                  <th v-html="$t('protocol.physics.resonance.thFres')"></th>
+                  <th v-html="$t('protocol.physics.resonance.thQ')"></th>
+                  <th v-html="$t('protocol.physics.resonance.thEthr')"></th>
+                  <th v-html="$t('protocol.physics.resonance.thBasis')"></th>
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td>Influenza A (R = 60 nm)</td>
-                  <td class="protocol__mono protocol__primary-val">~12 GHz</td>
-                  <td class="protocol__mono">30</td>
-                  <td class="protocol__mono protocol__cancer-val">800</td>
-                  <td>v<sub>protein</sub> ≈ 1440 m/s; Tsen et al. [10]</td>
-                </tr>
-                <tr>
-                  <td>SARS-CoV-2 (R = 60 nm)</td>
-                  <td class="protocol__mono protocol__primary-val">~10 GHz</td>
-                  <td class="protocol__mono">25</td>
-                  <td class="protocol__mono protocol__cancer-val">1000</td>
-                  <td>Larger spike envelope lowers f<sub>res</sub>; Tsen et al. [10]</td>
-                </tr>
-                <tr>
-                  <td>E. coli K-12 (R = 1 µm)</td>
-                  <td class="protocol__mono protocol__primary-val">~0.5 GHz</td>
-                  <td class="protocol__mono">4 <span class="protocol__ref-note">(viscoelastic)</span></td>
-                  <td class="protocol__mono protocol__warn-val">2000</td>
-                  <td>v<sub>wall</sub> ≈ 1000 m/s; gram-neg peptidoglycan; Q greatly reduced vs protein capsid</td>
-                </tr>
-                <tr>
-                  <td>MRSA (R = 0.5 µm)</td>
-                  <td class="protocol__mono protocol__primary-val">~1.5 GHz</td>
-                  <td class="protocol__mono">3 <span class="protocol__ref-note">(thick wall)</span></td>
-                  <td class="protocol__mono protocol__warn-val">3000</td>
-                  <td>Thick peptidoglycan (20 nm); v<sub>wall</sub> ≈ 1500 m/s; near overdamped limit</td>
-                </tr>
-                <tr>
-                  <td>Hepatocyte (R = 10 µm)</td>
-                  <td class="protocol__mono protocol__muted">N/A</td>
-                  <td class="protocol__mono protocol__muted">—</td>
-                  <td class="protocol__mono protocol__muted">N/A</td>
-                  <td>No rigid-shell resonance — Schwan V<sub>m</sub> → 0 at GHz (ωτ ≫ 1); unaffected at pathogen frequencies</td>
+                <tr v-for="row in resonanceRows" :key="row.target">
+                  <td v-html="row.target"></td>
+                  <td class="protocol__mono" :class="row.fresClass ? 'protocol__' + row.fresClass : ''" v-html="row.fres"></td>
+                  <td class="protocol__mono" v-html="row.q"></td>
+                  <td class="protocol__mono" :class="row.ethrClass ? 'protocol__' + row.ethrClass : ''" v-html="row.ethr"></td>
+                  <td v-html="row.basis"></td>
                 </tr>
               </tbody>
             </table>
+
             <div class="protocol__info-box">
               <span class="protocol__info-icon">ℹ</span>
-              <span>
-                Switch to <strong>Resonance mode</strong> in the Experiment Lab (toggle button in the
-                session bar) when working with bacterial or viral targets. The platform auto-tunes
-                frequency to f<sub>res</sub> and sets field to 50% of E<sub>thr</sub> when a
-                resonance-enabled preset is loaded.
-              </span>
+              <span v-html="$t('protocol.physics.resonance.infoBox')"></span>
             </div>
 
-            <div class="protocol__warn-box">
-              <span class="protocol__warn-icon">⚠</span>
-              <span>
-                <strong>Bacterial peptidoglycan Q-factor caveat:</strong>
-                The Dykeman &amp; Sankey (2010) [11] atomistic models were computed for
-                <em>icosahedral protein-capsid viruses</em> (CCMV, HBV), not bacterial cell walls.
-                Peptidoglycan is a cross-linked viscoelastic polymer mesh — its mechanical damping is
-                substantially higher than a rigid protein-shell. Published acoustic spectroscopy data
-                for isolated E. coli sacculi (Arnoldi et al. 2000; Deng et al. 2011) suggest an
-                effective Q in the range <strong>2–5</strong> at GHz frequencies, compared with
-                Q = 20–50 for protein-capsid viruses. The values Q = 4 (E. coli) and Q = 3 (MRSA)
-                used here represent the upper end of this range; the true resonance peak may be
-                substantially broader and flatter — requiring higher fields or closer frequency
-                tuning to achieve disruption. In the near-overdamped limit (Q ≈ 1–2), the concept
-                of a sharp resonance frequency breaks down entirely.
-              </span>
+            <!-- Model basis notes -->
+            <div class="protocol__note">
+              <div class="protocol__note-label" v-html="$t('protocol.physics.resonance.noteLabel')"></div>
+              <p v-html="$t('protocol.physics.resonance.rfBasis')"></p>
+              <p class="protocol__body-text--spaced" v-html="$t('protocol.physics.resonance.envelopedBasis')"></p>
+              <p class="protocol__body-text--spaced" v-html="$t('protocol.physics.resonance.bacteriaQ')"></p>
             </div>
 
-            <div class="protocol__warn-box">
-              <span class="protocol__warn-icon">⚠</span>
-              <span>
-                <strong>Excitation mechanism caveat:</strong> The f<sub>res</sub> values above
-                are derived from <em>femtosecond pulsed laser</em> (near-IR, ~800 nm) experiments
-                in which acoustic capsid normal modes are excited via impulsive stimulated Raman
-                scattering (Tsen et al. [10]) — <strong>not direct RF/microwave delivery</strong>.
-                The E<sub>thr</sub> values (V/cm) for RF excitation have <em>no experimental basis</em>
-                and are theoretical extrapolations included as research targets only. The physical
-                coupling mechanism between an RF electromagnetic field and GHz acoustic capsid modes
-                is not established in the literature. Additionally, direct microwave excitation at
-                10–12 GHz in bulk tissue faces a penetration depth of only ~1–2 mm (skin-depth
-                limited in saline), making in vivo delivery an unsolved engineering challenge.
-              </span>
-            </div>
-            <div class="protocol__warn-box">
-              <span class="protocol__warn-icon">⚠</span>
-              <span>
-                <strong>Enveloped vs. non-enveloped virus caveat:</strong>
-                The Tsen et al. [10] and Dykeman &amp; Sankey [11] acoustic resonance model
-                was experimentally validated on <em>non-enveloped</em> icosahedral protein-capsid
-                viruses (M13 bacteriophage, TMV, CCMV). Influenza A and SARS-CoV-2 are
-                <em>lipid-enveloped</em> RNA viruses — their envelope is a fluid lipid bilayer
-                with embedded spike proteins, <strong>not</strong> a rigid protein capsid.
-                A fluid lipid membrane has no well-defined mechanical resonance Q (Q ≈ 1,
-                highly damped); the f<sub>res</sub>, Q, and E<sub>thr</sub> parameters
-                for enveloped viruses in this table are theoretical extrapolations that are
-                <strong>not supported by published experimental data</strong>. They are included
-                as exploratory research targets only.
-              </span>
-            </div>
-
-            <h3 id="nsep" class="protocol__subsection-title">2.5 Nanosecond Pulsed EP (nsEP) — Reference Model</h3>
-            <p class="protocol__body-text">
-              Nanosecond pulsed electroporation (nsEP) uses <em>DC rectangular pulses</em>
-              (not sinusoidal RF) applied from specialised pulsed-power generators.
-              The membrane charges as a first-order RC step response:
-            </p>
+            <!-- 2.6 nsEP -->
+            <h3 id="nsep" class="protocol__subsection-title" v-html="$t('protocol.physics.nsep.title')"></h3>
+            <p class="protocol__body-text" v-html="$t('protocol.physics.nsep.p1')"></p>
             <div class="protocol__eq-block">
-              <div class="protocol__eq-main">V<sub>m,eff</sub>(t<sub>p</sub>) = 1.5 · E · R · cos θ × (1 − exp(−t<sub>p</sub> / τ))</div>
-              <div class="protocol__eq-sub">τ = R · C<sub>m</sub> · (2σ<sub>e</sub>+σ<sub>i</sub>) / (2σ<sub>e</sub>·σ<sub>i</sub>)</div>
-              <div class="protocol__eq-note">Stacey et al. [8]; Schoenbach et al. [12]</div>
+              <div class="protocol__eq-main" v-html="$t('protocol.physics.nsep.eqMain')"></div>
+              <div class="protocol__eq-sub" v-html="$t('protocol.physics.nsep.eqSub1')"></div>
+              <div class="protocol__eq-note" v-html="$t('protocol.physics.nsep.eqNote')"></div>
             </div>
-            <p class="protocol__body-text">
-              At t<sub>p</sub> = 10 ns in saline: τ<sub>E.coli</sub> ≈ 14 ns → factor ≈ 0.51;
-              τ<sub>hepatocyte</sub> ≈ 147 ns → factor ≈ 0.065.
-              The quasi-DC V<sub>m</sub> ratio of 0.10× (E. coli vs. hepatocyte) <em>improves</em>
-              to ~0.78× — the small cell charges proportionally more per pulse than the large cell.
-              The theoretical limit as t<sub>p</sub> → 0 is (τ<sub>H</sub>·R<sub>E</sub>) /
-              (τ<sub>E</sub>·R<sub>H</sub>) ≈ 1.05×; even at this limit the Therapeutic Index
-              remains &lt;1 because V<sub>m,thr,bacteria</sub> &gt; V<sub>m,thr,hepatocyte</sub>
-              (cell-wall reinforcement raises the lysis threshold).
-            </p>
-            <div class="protocol__warn-box">
-              <span class="protocol__warn-icon">⚠</span>
-              <span>
-                <strong>Live simulation scope:</strong> The Experiment Lab simulates
-                <em>duty-cycled AC sinusoidal</em> fields — the Schwan Vm(f) model is evaluated at
-                the RF carrier frequency. This is the correct model for continuous-wave RF or
-                pulse-modulated RF bursts. True nsEP (DC rectangular pulses, pulsed-power hardware)
-                uses a different excitation mechanism where the membrane charging obeys the step
-                response above, and the AC frequency is not a meaningful parameter. The Pulse Width
-                slider in the lab controls lysis protocol timing (N × t<sub>p</sub>/dc) and the SAR
-                waveform factor, not the Vm per se. For dedicated nsEP modelling, use the DC formula
-                above directly.
-              </span>
+            <div class="protocol__info-box">
+              <span class="protocol__info-icon">ℹ</span>
+              <span v-html="$t('protocol.physics.nsep.scope')"></span>
             </div>
-          </section>
 
-          <h3 id="doubleshell" class="protocol__subsection-title">2.6 Double-Shell Nuclear Envelope Model</h3>
-            <p class="protocol__body-text">
-              For mammalian nucleated cells, an optional <strong>double-shell model</strong>
-              (Kotnik &amp; Miklavcic 2006 [13]) adds the nuclear membrane as a second
-              concentric dielectric shell. The nuclear membrane Vm is a two-pole bandpass
-              function of frequency:
-            </p>
+            <!-- 2.7 Double-Shell -->
+            <h3 id="doubleshell" class="protocol__subsection-title" v-html="$t('protocol.physics.doubleshell.title')"></h3>
+            <p class="protocol__body-text" v-html="$t('protocol.physics.doubleshell.p1')"></p>
             <div class="protocol__eq-block">
-              <div class="protocol__eq-main">V<sub>m,nuc</sub>(f) = (1.5 · E · R<sub>nuc</sub> · cos θ · ω·τ<sub>out</sub>) / √[(1+(ωτ<sub>out</sub>)²) · (1+(ωτ<sub>ne</sub>)²)]</div>
+              <div class="protocol__eq-main" v-html="$t('protocol.physics.doubleshell.eqMain')"></div>
               <div class="protocol__eq-divider"></div>
-              <div class="protocol__eq-sub">τ<sub>out</sub> = R·C<sub>m</sub>·(2σ<sub>e</sub>+σ<sub>i</sub>)/(2σ<sub>e</sub>·σ<sub>i</sub>) &nbsp;(existing outer shell τ)</div>
-              <div class="protocol__eq-sub">τ<sub>ne</sub> = R<sub>nuc</sub>·C<sub>m,ne</sub>·(2σ<sub>i</sub>+σ<sub>np</sub>)/(2σ<sub>i</sub>·σ<sub>np</sub>) &nbsp;·&nbsp; C<sub>m,ne</sub> = ε<sub>ne</sub>·ε₀/d<sub>ne</sub></div>
-              <div class="protocol__eq-note-sub">σ<sub>i</sub> = cytoplasm conductivity (external medium for nucleus); σ<sub>np</sub> = nucleoplasm</div>
-              <div class="protocol__eq-sub">f<sub>peak</sub> = 1/(2π√(τ<sub>out</sub>·τ<sub>ne</sub>)) &nbsp;·&nbsp; peak gain = τ<sub>out</sub>/(τ<sub>out</sub>+τ<sub>ne</sub>)</div>
-              <div class="protocol__eq-note">Kotnik &amp; Miklavcic, Biophys. J. 90:480 (2006) [13]</div>
+              <div class="protocol__eq-sub" v-html="$t('protocol.physics.doubleshell.eqSub1')"></div>
+              <div class="protocol__eq-sub" v-html="$t('protocol.physics.doubleshell.eqSub2')"></div>
+              <div class="protocol__eq-note" v-html="$t('protocol.physics.doubleshell.eqNote')"></div>
             </div>
-            <p class="protocol__body-text">
-              The bandpass shape arises because at low frequencies both shells short-circuit
-              (no voltage division across the nuclear membrane), and at high frequencies
-              the outer membrane shields the interior. The peak is typically in the
-              <strong>0.87–2.1 MHz</strong> range for the presets in this library.
-              Cancer cells have a higher nuclear-to-cytoplasmic (N/C) ratio, thinner and
-              more conductive nuclear envelopes, and lower nuclear V<sub>m</sub> thresholds —
-              creating an additional cancer-selectivity axis. Enable this model via the
-              <strong>Shell Model</strong> toggle in the Field Control panel (visible for
-              nucleated mammalian presets only; hidden for bacteria, viruses, and RBC).
-            </p>
-            <div class="protocol__warn-box">
-              <span class="protocol__warn-icon">⚠</span>
-              <span>
-                <strong>f<sub>peak</sub> accuracy — geometric mean approximation:</strong>
-                The formula f<sub>peak</sub> = 1/(2π√(τ<sub>out</sub>·τ<sub>ne</sub>)) is the
-                geometric mean approximation, exact only when τ<sub>out</sub> ≫ τ<sub>ne</sub>
-                or τ<sub>ne</sub> ≫ τ<sub>out</sub>. For intermediate ratios
-                (0.1 &lt; τ<sub>out</sub>/τ<sub>ne</sub> &lt; 10) — which includes all presets
-                in this library — the true peak frequency from the full transfer function deviates
-                from this approximation by up to ±30%. The displayed f<sub>peak</sub> values
-                should be treated as estimates with ±30% uncertainty. Consult the full two-pole
-                transfer function (Kotnik &amp; Miklavcic 2006, Eq. 12) for precise computation.
-              </span>
+            <div class="protocol__note">
+              <div class="protocol__note-label" v-html="$t('protocol.physics.doubleshell.noteLabel')"></div>
+              <p v-html="$t('protocol.physics.doubleshell.fpeak')"></p>
+              <p class="protocol__body-text--spaced" v-html="$t('protocol.physics.doubleshell.thinShell')"></p>
+              <p class="protocol__body-text--spaced" v-html="$t('protocol.physics.doubleshell.sigmaNote')"></p>
             </div>
-
-            <div class="protocol__warn-box">
-              <span class="protocol__warn-icon">⚠</span>
-              <span>
-                <strong>Thin-shell / sphere-in-infinite-medium approximation:</strong>
-                The Kotnik &amp; Miklavcic (2006) double-shell model assumes the nuclear
-                radius R<sub>nuc</sub> is small relative to the cell radius R (thin-shell,
-                dilute-nucleus limit). For the adenocarcinoma preset,
-                R<sub>nuc</sub>/R = 8/15 ≈ 0.53 — near the boundary of the approximation's
-                validity (N/C ratio ≈ 0.28 by volume). At this N/C ratio the cytoplasmic
-                volume is comparable to the nuclear volume, and the sphere-in-infinite-medium
-                assumption underestimates the electric field concentration around the nuclear
-                envelope by up to ~15%. The model remains a useful qualitative predictor of
-                bandpass frequency and cancer/normal selectivity trends, but quantitative
-                Vm<sub>nuc</sub> values for high N/C ratio cells should be interpreted
-                with corresponding uncertainty.
-              </span>
-            </div>
-            <p class="protocol__body-text">
-              σ<sub>ne</sub> is not stored or used in the simulation. The implementation operates
-              in the <em>thin-membrane capacitive limit</em> (σ<sub>ne</sub> → 0), per
-              Kotnik &amp; Miklavcic (2006) Eq. (14). Including a finite σ<sub>ne</sub> requires
-              the full complex admittance transfer function and is left for future work.
-            </p>
             <table class="protocol__param-table">
               <thead>
-                <tr><th>Cell</th><th>R<sub>nuc</sub> (µm)</th><th>d<sub>ne</sub> (nm)</th><th>ε<sub>ne</sub> (eff.)</th><th>V<sub>thr,nuc</sub> (V)</th><th>f<sub>peak</sub> (saline)</th></tr>
+                <tr>
+                  <th v-html="$t('protocol.physics.doubleshell.thCell')"></th>
+                  <th v-html="$t('protocol.physics.doubleshell.thRnuc')"></th>
+                  <th v-html="$t('protocol.physics.doubleshell.thDne')"></th>
+                  <th v-html="$t('protocol.physics.doubleshell.thEne')"></th>
+                  <th v-html="$t('protocol.physics.doubleshell.thVthr')"></th>
+                  <th v-html="$t('protocol.physics.doubleshell.thFpeak')"></th>
+                </tr>
               </thead>
               <tbody>
-                <tr><td>Hepatocyte</td><td class="protocol__mono">5.0</td><td class="protocol__mono">15</td><td class="protocol__mono">10</td><td class="protocol__mono">0.50</td><td class="protocol__mono protocol__primary-val">~1.66 MHz</td></tr>
-                <tr><td>Adenocarcinoma</td><td class="protocol__mono">8.0</td><td class="protocol__mono">12</td><td class="protocol__mono">12</td><td class="protocol__mono protocol__cancer-val">0.40</td><td class="protocol__mono protocol__cancer-val">~0.87 MHz</td></tr>
-                <tr><td>GBM</td><td class="protocol__mono">7.0</td><td class="protocol__mono">11</td><td class="protocol__mono">12</td><td class="protocol__mono protocol__cancer-val">0.35</td><td class="protocol__mono protocol__cancer-val">~1.05 MHz</td></tr>
-                <tr><td>MCF-7</td><td class="protocol__mono">6.0</td><td class="protocol__mono">13</td><td class="protocol__mono">11</td><td class="protocol__mono protocol__cancer-val">0.42</td><td class="protocol__mono protocol__cancer-val">~1.28 MHz</td></tr>
-                <tr><td>HL-60</td><td class="protocol__mono">4.0</td><td class="protocol__mono">14</td><td class="protocol__mono">11</td><td class="protocol__mono protocol__cancer-val">0.45</td><td class="protocol__mono protocol__cancer-val">~2.12 MHz</td></tr>
-                <tr><td>RBC</td><td class="protocol__mono protocol__muted">—</td><td class="protocol__mono protocol__muted">—</td><td class="protocol__mono protocol__muted">—</td><td class="protocol__mono protocol__muted">—</td><td class="protocol__mono protocol__muted">Anucleate — not applicable</td></tr>
+                <tr v-for="row in doubleshellRows" :key="row.cell">
+                  <td v-html="row.cell"></td>
+                  <td class="protocol__mono" :class="row.rnucClass ? 'protocol__' + row.rnucClass : ''" v-html="row.rnuc"></td>
+                  <td class="protocol__mono" :class="row.dneClass  ? 'protocol__' + row.dneClass  : ''" v-html="row.dne"></td>
+                  <td class="protocol__mono" :class="row.eneClass  ? 'protocol__' + row.eneClass  : ''" v-html="row.ene"></td>
+                  <td class="protocol__mono" :class="row.vThrClass ? 'protocol__' + row.vThrClass : ''" v-html="row.vthr"></td>
+                  <td class="protocol__mono" :class="row.fpeakClass ? 'protocol__' + row.fpeakClass : ''" v-html="row.fpeak"></td>
+                </tr>
               </tbody>
             </table>
 
+            <!-- 2.8 Conductivity Uncertainty -->
+            <h3 id="uncertainty" class="protocol__subsection-title" v-html="$t('protocol.physics.uncertainty.title')"></h3>
+            <p class="protocol__body-text" v-html="$t('protocol.physics.uncertainty.p1')"></p>
+            <p class="protocol__body-text" v-html="$t('protocol.physics.uncertainty.p2')"></p>
+            <table class="protocol__param-table">
+              <thead>
+                <tr>
+                  <th v-html="$t('protocol.physics.uncertainty.thCategory')"></th>
+                  <th v-html="$t('protocol.physics.uncertainty.thBand')"></th>
+                  <th v-html="$t('protocol.physics.uncertainty.thRange')"></th>
+                  <th v-html="$t('protocol.physics.uncertainty.thSource')"></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="row in uncertaintyRows" :key="row.category">
+                  <td v-html="row.category"></td>
+                  <td class="protocol__mono" :class="row.bandClass ? 'protocol__' + row.bandClass : ''" v-html="row.band"></td>
+                  <td class="protocol__mono" v-html="row.range"></td>
+                  <td v-html="row.source"></td>
+                </tr>
+              </tbody>
+            </table>
+
+            <!-- 2.9 Sub-threshold Biomodulation -->
+            <h3 id="biomodulation" class="protocol__subsection-title" v-html="$t('protocol.physics.biomodulation.title')"></h3>
+            <p class="protocol__body-text" v-html="$t('protocol.physics.biomodulation.p1')"></p>
+            <p class="protocol__body-text" v-html="$t('protocol.physics.biomodulation.p2')"></p>
+            <p class="protocol__body-text" v-html="$t('protocol.physics.biomodulation.p3')"></p>
+            <p class="protocol__body-text" v-html="$t('protocol.physics.biomodulation.p4')"></p>
+
+          </section>
+
           <!-- 3. Step-by-step protocol -->
-          <section id="protocol" class="protocol__section">
-            <h2 class="protocol__section-title">3. Experimental Protocol</h2>
+          <section id="protocol-steps" class="protocol__section">
+            <h2 class="protocol__section-title" v-html="$t('protocol.protocol.title')"></h2>
             <ol class="protocol__steps">
-              <li class="protocol__step">
-                <div class="protocol__step-num">01</div>
+
+              <li v-for="(stepKey, i) in protocolStepKeys" :key="stepKey" class="protocol__step">
+                <div class="protocol__step-num">{{ String(i + 1).padStart(2, '0') }}</div>
                 <div class="protocol__step-body">
-                  <div class="protocol__step-title">Select target cell type</div>
-                  <p class="protocol__step-desc">
-                    In the Experiment Lab, use the Target preset pills in the Selectivity Panel
-                    to choose the pathogen of interest (cancer, bacteria, or virus). Each preset
-                    loads biophysical parameters from the cell library (see Data Sets tab).
-                    Alternatively, open the Cell Parameters panel on the target card to enter
-                    custom values.
-                  </p>
+                  <div class="protocol__step-title" v-html="$t(`protocol.protocol.steps.${stepKey}.title`)"></div>
+                  <p class="protocol__step-desc" v-html="$t(`protocol.protocol.steps.${stepKey}.desc`)"></p>
                 </div>
               </li>
-              <li class="protocol__step">
-                <div class="protocol__step-num">02</div>
-                <div class="protocol__step-body">
-                  <div class="protocol__step-title">Set propagation medium</div>
-                  <p class="protocol__step-desc">
-                    Choose the extracellular medium (Saline, Blood, Tissue, or Water) using the
-                    radio pills in the Field Control panel. The medium conductivity σ<sub>e</sub>
-                    directly modifies τ for all cells, shifting f<sub>c</sub> markers on the chart
-                    and scaling V<sub>m</sub>. Physiological saline (σ<sub>e</sub> = 1.5 S/m) is
-                    the standard reference medium for in vitro experiments.
-                  </p>
-                </div>
-              </li>
-              <li class="protocol__step">
-                <div class="protocol__step-num">03</div>
-                <div class="protocol__step-body">
-                  <div class="protocol__step-title">Establish baseline at sub-threshold field</div>
-                  <p class="protocol__step-desc">
-                    Begin with the default field intensity of 150 V/cm. Both cells should display
-                    disruption ratios well below 50%. Click <em>Log Reading</em> in the Experiment
-                    Log panel to record the baseline state. This first manual entry anchors the
-                    session dataset.
-                  </p>
-                </div>
-              </li>
-              <li class="protocol__step">
-                <div class="protocol__step-num">04</div>
-                <div class="protocol__step-body">
-                  <div class="protocol__step-title">Identify the optimal frequency window</div>
-                  <p class="protocol__step-desc">
-                    <strong>Cancer targets (IRE / Schwan mode):</strong> On the Transmembrane Potential
-                    Response chart, the golden ⭐ marker shows the optimal broadcast frequency.
-                    For cancer vs. normal cell pairs, selectivity is maximised in the quasi-DC regime
-                    (f ≪ f<sub>c</sub>(T)), where V<sub>m</sub> selectivity = R<sub>T</sub>/R<sub>H</sub>.
-                    The f<sub>c</sub> markers show where each cell's V<sub>m</sub> begins to roll off.
-                  </p>
-                  <p class="protocol__step-desc protocol__step-desc--spaced">
-                    <strong>Bacteria / virus targets (Resonance mode):</strong> Switch to
-                    <em>Resonance mode</em> using the toggle in the session bar. The platform
-                    auto-tunes frequency to f<sub>res</sub> and sets field to 50% of E<sub>thr</sub>
-                    when loading a resonance-enabled preset. The Lorentzian disruption curve peaks
-                    at f<sub>res</sub> — tune frequency to this value for maximum disruption.
-                    Click the ⭐ in the Selectivity Panel to snap to f<sub>res</sub> instantly.
-                  </p>
-                </div>
-              </li>
-              <li class="protocol__step">
-                <div class="protocol__step-num">05</div>
-                <div class="protocol__step-body">
-                  <div class="protocol__step-title">Sweep frequency for maximum selectivity</div>
-                  <p class="protocol__step-desc">
-                    Drag the RF Frequency slider from 10 kHz to 500 kHz and observe the
-                    Selectivity Ratio. A ratio ≥ 1.5× is classified as a strong therapeutic
-                    window (green); 1.0–1.5× is marginal (amber). For most cancer vs. epithelial
-                    pairings in saline, maximum selectivity occurs at quasi-DC (well below
-                    f<sub>c</sub>(T) ≈ 0.49 MHz for adenocarcinoma). Click the ⭐ optimal note
-                    in the Selectivity Panel to snap the cursor to the optimal frequency and
-                    log a reading there.
-                  </p>
-                </div>
-              </li>
-              <li class="protocol__step">
-                <div class="protocol__step-num">06</div>
-                <div class="protocol__step-body">
-                  <div class="protocol__step-title">Increase field intensity toward target threshold</div>
-                  <p class="protocol__step-desc">
-                    Raise the Field Intensity slider incrementally. Monitor the Target disruption
-                    ratio on the CellCard and Selectivity Panel progress bars. For adenocarcinoma
-                    vs. hepatocyte in saline at 100 kHz (quasi-DC), lysis occurs near ~311 V/cm for the cancer
-                    cell while the healthy cell remains below 50% disruption. Log readings at each
-                    significant threshold crossing.
-                  </p>
-                </div>
-              </li>
-              <li class="protocol__step">
-                <div class="protocol__step-num">07</div>
-                <div class="protocol__step-body">
-                  <div class="protocol__step-title">Record lysis event and review temperature</div>
-                  <p class="protocol__step-desc">
-                    When target cell lysis occurs, an entry is automatically added to the Experiment
-                    Log with event type <em>lysis</em>. Check the temperature readout on both cell
-                    cards. If temperature approaches 42 °C, consider reducing the field intensity
-                    or switching to a lower-conductivity medium to reduce SAR.
-                  </p>
-                </div>
-              </li>
-              <li class="protocol__step">
-                <div class="protocol__step-num">08</div>
-                <div class="protocol__step-body">
-                  <div class="protocol__step-title">Change cell preset and repeat parametric study</div>
-                  <p class="protocol__step-desc">
-                    Switch to a different target preset (e.g. GBM, MCF-7, E. coli) and repeat
-                    steps 4–7. Compare selectivity ratios, f<sub>c</sub> positions, and lysis
-                    thresholds across cell types. Use the Cell Parameters panel to perform
-                    sensitivity analysis around published values.
-                  </p>
-                </div>
-              </li>
-              <li class="protocol__step">
-                <div class="protocol__step-num">09</div>
-                <div class="protocol__step-body">
-                  <div class="protocol__step-title">Export session data for analysis</div>
-                  <p class="protocol__step-desc">
-                    Navigate to the Reports tab to review the full session log. Edit the session
-                    name, then click <em>Export CSV</em> to download a structured comma-separated
-                    file containing all logged parameters: frequency, field, V<sub>m</sub>,
-                    selectivity ratio, disruption ratios, temperatures, and event type.
-                  </p>
-                </div>
-              </li>
+
             </ol>
           </section>
 
           <!-- 4. Safety -->
           <section id="safety" class="protocol__section">
-            <h2 class="protocol__section-title">4. Safety &amp; Thresholds</h2>
-            <p class="protocol__body-text">
-              The following reference thresholds are used in the simulation and are based on
-              published bioelectromagnetics literature.
-            </p>
+            <h2 class="protocol__section-title" v-html="$t('protocol.safety.title')"></h2>
+            <p class="protocol__body-text" v-html="$t('protocol.safety.intro')"></p>
             <table class="protocol__param-table">
               <thead>
-                <tr><th>Parameter</th><th>Value</th><th>Significance</th></tr>
+                <tr>
+                  <th v-html="$t('protocol.safety.thParam')"></th>
+                  <th v-html="$t('protocol.safety.thValue')"></th>
+                  <th v-html="$t('protocol.safety.thSig')"></th>
+                </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td>V<sub>m,thr</sub> cancer cells</td>
-                  <td class="protocol__mono protocol__cancer-val">0.65–0.85 V</td>
-                  <td>Electroporation threshold; irreversible membrane disruption</td>
-                </tr>
-                <tr>
-                  <td>V<sub>m,thr</sub> healthy tissue</td>
-                  <td class="protocol__mono protocol__ref-val">1.0–1.1 V</td>
-                  <td>Normal epithelial / hepatocyte electroporation threshold</td>
-                </tr>
-                <tr>
-                  <td>V<sub>m,thr</sub> bacteria</td>
-                  <td class="protocol__mono protocol__warn-val">1.5–2.0 V</td>
-                  <td>Higher due to cell wall reinforcement (peptidoglycan)</td>
-                </tr>
-                <tr>
-                  <td>Hyperthermic onset</td>
-                  <td class="protocol__mono protocol__warn-val">42 °C</td>
-                  <td>Sustained thermal damage onset; cancer cells more susceptible than normal tissue (IAHT threshold)</td>
-                </tr>
-                <tr>
-                  <td>IEC 60601-2-33 SAR limit</td>
-                  <td class="protocol__mono protocol__warn-val">4 W/kg</td>
-                  <td>Regulatory whole-body average SAR limit for MRI equipment (IEC 60601-2-33); used here as a reference upper bound for pulsed RF</td>
-                </tr>
-                <tr>
-                  <td>IEEE C95.1 SAR limit</td>
-                  <td class="protocol__mono protocol__warn-val">1.6 W/kg</td>
-                  <td>FCC/IEEE partial-body SAR limit (1 g tissue average)</td>
-                </tr>
-                <tr>
-                  <td>Lysis protocol time</td>
-                  <td class="protocol__mono">N × t<sub>p</sub>/dc (pulsed) · 2.5 s (CW)</td>
-                  <td>Arms when Disruption Ratio &gt; 0.85; fires after N<sub>pulses</sub> complete pulse cycles (pulsed) or 2.5 s (CW). Clamped to [0.2 s, 30 s]. N and pulse width set in Advanced panel.</td>
-                </tr>
-                <tr>
-                  <td>IRE / electroporation field range</td>
-                  <td class="protocol__mono protocol__primary-val">100–1000 V/cm</td>
-                  <td>Sub-ablative to ablative IRE range (Davalos et al. [4]). Note: TTFields (Kirson et al. [2]) use ~1–3 V/cm via mitotic spindle disruption — a distinct, non-V<sub>m</sub>-threshold mechanism not modelled here</td>
-                </tr>
-                <tr>
-                  <td>Acoustic resonance — Influenza A</td>
-                  <td class="protocol__mono protocol__primary-val">f<sub>res</sub> ≈ 12 GHz · E<sub>thr</sub> = 800 V/cm</td>
-                  <td>Capsid disruption threshold at resonance. Mammalian cells unaffected (no GHz resonance). Ref: Tsen et al. [10]</td>
-                </tr>
-                <tr>
-                  <td>Acoustic resonance — SARS-CoV-2</td>
-                  <td class="protocol__mono protocol__primary-val">f<sub>res</sub> ≈ 10 GHz · E<sub>thr</sub> = 1000 V/cm</td>
-                  <td>Spike-protein envelope resonance; larger effective radius vs. Influenza. Ref: Tsen et al. [10]</td>
-                </tr>
-                <tr>
-                  <td>Acoustic resonance — E. coli</td>
-                  <td class="protocol__mono protocol__warn-val">f<sub>res</sub> ≈ 0.5 GHz · E<sub>thr</sub> = 2000 V/cm · Q ≈ 4</td>
-                  <td>Peptidoglycan cell-wall resonance (viscoelastic; Q substantially lower than protein capsid Q ≈ 20–50). Broad peak. Ref: Dykeman &amp; Sankey (2010) [11]</td>
-                </tr>
-                <tr>
-                  <td>GHz field SAR caution</td>
-                  <td class="protocol__mono protocol__warn-val">Duty cycle ≤ 0.001%</td>
-                  <td>At GHz and >500 V/cm, use ultra-low duty cycle (pulsed mode) to prevent bulk heating. SAR model remains valid — monitor thermal readout.</td>
+                <tr v-for="row in safetyRows" :key="row.param">
+                  <td v-html="row.param"></td>
+                  <td class="protocol__mono" :class="row.valueClass ? 'protocol__' + row.valueClass : ''" v-html="row.value"></td>
+                  <td v-html="row.sig"></td>
                 </tr>
               </tbody>
             </table>
@@ -685,130 +298,27 @@
 
           <!-- 5. References -->
           <section id="refs" class="protocol__section">
-            <h2 class="protocol__section-title">5. References</h2>
+            <h2 class="protocol__section-title" v-html="$t('protocol.refs.title')"></h2>
             <ol class="protocol__refs-list">
-              <li class="protocol__ref-item">
-                <span class="protocol__ref-num">[1]</span>
+              <li v-for="(ref, i) in refList" :key="i" class="protocol__ref-item">
+                <span class="protocol__ref-num">[{{ i + 1 }}]</span>
                 <span class="protocol__ref-body">
-                  Schwan HP. <em>Electrical properties of tissue and cell suspensions.</em>
-                  Advances in Biological and Medical Physics. 1957;5:147–209.
-                  doi:10.1016/B978-1-4832-3111-2.50008-0
-                </span>
-              </li>
-              <li class="protocol__ref-item">
-                <span class="protocol__ref-num">[2]</span>
-                <span class="protocol__ref-body">
-                  Kirson ED, Dbaly V, Tovarys F, et al.
-                  <em>Alternating electric fields arrest cell proliferation in animal tumor
-                  models and human brain tumors.</em>
-                  Proceedings of the National Academy of Sciences. 2007;104(24):10152–10157.
-                  doi:10.1073/pnas.0702916104
-                </span>
-              </li>
-              <li class="protocol__ref-item">
-                <span class="protocol__ref-num">[3]</span>
-                <span class="protocol__ref-body">
-                  Weaver JC, Chizmadzhev YA.
-                  <em>Theory of electroporation: a review.</em>
-                  Bioelectrochemistry and Bioenergetics. 1996;41(2):135–160.
-                  doi:10.1016/S0302-4598(96)05062-3
-                </span>
-              </li>
-              <li class="protocol__ref-item">
-                <span class="protocol__ref-num">[4]</span>
-                <span class="protocol__ref-body">
-                  Davalos RV, Mir LM, Rubinsky B.
-                  <em>Tissue ablation with irreversible electroporation.</em>
-                  Annals of Biomedical Engineering. 2005;33(2):223–231.
-                  doi:10.1007/s10439-005-8981-8
-                </span>
-              </li>
-              <li class="protocol__ref-item">
-                <span class="protocol__ref-num">[5]</span>
-                <span class="protocol__ref-body">
-                  Foster KR, Schwan HP.
-                  <em>Dielectric properties of tissues and biological materials: a critical review.</em>
-                  Critical Reviews in Biomedical Engineering. 1989;17(1):25–104.
-                  PMID:2651001
-                </span>
-              </li>
-              <li class="protocol__ref-item">
-                <span class="protocol__ref-num">[6]</span>
-                <span class="protocol__ref-body">
-                  Dimova R, Riske KA, Aranda S, et al.
-                  <em>Giant vesicles in electric fields.</em>
-                  Soft Matter. 2007;3(7):817–827.
-                  doi:10.1039/B703580B
-                </span>
-              </li>
-              <li class="protocol__ref-item">
-                <span class="protocol__ref-num">[7]</span>
-                <span class="protocol__ref-body">
-                  Neumann E, Schaefer-Ridder M, Wang Y, Hofschneider PH.
-                  <em>Gene transfer into mouse lyoma cells by electroporation in high electric fields.</em>
-                  EMBO Journal. 1982;1(7):841–845.
-                  doi:10.1002/j.1460-2075.1982.tb01257.x
-                </span>
-              </li>
-              <li class="protocol__ref-item">
-                <span class="protocol__ref-num">[8]</span>
-                <span class="protocol__ref-body">
-                  Stacey M, Stickley J, Fox P, et al.
-                  <em>Differential effects in cells exposed to ultra-short, high intensity
-                  electric fields: cell survival, DNA damage, and cell cycle analysis.</em>
-                  Mutation Research. 2003;542(1–2):65–75.
-                  doi:10.1016/j.mrgentox.2003.08.006
-                </span>
-              </li>
-              <li class="protocol__ref-item">
-                <span class="protocol__ref-num">[9]</span>
-                <span class="protocol__ref-body">
-                  Kotnik T, Miklavcic D.
-                  <em>Analytical description of transmembrane voltage induced by electric fields on
-                  spheroidal cells.</em>
-                  Biophysical Journal. 2000;79(2):670–679.
-                  doi:10.1016/S0006-3495(00)76325-9
-                  <span class="protocol__ref-note">[Source of the corrected τ = R·C<sub>m</sub>·(2σ<sub>e</sub>+σ<sub>i</sub>)/(2σ<sub>e</sub>·σ<sub>i</sub>) formula used in this simulator]</span>
-                </span>
-              </li>
-              <li class="protocol__ref-item">
-                <span class="protocol__ref-num">[10]</span>
-                <span class="protocol__ref-body">
-                  Tsen SW, Wu TC, Kiang JG, Tsen KT.
-                  <em>Prospects for a novel ultrashort pulsed laser technology for pathogen inactivation.</em>
-                  Journal of Biomedical Science. 2012;19:1–8.
-                  doi:10.1186/1423-0127-19-62
-                  <span class="protocol__ref-note">[Review consolidating 2007–2012 experimental data on acoustic resonance disruption of viral capsids; f<sub>res</sub> and E<sub>thr</sub> values for Influenza A and SARS-CoV-2 used in this simulator]</span>
-                </span>
-              </li>
-              <li class="protocol__ref-item">
-                <span class="protocol__ref-num">[11]</span>
-                <span class="protocol__ref-body">
-                  Dykeman EC, Sankey OF.
-                  <em>Atomistic modeling of the low-frequency mechanical modes and Raman spectra of icosahedral virus capsids.</em>
-                  Physical Review E. 2010;81:021918.
-                  doi:10.1103/PhysRevE.81.021918
-                  <span class="protocol__ref-note">[Lorentzian resonance lineshape model; Q-factor basis for capsid disruption simulation]</span>
-                </span>
-              </li>
-              <li class="protocol__ref-item">
-                <span class="protocol__ref-num">[12]</span>
-                <span class="protocol__ref-body">
-                  Schoenbach KH, Beebe SJ, Buescher ES.
-                  <em>Intracellular effect of ultrashort electrical pulses.</em>
-                  Bioelectromagnetics. 2001;22(6):440–448.
-                  doi:10.1002/bem.71
-                  <span class="protocol__ref-note">[Foundational nsEP paper; pulse step-response charging of membranes with t<sub>p</sub> ≪ τ; basis for nsEP selectivity model in Section 2.5]</span>
-                </span>
-              </li>
-              <li class="protocol__ref-item">
-                <span class="protocol__ref-num">[13]</span>
-                <span class="protocol__ref-body">
-                  Kotnik T, Miklavcic D.
-                  <em>Theoretical evaluation of voltage inducement on internal membranes of biological cells exposed to electric fields.</em>
-                  Biophysical Journal. 2006;90(2):480–491.
-                  doi:10.1529/biophysj.105.070771
-                  <span class="protocol__ref-note">[Double-shell nuclear envelope model; two-pole bandpass formula for nuclear membrane Vm; f<sub>peak</sub> and nuclear Vm values used in Section 2.6 and the "+ Nuclear Envelope" toggle]</span>
+                  <span v-html="ref.body"></span>
+                  <a
+                    v-if="ref.doi"
+                    class="protocol__ref-link"
+                    :href="`https://doi.org/${ref.doi}`"
+                    target="_blank"
+                    rel="noopener"
+                  >doi:{{ ref.doi }}</a>
+                  <a
+                    v-if="ref.pmid"
+                    class="protocol__ref-link"
+                    :href="`https://pubmed.ncbi.nlm.nih.gov/${ref.pmid}/`"
+                    target="_blank"
+                    rel="noopener"
+                  >PubMed:{{ ref.pmid }}</a>
+                  <span v-if="ref.note" class="protocol__ref-note" v-html="ref.note"></span>
                 </span>
               </li>
             </ol>
@@ -822,7 +332,45 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
-export default defineComponent({})
+
+interface SchwanParamRow   { sym: string; param: string; unit: string; note: string }
+interface ResonanceRow     { target: string; fres: string; fresClass: string; q: string; ethr: string; ethrClass: string; basis: string }
+interface DoubleshellRow   { cell: string; rnuc: string; rnucClass?: string; dne: string; dneClass?: string; ene: string; eneClass?: string; vthr: string; vThrClass?: string; fpeak: string; fpeakClass: string }
+interface UncertaintyRow   { category: string; band: string; bandClass: string; range: string; source: string }
+interface SafetyRow        { param: string; value: string; valueClass: string; sig: string }
+interface RefItem          { body: string; doi?: string; pmid?: string; note?: string }
+
+export default defineComponent({
+  computed: {
+    protocolStepKeys(): string[] {
+      return ['s01', 's02', 's03', 's04', 's05', 's06', 's07', 's08', 's09', 's10']
+    },
+
+    schwanParams(): SchwanParamRow[] {
+      return (this.$tm as Function)('protocol.physics.schwan.params') as SchwanParamRow[]
+    },
+
+    resonanceRows(): ResonanceRow[] {
+      return (this.$tm as Function)('protocol.physics.resonance.rows') as ResonanceRow[]
+    },
+
+    doubleshellRows(): DoubleshellRow[] {
+      return (this.$tm as Function)('protocol.physics.doubleshell.rows') as DoubleshellRow[]
+    },
+
+    uncertaintyRows(): UncertaintyRow[] {
+      return (this.$tm as Function)('protocol.physics.uncertainty.rows') as UncertaintyRow[]
+    },
+
+    safetyRows(): SafetyRow[] {
+      return (this.$tm as Function)('protocol.safety.rows') as SafetyRow[]
+    },
+
+    refList(): RefItem[] {
+      return (this.$tm as Function)('protocol.refs.list') as RefItem[]
+    },
+  },
+})
 </script>
 
 <style lang="scss" scoped>
@@ -906,286 +454,299 @@ export default defineComponent({})
 
     &:hover {
       color: var(--color-primary);
-      background-color: var(--color-primary-dim);
+      background-color: rgba(0, 212, 255, 0.06);
+    }
+
+    &--active {
+      color: var(--color-primary);
     }
   }
 
   &__toc-indent {
-    padding-left: 1.1rem;
-    font-size: 0.75rem;
+    padding-left: 1.5rem;
+    font-size: 0.73rem;
   }
 
-  &__doc {
-    @include flex-col(2rem);
-  }
+  /* ── Document ──────────────────────────────────────────── */
+  &__doc { @include flex-col(0rem); }
 
   &__section {
-    @include flex-col(1.25rem);
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
-    padding: 2rem;
+    @include flex-col(1rem);
+    padding-bottom: 2.5rem;
+    border-bottom: 1px solid var(--color-border);
+    margin-bottom: 2.5rem;
+
+    &:last-child { border-bottom: none; }
   }
 
   &__section-title {
-    font-size: 1.25rem;
+    font-size: 1.15rem;
     font-weight: 700;
     color: var(--color-text-heading);
     margin: 0;
-    padding-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
     border-bottom: 1px solid var(--color-border);
   }
 
   &__subsection-title {
     font-size: 0.95rem;
     font-weight: 600;
-    color: var(--color-primary);
+    color: var(--color-text-heading);
     margin: 0.5rem 0 0;
-    font-family: var(--font-mono);
-    letter-spacing: 0.03em;
+    padding-top: 1rem;
   }
 
   &__body-text {
-    font-size: 0.9rem;
+    font-size: 0.875rem;
+    line-height: 1.7;
     color: var(--color-text);
-    line-height: 1.8;
     margin: 0;
 
-    strong { color: var(--color-text-heading); }
+    &--spaced { margin-top: 0.6rem; }
   }
 
-  &__info-box {
-    @include flex-row(0.75rem);
-    align-items: flex-start;
-    background: var(--color-primary-dim);
-    border: 1px solid rgba(0, 212, 255, 0.25);
-    border-radius: var(--radius);
-    padding: 0.85rem 1rem;
-    font-size: 0.82rem;
-    color: var(--color-text-muted);
-    line-height: 1.6;
-  }
-
-  &__info-icon {
-    color: var(--color-primary);
-    font-weight: 700;
-    flex-shrink: 0;
-    margin-top: 0.05rem;
-  }
-
-  &__warn-box {
-    @include flex-row(0.75rem);
-    align-items: flex-start;
-    background: rgba(251, 191, 36, 0.06);
-    border: 1px solid rgba(251, 191, 36, 0.3);
-    border-radius: var(--radius);
-    padding: 0.85rem 1rem;
-    font-size: 0.82rem;
-    color: var(--color-text-muted);
-    line-height: 1.6;
-  }
-
-  &__warn-icon {
-    color: var(--color-amber);
-    font-weight: 700;
-    flex-shrink: 0;
-    margin-top: 0.05rem;
-  }
-
+  /* ── Equation blocks ──────────────────────────────────── */
   &__eq-block {
-    @include flex-col(0.4rem);
-    background: var(--color-surface-2, #0a1628);
+    background: rgba(0, 0, 0, 0.25);
     border: 1px solid var(--color-border);
     border-left: 3px solid var(--color-primary);
     border-radius: var(--radius);
-    padding: 1.25rem 1.5rem;
+    padding: 0.85rem 1.15rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
   }
 
   &__eq-main {
-    font-size: 1rem;
     font-family: var(--font-mono);
+    font-size: 0.9rem;
+    font-weight: 600;
     color: var(--color-text-heading);
-    letter-spacing: 0.04em;
+    letter-spacing: 0.01em;
   }
 
   &__eq-sub {
-    font-size: 0.78rem;
     font-family: var(--font-mono);
+    font-size: 0.78rem;
     color: var(--color-text-muted);
+    padding-left: 0.5rem;
+    line-height: 1.5;
   }
 
   &__eq-divider {
     height: 1px;
     background: var(--color-border);
-    margin: 0.25rem 0;
+    opacity: 0.5;
+    margin: 0.2rem 0;
   }
 
   &__eq-note {
-    font-size: 0.68rem;
     font-family: var(--font-mono);
+    font-size: 0.68rem;
     color: var(--color-text-muted);
-    opacity: 0.6;
+    opacity: 0.7;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    padding-top: 0.35rem;
     margin-top: 0.15rem;
   }
 
-  &__eq-note-sub {
-    font-size: 0.68rem;
-    font-family: var(--font-mono);
-    color: var(--color-text-muted);
-    opacity: 0.6;
-    margin-top: 0.15rem;
-  }
-
+  /* ── Tables ───────────────────────────────────────────── */
   &__param-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 0.82rem;
+    font-size: 0.8rem;
+
+    th, td {
+      padding: 0.45rem 0.7rem;
+      text-align: left;
+      border-bottom: 1px solid var(--color-border);
+    }
 
     th {
-      text-align: left;
-      padding: 0.55rem 0.75rem;
-      font-size: 0.68rem;
       font-family: var(--font-mono);
+      font-size: 0.68rem;
       text-transform: uppercase;
-      letter-spacing: 0.1em;
+      letter-spacing: 0.07em;
       color: var(--color-text-muted);
-      border-bottom: 1px solid var(--color-border);
-      background: rgba(255, 255, 255, 0.02);
+      background: rgba(0, 0, 0, 0.2);
     }
 
-    td {
-      padding: 0.6rem 0.75rem;
-      color: var(--color-text);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-      line-height: 1.5;
-    }
+    td { color: var(--color-text); line-height: 1.45; }
 
     tr:last-child td { border-bottom: none; }
-    tr:hover td { background: rgba(255, 255, 255, 0.025); }
+    tr:hover td { background: rgba(255, 255, 255, 0.02); }
   }
 
-  &__mono        { font-family: var(--font-mono); font-size: 0.8rem; }
-  &__cancer-val  { color: var(--color-danger);  }
-  &__ref-val     { color: var(--color-primary); }
-  &__warn-val    { color: var(--color-amber);   }
-  &__muted       { color: var(--color-text-muted); }
-  &__primary-val { color: var(--color-primary); }
+  &__mono { font-family: var(--font-mono); font-size: 0.78rem; }
 
+  &__primary-val  { color: var(--color-primary); }
+  &__cancer-val   { color: var(--color-danger); }
+  &__warn-val     { color: var(--color-amber); }
+  &__ref-val      { color: var(--color-lime); }
+  &__muted        { color: var(--color-text-muted); opacity: 0.6; }
+
+  /* ── Info / note boxes ─────────────────────────────────── */
+  &__info-box {
+    display: flex;
+    gap: 0.65rem;
+    align-items: flex-start;
+    background: rgba(0, 212, 255, 0.05);
+    border: 1px solid rgba(0, 212, 255, 0.18);
+    border-radius: var(--radius);
+    padding: 0.65rem 0.85rem;
+    font-size: 0.83rem;
+    line-height: 1.6;
+    color: var(--color-text);
+  }
+
+  &__info-icon {
+    color: var(--color-primary);
+    font-size: 0.85rem;
+    flex-shrink: 0;
+    margin-top: 0.05rem;
+  }
+
+  &__note {
+    border-left: 3px solid var(--color-border);
+    padding: 0.55rem 0.85rem;
+    background: rgba(255, 255, 255, 0.02);
+    font-size: 0.82rem;
+    line-height: 1.6;
+    color: var(--color-text-muted);
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+
+  &__note-label {
+    font-size: 0.62rem;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--color-text-muted);
+    opacity: 0.7;
+    margin-bottom: 0.25rem;
+  }
+
+  /* ── Protocol steps ───────────────────────────────────── */
   &__steps {
-    @include flex-col(0);
     list-style: none;
-    margin: 0;
     padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
   }
 
   &__step {
     display: flex;
-    gap: 1.25rem;
-    padding: 1.1rem 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    gap: 1rem;
+    align-items: flex-start;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    padding: 0.75rem 1rem;
+    transition: border-color 0.15s;
 
-    &:last-child { border-bottom: none; }
+    &:hover { border-color: rgba(0, 212, 255, 0.25); }
   }
 
   &__step-num {
-    font-size: 0.68rem;
     font-family: var(--font-mono);
+    font-size: 1.1rem;
+    font-weight: 800;
     color: var(--color-primary);
-    background: var(--color-primary-dim);
-    border: 1px solid rgba(0, 212, 255, 0.2);
-    border-radius: 4px;
-    padding: 0.2rem 0.45rem;
+    opacity: 0.35;
     flex-shrink: 0;
-    height: fit-content;
-    letter-spacing: 0.08em;
+    width: 2rem;
+    line-height: 1.5;
   }
 
-  &__step-body {
-    @include flex-col(0.35rem);
-  }
+  &__step-body { @include flex-col(0.25rem); flex: 1; }
 
   &__step-title {
-    font-size: 0.9rem;
+    font-size: 0.88rem;
     font-weight: 600;
     color: var(--color-text-heading);
   }
 
   &__step-desc {
-    font-size: 0.85rem;
-    color: var(--color-text-muted);
-    line-height: 1.7;
+    font-size: 0.83rem;
+    line-height: 1.6;
+    color: var(--color-text);
     margin: 0;
-
-    em {
-      color: var(--color-primary);
-      font-style: normal;
-    }
-
-    &--spaced { margin-top: 0.5rem; }
   }
 
+  /* ── References ───────────────────────────────────────── */
   &__refs-list {
-    @include flex-col(0);
     list-style: none;
-    margin: 0;
     padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
   }
 
   &__ref-item {
     display: flex;
-    gap: 0.75rem;
-    padding: 0.9rem 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-
-    &:last-child { border-bottom: none; }
+    gap: 0.65rem;
+    font-size: 0.82rem;
+    line-height: 1.55;
+    color: var(--color-text-muted);
+    align-items: flex-start;
   }
 
   &__ref-num {
-    font-size: 0.75rem;
     font-family: var(--font-mono);
+    font-size: 0.72rem;
     color: var(--color-primary);
+    opacity: 0.75;
     flex-shrink: 0;
-    width: 2.25rem;
-    padding-top: 0.05rem;
+    min-width: 2.2rem;
+    padding-top: 0.1rem;
   }
 
   &__ref-body {
-    font-size: 0.82rem;
-    color: var(--color-text-muted);
-    line-height: 1.7;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
 
-    em {
-      color: var(--color-text);
-      font-style: italic;
-    }
+  &__ref-link {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--color-primary);
+    text-decoration: none;
+    opacity: 0.8;
+    transition: opacity 0.15s;
+
+    &:hover { opacity: 1; text-decoration: underline; }
   }
 
   &__ref-note {
-    display: block;
-    font-size: 0.72rem;
-    color: var(--color-primary);
-    opacity: 0.7;
-    margin-top: 0.15rem;
     font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: var(--color-text-muted);
+    opacity: 0.6;
+    font-style: italic;
   }
-}
 
-@media (max-width: 900px) {
-  .protocol__layout {
-    grid-template-columns: 1fr;
+  &__ref-note-inline {
+    font-size: 0.7rem;
+    color: var(--color-text-muted);
+    opacity: 0.75;
+    font-style: italic;
   }
-  .protocol__toc {
-    position: static;
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 0.25rem;
-  }
-  .protocol__toc-title { width: 100%; }
-  .protocol__toc-link  { font-size: 0.75rem; }
-}
 
-@media (max-width: 600px) {
-  .protocol__inner   { padding: 1rem 1rem 3rem; }
-  .protocol__section { padding: 1.25rem; }
+  /* ── Warn box (legacy — kept for forward compat) ─────── */
+  &__warn-box {
+    background: rgba(251, 191, 36, 0.06);
+    border: 1px solid rgba(251, 191, 36, 0.25);
+    border-radius: var(--radius);
+    padding: 0.65rem 0.9rem;
+    font-size: 0.82rem;
+    line-height: 1.6;
+    color: var(--color-amber);
+  }
 }
 </style>

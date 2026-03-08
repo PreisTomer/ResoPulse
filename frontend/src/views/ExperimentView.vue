@@ -128,14 +128,30 @@
         </div>
       </div>
 
-      <!-- Row 2: Chart (full width) -->
-      <FrequencyResponseChart v-if="store.chartMode === CHART_MODE.SCHWAN" />
-      <ResonanceChart v-else />
+      <!-- Row 2: Chart (full width, collapsible) -->
+      <div class="experiment__chart-section">
+        <button class="experiment__chart-toggle" @click="chartOpen = !chartOpen">
+          <span class="experiment__chart-toggle-left">
+            <span class="experiment__chart-toggle-icon">∿</span>
+            <span class="experiment__chart-toggle-title">Frequency Response</span>
+            <span class="experiment__chart-toggle-sub">{{ chartModeLabel }}</span>
+          </span>
+          <span class="experiment__chart-chevron" :class="{ 'experiment__chart-chevron--open': chartOpen }">›</span>
+        </button>
+        <div v-show="chartOpen">
+          <FrequencyResponseChart v-if="store.chartMode === CHART_MODE.SCHWAN" />
+          <ResonanceChart v-else />
+        </div>
+      </div>
 
       <!-- Row 3: Selectivity (full width) -->
       <SelectivityPanel />
 
-      <!-- Row 4: Log (full width) -->
+      <!-- Row 4 & 5: Research analysis tools — sweep + population (collapsible, full width) -->
+      <SweepPanel />
+      <PopulationPanel />
+
+      <!-- Row 6: Log (full width) -->
       <ExperimentLog />
 
     </div>
@@ -151,6 +167,8 @@ import FrequencySlider from '@/components/FrequencySlider/index.vue'
 import FrequencyResponseChart from '@/components/FrequencyResponseChart/index.vue'
 import ResonanceChart from '@/components/ResonanceChart/index.vue'
 import SelectivityPanel from '@/components/SelectivityPanel/index.vue'
+import SweepPanel from '@/components/SweepPanel/index.vue'
+import PopulationPanel from '@/components/PopulationPanel/index.vue'
 import ExperimentLog from '@/components/ExperimentLog.vue'
 import { useExperimentStore } from '@/stores/experimentStore'
 import { CELL_PRESETS, GROUP_COLORS, GROUP_LABELS } from '@/constants/cellLibrary'
@@ -166,6 +184,8 @@ export default defineComponent({
     FrequencyResponseChart,
     ResonanceChart,
     SelectivityPanel,
+    SweepPanel,
+    PopulationPanel,
     ExperimentLog,
   },
 
@@ -189,6 +209,7 @@ export default defineComponent({
     return {
       healthyPickerOpen: false,
       targetPickerOpen: false,
+      chartOpen: true,
       targetPickerCategory: CELL_GROUP.CANCER as CellGroup,
     }
   },
@@ -232,6 +253,12 @@ export default defineComponent({
 
     healthyFcSetup(): string { return formatFreqKHz(this.store.healthyFc, 1) },
     targetFcSetup(): string  { return formatFreqKHz(this.store.targetFc, 1) },
+
+    chartModeLabel(): string {
+      return this.store.chartMode === CHART_MODE.SCHWAN
+        ? 'Schwan · Vm vs Frequency'
+        : 'Resonance · Acoustic Lineshape'
+    },
 
     cells() {
       // Resolve label + sublabel from the live store cell (changes when preset loads)
@@ -612,6 +639,69 @@ export default defineComponent({
     min-width: 0;
     display: flex;
     flex-direction: column;
+  }
+
+  /* ── Chart section (collapsible) ─────────────────────────────── */
+  &__chart-section {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  &__chart-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--color-border);
+    padding: 0.6rem 1rem;
+    cursor: pointer;
+    gap: 0.5rem;
+
+    &:hover .experiment__chart-toggle-title { color: var(--color-primary); }
+  }
+
+  &__chart-toggle-left {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+  }
+
+  &__chart-toggle-icon {
+    font-size: 0.9rem;
+    color: var(--color-primary);
+    opacity: 0.7;
+    flex-shrink: 0;
+  }
+
+  &__chart-toggle-title {
+    font-size: 0.62rem;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--color-text);
+    flex-shrink: 0;
+    transition: color 0.15s;
+  }
+
+  &__chart-toggle-sub {
+    font-size: 0.58rem;
+    font-family: var(--font-mono);
+    color: var(--color-text-muted);
+    opacity: 0.65;
+  }
+
+  &__chart-chevron {
+    font-size: 1rem;
+    color: var(--color-text-muted);
+    opacity: 0.5;
+    flex-shrink: 0;
+    transition: transform 0.2s;
+
+    &--open { transform: rotate(90deg); }
   }
 }
 

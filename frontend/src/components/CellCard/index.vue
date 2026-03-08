@@ -164,7 +164,7 @@ import * as d3 from 'd3'
 import { useCellStore } from '@/stores/cellStore'
 import { useExperimentStore } from '@/stores/experimentStore'
 import { CELL_PRESETS } from '@/constants/cellLibrary'
-import type { CellRecord } from '@/types/cell'
+import type { CellConfig, CellRecord } from '@/types/cell'
 import { membraneCm, computeTau } from '@/utils/physics'
 import type { CellState } from '@/types/cell'
 import {
@@ -185,7 +185,7 @@ import { CELL_STATE, CELL_TYPE, CELL_CATEGORY } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'
 import { formatFreqKHz } from '@/utils/format'
-import { tipVm as tipVmFn, tipTemp as tipTempFn, tipState as tipStateFn, tipDisruption as tipDisruptionFn, tipNuclearBar as tipNuclearBarFn, formatLysisTimeLocal } from '@/utils/cellCardTooltips'
+import { tipVm as tipVmFn, tipAcousticVm as tipAcousticVmFn, tipTemp as tipTempFn, tipState as tipStateFn, tipDisruption as tipDisruptionFn, tipNuclearBar as tipNuclearBarFn, formatLysisTimeLocal } from '@/utils/cellCardTooltips'
 
 import CellHeader from './CellHeader.vue'
 import CellParamsPanel from './CellParamsPanel.vue'
@@ -230,13 +230,32 @@ export default defineComponent({
   computed: {
     accentColor(): string { return CELL_COLORS[this.type].accent },
 
+    /**
+     * True when the target cell uses acoustic/mechanical resonance as its primary
+     * disruption model (bacteria or virus with resonantFreqGHz defined).
+     * In this regime the Schwan Vm is negligible (~0 at GHz) and should not be
+     * displayed as the primary metric — acoustic DR% is shown instead.
+     */
+    isAcousticTarget(): boolean {
+      if (this.type !== CELL_TYPE.TARGET) return false
+      const cat = this.store.targetCellCategory
+      if (cat !== CELL_CATEGORY.BACTERIA && cat !== CELL_CATEGORY.VIRUS) return false
+      const t = this.store.target as CellConfig & { resonantFreqGHz?: number }
+      return !!t.resonantFreqGHz
+    },
+
     vm(): number {
       return (this.type === CELL_TYPE.HEALTHY ? this.store.healthyVm : this.store.targetVm) * 1000
     },
     temperature(): number {
       return this.type === CELL_TYPE.HEALTHY ? this.store.healthyTemp : this.store.targetTemp
     },
-    vmDisplay():   string  { return `${this.vm.toFixed(3)} ${UNIT.MV}` },
+    vmDisplay(): string {
+      if (this.isAcousticTarget) {
+        return `DR ${(this.disruptionRatio * 100).toFixed(0)}${UNIT.PERCENT}`
+      }
+      return `${this.vm.toFixed(3)} ${UNIT.MV}`
+    },
     tempDisplay(): string  { return `${this.temperature.toFixed(1)} ${UNIT.DEG_C}` },
     tempWarning():     boolean { return this.temperature > TEMP_WARN_CELSIUS },
     tempDenaturing():  boolean { return this.temperature >= TEMP_DENATURING },
@@ -314,6 +333,17 @@ export default defineComponent({
     },
 
     tipVm(): string {
+      if (this.isAcousticTarget) {
+        const t = this.store.target as CellConfig & { resonantFreqGHz?: number; capsidQ?: number; experimentalBasis?: string }
+        return tipAcousticVmFn({
+          disruptionRatio:  this.disruptionRatio,
+          resonantFreqGHz:  t.resonantFreqGHz ?? 0,
+          capsidQ:          t.capsidQ ?? 1,
+          freqKHz:          this.store.currentBroadcastFrequency,
+          fieldVcm:         this.store.fieldIntensity,
+          experimentalBasis: t.experimentalBasis,
+        })
+      }
       const cell = this.type === CELL_TYPE.HEALTHY ? this.store.healthy : this.store.target
       return tipVmFn({
         vmDisplay:        this.vmDisplay,
@@ -523,8 +553,19 @@ export default defineComponent({
       const el = this.$refs.oscCanvas as HTMLElement
       if (!el) return
       this._oscTimer = setupOscilloscope(
-        el, this.accentColor, this.cellData.naturalFrequency,
-        () => ({ state: this.cellState, impact: this.disruptionRatio, liveAmplitude: this.liveAmplitude, cellColor: this.cellColor }),
+        el, this.accentColor,
+        () => ({
+          state:           this.cellState,
+          impact:          this.disruptionRatio,
+          liveAmplitude:   this.liveAmplitude,
+          cellColor:       this.cellColor,
+          // Acoustic targets: track live broadcast frequency so the oscilloscope
+          // waveform speed responds to the frequency slider in real time.
+          // Mammalian/healthy: use preset naturalFrequency (fixed membrane resonance).
+          naturalFrequency: this.isAcousticTarget
+            ? this.store.currentBroadcastFrequency
+            : (this.cellData?.naturalFrequency ?? 400),
+        }),
       )
     },
 
