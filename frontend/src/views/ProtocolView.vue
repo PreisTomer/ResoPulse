@@ -13,8 +13,9 @@
       </div>
 
       <!-- Mobile-only contents toggle -->
-      <button class="protocol__toc-mobile-btn" @click="tocMobileOpen = !tocMobileOpen">
-        <span>§</span> {{ tocMobileOpen ? 'Close' : 'Contents' }}
+      <button class="protocol__toc-mobile-btn" :class="{ 'protocol__toc-mobile-btn--open': tocMobileOpen }" @click="tocMobileOpen = !tocMobileOpen">
+        <span class="protocol__toc-mobile-icon">☰</span>
+        <span class="protocol__toc-mobile-label">{{ tocMobileOpen ? 'Close' : 'Contents' }}</span>
         <span class="protocol__toc-mobile-caret" :class="{ 'protocol__toc-mobile-caret--open': tocMobileOpen }">▼</span>
       </button>
 
@@ -532,6 +533,8 @@ export default defineComponent({
     padding-bottom: 2.5rem;
     border-bottom: 1px solid var(--color-border);
     margin-bottom: 2.5rem;
+    // Offset scroll-to-anchor by sticky navbar height so headings aren't hidden
+    scroll-margin-top: 5rem;
 
     &:last-child { border-bottom: none; }
   }
@@ -826,20 +829,38 @@ export default defineComponent({
   .protocol__toc-mobile-btn {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.6rem;
     width: 100%;
-    padding: 0.65rem 1rem;
+    padding: 0.8rem 1.1rem;
     background: var(--color-surface);
-    border: 1px solid var(--color-border);
+    border: 1.5px solid rgba(0, 212, 255, 0.35);
     border-radius: var(--radius);
-    color: var(--color-text-muted);
-    font-size: 0.82rem;
+    color: var(--color-primary);
+    font-size: 0.88rem;
     font-family: var(--font-mono);
+    font-weight: 600;
+    letter-spacing: 0.04em;
     cursor: pointer;
     margin-bottom: 0.75rem;
-    transition: border-color 0.15s, color 0.15s;
+    transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+    box-shadow: 0 0 12px rgba(0, 212, 255, 0.08);
 
-    &:hover { border-color: var(--color-primary); color: var(--color-primary); }
+    &:hover, &--open {
+      border-color: var(--color-primary);
+      background: rgba(0, 212, 255, 0.06);
+      box-shadow: 0 0 18px rgba(0, 212, 255, 0.18);
+    }
+  }
+
+  .protocol__toc-mobile-icon {
+    font-size: 1.1rem;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+
+  .protocol__toc-mobile-label {
+    flex: 1;
+    text-align: left;
   }
 
   // Hide sidebar TOC on mobile by default
@@ -849,7 +870,10 @@ export default defineComponent({
     top: 60px;
     left: 0;
     right: 0;
-    bottom: 0;
+    // Use dvh (dynamic viewport height) so overlay fills screen even as browser
+    // chrome appears/disappears on scroll. Falls back to vh for older browsers.
+    height: calc(100vh - 60px);
+    height: calc(100dvh - 60px);
     z-index: 90;
     background: rgba(8, 14, 26, 0.97);
     backdrop-filter: blur(12px);
