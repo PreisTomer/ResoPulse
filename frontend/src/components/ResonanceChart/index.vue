@@ -22,7 +22,7 @@ import { computeResonantDisruption } from '@/utils/physics'
 import { CELL_PRESETS, GROUP_COLORS } from '@/constants/cellLibrary'
 import type { CellGroup } from '@/constants/cellLibrary'
 import type { CellConfig } from '@/types/cell'
-import { broadcastFieldParams } from '@/services/socket'
+import { broadcastStateSync } from '@/services/socket'
 import { C } from '@/theme/colors'
 
 // Frequency range: 10 MHz – 50 GHz
@@ -227,7 +227,7 @@ export default defineComponent({
               const hz = Math.max(F_MIN_HZ, Math.min(F_MAX_HZ, xScale.invert(event.x)))
               const khz = Math.round(Math.min(hz / 1000, F_CURSOR_MAX_KHZ))
               self.store.setBroadcastFreqKHz(khz)
-              broadcastFieldParams(khz, self.store.fieldIntensity, self.store.medium)
+              broadcastStateSync()
             })
         )
     },

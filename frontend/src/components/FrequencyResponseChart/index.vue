@@ -36,7 +36,7 @@ import { CELL_PRESETS, GROUP_COLORS } from '@/constants/cellLibrary'
 import { CELL_CATEGORY, CHART_MODE } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'
-import { broadcastFieldParams } from '@/services/socket'
+import { broadcastStateSync } from '@/services/socket'
 import { C } from '@/theme/colors'
 import ChartLegend from './ChartLegend.vue'
 
@@ -278,7 +278,7 @@ export default defineComponent({
           const hz = this._xScale.invert(xClamped)
           const khz = Math.max(10, Math.min(F_CURSOR_MAX_KHZ, hz / 1000))
           this.store.setBroadcastFreqKHz(Math.round(khz))
-          broadcastFieldParams(Math.round(khz), this.store.fieldIntensity, this.store.medium)
+          broadcastStateSync()
         })
 
       g.select<SVGLineElement>('.cursor-line').call(dragBehavior)

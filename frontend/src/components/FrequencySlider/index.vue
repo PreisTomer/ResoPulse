@@ -169,7 +169,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { useCellStore } from '@/stores/cellStore'
-import { broadcastFieldParams } from '@/services/socket'
+import { broadcastStateSync } from '@/services/socket'
 import { MEDIA } from '@/constants/media'
 import { CHART_MODE, CELL_CATEGORY, THERMAL_LEVEL } from '@/constants/strings'
 import { THRESHOLDS } from '@/constants/cellCard'
@@ -334,30 +334,31 @@ export default defineComponent({
   methods: {
     onMediumChange(key: MediumKey) {
       this.store.setMedium(key)
-      broadcastFieldParams(this.currentFreq, this.currentField, key)
+      broadcastStateSync()
     },
 
     onFreqInput(e: Event) {
       const freq = Number((e.target as HTMLInputElement).value)
       this.store.setBroadcastFreqKHz(freq)
-      broadcastFieldParams(freq, this.currentField, this.currentMedium)
+      broadcastStateSync()
     },
 
     onFieldInput(e: Event) {
       const vcm = Number((e.target as HTMLInputElement).value)
       this.store.setFieldIntensity(vcm)
-      broadcastFieldParams(this.currentFreq, vcm, this.currentMedium)
+      broadcastStateSync()
     },
 
     onSafeModeChange(on: boolean) {
       this.store.setSafeMode(on)
+      broadcastStateSync()
     },
 
     snapToOptimal() {
       const { khz } = this.optimalFreqResult
       const snapped = Math.round(Math.max(this.sliderRanges.freqMin, Math.min(this.sliderRanges.freqMax, khz)))
       this.store.setBroadcastFreqKHz(snapped)
-      broadcastFieldParams(snapped, this.currentField, this.currentMedium)
+      broadcastStateSync()
     },
   },
 })
@@ -390,22 +391,6 @@ export default defineComponent({
 @keyframes state-blink {
   0%, 100% { opacity: 1; }
   50%       { opacity: 0.35; }
-}
-
-/* ── Mobile ──────────────────────────────────────────────────────────── */
-@media (max-width: 768px) {
-  .field-panel {
-    margin-top: 1rem;
-    padding: 0.7rem 0.85rem;
-  }
-  .field-panel__row {
-    grid-template-columns: 5.5rem 1fr 6rem;
-    gap: 0.5rem;
-  }
-  .field-panel__readout { width: 6rem; }
-  .field-panel__readout-value { font-size: 0.85rem; }
-  .field-panel__readout-sub { display: none; }
-  .field-panel__row-meta { display: none; }
 }
 
 /* ── Block ───────────────────────────────────────────────────────────── */

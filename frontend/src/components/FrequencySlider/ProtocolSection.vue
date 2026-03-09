@@ -82,6 +82,7 @@
 import { defineComponent } from 'vue'
 import type { PropType } from 'vue'
 import { useCellStore } from '@/stores/cellStore'
+import { broadcastStateSync } from '@/services/socket'
 import { WAVEFORM, THERMAL_LEVEL } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
 import { tipWaveform, tipDutyCycle, tipPulseWidth, tipSafeModeLock } from '@/utils/sliderTooltips'
@@ -165,6 +166,7 @@ export default defineComponent({
   methods: {
     onWaveformChange(mode: typeof WAVEFORM[keyof typeof WAVEFORM]) {
       this.store.setWaveform(mode)
+      broadcastStateSync()
     },
 
     onDutyCycleInput(e: Event) {
@@ -177,11 +179,13 @@ export default defineComponent({
         }
       }
       this.store.setDutyCycle(Math.pow(10, logVal))
+      broadcastStateSync()
     },
 
     onPulseWidthInput(e: Event) {
       const logVal = Number((e.target as HTMLInputElement).value)
       this.store.setPulseWidthNs(Math.round(Math.pow(10, logVal)))
+      broadcastStateSync()
     },
   },
 })

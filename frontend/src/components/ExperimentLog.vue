@@ -87,6 +87,7 @@
 import { defineComponent } from 'vue'
 import { useExperimentStore } from '@/stores/experimentStore'
 import { useCellStore } from '@/stores/cellStore'
+import { broadcastLogEntry } from '@/services/socket'
 import { LOG_EVENT } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
 import { THRESHOLDS } from '@/constants/cellCard'
@@ -136,6 +137,8 @@ export default defineComponent({
   methods: {
     logReading() {
       this.expStore.logReading(this.cellStore as Parameters<typeof this.expStore.logReading>[0], LOG_EVENT.MANUAL)
+      const last = this.expStore.entries[this.expStore.entries.length - 1]
+      if (last) broadcastLogEntry(last)
     },
     exportCSV()  { this.expStore.exportCSV() },
     clearLog()   { this.expStore.clearLog() },

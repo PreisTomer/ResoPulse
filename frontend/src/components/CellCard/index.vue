@@ -163,6 +163,7 @@ import type { PropType } from 'vue'
 import * as d3 from 'd3'
 import { useCellStore } from '@/stores/cellStore'
 import { useExperimentStore } from '@/stores/experimentStore'
+import { broadcastLogEntry } from '@/services/socket'
 import { CELL_PRESETS } from '@/constants/cellLibrary'
 import type { CellConfig, CellRecord } from '@/types/cell'
 import { membraneCm, computeTau } from '@/utils/physics'
@@ -572,7 +573,10 @@ export default defineComponent({
 
     triggerLysis() {
       this.cellState = CELL_STATE.LYSING
-      useExperimentStore().logReading(useCellStore(), 'lysis')
+      const expStore = useExperimentStore()
+      expStore.logReading(useCellStore(), 'lysis')
+      const last = expStore.entries[expStore.entries.length - 1]
+      if (last) broadcastLogEntry(last)
       const el = this.$refs.cellCanvas as HTMLElement
       this._particleInterval = setInterval(() => {
         if (el) spawnFragment(el)

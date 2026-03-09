@@ -137,7 +137,7 @@ import { CELL_CATEGORY, CHART_MODE, EXPERIMENTAL_BASIS } from '@/constants/strin
 import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'
 import { formatFreqKHz, formatFieldVcm } from '@/utils/format'
-import { broadcastFieldParams } from '@/services/socket'
+import { broadcastStateSync } from '@/services/socket'
 import DisruptionBars from './DisruptionBars.vue'
 import ComparisonTable from './ComparisonTable.vue'
 import PresetLibrary from './PresetLibrary.vue'
@@ -459,7 +459,7 @@ Note: virion fc ~0.6–0.75 MHz per Schwan model (σ_i-limited; model approximat
       const maxKhz = this.isResonanceTarget ? 50_000_000 : 10_000
       const snapped = Math.round(Math.max(10, Math.min(maxKhz, khz)))
       this.store.setBroadcastFreqKHz(snapped)
-      broadcastFieldParams(snapped, this.store.fieldIntensity, this.store.medium)
+      broadcastStateSync()
     },
   },
 })

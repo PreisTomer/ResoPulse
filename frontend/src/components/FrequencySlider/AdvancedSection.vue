@@ -58,7 +58,7 @@
           :class="{ 'field-panel__pill--active': !store.doubleShellEnabled }"
           v-tip="tipSingleShell"
         >
-          <input type="radio" name="shellModel" :checked="!store.doubleShellEnabled" @change="store.doubleShellEnabled && store.toggleDoubleShell()" />
+          <input type="radio" name="shellModel" :checked="!store.doubleShellEnabled" @change="setShellModel(false)" />
           {{ $t('slider.doubleShellSingle') }}
         </label>
         <label
@@ -66,7 +66,7 @@
           :class="{ 'field-panel__pill--active': store.doubleShellEnabled }"
           v-tip="tipDoubleShell"
         >
-          <input type="radio" name="shellModel" :checked="store.doubleShellEnabled" @change="!store.doubleShellEnabled && store.toggleDoubleShell()" />
+          <input type="radio" name="shellModel" :checked="store.doubleShellEnabled" @change="setShellModel(true)" />
           {{ $t('slider.doubleShellDouble') }}
         </label>
       </div>
@@ -115,6 +115,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { useCellStore } from '@/stores/cellStore'
+import { broadcastStateSync } from '@/services/socket'
 import { WAVEFORM } from '@/constants/strings'
 import { CELL_CATEGORY } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
@@ -190,21 +191,29 @@ export default defineComponent({
 
   methods: {
     onOrientationInput(e: Event) {
-      const deg = Number((e.target as HTMLInputElement).value)
-      this.store.setOrientationDeg(deg)
+      this.store.setOrientationDeg(Number((e.target as HTMLInputElement).value))
+      broadcastStateSync()
     },
 
     onLysisNInput(e: Event) {
       const logVal = Number((e.target as HTMLInputElement).value)
       this.store.setLysisNPulses(Math.round(Math.pow(10, logVal)))
+      broadcastStateSync()
+    },
+
+    setShellModel(enable: boolean) {
+      if (this.store.doubleShellEnabled !== enable) this.store.toggleDoubleShell()
+      broadcastStateSync()
     },
 
     onPerfusionInput(e: Event) {
       this.store.setPerfusionRate(Number((e.target as HTMLInputElement).value))
+      broadcastStateSync()
     },
 
     onCellPackingInput(e: Event) {
       this.store.setCellPackingFraction(Number((e.target as HTMLInputElement).value))
+      broadcastStateSync()
     },
   },
 })

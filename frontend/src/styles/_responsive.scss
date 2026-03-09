@@ -1,12 +1,5 @@
-// _responsive.scss — centralised responsive media queries for BioResonance
-//
-// Specificity strategy for scoped Vue components:
-//   Scoped child selectors compile to .cls[data-v-xxx] = (0,1,1,0).
-//   Using .root .child = (0,2,0,0) beats scoped specificity.
-//   Unscoped components (ExperimentView) need no prefix.
-//
-// NavBar and ProtocolView mobile CSS live in their own scoped <style> blocks
-// for reliability — they are NOT duplicated here.
+// NavBar, ProtocolView, and ExperimentView mobile CSS live in their own scoped
+// <style> blocks (scoped specificity requires co-location) — NOT duplicated here.
 //
 // Breakpoints
 //   $bp-phone : 480px  — small phones
@@ -37,12 +30,10 @@
 
   .home .home__tagline {
     font-size: 0.88rem;
-    max-width: 100%;           // never wider than viewport
+    max-width: 100%;
     word-break: break-word;
   }
 
-  // Capability pills: 2 columns → 3 rows on mobile
-  // Triple selector (0,3,0,0) beats scoped .home__cap[data-v-xxx] (0,2,0,0)
   .home .home__caps {
     grid-template-columns: repeat(2, 1fr);
     width: 100%;
@@ -123,6 +114,22 @@
 
 @media (max-width: 640px) {
   .datasets .datasets__inner { padding: 1rem 0.85rem 3rem; }
+}
+
+// ─── FrequencySlider ──────────────────────────────────────────────────────────
+@media (max-width: 768px) {
+  .field-panel {
+    margin-top: 1rem;
+    padding: 0.7rem 0.85rem;
+  }
+  .field-panel__row {
+    grid-template-columns: 5.5rem 1fr 6rem;
+    gap: 0.5rem;
+  }
+  .field-panel__readout { width: 6rem; }
+  .field-panel__readout-value { font-size: 0.85rem; }
+  .field-panel__readout-sub { display: none; }
+  .field-panel__row-meta { display: none; }
 }
 
 // ─── ReportsView ──────────────────────────────────────────────────────────────

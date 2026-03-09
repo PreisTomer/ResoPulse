@@ -179,7 +179,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { useCellStore } from '@/stores/cellStore'
-import { connectSocket, socketConnected, broadcastFieldParams } from '@/services/socket'
+import { connectSocket, socketConnected, broadcastStateSync } from '@/services/socket'
 import CellCard from '@/components/CellCard/index.vue'
 import FrequencySlider from '@/components/FrequencySlider/index.vue'
 import FrequencyResponseChart from '@/components/FrequencyResponseChart/index.vue'
@@ -389,22 +389,22 @@ Larger radius raises Vm and lowers the lysis field threshold.`
       const center = Math.round((this.sweepWindow.lo + this.sweepWindow.hi) / 2)
       if (this.sweepWindow.param === 'field') {
         this.store.setFieldIntensity(center)
-        broadcastFieldParams(this.store.currentBroadcastFrequency, center, this.store.medium)
       } else {
         this.store.setBroadcastFreqKHz(center)
-        broadcastFieldParams(center, this.store.fieldIntensity, this.store.medium)
       }
+      broadcastStateSync()
     },
 
     loadHealthyPreset(preset: CellPreset) {
       this.store.loadPreset('healthy', preset)
       this.healthyPickerOpen = false
+      broadcastStateSync()
     },
 
     loadTargetPreset(preset: CellPreset) {
       this.store.loadPreset('target', preset)
       this.targetPickerOpen = false
-      // applyTargetDefaults fires via watcher on currentTargetId
+      // applyTargetDefaults fires via watcher on currentTargetId — it will call broadcastStateSync
     },
 
     toggleHealthyPicker() {
@@ -443,8 +443,7 @@ Larger radius raises Vm and lowers the lysis field threshold.`
       // Always start from a thermally neutral state — clears any lysis/destruction
       this.store.resetTemps()
       this.store.setChartMode((cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) ? CHART_MODE.RESONANCE : CHART_MODE.SCHWAN)
-      // Sync backend — ensures socket subscribers see the new field parameters immediately
-      broadcastFieldParams(freqKHz, fieldVcm, d.medium)
+      broadcastStateSync()
     },
   },
 
