@@ -6,12 +6,12 @@
       <div class="datasets__header">
         <div class="datasets__eyebrow">
           <span class="datasets__eyebrow-dot"></span>
-          Reference Database
+          {{ $t('datasets.eyebrow') }}
         </div>
-        <h1 class="datasets__title">Cell &amp; Pathogen Data Sets</h1>
+        <h1 class="datasets__title" v-html="$t('datasets.title')"></h1>
         <p class="datasets__subtitle">
-          Biophysical parameters for all presets · Schwan single-shell model · double-shell nuclear envelope (mammalian) · acoustic resonance (bacteria/virus)
-          <br>Computed in physiological saline (σ<sub>e</sub> = 1.5 S/m) · Kotnik &amp; Miklavcic (2000, 2006)
+          {{ $t('datasets.subtitle') }}
+          <br><span v-html="$t('datasets.subtitleNote')"></span>
         </p>
       </div>
 
@@ -31,28 +31,28 @@
       <!-- Cell library table -->
       <section class="datasets__card">
         <div class="datasets__card-hdr">
-          <h2 class="datasets__card-title">Cell Library</h2>
-          <span class="datasets__card-tag">{{ presets.length }} presets</span>
+          <h2 class="datasets__card-title">{{ $t('datasets.cellLib.sectionTitle') }}</h2>
+          <span class="datasets__card-tag">{{ $t('datasets.cellLib.sectionTag', { n: presets.length }) }}</span>
         </div>
         <div class="datasets__table-wrap">
           <table class="datasets__table">
             <thead>
               <tr>
-                <th>Group</th>
-                <th>Cell / Pathogen</th>
-                <th>R (µm)</th>
-                <th>d (nm)</th>
-                <th title="Effective membrane relative permittivity. Physical lipid bilayer ε_r ≈ 2–5; protein channels and pore contributions raise the effective value. Used in Cm = ε_r·ε₀/d.">Eff. ε<sub>r</sub></th>
-                <th>σ<sub>i</sub> (S/m)</th>
-                <th>C<sub>m</sub> (mF/m²)</th>
-                <th>f<sub>c</sub> in saline</th>
-                <th>V<sub>m,thr</sub> (V)</th>
-                <th title="Nuclear radius — double-shell model (mammalian nucleated cells only; RBC and bacteria/virus have no nucleus)">R<sub>nuc</sub> (µm)</th>
-                <th>ρ (kg/m³)</th>
-                <th title="Acoustic resonance frequency — bacteria/virus only">f<sub>res</sub></th>
-                <th title="Mechanical quality factor — sharpness of resonance peak">Q</th>
-                <th title="Theoretical RF field amplitude for capsid/cell-wall disruption at resonance. Tsen et al. experiments used femtosecond laser excitation, not RF; these V/cm values are extrapolations with no direct experimental basis.">E<sub>thr</sub>† (V/cm)</th>
-                <th>Notes</th>
+                <th>{{ $t('datasets.cellLib.colGroup') }}</th>
+                <th>{{ $t('datasets.cellLib.colCell') }}</th>
+                <th>{{ $t('datasets.cellLib.colR') }}</th>
+                <th>{{ $t('datasets.cellLib.colD') }}</th>
+                <th :title="$t('datasets.cellLib.colErTitle')" v-html="$t('datasets.cellLib.colEr')"></th>
+                <th v-html="$t('datasets.cellLib.colSigI')"></th>
+                <th v-html="$t('datasets.cellLib.colCm')"></th>
+                <th v-html="$t('datasets.cellLib.colFc')"></th>
+                <th v-html="$t('datasets.cellLib.colVmThr')"></th>
+                <th :title="$t('datasets.cellLib.colRnucTitle')" v-html="$t('datasets.cellLib.colRnuc')"></th>
+                <th>{{ $t('datasets.cellLib.colRho') }}</th>
+                <th :title="$t('datasets.cellLib.colFresTitle')" v-html="$t('datasets.cellLib.colFres')"></th>
+                <th :title="$t('datasets.cellLib.colQTitle')">{{ $t('datasets.cellLib.colQ') }}</th>
+                <th :title="$t('datasets.cellLib.colEthrTitle')" v-html="$t('datasets.cellLib.colEthr')"></th>
+                <th>{{ $t('datasets.cellLib.colNotes') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -88,142 +88,130 @@
             </tbody>
           </table>
         </div>
-        <div class="datasets__table-footer">
-          C<sub>m</sub> = ε<sub>r</sub>·ε₀/d &nbsp;·&nbsp;
-          f<sub>c</sub> = 1/(2πτ), τ = R·C<sub>m</sub>·(2σ<sub>e</sub>+σ<sub>i</sub>)/(2σ<sub>e</sub>·σ<sub>i</sub>) &nbsp;·&nbsp;
-          Computed at σ<sub>e</sub> = 1.5 S/m (saline) · Kotnik &amp; Miklavcic (2000) &nbsp;·&nbsp;
-          f<sub>res</sub> / Q / E<sub>thr</sub>: acoustic resonance parameters (bacteria/virus only) · Tsen et al. (2007); Dykeman &amp; Sankey (2008)
-        </div>
+        <div class="datasets__table-footer" v-html="$t('datasets.cellLib.footer')"></div>
       </section>
 
       <!-- Propagation media -->
       <section class="datasets__card">
         <div class="datasets__card-hdr">
-          <h2 class="datasets__card-title">Propagation Media</h2>
-          <span class="datasets__card-tag">Extracellular conductivity σ<sub>e</sub> shifts τ and V<sub>m</sub></span>
+          <h2 class="datasets__card-title">{{ $t('datasets.media.sectionTitle') }}</h2>
+          <span class="datasets__card-tag" v-html="$t('datasets.media.sectionTag')"></span>
         </div>
         <div class="datasets__table-wrap">
           <table class="datasets__table">
             <thead>
               <tr>
-                <th>Key</th>
-                <th>Medium</th>
-                <th>σ<sub>e</sub> (S/m)</th>
-                <th>Effect on τ / f<sub>c</sub> (quasi-DC V<sub>m</sub> unchanged) — epithelial ref σ<sub>i</sub> ≈ 0.5 S/m</th>
-                <th>Typical Research Use</th>
+                <th>{{ $t('datasets.media.colKey') }}</th>
+                <th>{{ $t('datasets.media.colMedium') }}</th>
+                <th v-html="$t('datasets.media.colSigE')"></th>
+                <th v-html="$t('datasets.media.colEffect')"></th>
+                <th>{{ $t('datasets.media.colUse') }}</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td class="datasets__mono datasets__primary-val">saline</td>
-                <td>Physiological Saline (0.9% NaCl)</td>
+                <td class="datasets__mono datasets__primary-val">{{ $t('datasets.media.salineKey') }}</td>
+                <td>{{ $t('datasets.media.salineName') }}</td>
                 <td class="datasets__mono">1.500</td>
-                <td>Reference baseline · τ and f<sub>c</sub> reference (V<sub>m,DC</sub> independent of medium)</td>
-                <td>Standard in vitro assay medium · physiological approximation</td>
+                <td v-html="$t('datasets.media.salineEffect')"></td>
+                <td>{{ $t('datasets.media.salineUse') }}</td>
               </tr>
               <tr>
-                <td class="datasets__mono">blood</td>
-                <td>Whole Blood</td>
+                <td class="datasets__mono">{{ $t('datasets.media.bloodKey') }}</td>
+                <td>{{ $t('datasets.media.bloodName') }}</td>
                 <td class="datasets__mono">0.700</td>
-                <td>τ +16% · f<sub>c</sub> −14% (epithelial σ<sub>i</sub>≈0.5; bacteria ~5%; virions ~0% — low-σ<sub>i</sub> cells barely affected) · V<sub>m,DC</sub> unchanged</td>
-                <td>Haematological applications · in vivo tumour vasculature</td>
+                <td v-html="$t('datasets.media.bloodEffect')"></td>
+                <td>{{ $t('datasets.media.bloodUse') }}</td>
               </tr>
               <tr>
-                <td class="datasets__mono">tissue</td>
-                <td>Soft Tissue</td>
+                <td class="datasets__mono">{{ $t('datasets.media.tissueKey') }}</td>
+                <td>{{ $t('datasets.media.tissueName') }}</td>
                 <td class="datasets__mono">0.400</td>
-                <td>τ +39% · f<sub>c</sub> −28% (epithelial σ<sub>i</sub>≈0.5; bacteria ~13%; virions ~0.5%) · V<sub>m,DC</sub> unchanged · increased τ shifts fc lower</td>
-                <td>Solid tumour bulk / poorly-perfused tissue (note: DMEM ≈ 1.4–1.6 S/m, not used here)</td>
+                <td v-html="$t('datasets.media.tissueEffect')"></td>
+                <td>{{ $t('datasets.media.tissueUse') }}</td>
               </tr>
               <tr>
-                <td class="datasets__mono datasets__warn-val">water</td>
-                <td>Distilled Water</td>
+                <td class="datasets__mono datasets__warn-val">{{ $t('datasets.media.waterKey') }}</td>
+                <td>{{ $t('datasets.media.waterName') }}</td>
                 <td class="datasets__mono">0.001</td>
-                <td>τ ~200× longer · f<sub>c</sub> to ~5 kHz (epithelial σ<sub>i</sub>≈0.5 S/m); bacteria ~50–100×; virions ~3–5× (σ<sub>i</sub>≪σ<sub>e</sub> → medium effect collapses)</td>
-                <td>Electroporation buffer · academic boundary-condition reference</td>
+                <td v-html="$t('datasets.media.waterEffect')"></td>
+                <td>{{ $t('datasets.media.waterUse') }}</td>
               </tr>
             </tbody>
           </table>
         </div>
-        <div class="datasets__table-footer">
-          τ = R·C<sub>m</sub>·(2σ<sub>e</sub>+σ<sub>i</sub>)/(2σ<sub>e</sub>·σ<sub>i</sub>) — V<sub>m,DC</sub> independent of medium ·
-          τ shift magnitudes depend on σ<sub>i</sub>: large for σ<sub>i</sub> ≈ σ<sub>e</sub> (epithelial), negligible for σ<sub>i</sub> ≪ σ<sub>e</sub> (virions)
-        </div>
+        <div class="datasets__table-footer" v-html="$t('datasets.media.footer')"></div>
       </section>
 
       <!-- Therapeutic window reference -->
       <section class="datasets__card">
         <div class="datasets__card-hdr">
-          <h2 class="datasets__card-title">Therapeutic Window Reference</h2>
-          <span class="datasets__card-tag">Adenocarcinoma vs Hepatocyte · saline (σ<sub>e</sub> = 1.5 S/m)</span>
+          <h2 class="datasets__card-title">{{ $t('datasets.window.sectionTitle') }}</h2>
+          <span class="datasets__card-tag" v-html="$t('datasets.window.sectionTag')"></span>
         </div>
         <div class="datasets__ref-grid">
           <div class="datasets__ref-block datasets__ref-block--cancer">
-            <div class="datasets__ref-block-title">Target — Adenocarcinoma</div>
+            <div class="datasets__ref-block-title">{{ $t('datasets.window.cancerTitle') }}</div>
             <div class="datasets__ref-block-params">
-              <div class="datasets__rp-row"><span>Radius R</span><span class="datasets__mono">15 µm</span></div>
-              <div class="datasets__rp-row"><span>f<sub>c</sub> (saline)</span><span class="datasets__mono datasets__cancer-val">~0.49 MHz</span></div>
-              <div class="datasets__rp-row"><span>V<sub>m,thr</sub></span><span class="datasets__mono">0.70 V</span></div>
-              <div class="datasets__rp-row"><span>C<sub>m</sub></span><span class="datasets__mono">~15.1 mF/m²</span></div>
-              <div class="datasets__rp-row"><span>Lysis threshold</span><span class="datasets__mono datasets__cancer-val">~311 V/cm</span></div>
+              <div class="datasets__rp-row"><span>{{ $t('datasets.window.paramRadius') }}</span><span class="datasets__mono">{{ $t('datasets.window.cancerR') }}</span></div>
+              <div class="datasets__rp-row"><span v-html="$t('datasets.window.paramFc')"></span><span class="datasets__mono datasets__cancer-val">{{ $t('datasets.window.cancerFc') }}</span></div>
+              <div class="datasets__rp-row"><span v-html="$t('datasets.window.paramVmThr')"></span><span class="datasets__mono">{{ $t('datasets.window.cancerVmThr') }}</span></div>
+              <div class="datasets__rp-row"><span v-html="$t('datasets.window.paramCm')"></span><span class="datasets__mono">{{ $t('datasets.window.cancerCm') }}</span></div>
+              <div class="datasets__rp-row"><span>{{ $t('datasets.window.paramLysis') }}</span><span class="datasets__mono datasets__cancer-val">{{ $t('datasets.window.cancerLysis') }}</span></div>
             </div>
           </div>
           <div class="datasets__ref-block datasets__ref-block--window">
-            <div class="datasets__ref-block-title">Therapeutic Window</div>
+            <div class="datasets__ref-block-title">{{ $t('datasets.window.windowTitle') }}</div>
             <div class="datasets__window-stat">
-              <div class="datasets__window-ratio">~1.5×</div>
-              <div class="datasets__window-label">Max V<sub>m</sub> selectivity at quasi-DC (&lt;100 kHz) — driven by size ratio R<sub>T</sub>/R<sub>H</sub></div>
+              <div class="datasets__window-ratio">{{ $t('datasets.window.ratioVmSel') }}</div>
+              <div class="datasets__window-label" v-html="$t('datasets.window.labelVmSel')"></div>
             </div>
             <div class="datasets__window-stat datasets__window-stat--spaced">
-              <div class="datasets__window-ratio datasets__window-ratio--sm">~2.4×</div>
-              <div class="datasets__window-label">Therapeutic Index TI at quasi-DC — normalised by lysis thresholds (1.1 V / 0.70 V)</div>
+              <div class="datasets__window-ratio datasets__window-ratio--sm">{{ $t('datasets.window.ratioTI') }}</div>
+              <div class="datasets__window-label">{{ $t('datasets.window.labelTI') }}</div>
             </div>
             <div class="datasets__window-stat datasets__window-stat--spaced">
-              <div class="datasets__window-ratio datasets__window-ratio--sm datasets__window-ratio--muted">↓ freq</div>
-              <div class="datasets__window-label">Selectivity decreases above f<sub>c</sub>(T) — target rolls off before healthy cell</div>
+              <div class="datasets__window-ratio datasets__window-ratio--sm datasets__window-ratio--muted">{{ $t('datasets.window.ratioFreqDown') }}</div>
+              <div class="datasets__window-label" v-html="$t('datasets.window.labelFreqDown')"></div>
             </div>
             <div class="datasets__window-note">
-              Cancer lysis at ~311 V/cm · Healthy threshold at ~733 V/cm
+              {{ $t('datasets.window.windowNote') }}
             </div>
             <div class="datasets__window-range">
-              Safe operating range: <span class="datasets__mono datasets__primary-val">311–733 V/cm</span>
+              {{ $t('datasets.window.windowRange') }} <span class="datasets__mono datasets__primary-val">{{ $t('datasets.window.windowRangeVal') }}</span>
             </div>
           </div>
           <div class="datasets__ref-block datasets__ref-block--healthy">
-            <div class="datasets__ref-block-title">Reference — Hepatocyte</div>
+            <div class="datasets__ref-block-title">{{ $t('datasets.window.healthyTitle') }}</div>
             <div class="datasets__ref-block-params">
-              <div class="datasets__rp-row"><span>Radius R</span><span class="datasets__mono">10 µm</span></div>
-              <div class="datasets__rp-row"><span>f<sub>c</sub> (saline)</span><span class="datasets__mono datasets__ref-val">~1.08 MHz</span></div>
-              <div class="datasets__rp-row"><span>V<sub>m,thr</sub></span><span class="datasets__mono">1.10 V</span></div>
-              <div class="datasets__rp-row"><span>C<sub>m</sub></span><span class="datasets__mono">~6.3 mF/m²</span></div>
-              <div class="datasets__rp-row"><span>Lysis threshold</span><span class="datasets__mono datasets__ref-val">~733 V/cm</span></div>
+              <div class="datasets__rp-row"><span>{{ $t('datasets.window.paramRadius') }}</span><span class="datasets__mono">{{ $t('datasets.window.healthyR') }}</span></div>
+              <div class="datasets__rp-row"><span v-html="$t('datasets.window.paramFc')"></span><span class="datasets__mono datasets__ref-val">{{ $t('datasets.window.healthyFc') }}</span></div>
+              <div class="datasets__rp-row"><span v-html="$t('datasets.window.paramVmThr')"></span><span class="datasets__mono">{{ $t('datasets.window.healthyVmThr') }}</span></div>
+              <div class="datasets__rp-row"><span v-html="$t('datasets.window.paramCm')"></span><span class="datasets__mono">{{ $t('datasets.window.healthyCm') }}</span></div>
+              <div class="datasets__rp-row"><span>{{ $t('datasets.window.paramLysis') }}</span><span class="datasets__mono datasets__ref-val">{{ $t('datasets.window.healthyLysis') }}</span></div>
             </div>
           </div>
         </div>
-        <div class="datasets__table-footer">
-          Quasi-DC: E<sub>lysis</sub> = V<sub>m,thr</sub>/(1.5·R) ·
-          f<sub>c</sub> from Kotnik &amp; Miklavcic (2000) τ formula ·
-          TI = (V<sub>t</sub>/V<sub>t,thr</sub>) / (V<sub>h</sub>/V<sub>h,thr</sub>)
-        </div>
+        <div class="datasets__table-footer" v-html="$t('datasets.window.footer')"></div>
       </section>
 
       <!-- Double-shell nuclear envelope parameters -->
       <section class="datasets__card">
         <div class="datasets__card-hdr">
-          <h2 class="datasets__card-title">Double-Shell Nuclear Envelope Parameters</h2>
-          <span class="datasets__card-tag">Mammalian nucleated cells only · Kotnik &amp; Miklavcic (2006)</span>
+          <h2 class="datasets__card-title">{{ $t('datasets.nucShell.sectionTitle') }}</h2>
+          <span class="datasets__card-tag" v-html="$t('datasets.nucShell.sectionTag')"></span>
         </div>
         <div class="datasets__table-wrap">
           <table class="datasets__table">
             <thead>
               <tr>
-                <th>Cell</th>
-                <th title="Nuclear radius — typically 40–60% of cell radius for mammalian cells">R<sub>nuc</sub> (µm)</th>
-                <th title="Nuclear envelope thickness (inner + outer membrane + lumen ≈ 40 nm total; d here is electrical effective thickness)">d<sub>ne</sub> (nm)</th>
-                <th title="Relative permittivity of nuclear envelope — elevated vs lipid bilayer due to nuclear pore complex contribution">ε<sub>ne</sub></th>
-                <th title="Nucleoplasm conductivity — typically higher than cytoplasm due to dissolved chromatin and RNA">σ<sub>np</sub> (S/m)</th>
-                <th title="Nuclear membrane disruption threshold voltage — cancer nuclei have thinner/leakier NE, lower threshold">V<sub>thr,nuc</sub> (V)</th>
-                <th title="Peak frequency of nuclear Vm bandpass: f_peak = 1 / (2π × √(τ_out × τ_ne)) — nuclear Vm is maximised here, not at DC">f<sub>peak</sub> in saline</th>
+                <th>{{ $t('datasets.nucShell.colCell') }}</th>
+                <th :title="$t('datasets.nucShell.colRnucTitle')" v-html="$t('datasets.nucShell.colRnuc')"></th>
+                <th :title="$t('datasets.nucShell.colDneTitle')" v-html="$t('datasets.nucShell.colDne')"></th>
+                <th :title="$t('datasets.nucShell.colEpsNeTitle')" v-html="$t('datasets.nucShell.colEpsNe')"></th>
+                <th :title="$t('datasets.nucShell.colSigNpTitle')" v-html="$t('datasets.nucShell.colSigNp')"></th>
+                <th :title="$t('datasets.nucShell.colVthrNucTitle')" v-html="$t('datasets.nucShell.colVthrNuc')"></th>
+                <th :title="$t('datasets.nucShell.colFpeakTitle')" v-html="$t('datasets.nucShell.colFpeak')"></th>
               </tr>
             </thead>
             <tbody>
@@ -248,105 +236,266 @@
             </tbody>
           </table>
         </div>
-        <div class="datasets__table-footer">
-          τ<sub>ne</sub> = R<sub>nuc</sub>·C<sub>m,ne</sub>·(2σ<sub>i</sub>+σ<sub>np</sub>)/(2σ<sub>i</sub>·σ<sub>np</sub>)  ·  C<sub>m,ne</sub> = ε<sub>ne</sub>·ε₀/d<sub>ne</sub>  ·
-          f<sub>peak</sub> = 1/(2π√(τ<sub>out</sub>·τ<sub>ne</sub>))  ·  Nuclear Vm is bandpass — zero at DC &amp; GHz, peaks near f<sub>peak</sub>  ·
-          Cancer nuclei: higher N/C ratio, thinner NE, lower V<sub>thr,nuc</sub> → additional selectivity axis at f<sub>peak</sub>  ·  σ<sub>ne</sub> not stored (capacitive limit σ<sub>ne</sub>→0 assumed)
-        </div>
+        <div class="datasets__table-footer" v-html="$t('datasets.nucShell.footer')"></div>
       </section>
 
       <!-- Acoustic resonance reference -->
       <section class="datasets__card">
         <div class="datasets__card-hdr">
-          <h2 class="datasets__card-title">Acoustic Resonance Reference</h2>
-          <span class="datasets__card-tag">Virus &amp; Bacteria · Resonance mode</span>
+          <h2 class="datasets__card-title">{{ $t('datasets.acousticRes.sectionTitle') }}</h2>
+          <span class="datasets__card-tag" v-html="$t('datasets.acousticRes.sectionTag')"></span>
         </div>
         <div class="datasets__ref-grid datasets__ref-grid--res">
           <div class="datasets__ref-block datasets__ref-block--virus">
-            <div class="datasets__ref-block-title">Viral Capsids (R ≈ 60 nm)</div>
+            <div class="datasets__ref-block-title">{{ $t('datasets.acousticRes.virusTitle') }}</div>
             <div class="datasets__ref-block-params">
-              <div class="datasets__rp-row"><span>Influenza A f<sub>res</sub></span><span class="datasets__mono datasets__primary-val">~12 GHz</span></div>
-              <div class="datasets__rp-row"><span>SARS-CoV-2 f<sub>res</sub></span><span class="datasets__mono datasets__primary-val">~10 GHz</span></div>
-              <div class="datasets__rp-row"><span>E<sub>thr</sub> range</span><span class="datasets__mono datasets__warn-val">800–1000 V/cm</span></div>
-              <div class="datasets__rp-row"><span>Q factor</span><span class="datasets__mono">25–30</span></div>
+              <div class="datasets__rp-row"><span v-html="$t('datasets.acousticRes.virusInfluFres')"></span><span class="datasets__mono datasets__primary-val">{{ $t('datasets.acousticRes.virusInfluFresVal') }}</span></div>
+              <div class="datasets__rp-row"><span v-html="$t('datasets.acousticRes.virusSarsFres')"></span><span class="datasets__mono datasets__primary-val">{{ $t('datasets.acousticRes.virusSarsFresVal') }}</span></div>
+              <div class="datasets__rp-row"><span v-html="$t('datasets.acousticRes.virusEthrRange')"></span><span class="datasets__mono datasets__warn-val">{{ $t('datasets.acousticRes.virusEthrRangeVal') }}</span></div>
+              <div class="datasets__rp-row"><span>{{ $t('datasets.acousticRes.virusQ') }}</span><span class="datasets__mono">{{ $t('datasets.acousticRes.virusQVal') }}</span></div>
             </div>
           </div>
           <div class="datasets__ref-block datasets__ref-block--window">
-            <div class="datasets__ref-block-title">Selectivity Principle</div>
+            <div class="datasets__ref-block-title">{{ $t('datasets.acousticRes.windowTitle') }}</div>
             <div class="datasets__window-stat">
-              <div class="datasets__window-ratio">∞</div>
-              <div class="datasets__window-label">Theoretical selectivity at f<sub>res</sub> — healthy Schwan Vm → 0 at GHz</div>
+              <div class="datasets__window-ratio">{{ $t('datasets.acousticRes.selRatioVal') }}</div>
+              <div class="datasets__window-label" v-html="$t('datasets.acousticRes.selRatioLabel')"></div>
             </div>
             <div class="datasets__window-stat datasets__window-stat--spaced">
-              <div class="datasets__window-ratio datasets__window-ratio--sm">Lorentzian</div>
-              <div class="datasets__window-label">Disruption = (E / E<sub>thr</sub>) × L(f, f<sub>res</sub>, Q)<br>L peaks at 1.0 at f<sub>res</sub></div>
+              <div class="datasets__window-ratio datasets__window-ratio--sm">{{ $t('datasets.acousticRes.selLorentzian') }}</div>
+              <div class="datasets__window-label" v-html="$t('datasets.acousticRes.selLorentzianLabel')"></div>
             </div>
-            <div class="datasets__window-note datasets__window-note--spaced">
-              Ref: Tsen et al. (2007, 2012) · Dykeman &amp; Sankey (2008)
-            </div>
+            <div class="datasets__window-note datasets__window-note--spaced" v-html="$t('datasets.acousticRes.selRef')"></div>
           </div>
           <div class="datasets__ref-block datasets__ref-block--bacteria">
-            <div class="datasets__ref-block-title">Bacteria (R ≈ 0.5–1 µm)</div>
+            <div class="datasets__ref-block-title">{{ $t('datasets.acousticRes.bacteriaTitle') }}</div>
             <div class="datasets__ref-block-params">
-              <div class="datasets__rp-row"><span>E. coli f<sub>res</sub></span><span class="datasets__mono datasets__primary-val">~0.5 GHz</span></div>
-              <div class="datasets__rp-row"><span>MRSA f<sub>res</sub></span><span class="datasets__mono datasets__primary-val">~1.5 GHz</span></div>
-              <div class="datasets__rp-row"><span>E<sub>thr</sub> range</span><span class="datasets__mono datasets__warn-val">2000–3000 V/cm</span></div>
-              <div class="datasets__rp-row"><span>Q factor</span><span class="datasets__mono">12–15</span></div>
+              <div class="datasets__rp-row"><span v-html="$t('datasets.acousticRes.bacteriaEcoliF')"></span><span class="datasets__mono datasets__primary-val">{{ $t('datasets.acousticRes.bacteriaEcoliFVal') }}</span></div>
+              <div class="datasets__rp-row"><span v-html="$t('datasets.acousticRes.bacteriaMrsaF')"></span><span class="datasets__mono datasets__primary-val">{{ $t('datasets.acousticRes.bacteriaMrsaFVal') }}</span></div>
+              <div class="datasets__rp-row"><span v-html="$t('datasets.acousticRes.bacteriaEthrRange')"></span><span class="datasets__mono datasets__warn-val">{{ $t('datasets.acousticRes.bacteriaEthrRangeVal') }}</span></div>
+              <div class="datasets__rp-row">
+                <span>{{ $t('datasets.acousticRes.bacteriaQ') }}</span>
+                <span class="datasets__mono">{{ $t('datasets.acousticRes.bacteriaQVal') }} <span class="datasets__muted">{{ $t('datasets.acousticRes.bacteriaQNote') }}</span></span>
+              </div>
             </div>
           </div>
         </div>
-        <div class="datasets__table-footer">
-          f<sub>res</sub> ≈ v<sub>protein</sub>/(2R) · v<sub>wall</sub> ≈ 1000–1500 m/s (protein/peptidoglycan) ·
-          Healthy mammalian cells have no rigid-shell resonance — Schwan V<sub>m</sub> rolls off via f<sub>c</sub> ≈ 1 MHz (ωτ ≫ 1), approaching zero at GHz
-        </div>
+        <div class="datasets__table-footer" v-html="$t('datasets.acousticRes.footer')"></div>
       </section>
 
       <!-- Electrode / field geometry note -->
       <section class="datasets__card datasets__card--flat">
         <div class="datasets__card-hdr">
-          <h2 class="datasets__card-title">Field Geometry Assumptions</h2>
+          <h2 class="datasets__card-title">{{ $t('datasets.fieldGeo.sectionTitle') }}</h2>
         </div>
         <div class="datasets__geo-body">
-          <p class="datasets__geo-text">
-            The Schwan model assumes a <strong>uniform, quasi-static electric field</strong> applied
-            to a suspension of non-interacting spherical cells at low volume fraction. In clinical
-            TTField devices (Optune®), 4 electrode arrays generate a rotating field at 100–300 kHz
-            with amplitudes of 1–3 V/cm at depth; the field map is non-uniform and computed via
-            FEM models of head conductivity. The BioResonance simulator applies the uniform-field
-            Schwan equation and is appropriate for well-mixed in vitro geometries (parallel-plate
-            or four-electrode chambers).
-          </p>
+          <p class="datasets__geo-text" v-html="$t('datasets.fieldGeo.geoParagraph')"></p>
           <div class="datasets__geo-assumptions">
             <div class="datasets__geo-item">
               <span class="datasets__geo-icon">◈</span>
-              <span>Single-shell (Schwan) or double-shell (nuclear envelope) cell model</span>
+              <span>{{ $t('datasets.fieldGeo.assumption1') }}</span>
             </div>
             <div class="datasets__geo-item">
               <span class="datasets__geo-icon">◈</span>
-              <span>Uniform applied field (E constant in space)</span>
+              <span>{{ $t('datasets.fieldGeo.assumption2') }}</span>
             </div>
             <div class="datasets__geo-item">
               <span class="datasets__geo-icon">◈</span>
-              <span>Dilute suspension — cell-cell interactions neglected</span>
+              <span>{{ $t('datasets.fieldGeo.assumption3') }}</span>
             </div>
             <div class="datasets__geo-item">
               <span class="datasets__geo-icon">◈</span>
-              <span>Linear membrane response — below pore-formation threshold</span>
+              <span>{{ $t('datasets.fieldGeo.assumption4') }}</span>
             </div>
             <div class="datasets__geo-item">
               <span class="datasets__geo-icon">◈</span>
-              <span>Isotropic, homogeneous cytoplasm and extracellular medium</span>
+              <span>{{ $t('datasets.fieldGeo.assumption5') }}</span>
+            </div>
+            <div class="datasets__geo-item">
+              <span class="datasets__geo-icon">◈</span>
+              <span v-html="$t('datasets.fieldGeo.assumption6')"></span>
+            </div>
+            <div class="datasets__geo-item">
+              <span class="datasets__geo-icon">◈</span>
+              <span v-html="$t('datasets.fieldGeo.assumption7')"></span>
+            </div>
+            <div class="datasets__geo-item">
+              <span class="datasets__geo-icon">◈</span>
+              <span v-html="$t('datasets.fieldGeo.assumption8')"></span>
             </div>
           </div>
+        </div>
+      </section>
+
+      <!-- Simulation thresholds & classification -->
+      <section class="datasets__card">
+        <div class="datasets__card-hdr">
+          <h2 class="datasets__card-title" v-html="$t('datasets.thresholds.sectionTitle')"></h2>
+          <span class="datasets__card-tag">{{ $t('datasets.thresholds.sectionTag') }}</span>
+        </div>
+        <div class="datasets__threshold-grid">
+
+          <!-- Disruption ratio states -->
+          <div class="datasets__thr-block">
+            <div class="datasets__thr-title">{{ $t('datasets.thresholds.drTitle') }}</div>
+            <table class="datasets__table datasets__table--compact">
+              <thead>
+                <tr>
+                  <th>{{ $t('datasets.thresholds.drColRange') }}</th>
+                  <th>{{ $t('datasets.thresholds.drColState') }}</th>
+                  <th>{{ $t('datasets.thresholds.drColDesc') }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="datasets__mono datasets__primary-val">&lt; {{ (THRESHOLDS.VIBRATING_MIN * 100).toFixed(0) }}%</td>
+                  <td>{{ $t('datasets.thresholds.drStableState') }}</td>
+                  <td>{{ $t('datasets.thresholds.drStableDesc') }}</td>
+                </tr>
+                <tr>
+                  <td class="datasets__mono datasets__primary-val">{{ (THRESHOLDS.VIBRATING_MIN * 100).toFixed(0) }}–{{ (THRESHOLDS.HEALTHY_APPROACHING * 100).toFixed(0) }}%</td>
+                  <td class="datasets__primary-val">{{ $t('datasets.thresholds.drNourishingState') }}</td>
+                  <td>{{ $t('datasets.thresholds.drNourishingDesc') }}</td>
+                </tr>
+                <tr>
+                  <td class="datasets__mono datasets__warn-val">{{ (THRESHOLDS.HEALTHY_APPROACHING * 100).toFixed(0) }}–{{ (THRESHOLDS.DISRUPTION_WARN * 100).toFixed(0) }}%</td>
+                  <td class="datasets__warn-val">{{ $t('datasets.thresholds.drRevEpState') }}</td>
+                  <td v-html="$t('datasets.thresholds.drRevEpDesc')"></td>
+                </tr>
+                <tr>
+                  <td class="datasets__mono datasets__cancer-val">{{ (THRESHOLDS.DISRUPTION_WARN * 100).toFixed(0) }}–{{ (THRESHOLDS.LYSIS_PROB_CENTER * 100).toFixed(0) }}%</td>
+                  <td class="datasets__cancer-val">{{ $t('datasets.thresholds.drVibratingState') }}</td>
+                  <td>{{ $t('datasets.thresholds.drVibratingDesc') }}</td>
+                </tr>
+                <tr>
+                  <td class="datasets__mono datasets__cancer-val">≥ {{ (THRESHOLDS.LYSIS_PROB_CENTER * 100).toFixed(0) }}%</td>
+                  <td class="datasets__cancer-val">{{ $t('datasets.thresholds.drLysingState') }}</td>
+                  <td v-html="$t('datasets.thresholds.drLysingDesc')"></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Temperature thresholds -->
+          <div class="datasets__thr-block">
+            <div class="datasets__thr-title">{{ $t('datasets.thresholds.tempTitle') }}</div>
+            <table class="datasets__table datasets__table--compact">
+              <thead>
+                <tr>
+                  <th>{{ $t('datasets.thresholds.tempColT') }}</th>
+                  <th>{{ $t('datasets.thresholds.tempColEvent') }}</th>
+                  <th>{{ $t('datasets.thresholds.tempColRef') }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="datasets__mono datasets__primary-val">37</td>
+                  <td>{{ $t('datasets.thresholds.tempNormoEvent') }}</td>
+                  <td>{{ $t('datasets.thresholds.tempNormoRef') }}</td>
+                </tr>
+                <tr>
+                  <td class="datasets__mono datasets__warn-val">{{ THRESHOLDS.TEMP_WARN }}</td>
+                  <td class="datasets__warn-val">{{ $t('datasets.thresholds.tempHyperEvent') }}</td>
+                  <td>{{ $t('datasets.thresholds.tempHyperRef') }}</td>
+                </tr>
+                <tr>
+                  <td class="datasets__mono datasets__warn-val">{{ THRESHOLDS.TEMP_DENATURING }}</td>
+                  <td class="datasets__warn-val">{{ $t('datasets.thresholds.tempDenatEvent') }}</td>
+                  <td>{{ $t('datasets.thresholds.tempDenatRef') }}</td>
+                </tr>
+                <tr>
+                  <td class="datasets__mono datasets__cancer-val">{{ THRESHOLDS.TEMP_VAPORIZING }}</td>
+                  <td class="datasets__cancer-val">{{ $t('datasets.thresholds.tempLysisEvent') }}</td>
+                  <td>{{ $t('datasets.thresholds.tempLysisRef') }}</td>
+                </tr>
+                <tr>
+                  <td class="datasets__mono datasets__muted">{{ THRESHOLDS.TEMP_CAP }}</td>
+                  <td class="datasets__muted">{{ $t('datasets.thresholds.tempCeilEvent') }}</td>
+                  <td>{{ $t('datasets.thresholds.tempCeilRef') }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Selectivity & TI thresholds -->
+          <div class="datasets__thr-block">
+            <div class="datasets__thr-title" v-html="$t('datasets.thresholds.tiTitle')"></div>
+            <table class="datasets__table datasets__table--compact">
+              <thead>
+                <tr>
+                  <th v-html="$t('datasets.thresholds.tiColTI')"></th>
+                  <th>{{ $t('datasets.thresholds.tiColBadge') }}</th>
+                  <th>{{ $t('datasets.thresholds.tiColMode') }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="datasets__mono datasets__cancer-val">&lt; {{ THRESHOLDS.TI_MARGINAL }}×</td>
+                  <td class="datasets__cancer-val">{{ $t('datasets.thresholds.tiPoorBadge') }}</td>
+                  <td>{{ $t('datasets.thresholds.tiPoorMode') }}</td>
+                </tr>
+                <tr>
+                  <td class="datasets__mono datasets__warn-val">{{ THRESHOLDS.TI_MARGINAL }}–{{ THRESHOLDS.TI_STRONG }}×</td>
+                  <td class="datasets__warn-val">{{ $t('datasets.thresholds.tiMarginalBadge') }}</td>
+                  <td>{{ $t('datasets.thresholds.tiMarginalMode') }}</td>
+                </tr>
+                <tr>
+                  <td class="datasets__mono datasets__primary-val">≥ {{ THRESHOLDS.TI_STRONG }}×</td>
+                  <td class="datasets__primary-val">{{ $t('datasets.thresholds.tiStrongBadge') }}</td>
+                  <td>{{ $t('datasets.thresholds.tiStrongMode') }}</td>
+                </tr>
+                <tr>
+                  <td class="datasets__mono datasets__cancer-val">H ≥ {{ (THRESHOLDS.DISRUPTION_WARN * 100).toFixed(0) }}%</td>
+                  <td class="datasets__cancer-val">{{ $t('datasets.thresholds.tiAblativeBadge') }}</td>
+                  <td>{{ $t('datasets.thresholds.tiAblativeMode') }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Cell classification -->
+          <div class="datasets__thr-block">
+            <div class="datasets__thr-title">{{ $t('datasets.thresholds.classTitle') }}</div>
+            <table class="datasets__table datasets__table--compact">
+              <thead>
+                <tr>
+                  <th>{{ $t('datasets.thresholds.classColR') }}</th>
+                  <th>{{ $t('datasets.thresholds.classColCat') }}</th>
+                  <th>{{ $t('datasets.thresholds.classColMode') }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="datasets__mono">&lt; {{ THRESHOLDS.RADIUS_VIRUS_MAX }} µm</td>
+                  <td class="datasets__primary-val">{{ $t('datasets.thresholds.classVirusCat') }}</td>
+                  <td>{{ $t('datasets.thresholds.classVirusMode') }}</td>
+                </tr>
+                <tr>
+                  <td class="datasets__mono">{{ THRESHOLDS.RADIUS_VIRUS_MAX }} – {{ THRESHOLDS.RADIUS_BACTERIA_MAX }} µm</td>
+                  <td class="datasets__warn-val">{{ $t('datasets.thresholds.classBacteriaCat') }}</td>
+                  <td>{{ $t('datasets.thresholds.classBacteriaMode') }}</td>
+                </tr>
+                <tr>
+                  <td class="datasets__mono">≥ {{ THRESHOLDS.RADIUS_BACTERIA_MAX }} µm</td>
+                  <td class="datasets__ref-val">{{ $t('datasets.thresholds.classMammalCat') }}</td>
+                  <td>{{ $t('datasets.thresholds.classMammalMode') }}</td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="datasets__thr-note">
+              {{ $t('datasets.thresholds.classNote') }}
+            </div>
+          </div>
+
         </div>
       </section>
 
       <!-- CTA -->
       <div class="datasets__open-lab">
         <RouterLink to="/experiment" class="datasets__btn-lab">
-          Open Experiment Lab →
+          {{ $t('datasets.cta.btnLab') }}
         </RouterLink>
-        <span class="datasets__open-lab-note">Apply these parameters interactively in the simulation</span>
+        <span class="datasets__open-lab-note">{{ $t('datasets.cta.note') }}</span>
       </div>
 
     </div>
@@ -359,6 +508,7 @@ import { CELL_PRESETS, GROUP_COLORS, GROUP_LABELS, type CellGroup, type CellPres
 import { MEDIA } from '@/constants/media'
 import { CELL_GROUP } from '@/constants/strings'
 import { membraneCm, computeFc, computeTau, computeNuclearTau } from '@/utils/physics'
+import { THRESHOLDS } from '@/constants/cellCard'
 
 const SIGMA_SALINE = MEDIA.saline.conductivity // 1.5 S/m
 
@@ -434,7 +584,7 @@ export default defineComponent({
       conductivity: val.conductivity,
     }))
 
-    return { presets, nuclearPresets, mediaEntries, GROUPS, GROUP_COLORS, GROUP_LABELS, CELL_GROUP }
+    return { presets, nuclearPresets, mediaEntries, GROUPS, GROUP_COLORS, GROUP_LABELS, CELL_GROUP, THRESHOLDS }
   },
 })
 </script>
@@ -754,6 +904,50 @@ export default defineComponent({
     color: var(--color-text-muted);
     font-family: var(--font-mono);
   }
+
+  /* ── Threshold tables grid ────────────────────────────────────────────────── */
+  &__threshold-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0;
+  }
+
+  &__thr-block {
+    padding: 1.25rem 1.5rem;
+    @include flex-col(0.75rem);
+
+    & + & {
+      border-left: 1px solid var(--color-border);
+    }
+
+    &:nth-child(n+3) {
+      border-top: 1px solid var(--color-border);
+    }
+  }
+
+  &__thr-title {
+    font-size: 0.7rem;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--color-text-muted);
+  }
+
+  &__thr-note {
+    font-size: 0.7rem;
+    color: var(--color-text-muted);
+    line-height: 1.5;
+  }
+
+  &__table--compact {
+    min-width: unset;
+
+    th, td {
+      padding: 0.32rem 0.55rem;
+      font-size: 0.74rem;
+    }
+  }
+
 }
 
 /* ── Responsive ───────────────────────────────────────────────────────────── */
@@ -762,6 +956,13 @@ export default defineComponent({
     grid-template-columns: 1fr;
   }
   .datasets__ref-block + .datasets__ref-block {
+    border-left: none;
+    border-top: 1px solid var(--color-border);
+  }
+  .datasets__threshold-grid {
+    grid-template-columns: 1fr;
+  }
+  .datasets__thr-block + .datasets__thr-block {
     border-left: none;
     border-top: 1px solid var(--color-border);
   }

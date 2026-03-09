@@ -18,20 +18,20 @@
         <!-- Sidebar TOC -->
         <nav class="protocol__toc" aria-label="Table of contents">
           <div class="protocol__toc-title" v-html="$t('protocol.toc.title')"></div>
-          <a href="#overview"       class="protocol__toc-link" v-html="$t('protocol.toc.overview')"></a>
-          <a href="#physics"        class="protocol__toc-link" v-html="$t('protocol.toc.physics')"></a>
-          <a href="#schwan"         class="protocol__toc-link protocol__toc-indent" v-html="$t('protocol.toc.schwan')"></a>
-          <a href="#thermal"        class="protocol__toc-link protocol__toc-indent" v-html="$t('protocol.toc.thermal')"></a>
-          <a href="#maxwell"        class="protocol__toc-link protocol__toc-indent" v-html="$t('protocol.toc.maxwell')"></a>
-          <a href="#disruption"     class="protocol__toc-link protocol__toc-indent" v-html="$t('protocol.toc.disruption')"></a>
-          <a href="#resonance"      class="protocol__toc-link protocol__toc-indent" v-html="$t('protocol.toc.resonance')"></a>
-          <a href="#nsep"           class="protocol__toc-link protocol__toc-indent" v-html="$t('protocol.toc.nsep')"></a>
-          <a href="#doubleshell"    class="protocol__toc-link protocol__toc-indent" v-html="$t('protocol.toc.doubleshell')"></a>
-          <a href="#uncertainty"    class="protocol__toc-link protocol__toc-indent" v-html="$t('protocol.toc.uncertainty')"></a>
-          <a href="#biomodulation"  class="protocol__toc-link protocol__toc-indent" v-html="$t('protocol.toc.biomodulation')"></a>
-          <a href="#protocol-steps" class="protocol__toc-link" v-html="$t('protocol.toc.protocol')"></a>
-          <a href="#safety"         class="protocol__toc-link" v-html="$t('protocol.toc.safety')"></a>
-          <a href="#refs"           class="protocol__toc-link" v-html="$t('protocol.toc.refs')"></a>
+          <a href="#overview"       class="protocol__toc-link" :class="{ 'protocol__toc-link--active': activeSection === 'overview' }" v-html="$t('protocol.toc.overview')"></a>
+          <a href="#physics"        class="protocol__toc-link" :class="{ 'protocol__toc-link--active': isPhysicsActive }" v-html="$t('protocol.toc.physics')"></a>
+          <a href="#schwan"         class="protocol__toc-link protocol__toc-indent" :class="{ 'protocol__toc-link--active': activeSection === 'schwan' }" v-html="$t('protocol.toc.schwan')"></a>
+          <a href="#thermal"        class="protocol__toc-link protocol__toc-indent" :class="{ 'protocol__toc-link--active': activeSection === 'thermal' }" v-html="$t('protocol.toc.thermal')"></a>
+          <a href="#maxwell"        class="protocol__toc-link protocol__toc-indent" :class="{ 'protocol__toc-link--active': activeSection === 'maxwell' }" v-html="$t('protocol.toc.maxwell')"></a>
+          <a href="#disruption"     class="protocol__toc-link protocol__toc-indent" :class="{ 'protocol__toc-link--active': activeSection === 'disruption' }" v-html="$t('protocol.toc.disruption')"></a>
+          <a href="#resonance"      class="protocol__toc-link protocol__toc-indent" :class="{ 'protocol__toc-link--active': activeSection === 'resonance' }" v-html="$t('protocol.toc.resonance')"></a>
+          <a href="#nsep"           class="protocol__toc-link protocol__toc-indent" :class="{ 'protocol__toc-link--active': activeSection === 'nsep' }" v-html="$t('protocol.toc.nsep')"></a>
+          <a href="#doubleshell"    class="protocol__toc-link protocol__toc-indent" :class="{ 'protocol__toc-link--active': activeSection === 'doubleshell' }" v-html="$t('protocol.toc.doubleshell')"></a>
+          <a href="#uncertainty"    class="protocol__toc-link protocol__toc-indent" :class="{ 'protocol__toc-link--active': activeSection === 'uncertainty' }" v-html="$t('protocol.toc.uncertainty')"></a>
+          <a href="#biomodulation"  class="protocol__toc-link protocol__toc-indent" :class="{ 'protocol__toc-link--active': activeSection === 'biomodulation' }" v-html="$t('protocol.toc.biomodulation')"></a>
+          <a href="#protocol-steps" class="protocol__toc-link" :class="{ 'protocol__toc-link--active': activeSection === 'protocol-steps' }" v-html="$t('protocol.toc.protocol')"></a>
+          <a href="#safety"         class="protocol__toc-link" :class="{ 'protocol__toc-link--active': activeSection === 'safety' }" v-html="$t('protocol.toc.safety')"></a>
+          <a href="#refs"           class="protocol__toc-link" :class="{ 'protocol__toc-link--active': activeSection === 'refs' }" v-html="$t('protocol.toc.refs')"></a>
         </nav>
 
         <!-- Main document -->
@@ -340,8 +340,27 @@ interface UncertaintyRow   { category: string; band: string; bandClass: string; 
 interface SafetyRow        { param: string; value: string; valueClass: string; sig: string }
 interface RefItem          { body: string; doi?: string; pmid?: string; note?: string }
 
+const ALL_SECTION_IDS = [
+  'overview',
+  'physics', 'schwan', 'thermal', 'maxwell', 'disruption',
+  'resonance', 'nsep', 'doubleshell', 'uncertainty', 'biomodulation',
+  'protocol-steps', 'safety', 'refs',
+] as const
+
+const PHYSICS_IDS = new Set(['physics', 'schwan', 'thermal', 'maxwell', 'disruption', 'resonance', 'nsep', 'doubleshell', 'uncertainty', 'biomodulation'])
+
 export default defineComponent({
+  data() {
+    return {
+      activeSection: 'overview' as string,
+    }
+  },
+
   computed: {
+    isPhysicsActive(): boolean {
+      return PHYSICS_IDS.has(this.activeSection)
+    },
+
     protocolStepKeys(): string[] {
       return ['s01', 's02', 's03', 's04', 's05', 's06', 's07', 's08', 's09', 's10']
     },
@@ -370,6 +389,27 @@ export default defineComponent({
       return (this.$tm as Function)('protocol.refs.list') as RefItem[]
     },
   },
+
+  mounted() {
+    const handler = () => {
+      let current: string = ALL_SECTION_IDS[0]
+      for (const id of ALL_SECTION_IDS) {
+        const el = document.getElementById(id)
+        if (el && el.getBoundingClientRect().top <= 80) {
+          current = id
+        }
+      }
+      this.activeSection = current
+    }
+    window.addEventListener('scroll', handler, { passive: true })
+    handler()
+    ;(this as unknown as Record<string, unknown>)._scrollHandler = handler
+  },
+
+  beforeUnmount() {
+    const handler = (this as unknown as Record<string, unknown>)._scrollHandler as EventListener | undefined
+    if (handler) window.removeEventListener('scroll', handler)
+  },
 })
 </script>
 
@@ -378,7 +418,6 @@ export default defineComponent({
 
 .protocol {
   flex: 1;
-  overflow-y: auto;
   background-color: var(--color-bg);
 
   &__inner {
@@ -430,11 +469,15 @@ export default defineComponent({
   &__toc {
     @include flex-col(0.05rem);
     position: sticky;
-    top: 80px;
+    top: 5rem;
+    max-height: calc(100vh - 6rem);
+    overflow-y: auto;
     background: var(--color-surface);
     border: 1px solid var(--color-border);
     border-radius: var(--radius);
     padding: 1.25rem;
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-border) transparent;
   }
 
   &__toc-title {
@@ -459,12 +502,19 @@ export default defineComponent({
 
     &--active {
       color: var(--color-primary);
+      background-color: rgba(0, 212, 255, 0.08);
+      border-left: 2px solid var(--color-primary);
+      padding-left: calc(0.5rem - 2px);
     }
   }
 
   &__toc-indent {
     padding-left: 1.5rem;
     font-size: 0.73rem;
+
+    &.protocol__toc-link--active {
+      padding-left: calc(1.5rem - 2px);
+    }
   }
 
   /* ── Document ──────────────────────────────────────────── */
