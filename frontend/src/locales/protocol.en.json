@@ -81,7 +81,7 @@
     },
     "disruption": {
       "title": "2.4 Disruption Criterion (IRE)",
-      "p1": "Membrane disruption (irreversible electroporation; Neumann et al. [7]) is initiated when the disruption ratio exceeds threshold for a sustained period. The <strong>pulse-envelope factor</strong> f<sub>pulse</sub> = 1 − exp(−t<sub>p</sub>/τ) captures the RC charging dynamics of the membrane during a rectangular pulse of width t<sub>p</sub> (Weaver &amp; Chizmadzhev [3]): at t<sub>p</sub> ≫ τ (standard IRE with µs pulses), f<sub>pulse</sub> ≈ 1 and the listed V<sub>m,threshold</sub> values apply directly. At t<sub>p</sub> ≪ τ (nsEP with 10 ns pulses), f<sub>pulse</sub> ≈ 0.07 for a hepatocyte — the effective threshold is ~14× higher, requiring proportionally greater field for disruption. CW mode sets f<sub>pulse</sub> = 1.",
+      "p1": "Membrane disruption (irreversible electroporation; Neumann et al. [7]; membrane deformation dynamics reviewed in Dimova et al. [6]) is initiated when the disruption ratio exceeds threshold for a sustained period. The <strong>pulse-envelope factor</strong> f<sub>pulse</sub> = 1 − exp(−t<sub>p</sub>/τ) captures the RC charging dynamics of the membrane during a rectangular pulse of width t<sub>p</sub> (Weaver &amp; Chizmadzhev [3]): at t<sub>p</sub> ≫ τ (standard IRE with µs pulses), f<sub>pulse</sub> ≈ 1 and the listed V<sub>m,threshold</sub> values apply directly. At t<sub>p</sub> ≪ τ (nsEP with 10 ns pulses), f<sub>pulse</sub> ≈ 0.07 for a hepatocyte — the effective threshold is ~14× higher, requiring proportionally greater field for disruption. CW mode sets f<sub>pulse</sub> = 1.",
       "p2": "Cancer cells exhibit lower V<sub>m,threshold</sub> (~0.65–0.85 V) than healthy tissue (~1.0–1.1 V), creating a therapeutic window where tumour cell disruption occurs at sub-lethal field intensities for normal cells. For adenocarcinoma vs. hepatocyte in saline, maximum V<sub>m</sub> selectivity ≈ R<sub>T</sub>/R<sub>H</sub> = <strong>1.5×</strong> occurs at quasi-DC (f ≪ f<sub>c</sub>(T)); the Therapeutic Index (accounting for different lysis thresholds) reaches <strong>~2.4×</strong> at quasi-DC. Selectivity <em>decreases</em> with increasing frequency as the larger target cell rolls off before the smaller healthy cell.",
       "revEp": "The <strong>Rev-EP window (50–85% disruption ratio)</strong> represents reversible electroporation: pores open transiently and re-seal after the field is removed. This is the drug/gene delivery regime — cells survive. The simulation shows this state with an amber indicator. Increasing the field or duration beyond the 85% threshold arms the irreversible lysis countdown.",
       "eqMain": "Disruption Ratio = V<sub>m</sub>(f) × f<sub>pulse</sub> / V<sub>m,threshold</sub>",
@@ -200,7 +200,7 @@
       },
       "s06": {
         "title": "Increase field intensity toward target threshold",
-        "desc": "Raise the Field Intensity slider incrementally. Monitor the Target disruption ratio on the CellCard and Selectivity Panel progress bars. For adenocarcinoma vs. hepatocyte in saline at quasi-DC, lysis occurs near ~311 V/cm for the cancer cell while the healthy cell remains below 50% disruption. Log readings at each significant threshold crossing."
+        "desc": "Raise the Field Intensity slider incrementally. Monitor the Target disruption ratio on the CellCard and Selectivity Panel progress bars. For adenocarcinoma vs. hepatocyte in saline at quasi-DC, lysis occurs near ~311 V/cm for the cancer cell while the healthy cell remains below 50% disruption. <strong>Field Sweep Analysis:</strong> Open the Field Sweep panel to visualise DR<sub>T</sub> and DR<sub>H</sub> across the full field range. The therapeutic window (green fill: DR<sub>T</sub> ≥ 85% and DR<sub>H</sub> &lt; 50%) is highlighted automatically. Use the <em>⭐ Set to Window Center</em> snap bar button to apply the window midpoint. Note: this sets the live field intensity to within the lysis zone — the cell card will arm the lysis countdown. Log readings at each significant threshold crossing."
       },
       "s07": {
         "title": "Record lysis event and review temperature",
@@ -212,7 +212,7 @@
       },
       "s09": {
         "title": "Change cell preset and repeat parametric study",
-        "desc": "Switch to a different target preset (e.g. GBM, MCF-7, E. coli) and repeat steps 4–7. Compare selectivity ratios, f<sub>c</sub> positions, and lysis thresholds across cell types. Use the Cell Parameters panel and σ<sub>i</sub> uncertainty bands on the chart to assess sensitivity to parameter variability."
+        "desc": "Switch to a different target preset (e.g. GBM, MCF-7, E. coli) and repeat steps 4–7. Compare selectivity ratios, f<sub>c</sub> positions, and lysis thresholds across cell types. Use the Cell Parameters panel and σ<sub>i</sub> uncertainty bands on the chart to assess sensitivity to parameter variability. <strong>Cell Population Model:</strong> Open the Population Model panel and set a radius variance (1–30%) to generate a Gaussian-sampled cell population (Box-Muller sampling, N = 100–1000 cells). The histogram shows the distribution of disruption ratios and the fraction of cells in each state (Lysed %, Rev-EP %, Nourishing %). This quantifies treatment efficacy across biological heterogeneity — critical for assessing whether all target cells are reached by a given protocol while healthy cells remain sub-threshold."
       },
       "s10": {
         "title": "Export session data for analysis",
@@ -326,6 +326,11 @@
         "body": "James R. Lepock. <em>Cellular effects of hyperthermia: relevance to the minimum dose for thermal damage.</em> International Journal of Hyperthermia. 2003;19(3):252–266.",
         "doi": "10.1080/0265673031000065817",
         "note": "Thermal damage thresholds: 42 °C hyperthermic onset (IAHT), 60 °C protein denaturation, 100 °C vaporisation; basis for temperature warning states in simulation"
+      },
+      {
+        "body": "Camelia Gabriel, Sami Gabriel, E. Corthout. <em>The dielectric properties of biological tissues: I. Literature survey.</em> Physics in Medicine &amp; Biology. 1996;41(11):2231–2249.",
+        "doi": "10.1088/0031-9155/41/11/001",
+        "note": "Comprehensive survey of tissue electrical properties; basis for extracellular conductivity σ<sub>e</sub> values and temperature-dependent correction coefficients used in this simulator. Also underlies the skin depth model δ = √(1/(π·f·μ₀·σ<sub>e</sub>)) displayed in the Selectivity Panel."
       }
     ]
   }

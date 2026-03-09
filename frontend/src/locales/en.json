@@ -118,6 +118,8 @@
     "localTip": "<strong>Local Mode</strong>\nBackend unreachable · all physics\nrun client-side · no multi-client sync",
     "snapBarLabel": "Therapeutic Window",
     "snapBarBtn": "⭐ Set to Window Center",
+    "snapBarBtnConfirm": "⚡ Confirm — Lyse {cellLabel}?",
+    "snapBarLysisWarn": "⚡ will lyse {cellLabel}",
     "snapBarSubField": "DR_T ≥ 85% · DR_H < 50% · set E →",
     "snapBarSubFreq": "DR_T ≥ 85% · DR_H < 50% · set f →",
     "badgeHealthy": "Healthy ·",

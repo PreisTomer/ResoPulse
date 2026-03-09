@@ -159,7 +159,12 @@
           {{ sweepWindow.param === 'field' ? $t('sweep.fieldUnit') : $t('sweep.freqUnit') }}
         </span>
         <span class="experiment__snap-bar-affects">{{ sweepWindow.param === 'field' ? $t('exp.snapBarSubField') : $t('exp.snapBarSubFreq') }} {{ Math.round((sweepWindow.lo + sweepWindow.hi) / 2) }} {{ sweepWindow.param === 'field' ? $t('sweep.fieldUnit') : $t('sweep.freqUnit') }}</span>
-        <button class="experiment__snap-bar-btn" @click="snapToWindow">{{ $t('exp.snapBarBtn') }}</button>
+        <span class="experiment__snap-bar-lysis-warn">{{ $t('exp.snapBarLysisWarn', { cellLabel: snapLysisCellLabel }) }}</span>
+        <button
+          class="experiment__snap-bar-btn"
+          :class="{ 'experiment__snap-bar-btn--confirm': snapConfirming }"
+          @click="snapToWindow"
+        >{{ snapConfirming ? $t('exp.snapBarBtnConfirm', { cellLabel: snapLysisCellLabel }) : $t('exp.snapBarBtn') }}</button>
       </div>
 
       <PopulationPanel @open-change="populationPanelOpen = $event" />
@@ -186,6 +191,7 @@ import ExperimentLog from '@/components/ExperimentLog.vue'
 import { useExperimentStore } from '@/stores/experimentStore'
 import { CELL_PRESETS, GROUP_COLORS, GROUP_LABELS } from '@/constants/cellLibrary'
 import type { CellPreset, CellGroup } from '@/constants/cellLibrary'
+import { formatLysisTime } from '@/utils/sliderTooltips'
 import { CATEGORY_DEFAULTS } from '@/constants/experimentDefaults'
 import { CELL_CATEGORY, CELL_TYPE, CELL_GROUP, CHART_MODE } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
@@ -229,6 +235,8 @@ export default defineComponent({
       sweepWindow: null as { lo: number; hi: number; param: 'field' | 'freq' } | null,
       sweepPanelOpen: false,
       populationPanelOpen: false,
+      snapConfirming: false,
+      _snapResetTimer: null as number | null,
     }
   },
 
@@ -317,6 +325,12 @@ Larger radius raises Vm and lowers the lysis field threshold.`
         : this.$t('exp.chartModeResonance')
     },
 
+    /** Dynamic label used in the snap-bar lysis warning and confirm button.
+     *  Includes the live target cell name and estimated lysis countdown. */
+    snapLysisCellLabel(): string {
+      return `${this.store.target.label} (~${formatLysisTime(this.store.lysisDelayMs)})`
+    },
+
     cells() {
       // Resolve label + sublabel from the live store cell (changes when preset loads)
       const cellLabel = (type: 'healthy' | 'target') => {
@@ -361,6 +375,17 @@ Larger radius raises Vm and lowers the lysis field threshold.`
 
     snapToWindow() {
       if (!this.sweepWindow) return
+      // First click: arm the confirmation state; auto-disarm after 3 s
+      if (!this.snapConfirming) {
+        this.snapConfirming = true
+        this._snapResetTimer = setTimeout(() => {
+          this.snapConfirming = false
+        }, 3000) as unknown as number
+        return
+      }
+      // Second click within 3 s: execute the snap
+      clearTimeout(this._snapResetTimer ?? undefined)
+      this.snapConfirming = false
       const center = Math.round((this.sweepWindow.lo + this.sweepWindow.hi) / 2)
       if (this.sweepWindow.param === 'field') {
         this.store.setFieldIntensity(center)
@@ -421,6 +446,10 @@ Larger radius raises Vm and lowers the lysis field threshold.`
       // Sync backend — ensures socket subscribers see the new field parameters immediately
       broadcastFieldParams(freqKHz, fieldVcm, d.medium)
     },
+  },
+
+  beforeUnmount() {
+    clearTimeout(this._snapResetTimer ?? undefined)
   },
 })
 </script>
@@ -753,6 +782,14 @@ Larger radius raises Vm and lowers the lysis field threshold.`
     white-space: nowrap;
   }
 
+  &__snap-bar-lysis-warn {
+    font-size: 0.63rem;
+    font-family: var(--font-mono);
+    color: var(--color-danger);
+    opacity: 0.8;
+    white-space: nowrap;
+  }
+
   &__snap-bar-btn {
     margin-left: auto;
     padding: 0.22rem 0.75rem;
@@ -764,13 +801,30 @@ Larger radius raises Vm and lowers the lysis field threshold.`
     font-size: 0.7rem;
     letter-spacing: 0.04em;
     cursor: pointer;
-    transition: background 0.15s, border-color 0.15s;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
     white-space: nowrap;
 
     &:hover {
       background: rgba(34, 197, 94, 0.24);
       border-color: rgba(34, 197, 94, 0.65);
     }
+
+    &--confirm {
+      background: rgba(239, 68, 68, 0.14);
+      border-color: rgba(239, 68, 68, 0.55);
+      color: var(--color-danger);
+      animation: snap-confirm-pulse 0.7s ease-in-out infinite alternate;
+
+      &:hover {
+        background: rgba(239, 68, 68, 0.24);
+        border-color: rgba(239, 68, 68, 0.8);
+      }
+    }
+  }
+
+  @keyframes snap-confirm-pulse {
+    from { opacity: 0.75; }
+    to   { opacity: 1.0; }
   }
 
   /* ── Chart section (collapsible) ─────────────────────────────── */

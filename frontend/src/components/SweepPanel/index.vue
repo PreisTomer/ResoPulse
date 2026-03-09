@@ -321,7 +321,7 @@ Range where DR_target ≥ 85% AND DR_healthy &lt; 50% simultaneously.
   Center: <span class="tip-val">${center} ${unit}</span>
 
 Operating within this window maximises therapeutic selectivity.
-Click "Snap to center" to set the active parameter to ${center} ${unit}.`
+Use the <span class="tip-val">⭐ Set to Window Center</span> button in the snap bar to apply ${center} ${unit} to the active parameter.`
     },
 
     tipNoWindow(): string {
@@ -781,21 +781,6 @@ Steady-state temperature via Pennes bioheat.${warn}`
   &__window-sub {
     font-size: 0.72rem;
     color: var(--color-text-muted);
-  }
-
-  &__snap-btn {
-    margin-left: auto;
-    font-size: 0.72rem;
-    font-family: var(--font-mono);
-    padding: 0.22rem 0.6rem;
-    border-radius: 3px;
-    border: 1px solid rgba(34,197,94,0.35);
-    background: rgba(34,197,94,0.08);
-    color: rgb(34,197,94);
-    cursor: pointer;
-    transition: all 0.15s;
-
-    &:hover { background: rgba(34,197,94,0.15); border-color: rgba(34,197,94,0.6); }
   }
 
   &__table {

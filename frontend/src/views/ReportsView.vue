@@ -6,13 +6,13 @@
       <div class="reports__header">
         <div class="reports__eyebrow">
           <span class="reports__eyebrow-dot"></span>
-          Session History
+          {{ $t('reports.eyebrow') }}
         </div>
         <div class="reports__header-row">
           <div>
-            <h1 class="reports__title">Experiment Reports</h1>
+            <h1 class="reports__title">{{ $t('reports.title') }}</h1>
             <p class="reports__subtitle">
-              Session log · recorded readings · lysis events · CSV export
+              {{ $t('reports.subtitle') }}
             </p>
           </div>
           <div class="reports__header-actions">
@@ -21,14 +21,14 @@
               :disabled="totalReadings === 0"
               @click="store.exportCSV()"
             >
-              ↓ Export CSV
+              {{ $t('reports.exportCsv') }}
             </button>
             <button
               class="reports__btn reports__btn--clear"
               :disabled="totalReadings === 0"
               @click="store.clearLog()"
             >
-              Clear Log
+              {{ $t('reports.clearLog') }}
             </button>
           </div>
         </div>
@@ -36,11 +36,11 @@
 
       <!-- Session name -->
       <div class="reports__session-row">
-        <label class="reports__session-label">Session Name</label>
+        <label class="reports__session-label">{{ $t('reports.sessionLabel') }}</label>
         <input
           v-model="store.sessionName"
           class="reports__session-input"
-          placeholder="Session 001"
+          :placeholder="$t('reports.sessionPlaceholder')"
           spellcheck="false"
         />
       </div>
@@ -51,57 +51,56 @@
           <div class="reports__stat-value" :class="{ 'reports__stat-empty': totalReadings === 0 }">
             {{ totalReadings }}
           </div>
-          <div class="reports__stat-label">Total Readings</div>
+          <div class="reports__stat-label">{{ $t('reports.totalReadings') }}</div>
         </div>
         <div class="reports__stat-card">
           <div class="reports__stat-value reports__stat-lysis">{{ lysisEvents }}</div>
-          <div class="reports__stat-label">Lysis Events</div>
+          <div class="reports__stat-label">{{ $t('reports.lysisEvents') }}</div>
         </div>
         <div class="reports__stat-card">
           <div class="reports__stat-value">{{ manualReadings }}</div>
-          <div class="reports__stat-label">Manual Logs</div>
+          <div class="reports__stat-label">{{ $t('reports.manualReadings') }}</div>
         </div>
         <div class="reports__stat-card">
           <div class="reports__stat-value reports__stat-primary">{{ avgSelectivity ?? '—' }}</div>
-          <div class="reports__stat-label">Avg Selectivity</div>
+          <div class="reports__stat-label">{{ $t('reports.avgSelectivity') }}</div>
         </div>
         <div class="reports__stat-card">
           <div class="reports__stat-value reports__stat-green">{{ peakSelectivity ?? '—' }}</div>
-          <div class="reports__stat-label">Peak Selectivity</div>
+          <div class="reports__stat-label">{{ $t('reports.peakSelectivity') }}</div>
         </div>
         <div class="reports__stat-card">
           <div class="reports__stat-value reports__stat-red">{{ peakTargetRatio ?? '—' }}</div>
-          <div class="reports__stat-label">Peak T-Disruption</div>
+          <div class="reports__stat-label">{{ $t('reports.peakTargetRatio') }}</div>
         </div>
         <div class="reports__stat-card reports__stat-card--wide">
           <div class="reports__stat-value reports__stat-small">{{ freqRange ?? '—' }}</div>
-          <div class="reports__stat-label">Frequency Range</div>
+          <div class="reports__stat-label">{{ $t('reports.freqRange') }}</div>
         </div>
         <div class="reports__stat-card reports__stat-card--wide">
           <div class="reports__stat-value reports__stat-small">{{ fieldRange ?? '—' }}</div>
-          <div class="reports__stat-label">Field Range</div>
+          <div class="reports__stat-label">{{ $t('reports.fieldRange') }}</div>
         </div>
       </div>
 
       <!-- Log table -->
       <div class="reports__log-card">
         <div class="reports__log-card-hdr">
-          <span class="reports__log-title">Experiment Log</span>
+          <span class="reports__log-title">{{ $t('reports.logTitle') }}</span>
           <span class="reports__log-count">
-            {{ totalReadings }} {{ totalReadings === 1 ? 'entry' : 'entries' }}
+            {{ totalReadings }} {{ totalReadings === 1 ? $t('reports.countSingular') : $t('reports.countPlural') }}
           </span>
         </div>
 
         <!-- Empty state -->
         <div v-if="totalReadings === 0" class="reports__log-empty">
-          <div class="reports__empty-icon">◎</div>
-          <div class="reports__empty-text">No readings recorded yet</div>
+          <div class="reports__empty-icon">{{ $t('reports.emptyIcon') }}</div>
+          <div class="reports__empty-text">{{ $t('reports.emptyText') }}</div>
           <p class="reports__empty-sub">
-            Go to the Experiment Lab and click "Log Reading", or trigger a lysis event to
-            automatically record a session entry.
+            {{ $t('reports.emptySub') }}
           </p>
           <RouterLink to="/experiment" class="reports__empty-btn">
-            Open Experiment Lab →
+            {{ $t('reports.emptyBtn') }}
           </RouterLink>
         </div>
 
@@ -110,20 +109,20 @@
           <table class="reports__table">
             <thead>
               <tr>
-                <th>#</th>
-                <th>Time</th>
-                <th>Target</th>
-                <th>Freq (kHz)</th>
-                <th>Field (V/cm)</th>
-                <th>Medium</th>
-                <th title="Schwan transmembrane potential — ≈0 in Resonance mode (see T-Ratio %)">T-Vm (mV) ¹</th>
-                <th title="Schwan transmembrane potential — ≈0 in Resonance mode (see H-Ratio %)">H-Vm (mV) ¹</th>
-                <th title="Selectivity = targetDisruptionRatio / healthyDisruptionRatio — valid in both IRE and Resonance mode">Selectivity</th>
-                <th title="Target disruption ratio — uses acoustic resonance model for bacteria/virus, Schwan model for cancer">T-Ratio %</th>
-                <th title="Healthy cell disruption ratio — always Schwan-based (≈0 at GHz for Resonance mode)">H-Ratio %</th>
-                <th>T-Temp (°C)</th>
-                <th>H-Temp (°C)</th>
-                <th>Event</th>
+                <th>{{ $t('reports.colId') }}</th>
+                <th>{{ $t('reports.colTime') }}</th>
+                <th>{{ $t('reports.colTarget') }}</th>
+                <th>{{ $t('reports.colFreq') }}</th>
+                <th>{{ $t('reports.colField') }}</th>
+                <th>{{ $t('reports.colMedium') }}</th>
+                <th :title="$t('reports.colTVmTitle')">{{ $t('reports.colTVm') }}</th>
+                <th :title="$t('reports.colHVmTitle')">{{ $t('reports.colHVm') }}</th>
+                <th :title="$t('reports.colSelectivityTitle')">{{ $t('reports.colSelectivity') }}</th>
+                <th :title="$t('reports.colTRatioTitle')">{{ $t('reports.colTRatio') }}</th>
+                <th :title="$t('reports.colHRatioTitle')">{{ $t('reports.colHRatio') }}</th>
+                <th>{{ $t('reports.colTTemp') }}</th>
+                <th>{{ $t('reports.colHTemp') }}</th>
+                <th>{{ $t('reports.colEvent') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -135,8 +134,8 @@
                 <td class="reports__mono reports__muted">{{ e.id }}</td>
                 <td class="reports__mono">{{ e.timestamp }}</td>
                 <td class="reports__mono">{{ e.targetPreset }}</td>
-                <td class="reports__mono">{{ e.freqKHz }}</td>
-                <td class="reports__mono">{{ e.fieldVcm }}</td>
+                <td class="reports__mono">{{ formatFreqKHz(e.freqKHz, 1) }}</td>
+                <td class="reports__mono">{{ formatFieldVcm(e.fieldVcm) }}</td>
                 <td class="reports__mono reports__muted">{{ e.medium }}</td>
                 <td class="reports__mono reports__cancer-val">{{ e.targetVm.toFixed(3) }}</td>
                 <td class="reports__mono reports__ref-val">{{ e.healthyVm.toFixed(3) }}</td>
@@ -165,19 +164,19 @@
         <!-- Legend -->
         <div v-if="totalReadings > 0" class="reports__legend">
           <span class="reports__legend-item">
-            <span class="reports__legend-color reports__cancer-val">■</span> Target value / high disruption
+            <span class="reports__legend-color reports__cancer-val">■</span> {{ $t('reports.legendTarget') }}
           </span>
           <span class="reports__legend-item">
-            <span class="reports__legend-color reports__ref-val">■</span> Healthy / reference value
+            <span class="reports__legend-color reports__ref-val">■</span> {{ $t('reports.legendHealthy') }}
           </span>
           <span class="reports__legend-item">
-            <span class="reports__legend-color reports__green-val">■</span> Selectivity ≥ {{ THRESHOLDS.SEL_STRONG }}× (therapeutic window)
+            <span class="reports__legend-color reports__green-val">■</span> {{ $t('reports.legendSelectivity', { strong: THRESHOLDS.SEL_STRONG }) }}
           </span>
           <span class="reports__legend-item">
-            <span class="reports__legend-color reports__warn-val">■</span> Selectivity {{ THRESHOLDS.SEL_MARGINAL }}–{{ THRESHOLDS.SEL_STRONG }}× or temperature warning
+            <span class="reports__legend-color reports__warn-val">■</span> {{ $t('reports.legendWarning', { marginal: THRESHOLDS.SEL_MARGINAL, strong: THRESHOLDS.SEL_STRONG }) }}
           </span>
           <span class="reports__legend-item reports__footnote">
-            ¹ T-Vm / H-Vm: Schwan transmembrane potential (mV). In Resonance mode (bacteria/virus at GHz), these are ≈ 0 — use T-Ratio % / H-Ratio % as the primary disruption metrics.
+            {{ $t('reports.footnote') }}
           </span>
         </div>
       </div>
@@ -189,6 +188,7 @@
 <script lang="ts">
 import { defineComponent, computed } from 'vue'
 import { useExperimentStore } from '@/stores/experimentStore'
+import { formatFreqKHz, formatFieldVcm } from '@/utils/format'
 import { LOG_EVENT } from '@/constants/strings'
 import { THRESHOLDS } from '@/constants/cellCard'
 
@@ -216,7 +216,7 @@ export default defineComponent({
       const freqs = store.entries.map((e) => e.freqKHz)
       const lo = Math.min(...freqs)
       const hi = Math.max(...freqs)
-      return lo === hi ? `${lo} kHz` : `${lo} – ${hi} kHz`
+      return lo === hi ? formatFreqKHz(lo) : `${formatFreqKHz(lo)} – ${formatFreqKHz(hi)}`
     })
 
     const fieldRange = computed(() => {
@@ -224,7 +224,7 @@ export default defineComponent({
       const fields = store.entries.map((e) => e.fieldVcm)
       const lo = Math.min(...fields)
       const hi = Math.max(...fields)
-      return lo === hi ? `${lo} V/cm` : `${lo} – ${hi} V/cm`
+      return lo === hi ? formatFieldVcm(lo) : `${formatFieldVcm(lo)} – ${formatFieldVcm(hi)}`
     })
 
     const peakTargetRatio = computed(() => {
@@ -254,6 +254,8 @@ export default defineComponent({
       peakTargetRatio,
       eventClass,
       selClass,
+      formatFreqKHz,
+      formatFieldVcm,
       LOG_EVENT,
       THRESHOLDS,
     }
