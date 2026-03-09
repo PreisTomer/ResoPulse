@@ -919,5 +919,70 @@ export default defineComponent({
     display: block;
     overflow-x: auto;
   }
+
+  // Prevent doc from escaping its column
+  .protocol__doc {
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  // Equation blocks: scroll internally rather than pushing page width
+  .protocol__eq-block {
+    overflow-x: auto;
+    padding: 0.65rem 0.85rem;
+    // Shrink mono text so shorter formulas fit without any scroll
+    font-size: 0.8rem;
+  }
+
+  .protocol__eq-main {
+    font-size: 0.78rem;
+    white-space: nowrap; // allow horizontal scroll within the block
+  }
+
+  .protocol__eq-sub {
+    font-size: 0.68rem;
+    white-space: nowrap;
+    padding-left: 0.35rem;
+  }
+
+  .protocol__eq-note {
+    font-size: 0.6rem;
+    white-space: normal; // notes wrap normally
+  }
+
+  // Warn / info boxes: ensure they don't overflow
+  .protocol__warn-box,
+  .protocol__info-box {
+    font-size: 0.78rem;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+
+  // Step numbers and body text: comfortable reading width
+  .protocol__body-text {
+    font-size: 0.88rem;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+}
+
+// Extra-small phones (≤400px) — tighten further
+@media (max-width: 400px) {
+  .protocol__inner {
+    padding: 0.75rem 0.75rem 3rem;
+  }
+
+  .protocol__eq-main { font-size: 0.72rem; }
+  .protocol__eq-sub  { font-size: 0.62rem; }
+
+  .protocol__section-title {
+    font-size: 1rem;
+  }
+
+  .protocol__toc-link {
+    font-size: 0.82rem;
+    padding: 0.5rem 0.65rem;
+  }
 }
 </style>

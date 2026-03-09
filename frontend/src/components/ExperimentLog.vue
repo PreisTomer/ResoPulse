@@ -205,7 +205,7 @@ Disruption ratio: ${(e.targetRatio * 100).toFixed(1)}% of lysis threshold`
 Disruption ratio: ${(e.healthyRatio * 100).toFixed(1)}% of lysis threshold`
     },
     tipCellSel(e: { selectivity: number; targetTemp: number; healthyTemp: number }): string {
-      return `<strong>Selectivity: ×${e.selectivity.toFixed(3)}</strong>
+      return `<strong>Selectivity: ×${e.selectivity.toFixed(2)}</strong>
 T-Vm / H-Vm ratio at this reading.
 Target temp: ${e.targetTemp}°C  ·  Healthy temp: ${e.healthyTemp}°C`
     },

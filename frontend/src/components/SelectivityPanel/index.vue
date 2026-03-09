@@ -187,10 +187,10 @@ export default defineComponent({
       return                                                                             'sel-panel__mode-badge--subthreshold'
     },
 
-    targetVmMv(): string  { return (this.store.targetVm  * 1000).toFixed(2) },
-    healthyVmMv(): string { return (this.store.healthyVm * 1000).toFixed(2) },
-    targetSarVal(): string  { return this.store.targetSAR.toFixed(3)  },
-    healthySarVal(): string { return this.store.healthySAR.toFixed(3) },
+    targetVmMv(): string  { return (this.store.targetVm  * 1000).toFixed(1) },
+    healthyVmMv(): string { return (this.store.healthyVm * 1000).toFixed(1) },
+    targetSarVal(): string  { return this.store.targetSAR.toFixed(1)  },
+    healthySarVal(): string { return this.store.healthySAR.toFixed(1) },
 
     isResonanceTarget(): boolean {
       const cat = this.store.targetCellCategory
@@ -394,7 +394,7 @@ the exact σ_i value used. Validate with measured cell impedance (patch clamp / 
         : sel >= sm
           ? '<span class="tip-warn">Marginal window — adjust field or preset</span>'
           : '<span class="tip-warn">Non-selective — healthy cells equally at risk</span>'
-      const selStr = sel >= 99 ? ICON.INFINITY : sel.toFixed(3)
+      const selStr = sel >= 99 ? ICON.INFINITY : sel.toFixed(2)
 
       if (this.isResonanceTarget) {
         return `<strong>TI (Therapeutic Index) = Target / Healthy disruption ratio</strong>
@@ -478,7 +478,7 @@ Ref: Tsen et al. (2007); Dykeman &amp; Sankey (2008)
 Scanned 300 log-spaced points from 10 kHz → 500 MHz.
 Maximises target / healthy disruption ratio at current field and medium.
 
-Peak: <span class="${cls}">${label} · ×${sel.toFixed(3)}</span>
+Peak: <span class="${cls}">${label} · ×${sel.toFixed(2)}</span>
 ${snapNote}
 
 Physics:

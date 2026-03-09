@@ -121,7 +121,7 @@ export default defineComponent({
     dutyCycleDisplay(): string {
       const pct = this.store.dutyCycle * 100
       if (pct < 0.001) return (pct * 1000).toFixed(1) + ' µ%'
-      if (pct < 0.1)   return pct.toFixed(4) + '%'
+      if (pct < 0.1)   return pct.toFixed(2) + '%'
       return pct.toFixed(2) + '%'
     },
 

@@ -255,7 +255,7 @@ export default defineComponent({
       if (this.isAcousticTarget) {
         return `DR ${(this.disruptionRatio * 100).toFixed(0)}${UNIT.PERCENT}`
       }
-      return `${this.vm.toFixed(3)} ${UNIT.MV}`
+      return `${this.vm.toFixed(1)} ${UNIT.MV}`
     },
     tempDisplay(): string  { return `${this.temperature.toFixed(1)} ${UNIT.DEG_C}` },
     tempWarning():     boolean { return this.temperature > TEMP_WARN_CELSIUS },
