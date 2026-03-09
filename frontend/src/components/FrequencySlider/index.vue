@@ -367,10 +367,10 @@ export default defineComponent({
 /* ── Container query ───────────────────── */
 @container (max-width: 320px) {
   .field-panel__row {
-    grid-template-columns: 5rem 1fr auto;
+    grid-template-columns: 5rem 1fr 5.5rem;
     gap: 0.5rem;
   }
-  .field-panel__readout { min-width: 5.5rem; }
+  .field-panel__readout { width: 5.5rem; }
   .field-panel__readout-sub { display: none; }
   .field-panel__row-meta { display: none; }
   .field-panel__row-label { font-size: 0.58rem; }
@@ -399,10 +399,10 @@ export default defineComponent({
     padding: 0.7rem 0.85rem;
   }
   .field-panel__row {
-    grid-template-columns: 5.5rem 1fr auto;
+    grid-template-columns: 5.5rem 1fr 6rem;
     gap: 0.5rem;
   }
-  .field-panel__readout { min-width: 6rem; }
+  .field-panel__readout { width: 6rem; }
   .field-panel__readout-value { font-size: 0.85rem; }
   .field-panel__readout-sub { display: none; }
   .field-panel__row-meta { display: none; }
@@ -551,19 +551,20 @@ export default defineComponent({
   /* ── Row ─────────────────────────────────────────────────────────── */
   &__row {
     display: grid;
-    grid-template-columns: 7.5rem 1fr auto;
+    // Fixed readout column (8.5rem) prevents text width changes from resizing the slider
+    grid-template-columns: 7.5rem 1fr 8.5rem;
     align-items: center;
     gap: 0.85rem;
     min-height: 2.75rem;
 
     &--medium {
-      grid-template-columns: 7.5rem 1fr auto;
+      grid-template-columns: 7.5rem 1fr 8.5rem;
     }
 
     /* Advanced rows: shorter label column + narrower readout → more slider room */
     &--compact-readout {
-      grid-template-columns: 5.5rem 1fr auto;
-      .field-panel__readout { min-width: 6rem; }
+      grid-template-columns: 5.5rem 1fr 6.5rem;
+      .field-panel__readout { width: 6.5rem; }
     }
 
     &--hyperthermic .field-panel__slider {
@@ -713,7 +714,8 @@ export default defineComponent({
     flex-direction: column;
     align-items: flex-end;
     gap: 0.25rem;
-    min-width: 8rem;
+    width: 8.5rem;    // fixed — must match grid column so text never shifts slider
+    overflow: hidden; // clip rather than push layout
 
     &-value {
       font-size: 1rem;
