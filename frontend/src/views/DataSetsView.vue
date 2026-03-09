@@ -43,12 +43,12 @@
                 <th>{{ $t('datasets.cellLib.colR') }}</th>
                 <th>{{ $t('datasets.cellLib.colD') }}</th>
                 <th :title="$t('datasets.cellLib.colErTitle')" v-html="$t('datasets.cellLib.colEr')"></th>
-                <th v-html="$t('datasets.cellLib.colSigI')"></th>
-                <th v-html="$t('datasets.cellLib.colCm')"></th>
-                <th v-html="$t('datasets.cellLib.colFc')"></th>
-                <th v-html="$t('datasets.cellLib.colVmThr')"></th>
+                <th :title="$t('datasets.cellLib.colSigITitle')" v-html="$t('datasets.cellLib.colSigI')"></th>
+                <th :title="$t('datasets.cellLib.colCmTitle')" v-html="$t('datasets.cellLib.colCm')"></th>
+                <th :title="$t('datasets.cellLib.colFcTitle')" v-html="$t('datasets.cellLib.colFc')"></th>
+                <th :title="$t('datasets.cellLib.colVmThrTitle')" v-html="$t('datasets.cellLib.colVmThr')"></th>
                 <th :title="$t('datasets.cellLib.colRnucTitle')" v-html="$t('datasets.cellLib.colRnuc')"></th>
-                <th>{{ $t('datasets.cellLib.colRho') }}</th>
+                <th :title="$t('datasets.cellLib.colRhoTitle')">{{ $t('datasets.cellLib.colRho') }}</th>
                 <th :title="$t('datasets.cellLib.colFresTitle')" v-html="$t('datasets.cellLib.colFres')"></th>
                 <th :title="$t('datasets.cellLib.colQTitle')">{{ $t('datasets.cellLib.colQ') }}</th>
                 <th :title="$t('datasets.cellLib.colEthrTitle')" v-html="$t('datasets.cellLib.colEthr')"></th>
@@ -83,7 +83,7 @@
                 <td class="datasets__mono" :class="p.hasResonance ? 'datasets__primary-val' : 'datasets__muted'">{{ p.resFreqDisplay }}</td>
                 <td class="datasets__mono" :class="p.hasResonance ? '' : 'datasets__muted'">{{ p.resQDisplay }}</td>
                 <td class="datasets__mono" :class="p.hasResonance ? 'datasets__warn-val' : 'datasets__muted'">{{ p.resEthrDisplay }}</td>
-                <td class="datasets__notes-cell">{{ p.notes }}</td>
+                <td class="datasets__notes-cell" :title="p.notes">{{ p.notes }}</td>
               </tr>
             </tbody>
           </table>
@@ -359,7 +359,7 @@
                 </tr>
                 <tr>
                   <td class="datasets__mono datasets__warn-val">{{ (THRESHOLDS.HEALTHY_APPROACHING * 100).toFixed(0) }}–{{ (THRESHOLDS.DISRUPTION_WARN * 100).toFixed(0) }}%</td>
-                  <td class="datasets__warn-val">{{ $t('datasets.thresholds.drRevEpState') }}</td>
+                  <td class="datasets__warn-val" :title="$t('datasets.thresholds.drRevEpStateTitle')">{{ $t('datasets.thresholds.drRevEpState') }}</td>
                   <td v-html="$t('datasets.thresholds.drRevEpDesc')"></td>
                 </tr>
                 <tr>
@@ -461,7 +461,7 @@
                 <tr>
                   <th>{{ $t('datasets.thresholds.classColR') }}</th>
                   <th>{{ $t('datasets.thresholds.classColCat') }}</th>
-                  <th>{{ $t('datasets.thresholds.classColMode') }}</th>
+                  <th :title="$t('datasets.thresholds.classColModeTitle')">{{ $t('datasets.thresholds.classColMode') }}</th>
                 </tr>
               </thead>
               <tbody>
