@@ -115,7 +115,7 @@ export default defineComponent({})
   justify-content: center;
   min-height: calc(100vh - 60px);
   position: relative;
-  overflow: hidden;
+  overflow-x: hidden; // vertical must NOT be hidden — content overflows on small phones
 
   &__bg-grid {
     position: absolute;
@@ -363,21 +363,5 @@ export default defineComponent({})
   50%       { text-shadow: 0 0 44px rgba(0, 212, 255, 0.52); }
 }
 
-@media (max-width: 580px) {
-  .home {
-    &__feature-cards { grid-template-columns: 1fr; }
-    &__actions { grid-template-columns: 1fr; }
-    &__caps { grid-template-columns: repeat(2, auto); }
-  }
-}
-
-@media (max-width: 600px) {
-  .home {
-    &__logo-wrap { width: 140px; height: 140px; }
-    &__logo-circle { width: 70px; height: 70px; }
-    &__ring--3, &__ring--4 { display: none; }
-    &__actions { flex-direction: column; align-items: stretch; }
-    &__btn { justify-content: center; }
-  }
-}
+// Media queries → _responsive.scss
 </style>

@@ -1,0 +1,176 @@
+// _responsive.scss — centralised responsive media queries for BioResonance
+//
+// Specificity strategy for scoped Vue components:
+//   Scoped child selectors compile to .cls[data-v-xxx] = (0,1,1,0).
+//   Using .root .child = (0,2,0,0) beats scoped specificity.
+//   Unscoped components (ExperimentView) need no prefix.
+//
+// NavBar and ProtocolView mobile CSS live in their own scoped <style> blocks
+// for reliability — they are NOT duplicated here.
+//
+// Breakpoints
+//   $bp-phone : 480px  — small phones
+//   $bp-sm    : 640px  — large phones
+//   $bp-md    : 768px  — tablets portrait / hamburger threshold
+//   $bp-lg    : 1024px — small laptops
+//   $bp-xl    : 1200px — wide tablets / 13" laptops
+
+// ─── HomeView ─────────────────────────────────────────────────────────────────
+@media (max-width: 768px) {
+  // Switch from centered flexbox to top-aligned so tall content isn't clipped
+  .home {
+    align-items: flex-start;
+    justify-content: flex-start;
+    min-height: unset;
+  }
+
+  .home .home__inner {
+    padding: 2rem 1.25rem 3rem;
+    gap: 1.25rem;
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .home .home__title {
+    font-size: clamp(2.4rem, 10vw, 4rem);
+  }
+
+  .home .home__tagline {
+    font-size: 0.88rem;
+    max-width: 100%;           // never wider than viewport
+    word-break: break-word;
+  }
+
+  // Capability pills: 2 columns instead of 3
+  .home .home__caps {
+    grid-template-columns: repeat(2, auto);
+    width: 100%;
+    justify-content: center;
+  }
+
+  // CTA buttons: stack vertically, full width
+  .home .home__actions {
+    grid-template-columns: 1fr;
+    max-width: 100%;
+  }
+
+  // Feature cards: single column
+  .home .home__feature-cards {
+    grid-template-columns: 1fr;
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .home .home__inner {
+    padding: 1.5rem 1rem 3rem;
+    gap: 1rem;
+  }
+
+  .home .home__logo-wrap   { width: 120px; height: 120px; }
+  .home .home__logo-circle { width: 60px;  height: 60px;  }
+  .home .home__ring--3,
+  .home .home__ring--4     { display: none; }
+
+  // Eyebrow text: prevent overflow
+  .home .home__eyebrow {
+    font-size: 0.65rem;
+    text-align: center;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  // Pill caps: 2 columns
+  .home .home__caps {
+    grid-template-columns: 1fr 1fr;
+    justify-items: stretch;
+  }
+
+  .home .home__cap {
+    text-align: center;
+    white-space: normal;
+    line-height: 1.4;
+  }
+}
+
+// ─── ExperimentView (unscoped — no root prefix needed) ────────────────────────
+@media (max-width: 1200px) {
+  .experiment__main { padding: 1rem 1.5rem; }
+  .experiment__top {
+    grid-template-columns: minmax(0, 1fr) minmax(380px, 460px);
+    gap: 1rem;
+  }
+}
+
+// Tablet — collapse side-by-side into single column
+@media (max-width: 900px) {
+  .experiment__main { padding: 0.85rem; gap: 0.85rem; }
+  .experiment__top  { grid-template-columns: 1fr; }
+  // Keep cell cards side-by-side at tablet width (enough room)
+  .experiment__cells { grid-template-columns: 1fr 1fr; }
+}
+
+// Large phone (≤768px) — cells side by side still ok if wide enough
+@media (max-width: 768px) {
+  .experiment__main   { padding: 0.65rem; gap: 0.7rem; }
+  .experiment__header { padding: 0.5rem 0.65rem; }
+  // Picker becomes a fixed overlay so it doesn't overflow viewport
+  .experiment__cell-picker {
+    position: fixed;
+    top: 60px;
+    left: 0.5rem;
+    right: 0.5rem;
+    max-width: none;
+    z-index: 200;
+  }
+}
+
+// Phone (≤540px) — stack everything: single-column cells, no clipping
+@media (max-width: 540px) {
+  .experiment__header { flex-wrap: wrap; gap: 0.5rem; padding: 0.5rem 0.5rem; }
+  .experiment__cell-badges { flex-wrap: wrap; gap: 0.5rem; justify-content: center; }
+  .experiment__cell-badge-row { min-width: 140px; }
+
+  // Stack cell cards vertically — each card gets full width
+  .experiment__cells {
+    grid-template-columns: 1fr;
+    gap: 0.7rem;
+  }
+
+  // Each cell card: ensure it never collapses to zero height
+  .experiment__cells > * {
+    min-height: 260px;
+  }
+}
+
+// ─── DataSetsView ─────────────────────────────────────────────────────────────
+@media (max-width: 900px) {
+  .datasets .datasets__ref-grid { grid-template-columns: 1fr; }
+
+  .datasets .datasets__ref-block + .datasets__ref-block {
+    border-left: none;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .datasets .datasets__threshold-grid { grid-template-columns: 1fr; }
+
+  .datasets .datasets__thr-block + .datasets__thr-block {
+    border-left: none;
+    border-top: 1px solid var(--color-border);
+  }
+}
+
+@media (max-width: 640px) {
+  .datasets .datasets__inner { padding: 1rem 0.85rem 3rem; }
+}
+
+// ─── ReportsView ──────────────────────────────────────────────────────────────
+@media (max-width: 1100px) {
+  .reports .reports__stats-grid { grid-template-columns: repeat(4, 1fr); }
+}
+
+@media (max-width: 700px) {
+  .reports .reports__stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .reports .reports__inner      { padding: 1rem 0.85rem 3rem; }
+  .reports .reports__header-row { flex-direction: column; align-items: flex-start; }
+}

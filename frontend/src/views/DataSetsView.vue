@@ -950,25 +950,5 @@ export default defineComponent({
 
 }
 
-/* ── Responsive ───────────────────────────────────────────────────────────── */
-@media (max-width: 900px) {
-  .datasets__ref-grid {
-    grid-template-columns: 1fr;
-  }
-  .datasets__ref-block + .datasets__ref-block {
-    border-left: none;
-    border-top: 1px solid var(--color-border);
-  }
-  .datasets__threshold-grid {
-    grid-template-columns: 1fr;
-  }
-  .datasets__thr-block + .datasets__thr-block {
-    border-left: none;
-    border-top: 1px solid var(--color-border);
-  }
-}
-
-@media (max-width: 600px) {
-  .datasets__inner { padding: 1rem 1rem 3rem; }
-}
+// Media queries → _responsive.scss
 </style>
