@@ -12,26 +12,32 @@
         <p class="protocol__subtitle" v-html="$t('protocol.header.subtitle')"></p>
       </div>
 
+      <!-- Mobile-only contents toggle -->
+      <button class="protocol__toc-mobile-btn" @click="tocMobileOpen = !tocMobileOpen">
+        <span>§</span> {{ tocMobileOpen ? 'Close' : 'Contents' }}
+        <span class="protocol__toc-mobile-caret" :class="{ 'protocol__toc-mobile-caret--open': tocMobileOpen }">▼</span>
+      </button>
+
       <!-- Two-column layout: TOC + content -->
       <div class="protocol__layout">
 
         <!-- Sidebar TOC -->
-        <nav class="protocol__toc" aria-label="Table of contents">
+        <nav class="protocol__toc" :class="{ 'protocol__toc--mobile-open': tocMobileOpen }" aria-label="Table of contents">
           <div class="protocol__toc-title" v-html="$t('protocol.toc.title')"></div>
-          <a href="#overview"       class="protocol__toc-link" :class="{ 'protocol__toc-link--active': activeSection === 'overview' }" v-html="$t('protocol.toc.overview')"></a>
-          <a href="#physics"        class="protocol__toc-link" :class="{ 'protocol__toc-link--active': isPhysicsActive }" v-html="$t('protocol.toc.physics')"></a>
-          <a href="#schwan"         class="protocol__toc-link protocol__toc-indent" :class="{ 'protocol__toc-link--active': activeSection === 'schwan' }" v-html="$t('protocol.toc.schwan')"></a>
-          <a href="#thermal"        class="protocol__toc-link protocol__toc-indent" :class="{ 'protocol__toc-link--active': activeSection === 'thermal' }" v-html="$t('protocol.toc.thermal')"></a>
-          <a href="#maxwell"        class="protocol__toc-link protocol__toc-indent" :class="{ 'protocol__toc-link--active': activeSection === 'maxwell' }" v-html="$t('protocol.toc.maxwell')"></a>
-          <a href="#disruption"     class="protocol__toc-link protocol__toc-indent" :class="{ 'protocol__toc-link--active': activeSection === 'disruption' }" v-html="$t('protocol.toc.disruption')"></a>
-          <a href="#resonance"      class="protocol__toc-link protocol__toc-indent" :class="{ 'protocol__toc-link--active': activeSection === 'resonance' }" v-html="$t('protocol.toc.resonance')"></a>
-          <a href="#nsep"           class="protocol__toc-link protocol__toc-indent" :class="{ 'protocol__toc-link--active': activeSection === 'nsep' }" v-html="$t('protocol.toc.nsep')"></a>
-          <a href="#doubleshell"    class="protocol__toc-link protocol__toc-indent" :class="{ 'protocol__toc-link--active': activeSection === 'doubleshell' }" v-html="$t('protocol.toc.doubleshell')"></a>
-          <a href="#uncertainty"    class="protocol__toc-link protocol__toc-indent" :class="{ 'protocol__toc-link--active': activeSection === 'uncertainty' }" v-html="$t('protocol.toc.uncertainty')"></a>
-          <a href="#biomodulation"  class="protocol__toc-link protocol__toc-indent" :class="{ 'protocol__toc-link--active': activeSection === 'biomodulation' }" v-html="$t('protocol.toc.biomodulation')"></a>
-          <a href="#protocol-steps" class="protocol__toc-link" :class="{ 'protocol__toc-link--active': activeSection === 'protocol-steps' }" v-html="$t('protocol.toc.protocol')"></a>
-          <a href="#safety"         class="protocol__toc-link" :class="{ 'protocol__toc-link--active': activeSection === 'safety' }" v-html="$t('protocol.toc.safety')"></a>
-          <a href="#refs"           class="protocol__toc-link" :class="{ 'protocol__toc-link--active': activeSection === 'refs' }" v-html="$t('protocol.toc.refs')"></a>
+          <a href="#overview"       class="protocol__toc-link" :class="{ 'protocol__toc-link--active': activeSection === 'overview' }" @click="tocMobileOpen = false" v-html="$t('protocol.toc.overview')"></a>
+          <a href="#physics"        class="protocol__toc-link" :class="{ 'protocol__toc-link--active': isPhysicsActive }" @click="tocMobileOpen = false" v-html="$t('protocol.toc.physics')"></a>
+          <a href="#schwan"         class="protocol__toc-link protocol__toc-indent" :class="{ 'protocol__toc-link--active': activeSection === 'schwan' }" @click="tocMobileOpen = false" v-html="$t('protocol.toc.schwan')"></a>
+          <a href="#thermal"        class="protocol__toc-link protocol__toc-indent" :class="{ 'protocol__toc-link--active': activeSection === 'thermal' }" @click="tocMobileOpen = false" v-html="$t('protocol.toc.thermal')"></a>
+          <a href="#maxwell"        class="protocol__toc-link protocol__toc-indent" :class="{ 'protocol__toc-link--active': activeSection === 'maxwell' }" @click="tocMobileOpen = false" v-html="$t('protocol.toc.maxwell')"></a>
+          <a href="#disruption"     class="protocol__toc-link protocol__toc-indent" :class="{ 'protocol__toc-link--active': activeSection === 'disruption' }" @click="tocMobileOpen = false" v-html="$t('protocol.toc.disruption')"></a>
+          <a href="#resonance"      class="protocol__toc-link protocol__toc-indent" :class="{ 'protocol__toc-link--active': activeSection === 'resonance' }" @click="tocMobileOpen = false" v-html="$t('protocol.toc.resonance')"></a>
+          <a href="#nsep"           class="protocol__toc-link protocol__toc-indent" :class="{ 'protocol__toc-link--active': activeSection === 'nsep' }" @click="tocMobileOpen = false" v-html="$t('protocol.toc.nsep')"></a>
+          <a href="#doubleshell"    class="protocol__toc-link protocol__toc-indent" :class="{ 'protocol__toc-link--active': activeSection === 'doubleshell' }" @click="tocMobileOpen = false" v-html="$t('protocol.toc.doubleshell')"></a>
+          <a href="#uncertainty"    class="protocol__toc-link protocol__toc-indent" :class="{ 'protocol__toc-link--active': activeSection === 'uncertainty' }" @click="tocMobileOpen = false" v-html="$t('protocol.toc.uncertainty')"></a>
+          <a href="#biomodulation"  class="protocol__toc-link protocol__toc-indent" :class="{ 'protocol__toc-link--active': activeSection === 'biomodulation' }" @click="tocMobileOpen = false" v-html="$t('protocol.toc.biomodulation')"></a>
+          <a href="#protocol-steps" class="protocol__toc-link" :class="{ 'protocol__toc-link--active': activeSection === 'protocol-steps' }" @click="tocMobileOpen = false" v-html="$t('protocol.toc.protocol')"></a>
+          <a href="#safety"         class="protocol__toc-link" :class="{ 'protocol__toc-link--active': activeSection === 'safety' }" @click="tocMobileOpen = false" v-html="$t('protocol.toc.safety')"></a>
+          <a href="#refs"           class="protocol__toc-link" :class="{ 'protocol__toc-link--active': activeSection === 'refs' }" @click="tocMobileOpen = false" v-html="$t('protocol.toc.refs')"></a>
         </nav>
 
         <!-- Main document -->
@@ -353,6 +359,7 @@ export default defineComponent({
   data() {
     return {
       activeSection: 'overview' as string,
+      tocMobileOpen: false,
     }
   },
 
@@ -797,6 +804,96 @@ export default defineComponent({
     font-size: 0.82rem;
     line-height: 1.6;
     color: var(--color-amber);
+  }
+
+  // ── Mobile TOC toggle button (hidden on desktop) ────────────────────────────
+  &__toc-mobile-btn {
+    display: none;
+  }
+
+  &__toc-mobile-caret {
+    font-size: 0.6rem;
+    opacity: 0.7;
+    transition: transform 0.2s;
+    margin-left: auto;
+
+    &--open { transform: rotate(180deg); }
+  }
+}
+
+// ── Mobile / phone layout ─────────────────────────────────────────────────────
+@media (max-width: 768px) {
+  .protocol__toc-mobile-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.65rem 1rem;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    color: var(--color-text-muted);
+    font-size: 0.82rem;
+    font-family: var(--font-mono);
+    cursor: pointer;
+    margin-bottom: 0.75rem;
+    transition: border-color 0.15s, color 0.15s;
+
+    &:hover { border-color: var(--color-primary); color: var(--color-primary); }
+  }
+
+  // Hide sidebar TOC on mobile by default
+  .protocol__toc {
+    display: none;
+    position: fixed;
+    top: 60px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 90;
+    background: rgba(8, 14, 26, 0.97);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-top: 1px solid var(--color-border);
+    padding: 1.5rem 1.25rem;
+    overflow-y: auto;
+    flex-direction: column;
+    gap: 0.1rem;
+
+    &--mobile-open {
+      display: flex;
+    }
+  }
+
+  // Full-width single column layout
+  .protocol__layout {
+    grid-template-columns: 1fr;
+  }
+
+  .protocol__inner {
+    padding: 1rem 1rem 3rem;
+  }
+
+  .protocol__toc-link {
+    font-size: 0.9rem;
+    padding: 0.65rem 0.75rem;
+    border-bottom: 1px solid rgba(30, 58, 95, 0.4);
+
+    &:last-child { border-bottom: none; }
+  }
+
+  .protocol__toc-indent {
+    padding-left: 1.75rem;
+    font-size: 0.82rem;
+  }
+
+  // Keep tables scrollable
+  .protocol__param-table,
+  .protocol__doubleshell-table,
+  .protocol__safety-table {
+    font-size: 0.72rem;
+    display: block;
+    overflow-x: auto;
   }
 }
 </style>

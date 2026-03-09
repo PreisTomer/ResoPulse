@@ -615,14 +615,5 @@ export default defineComponent({
   }
 }
 
-/* ── Responsive ───────────────────────────────────────────────────────────── */
-@media (max-width: 1100px) {
-  .reports__stats-grid { grid-template-columns: repeat(4, 1fr); }
-}
-
-@media (max-width: 700px) {
-  .reports__stats-grid  { grid-template-columns: repeat(2, 1fr); }
-  .reports__inner       { padding: 1rem 1rem 3rem; }
-  .reports__header-row  { flex-direction: column; align-items: flex-start; }
-}
+// Media queries → _responsive.scss
 </style>

@@ -901,26 +901,5 @@ Larger radius raises Vm and lowers the lysis field threshold.`
   50%       { opacity: 0.4; }
 }
 
-/* ── Responsive ──────────────────────────────────────────────── */
-@media (max-width: 1200px) {
-  .experiment__main { padding: 1rem 1.5rem; }
-  .experiment__top {
-    grid-template-columns: minmax(0, 1fr) minmax(380px, 460px);
-    gap: 1rem;
-  }
-}
-
-@media (max-width: 900px) {
-  .experiment__main { padding: 1rem; }
-  .experiment__top  { grid-template-columns: 1fr; }
-}
-
-@media (max-width: 680px) {
-  .experiment__header      { flex-wrap: wrap; gap: 0.6rem; padding: 0.5rem 1rem; }
-  .experiment__main        { padding: 0.75rem; gap: 0.85rem; }
-  .experiment__cell-badges { flex-wrap: wrap; gap: 0.6rem; }
-  .experiment__cell-picker { left: 0; right: auto; max-width: none; }
-  .experiment__cell-badge-row { min-width: 140px; max-width: none; }
-  .experiment__cells       { grid-template-columns: 1fr; }
-}
+// Media queries → _responsive.scss
 </style>
