@@ -38,6 +38,12 @@
       "conductivity": "Conductivity σ_i",
       "thresholdVoltage": "Threshold Vm"
     },
+    "paramsToggleLabel": "Cell Parameters",
+    "paramsToggleTip": "<strong>Cell Parameters</strong>\nEdit biophysical properties that drive the\nSchwan equation calculation in real time.\nChanges immediately update Vm, selectivity,\nand the frequency response chart.",
+    "derivedLabel": "Derived constants",
+    "derivedTip": "<strong>Derived biophysical parameters</strong>\nComputed in real time from the editable values above.\n\n<span class='tip-val'>Cm</span> = ε_r × ε₀ / d\n  Membrane specific capacitance [mF/m²]\n\n<span class='tip-val'>τ</span> = R·Cm·(2σ_e+σ_i) / (2σ_e·σ_i)\n  Schwan time constant (Kotnik &amp; Miklavcic 2000)\n  Sets the frequency roll-off\n\n<span class='tip-val'>fc</span> = 1/(2πτ)\n  Characteristic frequency — Vm drops −3 dB here\n  Below fc: quasi-DC regime, Vm at maximum",
+    "resetBtn": "↺ Reset to defaults",
+    "resetBtnTip": "<strong>Reset to Preset Defaults</strong>\nRestores all parameters to the original\nvalues for this preset.\nUseful after editing to explore changes.",
     "tempWarning": "Thermal warning — reduce field intensity",
     "lysed": "Membrane Lysed",
     "lysing": "Lysing",
@@ -108,7 +114,9 @@
     "MHz": "MHz",
     "GHz": "GHz",
     "kVPerCm": "kV/cm",
-    "µs": "µs"
+    "µs": "µs",
+    "perfusionInVitro": "0 (in vitro)",
+    "cellPackingIsolated": "0% (isolated)"
   },
   "exp": {
     "renameSession": "Click to rename session",
@@ -174,7 +182,19 @@
     "legendBacteria": "Bacteria",
     "legendVirus": "Virus",
     "activeH": "Active H",
-    "activeT": "Active T"
+    "activeT": "Active T",
+    "legendVmRatio": "Vm ratio T/H",
+    "legendNucH": "Nucleus H",
+    "legendNucT": "Nucleus T",
+    "tipReference": "<strong>Reference cells</strong>\nHealthy baseline — hepatocyte, RBC\nTypically higher threshold voltage\nand lower membrane permittivity",
+    "tipCancer": "<strong>Cancer cells</strong>\nLarger radius → lower fc → higher Vm at low frequency\nLower threshold → disrupted at lower field intensity",
+    "tipBacteria": "<strong>Bacteria</strong>\nSmall radius (0.5–1 µm) → fc ~8–26 MHz (E. coli ~8 MHz, MRSA ~26 MHz)\nThick peptidoglycan wall raises membrane thickness",
+    "tipVirus": "<strong>Viruses</strong>\nRadius ~100 nm · Schwan fc ~0.4 MHz (σ_i-limited)\nNote: single-shell model is approximate for virions",
+    "tipActiveH": "<strong>Active Healthy cell</strong>\nCurrently selected healthy baseline\n(cyan, full opacity, glowing)\nShows Vm curve for selected preset and current field",
+    "tipActiveT": "<strong>Active Target cell</strong>\nCurrently selected target (cancer / pathogen)\n(red, full opacity, glowing)\nDrag the white cursor to set broadcast frequency",
+    "tipVmRatio": "<strong>Vm selectivity ratio</strong> (amber dashed · right axis)\nVm_T(f) × psf_T / (Vm_H(f) × psf_H) — orientation-independent (cos θ cancels).\n>1× → target accumulates more Vm than healthy at that frequency.\nPulse step factor (psf) accounts for ns-pulse charging fraction.",
+    "tipNucH": "<strong>Nuclear Vm — Healthy</strong> (dashed, half opacity)\nDouble-shell model (Kotnik &amp; Miklavcic 2006).\nVm_nuc is a bandpass function peaking near f_peak = 1/(2π√(τ_out·τ_ne)).\nTypical: hepatocyte f_peak ≈ 1.66 MHz · Vm_nuc ≈ 40 mV at 417 kHz / 150 V/cm",
+    "tipNucT": "<strong>Nuclear Vm — Target</strong> (dashed, half opacity)\nDouble-shell model (Kotnik &amp; Miklavcic 2006).\nCancer nuclei have thinner/leakier NE → higher Vm_nuc and lower threshold.\nTypical: adenocarcinoma f_peak ≈ 0.87 MHz · Vm_nuc ≈ 110 mV at 417 kHz / 150 V/cm"
   },
   "selectivity": {
     "title": "Selectivity Analysis",
@@ -201,7 +221,14 @@
     "modeMarginal": "Marginal Window",
     "compAltCancer": "Alternative Cancer Targets",
     "compAltBacteria": "Alternative Bacteria",
-    "compAltViruses": "Alternative Viruses"
+    "compAltViruses": "Alternative Viruses",
+    "neSelectivity": "NE Selectivity",
+    "resonanceParamsTitle": "RESONANCE PARAMETERS",
+    "skinDepthLabel": "δ skin depth",
+    "fresRangeLabel": "f_res range",
+    "qRangeLabel": "Q range",
+    "basisLabel": "Basis",
+    "switchToResonanceBtn": "→ Switch to Resonance Mode"
   },
   "log": {
     "sessionPlaceholder": "Session name…",

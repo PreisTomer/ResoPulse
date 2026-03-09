@@ -119,10 +119,11 @@ import { WAVEFORM } from '@/constants/strings'
 import { CELL_CATEGORY } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
 import { tipOrientation, tipLysisN, tipLysisNNote, tipShellModel, tipSingleShell, tipDoubleShell, tipPerfusion, tipCellPacking, formatLysisTime } from '@/utils/sliderTooltips'
+import { UNIT } from '@/constants/units'
 
 export default defineComponent({
   setup() {
-    return { store: useCellStore(), WAVEFORM, CELL_CATEGORY, ICON }
+    return { store: useCellStore(), WAVEFORM, CELL_CATEGORY, ICON, UNIT }
   },
 
   data() {
@@ -166,12 +167,12 @@ export default defineComponent({
 
     perfusionDisplay(): string {
       const r = this.store.perfusionRate
-      return r === 0 ? '0 (in vitro)' : `${r.toFixed(2)} mL/(g·min)`
+      return r === 0 ? this.$t('slider.perfusionInVitro') : `${r.toFixed(2)} ${UNIT.ML_PER_G_MIN}`
     },
 
     cellPackingDisplay(): string {
       const phi = this.store.cellPackingFraction
-      return phi === 0 ? '0% (isolated)' : `${(phi * 100).toFixed(0)}%`
+      return phi === 0 ? this.$t('slider.cellPackingIsolated') : `${(phi * 100).toFixed(0)}${UNIT.PERCENT}`
     },
 
     tipPerfusionFull(): string {

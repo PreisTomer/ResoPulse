@@ -12,7 +12,8 @@ export const UNIT = {
   PERCENT:   '%',
   DEG_C:     '°C',
   W_PER_KG:  'W/kg',
-  S_PER_M:   'S/m',
+  S_PER_M:      'S/m',
+  ML_PER_G_MIN: 'mL/(g·min)',
 } as const
 
 export type Unit = typeof UNIT[keyof typeof UNIT]

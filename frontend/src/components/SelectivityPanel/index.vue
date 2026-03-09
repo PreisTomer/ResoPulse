@@ -74,22 +74,22 @@
 
     <!-- ── Resonance physics info (resonance mode only) ─────────── -->
     <div v-if="isResonanceTarget && store.chartMode === CHART_MODE.RESONANCE" class="sel-panel__resonance-info">
-      <div class="sel-panel__res-title">RESONANCE PARAMETERS</div>
+      <div class="sel-panel__res-title">{{ $t('selectivity.resonanceParamsTitle') }}</div>
       <div class="sel-panel__res-row" v-tip="tipSkinDepth">
-        <span class="sel-panel__res-label">δ skin depth</span>
+        <span class="sel-panel__res-label">{{ $t('selectivity.skinDepthLabel') }}</span>
         <span class="sel-panel__res-val" :class="skinDepthClass">{{ skinDepthLabel }}</span>
         <span class="sel-panel__res-note">at {{ freqDisplayLabel }}</span>
       </div>
       <div class="sel-panel__res-row" v-tip="tipFresRange">
-        <span class="sel-panel__res-label">f_res range</span>
+        <span class="sel-panel__res-label">{{ $t('selectivity.fresRangeLabel') }}</span>
         <span class="sel-panel__res-val">{{ resonantFreqRange }}</span>
       </div>
       <div v-if="resonantQRange" class="sel-panel__res-row" v-tip="tipQFactor">
-        <span class="sel-panel__res-label">Q range</span>
+        <span class="sel-panel__res-label">{{ $t('selectivity.qRangeLabel') }}</span>
         <span class="sel-panel__res-val">{{ resonantQRange }}</span>
       </div>
       <div class="sel-panel__res-row" v-tip="tipBasis">
-        <span class="sel-panel__res-label">Basis</span>
+        <span class="sel-panel__res-label">{{ $t('selectivity.basisLabel') }}</span>
         <span class="sel-panel__res-badge" :class="experimentalBasisClass">{{ experimentalBasisLabel }}</span>
       </div>
     </div>
@@ -118,7 +118,7 @@
         v-if="showResonanceSwitchBtn"
         class="sel-panel__model-warning-btn"
         @click="store.setChartMode(CHART_MODE.RESONANCE)"
-      >→ Switch to Resonance Mode</button>
+      >{{ $t('selectivity.switchToResonanceBtn') }}</button>
     </div>
 
     <!-- ── Preset selectivity comparison ─────────────────────── -->

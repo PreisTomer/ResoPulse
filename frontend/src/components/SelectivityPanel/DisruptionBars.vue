@@ -58,7 +58,7 @@
         <span class="sel-panel__nuc-bar-val">{{ (store.healthyNuclearDisruptionRatio * 100).toFixed(0) }}%</span>
       </div>
       <div class="sel-panel__nuc-sel-row">
-        <span class="sel-panel__nuc-sel-label">NE Selectivity</span>
+        <span class="sel-panel__nuc-sel-label">{{ $t('selectivity.neSelectivity') }}</span>
         <span class="sel-panel__nuc-sel-val" :class="store.nuclearSelectivityRatio >= THRESHOLDS.SEL_STRONG ? 'sel-panel__nuc-sel--good' : store.nuclearSelectivityRatio >= THRESHOLDS.SEL_MARGINAL ? 'sel-panel__nuc-sel--ok' : 'sel-panel__nuc-sel--low'">
           ×{{ store.nuclearSelectivityRatio >= 99 ? ICON.INFINITY : store.nuclearSelectivityRatio.toFixed(2) }}
         </span>
