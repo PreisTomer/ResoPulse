@@ -901,5 +901,45 @@ Larger radius raises Vm and lowers the lysis field threshold.`
   50%       { opacity: 0.4; }
 }
 
-// Media queries → _responsive.scss
+// ── Mobile / Responsive ───────────────────────────────────────────────────────
+@media (max-width: 1200px) {
+  .experiment__main { padding: 1rem 1.5rem; }
+  .experiment__top {
+    grid-template-columns: minmax(0, 1fr) minmax(380px, 460px);
+    gap: 1rem;
+  }
+}
+
+// Tablet — collapse top row into single column
+@media (max-width: 900px) {
+  .experiment__main { padding: 0.85rem; gap: 0.85rem; }
+  .experiment__top  { grid-template-columns: 1fr; }
+  .experiment__cells { grid-template-columns: 1fr 1fr; }
+}
+
+// Large phone — picker overlay
+@media (max-width: 768px) {
+  .experiment__main   { padding: 0.65rem; gap: 0.7rem; }
+  .experiment__header { padding: 0.5rem 0.65rem; }
+  .experiment__cell-picker {
+    position: fixed;
+    top: 60px;
+    left: 0.5rem;
+    right: 0.5rem;
+    max-width: none;
+    z-index: 200;
+  }
+}
+
+// Phone — single-column cells, full cards
+@media (max-width: 540px) {
+  .experiment__header        { flex-wrap: wrap; gap: 0.5rem; padding: 0.5rem; }
+  .experiment__cell-badges   { flex-wrap: wrap; gap: 0.5rem; justify-content: center; }
+  .experiment__cell-badge-row { min-width: 140px; }
+  .experiment__cells {
+    grid-template-columns: 1fr;
+    gap: 0.7rem;
+  }
+  .experiment__cells > * { min-height: 260px; }
+}
 </style>
