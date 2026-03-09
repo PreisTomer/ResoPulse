@@ -29,7 +29,7 @@
       class="sel-panel__ti-range"
       v-tip="tipTiRange"
     >
-      <span class="sel-panel__ti-range-label">σ_i range:</span>
+      <span class="sel-panel__ti-range-label">{{ $t('selectivity.sigmaIRange') }}</span>
       <span class="sel-panel__ti-range-val">
         [×{{ tiRange.low.toFixed(2) }} – ×{{ tiRange.high >= 99 ? ICON.INFINITY : tiRange.high.toFixed(2) }}]
       </span>
@@ -46,27 +46,27 @@
         <div class="sel-panel__vm-sar-cell">
           <span class="sel-panel__vs-type sel-panel__vs-type--t">{{ $t('selectivity.tDisr') }}</span>
           <span class="sel-panel__vs-vm sel-panel__vs-vm--t">{{ targetRatioPct.toFixed(1) }}%</span>
-          <span class="sel-panel__vs-sar">{{ targetSarVal }} W/kg</span>
+          <span class="sel-panel__vs-sar">{{ targetSarVal }} {{ UNIT.W_PER_KG }}</span>
           <span class="sel-panel__vs-elysis" v-tip="tipEthr">E<sub>thr</sub> {{ targetResonanceEthr }}</span>
         </div>
         <div class="sel-panel__vm-sar-cell">
           <span class="sel-panel__vs-type sel-panel__vs-type--h">{{ $t('selectivity.hSafe') }}</span>
           <span class="sel-panel__vs-vm sel-panel__vs-vm--res">≈0%</span>
-          <span class="sel-panel__vs-sar">{{ healthySarVal }} W/kg</span>
+          <span class="sel-panel__vs-sar">{{ healthySarVal }} {{ UNIT.W_PER_KG }}</span>
           <span class="sel-panel__vs-elysis sel-panel__vs-elysis--safe" v-tip="tipNoGhzRes">{{ $t('selectivity.noGhzRes') }}</span>
         </div>
       </template>
       <template v-else>
         <div class="sel-panel__vm-sar-cell">
           <span class="sel-panel__vs-type sel-panel__vs-type--t">{{ $t('selectivity.targetBar') }}-Vm</span>
-          <span class="sel-panel__vs-vm sel-panel__vs-vm--t">{{ targetVmMv }} mV</span>
-          <span class="sel-panel__vs-sar">{{ targetSarVal }} W/kg</span>
+          <span class="sel-panel__vs-vm sel-panel__vs-vm--t">{{ targetVmMv }} {{ UNIT.MV }}</span>
+          <span class="sel-panel__vs-sar">{{ targetSarVal }} {{ UNIT.W_PER_KG }}</span>
           <span class="sel-panel__vs-elysis" v-tip="tipTargetLysisField">E<sub>lys</sub> {{ targetLysisField }}</span>
         </div>
         <div class="sel-panel__vm-sar-cell">
           <span class="sel-panel__vs-type sel-panel__vs-type--h">{{ $t('selectivity.healthyBar') }}-Vm</span>
-          <span class="sel-panel__vs-vm sel-panel__vs-vm--h">{{ healthyVmMv }} mV</span>
-          <span class="sel-panel__vs-sar">{{ healthySarVal }} W/kg</span>
+          <span class="sel-panel__vs-vm sel-panel__vs-vm--h">{{ healthyVmMv }} {{ UNIT.MV }}</span>
+          <span class="sel-panel__vs-sar">{{ healthySarVal }} {{ UNIT.W_PER_KG }}</span>
           <span class="sel-panel__vs-elysis" v-tip="tipHealthyLysisField">E<sub>lys</sub> {{ healthyLysisField }}</span>
         </div>
       </template>
@@ -135,6 +135,7 @@ import { useCellStore } from '@/stores/cellStore'
 import { THRESHOLDS, DISRUPTION_WARN_THRESHOLD } from '@/constants/cellCard'
 import { CELL_CATEGORY, CHART_MODE, EXPERIMENTAL_BASIS } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
+import { UNIT } from '@/constants/units'
 import { formatFreqKHz, formatFieldVcm } from '@/utils/format'
 import { broadcastFieldParams } from '@/services/socket'
 import DisruptionBars from './DisruptionBars.vue'
@@ -145,7 +146,7 @@ export default defineComponent({
   components: { DisruptionBars, ComparisonTable, PresetLibrary },
 
   setup() {
-    return { store: useCellStore(), CHART_MODE, ICON }
+    return { store: useCellStore(), CHART_MODE, ICON, UNIT }
   },
 
   data() {
@@ -205,10 +206,9 @@ export default defineComponent({
     },
 
     tipVmSar(): string {
-      if (this.isResonanceTarget) {
-        return '<strong>Disruption &amp; Thermal (Resonance Mode)</strong>\nT-Disr: target capsid/cell-wall disruption % = (E / E_thr) × L(f, f_res, Q)\nH-Safe: healthy Schwan Vm → 0 at GHz — no coupling, unperturbed\nSAR (W/kg) — Ohmic heating, valid in all modes\n  SAR = σ_i·α²·E²·wf / ρ — use duty cycle to limit thermal load'
-      }
-      return '<strong>Transmembrane potential and SAR</strong>\nVm — peak voltage across cell membrane (Schwan eq.)\n  Vm = 1.5·E·R / √(1+(2πf·τ)²)\n  τ = R·Cm·(2σ_e+σ_i)/(2σ_e·σ_i)\nSAR — specific absorption rate (W/kg) in cell interior\n  SAR = σ_i·α²·E²·wf / ρ  α = 3σ_e/(2σ_e+σ_i) (internal field factor)\n  wf=0.5(CW) or 1.0(pulsed)\n  Proportional to thermal load deposited in the cell'
+      return this.isResonanceTarget
+        ? this.$t('selectivity.tipVmSarResonance')
+        : this.$t('selectivity.tipVmSarSchwan')
     },
 
     therapeuticIndex(): number { return this.store.therapeuticIndex },
@@ -339,10 +339,10 @@ the exact σ_i value used. Validate with measured cell impedance (patch clamp / 
 
     experimentalBasisLabel(): string {
       switch (this.store.target.experimentalBasis) {
-        case EXPERIMENTAL_BASIS.LASER_VALIDATED: return 'LASER-VALIDATED'
-        case EXPERIMENTAL_BASIS.RF_EXTRAPOLATED: return 'RF-EXTRAPOLATED'
-        case EXPERIMENTAL_BASIS.SPECULATIVE:     return 'SPECULATIVE'
-        default: return 'UNCLASSIFIED'
+        case EXPERIMENTAL_BASIS.LASER_VALIDATED: return this.$t('selectivity.basisLaserValidated')
+        case EXPERIMENTAL_BASIS.RF_EXTRAPOLATED: return this.$t('selectivity.basisRfExtrapolated')
+        case EXPERIMENTAL_BASIS.SPECULATIVE:     return this.$t('selectivity.basisSpeculative')
+        default: return this.$t('selectivity.basisUnclassified')
       }
     },
 
@@ -362,29 +362,12 @@ the exact σ_i value used. Validate with measured cell impedance (patch clamp / 
       return `<strong>${this.$t('selectivity.tipNoGhzRes')}</strong>\n${this.$t('selectivity.tipNoGhzResBody')}`
     },
 
-    tipTargetLysisField(): string {
-      return `<strong>Target lysis field</strong>\nMinimum E required to reach lysis threshold at current frequency.\nE_lysis = Vm_thr · √(1+(ωτ)²) / (1.5·R)`
-    },
-
-    tipHealthyLysisField(): string {
-      return `<strong>Healthy lysis field</strong>\nMinimum E required to reach lysis threshold at current frequency.\nKeep operating field below this value for selective therapy.`
-    },
-
-    tipSkinDepth(): string {
-      return `<strong>EM Skin Depth</strong>\nδ = √(1/(π·f·μ₀·σ_e))\nDepth at which field amplitude decays to 1/e (~37%) in saline (σ_e = 1.5 S/m).\n  100 MHz → 41 mm  ·  1 GHz → 13 mm  ·  5 GHz → 5.8 mm  ·  12 GHz → 3.8 mm\n≥20 mm: tissue-penetrating · 5–20 mm: cm-depth accessible · <5 mm: near-surface / intracavitary.\nIn vivo GHz resonance delivery requires near-field or intracavitary applicators.\nRef: Gabriel et al. (1996) Phys. Med. Biol. 41:2271`
-    },
-
-    tipFresRange(): string {
-      return `<strong>f_res Uncertainty Range</strong>\nf_res = v_sound / (2R) — uncertainty driven by v_sound literature range.\nBacteria peptidoglycan: v_wall ≈ 800–1200 m/s → ±25–30%.\nEnveloped viruses: v_eff poorly defined → ±40%.\nTune frequency experimentally within this range.`
-    },
-
-    tipQFactor(): string {
-      return `<strong>Q-Factor Uncertainty</strong>\nMechanical quality factor Q sets the resonance linewidth.\nLower Q → broader resonance → easier frequency matching but weaker peak amplitude.\nDykeman & Sankey (2010) validated Q on rigid icosahedral protein capsids only.\nBacterial peptidoglycan and viral lipid envelopes have substantially lower Q.`
-    },
-
-    tipBasis(): string {
-      return `<strong>Experimental Basis</strong>\nLASER-VALIDATED: capsid disruption confirmed by pulsed laser acoustic excitation (Tsen 2007–2012).\nRF-EXTRAPOLATED: acoustic mechanism plausible for rigid walls; GHz RF delivery is not yet experimentally validated — laser experiments only.\nSPECULATIVE: enveloped viruses / peptidoglycan — no experimental validation of resonance disruption by any method.\nRef: Tsen et al. (2007) Biophys. J.; Dykeman &amp; Sankey (2010) Phys. Rev. Lett.`
-    },
+    tipTargetLysisField(): string { return this.$t('selectivity.tipTargetLysisField') },
+    tipHealthyLysisField(): string { return this.$t('selectivity.tipHealthyLysisField') },
+    tipSkinDepth(): string { return this.$t('selectivity.tipSkinDepth') },
+    tipFresRange(): string { return this.$t('selectivity.tipFresRange') },
+    tipQFactor(): string { return this.$t('selectivity.tipQFactor') },
+    tipBasis(): string { return this.$t('selectivity.tipBasis') },
 
     tipSelectivity(): string {
       const sel = this.selectivity
@@ -430,26 +413,7 @@ Current: <span class="tip-val">×${vmStr}</span>  (cancer/normal DC limit: 1.5×
 TI incorporates lysis thresholds — more clinically relevant than Vm ratio alone.`
     },
 
-    tipModeBadge(): string {
-      return `<strong>Therapeutic Mode</strong>
-Derived from target + healthy disruption ratios:
-
-<span class="tip-ok">Therapeutic Window</span>  T >85%, H <50%
-  Target at lysis threshold · healthy cells safely below 50%
-
-<span class="tip-val">Marginal Window</span>  T >85%, H 50–84%
-  Target at threshold but healthy cells are also stressed.
-  Reduce field or change frequency/medium for better selectivity.
-
-<span class="tip-val">Approaching Window</span>  T 50–85%
-  Increase field to reach therapeutic window
-
-Sub-threshold  T <50%
-  Field too low to affect target cells
-
-<span class="tip-warn">Ablative</span>  H >85%
-  Non-selective — both cell types at lysis threshold`
-    },
+    tipModeBadge(): string { return this.$t('selectivity.tipModeBadge') },
 
     tipOptimal(): string {
       if (this.isResonanceTarget) {

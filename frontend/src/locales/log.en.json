@@ -1,0 +1,35 @@
+{
+  "log": {
+    "sessionPlaceholder": "Session name…",
+    "logReading": "Log Reading",
+    "exportCsv": "CSV",
+    "clear": "Clear",
+    "eventLysis": "lysis",
+    "eventManual": "manual",
+    "colId": "#",
+    "colTime": "Time",
+    "colFreq": "Freq",
+    "colField": "Field",
+    "colTVm": "T-Vm",
+    "colHVm": "H-Vm",
+    "colSel": "Sel×",
+    "colEvent": "Event",
+    "emptyHint": "No readings yet — click Log Reading to record",
+
+    "tipLogReading": "<strong>Log Reading</strong>\nSnapshot current experiment state:\nRF frequency, field, Vm (target &amp; healthy),\nselectivity, temperature, disruption ratios.\nAuto-logged on lysis events.",
+    "tipExportCsv": "<strong>Export CSV</strong>\nDownload all log entries.\nColumns: #, time, freq (kHz), field (V/cm),\nT-Vm (mV), H-Vm (mV), selectivity, event type.",
+    "tipClearLog": "<strong>Clear Log</strong>\nRemove all readings from this session.\nThis action cannot be undone.",
+
+    "tipThNumber": "<strong># — Entry Index</strong>\nSequential reading number (newest first).",
+    "tipThTime": "<strong>Time — Timestamp</strong>\nLocal time (HH:MM:SS) when the reading was logged.",
+    "tipThFreq": "<strong>Freq — RF Frequency</strong>\nBroadcast frequency at time of reading.\nBelow fc → quasi-DC, Vm at maximum.\nAbove fc → Schwan roll-off reduces Vm.",
+    "tipThField": "<strong>Field — Applied Electric Field</strong>\nField intensity at time of reading.\nVm scales linearly with E (Schwan eq.).",
+    "tipThTargetVm": "<strong>T-Vm — Target Transmembrane Potential</strong>\nPeak voltage across target cell membrane\nvia Schwan equation. Higher → more disruption.",
+    "tipThHealthyVm": "<strong>H-Vm — Healthy Transmembrane Potential</strong>\nPeak voltage across healthy reference membrane.\nKeep below 50% of threshold for safe operation.",
+    "tipThSel": "<strong>Sel× — Vm Selectivity Ratio</strong>\nT-Vm / H-Vm — raw membrane potential ratio.\n<span class=\"tip-ok\">≥ {strong}×</span> Strong therapeutic window\n<span class=\"tip-val\">{marginal}–{strong}×</span> Marginal window\n<span class=\"tip-warn\">&lt; {marginal}×</span> Non-selective",
+    "tipThEvent": "<strong>Event Type</strong>\nmanual — snapshot triggered by user\nlysis — membrane disrupted (auto-logged)",
+
+    "tipCellLysis": "<span class=\"tip-warn\">⚡ Lysis event</span>\nTarget membrane irreversibly disrupted.\nAuto-logged when lysis countdown completed.",
+    "tipCellManual": "Manual snapshot\nLogged by user at this timestamp."
+  }
+}

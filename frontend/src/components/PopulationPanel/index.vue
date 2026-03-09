@@ -115,6 +115,7 @@ import { computeSchwan, computeTau, computePulseStepResponse, computeResonantDis
 import { WAVEFORM, CHART_MODE, CELL_CATEGORY } from '@/constants/strings'
 import { THRESHOLDS } from '@/constants/cellCard'
 import { ICON } from '@/constants/icons'
+import { UNIT } from '@/constants/units'
 import type { CellConfig } from '@/types/cell'
 
 type ResizeObserverInstance = InstanceType<typeof ResizeObserver>
@@ -145,7 +146,7 @@ const N_BINS = 20
 export default defineComponent({
   emits: ['openChange'],
   setup() {
-    return { store: useCellStore(), THRESHOLDS, ICON }
+    return { store: useCellStore(), THRESHOLDS, ICON, UNIT }
   },
 
   data() {
@@ -162,9 +163,10 @@ export default defineComponent({
   computed: {
     isResonanceTarget(): boolean {
       const cat = this.store.targetCellCategory
-      if (cat !== CELL_CATEGORY.BACTERIA && cat !== CELL_CATEGORY.VIRUS) return false
       const t = this.store.target as CellConfig & { resonantFreqGHz?: number; resonantThresholdVcm?: number }
-      return !!(t.resonantFreqGHz && t.resonantThresholdVcm) && this.store.chartMode === CHART_MODE.RESONANCE
+      return (cat === CELL_CATEGORY.BACTERIA || cat === CELL_CATEGORY.VIRUS) &&
+        !!(t.resonantFreqGHz && t.resonantThresholdVcm) &&
+        this.store.chartMode === CHART_MODE.RESONANCE
     },
 
     targetUncPct(): number {
@@ -183,119 +185,48 @@ export default defineComponent({
 
     subtitle(): string {
       const { nCells, store } = this
-      return `N=${nCells} · ${store.fieldIntensity} V/cm · ${store.currentBroadcastFrequency} kHz`
+      return `N=${nCells} · ${store.fieldIntensity} ${UNIT.V_PER_CM} · ${store.currentBroadcastFrequency} ${UNIT.KHZ}`
     },
 
     // ── Tooltips ──────────────────────────────────────────────────────────────
-    tipPopSize(): string {
-      return `<strong>Population Size N</strong>
-Number of cells sampled per Monte Carlo run.
-<span class="tip-val">N=100</span>  Fast · coarse histogram — quick parameter scans
-<span class="tip-val">N=300</span>  Balanced default — smooth histogram, moderate speed
-<span class="tip-val">N=1000</span> High-fidelity — ideal for final analysis, slower sampling`
-    },
-
-    tipRVariance(): string {
-      return `<strong>Radius Variance  σ_R / R</strong>
-Gaussian spread of cell radius as % of mean R.
-Models natural cell-to-cell size heterogeneity.
-
-  Mammalian: ~10% · Bacteria: ~20% · Virus: ~30%
-
-Since Vm ∝ R (Schwan), larger cells receive higher Vm
-and are closer to the lysis threshold at a given field.`
-    },
-
-    tipResample(): string {
-      return `<strong>⟳ Resample</strong>
-Generate a new random population.
-Each cell's radius R and cytoplasm conductivity σ_i are
-independently drawn from Gaussian distributions.
-
-  σ_R = R × (variance%) · σ(σ_i) = σ_i × uncertainty
-  Uncertainty: mammalian 20% · bacteria 35% · virus 45%
-
-Histogram and stats update immediately.`
-    },
-
-    tipExport(): string {
-      return `<strong>↓ Export CSV</strong>
-Download all sampled DR values as CSV.
-Columns: cell_type · sample_index · DR`
-    },
+    tipPopSize(): string  { return this.$t('population.tipPopSize') },
+    tipRVariance(): string { return this.$t('population.tipRVariance') },
+    tipResample(): string  { return this.$t('population.tipResample') },
+    tipExport(): string    { return this.$t('population.tipExport') },
 
     tipTargetCard(): string {
-      return `<strong>Target Cell Population  (${this.store.target.label})</strong>
-Outcome distribution for the current field settings.
-Cells are sampled with Gaussian radius and σ_i variation
-(σ_i uncertainty: ±${this.targetUncPct}%).
-
-DR = Vm × f_pulse / V_threshold  (pulse envelope applied in IRE mode)`
+      return this.$t('population.tipTargetCard', {
+        label: this.store.target.label,
+        uncPct: this.targetUncPct,
+      })
     },
 
     tipHealthyCard(): string {
-      return `<strong>Healthy Reference Population  (${this.store.healthy.label})</strong>
-Outcome distribution under the same shared field.
-Ideally: 0% Lysed · low Rev-EP · high Stable fraction.
-
-DR = Vm × f_pulse / V_threshold
-σ_i uncertainty: ±${this.healthyUncPct}%`
+      return this.$t('population.tipHealthyCard', {
+        label: this.store.healthy.label,
+        uncPct: this.healthyUncPct,
+      })
     },
 
     tipLysedTarget(): string {
-      return `<strong>Target Lysed: ${this.targetStats.pctLysed}%</strong>
-Fraction of target cells with DR ≥ 1.0.
-Lysis threshold crossed → irreversible membrane disruption.
-<span class="tip-ok">Goal: maximise this fraction</span>`
+      return this.$t('population.tipLysedTarget', { pct: this.targetStats.pctLysed })
     },
-
     tipRevEpTarget(): string {
-      return `<strong>Target Rev-EP: ${this.targetStats.pctRevEp}%</strong>
-Fraction with DR 0.50–1.0 — reversible electroporation zone.
-Membrane is permeabilised but may recover.
-Repeated pulses accumulate pore damage toward lysis.`
+      return this.$t('population.tipRevEpTarget', { pct: this.targetStats.pctRevEp })
     },
-
     tipNourTarget(): string {
-      return `<strong>Target Nourishing: ${this.targetStats.pctNour}%</strong>
-Fraction with DR 0.08–0.50 — sub-EP Schwan coupling.
-Membrane partially stressed but cell is intact.`
+      return this.$t('population.tipNourTarget', { pct: this.targetStats.pctNour })
     },
-
     tipLysedHealthy(): string {
-      return `<strong>Healthy Lysed: ${this.healthyStats.pctLysed}%</strong>
-<span class="tip-warn">⚠ Collateral damage — healthy cells with DR ≥ 1.0.</span>
-Keep this at 0% for a safe therapeutic window.
-Increase selectivity: reduce field or tune frequency.`
+      return this.$t('population.tipLysedHealthy', { pct: this.healthyStats.pctLysed })
     },
-
     tipRevEpHealthy(): string {
-      return `<strong>Healthy Rev-EP: ${this.healthyStats.pctRevEp}%</strong>
-Healthy cells in the reversible EP zone (DR 0.50–1.0).
-Membrane stress; typically reversible at low duty cycle.
-Monitor closely — repeated pulses may accumulate.`
+      return this.$t('population.tipRevEpHealthy', { pct: this.healthyStats.pctRevEp })
     },
-
     tipNourHealthy(): string {
-      return `<strong>Healthy Nourishing: ${this.healthyStats.pctNour}%</strong>
-Healthy cells with sub-lytic Schwan coupling (DR 0.08–0.50).
-Low-level membrane activity — generally considered safe.`
+      return this.$t('population.tipNourHealthy', { pct: this.healthyStats.pctNour })
     },
-
-    tipChart(): string {
-      return `<strong>Population DR Histogram</strong>
-Monte Carlo distribution of disruption ratios across the sampled population.
-
-<span class="tip-val">Red</span> = Target cells  ·  <span class="tip-val">Cyan</span> = Healthy cells
-
-Threshold lines:
-  <span class="tip-val">50%</span> — Rev-EP onset (reversible pore formation)
-  <span class="tip-val">85%</span> — Lysis armed (irreversible pore accumulation onset)
-  <span class="tip-val">100%</span> — Lysis threshold (membrane rupture)
-
-Overlap of target and healthy bars = reduced therapeutic selectivity.
-Ideal: target bars clustered near 100% · healthy bars near 0%.`
-    },
+    tipChart(): string { return this.$t('population.tipChart') },
   },
 
   watch: {
@@ -326,20 +257,17 @@ Ideal: target bars clustered near 100% · healthy bars near 0%.`
 
   methods: {
     tipNPill(n: number): string {
-      if (n === 100)  return '<strong>N=100</strong>\nFast sampling — coarse histogram. Best for quick parameter scans.'
-      if (n === 300)  return '<strong>N=300</strong>\nBalanced default — smooth histogram, moderate computation time.'
-      return '<strong>N=1000</strong>\nHigh-fidelity histogram — slow sampling. Ideal for final analysis.'
+      if (n === 100) return this.$t('population.tipNPill100')
+      if (n === 300) return this.$t('population.tipNPill300')
+      return this.$t('population.tipNPill1000')
     },
 
     tipMeanDr(stats: PopStats, uncPct: number): string {
-      return `<strong>Mean DR ± σ</strong>
-Population mean disruption ratio ± standard deviation.
-  DR = Vm × f_pulse / V_threshold
-
-Mean: <span class="tip-val">${stats.meanDr.toFixed(3)}</span>  ·  σ: <span class="tip-val">${stats.stdDr.toFixed(3)}</span>
-
-σ_i uncertainty ±${uncPct}% added to radius variance
-to model natural biophysical heterogeneity.`
+      return this.$t('population.tipMeanDr', {
+        mean: stats.meanDr.toFixed(3),
+        std:  stats.stdDr.toFixed(3),
+        uncPct,
+      })
     },
 
     resample() {
@@ -454,9 +382,9 @@ to model natural biophysical heterogeneity.`
 
       // Threshold lines
       const lines = [
-        { x: THRESHOLDS.HEALTHY_APPROACHING, label: 'Rev-EP', color: 'rgba(251,191,36,0.7)', dash: '3,2' },
-        { x: THRESHOLDS.DISRUPTION_WARN,     label: '85%',    color: CSS_DANGER,             dash: '3,2' },
-        { x: 1.00,                           label: 'Lysis',  color: CSS_DANGER,             dash: '2,2' },
+        { x: THRESHOLDS.HEALTHY_APPROACHING, label: this.$t('chart.revEp'),    color: 'rgba(251,191,36,0.7)', dash: '3,2' },
+        { x: THRESHOLDS.DISRUPTION_WARN,     label: this.$t('chart.thresh85'), color: CSS_DANGER,             dash: '3,2' },
+        { x: 1.00,                           label: this.$t('chart.lysis'),    color: CSS_DANGER,             dash: '2,2' },
       ]
       for (const { x, label, color, dash } of lines) {
         if (x > xMax) continue
@@ -489,19 +417,19 @@ to model natural biophysical heterogeneity.`
         .attr('x', iW / 2).attr('y', iH + 32)
         .attr('text-anchor', 'middle')
         .attr('font-size', 10).attr('fill', 'rgba(255,255,255,0.4)')
-        .text('Disruption Ratio')
+        .text(this.$t('population.chartAxisDr'))
 
       g.append('text')
         .attr('transform', 'rotate(-90)')
         .attr('x', -iH / 2).attr('y', -36)
         .attr('text-anchor', 'middle')
         .attr('font-size', 10).attr('fill', 'rgba(255,255,255,0.4)')
-        .text('Cell count')
+        .text(this.$t('population.chartAxisCount'))
 
       // Legend
       const legend = [
-        { color: CSS_DANGER,  label: `Target (${this.store.target.label})` },
-        { color: CSS_PRIMARY, label: `Healthy (${this.store.healthy.label})` },
+        { color: CSS_DANGER,  label: `${this.$t('population.chartLegendTarget')} (${this.store.target.label})` },
+        { color: CSS_PRIMARY, label: `${this.$t('population.chartLegendHealthy')} (${this.store.healthy.label})` },
       ]
       legend.forEach(({ color, label }, i) => {
         const lx = i * 160

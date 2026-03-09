@@ -14,6 +14,10 @@ export const UNIT = {
   W_PER_KG:  'W/kg',
   S_PER_M:      'S/m',
   ML_PER_G_MIN: 'mL/(g·min)',
+  V:   'V',
+  UM:  'µm',
+  NM:  'nm',
+  MM:  'mm',
 } as const
 
 export type Unit = typeof UNIT[keyof typeof UNIT]
