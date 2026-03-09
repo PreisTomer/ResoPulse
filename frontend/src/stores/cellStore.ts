@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { cloneDeep } from 'lodash'
 import { cellConfigs } from '@/mockData'
+import { CELL_PRESETS } from '@/constants/cellLibrary'
 import { MEDIA } from '@/constants/media'
 import type { CellConfig } from '@/types/cell'
 import type { MediumKey } from '@/types/media'
@@ -27,6 +28,26 @@ export interface FieldPacket {
 
 // Legacy alias — services/socket.ts imports this type
 export type ResonancePacket = FieldPacket
+
+/** Full experiment state broadcast between clients */
+export interface StatePacket {
+  freqKHz:             number
+  fieldVcm:            number
+  medium:              string
+  dutyCycle:           number
+  pulseWidthNs:        number
+  waveform:            'cw' | 'pulsed'
+  orientationDeg:      number
+  lysisNPulses:        number
+  chartMode:           'schwan' | 'resonance'
+  safeMode:            boolean
+  doubleShellEnabled:  boolean
+  perfusionRate:       number
+  cellPackingFraction: number
+  targetPresetId:      string
+  healthyPresetId:     string
+  sessionName:         string
+}
 
 interface CellStoreState {
   healthy: CellConfig
@@ -417,6 +438,32 @@ export const useCellStore = defineStore('cell', {
       this.fieldIntensity = packet.activeFieldIntensityVcm
       if (packet.activeMedium in MEDIA) {
         this.medium = packet.activeMedium as MediumKey
+      }
+    },
+
+    handleStatePacket(packet: StatePacket) {
+      this.currentBroadcastFrequency = packet.freqKHz
+      this.fieldIntensity            = packet.fieldVcm
+      if (packet.medium in MEDIA) this.medium = packet.medium as MediumKey
+      this.dutyCycle           = packet.dutyCycle
+      this.pulseWidthNs        = packet.pulseWidthNs
+      this.waveform            = packet.waveform
+      this.orientationDeg      = packet.orientationDeg
+      this.lysisNPulses        = packet.lysisNPulses
+      this.chartMode           = packet.chartMode
+      this.safeMode            = packet.safeMode
+      this.doubleShellEnabled  = packet.doubleShellEnabled
+      this.perfusionRate       = packet.perfusionRate
+      this.cellPackingFraction = packet.cellPackingFraction
+
+      // Load presets by ID if they differ from current
+      if (packet.targetPresetId && packet.targetPresetId !== this.target.id) {
+        const p = CELL_PRESETS.find(c => c.id === packet.targetPresetId)
+        if (p) { this.target = cloneDeep(p) as CellConfig; this.targetTemp = 37; this.resetCounter++ }
+      }
+      if (packet.healthyPresetId && packet.healthyPresetId !== this.healthy.id) {
+        const p = CELL_PRESETS.find(c => c.id === packet.healthyPresetId)
+        if (p) { this.healthy = cloneDeep(p) as CellConfig; this.healthyTemp = 37; this.resetCounter++ }
       }
     },
 

@@ -76,6 +76,18 @@ export const useExperimentStore = defineStore('experiment', {
       })
     },
 
+    /** Receive a log entry broadcast from another client — append without re-broadcasting. */
+    receiveEntry(entry: LogEntry) {
+      // Avoid duplicates (same id already in log)
+      if (this.entries.some(e => e.id === entry.id)) return
+      this.entries.push(entry)
+      if (entry.id >= this.nextId) this.nextId = entry.id + 1
+    },
+
+    setSessionName(name: string) {
+      this.sessionName = name
+    },
+
     clearLog() {
       this.entries = []
       this.nextId = 1
