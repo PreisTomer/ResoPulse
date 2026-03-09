@@ -110,6 +110,7 @@ import {
 import { WAVEFORM, CHART_MODE, CELL_CATEGORY } from '@/constants/strings'
 import { THRESHOLDS } from '@/constants/cellCard'
 import { ICON } from '@/constants/icons'
+import { UNIT } from '@/constants/units'
 import type { CellConfig } from '@/types/cell'
 import { formatFreqKHz } from '@/utils/format'
 
@@ -145,7 +146,7 @@ export default defineComponent({
   emits: ['windowChange', 'openChange'],
 
   setup() {
-    return { store: useCellStore(), THRESHOLDS, ICON }
+    return { store: useCellStore(), THRESHOLDS, ICON, UNIT }
   },
 
   data() {
@@ -160,9 +161,10 @@ export default defineComponent({
   computed: {
     isResonanceTarget(): boolean {
       const cat = this.store.targetCellCategory
-      if (cat !== CELL_CATEGORY.BACTERIA && cat !== CELL_CATEGORY.VIRUS) return false
       const t = this.store.target as CellConfig & { resonantFreqGHz?: number; resonantThresholdVcm?: number }
-      return !!(t.resonantFreqGHz && t.resonantThresholdVcm) && this.store.chartMode === CHART_MODE.RESONANCE
+      return (cat === CELL_CATEGORY.BACTERIA || cat === CELL_CATEGORY.VIRUS) &&
+        !!t.resonantFreqGHz && !!t.resonantThresholdVcm &&
+        this.store.chartMode === CHART_MODE.RESONANCE
     },
 
     sweepData(): SweepPoint[] {
@@ -231,9 +233,9 @@ export default defineComponent({
 
     sweepSubtitle(): string {
       if (this.sweepParam === 'field') {
-        return `E: 0–${this.sweepMax} V/cm @ ${formatFreqKHz(this.store.currentBroadcastFrequency, 1)}`
+        return `E: 0–${this.sweepMax} ${UNIT.V_PER_CM} @ ${formatFreqKHz(this.store.currentBroadcastFrequency, 1)}`
       }
-      return `f: 0–${formatFreqKHz(this.sweepMax, 1)} @ ${this.store.fieldIntensity} V/cm`
+      return `f: 0–${formatFreqKHz(this.sweepMax, 1)} @ ${this.store.fieldIntensity} ${UNIT.V_PER_CM}`
     },
 
     windowRange(): { lo: number; hi: number } | null {
@@ -264,50 +266,17 @@ export default defineComponent({
     },
 
     // ── Tooltips ──────────────────────────────────────────────────────────────
-    tipSweepLabel(): string {
-      return `<strong>Sweep Parameter</strong>
-Choose which physical quantity to vary across the sweep axis.`
-    },
-
-    tipFieldPill(): string {
-      return `<strong>E-field Sweep</strong>
-Varies field intensity from 0 to max at the current fixed RF frequency.
-Shows how DR and TI change with field amplitude.
-Useful for finding the minimum lysis field and therapeutic window.`
-    },
-
-    tipFreqPill(): string {
-      return `<strong>Frequency Sweep</strong>
-Varies RF frequency from 0 to max at the current fixed field intensity.
-Shows Schwan roll-off shape and fc-dependent selectivity.
-Note: SAR (temperature) is frequency-independent in this model.`
-    },
+    tipSweepLabel(): string { return this.$t('sweep.tipSweepLabel') },
+    tipFieldPill(): string  { return this.$t('sweep.tipFieldPill') },
+    tipFreqPill(): string   { return this.$t('sweep.tipFreqPill') },
 
     tipMaxLabel(): string {
-      const unit = this.sweepParam === 'field' ? 'V/cm' : 'kHz'
-      return `<strong>Sweep Maximum</strong>
-Upper limit of the sweep axis (${unit}).
-Increase to extend the sweep range and find higher-field/frequency operating points.`
+      const unit = this.sweepParam === 'field' ? UNIT.V_PER_CM : UNIT.KHZ
+      return this.$t('sweep.tipMaxLabel', { unit })
     },
 
-    tipExport(): string {
-      return `<strong>↓ Export CSV</strong>
-Download all sweep data points as CSV.
-Columns: x-axis value · DR_H · DR_T · TI · T_H · T_T · in_window (0/1)`
-    },
-
-    tipChart(): string {
-      return `<strong>Field Sweep Chart</strong>
-<span class="tip-val">Solid red</span> = Target DR
-<span class="tip-val">Solid cyan</span> = Healthy DR
-<span class="tip-val">Dashed amber</span> = Therapeutic Index (TI, right axis)
-
-<span class="tip-val">Green fill</span> = Therapeutic window (DR_T ≥ 85% · DR_H &lt; 50%)
-<span class="tip-val">White dashed cursor</span> = Current active parameter value
-
-Left Y-axis: Disruption Ratio (%)
-Right Y-axis: Therapeutic Index TI = DR_T / DR_H`
-    },
+    tipExport(): string { return this.$t('sweep.tipExport') },
+    tipChart(): string  { return this.$t('sweep.tipChart') },
 
     tipWindow(): string {
       const wr = this.windowRange
@@ -341,18 +310,8 @@ Key ${this.sweepParam === 'field' ? 'field' : 'frequency'} value where target DR
   100% — lysis threshold reached`
     },
 
-    tipThDrT(): string {
-      return `<strong>DR<sub>T</sub> — Target Disruption Ratio</strong>
-Target cell disruption ratio at this operating point.
-DR = Vm × f_pulse / V_threshold
-1.0 = lysis threshold crossed`
-    },
-
-    tipThDrH(): string {
-      return `<strong>DR<sub>H</sub> — Healthy Disruption Ratio</strong>
-Healthy reference cell DR at the same operating point.
-Should stay below 0.50 for a safe therapeutic window.`
-    },
+    tipThDrT(): string { return this.$t('sweep.tipThDrT') },
+    tipThDrH(): string { return this.$t('sweep.tipThDrH') },
 
     tipThTI(): string {
       const s = THRESHOLDS.TI_STRONG, m = THRESHOLDS.TI_MARGINAL
@@ -478,9 +437,9 @@ Steady-state temperature via Pennes bioheat.${warn}`
 
       // Threshold lines
       const threshLines = [
-        { dr: THRESHOLDS.HEALTHY_APPROACHING, label: 'Rev-EP', color: CSS_AMBER,  dash: '4,3' },
-        { dr: THRESHOLDS.DISRUPTION_WARN,     label: '85%',    color: CSS_DANGER,  dash: '4,3' },
-        { dr: 1.00,                           label: 'Lysis',  color: CSS_DANGER,  dash: '2,2' },
+        { dr: THRESHOLDS.HEALTHY_APPROACHING, label: this.$t('chart.revEp'),   color: CSS_AMBER,  dash: '4,3' },
+        { dr: THRESHOLDS.DISRUPTION_WARN,     label: this.$t('chart.thresh85'), color: CSS_DANGER,  dash: '4,3' },
+        { dr: 1.00,                           label: this.$t('chart.lysis'),    color: CSS_DANGER,  dash: '2,2' },
       ]
       for (const { dr, label, color, dash } of threshLines) {
         if (dr > drMax) continue
@@ -509,7 +468,7 @@ Steady-state temperature via Pennes bioheat.${warn}`
         g.append('text')
           .attr('x', xScale(curX) + 3).attr('y', 10)
           .attr('font-size', 8.5).attr('fill', 'rgba(255,255,255,0.5)')
-          .text('current')
+          .text(this.$t('sweep.cursorCurrent'))
       }
 
       // Line generators
@@ -553,17 +512,19 @@ Steady-state temperature via Pennes bioheat.${warn}`
       // Axis labels
       g.append('text').attr('x', iW / 2).attr('y', iH + 30)
         .attr('text-anchor', 'middle').attr('font-size', 10).attr('fill', 'rgba(255,255,255,0.4)')
-        .text(this.sweepParam === 'field' ? 'Field Intensity (V/cm)' : 'Frequency (kHz)')
+        .text(this.sweepParam === 'field'
+          ? `${this.$t('sweep.axisFieldIntensity')} (${UNIT.V_PER_CM})`
+          : `${this.$t('sweep.axisFrequency')} (${UNIT.KHZ})`)
 
       g.append('text').attr('transform', 'rotate(-90)').attr('x', -iH / 2).attr('y', -40)
         .attr('text-anchor', 'middle').attr('font-size', 10).attr('fill', 'rgba(255,255,255,0.4)')
-        .text('Disruption Ratio')
+        .text(this.$t('sweep.axisDisruptionRatio'))
 
       // Legend
       const legend = [
-        { color: CSS_DANGER,  label: 'Target DR',  dash: '' },
-        { color: CSS_PRIMARY, label: 'Healthy DR', dash: '' },
-        { color: CSS_AMBER,   label: 'TI (right)', dash: '5,3' },
+        { color: CSS_DANGER,  label: this.$t('sweep.legendTargetDr'),  dash: '' },
+        { color: CSS_PRIMARY, label: this.$t('sweep.legendHealthyDr'), dash: '' },
+        { color: CSS_AMBER,   label: this.$t('sweep.legendTI'),        dash: '5,3' },
       ]
       legend.forEach(({ color, label, dash }, i) => {
         const lx = i * 90

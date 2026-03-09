@@ -32,11 +32,12 @@ import { useCellStore } from '@/stores/cellStore'
 import { CELL_PRESETS, GROUP_COLORS } from '@/constants/cellLibrary'
 import { CELL_CATEGORY, CELL_GROUP } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
+import { UNIT } from '@/constants/units'
 import { computeSchwan, computeResonantDisruption } from '@/utils/physics'
 
 export default defineComponent({
   setup() {
-    return { store: useCellStore(), CELL_PRESETS, GROUP_COLORS }
+    return { store: useCellStore(), CELL_PRESETS, GROUP_COLORS, UNIT }
   },
 
   computed: {
@@ -97,17 +98,14 @@ export default defineComponent({
     },
 
     cmpTip(row: { preset: typeof CELL_PRESETS[0]; sel: number; tVmMv: string; hasRes: boolean }): string {
-      const selStr = row.sel >= 99 ? ICON.INFINITY : row.sel.toFixed(3)
+      const selStr = row.sel >= 99 ? ICON.INFINITY : row.sel.toFixed(2)
+      const disr  = this.$t('selectivity.cmpTipDisruption')
+      const selLbl = this.$t('selectivity.cmpTipSelectivity')
+      const hint  = this.$t('selectivity.cmpTipClickHint')
       if (row.hasRes) {
-        return `<strong>${row.preset.label}</strong>
-${row.preset.notes}
-Disruption = <span class='tip-val'>${row.tVmMv}</span>  ·  Selectivity = <span class='tip-val'>×${selStr}</span>
-Click the preset pill below to switch to this cell`
+        return `<strong>${row.preset.label}</strong>\n${row.preset.notes}\n${disr} = <span class='tip-val'>${row.tVmMv}</span>  ·  ${selLbl} = <span class='tip-val'>×${selStr}</span>${hint}`
       }
-      return `<strong>${row.preset.label}</strong>
-${row.preset.notes}
-Vm = <span class='tip-val'>${row.tVmMv} mV</span>  ·  Selectivity = <span class='tip-val'>×${selStr}</span>
-Click the preset pill below to switch to this cell`
+      return `<strong>${row.preset.label}</strong>\n${row.preset.notes}\nVm = <span class='tip-val'>${row.tVmMv} ${UNIT.MV}</span>  ·  ${selLbl} = <span class='tip-val'>×${selStr}</span>${hint}`
     },
   },
 })

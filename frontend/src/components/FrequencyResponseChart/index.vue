@@ -4,8 +4,8 @@
     <div class="freq-chart__header">
       <span
         class="freq-chart__title"
-        v-tip="'<strong>Transmembrane Potential vs Frequency</strong>\nSchwan equation Vm(f) = 1.5·E·R·cos(θ) / √(1+(2πf·τ)²)\nX-axis: log scale 10 kHz → 500 MHz\nY-axis: peak Vm in millivolts\n\nFaint curves: all library presets\nBright curves: currently active cells\nShaded band: ±σ_i uncertainty (mammalian ±20% · bacteria ±35% · virus ±45%)\nAmber dashed: Vm selectivity ratio T/H (right axis)\nDotted threshold lines: lysis (bright) · Rev.EP at 50% (faint)\nDrag white cursor to set broadcast frequency'"
-      >Transmembrane Potential Response</span>
+        v-tip="$t('chart.tipMainTitle')"
+      >{{ $t('chart.title') }}</span>
       <ChartLegend />
     </div>
 
@@ -195,7 +195,7 @@ export default defineComponent({
         .attr('font-size', '0.62rem')
         .attr('font-family', 'var(--font-mono)')
         .attr('letter-spacing', '0.1em')
-        .text('FREQUENCY (Hz)')
+        .text(this.$t('chart.axisFrequency'))
 
       g.append('text')
         .attr('class', 'axis-label-y')
@@ -207,7 +207,7 @@ export default defineComponent({
         .attr('font-size', '0.6rem')
         .attr('font-family', 'var(--font-mono)')
         .attr('letter-spacing', '0.1em')
-        .text('Vm (mV)')
+        .text(`${this.$t('chart.axisVm')} (${UNIT.MV})`)
 
       // Curve groups (library first so they're below)
       g.append('g').attr('class', 'curves-library')
@@ -260,7 +260,7 @@ export default defineComponent({
         .attr('font-family', 'var(--font-mono)')
         .attr('letter-spacing', '0.08em')
         .attr('pointer-events', 'none')
-        .text('⟵ drag ⟶')
+        .text(this.$t('chart.dragHint'))
 
       // Hover overlay (captures mouse events)
       g.append('rect')
@@ -422,7 +422,7 @@ export default defineComponent({
         thrGroup.append('text')
           .attr('x', this._chartW + 4).attr('y', y1 + 4)
           .attr('fill', C.danger).attr('font-size', '0.52rem')
-          .attr('font-family', 'var(--font-mono)').text('DR=1')
+          .attr('font-family', 'var(--font-mono)').text(this.$t('chart.drOne'))
       }
 
       // f_res vertical marker + label
@@ -477,14 +477,14 @@ export default defineComponent({
         (cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) &&
         t.resonantFreqGHz && t.resonantThresholdVcm
       ) {
-        g.select('.axis-label-y').text('DISRUPTION RATIO')
+        g.select('.axis-label-y').text(this.$t('chart.axisDisruptionRatio'))
         this.updateChartResonance()
         return
       }
 
       // Schwan mode: reset x domain and y-axis label
       this._xScale!.domain([F_MIN_HZ, F_MAX_HZ])
-      g.select('.axis-label-y').text('Vm (mV)')
+      g.select('.axis-label-y').text(`${this.$t('chart.axisVm')} (${UNIT.MV})`)
 
       const sigma_e  = this.store.effectiveSigmaE
       const cosTheta = this.store.cosThetaFactor
@@ -700,8 +700,8 @@ export default defineComponent({
       thrGroup.selectAll('*').remove()
 
       const thrData = [
-        { label: 'thr H', vm: this.store.healthy.thresholdVoltage * 1000, color: C.primary },
-        { label: 'thr T', vm: this.store.target.thresholdVoltage * 1000,  color: C.danger  },
+        { label: this.$t('chart.thrH'), vm: this.store.healthy.thresholdVoltage * 1000, color: C.primary },
+        { label: this.$t('chart.thrT'), vm: this.store.target.thresholdVoltage * 1000,  color: C.danger  },
       ]
       thrData.forEach(({ label, vm, color }) => {
         // Lysis threshold line
@@ -733,7 +733,7 @@ export default defineComponent({
             .attr('fill', color).attr('font-size', '0.48rem')
             .attr('font-family', 'var(--font-mono)')
             .attr('opacity', 0.6)
-            .text('Rev.EP')
+            .text(this.$t('chart.revEp'))
         }
       })
 
@@ -741,8 +741,8 @@ export default defineComponent({
       const fcGroup = g.select<SVGGElement>('.fc-markers')
       fcGroup.selectAll('*').remove()
       const fcData = [
-        { fc: computeFc(this.store.healthy, sigma_e), color: C.primary, label: 'fc(H)' },
-        { fc: computeFc(this.store.target,  sigma_e), color: C.danger,  label: 'fc(T)' },
+        { fc: computeFc(this.store.healthy, sigma_e), color: C.primary, label: this.$t('chart.fcH') },
+        { fc: computeFc(this.store.target,  sigma_e), color: C.danger,  label: this.$t('chart.fcT') },
       ]
       // Build visible fc markers (within chart x domain)
       const visibleFc = fcData
@@ -831,9 +831,9 @@ export default defineComponent({
       g.select('.cursor-drag-hint').attr('x', x)
 
       const freqKHz = this.store.currentBroadcastFrequency
-      const label = freqKHz >= 1e6 ? `${(freqKHz / 1e6).toFixed(2)} GHz`
-                  : freqKHz >= 1000 ? `${(freqKHz / 1000).toFixed(1)} MHz`
-                  : `${freqKHz} kHz`
+      const label = freqKHz >= 1e6 ? `${(freqKHz / 1e6).toFixed(2)} ${UNIT.GHZ}`
+                  : freqKHz >= 1000 ? `${(freqKHz / 1000).toFixed(1)} ${UNIT.MHZ}`
+                  : `${freqKHz} ${UNIT.KHZ}`
       const textEl = g.select<SVGTextElement>('.cursor-label')
       textEl.attr('x', x).text(label)
 

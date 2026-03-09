@@ -113,70 +113,24 @@ export default defineComponent({
     hasEntries(): boolean { return this.expStore.entries.length > 0 },
 
     // ── Button tooltips ────────────────────────────────────────────────────────
-    tipLogReading(): string {
-      return `<strong>Log Reading</strong>
-Capture a snapshot of the current experiment state:
-RF frequency, field intensity, transmembrane potentials (Vm),
-selectivity ratio, cell temperatures, and disruption ratios.
-Auto-logged on lysis events.`
-    },
-    tipExportCsv(): string {
-      return `<strong>Export CSV</strong>
-Download all log entries as a comma-separated file.
-Columns: #, timestamp, frequency (kHz), field (V/cm),
-target Vm (mV), healthy Vm (mV), selectivity, event type.`
-    },
-    tipClearLog(): string {
-      return `<strong>Clear Log</strong>
-Remove all readings from this session.
-This action cannot be undone.`
-    },
+    tipLogReading(): string { return this.$t('log.tipLogReading') },
+    tipExportCsv(): string  { return this.$t('log.tipExportCsv') },
+    tipClearLog(): string   { return this.$t('log.tipClearLog') },
 
     // ── Column header tooltips ─────────────────────────────────────────────────
-    tipThNumber(): string {
-      return `<strong>#  — Entry Index</strong>
-Sequential reading number (newest first).`
-    },
-    tipThTime(): string {
-      return `<strong>Time — Timestamp</strong>
-Local time (HH:MM:SS) when the reading was logged.`
-    },
-    tipThFreq(): string {
-      return `<strong>Freq — RF Frequency (kHz)</strong>
-Broadcast frequency at the time of reading.
-Below fc → quasi-DC regime, Vm is at its maximum.
-Above fc → Schwan roll-off reduces Vm.`
-    },
-    tipThField(): string {
-      return `<strong>Field — Applied Electric Field (V/cm)</strong>
-Field intensity at the time of reading.
-Transmembrane potential Vm scales linearly with E.`
-    },
-    tipThTargetVm(): string {
-      return `<strong>T-Vm — Target Transmembrane Potential (mV)</strong>
-Peak voltage induced across the target cell membrane,
-computed via the Schwan equation.
-Higher values → greater disruption potential.`
-    },
-    tipThHealthyVm(): string {
-      return `<strong>H-Vm — Healthy Transmembrane Potential (mV)</strong>
-Peak voltage induced across the healthy reference
-cell membrane. Should remain below 50% of threshold
-for a safe therapeutic window.`
-    },
+    tipThNumber(): string   { return this.$t('log.tipThNumber') },
+    tipThTime(): string     { return this.$t('log.tipThTime') },
+    tipThFreq(): string     { return this.$t('log.tipThFreq') },
+    tipThField(): string    { return this.$t('log.tipThField') },
+    tipThTargetVm(): string { return this.$t('log.tipThTargetVm') },
+    tipThHealthyVm(): string { return this.$t('log.tipThHealthyVm') },
+
     tipThSel(): string {
-      const { SEL_STRONG: s, SEL_MARGINAL: m } = THRESHOLDS
-      return `<strong>Sel× — Vm Selectivity Ratio</strong>
-T-Vm / H-Vm — raw membrane potential ratio.
-<span class="tip-ok">≥ ${s}×</span> Strong therapeutic window
-<span class="tip-val">${m}–${s}×</span> Marginal window
-<span class="tip-warn">&lt; ${m}×</span> Non-selective`
+      const { SEL_STRONG: strong, SEL_MARGINAL: marginal } = THRESHOLDS
+      return this.$t('log.tipThSel', { strong, marginal })
     },
-    tipThEvent(): string {
-      return `<strong>Event Type</strong>
-manual — snapshot triggered by user
-lysis — target membrane disrupted (auto-logged)`
-    },
+
+    tipThEvent(): string { return this.$t('log.tipThEvent') },
   },
 
   methods: {
@@ -211,11 +165,8 @@ Target temp: ${e.targetTemp}°C  ·  Healthy temp: ${e.healthyTemp}°C`
     },
     tipCellEvent(e: { event: string }): string {
       return e.event === LOG_EVENT.LYSIS
-        ? `<span class="tip-warn">⚡ Lysis event</span>
-Target membrane was irreversibly disrupted.
-Automatically logged when the lysis countdown completed.`
-        : `Manual snapshot
-Logged by user click at this timestamp.`
+        ? this.$t('log.tipCellLysis')
+        : this.$t('log.tipCellManual')
     },
   },
 })

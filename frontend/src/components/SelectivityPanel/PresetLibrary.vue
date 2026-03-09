@@ -46,6 +46,7 @@ import { useCellStore } from '@/stores/cellStore'
 import { CELL_PRESETS, GROUP_COLORS, GROUP_LABELS } from '@/constants/cellLibrary'
 import type { CellGroup } from '@/constants/cellLibrary'
 import { CELL_TYPE, CELL_GROUP } from '@/constants/strings'
+import { UNIT } from '@/constants/units'
 
 const TARGET_GROUPS: CellGroup[] = [CELL_GROUP.CANCER, CELL_GROUP.BACTERIA, CELL_GROUP.VIRUS] as CellGroup[]
 const HEALTHY_GROUP: CellGroup = CELL_GROUP.REFERENCE as CellGroup
@@ -59,7 +60,7 @@ export default defineComponent({
   },
 
   setup() {
-    return { store: useCellStore(), CELL_PRESETS, GROUP_COLORS, GROUP_LABELS, CELL_TYPE, CELL_GROUP }
+    return { store: useCellStore(), CELL_PRESETS, GROUP_COLORS, GROUP_LABELS, CELL_TYPE, CELL_GROUP, UNIT }
   },
 
   computed: {
@@ -91,15 +92,13 @@ export default defineComponent({
 
     presetTip(p: typeof CELL_PRESETS[0]): string {
       const pr = p as typeof p & { resonantFreqGHz?: number; capsidQ?: number; resonantThresholdVcm?: number }
+      const R   = this.$t('selectivity.presetTipRadius')
+      const mem = this.$t('selectivity.presetTipMembrane')
+      const thr = this.$t('selectivity.presetTipVmThr')
       const res = pr.resonantFreqGHz
-        ? `\nf_res = <span class="tip-val">${pr.resonantFreqGHz} GHz</span>  ·  Q = ${pr.capsidQ ?? 20}  ·  E_thr = ${pr.resonantThresholdVcm} V/cm`
+        ? `\nf_res = <span class="tip-val">${pr.resonantFreqGHz} ${UNIT.GHZ}</span>  ·  Q = ${pr.capsidQ ?? 20}  ·  E_thr = ${pr.resonantThresholdVcm} ${UNIT.V_PER_CM}`
         : ''
-      return `<strong>${p.label}</strong>
-${p.notes}
-
-R = <span class="tip-val">${p.radius} µm</span>  ·  membrane = ${p.membraneThickness} nm
-ε_r = ${p.dielectricConstant}  ·  σ_i = ${p.conductivity} S/m
-Vm threshold = <span class="tip-val">${p.thresholdVoltage} V</span>${res}`
+      return `<strong>${p.label}</strong>\n${p.notes}\n\n${R} = <span class="tip-val">${p.radius} ${UNIT.UM}</span>  ·  ${mem} = ${p.membraneThickness} ${UNIT.NM}\nε_r = ${p.dielectricConstant}  ·  σ_i = ${p.conductivity} ${UNIT.S_PER_M}\n${thr} = <span class="tip-val">${p.thresholdVoltage} ${UNIT.V}</span>${res}`
     },
   },
 })
