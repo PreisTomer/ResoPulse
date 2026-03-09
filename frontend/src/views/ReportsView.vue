@@ -47,37 +47,37 @@
 
       <!-- Stats row -->
       <div class="reports__stats-grid">
-        <div class="reports__stat-card">
+        <div class="reports__stat-card" :title="$t('reports.totalReadingsTitle')">
           <div class="reports__stat-value" :class="{ 'reports__stat-empty': totalReadings === 0 }">
             {{ totalReadings }}
           </div>
           <div class="reports__stat-label">{{ $t('reports.totalReadings') }}</div>
         </div>
-        <div class="reports__stat-card">
+        <div class="reports__stat-card" :title="$t('reports.lysisEventsTitle')">
           <div class="reports__stat-value reports__stat-lysis">{{ lysisEvents }}</div>
           <div class="reports__stat-label">{{ $t('reports.lysisEvents') }}</div>
         </div>
-        <div class="reports__stat-card">
+        <div class="reports__stat-card" :title="$t('reports.manualReadingsTitle')">
           <div class="reports__stat-value">{{ manualReadings }}</div>
           <div class="reports__stat-label">{{ $t('reports.manualReadings') }}</div>
         </div>
-        <div class="reports__stat-card">
+        <div class="reports__stat-card" :title="$t('reports.avgSelectivityTitle')">
           <div class="reports__stat-value reports__stat-primary">{{ avgSelectivity ?? '—' }}</div>
           <div class="reports__stat-label">{{ $t('reports.avgSelectivity') }}</div>
         </div>
-        <div class="reports__stat-card">
+        <div class="reports__stat-card" :title="$t('reports.peakSelectivityTitle')">
           <div class="reports__stat-value reports__stat-green">{{ peakSelectivity ?? '—' }}</div>
           <div class="reports__stat-label">{{ $t('reports.peakSelectivity') }}</div>
         </div>
-        <div class="reports__stat-card">
+        <div class="reports__stat-card" :title="$t('reports.peakTargetRatioTitle')">
           <div class="reports__stat-value reports__stat-red">{{ peakTargetRatio ?? '—' }}</div>
           <div class="reports__stat-label">{{ $t('reports.peakTargetRatio') }}</div>
         </div>
-        <div class="reports__stat-card reports__stat-card--wide">
+        <div class="reports__stat-card reports__stat-card--wide" :title="$t('reports.freqRangeTitle')">
           <div class="reports__stat-value reports__stat-small">{{ freqRange ?? '—' }}</div>
           <div class="reports__stat-label">{{ $t('reports.freqRange') }}</div>
         </div>
-        <div class="reports__stat-card reports__stat-card--wide">
+        <div class="reports__stat-card reports__stat-card--wide" :title="$t('reports.fieldRangeTitle')">
           <div class="reports__stat-value reports__stat-small">{{ fieldRange ?? '—' }}</div>
           <div class="reports__stat-label">{{ $t('reports.fieldRange') }}</div>
         </div>
@@ -120,9 +120,9 @@
                 <th :title="$t('reports.colSelectivityTitle')">{{ $t('reports.colSelectivity') }}</th>
                 <th :title="$t('reports.colTRatioTitle')">{{ $t('reports.colTRatio') }}</th>
                 <th :title="$t('reports.colHRatioTitle')">{{ $t('reports.colHRatio') }}</th>
-                <th>{{ $t('reports.colTTemp') }}</th>
-                <th>{{ $t('reports.colHTemp') }}</th>
-                <th>{{ $t('reports.colEvent') }}</th>
+                <th :title="$t('reports.colTTempTitle')">{{ $t('reports.colTTemp') }}</th>
+                <th :title="$t('reports.colHTempTitle')">{{ $t('reports.colHTemp') }}</th>
+                <th :title="$t('reports.colEventTitle')">{{ $t('reports.colEvent') }}</th>
               </tr>
             </thead>
             <tbody>
