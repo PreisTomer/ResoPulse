@@ -2,11 +2,11 @@
   <template v-if="cellData">
     <div
       class="cell-card__params-toggle"
-      v-tip="'<strong>Cell Parameters</strong>\nEdit biophysical properties that drive the\nSchwan equation calculation in real time.\nChanges immediately update Vm, selectivity,\nand the frequency response chart.'"
+      v-tip="$t('cells.paramsToggleTip')"
       @click="paramsExpanded = !paramsExpanded"
     >
       <span class="cell-card__params-toggle-arrow">{{ paramsExpanded ? '▾' : '▸' }}</span>
-      Cell Parameters
+      {{ $t('cells.paramsToggleLabel') }}
     </div>
     <Transition name="params">
       <div v-if="paramsExpanded" class="cell-card__params-panel">
@@ -21,9 +21,9 @@
         </div>
         <div
           class="cell-card__params-derived-hdr"
-          v-tip="'<strong>Derived biophysical parameters</strong>\nComputed in real time from the editable values above.\n\n<span class=\'tip-val\'>Cm</span> = ε_r × ε₀ / d\n  Membrane specific capacitance [mF/m²]\n\n<span class=\'tip-val\'>τ</span> = R·Cm·(2σ_e+σ_i) / (2σ_e·σ_i)\n  Schwan time constant (Kotnik & Miklavcic 2000)\n  Sets the frequency roll-off\n\n<span class=\'tip-val\'>fc</span> = 1/(2πτ)\n  Characteristic frequency — Vm drops −3 dB here\n  Below fc: quasi-DC regime, Vm at maximum'"
+          v-tip="$t('cells.derivedTip')"
         >
-          <span class="cell-card__params-derived-label">Derived constants</span>
+          <span class="cell-card__params-derived-label">{{ $t('cells.derivedLabel') }}</span>
         </div>
         <div v-for="p in derivedParams" :key="p.label" class="cell-card__param-row cell-card__param-row--derived">
           <label class="cell-card__param-label">{{ p.label }}</label>
@@ -33,9 +33,9 @@
         <div v-if="canResetToPreset" class="cell-card__params-reset-row">
           <button
             class="cell-card__params-btn"
-            v-tip="'<strong>Reset to Preset Defaults</strong>\nRestores all parameters to the original\nvalues for this preset.\nUseful after editing to explore changes.'"
+            v-tip="$t('cells.resetBtnTip')"
             @click="$emit('reset-to-preset')"
-          >↺ Reset to defaults</button>
+          >{{ $t('cells.resetBtn') }}</button>
         </div>
       </div>
     </Transition>
