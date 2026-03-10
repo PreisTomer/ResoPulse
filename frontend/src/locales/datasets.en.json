@@ -60,6 +60,18 @@
       "waterName": "Distilled Water",
       "waterEffect": "τ ~200× longer · f<sub>c</sub> to ~5 kHz (epithelial σ<sub>i</sub>≈0.5 S/m); bacteria ~50–100×; virions ~3–5× (σ<sub>i</sub>≪σ<sub>e</sub> → medium effect collapses)",
       "waterUse": "Electroporation buffer · academic boundary-condition reference",
+      "dmemKey": "dmem",
+      "dmemName": "DMEM (Dulbecco's Modified Eagle Medium)",
+      "dmemEffect": "τ +1% · f<sub>c</sub> −1% (epithelial) — effectively identical to saline · V<sub>m,DC</sub> unchanged",
+      "dmemUse": "Standard adherent mammalian cell culture (HeLa, A549, MCF-7, HEK293)",
+      "rpmiKey": "rpmi",
+      "rpmiName": "RPMI 1640",
+      "rpmiEffect": "τ +2% · f<sub>c</sub> −2% (epithelial) — negligible difference vs saline · V<sub>m,DC</sub> unchanged",
+      "rpmiUse": "Suspension and haematological cell lines (HL-60, Jurkat, PBMC, LNCaP)",
+      "mhbKey": "mhb",
+      "mhbName": "Mueller-Hinton Broth",
+      "mhbEffect": "τ +13% · f<sub>c</sub> −11% (epithelial σ<sub>i</sub>≈0.5); bacteria ~7%; virions ~0.5% · V<sub>m,DC</sub> unchanged",
+      "mhbUse": "CLSI/EUCAST bacterial susceptibility testing standard (E. coli, MRSA, Klebsiella)",
       "footer": "τ = R·C<sub>m</sub>·(2σ<sub>e</sub>+σ<sub>i</sub>)/(2σ<sub>e</sub>·σ<sub>i</sub>) — V<sub>m,DC</sub> independent of medium · τ shift magnitudes depend on σ<sub>i</sub>: large for σ<sub>i</sub> ≈ σ<sub>e</sub> (epithelial), negligible for σ<sub>i</sub> ≪ σ<sub>e</sub> (virions)"
     },
 

@@ -137,6 +137,27 @@
                 <td v-html="$t('datasets.media.waterEffect')"></td>
                 <td>{{ $t('datasets.media.waterUse') }}</td>
               </tr>
+              <tr>
+                <td class="datasets__mono datasets__primary-val">{{ $t('datasets.media.dmemKey') }}</td>
+                <td>{{ $t('datasets.media.dmemName') }}</td>
+                <td class="datasets__mono">1.400</td>
+                <td v-html="$t('datasets.media.dmemEffect')"></td>
+                <td>{{ $t('datasets.media.dmemUse') }}</td>
+              </tr>
+              <tr>
+                <td class="datasets__mono">{{ $t('datasets.media.rpmiKey') }}</td>
+                <td>{{ $t('datasets.media.rpmiName') }}</td>
+                <td class="datasets__mono">1.300</td>
+                <td v-html="$t('datasets.media.rpmiEffect')"></td>
+                <td>{{ $t('datasets.media.rpmiUse') }}</td>
+              </tr>
+              <tr>
+                <td class="datasets__mono">{{ $t('datasets.media.mhbKey') }}</td>
+                <td>{{ $t('datasets.media.mhbName') }}</td>
+                <td class="datasets__mono">0.800</td>
+                <td v-html="$t('datasets.media.mhbEffect')"></td>
+                <td>{{ $t('datasets.media.mhbUse') }}</td>
+              </tr>
             </tbody>
           </table>
         </div>
