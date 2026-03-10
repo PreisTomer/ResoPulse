@@ -34,6 +34,11 @@
     "tipActiveT": "<strong>Active Target cell</strong>\nCurrently selected target cell (red, full opacity).\nDrag the white cursor to set broadcast frequency.",
     "tipVmRatio": "<strong>Vm Selectivity Ratio</strong> (amber dashed · right axis)\nVm_T / Vm_H — orientation-independent (cos θ cancels).\n>1× → target accumulates more Vm than healthy.\nPulse step factor accounts for ns-pulse charging fraction.",
     "tipNucH": "<strong>Nuclear Vm — Healthy</strong> (dashed, half opacity)\nDouble-shell model (Kotnik &amp; Miklavcic 2006).\nVm_nuc bandpass peaks at f_peak = 1/(2π√(τ_out·τ_ne)).\nHepatocyte: f_peak ≈ 1.66 MHz · Vm_nuc ≈ 40 mV at 417 kHz",
-    "tipNucT": "<strong>Nuclear Vm — Target</strong> (dashed, half opacity)\nDouble-shell model (Kotnik &amp; Miklavcic 2006).\nCancer NE thinner/leakier → higher Vm_nuc, lower threshold.\nAdenocarcinoma: f_peak ≈ 0.87 MHz · Vm_nuc ≈ 110 mV"
+    "tipNucT": "<strong>Nuclear Vm — Target</strong> (dashed, half opacity)\nDouble-shell model (Kotnik &amp; Miklavcic 2006).\nCancer NE thinner/leakier → higher Vm_nuc, lower threshold.\nAdenocarcinoma: f_peak ≈ 0.87 MHz · Vm_nuc ≈ 110 mV",
+
+    "tooltipDR": "T-DR",
+    "tooltipNoRes": "H: no resonance",
+    "tooltipTauH": "τ(H)",
+    "tooltipTauT": "τ(T)"
   }
 }
