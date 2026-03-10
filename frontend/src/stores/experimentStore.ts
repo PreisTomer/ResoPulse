@@ -43,6 +43,11 @@ function nowHMS(): string {
   return new Date().toLocaleTimeString('en-GB', { hour12: false })
 }
 
+/** Round a number to `decimals` significant decimal places, stripping trailing zeros. */
+function round(value: number, decimals: number): number {
+  return parseFloat(value.toFixed(decimals))
+}
+
 const LS_KEY = 'br-experiment'
 
 function loadState(): ExperimentState {
@@ -65,13 +70,13 @@ export const useExperimentStore = defineStore('experiment', {
         fieldVcm: snap.fieldIntensity,
         medium: snap.medium,
         targetPreset: snap.target.id,
-        healthyVm: parseFloat((snap.healthyVm * 1000).toFixed(3)),
-        targetVm: parseFloat((snap.targetVm * 1000).toFixed(3)),
-        selectivity: parseFloat(snap.selectivityRatio.toFixed(3)),
-        healthyRatio: parseFloat(snap.healthyDisruptionRatio.toFixed(4)),
-        targetRatio: parseFloat(snap.targetDisruptionRatio.toFixed(4)),
-        healthyTemp: parseFloat(snap.healthyTemp.toFixed(1)),
-        targetTemp: parseFloat(snap.targetTemp.toFixed(1)),
+        healthyVm:    round(snap.healthyVm * 1000,        3),
+        targetVm:     round(snap.targetVm  * 1000,        3),
+        selectivity:  round(snap.selectivityRatio,        3),
+        healthyRatio: round(snap.healthyDisruptionRatio,  4),
+        targetRatio:  round(snap.targetDisruptionRatio,   4),
+        healthyTemp:  round(snap.healthyTemp,             1),
+        targetTemp:   round(snap.targetTemp,              1),
         event,
       })
     },
@@ -81,7 +86,7 @@ export const useExperimentStore = defineStore('experiment', {
       // Avoid duplicates (same id already in log)
       if (this.entries.some(e => e.id === entry.id)) return
       this.entries.push(entry)
-      if (entry.id >= this.nextId) this.nextId = entry.id + 1
+      this.nextId = Math.max(this.nextId, entry.id + 1)
     },
 
     setSessionName(name: string) {

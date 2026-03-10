@@ -108,11 +108,23 @@ import {
   computeResonantDisruption,
 } from '@/utils/physics'
 import { WAVEFORM, CHART_MODE, CELL_CATEGORY } from '@/constants/strings'
-import { THRESHOLDS } from '@/constants/cellCard'
+import { THRESHOLDS, DEFAULT_CAPSID_Q } from '@/constants/cellCard'
 import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'
 import type { CellConfig } from '@/types/cell'
 import { formatFreqKHz } from '@/utils/format'
+import {
+  tipWindow,
+  tipNoWindow,
+  tipThThreshold,
+  tipThTI,
+  tipThTemp,
+  tipKpLabel,
+  tipKpDrT,
+  tipKpDrH,
+  tipKpTI,
+  tipKpTemp,
+} from '@/utils/sweepTooltips'
 
 const LAMBDA   = 0.02  // Newton cooling [1/s]
 const N_POINTS = 100   // sweep resolution
@@ -201,7 +213,7 @@ export default defineComponent({
           drH = (vmH * pefH) / healthy.thresholdVoltage
 
           if (this.isResonanceTarget) {
-            drT = computeResonantDisruption(t.resonantFreqGHz!, t.capsidQ ?? 20, t.resonantThresholdVcm!, freqKHz * 1e3, x)
+            drT = computeResonantDisruption(t.resonantFreqGHz!, t.capsidQ ?? DEFAULT_CAPSID_Q, t.resonantThresholdVcm!, freqKHz * 1e3, x)
           } else {
             const vmT = computeSchwan(target, freqKHz, x, sigma_e, cosTheta)
             drT = (vmT * pefT) / target.thresholdVoltage
@@ -215,7 +227,7 @@ export default defineComponent({
           drH = (vmH * pefH) / healthy.thresholdVoltage
 
           if (this.isResonanceTarget) {
-            drT = computeResonantDisruption(t.resonantFreqGHz!, t.capsidQ ?? 20, t.resonantThresholdVcm!, x * 1e3, E)
+            drT = computeResonantDisruption(t.resonantFreqGHz!, t.capsidQ ?? DEFAULT_CAPSID_Q, t.resonantThresholdVcm!, x * 1e3, E)
           } else {
             const vmT = computeSchwan(target, x, E, sigma_e, cosTheta)
             drT = (vmT * pefT) / target.thresholdVoltage
@@ -281,52 +293,21 @@ export default defineComponent({
     tipWindow(): string {
       const wr = this.windowRange
       if (!wr) return ''
-      const unit   = this.sweepParam === 'field' ? 'V/cm' : 'kHz'
-      const center = ((wr.lo + wr.hi) / 2).toFixed(0)
-      return `<strong>Therapeutic Window</strong>
-Range where DR_target ≥ 85% AND DR_healthy &lt; 50% simultaneously.
-
-  Lo: ${wr.lo.toFixed(0)} ${unit}  ·  Hi: ${wr.hi.toFixed(0)} ${unit}
-  Center: <span class="tip-val">${center} ${unit}</span>
-
-Operating within this window maximises therapeutic selectivity.
-Use the <span class="tip-val">⭐ Set to Window Center</span> button in the snap bar to apply ${center} ${unit} to the active parameter.`
+      const isField = this.sweepParam === 'field'
+      return tipWindow({
+        loStr:  wr.lo.toFixed(0),
+        hiStr:  wr.hi.toFixed(0),
+        center: ((wr.lo + wr.hi) / 2).toFixed(0),
+        unit:   isField ? UNIT.V_PER_CM : UNIT.KHZ,
+      })
     },
 
-    tipNoWindow(): string {
-      return `<strong>No Therapeutic Window</strong>
-No ${this.sweepParam === 'field' ? 'field intensity' : 'frequency'} range found where:
-  DR_target ≥ 85%  AND  DR_healthy &lt; 50%
-
-Try increasing the sweep maximum, adjusting pulse width,
-or switching from CW to pulsed mode for better selectivity.`
-    },
-
-    tipThThreshold(): string {
-      return `<strong>Operating Threshold</strong>
-Key ${this.sweepParam === 'field' ? 'field' : 'frequency'} value where target DR crosses a biophysical milestone:
-  50% — reversible electroporation onset
-  85% — lysis countdown arms (irreversible pore accumulation)
-  100% — lysis threshold reached`
-    },
-
-    tipThDrT(): string { return this.$t('sweep.tipThDrT') },
-    tipThDrH(): string { return this.$t('sweep.tipThDrH') },
-
-    tipThTI(): string {
-      const s = THRESHOLDS.TI_STRONG, m = THRESHOLDS.TI_MARGINAL
-      return `<strong>TI — Therapeutic Index</strong>
-TI = DR_T / DR_H — selectivity ratio at this operating point.
-<span class="tip-ok">≥ ${s}×</span> — strong therapeutic window
-<span class="tip-val">${m}–${s}×</span> — marginal window
-<span class="tip-warn">&lt; ${m}×</span> — poor selectivity`
-    },
-
-    tipThTemp(): string {
-      return `<strong>T<sub>target</sub> — Target Steady-State Temperature</strong>
-T_ss = 37 + SAR_eff / (λ × cp)
-Coloured: amber ≥ ${THRESHOLDS.TEMP_WARN}°C · red ≥ ${THRESHOLDS.TEMP_DENATURING}°C (denaturation onset)`
-    },
+    tipNoWindow(): string   { return tipNoWindow(this.sweepParam === 'field') },
+    tipThThreshold(): string { return tipThThreshold(this.sweepParam === 'field') },
+    tipThDrT(): string      { return this.$t('sweep.tipThDrT') },
+    tipThDrH(): string      { return this.$t('sweep.tipThDrH') },
+    tipThTI(): string       { return tipThTI() },
+    tipThTemp(): string     { return tipThTemp() },
   },
 
   watch: {
@@ -354,38 +335,11 @@ Coloured: amber ≥ ${THRESHOLDS.TEMP_WARN}°C · red ≥ ${THRESHOLDS.TEMP_DENA
   },
 
   methods: {
-    tipKpLabel(kp: KeyPoint): string {
-      return `<strong>Operating Point</strong>\n${kp.label}`
-    },
-
-    tipKpDrT(kp: KeyPoint): string {
-      return `<strong>Target DR = ${kp.drT.toFixed(3)}</strong>
-Disruption ratio at this operating point.
-${kp.drT >= 1.0 ? '<span class="tip-warn">⚡ Lysis threshold crossed</span>' : kp.drT >= THRESHOLDS.DISRUPTION_WARN ? '<span class="tip-warn">⚠ Lysis armed (&gt;85%)</span>' : 'Sub-lysis operating point.'}`
-    },
-
-    tipKpDrH(kp: KeyPoint): string {
-      return `<strong>Healthy DR = ${kp.drH.toFixed(3)}</strong>
-${kp.drH >= THRESHOLDS.HEALTHY_APPROACHING ? '<span class="tip-warn">⚠ Healthy cells in Rev-EP zone (≥50%)</span>' : '<span class="tip-ok">✓ Healthy cells below Rev-EP threshold</span>'}`
-    },
-
-    tipKpTI(kp: KeyPoint): string {
-      const { TI_STRONG: s, TI_MARGINAL: m } = THRESHOLDS
-      const cls = kp.ti >= s ? 'tip-ok' : kp.ti >= m ? '' : 'tip-warn'
-      return `<strong>TI = ${kp.ti.toFixed(3)}×</strong>
-<span class="${cls}">${kp.ti >= s ? '✓ Strong selectivity' : kp.ti >= m ? 'Marginal selectivity' : '⚠ Poor selectivity'}</span>
-TI = DR_T / DR_H at this threshold crossing.`
-    },
-
-    tipKpTemp(kp: KeyPoint): string {
-      const warn = kp.tT >= THRESHOLDS.TEMP_DENATURING
-        ? '\n<span class="tip-warn">⚠ Denaturation zone (≥60°C)</span>'
-        : kp.tT >= THRESHOLDS.TEMP_WARN
-          ? '\n<span class="tip-warn">⚠ Hyperthermic (≥42°C)</span>'
-          : '\n<span class="tip-ok">✓ Safe thermal zone</span>'
-      return `<strong>T_ss (target) = ${kp.tT.toFixed(1)}°C</strong>
-Steady-state temperature via Pennes bioheat.${warn}`
-    },
+    tipKpLabel(kp: KeyPoint): string { return tipKpLabel(kp.label) },
+    tipKpDrT(kp: KeyPoint): string   { return tipKpDrT(kp.drT) },
+    tipKpDrH(kp: KeyPoint): string   { return tipKpDrH(kp.drH) },
+    tipKpTI(kp: KeyPoint): string    { return tipKpTI(kp.ti) },
+    tipKpTemp(kp: KeyPoint): string  { return tipKpTemp(kp.tT) },
 
     _initChart() {
       const wrap = this.$refs.chartWrap as HTMLElement

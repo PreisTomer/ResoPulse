@@ -70,10 +70,18 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { useCellStore } from '@/stores/cellStore'
-import { THRESHOLDS, DISRUPTION_WARN_THRESHOLD } from '@/constants/cellCard'
+import { THRESHOLDS } from '@/constants/cellCard'
 import { CELL_CATEGORY } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
 import { formatLysisTime } from '@/utils/sliderTooltips'
+import { computeLysisProbability } from '@/utils/physics'
+import {
+  tipTargetPlysis,
+  tipHealthyPlysis,
+  tipNuclearSection,
+  tipTargetBar,
+  tipHealthyBar,
+} from '@/utils/disruptionBarTooltips'
 
 export default defineComponent({
   setup() {
@@ -87,19 +95,13 @@ export default defineComponent({
     healthyRatioPct(): number { return Math.min(100, this.healthyRatio * 100) },
 
     targetLysisProbability(): number {
-      return Math.round(100 / (1 + Math.exp(-(this.targetRatio - THRESHOLDS.LYSIS_PROB_CENTER) / THRESHOLDS.LYSIS_PROB_SLOPE)))
+      return computeLysisProbability(this.targetRatio, THRESHOLDS.LYSIS_PROB_CENTER, THRESHOLDS.LYSIS_PROB_SLOPE)
     },
     healthyLysisProbability(): number {
-      return Math.round(100 / (1 + Math.exp(-(this.healthyRatio - THRESHOLDS.LYSIS_PROB_CENTER) / THRESHOLDS.LYSIS_PROB_SLOPE)))
+      return computeLysisProbability(this.healthyRatio, THRESHOLDS.LYSIS_PROB_CENTER, THRESHOLDS.LYSIS_PROB_SLOPE)
     },
 
-    lysisTimeDisplay(): string {
-      return formatLysisTime(this.store.lysisDelayMs)
-    },
-
-    tipTargetPlysis(): string {
-      return `<strong>P(electroporation)</strong>\nSigmoid probability centered at 100% disruption threshold.\nP = 1 / (1 + e^−((ratio−1.0)/0.05))\n≥50% → lysis likely if held for ${this.lysisTimeDisplay}`
-    },
+    lysisTimeDisplay(): string { return formatLysisTime(this.store.lysisDelayMs) },
 
     isResonanceTarget(): boolean {
       const cat = this.store.targetCellCategory
@@ -107,52 +109,32 @@ export default defineComponent({
       return (cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) && !!t.resonantFreqGHz && !!t.resonantThresholdVcm
     },
 
-    tipHealthyPlysis(): string {
-      return `<strong>P(electroporation) — Healthy</strong>\nSigmoid probability centered at 100% disruption threshold.\nKeep this value near 0% for selective therapy`
-    },
-
-    tipNuclearSection(): string {
-      return `<strong>Nuclear Envelope Disruption (Double-Shell Model)</strong>\nVm_nuc / V_threshold_nuc for each cell.\nBandpass peak at f_peak = 1/(2π√(τ_pm·τ_ne)) — typically 0.87–2.1 MHz.\nCancer nuclei have thinner/leakier NE and lower thresholds → higher disruption ratio.\nKotnik &amp; Miklavcic, Biophys. J. 90:480 (2006)`
-    },
+    tipTargetPlysis(): string { return tipTargetPlysis(this.lysisTimeDisplay) },
+    tipHealthyPlysis(): string { return tipHealthyPlysis() },
+    tipNuclearSection(): string { return tipNuclearSection() },
 
     tipTargetBar(): string {
-      const pct  = this.targetRatioPct.toFixed(0)
-      const warn = this.targetRatio >= DISRUPTION_WARN_THRESHOLD
-        ? `\n<span class="tip-warn">${ICON.LIGHTNING} >85% — disruption countdown active (${this.lysisTimeDisplay})</span>` : ''
-      if (this.isResonanceTarget) {
-        const t = this.store.target as { resonantFreqGHz?: number; resonantThresholdVcm?: number }
-        return `<strong>Target resonant disruption: <span class="tip-val">${pct}%</span></strong>
-Disruption ratio = (E / E_threshold) × L(f, f_res, Q)
-E_threshold = ${t.resonantThresholdVcm} V/cm  ·  f_res = ${t.resonantFreqGHz} GHz${warn}
-≥100% → capsid/cell-wall disruption threshold exceeded`
-      }
-      const tVm  = (this.store.targetVm * 1000).toFixed(2)
-      const tThr = (this.store.target.thresholdVoltage * 1000).toFixed(0)
-      return `<strong>Target membrane disruption: <span class="tip-val">${pct}%</span></strong>
-Induced Vm = <span class="tip-val">${tVm} mV</span>
-Lysis threshold = ${tThr} mV
-Ratio = Vm / threshold${warn}
->85% held for ${this.lysisTimeDisplay} → irreversible lysis`
+      const t = this.store.target as { resonantFreqGHz?: number; resonantThresholdVcm?: number }
+      return tipTargetBar({
+        pct:                  this.targetRatioPct.toFixed(0),
+        isResonanceTarget:    this.isResonanceTarget,
+        resonantFreqGHz:      t.resonantFreqGHz,
+        resonantThresholdVcm: t.resonantThresholdVcm,
+        targetVmMv:           (this.store.targetVm * 1000).toFixed(2),
+        thresholdMv:          (this.store.target.thresholdVoltage * 1000).toFixed(0),
+        lysisTime:            this.lysisTimeDisplay,
+        targetRatio:          this.targetRatio,
+      })
     },
 
     tipHealthyBar(): string {
-      const pct = this.healthyRatioPct.toFixed(0)
-      if (this.isResonanceTarget) {
-        return `<strong>Healthy cell: <span class="tip-val">${pct}% disruption (≈0)</span></strong>
-Mammalian cells lack rigid-shell resonance — Schwan Vm → 0 at GHz (ωτ ≫ 1).
-No membrane coupling at pathogen-targeting frequencies.
-<span class="tip-ok">${ICON.CHECK} Frequency-selective — healthy tissue unperturbed</span>
-Ref: Tsen et al. (2007)`
-      }
-      const hVm  = (this.store.healthyVm * 1000).toFixed(2)
-      const hThr = (this.store.healthy.thresholdVoltage * 1000).toFixed(0)
-      const status = this.healthyRatio < THRESHOLDS.HEALTHY_APPROACHING
-        ? `\n<span class="tip-ok">${ICON.CHECK} Healthy cells are safe</span>`
-        : `\n<span class="tip-warn">${ICON.WARNING} Approaching threshold — reduce field</span>`
-      return `<strong>Healthy membrane disruption: <span class="tip-val">${pct}%</span></strong>
-Induced Vm = <span class="tip-val">${hVm} mV</span>
-Lysis threshold = ${hThr} mV
-Keep below 50% for therapeutic window${status}`
+      return tipHealthyBar({
+        pct:               this.healthyRatioPct.toFixed(0),
+        isResonanceTarget: this.isResonanceTarget,
+        healthyVmMv:       (this.store.healthyVm * 1000).toFixed(2),
+        thresholdMv:       (this.store.healthy.thresholdVoltage * 1000).toFixed(0),
+        healthyRatio:      this.healthyRatio,
+      })
     },
   },
 })

@@ -12,9 +12,9 @@
         <input
           class="field-panel__slider"
           type="range"
-          min="0"
-          max="90"
-          step="1"
+          :min="SLIDER_ADV.ORI_MIN"
+          :max="SLIDER_ADV.ORI_MAX"
+          :step="SLIDER_ADV.ORI_STEP"
           :value="orientationDeg"
           @input="onOrientationInput"
         />
@@ -34,9 +34,9 @@
         <input
           class="field-panel__slider"
           type="range"
-          min="0"
-          max="3"
-          step="0.05"
+          :min="SLIDER_ADV.LYSIS_N_LOG_MIN"
+          :max="SLIDER_ADV.LYSIS_N_LOG_MAX"
+          :step="SLIDER_ADV.LYSIS_N_LOG_STEP"
           :value="lysisNLogVal"
           @input="onLysisNInput"
         />
@@ -79,9 +79,9 @@
         <input
           class="field-panel__slider"
           type="range"
-          min="0"
-          max="5"
-          step="0.05"
+          :min="SLIDER_ADV.PERF_MIN"
+          :max="SLIDER_ADV.PERF_MAX"
+          :step="SLIDER_ADV.PERF_STEP"
           :value="store.perfusionRate"
           @input="onPerfusionInput"
         />
@@ -98,9 +98,9 @@
         <input
           class="field-panel__slider"
           type="range"
-          min="0"
-          max="0.9"
-          step="0.01"
+          :min="SLIDER_ADV.PHI_MIN"
+          :max="SLIDER_ADV.PHI_MAX"
+          :step="SLIDER_ADV.PHI_STEP"
           :value="store.cellPackingFraction"
           @input="onCellPackingInput"
         />
@@ -116,15 +116,15 @@
 import { defineComponent } from 'vue'
 import { useCellStore } from '@/stores/cellStore'
 import { broadcastStateSync } from '@/services/socket'
-import { WAVEFORM } from '@/constants/strings'
-import { CELL_CATEGORY } from '@/constants/strings'
+import { WAVEFORM, CELL_CATEGORY } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
+import { SLIDER_ADV } from '@/constants/sliderBounds'
 import { tipOrientation, tipLysisN, tipLysisNNote, tipShellModel, tipSingleShell, tipDoubleShell, tipPerfusion, tipCellPacking, formatLysisTime } from '@/utils/sliderTooltips'
 import { UNIT } from '@/constants/units'
 
 export default defineComponent({
   setup() {
-    return { store: useCellStore(), WAVEFORM, CELL_CATEGORY, ICON, UNIT }
+    return { store: useCellStore(), WAVEFORM, CELL_CATEGORY, ICON, UNIT, SLIDER_ADV }
   },
 
   data() {

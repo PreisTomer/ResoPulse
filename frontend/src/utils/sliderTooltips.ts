@@ -7,6 +7,7 @@
  */
 
 import { MEDIA } from '@/constants/media'
+import { DEFAULT_CAPSID_Q } from '@/constants/cellCard'
 import { CHART_MODE, CELL_CATEGORY, THERMAL_LEVEL } from '@/constants/strings'
 import type { MediumKey } from '@/types/media'
 
@@ -158,7 +159,7 @@ export function tipField(opts: {
 ${t('slider.fieldIntensity')}: <span class="tip-val">${fieldDisplay}</span>
 
 ${t('resonance.tipFieldFormula')}
-f_res(T) = <span class="tip-val">${fStr}</span>  ·  E_threshold = <span class="tip-val">${thrStr}</span>  ·  Q = ${target.capsidQ ?? 20}
+f_res(T) = <span class="tip-val">${fStr}</span>  ·  E_threshold = <span class="tip-val">${thrStr}</span>  ·  Q = ${target.capsidQ ?? DEFAULT_CAPSID_Q}
 
 ${t('resonance.tipFieldRatio')}: <span class="tip-val">${pct}</span>
 ${t('resonance.tipFieldDisruptNote')}${warn}`
@@ -202,7 +203,7 @@ export function tipTargetBadge(opts: {
         : ''
     return `<strong>${t('resonance.tipTargetBadgeTitle', { pct })}</strong>
 ${t('resonance.tipTargetBadgeFormula')}
-f_res = <span class="tip-val">${fStr}</span>  ·  Q = ${(target as { capsidQ?: number }).capsidQ ?? 20}${warn}
+f_res = <span class="tip-val">${fStr}</span>  ·  Q = ${(target as { capsidQ?: number }).capsidQ ?? DEFAULT_CAPSID_Q}${warn}
 ${t('resonance.tipTargetBadgeNote')}`
   }
   const tThr  = (target.thresholdVoltage * 1000).toFixed(0)

@@ -7,9 +7,39 @@ import type { CellConfig } from '@/types/cell'
 import type { MediumKey } from '@/types/media'
 import { computeSchwan, computeSAR, computeFc, computeTau, computeResonantDisruption, computeNuclearVm, computePulseStepResponse, computeSkinDepthMm } from '@/utils/physics'
 import { CELL_CATEGORY, CHART_MODE, WAVEFORM, CELL_TYPE } from '@/constants/strings'
-import { THRESHOLDS } from '@/constants/cellCard'
+import { THRESHOLDS, DEFAULT_CAPSID_Q } from '@/constants/cellCard'
 
 const LAMBDA = 0.02     // Newton cooling rate [1/s]
+
+// ── Module-level computation helpers (pure functions — no store context needed) ──
+
+/** Pulse envelope for a single cell: 1.0 for CW; 1−exp(−t_p/τ) for pulsed. */
+function pulseEnvelope(cell: CellConfig, pulseWidthNs: number, sigma_e: number): number {
+  return computePulseStepResponse(computeTau(cell, sigma_e), pulseWidthNs)
+}
+
+/** Lysis field [V/cm]: Vth·√(1+(ωτ)²) / (1.5·R·cosθ·100·pef). Returns 1e6 near θ=90°. */
+function lysisField(
+  cell: CellConfig,
+  freqKHz: number,
+  sigma_e: number,
+  cosTheta: number,
+  pef: number,
+): number {
+  if (cosTheta < 0.01) return 1e6
+  const omega = 2 * Math.PI * freqKHz * 1e3
+  const tau   = computeTau(cell, sigma_e)
+  return (cell.thresholdVoltage * Math.sqrt(1 + (omega * tau) ** 2)) /
+    (1.5 * cell.radius * 1e-6 * cosTheta * 100 * Math.max(1e-4, pef))
+}
+
+/** Uncertainty factor by cell size: virus 45%, bacteria 35%, mammalian 20%. */
+function uncertaintyFactor(radius: number): number {
+  const { RADIUS_VIRUS_MAX, RADIUS_BACTERIA_MAX } = THRESHOLDS
+  if (radius < RADIUS_VIRUS_MAX)    return 0.45
+  if (radius < RADIUS_BACTERIA_MAX) return 0.35
+  return 0.20
+}
 
 // σ_e(T) = σ_e0 × (1 + α × (T−37)) — medium-specific coefficients [1/°C]
 const SIGMA_TEMP_COEFF: Record<string, number> = {
@@ -107,17 +137,14 @@ export const useCellStore = defineStore('cell', {
     pulseEnvelopeFactorHealthy(): number {
       const state = this as unknown as CellStoreState
       if (state.waveform !== WAVEFORM.PULSED) return 1.0
-      const tau_s = computeTau(state.healthy, this.effectiveSigmaE)
-      return computePulseStepResponse(tau_s, state.pulseWidthNs)
+      return pulseEnvelope(state.healthy, state.pulseWidthNs, this.effectiveSigmaE)
     },
 
     /** Same as pulseEnvelopeFactorHealthy; always 1.0 in resonance mode (acoustic coupling). */
     pulseEnvelopeFactorTarget(): number {
       const state = this as unknown as CellStoreState
-      if (state.waveform !== WAVEFORM.PULSED) return 1.0
-      if (state.chartMode === CHART_MODE.RESONANCE) return 1.0
-      const tau_s = computeTau(state.target, this.effectiveSigmaE)
-      return computePulseStepResponse(tau_s, state.pulseWidthNs)
+      if (state.waveform !== WAVEFORM.PULSED || state.chartMode === CHART_MODE.RESONANCE) return 1.0
+      return pulseEnvelope(state.target, state.pulseWidthNs, this.effectiveSigmaE)
     },
 
     /** σ_e corrected for temperature and cell packing fraction [S/m].
@@ -166,7 +193,7 @@ export const useCellStore = defineStore('cell', {
       if ((cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) && t.resonantFreqGHz && t.resonantThresholdVcm) {
         return computeResonantDisruption(
           t.resonantFreqGHz,
-          t.capsidQ ?? 20,
+          t.capsidQ ?? DEFAULT_CAPSID_Q,
           t.resonantThresholdVcm,
           this.currentBroadcastFrequency * 1e3,  // kHz → Hz
           this.fieldIntensity,
@@ -228,8 +255,8 @@ export const useCellStore = defineStore('cell', {
       const field   = state.fieldIntensity
       const freq    = state.currentBroadcastFrequency
       const cosT    = this.cosThetaFactor
-      const uncH    = state.healthy.radius < THRESHOLDS.RADIUS_BACTERIA_MAX ? 0.35 : 0.20
-      const uncT    = state.target.radius < THRESHOLDS.RADIUS_VIRUS_MAX ? 0.45 : state.target.radius < THRESHOLDS.RADIUS_BACTERIA_MAX ? 0.35 : 0.20
+      const uncH    = uncertaintyFactor(state.healthy.radius)
+      const uncT    = uncertaintyFactor(state.target.radius)
       // TI_low: weakest target + strongest healthy coupling
       const vmTLow  = computeSchwan({ ...state.target,  conductivity: state.target.conductivity  * (1 - uncT) }, freq, field, sigma_e, cosT)
       const vmHHigh = computeSchwan({ ...state.healthy, conductivity: state.healthy.conductivity * (1 + uncH) }, freq, field, sigma_e, cosT)
@@ -296,32 +323,13 @@ export const useCellStore = defineStore('cell', {
     /** E_lysis for target [V/cm]: Vm_thr·√(1+(ωτ)²)/(1.5·R·cosθ·pef). Returns 1e6 near θ=90°. */
     targetLysisField(): number {
       const state = this as unknown as CellStoreState
-      const cosT = this.cosThetaFactor
-      if (cosT < 0.01) return 1e6
-      const sigma_e = this.effectiveSigmaE
-      const tau   = computeTau(state.target, sigma_e)
-      const omega = 2 * Math.PI * state.currentBroadcastFrequency * 1e3
-      const R     = state.target.radius * 1e-6
-      const denom = Math.sqrt(1 + (omega * tau) ** 2)
-      const baseLysisField = (state.target.thresholdVoltage * denom) / (1.5 * R * cosT * 100)
-      // Divide by pulse envelope factor: shorter pulses require proportionally more field
-      const pef = Math.max(1e-4, this.pulseEnvelopeFactorTarget)
-      return baseLysisField / pef
+      return lysisField(state.target, state.currentBroadcastFrequency, this.effectiveSigmaE, this.cosThetaFactor, this.pulseEnvelopeFactorTarget)
     },
 
     /** E_lysis for healthy cell [V/cm] — same formula as targetLysisField. */
     healthyLysisField(): number {
       const state = this as unknown as CellStoreState
-      const cosT = this.cosThetaFactor
-      if (cosT < 0.01) return 1e6
-      const sigma_e = this.effectiveSigmaE
-      const tau   = computeTau(state.healthy, sigma_e)
-      const omega = 2 * Math.PI * state.currentBroadcastFrequency * 1e3
-      const R     = state.healthy.radius * 1e-6
-      const denom = Math.sqrt(1 + (omega * tau) ** 2)
-      const baseLysisField = (state.healthy.thresholdVoltage * denom) / (1.5 * R * cosT * 100)
-      const pef = Math.max(1e-4, this.pulseEnvelopeFactorHealthy)
-      return baseLysisField / pef
+      return lysisField(state.healthy, state.currentBroadcastFrequency, this.effectiveSigmaE, this.cosThetaFactor, this.pulseEnvelopeFactorHealthy)
     },
 
     /** dc for thermal calc: CW→1.0, pulsed→stored value */
@@ -397,16 +405,13 @@ export const useCellStore = defineStore('cell', {
       const field   = state.fieldIntensity
       const hThr    = state.healthy.thresholdVoltage
       const tThr    = state.target.thresholdVoltage
-      let maxSel = -Infinity, optKhz = 10
-      const logMin = Math.log10(10), logMax = Math.log10(500_000)
-      for (let i = 0; i < 300; i++) {
+      const logMin  = Math.log10(10), logMax = Math.log10(500_000)
+      const { khz: optKhz, sel: maxSel } = Array.from({ length: 300 }, (_, i) => {
         const khz = Math.pow(10, logMin + (logMax - logMin) * i / 299)
-        const hVm = computeSchwan(state.healthy, khz, field, sigma_e)
-        const tVm = computeSchwan(state.target,  khz, field, sigma_e)
-        const hDr = hVm / hThr, tDr = tVm / tThr
-        const sel  = hDr > 0 ? tDr / hDr : 0
-        if (sel > maxSel) { maxSel = sel; optKhz = khz }
-      }
+        const hDr = computeSchwan(state.healthy, khz, field, sigma_e) / hThr
+        const tDr = computeSchwan(state.target,  khz, field, sigma_e) / tThr
+        return { khz, sel: hDr > 0 ? tDr / hDr : 0 }
+      }).reduce((best, pt) => pt.sel > best.sel ? pt : best, { khz: 10, sel: -Infinity })
       return { khz: optKhz, sel: Math.max(0, maxSel) }
     },
 
@@ -455,16 +460,18 @@ export const useCellStore = defineStore('cell', {
       this.doubleShellEnabled  = packet.doubleShellEnabled
       this.perfusionRate       = packet.perfusionRate
       this.cellPackingFraction = packet.cellPackingFraction
+      this.loadPresetIfNeeded('target',  packet.targetPresetId)
+      this.loadPresetIfNeeded('healthy', packet.healthyPresetId)
+    },
 
-      // Load presets by ID if they differ from current
-      if (packet.targetPresetId && packet.targetPresetId !== this.target.id) {
-        const p = CELL_PRESETS.find(c => c.id === packet.targetPresetId)
-        if (p) { this.target = cloneDeep(p) as CellConfig; this.targetTemp = 37; this.resetCounter++ }
-      }
-      if (packet.healthyPresetId && packet.healthyPresetId !== this.healthy.id) {
-        const p = CELL_PRESETS.find(c => c.id === packet.healthyPresetId)
-        if (p) { this.healthy = cloneDeep(p) as CellConfig; this.healthyTemp = 37; this.resetCounter++ }
-      }
+    loadPresetIfNeeded(cellType: 'healthy' | 'target', presetId: string) {
+      if (!presetId || presetId === this[cellType].id) return
+      const preset = CELL_PRESETS.find(c => c.id === presetId)
+      if (!preset) return
+      this[cellType] = cloneDeep(preset) as CellConfig
+      if (cellType === 'target') this.targetTemp = 37
+      else this.healthyTemp = 37
+      this.resetCounter++
     },
 
     updateCellParam(cellType: 'healthy' | 'target', key: string, value: number) {

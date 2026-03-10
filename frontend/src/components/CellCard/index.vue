@@ -325,7 +325,7 @@ export default defineComponent({
       const fc  = this.type === CELL_TYPE.HEALTHY ? this.store.healthyFc : this.store.targetFc
       return [
         { label: 'Membrane Cm',   value: Cm.toFixed(2),           unit: 'mF/m²' },
-        { label: 'Time const τ',  value: tau.toFixed(1),          unit: 'ns'    },
+        { label: 'Time const τ',  value: tau.toFixed(1),          unit: UNIT.NS },
         { label: 'Char. freq fc', value: formatFreqKHz(fc, 2),    unit: ''      },
       ]
     },

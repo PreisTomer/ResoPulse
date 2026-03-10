@@ -138,6 +138,7 @@ import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'
 import { formatFreqKHz, formatFieldVcm } from '@/utils/format'
 import { broadcastStateSync } from '@/services/socket'
+import { tipTiRange, tipSelectivity, tipOptimal } from '@/utils/selectivityTooltips'
 import DisruptionBars from './DisruptionBars.vue'
 import ComparisonTable from './ComparisonTable.vue'
 import PresetLibrary from './PresetLibrary.vue'
@@ -222,18 +223,10 @@ export default defineComponent({
 
     tipTiRange(): string {
       const { low, high } = this.tiRange
-      const uncH = this.store.healthy.radius < 2.0 ? '35%' : '20%'
-      const uncT = this.store.target.radius < 0.1 ? '45%' : this.store.target.radius < 2.0 ? '35%' : '20%'
-      return `<strong>TI Uncertainty from σ_i Variability</strong>
-TI_low  = ×${low.toFixed(2)} (worst case: target σ_i at −${uncT}, healthy at +${uncH})
-TI_high = ×${high >= 99 ? '∞' : high.toFixed(2)} (best case: target σ_i at +${uncT}, healthy at −${uncH})
-
-σ_i (cytoplasm conductivity) is a literature range, not a single measured value.
-Variability: healthy (±${uncH}) · target (±${uncT})
-These bounds propagate through τ → fc → Vm → DR → TI.
-
-<span class="tip-note">A wide uncertainty band means the TI claim depends strongly on
-the exact σ_i value used. Validate with measured cell impedance (patch clamp / DEP).</span>`
+      const { RADIUS_VIRUS_MAX: rv, RADIUS_BACTERIA_MAX: rb } = THRESHOLDS
+      const uncH = this.store.healthy.radius < rb ? '35%' : '20%'
+      const uncT = this.store.target.radius < rv ? '45%' : this.store.target.radius < rb ? '35%' : '20%'
+      return tipTiRange({ low, high, uncH, uncT })
     },
 
     vmSelectivityRatio(): number {
@@ -370,86 +363,27 @@ the exact σ_i value used. Validate with measured cell impedance (patch clamp / 
     tipBasis(): string { return this.$t('selectivity.tipBasis') },
 
     tipSelectivity(): string {
-      const sel = this.selectivity
-      const { SEL_STRONG: ss, SEL_MARGINAL: sm } = THRESHOLDS
-      const quality = sel >= ss
-        ? '<span class="tip-ok">Strong therapeutic window</span>'
-        : sel >= sm
-          ? '<span class="tip-warn">Marginal window — adjust field or preset</span>'
-          : '<span class="tip-warn">Non-selective — healthy cells equally at risk</span>'
-      const selStr = sel >= 99 ? ICON.INFINITY : sel.toFixed(2)
-
-      if (this.isResonanceTarget) {
-        return `<strong>TI (Therapeutic Index) = Target / Healthy disruption ratio</strong>
-Current: <span class="tip-val">×${selStr}</span>
-
-${quality}
-≥ ${ss} → strong window (green)  ·  < ${sm} → non-selective (red)
-
-<strong>Resonance mode selectivity:</strong>
-Mammalian cells lack rigid-shell resonance — Schwan Vm → 0 at GHz (ωτ ≫ 1).
-At f_res(target), healthy disruption ≈ 0 → TI → ∞
-
-<span class="tip-ok">Frequency-selective — healthy tissue unperturbed at GHz fields</span>
-Ref: Tsen et al. (2007); Dykeman &amp; Sankey (2008)
-<span class="tip-warn">${ICON.WARNING} Enveloped viruses (Influenza, SARS-CoV-2): lipid envelope has no rigid-shell resonance (Q≈1). f_res/Q/E_thr values are theoretical extrapolations — not experimentally validated.</span>`
-      }
-
-      const vmSel = this.vmSelectivityRatio
-      const vmStr = vmSel >= 99 ? ICON.INFINITY : vmSel.toFixed(2)
-      return `<strong>TI (Therapeutic Index) = (Vm_T/Vth_T) / (Vm_H/Vth_H)</strong>
-Current: <span class="tip-val">×${selStr}</span>
-
-${quality}
-≥ ${ss} → strong window (green)
-${sm}–${ss} → marginal (amber)
-< ${sm} → non-selective (red)
-
-TI > 1 → target proportionally closer to lysis threshold than healthy cell.
-For adeno/hepatocyte at DC: TI = (15µm×1.1V)/(10µm×0.70V) = <span class="tip-val">2.36×</span>
-
-<strong>Raw Vm selectivity</strong> = Vm_T / Vm_H = R_T/R_H at quasi-DC
-Current: <span class="tip-val">×${vmStr}</span>  (cancer/normal DC limit: 1.5×)
-TI incorporates lysis thresholds — more clinically relevant than Vm ratio alone.`
+      return tipSelectivity({
+        sel:               this.selectivity,
+        vmSel:             this.vmSelectivityRatio,
+        isResonanceTarget: this.isResonanceTarget,
+      })
     },
 
     tipModeBadge(): string { return this.$t('selectivity.tipModeBadge') },
 
     tipOptimal(): string {
-      if (this.isResonanceTarget) {
-        const t = this.store.target as { resonantFreqGHz?: number; resonantThresholdVcm?: number; capsidQ?: number }
-        const fRes = t.resonantFreqGHz ?? 0
-        const label = formatFreqKHz(fRes * 1e6)
-        return `<strong>Resonant Frequency — f_res = ${label}</strong>
-Acoustic/mechanical resonance: disruption ratio peaks at 1.0 at f_res.
-Lorentzian lineshape L(f) = 1 / √(1 + (Q·(f/f₀ − f₀/f))²)
-
-E_threshold = ${t.resonantThresholdVcm} V/cm  ·  Q = ${t.capsidQ ?? 20}
-Healthy cells (R ≈ 10 µm) have no GHz resonance → selectivity → ${ICON.INFINITY}
-
-<span class="tip-ok">Click to snap cursor to f_res</span>
-Ref: Tsen et al. (2007); Dykeman &amp; Sankey (2008)
-<span class="tip-warn">${ICON.WARNING} Enveloped viruses (Influenza, SARS-CoV-2): lipid envelope — no rigid-shell resonance. Extrapolated values only.</span>`
-      }
       const { khz, sel } = this.optimalFreqResult
-      const label    = formatFreqKHz(khz)
-      const cls      = sel >= 1.5 ? 'tip-ok' : sel >= 1.0 ? 'tip-val' : 'tip-warn'
-      const beyondRange = khz > 10000
-      const snapNote = beyondRange
-        ? `<span class="tip-warn">${ICON.WARNING} Optimal is beyond 10 MHz slider cap.\n  Snap sets 10 MHz (best reachable frequency).\n  Bacteria/virus targeting requires >10 MHz RF equipment.</span>`
-        : `<span class="tip-ok">Click to snap cursor to this frequency</span>`
-      return `<strong>Optimal Broadcast Frequency (Schwan mode)</strong>
-Scanned 300 log-spaced points from 10 kHz → 500 MHz.
-Maximises target / healthy disruption ratio at current field and medium.
-
-Peak: <span class="${cls}">${label} · ×${sel.toFixed(2)}</span>
-${snapNote}
-
-Physics:
-  f ≪ fc_T and fc_H : sel = R_T/R_H  (quasi-DC; maximum for cancer/normal pairs)
-  When τ_T > τ_H (cancer larger): sel decreases above fc(T) — target rolls off first
-  f ≫ fc_H : sel → (R_T·τ_H)/(R_H·τ_T)  — for adeno/hepatocyte ≈ 0.68× (sub-unity)
-Note: virion fc ~0.6–0.75 MHz per Schwan model (σ_i-limited; model approximate for virions)`
+      const t = this.store.target as { resonantFreqGHz?: number; resonantThresholdVcm?: number; capsidQ?: number }
+      return tipOptimal({
+        isResonanceTarget:    this.isResonanceTarget,
+        resonantFreqGHz:      t.resonantFreqGHz,
+        resonantThresholdVcm: t.resonantThresholdVcm,
+        capsidQ:              t.capsidQ,
+        optKhz:               khz,
+        optSel:               sel,
+        beyondRange:          khz > 10000,
+      })
     },
   },
 

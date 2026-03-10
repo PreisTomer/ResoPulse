@@ -47,6 +47,7 @@ import { CELL_PRESETS, GROUP_COLORS, GROUP_LABELS } from '@/constants/cellLibrar
 import type { CellGroup } from '@/constants/cellLibrary'
 import { CELL_TYPE, CELL_GROUP } from '@/constants/strings'
 import { UNIT } from '@/constants/units'
+import { DEFAULT_CAPSID_Q } from '@/constants/cellCard'
 
 const TARGET_GROUPS: CellGroup[] = [CELL_GROUP.CANCER, CELL_GROUP.BACTERIA, CELL_GROUP.VIRUS] as CellGroup[]
 const HEALTHY_GROUP: CellGroup = CELL_GROUP.REFERENCE as CellGroup
@@ -96,7 +97,7 @@ export default defineComponent({
       const mem = this.$t('selectivity.presetTipMembrane')
       const thr = this.$t('selectivity.presetTipVmThr')
       const res = pr.resonantFreqGHz
-        ? `\nf_res = <span class="tip-val">${pr.resonantFreqGHz} ${UNIT.GHZ}</span>  ·  Q = ${pr.capsidQ ?? 20}  ·  E_thr = ${pr.resonantThresholdVcm} ${UNIT.V_PER_CM}`
+        ? `\nf_res = <span class="tip-val">${pr.resonantFreqGHz} ${UNIT.GHZ}</span>  ·  Q = ${pr.capsidQ ?? DEFAULT_CAPSID_Q}  ·  E_thr = ${pr.resonantThresholdVcm} ${UNIT.V_PER_CM}`
         : ''
       return `<strong>${p.label}</strong>\n${p.notes}\n\n${R} = <span class="tip-val">${p.radius} ${UNIT.UM}</span>  ·  ${mem} = ${p.membraneThickness} ${UNIT.NM}\nε_r = ${p.dielectricConstant}  ·  σ_i = ${p.conductivity} ${UNIT.S_PER_M}\n${thr} = <span class="tip-val">${p.thresholdVoltage} ${UNIT.V}</span>${res}`
     },

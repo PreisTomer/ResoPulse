@@ -54,37 +54,44 @@ const BOUNDS = {
 // ── In-memory last known state ────────────────────────────────────────────────
 let lastState: StatePacket | null = null
 
+// ── Validation helpers ────────────────────────────────────────────────────────
+const inBounds = (v: number, min: number, max: number): boolean =>
+  !isNaN(v) && v >= min && v <= max
+
+const getString = (v: unknown, fallback: string): string =>
+  typeof v === 'string' ? v : fallback
+
+const getNum = (v: unknown, fallback: number): number => {
+  const n = Number(v)
+  return isNaN(n) ? fallback : n
+}
+
 // ── Validators ────────────────────────────────────────────────────────────────
 function validateStatePacket(raw: Record<string, unknown>): StatePacket | null {
-  const fKHz = Number(raw.freqKHz)
-  const fVcm = Number(raw.fieldVcm)
-  const dc   = Number(raw.dutyCycle)
-  const pw   = Number(raw.pulseWidthNs)
-  const ori  = Number(raw.orientationDeg)
-  const np   = Number(raw.lysisNPulses)
-  const prf  = Number(raw.perfusionRate)
-  const phi  = Number(raw.cellPackingFraction)
+  const fKHz = Number(raw.freqKHz),  fVcm = Number(raw.fieldVcm)
+  const dc   = Number(raw.dutyCycle), pw  = Number(raw.pulseWidthNs)
+  const ori  = Number(raw.orientationDeg), np = Number(raw.lysisNPulses)
+  const prf  = Number(raw.perfusionRate),  phi = Number(raw.cellPackingFraction)
 
-  if (isNaN(fKHz) || fKHz < BOUNDS.FREQ_MIN_KHZ  || fKHz > BOUNDS.FREQ_MAX_KHZ)  return null
-  if (isNaN(fVcm) || fVcm < BOUNDS.FIELD_MIN_VCM || fVcm > BOUNDS.FIELD_MAX_VCM) return null
-  if (isNaN(dc)   || dc   < BOUNDS.DC_MIN         || dc   > BOUNDS.DC_MAX)        return null
-  if (isNaN(pw)   || pw   < BOUNDS.PW_MIN_NS      || pw   > BOUNDS.PW_MAX_NS)     return null
-  if (isNaN(ori)  || ori  < BOUNDS.ORI_MIN_DEG    || ori  > BOUNDS.ORI_MAX_DEG)   return null
-  if (isNaN(np)   || np   < BOUNDS.PULSES_MIN     || np   > BOUNDS.PULSES_MAX)    return null
-  if (isNaN(prf)  || prf  < BOUNDS.PERF_MIN       || prf  > BOUNDS.PERF_MAX)      return null
-  if (isNaN(phi)  || phi  < BOUNDS.PHI_MIN        || phi  > BOUNDS.PHI_MAX)       return null
+  if (!inBounds(fKHz, BOUNDS.FREQ_MIN_KHZ,  BOUNDS.FREQ_MAX_KHZ))  return null
+  if (!inBounds(fVcm, BOUNDS.FIELD_MIN_VCM, BOUNDS.FIELD_MAX_VCM)) return null
+  if (!inBounds(dc,   BOUNDS.DC_MIN,        BOUNDS.DC_MAX))         return null
+  if (!inBounds(pw,   BOUNDS.PW_MIN_NS,     BOUNDS.PW_MAX_NS))      return null
+  if (!inBounds(ori,  BOUNDS.ORI_MIN_DEG,   BOUNDS.ORI_MAX_DEG))    return null
+  if (!inBounds(np,   BOUNDS.PULSES_MIN,    BOUNDS.PULSES_MAX))     return null
+  if (!inBounds(prf,  BOUNDS.PERF_MIN,      BOUNDS.PERF_MAX))       return null
+  if (!inBounds(phi,  BOUNDS.PHI_MIN,       BOUNDS.PHI_MAX))        return null
 
-  const med      = typeof raw.medium          === 'string' ? raw.medium          : MEDIUM.SALINE
-  const waveform = typeof raw.waveform        === 'string' ? raw.waveform        : WAVEFORM.CW
-  const mode     = typeof raw.chartMode       === 'string' ? raw.chartMode       : CHART_MODE.SCHWAN
-  const targetId = typeof raw.targetPresetId  === 'string' ? raw.targetPresetId  : ''
-  const healthyId= typeof raw.healthyPresetId === 'string' ? raw.healthyPresetId : ''
-  const session  = typeof raw.sessionName     === 'string'
-    ? raw.sessionName.slice(0, BOUNDS.SESSION_MAX_LEN) : ''
+  const med      = getString(raw.medium,          MEDIUM.SALINE)
+  const waveform = getString(raw.waveform,         WAVEFORM.CW)
+  const mode     = getString(raw.chartMode,        CHART_MODE.SCHWAN)
+  const targetId = getString(raw.targetPresetId,   '')
+  const healthyId= getString(raw.healthyPresetId,  '')
+  const session  = getString(raw.sessionName,      '').slice(0, BOUNDS.SESSION_MAX_LEN)
 
-  if (!VALID_MEDIA.has(med as typeof MEDIUM[keyof typeof MEDIUM]))         return null
-  if (!VALID_WAVEFORM.has(waveform as typeof WAVEFORM[keyof typeof WAVEFORM])) return null
-  if (!VALID_MODE.has(mode as typeof CHART_MODE[keyof typeof CHART_MODE])) return null
+  if (!VALID_MEDIA.has(med as typeof MEDIUM[keyof typeof MEDIUM]))               return null
+  if (!VALID_WAVEFORM.has(waveform as typeof WAVEFORM[keyof typeof WAVEFORM]))   return null
+  if (!VALID_MODE.has(mode as typeof CHART_MODE[keyof typeof CHART_MODE]))       return null
 
   return {
     freqKHz:             Math.round(fKHz),
@@ -111,19 +118,19 @@ function validateLogEntry(raw: Record<string, unknown>): LogEntry | null {
   const event = typeof raw.event === 'string' && VALID_EVENT.has(raw.event as typeof EVENT[keyof typeof EVENT])
     ? raw.event : EVENT.MANUAL
   return {
-    id:           Number(raw.id)           || 0,
+    id:           getNum(raw.id,           0),
     timestamp:    raw.timestamp,
-    freqKHz:      Number(raw.freqKHz)      || 0,
-    fieldVcm:     Number(raw.fieldVcm)     || 0,
-    medium:       typeof raw.medium       === 'string' ? raw.medium       : MEDIUM.SALINE,
-    targetPreset: typeof raw.targetPreset  === 'string' ? raw.targetPreset : '',
-    healthyVm:    Number(raw.healthyVm)    || 0,
-    targetVm:     Number(raw.targetVm)     || 0,
-    selectivity:  Number(raw.selectivity)  || 0,
-    healthyRatio: Number(raw.healthyRatio) || 0,
-    targetRatio:  Number(raw.targetRatio)  || 0,
-    healthyTemp:  Number(raw.healthyTemp)  || 37,
-    targetTemp:   Number(raw.targetTemp)   || 37,
+    freqKHz:      getNum(raw.freqKHz,      0),
+    fieldVcm:     getNum(raw.fieldVcm,     0),
+    medium:       getString(raw.medium,    MEDIUM.SALINE),
+    targetPreset: getString(raw.targetPreset, ''),
+    healthyVm:    getNum(raw.healthyVm,    0),
+    targetVm:     getNum(raw.targetVm,     0),
+    selectivity:  getNum(raw.selectivity,  0),
+    healthyRatio: getNum(raw.healthyRatio, 0),
+    targetRatio:  getNum(raw.targetRatio,  0),
+    healthyTemp:  getNum(raw.healthyTemp,  37),
+    targetTemp:   getNum(raw.targetTemp,   37),
     event,
   }
 }
