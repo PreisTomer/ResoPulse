@@ -139,3 +139,135 @@ export default defineComponent({
   },
 })
 </script>
+
+<style lang="scss" scoped>
+@keyframes bar-flash {
+  from { opacity: 1; }
+  to   { opacity: 0.5; }
+}
+
+.sel-panel {
+  &__bars { display: flex; flex-direction: column; gap: 0.35rem; }
+
+  &__bar-row { display: flex; align-items: center; gap: 0.5rem; }
+
+  &__bar-label {
+    font-size: 0.66rem;
+    font-family: var(--font-mono);
+    color: var(--color-text);
+    width: 1rem;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  &__bar-track {
+    flex: 1;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  &__bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.3s ease;
+
+    &--t    { background: var(--color-danger); }
+    &--h    { background: var(--color-primary); }
+    &--warn { animation: bar-flash 0.6s ease-in-out infinite alternate; }
+  }
+
+  &__bar-val {
+    font-size: 0.66rem;
+    font-family: var(--font-mono);
+    color: var(--color-text);
+    width: 2.2rem;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  &__bar-plysis {
+    font-size: 0.62rem;
+    font-family: var(--font-mono);
+    color: var(--color-text-muted);
+    opacity: 0.7;
+    width: 2.6rem;
+    text-align: right;
+    flex-shrink: 0;
+    transition: color 0.3s, opacity 0.3s;
+
+    &--high { color: var(--color-danger); opacity: 1; font-weight: 600; }
+  }
+
+  &__nuc-section {
+    margin-top: 0.5rem;
+    padding: 0.35rem 0.5rem;
+    background: rgba(167, 139, 250, 0.05);
+    border-left: 2px solid rgba(167, 139, 250, 0.3);
+    border-radius: 0 4px 4px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.28rem;
+  }
+
+  &__nuc-bar-row { display: flex; align-items: center; gap: 0.5rem; }
+
+  &__nuc-bar-label {
+    font-size: 0.58rem;
+    font-family: var(--font-mono);
+    color: #a78bfa;
+    width: 3rem;
+    flex-shrink: 0;
+  }
+
+  &__nuc-bar-track {
+    flex: 1;
+    height: 3px;
+    background: rgba(167, 139, 250, 0.12);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  &__nuc-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.3s ease;
+
+    &--t    { background: #a78bfa; }
+    &--h    { background: rgba(0, 212, 255, 0.7); }
+    &--warn { background: #ff4d6d !important; animation: bar-flash 0.6s ease-in-out infinite alternate; }
+  }
+
+  &__nuc-bar-val {
+    font-size: 0.58rem;
+    font-family: var(--font-mono);
+    color: #a78bfa;
+    width: 2rem;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  &__nuc-sel-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 0.15rem;
+    border-top: 1px solid rgba(167, 139, 250, 0.12);
+    margin-top: 0.05rem;
+  }
+
+  &__nuc-sel-label { font-size: 0.58rem; color: rgba(167, 139, 250, 0.7); }
+
+  &__nuc-sel-val {
+    font-size: 0.68rem;
+    font-family: var(--font-mono);
+    font-weight: 600;
+    color: #a78bfa;
+  }
+
+  &__nuc-sel--good { color: #4ade80; }
+  &__nuc-sel--ok   { color: #fbbf24; }
+  &__nuc-sel--low  { color: #ff4d6d; }
+}
+</style>

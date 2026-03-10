@@ -111,3 +111,72 @@ export default defineComponent({
   },
 })
 </script>
+
+<style lang="scss" scoped>
+.sel-panel {
+  &__library { display: flex; flex-direction: column; gap: 0.4rem; }
+
+  &__lib-title {
+    font-size: 0.6rem;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--color-text-heading);
+    opacity: 0.9;
+    margin-bottom: 0.1rem;
+  }
+
+  &__comparison-table { display: flex; flex-direction: column; gap: 0.18rem; }
+
+  &__cmp-row {
+    display: grid;
+    grid-template-columns: 3.2rem 1fr 2.8rem;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.1rem 0.2rem;
+    border-radius: 3px;
+    transition: background 0.1s;
+
+    &--active { background: rgba(255, 255, 255, 0.05); }
+  }
+
+  &__cmp-name {
+    font-size: 0.56rem;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--gc, var(--color-text));
+  }
+
+  &__cmp-bar-track {
+    height: 4px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  &__cmp-bar {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.3s ease;
+
+    &.sel-panel__cmp--strong   { background: var(--color-lime); }
+    &.sel-panel__cmp--marginal { background: var(--color-amber); }
+    &.sel-panel__cmp--weak     { background: var(--color-danger); }
+  }
+
+  &__cmp-sel {
+    font-size: 0.6rem;
+    font-family: var(--font-mono);
+    font-weight: 600;
+    text-align: right;
+
+    &.sel-panel__cmp--strong   { color: var(--color-lime); }
+    &.sel-panel__cmp--marginal { color: var(--color-amber); }
+    &.sel-panel__cmp--weak     { color: var(--color-danger); }
+  }
+}
+</style>

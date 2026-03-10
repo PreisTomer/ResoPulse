@@ -71,3 +71,41 @@ export default defineComponent({
   },
 })
 </script>
+
+<style lang="scss" scoped>
+@use '../../styles/mixins' as *;
+
+.freq-chart {
+  &__legend {
+    @include flex-row(0.75rem);
+    flex-wrap: wrap;
+  }
+
+  &__legend-item {
+    @include flex-row(0.3rem);
+    font-size: 0.62rem;
+    font-family: var(--font-mono);
+    color: var(--color-text);
+    white-space: nowrap;
+  }
+
+  &__legend-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    opacity: 0.75;
+    flex-shrink: 0;
+  }
+
+  &__legend-line {
+    width: 14px; height: 2px;
+    border-radius: 1px;
+    flex-shrink: 0;
+
+    &--h   { background: var(--color-primary); box-shadow: 0 0 4px var(--color-primary); }
+    &--t   { background: var(--color-danger);  box-shadow: 0 0 4px var(--color-danger); }
+    &--sel { width: 18px; height: 0; border-top: 2px dashed #fbbf24; background: transparent; opacity: 0.8; }
+    &--nuc-h { width: 18px; height: 0; border-top: 2px dashed rgba(0, 212, 255, 0.55); background: transparent; }
+    &--nuc-t { width: 18px; height: 0; border-top: 2px dashed rgba(255, 77, 109, 0.55); background: transparent; }
+  }
+}
+</style>
