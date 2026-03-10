@@ -104,3 +104,53 @@ export default defineComponent({
   },
 })
 </script>
+
+<style lang="scss" scoped>
+.sel-panel {
+  &__library { display: flex; flex-direction: column; gap: 0.4rem; }
+
+  &__lib-title {
+    font-size: 0.6rem;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--color-text-heading);
+    opacity: 0.9;
+    margin-bottom: 0.1rem;
+  }
+
+  &__lib-group { display: flex; flex-direction: column; gap: 0.25rem; margin-bottom: 0.25rem; }
+
+  &__lib-group-label {
+    font-size: 0.55rem;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    opacity: 0.9;
+    color: var(--pill-c, var(--color-text-muted));
+  }
+
+  &__lib-pills { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+
+  &__preset-pill {
+    font-size: 0.58rem;
+    font-family: var(--font-mono);
+    padding: 0.18rem 0.5rem;
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    background: transparent;
+    color: var(--color-text);
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s, background-color 0.15s;
+    white-space: nowrap;
+
+    &:hover { border-color: var(--color-primary); color: var(--color-primary); }
+
+    &--active {
+      background-color: rgba(255, 255, 255, 0.05);
+      border-color: var(--pill-c, var(--color-primary));
+      color: var(--pill-c, var(--color-primary));
+    }
+  }
+}
+</style>

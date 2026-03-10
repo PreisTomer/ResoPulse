@@ -363,7 +363,7 @@ export default defineComponent({
 })
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 /* ── Container query ───────────────────── */
 @container (max-width: 320px) {
   .field-panel__row {

@@ -104,3 +104,97 @@ export default defineComponent({
   },
 })
 </script>
+
+<style lang="scss" scoped>
+@use '../../styles/keyframes' as *;
+@use '../../styles/mixins' as *;
+
+@keyframes nourish-text-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.65; }
+}
+
+.cell-card {
+  &__biostim {
+    background: rgba(0, 212, 255, 0.045);
+    border: 1px solid rgba(0, 212, 255, 0.13);
+    border-radius: var(--radius);
+    padding: 0.5rem 0.65rem;
+    cursor: help;
+    margin: 0 0.15rem;
+    transition: border-color 0.3s, background 0.3s;
+
+    &--nourishing {
+      background: rgba(0, 212, 255, 0.08);
+      border-color: rgba(0, 212, 255, 0.30);
+    }
+  }
+
+  &__biostim-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.4rem;
+  }
+
+  &__biostim-title {
+    @include mono-upper(0.6rem, 0.09em);
+    color: var(--color-accent);
+    opacity: 0.80;
+  }
+
+  &__biostim-score {
+    font-size: 0.68rem;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    transition: color 0.3s;
+
+    &--low    { color: var(--color-accent); opacity: 0.40; }
+    &--medium { color: var(--color-accent); opacity: 0.75; }
+    &--high   { color: #39ff14; }
+    &--active { animation: nourish-text-pulse 2.2s ease-in-out infinite; }
+  }
+
+  &__biostim-bars { @include flex-col(0.22rem); }
+
+  &__biostim-row {
+    display: grid;
+    grid-template-columns: 4.8rem 1fr 2.2rem;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  &__biostim-label {
+    font-size: 0.54rem;
+    font-family: var(--font-mono);
+    color: var(--color-text-muted);
+    white-space: nowrap;
+    opacity: 0.80;
+  }
+
+  &__biostim-track {
+    height: 3px;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  &__biostim-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.25s ease;
+
+    &--si  { background: var(--color-accent); }
+    &--mte { background: #7c6cff; }
+    &--ma  { background: #fbbf24; }
+  }
+
+  &__biostim-val {
+    font-size: 0.54rem;
+    font-family: var(--font-mono);
+    color: var(--color-text-muted);
+    text-align: right;
+    opacity: 0.75;
+  }
+}
+</style>

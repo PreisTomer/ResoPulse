@@ -73,3 +73,130 @@ export default defineComponent({
   },
 })
 </script>
+
+<style lang="scss" scoped>
+@use '../../styles/mixins' as *;
+
+/* ── Vue Transition (name="params") ──────────────────────────────────── */
+.params-enter-active, .params-leave-active { transition: opacity 0.2s, transform 0.2s; }
+.params-enter-from,  .params-leave-to      { opacity: 0; transform: translateY(-6px); }
+
+.cell-card {
+  &__params-toggle {
+    @include flex-row(0.45rem);
+    @include mono-upper(0.62rem, 0.1em);
+    color: var(--color-text);
+    cursor: pointer;
+    user-select: none;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    padding: 0.3rem 0.65rem;
+    transition: border-color 0.15s, background-color 0.15s, color 0.15s;
+
+    &:hover {
+      border-color: rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--color-text-heading);
+    }
+  }
+
+  &__params-toggle-arrow { font-size: 0.7rem; opacity: 0.75; }
+
+  &__params-panel {
+    background-color: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    padding: 0.65rem 0.85rem;
+    @include flex-col(0.45rem);
+  }
+
+  &__param-row {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    align-items: center;
+    gap: 0.5rem;
+
+    &--derived { opacity: 0.8; pointer-events: none; }
+  }
+
+  &__param-label {
+    @include mono-upper(0.6rem);
+    color: var(--color-text-muted);
+  }
+
+  &__param-input {
+    width: 5rem;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 3px;
+    color: var(--color-text-heading);
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    padding: 0.15rem 0.35rem;
+    text-align: right;
+    -moz-appearance: textfield;
+    appearance: textfield;
+
+    &::-webkit-inner-spin-button,
+    &::-webkit-outer-spin-button { opacity: 0.3; }
+
+    &:focus { outline: none; border-color: var(--color-primary); }
+  }
+
+  &__param-unit {
+    font-size: 0.6rem;
+    font-family: var(--font-mono);
+    color: var(--color-text-muted);
+    opacity: 0.6;
+    width: 2.5rem;
+    text-align: left;
+  }
+
+  &__params-derived-hdr {
+    @include flex-row(0.5rem);
+    padding-top: 0.3rem;
+    margin-top: 0.1rem;
+    border-top: 1px solid var(--color-border);
+    cursor: default;
+  }
+
+  &__params-derived-label {
+    @include mono-upper(0.52rem, 0.12em);
+    color: var(--color-text-muted);
+    opacity: 0.65;
+  }
+
+  &__param-derived-value {
+    font-size: 0.7rem;
+    font-family: var(--font-mono);
+    color: var(--color-text);
+    text-align: right;
+    width: 5rem;
+  }
+
+  &__params-reset-row {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 0.2rem;
+    border-top: 1px solid var(--color-border);
+    margin-top: 0.1rem;
+  }
+
+  &__params-btn {
+    background: transparent;
+    border: 1px solid var(--color-border);
+    color: var(--color-text-muted);
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 0.18rem 0.55rem;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+
+    &:hover { border-color: var(--color-primary); color: var(--color-primary); }
+  }
+}
+</style>

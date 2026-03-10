@@ -611,7 +611,7 @@ export default defineComponent({
 })
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 @use '../../styles/keyframes' as *;
 @use '../../styles/mixins' as *;
 

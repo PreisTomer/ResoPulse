@@ -1,6 +1,6 @@
 <template>
   <div class="cell-card__header">
-    <span class="cell-card__icon">{{ ICON.CELL }}</span>
+    <span :class="['cell-card__icon', `cell-card__icon--${type}`]">{{ ICON.CELL }}</span>
     <div class="cell-card__name">
       <div class="cell-card__label">{{ label }}</div>
       <div
@@ -63,3 +63,84 @@ export default defineComponent({
   },
 })
 </script>
+
+<style lang="scss" scoped>
+@use '../../styles/keyframes' as *;
+@use '../../styles/mixins' as *;
+
+.cell-card {
+  &__header {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.85rem;
+    min-height: 5.5rem;
+  }
+
+  &__icon {
+    font-size: 1.8rem;
+    line-height: 1;
+    flex-shrink: 0;
+
+    &--healthy { color: var(--color-accent); }
+    &--target  { color: var(--color-danger); }
+  }
+
+  &__name {
+    flex: 1;
+    min-width: 0;
+    @include flex-col(0.15rem);
+  }
+
+  &__label {
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--color-text-heading);
+    line-height: 1.25;
+  }
+
+  &__sublabel {
+    @include mono-upper(0.72rem);
+    color: var(--color-text-muted);
+    line-height: 1.3;
+
+    &--has-tip {
+      cursor: help;
+      border-bottom: 1px dotted rgba(255, 255, 255, 0.25);
+      text-decoration-skip-ink: none;
+    }
+  }
+
+  &__meta {
+    @include flex-row(0.3rem);
+    margin-top: 0.3rem;
+    font-size: 0.68rem;
+    font-family: var(--font-mono);
+    color: var(--color-text-muted);
+    white-space: nowrap;
+  }
+
+  &__meta-sep       { opacity: 0.4; }
+  &__meta-state     { text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+  &__meta-temp-warn { color: #ffb800; }
+
+  &__nuclear-meta {
+    @include flex-row(0.35rem);
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    color: #a78bfa;
+    margin-top: 0.1rem;
+  }
+
+  &__nuclear-label { opacity: 0.65; letter-spacing: 0.06em; }
+  &__nuclear-value { font-weight: 600; }
+
+  &__nuclear-ratio {
+    opacity: 0.8;
+
+    &--caution { color: #fbbf24; }
+    &--warn    { color: #ff4d6d; animation: state-blink 1s ease-in-out infinite; }
+  }
+
+  @include cell-state-classes();
+}
+</style>

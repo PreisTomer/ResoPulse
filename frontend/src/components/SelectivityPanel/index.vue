@@ -399,7 +399,7 @@ export default defineComponent({
 })
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 @keyframes bar-flash {
   from { opacity: 1; }
   to   { opacity: 0.5; }
