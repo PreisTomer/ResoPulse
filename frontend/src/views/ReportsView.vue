@@ -164,16 +164,16 @@
         <!-- Legend -->
         <div v-if="totalReadings > 0" class="reports__legend">
           <span class="reports__legend-item">
-            <span class="reports__legend-color reports__cancer-val">■</span> {{ $t('reports.legendTarget') }}
+            <span class="reports__legend-color reports__cancer-val">{{ ICON.SQUARE }}</span> {{ $t('reports.legendTarget') }}
           </span>
           <span class="reports__legend-item">
-            <span class="reports__legend-color reports__ref-val">■</span> {{ $t('reports.legendHealthy') }}
+            <span class="reports__legend-color reports__ref-val">{{ ICON.SQUARE }}</span> {{ $t('reports.legendHealthy') }}
           </span>
           <span class="reports__legend-item">
-            <span class="reports__legend-color reports__green-val">■</span> {{ $t('reports.legendSelectivity', { strong: THRESHOLDS.SEL_STRONG }) }}
+            <span class="reports__legend-color reports__green-val">{{ ICON.SQUARE }}</span> {{ $t('reports.legendSelectivity', { strong: THRESHOLDS.SEL_STRONG }) }}
           </span>
           <span class="reports__legend-item">
-            <span class="reports__legend-color reports__warn-val">■</span> {{ $t('reports.legendWarning', { marginal: THRESHOLDS.SEL_MARGINAL, strong: THRESHOLDS.SEL_STRONG }) }}
+            <span class="reports__legend-color reports__warn-val">{{ ICON.SQUARE }}</span> {{ $t('reports.legendWarning', { marginal: THRESHOLDS.SEL_MARGINAL, strong: THRESHOLDS.SEL_STRONG }) }}
           </span>
           <span class="reports__legend-item reports__footnote">
             {{ $t('reports.footnote') }}
@@ -191,6 +191,7 @@ import { useExperimentStore } from '@/stores/experimentStore'
 import { formatFreqKHz, formatFieldVcm } from '@/utils/format'
 import { LOG_EVENT } from '@/constants/strings'
 import { THRESHOLDS } from '@/constants/cellCard'
+import { ICON } from '@/constants/icons'
 
 export default defineComponent({
   setup() {
@@ -258,6 +259,7 @@ export default defineComponent({
       formatFieldVcm,
       LOG_EVENT,
       THRESHOLDS,
+      ICON,
     }
   },
 })

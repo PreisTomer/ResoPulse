@@ -509,6 +509,7 @@ import { MEDIA } from '@/constants/media'
 import { CELL_GROUP } from '@/constants/strings'
 import { membraneCm, computeFc, computeTau, computeNuclearTau } from '@/utils/physics'
 import { THRESHOLDS } from '@/constants/cellCard'
+import { UNIT } from '@/constants/units'
 
 const SIGMA_SALINE = MEDIA.saline.conductivity // 1.5 S/m
 
@@ -535,11 +536,11 @@ export default defineComponent({
         const fc = computeFc(p, SIGMA_SALINE)         // kHz
         const fcDisplay =
           fc >= 1000
-            ? `${(fc / 1000).toFixed(2)} MHz`
-            : `${fc.toFixed(1)} kHz`
+            ? `${(fc / 1000).toFixed(2)} ${UNIT.MHZ}`
+            : `${fc.toFixed(1)} ${UNIT.KHZ}`
         // Resonance parameters (bacteria/virus only)
         const resFreqDisplay = pr.resonantFreqGHz
-          ? `${pr.resonantFreqGHz} GHz`
+          ? `${pr.resonantFreqGHz} ${UNIT.GHZ}`
           : '—'
         const resQDisplay = pr.capsidQ ? `${pr.capsidQ}` : '—'
         const resEthrDisplay = pr.resonantThresholdVcm
@@ -556,7 +557,7 @@ export default defineComponent({
           if (tau_out > 0 && tau_ne > 0) {
             const fpeak_Hz  = 1 / (2 * Math.PI * Math.sqrt(tau_out * tau_ne))
             const fpeak_MHz = fpeak_Hz / 1e6
-            nucFpeakDisplay = `${fpeak_MHz.toFixed(2)} MHz`
+            nucFpeakDisplay = `${fpeak_MHz.toFixed(2)} ${UNIT.MHZ}`
           }
         }
         return {

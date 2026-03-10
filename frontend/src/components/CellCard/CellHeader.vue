@@ -1,6 +1,6 @@
 <template>
   <div class="cell-card__header">
-    <span class="cell-card__icon">◎</span>
+    <span class="cell-card__icon">{{ ICON.CELL }}</span>
     <div class="cell-card__name">
       <div class="cell-card__label">{{ label }}</div>
       <div
@@ -20,12 +20,12 @@
         <span class="cell-card__meta-state" :class="metaStateClass" v-tip="tipState">{{ cellState }}</span>
       </div>
       <div v-if="doubleShellEnabled && hasNuclearParams" class="cell-card__nuclear-meta">
-        <span class="cell-card__nuclear-label">{{ ICON.NUCLEUS }} Nucleus Vm</span>
-        <span class="cell-card__nuclear-value">{{ nuclearVmMv.toFixed(3) }} mV</span>
+        <span class="cell-card__nuclear-label">{{ ICON.NUCLEUS }} {{ $t('cellHeader.nucleusVm') }}</span>
+        <span class="cell-card__nuclear-value">{{ nuclearVmMv.toFixed(3) }} {{ UNIT.MV }}</span>
         <span
           class="cell-card__nuclear-ratio"
           :class="nuclearDisruptionRatio >= THRESHOLDS.DISRUPTION_WARN ? 'cell-card__nuclear-ratio--warn' : nuclearDisruptionRatio >= THRESHOLDS.HEALTHY_APPROACHING ? 'cell-card__nuclear-ratio--caution' : ''"
-        >{{ (nuclearDisruptionRatio * 100).toFixed(0) }}%</span>
+        >{{ (nuclearDisruptionRatio * 100).toFixed(0) }}{{ UNIT.PERCENT }}</span>
       </div>
     </div>
   </div>
@@ -36,10 +36,11 @@ import { defineComponent } from 'vue'
 import type { PropType } from 'vue'
 import type { CellState } from '@/types/cell'
 import { ICON } from '@/constants/icons'
+import { UNIT } from '@/constants/units'
 import { THRESHOLDS } from '@/constants/cellCard'
 
 export default defineComponent({
-  setup() { return { ICON, THRESHOLDS } },
+  setup() { return { ICON, UNIT, THRESHOLDS } },
 
   props: {
     type:               { type: String as PropType<'healthy' | 'target'>, required: true },

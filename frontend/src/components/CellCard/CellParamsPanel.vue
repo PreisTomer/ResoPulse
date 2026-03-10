@@ -5,7 +5,7 @@
       v-tip="$t('cells.paramsToggleTip')"
       @click="paramsExpanded = !paramsExpanded"
     >
-      <span class="cell-card__params-toggle-arrow">{{ paramsExpanded ? '▾' : '▸' }}</span>
+      <span class="cell-card__params-toggle-arrow">{{ paramsExpanded ? ICON.EXPAND : ICON.COLLAPSE }}</span>
       {{ $t('cells.paramsToggleLabel') }}
     </div>
     <Transition name="params">
@@ -46,8 +46,10 @@
 import { defineComponent } from 'vue'
 import type { PropType } from 'vue'
 import type { CellRecord } from '@/types/cell'
+import { ICON } from '@/constants/icons'
 
 export default defineComponent({
+  setup() { return { ICON } },
   props: {
     cellData: { type: Object as PropType<CellRecord | null>, default: null },
     editableParams: {
