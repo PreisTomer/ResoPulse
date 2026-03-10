@@ -1,7 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(wc -l /e/code/BioResonance/backend/src/*.ts)"
-    ]
-  }
-}
