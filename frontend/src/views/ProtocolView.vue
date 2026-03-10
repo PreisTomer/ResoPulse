@@ -312,19 +312,12 @@
                 <span class="protocol__ref-body">
                   <span v-html="ref.body"></span>
                   <a
-                    v-if="ref.doi"
+                    v-if="ref.url"
                     class="protocol__ref-link"
-                    :href="`https://doi.org/${ref.doi}`"
+                    :href="ref.url"
                     target="_blank"
                     rel="noopener"
-                  >doi:{{ ref.doi }}</a>
-                  <a
-                    v-if="ref.pmid"
-                    class="protocol__ref-link"
-                    :href="`https://pubmed.ncbi.nlm.nih.gov/${ref.pmid}/`"
-                    target="_blank"
-                    rel="noopener"
-                  >PubMed:{{ ref.pmid }}</a>
+                  >{{ ref.urlLabel }}</a>
                   <span v-if="ref.note" class="protocol__ref-note" v-html="ref.note"></span>
                 </span>
               </li>
@@ -345,7 +338,8 @@ interface ResonanceRow     { target: string; fres: string; fresClass: string; q:
 interface DoubleshellRow   { cell: string; rnuc: string; rnucClass?: string; dne: string; dneClass?: string; ene: string; eneClass?: string; vthr: string; vThrClass?: string; fpeak: string; fpeakClass: string }
 interface UncertaintyRow   { category: string; band: string; bandClass: string; range: string; source: string }
 interface SafetyRow        { param: string; value: string; valueClass: string; sig: string }
-interface RefItem          { body: string; doi?: string; pmid?: string; note?: string }
+interface RawRefItem       { body: string; doi?: string; pmid?: string; note?: string }
+interface RefItem          { body: string; url?: string; urlLabel?: string; note?: string }
 
 const ALL_SECTION_IDS = [
   'overview',
@@ -394,7 +388,17 @@ export default defineComponent({
     },
 
     refList(): RefItem[] {
-      return (this.$tm as Function)('protocol.refs.list') as RefItem[]
+      const raw = (this.$tm as Function)('protocol.refs.list') as RawRefItem[]
+      return raw.map((item) => ({
+        body: item.body,
+        note: item.note,
+        url: item.doi  ? `https://doi.org/${item.doi}`
+           : item.pmid ? `https://pubmed.ncbi.nlm.nih.gov/${item.pmid}/`
+           : undefined,
+        urlLabel: item.doi  ? `doi:${item.doi}`
+               : item.pmid ? `PubMed:${item.pmid}`
+               : undefined,
+      }))
     },
   },
 

@@ -1,9 +1,9 @@
 <template>
   <div class="cell-card__biostim" v-tip="tooltip">
     <div class="cell-card__biostim-header">
-      <span class="cell-card__biostim-title">⊕ {{ $t('biostim.title') }}</span>
+      <span class="cell-card__biostim-title">{{ ICON.NOURISH }} {{ $t('biostim.title') }}</span>
       <span class="cell-card__biostim-score" :class="scoreClass">
-        {{ (biomodScore * 100).toFixed(0) }}%
+        {{ (biomodScore * 100).toFixed(0) }}{{ UNIT.PERCENT }}
       </span>
     </div>
     <div class="cell-card__biostim-bars">
@@ -15,7 +15,7 @@
             :style="{ width: (stimIndex * 100) + '%' }"
           ></div>
         </div>
-        <span class="cell-card__biostim-val">{{ (stimIndex * 100).toFixed(0) }}%</span>
+        <span class="cell-card__biostim-val">{{ (stimIndex * 100).toFixed(0) }}{{ UNIT.PERCENT }}</span>
       </div>
       <div class="cell-card__biostim-row">
         <span class="cell-card__biostim-label">{{ $t('biostim.labelMTE') }}</span>
@@ -25,7 +25,7 @@
             :style="{ width: (mechTransdEff * 100) + '%' }"
           ></div>
         </div>
-        <span class="cell-card__biostim-val">{{ (mechTransdEff * 100).toFixed(0) }}%</span>
+        <span class="cell-card__biostim-val">{{ (mechTransdEff * 100).toFixed(0) }}{{ UNIT.PERCENT }}</span>
       </div>
       <div class="cell-card__biostim-row">
         <span class="cell-card__biostim-label">{{ $t('biostim.labelMA') }}</span>
@@ -35,7 +35,7 @@
             :style="{ width: (mildThermal * 100) + '%' }"
           ></div>
         </div>
-        <span class="cell-card__biostim-val">{{ (mildThermal * 100).toFixed(0) }}%</span>
+        <span class="cell-card__biostim-val">{{ (mildThermal * 100).toFixed(0) }}{{ UNIT.PERCENT }}</span>
       </div>
     </div>
   </div>
@@ -43,9 +43,13 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+import { ICON } from '@/constants/icons'
+import { UNIT } from '@/constants/units'
 import { tipBiomod } from '@/utils/biostimTooltips'
 
 export default defineComponent({
+  setup() { return { ICON, UNIT } },
+
   props: {
     stimIndex:       { type: Number, required: true },
     mechTransdEff:   { type: Number, required: true },
@@ -66,22 +70,22 @@ export default defineComponent({
 
     freqLabel(): string {
       return this.freqKHz >= 1000
-        ? `${(this.freqKHz / 1000).toFixed(1)} MHz`
-        : `${this.freqKHz.toFixed(0)} kHz`
+        ? `${(this.freqKHz / 1000).toFixed(1)} ${UNIT.MHZ}`
+        : `${this.freqKHz.toFixed(0)} ${UNIT.KHZ}`
     },
 
     fcLabel(): string {
       return this.fcKHz >= 1000
-        ? `${(this.fcKHz / 1000).toFixed(1)} MHz`
-        : `${this.fcKHz.toFixed(0)} kHz`
+        ? `${(this.fcKHz / 1000).toFixed(1)} ${UNIT.MHZ}`
+        : `${this.fcKHz.toFixed(0)} ${UNIT.KHZ}`
     },
 
     /** Recommended max frequency for ≥70% coupling efficiency: f < fc/√2 */
     optCouplingFreqLabel(): string {
       const optKHz = this.fcKHz / Math.SQRT2
       return optKHz >= 1000
-        ? `<${(optKHz / 1000).toFixed(1)} MHz`
-        : `<${optKHz.toFixed(0)} kHz`
+        ? `<${(optKHz / 1000).toFixed(1)} ${UNIT.MHZ}`
+        : `<${optKHz.toFixed(0)} ${UNIT.KHZ}`
     },
 
     tooltip(): string {

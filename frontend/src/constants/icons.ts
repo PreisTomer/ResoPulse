@@ -18,6 +18,8 @@ export const ICON = {
   RELOAD:    '⟳',   // sweep / resample
   GRID:      '⊞',   // population panel
   WAVE:      '∿',   // frequency response chart
+  SQUARE:    '■',   // legend color swatch
+  CELL:      '◎',   // cell icon in CellCard header
 } as const
 
 export type Icon = typeof ICON[keyof typeof ICON]

@@ -181,6 +181,9 @@
     "labelMTE": "Freq coupl.",
     "labelMA": "Mild heat"
   },
+  "cellHeader": {
+    "nucleusVm": "Nucleus Vm"
+  },
   "features": {
     "visualization": {
       "title": "Big Data Visualization",
