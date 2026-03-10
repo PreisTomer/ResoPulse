@@ -192,10 +192,11 @@ import { useExperimentStore } from '@/stores/experimentStore'
 import { CELL_PRESETS, GROUP_COLORS, GROUP_LABELS } from '@/constants/cellLibrary'
 import type { CellPreset, CellGroup } from '@/constants/cellLibrary'
 import { formatLysisTime } from '@/utils/sliderTooltips'
-import { CATEGORY_DEFAULTS } from '@/constants/experimentDefaults'
+import { CATEGORY_DEFAULTS, INITIAL_RESONANT_FIELD_FRACTION, SNAP_CONFIRM_MS } from '@/constants/experimentDefaults'
 import { CELL_CATEGORY, CELL_TYPE, CELL_GROUP, CHART_MODE } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
 import { formatFreqKHz } from '@/utils/format'
+import { UNIT } from '@/constants/units'
 
 export default defineComponent({
   components: {
@@ -218,6 +219,7 @@ export default defineComponent({
       GROUP_LABELS,
       CHART_MODE,
       ICON,
+      UNIT,
     }
   },
 
@@ -264,7 +266,7 @@ export default defineComponent({
     tipSnapBar(): string {
       if (!this.sweepWindow) return ''
       const isField = this.sweepWindow.param === 'field'
-      const unit    = isField ? 'V/cm' : 'kHz'
+      const unit    = isField ? UNIT.V_PER_CM : UNIT.KHZ
       const param   = isField ? 'field intensity' : 'RF frequency'
       const center  = Math.round((this.sweepWindow.lo + this.sweepWindow.hi) / 2)
       return `<strong>⭐ Therapeutic Window</strong>
@@ -380,7 +382,7 @@ Larger radius raises Vm and lowers the lysis field threshold.`
         this.snapConfirming = true
         this._snapResetTimer = setTimeout(() => {
           this.snapConfirming = false
-        }, 3000) as unknown as number
+        }, SNAP_CONFIRM_MS) as unknown as number
         return
       }
       // Second click within 3 s: execute the snap
@@ -429,7 +431,7 @@ Larger radius raises Vm and lowers the lysis field threshold.`
         : d.freqKHz
       // Start at 50% of disruption threshold for intuitive first contact
       const fieldVcm = (cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) && t.resonantThresholdVcm
-        ? t.resonantThresholdVcm * 0.5
+        ? t.resonantThresholdVcm * INITIAL_RESONANT_FIELD_FRACTION
         : d.fieldVcm
       this.store.setFieldIntensity(fieldVcm)
       this.store.setBroadcastFreqKHz(freqKHz)

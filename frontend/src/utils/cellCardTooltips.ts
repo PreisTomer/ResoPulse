@@ -6,6 +6,7 @@
 import { CELL_STATE, CELL_TYPE, CHART_MODE, WAVEFORM } from '@/constants/strings'
 import { computeTau } from './physics'
 import type { CellConfig } from '@/types/cell'
+import { THRESHOLDS } from '@/constants/cellCard'
 
 export function formatLysisTimeLocal(ms: number): string {
   return ms < 1000 ? `${ms}ms` : `${(ms / 1000).toFixed(1)}s`
@@ -163,7 +164,7 @@ export function tipDisruption(opts: {
     ? `\n<span class="tip-note">Pulse factor: ${(pulseEnvelopeFactor * 100).toFixed(1)}% (t_p = ${pulseWidthNs} ns vs τ = ${tau_ns} ns).\nMembrane charges to ${(pulseEnvelopeFactor * 100).toFixed(1)}% of Schwan Vm per pulse.\nEffective threshold is ${(1 / pulseEnvelopeFactor).toFixed(1)}× higher at this pulse width.\nRef: Weaver &amp; Chizmadzhev (1996).</span>`
     : ''
 
-  const revEpNote = (cellType === CELL_TYPE.TARGET && disruptionRatio >= 0.50 && disruptionRatio < 0.85)
+  const revEpNote = (cellType === CELL_TYPE.TARGET && disruptionRatio >= THRESHOLDS.HEALTHY_APPROACHING && disruptionRatio < THRESHOLDS.DISRUPTION_WARN)
     ? `\n<span class="tip-note">Reversible EP window: pores open transiently and re-seal.\nThis is the drug/gene delivery regime — cells survive.\nIncrease field or hold to progress to irreversible lysis.</span>`
     : ''
 

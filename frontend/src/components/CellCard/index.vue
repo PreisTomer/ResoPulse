@@ -324,9 +324,9 @@ export default defineComponent({
       const tau = computeTau(cell, sigma_e) * 1e9
       const fc  = this.type === CELL_TYPE.HEALTHY ? this.store.healthyFc : this.store.targetFc
       return [
-        { label: 'Membrane Cm',   value: Cm.toFixed(2),           unit: 'mF/m²' },
-        { label: 'Time const τ',  value: tau.toFixed(1),          unit: UNIT.NS },
-        { label: 'Char. freq fc', value: formatFreqKHz(fc, 2),    unit: ''      },
+        { label: this.$t('cells.derivedParams.cm'),  value: Cm.toFixed(2),        unit: UNIT.MF_PER_M2 },
+        { label: this.$t('cells.derivedParams.tau'), value: tau.toFixed(1),       unit: UNIT.NS        },
+        { label: this.$t('cells.derivedParams.fc'),  value: formatFreqKHz(fc, 2), unit: ''             },
       ]
     },
 

@@ -20,8 +20,8 @@
         :style="{ left: (_tooltipData.x + 54) + 'px' }"
       >
         <div class="freq-chart__tooltip-freq">{{ formatHz(_tooltipData.freqHz) }}{{ UNIT.HZ }}</div>
-        <div class="freq-chart__tooltip-row freq-chart__tooltip-row--h">H {{ _tooltipData.healthyVm.toFixed(2) }} {{ UNIT.MV }}</div>
-        <div class="freq-chart__tooltip-row freq-chart__tooltip-row--t">T {{ _tooltipData.targetVm.toFixed(2) }} {{ UNIT.MV }}</div>
+        <div class="freq-chart__tooltip-row freq-chart__tooltip-row--h">{{ CELL_LABEL.HEALTHY }} {{ _tooltipData.healthyVm.toFixed(2) }} {{ UNIT.MV }}</div>
+        <div class="freq-chart__tooltip-row freq-chart__tooltip-row--t">{{ CELL_LABEL.TARGET }} {{ _tooltipData.targetVm.toFixed(2) }} {{ UNIT.MV }}</div>
       </div>
     </Transition>
   </div>
@@ -34,7 +34,7 @@ import { useCellStore } from '@/stores/cellStore'
 import { computeSchwan, computeFc, computeNuclearVm, computeResonantLineshape } from '@/utils/physics'
 import { CELL_PRESETS, GROUP_COLORS } from '@/constants/cellLibrary'
 import { DEFAULT_CAPSID_Q } from '@/constants/cellCard'
-import { CELL_CATEGORY, CHART_MODE } from '@/constants/strings'
+import { CELL_CATEGORY, CHART_MODE, CELL_LABEL } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'
 import { broadcastStateSync } from '@/services/socket'
@@ -60,7 +60,7 @@ export default defineComponent({
   components: { ChartLegend },
 
   setup() {
-    return { store: useCellStore(), UNIT }
+    return { store: useCellStore(), UNIT, CELL_LABEL }
   },
 
   data() {

@@ -1,3 +1,9 @@
+/** Short display labels for healthy / target cell roles (domain notation: H / T) */
+export const CELL_LABEL = {
+  HEALTHY: 'H',
+  TARGET:  'T',
+} as const
+
 /** Cell lifecycle states (matches CellState union in types/cell.ts) */
 export const CELL_STATE = {
   STABLE:      'stable',

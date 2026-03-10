@@ -29,7 +29,7 @@
       <span
         class="field-panel__row-label"
         v-tip="tipLysisNFull"
-      >{{ $t('slider.pulsesN') }} <span class="field-panel__scope-tag field-panel__scope-tag--target">T</span></span>
+      >{{ $t('slider.pulsesN') }} <span class="field-panel__scope-tag field-panel__scope-tag--target">{{ CELL_LABEL.TARGET }}</span></span>
       <div class="field-panel__track">
         <input
           class="field-panel__slider"
@@ -116,7 +116,7 @@
 import { defineComponent } from 'vue'
 import { useCellStore } from '@/stores/cellStore'
 import { broadcastStateSync } from '@/services/socket'
-import { WAVEFORM, CELL_CATEGORY } from '@/constants/strings'
+import { WAVEFORM, CELL_CATEGORY, CELL_LABEL } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
 import { SLIDER_ADV } from '@/constants/sliderBounds'
 import { tipOrientation, tipLysisN, tipLysisNNote, tipShellModel, tipSingleShell, tipDoubleShell, tipPerfusion, tipCellPacking, formatLysisTime } from '@/utils/sliderTooltips'
@@ -124,7 +124,7 @@ import { UNIT } from '@/constants/units'
 
 export default defineComponent({
   setup() {
-    return { store: useCellStore(), WAVEFORM, CELL_CATEGORY, ICON, UNIT, SLIDER_ADV }
+    return { store: useCellStore(), WAVEFORM, CELL_CATEGORY, CELL_LABEL, ICON, UNIT, SLIDER_ADV }
   },
 
   data() {

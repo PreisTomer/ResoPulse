@@ -49,7 +49,7 @@
           v-tip="tipDutyCycle"
         >{{ dutyCycleDisplay }}</span>
         <span class="field-panel__readout-sub" v-tip="tipDutyCycle">
-          T_ss {{ maxSteadyTemp.toFixed(0) }}°C · SAR_eff T {{ (store.targetSAR * store.dutyCycle).toFixed(1) }} W/kg
+          T_ss {{ maxSteadyTemp.toFixed(0) }} {{ UNIT.DEG_C }} · SAR_eff {{ CELL_LABEL.TARGET }} {{ (store.targetSAR * store.dutyCycle).toFixed(1) }} {{ UNIT.W_PER_KG }}
         </span>
       </div>
     </div>
@@ -83,8 +83,9 @@ import { defineComponent } from 'vue'
 import type { PropType } from 'vue'
 import { useCellStore } from '@/stores/cellStore'
 import { broadcastStateSync } from '@/services/socket'
-import { WAVEFORM, THERMAL_LEVEL } from '@/constants/strings'
+import { WAVEFORM, THERMAL_LEVEL, CELL_LABEL } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
+import { UNIT } from '@/constants/units'
 import { tipWaveform, tipDutyCycle, tipPulseWidth, tipSafeModeLock, formatLysisTime } from '@/utils/sliderTooltips'
 
 export default defineComponent({
@@ -107,7 +108,7 @@ export default defineComponent({
   },
 
   setup() {
-    return { store: useCellStore(), WAVEFORM, THERMAL_LEVEL, ICON }
+    return { store: useCellStore(), WAVEFORM, THERMAL_LEVEL, ICON, UNIT, CELL_LABEL }
   },
 
   data() {
@@ -129,8 +130,8 @@ export default defineComponent({
 
     pulseWidthDisplay(): string {
       const ns = this.store.pulseWidthNs
-      if (ns >= 1000) return (ns / 1000).toFixed(ns >= 10000 ? 0 : 1) + ' µs'
-      return ns.toFixed(0) + ' ns'
+      if (ns >= 1000) return (ns / 1000).toFixed(ns >= 10000 ? 0 : 1) + ' ' + UNIT.US
+      return ns.toFixed(0) + ' ' + UNIT.NS
     },
 
     tipWaveform(): string {

@@ -9,6 +9,7 @@
 import { MEDIA } from '@/constants/media'
 import { DEFAULT_CAPSID_Q } from '@/constants/cellCard'
 import { CHART_MODE, CELL_CATEGORY, THERMAL_LEVEL } from '@/constants/strings'
+import { UNIT } from '@/constants/units'
 import type { MediumKey } from '@/types/media'
 
 /** i18n translator signature (matches vue-i18n's `useI18n().t`) */
@@ -444,8 +445,8 @@ export function tipPulseWidth(opts: {
   const { targetFc, healthyFc, pulseWidthDisplay, lysisDelayMs, lysisNPulses, dutyCycle } = opts
   const tTau_ns = targetFc  > 0 ? (1 / (2 * Math.PI * targetFc  * 1e3) * 1e9) : 0
   const hTau_ns = healthyFc > 0 ? (1 / (2 * Math.PI * healthyFc * 1e3) * 1e9) : 0
-  const tTauStr = tTau_ns > 0 ? tTau_ns.toFixed(0) + ' ns' : '—'
-  const hTauStr = hTau_ns > 0 ? hTau_ns.toFixed(0) + ' ns' : '—'
+  const tTauStr = tTau_ns > 0 ? tTau_ns.toFixed(0) + ' ' + UNIT.NS : '—'
+  const hTauStr = hTau_ns > 0 ? hTau_ns.toFixed(0) + ' ' + UNIT.NS : '—'
   const dcPct   = (dutyCycle * 100).toFixed(4)
   return `<strong>Pulse Width  t_p</strong>
 Current: <span class="tip-val">${pulseWidthDisplay}</span>
