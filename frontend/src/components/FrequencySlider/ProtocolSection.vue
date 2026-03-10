@@ -73,6 +73,9 @@
         <span class="field-panel__readout-sub" v-tip="tipPulseWidth">
           Lysis {{ lysisTimeDisplay }}
         </span>
+        <span class="field-panel__readout-sub" :style="minPwStyle" v-tip="tipMinPulse">
+          {{ minPwDisplay }}
+        </span>
       </div>
     </div>
   </div>
@@ -162,6 +165,36 @@ export default defineComponent({
 
     tipSafeModeLock(): string { return tipSafeModeLock() },
     lysisTimeDisplay(): string { return formatLysisTime(this.store.lysisDelayMs) },
+
+    /** τ of target cell in ns, derived from fc (τ = 1/2πfc) */
+    tauTargetNs(): number {
+      return this.store.targetFc > 0 ? 1e6 / (2 * Math.PI * this.store.targetFc) : 0
+    },
+
+    /** Minimum effective pulse width for full membrane charging (3τ) */
+    minPwNs(): number { return 3 * this.tauTargetNs },
+
+    minPwDisplay(): string {
+      const ns = this.minPwNs
+      if (ns <= 0) return ''
+      if (ns >= 1000) return `3τ_T ≥ ${(ns / 1000).toFixed(1)} ${UNIT.US}`
+      return `3τ_T ≥ ${ns.toFixed(0)} ${UNIT.NS}`
+    },
+
+    pwSufficiency(): 'ok' | 'marginal' | 'below' {
+      const pw = this.store.pulseWidthNs
+      if (pw >= this.minPwNs) return 'ok'
+      if (pw >= this.tauTargetNs) return 'marginal'
+      return 'below'
+    },
+
+    minPwStyle(): string {
+      if (this.pwSufficiency === 'ok')       return 'color: var(--color-lime)'
+      if (this.pwSufficiency === 'marginal') return 'color: var(--color-amber)'
+      return 'color: var(--color-danger)'
+    },
+
+    tipMinPulse(): string { return this.$t('slider.tipMinPulse') },
   },
 
   methods: {

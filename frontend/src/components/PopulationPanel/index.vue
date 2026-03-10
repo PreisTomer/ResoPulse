@@ -281,7 +281,7 @@ export default defineComponent({
 
       const healthy = store.healthy
       const target  = store.target
-      const t = target as CellConfig & { resonantFreqGHz?: number; capsidQ?: number; resonantThresholdVcm?: number }
+      const t = target as CellConfig & { resonantFreqGHz?: number; capsidQ?: number; capsidQMin?: number; capsidQMax?: number; resonantThresholdVcm?: number }
 
       const uncH = this.healthyUncPct / 100
       const uncT = this.targetUncPct  / 100
@@ -293,7 +293,14 @@ export default defineComponent({
         const cell = { ...base, radius: R, conductivity: sigI }
 
         if (isTarget && this.isResonanceTarget) {
-          return computeResonantDisruption(t.resonantFreqGHz!, t.capsidQ ?? DEFAULT_CAPSID_Q, t.resonantThresholdVcm!, freqKHz * 1e3, E)
+          // Scale resonant frequency inversely with sampled radius (f_res ∝ 1/R for shell modes)
+          const fResScaled = t.resonantFreqGHz! * (base.radius / R)
+          // Sample Q within [QMin, QMax] to capture capsid viscoelastic spread
+          const qNominal = t.capsidQ ?? DEFAULT_CAPSID_Q
+          const qMin = t.capsidQMin ?? qNominal
+          const qMax = t.capsidQMax ?? qNominal
+          const Q = qMin === qMax ? qNominal : sampleGaussian((qMin + qMax) / 2, (qMax - qMin) / 4, qMin, qMax)
+          return computeResonantDisruption(fResScaled, Q, t.resonantThresholdVcm!, freqKHz * 1e3, E)
         }
 
         const tau = computeTau(cell, sigma_e)

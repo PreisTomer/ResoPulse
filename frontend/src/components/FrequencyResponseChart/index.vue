@@ -20,8 +20,14 @@
         :style="{ left: (_tooltipData.x + 54) + 'px' }"
       >
         <div class="freq-chart__tooltip-freq">{{ formatHz(_tooltipData.freqHz) }}{{ UNIT.HZ }}</div>
-        <div class="freq-chart__tooltip-row freq-chart__tooltip-row--h">{{ CELL_LABEL.HEALTHY }} {{ _tooltipData.healthyVm.toFixed(2) }} {{ UNIT.MV }}</div>
-        <div class="freq-chart__tooltip-row freq-chart__tooltip-row--t">{{ CELL_LABEL.TARGET }} {{ _tooltipData.targetVm.toFixed(2) }} {{ UNIT.MV }}</div>
+        <template v-if="_tooltipData.mode === 'schwan'">
+          <div class="freq-chart__tooltip-row freq-chart__tooltip-row--h">{{ CELL_LABEL.HEALTHY }} {{ _tooltipData.healthyVm.toFixed(2) }} {{ UNIT.MV }}</div>
+          <div class="freq-chart__tooltip-row freq-chart__tooltip-row--t">{{ CELL_LABEL.TARGET }} {{ _tooltipData.targetVm.toFixed(2) }} {{ UNIT.MV }}</div>
+        </template>
+        <template v-else>
+          <div class="freq-chart__tooltip-row freq-chart__tooltip-row--t">{{ $t('chart.tooltipDR') }} {{ (_tooltipData.targetDR * 100).toFixed(1) }}%</div>
+          <div class="freq-chart__tooltip-row freq-chart__tooltip-row--h">{{ $t('chart.tooltipNoRes') }}</div>
+        </template>
       </div>
     </Transition>
   </div>
@@ -31,7 +37,7 @@
 import { defineComponent } from 'vue'
 import * as d3 from 'd3'
 import { useCellStore } from '@/stores/cellStore'
-import { computeSchwan, computeFc, computeNuclearVm, computeResonantLineshape } from '@/utils/physics'
+import { computeSchwan, computeFc, computeNuclearVm, computeResonantLineshape, computeResonantDisruption, computeTau } from '@/utils/physics'
 import { CELL_PRESETS, GROUP_COLORS } from '@/constants/cellLibrary'
 import { DEFAULT_CAPSID_Q } from '@/constants/cellCard'
 import { CELL_CATEGORY, CHART_MODE, CELL_LABEL } from '@/constants/strings'
@@ -72,7 +78,7 @@ export default defineComponent({
       _chartW: 0,
       _chartH: 0,
       _resizeObserver: null as ResizeObserver | null,
-      _tooltipData: null as { x: number; healthyVm: number; targetVm: number; freqHz: number } | null,
+      _tooltipData: null as { x: number; freqHz: number; mode: 'schwan' | 'resonance'; healthyVm: number; targetVm: number; targetDR: number } | null,
     }
   },
 
@@ -741,21 +747,24 @@ export default defineComponent({
       // fc markers
       const fcGroup = g.select<SVGGElement>('.fc-markers')
       fcGroup.selectAll('*').remove()
+      const tauHNs = computeTau(this.store.healthy, sigma_e) * 1e9
+      const tauTNs = computeTau(this.store.target,  sigma_e) * 1e9
       const fcData = [
-        { fc: computeFc(this.store.healthy, sigma_e), color: C.primary, label: this.$t('chart.fcH') },
-        { fc: computeFc(this.store.target,  sigma_e), color: C.danger,  label: this.$t('chart.fcT') },
+        { fc: computeFc(this.store.healthy, sigma_e), color: C.primary, label: this.$t('chart.fcH'), tauNs: tauHNs },
+        { fc: computeFc(this.store.target,  sigma_e), color: C.danger,  label: this.$t('chart.fcT'), tauNs: tauTNs },
       ]
       // Build visible fc markers (within chart x domain)
       const visibleFc = fcData
-        .map(({ fc, color, label }) => {
+        .map(({ fc, color, label, tauNs }) => {
           const hz = fc * 1000
           if (hz < F_MIN_HZ || hz > F_MAX_HZ) return null
-          return {
-            x: this._xScale!(hz), color, label,
-            fcDisplay: fc >= 1000 ? `${(fc / 1000).toFixed(1)}M` : `${fc.toFixed(0)}k`,
-          }
+          const fcDisplay = fc >= 1000 ? `${(fc / 1000).toFixed(1)}M` : `${fc.toFixed(0)}k`
+          const tauDisplay = tauNs >= 1000
+            ? `τ=${(tauNs / 1000).toFixed(0)}${UNIT.US}`
+            : `τ=${tauNs.toFixed(0)}${UNIT.NS}`
+          return { x: this._xScale!(hz), color, label, fcDisplay, tauDisplay }
         })
-        .filter(Boolean) as { x: number; color: string; label: string; fcDisplay: string }[]
+        .filter(Boolean) as { x: number; color: string; label: string; fcDisplay: string; tauDisplay: string }[]
 
       // When the two markers are within 52 px, flip text-anchor outward to avoid overlap
       const MIN_GAP_PX = 52
@@ -770,7 +779,7 @@ export default defineComponent({
         }
       }
 
-      visibleFc.forEach(({ x, color, label, fcDisplay }, i) => {
+      visibleFc.forEach(({ x, color, label, fcDisplay, tauDisplay }, i) => {
         const anchor: 'middle' | 'end' | 'start' = anchors[i] ?? 'middle'
         fcGroup.append('text')
           .attr('x', x).attr('y', this._chartH + 20)
@@ -785,6 +794,13 @@ export default defineComponent({
           .attr('font-family', 'var(--font-mono)')
           .attr('letter-spacing', '0.03em')
           .text(`${label} ${fcDisplay}`)
+        fcGroup.append('text')
+          .attr('x', x).attr('y', this._chartH + 46)
+          .attr('text-anchor', anchor)
+          .attr('fill', color).attr('font-size', '0.55rem')
+          .attr('font-family', 'var(--font-mono)')
+          .attr('opacity', 0.65)
+          .text(tauDisplay)
       })
 
       // Optimal frequency marker (golden dashed line + star label)
@@ -852,9 +868,29 @@ export default defineComponent({
       const khz = hz / 1000
       const sigma_e  = this.store.effectiveSigmaE
       const cosTheta = this.store.cosThetaFactor
+      const cat = this.store.targetCellCategory
+      const t = this.store.target as { resonantFreqGHz?: number; capsidQ?: number; resonantThresholdVcm?: number }
+
+      // In resonance mode show DR (disruption ratio), not Vm — axes are incompatible
+      if (
+        this.store.chartMode === CHART_MODE.RESONANCE &&
+        (cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) &&
+        t.resonantFreqGHz && t.resonantThresholdVcm
+      ) {
+        const dr = computeResonantDisruption(
+          t.resonantFreqGHz,
+          t.capsidQ ?? DEFAULT_CAPSID_Q,
+          t.resonantThresholdVcm,
+          hz,
+          this.store.fieldIntensity,
+        )
+        this._tooltipData = { x: mx, freqHz: hz, mode: 'resonance', healthyVm: 0, targetVm: 0, targetDR: dr }
+        return
+      }
+
       const hVm = computeSchwan(this.store.healthy, khz, this.store.fieldIntensity, sigma_e, cosTheta) * 1000
       const tVm = computeSchwan(this.store.target,  khz, this.store.fieldIntensity, sigma_e, cosTheta) * 1000
-      this._tooltipData = { x: mx, freqHz: hz, healthyVm: hVm, targetVm: tVm }
+      this._tooltipData = { x: mx, freqHz: hz, mode: 'schwan', healthyVm: hVm, targetVm: tVm, targetDR: 0 }
     },
   },
 })

@@ -3,4 +3,4 @@ export interface MediaEntry {
   conductivity: number
 }
 
-export type MediumKey = 'saline' | 'blood' | 'tissue' | 'water'
+export type MediumKey = 'saline' | 'blood' | 'tissue' | 'water' | 'dmem' | 'rpmi' | 'mhb'

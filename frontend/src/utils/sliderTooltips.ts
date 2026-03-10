@@ -93,8 +93,11 @@ export function tipMediumKeys(): Record<string, string> {
   const descs: Record<string, string> = {
     saline: 'Matches physiological interstitial fluid',
     blood:  'Whole blood — moderate coupling',
-    tissue: 'Soft tissue (low-perfusion) — note: DMEM has σ_e ≈ 1.4–1.6 S/m, not 0.4 S/m',
+    tissue: 'Soft tissue (low-perfusion region)',
     water:  'Distilled water — near-zero coupling',
+    dmem:   'Dulbecco\'s Modified Eagle Medium — standard adherent cell culture · σ_e ≈ saline',
+    rpmi:   'RPMI 1640 — suspension / haematological cell lines · slightly lower ionic strength',
+    mhb:    'Mueller-Hinton Broth — CLSI/EUCAST bacteriology standard · τ ~12% longer than saline',
   }
   const out: Record<string, string> = {}
   for (const key of Object.keys(MEDIA)) {
