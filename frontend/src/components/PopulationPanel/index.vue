@@ -113,7 +113,7 @@ import * as d3 from 'd3'
 import { useCellStore } from '@/stores/cellStore'
 import { computeSchwan, computeTau, computePulseStepResponse, computeResonantDisruption } from '@/utils/physics'
 import { WAVEFORM, CHART_MODE, CELL_CATEGORY } from '@/constants/strings'
-import { THRESHOLDS } from '@/constants/cellCard'
+import { THRESHOLDS, DEFAULT_CAPSID_Q } from '@/constants/cellCard'
 import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'
 import type { CellConfig } from '@/types/cell'
@@ -293,7 +293,7 @@ export default defineComponent({
         const cell = { ...base, radius: R, conductivity: sigI }
 
         if (isTarget && this.isResonanceTarget) {
-          return computeResonantDisruption(t.resonantFreqGHz!, t.capsidQ ?? 20, t.resonantThresholdVcm!, freqKHz * 1e3, E)
+          return computeResonantDisruption(t.resonantFreqGHz!, t.capsidQ ?? DEFAULT_CAPSID_Q, t.resonantThresholdVcm!, freqKHz * 1e3, E)
         }
 
         const tau = computeTau(cell, sigma_e)

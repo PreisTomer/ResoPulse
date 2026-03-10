@@ -109,7 +109,7 @@ export default defineComponent({
 
   computed: {
     entries() {
-      return [...this.expStore.entries].reverse().slice(0, 20)
+      return this.expStore.entries.slice(-20).reverse()
     },
     hasEntries(): boolean { return this.expStore.entries.length > 0 },
 

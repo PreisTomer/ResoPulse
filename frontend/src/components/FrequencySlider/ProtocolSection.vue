@@ -71,7 +71,7 @@
       <div class="field-panel__readout">
         <span class="field-panel__readout-value" v-tip="tipPulseWidth">{{ pulseWidthDisplay }}</span>
         <span class="field-panel__readout-sub" v-tip="tipPulseWidth">
-          Lysis {{ store.lysisDelayMs >= 1000 ? (store.lysisDelayMs / 1000).toFixed(1) + 's' : store.lysisDelayMs + 'ms' }}
+          Lysis {{ lysisTimeDisplay }}
         </span>
       </div>
     </div>
@@ -85,7 +85,7 @@ import { useCellStore } from '@/stores/cellStore'
 import { broadcastStateSync } from '@/services/socket'
 import { WAVEFORM, THERMAL_LEVEL } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
-import { tipWaveform, tipDutyCycle, tipPulseWidth, tipSafeModeLock } from '@/utils/sliderTooltips'
+import { tipWaveform, tipDutyCycle, tipPulseWidth, tipSafeModeLock, formatLysisTime } from '@/utils/sliderTooltips'
 
 export default defineComponent({
   props: {
@@ -122,7 +122,6 @@ export default defineComponent({
     dutyCycleDisplay(): string {
       const pct = this.store.dutyCycle * 100
       if (pct < 0.001) return (pct * 1000).toFixed(1) + ' µ%'
-      if (pct < 0.1)   return pct.toFixed(2) + '%'
       return pct.toFixed(2) + '%'
     },
 
@@ -161,6 +160,7 @@ export default defineComponent({
     },
 
     tipSafeModeLock(): string { return tipSafeModeLock() },
+    lysisTimeDisplay(): string { return formatLysisTime(this.store.lysisDelayMs) },
   },
 
   methods: {

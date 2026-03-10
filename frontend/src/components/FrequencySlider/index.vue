@@ -176,6 +176,8 @@ import { THRESHOLDS } from '@/constants/cellCard'
 import { ICON } from '@/constants/icons'
 import type { MediumKey } from '@/types/media'
 import { formatFreqKHz, formatFieldVcm } from '@/utils/format'
+import { SLIDER_RANGES } from '@/constants/sliderBounds'
+import type { SliderRange } from '@/constants/sliderBounds'
 import {
   tipMedium,
   tipMediumKeys,
@@ -212,20 +214,16 @@ export default defineComponent({
     targetDisruption(): number  { return this.store.targetDisruptionRatio },
     healthyDisruption(): number { return this.store.healthyDisruptionRatio },
 
-    sliderRanges(): { freqMin: number; freqMax: number; freqStep: number; fieldMin: number; fieldMax: number; fieldStep: number; pwLogMin: number; pwLogMax: number } {
+    sliderRanges(): SliderRange {
       const cat = this.store.targetCellCategory
       if (this.isResonanceMode) {
-        if (cat === CELL_CATEGORY.VIRUS)
-          return { freqMin: 1000000, freqMax: 50000000, freqStep: 100000, fieldMin: 10, fieldMax: 5000, fieldStep: 10, pwLogMin: 0, pwLogMax: 2 }
-        if (cat === CELL_CATEGORY.MAMMALIAN)
-          return { freqMin: 10, freqMax: 10000, freqStep: 1, fieldMin: 10, fieldMax: 3000, fieldStep: 1, pwLogMin: 0, pwLogMax: 5 }
-        return { freqMin: 10000, freqMax: 10000000, freqStep: 10000, fieldMin: 10, fieldMax: 10000, fieldStep: 100, pwLogMin: 0, pwLogMax: 3 }
+        if (cat === CELL_CATEGORY.VIRUS)     return SLIDER_RANGES.RESONANCE_VIRUS
+        if (cat === CELL_CATEGORY.MAMMALIAN) return SLIDER_RANGES.RESONANCE_MAMMALIAN
+        return SLIDER_RANGES.RESONANCE_BACTERIA
       }
-      if (cat === CELL_CATEGORY.VIRUS)
-        return { freqMin: 1, freqMax: 5000000, freqStep: 1000, fieldMin: 10, fieldMax: 100000, fieldStep: 10, pwLogMin: 0, pwLogMax: 2 }
-      if (cat === CELL_CATEGORY.BACTERIA)
-        return { freqMin: 10, freqMax: 1000000, freqStep: 100, fieldMin: 10, fieldMax: 100000, fieldStep: 100, pwLogMin: 0, pwLogMax: 3 }
-      return { freqMin: 10, freqMax: 10000, freqStep: 1, fieldMin: 10, fieldMax: 3000, fieldStep: 1, pwLogMin: 0, pwLogMax: 5 }
+      if (cat === CELL_CATEGORY.VIRUS)    return SLIDER_RANGES.IRE_VIRUS
+      if (cat === CELL_CATEGORY.BACTERIA) return SLIDER_RANGES.IRE_BACTERIA
+      return SLIDER_RANGES.IRE_MAMMALIAN
     },
 
     freqDisplay(): string      { return formatFreqKHz(this.currentFreq) },

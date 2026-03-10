@@ -30,6 +30,7 @@
 import { defineComponent } from 'vue'
 import { useCellStore } from '@/stores/cellStore'
 import { CELL_PRESETS, GROUP_COLORS } from '@/constants/cellLibrary'
+import { DEFAULT_CAPSID_Q } from '@/constants/cellCard'
 import { CELL_CATEGORY, CELL_GROUP } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'
@@ -69,7 +70,7 @@ export default defineComponent({
           if (hasRes) {
             const ratio = computeResonantDisruption(
               pr.resonantFreqGHz!,
-              pr.capsidQ ?? 20,
+              pr.capsidQ ?? DEFAULT_CAPSID_Q,
               pr.resonantThresholdVcm!,
               freq * 1e3,
               field,

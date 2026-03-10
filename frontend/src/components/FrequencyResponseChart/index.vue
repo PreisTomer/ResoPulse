@@ -33,6 +33,7 @@ import * as d3 from 'd3'
 import { useCellStore } from '@/stores/cellStore'
 import { computeSchwan, computeFc, computeNuclearVm, computeResonantLineshape } from '@/utils/physics'
 import { CELL_PRESETS, GROUP_COLORS } from '@/constants/cellLibrary'
+import { DEFAULT_CAPSID_Q } from '@/constants/cellCard'
 import { CELL_CATEGORY, CHART_MODE } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'
@@ -292,7 +293,7 @@ export default defineComponent({
 
       const g = this._svg.select<SVGGElement>('.chart-g')
       const f0_hz = t.resonantFreqGHz * 1e9
-      const Q    = t.capsidQ ?? 20
+      const Q    = t.capsidQ ?? DEFAULT_CAPSID_Q
       const Qmin = t.capsidQMin ?? Q
       const Qmax = t.capsidQMax ?? Q
       const E    = this.store.fieldIntensity

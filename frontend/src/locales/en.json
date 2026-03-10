@@ -175,6 +175,12 @@
     "tipHealthyBadgeBody": "Mammalian cells lack rigid-shell resonance — Schwan Vm → 0 at GHz (ωτ ≫ 1).\nAt f_res(target) in GHz, healthy cell disruption ≈ 0.",
     "tipHealthyBadgeSafe": "Frequency-selective — healthy tissue is unperturbed"
   },
+  "biostim": {
+    "title": "Biomodulation",
+    "labelSI": "Sub-thr SI",
+    "labelMTE": "Freq coupl.",
+    "labelMA": "Mild heat"
+  },
   "features": {
     "visualization": {
       "title": "Big Data Visualization",

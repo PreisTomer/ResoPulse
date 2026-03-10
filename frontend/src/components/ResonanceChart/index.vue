@@ -19,6 +19,7 @@ import { defineComponent } from 'vue'
 import * as d3 from 'd3'
 import { useCellStore } from '@/stores/cellStore'
 import { computeResonantDisruption } from '@/utils/physics'
+import { DEFAULT_CAPSID_Q } from '@/constants/cellCard'
 import { CELL_PRESETS, GROUP_COLORS } from '@/constants/cellLibrary'
 import type { CellGroup } from '@/constants/cellLibrary'
 import type { CellConfig } from '@/types/cell'
@@ -96,7 +97,7 @@ export default defineComponent({
         hz,
         ratio: computeResonantDisruption(
           cell.resonantFreqGHz!,
-          cell.capsidQ ?? 20,
+          cell.capsidQ ?? DEFAULT_CAPSID_Q,
           cell.resonantThresholdVcm!,
           hz,
           this.store.fieldIntensity,

@@ -44,6 +44,9 @@ export const THRESHOLDS = {
 
 export type ThresholdKey = keyof typeof THRESHOLDS
 
+/** Default acoustic Q factor used when a preset does not specify capsidQ. */
+export const DEFAULT_CAPSID_Q = 20
+
 // Individual named exports — derived from THRESHOLDS for backward compatibility
 export const DISRUPTION_WARN_THRESHOLD     = THRESHOLDS.DISRUPTION_WARN
 export const HEALTHY_CRITICAL_THRESHOLD    = THRESHOLDS.HEALTHY_CRITICAL
