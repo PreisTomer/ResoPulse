@@ -125,8 +125,15 @@ import {
   tipKpTI,
   tipKpTemp,
 } from '@/utils/sweepTooltips'
+import {
+  NEWTON_COOLING_LAMBDA,
+  PENNES_BLOOD_COEFF,
+  WF_CW,
+  WF_PULSED,
+  BODY_TEMP_C,
+} from '@/constants/physics'
+import { SWEEP_TI_CAP } from '@/constants/experimentDefaults'
 
-const LAMBDA   = 0.02  // Newton cooling [1/s]
 const N_POINTS = 100   // sweep resolution
 
 interface SweepPoint {
@@ -148,8 +155,8 @@ type ResizeObserverInstance = InstanceType<typeof ResizeObserver>
 function computeTemp(cell: CellConfig, E: number, sigma_e: number, wf: number, dc: number, perfRate: number): number {
   const sar = computeSAR(cell, E, sigma_e, wf)
   const sarEff = sar * dc
-  const lambda_perf = perfRate * 63.9 / cell.specificHeatCapacity
-  return Math.min(37 + sarEff / ((LAMBDA + lambda_perf) * cell.specificHeatCapacity), 150)
+  const lambda_perf = perfRate * PENNES_BLOOD_COEFF / cell.specificHeatCapacity
+  return Math.min(BODY_TEMP_C + sarEff / ((NEWTON_COOLING_LAMBDA + lambda_perf) * cell.specificHeatCapacity), THRESHOLDS.TEMP_CAP)
 }
 
 const MARGIN = { top: 18, right: 76, bottom: 38, left: 54 }
@@ -191,7 +198,7 @@ export default defineComponent({
       const healthy  = store.healthy
       const target   = store.target
       const perfRate = store.perfusionRate
-      const wf       = waveform === WAVEFORM.CW ? 0.5 : 1.0
+      const wf       = waveform === WAVEFORM.CW ? WF_CW : WF_PULSED
 
       const tauH = computeTau(healthy, sigma_e)
       const tauT = computeTau(target,  sigma_e)
@@ -237,7 +244,7 @@ export default defineComponent({
           tT = computeTemp(target,  E, sigma_e, wf, dc, perfRate)
         }
 
-        const ti = drH < 1e-9 ? (drT > 0 ? 5 : 0) : Math.min(5, drT / drH)
+        const ti = drH < 1e-9 ? (drT > 0 ? SWEEP_TI_CAP : 0) : Math.min(SWEEP_TI_CAP, drT / drH)
         points.push({ x, drH, drT, ti, tH, tT })
       }
       return points
@@ -267,7 +274,7 @@ export default defineComponent({
       const thresholds = [
         { label: this.$t('sweep.keyRevEp'),      drTMin: THRESHOLDS.HEALTHY_APPROACHING },
         { label: this.$t('sweep.keyLysisArmed'), drTMin: THRESHOLDS.DISRUPTION_WARN     },
-        { label: this.$t('sweep.keyLysis'),      drTMin: 1.00                           },
+        { label: this.$t('sweep.keyLysis'),      drTMin: THRESHOLDS.LYSIS_PROB_CENTER   },
       ]
       return thresholds.flatMap(({ label, drTMin }) => {
         const pt = pts.find(p => p.drT >= drTMin)
@@ -393,7 +400,7 @@ export default defineComponent({
       const threshLines = [
         { dr: THRESHOLDS.HEALTHY_APPROACHING, label: this.$t('chart.revEp'),   color: CSS_AMBER,  dash: '4,3' },
         { dr: THRESHOLDS.DISRUPTION_WARN,     label: this.$t('chart.thresh85'), color: CSS_DANGER,  dash: '4,3' },
-        { dr: 1.00,                           label: this.$t('chart.lysis'),    color: CSS_DANGER,  dash: '2,2' },
+        { dr: THRESHOLDS.LYSIS_PROB_CENTER,   label: this.$t('chart.lysis'),    color: CSS_DANGER,  dash: '2,2' },
       ]
       for (const { dr, label, color, dash } of threshLines) {
         if (dr > drMax) continue

@@ -1,5 +1,6 @@
 // Biophysics utilities — Schwan single-shell model, SAR, nsEP, acoustic resonance, EM skin depth
 import type { CellConfig } from '@/types/cell'
+import { SCHWAN_SPHERE_FACTOR, WF_CW } from '@/constants/physics'
 
 export const EPSILON_0 = 8.854187817e-12 // F/m
 
@@ -37,7 +38,7 @@ export function computeSchwan(
 ): number {
   const omega = 2 * Math.PI * freqKHz * KHZ_TO_HZ
   const tau   = computeTau(cell, sigma_e)
-  return (1.5 * fieldVcm * VCM_TO_VM * cell.radius * UM_TO_M * cosTheta) /
+  return (SCHWAN_SPHERE_FACTOR * fieldVcm * VCM_TO_VM * cell.radius * UM_TO_M * cosTheta) /
     Math.sqrt(1 + (omega * tau) ** 2)
 }
 
@@ -48,7 +49,7 @@ export function computeSAR(
   cell: CellConfig,
   fieldVcm: number,
   sigma_e: number,
-  waveformFactor = 0.5,
+  waveformFactor = WF_CW,
 ): number {
   const E_si  = fieldVcm * VCM_TO_VM
   const alpha = (3 * sigma_e) / (2 * sigma_e + cell.conductivity)

@@ -65,7 +65,7 @@
           >
             <td class="exp-log__td-id">{{ e.id }}</td>
             <td class="exp-log__td-mono">{{ e.timestamp }}</td>
-            <td class="exp-log__td-mono" v-tip="tipCellFreq(e)">{{ e.freqKHz }}k</td>
+            <td class="exp-log__td-mono" v-tip="tipCellFreq(e)">{{ formatFreqKHz(e.freqKHz) }}</td>
             <td class="exp-log__td-mono" v-tip="tipCellField(e)">{{ e.fieldVcm }}</td>
             <td class="exp-log__td-target" v-tip="tipCellTargetVm(e)">{{ e.targetVm }}</td>
             <td class="exp-log__td-healthy" v-tip="tipCellHealthyVm(e)">{{ e.healthyVm }}</td>
@@ -91,6 +91,7 @@ import { broadcastLogEntry } from '@/services/socket'
 import { LOG_EVENT } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
 import { THRESHOLDS } from '@/constants/cellCard'
+import { formatFreqKHz } from '@/utils/format'
 
 export default defineComponent({
   setup() {
@@ -100,6 +101,7 @@ export default defineComponent({
       LOG_EVENT,
       ICON,
       THRESHOLDS,
+      formatFreqKHz,
     }
   },
 
@@ -145,26 +147,30 @@ export default defineComponent({
 
     // ── Row cell tooltips ──────────────────────────────────────────────────────
     tipCellFreq(e: { freqKHz: number }): string {
-      return `<strong>Frequency: ${e.freqKHz} kHz</strong>
-Carrier frequency at the time of this reading.`
+      return this.$t('log.tipCellFreq', { freq: e.freqKHz })
     },
     tipCellField(e: { fieldVcm: number }): string {
-      return `<strong>Field Intensity: ${e.fieldVcm} V/cm</strong>
-Applied electric field at the time of this reading.`
+      return this.$t('log.tipCellField', { field: e.fieldVcm })
     },
     tipCellTargetVm(e: { targetVm: number; targetPreset: string; targetRatio: number }): string {
-      return `<strong>Target Vm: ${e.targetVm} mV</strong>
-Cell: ${e.targetPreset}
-Disruption ratio: ${(e.targetRatio * 100).toFixed(1)}% of lysis threshold`
+      return this.$t('log.tipCellTargetVm', {
+        vm:     e.targetVm,
+        preset: e.targetPreset,
+        ratio:  (e.targetRatio * 100).toFixed(1),
+      })
     },
     tipCellHealthyVm(e: { healthyVm: number; healthyRatio: number }): string {
-      return `<strong>Healthy Vm: ${e.healthyVm} mV</strong>
-Disruption ratio: ${(e.healthyRatio * 100).toFixed(1)}% of lysis threshold`
+      return this.$t('log.tipCellHealthyVm', {
+        vm:    e.healthyVm,
+        ratio: (e.healthyRatio * 100).toFixed(1),
+      })
     },
     tipCellSel(e: { selectivity: number; targetTemp: number; healthyTemp: number }): string {
-      return `<strong>Selectivity: ×${e.selectivity.toFixed(2)}</strong>
-T-Vm / H-Vm ratio at this reading.
-Target temp: ${e.targetTemp}°C  ·  Healthy temp: ${e.healthyTemp}°C`
+      return this.$t('log.tipCellSel', {
+        sel:         e.selectivity.toFixed(2),
+        targetTemp:  e.targetTemp,
+        healthyTemp: e.healthyTemp,
+      })
     },
     tipCellEvent(e: { event: string }): string {
       return e.event === LOG_EVENT.LYSIS

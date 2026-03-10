@@ -1,7 +1,7 @@
 <template>
   <div class="sel-panel__bars">
     <div class="sel-panel__bar-row" v-tip="tipTargetBar">
-      <span class="sel-panel__bar-label">T</span>
+      <span class="sel-panel__bar-label">{{ CELL_LABEL.TARGET }}</span>
       <div class="sel-panel__bar-track">
         <div
           class="sel-panel__bar-fill sel-panel__bar-fill--t"
@@ -17,7 +17,7 @@
       >P{{ targetLysisProbability }}%</span>
     </div>
     <div class="sel-panel__bar-row" v-tip="tipHealthyBar">
-      <span class="sel-panel__bar-label">H</span>
+      <span class="sel-panel__bar-label">{{ CELL_LABEL.HEALTHY }}</span>
       <div class="sel-panel__bar-track">
         <div
           class="sel-panel__bar-fill sel-panel__bar-fill--h"
@@ -38,7 +38,7 @@
   <template v-if="store.doubleShellEnabled && store.targetCellCategory === CELL_CATEGORY.MAMMALIAN">
     <div class="sel-panel__nuc-section" v-tip="tipNuclearSection">
       <div class="sel-panel__nuc-bar-row">
-        <span class="sel-panel__nuc-bar-label">&#x26AC; NE-T</span>
+        <span class="sel-panel__nuc-bar-label">{{ $t('labels.neTarget') }}</span>
         <div class="sel-panel__nuc-bar-track">
           <div class="sel-panel__nuc-bar-fill sel-panel__nuc-bar-fill--t"
             :style="{ width: Math.min(100, store.targetNuclearDisruptionRatio * 100) + '%' }"
@@ -48,7 +48,7 @@
         <span class="sel-panel__nuc-bar-val">{{ (store.targetNuclearDisruptionRatio * 100).toFixed(0) }}%</span>
       </div>
       <div class="sel-panel__nuc-bar-row">
-        <span class="sel-panel__nuc-bar-label">&#x26AC; NE-H</span>
+        <span class="sel-panel__nuc-bar-label">{{ $t('labels.neHealthy') }}</span>
         <div class="sel-panel__nuc-bar-track">
           <div class="sel-panel__nuc-bar-fill sel-panel__nuc-bar-fill--h"
             :style="{ width: Math.min(100, store.healthyNuclearDisruptionRatio * 100) + '%' }"
@@ -71,7 +71,7 @@
 import { defineComponent } from 'vue'
 import { useCellStore } from '@/stores/cellStore'
 import { THRESHOLDS } from '@/constants/cellCard'
-import { CELL_CATEGORY } from '@/constants/strings'
+import { CELL_CATEGORY, CELL_LABEL } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
 import { formatLysisTime } from '@/utils/sliderTooltips'
 import { computeLysisProbability } from '@/utils/physics'
@@ -85,7 +85,7 @@ import {
 
 export default defineComponent({
   setup() {
-    return { store: useCellStore(), CELL_CATEGORY, ICON, THRESHOLDS }
+    return { store: useCellStore(), CELL_CATEGORY, CELL_LABEL, ICON, THRESHOLDS }
   },
 
   computed: {

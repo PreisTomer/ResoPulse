@@ -13,6 +13,7 @@ export const UNIT = {
   DEG_C:     '°C',
   W_PER_KG:  'W/kg',
   S_PER_M:      'S/m',
+  MF_PER_M2:    'mF/m²',
   ML_PER_G_MIN: 'mL/(g·min)',
   V:   'V',
   UM:  'µm',

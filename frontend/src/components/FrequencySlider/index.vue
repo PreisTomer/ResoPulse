@@ -28,7 +28,7 @@
       class="field-panel__scope-note"
       v-tip="tipScopeNote"
     >
-      <span class="field-panel__scope-chip field-panel__scope-chip--both">H + T</span>
+      <span class="field-panel__scope-chip field-panel__scope-chip--both">{{ $t('labels.scopeBoth') }}</span>
       <span class="field-panel__scope-sep">{{ $t('slider.sharedField') }}</span>
       <span class="field-panel__scope-chip field-panel__scope-chip--card">{{ $t('slider.cardParams') }}</span>
       <span class="field-panel__scope-sep">{{ $t('slider.cellSpecific') }}</span>
@@ -49,7 +49,7 @@
               ? $t('slider.thermalDenaturing')
               : $t('slider.thermalHyperthermic') }}
       </span>
-      <span class="field-panel__thermal-temp">T_ss {{ maxSteadyTemp.toFixed(0) }}°C</span>
+      <span class="field-panel__thermal-temp">T_ss {{ maxSteadyTemp.toFixed(0) }} {{ UNIT.DEG_C }}</span>
     </div>
 
     <!-- Row 1: Medium selector -->
@@ -134,12 +134,12 @@
             class="field-panel__badge field-panel__badge--target"
             :class="{ 'field-panel__badge--warn': targetDisruption > THRESHOLDS.DISRUPTION_WARN }"
             v-tip="tipTargetBadge"
-          >T {{ targetDisruptPercent }}%</span>
+          >{{ CELL_LABEL.TARGET }} {{ targetDisruptPercent }}%</span>
           <span
             class="field-panel__badge field-panel__badge--healthy"
             :class="{ 'field-panel__badge--warn': healthyDisruption > THRESHOLDS.DISRUPTION_WARN }"
             v-tip="tipHealthyBadge"
-          >H {{ healthyDisruptPercent }}%</span>
+          >{{ CELL_LABEL.HEALTHY }} {{ healthyDisruptPercent }}%</span>
         </div>
       </div>
     </div>
@@ -171,11 +171,12 @@ import { defineComponent } from 'vue'
 import { useCellStore } from '@/stores/cellStore'
 import { broadcastStateSync } from '@/services/socket'
 import { MEDIA } from '@/constants/media'
-import { CHART_MODE, CELL_CATEGORY, THERMAL_LEVEL } from '@/constants/strings'
+import { CHART_MODE, CELL_CATEGORY, CELL_LABEL, THERMAL_LEVEL } from '@/constants/strings'
 import { THRESHOLDS } from '@/constants/cellCard'
 import { ICON } from '@/constants/icons'
 import type { MediumKey } from '@/types/media'
 import { formatFreqKHz, formatFieldVcm } from '@/utils/format'
+import { UNIT } from '@/constants/units'
 import { SLIDER_RANGES } from '@/constants/sliderBounds'
 import type { SliderRange } from '@/constants/sliderBounds'
 import {
@@ -201,7 +202,7 @@ export default defineComponent({
 
   setup() {
     const store = useCellStore()
-    return { store, MEDIA, ICON, THERMAL_LEVEL, THRESHOLDS }
+    return { store, MEDIA, ICON, THERMAL_LEVEL, THRESHOLDS, CELL_LABEL, UNIT }
   },
 
   computed: {

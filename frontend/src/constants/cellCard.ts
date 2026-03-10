@@ -40,6 +40,18 @@ export const THRESHOLDS = {
   // ── Cell category radius boundaries (µm) ───────────────────────────────────
   RADIUS_VIRUS_MAX:    0.1,   // R < 0.1 µm → VIRUS classification
   RADIUS_BACTERIA_MAX: 2.0,   // 0.1 ≤ R < 2.0 µm → BACTERIA; R ≥ 2.0 µm → MAMMALIAN
+  // ── Display caps ─────────────────────────────────────────────────────────────
+  TI_DISPLAY_CAP:      99.9,  // TI display ceiling when healthy DR → 0
+  // ── Nuclear membrane model ───────────────────────────────────────────────────
+  NUCLEAR_VM_DEFAULT:  0.5,   // Default nuclear membrane threshold voltage [V] (Kotnik 2006)
+  // ── σ_i uncertainty fractions per cell category (used in TI error bars) ─────
+  UNCERTAINTY_VIRUS:    0.45, // ±45% — lipid envelope σ_i highly variable
+  UNCERTAINTY_BACTERIA: 0.35, // ±35% — cytoplasm σ_i literature range
+  UNCERTAINTY_MAMMALIAN: 0.20,// ±20% — well-characterised cytoplasm σ_i
+  // ── BMS weighting coefficients (sum = 1.0) ───────────────────────────────────
+  BMS_WEIGHT_SI:       0.55,  // sub-threshold stimulation index weight
+  BMS_WEIGHT_MTE:      0.25,  // mechanical transduction efficiency weight
+  BMS_WEIGHT_MA:       0.20,  // mild thermal activation weight
 } as const
 
 export type ThresholdKey = keyof typeof THRESHOLDS
@@ -61,6 +73,8 @@ export const TEMP_SIMULATION_CAP           = THRESHOLDS.TEMP_CAP
 // ── Per-type colors (defined in theme/colors.ts — re-exported here for back-compat) ──
 export { CELL_COLORS } from '@/theme/colors'
 
+import { UNIT } from '@/constants/units'
+
 // ── Editable biophysical parameter definitions ────────────────────────────────
 export interface EditableParamDef {
   label: string
@@ -71,8 +85,8 @@ export interface EditableParamDef {
 }
 
 export const EDITABLE_PARAMS: EditableParamDef[] = [
-  { label: 'Radius R',         key: 'radius',            step: 0.001, min: 0.001, unit: 'µm'  },
-  { label: 'Eff. membrane ε_r', key: 'dielectricConstant', step: 0.1, min: 1,     unit: ''    },
-  { label: 'Conductivity σ_i', key: 'conductivity',      step: 0.01, min: 0.001, unit: 'S/m' },
-  { label: 'Threshold Vm',     key: 'thresholdVoltage',  step: 0.05, min: 0.1,   unit: 'V'   },
+  { label: 'Radius R',          key: 'radius',            step: 0.001, min: 0.001, unit: UNIT.UM      },
+  { label: 'Eff. membrane ε_r', key: 'dielectricConstant', step: 0.1,  min: 1,     unit: ''           },
+  { label: 'Conductivity σ_i',  key: 'conductivity',      step: 0.01,  min: 0.001, unit: UNIT.S_PER_M },
+  { label: 'Threshold Vm',      key: 'thresholdVoltage',  step: 0.05,  min: 0.1,   unit: UNIT.V       },
 ]

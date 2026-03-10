@@ -1,5 +1,7 @@
 import { defineStore } from 'pinia'
 import type { LogEventType } from '@/constants/strings'
+import { CELL_LABEL } from '@/constants/strings'
+import { UNIT } from '@/constants/units'
 
 export interface LogEntry {
   id: number
@@ -99,15 +101,20 @@ export const useExperimentStore = defineStore('experiment', {
     },
 
     exportCSV() {
+      const H = CELL_LABEL.HEALTHY
+      const T = CELL_LABEL.TARGET
       const headers = [
-        '#', 'Time', 'Session', 'Freq (kHz)', 'Field (V/cm)', 'Medium', 'Target',
-        'H-Vm (mV)', 'T-Vm (mV)', 'Selectivity', 'H-Ratio', 'T-Ratio',
-        'H-Temp (°C)', 'T-Temp (°C)', 'Event',
+        '#', 'Time', 'Session',
+        `Freq (${UNIT.KHZ})`, `Field (${UNIT.V_PER_CM})`, 'Medium', 'Target',
+        `${H}-Vm (${UNIT.MV})`, `${T}-Vm (${UNIT.MV})`, 'Selectivity',
+        `${H}-Ratio`, `${T}-Ratio`,
+        `${H}-Temp (${UNIT.DEG_C})`, `${T}-Temp (${UNIT.DEG_C})`, 'Event',
       ]
       const rows = this.entries.map((e) => [
         e.id, e.timestamp, this.sessionName, e.freqKHz, e.fieldVcm, e.medium, e.targetPreset,
         e.healthyVm, e.targetVm, e.selectivity,
-        (e.healthyRatio * 100).toFixed(1) + '%', (e.targetRatio * 100).toFixed(1) + '%',
+        (e.healthyRatio * 100).toFixed(1) + UNIT.PERCENT,
+        (e.targetRatio  * 100).toFixed(1) + UNIT.PERCENT,
         e.healthyTemp, e.targetTemp, e.event,
       ])
 

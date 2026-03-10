@@ -22,6 +22,18 @@
  *   σ_i ≈ 0.005 S/m (lipid envelope)  ·  SAR_eff ≈ 0.014 W/kg  ·  T_ss ≈ 37.000°C ✓
  *   Auto-tuned to preset's resonantFreqGHz in applyTargetDefaults.
  */
+/** Initial field as a fraction of a preset's resonant threshold (applied when loading resonant presets) */
+export const INITIAL_RESONANT_FIELD_FRACTION = 0.5
+
+/** Duration [ms] for the snap-to-window confirmation button state before auto-reset */
+export const SNAP_CONFIRM_MS = 3000
+
+/** Default lysis N-pulses value applied on cell reset */
+export const DEFAULT_LYSIS_N_PULSES = 10
+
+/** Sweep panel TI Y-axis display ceiling (separate from TI_DISPLAY_CAP in the store) */
+export const SWEEP_TI_CAP = 5
+
 export const CATEGORY_DEFAULTS = {
   mammalian: { fieldVcm: 150,  freqKHz: 417,       waveform: 'pulsed' as const, dutyCycle: 1e-4, pulseWidthNs: 100000, medium: 'saline' as const },
   bacteria:  { fieldVcm: 1000, freqKHz: 500000,    waveform: 'pulsed' as const, dutyCycle: 1e-6, pulseWidthNs: 10,     medium: 'saline' as const },
