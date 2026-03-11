@@ -55,32 +55,48 @@
     <!-- Row 1: Medium selector -->
     <div class="field-panel__row field-panel__row--medium">
       <span class="field-panel__row-label" v-tip="tipMedium">{{ $t('slider.medium') }}</span>
-      <div class="field-panel__pills">
-        <label
-          v-for="key in mediaKeys"
-          :key="key"
-          class="field-panel__pill"
-          :class="{ 'field-panel__pill--active': currentMedium === key }"
-          v-tip="tipMediumKeys[key]"
-        >
-          <input
-            type="radio"
-            :value="key"
-            :checked="currentMedium === key"
-            name="medium"
-            @change="onMediumChange(key)"
-          />
-          {{ MEDIA[key].name.split(' ')[0] }}
-        </label>
-      </div>
+      <select
+        class="field-panel__medium-select"
+        :value="currentMedium"
+        v-tip="tipMediumKeys[currentMedium]"
+        @change="onMediumChange(($event.target as HTMLSelectElement).value as typeof currentMedium)"
+      >
+        <optgroup :label="$t('slider.mediumGroupPhysio')">
+          <option value="saline">{{ $t('slider.mediums.saline') }}</option>
+          <option value="blood">{{ $t('slider.mediums.blood') }}</option>
+          <option value="tissue">{{ $t('slider.mediums.tissue') }}</option>
+        </optgroup>
+        <optgroup :label="$t('slider.mediumGroupCulture')">
+          <option value="dmem">{{ $t('slider.mediums.dmem') }}</option>
+          <option value="rpmi">{{ $t('slider.mediums.rpmi') }}</option>
+        </optgroup>
+        <optgroup :label="$t('slider.mediumGroupMicro')">
+          <option value="mhb">{{ $t('slider.mediums.mhb') }}</option>
+        </optgroup>
+        <optgroup :label="$t('slider.mediumGroupRef')">
+          <option value="water">{{ $t('slider.mediums.water') }}</option>
+        </optgroup>
+      </select>
       <span
         class="field-panel__row-meta"
         v-tip="tipSigmaE"
       >σ_e {{ MEDIA[currentMedium].conductivity }} S/m</span>
     </div>
 
-    <!-- Snap to Optimal (Schwan/IRE mode only) — above RF Frequency slider -->
+    <!-- Snap to Optimal / fc buttons (Schwan/IRE mode only) — above RF Frequency slider -->
     <div v-if="!isResonanceMode" class="field-panel__optimal-row">
+      <button
+        class="field-panel__optimal-btn field-panel__optimal-btn--fc field-panel__optimal-btn--fc-h"
+        v-tip="tipSnapFcH"
+        @click="snapToFc('healthy')"
+        type="button"
+      >{{ $t('slider.snapFcH') }} {{ healthyFcDisplay }}</button>
+      <button
+        class="field-panel__optimal-btn field-panel__optimal-btn--fc field-panel__optimal-btn--fc-t"
+        v-tip="tipSnapFcT"
+        @click="snapToFc('target')"
+        type="button"
+      >{{ $t('slider.snapFcT') }} {{ targetFcDisplay }}</button>
       <button
         class="field-panel__optimal-btn"
         :class="{ 'field-panel__optimal-btn--beyond': optimalBeyondRange }"
@@ -279,6 +295,8 @@ export default defineComponent({
     },
 
     tipOptimalBtn(): string    { return tipOptimalBtn(this.optimalBeyondRange) },
+    tipSnapFcH(): string { return this.$t('slider.tipSnapFcH', { fc: this.healthyFcDisplay }) },
+    tipSnapFcT(): string { return this.$t('slider.tipSnapFcT', { fc: this.targetFcDisplay }) },
     tipExpertMode(): string    { return tipExpertMode() },
     tipSafeMode(): string      { return tipSafeMode() },
     tipScopeNote(): string     { return tipScopeNote() },
@@ -350,6 +368,13 @@ export default defineComponent({
 
     onSafeModeChange(on: boolean) {
       this.store.setSafeMode(on)
+      broadcastStateSync()
+    },
+
+    snapToFc(cellType: 'healthy' | 'target') {
+      const fcKhz = cellType === 'healthy' ? this.store.healthyFc : this.store.targetFc
+      const snapped = Math.round(Math.max(this.sliderRanges.freqMin, Math.min(this.sliderRanges.freqMax, fcKhz)))
+      this.store.setBroadcastFreqKHz(snapped)
       broadcastStateSync()
     },
 
@@ -595,6 +620,34 @@ export default defineComponent({
     opacity: 0.65;
   }
 
+  /* ── Medium select ───────────────────────────────────────────────── */
+  &__medium-select {
+    flex: 1;
+    min-width: 0;
+    padding: 0.26rem 0.55rem;
+    font-size: 0.62rem;
+    font-family: var(--font-mono);
+    background: var(--color-surface-2, #0a1628);
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    color: var(--color-primary);
+    cursor: pointer;
+    outline: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='rgba(148,163,184,0.5)'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.5rem center;
+    padding-right: 1.6rem;
+    transition: border-color 0.15s;
+
+    &:focus,
+    &:hover { border-color: var(--color-primary); }
+
+    option, optgroup { background: #0a1628; color: var(--color-text); }
+    optgroup { color: var(--color-text-muted); font-style: normal; }
+  }
+
   /* ── Pills ───────────────────────────────────────────────────────── */
   &__pills {
     display: flex;
@@ -733,6 +786,8 @@ export default defineComponent({
   &__optimal-row {
     display: flex;
     justify-content: flex-end;
+    align-items: center;
+    gap: 0.35rem;
     margin-top: -0.35rem;  /* pull closer to the freq slider below */
     margin-bottom: -0.2rem;
   }
@@ -774,6 +829,35 @@ export default defineComponent({
         border-color: rgba(148, 163, 184, 0.35);
         box-shadow: none;
         color: var(--color-text-muted);
+      }
+    }
+
+    &--fc {
+      font-size: 0.56rem;
+      padding: 0.15rem 0.45rem;
+    }
+
+    &--fc-h {
+      color: var(--color-primary);
+      background: rgba(0, 212, 255, 0.06);
+      border-color: rgba(0, 212, 255, 0.25);
+      &:hover {
+        background: rgba(0, 212, 255, 0.14);
+        border-color: rgba(0, 212, 255, 0.5);
+        color: var(--color-primary);
+        box-shadow: 0 0 6px rgba(0, 212, 255, 0.2);
+      }
+    }
+
+    &--fc-t {
+      color: var(--color-danger);
+      background: rgba(239, 68, 68, 0.06);
+      border-color: rgba(239, 68, 68, 0.25);
+      &:hover {
+        background: rgba(239, 68, 68, 0.14);
+        border-color: rgba(239, 68, 68, 0.5);
+        color: var(--color-danger);
+        box-shadow: 0 0 6px rgba(239, 68, 68, 0.2);
       }
     }
   }

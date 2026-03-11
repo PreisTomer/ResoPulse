@@ -16,6 +16,7 @@
         <RouterLink to="/datasets"   class="nav-bar__link" active-class="active"       @click="mobileOpen = false">{{ $t('nav.dataSets') }}</RouterLink>
         <RouterLink to="/reports"    class="nav-bar__link" active-class="active"       @click="mobileOpen = false">{{ $t('nav.reports') }}</RouterLink>
         <RouterLink to="/protocol"   class="nav-bar__link" active-class="active"       @click="mobileOpen = false">{{ $t('nav.protocol') }}</RouterLink>
+        <RouterLink to="/instrument" class="nav-bar__link nav-bar__link--instrument" active-class="active" @click="mobileOpen = false">{{ $t('nav.instrument') }}</RouterLink>
       </nav>
       <div class="nav-bar__right">
         <div

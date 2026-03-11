@@ -24,5 +24,9 @@ export default createRouter({
       path: '/protocol',
       component: () => import('../views/ProtocolView.vue'),
     },
+    {
+      path: '/instrument',
+      component: () => import('../views/InstrumentView.vue'),
+    },
   ],
 })

@@ -8,6 +8,7 @@ import selectivity from './locales/selectivity.en.json'
 import population from './locales/population.en.json'
 import sweep from './locales/sweep.en.json'
 import log from './locales/log.en.json'
+import instrument from './locales/instrument.en.json'
 
 export const i18n = createI18n({
   legacy: true,
@@ -24,6 +25,7 @@ export const i18n = createI18n({
       ...population,
       ...sweep,
       ...log,
+      ...instrument,
     },
   },
 })
