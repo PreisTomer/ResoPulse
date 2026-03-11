@@ -15,50 +15,44 @@
       <!-- Physics callout: why impedance matters -->
       <div class="instrument__callout">
         <div class="instrument__callout-col">
-          <div class="instrument__callout-label">Ion Release Model</div>
-          <div class="instrument__callout-formula">
-            σ_e(t) = σ_e₀ + φ · f<sub>lysed</sub> · (σ_i − σ_e₀) · 0.8
-          </div>
-          <div class="instrument__callout-note">
-            φ = cell volume fraction · f<sub>lysed</sub> from disruption ratio DR
-          </div>
+          <div class="instrument__callout-label">{{ $t('instrument.view.calloutIonTitle') }}</div>
+          <div class="instrument__callout-formula" v-html="$t('instrument.view.calloutIonFormula')"></div>
+          <div class="instrument__callout-note" v-html="$t('instrument.view.calloutIonNote')"></div>
         </div>
         <div class="instrument__callout-sep" aria-hidden="true">→</div>
         <div class="instrument__callout-col">
-          <div class="instrument__callout-label">Cuvette Impedance</div>
-          <div class="instrument__callout-formula">Z = d / (σ_e · A)</div>
-          <div class="instrument__callout-note">DC limit · valid for f ≪ 340 MHz in saline</div>
+          <div class="instrument__callout-label">{{ $t('instrument.view.calloutZTitle') }}</div>
+          <div class="instrument__callout-formula">{{ $t('instrument.view.calloutZFormula') }}</div>
+          <div class="instrument__callout-note">{{ $t('instrument.view.calloutZNote') }}</div>
         </div>
         <div class="instrument__callout-sep" aria-hidden="true">→</div>
         <div class="instrument__callout-col">
-          <div class="instrument__callout-label">Corrected Generator Output</div>
-          <div class="instrument__callout-formula">
-            E<sub>gen</sub> = E<sub>target</sub> × (1 + R_s / Z)
-          </div>
-          <div class="instrument__callout-note">Voltage divider compensation</div>
+          <div class="instrument__callout-label">{{ $t('instrument.view.calloutCorrTitle') }}</div>
+          <div class="instrument__callout-formula" v-html="$t('instrument.view.calloutCorrFormula')"></div>
+          <div class="instrument__callout-note">{{ $t('instrument.view.calloutCorrNote') }}</div>
         </div>
       </div>
 
       <!-- Live experiment context strip -->
       <div class="instrument__context-strip">
-        <div class="instrument__context-item">
-          <span class="instrument__context-label">Target Cell</span>
+        <div class="instrument__context-item" v-tip="$t('instrument.view.tipContextTarget')">
+          <span class="instrument__context-label">{{ $t('instrument.view.contextTarget') }}</span>
           <span class="instrument__context-value">{{ cellStore.target.label }}</span>
         </div>
         <div class="instrument__context-item">
-          <span class="instrument__context-label">Medium</span>
+          <span class="instrument__context-label">{{ $t('instrument.view.contextMedium') }}</span>
           <span class="instrument__context-value">{{ $t(`slider.mediums.${cellStore.medium}`) }}</span>
         </div>
         <div class="instrument__context-item">
-          <span class="instrument__context-label">σ_e (base)</span>
+          <span class="instrument__context-label">{{ $t('instrument.view.contextSigmaBase') }}</span>
           <span class="instrument__context-value">{{ cellStore.effectiveSigmaE.toFixed(3) }} {{ UNIT.S_PER_M }}</span>
         </div>
         <div class="instrument__context-item">
-          <span class="instrument__context-label">Target E</span>
+          <span class="instrument__context-label">{{ $t('instrument.view.contextField') }}</span>
           <span class="instrument__context-value">{{ cellStore.fieldIntensity }} {{ UNIT.V_PER_CM }}</span>
         </div>
-        <div class="instrument__context-item">
-          <span class="instrument__context-label">DR (target)</span>
+        <div class="instrument__context-item" v-tip="$t('instrument.view.tipContextDR')">
+          <span class="instrument__context-label">{{ $t('instrument.view.contextDR') }}</span>
           <span
             class="instrument__context-value"
             :class="{
@@ -68,11 +62,11 @@
           >{{ (targetDR * 100).toFixed(0) }}%</span>
         </div>
         <div class="instrument__context-item">
-          <span class="instrument__context-label">Z nominal</span>
+          <span class="instrument__context-label">{{ $t('instrument.view.contextZNominal') }}</span>
           <span class="instrument__context-value">{{ impStore.nominalImpedanceOhm.toFixed(1) }} {{ UNIT.OHM }}</span>
         </div>
-        <div class="instrument__context-item">
-          <span class="instrument__context-label">Correction</span>
+        <div class="instrument__context-item" v-tip="$t('instrument.view.tipContextCorrection')">
+          <span class="instrument__context-label">{{ $t('instrument.view.contextCorrection') }}</span>
           <span
             class="instrument__context-value"
             :class="{ 'instrument__context-value--warn': impStore.voltageCorrectionFactor > 1.05 }"
@@ -87,13 +81,8 @@
       <div class="instrument__poc-note">
         <span class="instrument__poc-icon">{{ ICON.INFO }}</span>
         <div>
-          <strong>Proof of Concept — Simulated Mode</strong>
-          In simulated mode, impedance drift is computed from the ion-release physics model
-          (cell volume fraction × lysed fraction × σ contrast). Switch to
-          <em>Live Hardware</em> in the Hardware Input panel to replace this with real measurements
-          from a lab impedance analyser or LCR meter connected via the
-          <code>impedanceReading</code> socket event.
-          See the <a href="/protocol" class="instrument__poc-link">Protocol</a> page for the full hardware integration specification.
+          <strong>{{ $t('instrument.view.pocTitle') }}</strong>
+          <span v-html="$t('instrument.view.pocBody')"></span>
         </div>
       </div>
 

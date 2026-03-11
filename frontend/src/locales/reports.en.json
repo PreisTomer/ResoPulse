@@ -70,6 +70,8 @@
     "legendHealthy": "Healthy / reference value",
     "legendSelectivity": "Selectivity ≥ {strong}× (therapeutic window)",
     "legendWarning": "Selectivity {marginal}–{strong}× or temperature warning",
-    "footnote": "¹ T-Vm / H-Vm: Schwan transmembrane potential (mV). In Resonance mode (bacteria/virus at GHz), these are ≈ 0 — use T-Ratio % / H-Ratio % as the primary disruption metrics."
+    "footnote": "¹ T-Vm / H-Vm: Schwan transmembrane potential (mV). In Resonance mode (bacteria/virus at GHz), these are ≈ 0 — use T-Ratio % / H-Ratio % as the primary disruption metrics.",
+    "instrumentLink": "⚗ Impedance drift and corrected field data →",
+    "instrumentLinkTitle": "Open Instrument Panel"
   }
 }

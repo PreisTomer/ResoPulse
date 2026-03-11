@@ -17,6 +17,8 @@
     "doubleshell": "2.7 Double-Shell Nuclear Envelope",
     "uncertainty": "2.8 Conductivity Uncertainty",
     "biomodulation": "2.9 Sub-threshold Biomodulation",
+    "impedance": "2.10 Impedance Feedback",
+    "sonification": "2.11 Auditory Display",
     "protocol": "3. Experimental Protocol",
     "safety": "4. Safety &amp; Thresholds",
     "refs": "5. References"
@@ -173,6 +175,40 @@
       "p2": "<strong>Ca²⁺ influx via mechanosensitive and voltage-gated channels:</strong> Sub-threshold pulsed fields activate PIEZO1 mechanosensitive channels and voltage-gated Ca²⁺ channels (Lee et al. [17]), generating transient intracellular Ca²⁺ spikes without permanent membrane permeabilisation. Ca²⁺ is a universal second messenger mediating downstream effects including gene expression, cytoskeletal remodelling, and cell proliferation. The optimal DR window for Ca²⁺ stimulation is approximately 20–40% of the lysis threshold.",
       "p3": "<strong>Nitric oxide (NO) signalling:</strong> Sub-threshold electromagnetic fields transiently modulate NO production via calmodulin-dependent nitric oxide synthase (CaM-NOS), with effects on vasodilation, inflammation resolution, and cell growth (Pilla [16]). This is thought to be a downstream consequence of the Ca²⁺ influx rather than a direct electromagnetic-NO interaction.",
       "p4": "The Nourishing state is therefore not a threshold of damage but a <em>biomodulation window</em> with potential therapeutic applications (tissue repair, anti-inflammatory, angiogenesis stimulation) distinct from the electroporation and ablation regimes. The simulation indicates this state on the cell card indicator bar and in the cell state tooltip. Recommended protocol for biomodulation: pulsed mode, low duty cycle (dc ≈ 10⁻⁵ – 10⁻⁴), frequency below f<sub>c</sub> of the target cell, with DR ≈ 20–40%."
+    },
+    "impedance": {
+      "title": "2.10 Impedance Feedback &amp; Ion Release Model",
+      "p1": "As cells lyse during an electroporation protocol, intracellular ions (K⁺, Na⁺, Cl⁻, ATP, and other solutes) are released into the extracellular medium. This ion flux progressively raises medium conductivity σ<sub>e</sub>, which lowers the cuvette's DC impedance Z = d/(σ<sub>e</sub>·A). Because the generator and its connecting cable have a finite source impedance R<sub>s</sub> (typically 50 Ω for coaxial RF systems), the cuvette and source resistance form a voltage divider: as Z falls, the fraction of generator voltage dropped across the cuvette drops with it. Without field correction, the delivered electric field can fall significantly below the set point — particularly at high lysis fractions in small-volume cuvettes — compromising the protocol and invalidating dose comparisons between sessions (Kotnik et al. [20]).",
+      "p2": "The <strong>Instrument Panel</strong> (/instrument) models this drift in real time. The ion-release model computes the live conductivity from the current disruption ratio; the corrected generator output is then displayed so the operator knows exactly how much to increase the generator voltage to maintain a constant intra-cuvette field.",
+      "eqMain": "σ<sub>e</sub>(t) = σ<sub>e₀</sub> + φ · f<sub>lysed</sub> · (σ<sub>i</sub> − σ<sub>e₀</sub>) · η",
+      "eqSub1": "φ = N · (4/3)π R³ &nbsp;·&nbsp; cell volume fraction",
+      "eqSub2": "f<sub>lysed</sub> = max(0, (DR − 0.85) / 0.15) &nbsp;·&nbsp; fraction of cells past lysis threshold",
+      "eqSub3": "η = 0.8 &nbsp;·&nbsp; ion-release efficiency (reduced by protein–polymer crowding in released cytoplasm)",
+      "eqDivider": true,
+      "eqZ": "Z = d / (σ<sub>e</sub> · A) &nbsp;·&nbsp; DC cuvette impedance [Ω] &nbsp;·&nbsp; valid for f ≪ 340 MHz in saline",
+      "eqCorr": "E<sub>gen</sub> = E<sub>target</sub> × (1 + R<sub>s</sub> / Z) &nbsp;·&nbsp; corrected generator field [V/cm]",
+      "eqNote": "Kotnik, Rems, Tarek &amp; Miklavcic, Trends Biotechnol. 37:1229 (2019) [20]; cuvette DC model: standard electrochemistry",
+      "hardwareTitle": "Hardware Integration (PoC)",
+      "hardwareP": "In the default <em>Simulated</em> mode the ion-release model drives the impedance display. To replace the simulation with real instrument data, connect an impedance analyser or LCR meter to the BioResonance backend socket and emit the <code>impedanceReading</code> event. The backend validates the packet and re-broadcasts <code>impedanceBroadcast</code> to all connected UI clients. Switch the Sensor Mode toggle to <em>Live Hardware</em> in the Hardware Input card to activate this override. The hardware Z<sub>real</sub> replaces the simulated value; σ<sub>e</sub> is back-derived as σ = d/(Z<sub>real</sub>·A).",
+      "hardwareSchema": "Socket event: <code>impedanceReading</code> → backend → <code>impedanceBroadcast</code><br>Required fields: zReal [Ω], zImag [Ω], freqHz [Hz], timestamp [Unix ms]<br>Optional: conductivity [S/m] (pre-computed σ<sub>e</sub> from instrument)"
+    },
+    "sonification": {
+      "title": "2.11 Auditory Display (Sonification)",
+      "p1": "Sonification is the use of non-speech audio to convey information. In the context of this platform, live experiment parameters are mapped to audible tones via the Web Audio API, enabling an operator to monitor experiment state without continuously watching the screen — a technique first formalised by Kramer et al. (1999) [21]. The technique is particularly suited to multi-parameter monitoring during long electroporation protocols where both impedance drift and cell disruption ratio evolve simultaneously.",
+      "disclaimer": "<strong>Important:</strong> These sounds are NOT the RF treatment frequencies. The electroporation and resonance frequencies used in this platform are in the kHz–GHz range — far above the 20 Hz–20 kHz audible spectrum. The sonification maps data <em>values</em> to audible tones; it has no physical relationship to the applied field and does not affect the cells.",
+      "mappingsTitle": "Parameter-to-Sound Mappings",
+      "mappings": [
+        { "param": "Impedance drift |ΔZ|",       "mapping": "Pitch 220–1760 Hz (A3–A6)",  "note": "Higher drift = higher pitch; maps absolute drift % logarithmically" },
+        { "param": "Disruption ratio (DR)",       "mapping": "Gain 0–0.4",                "note": "Louder = higher DR; scales from 0% to 100% lysis" },
+        { "param": "Rev-EP state (DR 50–85%)",   "mapping": "6 Hz tremolo (AM mod.)",    "note": "Amplitude modulation flags the reversible electroporation window" },
+        { "param": "Lysis event (DR > 85%)",     "mapping": "880 Hz burst, 0.3 s",       "note": "Single A5 tone marks the lysis threshold crossing" },
+        { "param": "Nourishing state (DR < 50%)",  "mapping": "110 Hz slow pulse",        "note": "Sub-threshold biomodulation window indicator" }
+      ],
+      "thParam": "Parameter",
+      "thMapping": "Sound mapping",
+      "thNote": "Notes",
+      "p2": "The Auditory Display is enabled from the Instrument Panel via the ♪ button. The pitch bar below the button shows the current pitch frequency in real time. All mappings follow the design principles in Walker &amp; Kramer (2006) [22]: pitch is an effective ordinal scale for scalar quantities; AM tremolo is a distinctive qualitative marker for state transitions; and the mapping direction (higher = more disrupted) is intuitive and consistent with spectral urgency conventions.",
+      "refNote": "Kramer G. et al., <em>Sonification Report: Status of the Field and Research Agenda.</em> ICAD (1999) [21] &nbsp;·&nbsp; Walker B.N. &amp; Kramer G., <em>Mappings and Metaphors in Auditory Displays.</em> ACM Trans. Appl. Percept. 2006 [22]"
     }
   },
   "protocol": {
@@ -217,6 +253,14 @@
       "s10": {
         "title": "Export session data for analysis",
         "desc": "Navigate to the Reports tab to review the full session log. Edit the session name, then click <em>Export CSV</em> to download a structured file containing all logged parameters: frequency, field, V<sub>m</sub>, selectivity ratio, disruption ratios, temperatures, and event type."
+      },
+      "s11": {
+        "title": "Monitor and compensate impedance drift (Instrument Panel)",
+        "desc": "Navigate to the <strong>Instrument</strong> tab. Verify the Cuvette Setup card matches your physical cuvette geometry (gap, cross-section, source impedance R<sub>s</sub>). The Live Impedance Status card shows the simulated σ<sub>e</sub> rise as cells lyse. The Field Correction card shows the corrected generator voltage needed to maintain constant intra-cuvette field. <br><br><strong>To connect a lab instrument (hardware mode):</strong> Wire an impedance analyser or LCR meter to your measurement PC, run a bridge script that emits JSON to the BioResonance backend socket event <code>impedanceReading</code>, then switch the Sensor Mode toggle to <em>Live Hardware</em>. Required packet fields: <code>zReal</code> [Ω], <code>zImag</code> [Ω], <code>freqHz</code> [Hz], <code>timestamp</code> [Unix ms]. The backend validates and re-broadcasts to all UI clients. If the reading is older than 5 s, the status indicator turns amber (stale). A typical 1 mm BTX cuvette with 1× PBS starts at Z ≈ 165 Ω; at 100% lysis the impedance may drop 10–20%, requiring ~11–25% generator voltage increase."
+      },
+      "s12": {
+        "title": "Enable auditory display for hands-free monitoring",
+        "desc": "On the Instrument Panel, click the <strong>♪ Auditory Display</strong> button to activate sonification. Impedance drift is mapped to pitch (220–1760 Hz); disruption ratio controls volume; the reversible-EP window triggers a 6 Hz tremolo; lysis events produce an 880 Hz burst. <br><br><strong>Note:</strong> These tones are NOT the RF treatment frequencies — they are audible data representations only. Allow browser audio permission when prompted. The pitch bar below the button shows the current pitch in Hz and updates at 10 Hz. For noisy lab environments, use headphones. See §2.11 for the full parameter-to-sound mapping table and methodology references (Kramer et al. [21]; Walker &amp; Kramer [22])."
       }
     }
   },
@@ -331,6 +375,20 @@
         "body": "Camelia Gabriel, Sami Gabriel, E. Corthout. <em>The dielectric properties of biological tissues: I. Literature survey.</em> Physics in Medicine &amp; Biology. 1996;41(11):2231–2249.",
         "doi": "10.1088/0031-9155/41/11/001",
         "note": "Comprehensive survey of tissue electrical properties; basis for extracellular conductivity σ<sub>e</sub> values and temperature-dependent correction coefficients used in this simulator. Also underlies the skin depth model δ = √(1/(π·f·μ₀·σ<sub>e</sub>)) displayed in the Selectivity Panel."
+      },
+      {
+        "body": "Tadej Kotnik, Lea Rems, Mounir Tarek, Damijan Miklavcic. <em>Membrane Electroporation and Electropermeabilization: Mechanisms and Models.</em> Annual Review of Biophysics. 2019;48:63–91.",
+        "doi": "10.1146/annurev-biophys-052118-115451",
+        "note": "Comprehensive review of electroporation mechanisms including ion release from lysed cells and medium conductivity changes; basis for the ion-release model σ<sub>e</sub>(t) in §2.10"
+      },
+      {
+        "body": "Gregory Kramer, Bruce Walker, Terri Bonebright, et al. <em>Sonification Report: Status of the Field and Research Agenda.</em> International Community for Auditory Display (ICAD). 1999.",
+        "note": "Foundational report establishing sonification as a scientific data-monitoring discipline; basis for auditory display methodology in §2.11 and the Instrument Panel sonification feature"
+      },
+      {
+        "body": "Bruce N. Walker, Gregory Kramer. <em>Mappings and metaphors in auditory displays: An experimental assessment.</em> ACM Transactions on Applied Perception. 2006;3(4):407–427.",
+        "doi": "10.1145/1190036.1190041",
+        "note": "Pitch, gain, and AM-tremolo mapping design principles applied in the impedance-drift and disruption-ratio auditory display (§2.11); pitch as ordinal scale; spectral urgency conventions"
       }
     ]
   }

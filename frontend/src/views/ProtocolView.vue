@@ -36,6 +36,8 @@
           <a href="#doubleshell"    class="protocol__toc-link protocol__toc-indent" :class="{ 'protocol__toc-link--active': activeSection === 'doubleshell' }" @click="tocMobileOpen = false" v-html="$t('protocol.toc.doubleshell')"></a>
           <a href="#uncertainty"    class="protocol__toc-link protocol__toc-indent" :class="{ 'protocol__toc-link--active': activeSection === 'uncertainty' }" @click="tocMobileOpen = false" v-html="$t('protocol.toc.uncertainty')"></a>
           <a href="#biomodulation"  class="protocol__toc-link protocol__toc-indent" :class="{ 'protocol__toc-link--active': activeSection === 'biomodulation' }" @click="tocMobileOpen = false" v-html="$t('protocol.toc.biomodulation')"></a>
+          <a href="#impedance"      class="protocol__toc-link protocol__toc-indent" :class="{ 'protocol__toc-link--active': activeSection === 'impedance' }" @click="tocMobileOpen = false" v-html="$t('protocol.toc.impedance')"></a>
+          <a href="#sonification"   class="protocol__toc-link protocol__toc-indent" :class="{ 'protocol__toc-link--active': activeSection === 'sonification' }" @click="tocMobileOpen = false" v-html="$t('protocol.toc.sonification')"></a>
           <a href="#protocol-steps" class="protocol__toc-link" :class="{ 'protocol__toc-link--active': activeSection === 'protocol-steps' }" @click="tocMobileOpen = false" v-html="$t('protocol.toc.protocol')"></a>
           <a href="#safety"         class="protocol__toc-link" :class="{ 'protocol__toc-link--active': activeSection === 'safety' }" @click="tocMobileOpen = false" v-html="$t('protocol.toc.safety')"></a>
           <a href="#refs"           class="protocol__toc-link" :class="{ 'protocol__toc-link--active': activeSection === 'refs' }" @click="tocMobileOpen = false" v-html="$t('protocol.toc.refs')"></a>
@@ -263,6 +265,52 @@
             <p class="protocol__body-text" v-html="$t('protocol.physics.biomodulation.p3')"></p>
             <p class="protocol__body-text" v-html="$t('protocol.physics.biomodulation.p4')"></p>
 
+            <!-- 2.10 Impedance Feedback -->
+            <h3 id="impedance" class="protocol__subsection-title" v-html="$t('protocol.physics.impedance.title')"></h3>
+            <p class="protocol__body-text" v-html="$t('protocol.physics.impedance.p1')"></p>
+            <p class="protocol__body-text" v-html="$t('protocol.physics.impedance.p2')"></p>
+            <div class="protocol__eq-block">
+              <div class="protocol__eq-main" v-html="$t('protocol.physics.impedance.eqMain')"></div>
+              <div class="protocol__eq-sub" v-html="$t('protocol.physics.impedance.eqSub1')"></div>
+              <div class="protocol__eq-sub" v-html="$t('protocol.physics.impedance.eqSub2')"></div>
+              <div class="protocol__eq-sub" v-html="$t('protocol.physics.impedance.eqSub3')"></div>
+              <div class="protocol__eq-divider"></div>
+              <div class="protocol__eq-main" v-html="$t('protocol.physics.impedance.eqZ')"></div>
+              <div class="protocol__eq-main" v-html="$t('protocol.physics.impedance.eqCorr')"></div>
+              <div class="protocol__eq-note" v-html="$t('protocol.physics.impedance.eqNote')"></div>
+            </div>
+            <div class="protocol__note">
+              <div class="protocol__note-label" v-html="$t('protocol.physics.impedance.hardwareTitle')"></div>
+              <p v-html="$t('protocol.physics.impedance.hardwareP')"></p>
+              <p class="protocol__body-text--spaced" v-html="$t('protocol.physics.impedance.hardwareSchema')"></p>
+            </div>
+
+            <!-- 2.11 Auditory Display (Sonification) -->
+            <h3 id="sonification" class="protocol__subsection-title" v-html="$t('protocol.physics.sonification.title')"></h3>
+            <p class="protocol__body-text" v-html="$t('protocol.physics.sonification.p1')"></p>
+            <div class="protocol__warn-box" v-html="$t('protocol.physics.sonification.disclaimer')"></div>
+            <p class="protocol__body-text" v-html="$t('protocol.physics.sonification.mappingsTitle')"></p>
+            <table class="protocol__param-table">
+              <thead>
+                <tr>
+                  <th v-html="$t('protocol.physics.sonification.thParam')"></th>
+                  <th v-html="$t('protocol.physics.sonification.thMapping')"></th>
+                  <th v-html="$t('protocol.physics.sonification.thNote')"></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="row in sonificationMappings" :key="row.param">
+                  <td v-html="row.param"></td>
+                  <td class="protocol__mono protocol__primary-val" v-html="row.mapping"></td>
+                  <td v-html="row.note"></td>
+                </tr>
+              </tbody>
+            </table>
+            <p class="protocol__body-text" v-html="$t('protocol.physics.sonification.p2')"></p>
+            <div class="protocol__note">
+              <span v-html="$t('protocol.physics.sonification.refNote')"></span>
+            </div>
+
           </section>
 
           <!-- 3. Step-by-step protocol -->
@@ -345,10 +393,11 @@ const ALL_SECTION_IDS = [
   'overview',
   'physics', 'schwan', 'thermal', 'maxwell', 'disruption',
   'resonance', 'nsep', 'doubleshell', 'uncertainty', 'biomodulation',
+  'impedance', 'sonification',
   'protocol-steps', 'safety', 'refs',
 ] as const
 
-const PHYSICS_IDS = new Set(['physics', 'schwan', 'thermal', 'maxwell', 'disruption', 'resonance', 'nsep', 'doubleshell', 'uncertainty', 'biomodulation'])
+const PHYSICS_IDS = new Set(['physics', 'schwan', 'thermal', 'maxwell', 'disruption', 'resonance', 'nsep', 'doubleshell', 'uncertainty', 'biomodulation', 'impedance', 'sonification'])
 
 export default defineComponent({
   data() {
@@ -364,7 +413,7 @@ export default defineComponent({
     },
 
     protocolStepKeys(): string[] {
-      return ['s01', 's02', 's03', 's04', 's05', 's06', 's07', 's08', 's09', 's10']
+      return ['s01', 's02', 's03', 's04', 's05', 's06', 's07', 's08', 's09', 's10', 's11', 's12']
     },
 
     schwanParams(): SchwanParamRow[] {
@@ -385,6 +434,10 @@ export default defineComponent({
 
     safetyRows(): SafetyRow[] {
       return (this.$tm as Function)('protocol.safety.rows') as SafetyRow[]
+    },
+
+    sonificationMappings(): Array<{ param: string; mapping: string; note: string }> {
+      return (this.$tm as Function)('protocol.physics.sonification.mappings') as Array<{ param: string; mapping: string; note: string }>
     },
 
     refList(): RefItem[] {

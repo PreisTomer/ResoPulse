@@ -1,17 +1,13 @@
 <template>
   <div class="pop-panel">
 
-    <!-- Accordion toggle -->
-    <button class="pop-panel__toggle" @click="open = !open">
-      <span class="pop-panel__toggle-left">
-        <span class="pop-panel__toggle-icon">{{ ICON.GRID }}</span>
-        <span class="pop-panel__toggle-title">{{ $t('population.title') }}</span>
-        <span class="pop-panel__toggle-sub">{{ subtitle }}</span>
-      </span>
-      <span class="pop-panel__chevron" :class="{ 'pop-panel__chevron--open': open }">{{ ICON.CHEVRON }}</span>
-    </button>
-
-    <div v-show="open" class="pop-panel__body">
+    <AccordionPanel
+      :icon="ICON.GRID"
+      :title="$t('population.title')"
+      :subtitle="subtitle"
+      @open-change="onAccordionChange"
+    >
+    <div class="pop-panel__body">
 
       <!-- Controls -->
       <div class="pop-panel__controls">
@@ -104,6 +100,7 @@
       </div>
 
     </div>
+    </AccordionPanel>
   </div>
 </template>
 
@@ -111,6 +108,7 @@
 import { defineComponent } from 'vue'
 import * as d3 from 'd3'
 import { useCellStore } from '@/stores/cellStore'
+import AccordionPanel from '@/components/AccordionPanel.vue'
 import { computeSchwan, computeTau, computePulseStepResponse, computeResonantDisruption } from '@/utils/physics'
 import { WAVEFORM, CHART_MODE, CELL_CATEGORY } from '@/constants/strings'
 import { THRESHOLDS, DEFAULT_CAPSID_Q } from '@/constants/cellCard'
@@ -144,6 +142,7 @@ const MARGIN = { top: 14, right: 16, bottom: 40, left: 50 }
 const N_BINS = 20
 
 export default defineComponent({
+  components: { AccordionPanel },
   emits: ['openChange'],
   setup() {
     return { store: useCellStore(), THRESHOLDS, ICON, UNIT }
@@ -256,6 +255,10 @@ export default defineComponent({
   },
 
   methods: {
+    onAccordionChange(v: boolean) {
+      this.open = v  // triggers the watcher (chart init + openChange emit)
+    },
+
     tipNPill(n: number): string {
       if (n === 100) return this.$t('population.tipNPill100')
       if (n === 300) return this.$t('population.tipNPill300')
@@ -482,51 +485,6 @@ export default defineComponent({
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   overflow: hidden;
-
-  &__toggle {
-    @include flex-row(0);
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    padding: 0.75rem 1rem;
-    transition: background 0.15s;
-
-    &:hover { background: rgba(255,255,255,0.04); }
-  }
-
-  &__toggle-left {
-    @include flex-row(0.6rem);
-    align-items: center;
-  }
-
-  &__toggle-icon {
-    font-size: 0.9rem;
-    color: var(--color-primary);
-  }
-
-  &__toggle-title {
-    font-size: 0.82rem;
-    font-weight: 600;
-    color: var(--color-text-heading);
-    font-family: var(--font-mono);
-    letter-spacing: 0.04em;
-  }
-
-  &__toggle-sub {
-    font-size: 0.72rem;
-    color: var(--color-text-muted);
-    font-family: var(--font-mono);
-  }
-
-  &__chevron {
-    font-size: 1.1rem;
-    color: var(--color-text-muted);
-    transition: transform 0.2s;
-    &--open { transform: rotate(90deg); }
-  }
 
   &__body {
     @include flex-col(0.75rem);

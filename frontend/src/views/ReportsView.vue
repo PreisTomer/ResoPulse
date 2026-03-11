@@ -186,6 +186,9 @@
           <span class="reports__legend-item reports__footnote">
             {{ $t('reports.footnote') }}
           </span>
+          <RouterLink to="/instrument" class="reports__legend-item reports__instrument-link" :title="$t('reports.instrumentLinkTitle')">
+            {{ $t('reports.instrumentLink') }}
+          </RouterLink>
         </div>
       </div>
 
@@ -578,26 +581,19 @@ export default defineComponent({
   &__green-val  { color: var(--color-lime);   }
   &__warn-val   { color: var(--color-amber);  }
 
-  /* Event badges */
+  /* Event type labels — plain colored text, not styled as buttons */
   &__ev-badge {
-    font-size: 0.62rem;
+    font-size: 0.7rem;
     font-family: var(--font-mono);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    padding: 0.15rem 0.45rem;
-    border-radius: 3px;
-    border: 1px solid;
+    font-weight: 600;
 
     &--manual {
       color: var(--color-primary);
-      border-color: rgba(0, 212, 255, 0.35);
-      background: rgba(0, 212, 255, 0.08);
+      opacity: 0.85;
     }
 
     &--lysis {
       color: var(--color-danger);
-      border-color: rgba(255, 77, 109, 0.35);
-      background: rgba(255, 77, 109, 0.08);
     }
   }
 
@@ -652,6 +648,21 @@ export default defineComponent({
     opacity: 0.65;
     margin-top: 0.15rem;
     line-height: 1.5;
+  }
+
+  &__instrument-link {
+    width: 100%;
+    font-size: 0.65rem;
+    font-family: var(--font-mono);
+    color: var(--color-primary);
+    opacity: 0.7;
+    text-decoration: none;
+    margin-top: 0.1rem;
+    transition: opacity 0.15s;
+
+    &:hover {
+      opacity: 1;
+    }
   }
 }
 

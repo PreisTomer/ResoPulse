@@ -1,17 +1,13 @@
 <template>
   <div class="exp-log">
 
-    <!-- Accordion toggle -->
-    <button class="exp-log__toggle" @click="open = !open">
-      <span class="exp-log__toggle-left">
-        <span class="exp-log__toggle-icon">{{ ICON.LINES }}</span>
-        <span class="exp-log__toggle-title">{{ $t('exp.logTitle') }}</span>
-        <span class="exp-log__toggle-sub">{{ hasEntries ? $t('exp.logReadingsCount', { n: expStore.entries.length }) : $t('exp.logNoReadings') }}</span>
-      </span>
-      <span class="exp-log__chevron" :class="{ 'exp-log__chevron--open': open }">{{ ICON.CHEVRON }}</span>
-    </button>
-
-    <div v-show="open">
+    <AccordionPanel
+      :icon="ICON.LINES"
+      :title="$t('exp.logTitle')"
+      :subtitle="hasEntries ? $t('exp.logReadingsCount', { n: expStore.entries.length }) : $t('exp.logNoReadings')"
+      :border-on-toggle="true"
+    >
+    <div>
 
     <!-- Header row -->
     <div class="exp-log__header">
@@ -79,12 +75,14 @@
       </table>
     </div><!-- /exp-log__table-wrap -->
 
-    </div><!-- /v-show="open" -->
+    </div>
+    </AccordionPanel>
   </div><!-- /exp-log -->
 </template>
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+import AccordionPanel from '@/components/AccordionPanel.vue'
 import { useExperimentStore } from '@/stores/experimentStore'
 import { useCellStore } from '@/stores/cellStore'
 import { broadcastLogEntry } from '@/services/socket'
@@ -94,6 +92,8 @@ import { THRESHOLDS } from '@/constants/cellCard'
 import { formatFreqKHz } from '@/utils/format'
 
 export default defineComponent({
+  components: { AccordionPanel },
+
   setup() {
     return {
       expStore: useExperimentStore(),
@@ -103,10 +103,6 @@ export default defineComponent({
       THRESHOLDS,
       formatFreqKHz,
     }
-  },
-
-  data() {
-    return { open: false }
   },
 
   computed: {
@@ -193,60 +189,6 @@ export default defineComponent({
   overflow: hidden;
   flex: 1;
   min-height: 0;
-
-  &__toggle {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-    background: transparent;
-    border: none;
-    border-bottom: 1px solid var(--color-border);
-    padding: 0.65rem 0.85rem;
-    cursor: pointer;
-    gap: 0.5rem;
-    flex-shrink: 0;
-
-    &:hover .exp-log__toggle-title { color: var(--color-primary); }
-  }
-
-  &__toggle-left {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    min-width: 0;
-  }
-
-  &__toggle-icon {
-    font-size: 0.8rem;
-    color: var(--color-primary);
-    flex-shrink: 0;
-    opacity: 0.7;
-  }
-
-  &__toggle-title {
-    @include mono-upper(0.62rem, 0.1em);
-    color: var(--color-text);
-    flex-shrink: 0;
-    transition: color 0.15s;
-  }
-
-  &__toggle-sub {
-    font-size: 0.58rem;
-    font-family: var(--font-mono);
-    color: var(--color-text-muted);
-    opacity: 0.65;
-  }
-
-  &__chevron {
-    font-size: 1rem;
-    color: var(--color-text-muted);
-    opacity: 0.5;
-    flex-shrink: 0;
-    transition: transform 0.2s;
-
-    &--open { transform: rotate(90deg); }
-  }
 
   &__header {
     @include flex-row(0.6rem);

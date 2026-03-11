@@ -4,6 +4,30 @@
     "title": "Impedance Feedback",
     "subtitle": "As target cells lyse, released intracellular ions increase medium conductivity σ_e, lowering cuvette impedance. This creates a voltage-divider mismatch with the generator's source impedance — the delivered field drops below the set point. This panel models the drift and computes the corrected generator output voltage to maintain constant transmembrane potential.",
 
+    "view": {
+      "calloutIonTitle":    "Ion Release Model",
+      "calloutIonFormula":  "σ_e(t) = σ_e₀ + φ · f<sub>lysed</sub> · (σ_i − σ_e₀) · 0.8",
+      "calloutIonNote":     "φ = cell volume fraction · f<sub>lysed</sub> derived from disruption ratio DR",
+      "calloutZTitle":      "Cuvette Impedance",
+      "calloutZFormula":    "Z = d / (σ_e · A)",
+      "calloutZNote":       "DC limit — valid for f ≪ 340 MHz in saline",
+      "calloutCorrTitle":   "Corrected Generator Output",
+      "calloutCorrFormula": "E<sub>gen</sub> = E<sub>target</sub> × (1 + R_s / Z)",
+      "calloutCorrNote":    "Voltage divider compensation",
+      "contextTarget":      "Target Cell",
+      "contextMedium":      "Medium",
+      "contextSigmaBase":   "σ_e (base)",
+      "contextField":       "Target E",
+      "contextDR":          "DR (target)",
+      "contextZNominal":    "Z nominal",
+      "contextCorrection":  "Correction",
+      "pocTitle":           "Proof of Concept — Simulated Mode",
+      "pocBody":            "In simulated mode, impedance drift is computed from the ion-release physics model (cell volume fraction × lysed fraction × σ contrast). Switch to <em>Live Hardware</em> in the Hardware Input panel to replace this with real measurements from a lab impedance analyser or LCR meter connected via the <code>impedanceReading</code> socket event. See the <a href=\"/protocol\" class=\"instrument__poc-link\">Protocol</a> page for the full hardware integration specification.",
+      "tipContextTarget":    "<strong>Target Cell</strong>\nCurrently selected target cell type. The impedance model uses its radius and intracellular conductivity to compute ion release on lysis.",
+      "tipContextDR":        "<strong>Disruption Ratio (target)</strong>\nDR = (V_m · PEF) / V_threshold. Values above 85% indicate the lysis window has been reached.",
+      "tipContextCorrection": "<strong>Voltage Correction Factor</strong>\n= 1 + R_s / Z_cuvette\nValues above 1 mean the generator must output proportionally more voltage to compensate for impedance drift."
+    },
+
     "setup": {
       "title": "Cuvette Setup",
       "sub": "Electrode geometry · source impedance · cell seeding density",
@@ -20,7 +44,7 @@
       "tipPreset": "<strong>Cuvette Preset</strong>\nStandard electroporation cuvette geometries from BTX and Bio-Rad.\nGap sets E = V/d; area sets impedance Z = d/(σ·A).\nUse 'Custom' to enter arbitrary geometry.",
       "tipGap": "<strong>Electrode Gap [mm]</strong>\nDetermines the electric field: E = V_applied / d.\nSmaller gap → higher field per volt, but lower cuvette impedance.\nTypical lab cuvettes: 1 mm, 2 mm, 4 mm.",
       "tipArea": "<strong>Electrode Cross-Section [cm²]</strong>\nWith gap, sets cuvette DC resistance: Z = d / (σ_e × A).\nBTX cuvettes ≈ 0.10 cm²; Bio-Rad ≈ 0.13 cm².",
-      "tipSourceR": "<strong>Source Impedance R_s [Ω]</strong>\nGenerator output + cable impedance.\n50 Ω — standard RF / coaxial system\n< 1 Ω — typical high-voltage pulsed power unit\nHigher R_s → larger voltage-divider correction needed.",
+      "tipSourceR": "<strong>Source Impedance R_s [Ω]</strong>\nGenerator output + cable impedance.\n50 Ω — standard RF / coaxial system\n&lt; 1 Ω — typical high-voltage pulsed power unit\nHigher R_s → larger voltage-divider correction needed.",
       "tipDensity": "<strong>Cell Density [cells/mL]</strong>\nSets the volume fraction φ = N × (4/3)π R³.\nHigher density → more ions released per unit volume → larger σ_e rise on lysis.\nTypical: 10⁶ cells/mL mammalian, 10⁸ cells/mL bacteria."
     },
 
@@ -65,6 +89,7 @@
       "zReal": "Z_real",
       "zImag": "Z_imag",
       "freqHz": "Meas. Freq",
+      "sigmaDerived": "σ_e (derived)",
       "status": "Sensor Status",
       "statusDisconnected": "No data received",
       "statusFresh": "Live · fresh",
@@ -80,8 +105,19 @@
       "title": "Impedance Trend",
       "sub": "Historical Z readings — simulated (grey) or hardware (cyan)",
       "noData": "No history yet — readings will appear as cells lyse or hardware data arrives",
-      "axisZ": "Z (Ω)",
-      "axisTime": "Time"
+      "axisZ": "Z",
+      "axisTime": "Time",
+      "thNum": "#",
+      "thTime": "Time",
+      "thZ": "Z",
+      "thSigma": "σ_e"
+    },
+
+    "sonif": {
+      "on":   "Auditory Display — On",
+      "off":  "Auditory Display — Off",
+      "note": "The sounds are NOT the RF frequencies (kHz–MHz range) — those are far above the audible range. This is a scientific data-monitoring technique (sonification).",
+      "tip":  "<strong>Auditory Display (Sonification)</strong>\nMaps live experiment data to audible tones via the Web Audio API.\n\n<em>These sounds are NOT the RF frequencies (kHz–MHz), which are far above the audible range. This is a scientific monitoring technique.</em>\n\nMappings:\n  Impedance drift → pitch (220 Hz – 1760 Hz)\n  Disruption ratio → volume\n  Rev-EP window → 6 Hz tremolo modulation\n  Lysis event → 880 Hz burst\n  Healthy-cell warning → 110 Hz pulse\n\nRef: Kramer et al. (1999); Walker &amp; Kramer (2006)"
     }
   }
 }

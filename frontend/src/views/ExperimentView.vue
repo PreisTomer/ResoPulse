@@ -94,6 +94,15 @@
 
       <!-- Far right: mode toggle + connection status -->
       <div class="experiment__header-right">
+        <RouterLink
+          v-if="showZDriftBadge"
+          to="/instrument"
+          class="experiment__z-drift-badge"
+          v-tip="$t('exp.zDriftTip')"
+        >
+          <span class="experiment__z-drift-icon">⚗</span>
+          Z {{ impStore.impedanceDriftPct.toFixed(1) }}%
+        </RouterLink>
         <span
           class="experiment__chip"
           :class="socketConnected ? 'experiment__chip--connected' : 'experiment__chip--local'"
@@ -130,18 +139,16 @@
 
       <!-- Row 2: Chart (full width, collapsible) -->
       <div class="experiment__chart-section">
-        <button class="experiment__chart-toggle" @click="chartOpen = !chartOpen">
-          <span class="experiment__chart-toggle-left">
-            <span class="experiment__chart-toggle-icon">{{ ICON.WAVE }}</span>
-            <span class="experiment__chart-toggle-title">{{ $t('exp.chartSectionTitle') }}</span>
-            <span class="experiment__chart-toggle-sub">{{ chartModeLabel }}</span>
-          </span>
-          <span class="experiment__chart-chevron" :class="{ 'experiment__chart-chevron--open': chartOpen }">{{ ICON.CHEVRON }}</span>
-        </button>
-        <div v-show="chartOpen">
+        <AccordionPanel
+          :icon="ICON.WAVE"
+          :title="$t('exp.chartSectionTitle')"
+          :subtitle="chartModeLabel"
+          :initial-open="true"
+          :border-on-toggle="true"
+        >
           <FrequencyResponseChart v-if="store.chartMode === CHART_MODE.SCHWAN" />
           <ResonanceChart v-else />
-        </div>
+        </AccordionPanel>
       </div>
 
       <!-- Row 3: Selectivity (full width) -->
@@ -180,6 +187,7 @@
 import { defineComponent } from 'vue'
 import { useCellStore } from '@/stores/cellStore'
 import { connectSocket, socketConnected, broadcastStateSync } from '@/services/socket'
+import AccordionPanel from '@/components/AccordionPanel.vue'
 import CellCard from '@/components/CellCard/index.vue'
 import FrequencySlider from '@/components/FrequencySlider/index.vue'
 import FrequencyResponseChart from '@/components/FrequencyResponseChart/index.vue'
@@ -189,6 +197,7 @@ import SweepPanel from '@/components/SweepPanel/index.vue'
 import PopulationPanel from '@/components/PopulationPanel/index.vue'
 import ExperimentLog from '@/components/ExperimentLog.vue'
 import { useExperimentStore } from '@/stores/experimentStore'
+import { useImpedanceStore } from '@/stores/impedanceStore'
 import { CELL_PRESETS, GROUP_COLORS, GROUP_LABELS } from '@/constants/cellLibrary'
 import type { CellPreset, CellGroup } from '@/constants/cellLibrary'
 import { formatLysisTime } from '@/utils/sliderTooltips'
@@ -200,6 +209,7 @@ import { UNIT } from '@/constants/units'
 
 export default defineComponent({
   components: {
+    AccordionPanel,
     CellCard,
     FrequencySlider,
     FrequencyResponseChart,
@@ -214,6 +224,7 @@ export default defineComponent({
     return {
       store: useCellStore(),
       expStore: useExperimentStore(),
+      impStore: useImpedanceStore(),
       socketConnected,
       GROUP_COLORS,
       GROUP_LABELS,
@@ -232,7 +243,6 @@ export default defineComponent({
     return {
       healthyPickerOpen: false,
       targetPickerOpen: false,
-      chartOpen: true,
       targetPickerCategory: CELL_GROUP.CANCER as CellGroup,
       sweepWindow: null as { lo: number; hi: number; param: 'field' | 'freq' } | null,
       sweepPanelOpen: false,
@@ -261,6 +271,10 @@ export default defineComponent({
   computed: {
     currentTargetId(): string {
       return this.store.target.id
+    },
+
+    showZDriftBadge(): boolean {
+      return Math.abs(this.impStore.impedanceDriftPct) > 5
     },
 
     tipSnapBar(): string {
@@ -530,6 +544,32 @@ Larger radius raises Vm and lowers the lysis field threshold.`
     animation: pulse-dot 2s ease-in-out infinite;
 
     &--warn { background: var(--color-amber); animation: none; }
+  }
+
+  &__z-drift-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    letter-spacing: 0.08em;
+    padding: 0.18rem 0.5rem;
+    border-radius: 3px;
+    border: 1px solid rgba(251, 191, 36, 0.45);
+    color: var(--color-amber);
+    background: rgba(251, 191, 36, 0.08);
+    text-decoration: none;
+    white-space: nowrap;
+    animation: pulse-dot 2s ease-in-out infinite;
+    transition: background 0.15s;
+
+    &:hover {
+      background: rgba(251, 191, 36, 0.16);
+    }
+  }
+
+  &__z-drift-icon {
+    font-size: 0.7rem;
   }
 
   &__cell-badges {
@@ -836,60 +876,6 @@ Larger radius raises Vm and lowers the lysis field threshold.`
     overflow: hidden;
   }
 
-  &__chart-toggle {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-    background: transparent;
-    border: none;
-    border-bottom: 1px solid var(--color-border);
-    padding: 0.6rem 1rem;
-    cursor: pointer;
-    gap: 0.5rem;
-
-    &:hover .experiment__chart-toggle-title { color: var(--color-primary); }
-  }
-
-  &__chart-toggle-left {
-    display: flex;
-    align-items: center;
-    gap: 0.55rem;
-  }
-
-  &__chart-toggle-icon {
-    font-size: 0.9rem;
-    color: var(--color-primary);
-    opacity: 0.7;
-    flex-shrink: 0;
-  }
-
-  &__chart-toggle-title {
-    font-size: 0.62rem;
-    font-family: var(--font-mono);
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    color: var(--color-text);
-    flex-shrink: 0;
-    transition: color 0.15s;
-  }
-
-  &__chart-toggle-sub {
-    font-size: 0.58rem;
-    font-family: var(--font-mono);
-    color: var(--color-text-muted);
-    opacity: 0.65;
-  }
-
-  &__chart-chevron {
-    font-size: 1rem;
-    color: var(--color-text-muted);
-    opacity: 0.5;
-    flex-shrink: 0;
-    transition: transform 0.2s;
-
-    &--open { transform: rotate(90deg); }
-  }
 }
 
 /* Compound modifier: healthy preset btn that is also active */
