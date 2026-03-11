@@ -922,7 +922,7 @@ export default defineComponent({
   }
 
   &__title {
-    @include mono-upper(0.72rem, 0.12em);
+    @include mono-upper(0.82rem, 0.12em);
     color: var(--color-text);
     white-space: nowrap;
   }

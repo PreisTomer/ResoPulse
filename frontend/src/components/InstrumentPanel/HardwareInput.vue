@@ -63,7 +63,7 @@
           <span class="hw-input__reading-value">{{ freqDisplay }}</span>
         </div>
         <div class="hw-input__reading-row">
-          <span class="hw-input__reading-label">σ_e (derived)</span>
+          <span class="hw-input__reading-label">{{ $t('instrument.hardware.sigmaDerived') }}</span>
           <span class="hw-input__reading-value">{{ derivedSigma }} {{ UNIT.S_PER_M }}</span>
         </div>
       </div>

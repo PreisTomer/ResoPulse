@@ -14,10 +14,11 @@ export const ICON = {
   NOURISH:   '⊕',
   LYSIS_BOLT:'↯',
   NUCLEUS:   '⚬',
-  LINES:     '≡',   // hamburger / log header
-  RELOAD:    '⟳',   // sweep / resample
-  GRID:      '⊞',   // population panel
-  WAVE:      '∿',   // frequency response chart
+  LINES:       '≡',   // hamburger / log header
+  RELOAD:      '⟳',   // sweep / resample
+  GRID:        '⊞',   // population panel
+  WAVE:        '∿',   // frequency response chart
+  SELECTIVITY: '⊙',   // selectivity — crosshair/target (target one cell type over another)
   SQUARE:    '■',   // legend color swatch
   CELL:      '◎',   // cell icon in CellCard header
   PLUG:      '⏻',   // instrument / hardware connection

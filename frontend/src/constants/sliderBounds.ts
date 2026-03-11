@@ -10,10 +10,12 @@ export interface SliderRange {
 export const SLIDER_RANGES = {
   RESONANCE_VIRUS:     { freqMin: 1_000_000, freqMax: 50_000_000, freqStep: 100_000, fieldMin: 10, fieldMax:  5_000, fieldStep:  10, pwLogMin: 0, pwLogMax: 2 },
   RESONANCE_BACTERIA:  { freqMin:    10_000, freqMax: 10_000_000, freqStep:  10_000, fieldMin: 10, fieldMax: 10_000, fieldStep: 100, pwLogMin: 0, pwLogMax: 3 },
-  RESONANCE_MAMMALIAN: { freqMin:        10, freqMax:     10_000, freqStep:       1, fieldMin: 10, fieldMax:  3_000, fieldStep:   1, pwLogMin: 0, pwLogMax: 5 },
+  // Extended to 100 MHz so the Schwan fc rolloff (typically 1–10 MHz for cancer cells) is fully visible
+  RESONANCE_MAMMALIAN: { freqMin:        10, freqMax:    100_000, freqStep:      10, fieldMin: 10, fieldMax:  3_000, fieldStep:   1, pwLogMin: 0, pwLogMax: 5 },
   IRE_VIRUS:           { freqMin:         1, freqMax:  5_000_000, freqStep:   1_000, fieldMin: 10, fieldMax: 100_000, fieldStep:  10, pwLogMin: 0, pwLogMax: 2 },
   IRE_BACTERIA:        { freqMin:        10, freqMax:  1_000_000, freqStep:     100, fieldMin: 10, fieldMax: 100_000, fieldStep: 100, pwLogMin: 0, pwLogMax: 3 },
-  IRE_MAMMALIAN:       { freqMin:        10, freqMax:     10_000, freqStep:       1, fieldMin: 10, fieldMax:   3_000, fieldStep:   1, pwLogMin: 0, pwLogMax: 5 },
+  // Extended to 100 MHz — Schwan relaxation frequency for mammalian cells is 1–10 MHz; full rolloff now visible
+  IRE_MAMMALIAN:       { freqMin:        10, freqMax:    100_000, freqStep:      10, fieldMin: 10, fieldMax:   3_000, fieldStep:   1, pwLogMin: 0, pwLogMax: 5 },
 }
 
 /** Advanced-section slider attributes — orientation, pulse count, perfusion, cell packing. */

@@ -1,17 +1,13 @@
 <template>
   <div class="sweep-panel">
 
-    <!-- Accordion toggle -->
-    <button class="sweep-panel__toggle" @click="open = !open">
-      <span class="sweep-panel__toggle-left">
-        <span class="sweep-panel__toggle-icon">{{ ICON.RELOAD }}</span>
-        <span class="sweep-panel__toggle-title">{{ $t('sweep.title') }}</span>
-        <span class="sweep-panel__toggle-sub">{{ sweepSubtitle }}</span>
-      </span>
-      <span class="sweep-panel__chevron" :class="{ 'sweep-panel__chevron--open': open }">{{ ICON.CHEVRON }}</span>
-    </button>
-
-    <div v-show="open" class="sweep-panel__body">
+    <AccordionPanel
+      :icon="ICON.RELOAD"
+      :title="$t('sweep.title')"
+      :subtitle="sweepSubtitle"
+      @open-change="onAccordionChange"
+    >
+    <div class="sweep-panel__body">
 
       <!-- Controls row -->
       <div class="sweep-panel__controls">
@@ -96,6 +92,7 @@
       </table>
 
     </div>
+    </AccordionPanel>
   </div>
 </template>
 
@@ -103,6 +100,7 @@
 import { defineComponent } from 'vue'
 import * as d3 from 'd3'
 import { useCellStore } from '@/stores/cellStore'
+import AccordionPanel from '@/components/AccordionPanel.vue'
 import {
   computeSchwan, computeSAR, computeTau, computePulseStepResponse,
   computeResonantDisruption,
@@ -162,6 +160,7 @@ function computeTemp(cell: CellConfig, E: number, sigma_e: number, wf: number, d
 const MARGIN = { top: 18, right: 76, bottom: 38, left: 54 }
 
 export default defineComponent({
+  components: { AccordionPanel },
   emits: ['windowChange', 'openChange'],
 
   setup() {
@@ -342,6 +341,10 @@ export default defineComponent({
   },
 
   methods: {
+    onAccordionChange(v: boolean) {
+      this.open = v  // triggers the watcher (chart init + openChange emit)
+    },
+
     tipKpLabel(kp: KeyPoint): string { return tipKpLabel(kp.label) },
     tipKpDrT(kp: KeyPoint): string   { return tipKpDrT(kp.drT) },
     tipKpDrH(kp: KeyPoint): string   { return tipKpDrH(kp.drH) },
@@ -534,52 +537,6 @@ export default defineComponent({
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   overflow: hidden;
-
-  &__toggle {
-    @include flex-row(0);
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    padding: 0.75rem 1rem;
-    border-bottom: 1px solid transparent;
-    transition: background 0.15s, border-color 0.15s;
-
-    &:hover { background: rgba(255,255,255,0.04); }
-  }
-
-  &__toggle-left {
-    @include flex-row(0.6rem);
-    align-items: center;
-  }
-
-  &__toggle-icon {
-    font-size: 0.95rem;
-    color: var(--color-primary);
-  }
-
-  &__toggle-title {
-    font-size: 0.82rem;
-    font-weight: 600;
-    color: var(--color-text-heading);
-    font-family: var(--font-mono);
-    letter-spacing: 0.04em;
-  }
-
-  &__toggle-sub {
-    font-size: 0.72rem;
-    color: var(--color-text-muted);
-    font-family: var(--font-mono);
-  }
-
-  &__chevron {
-    font-size: 1.1rem;
-    color: var(--color-text-muted);
-    transition: transform 0.2s;
-    &--open { transform: rotate(90deg); }
-  }
 
   &__body {
     @include flex-col(0.75rem);

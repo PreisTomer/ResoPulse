@@ -65,10 +65,10 @@
         <table class="imp-trend__table">
           <thead>
             <tr>
-              <th>#</th>
-              <th>Time</th>
-              <th>Z ({{ UNIT.OHM }})</th>
-              <th>σ_e ({{ UNIT.S_PER_M }})</th>
+              <th>{{ $t('instrument.trend.thNum') }}</th>
+              <th>{{ $t('instrument.trend.thTime') }}</th>
+              <th>{{ $t('instrument.trend.thZ') }} ({{ UNIT.OHM }})</th>
+              <th>{{ $t('instrument.trend.thSigma') }} ({{ UNIT.S_PER_M }})</th>
             </tr>
           </thead>
           <tbody>

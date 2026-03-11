@@ -170,7 +170,8 @@
     "logThTargetVm": "T-Vm",
     "logThHealthyVm": "H-Vm",
     "logThSel": "Sel×",
-    "logThEvent": "Event"
+    "logThEvent": "Event",
+    "zDriftTip": "<strong>⚗ Impedance Drift Detected</strong>\nMedium conductivity has shifted from baseline by more than 5%.\nThis typically indicates ion release from lysing target cells.\n\nClick to open the Instrument Panel for real-time impedance tracking and corrected field voltage."
   },
   "resonance": {
     "chartTitle": "Resonant Capsid / Cell-Wall Disruption",

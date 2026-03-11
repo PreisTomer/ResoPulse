@@ -1,10 +1,10 @@
 <template>
   <div class="home">
-    <!-- Animated background grid -->
     <div class="home__bg-grid" aria-hidden="true"></div>
 
     <div class="home__inner">
-      <!-- Logo + rings -->
+
+      <!-- Logo rings -->
       <div class="home__logo-wrap" aria-hidden="true">
         <div class="home__ring home__ring--1"></div>
         <div class="home__ring home__ring--2"></div>
@@ -18,68 +18,127 @@
       <!-- Eyebrow -->
       <div class="home__eyebrow">
         <span class="home__eyebrow-dot"></span>
-        Membrane Biophysics · Electric Fields · Acoustic Resonance
+        Bioelectric Field Research · Electroporation · Acoustic Disruption
       </div>
 
       <!-- Title -->
       <h1 class="home__title">
         Bio<span class="home__title-accent">Resonance</span>
       </h1>
+
+      <!-- Tagline -->
       <p class="home__tagline">
-        A computational platform for studying how pulsed electric fields interact with
-        biological membranes. Model cancer cell selective disruption, acoustic resonance
-        targeting of viral capsids and bacterial cell walls, and SAR thermal response —
-        built on the Schwan dielectric model and Lorentzian acoustic resonance theory.
+        A computational workbench for pulsed electric field research. Model how
+        field protocols selectively disrupt cancer cells, bacteria, and viruses —
+        quantify the therapeutic safety margin and spare healthy tissue.
       </p>
 
       <!-- Capability pills -->
       <div class="home__caps">
-        <span class="home__cap">◈ Schwan Dielectric Model</span>
-        <span class="home__cap">◎ Lorentzian Acoustic Resonance</span>
-        <span class="home__cap">⊕ SAR Thermal Model</span>
-        <span class="home__cap">⇌ Socket.IO Instrument Sync</span>
-        <span class="home__cap">⊞ 10-Preset Cell Library</span>
-        <span class="home__cap">↯ nsEP Pulse Selectivity</span>
+        <span class="home__cap">∿ Transmembrane Voltage</span>
+        <span class="home__cap">⊙ Selectivity &amp; Therapeutic Index</span>
+        <span class="home__cap">↯ Nanosecond Pulse Selectivity</span>
+        <span class="home__cap">⟳ Field &amp; Frequency Sweep</span>
+        <span class="home__cap">⊞ Population Distribution Model</span>
+        <span class="home__cap">⚗ Live Impedance Feedback</span>
       </div>
 
       <!-- CTA -->
       <div class="home__actions">
         <RouterLink to="/experiment" class="home__btn home__btn--primary">
-          Run Simulation <span class="home__btn-arrow">⟶</span>
+          Open Experiment Lab <span class="home__btn-arrow">⟶</span>
         </RouterLink>
-        <RouterLink to="/protocol" class="home__btn home__btn--ghost">Read the Science <span class="home__btn-arrow">⟶</span></RouterLink>
+        <RouterLink to="/protocol" class="home__btn home__btn--ghost">
+          Read the Science <span class="home__btn-arrow">⟶</span>
+        </RouterLink>
       </div>
 
-      <!-- Feature cards -->
+      <!-- 3-step workflow -->
+      <div class="home__workflow">
+        <div class="home__wf-step">
+          <span class="home__wf-num">01</span>
+          <span class="home__wf-label">Select Cells</span>
+          <span class="home__wf-desc">Pick any of 10 presets — cancer lines, bacteria, viruses, or healthy reference — and pair a target against a healthy baseline.</span>
+        </div>
+        <span class="home__wf-arrow" aria-hidden="true">⟶</span>
+        <div class="home__wf-step">
+          <span class="home__wf-num">02</span>
+          <span class="home__wf-label">Design Protocol</span>
+          <span class="home__wf-desc">Set frequency, field intensity, waveform, duty cycle, and pulse width. Watch transmembrane voltage, disruption ratio, and temperature update live.</span>
+        </div>
+        <span class="home__wf-arrow" aria-hidden="true">⟶</span>
+        <div class="home__wf-step">
+          <span class="home__wf-num">03</span>
+          <span class="home__wf-label">Optimise &amp; Export</span>
+          <span class="home__wf-desc">Sweep parameters to find the therapeutic window, monitor impedance drift, and export a full Methods section for your publication.</span>
+        </div>
+      </div>
+
+      <!-- Feature cards (3 cols) -->
       <div class="home__feature-cards">
-        <RouterLink to="/experiment" class="home__feature-card">
+
+        <RouterLink to="/experiment" class="home__feature-card home__feature-card--primary">
           <div class="home__fc-header">
             <span class="home__fc-icon">⚗</span>
             <span class="home__fc-title">Experiment Lab</span>
           </div>
-          <span class="home__fc-desc">Configure frequency, field intensity, waveform, and propagation medium. Observe live Schwan transmembrane potential, disruption ratios, and SAR thermal response for any target–reference cell pair.</span>
+          <span class="home__fc-desc">Live Schwan Vm, disruption ratios, SAR temperature, frequency response chart, field &amp; frequency sweep, and cell population distribution — all in one workspace.</span>
         </RouterLink>
-        <RouterLink to="/datasets" class="home__feature-card">
+
+        <RouterLink to="/instrument" class="home__feature-card">
           <div class="home__fc-header">
-            <span class="home__fc-icon">⊞</span>
-            <span class="home__fc-title">Cell Library</span>
+            <span class="home__fc-icon">⏻</span>
+            <span class="home__fc-title">Instrument Panel</span>
           </div>
-          <span class="home__fc-desc">Ten biologically-realistic presets: reference epithelials, four cancer lines (Adeno, GBM, MCF-7, HL-60), gram-negative and gram-positive bacteria, and two enveloped RNA viruses.</span>
+          <span class="home__fc-desc">Tracks cuvette impedance as cells lyse, computes corrected generator voltage, and sonifies live physics data via the Web Audio API.</span>
         </RouterLink>
-        <RouterLink to="/protocol" class="home__feature-card">
-          <div class="home__fc-header">
-            <span class="home__fc-icon">§</span>
-            <span class="home__fc-title">Physics &amp; Protocol</span>
-          </div>
-          <span class="home__fc-desc">Full derivation of the Schwan equation, SAR thermal model, Lorentzian acoustic resonance, and nsEP pulse-width selectivity — with a 9-step experimental protocol.</span>
-        </RouterLink>
+
         <RouterLink to="/reports" class="home__feature-card">
           <div class="home__fc-header">
             <span class="home__fc-icon">◎</span>
             <span class="home__fc-title">Session Reports</span>
           </div>
-          <span class="home__fc-desc">Log experiment readings, track selectivity ratios across frequency sweeps, and export structured CSV data with all Schwan parameters for downstream statistical analysis.</span>
+          <span class="home__fc-desc">Log every reading and lysis event. Export structured CSV data and publication-ready Materials &amp; Methods text per logged entry.</span>
         </RouterLink>
+
+        <RouterLink to="/datasets" class="home__feature-card">
+          <div class="home__fc-header">
+            <span class="home__fc-icon">⊞</span>
+            <span class="home__fc-title">Cell Library</span>
+          </div>
+          <span class="home__fc-desc">10 biologically-grounded presets: reference hepatocytes, 4 cancer lines, E. coli, MRSA, Influenza A, and SARS-CoV-2 — with computed Cm, τ, and fc.</span>
+        </RouterLink>
+
+        <RouterLink to="/protocol" class="home__feature-card">
+          <div class="home__fc-header">
+            <span class="home__fc-icon">§</span>
+            <span class="home__fc-title">Physics &amp; Protocol</span>
+          </div>
+          <span class="home__fc-desc">Full derivations for Schwan Vm, SAR, Lorentzian resonance, nsEP pulse selectivity, impedance feedback, and sonification — plus a 12-step experimental guide.</span>
+        </RouterLink>
+
+        <!-- Stats card -->
+        <div class="home__feature-card home__feature-card--stats">
+          <div class="home__stats-grid">
+            <div class="home__stat">
+              <span class="home__stat-val">10</span>
+              <span class="home__stat-label">Cell Presets</span>
+            </div>
+            <div class="home__stat">
+              <span class="home__stat-val">12</span>
+              <span class="home__stat-label">Protocol Steps</span>
+            </div>
+            <div class="home__stat">
+              <span class="home__stat-val">1 GHz</span>
+              <span class="home__stat-label">Max Frequency</span>
+            </div>
+            <div class="home__stat">
+              <span class="home__stat-val">22</span>
+              <span class="home__stat-label">References</span>
+            </div>
+          </div>
+        </div>
+
       </div>
 
       <!-- Research scope tags -->
@@ -90,7 +149,6 @@
         <span class="home__scope-tag home__scope-tag--ref">Cell Membranes</span>
       </div>
 
-      <!-- Disclaimer -->
       <p class="home__disclaimer">
         for research visualisation only · not a medical device
       </p>
@@ -115,7 +173,7 @@ export default defineComponent({})
   justify-content: center;
   min-height: calc(100vh - 60px);
   position: relative;
-  overflow-x: hidden; // vertical must NOT be hidden — content overflows on small phones
+  overflow-x: hidden;
 
   &__bg-grid {
     position: absolute;
@@ -137,9 +195,11 @@ export default defineComponent({})
     text-align: center;
     gap: 1.8rem;
     padding: 3rem 2rem;
-    max-width: 780px;
+    max-width: 900px;
+    width: 100%;
   }
 
+  /* ── Logo ────────────────────────────────────────────────────── */
   &__logo-wrap {
     position: relative;
     width: 180px;
@@ -179,6 +239,7 @@ export default defineComponent({})
     }
   }
 
+  /* ── Typography ──────────────────────────────────────────────── */
   &__eyebrow {
     @include flex-row(0.5rem);
     @include mono-upper(0.75rem, 0.14em);
@@ -217,6 +278,7 @@ export default defineComponent({})
     margin: 0;
   }
 
+  /* ── Capability pills ────────────────────────────────────────── */
   &__caps {
     display: grid;
     grid-template-columns: repeat(3, auto);
@@ -226,7 +288,7 @@ export default defineComponent({})
 
   &__cap {
     @include mono-upper(0.67rem, 0.07em);
-    padding: 0.25rem 0.6rem;
+    padding: 0.25rem 0.65rem;
     border: 1px solid var(--color-border);
     border-radius: 20px;
     color: var(--color-text-muted);
@@ -234,16 +296,17 @@ export default defineComponent({})
     white-space: nowrap;
   }
 
+  /* ── CTA buttons ─────────────────────────────────────────────── */
   &__actions {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 0.85rem;
     width: 100%;
-    max-width: 640px;
+    max-width: 520px;
   }
 
   &__btn {
-    padding: 0.75rem 1.75rem;
+    padding: 0.75rem 1.5rem;
     border-radius: var(--radius);
     font-size: 0.95rem;
     font-weight: 600;
@@ -280,16 +343,73 @@ export default defineComponent({})
 
   &__btn-arrow {
     display: inline-block;
-    margin-left: 0.3rem;
+    margin-left: 0.4rem;
     transition: transform 0.18s ease;
   }
 
+  /* ── 3-step workflow ─────────────────────────────────────────── */
+  &__workflow {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 0.6rem;
+    width: 100%;
+    max-width: 820px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    background: var(--color-surface);
+    padding: 1.2rem 1.4rem;
+  }
+
+  &__wf-step {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+    text-align: center;
+    min-width: 0;
+  }
+
+  &__wf-num {
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--color-primary);
+    opacity: 0.7;
+  }
+
+  &__wf-label {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--color-text-heading);
+    font-family: var(--font-mono);
+    letter-spacing: 0.03em;
+  }
+
+  &__wf-desc {
+    font-size: 0.7rem;
+    color: var(--color-text-muted);
+    line-height: 1.55;
+    max-width: 200px;
+  }
+
+  &__wf-arrow {
+    font-size: 1.1rem;
+    color: var(--color-primary);
+    opacity: 0.35;
+    flex-shrink: 0;
+    margin-top: 1.5rem;
+  }
+
+  /* ── Feature cards ───────────────────────────────────────────── */
   &__feature-cards {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.85rem;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0.75rem;
     width: 100%;
-    max-width: 640px;
+    max-width: 820px;
   }
 
   &__feature-card {
@@ -300,24 +420,74 @@ export default defineComponent({})
     text-decoration: none;
     display: flex;
     flex-direction: column;
-    gap: 0.35rem;
+    gap: 0.4rem;
     text-align: left;
     transition: border-color 0.18s, box-shadow 0.18s;
 
     &:hover {
       border-color: rgba(0, 212, 255, 0.4);
-      box-shadow: 0 0 16px rgba(0, 212, 255, 0.08);
+      box-shadow: 0 0 18px rgba(0, 212, 255, 0.08);
       text-decoration: none;
+    }
+
+    &--primary {
+      grid-column: 1;
+    }
+
+    &--stats {
+      cursor: default;
+      border-style: dashed;
+      border-color: rgba(0, 212, 255, 0.18);
+      background: rgba(0, 212, 255, 0.03);
+
+      &:hover {
+        border-color: rgba(0, 212, 255, 0.28);
+        box-shadow: none;
+      }
     }
   }
 
   &__fc {
     &-header { display: flex; align-items: center; gap: 0.45rem; }
-    &-icon   { font-size: 1rem; opacity: 0.75; flex-shrink: 0; }
+    &-icon   { font-size: 1rem; opacity: 0.7; flex-shrink: 0; }
     &-title  { font-size: 0.82rem; font-weight: 600; color: var(--color-text-heading); }
-    &-desc   { font-size: 0.72rem; color: var(--color-text-muted); line-height: 1.6; }
+    &-desc   { font-size: 0.7rem; color: var(--color-text-muted); line-height: 1.6; }
   }
 
+  /* ── Stats card ──────────────────────────────────────────────── */
+  &__stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    height: 100%;
+    align-content: center;
+  }
+
+  &__stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.15rem;
+
+    &-val {
+      font-family: var(--font-mono);
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: var(--color-primary);
+      letter-spacing: -0.03em;
+      line-height: 1;
+    }
+
+    &-label {
+      font-size: 0.62rem;
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--color-text-muted);
+    }
+  }
+
+  /* ── Scope tags ──────────────────────────────────────────────── */
   &__scope-tags {
     display: flex;
     gap: 0.5rem;
@@ -351,6 +521,7 @@ export default defineComponent({})
   }
 }
 
+/* ── Animations ──────────────────────────────────────────────────────── */
 @keyframes ring-expand {
   0%   { transform: scale(0.8); opacity: 0.8; }
   100% { transform: scale(1.1); opacity: 0; }

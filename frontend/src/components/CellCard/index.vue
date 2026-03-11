@@ -163,6 +163,7 @@ import type { PropType } from 'vue'
 import * as d3 from 'd3'
 import { useCellStore } from '@/stores/cellStore'
 import { useExperimentStore } from '@/stores/experimentStore'
+import { useImpedanceStore } from '@/stores/impedanceStore'
 import { broadcastLogEntry } from '@/services/socket'
 import { CELL_PRESETS } from '@/constants/cellLibrary'
 import type { CellConfig, CellRecord } from '@/types/cell'
@@ -577,6 +578,10 @@ export default defineComponent({
       expStore.logReading(useCellStore(), 'lysis')
       const last = expStore.entries[expStore.entries.length - 1]
       if (last) broadcastLogEntry(last)
+      // Snapshot impedance at the lysis moment (target cell only)
+      if (this.type === CELL_TYPE.TARGET) {
+        useImpedanceStore().snapshotSimulatedReading()
+      }
       const el = this.$refs.cellCanvas as HTMLElement
       this._particleInterval = setInterval(() => {
         if (el) spawnFragment(el)

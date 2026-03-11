@@ -2,16 +2,14 @@
   <div class="sel-panel">
 
     <!-- ── Accordion toggle ─────────────────────────────────── -->
-    <button class="sel-panel__toggle" @click="open = !open">
-      <span class="sel-panel__toggle-left">
-        <span class="sel-panel__toggle-icon">⊕</span>
-        <span class="sel-panel__toggle-title">{{ $t('selectivity.title') }}</span>
-        <span class="sel-panel__toggle-sub">{{ toggleSubtitle }}</span>
-      </span>
-      <span class="sel-panel__chevron" :class="{ 'sel-panel__chevron--open': open }">›</span>
-    </button>
-
-    <div v-show="open">
+    <AccordionPanel
+      :icon="ICON.SELECTIVITY"
+      :title="$t('selectivity.title')"
+      :subtitle="toggleSubtitle"
+      :initial-open="true"
+      :compact="true"
+    >
+    <div class="sel-panel__body">
 
     <!-- ── Selectivity ratio + TI ────────────────────────────── -->
     <div class="sel-panel__ratio-wrap" v-tip="tipSelectivity">
@@ -125,7 +123,8 @@
     <div class="sel-panel__sep"></div>
     <ComparisonTable />
 
-    </div><!-- /v-show="open" -->
+    </div><!-- /slot content -->
+    </AccordionPanel>
   </div>
 </template>
 
@@ -139,19 +138,16 @@ import { UNIT } from '@/constants/units'
 import { formatFreqKHz, formatFieldVcm } from '@/utils/format'
 import { broadcastStateSync } from '@/services/socket'
 import { tipTiRange, tipSelectivity, tipOptimal } from '@/utils/selectivityTooltips'
+import AccordionPanel from '@/components/AccordionPanel.vue'
 import DisruptionBars from './DisruptionBars.vue'
 import ComparisonTable from './ComparisonTable.vue'
 import PresetLibrary from './PresetLibrary.vue'
 
 export default defineComponent({
-  components: { DisruptionBars, ComparisonTable, PresetLibrary },
+  components: { AccordionPanel, DisruptionBars, ComparisonTable, PresetLibrary },
 
   setup() {
     return { store: useCellStore(), CHART_MODE, ICON, UNIT }
-  },
-
-  data() {
-    return { open: true }
   },
 
   computed: {
@@ -409,10 +405,18 @@ export default defineComponent({
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
-  padding: 1rem 1.1rem 1.2rem;
+  padding: 0 1.1rem;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0;
+
+  /* ── Body content (inside AccordionPanel slot) ─────────────── */
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding-bottom: 0.75rem;
+  }
 
   /* ── Section separator ─────────────────────────────────────── */
   &__sep {
@@ -421,68 +425,6 @@ export default defineComponent({
     opacity: 0.5;
     margin: 0.1rem 0;
     flex-shrink: 0;
-  }
-
-  /* ── Accordion toggle ──────────────────────────────────────── */
-  &__toggle {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-    background: transparent;
-    border: none;
-    border-bottom: 1px solid var(--color-border);
-    padding: 0.5rem 0 0.5rem;
-    margin-bottom: 0.5rem;
-    cursor: pointer;
-    gap: 0.5rem;
-
-    &:hover .sel-panel__toggle-title { color: var(--color-primary); }
-  }
-
-  &__toggle-left {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    min-width: 0;
-  }
-
-  &__toggle-icon {
-    font-size: 0.75rem;
-    color: var(--color-primary);
-    flex-shrink: 0;
-    opacity: 0.7;
-  }
-
-  &__toggle-title {
-    font-size: 0.62rem;
-    font-family: var(--font-mono);
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    color: var(--color-text);
-    flex-shrink: 0;
-    transition: color 0.15s;
-  }
-
-  &__toggle-sub {
-    font-size: 0.58rem;
-    font-family: var(--font-mono);
-    color: var(--color-text-muted);
-    opacity: 0.7;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  &__chevron {
-    font-size: 1rem;
-    color: var(--color-text-muted);
-    opacity: 0.5;
-    flex-shrink: 0;
-    transition: transform 0.2s;
-    transform: rotate(0deg);
-
-    &--open { transform: rotate(90deg); }
   }
 
   /* ── Selectivity ratio ─────────────────────────────────────── */
