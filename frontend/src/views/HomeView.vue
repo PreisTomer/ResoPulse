@@ -18,7 +18,7 @@
       <!-- Eyebrow -->
       <div class="home__eyebrow">
         <span class="home__eyebrow-dot"></span>
-        Bioelectric Field Research · Electroporation · Acoustic Disruption
+        {{ $t('home.eyebrow') }}
       </div>
 
       <!-- Title -->
@@ -27,50 +27,47 @@
       </h1>
 
       <!-- Tagline -->
-      <p class="home__tagline">
-        A computational workbench for pulsed electric field research. Model how
-        field protocols selectively disrupt cancer cells, bacteria, and viruses —
-        quantify the therapeutic safety margin and spare healthy tissue.
-      </p>
+      <p class="home__tagline">{{ $t('home.tagline') }}</p>
 
       <!-- Capability pills -->
       <div class="home__caps">
-        <span class="home__cap">∿ Transmembrane Voltage</span>
-        <span class="home__cap">⊙ Selectivity &amp; Therapeutic Index</span>
-        <span class="home__cap">↯ Nanosecond Pulse Selectivity</span>
-        <span class="home__cap">⟳ Field &amp; Frequency Sweep</span>
-        <span class="home__cap">⊞ Population Distribution Model</span>
-        <span class="home__cap">⚗ Live Impedance Feedback</span>
+        <span class="home__cap">{{ ICON.WAVE }} {{ $t('home.capVm') }}</span>
+        <span class="home__cap">{{ ICON.SELECTIVITY }} {{ $t('home.capSelectivity') }}</span>
+        <span class="home__cap">{{ ICON.LYSIS_BOLT }} {{ $t('home.capPulse') }}</span>
+        <span class="home__cap">{{ ICON.RELOAD }} {{ $t('home.capSweep') }}</span>
+        <span class="home__cap">{{ ICON.GRID }} {{ $t('home.capPop') }}</span>
+        <span class="home__cap">{{ ICON.FLASK }} {{ $t('home.capImp') }}</span>
+        <span class="home__cap">{{ ICON.NOURISH }} {{ $t('home.capBio') }}</span>
       </div>
 
       <!-- CTA -->
       <div class="home__actions">
         <RouterLink to="/experiment" class="home__btn home__btn--primary">
-          Open Experiment Lab <span class="home__btn-arrow">⟶</span>
+          {{ $t('home.btnPrimary') }} <span class="home__btn-arrow">{{ ICON.ARROW_R }}</span>
         </RouterLink>
         <RouterLink to="/protocol" class="home__btn home__btn--ghost">
-          Read the Science <span class="home__btn-arrow">⟶</span>
+          {{ $t('home.btnGhost') }} <span class="home__btn-arrow">{{ ICON.ARROW_R }}</span>
         </RouterLink>
       </div>
 
       <!-- 3-step workflow -->
       <div class="home__workflow">
         <div class="home__wf-step">
-          <span class="home__wf-num">01</span>
-          <span class="home__wf-label">Select Cells</span>
-          <span class="home__wf-desc">Pick any of 10 presets — cancer lines, bacteria, viruses, or healthy reference — and pair a target against a healthy baseline.</span>
+          <span class="home__wf-num">{{ $t('home.wf1Num') }}</span>
+          <span class="home__wf-label">{{ $t('home.wf1Label') }}</span>
+          <span class="home__wf-desc">{{ $t('home.wf1Desc') }}</span>
         </div>
-        <span class="home__wf-arrow" aria-hidden="true">⟶</span>
+        <span class="home__wf-arrow" aria-hidden="true">{{ ICON.ARROW_R }}</span>
         <div class="home__wf-step">
-          <span class="home__wf-num">02</span>
-          <span class="home__wf-label">Design Protocol</span>
-          <span class="home__wf-desc">Set frequency, field intensity, waveform, duty cycle, and pulse width. Watch transmembrane voltage, disruption ratio, and temperature update live.</span>
+          <span class="home__wf-num">{{ $t('home.wf2Num') }}</span>
+          <span class="home__wf-label">{{ $t('home.wf2Label') }}</span>
+          <span class="home__wf-desc">{{ $t('home.wf2Desc') }}</span>
         </div>
-        <span class="home__wf-arrow" aria-hidden="true">⟶</span>
+        <span class="home__wf-arrow" aria-hidden="true">{{ ICON.ARROW_R }}</span>
         <div class="home__wf-step">
-          <span class="home__wf-num">03</span>
-          <span class="home__wf-label">Optimise &amp; Export</span>
-          <span class="home__wf-desc">Sweep parameters to find the therapeutic window, monitor impedance drift, and export a full Methods section for your publication.</span>
+          <span class="home__wf-num">{{ $t('home.wf3Num') }}</span>
+          <span class="home__wf-label">{{ $t('home.wf3Label') }}</span>
+          <span class="home__wf-desc">{{ $t('home.wf3Desc') }}</span>
         </div>
       </div>
 
@@ -79,62 +76,62 @@
 
         <RouterLink to="/experiment" class="home__feature-card home__feature-card--primary">
           <div class="home__fc-header">
-            <span class="home__fc-icon">⚗</span>
-            <span class="home__fc-title">Experiment Lab</span>
+            <span class="home__fc-icon">{{ ICON.FLASK }}</span>
+            <span class="home__fc-title">{{ $t('home.card1Title') }}</span>
           </div>
-          <span class="home__fc-desc">Live Schwan Vm, disruption ratios, SAR temperature, frequency response chart, field &amp; frequency sweep, and cell population distribution — all in one workspace.</span>
+          <span class="home__fc-desc">{{ $t('home.card1Desc') }}</span>
         </RouterLink>
 
         <RouterLink to="/instrument" class="home__feature-card">
           <div class="home__fc-header">
-            <span class="home__fc-icon">⏻</span>
-            <span class="home__fc-title">Instrument Panel</span>
+            <span class="home__fc-icon">{{ ICON.PLUG }}</span>
+            <span class="home__fc-title">{{ $t('home.card2Title') }}</span>
           </div>
-          <span class="home__fc-desc">Tracks cuvette impedance as cells lyse, computes corrected generator voltage, and sonifies live physics data via the Web Audio API.</span>
+          <span class="home__fc-desc">{{ $t('home.card2Desc') }}</span>
         </RouterLink>
 
         <RouterLink to="/reports" class="home__feature-card">
           <div class="home__fc-header">
-            <span class="home__fc-icon">◎</span>
-            <span class="home__fc-title">Session Reports</span>
+            <span class="home__fc-icon">{{ ICON.CELL }}</span>
+            <span class="home__fc-title">{{ $t('home.card3Title') }}</span>
           </div>
-          <span class="home__fc-desc">Log every reading and lysis event. Export structured CSV data and publication-ready Materials &amp; Methods text per logged entry.</span>
+          <span class="home__fc-desc">{{ $t('home.card3Desc') }}</span>
         </RouterLink>
 
         <RouterLink to="/datasets" class="home__feature-card">
           <div class="home__fc-header">
-            <span class="home__fc-icon">⊞</span>
-            <span class="home__fc-title">Cell Library</span>
+            <span class="home__fc-icon">{{ ICON.GRID }}</span>
+            <span class="home__fc-title">{{ $t('home.card4Title') }}</span>
           </div>
-          <span class="home__fc-desc">10 biologically-grounded presets: reference hepatocytes, 4 cancer lines, E. coli, MRSA, Influenza A, and SARS-CoV-2 — with computed Cm, τ, and fc.</span>
+          <span class="home__fc-desc">{{ $t('home.card4Desc') }}</span>
         </RouterLink>
 
         <RouterLink to="/protocol" class="home__feature-card">
           <div class="home__fc-header">
-            <span class="home__fc-icon">§</span>
-            <span class="home__fc-title">Physics &amp; Protocol</span>
+            <span class="home__fc-icon">{{ ICON.SECTION }}</span>
+            <span class="home__fc-title">{{ $t('home.card5Title') }}</span>
           </div>
-          <span class="home__fc-desc">Full derivations for Schwan Vm, SAR, Lorentzian resonance, nsEP pulse selectivity, impedance feedback, and sonification — plus a 12-step experimental guide.</span>
+          <span class="home__fc-desc">{{ $t('home.card5Desc') }}</span>
         </RouterLink>
 
         <!-- Stats card -->
         <div class="home__feature-card home__feature-card--stats">
           <div class="home__stats-grid">
             <div class="home__stat">
-              <span class="home__stat-val">10</span>
-              <span class="home__stat-label">Cell Presets</span>
+              <span class="home__stat-val">{{ $t('home.stat1Val') }}</span>
+              <span class="home__stat-label">{{ $t('home.stat1Label') }}</span>
             </div>
             <div class="home__stat">
-              <span class="home__stat-val">12</span>
-              <span class="home__stat-label">Protocol Steps</span>
+              <span class="home__stat-val">{{ $t('home.stat2Val') }}</span>
+              <span class="home__stat-label">{{ $t('home.stat2Label') }}</span>
             </div>
             <div class="home__stat">
-              <span class="home__stat-val">1 GHz</span>
-              <span class="home__stat-label">Max Frequency</span>
+              <span class="home__stat-val">{{ $t('home.stat3Val') }}</span>
+              <span class="home__stat-label">{{ $t('home.stat3Label') }}</span>
             </div>
             <div class="home__stat">
-              <span class="home__stat-val">22</span>
-              <span class="home__stat-label">References</span>
+              <span class="home__stat-val">{{ $t('home.stat4Val') }}</span>
+              <span class="home__stat-label">{{ $t('home.stat4Label') }}</span>
             </div>
           </div>
         </div>
@@ -143,23 +140,28 @@
 
       <!-- Research scope tags -->
       <div class="home__scope-tags">
-        <span class="home__scope-tag home__scope-tag--cancer">Cancer</span>
-        <span class="home__scope-tag home__scope-tag--bacteria">Bacteria</span>
-        <span class="home__scope-tag home__scope-tag--virus">Viruses</span>
-        <span class="home__scope-tag home__scope-tag--ref">Cell Membranes</span>
+        <span class="home__scope-tag home__scope-tag--cancer">{{ $t('home.tagCancer') }}</span>
+        <span class="home__scope-tag home__scope-tag--bacteria">{{ $t('home.tagBacteria') }}</span>
+        <span class="home__scope-tag home__scope-tag--virus">{{ $t('home.tagVirus') }}</span>
+        <span class="home__scope-tag home__scope-tag--ref">{{ $t('home.tagRef') }}</span>
       </div>
 
-      <p class="home__disclaimer">
-        for research visualisation only · not a medical device
-      </p>
+      <p class="home__disclaimer">{{ $t('home.disclaimer') }}</p>
     </div>
   </div>
 </template>
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+import { ICON } from '@/constants/icons'
 
-export default defineComponent({})
+export default defineComponent({
+  name: 'HomeView',
+
+  data() {
+    return { ICON }
+  },
+})
 </script>
 
 <style lang="scss" scoped>
@@ -244,6 +246,8 @@ export default defineComponent({})
     @include flex-row(0.5rem);
     @include mono-upper(0.75rem, 0.14em);
     color: var(--color-primary);
+    flex-wrap: wrap;
+    justify-content: center;
 
     &-dot {
       width: 6px; height: 6px;
@@ -251,11 +255,12 @@ export default defineComponent({})
       background-color: var(--color-primary);
       box-shadow: 0 0 8px var(--color-primary);
       animation: blink 2s ease-in-out infinite;
+      flex-shrink: 0;
     }
   }
 
   &__title {
-    font-size: clamp(3rem, 7vw, 5.5rem);
+    font-size: clamp(2.8rem, 7vw, 5.5rem);
     font-weight: 900;
     letter-spacing: -0.04em;
     line-height: 1;
@@ -280,10 +285,11 @@ export default defineComponent({})
 
   /* ── Capability pills ────────────────────────────────────────── */
   &__caps {
-    display: grid;
-    grid-template-columns: repeat(3, auto);
+    display: flex;
+    flex-wrap: wrap;
     justify-content: center;
     gap: 0.55rem;
+    max-width: 720px;
   }
 
   &__cap {
@@ -317,6 +323,7 @@ export default defineComponent({})
     display: flex;
     align-items: center;
     justify-content: center;
+    gap: 0.35rem;
 
     &--primary {
       background-color: var(--color-primary);
@@ -337,15 +344,14 @@ export default defineComponent({})
 
       &:hover { border-color: var(--color-primary); color: var(--color-primary); text-decoration: none; }
     }
-
-    &:hover &-arrow { transform: translateX(4px); }
   }
 
   &__btn-arrow {
     display: inline-block;
-    margin-left: 0.4rem;
     transition: transform 0.18s ease;
   }
+
+  &__btn:hover &__btn-arrow { transform: translateX(4px); }
 
   /* ── 3-step workflow ─────────────────────────────────────────── */
   &__workflow {
@@ -428,10 +434,6 @@ export default defineComponent({})
       border-color: rgba(0, 212, 255, 0.4);
       box-shadow: 0 0 18px rgba(0, 212, 255, 0.08);
       text-decoration: none;
-    }
-
-    &--primary {
-      grid-column: 1;
     }
 
     &--stats {
@@ -519,6 +521,126 @@ export default defineComponent({})
     text-transform: uppercase;
     margin: 0;
   }
+
+  /* ── Responsive — tablet (≤ 768px) ──────────────────────────── */
+  @media (max-width: 768px) {
+    &__inner {
+      gap: 1.4rem;
+      padding: 2rem 1.5rem;
+    }
+
+    &__logo-wrap {
+      width: 140px;
+      height: 140px;
+    }
+
+    &__ring {
+      &--1 { width: 68px;  height: 68px; }
+      &--2 { width: 98px;  height: 98px; }
+      &--3 { width: 122px; height: 122px; }
+      &--4 { width: 140px; height: 140px; }
+    }
+
+    &__logo-circle {
+      width: 68px;
+      height: 68px;
+    }
+
+    &__tagline {
+      font-size: 0.9rem;
+    }
+
+    &__actions {
+      max-width: 100%;
+    }
+
+    &__workflow {
+      padding: 1rem 1rem;
+    }
+
+    &__wf-desc {
+      max-width: 160px;
+    }
+
+    &__feature-cards {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  /* ── Responsive — phone (≤ 520px) ───────────────────────────── */
+  @media (max-width: 520px) {
+    &__inner {
+      gap: 1.2rem;
+      padding: 1.5rem 1rem;
+    }
+
+    &__logo-wrap {
+      width: 120px;
+      height: 120px;
+    }
+
+    &__ring {
+      &--1 { width: 58px;  height: 58px; }
+      &--2 { width: 84px;  height: 84px; }
+      &--3 { width: 104px; height: 104px; }
+      &--4 { width: 122px; height: 122px; }
+    }
+
+    &__logo-circle {
+      width: 58px;
+      height: 58px;
+    }
+
+    &__eyebrow {
+      font-size: 0.65rem;
+    }
+
+    &__tagline {
+      font-size: 0.85rem;
+    }
+
+    &__actions {
+      grid-template-columns: 1fr;
+      max-width: 100%;
+    }
+
+    &__btn {
+      padding: 0.7rem 1.2rem;
+      font-size: 0.9rem;
+    }
+
+    /* workflow: vertical stack */
+    &__workflow {
+      flex-direction: column;
+      align-items: center;
+      padding: 1rem;
+      gap: 0.8rem;
+    }
+
+    &__wf-step {
+      width: 100%;
+      max-width: 320px;
+    }
+
+    &__wf-desc {
+      max-width: 100%;
+    }
+
+    &__wf-arrow {
+      transform: rotate(90deg);
+      margin-top: 0;
+      opacity: 0.25;
+    }
+
+    &__feature-cards {
+      grid-template-columns: 1fr;
+    }
+
+    &__cap {
+      font-size: 0.62rem;
+      padding: 0.22rem 0.5rem;
+    }
+  }
 }
 
 /* ── Animations ──────────────────────────────────────────────────────── */
@@ -533,6 +655,4 @@ export default defineComponent({})
   0%, 100% { text-shadow: 0 0 22px rgba(0, 212, 255, 0.2); }
   50%       { text-shadow: 0 0 44px rgba(0, 212, 255, 0.52); }
 }
-
-// Media queries → _responsive.scss
 </style>
