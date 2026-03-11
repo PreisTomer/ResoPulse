@@ -450,10 +450,20 @@ export default defineComponent({
     },
 
     exportCSV() {
-      const header = 'cell_type,sample_index,DR\n'
+      const { store } = this
+      const meta = [
+        `# BioResonance — Population Monte Carlo Export`,
+        `# Exported: ${new Date().toISOString()}`,
+        `# Healthy: ${store.healthy.label} · R=${store.healthy.radius} ${UNIT.UM} · N=${this.nCells} · σ_i ±${this.healthyUncPct}% · R ±${this.rVariancePct}%`,
+        `# Target:  ${store.target.label} · R=${store.target.radius} ${UNIT.UM} · N=${this.nCells} · σ_i ±${this.targetUncPct}% · R ±${this.rVariancePct}%`,
+        `# Medium: ${store.medium} · σ_e=${store.effectiveSigmaE.toFixed(3)} ${UNIT.S_PER_M}`,
+        `# Field: ${store.currentBroadcastFrequency} ${UNIT.KHZ} · ${store.fieldIntensity} ${UNIT.V_PER_CM} · ${store.waveform} · dc=${store.dutyCycle.toExponential(2)} · pw=${store.pulseWidthNs} ${UNIT.NS}`,
+        `# Model: Schwan + Box-Muller Gaussian sampling (Kotnik & Miklavcic 2000)`,
+        `cell_type,sample_index,DR`,
+      ].join('\n')
       const targetRows  = this.targetDRs.map((d, i) => `target,${i},${d.toFixed(4)}`)
       const healthyRows = this.healthyDRs.map((d, i) => `healthy,${i},${d.toFixed(4)}`)
-      const blob = new Blob([header + [...targetRows, ...healthyRows].join('\n')], { type: 'text/csv' })
+      const blob = new Blob([meta + '\n' + [...targetRows, ...healthyRows].join('\n')], { type: 'text/csv' })
       const a = document.createElement('a')
       a.href = URL.createObjectURL(blob)
       a.download = `population_model_${Date.now()}.csv`

@@ -123,16 +123,17 @@
                 <th :title="$t('reports.colTTempTitle')">{{ $t('reports.colTTemp') }}</th>
                 <th :title="$t('reports.colHTempTitle')">{{ $t('reports.colHTemp') }}</th>
                 <th :title="$t('reports.colEventTitle')">{{ $t('reports.colEvent') }}</th>
+                <th :title="$t('reports.colMethodsTitle')">{{ $t('reports.colMethods') }}</th>
               </tr>
             </thead>
             <tbody>
               <tr
-                v-for="e in store.entries"
+                v-for="e in reversedEntries"
                 :key="e.id"
                 :class="{ 'reports__row--lysis': e.event === LOG_EVENT.LYSIS }"
               >
                 <td class="reports__mono reports__muted">{{ e.id }}</td>
-                <td class="reports__mono">{{ e.timestamp }}</td>
+                <td class="reports__mono reports__timestamp">{{ e.timestamp }}</td>
                 <td class="reports__mono">{{ e.targetPreset }}</td>
                 <td class="reports__mono">{{ formatFreqKHz(e.freqKHz, 1) }}</td>
                 <td class="reports__mono">{{ formatFieldVcm(e.fieldVcm) }}</td>
@@ -155,6 +156,13 @@
                 </td>
                 <td>
                   <span class="reports__ev-badge" :class="eventClass(e.event)">{{ e.event }}</span>
+                </td>
+                <td>
+                  <button
+                    class="reports__methods-row-btn"
+                    :title="e.healthySnap ? $t('reports.colMethodsTitle') : $t('reports.colMethodsLegacy')"
+                    @click="store.exportEntryMethods(e)"
+                  >↓ Methods</button>
                 </td>
               </tr>
             </tbody>
@@ -197,9 +205,10 @@ export default defineComponent({
   setup() {
     const store = useExperimentStore()
 
-    const totalReadings = computed(() => store.entries.length)
-    const lysisEvents = computed(() => store.entries.filter((e) => e.event === LOG_EVENT.LYSIS).length)
-    const manualReadings = computed(() => store.entries.filter((e) => e.event === LOG_EVENT.MANUAL).length)
+    const totalReadings   = computed(() => store.entries.length)
+    const reversedEntries = computed(() => [...store.entries].reverse())
+    const lysisEvents     = computed(() => store.entries.filter((e) => e.event === LOG_EVENT.LYSIS).length)
+    const manualReadings  = computed(() => store.entries.filter((e) => e.event === LOG_EVENT.MANUAL).length)
 
     const avgSelectivity = computed(() => {
       if (!store.entries.length) return null
@@ -246,6 +255,7 @@ export default defineComponent({
     return {
       store,
       totalReadings,
+      reversedEntries,
       lysisEvents,
       manualReadings,
       avgSelectivity,
@@ -526,7 +536,7 @@ export default defineComponent({
     width: 100%;
     border-collapse: collapse;
     font-size: 0.78rem;
-    min-width: 1060px;
+    min-width: 1200px;
 
     th {
       text-align: left;
@@ -553,6 +563,12 @@ export default defineComponent({
 
   &__row--lysis td { background: rgba(255, 77, 109, 0.04); }
   &__row--lysis:hover td { background: rgba(255, 77, 109, 0.08) !important; }
+
+  &__timestamp {
+    font-size: 0.72rem;
+    letter-spacing: 0.02em;
+    opacity: 0.8;
+  }
 
   /* Utility colours */
   &__mono       { font-family: var(--font-mono); }
@@ -582,6 +598,28 @@ export default defineComponent({
       color: var(--color-danger);
       border-color: rgba(255, 77, 109, 0.35);
       background: rgba(255, 77, 109, 0.08);
+    }
+  }
+
+  /* Per-row methods download button */
+  &__methods-row-btn {
+    padding: 0.18rem 0.45rem;
+    font-size: 0.62rem;
+    font-family: var(--font-mono);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: #c4b5fd;
+    background: rgba(167, 139, 250, 0.08);
+    border: 1px solid rgba(167, 139, 250, 0.3);
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+
+    &:hover {
+      background: rgba(167, 139, 250, 0.2);
+      border-color: rgba(167, 139, 250, 0.7);
+      color: #e9d5ff;
     }
   }
 

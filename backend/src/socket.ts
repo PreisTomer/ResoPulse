@@ -1,6 +1,6 @@
 import { Server } from 'socket.io'
 import type { Server as HttpServer } from 'http'
-import type { StatePacket, LogEntry } from './types/socket'
+import type { StatePacket, LogEntry, HardwareImpedancePacket } from './types/socket'
 
 // ── Domain constants ──────────────────────────────────────────────────────────
 const MEDIUM = {
@@ -135,13 +135,44 @@ function validateLogEntry(raw: Record<string, unknown>): LogEntry | null {
   }
 }
 
+// ── Impedance packet validator ─────────────────────────────────────────────────
+const IMP_BOUNDS = {
+  Z_MIN:    0.01,   // Ω — sub-ohm readings indicate instrument error
+  Z_MAX:    1e6,    // Ω — 1 MΩ upper ceiling
+  FREQ_MIN: 1,      // Hz
+  FREQ_MAX: 1e9,    // 1 GHz
+  SIGMA_MIN: 0,
+  SIGMA_MAX: 100,   // S/m
+} as const
+
+function validateHardwareImpedancePacket(raw: Record<string, unknown>): HardwareImpedancePacket | null {
+  const zReal = Number(raw.zReal)
+  const zImag = Number(raw.zImag)
+  const freqHz = Number(raw.freqHz)
+  const ts = Number(raw.timestamp)
+
+  if (!inBounds(zReal,  IMP_BOUNDS.Z_MIN,    IMP_BOUNDS.Z_MAX))    return null
+  if (isNaN(zImag))                                                  return null
+  if (!inBounds(freqHz, IMP_BOUNDS.FREQ_MIN, IMP_BOUNDS.FREQ_MAX))  return null
+  if (isNaN(ts) || ts <= 0)                                          return null
+
+  const result: HardwareImpedancePacket = { zReal, zImag, freqHz, timestamp: ts }
+  const sigma = Number(raw.conductivity)
+  if (!isNaN(sigma) && inBounds(sigma, IMP_BOUNDS.SIGMA_MIN, IMP_BOUNDS.SIGMA_MAX)) {
+    result.conductivity = sigma
+  }
+  return result
+}
+
 // ── Socket server ─────────────────────────────────────────────────────────────
 const SOCKET_EVENTS = {
-  STATE_SYNC:    'stateSync',
-  STATE_UPDATE:  'stateUpdate',
-  LOG_ENTRY:     'logEntry',
-  NEW_LOG_ENTRY: 'newLogEntry',
-  DISCONNECT:    'disconnect',
+  STATE_SYNC:          'stateSync',
+  STATE_UPDATE:        'stateUpdate',
+  LOG_ENTRY:           'logEntry',
+  NEW_LOG_ENTRY:       'newLogEntry',
+  IMPEDANCE_READING:   'impedanceReading',
+  IMPEDANCE_BROADCAST: 'impedanceBroadcast',
+  DISCONNECT:          'disconnect',
 } as const
 
 export function setupSocketServer(httpServer: HttpServer): Server {
@@ -179,6 +210,15 @@ export function setupSocketServer(httpServer: HttpServer): Server {
       const entry = validateLogEntry(raw as Record<string, unknown>)
       if (!entry) return
       socket.broadcast.emit(SOCKET_EVENTS.NEW_LOG_ENTRY, entry)
+    })
+
+    // Hardware impedance reading from lab instrument bridge — broadcast to ALL clients
+    // (the instrument bridge is a separate process, not a UI client, so all UIs should see it)
+    socket.on(SOCKET_EVENTS.IMPEDANCE_READING, (raw: unknown) => {
+      if (!raw || typeof raw !== 'object') return
+      const packet = validateHardwareImpedancePacket(raw as Record<string, unknown>)
+      if (!packet) return
+      io.emit(SOCKET_EVENTS.IMPEDANCE_BROADCAST, packet)
     })
 
     socket.on(SOCKET_EVENTS.DISCONNECT, () => {

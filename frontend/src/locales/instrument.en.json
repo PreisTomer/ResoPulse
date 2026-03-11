@@ -1,0 +1,87 @@
+{
+  "instrument": {
+    "eyebrow": "Lab Instrumentation — PoC",
+    "title": "Impedance Feedback",
+    "subtitle": "As target cells lyse, released intracellular ions increase medium conductivity σ_e, lowering cuvette impedance. This creates a voltage-divider mismatch with the generator's source impedance — the delivered field drops below the set point. This panel models the drift and computes the corrected generator output voltage to maintain constant transmembrane potential.",
+
+    "setup": {
+      "title": "Cuvette Setup",
+      "sub": "Electrode geometry · source impedance · cell seeding density",
+      "preset": "Cuvette Preset",
+      "presetSub": "Standard electroporation cuvette geometries",
+      "gap": "Electrode Gap",
+      "gapSub": "Distance between electrodes [mm] — defines E = V/d",
+      "area": "Cross-Section",
+      "areaSub": "Electrode face area [cm²] — with gap, sets cuvette resistance Z = d/(σ·A)",
+      "sourceR": "Source Impedance R_s",
+      "sourceRSub": "Generator + cable impedance [Ω] — typically 50 Ω for RF, variable for pulsed",
+      "density": "Cell Density",
+      "densitySub": "Target cell seeding density [cells/mL] — sets ion release magnitude on lysis",
+      "tipPreset": "<strong>Cuvette Preset</strong>\nStandard electroporation cuvette geometries from BTX and Bio-Rad.\nGap sets E = V/d; area sets impedance Z = d/(σ·A).\nUse 'Custom' to enter arbitrary geometry.",
+      "tipGap": "<strong>Electrode Gap [mm]</strong>\nDetermines the electric field: E = V_applied / d.\nSmaller gap → higher field per volt, but lower cuvette impedance.\nTypical lab cuvettes: 1 mm, 2 mm, 4 mm.",
+      "tipArea": "<strong>Electrode Cross-Section [cm²]</strong>\nWith gap, sets cuvette DC resistance: Z = d / (σ_e × A).\nBTX cuvettes ≈ 0.10 cm²; Bio-Rad ≈ 0.13 cm².",
+      "tipSourceR": "<strong>Source Impedance R_s [Ω]</strong>\nGenerator output + cable impedance.\n50 Ω — standard RF / coaxial system\n< 1 Ω — typical high-voltage pulsed power unit\nHigher R_s → larger voltage-divider correction needed.",
+      "tipDensity": "<strong>Cell Density [cells/mL]</strong>\nSets the volume fraction φ = N × (4/3)π R³.\nHigher density → more ions released per unit volume → larger σ_e rise on lysis.\nTypical: 10⁶ cells/mL mammalian, 10⁸ cells/mL bacteria."
+    },
+
+    "meter": {
+      "title": "Live Impedance Status",
+      "sub": "Simulated medium drift from ion release model",
+      "nominalZ": "Nominal Z",
+      "currentZ": "Current Z",
+      "sigmaBase": "σ_e (base)",
+      "sigmaLive": "σ_e (live)",
+      "drift": "Impedance Drift",
+      "lysedPct": "Cells Lysed",
+      "volFraction": "Volume Fraction φ",
+      "tipNominal": "<strong>Nominal Cuvette Impedance Z₀ [Ω]</strong>\nComputed at experiment start with fresh medium and no lysis:\nZ₀ = d / (σ_e_base × A)\nReference for drift percentage.",
+      "tipCurrent": "<strong>Current Cuvette Impedance [Ω]</strong>\nZ corrected for ion release: σ_e rises as cells lyse.\nIn hardware mode, overridden by the live instrument reading.",
+      "tipDrift": "<strong>Impedance Drift [%]</strong>\n(Z_current − Z_nominal) / Z_nominal × 100\nNegative = impedance fell (σ_e rose from ion release).\nA −10% drift requires a +11% field correction.",
+      "tipSigmaLive": "<strong>Live σ_e [S/m]</strong>\nMedium conductivity including ion release from lysed cells.\nFormula: σ_e_live = σ_e_base + φ·f_lysed·(σ_i − σ_e_base)·0.8\nφ = cell volume fraction · f_lysed = fraction of cells lysed (DR > 85%)"
+    },
+
+    "corrector": {
+      "title": "Field Correction",
+      "sub": "Generator output needed to maintain target transmembrane voltage",
+      "targetField": "Target E (cuvette)",
+      "correctedField": "Set Generator To",
+      "factor": "Correction Factor",
+      "status": "Status",
+      "statusOk": "No correction needed",
+      "statusNeeded": "Correction needed",
+      "statusMinor": "Minor correction",
+      "tipTarget": "<strong>Target Field [V/cm]</strong>\nThe electric field required inside the cuvette to achieve the desired transmembrane voltage.\nSet in the Experiment Lab Field Control slider.",
+      "tipCorrected": "<strong>Corrected Generator Field [V/cm]</strong>\nThe equivalent field the generator must output to deliver E_target inside the cuvette after accounting for the voltage divider:\nE_gen = E_target × (1 + R_s / Z_cuvette)\nSet this value on your function generator or pulser.",
+      "tipFactor": "<strong>Voltage Correction Factor</strong>\n= 1 + R_s / Z_cuvette\nMultiply nominal generator voltage by this factor to compensate for impedance drift."
+    },
+
+    "hardware": {
+      "title": "Hardware Input",
+      "sub": "Connect a lab impedance analyser to override the simulated model",
+      "mode": "Sensor Mode",
+      "modeSimulated": "Simulated",
+      "modeLive": "Live Hardware",
+      "lastReading": "Last Reading",
+      "zReal": "Z_real",
+      "zImag": "Z_imag",
+      "freqHz": "Meas. Freq",
+      "status": "Sensor Status",
+      "statusDisconnected": "No data received",
+      "statusFresh": "Live · fresh",
+      "statusStale": "Stale — check instrument",
+      "socketEvent": "Socket Event",
+      "schema": "Packet Schema",
+      "schemaNote": "Send JSON to the socket event 'impedanceReading' from your instrument bridge. All numeric fields use SI units.",
+      "tipMode": "<strong>Sensor Mode</strong>\n<em>Simulated</em> — impedance is computed from the ion-release physics model based on the current disruption ratio.\n<em>Live Hardware</em> — the simulated value is replaced by Z_real from the last instrument packet.\nSwitch to Live Hardware only after confirming your instrument bridge is sending readings.",
+      "tipSocket": "<strong>Socket Event: impedanceReading</strong>\nYour instrument bridge should emit this event to the BioResonance backend socket.\nThe backend validates and re-broadcasts to all connected UI clients.\n\nMinimal schema:\n  zReal: number   (Ω — required)\n  zImag: number   (Ω — required)\n  freqHz: number  (Hz — required)\n  timestamp: number  (Unix ms — required)\n  conductivity?: number  (S/m — optional)"
+    },
+
+    "trend": {
+      "title": "Impedance Trend",
+      "sub": "Historical Z readings — simulated (grey) or hardware (cyan)",
+      "noData": "No history yet — readings will appear as cells lyse or hardware data arrives",
+      "axisZ": "Z (Ω)",
+      "axisTime": "Time"
+    }
+  }
+}

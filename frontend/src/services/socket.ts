@@ -10,18 +10,21 @@ import { useCellStore } from '@/stores/cellStore'
 import type { StatePacket } from '@/stores/cellStore'
 import { useExperimentStore } from '@/stores/experimentStore'
 import type { LogEntry } from '@/stores/experimentStore'
+import { useImpedanceStore } from '@/stores/impedanceStore'
+import type { HardwareImpedancePacket } from '@/stores/impedanceStore'
 
 // Set VITE_BACKEND_URL in Vercel environment variables once Railway is deployed.
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? 'http://localhost:3001'
 
 const SOCKET_EVENTS = {
-  STATE_SYNC:    'stateSync',
-  STATE_UPDATE:  'stateUpdate',
-  LOG_ENTRY:     'logEntry',
-  NEW_LOG_ENTRY: 'newLogEntry',
-  CONNECT:       'connect',
-  DISCONNECT:    'disconnect',
-  CONNECT_ERROR: 'connect_error',
+  STATE_SYNC:          'stateSync',
+  STATE_UPDATE:        'stateUpdate',
+  LOG_ENTRY:           'logEntry',
+  NEW_LOG_ENTRY:       'newLogEntry',
+  IMPEDANCE_BROADCAST: 'impedanceBroadcast',
+  CONNECT:             'connect',
+  DISCONNECT:          'disconnect',
+  CONNECT_ERROR:       'connect_error',
 } as const
 
 let socket: Socket | null = null
@@ -58,6 +61,11 @@ export function connectSocket(): void {
   // Another client logged an entry — append locally without re-broadcasting
   socket.on(SOCKET_EVENTS.NEW_LOG_ENTRY, (entry: LogEntry) => {
     useExperimentStore().receiveEntry(entry)
+  })
+
+  // Hardware impedance reading from lab instrument bridge
+  socket.on(SOCKET_EVENTS.IMPEDANCE_BROADCAST, (packet: HardwareImpedancePacket) => {
+    useImpedanceStore().handleHardwareImpedancePacket(packet)
   })
 
   socket.on(SOCKET_EVENTS.CONNECT_ERROR, () => {

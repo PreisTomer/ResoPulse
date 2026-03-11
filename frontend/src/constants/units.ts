@@ -19,6 +19,8 @@ export const UNIT = {
   UM:  'µm',
   NM:  'nm',
   MM:  'mm',
+  OHM: 'Ω',
+  CM2: 'cm²',
 } as const
 
 export type Unit = typeof UNIT[keyof typeof UNIT]

@@ -20,6 +20,8 @@ export const ICON = {
   WAVE:      '∿',   // frequency response chart
   SQUARE:    '■',   // legend color swatch
   CELL:      '◎',   // cell icon in CellCard header
+  PLUG:      '⏻',   // instrument / hardware connection
+  FLASK:     '⚗',   // cuvette / lab setup
 } as const
 
 export type Icon = typeof ICON[keyof typeof ICON]

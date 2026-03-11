@@ -17,6 +17,24 @@ export interface StatePacket {
   sessionName:         string
 }
 
+/**
+ * Packet emitted by a lab impedance instrument and forwarded to all UI clients.
+ * Instrument bridges should map their output to this JSON schema and emit via
+ * the 'impedanceReading' socket event.
+ */
+export interface HardwareImpedancePacket {
+  /** Real part of measured impedance [Ω] */
+  zReal:         number
+  /** Imaginary part of measured impedance [Ω] — negative = capacitive */
+  zImag:         number
+  /** Frequency at which the measurement was taken [Hz] */
+  freqHz:        number
+  /** Medium conductivity [S/m] — optionally derived/provided by instrument */
+  conductivity?: number
+  /** Unix timestamp [ms] when the reading was captured by the instrument */
+  timestamp:     number
+}
+
 export interface LogEntry {
   id:            number
   timestamp:     string
