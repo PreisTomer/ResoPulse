@@ -47,15 +47,6 @@ function ensureTip(): HTMLDivElement {
 #br-tip .tip-ok {
   color: #39ff14;
 }
-#br-tip .tip-note {
-  color: #7a96b8;
-  font-size: 0.56rem;
-  display: block;
-  margin-top: 0.35rem;
-  padding-top: 0.25rem;
-  border-top: 1px solid rgba(255,255,255,0.07);
-  line-height: 1.55;
-}
 `
     document.head.appendChild(style)
 
@@ -103,21 +94,16 @@ interface TipHandlers {
   leave: () => void
 }
 
-// Extended element type: stores handlers + mutable current tip content
-type TipEl = HTMLElement & { _tip?: TipHandlers; _tipContent?: string }
-
-export const vTip: Directive<TipEl, string> = {
+export const vTip: Directive<HTMLElement & { _tip?: TipHandlers }, string> = {
   mounted(el, binding) {
-    el._tipContent = binding.value
-
     const handlers: TipHandlers = {
       enter(e) {
-        if (!el._tipContent) return
+        if (!binding.value) return
         if (showTimer) clearTimeout(showTimer)
-        showTimer = setTimeout(() => show(el._tipContent!, e as MouseEvent), 200)
+        showTimer = setTimeout(() => show(binding.value, e as MouseEvent), 200)
       },
       move(e) {
-        if (el._tipContent && ensureTip().classList.contains('br-tip--on')) {
+        if (binding.value && ensureTip().classList.contains('br-tip--on')) {
           positionTip(ensureTip(), e as MouseEvent)
         }
       },
@@ -130,17 +116,7 @@ export const vTip: Directive<TipEl, string> = {
     el.addEventListener('mouseenter', handlers.enter)
     el.addEventListener('mousemove',  handlers.move)
     el.addEventListener('mouseleave', handlers.leave)
-    const tag = el.tagName.toLowerCase()
-    const isInteractive = ['button', 'a', 'label', 'select', 'input', 'textarea'].includes(tag) ||
-      el.getAttribute('role') === 'button' || el.getAttribute('tabindex') != null
-    if (!isInteractive && !el.style.cursor) {
-      el.style.cursor = 'default'
-    }
-  },
-
-  // Keep _tipContent in sync with reactive parent state changes
-  updated(el, binding) {
-    el._tipContent = binding.value
+    el.style.cursor = el.style.cursor || 'default'
   },
 
   beforeUnmount(el) {
