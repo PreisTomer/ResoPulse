@@ -109,54 +109,12 @@
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td class="datasets__mono datasets__primary-val">{{ $t('datasets.media.salineKey') }}</td>
-                <td>{{ $t('datasets.media.salineName') }}</td>
-                <td class="datasets__mono">1.500</td>
-                <td v-html="$t('datasets.media.salineEffect')"></td>
-                <td>{{ $t('datasets.media.salineUse') }}</td>
-              </tr>
-              <tr>
-                <td class="datasets__mono">{{ $t('datasets.media.bloodKey') }}</td>
-                <td>{{ $t('datasets.media.bloodName') }}</td>
-                <td class="datasets__mono">0.700</td>
-                <td v-html="$t('datasets.media.bloodEffect')"></td>
-                <td>{{ $t('datasets.media.bloodUse') }}</td>
-              </tr>
-              <tr>
-                <td class="datasets__mono">{{ $t('datasets.media.tissueKey') }}</td>
-                <td>{{ $t('datasets.media.tissueName') }}</td>
-                <td class="datasets__mono">0.400</td>
-                <td v-html="$t('datasets.media.tissueEffect')"></td>
-                <td>{{ $t('datasets.media.tissueUse') }}</td>
-              </tr>
-              <tr>
-                <td class="datasets__mono datasets__warn-val">{{ $t('datasets.media.waterKey') }}</td>
-                <td>{{ $t('datasets.media.waterName') }}</td>
-                <td class="datasets__mono">0.001</td>
-                <td v-html="$t('datasets.media.waterEffect')"></td>
-                <td>{{ $t('datasets.media.waterUse') }}</td>
-              </tr>
-              <tr>
-                <td class="datasets__mono datasets__primary-val">{{ $t('datasets.media.dmemKey') }}</td>
-                <td>{{ $t('datasets.media.dmemName') }}</td>
-                <td class="datasets__mono">1.400</td>
-                <td v-html="$t('datasets.media.dmemEffect')"></td>
-                <td>{{ $t('datasets.media.dmemUse') }}</td>
-              </tr>
-              <tr>
-                <td class="datasets__mono">{{ $t('datasets.media.rpmiKey') }}</td>
-                <td>{{ $t('datasets.media.rpmiName') }}</td>
-                <td class="datasets__mono">1.300</td>
-                <td v-html="$t('datasets.media.rpmiEffect')"></td>
-                <td>{{ $t('datasets.media.rpmiUse') }}</td>
-              </tr>
-              <tr>
-                <td class="datasets__mono">{{ $t('datasets.media.mhbKey') }}</td>
-                <td>{{ $t('datasets.media.mhbName') }}</td>
-                <td class="datasets__mono">0.800</td>
-                <td v-html="$t('datasets.media.mhbEffect')"></td>
-                <td>{{ $t('datasets.media.mhbUse') }}</td>
+              <tr v-for="m in mediaRows" :key="m.id">
+                <td class="datasets__mono" :class="m.keyClass">{{ $t(`datasets.media.${m.id}Key`) }}</td>
+                <td>{{ $t(`datasets.media.${m.id}Name`) }}</td>
+                <td class="datasets__mono">{{ m.sigma }}</td>
+                <td v-html="$t(`datasets.media.${m.id}Effect`)"></td>
+                <td>{{ $t(`datasets.media.${m.id}Use`) }}</td>
               </tr>
             </tbody>
           </table>
@@ -312,37 +270,9 @@
         <div class="datasets__geo-body">
           <p class="datasets__geo-text" v-html="$t('datasets.fieldGeo.geoParagraph')"></p>
           <div class="datasets__geo-assumptions">
-            <div class="datasets__geo-item">
+            <div v-for="n in 8" :key="n" class="datasets__geo-item">
               <span class="datasets__geo-icon">◈</span>
-              <span>{{ $t('datasets.fieldGeo.assumption1') }}</span>
-            </div>
-            <div class="datasets__geo-item">
-              <span class="datasets__geo-icon">◈</span>
-              <span>{{ $t('datasets.fieldGeo.assumption2') }}</span>
-            </div>
-            <div class="datasets__geo-item">
-              <span class="datasets__geo-icon">◈</span>
-              <span>{{ $t('datasets.fieldGeo.assumption3') }}</span>
-            </div>
-            <div class="datasets__geo-item">
-              <span class="datasets__geo-icon">◈</span>
-              <span>{{ $t('datasets.fieldGeo.assumption4') }}</span>
-            </div>
-            <div class="datasets__geo-item">
-              <span class="datasets__geo-icon">◈</span>
-              <span>{{ $t('datasets.fieldGeo.assumption5') }}</span>
-            </div>
-            <div class="datasets__geo-item">
-              <span class="datasets__geo-icon">◈</span>
-              <span v-html="$t('datasets.fieldGeo.assumption6')"></span>
-            </div>
-            <div class="datasets__geo-item">
-              <span class="datasets__geo-icon">◈</span>
-              <span v-html="$t('datasets.fieldGeo.assumption7')"></span>
-            </div>
-            <div class="datasets__geo-item">
-              <span class="datasets__geo-icon">◈</span>
-              <span v-html="$t('datasets.fieldGeo.assumption8')"></span>
+              <span v-html="$t(`datasets.fieldGeo.assumption${n}`)"></span>
             </div>
           </div>
         </div>
@@ -606,7 +536,17 @@ export default defineComponent({
       conductivity: val.conductivity,
     }))
 
-    return { presets, nuclearPresets, mediaEntries, GROUPS, GROUP_COLORS, GROUP_LABELS, CELL_GROUP, THRESHOLDS }
+    const mediaRows = [
+      { id: 'saline', sigma: MEDIA.saline.conductivity.toFixed(3),  keyClass: 'datasets__primary-val' },
+      { id: 'blood',  sigma: MEDIA.blood.conductivity.toFixed(3),   keyClass: '' },
+      { id: 'tissue', sigma: MEDIA.tissue.conductivity.toFixed(3),  keyClass: '' },
+      { id: 'water',  sigma: MEDIA.water.conductivity.toFixed(3),   keyClass: 'datasets__warn-val' },
+      { id: 'dmem',   sigma: MEDIA.dmem.conductivity.toFixed(3),    keyClass: 'datasets__primary-val' },
+      { id: 'rpmi',   sigma: MEDIA.rpmi.conductivity.toFixed(3),    keyClass: '' },
+      { id: 'mhb',    sigma: MEDIA.mhb.conductivity.toFixed(3),     keyClass: '' },
+    ]
+
+    return { presets, nuclearPresets, mediaEntries, mediaRows, GROUPS, GROUP_COLORS, GROUP_LABELS, CELL_GROUP, THRESHOLDS }
   },
 })
 </script>

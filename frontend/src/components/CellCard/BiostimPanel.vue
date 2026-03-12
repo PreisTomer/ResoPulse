@@ -45,7 +45,7 @@
 import { defineComponent } from 'vue'
 import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'
-import { tipBiomod } from '@/utils/biostimTooltips'
+import { tipBiomod } from '@/tooltips/biostimTooltips'
 
 export default defineComponent({
   setup() { return { ICON, UNIT } },

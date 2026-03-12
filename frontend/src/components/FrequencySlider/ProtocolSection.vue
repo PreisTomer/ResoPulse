@@ -89,7 +89,7 @@ import { broadcastStateSync } from '@/services/socket'
 import { WAVEFORM, THERMAL_LEVEL, CELL_LABEL } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'
-import { tipWaveform, tipDutyCycle, tipPulseWidth, tipSafeModeLock, formatLysisTime } from '@/utils/sliderTooltips'
+import { tipWaveform, tipDutyCycle, tipPulseWidth, tipSafeModeLock, formatLysisTime } from '@/tooltips/sliderTooltips'
 
 export default defineComponent({
   props: {

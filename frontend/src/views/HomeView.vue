@@ -31,13 +31,9 @@
 
       <!-- Capability pills -->
       <div class="home__caps">
-        <span class="home__cap">{{ ICON.WAVE }} {{ $t('home.capVm') }}</span>
-        <span class="home__cap">{{ ICON.SELECTIVITY }} {{ $t('home.capSelectivity') }}</span>
-        <span class="home__cap">{{ ICON.LYSIS_BOLT }} {{ $t('home.capPulse') }}</span>
-        <span class="home__cap">{{ ICON.RELOAD }} {{ $t('home.capSweep') }}</span>
-        <span class="home__cap">{{ ICON.GRID }} {{ $t('home.capPop') }}</span>
-        <span class="home__cap">{{ ICON.FLASK }} {{ $t('home.capImp') }}</span>
-        <span class="home__cap">{{ ICON.NOURISH }} {{ $t('home.capBio') }}</span>
+        <span v-for="pill in capPills" :key="pill.key" class="home__cap">
+          {{ pill.icon }} {{ $t(`home.${pill.key}`) }}
+        </span>
       </div>
 
       <!-- CTA -->
@@ -52,86 +48,39 @@
 
       <!-- 3-step workflow -->
       <div class="home__workflow">
-        <div class="home__wf-step">
-          <span class="home__wf-num">{{ $t('home.wf1Num') }}</span>
-          <span class="home__wf-label">{{ $t('home.wf1Label') }}</span>
-          <span class="home__wf-desc">{{ $t('home.wf1Desc') }}</span>
-        </div>
-        <span class="home__wf-arrow" aria-hidden="true">{{ ICON.ARROW_R }}</span>
-        <div class="home__wf-step">
-          <span class="home__wf-num">{{ $t('home.wf2Num') }}</span>
-          <span class="home__wf-label">{{ $t('home.wf2Label') }}</span>
-          <span class="home__wf-desc">{{ $t('home.wf2Desc') }}</span>
-        </div>
-        <span class="home__wf-arrow" aria-hidden="true">{{ ICON.ARROW_R }}</span>
-        <div class="home__wf-step">
-          <span class="home__wf-num">{{ $t('home.wf3Num') }}</span>
-          <span class="home__wf-label">{{ $t('home.wf3Label') }}</span>
-          <span class="home__wf-desc">{{ $t('home.wf3Desc') }}</span>
-        </div>
+        <template v-for="(step, i) in workflowSteps" :key="step">
+          <div class="home__wf-step">
+            <span class="home__wf-num">{{ $t(`home.${step}Num`) }}</span>
+            <span class="home__wf-label">{{ $t(`home.${step}Label`) }}</span>
+            <span class="home__wf-desc">{{ $t(`home.${step}Desc`) }}</span>
+          </div>
+          <span v-if="i < workflowSteps.length - 1" class="home__wf-arrow" aria-hidden="true">{{ ICON.ARROW_R }}</span>
+        </template>
       </div>
 
       <!-- Feature cards (3 cols) -->
       <div class="home__feature-cards">
 
-        <RouterLink to="/experiment" class="home__feature-card home__feature-card--primary">
+        <RouterLink
+          v-for="card in featureCards"
+          :key="card.to"
+          :to="card.to"
+          class="home__feature-card"
+          :class="{ 'home__feature-card--primary': card.primary }"
+        >
           <div class="home__fc-header">
-            <span class="home__fc-icon">{{ ICON.FLASK }}</span>
-            <span class="home__fc-title">{{ $t('home.card1Title') }}</span>
+            <span class="home__fc-icon">{{ card.icon }}</span>
+            <span class="home__fc-title">{{ $t(`home.${card.titleKey}`) }}</span>
           </div>
-          <span class="home__fc-desc">{{ $t('home.card1Desc') }}</span>
-        </RouterLink>
-
-        <RouterLink to="/instrument" class="home__feature-card">
-          <div class="home__fc-header">
-            <span class="home__fc-icon">{{ ICON.PLUG }}</span>
-            <span class="home__fc-title">{{ $t('home.card2Title') }}</span>
-          </div>
-          <span class="home__fc-desc">{{ $t('home.card2Desc') }}</span>
-        </RouterLink>
-
-        <RouterLink to="/reports" class="home__feature-card">
-          <div class="home__fc-header">
-            <span class="home__fc-icon">{{ ICON.CELL }}</span>
-            <span class="home__fc-title">{{ $t('home.card3Title') }}</span>
-          </div>
-          <span class="home__fc-desc">{{ $t('home.card3Desc') }}</span>
-        </RouterLink>
-
-        <RouterLink to="/datasets" class="home__feature-card">
-          <div class="home__fc-header">
-            <span class="home__fc-icon">{{ ICON.GRID }}</span>
-            <span class="home__fc-title">{{ $t('home.card4Title') }}</span>
-          </div>
-          <span class="home__fc-desc">{{ $t('home.card4Desc') }}</span>
-        </RouterLink>
-
-        <RouterLink to="/protocol" class="home__feature-card">
-          <div class="home__fc-header">
-            <span class="home__fc-icon">{{ ICON.SECTION }}</span>
-            <span class="home__fc-title">{{ $t('home.card5Title') }}</span>
-          </div>
-          <span class="home__fc-desc">{{ $t('home.card5Desc') }}</span>
+          <span class="home__fc-desc">{{ $t(`home.${card.descKey}`) }}</span>
         </RouterLink>
 
         <!-- Stats card -->
         <div class="home__feature-card home__feature-card--stats">
           <div class="home__stats-grid">
-            <div class="home__stat">
-              <span class="home__stat-val">{{ $t('home.stat1Val') }}</span>
-              <span class="home__stat-label">{{ $t('home.stat1Label') }}</span>
-            </div>
-            <div class="home__stat">
-              <span class="home__stat-val">{{ $t('home.stat2Val') }}</span>
-              <span class="home__stat-label">{{ $t('home.stat2Label') }}</span>
-            </div>
-            <div class="home__stat">
-              <span class="home__stat-val">{{ $t('home.stat3Val') }}</span>
-              <span class="home__stat-label">{{ $t('home.stat3Label') }}</span>
-            </div>
-            <div class="home__stat">
-              <span class="home__stat-val">{{ $t('home.stat4Val') }}</span>
-              <span class="home__stat-label">{{ $t('home.stat4Label') }}</span>
+            <div v-for="s in homeStats" :key="s" class="home__stat">
+              <span class="home__stat-val">{{ $t(`home.${s}Val`) }}</span>
+              <span class="home__stat-label">{{ $t(`home.${s}Label`) }}</span>
             </div>
           </div>
         </div>
@@ -140,10 +89,12 @@
 
       <!-- Research scope tags -->
       <div class="home__scope-tags">
-        <span class="home__scope-tag home__scope-tag--cancer">{{ $t('home.tagCancer') }}</span>
-        <span class="home__scope-tag home__scope-tag--bacteria">{{ $t('home.tagBacteria') }}</span>
-        <span class="home__scope-tag home__scope-tag--virus">{{ $t('home.tagVirus') }}</span>
-        <span class="home__scope-tag home__scope-tag--ref">{{ $t('home.tagRef') }}</span>
+        <span
+          v-for="tag in scopeTags"
+          :key="tag.mod"
+          class="home__scope-tag"
+          :class="`home__scope-tag--${tag.mod}`"
+        >{{ $t(`home.${tag.key}`) }}</span>
       </div>
 
       <p class="home__disclaimer">{{ $t('home.disclaimer') }}</p>
@@ -159,7 +110,38 @@ export default defineComponent({
   name: 'HomeView',
 
   data() {
-    return { ICON }
+    return {
+      ICON,
+
+      capPills: [
+        { icon: ICON.WAVE,        key: 'capVm' },
+        { icon: ICON.SELECTIVITY, key: 'capSelectivity' },
+        { icon: ICON.LYSIS_BOLT,  key: 'capPulse' },
+        { icon: ICON.RELOAD,      key: 'capSweep' },
+        { icon: ICON.GRID,        key: 'capPop' },
+        { icon: ICON.FLASK,       key: 'capImp' },
+        { icon: ICON.NOURISH,     key: 'capBio' },
+      ],
+
+      workflowSteps: ['wf1', 'wf2', 'wf3'],
+
+      featureCards: [
+        { to: '/experiment', icon: ICON.FLASK,   titleKey: 'card1Title', descKey: 'card1Desc', primary: true },
+        { to: '/instrument', icon: ICON.PLUG,    titleKey: 'card2Title', descKey: 'card2Desc', primary: false },
+        { to: '/reports',    icon: ICON.CELL,    titleKey: 'card3Title', descKey: 'card3Desc', primary: false },
+        { to: '/datasets',   icon: ICON.GRID,    titleKey: 'card4Title', descKey: 'card4Desc', primary: false },
+        { to: '/protocol',   icon: ICON.SECTION, titleKey: 'card5Title', descKey: 'card5Desc', primary: false },
+      ],
+
+      homeStats: ['stat1', 'stat2', 'stat3', 'stat4'],
+
+      scopeTags: [
+        { mod: 'cancer',   key: 'tagCancer' },
+        { mod: 'bacteria', key: 'tagBacteria' },
+        { mod: 'virus',    key: 'tagVirus' },
+        { mod: 'ref',      key: 'tagRef' },
+      ],
+    }
   },
 })
 </script>

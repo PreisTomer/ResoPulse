@@ -73,7 +73,7 @@ import { useCellStore } from '@/stores/cellStore'
 import { THRESHOLDS } from '@/constants/cellCard'
 import { CELL_CATEGORY, CELL_LABEL } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
-import { formatLysisTime } from '@/utils/sliderTooltips'
+import { formatLysisTime } from '@/tooltips/sliderTooltips'
 import { computeLysisProbability } from '@/utils/physics'
 import {
   tipTargetPlysis,
@@ -81,7 +81,7 @@ import {
   tipNuclearSection,
   tipTargetBar,
   tipHealthyBar,
-} from '@/utils/disruptionBarTooltips'
+} from '@/tooltips/disruptionBarTooltips'
 
 export default defineComponent({
   setup() {
