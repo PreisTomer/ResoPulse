@@ -1,19 +1,43 @@
 :root {
+  /* ── Backgrounds & surfaces ──────────────────────────────────────────── */
   --color-bg: #080e1a;
   --color-surface: #0d1826;
   --color-surface-2: #132035;
   --color-border: #1e3a5f;
+
+  /* ── Primary / accent / danger ───────────────────────────────────────── */
   --color-primary: #00d4ff;
   --color-primary-dim: rgba(0, 212, 255, 0.15);
   --color-accent: #00ff9d;
   --color-accent-dim: rgba(0, 255, 157, 0.12);
   --color-danger: #ff4d6d;
   --color-danger-dim: rgba(255, 77, 109, 0.12);
+
+  /* ── Extended palette ────────────────────────────────────────────────── */
+  --color-lime: #39ff14;
+  --color-lime-dim: rgba(57, 255, 20, 0.08);
+  --color-amber: #fbbf24;
+  --color-amber-dim: rgba(251, 191, 36, 0.08);
+  --color-amber-warm: #ffb800;        /* nav status warning dot */
+  --color-orange: #fb923c;
+  --color-orange-dim: rgba(251, 130, 20, 0.10);
+  --color-purple: #a78bfa;
+  --color-purple-light: #c4b5fd;
+
+  /* ── Cell-group semantic aliases ─────────────────────────────────────── */
+  --color-group-reference: var(--color-primary);
+  --color-group-cancer:    var(--color-danger);
+  --color-group-bacteria:  var(--color-amber);
+  --color-group-virus:     var(--color-purple);
+
+  /* ── Typography ──────────────────────────────────────────────────────── */
   --color-text: #c8d8e8;
   --color-text-muted: #5a7a9a;
   --color-text-heading: #e8f4ff;
   --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+
+  /* ── Layout ──────────────────────────────────────────────────────────── */
   --radius: 8px;
   --radius-lg: 12px;
 }
@@ -58,9 +82,16 @@ a:hover {
   text-decoration: underline;
 }
 
-button {
+button,
+label,
+select {
   cursor: pointer;
   font-family: inherit;
+}
+
+input[type="radio"],
+input[type="checkbox"] {
+  cursor: pointer;
 }
 
 ::-webkit-scrollbar {
