@@ -1,123 +1,201 @@
-<script lang="ts">
-import { defineComponent } from 'vue'
-import { useExperimentStore } from '../stores/experimentStore'
-import { useCellStore } from '../stores/cellStore'
-
-export default defineComponent({
-  setup() {
-    return {
-      expStore: useExperimentStore(),
-      cellStore: useCellStore(),
-    }
-  },
-
-  computed: {
-    entries() {
-      return [...this.expStore.entries].reverse().slice(0, 20)
-    },
-    hasEntries(): boolean { return this.expStore.entries.length > 0 },
-  },
-
-  methods: {
-    logReading() {
-      this.expStore.logReading(this.cellStore as Parameters<typeof this.expStore.logReading>[0], 'manual')
-    },
-    exportCSV()  { this.expStore.exportCSV() },
-    clearLog()   { this.expStore.clearLog() },
-  },
-})
-</script>
-
 <template>
-  <div class="log-panel">
+  <div class="exp-log">
+
+    <AccordionPanel
+      :icon="ICON.LINES"
+      :title="$t('exp.logTitle')"
+      :subtitle="hasEntries ? $t('exp.logReadingsCount', { n: expStore.entries.length }) : $t('exp.logNoReadings')"
+      :border-on-toggle="true"
+    >
+    <div>
+
     <!-- Header row -->
-    <div class="log-header">
+    <div class="exp-log__header">
       <input
         v-model="expStore.sessionName"
-        class="session-name-input"
-        placeholder="Session name…"
+        class="exp-log__name-input"
+        :placeholder="$t('exp.logSessionPlaceholder')"
         spellcheck="false"
       />
-      <div class="log-actions">
+      <!-- Dosimetry badge -->
+      <div class="exp-log__dose" v-tip="tipDose">
+        <span class="exp-log__dose-label">{{ $t('log.doseLabel') }}</span>
+        <span class="exp-log__dose-val">{{ doseBadge }}</span>
+      </div>
+      <div class="exp-log__actions">
         <button
-          class="log-btn log-btn--primary"
-          v-tip="'<strong>Log Reading</strong>\nCapture a snapshot of the current experiment state:\nfrequency, field, Vm values, selectivity ratio,\ncell temperatures, and disruption ratios.'"
+          class="exp-log__btn exp-log__btn--primary"
+          v-tip="tipLogReading"
           @click="logReading"
-        >Log Reading</button>
+        >{{ $t('exp.logReadingBtn') }}</button>
         <button
-          class="log-btn"
+          class="exp-log__btn"
           :disabled="!hasEntries"
-          v-tip="'<strong>Export CSV</strong>\nDownload all log entries as a comma-separated file.\nIncludes all columns: time, freq, field, Vm,\nselectivity, temps, ratios, and event type.'"
+          v-tip="tipExportCsv"
           @click="exportCSV"
-        >CSV</button>
+        >{{ $t('exp.logCsvBtn') }}</button>
         <button
-          class="log-btn"
+          class="exp-log__btn"
           :disabled="!hasEntries"
-          v-tip="'Clear all log entries from this session.\nThis cannot be undone.'"
+          v-tip="tipClearLog"
           @click="clearLog"
-        >Clear</button>
+        >{{ $t('exp.logClearBtn') }}</button>
       </div>
     </div>
 
     <!-- Table -->
-    <div class="log-table-wrap">
-      <table class="log-table">
+    <div class="exp-log__table-wrap">
+      <table class="exp-log__table">
         <thead>
           <tr>
-            <th v-tip="'Entry number\n(newest entries shown first)'">#</th>
-            <th v-tip="'Timestamp of the reading\n(HH:MM:SS local time)'">Time</th>
-            <th v-tip="'<strong>RF Frequency</strong>\nBroadcast frequency at time of reading (kHz)\nAffects transmembrane potential via Schwan eq.\nBelow fc → quasi-DC maximum Vm'">Freq</th>
-            <th v-tip="'<strong>Field Intensity</strong>\nApplied electric field strength (V/cm)\nVm scales linearly with this value\nDefault 150 V/cm = sub-threshold'">Field</th>
-            <th v-tip="'<strong>T-Vm — Target Transmembrane Potential</strong>\nPeak voltage induced across the target\n(cancer / pathogen) cell membrane (mV)\nComputed via Schwan equation\nHigher = greater disruption potential'">T-Vm</th>
-            <th v-tip="'<strong>H-Vm — Healthy Transmembrane Potential</strong>\nPeak voltage induced across the healthy\nreference cell membrane (mV)\nShould be kept low for tissue safety'">H-Vm</th>
-            <th v-tip="'<strong>Sel× — Selectivity Ratio</strong>\nT-Vm / H-Vm\n>1.5 = strong therapeutic window (green)\n1.0–1.5 = marginal window\n<1.0 = non-selective'">Sel×</th>
-            <th v-tip="'<strong>Event type</strong>\nmanual — user clicked Log Reading\nlysis — target membrane was disrupted\n(auto-logged when lysis countdown completes)'">Event</th>
+            <th v-tip="tipThNumber">{{ $t('exp.logThNumber') }}</th>
+            <th v-tip="tipThTime">{{ $t('exp.logThTime') }}</th>
+            <th v-tip="tipThFreq">{{ $t('exp.logThFreq') }}</th>
+            <th v-tip="tipThField">{{ $t('exp.logThField') }}</th>
+            <th v-tip="tipThTargetVm">{{ $t('exp.logThTargetVm') }}</th>
+            <th v-tip="tipThHealthyVm">{{ $t('exp.logThHealthyVm') }}</th>
+            <th v-tip="tipThSel">{{ $t('exp.logThSel') }}</th>
+            <th v-tip="tipThEvent">{{ $t('exp.logThEvent') }}</th>
           </tr>
         </thead>
         <tbody>
           <tr
             v-for="e in entries"
             :key="e.id"
-            :class="{ 'row--lysis': e.event === 'lysis' }"
+            :class="{ 'exp-log__row--lysis': e.event === LOG_EVENT.LYSIS }"
           >
-            <td class="td-id">{{ e.id }}</td>
-            <td class="td-mono">{{ e.timestamp }}</td>
-            <td
-              class="td-mono"
-              v-tip="`<strong>Frequency: ${e.freqKHz} kHz</strong>\nBroadcast frequency at time of reading`"
-            >{{ e.freqKHz }}k</td>
-            <td
-              class="td-mono"
-              v-tip="`<strong>Field: ${e.fieldVcm} V/cm</strong>\nApplied electric field intensity`"
-            >{{ e.fieldVcm }}</td>
-            <td
-              class="td-target"
-              v-tip="`<strong>Target Vm: ${e.targetVm} mV</strong>\nTransmembrane potential of ${e.targetPreset}\nT-ratio: ${(e.targetRatio * 100).toFixed(1)}% of lysis threshold`"
-            >{{ e.targetVm }}</td>
-            <td
-              class="td-healthy"
-              v-tip="`<strong>Healthy Vm: ${e.healthyVm} mV</strong>\nTransmembrane potential of healthy reference cell\nH-ratio: ${(e.healthyRatio * 100).toFixed(1)}% of lysis threshold`"
-            >{{ e.healthyVm }}</td>
-            <td
-              class="td-sel"
-              v-tip="`<strong>Selectivity: ×${e.selectivity.toFixed(3)}</strong>\nT-Vm / H-Vm ratio\nT-temp: ${e.targetTemp}°C  ·  H-temp: ${e.healthyTemp}°C`"
-            >{{ e.selectivity.toFixed(2) }}</td>
-            <td
-              class="td-event"
-              v-tip="e.event === 'lysis' ? '<span class=\'tip-warn\'>Lysis event</span>\nTarget membrane was irreversibly disrupted\n(auto-logged by system)' : 'Manual reading\nLogged by user at this timestamp'"
-            >{{ e.event }}</td>
+            <td class="exp-log__td-id">{{ e.id }}</td>
+            <td class="exp-log__td-mono">{{ e.timestamp }}</td>
+            <td class="exp-log__td-mono" v-tip="tipCellFreq(e)">{{ formatFreqKHz(e.freqKHz) }}</td>
+            <td class="exp-log__td-mono" v-tip="tipCellField(e)">{{ e.fieldVcm }}</td>
+            <td class="exp-log__td-target" v-tip="tipCellTargetVm(e)">{{ e.targetVm }}</td>
+            <td class="exp-log__td-healthy" v-tip="tipCellHealthyVm(e)">{{ e.healthyVm }}</td>
+            <td class="exp-log__td-sel" v-tip="tipCellSel(e)">{{ e.selectivity.toFixed(2) }}</td>
+            <td class="exp-log__td-event" v-tip="tipCellEvent(e)">{{ e.event }}</td>
           </tr>
           <tr v-if="!hasEntries">
-            <td colspan="8" class="td-empty">No readings yet — click Log Reading to record</td>
+            <td colspan="8" class="exp-log__td-empty">{{ $t('exp.logEmpty') }}</td>
           </tr>
         </tbody>
       </table>
+    </div><!-- /exp-log__table-wrap -->
+
     </div>
-  </div>
+    </AccordionPanel>
+  </div><!-- /exp-log -->
 </template>
 
-<style scoped>
-.log-panel {
+<script lang="ts">
+import { defineComponent } from 'vue'
+import AccordionPanel from '@/components/AccordionPanel.vue'
+import { useExperimentStore } from '@/stores/experimentStore'
+import { useCellStore } from '@/stores/cellStore'
+import { broadcastLogEntry } from '@/services/socket'
+import { LOG_EVENT } from '@/constants/strings'
+import { ICON } from '@/constants/icons'
+import { THRESHOLDS } from '@/constants/cellCard'
+import { formatFreqKHz } from '@/utils/format'
+
+export default defineComponent({
+  components: { AccordionPanel },
+
+  setup() {
+    return {
+      expStore: useExperimentStore(),
+      cellStore: useCellStore(),
+      LOG_EVENT,
+      ICON,
+      THRESHOLDS,
+      formatFreqKHz,
+    }
+  },
+
+  computed: {
+    entries() {
+      return this.expStore.entries.slice(-20).reverse()
+    },
+    hasEntries(): boolean { return this.expStore.entries.length > 0 },
+
+    // ── Button tooltips ────────────────────────────────────────────────────────
+    tipLogReading(): string { return this.$t('log.tipLogReading') },
+    tipExportCsv(): string  { return this.$t('log.tipExportCsv') },
+    tipClearLog(): string   { return this.$t('log.tipClearLog') },
+
+    // ── Column header tooltips ─────────────────────────────────────────────────
+    tipThNumber(): string   { return this.$t('log.tipThNumber') },
+    tipThTime(): string     { return this.$t('log.tipThTime') },
+    tipThFreq(): string     { return this.$t('log.tipThFreq') },
+    tipThField(): string    { return this.$t('log.tipThField') },
+    tipThTargetVm(): string { return this.$t('log.tipThTargetVm') },
+    tipThHealthyVm(): string { return this.$t('log.tipThHealthyVm') },
+
+    tipThSel(): string {
+      const { SEL_STRONG: strong, SEL_MARGINAL: marginal } = THRESHOLDS
+      return this.$t('log.tipThSel', { strong, marginal })
+    },
+
+    tipThEvent(): string { return this.$t('log.tipThEvent') },
+
+    /** Formatted cumulative dose badge text */
+    doseBadge(): string {
+      const dose = this.expStore.cumulativeDoseJkg
+      if (dose >= 1000) return `${(dose / 1000).toFixed(2)} kJ/kg`
+      if (dose >= 1)    return `${dose.toFixed(1)} J/kg`
+      return `${(dose * 1000).toFixed(0)} mJ/kg`
+    },
+
+    tipDose(): string { return this.$t('log.tipDose') },
+  },
+
+  methods: {
+    logReading() {
+      this.expStore.logReading(this.cellStore as Parameters<typeof this.expStore.logReading>[0], LOG_EVENT.MANUAL)
+      const last = this.expStore.entries[this.expStore.entries.length - 1]
+      if (last) broadcastLogEntry(last)
+    },
+    exportCSV()  { this.expStore.exportCSV() },
+    clearLog()   { this.expStore.clearLog() },
+
+    // ── Row cell tooltips ──────────────────────────────────────────────────────
+    tipCellFreq(e: { freqKHz: number }): string {
+      return this.$t('log.tipCellFreq', { freq: e.freqKHz })
+    },
+    tipCellField(e: { fieldVcm: number }): string {
+      return this.$t('log.tipCellField', { field: e.fieldVcm })
+    },
+    tipCellTargetVm(e: { targetVm: number; targetPreset: string; targetRatio: number }): string {
+      return this.$t('log.tipCellTargetVm', {
+        vm:     e.targetVm,
+        preset: e.targetPreset,
+        ratio:  (e.targetRatio * 100).toFixed(1),
+      })
+    },
+    tipCellHealthyVm(e: { healthyVm: number; healthyRatio: number }): string {
+      return this.$t('log.tipCellHealthyVm', {
+        vm:    e.healthyVm,
+        ratio: (e.healthyRatio * 100).toFixed(1),
+      })
+    },
+    tipCellSel(e: { selectivity: number; targetTemp: number; healthyTemp: number }): string {
+      return this.$t('log.tipCellSel', {
+        sel:         e.selectivity.toFixed(2),
+        targetTemp:  e.targetTemp,
+        healthyTemp: e.healthyTemp,
+      })
+    },
+    tipCellEvent(e: { event: string }): string {
+      return e.event === LOG_EVENT.LYSIS
+        ? this.$t('log.tipCellLysis')
+        : this.$t('log.tipCellManual')
+    },
+  },
+})
+</script>
+
+<style lang="scss" scoped>
+@use '../styles/mixins' as *;
+
+.exp-log {
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
@@ -126,100 +204,128 @@ export default defineComponent({
   overflow: hidden;
   flex: 1;
   min-height: 0;
+
+  &__header {
+    @include flex-row(0.6rem);
+    padding: 0.65rem 0.85rem;
+    border-bottom: 1px solid var(--color-border);
+    flex-wrap: wrap;
+  }
+
+  &__name-input {
+    flex: 1;
+    min-width: 100px;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--color-border);
+    color: var(--color-text-heading);
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    padding: 0.1rem 0.2rem;
+    outline: none;
+    letter-spacing: 0.06em;
+
+    &:focus { border-bottom-color: var(--color-primary); }
+  }
+
+  &__dose {
+    @include flex-row(0.4rem);
+    align-items:   center;
+    padding:       0.18rem 0.65rem;
+    border:        1px solid rgba(251, 191, 36, 0.3);
+    border-radius: 3px;
+    background:    rgba(251, 191, 36, 0.06);
+    cursor:        help;
+    flex-shrink:   0;
+  }
+
+  &__dose-label {
+    @include mono-upper(0.55rem, 0.08em);
+    color: rgba(251, 191, 36, 0.65);
+  }
+
+  &__dose-val {
+    font-family: var(--font-mono);
+    font-size:   0.68rem;
+    font-weight: 600;
+    color:       var(--color-amber);
+  }
+
+  &__actions { @include flex-row(0.35rem); flex-shrink: 0; }
+
+  &__btn {
+    @include mono-upper(0.58rem);
+    padding: 0.22rem 0.6rem;
+    border: 1px solid var(--color-border);
+    border-radius: 3px;
+    background: transparent;
+    color: var(--color-text);
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+
+    &:hover:not(:disabled) { border-color: var(--color-primary); color: var(--color-primary); }
+    &:disabled { opacity: 0.3; cursor: not-allowed; }
+
+    &--primary {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+
+      &:hover { background: var(--color-primary-dim); }
+    }
+  }
+
+  &__table-wrap {
+    overflow-y: auto;
+    flex: 1;
+    max-height: 220px;
+  }
+
+  &__table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.58rem;
+    font-family: var(--font-mono);
+
+    thead th {
+      position: sticky;
+      top: 0;
+      background: var(--color-surface-2);
+      padding: 0.3rem 0.45rem;
+      text-align: right;
+      color: var(--color-text);
+      font-weight: 400;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      white-space: nowrap;
+      border-bottom: 1px solid var(--color-border);
+
+      &:first-child { text-align: left; }
+    }
+
+    tbody {
+      td {
+        padding: 0.28rem 0.45rem;
+        text-align: right;
+        color: var(--color-text);
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+        white-space: nowrap;
+      }
+      tr:hover td { background: rgba(255,255,255,0.025); }
+    }
+  }
+
+  &__row--lysis {
+    td { background: rgba(255,77,109,0.06); }
+    &:hover td { background: rgba(255,77,109,0.10); }
+  }
+
+  &__td-id     { text-align: left; opacity: 0.6; }
+  &__td-mono   { text-align: left; }
+  &__td-target  { color: var(--color-danger); }
+  &__td-healthy { color: var(--color-primary); }
+  &__td-sel    { color: var(--color-text-heading); font-weight: 600; }
+  &__td-event  { text-transform: uppercase; opacity: 0.8; }
+  &__td-empty  { text-align: center; opacity: 0.6; padding: 1rem; }
 }
-
-/* ── Header ──────────────────────────────────────────────────── */
-.log-header {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 0.65rem 0.85rem;
-  border-bottom: 1px solid var(--color-border);
-  flex-wrap: wrap;
-}
-
-.session-name-input {
-  flex: 1;
-  min-width: 100px;
-  background: transparent;
-  border: none;
-  border-bottom: 1px solid var(--color-border);
-  color: var(--color-text-heading);
-  font-family: var(--font-mono);
-  font-size: 0.68rem;
-  padding: 0.1rem 0.2rem;
-  outline: none;
-  letter-spacing: 0.06em;
-}
-.session-name-input:focus { border-bottom-color: var(--color-primary); }
-
-.log-actions { display: flex; gap: 0.35rem; flex-shrink: 0; }
-
-.log-btn {
-  font-size: 0.58rem;
-  font-family: var(--font-mono);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  padding: 0.22rem 0.6rem;
-  border: 1px solid var(--color-border);
-  border-radius: 3px;
-  background: transparent;
-  color: var(--color-text);
-  cursor: pointer;
-  transition: all 0.15s;
-  white-space: nowrap;
-}
-.log-btn:hover:not(:disabled) { border-color: var(--color-primary); color: var(--color-primary); }
-.log-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-.log-btn--primary { border-color: var(--color-primary); color: var(--color-primary); }
-.log-btn--primary:hover { background: var(--color-primary-dim); }
-
-/* ── Table ───────────────────────────────────────────────────── */
-.log-table-wrap {
-  overflow-y: auto;
-  flex: 1;
-  max-height: 220px;
-}
-
-.log-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.58rem;
-  font-family: var(--font-mono);
-}
-
-.log-table thead th {
-  position: sticky;
-  top: 0;
-  background: var(--color-surface-2);
-  padding: 0.3rem 0.45rem;
-  text-align: right;
-  color: var(--color-text);
-  font-weight: 400;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  white-space: nowrap;
-  border-bottom: 1px solid var(--color-border);
-}
-.log-table thead th:first-child { text-align: left; }
-
-.log-table tbody td {
-  padding: 0.28rem 0.45rem;
-  text-align: right;
-  color: var(--color-text);
-  border-bottom: 1px solid rgba(255,255,255,0.04);
-  white-space: nowrap;
-}
-.log-table tbody tr:hover td { background: rgba(255,255,255,0.025); }
-
-.row--lysis td { background: rgba(255,77,109,0.06); }
-.row--lysis:hover td { background: rgba(255,77,109,0.10); }
-
-.td-id     { text-align: left; opacity: 0.6; }
-.td-mono   { text-align: left; }
-.td-target { color: #ff4d6d; }
-.td-healthy { color: #00d4ff; }
-.td-sel    { color: var(--color-text-heading); font-weight: 600; }
-.td-event  { text-transform: uppercase; opacity: 0.8; }
-.td-empty  { text-align: center; opacity: 0.6; padding: 1rem; }
 </style>

@@ -6,3 +6,4 @@ backend/dist/
 .env
 .env.local
 *.log
+.claude/settings.local.json

@@ -1,0 +1,6 @@
+// Shared keyframe used by CellCard and FrequencySlider.
+// Import with: @use '../../styles/keyframes' as *;
+@keyframes state-blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.35; }
+}
