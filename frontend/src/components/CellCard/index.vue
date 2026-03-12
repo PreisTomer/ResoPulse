@@ -188,7 +188,7 @@ import { CELL_STATE, CELL_TYPE, CELL_CATEGORY } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'
 import { formatFreqKHz } from '@/utils/format'
-import { tipVm as tipVmFn, tipAcousticVm as tipAcousticVmFn, tipTemp as tipTempFn, tipState as tipStateFn, tipDisruption as tipDisruptionFn, tipNuclearBar as tipNuclearBarFn, formatLysisTimeLocal } from '@/utils/cellCardTooltips'
+import { tipVm as tipVmFn, tipAcousticVm as tipAcousticVmFn, tipTemp as tipTempFn, tipState as tipStateFn, tipDisruption as tipDisruptionFn, tipNuclearBar as tipNuclearBarFn, formatLysisTimeLocal } from '@/tooltips/cellCardTooltips'
 
 import CellHeader from './CellHeader.vue'
 import CellParamsPanel from './CellParamsPanel.vue'

@@ -219,7 +219,7 @@ import {
   tipScopeNote,
   tipThermalBanner,
   tipSigmaE,
-} from '@/utils/sliderTooltips'
+} from '@/tooltips/sliderTooltips'
 import ProtocolSection from './ProtocolSection.vue'
 import AdvancedSection from './AdvancedSection.vue'
 

@@ -119,7 +119,7 @@ import { broadcastStateSync } from '@/services/socket'
 import { WAVEFORM, CELL_CATEGORY, CELL_LABEL } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
 import { SLIDER_ADV } from '@/constants/sliderBounds'
-import { tipOrientation, tipLysisN, tipLysisNNote, tipShellModel, tipSingleShell, tipDoubleShell, tipPerfusion, tipCellPacking, formatLysisTime } from '@/utils/sliderTooltips'
+import { tipOrientation, tipLysisN, tipLysisNNote, tipShellModel, tipSingleShell, tipDoubleShell, tipPerfusion, tipCellPacking, formatLysisTime } from '@/tooltips/sliderTooltips'
 import { UNIT } from '@/constants/units'
 
 export default defineComponent({

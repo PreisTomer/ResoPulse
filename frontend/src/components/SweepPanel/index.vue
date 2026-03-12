@@ -122,7 +122,7 @@ import {
   tipKpDrH,
   tipKpTI,
   tipKpTemp,
-} from '@/utils/sweepTooltips'
+} from '@/tooltips/sweepTooltips'
 import {
   NEWTON_COOLING_LAMBDA,
   PENNES_BLOOD_COEFF,

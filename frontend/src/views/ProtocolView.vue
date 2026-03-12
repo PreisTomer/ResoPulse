@@ -25,22 +25,18 @@
         <!-- Sidebar TOC -->
         <nav class="protocol__toc" :class="{ 'protocol__toc--mobile-open': tocMobileOpen }" aria-label="Table of contents">
           <div class="protocol__toc-title" v-html="$t('protocol.toc.title')"></div>
-          <a href="#overview"       class="protocol__toc-link" :class="{ 'protocol__toc-link--active': activeSection === 'overview' }" @click="tocMobileOpen = false" v-html="$t('protocol.toc.overview')"></a>
-          <a href="#physics"        class="protocol__toc-link" :class="{ 'protocol__toc-link--active': isPhysicsActive }" @click="tocMobileOpen = false" v-html="$t('protocol.toc.physics')"></a>
-          <a href="#schwan"         class="protocol__toc-link protocol__toc-indent" :class="{ 'protocol__toc-link--active': activeSection === 'schwan' }" @click="tocMobileOpen = false" v-html="$t('protocol.toc.schwan')"></a>
-          <a href="#thermal"        class="protocol__toc-link protocol__toc-indent" :class="{ 'protocol__toc-link--active': activeSection === 'thermal' }" @click="tocMobileOpen = false" v-html="$t('protocol.toc.thermal')"></a>
-          <a href="#maxwell"        class="protocol__toc-link protocol__toc-indent" :class="{ 'protocol__toc-link--active': activeSection === 'maxwell' }" @click="tocMobileOpen = false" v-html="$t('protocol.toc.maxwell')"></a>
-          <a href="#disruption"     class="protocol__toc-link protocol__toc-indent" :class="{ 'protocol__toc-link--active': activeSection === 'disruption' }" @click="tocMobileOpen = false" v-html="$t('protocol.toc.disruption')"></a>
-          <a href="#resonance"      class="protocol__toc-link protocol__toc-indent" :class="{ 'protocol__toc-link--active': activeSection === 'resonance' }" @click="tocMobileOpen = false" v-html="$t('protocol.toc.resonance')"></a>
-          <a href="#nsep"           class="protocol__toc-link protocol__toc-indent" :class="{ 'protocol__toc-link--active': activeSection === 'nsep' }" @click="tocMobileOpen = false" v-html="$t('protocol.toc.nsep')"></a>
-          <a href="#doubleshell"    class="protocol__toc-link protocol__toc-indent" :class="{ 'protocol__toc-link--active': activeSection === 'doubleshell' }" @click="tocMobileOpen = false" v-html="$t('protocol.toc.doubleshell')"></a>
-          <a href="#uncertainty"    class="protocol__toc-link protocol__toc-indent" :class="{ 'protocol__toc-link--active': activeSection === 'uncertainty' }" @click="tocMobileOpen = false" v-html="$t('protocol.toc.uncertainty')"></a>
-          <a href="#biomodulation"  class="protocol__toc-link protocol__toc-indent" :class="{ 'protocol__toc-link--active': activeSection === 'biomodulation' }" @click="tocMobileOpen = false" v-html="$t('protocol.toc.biomodulation')"></a>
-          <a href="#impedance"      class="protocol__toc-link protocol__toc-indent" :class="{ 'protocol__toc-link--active': activeSection === 'impedance' }" @click="tocMobileOpen = false" v-html="$t('protocol.toc.impedance')"></a>
-          <a href="#sonification"   class="protocol__toc-link protocol__toc-indent" :class="{ 'protocol__toc-link--active': activeSection === 'sonification' }" @click="tocMobileOpen = false" v-html="$t('protocol.toc.sonification')"></a>
-          <a href="#protocol-steps" class="protocol__toc-link" :class="{ 'protocol__toc-link--active': activeSection === 'protocol-steps' }" @click="tocMobileOpen = false" v-html="$t('protocol.toc.protocol')"></a>
-          <a href="#safety"         class="protocol__toc-link" :class="{ 'protocol__toc-link--active': activeSection === 'safety' }" @click="tocMobileOpen = false" v-html="$t('protocol.toc.safety')"></a>
-          <a href="#refs"           class="protocol__toc-link" :class="{ 'protocol__toc-link--active': activeSection === 'refs' }" @click="tocMobileOpen = false" v-html="$t('protocol.toc.refs')"></a>
+          <a
+            v-for="item in tocItems"
+            :key="item.id"
+            :href="`#${item.id}`"
+            class="protocol__toc-link"
+            :class="{
+              'protocol__toc-indent':        item.indent,
+              'protocol__toc-link--active':  isTocActive(item),
+            }"
+            @click="tocMobileOpen = false"
+            v-html="$t(`protocol.toc.${item.key}`)"
+          ></a>
         </nav>
 
         <!-- Main document -->
@@ -388,6 +384,26 @@ interface UncertaintyRow   { category: string; band: string; bandClass: string; 
 interface SafetyRow        { param: string; value: string; valueClass: string; sig: string }
 interface RawRefItem       { body: string; doi?: string; pmid?: string; note?: string }
 interface RefItem          { body: string; url?: string; urlLabel?: string; note?: string }
+interface TocItem          { id: string; key: string; indent: boolean; physicsParent?: boolean }
+
+const TOC_ITEMS: TocItem[] = [
+  { id: 'overview',       key: 'overview',      indent: false },
+  { id: 'physics',        key: 'physics',       indent: false, physicsParent: true },
+  { id: 'schwan',         key: 'schwan',        indent: true },
+  { id: 'thermal',        key: 'thermal',       indent: true },
+  { id: 'maxwell',        key: 'maxwell',       indent: true },
+  { id: 'disruption',     key: 'disruption',    indent: true },
+  { id: 'resonance',      key: 'resonance',     indent: true },
+  { id: 'nsep',           key: 'nsep',          indent: true },
+  { id: 'doubleshell',    key: 'doubleshell',   indent: true },
+  { id: 'uncertainty',    key: 'uncertainty',   indent: true },
+  { id: 'biomodulation',  key: 'biomodulation', indent: true },
+  { id: 'impedance',      key: 'impedance',     indent: true },
+  { id: 'sonification',   key: 'sonification',  indent: true },
+  { id: 'protocol-steps', key: 'protocol',      indent: false },
+  { id: 'safety',         key: 'safety',        indent: false },
+  { id: 'refs',           key: 'refs',          indent: false },
+]
 
 const ALL_SECTION_IDS = [
   'overview',
@@ -408,6 +424,10 @@ export default defineComponent({
   },
 
   computed: {
+    tocItems(): TocItem[] {
+      return TOC_ITEMS
+    },
+
     isPhysicsActive(): boolean {
       return PHYSICS_IDS.has(this.activeSection)
     },
@@ -452,6 +472,12 @@ export default defineComponent({
                : item.pmid ? `PubMed:${item.pmid}`
                : undefined,
       }))
+    },
+  },
+
+  methods: {
+    isTocActive(item: TocItem): boolean {
+      return item.physicsParent ? this.isPhysicsActive : this.activeSection === item.id
     },
   },
 

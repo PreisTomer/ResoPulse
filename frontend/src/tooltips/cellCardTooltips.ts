@@ -4,7 +4,7 @@
  */
 
 import { CELL_STATE, CELL_TYPE, CHART_MODE, WAVEFORM } from '@/constants/strings'
-import { computeTau } from './physics'
+import { computeTau } from '@/utils/physics'
 import type { CellConfig } from '@/types/cell'
 import { THRESHOLDS } from '@/constants/cellCard'
 

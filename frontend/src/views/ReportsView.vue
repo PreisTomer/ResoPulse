@@ -47,40 +47,53 @@
 
       <!-- Stats row -->
       <div class="reports__stats-grid">
-        <div class="reports__stat-card" :title="$t('reports.totalReadingsTitle')">
-          <div class="reports__stat-value" :class="{ 'reports__stat-empty': totalReadings === 0 }">
-            {{ totalReadings }}
-          </div>
-          <div class="reports__stat-label">{{ $t('reports.totalReadings') }}</div>
-        </div>
-        <div class="reports__stat-card" :title="$t('reports.lysisEventsTitle')">
-          <div class="reports__stat-value reports__stat-lysis">{{ lysisEvents }}</div>
-          <div class="reports__stat-label">{{ $t('reports.lysisEvents') }}</div>
-        </div>
-        <div class="reports__stat-card" :title="$t('reports.manualReadingsTitle')">
-          <div class="reports__stat-value">{{ manualReadings }}</div>
-          <div class="reports__stat-label">{{ $t('reports.manualReadings') }}</div>
-        </div>
-        <div class="reports__stat-card" :title="$t('reports.avgSelectivityTitle')">
-          <div class="reports__stat-value reports__stat-primary">{{ avgSelectivity ?? '—' }}</div>
-          <div class="reports__stat-label">{{ $t('reports.avgSelectivity') }}</div>
-        </div>
-        <div class="reports__stat-card" :title="$t('reports.peakSelectivityTitle')">
-          <div class="reports__stat-value reports__stat-green">{{ peakSelectivity ?? '—' }}</div>
-          <div class="reports__stat-label">{{ $t('reports.peakSelectivity') }}</div>
-        </div>
-        <div class="reports__stat-card" :title="$t('reports.peakTargetRatioTitle')">
-          <div class="reports__stat-value reports__stat-red">{{ peakTargetRatio ?? '—' }}</div>
-          <div class="reports__stat-label">{{ $t('reports.peakTargetRatio') }}</div>
-        </div>
-        <div class="reports__stat-card reports__stat-card--wide" :title="$t('reports.freqRangeTitle')">
-          <div class="reports__stat-value reports__stat-small">{{ freqRange ?? '—' }}</div>
-          <div class="reports__stat-label">{{ $t('reports.freqRange') }}</div>
-        </div>
-        <div class="reports__stat-card reports__stat-card--wide" :title="$t('reports.fieldRangeTitle')">
-          <div class="reports__stat-value reports__stat-small">{{ fieldRange ?? '—' }}</div>
-          <div class="reports__stat-label">{{ $t('reports.fieldRange') }}</div>
-        </div>
+        <StatCard
+          :label="$t('reports.totalReadings')"
+          :value="String(totalReadings)"
+          :variant="totalReadings === 0 ? 'muted' : 'default'"
+          :tooltip="$t('reports.totalReadingsTitle')"
+        />
+        <StatCard
+          :label="$t('reports.lysisEvents')"
+          :value="String(lysisEvents)"
+          variant="danger"
+          :tooltip="$t('reports.lysisEventsTitle')"
+        />
+        <StatCard
+          :label="$t('reports.manualReadings')"
+          :value="String(manualReadings)"
+          :tooltip="$t('reports.manualReadingsTitle')"
+        />
+        <StatCard
+          :label="$t('reports.avgSelectivity')"
+          :value="avgSelectivity ?? '—'"
+          variant="primary"
+          :tooltip="$t('reports.avgSelectivityTitle')"
+        />
+        <StatCard
+          :label="$t('reports.peakSelectivity')"
+          :value="peakSelectivity ?? '—'"
+          variant="ok"
+          :tooltip="$t('reports.peakSelectivityTitle')"
+        />
+        <StatCard
+          :label="$t('reports.peakTargetRatio')"
+          :value="peakTargetRatio ?? '—'"
+          variant="danger"
+          :tooltip="$t('reports.peakTargetRatioTitle')"
+        />
+        <StatCard
+          class="reports__stat-card--wide"
+          :label="$t('reports.freqRange')"
+          :value="freqRange ?? '—'"
+          :tooltip="$t('reports.freqRangeTitle')"
+        />
+        <StatCard
+          class="reports__stat-card--wide"
+          :label="$t('reports.fieldRange')"
+          :value="fieldRange ?? '—'"
+          :tooltip="$t('reports.fieldRangeTitle')"
+        />
       </div>
 
       <!-- Log table -->
@@ -155,7 +168,7 @@
                   {{ e.healthyTemp.toFixed(1) }}
                 </td>
                 <td>
-                  <span class="reports__ev-badge" :class="eventClass(e.event)">{{ e.event }}</span>
+                  <StatusBadge :label="e.event" :variant="eventVariant(e.event)" />
                 </td>
                 <td>
                   <button
@@ -203,8 +216,12 @@ import { formatFreqKHz, formatFieldVcm } from '@/utils/format'
 import { LOG_EVENT } from '@/constants/strings'
 import { THRESHOLDS } from '@/constants/cellCard'
 import { ICON } from '@/constants/icons'
+import StatusBadge from '@/components/StatusBadge.vue'
+import StatCard from '@/components/StatCard.vue'
 
 export default defineComponent({
+  components: { StatusBadge, StatCard },
+
   setup() {
     const store = useExperimentStore()
 
@@ -245,8 +262,8 @@ export default defineComponent({
       return (Math.max(...store.entries.map((e) => e.targetRatio)) * 100).toFixed(1) + '%'
     })
 
-    function eventClass(event: string) {
-      return event === LOG_EVENT.LYSIS ? 'reports__ev-badge--lysis' : 'reports__ev-badge--manual'
+    function eventVariant(event: string) {
+      return event === LOG_EVENT.LYSIS ? 'danger' : 'primary'
     }
 
     function selClass(sel: number) {
@@ -266,7 +283,7 @@ export default defineComponent({
       freqRange,
       fieldRange,
       peakTargetRatio,
-      eventClass,
+      eventVariant,
       selClass,
       formatFreqKHz,
       formatFieldVcm,
@@ -407,46 +424,7 @@ export default defineComponent({
     gap: 0.75rem;
   }
 
-  &__stat-card {
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius);
-    padding: 1rem 1.1rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.35rem;
-
-    &--wide { grid-column: span 1; }
-  }
-
-  &__stat-value {
-    font-size: 1.55rem;
-    font-weight: 800;
-    font-family: var(--font-mono);
-    color: var(--color-text-heading);
-    line-height: 1;
-
-    &.reports__stat-empty   { color: var(--color-text-muted); opacity: 0.35; }
-    &.reports__stat-lysis   { color: var(--color-danger); }
-    &.reports__stat-primary { color: var(--color-primary); }
-    &.reports__stat-green   { color: var(--color-lime);   }
-    &.reports__stat-red     { color: var(--color-danger); }
-  }
-
-  &__stat-small {
-    font-size: 0.82rem;
-    line-height: 1.4;
-    padding-top: 0.2rem;
-    color: var(--color-text);
-  }
-
-  &__stat-label {
-    font-size: 0.64rem;
-    font-family: var(--font-mono);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--color-text-muted);
-  }
+  &__stat-card--wide { grid-column: span 1; }
 
   /* ── Log card ─────────────────────────────────────────────────────────────── */
   &__log-card {
