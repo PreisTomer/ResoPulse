@@ -1,85 +1,77 @@
-# BioResonance Dashboard (POC)
+# BioResonance: Biophysical Control & Digital Twin Interface
 
-A high-fidelity biological resonance simulation platform designed to visualize the effects of frequency broadcasting on cellular structures. This project demonstrates **Real-time Resonance Matching**: a process where specific frequencies are used to selectively target and destabilize "pathogen" cells while maintaining the integrity of healthy cellular tissue.
+### *Precision Modeling for Targeted Electro-Physiology and Mechanical Lysis*
 
-## 🧬 Project Overview
-
-BioResonance is built on the principle of **Natural Resonant Frequency**. Every biological entity has a unique frequency signature. This dashboard allows a user to "sweep" through a frequency spectrum to observe how different cell types react to external energetic stimuli.
-
-### Key Visual Concepts
-
-* **Healthy Cell (528 Hz):** Visualized as a stable, high-gloss 3D organic blob. It remains resilient and "nourished" when exposed to its natural harmonic.
-* **Target Cell (417 Hz):** A specialized "pathogen" model. When the broadcast frequency matches its signature, the D3-driven physics engine simulates structural failure and cellular shattering.
-* **3D Bio-Organic Rendering:** Utilizing D3.js with SVG filters, radial gradients, and force-simulations to mimic deep, translucent biological volumes.
+[![Scientific Validity](https://img.shields.io/badge/Physics-Schwan_%26_Lorentzian-blue.svg)](https://bio-resonance.vercel.app/protocol)
+[![Research Grade](https://img.shields.io/badge/Status-Proof--of--Concept-orange.svg)](https://bio-resonance.vercel.app/experiment)
 
 ---
 
-## 🛠 Tech Stack
+## 🧬 Executive Summary
 
-* **Frontend:** [Vue.js / React] (Composition API)
-* **Visualizations:** D3.js (Force-directed simulations, SVG Blobs, Custom Math-based 3D rotations)
-* **Real-time Data:** WebSockets (Socket.io) for streaming frequency and stress-level packets.
-* **State Management:** Reactive stores for tracking broadcast frequencies across the system.
+**BioResonance** is a research-grade visualization tool and computational dashboard designed for studying the effects of alternating electric fields and mechanical vibrations on biological membranes. By creating a **Digital Twin** of cellular environments, the platform allows researchers to visualize, predict, and automate cellular responses to specific frequency parameters. 
 
----
-
-## 🚀 Features
-
-* **Dynamic Frequency Slider:** A global signal generator that updates the system's "Broadcast Frequency" in real-time.
-* **Resonance Stress Logic:** Real-time calculation of  to drive cellular animations.
-* **Real-time Streaming:** WebSocket integration to simulate data from backend bio-sensors.
-* **Modular Architecture:**
-* `Dashboard.vue`: Main experiment viewport.
-* `CellCard.vue`: Reusable D3 component for biological visualization.
-* `FeatureCard.vue`: Interactive controls for system navigation.
-* `Navbar.vue`: System health and connectivity status.
-
-
+The platform is architected as a modern GUI for high-frequency cellular research, leveraging validated physical models to bridge the gap between theoretical biophysics and laboratory experimentation.
 
 ---
 
-## 🏁 Getting Started
+## 🔬 Core Physical Frameworks
 
-### 1. Installation
+The engine utilizes two primary physical regimes to calculate cellular stress and targeting thresholds in real-time:
+
+### 1. The Electroporation Regime (Cancer & Mammalian Cells)
+Designed for determining the **Induced Transmembrane Potential ($V_m$)** using the **Schwan Equation**:
+* **Plasma Membrane Logic**: Calculates frequency-dependent membrane charging in the $10\text{ kHz}$ to $500\text{ MHz}$ range.
+* **Nuclear Envelope Targeting**: Implements the **Kotnik & Miklavcic (2006) double-shell model** to identify frequencies that bypass the plasma membrane to target the nucleus directly.
+* **Selectivity**: Identifies the **Therapeutic Window** where larger cancer cells reach lysis thresholds (typically $0.65\text{--}0.85\text{V}$) before healthy cells ($1.1\text{V}$).
+
+### 2. The Resonance Regime (Viruses & Bacteria)
+For sub-micron pathogens where $V_m$ is negligible, the system shifts to **Acoustic/Mechanical Resonance** modeling:
+* **Lorentzian Lineshape**: Models the physical "ringing" and fracture of capsids based on stiffness and geometry.
+* **Targeting Examples**: Includes specific resonant frequencies for pathogens such as **SARS-CoV-2 (~10 GHz)** and **Influenza A (~12 GHz)**.
+* **Mechanical Selectivity**: Since mammalian cells resonate at lower frequencies (~100 kHz), they remain physically unaffected by GHz-range pathogen targeting.
+
+---
+
+## 🚀 Key Modules
+
+### 🧪 [The Experiment Lab](https://bio-resonance.vercel.app/experiment)
+* **Real-Time Visualizer**: Observe membrane deformation, "ringing" effects, and thermal shifts driven by the physics engine.
+* **Bode Charting**: View $V_m$ roll-off and characteristic frequency ($f_c$) markers for target vs. reference cells.
+* **Live Controls**: Interactive adjustment of Field Intensity ($V/cm$), RF Frequency, and Pulse Width (ns).
+
+### 📜 [Experimental Protocol](https://bio-resonance.vercel.app/protocol)
+* **Mathematical Foundations**: Provides a comprehensive guide to the Schwan and Lorentzian models used in the simulation.
+* **Step-by-Step Lab Guide**: Walkthroughs for establishing baselines and identifying optimal frequency windows.
+* **Literature Anchors**: Database of dielectric and mechanical constants derived from peer-reviewed research.
+
+### 🎛️ [Instrument Panel](https://bio-resonance.vercel.app/instrument)
+* **Waveform Modulation**: Toggle between Continuous Wave (CW) Sinusoidal and Nanosecond Pulsed DC (nsEP).
+* **Hardware Readiness**: Designed to interface with function generators to automate frequency-sweep experiments.
+
+---
+
+## 📊 Advanced Research Features
+
+* **Frequency-Response Heatmaps**: A 2D "Kill Zone" finder mapping Frequency $\times$ Field Strength to identify the optimal therapeutic window.
+* **Dosimetry Logging**: Automatically calculates **Specific Absorption Rate (SAR)** and total energy fluence ($J/kg$) delivered during a session.
+* **Data Export**: Export structured session logs as CSVs for external statistical analysis and peer-review preparation.
+
+---
+
+## 📚 References & Bibliography
+
+The **BioResonance** engine is anchored in foundational biophysics literature:
+* **Schwan (1957)**: Dielectric properties of biological tissues.
+* **Kotnik & Miklavcic (2000/2006)**: Analytical descriptions of $V_m$ and multi-shell models.
+* **Tsen et al. (2007/2010)**: Virus inactivation via GHz mechanical resonance.
+* **Davalos et al. (2005)**: Irreversible Electroporation (IRE) thresholds.
+
+---
+
+## 🏁 Installation
 
 ```bash
-# Clone the repository
-git clone https://github.com/your-username/bioresonance-poc.git
-
-# Navigate to the frontend
-cd frontend
-
-# Install dependencies
+git clone [https://github.com/your-username/bio-resonance.git](https://github.com/your-username/bio-resonance.git)
 npm install
-
-```
-
-### 2. Development
-
-```bash
-# Start the development server
 npm run dev
-
-```
-
-### 3. Backend (Experimental)
-
-*The backend is currently structured to support a Python or Node.js WebSocket server to stream real-time signal processing data into the dashboard.*
-
----
-
-## 🧪 Future Roadmap
-
-* **[ ]** Integration of historical experiment data in the **Reports** tab.
-* **[ ]** Implementation of multi-target "Frequency Cocktails."
-* **[ ]** Hardware integration with frequency-generating peripheral devices.
-
----
-
-## 📝 License
-
-This project is for educational and Proof of Concept purposes regarding biological resonance and signal processing.
-
----
-
-### Would you like me to add a "How it Works" section with the specific D3 physics logic we discussed, or is this high-level version enough?
