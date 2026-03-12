@@ -1,5 +1,5 @@
 <template>
-  <div class="hmap">
+  <div class="hmap" v-if="store.targetCellCategory === CELL_CATEGORY.MAMMALIAN">
     <AccordionPanel
       :icon="ICON.WAVE"
       :title="$t('heatmap.title')"
@@ -134,7 +134,7 @@ export default defineComponent({
   components: { AccordionPanel },
 
   setup() {
-    return { store: useCellStore(), ICON, UNIT, CHART_MODE, ZONE_COLORS, ZONE_KEY }
+    return { store: useCellStore(), ICON, UNIT, CHART_MODE, CELL_CATEGORY, ZONE_COLORS, ZONE_KEY }
   },
 
   data() {
