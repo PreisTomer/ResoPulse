@@ -244,8 +244,8 @@ export default defineComponent({
 
 @keyframes nav-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 
-/* ── Mobile navigation ──────────────────────────────────────────────────── */
-@media (max-width: 768px) {
+/* ── Mobile / tablet navigation (hamburger at ≤ 960px) ──────────────────── */
+@media (max-width: 960px) {
   .nav-bar__inner {
     grid-template-columns: auto 1fr auto;
     padding: 0 1rem;
@@ -286,6 +286,5 @@ export default defineComponent({
 
   .nav-bar__hamburger { display: flex; }
   .nav-bar__status-label { display: none; }
-  .nav-bar__brand-tag { display: none; }
 }
 </style>
