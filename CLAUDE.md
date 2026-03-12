@@ -63,6 +63,32 @@ icon: ICON.STAR
 
 **Cell role labels** (`'H'` / `'T'`): always use `CELL_LABEL.HEALTHY` / `CELL_LABEL.TARGET` from `constants/strings.ts`.
 
+### Tooltip Strings — Strictly Forbidden Patterns
+
+**Never write tooltip text inline in a template or as a raw string in a computed property.**
+
+```ts
+// ✗ WRONG — inline hardcoded string in template
+v-tip="'<strong>Cell Parameters</strong>\nEdit biophysical properties...'"
+
+// ✗ WRONG — raw template literal in computed
+tipVm(): string {
+  return `<strong>Transmembrane Potential</strong>\nCurrent: ${this.vmDisplay}…`
+}
+
+// ✓ CORRECT — locale key for static tooltips
+v-tip="$t('cellCard.tipParamsToggle')"
+
+// ✓ CORRECT — utility function for dynamic tooltips (physics values interpolated)
+tipVm(): string {
+  return tipVmFn({ vmDisplay: this.vmDisplay, disruptionRatio: this.disruptionRatio, … })
+}
+```
+
+Dynamic tooltip builders that interpolate live physics values belong in `utils/<domain>Tooltips.ts`
+(e.g. `cellCardTooltips.ts`, `sliderTooltips.ts`, `selectivityTooltips.ts`). Static labels and
+descriptions belong in `locales/en.json`. **Never write them inline.**
+
 ---
 
 ## BEM + Nested SCSS
