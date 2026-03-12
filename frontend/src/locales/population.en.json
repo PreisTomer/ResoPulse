@@ -1,0 +1,47 @@
+{
+  "population": {
+    "title": "Cell Population Model",
+    "ctrlSizeLabel": "Population size",
+    "ctrlVarianceLabel": "R variance",
+    "varianceUnit": "%",
+    "resampleBtn": "⟳ Resample",
+    "exportBtn": "↓ Export CSV",
+    "warnIcon": "⚠",
+    "okIcon": "✓",
+    "warnCollateral": "{pct}% of healthy cells cross the lysis threshold — reduce field or tune frequency.",
+    "okWindow": "{pct}% of target cells lysed · 0% healthy collateral. Therapeutic window is effective.",
+    "badgeLysed": "Lysed {pct}%",
+    "badgeRevEp": "Rev-EP {pct}%",
+    "badgeNour": "Nourishing {pct}%",
+    "statMeanDr": "Mean DR",
+
+    "tipPopSize": "<strong>Population Size N</strong>\nN=100 — fast, coarse histogram · quick parameter scans\nN=300 — balanced default · smooth histogram\nN=1000 — high-fidelity · ideal for final analysis",
+    "tipRVariance": "<strong>Radius Variance σ_R / R</strong>\nGaussian spread of cell radius as % of mean R.\nModels natural cell-to-cell size heterogeneity.\n  Mammalian ~10% · Bacteria ~20% · Virus ~30%\nVm ∝ R → larger cells sit closer to lysis threshold.",
+    "tipResample": "<strong>⟳ Resample</strong>\nGenerate a new random population.\nR and σ_i sampled independently per cell.\n  σ_R = R × variance%\n  σ(σ_i) = σ_i × uncertainty\n  Uncertainty: mammalian 20% · bacteria 35% · virus 45%",
+    "tipExport": "<strong>↓ Export CSV</strong>\nDownload all sampled DR values.\nColumns: cell_type · sample_index · DR",
+
+    "tipTargetCard": "<strong>Target Population — {label}</strong>\nOutcome distribution at current field settings.\nRadius and σ_i sampled from Gaussian distributions.\nσ_i uncertainty: ±{uncPct}%\nDR = Vm × f_pulse / V_threshold",
+    "tipHealthyCard": "<strong>Healthy Population — {label}</strong>\nOutcome distribution under the same shared field.\nGoal: 0% Lysed · low Rev-EP · high Stable fraction.\nσ_i uncertainty: ±{uncPct}%",
+
+    "tipLysedTarget": "<strong>Target Lysed: {pct}%</strong>\nFraction with DR ≥ 1.0 — irreversible membrane disruption.\n<span class='tip-ok'>Goal: maximise this fraction</span>",
+    "tipRevEpTarget": "<strong>Target Rev-EP: {pct}%</strong>\nDR 0.50–1.0 — reversible electroporation zone.\nMembrane permeabilised; may recover with fewer pulses.",
+    "tipNourTarget": "<strong>Target Nourishing: {pct}%</strong>\nDR 0.08–0.50 — sub-EP Schwan coupling.\nMembrane partially stressed; cell is intact.",
+
+    "tipLysedHealthy": "<strong>Healthy Lysed: {pct}%</strong>\n<span class='tip-warn'>⚠ Collateral damage — DR ≥ 1.0.</span>\nKeep at 0% — reduce field or tune frequency.",
+    "tipRevEpHealthy": "<strong>Healthy Rev-EP: {pct}%</strong>\nDR 0.50–1.0 — reversible EP zone.\nReversible at low duty cycle; monitor repeated pulses.",
+    "tipNourHealthy": "<strong>Healthy Nourishing: {pct}%</strong>\nDR 0.08–0.50 — sub-lytic Schwan coupling.\nLow-level membrane activity — generally safe.",
+
+    "tipChart": "<strong>Population DR Histogram</strong>\nMonte Carlo disruption ratio distribution.\n<span class='tip-val'>Red</span> = Target cells · <span class='tip-val'>Cyan</span> = Healthy cells\nThreshold lines:\n  50% — Rev-EP onset\n  85% — Lysis countdown armed\n  100% — Lysis threshold\nIdeal: target near 100% · healthy near 0%.",
+
+    "tipNPill100": "<strong>N=100</strong>\nFast · coarse histogram. Best for quick scans.",
+    "tipNPill300": "<strong>N=300</strong>\nBalanced default — smooth histogram.",
+    "tipNPill1000": "<strong>N=1000</strong>\nHigh-fidelity · slow sampling. Ideal for final analysis.",
+
+    "tipMeanDr": "<strong>Mean DR ± σ</strong>\nDR = Vm × f_pulse / V_threshold\nMean: <span class='tip-val'>{mean}</span>  ·  σ: <span class='tip-val'>{std}</span>\nσ_i uncertainty ±{uncPct}% modelled in each sample.",
+
+    "chartAxisDr": "Disruption Ratio",
+    "chartAxisCount": "Cell count",
+    "chartLegendTarget": "Target",
+    "chartLegendHealthy": "Healthy"
+  }
+}
