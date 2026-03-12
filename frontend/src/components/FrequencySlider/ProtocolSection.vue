@@ -18,7 +18,7 @@
           {{ $t('slider.cw') }}
         </label>
       </div>
-      <span class="field-panel__row-meta">wf×{{ currentWaveform === WAVEFORM.CW ? '0.5' : '1.0' }}</span>
+      <span class="field-panel__row-meta">wf×{{ currentWaveform === WAVEFORM.CW ? CW_WAVEFORM_FACTOR : PULSED_WAVEFORM_FACTOR }}</span>
     </div>
 
     <!-- Row 5: Duty Cycle (pulsed only) -->
@@ -90,6 +90,7 @@ import { WAVEFORM, THERMAL_LEVEL, CELL_LABEL } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'
 import { tipWaveform, tipDutyCycle, tipPulseWidth, tipSafeModeLock, formatLysisTime } from '@/tooltips/sliderTooltips'
+import { CW_WAVEFORM_FACTOR, PULSED_WAVEFORM_FACTOR } from '@/constants/experimentDefaults'
 
 export default defineComponent({
   props: {
@@ -111,7 +112,7 @@ export default defineComponent({
   },
 
   setup() {
-    return { store: useCellStore(), WAVEFORM, THERMAL_LEVEL, ICON, UNIT, CELL_LABEL }
+    return { store: useCellStore(), WAVEFORM, THERMAL_LEVEL, ICON, UNIT, CELL_LABEL, CW_WAVEFORM_FACTOR, PULSED_WAVEFORM_FACTOR }
   },
 
   data() {

@@ -24,7 +24,8 @@ export const ICON = {
   PLUG:      '⏻',   // instrument / hardware connection
   FLASK:     '⚗',   // cuvette / lab setup
   SECTION:   '§',   // protocol / science documentation
-  ARROW_R:   '⟶',  // directional CTA arrow
+  ARROW_R:     '⟶',  // directional CTA arrow
+  TRIANGLE_UP: '▲',  // axis tick / chart marker
 } as const
 
 export type Icon = typeof ICON[keyof typeof ICON]

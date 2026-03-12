@@ -6,6 +6,8 @@
   },
   "toc": {
     "title": "Contents",
+    "close": "Close",
+    "contents": "Contents",
     "overview": "1. Overview",
     "physics": "2. Physical Model",
     "schwan": "2.1 Schwan Equation",

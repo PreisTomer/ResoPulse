@@ -34,6 +34,9 @@
 
     "tipPLysis":   "<strong>P(lysis) — Random Orientation Fraction</strong>\nIn a real experiment, cells are randomly oriented in 3D.\nThe Schwan Vm has a cosθ factor: Vm(θ) = Vm_max · |cosθ|.\n\nFor a 3D isotropic distribution:\n  P = max(0, 1 − 1/DR)\n\nAt DR=1.0: only the perfectly-aligned pole lyses → P = 0%\nAt DR=2.0: 50% of cells lyse\nAt DR=5.0: 80% of cells lyse\n\n<em>Resonance mode</em>: acoustic pressure is omnidirectional — cosθ does not apply.",
 
+    "clickToSet":   "↵ click to set",
+    "hoverToInspect": "hover to inspect",
+
     "tipHoverZone": "<strong>Hovered Point</strong>\nPhysics computed with current protocol settings (medium, waveform, dc, pulse width).\nClick to navigate to this operating point.",
 
     "tipRegime":   "<strong>Frequency Regime at Operating Point</strong>\nDetermines the hardware required for field delivery.\n  Electrolytic (&lt;300 MHz): direct-contact cuvette + pulse generator\n  Near-field RF (300 MHz–1 GHz): 50 Ω coaxial probe + RF amplifier\n  Microwave (&gt;1 GHz): rectangular waveguide or resonant cavity",

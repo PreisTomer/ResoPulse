@@ -15,7 +15,7 @@
       <!-- Mobile-only contents toggle -->
       <button class="protocol__toc-mobile-btn" :class="{ 'protocol__toc-mobile-btn--open': tocMobileOpen }" @click="tocMobileOpen = !tocMobileOpen">
         <span class="protocol__toc-mobile-icon">☰</span>
-        <span class="protocol__toc-mobile-label">{{ tocMobileOpen ? 'Close' : 'Contents' }}</span>
+        <span class="protocol__toc-mobile-label">{{ tocMobileOpen ? $t('protocol.toc.close') : $t('protocol.toc.contents') }}</span>
         <span class="protocol__toc-mobile-caret" :class="{ 'protocol__toc-mobile-caret--open': tocMobileOpen }">▼</span>
       </button>
 

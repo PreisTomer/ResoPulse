@@ -8,7 +8,11 @@
     "protocol": "Protocol",
     "instrument": "Instrument",
     "systemReady": "System Ready",
-    "systemWarning": "Thermal Alert"
+    "systemWarning": "Thermal Alert",
+    "tipSystemReady": "<strong>System Ready</strong>\nAll physics running client-side.\nNo thermal warnings active.",
+    "tipSystemWarning": "<strong>Thermal Alert</strong>\nSteady-state temperature exceeds 42°C.\nReduce duty cycle or field intensity.",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu"
   },
   "hero": {
     "eyebrow": "Bioelectrics & Electroporation Research",

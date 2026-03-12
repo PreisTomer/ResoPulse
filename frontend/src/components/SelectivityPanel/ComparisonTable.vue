@@ -2,7 +2,7 @@
   <div class="sel-panel__library">
     <div
       class="sel-panel__lib-title"
-      v-tip="'<strong>' + presetCompTitleDynamic + '</strong>\n' + $t('selectivity.presetCompTip')"
+      v-tip="cmpTitleTip"
     >{{ presetCompTitleDynamic }}</div>
     <div class="sel-panel__comparison-table">
       <div
@@ -42,6 +42,10 @@ export default defineComponent({
   },
 
   computed: {
+    cmpTitleTip(): string {
+      return `<strong>${this.presetCompTitleDynamic}</strong>\n${this.$t('selectivity.presetCompTip')}`
+    },
+
     presetCompTitleDynamic(): string {
       const cat = this.store.targetCellCategory
       if (cat === CELL_CATEGORY.BACTERIA) return this.$t('selectivity.compAltBacteria')

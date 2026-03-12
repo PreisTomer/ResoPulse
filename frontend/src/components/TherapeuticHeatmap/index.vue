@@ -10,7 +10,7 @@
     <div class="hmap__body">
 
       <!-- Canvas wrapper — v-tip content updates dynamically on move -->
-      <div class="hmap__canvas-wrap" ref="wrap" v-tip="$t('heatmap.tipCanvas')" style="cursor: crosshair">
+      <div class="hmap__canvas-wrap" ref="wrap" v-tip="$t('heatmap.tipCanvas')">
         <canvas
           ref="canvas"
           class="hmap__canvas"
@@ -34,10 +34,10 @@
             v-for="o in hoverInfo.outcomes" :key="o.text"
             class="hmap__readout-outcome" :class="`hmap__readout-outcome--${o.level}`"
           >{{ o.text }}</span>
-          <span class="hmap__readout-hint">↵ click to set</span>
+          <span class="hmap__readout-hint">{{ $t('heatmap.clickToSet') }}</span>
         </template>
         <template v-else>
-          <span class="hmap__readout-idle">hover to inspect</span>
+          <span class="hmap__readout-idle">{{ $t('heatmap.hoverToInspect') }}</span>
         </template>
       </div>
 

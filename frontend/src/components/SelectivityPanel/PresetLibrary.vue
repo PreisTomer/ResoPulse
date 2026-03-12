@@ -3,7 +3,7 @@
   <div v-if="type === CELL_TYPE.TARGET" class="sel-panel__library">
     <div
       class="sel-panel__lib-title"
-      v-tip="'<strong>' + $t('selectivity.targetLibTitle') + '</strong>\n' + $t('selectivity.targetLibTip')"
+      v-tip="targetLibTip"
     >{{ $t('selectivity.targetLibTitle') }}</div>
     <div v-for="grp in targetGroups" :key="grp" class="sel-panel__lib-group" :style="{ '--pill-c': GROUP_COLORS[grp] }">
       <span class="sel-panel__lib-group-label">{{ GROUP_LABELS[grp] }}</span>
@@ -24,7 +24,7 @@
   <div v-else class="sel-panel__library">
     <div
       class="sel-panel__lib-title"
-      v-tip="'<strong>' + $t('selectivity.healthyLibTitle') + '</strong>\n' + $t('selectivity.healthyLibTip')"
+      v-tip="healthyLibTip"
     >{{ $t('selectivity.healthyLibTitle') }}</div>
     <div class="sel-panel__lib-pills" :style="{ '--pill-c': GROUP_COLORS[CELL_GROUP.REFERENCE] }">
       <button
@@ -65,6 +65,9 @@ export default defineComponent({
   },
 
   computed: {
+    targetLibTip():  string { return `<strong>${this.$t('selectivity.targetLibTitle')}</strong>\n${this.$t('selectivity.targetLibTip')}` },
+    healthyLibTip(): string { return `<strong>${this.$t('selectivity.healthyLibTitle')}</strong>\n${this.$t('selectivity.healthyLibTip')}` },
+
     targetGroups(): CellGroup[] { return TARGET_GROUPS },
 
     presetsByGroup(): Record<CellGroup, typeof CELL_PRESETS> {
