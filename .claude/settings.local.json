@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(wc -l /e/code/BioResonance/backend/src/*.ts)",
+      "Bash(cd e:/code/BioResonance/frontend && npm run build)",
+      "Bash(cd e:/code/BioResonance/frontend && npm run type-check)",
+      "Bash(npm run:*)"
+    ]
+  }
+}
