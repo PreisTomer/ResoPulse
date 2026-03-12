@@ -1,77 +1,55 @@
 # BioResonance: Biophysical Control & Digital Twin Interface
 
-### *Precision Modeling for Targeted Electro-Physiology and Mechanical Lysis*
+### *Proprietary Research-Grade Simulation for Electro-Physiology & Mechanical Lysis*
 
-[![Scientific Validity](https://img.shields.io/badge/Physics-Schwan_%26_Lorentzian-blue.svg)](https://bio-resonance.vercel.app/protocol)
-[![Research Grade](https://img.shields.io/badge/Status-Proof--of--Concept-orange.svg)](https://bio-resonance.vercel.app/experiment)
+**⚠️ CONFIDENTIAL & PROPRIETARY** *This repository is for private research and evaluation only. All rights reserved.*
 
 ---
 
 ## 🧬 Executive Summary
 
-**BioResonance** is a research-grade visualization tool and computational dashboard designed for studying the effects of alternating electric fields and mechanical vibrations on biological membranes. By creating a **Digital Twin** of cellular environments, the platform allows researchers to visualize, predict, and automate cellular responses to specific frequency parameters. 
+**BioResonance** is a high-fidelity **Digital Twin** interface designed for the simulation and planning of frequency-specific cellular experiments. By leveraging validated biophysical models, the platform identifies the "Therapeutic Window" for cellular disruption, bridging the gap between theoretical physics and laboratory results.
 
-The platform is architected as a modern GUI for high-frequency cellular research, leveraging validated physical models to bridge the gap between theoretical biophysics and laboratory experimentation.
+The platform is architected to interface with laboratory signal generators, providing a modern GUI for researchers targeting oncology (mammalian cells) and virology (pathogen resonance).
 
 ---
 
 ## 🔬 Core Physical Frameworks
 
-The engine utilizes two primary physical regimes to calculate cellular stress and targeting thresholds in real-time:
+The engine utilizes two primary physical regimes to calculate cellular stress in real-time:
 
-### 1. The Electroporation Regime (Cancer & Mammalian Cells)
-Designed for determining the **Induced Transmembrane Potential ($V_m$)** using the **Schwan Equation**:
-* **Plasma Membrane Logic**: Calculates frequency-dependent membrane charging in the $10\text{ kHz}$ to $500\text{ MHz}$ range.
-* **Nuclear Envelope Targeting**: Implements the **Kotnik & Miklavcic (2006) double-shell model** to identify frequencies that bypass the plasma membrane to target the nucleus directly.
-* **Selectivity**: Identifies the **Therapeutic Window** where larger cancer cells reach lysis thresholds (typically $0.65\text{--}0.85\text{V}$) before healthy cells ($1.1\text{V}$).
+### 1. The Electroporation Regime (Mammalian Oncology)
+* **Model:** Based on the **Schwan Equation** and **Kotnik-Miklavcic** double-shell analysis.
+* **Logic:** Calculates induced transmembrane potential ($V_m$) to identify frequency windows where cancer cells reach lysis thresholds before healthy tissue.
 
-### 2. The Resonance Regime (Viruses & Bacteria)
-For sub-micron pathogens where $V_m$ is negligible, the system shifts to **Acoustic/Mechanical Resonance** modeling:
-* **Lorentzian Lineshape**: Models the physical "ringing" and fracture of capsids based on stiffness and geometry.
-* **Targeting Examples**: Includes specific resonant frequencies for pathogens such as **SARS-CoV-2 (~10 GHz)** and **Influenza A (~12 GHz)**.
-* **Mechanical Selectivity**: Since mammalian cells resonate at lower frequencies (~100 kHz), they remain physically unaffected by GHz-range pathogen targeting.
+### 2. The Resonance Regime (Virology & Bacteriology)
+* **Model:** **Lorentzian Harmonic Excitation** for mechanical capsid disruption.
+* **Logic:** Targets the structural integrity of sub-micron pathogens (e.g., SARS-CoV-2 at ~10 GHz) through resonant fracture.
 
 ---
 
 ## 🚀 Key Modules
 
-### 🧪 [The Experiment Lab](https://bio-resonance.vercel.app/experiment)
-* **Real-Time Visualizer**: Observe membrane deformation, "ringing" effects, and thermal shifts driven by the physics engine.
-* **Bode Charting**: View $V_m$ roll-off and characteristic frequency ($f_c$) markers for target vs. reference cells.
-* **Live Controls**: Interactive adjustment of Field Intensity ($V/cm$), RF Frequency, and Pulse Width (ns).
-
-### 📜 [Experimental Protocol](https://bio-resonance.vercel.app/protocol)
-* **Mathematical Foundations**: Provides a comprehensive guide to the Schwan and Lorentzian models used in the simulation.
-* **Step-by-Step Lab Guide**: Walkthroughs for establishing baselines and identifying optimal frequency windows.
-* **Literature Anchors**: Database of dielectric and mechanical constants derived from peer-reviewed research.
-
-### 🎛️ [Instrument Panel](https://bio-resonance.vercel.app/instrument)
-* **Waveform Modulation**: Toggle between Continuous Wave (CW) Sinusoidal and Nanosecond Pulsed DC (nsEP).
-* **Hardware Readiness**: Designed to interface with function generators to automate frequency-sweep experiments.
+* **🧪 The Experiment Lab:** Real-time visualization of membrane deformation, Bode plotting, and stochastic Lysis Probability.
+* **🎛️ Instrument Panel:** Hardware-ready interface for automated frequency sweeps and waveform modulation.
+* **📊 Analytics Suite:** Predictive data export for Specific Absorption Rate (SAR) and cumulative energy dosimetry.
 
 ---
 
-## 📊 Advanced Research Features
+## ⚖️ Legal Notice & Disclaimer
 
-* **Frequency-Response Heatmaps**: A 2D "Kill Zone" finder mapping Frequency $\times$ Field Strength to identify the optimal therapeutic window.
-* **Dosimetry Logging**: Automatically calculates **Specific Absorption Rate (SAR)** and total energy fluence ($J/kg$) delivered during a session.
-* **Data Export**: Export structured session logs as CSVs for external statistical analysis and peer-review preparation.
+### **Proprietary Rights**
+This software, including its specific implementation of biophysical models, UI/UX architecture, and integrated "Cell Signature" data, is the exclusive intellectual property of the owner. Unauthorized copying, distribution, or reverse engineering of this repository is strictly prohibited.
 
----
-
-## 📚 References & Bibliography
-
-The **BioResonance** engine is anchored in foundational biophysics literature:
-* **Schwan (1957)**: Dielectric properties of biological tissues.
-* **Kotnik & Miklavcic (2000/2006)**: Analytical descriptions of $V_m$ and multi-shell models.
-* **Tsen et al. (2007/2010)**: Virus inactivation via GHz mechanical resonance.
-* **Davalos et al. (2005)**: Irreversible Electroporation (IRE) thresholds.
+### **Scientific Disclaimer**
+BioResonance is a computational simulation tool intended for **In-Vitro Laboratory Research only**. It is not a medical device, nor has it been evaluated by any regulatory body for clinical use. All mathematical predictions must be verified by physical experimentation. The developer assumes no liability for experimental outcomes or laboratory decisions based on these simulations.
 
 ---
 
-## 🏁 Installation
+## 🛠 Setup & Installation
+
+*Note: Access to this repository is private. Ensure you have the required environment variables configured before building.*
 
 ```bash
-git clone [https://github.com/your-username/bio-resonance.git](https://github.com/your-username/bio-resonance.git)
 npm install
 npm run dev
