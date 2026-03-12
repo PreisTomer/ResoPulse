@@ -639,7 +639,7 @@ export default defineComponent({
 
 @keyframes nourish-text-pulse {
   0%, 100% { opacity: 1; }
-  50%       { opacity: 0.65; }
+  50%       { opacity: 0.80; }
 }
 
 @keyframes flicker {
@@ -651,7 +651,7 @@ export default defineComponent({
 
 @keyframes warn-fade {
   0%, 100% { opacity: 1; }
-  50%       { opacity: 0.55; }
+  50%       { opacity: 0.72; }
 }
 
 /* ── Vue Transition classes (name="params") ──────────────────────────── */
@@ -1012,9 +1012,8 @@ export default defineComponent({
   }
 
   &__params-derived-label {
-    @include mono-upper(0.52rem, 0.12em);
+    @include mono-upper(0.62rem, 0.12em);
     color: var(--color-text-muted);
-    opacity: 0.65;
   }
 
   &__param-derived-value {

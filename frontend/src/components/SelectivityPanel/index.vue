@@ -780,7 +780,7 @@ export default defineComponent({
       color: var(--color-text-muted);
       opacity: 0.7;
 
-      &:hover { opacity: 0.55; }
+      &:hover { opacity: 0.9; }
     }
   }
 
@@ -833,14 +833,13 @@ export default defineComponent({
   }
 
   &__res-note {
-    font-size: 0.55rem;
+    font-size: 0.63rem;
     font-family: var(--font-mono);
     color: var(--color-text-muted);
-    opacity: 0.65;
   }
 
   &__res-badge {
-    font-size: 0.55rem;
+    font-size: 0.62rem;
     font-family: var(--font-mono);
     text-transform: uppercase;
     letter-spacing: 0.07em;
@@ -855,7 +854,7 @@ export default defineComponent({
 
   /* ── Model warning ─────────────────────────────────────────── */
   &__model-warning {
-    font-size: 0.6rem;
+    font-size: 0.68rem;
     font-family: var(--font-mono);
     color: var(--color-amber);
     background: rgba(251, 191, 36, 0.07);
@@ -873,7 +872,7 @@ export default defineComponent({
     border-radius: 3px;
     color: var(--color-amber);
     font-family: var(--font-mono);
-    font-size: 0.58rem;
+    font-size: 0.65rem;
     letter-spacing: 0.08em;
     padding: 0.2rem 0.55rem;
     cursor: pointer;

@@ -485,7 +485,7 @@ export default defineComponent({
 
   &__scope-chip {
     font-family: var(--font-mono);
-    font-size: 0.5rem;
+    font-size: 0.6rem;
     font-weight: 700;
     letter-spacing: 0.06em;
     padding: 0.08rem 0.32rem;
@@ -506,9 +506,9 @@ export default defineComponent({
 
   &__scope-sep {
     font-family: var(--font-mono);
-    font-size: 0.48rem;
+    font-size: 0.6rem;
     color: var(--color-text-muted);
-    opacity: 0.55;
+    opacity: 0.75;
     white-space: nowrap;
   }
 
@@ -525,7 +525,7 @@ export default defineComponent({
 
   &__scope-tag {
     display: inline-block;
-    font-size: 0.44rem;
+    font-size: 0.58rem;
     font-weight: 700;
     letter-spacing: 0.04em;
     padding: 0.04rem 0.25rem;
@@ -872,7 +872,7 @@ export default defineComponent({
     align-items: center;
     gap: 0.2rem;
     padding: 0.18rem 0.55rem;
-    font-size: 0.58rem;
+    font-size: 0.65rem;
     font-family: var(--font-mono);
     text-transform: uppercase;
     letter-spacing: 0.06em;
@@ -908,7 +908,7 @@ export default defineComponent({
     }
 
     &--fc {
-      font-size: 0.56rem;
+      font-size: 0.62rem;
       padding: 0.15rem 0.45rem;
     }
 

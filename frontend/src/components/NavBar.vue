@@ -143,7 +143,7 @@ export default defineComponent({
     }
 
     &-tag {
-      font-size: 0.6rem;
+      font-size: 0.68rem;
       color: var(--color-text-muted);
       text-transform: uppercase;
       letter-spacing: 0.1em;
