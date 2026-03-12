@@ -113,6 +113,34 @@
       "thSigma": "σ_e"
     },
 
+    "loadMonitor": {
+      "title":           "Load Impedance Monitor",
+      "sub":             "Continuous σ_e and Z tracking — 1 s auto-sampling — 2-minute rolling window",
+      "stateNominal":    "Nominal",
+      "stateWarning":    "Drift Warning",
+      "stateCritical":   "Critical Drift",
+      "statSigmaBase":   "σ_e (base)",
+      "statSigmaLive":   "σ_e (live)",
+      "statDelta":       "Δσ_e",
+      "statDrift":       "Z Drift",
+      "noData":          "Collecting data — chart appears after 3 samples (~3 s)",
+      "axisTime":        "Time",
+      "legendSigma":     "σ_e [S/m]",
+      "legendZ":         "Z [Ω]",
+      "legendRef":       "Nominal reference",
+      "clear":           "Clear",
+      "chainLysed":      "f_lysed",
+      "chainDeltaSigma": "Δσ_e",
+      "chainZDrift":     "ΔZ %",
+      "chainCorrection": "E_gen ×",
+      "tipState":        "<strong>Load State</strong>\nBased on absolute impedance drift from nominal.\n<em>Nominal</em>: |ΔZ| &lt; 5% — no correction needed\n<em>Warning</em>: 5–15% — minor correction recommended\n<em>Critical</em>: &gt;15% — significant drift; apply corrected field",
+      "tipSigmaBase":    "<strong>Base Medium Conductivity σ_e [S/m]</strong>\nNominal conductivity of the selected medium at 37°C.\nThis is the experiment starting point before any cells lyse.",
+      "tipSigmaLive":    "<strong>Live Medium Conductivity σ_e [S/m]</strong>\nCurrent conductivity after accounting for ion release from lysed cells.\nRises (low-σ media) or falls (high-σ media like saline) depending on the σ_i vs σ_e contrast.",
+      "tipDelta":        "<strong>Conductivity Change Δσ_e [S/m]</strong>\nδσ_e = σ_e_live − σ_e_base\nPositive: intracellular σ_i &gt; σ_medium (low-σ media, e.g. PBS)\nNegative: intracellular σ_i &lt; σ_medium (high-σ media, e.g. saline)\nFormula: Δσ_e = φ × f_lysed × (σ_i − σ_base) × 0.8",
+      "tipDrift":        "<strong>Impedance Drift [%]</strong>\n(Z_live − Z_nominal) / Z_nominal × 100\nNegative drift (saline): σ_e rises → Z falls → field under-delivered\nPositive drift (PBS): σ_e falls → Z rises → field over-delivered",
+      "tipChain":        "<strong>Lysis Feedback Chain</strong>\nThe causal sequence connecting lysis events to generator correction:\n\nf_lysed — fraction of target cells lysed (DR ≥ 85%)\nΔσ_e   — conductivity shift from ion release\nΔZ %   — resulting cuvette impedance drift\nE_gen × — voltage correction factor to maintain target transmembrane Vm\n\nAt high cell density or long exposure, this correction can exceed 20%."
+    },
+
     "sonif": {
       "on":   "Auditory Display — On",
       "off":  "Auditory Display — Off",

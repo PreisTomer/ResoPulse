@@ -61,6 +61,9 @@
     "fresRangeLabel": "f_res range",
     "qRangeLabel": "Q range",
     "basisLabel": "Basis",
-    "switchToResonanceBtn": "→ Switch to Resonance Mode"
+    "switchToResonanceBtn": "→ Switch to Resonance Mode",
+
+    "orientFracLabel": "P(lysis) random orientation",
+    "tipOrientFrac": "<strong>Random-Orientation Lysis Probability</strong>\nIn a real experiment cells are randomly oriented. The Schwan Vm has a cosθ factor:\n  Vm(θ) = 1.5·E·R·cosθ / √(1+(ωτ)²)\n\nFor a 3D isotropic distribution, the fraction of cells with Vm > V_thr is:\n  P = max(0, 1 − 1/DR)   where DR = Vm_max / V_thr\n\nExamples:\n  DR = 1.0 → 0% of cells lyse (none aligned enough)\n  DR = 2.0 → 50% lyse\n  DR = 5.0 → 80% lyse\n\n<em>Resonance mode (bacteria/virus)</em>: acoustic pressure is nearly omnidirectional —\nthe cosθ formula does not apply. Orientation fraction shows — in that mode."
   }
 }

@@ -6,6 +6,11 @@
       <ImpedanceMeter class="inst-panel__card" />
     </div>
 
+    <!-- Load Impedance Monitor (full width) -->
+    <div class="inst-panel__card">
+      <LoadMonitor />
+    </div>
+
     <!-- Middle grid: Field corrector + Hardware input -->
     <div class="inst-panel__mid-grid">
       <FieldCorrector class="inst-panel__card" />
@@ -26,10 +31,11 @@ import ImpedanceMeter  from './ImpedanceMeter.vue'
 import FieldCorrector  from './FieldCorrector.vue'
 import HardwareInput   from './HardwareInput.vue'
 import ImpedanceTrend  from './ImpedanceTrend.vue'
+import LoadMonitor     from './LoadMonitor.vue'
 
 export default defineComponent({
   name: 'InstrumentPanel',
-  components: { CuvetteSetup, ImpedanceMeter, FieldCorrector, HardwareInput, ImpedanceTrend },
+  components: { CuvetteSetup, ImpedanceMeter, FieldCorrector, HardwareInput, ImpedanceTrend, LoadMonitor },
 })
 </script>
 

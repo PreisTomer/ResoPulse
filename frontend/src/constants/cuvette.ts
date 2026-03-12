@@ -36,3 +36,9 @@ export const HARDWARE_READING_STALE_MS = 5_000
 
 /** Maximum impedance history entries kept for the trend sparkline. */
 export const IMPEDANCE_HISTORY_MAX = 120
+
+/** Number of continuously auto-sampled conductivity points kept for the Load Monitor chart. */
+export const CONDUCTIVITY_SAMPLE_MAX = 120
+
+/** Interval between auto-sampled conductivity readings for the Load Monitor [ms]. */
+export const CONDUCTIVITY_SAMPLE_INTERVAL_MS = 1_000

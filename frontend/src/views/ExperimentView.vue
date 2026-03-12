@@ -72,19 +72,47 @@
                   :style="targetPickerCategory === cat ? { borderColor: GROUP_COLORS[cat], color: GROUP_COLORS[cat] } : {}"
                   @click.stop="targetPickerCategory = cat"
                 >{{ GROUP_LABELS[cat] }}</button>
+                <!-- Custom presets tab -->
+                <button
+                  class="experiment__cell-picker-tab experiment__cell-picker-tab--custom"
+                  :class="{ 'experiment__cell-picker-tab--active': targetPickerCategory === 'custom' }"
+                  @click.stop="targetPickerCategory = 'custom'"
+                >{{ $t('userPresets.tabLabel') }}</button>
               </div>
             </div>
-            <div class="experiment__cell-picker-grid">
+            <!-- Built-in presets grid -->
+            <div v-if="targetPickerCategory !== 'custom'" class="experiment__cell-picker-grid">
               <button
                 v-for="p in targetPresetsForCategory"
                 :key="p.presetId"
                 class="experiment__preset-btn"
                 :class="{ 'experiment__preset-btn--active': store.target.id === p.presetId }"
-                :style="store.target.id === p.presetId ? { borderColor: GROUP_COLORS[targetPickerCategory], color: GROUP_COLORS[targetPickerCategory] } : {}"
+                :style="store.target.id === p.presetId ? { borderColor: GROUP_COLORS[targetPickerCategory as CellGroup], color: GROUP_COLORS[targetPickerCategory as CellGroup] } : {}"
                 @click="loadTargetPreset(p)"
               >
                 <span class="experiment__preset-btn-name">{{ p.shortLabel }}</span>
                 <span class="experiment__preset-btn-sub">{{ p.notes }}</span>
+              </button>
+            </div>
+            <!-- Custom presets grid -->
+            <div v-else class="experiment__cell-picker-grid experiment__cell-picker-grid--custom">
+              <p v-if="!presetsStore.hasPresets" class="experiment__custom-empty">
+                {{ $t('userPresets.emptyMsg') }}<br />
+                <span class="experiment__custom-hint">{{ $t('userPresets.emptyHint') }}</span>
+              </p>
+              <button
+                v-for="p in presetsStore.presets"
+                :key="p.id"
+                class="experiment__preset-btn experiment__preset-btn--custom"
+                :class="{ 'experiment__preset-btn--active': store.target.id === p.id }"
+                @click="loadUserPreset(p)"
+              >
+                <span class="experiment__preset-btn-name">{{ p.shortLabel }}</span>
+                <span class="experiment__preset-btn-sub">{{ p.notes || p.label }}</span>
+                <button class="experiment__preset-btn-del" @click.stop="presetsStore.remove(p.id)" title="Delete">✕</button>
+              </button>
+              <button class="experiment__preset-btn-new" @click.stop="showCreateModal = true">
+                {{ $t('userPresets.createBtn') }}
               </button>
             </div>
           </div>
@@ -154,7 +182,10 @@
       <!-- Row 3: Selectivity (full width) -->
       <SelectivityPanel />
 
-      <!-- Row 4 & 5: Research analysis tools — sweep + population (collapsible, full width) -->
+      <!-- Row 4: Therapeutic Heatmap (full width, collapsible) -->
+      <TherapeuticHeatmap />
+
+      <!-- Row 5 & 6: Research analysis tools — sweep + population (collapsible, full width) -->
       <SweepPanel @window-change="onSweepWindowChange" @open-change="sweepPanelOpen = $event" />
 
       <!-- Global therapeutic window snap bar — visible only when at least one analysis panel is
@@ -176,11 +207,18 @@
 
       <PopulationPanel @open-change="populationPanelOpen = $event" />
 
-      <!-- Row 6: Log (full width) -->
+      <!-- Row 7: Log (full width) -->
       <ExperimentLog />
 
     </div>
   </div>
+
+  <!-- Create Cell Profile modal -->
+  <CreateCellModal
+    :visible="showCreateModal"
+    @close="showCreateModal = false"
+    @saved="onUserPresetSaved"
+  />
 </template>
 
 <script lang="ts">
@@ -193,13 +231,18 @@ import FrequencySlider from '@/components/FrequencySlider/index.vue'
 import FrequencyResponseChart from '@/components/FrequencyResponseChart/index.vue'
 import ResonanceChart from '@/components/ResonanceChart/index.vue'
 import SelectivityPanel from '@/components/SelectivityPanel/index.vue'
+import TherapeuticHeatmap from '@/components/TherapeuticHeatmap/index.vue'
 import SweepPanel from '@/components/SweepPanel/index.vue'
 import PopulationPanel from '@/components/PopulationPanel/index.vue'
 import ExperimentLog from '@/components/ExperimentLog.vue'
+import CreateCellModal from '@/components/CreateCellModal/index.vue'
 import { useExperimentStore } from '@/stores/experimentStore'
 import { useImpedanceStore } from '@/stores/impedanceStore'
+import { useUserPresetsStore } from '@/stores/userPresetsStore'
+import type { UserCellPreset } from '@/stores/userPresetsStore'
 import { CELL_PRESETS, GROUP_COLORS, GROUP_LABELS } from '@/constants/cellLibrary'
 import type { CellPreset, CellGroup } from '@/constants/cellLibrary'
+import { computeSAR } from '@/utils/physics'
 import { formatLysisTime } from '@/utils/sliderTooltips'
 import { CATEGORY_DEFAULTS, INITIAL_RESONANT_FIELD_FRACTION, SNAP_CONFIRM_MS } from '@/constants/experimentDefaults'
 import { CELL_CATEGORY, CELL_TYPE, CELL_GROUP, CHART_MODE } from '@/constants/strings'
@@ -215,9 +258,11 @@ export default defineComponent({
     FrequencyResponseChart,
     ResonanceChart,
     SelectivityPanel,
+    TherapeuticHeatmap,
     SweepPanel,
     PopulationPanel,
     ExperimentLog,
+    CreateCellModal,
   },
 
   setup() {
@@ -225,6 +270,7 @@ export default defineComponent({
       store: useCellStore(),
       expStore: useExperimentStore(),
       impStore: useImpedanceStore(),
+      presetsStore: useUserPresetsStore(),
       socketConnected,
       GROUP_COLORS,
       GROUP_LABELS,
@@ -237,18 +283,35 @@ export default defineComponent({
   created() {
     connectSocket()
     this.store.startSession()
+    this._doseLastMs = Date.now()
+    this._doseTimer = setInterval(() => {
+      const now     = Date.now()
+      const dtMs    = now - this._doseLastMs
+      this._doseLastMs = now
+      const sar = computeSAR(
+        this.store.target,
+        this.store.fieldIntensity,
+        this.store.effectiveSigmaE,
+        this.store.waveform === 'cw' ? 0.5 : 1.0,
+      )
+      this.expStore.addDoseSample(sar, this.store.dutyCycle, dtMs)
+    }, 1000)
   },
 
   data() {
     return {
       healthyPickerOpen: false,
       targetPickerOpen: false,
-      targetPickerCategory: CELL_GROUP.CANCER as CellGroup,
+      targetPickerCategory: CELL_GROUP.CANCER as CellGroup | 'custom',
       sweepWindow: null as { lo: number; hi: number; param: 'field' | 'freq' } | null,
       sweepPanelOpen: false,
       populationPanelOpen: false,
       snapConfirming: false,
       _snapResetTimer: null as number | null,
+      showCreateModal: false,
+      // Dosimetry timer
+      _doseTimer: null as ReturnType<typeof setInterval> | null,
+      _doseLastMs: 0,
     }
   },
 
@@ -321,6 +384,7 @@ Larger radius raises Vm and lowers the lysis field threshold.`
     },
 
     targetPresetsForCategory(): CellPreset[] {
+      if (this.targetPickerCategory === 'custom') return []
       return CELL_PRESETS.filter((p) => p.group === this.targetPickerCategory)
     },
 
@@ -423,6 +487,19 @@ Larger radius raises Vm and lowers the lysis field threshold.`
       // applyTargetDefaults fires via watcher on currentTargetId — it will call broadcastStateSync
     },
 
+    loadUserPreset(preset: UserCellPreset) {
+      const config = this.presetsStore.toCellConfig(preset, 'target')
+      this.store.loadPreset('target', config)
+      this.targetPickerOpen = false
+    },
+
+    onUserPresetSaved() {
+      this.showCreateModal = false
+      // Switch to custom tab so user sees the newly created preset
+      this.targetPickerCategory = 'custom'
+      this.targetPickerOpen = true
+    },
+
     toggleHealthyPicker() {
       this.healthyPickerOpen = !this.healthyPickerOpen
       if (this.healthyPickerOpen) this.targetPickerOpen = false
@@ -465,6 +542,7 @@ Larger radius raises Vm and lowers the lysis field threshold.`
 
   beforeUnmount() {
     clearTimeout(this._snapResetTimer ?? undefined)
+    if (this._doseTimer !== null) clearInterval(this._doseTimer)
   },
 })
 </script>
@@ -881,6 +959,89 @@ Larger radius raises Vm and lowers the lysis field threshold.`
 /* Compound modifier: healthy preset btn that is also active */
 .experiment__preset-btn--healthy.experiment__preset-btn--active {
   border-color: var(--color-primary);
+}
+
+/* Custom preset tab distinct styling */
+.experiment__cell-picker-tab--custom {
+  border-color: rgba(255, 140, 0, 0.4);
+  color:        rgba(255, 140, 0, 0.8);
+
+  &.experiment__cell-picker-tab--active {
+    border-color: rgba(255, 140, 0, 0.7);
+    color:        #ff8c00;
+    background:   rgba(255, 140, 0, 0.08);
+  }
+}
+
+/* Custom preset buttons */
+.experiment__preset-btn--custom {
+  position: relative;
+  padding-right: 1.6rem;
+
+  .experiment__preset-btn-del {
+    position:    absolute;
+    top:         50%;
+    right:       0.4rem;
+    transform:   translateY(-50%);
+    background:  transparent;
+    border:      none;
+    color:       var(--color-text-muted);
+    font-size:   0.65rem;
+    cursor:      pointer;
+    padding:     0.1rem;
+    line-height: 1;
+    opacity:     0.5;
+    transition:  opacity 0.15s, color 0.15s;
+
+    &:hover {
+      opacity: 1;
+      color:   var(--color-danger);
+    }
+  }
+}
+
+/* Empty state for custom presets */
+.experiment__custom-empty {
+  font-size:   0.72rem;
+  color:       var(--color-text-muted);
+  padding:     0.5rem 0.25rem;
+  margin:      0;
+  line-height: 1.5;
+}
+
+.experiment__custom-hint {
+  font-size: 0.65rem;
+  opacity:   0.65;
+}
+
+/* "+ New Cell Profile" button in custom preset grid */
+.experiment__preset-btn-new {
+  width:         100%;
+  padding:       0.45rem 0.65rem;
+  background:    rgba(255, 140, 0, 0.06);
+  border:        1px dashed rgba(255, 140, 0, 0.35);
+  border-radius: 4px;
+  color:         rgba(255, 140, 0, 0.85);
+  font-family:   var(--font-mono);
+  font-size:     0.68rem;
+  font-weight:   600;
+  letter-spacing: 0.04em;
+  cursor:        pointer;
+  text-align:    left;
+  transition:    background 0.15s, border-color 0.15s;
+  margin-top:    0.1rem;
+
+  &:hover {
+    background:    rgba(255, 140, 0, 0.12);
+    border-color:  rgba(255, 140, 0, 0.6);
+  }
+}
+
+/* Custom grid with explicit grid for empty state */
+.experiment__cell-picker-grid--custom {
+  display:        flex;
+  flex-direction: column;
+  gap:            0.35rem;
 }
 
 @keyframes pulse-dot {

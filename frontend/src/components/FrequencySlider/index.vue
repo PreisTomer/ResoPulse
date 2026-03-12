@@ -126,6 +126,16 @@
       </div>
     </div>
 
+    <!-- Frequency coupling regime badge -->
+    <div
+      class="field-panel__regime"
+      :class="`field-panel__regime--${store.freqRegime}`"
+      v-tip="tipFreqRegime"
+    >
+      <span class="field-panel__regime-dot"></span>
+      {{ $t(`slider.regime.${store.freqRegime}`) }}
+    </div>
+
     <!-- Row 3: Field Intensity + disruption indicators -->
     <div
       class="field-panel__row"
@@ -187,7 +197,7 @@ import { defineComponent } from 'vue'
 import { useCellStore } from '@/stores/cellStore'
 import { broadcastStateSync } from '@/services/socket'
 import { MEDIA } from '@/constants/media'
-import { CHART_MODE, CELL_CATEGORY, CELL_LABEL, THERMAL_LEVEL } from '@/constants/strings'
+import { CHART_MODE, CELL_CATEGORY, CELL_LABEL, THERMAL_LEVEL, FREQ_REGIME } from '@/constants/strings'
 import { THRESHOLDS } from '@/constants/cellCard'
 import { ICON } from '@/constants/icons'
 import type { MediumKey } from '@/types/media'
@@ -310,6 +320,26 @@ export default defineComponent({
     tipMediumKeys(): Record<string, string> { return tipMediumKeys() },
     tipFreq(): string      { return tipFreq(this.freqDisplay, this.targetFcDisplay, this.healthyFcDisplay) },
     tipFcSub(): string     { return tipFcSub() },
+    tipFreqRegime(): string {
+      const tips: Record<string, string> = {
+        electrolytic: this.$t('slider.regime.tipElectrolytic'),
+        nearfield_rf: this.$t('slider.regime.tipNearfieldRf'),
+        microwave:    this.$t('slider.regime.tipMicrowave'),
+      }
+      let tip = tips[this.store.freqRegime] ?? ''
+      // In resonance mode for bacteria/virus the capsid f_res is in GHz —
+      // warn if slider is not already in microwave regime
+      if (
+        this.isResonanceMode &&
+        this.store.targetCellCategory !== CELL_CATEGORY.MAMMALIAN &&
+        this.store.freqRegime !== FREQ_REGIME.MICROWAVE
+      ) {
+        const t = this.store.target as { resonantFreqGHz?: number }
+        const fRes = t.resonantFreqGHz ? ` (f_res = ${t.resonantFreqGHz} GHz)` : ''
+        tip += `\n\n⚠ Resonance mode active${fRes}: acoustic capsid disruption requires GHz delivery — rectangular waveguide or resonant cavity hardware needed. Current frequency is below the resonant target.`
+      }
+      return tip
+    },
 
     tipField(): string {
       return tipField({
@@ -517,6 +547,51 @@ export default defineComponent({
       border: 1px solid rgba(0, 212, 255, 0.20);
     }
   }
+
+  /* ── Frequency coupling regime badge ────────────────────────────── */
+  &__regime {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.62rem;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    padding: 0.22rem 0.7rem;
+    border-radius: 20px;
+    border: 1px solid transparent;
+    cursor: default;
+    transition: color 0.2s, border-color 0.2s, background 0.2s;
+
+    &--electrolytic {
+      color: var(--color-primary);
+      border-color: rgba(0, 212, 255, 0.3);
+      background: rgba(0, 212, 255, 0.05);
+    }
+
+    &--nearfield_rf {
+      color: var(--color-amber-warm);
+      border-color: rgba(251, 191, 36, 0.35);
+      background: rgba(251, 191, 36, 0.06);
+    }
+
+    &--microwave {
+      color: var(--color-danger, #ff4d6d);
+      border-color: rgba(255, 77, 109, 0.35);
+      background: rgba(255, 77, 109, 0.06);
+    }
+  }
+
+  &__regime-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  &__regime--electrolytic &__regime-dot { background: var(--color-primary); }
+  &__regime--nearfield_rf &__regime-dot { background: var(--color-amber-warm); }
+  &__regime--microwave    &__regime-dot { background: var(--color-danger, #ff4d6d); }
 
   /* ── Thermal banner ──────────────────────────────────────────────── */
   &__thermal-banner {

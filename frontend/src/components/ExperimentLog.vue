@@ -17,6 +17,11 @@
         :placeholder="$t('exp.logSessionPlaceholder')"
         spellcheck="false"
       />
+      <!-- Dosimetry badge -->
+      <div class="exp-log__dose" v-tip="tipDose">
+        <span class="exp-log__dose-label">{{ $t('log.doseLabel') }}</span>
+        <span class="exp-log__dose-val">{{ doseBadge }}</span>
+      </div>
       <div class="exp-log__actions">
         <button
           class="exp-log__btn exp-log__btn--primary"
@@ -130,6 +135,16 @@ export default defineComponent({
     },
 
     tipThEvent(): string { return this.$t('log.tipThEvent') },
+
+    /** Formatted cumulative dose badge text */
+    doseBadge(): string {
+      const dose = this.expStore.cumulativeDoseJkg
+      if (dose >= 1000) return `${(dose / 1000).toFixed(2)} kJ/kg`
+      if (dose >= 1)    return `${dose.toFixed(1)} J/kg`
+      return `${(dose * 1000).toFixed(0)} mJ/kg`
+    },
+
+    tipDose(): string { return this.$t('log.tipDose') },
   },
 
   methods: {
@@ -211,6 +226,29 @@ export default defineComponent({
     letter-spacing: 0.06em;
 
     &:focus { border-bottom-color: var(--color-primary); }
+  }
+
+  &__dose {
+    @include flex-row(0.4rem);
+    align-items:   center;
+    padding:       0.18rem 0.65rem;
+    border:        1px solid rgba(251, 191, 36, 0.3);
+    border-radius: 3px;
+    background:    rgba(251, 191, 36, 0.06);
+    cursor:        help;
+    flex-shrink:   0;
+  }
+
+  &__dose-label {
+    @include mono-upper(0.55rem, 0.08em);
+    color: rgba(251, 191, 36, 0.65);
+  }
+
+  &__dose-val {
+    font-family: var(--font-mono);
+    font-size:   0.68rem;
+    font-weight: 600;
+    color:       var(--color-amber);
   }
 
   &__actions { @include flex-row(0.35rem); flex-shrink: 0; }
