@@ -9,51 +9,40 @@
     >
     <div class="hmap__body">
 
-      <!-- Canvas wrapper -->
-      <div class="hmap__canvas-wrap" ref="wrap">
+      <!-- Canvas wrapper — v-tip content updates dynamically on move -->
+      <div class="hmap__canvas-wrap" ref="wrap" v-tip="$t('heatmap.tipCanvas')" style="cursor: crosshair">
         <canvas
           ref="canvas"
           class="hmap__canvas"
           @click="onCanvasClick"
           @mousemove="onCanvasMove"
-          @mouseleave="hoverInfo = null"
+          @mouseleave="onCanvasLeave"
         ></canvas>
-
-        <!-- Hover tooltip — compact scientist view -->
-        <div
-          v-if="hoverInfo"
-          class="hmap__hover"
-          :style="{ left: hoverInfo.cx + 'px', top: hoverInfo.cy + 'px' }"
-        >
-          <!-- coords line -->
-          <div class="hmap__hover-coords">
-            <span class="hmap__hover-freq">{{ hoverInfo.freqLabel }}</span>
-            <span class="hmap__hover-sep">·</span>
-            <span class="hmap__hover-field">{{ hoverInfo.fieldLabel }}</span>
-          </div>
-          <!-- zone badge -->
-          <div class="hmap__hover-zone" :style="{ color: hoverInfo.zoneColor }">{{ hoverInfo.zoneLabel }}</div>
-          <!-- DR row: T and H side-by-side -->
-          <div class="hmap__hover-dr">
-            <span>T <strong>{{ hoverInfo.tDr }}</strong></span>
-            <span>H <strong>{{ hoverInfo.hDr }}</strong></span>
-            <span>{{ hoverInfo.temp }}</span>
-          </div>
-          <!-- Outcome badges -->
-          <div class="hmap__hover-outcomes">
-            <span
-              v-for="o in hoverInfo.outcomes"
-              :key="o.text"
-              class="hmap__hover-outcome"
-              :class="`hmap__hover-outcome--${o.level}`"
-            >{{ o.text }}</span>
-          </div>
-          <div class="hmap__hover-click">↵ click to set</div>
-        </div>
       </div>
 
-      <!-- Legend strip -->
-      <div class="hmap__legend">
+      <!-- Hover readout bar — updates as cursor moves over canvas -->
+      <div class="hmap__readout" :class="{ 'hmap__readout--active': !!hoverInfo }">
+        <template v-if="hoverInfo">
+          <span class="hmap__readout-coord">{{ hoverInfo.freqLabel }}</span>
+          <span class="hmap__readout-sep">·</span>
+          <span class="hmap__readout-coord">{{ hoverInfo.fieldLabel }}</span>
+          <span class="hmap__readout-zone" :style="{ color: hoverInfo.zoneColor }">{{ hoverInfo.zoneLabel }}</span>
+          <span class="hmap__readout-dr">T&thinsp;<strong>{{ hoverInfo.tDr }}</strong></span>
+          <span class="hmap__readout-dr">H&thinsp;<strong>{{ hoverInfo.hDr }}</strong></span>
+          <span class="hmap__readout-temp">{{ hoverInfo.temp }}</span>
+          <span
+            v-for="o in hoverInfo.outcomes" :key="o.text"
+            class="hmap__readout-outcome" :class="`hmap__readout-outcome--${o.level}`"
+          >{{ o.text }}</span>
+          <span class="hmap__readout-hint">↵ click to set</span>
+        </template>
+        <template v-else>
+          <span class="hmap__readout-idle">hover to inspect</span>
+        </template>
+      </div>
+
+      <!-- Legend strip — hover for full zone guide -->
+      <div class="hmap__legend" v-tip="$t('heatmap.tipCanvas')">
         <div v-for="(color, zone) in ZONE_COLORS" :key="zone" class="hmap__legend-item">
           <span class="hmap__legend-dot" :style="{ background: color }"></span>
           <span class="hmap__legend-label">{{ $t(`heatmap.zone${ZONE_KEY[zone]}`) }}</span>
@@ -129,7 +118,6 @@ import AccordionPanel from '@/components/AccordionPanel.vue'
 interface OutcomeItem { text: string; level: 'ok' | 'warn' | 'danger' | 'info' }
 
 interface HoverInfo {
-  cx: number; cy: number           // tooltip CSS position relative to wrapper
   freqLabel: string; fieldLabel: string
   zoneLabel: string; zoneColor: string
   tDr: string; hDr: string; temp: string; pLysis: string
@@ -685,6 +673,7 @@ export default defineComponent({
       if (cx < HMAP_MARGIN.LEFT || cx > this.displayW - HMAP_MARGIN.RIGHT ||
           cy < HMAP_MARGIN.TOP  || cy > this.displayH - HMAP_MARGIN.BOTTOM) {
         this.hoverInfo = null
+        this._resetCanvasTip()
         return
       }
 
@@ -720,12 +709,6 @@ export default defineComponent({
         ? `${(Math.max(0, 1 - 1 / Math.max(0.001, tDR)) * 100).toFixed(0)}%`
         : '—'
 
-      // Tooltip position: offset from mouse, clamped inside wrapper
-      const wrap  = this.$refs.wrap as HTMLElement
-      const wrect = wrap.getBoundingClientRect()
-      const tx = Math.min(e.clientX - wrect.left + 12, wrect.width  - 160)
-      const ty = Math.min(e.clientY - wrect.top  + 12, wrect.height - 130)
-
       // ── Outcome badges ────────────────────────────────────────────────────────
       const outcomes: OutcomeItem[] = []
       if (tDR >= HMAP_LYSIS_DR && hDR < HMAP_LYSIS_DR && hTss < HMAP_THERM_CRIT_C) {
@@ -750,17 +733,44 @@ export default defineComponent({
         outcomes.push({ text: `⚠ H-Temp ${hTss.toFixed(1)}°C — hyperthermia`, level: 'warn' })
       }
 
+      const freqLabel  = formatFreqKHz(freqKHz, 2)
+      const fieldLabel = fieldVcm >= 1000 ? `${(fieldVcm / 1000).toFixed(1)} kV/cm` : `${fieldVcm.toFixed(0)} V/cm`
+      const zoneLabel  = this.$t(`heatmap.zone${HMAP_ZONE_KEY[zone]}`)
+
       this.hoverInfo = {
-        cx: tx, cy: ty,
-        freqLabel:  formatFreqKHz(freqKHz, 2),
-        fieldLabel: fieldVcm >= 1000 ? `${(fieldVcm / 1000).toFixed(1)} kV/cm` : `${fieldVcm.toFixed(0)} V/cm`,
-        zoneLabel:  this.$t(`heatmap.zone${HMAP_ZONE_KEY[zone]}`),
+        freqLabel, fieldLabel, zoneLabel,
         zoneColor:  HMAP_ZONE_CSS[zone],
         tDr:        `${(Math.min(tDR, 9.99) * 100).toFixed(1)}%`,
         hDr:        `${(Math.min(hDR, 9.99) * 100).toFixed(1)}%`,
         temp:       `${hTss.toFixed(1)}°C`,
         pLysis,
         outcomes,
+      }
+
+      // Update v-tip content dynamically so it reflects the hovered zone
+      const zoneClass = zone === HMAP_ZONE.THERAPEUTIC ? 'tip-ok'
+        : zone === HMAP_ZONE.MARGINAL    ? 'tip-val'
+        : (zone === HMAP_ZONE.ABLATIVE || zone === HMAP_ZONE.THERMAL) ? 'tip-warn' : ''
+      const outcomeLines = outcomes.map(o => o.text).join('\n')
+      const dynamicTip = `<strong>${freqLabel} · ${fieldLabel}</strong>\n`
+        + `<span class='${zoneClass}'>${zoneLabel}</span>\n`
+        + `T ${(Math.min(tDR, 9.99) * 100).toFixed(1)}% · H ${(Math.min(hDR, 9.99) * 100).toFixed(1)}% · ${hTss.toFixed(1)}°C\n`
+        + outcomeLines
+      const wrapEl = this.$refs.wrap as HTMLElement & { _tipContent?: string }
+      wrapEl._tipContent = dynamicTip
+      const brTip = document.getElementById('br-tip')
+      if (brTip && brTip.classList.contains('br-tip--on')) brTip.innerHTML = dynamicTip
+    },
+
+    onCanvasLeave() {
+      this.hoverInfo = null
+      this._resetCanvasTip()
+    },
+
+    _resetCanvasTip() {
+      const wrapEl = this.$refs.wrap as HTMLElement & { _tipContent?: string }
+      if (wrapEl && wrapEl._tipContent !== undefined) {
+        wrapEl._tipContent = this.$t('heatmap.tipCanvas')
       }
     },
 
@@ -801,74 +811,38 @@ export default defineComponent({
     height:  auto;
   }
 
-  /* ── Hover tooltip — compact ──────────────────────────────── */
-  &__hover {
-    position: absolute;
-    pointer-events: none;
-    background: rgba(8, 8, 20, 0.95);
-    border: 1px solid rgba(255,255,255,0.14);
+  /* ── Hover readout bar ─────────────────────────────────────── */
+  &__readout {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.2rem 0.75rem;
+    padding: 0.28rem 0.65rem;
+    min-height: 1.75rem;
+    background: rgba(0,0,0,0.18);
+    border: 1px solid var(--color-border);
     border-radius: var(--radius);
-    padding: 0.3rem 0.5rem;
     font-family: var(--font-mono);
-    font-size: 0.6rem;
-    min-width: 140px;
-    max-width: 190px;
-    display: flex;
-    flex-direction: column;
-    gap: 0.15rem;
-    backdrop-filter: blur(6px);
-    z-index: 10;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.5);
-  }
-
-  &__hover-coords {
-    display: flex;
-    align-items: baseline;
-    gap: 0.3rem;
-  }
-
-  &__hover-freq  { font-size: 0.66rem; font-weight: 700; color: var(--color-text); }
-  &__hover-field { color: var(--color-text-muted); }
-  &__hover-sep   { color: rgba(255,255,255,0.25); }
-
-  &__hover-zone {
-    font-size: 0.62rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.07em;
-  }
-
-  &__hover-dr {
-    display: flex;
-    gap: 0.6rem;
-    color: var(--color-text-muted);
     font-size: 0.58rem;
-    strong { color: var(--color-text); }
-  }
+    transition: border-color 0.2s;
 
-  &__hover-outcomes {
-    display: flex;
-    flex-direction: column;
-    gap: 0.08rem;
-    border-top: 1px solid rgba(255,255,255,0.08);
-    padding-top: 0.15rem;
-    margin-top: 0.05rem;
-  }
+    &--active { border-color: rgba(255,255,255,0.18); }
 
-  &__hover-outcome {
-    font-size: 0.58rem;
-    font-weight: 600;
+    &-coord   { font-weight: 700; color: var(--color-text); }
+    &-sep     { color: rgba(255,255,255,0.2); }
+    &-zone    { font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+    &-dr      { color: var(--color-text-muted); strong { color: var(--color-text); } }
+    &-temp    { color: var(--color-text-muted); }
+    &-hint    { margin-left: auto; color: rgba(255,255,255,0.18); font-size: 0.5rem; }
+    &-idle    { color: rgba(255,255,255,0.2); font-style: italic; }
 
-    &--ok     { color: #4ade80; }
-    &--warn   { color: #fbbf24; }
-    &--danger { color: #f87171; }
-    &--info   { color: var(--color-text-muted); }
-  }
-
-  &__hover-click {
-    font-size: 0.5rem;
-    color: rgba(255,255,255,0.22);
-    letter-spacing: 0.05em;
+    &-outcome {
+      font-weight: 600;
+      &--ok     { color: #4ade80; }
+      &--warn   { color: #fbbf24; }
+      &--danger { color: #f87171; }
+      &--info   { color: var(--color-text-muted); }
+    }
   }
 
   /* ── Legend ────────────────────────────────────────────────── */
