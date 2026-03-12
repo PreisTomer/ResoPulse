@@ -1,7 +1,3 @@
-This is a professional, technical README designed to showcase your project as a sophisticated BioResonance Proof of Concept (POC). It explains the physics, the stack, and the real-time data flow you've built.
-
----
-
 # BioResonance Dashboard (POC)
 
 A high-fidelity biological resonance simulation platform designed to visualize the effects of frequency broadcasting on cellular structures. This project demonstrates **Real-time Resonance Matching**: a process where specific frequencies are used to selectively target and destabilize "pathogen" cells while maintaining the integrity of healthy cellular tissue.
