@@ -1,31 +1,19 @@
 /**
  * Socket service — connects to the BioResonance backend.
- * Falls back to local mode (state applied directly to Pinia stores) if the
- * backend is unreachable. All reactive getters remain fully functional either way.
+ * Falls back to local mode (field params applied directly to the Pinia store) if
+ * the backend is unreachable. The store's reactive getters keep the UI
+ * fully functional in either mode.
  */
 import { ref } from 'vue'
 import { io } from 'socket.io-client'
 import type { Socket } from 'socket.io-client'
-import { useCellStore } from '@/stores/cellStore'
-import type { StatePacket } from '@/stores/cellStore'
-import { useExperimentStore } from '@/stores/experimentStore'
-import type { LogEntry } from '@/stores/experimentStore'
-import { useImpedanceStore } from '@/stores/impedanceStore'
-import type { HardwareImpedancePacket } from '@/stores/impedanceStore'
+import { useCellStore } from '../stores/cellStore'
+import type { FieldPacket } from '../stores/cellStore'
+import type { MediumKey } from '../mockData'
 
 // Set VITE_BACKEND_URL in Vercel environment variables once Railway is deployed.
+// Falls back to localhost for local development.
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? 'http://localhost:3001'
-
-const SOCKET_EVENTS = {
-  STATE_SYNC:          'stateSync',
-  STATE_UPDATE:        'stateUpdate',
-  LOG_ENTRY:           'logEntry',
-  NEW_LOG_ENTRY:       'newLogEntry',
-  IMPEDANCE_BROADCAST: 'impedanceBroadcast',
-  CONNECT:             'connect',
-  DISCONNECT:          'disconnect',
-  CONNECT_ERROR:       'connect_error',
-} as const
 
 let socket: Socket | null = null
 
@@ -39,36 +27,21 @@ export function connectSocket(): void {
     reconnectionAttempts: 3,
   })
 
-  socket.on(SOCKET_EVENTS.CONNECT, () => {
+  socket.on('connect', () => {
     socketConnected.value = true
     console.info('[Socket] Connected to BioResonance backend')
   })
 
-  socket.on(SOCKET_EVENTS.DISCONNECT, () => {
+  socket.on('disconnect', () => {
     socketConnected.value = false
   })
 
-  // Another client changed experiment state — apply to local stores
-  socket.on(SOCKET_EVENTS.STATE_UPDATE, (packet: StatePacket) => {
-    const store    = useCellStore()
-    const expStore = useExperimentStore()
-    store.handleStatePacket(packet)
-    if (packet.sessionName && expStore.sessionName !== packet.sessionName) {
-      expStore.setSessionName(packet.sessionName)
-    }
+  socket.on('resonanceUpdate', (packet: FieldPacket) => {
+    const store = useCellStore()
+    store.handleResonancePacket(packet)
   })
 
-  // Another client logged an entry — append locally without re-broadcasting
-  socket.on(SOCKET_EVENTS.NEW_LOG_ENTRY, (entry: LogEntry) => {
-    useExperimentStore().receiveEntry(entry)
-  })
-
-  // Hardware impedance reading from lab instrument bridge
-  socket.on(SOCKET_EVENTS.IMPEDANCE_BROADCAST, (packet: HardwareImpedancePacket) => {
-    useImpedanceStore().handleHardwareImpedancePacket(packet)
-  })
-
-  socket.on(SOCKET_EVENTS.CONNECT_ERROR, () => {
+  socket.on('connect_error', () => {
     if (socketConnected.value) {
       socketConnected.value = false
       console.info('[Socket] Backend unavailable — running in local mode')
@@ -77,42 +50,19 @@ export function connectSocket(): void {
 }
 
 /**
- * Broadcast the full experiment state to all other connected clients.
- * Call this after any store mutation that should be visible to remote users.
- * In local mode this is a no-op — the store is already updated locally.
+ * Broadcast field parameters.
+ * If connected: forwards to backend which echoes back a FieldPacket to all clients.
+ * If in local mode: updates the store directly (no round-trip needed).
  */
-export function broadcastStateSync(): void {
-  if (!socket?.connected) return
-  const store    = useCellStore()
-  const expStore = useExperimentStore()
-  const packet: StatePacket = {
-    freqKHz:             store.currentBroadcastFrequency,
-    fieldVcm:            store.fieldIntensity,
-    medium:              store.medium,
-    dutyCycle:           store.dutyCycle,
-    pulseWidthNs:        store.pulseWidthNs,
-    waveform:            store.waveform,
-    orientationDeg:      store.orientationDeg,
-    lysisNPulses:        store.lysisNPulses,
-    chartMode:           store.chartMode,
-    safeMode:            store.safeMode,
-    doubleShellEnabled:  store.doubleShellEnabled,
-    perfusionRate:       store.perfusionRate,
-    cellPackingFraction: store.cellPackingFraction,
-    targetPresetId:      store.target.id,
-    healthyPresetId:     store.healthy.id,
-    sessionName:         expStore.sessionName,
+export function broadcastFieldParams(freqKHz: number, fieldVcm: number, medium: MediumKey): void {
+  if (socket?.connected) {
+    socket.emit('setFieldParams', { freqKHz, fieldVcm, medium })
+  } else {
+    const store = useCellStore()
+    store.setBroadcastFreqKHz(freqKHz)
+    store.setFieldIntensity(fieldVcm)
+    store.setMedium(medium)
   }
-  socket.emit(SOCKET_EVENTS.STATE_SYNC, packet)
-}
-
-/**
- * Broadcast a log entry (lysis / manual) to all other connected clients.
- * Call immediately after logReading() so remote users see the event.
- */
-export function broadcastLogEntry(entry: LogEntry): void {
-  if (!socket?.connected) return
-  socket.emit(SOCKET_EVENTS.LOG_ENTRY, entry)
 }
 
 export function disconnectSocket(): void {
