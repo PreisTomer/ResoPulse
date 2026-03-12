@@ -324,7 +324,7 @@ export default defineComponent({
     flex-shrink: 0;
   }
 
-  &__row-meta { font-size: 0.58rem; font-family: var(--font-mono); color: var(--color-text-muted); white-space: nowrap; opacity: 0.65; }
+  &__row-meta { font-size: 0.65rem; font-family: var(--font-mono); color: var(--color-text-muted); white-space: nowrap; opacity: 0.80; }
 
   &__pills { display: flex; gap: 0.35rem; flex-wrap: wrap; }
 

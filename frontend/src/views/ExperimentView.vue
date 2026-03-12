@@ -725,10 +725,10 @@ Larger radius raises Vm and lowers the lysis field threshold.`
   }
 
   &__cell-badge-caret {
-    font-size: 0.58rem;
+    font-size: 0.65rem;
     color: var(--color-text-muted);
     transition: transform 0.2s;
-    opacity: 0.65;
+    opacity: 0.80;
     flex-shrink: 0;
 
     &--open { transform: rotate(180deg); }
@@ -1011,7 +1011,7 @@ Larger radius raises Vm and lowers the lysis field threshold.`
 
 .experiment__custom-hint {
   font-size: 0.65rem;
-  opacity:   0.65;
+  opacity:   0.80;
 }
 
 /* "+ New Cell Profile" button in custom preset grid */

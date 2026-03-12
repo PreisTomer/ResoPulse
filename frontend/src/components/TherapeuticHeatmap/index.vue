@@ -823,7 +823,7 @@ export default defineComponent({
     border: 1px solid var(--color-border);
     border-radius: var(--radius);
     font-family: var(--font-mono);
-    font-size: 0.58rem;
+    font-size: 0.64rem;
     transition: border-color 0.2s;
 
     &--active { border-color: rgba(255,255,255,0.18); }
@@ -867,7 +867,7 @@ export default defineComponent({
   }
 
   &__legend-label {
-    font-size: 0.58rem;
+    font-size: 0.64rem;
     font-family: var(--font-mono);
     color: var(--color-text-muted);
     white-space: nowrap;
@@ -887,7 +887,7 @@ export default defineComponent({
   }
 
   &__stats-label {
-    font-size: 0.55rem;
+    font-size: 0.63rem;
     font-family: var(--font-mono);
     color: var(--color-text-muted);
     text-transform: uppercase;
@@ -902,7 +902,7 @@ export default defineComponent({
   }
 
   &__stat-k {
-    font-size: 0.56rem;
+    font-size: 0.63rem;
     font-family: var(--font-mono);
     color: var(--color-text-muted);
     text-transform: uppercase;

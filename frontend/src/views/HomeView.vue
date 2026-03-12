@@ -498,7 +498,7 @@ export default defineComponent({
     font-size: 0.65rem;
     font-family: var(--font-mono);
     color: var(--color-text-muted);
-    opacity: 0.45;
+    opacity: 0.65;
     letter-spacing: 0.06em;
     text-transform: uppercase;
     margin: 0;
