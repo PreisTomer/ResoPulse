@@ -10,7 +10,7 @@
     <div class="hmap__body">
 
       <!-- Canvas wrapper -->
-      <div class="hmap__canvas-wrap" ref="wrap" v-tip="$t('heatmap.tipCanvas')">
+      <div class="hmap__canvas-wrap" ref="wrap">
         <canvas
           ref="canvas"
           class="hmap__canvas"
@@ -19,20 +19,27 @@
           @mouseleave="hoverInfo = null"
         ></canvas>
 
-        <!-- Hover tooltip -->
+        <!-- Hover tooltip — compact scientist view -->
         <div
           v-if="hoverInfo"
           class="hmap__hover"
           :style="{ left: hoverInfo.cx + 'px', top: hoverInfo.cy + 'px' }"
         >
-          <div class="hmap__hover-freq">{{ hoverInfo.freqLabel }}</div>
-          <div class="hmap__hover-field">{{ hoverInfo.fieldLabel }}</div>
+          <!-- coords line -->
+          <div class="hmap__hover-coords">
+            <span class="hmap__hover-freq">{{ hoverInfo.freqLabel }}</span>
+            <span class="hmap__hover-sep">·</span>
+            <span class="hmap__hover-field">{{ hoverInfo.fieldLabel }}</span>
+          </div>
+          <!-- zone badge -->
           <div class="hmap__hover-zone" :style="{ color: hoverInfo.zoneColor }">{{ hoverInfo.zoneLabel }}</div>
-          <div class="hmap__hover-row">T-DR <span>{{ hoverInfo.tDr }}</span></div>
-          <div class="hmap__hover-row">H-DR <span>{{ hoverInfo.hDr }}</span></div>
-          <div class="hmap__hover-row">H-Temp <span>{{ hoverInfo.temp }}</span></div>
-          <div class="hmap__hover-row">P(lysis) <span>{{ hoverInfo.pLysis }}</span></div>
-          <!-- Outcome indicators -->
+          <!-- DR row: T and H side-by-side -->
+          <div class="hmap__hover-dr">
+            <span>T <strong>{{ hoverInfo.tDr }}</strong></span>
+            <span>H <strong>{{ hoverInfo.hDr }}</strong></span>
+            <span>{{ hoverInfo.temp }}</span>
+          </div>
+          <!-- Outcome badges -->
           <div class="hmap__hover-outcomes">
             <span
               v-for="o in hoverInfo.outcomes"
@@ -41,7 +48,7 @@
               :class="`hmap__hover-outcome--${o.level}`"
             >{{ o.text }}</span>
           </div>
-          <div class="hmap__hover-click">↵ click to navigate</div>
+          <div class="hmap__hover-click">↵ click to set</div>
         </div>
       </div>
 
@@ -88,6 +95,7 @@
         <button class="hmap__snap-btn" @click="snapToOptimal" v-tip="$t('heatmap.tipOptLine')">
           {{ $t('heatmap.snapBtn') }}
         </button>
+        <span class="hmap__info-btn" v-tip="$t('heatmap.tipCanvas')">ℹ</span>
       </div>
 
     </div>
@@ -793,57 +801,63 @@ export default defineComponent({
     height:  auto;
   }
 
-  /* ── Hover tooltip ─────────────────────────────────────────── */
+  /* ── Hover tooltip — compact ──────────────────────────────── */
   &__hover {
     position: absolute;
     pointer-events: none;
-    background: rgba(10, 10, 26, 0.92);
-    border: 1px solid var(--color-border);
+    background: rgba(8, 8, 20, 0.95);
+    border: 1px solid rgba(255,255,255,0.14);
     border-radius: var(--radius);
-    padding: 0.35rem 0.55rem;
+    padding: 0.3rem 0.5rem;
     font-family: var(--font-mono);
-    font-size: 0.58rem;
-    min-width: 130px;
+    font-size: 0.6rem;
+    min-width: 140px;
+    max-width: 190px;
     display: flex;
     flex-direction: column;
-    gap: 0.12rem;
-    backdrop-filter: blur(4px);
+    gap: 0.15rem;
+    backdrop-filter: blur(6px);
     z-index: 10;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.5);
   }
 
-  &__hover-freq  { font-size: 0.65rem; font-weight: 700; color: var(--color-text); }
-  &__hover-field { font-size: 0.62rem; color: var(--color-text-muted); }
-
-  &__hover-zone  {
-    font-size: 0.58rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    margin: 0.1rem 0;
-  }
-
-  &__hover-row {
+  &__hover-coords {
     display: flex;
-    justify-content: space-between;
-    gap: 0.5rem;
-    color: var(--color-text-muted);
+    align-items: baseline;
+    gap: 0.3rem;
+  }
 
-    span { color: var(--color-text); font-weight: 600; }
+  &__hover-freq  { font-size: 0.66rem; font-weight: 700; color: var(--color-text); }
+  &__hover-field { color: var(--color-text-muted); }
+  &__hover-sep   { color: rgba(255,255,255,0.25); }
+
+  &__hover-zone {
+    font-size: 0.62rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+  }
+
+  &__hover-dr {
+    display: flex;
+    gap: 0.6rem;
+    color: var(--color-text-muted);
+    font-size: 0.58rem;
+    strong { color: var(--color-text); }
   }
 
   &__hover-outcomes {
     display: flex;
     flex-direction: column;
-    gap: 0.1rem;
-    margin-top: 0.18rem;
-    border-top: 1px solid rgba(255,255,255,0.1);
-    padding-top: 0.18rem;
+    gap: 0.08rem;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    padding-top: 0.15rem;
+    margin-top: 0.05rem;
   }
 
   &__hover-outcome {
-    font-size: 0.56rem;
+    font-size: 0.58rem;
     font-weight: 600;
-    letter-spacing: 0.03em;
 
     &--ok     { color: #4ade80; }
     &--warn   { color: #fbbf24; }
@@ -852,10 +866,9 @@ export default defineComponent({
   }
 
   &__hover-click {
-    font-size: 0.52rem;
-    color: rgba(255,255,255,0.3);
-    margin-top: 0.12rem;
-    letter-spacing: 0.04em;
+    font-size: 0.5rem;
+    color: rgba(255,255,255,0.22);
+    letter-spacing: 0.05em;
   }
 
   /* ── Legend ────────────────────────────────────────────────── */
@@ -949,6 +962,17 @@ export default defineComponent({
       &--nearfield_rf { color: var(--color-amber);   border-color: rgba(251,191,36,0.35); background: rgba(251,191,36,0.07); }
       &--microwave    { color: var(--color-danger);  border-color: rgba(255,77,109,0.35); background: rgba(255,77,109,0.07); }
     }
+  }
+
+  &__info-btn {
+    font-size: 0.7rem;
+    color: var(--color-text-muted);
+    opacity: 0.55;
+    cursor: default;
+    flex-shrink: 0;
+    transition: opacity 0.15s;
+
+    &:hover { opacity: 1; }
   }
 
   &__snap-btn {

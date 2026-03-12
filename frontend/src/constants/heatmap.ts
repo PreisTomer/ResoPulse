@@ -8,11 +8,11 @@
 
 // ── Grid resolution ────────────────────────────────────────────────────────────
 
-/** Number of frequency steps (X-axis columns).  80 cols × 60 rows = 4 800 physics evaluations per sweep. */
-export const HMAP_FREQ_STEPS  = 80
+/** Number of frequency steps (X-axis columns).  220 cols × 110 rows = 24 200 physics evaluations per sweep. */
+export const HMAP_FREQ_STEPS  = 220
 
 /** Number of field-intensity steps (Y-axis rows). */
-export const HMAP_FIELD_STEPS = 60
+export const HMAP_FIELD_STEPS = 110
 
 // ── Canvas geometry ────────────────────────────────────────────────────────────
 
