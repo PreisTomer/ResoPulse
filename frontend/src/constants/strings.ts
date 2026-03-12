@@ -70,6 +70,16 @@ export const EXPERIMENTAL_BASIS = {
   SPECULATIVE:     'speculative',
 } as const
 
+/**
+ * RF coupling regime determined by the operating frequency.
+ * Drives the hardware-requirement warning badge in the frequency slider.
+ */
+export const FREQ_REGIME = {
+  ELECTROLYTIC: 'electrolytic',  // < 300 MHz — direct electrode, DC model valid
+  NEARFIELD_RF: 'nearfield_rf',  // 300 MHz – 1 GHz — coaxial RF probe, DC model approximate
+  MICROWAVE:    'microwave',     // > 1 GHz — waveguide / resonant cavity / horn required
+} as const
+
 // ── Derived types from constants (single source of truth) ──────────────────
 /** All valid cell lifecycle states */
 export type CellState         = typeof CELL_STATE[keyof typeof CELL_STATE]
@@ -89,6 +99,8 @@ export type LogEventType      = typeof LOG_EVENT[keyof typeof LOG_EVENT]
 export type CellGroupType     = typeof CELL_GROUP[keyof typeof CELL_GROUP]
 /** Experimental validation basis for resonance presets */
 export type ExperimentalBasis = typeof EXPERIMENTAL_BASIS[keyof typeof EXPERIMENTAL_BASIS]
+/** RF coupling regime based on operating frequency */
+export type FreqRegime        = typeof FREQ_REGIME[keyof typeof FREQ_REGIME]
 /** Cell preset identifier */
 export type PresetId          = typeof PRESET_ID[keyof typeof PRESET_ID]
 

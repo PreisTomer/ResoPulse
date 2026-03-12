@@ -10,6 +10,8 @@ import sweep from './locales/sweep.en.json'
 import log from './locales/log.en.json'
 import instrument from './locales/instrument.en.json'
 import home from './locales/home.en.json'
+import heatmap from './locales/heatmap.en.json'
+import userPresets from './locales/userPresets.en.json'
 
 export const i18n = createI18n({
   legacy: true,
@@ -28,6 +30,8 @@ export const i18n = createI18n({
       ...log,
       ...instrument,
       ...home,
+      ...heatmap,
+      ...userPresets,
     },
   },
 })

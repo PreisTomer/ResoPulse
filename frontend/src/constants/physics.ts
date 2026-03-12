@@ -39,3 +39,21 @@ export const MIN_COS_THETA = 0.01
 
 /** Guard: minimum pulse envelope factor to prevent division artefacts (t_p → 0 limit) */
 export const MIN_PULSE_ENVELOPE = 1e-4
+
+/**
+ * Upper frequency limit of the electrolytic (direct electrode contact) coupling regime [kHz].
+ * Above this, the medium transitions from purely resistive to capacitive/reactive behaviour:
+ * f_complex = σ / (2π ε₀ εᵣ) ≈ 338 MHz for saline (σ=1.5 S/m, εᵣ=80).
+ * Standard cuvette wiring is replaced by near-field RF applicators or coaxial probes.
+ * Ref: Foster & Schwan (1989) — Dielectric properties of tissues.
+ */
+export const FREQ_ELECTROLYTIC_LIMIT_KHZ = 300_000  // 300 MHz
+
+/**
+ * Upper frequency limit of the near-field RF coupling regime [kHz].
+ * Above this, the in-medium wavelength (λ_water ≈ 3 cm at 1 GHz) approaches typical
+ * electrode gaps and lumped-element circuit models fail entirely.
+ * Waveguide, resonant cavity, or horn-antenna coupling is required.
+ * Ref: Gabriel et al. (1996) — RF tissue dielectric data.
+ */
+export const FREQ_NEARFIELD_RF_LIMIT_KHZ = 1_000_000  // 1 GHz

@@ -134,7 +134,15 @@
     "µs": "µs",
     "perfusionInVitro": "0 (in vitro)",
     "cellPackingIsolated": "0% (isolated)",
-    "tipMinPulse": "<strong>Minimum pulse width — 3τ rule</strong>\nFull membrane charging requires t_p ≥ 3τ (≥95% plateau).\nGreen: full charging · Amber: partial (τ–3τ) · Red: sub-threshold (<τ)\nτ = R·Cm·(2σ_e+σ_i)/(2σ_e·σ_i)  [Kotnik & Miklavcic 2000]"
+    "tipMinPulse": "<strong>Minimum pulse width — 3τ rule</strong>\nFull membrane charging requires t_p ≥ 3τ (≥95% plateau).\nGreen: full charging · Amber: partial (τ–3τ) · Red: sub-threshold (<τ)\nτ = R·Cm·(2σ_e+σ_i)/(2σ_e·σ_i)  [Kotnik & Miklavcic 2000]",
+    "regime": {
+      "electrolytic": "Electrolytic — direct electrode",
+      "nearfield_rf":  "Near-field RF — coaxial probe",
+      "microwave":     "Microwave — waveguide required",
+      "tipElectrolytic": "<strong>Electrolytic Regime (&lt;300 MHz)</strong>\nBelow the dielectric relaxation frequency of saline (~338 MHz),\nthe medium behaves as a conductor and direct-contact electrodes work well.\n\nHardware: electroporation cuvette · pulse generator · direct wire connection\nDC impedance model (Z = d/σA) is valid in this regime.\n\nRef: Foster &amp; Schwan (1989) CRC Crit. Rev. Biomed. Eng.",
+      "tipNearfieldRf":  "<strong>Near-field RF Regime (300 MHz – 1 GHz)</strong>\nAbove ~338 MHz the medium transitions from conductor to lossy dielectric.\nDirect electrodes still work for short path lengths, but skin depth\n(~13–41 mm) starts to limit penetration.\n\nHardware: coaxial RF probe · impedance-matched coaxial cable · 50 Ω system\nDC impedance model is approximate — use transmission-line or FEM for accuracy.\n\nRef: Gabriel et al. (1996) Phys. Med. Biol. 41:2271",
+      "tipMicrowave":    "<strong>Microwave Regime (&gt;1 GHz)</strong>\nSkin depth falls below 13 mm. DC electrode coupling is ineffective —\nonly the surface of the sample is accessible.\n\nHardware: rectangular waveguide · resonant cavity · horn antenna\nField uniformity is a major challenge. Cuvette geometry sets up standing waves.\nGHz frequencies are required for acoustic capsid resonance (bacteria/virus).\n\nRef: Gabriel et al. (1996); Tsen et al. (2007) J. Biol. Phys."
+    }
   },
   "exp": {
     "renameSession": "Click to rename session",

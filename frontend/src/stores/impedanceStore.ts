@@ -20,6 +20,7 @@ import {
   DEFAULT_CELL_DENSITY_PER_ML,
   HARDWARE_READING_STALE_MS,
   IMPEDANCE_HISTORY_MAX,
+  CONDUCTIVITY_SAMPLE_MAX,
 } from '@/constants/cuvette'
 import {
   lysedFractionFromDR,
@@ -58,6 +59,17 @@ export interface ImpedanceHistoryPoint {
   sigmaE: number  // derived σ_e [S/m]
 }
 
+/**
+ * A continuously auto-sampled data point for the Load Monitor chart.
+ * Captured every CONDUCTIVITY_SAMPLE_INTERVAL_MS by the LoadMonitor component.
+ */
+export interface ConductivitySample {
+  ts:       number  // Unix ms
+  sigmaE:   number  // effective σ_e at this moment [S/m]
+  zOhm:     number  // cuvette impedance at this moment [Ω]
+  driftPct: number  // impedance drift % relative to nominal
+}
+
 // ── State interface ────────────────────────────────────────────────────────────
 
 interface ImpedanceStoreState {
@@ -75,6 +87,8 @@ interface ImpedanceStoreState {
   hardwareReadingTs:     number         // Unix ms of last reading (0 = never)
   // History ring buffer for the trend sparkline
   impedanceHistory:      ImpedanceHistoryPoint[]
+  // Continuous auto-sample ring buffer for the Load Monitor chart
+  conductivitySamples:   ConductivitySample[]
 }
 
 // ── Store ──────────────────────────────────────────────────────────────────────
@@ -94,6 +108,7 @@ export const useImpedanceStore = defineStore('impedance', {
       hardwareFreqHz:         null,
       hardwareReadingTs:      0,
       impedanceHistory:       [],
+      conductivitySamples:    [],
     }
   },
 
@@ -200,6 +215,28 @@ export const useImpedanceStore = defineStore('impedance', {
       if (age < 60_000) return `${(age / 1000).toFixed(1)}s ago`
       return `${Math.floor(age / 60_000)} min ago`
     },
+
+    /**
+     * Absolute change in medium conductivity due to ion release from lysed cells [S/m].
+     * Positive = conductivity rose (low-σ media, cytoplasm σ_i > σ_base).
+     * Negative = conductivity fell (high-σ media like saline, σ_i < σ_base).
+     */
+    conductivityDeltaAbs(): number {
+      return this.sigmaEWithLysis - useCellStore().effectiveSigmaE
+    },
+
+    /**
+     * Qualitative load state derived from absolute impedance drift.
+     * Nominal: |drift| < 5% — no correction needed.
+     * Warning: 5% ≤ |drift| < 15% — minor correction recommended.
+     * Critical: |drift| ≥ 15% — significant drift; correction essential.
+     */
+    loadState(): 'nominal' | 'warning' | 'critical' {
+      const drift = Math.abs(this.impedanceDriftPct)
+      if (drift < 5)  return 'nominal'
+      if (drift < 15) return 'warning'
+      return 'critical'
+    },
   },
 
   actions: {
@@ -270,6 +307,28 @@ export const useImpedanceStore = defineStore('impedance', {
       if (this.impedanceHistory.length > IMPEDANCE_HISTORY_MAX) {
         this.impedanceHistory.shift()
       }
+    },
+
+    /**
+     * Append one continuously auto-sampled conductivity point to the ring buffer.
+     * Called on a 1-second interval by the LoadMonitor component.
+     */
+    addConductivitySample() {
+      const sample: ConductivitySample = {
+        ts:       Date.now(),
+        sigmaE:   this.sigmaEForImpedance,
+        zOhm:     this.currentImpedanceOhm,
+        driftPct: this.impedanceDriftPct,
+      }
+      this.conductivitySamples.push(sample)
+      if (this.conductivitySamples.length > CONDUCTIVITY_SAMPLE_MAX) {
+        this.conductivitySamples.shift()
+      }
+    },
+
+    /** Clear all conductivity chart samples (e.g. when the user resets the session). */
+    clearConductivitySamples() {
+      this.conductivitySamples = []
     },
   },
 })

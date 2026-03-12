@@ -65,6 +65,9 @@ interface ExperimentState {
   entries: LogEntry[]
   nextId: number
   sessionName: string
+  // ── Dosimetry ───────────────────────────────────────────────────────────
+  cumulativeDoseJkg: number   // J/kg — cumulative specific energy absorbed this session
+  sessionStartMs: number      // Unix ms — when the current session started
 }
 
 // Extended snapshot pulled from cellStore — avoids circular import
@@ -126,9 +129,16 @@ const LS_KEY = 'br-experiment'
 function loadState(): ExperimentState {
   try {
     const saved = localStorage.getItem(LS_KEY)
-    if (saved) return JSON.parse(saved) as ExperimentState
+    if (saved) {
+      const parsed = JSON.parse(saved) as ExperimentState
+      return {
+        ...parsed,
+        cumulativeDoseJkg: parsed.cumulativeDoseJkg ?? 0,
+        sessionStartMs:    parsed.sessionStartMs    ?? Date.now(),
+      }
+    }
   } catch { /* ignore corrupt data */ }
-  return { entries: [], nextId: 1, sessionName: 'Session 001' }
+  return { entries: [], nextId: 1, sessionName: 'Session 001', cumulativeDoseJkg: 0, sessionStartMs: Date.now() }
 }
 
 // ── Methods export helpers ─────────────────────────────────────────────────
@@ -384,6 +394,20 @@ export const useExperimentStore = defineStore('experiment', {
     clearLog() {
       this.entries = []
       this.nextId = 1
+      this.cumulativeDoseJkg = 0
+      this.sessionStartMs    = Date.now()
+    },
+
+    /**
+     * Accumulate dosimetry: SAR_target × dt_s × dutyCycle.
+     * Called on a periodic timer in ExperimentView.
+     * @param sarWkg   — instantaneous SAR [W/kg] for the target cell
+     * @param dutyCycle — duty cycle (0–1)
+     * @param dtMs      — elapsed time since last sample [ms]
+     */
+    addDoseSample(sarWkg: number, dutyCycle: number, dtMs: number) {
+      const dtS = dtMs * 1e-3
+      this.cumulativeDoseJkg += sarWkg * dutyCycle * dtS
     },
 
     /** Generate a publication-ready methods .txt file for a single log entry. */

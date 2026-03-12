@@ -6,7 +6,7 @@ import { MEDIA } from '@/constants/media'
 import type { CellConfig } from '@/types/cell'
 import type { MediumKey } from '@/types/media'
 import { computeSchwan, computeSAR, computeFc, computeTau, computeResonantDisruption, computeNuclearVm, computePulseStepResponse, computeSkinDepthMm } from '@/utils/physics'
-import { CELL_CATEGORY, CHART_MODE, WAVEFORM, CELL_TYPE } from '@/constants/strings'
+import { CELL_CATEGORY, CHART_MODE, WAVEFORM, CELL_TYPE, FREQ_REGIME } from '@/constants/strings'
 import { THRESHOLDS, DEFAULT_CAPSID_Q } from '@/constants/cellCard'
 import {
   SCHWAN_SPHERE_FACTOR,
@@ -19,6 +19,8 @@ import {
   TEMP_UPDATE_INTERVAL_MS,
   MIN_COS_THETA,
   MIN_PULSE_ENVELOPE,
+  FREQ_ELECTROLYTIC_LIMIT_KHZ,
+  FREQ_NEARFIELD_RF_LIMIT_KHZ,
 } from '@/constants/physics'
 
 // ── Module-level computation helpers (pure functions — no store context needed) ──
@@ -433,6 +435,44 @@ export const useCellStore = defineStore('cell', {
         THRESHOLDS.BMS_WEIGHT_MTE * this.healthyMechTransductionEff +
         THRESHOLDS.BMS_WEIGHT_MA  * this.healthyMildThermalActivation
       )
+    },
+
+    /**
+     * RF coupling regime based on the current operating frequency.
+     * Electrolytic  (< 300 MHz): direct electrode contact, DC resistance model valid.
+     * Near-field RF (300 MHz – 1 GHz): coaxial RF probe required; DC model approximate.
+     * Microwave     (> 1 GHz): waveguide / resonant cavity / horn antenna required.
+     */
+    freqRegime(state): 'electrolytic' | 'nearfield_rf' | 'microwave' {
+      const f = state.currentBroadcastFrequency
+      if (f < FREQ_ELECTROLYTIC_LIMIT_KHZ) return FREQ_REGIME.ELECTROLYTIC
+      if (f < FREQ_NEARFIELD_RF_LIMIT_KHZ) return FREQ_REGIME.NEARFIELD_RF
+      return FREQ_REGIME.MICROWAVE
+    },
+
+    /**
+     * Fraction of randomly-oriented target cells that exceed the lysis threshold
+     * under the current field and frequency [0–1].
+     *
+     * For a 3D isotropic orientation distribution the Vm at angle θ is
+     *   Vm(θ) = Vm_max · |cos θ|
+     * so the fraction exceeding V_th is P(|cos θ| > 1/DR) = max(0, 1 − 1/DR).
+     *
+     * Note: DR here is the field-aligned (cosθ = 1) disruption ratio.
+     * At DR = 1 only the perfectly-aligned cell reaches threshold (0% lysis).
+     * At DR = 2 exactly half the random population exceeds threshold (50% lysis).
+     */
+    targetLysisProbabilityRandom(): number {
+      const dr = this.targetDisruptionRatio
+      if (dr <= 0) return 0
+      return Math.max(0, Math.min(1, 1 - 1 / dr))
+    },
+
+    /** Same as targetLysisProbabilityRandom but for the healthy reference cell. */
+    healthyLysisProbabilityRandom(): number {
+      const dr = this.healthyDisruptionRatio
+      if (dr <= 0) return 0
+      return Math.max(0, Math.min(1, 1 - 1 / dr))
     },
   },
 

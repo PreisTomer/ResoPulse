@@ -37,6 +37,15 @@
     <div class="sel-panel__sep"></div>
     <DisruptionBars />
 
+    <!-- ── Random-orientation lysis fraction ─────────────────── -->
+    <div class="sel-panel__orient-row" v-tip="$t('selectivity.tipOrientFrac')">
+      <span class="sel-panel__orient-label">{{ $t('selectivity.orientFracLabel') }}</span>
+      <div class="sel-panel__orient-vals">
+        <span class="sel-panel__orient-t">T {{ targetOrientPct }}%</span>
+        <span class="sel-panel__orient-h">H {{ healthyOrientPct }}%</span>
+      </div>
+    </div>
+
     <!-- ── Vm / Disruption & SAR ─────────────────────────────── -->
     <div class="sel-panel__sep"></div>
     <div class="sel-panel__vm-sar-grid" v-tip="tipVmSar">
@@ -368,6 +377,17 @@ export default defineComponent({
 
     tipModeBadge(): string { return this.$t('selectivity.tipModeBadge') },
 
+    targetOrientPct(): string {
+      // Acoustic resonance (bacteria/virus in resonance mode) is omnidirectional —
+      // the cosθ Schwan factor does not apply
+      if (this.store.chartMode === CHART_MODE.RESONANCE && this.isResonanceTarget) return '—'
+      return `${(this.store.targetLysisProbabilityRandom * 100).toFixed(0)}%`
+    },
+
+    healthyOrientPct(): string {
+      return `${(this.store.healthyLysisProbabilityRandom * 100).toFixed(0)}%`
+    },
+
     tipOptimal(): string {
       const { khz, sel } = this.optimalFreqResult
       const t = this.store.target as { resonantFreqGHz?: number; resonantThresholdVcm?: number; capsidQ?: number }
@@ -620,6 +640,48 @@ export default defineComponent({
   &__nuc-sel--good { color: #4ade80; }
   &__nuc-sel--ok   { color: #fbbf24; }
   &__nuc-sel--low  { color: #ff4d6d; }
+
+  /* ── Random-orientation lysis fraction ─────────────────────── */
+  &__orient-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.4rem;
+    padding: 0.25rem 0.5rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    cursor: default;
+  }
+
+  &__orient-label {
+    font-size: 0.56rem;
+    font-family: var(--font-mono);
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    flex-shrink: 0;
+  }
+
+  &__orient-vals {
+    display: flex;
+    gap: 0.7rem;
+    flex-shrink: 0;
+  }
+
+  &__orient-t {
+    font-size: 0.66rem;
+    font-family: var(--font-mono);
+    font-weight: 600;
+    color: var(--color-danger);
+  }
+
+  &__orient-h {
+    font-size: 0.66rem;
+    font-family: var(--font-mono);
+    font-weight: 600;
+    color: var(--color-primary);
+  }
 
   /* ── Vm / SAR readout ──────────────────────────────────────── */
   &__vm-sar-grid {

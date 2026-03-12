@@ -555,15 +555,25 @@ export default defineComponent({
     }
 
     &__workflow {
-      padding: 1rem 1rem;
+      padding: 1rem;
     }
 
     &__wf-desc {
       max-width: 160px;
     }
 
+    /* 2-col card grid; stats card spans full width as a stat bar */
     &__feature-cards {
       grid-template-columns: 1fr 1fr;
+    }
+
+    &__feature-card--stats {
+      grid-column: span 2;
+
+      .home__stats-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.5rem;
+      }
     }
   }
 
@@ -632,8 +642,36 @@ export default defineComponent({
       opacity: 0.25;
     }
 
+    /* 2-col card grid on phone — compact, no full-width collapse */
     &__feature-cards {
-      grid-template-columns: 1fr;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.55rem;
+    }
+
+    &__feature-card {
+      padding: 0.75rem 0.8rem;
+      gap: 0.3rem;
+    }
+
+    &__fc {
+      &-icon  { font-size: 0.9rem; }
+      &-title { font-size: 0.75rem; }
+      &-desc  { font-size: 0.65rem; line-height: 1.5; }
+    }
+
+    /* stats card: full width with horizontal 4-col stat bar */
+    &__feature-card--stats {
+      grid-column: span 2;
+
+      .home__stats-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.4rem;
+      }
+    }
+
+    &__stat {
+      &-val   { font-size: 1.1rem; }
+      &-label { font-size: 0.56rem; }
     }
 
     &__cap {
