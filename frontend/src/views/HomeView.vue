@@ -1,75 +1,172 @@
-<script lang="ts">
-import { defineComponent } from 'vue'
-
-export default defineComponent({})
-</script>
-
 <template>
   <div class="home">
-    <!-- Animated background grid -->
-    <div class="bg-grid" aria-hidden="true"></div>
+    <div class="home__bg-grid" aria-hidden="true"></div>
 
-    <div class="home-inner">
-      <!-- Logo + rings -->
-      <div class="logo-ring-wrap" aria-hidden="true">
-        <div class="ring ring--1"></div>
-        <div class="ring ring--2"></div>
-        <div class="ring ring--3"></div>
-        <div class="ring ring--4"></div>
-        <div class="logo-circle">
-          <img src="/logo.jpg" alt="BioResonance" />
+    <div class="home__inner">
+
+      <!-- Logo rings -->
+      <div class="home__logo-wrap" aria-hidden="true">
+        <div class="home__ring home__ring--1"></div>
+        <div class="home__ring home__ring--2"></div>
+        <div class="home__ring home__ring--3"></div>
+        <div class="home__ring home__ring--4"></div>
+        <div class="home__logo-circle">
+          <img src="/logo.png" alt="BioResonance" />
         </div>
       </div>
 
       <!-- Eyebrow -->
-      <div class="eyebrow">
-        <span class="eyebrow-dot"></span>
-        Bioelectric Field Research Platform
+      <div class="home__eyebrow">
+        <span class="home__eyebrow-dot"></span>
+        {{ $t('home.eyebrow') }}
       </div>
 
       <!-- Title -->
-      <h1 class="title">
-        Bio<span class="title-accent">Resonance</span>
+      <h1 class="home__title">
+        Bio<span class="home__title-accent">Resonance</span>
       </h1>
-      <p class="tagline">
-        Precision visualisation of transmembrane potential, selective disruption,
-        and thermal response across cancer cells, bacteria, and viral particles.
-      </p>
+
+      <!-- Tagline -->
+      <p class="home__tagline">{{ $t('home.tagline') }}</p>
 
       <!-- Capability pills -->
-      <div class="caps">
-        <span class="cap">◈ Schwan Equation Model</span>
-        <span class="cap">◎ Size-Selective Disruption</span>
-        <span class="cap">⊞ Multi-Pathogen Library</span>
-        <span class="cap">⇌ Real-Time Instrument Sync</span>
+      <div class="home__caps">
+        <span class="home__cap">{{ ICON.WAVE }} {{ $t('home.capVm') }}</span>
+        <span class="home__cap">{{ ICON.SELECTIVITY }} {{ $t('home.capSelectivity') }}</span>
+        <span class="home__cap">{{ ICON.LYSIS_BOLT }} {{ $t('home.capPulse') }}</span>
+        <span class="home__cap">{{ ICON.RELOAD }} {{ $t('home.capSweep') }}</span>
+        <span class="home__cap">{{ ICON.GRID }} {{ $t('home.capPop') }}</span>
+        <span class="home__cap">{{ ICON.FLASK }} {{ $t('home.capImp') }}</span>
+        <span class="home__cap">{{ ICON.NOURISH }} {{ $t('home.capBio') }}</span>
       </div>
 
       <!-- CTA -->
-      <div class="actions">
-        <RouterLink to="/experiment" class="btn btn-primary">
-          Open Experiment Lab →
+      <div class="home__actions">
+        <RouterLink to="/experiment" class="home__btn home__btn--primary">
+          {{ $t('home.btnPrimary') }} <span class="home__btn-arrow">{{ ICON.ARROW_R }}</span>
         </RouterLink>
-        <a href="#" class="btn btn-ghost">View Protocol Documentation</a>
+        <RouterLink to="/protocol" class="home__btn home__btn--ghost">
+          {{ $t('home.btnGhost') }} <span class="home__btn-arrow">{{ ICON.ARROW_R }}</span>
+        </RouterLink>
+      </div>
+
+      <!-- 3-step workflow -->
+      <div class="home__workflow">
+        <div class="home__wf-step">
+          <span class="home__wf-num">{{ $t('home.wf1Num') }}</span>
+          <span class="home__wf-label">{{ $t('home.wf1Label') }}</span>
+          <span class="home__wf-desc">{{ $t('home.wf1Desc') }}</span>
+        </div>
+        <span class="home__wf-arrow" aria-hidden="true">{{ ICON.ARROW_R }}</span>
+        <div class="home__wf-step">
+          <span class="home__wf-num">{{ $t('home.wf2Num') }}</span>
+          <span class="home__wf-label">{{ $t('home.wf2Label') }}</span>
+          <span class="home__wf-desc">{{ $t('home.wf2Desc') }}</span>
+        </div>
+        <span class="home__wf-arrow" aria-hidden="true">{{ ICON.ARROW_R }}</span>
+        <div class="home__wf-step">
+          <span class="home__wf-num">{{ $t('home.wf3Num') }}</span>
+          <span class="home__wf-label">{{ $t('home.wf3Label') }}</span>
+          <span class="home__wf-desc">{{ $t('home.wf3Desc') }}</span>
+        </div>
+      </div>
+
+      <!-- Feature cards (3 cols) -->
+      <div class="home__feature-cards">
+
+        <RouterLink to="/experiment" class="home__feature-card home__feature-card--primary">
+          <div class="home__fc-header">
+            <span class="home__fc-icon">{{ ICON.FLASK }}</span>
+            <span class="home__fc-title">{{ $t('home.card1Title') }}</span>
+          </div>
+          <span class="home__fc-desc">{{ $t('home.card1Desc') }}</span>
+        </RouterLink>
+
+        <RouterLink to="/instrument" class="home__feature-card">
+          <div class="home__fc-header">
+            <span class="home__fc-icon">{{ ICON.PLUG }}</span>
+            <span class="home__fc-title">{{ $t('home.card2Title') }}</span>
+          </div>
+          <span class="home__fc-desc">{{ $t('home.card2Desc') }}</span>
+        </RouterLink>
+
+        <RouterLink to="/reports" class="home__feature-card">
+          <div class="home__fc-header">
+            <span class="home__fc-icon">{{ ICON.CELL }}</span>
+            <span class="home__fc-title">{{ $t('home.card3Title') }}</span>
+          </div>
+          <span class="home__fc-desc">{{ $t('home.card3Desc') }}</span>
+        </RouterLink>
+
+        <RouterLink to="/datasets" class="home__feature-card">
+          <div class="home__fc-header">
+            <span class="home__fc-icon">{{ ICON.GRID }}</span>
+            <span class="home__fc-title">{{ $t('home.card4Title') }}</span>
+          </div>
+          <span class="home__fc-desc">{{ $t('home.card4Desc') }}</span>
+        </RouterLink>
+
+        <RouterLink to="/protocol" class="home__feature-card">
+          <div class="home__fc-header">
+            <span class="home__fc-icon">{{ ICON.SECTION }}</span>
+            <span class="home__fc-title">{{ $t('home.card5Title') }}</span>
+          </div>
+          <span class="home__fc-desc">{{ $t('home.card5Desc') }}</span>
+        </RouterLink>
+
+        <!-- Stats card -->
+        <div class="home__feature-card home__feature-card--stats">
+          <div class="home__stats-grid">
+            <div class="home__stat">
+              <span class="home__stat-val">{{ $t('home.stat1Val') }}</span>
+              <span class="home__stat-label">{{ $t('home.stat1Label') }}</span>
+            </div>
+            <div class="home__stat">
+              <span class="home__stat-val">{{ $t('home.stat2Val') }}</span>
+              <span class="home__stat-label">{{ $t('home.stat2Label') }}</span>
+            </div>
+            <div class="home__stat">
+              <span class="home__stat-val">{{ $t('home.stat3Val') }}</span>
+              <span class="home__stat-label">{{ $t('home.stat3Label') }}</span>
+            </div>
+            <div class="home__stat">
+              <span class="home__stat-val">{{ $t('home.stat4Val') }}</span>
+              <span class="home__stat-label">{{ $t('home.stat4Label') }}</span>
+            </div>
+          </div>
+        </div>
+
       </div>
 
       <!-- Research scope tags -->
-      <div class="scope-tags">
-        <span class="scope-tag scope-tag--cancer">Cancer</span>
-        <span class="scope-tag scope-tag--bacteria">Bacteria</span>
-        <span class="scope-tag scope-tag--virus">Viruses</span>
-        <span class="scope-tag scope-tag--ref">Cell Membranes</span>
+      <div class="home__scope-tags">
+        <span class="home__scope-tag home__scope-tag--cancer">{{ $t('home.tagCancer') }}</span>
+        <span class="home__scope-tag home__scope-tag--bacteria">{{ $t('home.tagBacteria') }}</span>
+        <span class="home__scope-tag home__scope-tag--virus">{{ $t('home.tagVirus') }}</span>
+        <span class="home__scope-tag home__scope-tag--ref">{{ $t('home.tagRef') }}</span>
       </div>
 
-      <!-- Disclaimer -->
-      <p class="disclaimer">
-        Schwan equation biophysics model · for research visualisation only ·
-        not a medical device
-      </p>
+      <p class="home__disclaimer">{{ $t('home.disclaimer') }}</p>
     </div>
   </div>
 </template>
 
-<style scoped>
+<script lang="ts">
+import { defineComponent } from 'vue'
+import { ICON } from '@/constants/icons'
+
+export default defineComponent({
+  name: 'HomeView',
+
+  data() {
+    return { ICON }
+  },
+})
+</script>
+
+<style lang="scss" scoped>
+@use '../styles/mixins' as *;
+
 /* ── Layout ──────────────────────────────────────────────────────────── */
 .home {
   flex: 1;
@@ -78,213 +175,522 @@ export default defineComponent({})
   justify-content: center;
   min-height: calc(100vh - 60px);
   position: relative;
-  overflow: hidden;
+  overflow-x: hidden;
+
+  &__bg-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0, 212, 255, 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 212, 255, 0.04) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
+    pointer-events: none;
+  }
+
+  &__inner {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 1.8rem;
+    padding: 3rem 2rem;
+    max-width: 900px;
+    width: 100%;
+  }
+
+  /* ── Logo ────────────────────────────────────────────────────── */
+  &__logo-wrap {
+    position: relative;
+    width: 180px;
+    height: 180px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  &__ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 1px solid var(--color-primary);
+    animation: ring-expand 5s ease-out infinite;
+
+    &--1 { width: 90px;  height: 90px;  animation-delay: 0s;    opacity: 0.8; }
+    &--2 { width: 130px; height: 130px; animation-delay: 1.25s; opacity: 0.5; }
+    &--3 { width: 160px; height: 160px; animation-delay: 2.5s;  opacity: 0.3; }
+    &--4 { width: 185px; height: 185px; animation-delay: 3.75s; opacity: 0.15; }
+  }
+
+  &__logo-circle {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    overflow: hidden;
+    position: relative;
+    z-index: 1;
+    box-shadow: 0 0 36px rgba(0, 212, 255, 0.5), 0 0 72px rgba(0, 212, 255, 0.2);
+    border: 1.5px solid var(--color-primary);
+    background-color: var(--color-bg);
+
+    img {
+      width: 100%; height: 100%;
+      object-fit: cover; transform: scale(1.7); display: block;
+    }
+  }
+
+  /* ── Typography ──────────────────────────────────────────────── */
+  &__eyebrow {
+    @include flex-row(0.5rem);
+    @include mono-upper(0.75rem, 0.14em);
+    color: var(--color-primary);
+    flex-wrap: wrap;
+    justify-content: center;
+
+    &-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background-color: var(--color-primary);
+      box-shadow: 0 0 8px var(--color-primary);
+      animation: blink 2s ease-in-out infinite;
+      flex-shrink: 0;
+    }
+  }
+
+  &__title {
+    font-size: clamp(2.8rem, 7vw, 5.5rem);
+    font-weight: 900;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    color: var(--color-text-heading);
+    margin: 0;
+
+    &-accent {
+      color: #0a2e58;
+      -webkit-text-stroke: 1.5px var(--color-primary);
+      paint-order: stroke fill;
+      animation: res-glow 9s ease-in-out infinite;
+    }
+  }
+
+  &__tagline {
+    font-size: 1rem;
+    color: var(--color-text-muted);
+    line-height: 1.75;
+    max-width: 600px;
+    margin: 0;
+  }
+
+  /* ── Capability pills ────────────────────────────────────────── */
+  &__caps {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.55rem;
+    max-width: 720px;
+  }
+
+  &__cap {
+    @include mono-upper(0.67rem, 0.07em);
+    padding: 0.25rem 0.65rem;
+    border: 1px solid var(--color-border);
+    border-radius: 20px;
+    color: var(--color-text-muted);
+    background-color: var(--color-surface);
+    white-space: nowrap;
+  }
+
+  /* ── CTA buttons ─────────────────────────────────────────────── */
+  &__actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.85rem;
+    width: 100%;
+    max-width: 520px;
+  }
+
+  &__btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius);
+    font-size: 0.95rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.18s;
+    cursor: pointer;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+
+    &--primary {
+      background-color: var(--color-primary);
+      color: #060e1a;
+      box-shadow: 0 0 24px rgba(0, 212, 255, 0.35);
+
+      &:hover {
+        filter: brightness(1.12);
+        box-shadow: 0 0 36px rgba(0, 212, 255, 0.55);
+        text-decoration: none;
+      }
+    }
+
+    &--ghost {
+      background: transparent;
+      color: var(--color-text-muted);
+      border: 1px solid var(--color-border);
+
+      &:hover { border-color: var(--color-primary); color: var(--color-primary); text-decoration: none; }
+    }
+  }
+
+  &__btn-arrow {
+    display: inline-block;
+    transition: transform 0.18s ease;
+  }
+
+  &__btn:hover &__btn-arrow { transform: translateX(4px); }
+
+  /* ── 3-step workflow ─────────────────────────────────────────── */
+  &__workflow {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 0.6rem;
+    width: 100%;
+    max-width: 820px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    background: var(--color-surface);
+    padding: 1.2rem 1.4rem;
+  }
+
+  &__wf-step {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+    text-align: center;
+    min-width: 0;
+  }
+
+  &__wf-num {
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--color-primary);
+    opacity: 0.7;
+  }
+
+  &__wf-label {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--color-text-heading);
+    font-family: var(--font-mono);
+    letter-spacing: 0.03em;
+  }
+
+  &__wf-desc {
+    font-size: 0.7rem;
+    color: var(--color-text-muted);
+    line-height: 1.55;
+    max-width: 200px;
+  }
+
+  &__wf-arrow {
+    font-size: 1.1rem;
+    color: var(--color-primary);
+    opacity: 0.35;
+    flex-shrink: 0;
+    margin-top: 1.5rem;
+  }
+
+  /* ── Feature cards ───────────────────────────────────────────── */
+  &__feature-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0.75rem;
+    width: 100%;
+    max-width: 820px;
+  }
+
+  &__feature-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    padding: 1rem 1.1rem;
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    text-align: left;
+    transition: border-color 0.18s, box-shadow 0.18s;
+
+    &:hover {
+      border-color: rgba(0, 212, 255, 0.4);
+      box-shadow: 0 0 18px rgba(0, 212, 255, 0.08);
+      text-decoration: none;
+    }
+
+    &--stats {
+      cursor: default;
+      border-style: dashed;
+      border-color: rgba(0, 212, 255, 0.18);
+      background: rgba(0, 212, 255, 0.03);
+
+      &:hover {
+        border-color: rgba(0, 212, 255, 0.28);
+        box-shadow: none;
+      }
+    }
+  }
+
+  &__fc {
+    &-header { display: flex; align-items: center; gap: 0.45rem; }
+    &-icon   { font-size: 1rem; opacity: 0.7; flex-shrink: 0; }
+    &-title  { font-size: 0.82rem; font-weight: 600; color: var(--color-text-heading); }
+    &-desc   { font-size: 0.7rem; color: var(--color-text-muted); line-height: 1.6; }
+  }
+
+  /* ── Stats card ──────────────────────────────────────────────── */
+  &__stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    height: 100%;
+    align-content: center;
+  }
+
+  &__stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.15rem;
+
+    &-val {
+      font-family: var(--font-mono);
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: var(--color-primary);
+      letter-spacing: -0.03em;
+      line-height: 1;
+    }
+
+    &-label {
+      font-size: 0.62rem;
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--color-text-muted);
+    }
+  }
+
+  /* ── Scope tags ──────────────────────────────────────────────── */
+  &__scope-tags {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  &__scope-tag {
+    font-size: 0.65rem;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 0.15rem 0.55rem;
+    border-radius: 3px;
+    border: 1px solid transparent;
+
+    &--cancer   { color: var(--color-danger);  border-color: rgba(255,77,109,0.35);  background: rgba(255,77,109,0.07); }
+    &--bacteria { color: var(--color-amber);   border-color: rgba(251,191,36,0.35);  background: rgba(251,191,36,0.07); }
+    &--virus    { color: var(--color-purple);  border-color: rgba(167,139,250,0.35); background: rgba(167,139,250,0.07); }
+    &--ref      { color: var(--color-primary); border-color: rgba(0,212,255,0.35);   background: rgba(0,212,255,0.07); }
+  }
+
+  &__disclaimer {
+    font-size: 0.65rem;
+    font-family: var(--font-mono);
+    color: var(--color-text-muted);
+    opacity: 0.45;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin: 0;
+  }
+
+  /* ── Responsive — tablet (≤ 768px) ──────────────────────────── */
+  @media (max-width: 768px) {
+    &__inner {
+      gap: 1.4rem;
+      padding: 2rem 1.5rem;
+    }
+
+    &__logo-wrap {
+      width: 140px;
+      height: 140px;
+    }
+
+    &__ring {
+      &--1 { width: 68px;  height: 68px; }
+      &--2 { width: 98px;  height: 98px; }
+      &--3 { width: 122px; height: 122px; }
+      &--4 { width: 140px; height: 140px; }
+    }
+
+    &__logo-circle {
+      width: 68px;
+      height: 68px;
+    }
+
+    &__tagline {
+      font-size: 0.9rem;
+    }
+
+    &__actions {
+      max-width: 100%;
+    }
+
+    &__workflow {
+      padding: 1rem;
+    }
+
+    &__wf-desc {
+      max-width: 160px;
+    }
+
+    /* 2-col card grid; stats card spans full width as a stat bar */
+    &__feature-cards {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    &__feature-card--stats {
+      grid-column: span 2;
+
+      .home__stats-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.5rem;
+      }
+    }
+  }
+
+  /* ── Responsive — phone (≤ 520px) ───────────────────────────── */
+  @media (max-width: 520px) {
+    &__inner {
+      gap: 1.2rem;
+      padding: 1.5rem 1rem;
+    }
+
+    &__logo-wrap {
+      width: 120px;
+      height: 120px;
+    }
+
+    &__ring {
+      &--1 { width: 58px;  height: 58px; }
+      &--2 { width: 84px;  height: 84px; }
+      &--3 { width: 104px; height: 104px; }
+      &--4 { width: 122px; height: 122px; }
+    }
+
+    &__logo-circle {
+      width: 58px;
+      height: 58px;
+    }
+
+    &__eyebrow {
+      font-size: 0.65rem;
+    }
+
+    &__tagline {
+      font-size: 0.85rem;
+    }
+
+    &__actions {
+      grid-template-columns: 1fr;
+      max-width: 100%;
+    }
+
+    &__btn {
+      padding: 0.7rem 1.2rem;
+      font-size: 0.9rem;
+    }
+
+    /* workflow: vertical stack */
+    &__workflow {
+      flex-direction: column;
+      align-items: center;
+      padding: 1rem;
+      gap: 0.8rem;
+    }
+
+    &__wf-step {
+      width: 100%;
+      max-width: 320px;
+    }
+
+    &__wf-desc {
+      max-width: 100%;
+    }
+
+    &__wf-arrow {
+      transform: rotate(90deg);
+      margin-top: 0;
+      opacity: 0.25;
+    }
+
+    /* 2-col card grid on phone — compact, no full-width collapse */
+    &__feature-cards {
+      grid-template-columns: 1fr 1fr;
+      gap: 0.55rem;
+    }
+
+    &__feature-card {
+      padding: 0.75rem 0.8rem;
+      gap: 0.3rem;
+    }
+
+    &__fc {
+      &-icon  { font-size: 0.9rem; }
+      &-title { font-size: 0.75rem; }
+      &-desc  { font-size: 0.65rem; line-height: 1.5; }
+    }
+
+    /* stats card: full width with horizontal 4-col stat bar */
+    &__feature-card--stats {
+      grid-column: span 2;
+
+      .home__stats-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.4rem;
+      }
+    }
+
+    &__stat {
+      &-val   { font-size: 1.1rem; }
+      &-label { font-size: 0.56rem; }
+    }
+
+    &__cap {
+      font-size: 0.62rem;
+      padding: 0.22rem 0.5rem;
+    }
+  }
 }
 
-/* ── Animated grid background ────────────────────────────────────────── */
-.bg-grid {
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(rgba(0, 212, 255, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 212, 255, 0.04) 1px, transparent 1px);
-  background-size: 48px 48px;
-  mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
-  pointer-events: none;
-}
-
-/* ── Center content ──────────────────────────────────────────────────── */
-.home-inner {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: 1.5rem;
-  padding: 3rem 2rem;
-  max-width: 720px;
-}
-
-/* ── Logo + ring animation ───────────────────────────────────────────── */
-.logo-ring-wrap {
-  position: relative;
-  width: 180px;
-  height: 180px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.ring {
-  position: absolute;
-  border-radius: 50%;
-  border: 1px solid var(--color-primary);
-  animation: ring-expand 5s ease-out infinite;
-}
-.ring--1 { width: 90px;  height: 90px;  animation-delay: 0s;    opacity: 0.8; }
-.ring--2 { width: 130px; height: 130px; animation-delay: 1.25s; opacity: 0.5; }
-.ring--3 { width: 160px; height: 160px; animation-delay: 2.5s;  opacity: 0.3; }
-.ring--4 { width: 185px; height: 185px; animation-delay: 3.75s; opacity: 0.15; }
-
+/* ── Animations ──────────────────────────────────────────────────────── */
 @keyframes ring-expand {
   0%   { transform: scale(0.8); opacity: 0.8; }
   100% { transform: scale(1.1); opacity: 0; }
 }
 
-.logo-circle {
-  width: 90px;
-  height: 90px;
-  border-radius: 50%;
-  overflow: hidden;
-  position: relative;
-  z-index: 1;
-  box-shadow: 0 0 36px rgba(0, 212, 255, 0.5), 0 0 72px rgba(0, 212, 255, 0.2);
-  border: 1.5px solid var(--color-primary);
-}
-.logo-circle img {
-  width: 100%; height: 100%;
-  object-fit: cover; transform: scale(1.7); display: block;
-}
-
-/* ── Eyebrow ─────────────────────────────────────────────────────────── */
-.eyebrow {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.75rem;
-  color: var(--color-primary);
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  font-family: var(--font-mono);
-}
-.eyebrow-dot {
-  width: 6px; height: 6px;
-  border-radius: 50%;
-  background-color: var(--color-primary);
-  box-shadow: 0 0 8px var(--color-primary);
-  animation: blink 2s ease-in-out infinite;
-}
 @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
-/* ── Title ───────────────────────────────────────────────────────────── */
-.title {
-  font-size: clamp(3rem, 7vw, 5.5rem);
-  font-weight: 900;
-  letter-spacing: -0.04em;
-  line-height: 1;
-  color: var(--color-text-heading);
-  margin: 0;
-}
-.title-accent {
-  color: var(--color-primary);
-  text-shadow: 0 0 40px rgba(0, 212, 255, 0.4);
-}
-
-/* ── Tagline ─────────────────────────────────────────────────────────── */
-.tagline {
-  font-size: 1rem;
-  color: var(--color-text-muted);
-  line-height: 1.75;
-  max-width: 560px;
-  margin: 0;
-}
-
-/* ── Capability pills ────────────────────────────────────────────────── */
-.caps {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0.55rem;
-}
-.cap {
-  font-size: 0.72rem;
-  font-family: var(--font-mono);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  padding: 0.3rem 0.75rem;
-  border: 1px solid var(--color-border);
-  border-radius: 20px;
-  color: var(--color-text-muted);
-  background-color: var(--color-surface);
-  white-space: nowrap;
-}
-
-/* ── CTA buttons ─────────────────────────────────────────────────────── */
-.actions {
-  display: flex;
-  gap: 0.85rem;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-.btn {
-  padding: 0.75rem 1.75rem;
-  border-radius: var(--radius);
-  font-size: 0.95rem;
-  font-weight: 600;
-  text-decoration: none;
-  transition: all 0.18s;
-  cursor: pointer;
-  border: none;
-  display: inline-flex;
-  align-items: center;
-}
-.btn-primary {
-  background-color: var(--color-primary);
-  color: #060e1a;
-  box-shadow: 0 0 24px rgba(0, 212, 255, 0.35);
-}
-.btn-primary:hover {
-  filter: brightness(1.12);
-  box-shadow: 0 0 36px rgba(0, 212, 255, 0.55);
-  text-decoration: none;
-}
-.btn-ghost {
-  background: transparent;
-  color: var(--color-text-muted);
-  border: 1px solid var(--color-border);
-}
-.btn-ghost:hover { border-color: var(--color-primary); color: var(--color-primary); text-decoration: none; }
-
-/* ── Scope tags ──────────────────────────────────────────────────────── */
-.scope-tags {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-.scope-tag {
-  font-size: 0.65rem;
-  font-family: var(--font-mono);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  padding: 0.15rem 0.55rem;
-  border-radius: 3px;
-  border: 1px solid transparent;
-}
-.scope-tag--cancer   { color: #ff4d6d; border-color: rgba(255,77,109,0.35); background: rgba(255,77,109,0.07); }
-.scope-tag--bacteria { color: #fbbf24; border-color: rgba(251,191,36,0.35); background: rgba(251,191,36,0.07); }
-.scope-tag--virus    { color: #a78bfa; border-color: rgba(167,139,250,0.35); background: rgba(167,139,250,0.07); }
-.scope-tag--ref      { color: #00d4ff; border-color: rgba(0,212,255,0.35); background: rgba(0,212,255,0.07); }
-
-/* ── Disclaimer ──────────────────────────────────────────────────────── */
-.disclaimer {
-  font-size: 0.65rem;
-  font-family: var(--font-mono);
-  color: var(--color-text-muted);
-  opacity: 0.45;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  margin: 0;
-}
-
-/* ── Responsive ──────────────────────────────────────────────────────── */
-@media (max-width: 600px) {
-  .logo-ring-wrap { width: 140px; height: 140px; }
-  .logo-circle    { width: 70px; height: 70px; }
-  .ring--3, .ring--4 { display: none; }
-  .actions { flex-direction: column; align-items: stretch; }
-  .btn { justify-content: center; }
+@keyframes res-glow {
+  0%, 100% { text-shadow: 0 0 22px rgba(0, 212, 255, 0.2); }
+  50%       { text-shadow: 0 0 44px rgba(0, 212, 255, 0.52); }
 }
 </style>

@@ -1,0 +1,81 @@
+// =============================================================================
+// src/theme/colors.ts
+//
+// Single source of truth for all design-token color constants.
+// CSS counterparts live in src/style.css as custom properties (--color-*).
+//
+// Usage in TypeScript / Vue script blocks:
+//   import { C, GROUP_COLORS, CELL_COLORS } from '@/theme/colors'
+//   import { C } from '@/theme'   // via barrel
+// =============================================================================
+
+// ── Core palette (1:1 with --color-* vars in style.css) ───────────────────────
+export const C = {
+  // Backgrounds & surfaces
+  bg:          '#080e1a',   // --color-bg
+  surface:     '#0d1826',   // --color-surface
+  surface2:    '#132035',   // --color-surface-2
+  border:      '#1e3a5f',   // --color-border
+
+  // Primary / accent / danger
+  primary:     '#00d4ff',                    // --color-primary     (cyan)
+  primaryDim:  'rgba(0, 212, 255, 0.15)',    // --color-primary-dim
+  accent:      '#00ff9d',                    // --color-accent      (bright green)
+  accentDim:   'rgba(0, 255, 157, 0.12)',    // --color-accent-dim
+  danger:      '#ff4d6d',                    // --color-danger      (red)
+  dangerDim:   'rgba(255, 77, 109, 0.12)',   // --color-danger-dim
+
+  // Typography
+  text:        '#c8d8e8',   // --color-text
+  textMuted:   '#5a7a9a',   // --color-text-muted
+  textHeading: '#e8f4ff',   // --color-text-heading
+
+  // Extended palette (match new CSS vars added to style.css)
+  lime:        '#39ff14',                   // --color-lime        (safe / stable / therapeutic)
+  limeDim:     'rgba(57, 255, 20, 0.08)',   // --color-lime-dim
+  amber:       '#fbbf24',                   // --color-amber       (warning / bacteria)
+  amberDim:    'rgba(251, 191, 36, 0.08)',  // --color-amber-dim
+  orange:      '#fb923c',                   // --color-orange      (thermal denaturing)
+  orangeDim:   'rgba(251, 130, 20, 0.10)',  // --color-orange-dim
+  purple:      '#a78bfa',                   // --color-purple      (virus group)
+  purpleLight: '#c4b5fd',                   // --color-purple-light
+
+  // Semantic one-offs (no CSS var; used only in script/canvas/D3 contexts)
+  navWarning:    '#ffb800',   // nav status warning dot — warm amber
+  lysed:         '#882233',   // dead-cell state color
+  targetInterp:  '#4d79ff',   // D3 gradient start for target cell interpolation
+  nucleusOrange: '#ff8c00',   // nucleus rung color for target cell canvas
+} as const
+
+export type SystemColor = keyof typeof C
+
+// ── Cell group colors (used in D3 charts and library preset dots) ─────────────
+export const GROUP_COLORS = {
+  reference: C.primary,
+  cancer:    C.danger,
+  bacteria:  C.amber,
+  virus:     C.purple,
+} as const
+
+// ── Per-type cell appearance (canvas / D3 drawing code) ───────────────────────
+export const CELL_COLORS = {
+  healthy: {
+    accent:     C.primary,
+    rung:       C.lime,
+    interpFrom: C.primary,   // gradient start (cellColor interpolation)
+    interpTo:   C.lime,      // gradient end
+  },
+  target: {
+    accent:     C.danger,
+    rung:       C.nucleusOrange,
+    interpFrom: C.targetInterp,
+    interpTo:   C.danger,
+  },
+} as const
+
+// ── Selectivity colors ────────────────────────────────────────────────────────
+export const SELECTIVITY_COLORS = {
+  strong:   C.lime,    // selectivity ≥ 1.5
+  marginal: C.amber,   // selectivity ≥ 1.0
+  weak:     C.danger,  // selectivity < 1.0
+} as const
