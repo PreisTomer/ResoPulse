@@ -422,9 +422,20 @@ export default defineComponent({
     display: grid;
     grid-template-columns: repeat(6, 1fr);
     gap: 0.75rem;
+
+    @media (max-width: 1100px) { grid-template-columns: repeat(3, 1fr); }
+    @media (max-width: 700px)  { grid-template-columns: repeat(2, 1fr); }
   }
 
   &__stat-card--wide { grid-column: span 1; }
+
+  /* ── Mobile layout ────────────────────────────────────────────────────────── */
+  @media (max-width: 700px) {
+    &__inner      { padding: 1rem 0.85rem 3rem; }
+    &__header-row { flex-direction: column; align-items: flex-start; }
+    &__session-row { flex-wrap: wrap; }
+    &__session-input { width: 100%; flex: 1 1 180px; }
+  }
 
   /* ── Log card ─────────────────────────────────────────────────────────────── */
   &__log-card {
