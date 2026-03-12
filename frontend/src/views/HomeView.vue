@@ -544,14 +544,12 @@ export default defineComponent({
       max-width: 160px;
     }
 
-    /* 2-col card grid; stats card spans full width as a stat bar */
+    /* Single-column card grid on tablet; stats card full-width stat bar */
     &__feature-cards {
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1fr;
     }
 
     &__feature-card--stats {
-      grid-column: span 2;
-
       .home__stats-grid {
         grid-template-columns: repeat(4, 1fr);
         gap: 0.5rem;
@@ -624,9 +622,9 @@ export default defineComponent({
       opacity: 0.25;
     }
 
-    /* 2-col card grid on phone — compact, no full-width collapse */
+    /* Single-column card grid on phone */
     &__feature-cards {
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1fr;
       gap: 0.55rem;
     }
 
@@ -641,10 +639,8 @@ export default defineComponent({
       &-desc  { font-size: 0.65rem; line-height: 1.5; }
     }
 
-    /* stats card: full width with horizontal 4-col stat bar */
+    /* stats card: horizontal 4-col stat bar */
     &__feature-card--stats {
-      grid-column: span 2;
-
       .home__stats-grid {
         grid-template-columns: repeat(4, 1fr);
         gap: 0.4rem;
