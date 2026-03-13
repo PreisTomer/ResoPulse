@@ -65,6 +65,9 @@ interface ExperimentState {
   entries: LogEntry[]
   nextId: number
   sessionName: string
+  // ── Session metadata ────────────────────────────────────────────────────
+  sampleDescription: string   // e.g. "HepG2 passage 12, 80% confluency, PBS buffer"
+  sessionNotes: string        // free-form lab notes baked into exports
   // ── Dosimetry ───────────────────────────────────────────────────────────
   cumulativeDoseJkg: number   // J/kg — cumulative specific energy absorbed this session
   sessionStartMs: number      // Unix ms — when the current session started
@@ -133,12 +136,14 @@ function loadState(): ExperimentState {
       const parsed = JSON.parse(saved) as ExperimentState
       return {
         ...parsed,
+        sampleDescription: parsed.sampleDescription ?? '',
+        sessionNotes:      parsed.sessionNotes      ?? '',
         cumulativeDoseJkg: parsed.cumulativeDoseJkg ?? 0,
         sessionStartMs:    parsed.sessionStartMs    ?? Date.now(),
       }
     }
   } catch { /* ignore corrupt data */ }
-  return { entries: [], nextId: 1, sessionName: 'Session 001', cumulativeDoseJkg: 0, sessionStartMs: Date.now() }
+  return { entries: [], nextId: 1, sessionName: 'Session 001', sampleDescription: '', sessionNotes: '', cumulativeDoseJkg: 0, sessionStartMs: Date.now() }
 }
 
 // ── Methods export helpers ─────────────────────────────────────────────────
@@ -391,6 +396,14 @@ export const useExperimentStore = defineStore('experiment', {
       this.sessionName = name
     },
 
+    setSampleDescription(desc: string) {
+      this.sampleDescription = desc
+    },
+
+    setSessionNotes(notes: string) {
+      this.sessionNotes = notes
+    },
+
     clearLog() {
       this.entries = []
       this.nextId = 1
@@ -545,6 +558,8 @@ export const useExperimentStore = defineStore('experiment', {
       const meta = [
         `# Session: ${this.sessionName}`,
         `# Exported: ${new Date().toISOString()}`,
+        ...(this.sampleDescription ? [`# Sample: ${this.sampleDescription}`] : []),
+        ...(this.sessionNotes      ? [`# Notes: ${this.sessionNotes}`]      : []),
         `# Healthy: ${cell.healthy.label} · R=${cell.healthy.radius} ${UNIT.UM} · fc=${cell.healthyFc.toFixed(0)} ${UNIT.KHZ}`,
         `# Target:  ${cell.target.label} · R=${cell.target.radius} ${UNIT.UM} · fc=${cell.targetFc.toFixed(0)} ${UNIT.KHZ}`,
         `# Medium: ${cell.medium} · σ_e=${cell.effectiveSigmaE.toFixed(3)} ${UNIT.S_PER_M}`,

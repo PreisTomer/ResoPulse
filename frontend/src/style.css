@@ -42,6 +42,17 @@
   --radius-lg: 12px;
 }
 
+/* ── OLED Black theme ───────────────────────────────────────────────────── */
+[data-theme="oled"] {
+  --color-bg:           #000000;
+  --color-surface:      #060606;
+  --color-surface-2:    #0d0d0d;
+  --color-border:       #1a1a1a;
+  --color-text:         #d8e8f0;
+  --color-text-muted:   #4a6070;
+  --color-text-heading: #f0f8ff;
+}
+
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;

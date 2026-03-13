@@ -102,7 +102,7 @@
     </div>
 
     <!-- Row 2: RF Frequency -->
-    <div class="field-panel__row">
+    <div class="field-panel__row field-panel__row--interactive">
       <span class="field-panel__row-label" v-tip="tipFreq">{{ $t('slider.rfFrequency') }}</span>
       <div class="field-panel__track">
         <input
@@ -116,8 +116,30 @@
         />
       </div>
       <div class="field-panel__readout">
-        <span class="field-panel__readout-value" v-tip="tipFreq">{{ freqDisplay }}</span>
+        <div v-if="editingFreq" class="field-panel__readout-edit">
+          <input
+            ref="freqInputEl"
+            class="field-panel__readout-input"
+            type="number"
+            :step="freqInputStep"
+            v-model.number="freqInputVal"
+            @keydown="onFreqEditKey"
+            @blur="commitFreqEdit"
+          />
+          <span class="field-panel__readout-input-unit">{{ freqInputUnit }}</span>
+        </div>
+        <span
+          v-else
+          class="field-panel__readout-value field-panel__readout-value--editable"
+          v-tip="tipFreq"
+          @click="startEditFreq"
+        >{{ freqDisplay }}</span>
         <span class="field-panel__readout-sub" v-tip="tipFcSub">{{ freqSubDisplay }}</span>
+        <div v-if="!editingFreq" class="field-panel__readout-steps">
+          <button class="field-panel__readout-step" type="button" @click="stepFreq(-1)">−</button>
+          <span class="field-panel__readout-steps-unit">{{ freqInputUnit }}</span>
+          <button class="field-panel__readout-step" type="button" @click="stepFreq(1)">+</button>
+        </div>
       </div>
     </div>
 
@@ -133,7 +155,7 @@
 
     <!-- Row 3: Field Intensity + disruption indicators -->
     <div
-      class="field-panel__row"
+      class="field-panel__row field-panel__row--interactive"
       :class="!isResonanceMode && thermalDangerLevel !== THERMAL_LEVEL.SAFE ? `field-panel__row--${thermalDangerLevel}` : ''"
     >
       <span class="field-panel__row-label" v-tip="tipField">{{ $t('slider.fieldIntensity') }}</span>
@@ -149,7 +171,24 @@
         />
       </div>
       <div class="field-panel__readout">
-        <span class="field-panel__readout-value" v-tip="tipField">{{ fieldDisplay }}</span>
+        <div v-if="editingField" class="field-panel__readout-edit">
+          <input
+            ref="fieldInputEl"
+            class="field-panel__readout-input"
+            type="number"
+            :step="fieldInputStep"
+            v-model.number="fieldInputVal"
+            @keydown="onFieldEditKey"
+            @blur="commitFieldEdit"
+          />
+          <span class="field-panel__readout-input-unit">{{ fieldInputUnit }}</span>
+        </div>
+        <span
+          v-else
+          class="field-panel__readout-value field-panel__readout-value--editable"
+          v-tip="tipField"
+          @click="startEditField"
+        >{{ fieldDisplay }}</span>
         <div class="field-panel__badges">
           <span
             class="field-panel__badge field-panel__badge--target"
@@ -161,6 +200,11 @@
             :class="{ 'field-panel__badge--warn': healthyDisruption > THRESHOLDS.DISRUPTION_WARN }"
             v-tip="tipHealthyBadge"
           >{{ CELL_LABEL.HEALTHY }} {{ healthyDisruptPercent }}%</span>
+        </div>
+        <div v-if="!editingField" class="field-panel__readout-steps">
+          <button class="field-panel__readout-step" type="button" @click="stepField(-1)">−</button>
+          <span class="field-panel__readout-steps-unit">{{ fieldInputUnit }}</span>
+          <button class="field-panel__readout-step" type="button" @click="stepField(1)">+</button>
         </div>
       </div>
     </div>
@@ -224,6 +268,15 @@ export default defineComponent({
   setup() {
     const store = useCellStore()
     return { store, MEDIA, ICON, THERMAL_LEVEL, THRESHOLDS, CELL_LABEL, UNIT }
+  },
+
+  data() {
+    return {
+      editingFreq:  false,
+      freqInputVal: 0,
+      editingField: false,
+      fieldInputVal: 0,
+    }
   },
 
   computed: {
@@ -336,6 +389,26 @@ export default defineComponent({
       return tip
     },
 
+    // ── Inline edit helpers ───────────────────────────────────────────────
+    freqInputUnit(): string {
+      const f = this.currentFreq
+      if (f >= 1_000_000) return 'GHz'
+      if (f >= 1_000)     return 'MHz'
+      return 'kHz'
+    },
+    freqInputStep(): number {
+      const f = this.currentFreq
+      if (f >= 1_000_000) return 0.001  // 1 MHz increments
+      if (f >= 1_000)     return 0.1    // 100 kHz increments
+      return 1                           // 1 kHz increments
+    },
+    fieldInputUnit(): string {
+      return this.currentField >= 10_000 ? 'kV/cm' : 'V/cm'
+    },
+    fieldInputStep(): number {
+      return this.currentField >= 10_000 ? 0.1 : 1
+    },
+
     tipField(): string {
       return tipField({
         chartMode:          this.store.chartMode,
@@ -403,6 +476,71 @@ export default defineComponent({
       broadcastStateSync()
     },
 
+    // ── Inline freq edit ─────────────────────────────────────────────────
+    startEditFreq() {
+      const f = this.currentFreq
+      if (f >= 1_000_000) this.freqInputVal = parseFloat((f / 1_000_000).toFixed(3))
+      else if (f >= 1_000) this.freqInputVal = parseFloat((f / 1_000).toFixed(2))
+      else this.freqInputVal = Math.round(f)
+      this.editingFreq = true
+      this.$nextTick(() => {
+        const el = this.$refs.freqInputEl as HTMLInputElement
+        el?.focus(); el?.select()
+      })
+    },
+    commitFreqEdit() {
+      if (!this.editingFreq) return
+      let khz = this.freqInputVal
+      if (this.freqInputUnit === 'GHz')      khz = this.freqInputVal * 1_000_000
+      else if (this.freqInputUnit === 'MHz') khz = this.freqInputVal * 1_000
+      const clamped = Math.max(this.sliderRanges.freqMin, Math.min(this.sliderRanges.freqMax, Math.round(khz)))
+      this.store.setBroadcastFreqKHz(clamped)
+      broadcastStateSync()
+      this.editingFreq = false
+    },
+    onFreqEditKey(e: KeyboardEvent) {
+      if (e.key === 'Enter')  { e.preventDefault(); this.commitFreqEdit() }
+      if (e.key === 'Escape') { e.preventDefault(); this.editingFreq = false }
+    },
+    stepFreq(dir: number) {
+      const unit = this.freqInputUnit
+      const step = this.freqInputStep
+      const stepKhz = unit === 'GHz' ? step * 1_000_000 : unit === 'MHz' ? step * 1_000 : step
+      const next = Math.max(this.sliderRanges.freqMin, Math.min(this.sliderRanges.freqMax, this.currentFreq + dir * stepKhz))
+      this.store.setBroadcastFreqKHz(next)
+      broadcastStateSync()
+    },
+    // ── Inline field edit ────────────────────────────────────────────────
+    startEditField() {
+      this.fieldInputVal = this.currentField >= 10_000
+        ? parseFloat((this.currentField / 1_000).toFixed(1))
+        : this.currentField
+      this.editingField = true
+      this.$nextTick(() => {
+        const el = this.$refs.fieldInputEl as HTMLInputElement
+        el?.focus(); el?.select()
+      })
+    },
+    commitFieldEdit() {
+      if (!this.editingField) return
+      let vcm = this.fieldInputVal
+      if (this.fieldInputUnit === 'kV/cm') vcm = this.fieldInputVal * 1_000
+      const clamped = Math.max(this.sliderRanges.fieldMin, Math.min(this.sliderRanges.fieldMax, vcm))
+      this.store.setFieldIntensity(clamped)
+      broadcastStateSync()
+      this.editingField = false
+    },
+    onFieldEditKey(e: KeyboardEvent) {
+      if (e.key === 'Enter')  { e.preventDefault(); this.commitFieldEdit() }
+      if (e.key === 'Escape') { e.preventDefault(); this.editingField = false }
+    },
+    stepField(dir: number) {
+      const step = this.fieldInputStep
+      const stepVcm = this.fieldInputUnit === 'kV/cm' ? step * 1_000 : step
+      const next = Math.max(this.sliderRanges.fieldMin, Math.min(this.sliderRanges.fieldMax, this.currentField + dir * stepVcm))
+      this.store.setFieldIntensity(next)
+      broadcastStateSync()
+    },
     snapToOptimal() {
       const { khz } = this.optimalFreqResult
       const snapped = Math.round(Math.max(this.sliderRanges.freqMin, Math.min(this.sliderRanges.freqMax, khz)))
@@ -552,7 +690,7 @@ export default defineComponent({
   &__regime {
     display: inline-flex;
     align-items: center;
-    align-self: flex-end;
+    align-self: flex-start;
     gap: 0.3rem;
     font-size: 0.58rem;
     font-family: var(--font-mono);
@@ -697,6 +835,8 @@ export default defineComponent({
     color: var(--color-text-muted);
     white-space: nowrap;
     opacity: 0.65;
+    text-align: right;
+    justify-self: end;
   }
 
   /* ── Medium select ───────────────────────────────────────────────── */
@@ -860,12 +1000,95 @@ export default defineComponent({
     &--hyperthermic { color: var(--color-amber)  !important; }
     &--denaturing   { color: var(--color-orange) !important; }
     &--vaporizing   { color: var(--color-danger) !important; animation: state-blink 0.5s ease-in-out infinite; }
+
+    // ── Click-to-edit & step controls ────────────────────────────────
+
+    &-value--editable {
+      cursor: text;
+      border-bottom: 1px dashed transparent;
+      transition: border-color 0.15s;
+      &:hover { border-bottom-color: rgba(0, 212, 255, 0.4); }
+    }
+
+    &-edit {
+      display: flex;
+      align-items: baseline;
+      justify-content: flex-end;
+      gap: 0.2rem;
+      width: 100%;
+    }
+
+    &-input {
+      font-size: 1rem;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      color: var(--color-text-heading);
+      letter-spacing: -0.02em;
+      line-height: 1;
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid var(--color-primary);
+      outline: none;
+      text-align: right;
+      padding: 0;
+      width: 5rem;
+      &::-webkit-outer-spin-button,
+      &::-webkit-inner-spin-button { -webkit-appearance: none; appearance: none; }
+      -moz-appearance: textfield;
+      appearance: textfield;
+    }
+
+    &-input-unit {
+      font-size: 0.6rem;
+      font-family: var(--font-mono);
+      color: var(--color-primary);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    &-steps {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 0.2rem;
+    }
+
+    &-steps-unit {
+      font-size: 0.48rem;
+      font-family: var(--font-mono);
+      color: var(--color-text-muted);
+      opacity: 0.55;
+    }
+
+    &-step {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.1rem;
+      height: 0.9rem;
+      padding: 0;
+      font-size: 0.72rem;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      color: var(--color-text-muted);
+      background: transparent;
+      border: 1px solid var(--color-border);
+      border-radius: 3px;
+      cursor: pointer;
+      transition: color 0.1s, border-color 0.1s, background 0.1s;
+      &:hover {
+        color: var(--color-primary);
+        border-color: var(--color-primary);
+        background: rgba(0, 212, 255, 0.08);
+      }
+    }
   }
 
   &__optimal-row {
     display: flex;
-    justify-content: flex-end;
+    justify-content: flex-start;
     align-items: center;
+    flex-wrap: wrap;
     gap: 0.35rem;
     margin-top: -0.35rem;  /* pull closer to the freq slider below */
     margin-bottom: -0.2rem;

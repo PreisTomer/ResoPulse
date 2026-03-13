@@ -25,6 +25,13 @@
       </nav>
 
       <div class="nav-bar__right">
+        <button
+          class="nav-bar__theme-toggle"
+          :class="{ 'nav-bar__theme-toggle--oled': isOled }"
+          type="button"
+          :title="isOled ? $t('nav.themeSwitchDark') : $t('nav.themeSwitchOled')"
+          @click="themeStore.toggle()"
+        >{{ isOled ? $t('nav.themeOled') : $t('nav.themeDark') }}</button>
         <div
           class="nav-bar__status"
           v-tip="systemReady ? $t('nav.tipSystemReady') : $t('nav.tipSystemWarning')"
@@ -51,6 +58,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { useCellStore } from '@/stores/cellStore'
+import { useThemeStore } from '@/stores/themeStore'
 
 const NAV_LINKS = [
   { to: '/',           labelKey: 'nav.home',       exact: true },
@@ -65,7 +73,7 @@ export default defineComponent({
   name: 'NavBar',
 
   setup() {
-    return { store: useCellStore() }
+    return { store: useCellStore(), themeStore: useThemeStore() }
   },
 
   data() {
@@ -74,6 +82,7 @@ export default defineComponent({
 
   computed: {
     systemReady(): boolean { return this.store.systemReady },
+    isOled(): boolean { return this.themeStore.theme === 'oled' },
   },
 })
 </script>
@@ -200,6 +209,33 @@ export default defineComponent({
       color: var(--color-text-muted);
 
       &--warning { color: var(--color-amber-warm); }
+    }
+  }
+
+  /* ── Theme toggle ───────────────────────────────────────────────── */
+  &__theme-toggle {
+    font-size: 0.6rem;
+    font-family: var(--font-mono);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.22rem 0.6rem;
+    background: transparent;
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+    white-space: nowrap;
+
+    &:hover {
+      color: var(--color-text);
+      border-color: var(--color-text-muted);
+    }
+
+    &--oled {
+      color: var(--color-primary);
+      border-color: rgba(0, 212, 255, 0.35);
+      background: rgba(0, 212, 255, 0.06);
     }
   }
 
