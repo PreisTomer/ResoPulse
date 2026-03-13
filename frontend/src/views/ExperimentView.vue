@@ -4,7 +4,7 @@
     <!-- ── Combined header bar ───────────────────────────────────── -->
     <div class="experiment__header">
 
-      <!-- Far left: session name -->
+      <!-- Far left: session name + notes toggle -->
       <div class="experiment__header-left">
         <input
           v-model="expStore.sessionName"
@@ -12,6 +12,13 @@
           spellcheck="false"
           :title="$t('exp.renameSession')"
         />
+        <button
+          class="experiment__notes-toggle"
+          :class="{ 'experiment__notes-toggle--active': notesOpen }"
+          type="button"
+          :title="$t('exp.notesToggleTip')"
+          @click.stop="notesOpen = !notesOpen"
+        >{{ $t('exp.notesToggle') }}</button>
       </div>
 
       <!-- Center: cell selectors -->
@@ -141,6 +148,33 @@
         </span>
       </div>
 
+    </div>
+
+    <!-- ── Session metadata panel (expands below header) ─────────── -->
+    <div v-show="notesOpen" class="experiment__notes-panel" @click.stop>
+      <div class="experiment__notes-field">
+        <label class="experiment__notes-label">{{ $t('exp.notesLabelSample') }}</label>
+        <input
+          class="experiment__notes-input"
+          type="text"
+          :placeholder="$t('exp.notesSamplePlaceholder')"
+          :value="expStore.sampleDescription"
+          @input="expStore.setSampleDescription(($event.target as HTMLInputElement).value)"
+          spellcheck="false"
+        />
+      </div>
+      <div class="experiment__notes-field experiment__notes-field--grow">
+        <label class="experiment__notes-label">{{ $t('exp.notesLabelNotes') }}</label>
+        <textarea
+          class="experiment__notes-textarea"
+          :placeholder="$t('exp.notesNotesPlaceholder')"
+          :value="expStore.sessionNotes"
+          @input="expStore.setSessionNotes(($event.target as HTMLTextAreaElement).value)"
+          rows="2"
+          spellcheck="false"
+        ></textarea>
+      </div>
+      <p class="experiment__notes-hint">{{ $t('exp.notesHint') }}</p>
     </div>
 
     <!-- ── Main content ──────────────────────────────────────────── -->
@@ -308,6 +342,7 @@ export default defineComponent({
       snapConfirming: false,
       _snapResetTimer: null as number | null,
       showCreateModal: false,
+      notesOpen: false,
       // Dosimetry timer
       _doseTimer: null as ReturnType<typeof setInterval> | null,
       _doseLastMs: 0,
@@ -574,6 +609,88 @@ Larger radius raises Vm and lowers the lysis field threshold.`
   &__header-left {
     @include flex-row(0.6rem);
     flex-shrink: 0;
+    align-items: center;
+  }
+
+  &__notes-toggle {
+    font-size: 0.6rem;
+    font-family: var(--font-mono);
+    letter-spacing: 0.06em;
+    padding: 0.14rem 0.5rem;
+    background: transparent;
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+    white-space: nowrap;
+
+    &:hover {
+      color: var(--color-text);
+      border-color: var(--color-text-muted);
+    }
+
+    &--active {
+      color: var(--color-primary);
+      border-color: rgba(0, 212, 255, 0.4);
+      background: rgba(0, 212, 255, 0.06);
+    }
+  }
+
+  &__notes-panel {
+    display: flex;
+    align-items: flex-start;
+    gap: 1.25rem;
+    padding: 0.65rem 1.75rem;
+    background: var(--color-surface-2, #0a1628);
+    border-bottom: 1px solid var(--color-border);
+    flex-shrink: 0;
+  }
+
+  &__notes-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 220px;
+
+    &--grow { flex: 1; }
+  }
+
+  &__notes-label {
+    font-size: 0.58rem;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--color-text-muted);
+  }
+
+  &__notes-input,
+  &__notes-textarea {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    font-size: 0.72rem;
+    padding: 0.3rem 0.6rem;
+    outline: none;
+    transition: border-color 0.15s;
+    resize: none;
+
+    &::placeholder { color: var(--color-text-muted); opacity: 0.55; }
+    &:focus { border-color: var(--color-primary); }
+  }
+
+  &__notes-textarea { line-height: 1.5; }
+
+  &__notes-hint {
+    font-size: 0.58rem;
+    font-family: var(--font-mono);
+    color: var(--color-text-muted);
+    opacity: 0.55;
+    align-self: flex-end;
+    white-space: nowrap;
+    margin-top: auto;
   }
 
   &__header-right {

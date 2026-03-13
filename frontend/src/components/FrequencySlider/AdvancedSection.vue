@@ -292,11 +292,15 @@ export default defineComponent({
     gap: 0.85rem;
     min-height: 2.75rem;
 
-    &--medium { grid-template-columns: 7.5rem 1fr 8.5rem; }
+    &--medium {
+      grid-template-columns: 7.5rem 1fr 8.5rem;
+      // Pills span both non-label columns so long pill text doesn't wrap
+      > .field-panel__pills { grid-column: 2 / -1; }
+    }
 
     &--compact-readout {
-      grid-template-columns: 5.5rem 1fr 6.5rem;
-      .field-panel__readout { width: 6.5rem; }
+      grid-template-columns: 5.5rem 1fr 7.5rem;
+      .field-panel__readout { width: 7.5rem; }
     }
   }
 
@@ -369,16 +373,16 @@ export default defineComponent({
     overflow: hidden;
 
     &-value {
-      font-size: 1rem;
-      font-weight: 700;
+      font-size: 0.78rem;
+      font-weight: 600;
       font-family: var(--font-mono);
-      color: var(--color-text-heading);
-      letter-spacing: -0.02em;
+      color: var(--color-text);
+      letter-spacing: -0.01em;
       line-height: 1;
       white-space: nowrap;
     }
 
-    &-sub { font-size: 0.64rem; font-family: var(--font-mono); color: var(--color-text-muted); white-space: nowrap; opacity: 0.82; }
+    &-sub { font-size: 0.6rem; font-family: var(--font-mono); color: var(--color-text-muted); white-space: nowrap; opacity: 0.75; }
   }
 }
 </style>

@@ -24,7 +24,7 @@
     <!-- Row 5: Duty Cycle (pulsed only) -->
     <div
       v-if="currentWaveform === WAVEFORM.PULSED"
-      class="field-panel__row"
+      class="field-panel__row field-panel__row--compact-readout"
       :class="thermalDangerLevel !== THERMAL_LEVEL.SAFE ? `field-panel__row--${thermalDangerLevel}` : ''"
     >
       <span class="field-panel__row-label" v-tip="tipDutyCycle">
@@ -55,7 +55,7 @@
     </div>
 
     <!-- Row 6: Pulse Width (pulsed only) -->
-    <div v-if="currentWaveform === WAVEFORM.PULSED" class="field-panel__row">
+    <div v-if="currentWaveform === WAVEFORM.PULSED" class="field-panel__row field-panel__row--compact-readout">
       <span class="field-panel__row-label" v-tip="tipPulseWidth">{{ $t('slider.pulseWidth') }}</span>
       <div class="field-panel__track">
         <input
@@ -291,11 +291,14 @@ export default defineComponent({
     gap: 0.85rem;
     min-height: 2.75rem;
 
-    &--medium { grid-template-columns: 7.5rem 1fr 8.5rem; }
+    &--medium {
+      grid-template-columns: 7.5rem 1fr 8.5rem;
+      > .field-panel__pills { justify-self: center; }
+    }
 
     &--compact-readout {
-      grid-template-columns: 5.5rem 1fr 6.5rem;
-      .field-panel__readout { width: 6.5rem; }
+      grid-template-columns: 5.5rem 1fr 7.5rem;
+      .field-panel__readout { width: 7.5rem; }
     }
 
     &--hyperthermic .field-panel__slider {
@@ -324,7 +327,7 @@ export default defineComponent({
     flex-shrink: 0;
   }
 
-  &__row-meta { font-size: 0.65rem; font-family: var(--font-mono); color: var(--color-text-muted); white-space: nowrap; opacity: 0.80; }
+  &__row-meta { font-size: 0.65rem; font-family: var(--font-mono); color: var(--color-text-muted); white-space: nowrap; opacity: 0.80; text-align: right; justify-self: end; }
 
   &__pills { display: flex; gap: 0.35rem; flex-wrap: wrap; }
 
