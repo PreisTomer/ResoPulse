@@ -28,6 +28,24 @@
               </div>
             </div>
 
+            <!-- ── Cell type selector ───────────────────────────────── -->
+            <div class="ccm__field">
+              <label class="ccm__label">
+                {{ $t('userPresets.cellTypeLabel') }}
+                <button class="ccm__tip-btn" @click="showTip('cellType')">?</button>
+              </label>
+              <div class="ccm__type-pills">
+                <button
+                  v-for="ct in (['mammalian', 'bacteria', 'virus'] as const)"
+                  :key="ct"
+                  type="button"
+                  class="ccm__type-pill"
+                  :class="{ 'ccm__type-pill--active': form.cellType === ct }"
+                  @click="onCellTypeChange(ct)"
+                >{{ $t(`userPresets.cellType${ct.charAt(0).toUpperCase() + ct.slice(1)}`) }}</button>
+              </div>
+            </div>
+
             <!-- ── Notes / citation ─────────────────────────────────── -->
             <div class="ccm__field">
               <label class="ccm__label">{{ $t('userPresets.fieldNotes') }}</label>
@@ -123,6 +141,52 @@
 
             </div>
 
+            <!-- ── Resonance fields (bacteria / virus only) ─────────── -->
+            <div v-if="form.cellType !== 'mammalian'" class="ccm__resonance-section">
+              <div class="ccm__resonance-title">
+                {{ $t('userPresets.resonanceSectionTitle') }}
+                <span class="ccm__resonance-sub">{{ $t('userPresets.resonanceSectionSub') }}</span>
+              </div>
+              <div class="ccm__params-grid">
+
+                <!-- Resonant frequency -->
+                <div class="ccm__field">
+                  <label class="ccm__label">
+                    {{ $t('userPresets.fieldResFreq') }}
+                    <span class="ccm__unit">GHz</span>
+                    <button class="ccm__tip-btn" @click="showTip('resFreq')">?</button>
+                  </label>
+                  <input v-model.number="form.resonantFreqGHz" class="ccm__input" type="number"
+                    step="0.01" min="0.001" max="1000" />
+                  <span class="ccm__sub-hint">{{ $t('userPresets.fieldResFreqSub') }}</span>
+                </div>
+
+                <!-- Quality factor -->
+                <div class="ccm__field">
+                  <label class="ccm__label">
+                    {{ $t('userPresets.fieldCapsidQ') }}
+                    <button class="ccm__tip-btn" @click="showTip('capsidQ')">?</button>
+                  </label>
+                  <input v-model.number="form.capsidQ" class="ccm__input" type="number"
+                    step="1" min="1" max="100" />
+                  <span class="ccm__sub-hint">{{ $t('userPresets.fieldCapsidQSub') }}</span>
+                </div>
+
+                <!-- Resonance threshold -->
+                <div class="ccm__field">
+                  <label class="ccm__label">
+                    {{ $t('userPresets.fieldResThr') }}
+                    <span class="ccm__unit">V/cm</span>
+                    <button class="ccm__tip-btn" @click="showTip('resThr')">?</button>
+                  </label>
+                  <input v-model.number="form.resonantThresholdVcm" class="ccm__input" type="number"
+                    step="100" min="10" max="100000" />
+                  <span class="ccm__sub-hint">{{ $t('userPresets.fieldResThrSub') }}</span>
+                </div>
+
+              </div>
+            </div>
+
             <!-- ── Derived preview ───────────────────────────────────── -->
             <div class="ccm__derived">
               <div class="ccm__derived-item">
@@ -186,20 +250,33 @@ import { computeTau, computeFc } from '@/utils/physics'
 
 // ── Default form values ────────────────────────────────────────────────────
 
+type CellFormType = 'mammalian' | 'bacteria' | 'virus'
+
+// Per-type scientifically representative defaults.
+// Mammalian: cancer-cell-typical (larger R, thinner membrane, lower Vth than healthy reference).
+// Bacteria: E. coli-like gram-negative baseline.
+// Virus: Influenza-like enveloped virus baseline.
+interface TypeDefaults {
+  radius: number; membraneThickness: number; dielectricConstant: number
+  conductivity: number; thresholdVoltage: number; density: number; specificHeatCapacity: number
+  resonantFreqGHz: number | null; capsidQ: number | null; resonantThresholdVcm: number | null
+}
+
+const TYPE_DEFAULTS: Record<CellFormType, TypeDefaults> = {
+  mammalian: { radius: 12,    membraneThickness: 6,  dielectricConstant: 8,  conductivity: 0.7, thresholdVoltage: 0.85, density: 1050, specificHeatCapacity: 3500, resonantFreqGHz: null, capsidQ: null, resonantThresholdVcm: null },
+  bacteria:  { radius: 1.0,   membraneThickness: 8,  dielectricConstant: 10, conductivity: 0.3, thresholdVoltage: 0.7,  density: 1100, specificHeatCapacity: 3700, resonantFreqGHz: 10,   capsidQ: 4,    resonantThresholdVcm: 10000 },
+  virus:     { radius: 0.060, membraneThickness: 4,  dielectricConstant: 22, conductivity: 0.2, thresholdVoltage: 0.4,  density: 1200, specificHeatCapacity: 3000, resonantFreqGHz: 0.7,  capsidQ: 8,    resonantThresholdVcm: 800 },
+}
+
 const DEFAULT_FORM = () => ({
+  cellType:            'mammalian' as CellFormType,
   label:               '',
   shortLabel:          '',
   notes:               '',
-  radius:              10,
-  membraneThickness:   7,
-  dielectricConstant:  6,
-  conductivity:        0.5,
-  thresholdVoltage:    1.0,
-  density:             1000,
-  specificHeatCapacity: 3500,
+  ...TYPE_DEFAULTS.mammalian,
 })
 
-type TipKey = 'radius' | 'memThick' | 'epsR' | 'sigmaI' | 'vmThr' | 'density' | 'cp' | 'derivedFc'
+type TipKey = 'radius' | 'memThick' | 'epsR' | 'sigmaI' | 'vmThr' | 'density' | 'cp' | 'derivedFc' | 'cellType' | 'resFreq' | 'capsidQ' | 'resThr'
 
 const TIP_I18N_MAP: Record<TipKey, string> = {
   radius:    'userPresets.tipRadius',
@@ -210,6 +287,10 @@ const TIP_I18N_MAP: Record<TipKey, string> = {
   density:   'userPresets.tipDensity',
   cp:        'userPresets.tipCp',
   derivedFc: 'userPresets.tipDerivedFc',
+  cellType:  'userPresets.tipCellType',
+  resFreq:   'userPresets.tipResFreq',
+  capsidQ:   'userPresets.tipCapsidQ',
+  resThr:    'userPresets.tipResThr',
 }
 
 export default defineComponent({
@@ -315,6 +396,13 @@ export default defineComponent({
       this.activeTip = key
     },
 
+    /** Switch cell type and reset physics fields to type-appropriate defaults
+     *  while preserving the user's label / shortLabel / notes. */
+    onCellTypeChange(ct: CellFormType) {
+      const { label, shortLabel, notes } = this.form
+      Object.assign(this.form, TYPE_DEFAULTS[ct], { cellType: ct, label, shortLabel, notes })
+    },
+
     onSave() {
       if (!this.isValid) return
       const preset: Omit<UserCellPreset, 'id' | 'createdAt'> = {
@@ -328,6 +416,10 @@ export default defineComponent({
         thresholdVoltage:    this.form.thresholdVoltage,
         density:             this.form.density,
         specificHeatCapacity: this.form.specificHeatCapacity,
+        // Resonance fields — only included when bacteria/virus and user provided values
+        ...(this.form.cellType !== 'mammalian' && this.form.resonantFreqGHz      != null && { resonantFreqGHz:      this.form.resonantFreqGHz }),
+        ...(this.form.cellType !== 'mammalian' && this.form.capsidQ              != null && { capsidQ:              this.form.capsidQ }),
+        ...(this.form.cellType !== 'mammalian' && this.form.resonantThresholdVcm != null && { resonantThresholdVcm: this.form.resonantThresholdVcm }),
       }
       this.presetsStore.add(preset)
       this.$emit('saved', preset)
@@ -584,6 +676,63 @@ export default defineComponent({
       &:hover:not(:disabled) { background: #33deff; }
       &:disabled { opacity: 0.4; cursor: not-allowed; }
     }
+  }
+
+  /* ── Cell type pill selector ─────────────────────────────────── */
+  &__type-pills {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  &__type-pill {
+    flex: 1;
+    padding: 0.4rem 0.6rem;
+    border-radius: 5px;
+    border: 1px solid var(--color-border, rgba(255,255,255,0.12));
+    background: transparent;
+    color: var(--color-text-muted, #8899aa);
+    font-size: 0.78rem;
+    cursor: pointer;
+    text-align: center;
+    transition: border-color 0.15s, color 0.15s, background 0.15s;
+
+    &:hover { border-color: rgba(0,212,255,0.4); color: var(--color-text, #e0eaff); }
+
+    &--active {
+      border-color: var(--color-primary, #00d4ff);
+      color: var(--color-primary, #00d4ff);
+      background: rgba(0,212,255,0.08);
+    }
+  }
+
+  /* ── Resonance section (bacteria/virus) ──────────────────────── */
+  &__resonance-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    padding: 0.75rem 0.9rem;
+    border-radius: 6px;
+    border: 1px solid rgba(167,139,250,0.25);
+    background: rgba(167,139,250,0.05);
+  }
+
+  &__resonance-title {
+    font-size: 0.73rem;
+    font-weight: 600;
+    color: #a78bfa;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+
+  &__resonance-sub {
+    font-size: 0.67rem;
+    font-weight: 400;
+    color: var(--color-text-muted, #8899aa);
+    text-transform: none;
+    letter-spacing: 0;
   }
 }
 

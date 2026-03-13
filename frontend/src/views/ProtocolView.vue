@@ -614,12 +614,9 @@ export default defineComponent({
   &__section {
     @include flex-col(1rem);
     padding-bottom: 2.5rem;
-    border-bottom: 1px solid var(--color-border);
     margin-bottom: 2.5rem;
     // Offset scroll-to-anchor by sticky navbar height so headings aren't hidden
     scroll-margin-top: 5rem;
-
-    &:last-child { border-bottom: none; }
   }
 
   &__section-title {

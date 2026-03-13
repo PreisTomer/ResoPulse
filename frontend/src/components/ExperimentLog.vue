@@ -71,7 +71,9 @@
             <td class="exp-log__td-target" v-tip="tipCellTargetVm(e)">{{ e.targetVm }}</td>
             <td class="exp-log__td-healthy" v-tip="tipCellHealthyVm(e)">{{ e.healthyVm }}</td>
             <td class="exp-log__td-sel" v-tip="tipCellSel(e)">{{ e.selectivity.toFixed(2) }}</td>
-            <td class="exp-log__td-event" v-tip="tipCellEvent(e)">{{ e.event }}</td>
+            <td class="exp-log__td-event">
+              <StatusBadge :label="e.event" :variant="eventVariant(e.event)" :tooltip="tipCellEvent(e)" />
+            </td>
           </tr>
           <tr v-if="!hasEntries">
             <td colspan="8" class="exp-log__td-empty">{{ $t('exp.logEmpty') }}</td>
@@ -88,6 +90,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import AccordionPanel from '@/components/AccordionPanel.vue'
+import StatusBadge from '@/components/StatusBadge.vue'
 import { useExperimentStore } from '@/stores/experimentStore'
 import { useCellStore } from '@/stores/cellStore'
 import { broadcastLogEntry } from '@/services/socket'
@@ -95,9 +98,10 @@ import { LOG_EVENT } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
 import { THRESHOLDS } from '@/constants/cellCard'
 import { formatFreqKHz } from '@/utils/format'
+import { UNIT } from '@/constants/units'
 
 export default defineComponent({
-  components: { AccordionPanel },
+  components: { AccordionPanel, StatusBadge },
 
   setup() {
     return {
@@ -139,9 +143,9 @@ export default defineComponent({
     /** Formatted cumulative dose badge text */
     doseBadge(): string {
       const dose = this.expStore.cumulativeDoseJkg
-      if (dose >= 1000) return `${(dose / 1000).toFixed(2)} kJ/kg`
-      if (dose >= 1)    return `${dose.toFixed(1)} J/kg`
-      return `${(dose * 1000).toFixed(0)} mJ/kg`
+      if (dose >= 1000) return `${(dose / 1000).toFixed(2)} ${UNIT.KJ_PER_KG}`
+      if (dose >= 1)    return `${dose.toFixed(1)} ${UNIT.J_PER_KG}`
+      return `${(dose * 1000).toFixed(0)} ${UNIT.MJ_PER_KG}`
     },
 
     tipDose(): string { return this.$t('log.tipDose') },
@@ -155,6 +159,9 @@ export default defineComponent({
     },
     exportCSV()  { this.expStore.exportCSV() },
     clearLog()   { this.expStore.clearLog() },
+    eventVariant(event: string): string {
+      return event === LOG_EVENT.LYSIS ? 'danger' : 'primary'
+    },
 
     // ── Row cell tooltips ──────────────────────────────────────────────────────
     tipCellFreq(e: { freqKHz: number }): string {
@@ -325,7 +332,7 @@ export default defineComponent({
   &__td-target  { color: var(--color-danger); }
   &__td-healthy { color: var(--color-primary); }
   &__td-sel    { color: var(--color-text-heading); font-weight: 600; }
-  &__td-event  { text-transform: uppercase; opacity: 0.8; }
+  &__td-event  { text-align: right; }
   &__td-empty  { text-align: center; opacity: 0.6; padding: 1rem; }
 }
 </style>

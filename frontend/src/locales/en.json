@@ -240,7 +240,9 @@
     "tipCellHealthyVm": "<strong>Healthy Vm: {vm} mV</strong>\nDisruption ratio: {ratio}% of lysis threshold",
     "tipCellSel": "<strong>Selectivity: ×{sel}</strong>\nTarget-Vm / Healthy-Vm ratio at this reading.\nTarget temp: {targetTemp} °C  ·  Healthy temp: {healthyTemp} °C",
     "tipCellLysis": "<strong>Lysis Event</strong>\nCell membrane disruption threshold was exceeded.\nThis reading was auto-logged at the lysis trigger.",
-    "tipCellManual": "<strong>Manual Reading</strong>\nUser-triggered snapshot of the current field state."
+    "tipCellManual": "<strong>Manual Reading</strong>\nUser-triggered snapshot of the current field state.",
+    "doseLabel": "Dose",
+    "tipDose": "<strong>Cumulative Dose</strong>\nSpecific energy absorbed (J/kg) estimated from SAR\nand pulse duty cycle across all logged readings.\nApproximation only — ignores blood perfusion and heat loss."
   },
   "features": {
     "visualization": {

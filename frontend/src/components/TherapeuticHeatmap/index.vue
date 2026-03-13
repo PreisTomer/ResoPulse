@@ -186,7 +186,7 @@ export default defineComponent({
     hDrPct():       string  { return (Math.min(this.store.healthyDisruptionRatio, 9.99) * 100).toFixed(1) },
     healthyTssStr():string  {
       const T = (this.store as unknown as Record<string, number>)['healthySteadyStateTemp'] as number | undefined
-      return T !== undefined ? `${T.toFixed(1)}°C` : '—'
+      return T !== undefined ? `${T.toFixed(1)} ${UNIT.DEG_C}` : '—'
     },
     pLysisStr():    string  {
       if (this.store.chartMode === CHART_MODE.RESONANCE) {
@@ -228,7 +228,7 @@ export default defineComponent({
     skinDepthStr(): string {
       const d = this.store.skinDepthMm
       if (!isFinite(d)) return '∞'
-      return d >= 10 ? `${d.toFixed(0)} mm` : `${d.toFixed(1)} mm`
+      return d >= 10 ? `${d.toFixed(0)} ${UNIT.MM}` : `${d.toFixed(1)} ${UNIT.MM}`
     },
 
     skinDepthClass(): string {
@@ -722,7 +722,7 @@ export default defineComponent({
         outcomes.push({ text: '⛔ Healthy ablation', level: 'danger' })
         if (tDR >= HMAP_LYSIS_DR) outcomes.push({ text: '⛔ Target lysis', level: 'danger' })
       } else if (hTss >= HMAP_THERM_CRIT_C) {
-        outcomes.push({ text: '⛔ Thermal damage (≥42°C)', level: 'danger' })
+        outcomes.push({ text: `⛔ Thermal damage (≥${HMAP_THERM_CRIT_C} ${UNIT.DEG_C})`, level: 'danger' })
       } else if (tDR >= HMAP_APPROACH_DR) {
         outcomes.push({ text: '→ Approaching window', level: 'info' })
         outcomes.push({ text: `T-DR ${(tDR * 100).toFixed(0)}% — lysis at ${(HMAP_LYSIS_DR * 100).toFixed(0)}%`, level: 'info' })
@@ -730,11 +730,11 @@ export default defineComponent({
         outcomes.push({ text: '— Sub-threshold', level: 'info' })
       }
       if (hTss >= HMAP_THERM_WARN_C && hTss < HMAP_THERM_CRIT_C) {
-        outcomes.push({ text: `⚠ H-Temp ${hTss.toFixed(1)}°C — hyperthermia`, level: 'warn' })
+        outcomes.push({ text: `⚠ H-Temp ${hTss.toFixed(1)} ${UNIT.DEG_C} — hyperthermia`, level: 'warn' })
       }
 
       const freqLabel  = formatFreqKHz(freqKHz, 2)
-      const fieldLabel = fieldVcm >= 1000 ? `${(fieldVcm / 1000).toFixed(1)} kV/cm` : `${fieldVcm.toFixed(0)} V/cm`
+      const fieldLabel = fieldVcm >= 1000 ? `${(fieldVcm / 1000).toFixed(1)} ${UNIT.KV_PER_CM}` : `${fieldVcm.toFixed(0)} ${UNIT.V_PER_CM}`
       const zoneLabel  = this.$t(`heatmap.zone${HMAP_ZONE_KEY[zone]}`)
 
       this.hoverInfo = {
@@ -742,7 +742,7 @@ export default defineComponent({
         zoneColor:  HMAP_ZONE_CSS[zone],
         tDr:        `${(Math.min(tDR, 9.99) * 100).toFixed(1)}%`,
         hDr:        `${(Math.min(hDR, 9.99) * 100).toFixed(1)}%`,
-        temp:       `${hTss.toFixed(1)}°C`,
+        temp:       `${hTss.toFixed(1)} ${UNIT.DEG_C}`,
         pLysis,
         outcomes,
       }
@@ -754,7 +754,7 @@ export default defineComponent({
       const outcomeLines = outcomes.map(o => o.text).join('\n')
       const dynamicTip = `<strong>${freqLabel} · ${fieldLabel}</strong>\n`
         + `<span class='${zoneClass}'>${zoneLabel}</span>\n`
-        + `T ${(Math.min(tDR, 9.99) * 100).toFixed(1)}% · H ${(Math.min(hDR, 9.99) * 100).toFixed(1)}% · ${hTss.toFixed(1)}°C\n`
+        + `T ${(Math.min(tDR, 9.99) * 100).toFixed(1)}% · H ${(Math.min(hDR, 9.99) * 100).toFixed(1)}% · ${hTss.toFixed(1)} ${UNIT.DEG_C}\n`
         + outcomeLines
       const wrapEl = this.$refs.wrap as HTMLElement & { _tipContent?: string }
       wrapEl._tipContent = dynamicTip

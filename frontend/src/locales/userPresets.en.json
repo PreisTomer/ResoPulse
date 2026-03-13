@@ -25,6 +25,20 @@
     "fieldCp":          "Specific Heat Capacity cp",
     "fieldCpSub":       "J/(kg·K) — affects temperature calculation (default: 3500)",
 
+    "cellTypeLabel":    "Cell Type",
+    "cellTypeMammalian": "Mammalian (cancer / normal)",
+    "cellTypeBacteria":  "Bacteria",
+    "cellTypeVirus":     "Virus",
+
+    "resonanceSectionTitle": "Acoustic / Mechanical Resonance",
+    "resonanceSectionSub":   "Required for resonance-mode targeting in acoustic disruption experiments.",
+    "fieldResFreq":     "Resonant Frequency f_res",
+    "fieldResFreqSub":  "GHz — fundamental capsid or cell-wall resonant frequency",
+    "fieldCapsidQ":     "Quality Factor Q",
+    "fieldCapsidQSub":  "Mechanical Q (higher = sharper resonance; bacteria 3–5, virus 6–12)",
+    "fieldResThr":      "Resonance Threshold",
+    "fieldResThrSub":   "V/cm — field amplitude at resonance required for disruption",
+
     "derivedCm":        "Membrane Cm",
     "derivedTau":       "Time constant τ",
     "derivedFc":        "Corner freq fc",
@@ -40,6 +54,10 @@
     "tipVmThr":       "<strong>Lysis Threshold Vm [V]</strong>\nTransmembrane voltage at which irreversible electroporation begins.\nDR = Vm / Vm_thr ≥ 0.85 triggers lysis in this model.\nTypical: mammalian 0.5–1.5 V · bacteria 0.8–2 V · virus (membrane disruption) 0.3–0.8 V.\nRef: Weaver &amp; Chizmadzhev (1996); Teissie &amp; Rols (1993).",
     "tipDensity":     "<strong>Cell Density ρ [kg/m³]</strong>\nUsed in SAR = σ_i·α²·E²·wf / ρ.\nMost mammalian cells ≈ 1000–1050 kg/m³ (close to water).\nBacteria: ~1070 kg/m³. Viruses: ~1200–1400 kg/m³.",
     "tipCp":          "<strong>Specific Heat Capacity cp [J/(kg·K)]</strong>\nUsed in temperature calculation: T_ss = 37 + SAR·dc / (λ·cp).\nWater: 4186. Mammalian cells: ~3500. Bacteria: ~3000. Dry virus particle: ~1000 (rarely relevant for in vitro).",
-    "tipDerivedFc":   "<strong>Corner Frequency fc [kHz]</strong>\nComputed from your entered parameters and the current medium conductivity.\nfc = 1/(2πτ)   τ = R·Cm·(2σ_e+σ_i)/(2σ_e·σ_i)\nBelow fc: Vm is at its Schwan maximum. Above fc: Vm falls as 1/f.\nThis is the key frequency to operate below for maximum disruption."
+    "tipDerivedFc":   "<strong>Corner Frequency fc [kHz]</strong>\nComputed from your entered parameters and the current medium conductivity.\nfc = 1/(2πτ)   τ = R·Cm·(2σ_e+σ_i)/(2σ_e·σ_i)\nBelow fc: Vm is at its Schwan maximum. Above fc: Vm falls as 1/f.\nThis is the key frequency to operate below for maximum disruption.",
+    "tipCellType":    "<strong>Cell Type</strong>\nSets the physics mode used for targeting.\n<em>Mammalian</em>: Schwan transmembrane voltage model (IRE / selectivity mode).\n<em>Bacteria</em>: Schwan model + optional acoustic cell-wall resonance (GHz range).\n<em>Virus</em>: Acoustic capsid resonance model (GHz range) + Schwan approximation.\nCell category is also auto-detected from radius: R &lt; 0.1 µm → virus, R &lt; 2 µm → bacteria.",
+    "tipResFreq":     "<strong>Resonant Frequency f_res [GHz]</strong>\nFundamental acoustic resonant frequency of the capsid or cell wall.\nFor rigid-shell model: f_res ≈ v_sound / (2R) — using capsid speed of sound (~1500–3000 m/s).\nE. coli ~10–25 GHz · MRSA ~40–60 GHz · Influenza ~0.7 GHz · SARS-CoV-2 ~0.6 GHz.\nIn practice these frequencies require rectangular waveguide or resonant cavity hardware.",
+    "tipCapsidQ":     "<strong>Quality Factor Q</strong>\nControls the sharpness of the resonance peak: bandwidth = f_res / Q.\nHigher Q → more frequency-selective disruption but tighter targeting bandwidth.\nBacteria: Q ≈ 3–5 (viscoelastic peptidoglycan wall damps resonance).\nVirus: Q ≈ 6–12 (rigid capsid protein shell).",
+    "tipResThr":      "<strong>Resonance Threshold [V/cm]</strong>\nField amplitude at the resonant frequency required to achieve disruption.\nHigh-Q capsids need less field at resonance; low-Q bacteria need more.\nEstimate from literature acoustic disruption experiments. Typical range 500–15000 V/cm."
   }
 }

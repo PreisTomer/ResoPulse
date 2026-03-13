@@ -132,7 +132,7 @@ import {
 } from '@/constants/physics'
 import { SWEEP_TI_CAP } from '@/constants/experimentDefaults'
 
-const N_POINTS = 100   // sweep resolution
+const N_POINTS = 400   // sweep resolution — 400 pts over default 1000 V/cm = 2.5 V/cm step, detects narrow windows
 
 interface SweepPoint {
   x: number    // sweep param value (V/cm or kHz)
