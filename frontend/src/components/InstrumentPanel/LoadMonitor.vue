@@ -437,6 +437,9 @@ export default defineComponent({
   }
 
   &__stat {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
     background: var(--color-surface-2, rgba(255,255,255,0.03));
     border: 1px solid var(--color-border);
     border-radius: var(--radius);

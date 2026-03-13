@@ -23,6 +23,10 @@ export interface UserCellPreset {
   // Thermal
   density:              number           // kg/m³ (default 1000)
   specificHeatCapacity: number           // J/(kg·K) (default 3500)
+  // Acoustic / mechanical resonance (bacteria / virus only)
+  resonantFreqGHz?:       number         // Capsid or cell-wall fundamental resonant frequency [GHz]
+  capsidQ?:               number         // Mechanical quality factor
+  resonantThresholdVcm?:  number         // Field amplitude at resonance for disruption [V/cm]
   createdAt:            number           // Unix ms
 }
 
@@ -92,6 +96,10 @@ export const useUserPresetsStore = defineStore('userPresets', {
         density:              preset.density,
         specificHeatCapacity: preset.specificHeatCapacity,
         amplitude:            0.5,
+        // Optional resonance fields (bacteria / virus only) — omit if undefined
+        ...(preset.resonantFreqGHz       != null && { resonantFreqGHz:      preset.resonantFreqGHz }),
+        ...(preset.capsidQ               != null && { capsidQ:              preset.capsidQ }),
+        ...(preset.resonantThresholdVcm  != null && { resonantThresholdVcm: preset.resonantThresholdVcm }),
       }
     },
 

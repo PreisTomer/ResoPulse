@@ -770,10 +770,10 @@ export default defineComponent({
     &--snap {
       cursor: pointer;
       color: var(--color-amber);
-      opacity: 1;
+      opacity: 0.85;
       transition: opacity 0.15s, color 0.2s;
 
-      &:hover { opacity: 0.75; }
+      &:hover { opacity: 1; }
     }
 
     &--beyond {

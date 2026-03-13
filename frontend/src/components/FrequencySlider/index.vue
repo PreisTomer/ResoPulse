@@ -21,17 +21,12 @@
           {{ $t('slider.safe') }}
         </label>
       </div>
-    </div>
-
-    <!-- Scope legend: which controls affect which cell -->
-    <div
-      class="field-panel__scope-note"
-      v-tip="tipScopeNote"
-    >
-      <span class="field-panel__scope-chip field-panel__scope-chip--both">{{ $t('labels.scopeBoth') }}</span>
-      <span class="field-panel__scope-sep">{{ $t('slider.sharedField') }}</span>
-      <span class="field-panel__scope-chip field-panel__scope-chip--card">{{ $t('slider.cardParams') }}</span>
-      <span class="field-panel__scope-sep">{{ $t('slider.cellSpecific') }}</span>
+      <!-- Scope legend sits below title, above safe toggle, inside the title-row -->
+      <div class="field-panel__scope-note" v-tip="tipScopeNote">
+        <span class="field-panel__scope-chip field-panel__scope-chip--both">{{ $t('labels.scopeBoth') }}</span>
+        <span class="field-panel__scope-sep">·</span>
+        <span class="field-panel__scope-chip field-panel__scope-chip--card">{{ $t('slider.cardParams') }}</span>
+      </div>
     </div>
 
     <!-- Thermal danger banner (IRE/Schwan mode only) -->
@@ -126,7 +121,7 @@
       </div>
     </div>
 
-    <!-- Frequency coupling regime badge -->
+    <!-- Frequency coupling regime badge (slim, right-aligned) -->
     <div
       class="field-panel__regime"
       :class="`field-panel__regime--${store.freqRegime}`"
@@ -460,10 +455,11 @@ export default defineComponent({
   flex: 1;  /* fills __field column height → matches cell card height */
 
   &__title-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.5rem;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto;
+    align-items: start;
+    gap: 0.25rem 0.5rem;
     margin-bottom: 0.1rem;
   }
 
@@ -479,7 +475,8 @@ export default defineComponent({
     display: flex;
     align-items: center;
     gap: 0.4rem;
-    margin-top: -0.45rem;
+    grid-column: 1;
+    grid-row: 2;
     cursor: help;
   }
 
@@ -515,6 +512,9 @@ export default defineComponent({
   &__safe-toggle {
     display: flex;
     gap: 0.3rem;
+    grid-column: 2;
+    grid-row: 1 / 3;
+    align-self: center;
   }
 
   &__safe-lock {
@@ -552,15 +552,19 @@ export default defineComponent({
   &__regime {
     display: inline-flex;
     align-items: center;
-    gap: 0.35rem;
-    font-size: 0.62rem;
+    align-self: flex-end;
+    gap: 0.3rem;
+    font-size: 0.58rem;
     font-family: var(--font-mono);
     text-transform: uppercase;
-    letter-spacing: 0.07em;
-    padding: 0.22rem 0.7rem;
-    border-radius: 20px;
+    letter-spacing: 0.06em;
+    padding: 0.12rem 0.5rem;
+    border-radius: 10px;
     border: 1px solid transparent;
     cursor: default;
+    white-space: nowrap;
+    margin-top: -0.4rem;
+    margin-bottom: -0.25rem;
     transition: color 0.2s, border-color 0.2s, background 0.2s;
 
     &--electrolytic {
@@ -583,8 +587,8 @@ export default defineComponent({
   }
 
   &__regime-dot {
-    width: 5px;
-    height: 5px;
+    width: 4px;
+    height: 4px;
     border-radius: 50%;
     flex-shrink: 0;
   }

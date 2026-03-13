@@ -21,6 +21,9 @@ export const UNIT = {
   MM:  'mm',
   OHM: 'Ω',
   CM2: 'cm²',
+  MJ_PER_KG: 'mJ/kg',
+  J_PER_KG:  'J/kg',
+  KJ_PER_KG: 'kJ/kg',
 } as const
 
 export type Unit = typeof UNIT[keyof typeof UNIT]

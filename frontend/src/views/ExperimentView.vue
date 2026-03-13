@@ -165,6 +165,22 @@
         </div>
       </div>
 
+      <!-- Therapeutic window snap bar — shown whenever a sweep has found an optimal window -->
+      <div v-if="sweepWindow" class="experiment__snap-bar" v-tip="tipSnapBar">
+        <span class="experiment__snap-bar-label">{{ $t('exp.snapBarLabel') }}</span>
+        <span class="experiment__snap-bar-range">
+          {{ sweepWindow.lo.toFixed(0) }}–{{ sweepWindow.hi.toFixed(0) }}
+          {{ sweepWindow.param === 'field' ? $t('sweep.fieldUnit') : $t('sweep.freqUnit') }}
+        </span>
+        <span class="experiment__snap-bar-affects">{{ sweepWindow.param === 'field' ? $t('exp.snapBarSubField') : $t('exp.snapBarSubFreq') }} {{ Math.round((sweepWindow.lo + sweepWindow.hi) / 2) }} {{ sweepWindow.param === 'field' ? $t('sweep.fieldUnit') : $t('sweep.freqUnit') }}</span>
+        <span class="experiment__snap-bar-lysis-warn">{{ $t('exp.snapBarLysisWarn', { cellLabel: snapLysisCellLabel }) }}</span>
+        <button
+          class="experiment__snap-bar-btn"
+          :class="{ 'experiment__snap-bar-btn--confirm': snapConfirming }"
+          @click="snapToWindow"
+        >{{ snapConfirming ? $t('exp.snapBarBtnConfirm', { cellLabel: snapLysisCellLabel }) : $t('exp.snapBarBtn') }}</button>
+      </div>
+
       <!-- Row 2: Chart (full width, collapsible) -->
       <div class="experiment__chart-section">
         <AccordionPanel
@@ -187,23 +203,6 @@
 
       <!-- Row 5 & 6: Research analysis tools — sweep + population (collapsible, full width) -->
       <SweepPanel @window-change="onSweepWindowChange" @open-change="sweepPanelOpen = $event" />
-
-      <!-- Global therapeutic window snap bar — visible only when at least one analysis panel is
-           open (so the user can see the effect), and a therapeutic window has been found. -->
-      <div v-if="sweepWindow && (sweepPanelOpen || populationPanelOpen)" class="experiment__snap-bar" v-tip="tipSnapBar">
-        <span class="experiment__snap-bar-label">{{ $t('exp.snapBarLabel') }}</span>
-        <span class="experiment__snap-bar-range">
-          {{ sweepWindow.lo.toFixed(0) }}–{{ sweepWindow.hi.toFixed(0) }}
-          {{ sweepWindow.param === 'field' ? $t('sweep.fieldUnit') : $t('sweep.freqUnit') }}
-        </span>
-        <span class="experiment__snap-bar-affects">{{ sweepWindow.param === 'field' ? $t('exp.snapBarSubField') : $t('exp.snapBarSubFreq') }} {{ Math.round((sweepWindow.lo + sweepWindow.hi) / 2) }} {{ sweepWindow.param === 'field' ? $t('sweep.fieldUnit') : $t('sweep.freqUnit') }}</span>
-        <span class="experiment__snap-bar-lysis-warn">{{ $t('exp.snapBarLysisWarn', { cellLabel: snapLysisCellLabel }) }}</span>
-        <button
-          class="experiment__snap-bar-btn"
-          :class="{ 'experiment__snap-bar-btn--confirm': snapConfirming }"
-          @click="snapToWindow"
-        >{{ snapConfirming ? $t('exp.snapBarBtnConfirm', { cellLabel: snapLysisCellLabel }) : $t('exp.snapBarBtn') }}</button>
-      </div>
 
       <PopulationPanel @open-change="populationPanelOpen = $event" />
 
@@ -517,10 +516,13 @@ Larger radius raises Vm and lowers the lysis field threshold.`
       const d   = CATEGORY_DEFAULTS[cat]
       // For virus/bacteria: auto-tune frequency to preset's resonant frequency if available
       const t = this.store.target as { resonantFreqGHz?: number; resonantThresholdVcm?: number }
+      // Virus/bacteria: use the preset's resonant frequency if available.
+      // Mammalian: use category default (417 kHz) — do not auto-snap.
       const freqKHz = (cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) && t.resonantFreqGHz
         ? t.resonantFreqGHz * 1e6   // GHz → kHz (1 GHz = 1,000,000 kHz)
         : d.freqKHz
-      // Start at 50% of disruption threshold for intuitive first contact
+      // Start at 50% of disruption threshold for intuitive first contact (virus/bacteria),
+      // or category default field for mammalian (150 V/cm).
       const fieldVcm = (cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) && t.resonantThresholdVcm
         ? t.resonantThresholdVcm * INITIAL_RESONANT_FIELD_FRACTION
         : d.fieldVcm
