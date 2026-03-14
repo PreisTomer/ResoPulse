@@ -11,7 +11,7 @@
         <div class="home__ring home__ring--3"></div>
         <div class="home__ring home__ring--4"></div>
         <div class="home__logo-circle">
-          <img src="/logo.png" alt="BioResonance" />
+          <img src="/logo.png" alt="ResoPulse" />
         </div>
       </div>
 
@@ -23,8 +23,11 @@
 
       <!-- Title -->
       <h1 class="home__title">
-        Bio<span class="home__title-accent">Resonance</span>
+        Reso<span class="home__title-accent">Pulse</span>
       </h1>
+
+      <!-- Subtitle -->
+      <div class="home__subtitle">{{ $t('home.subtitle') }}</div>
 
       <!-- Tagline -->
       <p class="home__tagline">{{ $t('home.taglineMain') }}</p>
@@ -261,7 +264,24 @@ export default defineComponent({
       color: #0a2e58;
       -webkit-text-stroke: 1.5px var(--color-primary);
       paint-order: stroke fill;
-      animation: res-glow 9s ease-in-out infinite;
+      animation: pulse-glow 2.5s ease-in-out infinite;
+    }
+  }
+
+  /* ── Subtitle ────────────────────────────────────────────────── */
+  &__subtitle {
+    @include flex-row(0.55rem);
+    @include mono-upper(0.68rem, 0.15em);
+    justify-content: center;
+    color: var(--color-text-muted);
+
+    &::before,
+    &::after {
+      content: '';
+      width: 36px;
+      height: 1px;
+      background: var(--color-border);
+      flex-shrink: 0;
     }
   }
 
@@ -679,8 +699,8 @@ export default defineComponent({
 
 @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
-@keyframes res-glow {
+@keyframes pulse-glow {
   0%, 100% { text-shadow: 0 0 22px rgba(0, 212, 255, 0.2); }
-  50%       { text-shadow: 0 0 44px rgba(0, 212, 255, 0.52); }
+  50%       { text-shadow: 0 0 50px rgba(0, 212, 255, 0.65); }
 }
 </style>

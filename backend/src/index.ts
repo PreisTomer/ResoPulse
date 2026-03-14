@@ -16,7 +16,7 @@ app.use(cors({ origin: ALLOWED_ORIGINS }))
 app.use(express.json({ limit: '500mb' }))
 
 app.get('/health', (_req, res) => {
-  res.json({ status: 'ok', service: 'bioresonance-api' })
+  res.json({ status: 'ok', service: 'resopulse-api' })
 })
 
 // Wrap Express in an http.Server so socket.io can attach
@@ -24,5 +24,5 @@ const httpServer = http.createServer(app)
 setupSocketServer(httpServer)
 
 httpServer.listen(PORT, () => {
-  console.log(`BioResonance API + Socket running on http://localhost:${PORT}`)
+  console.log(`ResoPulse API + Socket running on http://localhost:${PORT}`)
 })

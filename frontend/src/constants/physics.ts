@@ -1,5 +1,5 @@
 /**
- * Shared physics and thermal constants for the BioResonance simulation engine.
+ * Shared physics and thermal constants for the ResoPulse simulation engine.
  *
  * All values are sourced from peer-reviewed biophysics literature and are
  * the single source of truth used by cellStore, physics utils, and SweepPanel.

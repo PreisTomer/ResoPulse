@@ -1,4 +1,4 @@
-# BioResonance — Claude Code Instructions
+# ResoPulse — Claude Code Instructions
 
 These rules apply to **every code change** in this project. They are not suggestions.
 

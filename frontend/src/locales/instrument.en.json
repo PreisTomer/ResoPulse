@@ -98,7 +98,7 @@
       "schema": "Packet Schema",
       "schemaNote": "Send JSON to the socket event 'impedanceReading' from your instrument bridge. All numeric fields use SI units.",
       "tipMode": "<strong>Sensor Mode</strong>\n<em>Simulated</em> — impedance is computed from the ion-release physics model based on the current disruption ratio.\n<em>Live Hardware</em> — the simulated value is replaced by Z_real from the last instrument packet.\nSwitch to Live Hardware only after confirming your instrument bridge is sending readings.",
-      "tipSocket": "<strong>Socket Event: impedanceReading</strong>\nYour instrument bridge should emit this event to the BioResonance backend socket.\nThe backend validates and re-broadcasts to all connected UI clients.\n\nMinimal schema:\n  zReal: number   (Ω — required)\n  zImag: number   (Ω — required)\n  freqHz: number  (Hz — required)\n  timestamp: number  (Unix ms — required)\n  conductivity?: number  (S/m — optional)"
+      "tipSocket": "<strong>Socket Event: impedanceReading</strong>\nYour instrument bridge should emit this event to the ResoPulse backend socket.\nThe backend validates and re-broadcasts to all connected UI clients.\n\nMinimal schema:\n  zReal: number   (Ω — required)\n  zImag: number   (Ω — required)\n  freqHz: number  (Hz — required)\n  timestamp: number  (Unix ms — required)\n  conductivity?: number  (S/m — optional)"
     },
 
     "trend": {

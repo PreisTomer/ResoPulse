@@ -7,7 +7,7 @@
           <img src="/logo.png" :alt="$t('hero.title')" />
         </div>
         <div class="nav-bar__brand-text">
-          <span class="nav-bar__brand-name">Bio<span class="nav-bar__brand-resonance">Resonance</span></span>
+          <span class="nav-bar__brand-name">Reso<span class="nav-bar__brand-pulse">Pulse</span></span>
           <span class="nav-bar__brand-tag">{{ $t('nav.researchPlatform') }}</span>
         </div>
       </RouterLink>
@@ -145,17 +145,17 @@ export default defineComponent({
       line-height: 1;
     }
 
-    &-resonance {
+    &-pulse {
       color: #0a2e58;
       -webkit-text-stroke: 0.8px var(--color-primary);
       paint-order: stroke fill;
+      animation: brand-pulse 2.5s ease-in-out infinite;
     }
 
     &-tag {
-      font-size: 0.68rem;
+      font-size: 0.6rem;
       color: var(--color-text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
+      letter-spacing: 0.02em;
     }
   }
 
@@ -279,6 +279,7 @@ export default defineComponent({
 }
 
 @keyframes nav-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+@keyframes brand-pulse { 0%, 100% { text-shadow: 0 0 8px rgba(0, 212, 255, 0.15); } 50% { text-shadow: 0 0 18px rgba(0, 212, 255, 0.5); } }
 
 /* ── Mobile / tablet navigation (hamburger at ≤ 960px) ──────────────────── */
 @media (max-width: 960px) {

@@ -1,6 +1,6 @@
 {
   "nav": {
-    "researchPlatform": "Research Platform",
+    "researchPlatform": "Virtual Biophysics Engine",
     "home": "Home",
     "experiment": "Experiment Lab",
     "dataSets": "Data Sets",
@@ -20,7 +20,7 @@
   },
   "hero": {
     "eyebrow": "Computational Bioelectrics · Electroporation · Capsid Disruption",
-    "title": "BioResonance",
+    "title": "ResoPulse",
     "titleAccent": "Research Platform",
     "description": "A precision simulator for bioelectric field research. Models transmembrane potential via the Schwan equation, SAR-based thermal effects, pulse-width-dependent membrane charging, and frequency-selective disruption of viral capsids and bacterial cell walls.",
     "loadDataSet": "Load Cell Library",

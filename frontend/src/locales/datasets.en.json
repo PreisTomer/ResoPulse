@@ -160,7 +160,7 @@
 
     "fieldGeo": {
       "sectionTitle": "Field Geometry Assumptions",
-      "geoParagraph": "The Schwan model assumes a <strong>uniform, quasi-static electric field</strong> applied to a suspension of non-interacting spherical cells at low volume fraction. In clinical TTField devices (Optune®), 4 electrode arrays generate a rotating field at 100–300 kHz with amplitudes of 1–3 V/cm at depth; the field map is non-uniform and computed via FEM models of head conductivity. The BioResonance simulator applies the uniform-field Schwan equation and is appropriate for well-mixed in vitro geometries (parallel-plate or four-electrode chambers).",
+      "geoParagraph": "The Schwan model assumes a <strong>uniform, quasi-static electric field</strong> applied to a suspension of non-interacting spherical cells at low volume fraction. In clinical TTField devices (Optune®), 4 electrode arrays generate a rotating field at 100–300 kHz with amplitudes of 1–3 V/cm at depth; the field map is non-uniform and computed via FEM models of head conductivity. The ResoPulse simulator applies the uniform-field Schwan equation and is appropriate for well-mixed in vitro geometries (parallel-plate or four-electrode chambers).",
       "assumption1": "Single-shell (Schwan) or double-shell (nuclear envelope) cell model",
       "assumption2": "Uniform applied field (E constant in space)",
       "assumption3": "Dilute suspension — cell-cell interactions neglected",
@@ -173,7 +173,7 @@
 
     "thresholds": {
       "sectionTitle": "Simulation Thresholds &amp; Cell Classification",
-      "sectionTag": "Constants used by the BioResonance simulation engine",
+      "sectionTag": "Constants used by the ResoPulse simulation engine",
       "drTitle": "Disruption Ratio (DR) States",
       "drColRange": "DR range",
       "drColState": "State",

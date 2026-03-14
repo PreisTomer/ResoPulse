@@ -1,7 +1,7 @@
 {
-  "name": "bioresonance-backend",
+  "name": "resopulse-backend",
   "version": "0.1.0",
-  "description": "BioResonance API server — handles large cellular frequency data sets",
+  "description": "ResoPulse API server — biophysical field modelling backend",
   "main": "dist/index.js",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
