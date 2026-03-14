@@ -128,6 +128,8 @@
               <div class="protocol__eq-sub" v-html="$t('protocol.physics.disruption.eqSub3')"></div>
               <div class="protocol__eq-sub" v-html="$t('protocol.physics.disruption.eqSub4')"></div>
               <div class="protocol__eq-sub" v-html="$t('protocol.physics.disruption.eqSub5')"></div>
+              <div class="protocol__eq-sub" v-html="$t('protocol.physics.disruption.eqSub6')"></div>
+              <div class="protocol__eq-sub" v-html="$t('protocol.physics.disruption.eqSub7')"></div>
               <div class="protocol__eq-note" v-html="$t('protocol.physics.disruption.eqNote')"></div>
             </div>
             <p class="protocol__body-text" v-html="$t('protocol.physics.disruption.p2')"></p>
