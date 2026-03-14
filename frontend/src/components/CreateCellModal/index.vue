@@ -434,6 +434,8 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
+@use '../../styles/mixins' as *;
+
 .modal-fade-enter-active,
 .modal-fade-leave-active { transition: opacity 0.18s ease; }
 .modal-fade-enter-from,
@@ -466,9 +468,7 @@ export default defineComponent({
   flex-direction: column;
 
   &__header {
-    display:        flex;
-    align-items:    center;
-    justify-content: space-between;
+    @include flex-between();
     padding:        1rem 1.25rem 0.5rem;
     border-bottom:  1px solid var(--color-border, rgba(255,255,255,0.1));
   }
@@ -572,9 +572,7 @@ export default defineComponent({
   }
 
   &__tip-btn {
-    display:       inline-flex;
-    align-items:   center;
-    justify-content: center;
+    @include inline-flex-center();
     width:         14px;
     height:        14px;
     border-radius: 50%;

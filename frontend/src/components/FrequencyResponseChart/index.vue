@@ -913,11 +913,8 @@ export default defineComponent({
   position: relative;
 
   &__header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+    @include flex-between(1rem);
     padding: 0.6rem 0.85rem 0.2rem;
-    gap: 1rem;
     flex-wrap: wrap;
   }
 

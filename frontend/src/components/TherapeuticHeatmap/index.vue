@@ -784,10 +784,10 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
+@use '../../styles/mixins' as *;
+
 .hmap {
-  background:    var(--color-surface);
-  border:        1px solid var(--color-border);
-  border-radius: var(--radius);
+  @include surface-card(var(--radius));
   overflow:      hidden;
 
   &__body {

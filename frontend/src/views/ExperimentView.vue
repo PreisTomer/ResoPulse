@@ -611,10 +611,7 @@ Larger radius raises Vm and lowers the lysis field threshold.`
 
   /* ── Combined header bar ─────────────────────────────────────── */
   &__header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1.5rem;  /* justify-content: space-between prevents flex-row() use here */
+    @include flex-between(1.5rem);
     padding: 0.5rem 1.75rem;
     border-bottom: 1px solid var(--color-border);
     background: var(--color-surface);
@@ -870,14 +867,11 @@ Larger radius raises Vm and lowers the lysis field threshold.`
 
   /* ── Preset pickers ──────────────────────────────────────────── */
   &__cell-picker {
+    @include surface-card(6px, 0.75rem);
     position: absolute;
     top: calc(100% + 2px);
     left: 0;
     z-index: 200;
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: 6px;
-    padding: 0.75rem;
     min-width: 280px;
     max-width: 380px;
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
@@ -1082,9 +1076,7 @@ Larger radius raises Vm and lowers the lysis field threshold.`
 
   /* ── Chart section (collapsible) ─────────────────────────────── */
   &__chart-section {
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius);
+    @include surface-card(var(--radius));
     overflow: hidden;
   }
 

@@ -124,6 +124,8 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
+@use '../../styles/mixins' as *;
+
 .hw-input {
   display: flex;
   flex-direction: column;
@@ -221,9 +223,7 @@ export default defineComponent({
   }
 
   &__reading-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    @include flex-between();
     font-size: 0.75rem;
   }
 

@@ -416,6 +416,8 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
+@use '../../styles/mixins' as *;
+
 @keyframes bar-flash {
   from { opacity: 1; }
   to   { opacity: 0.5; }
@@ -620,9 +622,7 @@ export default defineComponent({
   }
 
   &__nuc-sel-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    @include flex-between();
     padding-top: 0.15rem;
     border-top: 1px solid rgba(167, 139, 250, 0.12);
     margin-top: 0.05rem;
@@ -643,10 +643,7 @@ export default defineComponent({
 
   /* ── Random-orientation lysis fraction ─────────────────────── */
   &__orient-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.4rem;
+    @include flex-between(0.4rem);
     padding: 0.25rem 0.5rem;
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid var(--color-border);

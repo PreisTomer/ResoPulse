@@ -131,9 +131,7 @@ export default defineComponent({
   }
 
   &__biostim-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+    @include flex-between();
     margin-bottom: 0.4rem;
   }
 

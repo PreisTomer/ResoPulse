@@ -533,9 +533,7 @@ export default defineComponent({
 @use '../../styles/mixins' as *;
 
 .sweep-panel {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  @include surface-card(var(--radius-lg));
   overflow: hidden;
 
   &__body {

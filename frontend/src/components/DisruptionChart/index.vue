@@ -325,16 +325,13 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
+@use '../../styles/mixins' as *;
+
 .dr-chart {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  padding: 0.75rem 0.75rem 0.5rem;
+  @include surface-card(8px, 0.75rem 0.75rem 0.5rem);
 
   &__header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+    @include flex-between();
     margin-bottom: 0.4rem;
   }
 
