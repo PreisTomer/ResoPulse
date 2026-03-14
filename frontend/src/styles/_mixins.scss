@@ -71,3 +71,138 @@ $_cell-states: (
     }
   }
 }
+
+// ── Accordion header ────────────────────────────────────────────────────────
+// Shared button for section collapse toggles (Protocol, Advanced).
+// Usage: &__accordion { @include accordion-header(); }
+@mixin accordion-header() {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.3rem 0;
+  background: none;
+  border: none;
+  border-top: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  font-size: 0.6rem;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  text-align: left;
+  transition: color 0.15s;
+  margin-top: 0.1rem;
+  &:hover { color: var(--color-text); }
+}
+
+// ── Field row grid ──────────────────────────────────────────────────────────
+// Three-column grid: label | slider track | readout.
+// Usage: @include field-row-grid(7.5rem, 8.5rem);
+@mixin field-row-grid($label: 7.5rem, $readout: 8.5rem) {
+  display: grid;
+  grid-template-columns: $label 1fr $readout;
+  align-items: center;
+  gap: 0.85rem;
+  min-height: 2.75rem;
+}
+
+// ── Row label ───────────────────────────────────────────────────────────────
+// Mono uppercase label in the first grid column of every slider row.
+// Usage: @include row-label();
+@mixin row-label() {
+  font-size: 0.62rem;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+// ── Slider track ────────────────────────────────────────────────────────────
+// Base <input type="range"> appearance reset.
+// Usage: @include slider-track();
+@mixin slider-track() {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--color-border);
+  outline: none;
+}
+
+// ── Slider thumb ────────────────────────────────────────────────────────────
+// Standard webkit + moz thumb. Optional $bg and $shadow overrides.
+// Usage: @include slider-thumb();
+@mixin slider-thumb($bg: var(--color-text-heading), $shadow: rgba(255, 255, 255, 0.2)) {
+  &::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 15px; height: 15px;
+    border-radius: 50%;
+    background: $bg;
+    border: 2px solid var(--color-surface);
+    box-shadow: 0 0 5px $shadow;
+    cursor: pointer;
+    transition: box-shadow 0.15s;
+    &:hover { box-shadow: 0 0 9px rgba(255, 255, 255, 0.45); }
+  }
+  &::-moz-range-thumb {
+    width: 15px; height: 15px;
+    border-radius: 50%;
+    background: $bg;
+    border: 2px solid var(--color-surface);
+    cursor: pointer;
+  }
+}
+
+// ── Readout step button ─────────────────────────────────────────────────────
+// The − / + increment buttons shown beneath the slider readout value.
+// Usage: @include readout-step-btn();
+@mixin readout-step-btn() {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.1rem;
+  height: 0.9rem;
+  padding: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: var(--color-text-muted);
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+  cursor: pointer;
+  transition: color 0.1s, border-color 0.1s, background 0.1s;
+  &:hover {
+    color: var(--color-primary);
+    border-color: var(--color-primary);
+    background: rgba(0, 212, 255, 0.08);
+  }
+}
+
+// ── Readout inline input ────────────────────────────────────────────────────
+// Click-to-edit <input type="number"> that overlays the readout value.
+// Usage: @include readout-inline-input();
+@mixin readout-inline-input() {
+  font-size: 1rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: var(--color-text-heading);
+  letter-spacing: -0.02em;
+  line-height: 1;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--color-primary);
+  outline: none;
+  text-align: right;
+  padding: 0;
+  width: 5rem;
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button { -webkit-appearance: none; appearance: none; }
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
