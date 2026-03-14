@@ -1112,9 +1112,7 @@ export default defineComponent({
   }
 
   &__osc-divider {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    @include flex-between();
     padding: 0.2rem 0.6rem;
     border-top: 1px solid var(--color-border);
     border-bottom: 1px solid var(--color-border);

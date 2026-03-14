@@ -66,9 +66,7 @@ export default defineComponent({
 .accordion-panel {
   /* ── Toggle button ──────────────────────────────────────────── */
   &__toggle {
-    @include flex-row(0);
-    justify-content: space-between;
-    align-items: center;
+    @include flex-between();
     width: 100%;
     background: transparent;
     border: none;

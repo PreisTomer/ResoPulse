@@ -102,6 +102,8 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
+@use '../../styles/mixins' as *;
+
 .field-corrector {
   display: flex;
   flex-direction: column;
@@ -196,9 +198,7 @@ export default defineComponent({
   }
 
   &__factor-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    @include flex-between();
     font-size: 0.75rem;
     padding: 0.4rem 0;
     border-top: 1px solid var(--color-border);

@@ -38,11 +38,10 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
+@use '../styles/mixins' as *;
+
 .stat-card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  padding: 1rem 1.1rem;
+  @include surface-card(var(--radius), 1rem 1.1rem);
   display: flex;
   flex-direction: column;
   gap: 0.35rem;

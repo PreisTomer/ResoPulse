@@ -118,6 +118,8 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
+@use '../styles/mixins' as *;
+
 .instrument {
   min-height: 100vh;
   background: var(--color-bg);
@@ -177,14 +179,11 @@ export default defineComponent({
   // ── Physics callout ──────────────────────────────────────────────────────────
 
   &__callout {
+    @include surface-card(var(--radius), 1.1rem 1.4rem);
     display: flex;
     align-items: center;
     gap: 1rem;
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
     border-left: 3px solid var(--color-primary);
-    border-radius: var(--radius);
-    padding: 1.1rem 1.4rem;
     flex-wrap: wrap;
     row-gap: 0.75rem;
 
@@ -227,11 +226,9 @@ export default defineComponent({
   // ── Context strip ─────────────────────────────────────────────────────────────
 
   &__context-strip {
+    @include surface-card(var(--radius));
     display: flex;
     gap: 0;
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius);
     overflow: hidden;
     flex-wrap: wrap;
   }

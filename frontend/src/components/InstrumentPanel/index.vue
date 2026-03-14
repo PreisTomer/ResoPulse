@@ -40,6 +40,8 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
+@use '../../styles/mixins' as *;
+
 .inst-panel {
   display: flex;
   flex-direction: column;
@@ -57,10 +59,7 @@ export default defineComponent({
   }
 
   &__card {
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg, var(--radius));
-    padding: 1.25rem;
+    @include surface-card(var(--radius-lg, var(--radius)), 1.25rem);
 
     &--trend {
       padding: 1.25rem;

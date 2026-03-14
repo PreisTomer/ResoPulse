@@ -277,19 +277,19 @@
 
   "home": {
     "eyebrow": "Computational Bioelectrics · Electroporation · Capsid Disruption",
-
-    "tagline": "A precision simulator for bioelectric field research. Models transmembrane potential via the Schwan equation, SAR-based thermal effects, pulse-width-dependent membrane charging, and frequency-selective disruption of viral capsids and bacterial cell walls.",
+    "tagline": "Precision simulation for computational bioelectrics and selective electroporation research.",
 
     "btnPrimary": "Open Experiment Lab",
     "btnGhost": "View Research Protocol",
 
-    "capVm":          "Schwan Vm Modelling",
+    "capVm":          "Schwan Vm Model",
     "capSelectivity": "Size-Selective TI",
     "capPulse":       "Pulsed IRE / nsEP",
     "capSweep":       "Frequency Sweep",
     "capPop":         "Population Analysis",
     "capImp":         "Impedance Tracking",
     "capBio":         "Biomodulation Scoring",
+    "capDr":          "DR(f) Analysis",
 
     "wf1Num":   "01",
     "wf1Label": "Configure Phenotypes",

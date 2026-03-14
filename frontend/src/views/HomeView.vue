@@ -27,13 +27,20 @@
       </h1>
 
       <!-- Tagline -->
-      <p class="home__tagline">{{ $t('home.tagline') }}</p>
+      <p class="home__tagline">{{ $t('home.taglineMain') }}</p>
 
-      <!-- Capability pills -->
+      <!-- Capability pills — two explicit rows of 4; no flex-wrap required -->
       <div class="home__caps">
-        <span v-for="pill in capPills" :key="pill.key" class="home__cap">
-          {{ pill.icon }} {{ $t(`home.${pill.key}`) }}
-        </span>
+        <div class="home__caps-row">
+          <span v-for="pill in capPills.slice(0, 4)" :key="pill.key" class="home__cap">
+            {{ pill.icon }} {{ $t(`home.${pill.key}`) }}
+          </span>
+        </div>
+        <div class="home__caps-row">
+          <span v-for="pill in capPills.slice(4)" :key="pill.key" class="home__cap">
+            {{ pill.icon }} {{ $t(`home.${pill.key}`) }}
+          </span>
+        </div>
       </div>
 
       <!-- CTA -->
@@ -121,6 +128,7 @@ export default defineComponent({
         { icon: ICON.GRID,        key: 'capPop' },
         { icon: ICON.FLASK,       key: 'capImp' },
         { icon: ICON.NOURISH,     key: 'capBio' },
+        { icon: ICON.LYSIS_BOLT,  key: 'capDr' },
       ],
 
       workflowSteps: ['wf1', 'wf2', 'wf3'],
@@ -257,26 +265,39 @@ export default defineComponent({
     }
   }
 
+  /* ── Tagline ─────────────────────────────────────────────────── */
   &__tagline {
     font-size: 1rem;
-    color: var(--color-text-muted);
-    line-height: 1.75;
-    max-width: 600px;
+    font-weight: 400;
+    color: var(--color-text);
+    line-height: 1.65;
+    text-align: center;
+    max-width: 620px;
     margin: 0;
   }
 
-  /* ── Capability pills ────────────────────────────────────────── */
+  /* ── Capability pills — two explicit rows of 4 ───────────────── */
   &__caps {
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  &__caps-row {
+    display: flex;
+    gap: 0.5rem;
     justify-content: center;
-    gap: 0.55rem;
-    max-width: 720px;
+    flex-wrap: nowrap;
+
+    @media (max-width: 520px) {
+      flex-wrap: wrap;
+    }
   }
 
   &__cap {
-    @include mono-upper(0.67rem, 0.07em);
-    padding: 0.25rem 0.65rem;
+    @include mono-upper(0.65rem, 0.06em);
+    padding: 0.22rem 0.6rem;
     border: 1px solid var(--color-border);
     border-radius: 20px;
     color: var(--color-text-muted);
@@ -294,6 +315,7 @@ export default defineComponent({
   }
 
   &__btn {
+    @include flex-row(0.35rem);
     padding: 0.75rem 1.5rem;
     border-radius: var(--radius);
     font-size: 0.95rem;
@@ -302,10 +324,6 @@ export default defineComponent({
     transition: all 0.18s;
     cursor: pointer;
     border: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.35rem;
 
     &--primary {
       background-color: var(--color-primary);
@@ -337,16 +355,13 @@ export default defineComponent({
 
   /* ── 3-step workflow ─────────────────────────────────────────── */
   &__workflow {
+    @include surface-card(var(--radius), 1.2rem 1.4rem);
     display: flex;
     align-items: flex-start;
     justify-content: center;
     gap: 0.6rem;
     width: 100%;
     max-width: 820px;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius);
-    background: var(--color-surface);
-    padding: 1.2rem 1.4rem;
   }
 
   &__wf-step {
@@ -401,10 +416,7 @@ export default defineComponent({
   }
 
   &__feature-card {
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius);
-    padding: 1rem 1.1rem;
+    @include surface-card(var(--radius), 1rem 1.1rem);
     text-decoration: none;
     display: flex;
     flex-direction: column;

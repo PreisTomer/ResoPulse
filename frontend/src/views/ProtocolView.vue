@@ -561,14 +561,11 @@ export default defineComponent({
 
   &__toc {
     @include flex-col(0.05rem);
+    @include surface-card(var(--radius), 1.25rem);
     position: sticky;
     top: 5rem;
     max-height: calc(100vh - 6rem);
     overflow-y: auto;
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius);
-    padding: 1.25rem;
     scrollbar-width: thin;
     scrollbar-color: var(--color-border) transparent;
   }
@@ -781,13 +778,10 @@ export default defineComponent({
   }
 
   &__step {
+    @include surface-card(var(--radius), 0.75rem 1rem);
     display: flex;
     gap: 1rem;
     align-items: flex-start;
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius);
-    padding: 0.75rem 1rem;
     transition: border-color 0.15s;
 
     &:hover { border-color: rgba(0, 212, 255, 0.25); }

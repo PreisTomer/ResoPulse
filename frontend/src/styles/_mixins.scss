@@ -13,6 +13,31 @@
   gap: $gap;
 }
 
+// Usage: @include flex-between(0.5rem);
+@mixin flex-between($gap: 0) {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  @if $gap != 0 { gap: $gap; }
+}
+
+// Usage: @include inline-flex-center();
+@mixin inline-flex-center() {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+// ── Surface card ────────────────────────────────────────────────────────────────
+// Shared bg + border + radius base for all panel cards.
+// Usage: @include surface-card();  or  @include surface-card(var(--radius-lg), 1.25rem);
+@mixin surface-card($radius: var(--radius), $padding: null) {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: $radius;
+  @if $padding { padding: $padding; }
+}
+
 // ── Monospace label ────────────────────────────────────────────────────────────
 // Combines font-mono + uppercase + letter-spacing — the most repeated 3-property
 // cluster in the codebase (127+ occurrences of --font-mono alone).

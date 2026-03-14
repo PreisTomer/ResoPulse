@@ -622,9 +622,7 @@ export default defineComponent({
 
   /* ── Card ─────────────────────────────────────────────────────────────────── */
   &__card {
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
+    @include surface-card(var(--radius-lg));
     overflow: hidden;
 
     &--flat .datasets__geo-body {
@@ -763,12 +761,9 @@ export default defineComponent({
   }
 
   &__rp-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    @include flex-between(0.5rem);
     font-size: 0.8rem;
     color: var(--color-text-muted);
-    gap: 0.5rem;
   }
 
   &__window-ratio {

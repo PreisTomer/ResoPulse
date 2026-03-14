@@ -439,16 +439,12 @@ export default defineComponent({
 
   /* ── Log card ─────────────────────────────────────────────────────────────── */
   &__log-card {
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
+    @include surface-card(var(--radius-lg));
     overflow: hidden;
   }
 
   &__log-card-hdr {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+    @include flex-between();
     padding: 1rem 1.5rem;
     border-bottom: 1px solid var(--color-border);
   }

@@ -124,6 +124,8 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
+@use '../../styles/mixins' as *;
+
 .imp-meter {
   display: flex;
   flex-direction: column;
@@ -212,9 +214,7 @@ export default defineComponent({
   }
 
   &__drift-label {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    @include flex-between();
     font-size: 0.75rem;
     color: var(--color-text-muted);
     margin-bottom: 0.35rem;
