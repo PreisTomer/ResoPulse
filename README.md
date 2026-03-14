@@ -1,6 +1,6 @@
-# BioResonance: Biophysical Control & Digital Twin Interface
+# ResoPulse — Virtual Biophysics Engine
 
-### *Precision Modeling for Targeted Electro-Physiology and Mechanical Lysis*
+### *Precision Simulation for Selective Electroporation & Bioelectric Field Research*
 
 **⚠️ CONFIDENTIAL & PROPRIETARY** *This repository is for private research and evaluation only. All rights reserved.*
 
@@ -8,66 +8,67 @@
 
 ## 🧬 Executive Summary
 
-**BioResonance** is a high-fidelity **Digital Twin** interface designed to revolutionize the planning and execution of frequency-specific cellular experiments. By creating a reactive virtual environment, the platform allows researchers to visualize and predict cellular responses to electromagnetic stress *before* moving to the wet lab.
+**ResoPulse** is a high-fidelity **Virtual Biophysics Engine** for planning and executing frequency-selective cellular electroporation experiments. By simulating the full physics in a reactive virtual environment, researchers can identify the exact field parameters that lyse a target cell while leaving healthy tissue below threshold — before touching a cuvette.
 
-The platform functions as a "Kill Zone" finder, identifying the exact frequency/amplitude intersections where target pathogens are disrupted while healthy tissue remains homeostatic.
+The platform computes the transmembrane potential, SAR thermal budget, pulse-width membrane charging, and acoustic capsid disruption ratio in real time, and maps the therapeutic window across the full frequency spectrum.
 
 ---
 
 ## 🔬 Core Physical Frameworks
 
-The engine operates in two distinct physical regimes to calculate stress thresholds:
+### 1. Electroporation Regime (Mammalian Oncology)
+* **Model:** Schwan single-shell & Kotnik-Miklavcic double-shell.
+* **Logic:** Frequency-dependent membrane charging (Vm) — identifies frequencies where cancer cells reach lysis threshold before healthy cells.
+* **Selectivity:** Therapeutic window where larger/higher-ε targets reach DR ≥ 85% while healthy baseline stays DR < 50%.
 
-### 1. The Electroporation Regime (Mammalian Oncology)
-* **Models:** Schwan Single-Shell & Kotnik-Miklavcic Double-Shell analysis.
-* **Logic:** Calculates frequency-dependent membrane charging ($V_m$) to identify frequencies that bypass the plasma membrane to target the nucleus directly.
-* **Selectivity:** Automatically identifies the **Therapeutic Window** where larger cancer cells reach lysis thresholds ($0.65\text{--}0.85\text{V}$) before healthy cells ($>1.0\text{V}$).
+### 2. Acoustic Resonance Regime (Virology & Bacteriology)
+* **Model:** Lorentzian harmonic excitation — capsid / cell-wall mechanical disruption.
+* **Logic:** Frequency-selective disruption of sub-micron pathogens via protein shell or peptidoglycan resonance.
 
-### 2. The Resonance Regime (Virology & Bacteriology)
-* **Models:** Lorentzian Harmonic Excitation.
-* **Logic:** Models the mechanical "ringing" and fracture of sub-micron pathogens (e.g., SARS-CoV-2 at ~10 GHz) using acoustic resonance theory.
-
----
-
-## 🚀 Key Modules & Capabilities
-
-### 🧪 [The Experiment Lab](https://bio-resonance.vercel.app/experiment)
-* **Real-Time Visualizer:** Observe membrane deformation and resonant "ringing" effects driven by the physics engine.
-* **Predictive Heatmap:** A 2D "Live Planning Tool" mapping **Freq × Field Strength**. It visualizes the "Kill Zone" in real-time, allowing for instant sensitivity analysis of experimental parameters.
-* **Stochastic Lysis Modeling:** Predicts the probability of cell death within a population based on time-on-target and voltage fluctuations.
-
-### 🎛️ [Instrument Control Suite](https://bio-resonance.vercel.app/instrument)
-* **Hardware Bridge:** Architected for WebUSB/Serial connection to drive physical function generators.
-* **Signal Modulation:** Real-time control of Sine, Square (nsEP), and Sawtooth waveforms.
-* **Automated Sweeps:** Programmatic frequency scanning to locate "Acoustic Peaks" in unknown biological samples.
-
-### 📊 [Dosimetry & Safety](https://bio-resonance.vercel.app/protocol)
-* **SAR Monitoring:** Real-time calculation of **Specific Absorption Rate** to prevent hyperthermia.
-* **Data Logging:** Automated export of session logs (CSV) including cumulative energy fluence ($J/kg$).
+### 3. Sub-threshold Biomodulation
+* **Model:** PIEZO1 Ca²⁺ / NO stimulation index at DR < 50%.
+* **Logic:** Nourishing / stimulation window for membrane activation without electroporation.
 
 ---
 
-## 🛠 Tech Stack & Architecture
+## 🚀 Key Modules
 
-* **Frontend:** Vue.js 3 / Vite (High-performance reactivity).
-* **Physics Engine:** Custom TypeScript implementation of Maxwell's Equations for bio-matter.
-* **Visualization:** D3.js (Cell Dynamics) & Chart.js (Frequency Analysis).
-* **Latency:** <16ms UI response time for live "Instrument" feel.
+### 🧪 Experiment Lab
+Real-time Schwan Vm, SAR thermal model, pulsed-IRE pulse-envelope factor, disruption ratio chart DR(f), cell population distribution, and live animated cell canvas — all in one workspace.
+
+### 🎛️ Instrument Panel
+Cuvette impedance tracking, Z-drift detection, corrected generator voltage, hardware bridge (Socket.IO), and sonification via Web Audio API.
+
+### 📊 Session Reports
+Full experiment log with cumulative absorbed dose (J/kg), selectivity timeline, and one-click CSV + Materials & Methods export.
+
+### 📚 Cell Library
+10 biologically-grounded presets: reference hepatocytes, 4 cancer lines, E. coli, MRSA, Influenza A, SARS-CoV-2 — with computed Cm, τ, and fc.
+
+### 📖 Research Protocol
+Schwan equation derivation, SAR model, pulse-envelope factor (Weaver & Chizmadzhev), electroporation thresholds, and 8 peer-reviewed literature references.
 
 ---
 
-## ⚖️ Legal Notice & Disclaimer
+## 🛠 Tech Stack
 
-### **Proprietary Rights**
-This software, including its specific implementation of biophysical models, UI/UX architecture, and integrated "Cell Signature" database, is the exclusive intellectual property of the owner. Unauthorized copying, distribution, or reverse engineering is strictly prohibited.
-
-### **Scientific Disclaimer**
-BioResonance is a computational simulation tool intended for **In-Vitro Laboratory Research only**. It is not a medical device. The developer assumes no liability for experimental outcomes or laboratory decisions based on these simulations.
+* **Frontend:** Vue 3 (Options API) · Pinia · TypeScript · Vite · D3.js v7 · vue-i18n
+* **Backend:** Node.js · Express · Socket.IO
+* **Physics:** Custom TypeScript — Schwan equation, Pennes bioheat, Lorentzian resonance, nsEP pulse envelope
+* **Deployment:** Vercel (frontend) · Railway (backend)
 
 ---
 
 ## 🏁 Installation
 
 ```bash
-npm install
-npm run dev
+npm run install:all
+npm run frontend    # Vite dev server
+npm run backend     # ts-node-dev
+```
+
+---
+
+## ⚖️ Legal Notice & Disclaimer
+
+ResoPulse is a computational simulation tool intended for **in-vitro laboratory research only**. It is not a medical device. All biophysical parameters are approximations derived from the bioelectromagnetics literature. The developer assumes no liability for experimental outcomes or laboratory decisions based on these simulations.

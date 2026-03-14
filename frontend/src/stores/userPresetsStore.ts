@@ -32,7 +32,7 @@ export interface UserCellPreset {
 
 // ── Persistence helpers ────────────────────────────────────────────────────────
 
-const STORAGE_KEY = 'bioresonance_user_presets_v1'
+const STORAGE_KEY = 'resopulse_user_presets_v1'
 
 function load(): UserCellPreset[] {
   try {

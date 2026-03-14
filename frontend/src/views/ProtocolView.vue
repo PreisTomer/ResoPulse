@@ -608,12 +608,10 @@ export default defineComponent({
   }
 
   /* ── Document ──────────────────────────────────────────── */
-  &__doc { @include flex-col(0rem); }
+  &__doc { @include flex-col(2.5rem); }
 
   &__section {
     @include flex-col(1rem);
-    padding-bottom: 2.5rem;
-    margin-bottom: 2.5rem;
     // Offset scroll-to-anchor by sticky navbar height so headings aren't hidden
     scroll-margin-top: 5rem;
   }
@@ -631,8 +629,7 @@ export default defineComponent({
     font-size: 0.95rem;
     font-weight: 600;
     color: var(--color-text-heading);
-    margin: 0.5rem 0 0;
-    padding-top: 1rem;
+    margin: 0;
   }
 
   &__body-text {

@@ -503,13 +503,13 @@ export default defineComponent({
     exportCSV() {
       const { store } = this
       const meta = [
-        `# BioResonance — ${this.sweepParam === 'field' ? 'Field' : 'Frequency'} Sweep Export`,
+        `# ResoPulse — ${this.sweepParam === 'field' ? 'Field' : 'Frequency'} Sweep Export`,
         `# Exported: ${new Date().toISOString()}`,
         `# Healthy: ${store.healthy.label} · R=${store.healthy.radius} ${UNIT.UM} · fc=${store.healthyFc.toFixed(0)} ${UNIT.KHZ}`,
         `# Target:  ${store.target.label} · R=${store.target.radius} ${UNIT.UM} · fc=${store.targetFc.toFixed(0)} ${UNIT.KHZ}`,
         `# Medium: ${store.medium} · σ_e=${store.effectiveSigmaE.toFixed(3)} ${UNIT.S_PER_M}`,
         `# Fixed: ${this.sweepParam === 'field' ? `freq=${store.currentBroadcastFrequency} ${UNIT.KHZ}` : `field=${store.fieldIntensity} ${UNIT.V_PER_CM}`} · ${store.waveform} · dc=${store.dutyCycle.toExponential(2)}`,
-        `# Model: Schwan equation (Kotnik & Miklavcic 2000) — BioResonance`,
+        `# Model: Schwan equation (Kotnik & Miklavcic 2000) — ResoPulse`,
       ].join('\n')
       const dataHeader = this.sweepParam === 'field'
         ? 'E_field_Vcm,DR_healthy,DR_target,TI,T_healthy_C,T_target_C,therapeutic_window'

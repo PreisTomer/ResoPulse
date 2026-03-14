@@ -1,5 +1,5 @@
 /**
- * Socket service — connects to the BioResonance backend.
+ * Socket service — connects to the ResoPulse backend.
  * Falls back to local mode (state applied directly to Pinia stores) if the
  * backend is unreachable. All reactive getters remain fully functional either way.
  */
@@ -41,7 +41,7 @@ export function connectSocket(): void {
 
   socket.on(SOCKET_EVENTS.CONNECT, () => {
     socketConnected.value = true
-    console.info('[Socket] Connected to BioResonance backend')
+    console.info('[Socket] Connected to ResoPulse backend')
   })
 
   socket.on(SOCKET_EVENTS.DISCONNECT, () => {

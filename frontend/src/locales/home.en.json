@@ -1,6 +1,7 @@
 {
   "home": {
     "eyebrow": "Bioelectric Field Research · Electroporation · Acoustic Disruption",
+    "subtitle": "Virtual Biophysics Engine",
     "taglineMain": "Set an RF frequency, watch the transmembrane voltage climb in real time, and find the precise window where a cancer cell reaches lysis threshold while the healthy cell beside it survives untouched. Built on the Schwan equation, Pennes bioheat model, and nsEP pulse-envelope physics — export publication-ready parameters before running a single in-vitro experiment.",
     "btnPrimary": "Open Experiment Lab",
     "btnGhost": "Read the Science",
