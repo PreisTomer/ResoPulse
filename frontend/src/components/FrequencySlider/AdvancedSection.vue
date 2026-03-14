@@ -224,27 +224,9 @@ export default defineComponent({
 
 .field-panel {
   &__accordion {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-    padding: 0.3rem 0;
-    background: none;
-    border: none;
-    border-top: 1px solid var(--color-border);
-    color: var(--color-text-muted);
-    font-size: 0.6rem;
-    font-family: var(--font-mono);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    cursor: pointer;
-    text-align: left;
-    transition: color 0.15s;
-    margin-top: 0.1rem;
+    @include accordion-header();
 
-    &:hover { color: var(--color-text); }
-
-    &-label { flex: 1; }
+    &-label  { flex: 1; }
 
     &-chevron {
       font-size: 1rem;
@@ -272,45 +254,30 @@ export default defineComponent({
     position: relative;
     top: -0.5px;
 
-    &--target {
-      background: rgba(255, 77, 109, 0.12);
-      color: #ff4d6d;
-      border: 1px solid rgba(255, 77, 109, 0.22);
-    }
-
-    &--healthy {
-      background: rgba(0, 212, 255, 0.10);
-      color: var(--color-accent);
-      border: 1px solid rgba(0, 212, 255, 0.20);
-    }
+    &--target  { background: rgba(255, 77, 109, 0.12); color: #ff4d6d;            border: 1px solid rgba(255, 77, 109, 0.22); }
+    &--healthy { background: rgba(0, 212, 255, 0.10);  color: var(--color-accent); border: 1px solid rgba(0, 212, 255, 0.20); }
   }
 
   &__row {
-    display: grid;
-    grid-template-columns: 7.5rem 1fr 8.5rem;
-    align-items: center;
-    gap: 0.85rem;
-    min-height: 2.75rem;
+    @include field-row-grid(7.5rem, 8.5rem);
 
     &--medium {
       grid-template-columns: 7.5rem 1fr 8.5rem;
-      // Pills span both non-label columns so long pill text doesn't wrap
       > .field-panel__pills { grid-column: 2 / -1; }
     }
 
     &--compact-readout {
-      grid-template-columns: 5.5rem 1fr 7.5rem;
+      @include field-row-grid(5.5rem, 7.5rem);
       .field-panel__readout { width: 7.5rem; }
     }
   }
 
-  &__row-label { font-size: 0.62rem; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.1em; color: var(--color-text-muted); white-space: nowrap; flex-shrink: 0; }
+  &__row-label { @include row-label(); }
 
   &__pills { display: flex; gap: 0.35rem; flex-wrap: wrap; }
 
   &__pill {
-    font-size: 0.62rem;
-    font-family: var(--font-mono);
+    @include mono-upper(0.62rem, 0);
     text-transform: capitalize;
     padding: 0.18rem 0.55rem;
     border: 1px solid var(--color-border);
@@ -323,7 +290,7 @@ export default defineComponent({
 
     input { display: none; }
 
-    &--active { border-color: var(--color-primary); color: var(--color-primary); background-color: var(--color-primary-dim); }
+    &--active  { border-color: var(--color-primary); color: var(--color-primary); background-color: var(--color-primary-dim); }
     &--nuclear {
       border-color: rgba(167, 139, 250, 0.5) !important;
       color: #a78bfa !important;
@@ -334,34 +301,8 @@ export default defineComponent({
   &__track { position: relative; display: flex; align-items: center; }
 
   &__slider {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 100%;
-    height: 3px;
-    border-radius: 2px;
-    background: var(--color-border);
-    outline: none;
-
-    &::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 15px; height: 15px;
-      border-radius: 50%;
-      background: var(--color-text-heading);
-      border: 2px solid var(--color-surface);
-      box-shadow: 0 0 5px rgba(255, 255, 255, 0.2);
-      cursor: pointer;
-      transition: box-shadow 0.15s;
-      &:hover { box-shadow: 0 0 9px rgba(255, 255, 255, 0.45); }
-    }
-
-    &::-moz-range-thumb {
-      width: 15px; height: 15px;
-      border-radius: 50%;
-      background: var(--color-text-heading);
-      border: 2px solid var(--color-surface);
-      cursor: pointer;
-    }
+    @include slider-track();
+    @include slider-thumb();
   }
 
   &__readout {
