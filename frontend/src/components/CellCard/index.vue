@@ -109,6 +109,21 @@
         <span class="cell-card__warn-pct">{{ (disruptionRatio * 100).toFixed(0) }}%</span>
       </div>
 
+      <!-- Structural integrity countdown bar — drains 100→0 % as lysis timer runs -->
+      <div
+        v-if="lysisIntegrityPct !== null"
+        class="cell-card__integrity-bar-row"
+      >
+        <span class="cell-card__integrity-label">{{ $t('cells.integrityLabel') }}</span>
+        <div class="cell-card__integrity-track">
+          <div
+            class="cell-card__integrity-fill"
+            :style="{ width: lysisIntegrityPct + '%' }"
+          ></div>
+        </div>
+        <span class="cell-card__integrity-pct">{{ lysisIntegrityPct.toFixed(0) }}%</span>
+      </div>
+
       <!-- Electroporation risk warning strip — healthy cell only -->
       <div
         v-if="type === CELL_TYPE.HEALTHY && (cellState === CELL_STATE.APPROACHING || cellState === CELL_STATE.CRITICAL) && !tempWarning"
@@ -220,13 +235,15 @@ export default defineComponent({
     return {
       liveAmplitude:  this.cellData?.amplitude ?? 0.8,
       cellState:      CELL_STATE.STABLE as CellState,
-      shatterPending: false,
-      thermalLysis:   false,
+      shatterPending:      false,
+      thermalLysis:        false,
+      lysisProgressElapsed: 0,
       _helixTimer:          null as d3.Timer | null,
       _oscTimer:            null as d3.Timer | null,
       _particleInterval:    null as number | null,
       _shatterTimeout:      null as number | null,
       _shatterDelayTimeout: null as number | null,
+      _progressInterval:    null as ReturnType<typeof setInterval> | null,
     }
   },
 
@@ -270,6 +287,14 @@ export default defineComponent({
         : this.store.targetDisruptionRatio
     },
     canReset(): boolean { return this.disruptionRatio <= DISRUPTION_WARN_THRESHOLD },
+
+    /** 100 → 0 % as the lysis countdown drains; null when not armed. */
+    lysisIntegrityPct(): number | null {
+      if (this.type !== CELL_TYPE.TARGET || !this.shatterPending) return null
+      const delay = this.store.lysisDelayMs
+      if (delay <= 0) return 0
+      return Math.max(0, 100 - (this.lysisProgressElapsed / delay) * 100)
+    },
 
     hasNuclearParams(): boolean {
       const cell = this.type === CELL_TYPE.HEALTHY ? this.store.healthy : this.store.target
@@ -451,7 +476,14 @@ export default defineComponent({
     'store.lysisDelayMs'() {
       if (this.type !== CELL_TYPE.TARGET || !this.shatterPending) return
       clearTimeout(this._shatterDelayTimeout ?? undefined)
+      clearInterval(this._progressInterval ?? undefined)
+      this.lysisProgressElapsed = 0
+      this._progressInterval = setInterval(() => {
+        this.lysisProgressElapsed += 50
+      }, 50)
       this._shatterDelayTimeout = setTimeout(() => {
+        clearInterval(this._progressInterval ?? undefined)
+        this._progressInterval = null
         this.shatterPending = false
         if (this.disruptionRatio > DISRUPTION_WARN_THRESHOLD) this.triggerLysis()
       }, this.store.lysisDelayMs) as unknown as number
@@ -469,6 +501,7 @@ export default defineComponent({
     this._helixTimer?.stop()
     this._oscTimer?.stop()
     clearInterval(this._particleInterval ?? undefined)
+    clearInterval(this._progressInterval ?? undefined)
     clearTimeout(this._shatterTimeout ?? undefined)
     clearTimeout(this._shatterDelayTimeout ?? undefined)
   },
@@ -497,7 +530,13 @@ export default defineComponent({
           this.cellState = CELL_STATE.VIBRATING
           if (!this.shatterPending) {
             this.shatterPending = true
+            this.lysisProgressElapsed = 0
+            this._progressInterval = setInterval(() => {
+              this.lysisProgressElapsed += 50
+            }, 50)
             this._shatterDelayTimeout = setTimeout(() => {
+              clearInterval(this._progressInterval ?? undefined)
+              this._progressInterval = null
               this.shatterPending = false
               if (this.disruptionRatio > DISRUPTION_WARN_THRESHOLD) this.triggerLysis()
             }, this.store.lysisDelayMs) as unknown as number
@@ -506,7 +545,10 @@ export default defineComponent({
         }
         if (this.shatterPending) {
           clearTimeout(this._shatterDelayTimeout ?? undefined)
+          clearInterval(this._progressInterval ?? undefined)
+          this._progressInterval = null
           this.shatterPending = false
+          this.lysisProgressElapsed = 0
         }
         // 50–85% → 'rev-ep': reversible electroporation window (Weaver & Chizmadzhev 1996).
         // Pores open transiently and re-seal — membrane is permeabilized but cells survive.
@@ -1113,6 +1155,51 @@ export default defineComponent({
   /* ── Lysis strip ───────────────────────────────────────────────────── */
   &__lysis-strip {
     @include status-strip(var(--color-danger), rgba(255, 77, 109, 0.08), rgba(255, 77, 109, 0.3), warn-fade, 1.1s);
+  }
+
+  /* ── Structural integrity countdown bar ────────────────────────────── */
+  &__integrity-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.3rem 0.75rem 0.35rem;
+    background: rgba(255, 77, 109, 0.05);
+    border-top: 1px solid rgba(255, 77, 109, 0.15);
+  }
+
+  &__integrity-label {
+    flex-shrink: 0;
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: rgba(255, 77, 109, 0.75);
+    white-space: nowrap;
+  }
+
+  &__integrity-track {
+    flex: 1;
+    height: 5px;
+    background: rgba(255, 77, 109, 0.15);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  &__integrity-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ff4d6d 0%, #ff8c42 100%);
+    border-radius: 3px;
+    transition: width 0.1s linear;
+  }
+
+  &__integrity-pct {
+    flex-shrink: 0;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    font-weight: 700;
+    color: var(--color-danger);
+    min-width: 2.6rem;
+    text-align: right;
   }
 
   /* ── Warn icon/text/pct (shared by multiple strips) ─────────────────── */

@@ -229,6 +229,19 @@
         </AccordionPanel>
       </div>
 
+      <!-- Row 2b: Disruption ratio chart (full width, collapsible) -->
+      <div class="experiment__chart-section">
+        <AccordionPanel
+          :icon="ICON.LYSIS_BOLT"
+          :title="$t('drChart.sectionTitle')"
+          :subtitle="$t('drChart.sectionTip')"
+          :initial-open="false"
+          :border-on-toggle="true"
+        >
+          <DisruptionChart />
+        </AccordionPanel>
+      </div>
+
       <!-- Row 3: Selectivity (full width) -->
       <SelectivityPanel />
 
@@ -263,6 +276,7 @@ import CellCard from '@/components/CellCard/index.vue'
 import FrequencySlider from '@/components/FrequencySlider/index.vue'
 import FrequencyResponseChart from '@/components/FrequencyResponseChart/index.vue'
 import ResonanceChart from '@/components/ResonanceChart/index.vue'
+import DisruptionChart from '@/components/DisruptionChart/index.vue'
 import SelectivityPanel from '@/components/SelectivityPanel/index.vue'
 import TherapeuticHeatmap from '@/components/TherapeuticHeatmap/index.vue'
 import SweepPanel from '@/components/SweepPanel/index.vue'
@@ -290,6 +304,7 @@ export default defineComponent({
     FrequencySlider,
     FrequencyResponseChart,
     ResonanceChart,
+    DisruptionChart,
     SelectivityPanel,
     TherapeuticHeatmap,
     SweepPanel,

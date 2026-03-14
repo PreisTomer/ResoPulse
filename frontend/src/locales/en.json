@@ -75,7 +75,8 @@
       "resetCell": "Reset Cell",
       "reduceFieldThermal": "Reduce field / duty cycle to reset",
       "reduceField": "Reduce field intensity to reset"
-    }
+    },
+    "integrityLabel": "INTEGRITY"
   },
   "slider": {
     "title": "Field Control",
@@ -335,5 +336,15 @@
     "tagRef":      "Healthy Reference",
 
     "disclaimer": "Research simulation — not validated for clinical or therapeutic use · all physics models are approximations for in-vitro modelling"
+  },
+
+  "drChart": {
+    "title": "Disruption Ratio — f-Domain",
+    "tipTitle": "<strong>Disruption Ratio vs Frequency</strong>\nShows DR(f) = V<sub>m</sub>(f) / V<sub>threshold</sub> × PEF for both cells.\n<strong>Green region</strong>: therapeutic window — target DR ≥ 85% while healthy DR &lt; 50%.\nDashed amber line = reversible EP boundary (50%).\nDashed red line = lysis threshold (85%).",
+    "legendTarget": "Target",
+    "legendHealthy": "Healthy",
+    "legendWindow": "Therapeutic window",
+    "sectionTitle": "Disruption Ratio Chart",
+    "sectionTip": "Show/hide the disruption ratio vs frequency chart"
   }
 }
