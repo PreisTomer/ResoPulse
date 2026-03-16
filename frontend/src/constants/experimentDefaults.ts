@@ -25,9 +25,8 @@
  *   σ_i ≈ 0.005 S/m (lipid envelope)  ·  SAR_eff ≈ 0.014 W/kg  ·  T_ss ≈ 37.000°C ✓
  *   Auto-tuned to preset's resonantFreqGHz in applyTargetDefaults.
  */
-/** Waveform factors for SAR display (wf in SAR = σ_i·α²·E²·wf/ρ) */
-export const CW_WAVEFORM_FACTOR     = 0.5
-export const PULSED_WAVEFORM_FACTOR = 1.0
+// Re-exported from physics.ts — single source of truth for waveform factors
+export { WF_CW as CW_WAVEFORM_FACTOR, WF_PULSED as PULSED_WAVEFORM_FACTOR } from '@/constants/physics'
 
 /** Initial field as a fraction of a preset's resonant threshold (applied when loading resonant presets) */
 export const INITIAL_RESONANT_FIELD_FRACTION = 0.5

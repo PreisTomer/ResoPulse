@@ -8,6 +8,7 @@ import { UNIT } from '@/constants/units'
 import { MEDIA } from '@/constants/media'
 import type { MediumKey } from '@/types/media'
 import { useCellStore } from '@/stores/cellStore'
+import { EPSILON_0 } from '@/utils/physics'
 
 // ── Parameter snapshot captured at log time ────────────────────────────────
 export interface CellParamSnapshot {
@@ -163,7 +164,7 @@ const fld = (label: string, value: string, width = 26) =>
   `  ${label.padEnd(width)}= ${value}`
 
 function buildHealthySection(h: CellParamSnapshot, isDbl: boolean, mediumName: string): string[] {
-  const eps0 = 8.854e-12
+  const eps0 = EPSILON_0
   const cm   = (h.dielectricConstant * eps0 / (h.membraneThickness * 1e-9) * 1e3).toFixed(2)
   const tau  = h.fc > 0 ? (1e6 / (2 * Math.PI * h.fc)).toFixed(0) : '—'
   const lines: string[] = [
@@ -189,7 +190,7 @@ function buildHealthySection(h: CellParamSnapshot, isDbl: boolean, mediumName: s
 }
 
 function buildTargetSection(t: CellParamSnapshot, isRes: boolean, isDbl: boolean, mediumName: string): string[] {
-  const eps0 = 8.854e-12
+  const eps0 = EPSILON_0
   const cm   = (t.dielectricConstant * eps0 / (t.membraneThickness * 1e-9) * 1e3).toFixed(2)
   const lines: string[] = [
     `Target Cell: ${t.label}  [category: ${t.category}]`,

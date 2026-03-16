@@ -11,6 +11,7 @@ import type { MediumKey } from '@/types/media'
 import { computeSchwan, computeSAR, computeFc, computeTau, computeResonantDisruption, computeNuclearVm, computePulseStepResponse, computeSkinDepthMm, computeDepCmReal, computeDepCrossoverKHz } from '@/utils/physics'
 import { CELL_CATEGORY, CHART_MODE, WAVEFORM, CELL_TYPE, FREQ_REGIME } from '@/constants/strings'
 import { THRESHOLDS, DEFAULT_CAPSID_Q } from '@/constants/cellCard'
+import { DEFAULT_LYSIS_N_PULSES } from '@/constants/experimentDefaults'
 import {
   SCHWAN_SPHERE_FACTOR,
   BODY_TEMP_C,
@@ -112,7 +113,7 @@ interface CellStoreState {
   doubleShellEnabled: boolean     // two-shell nuclear envelope model (Kotnik 2006)
   perfusionRate: number           // ω_b [mL/(g·min)]; 0 = in vitro
   cellPackingFraction: number     // φ [0–0.9]; Maxwell-Garnett σ_e correction
-  _tempTimer: number | null
+  tempTimer: ReturnType<typeof setInterval> | null
   resetCounter: number
 }
 
@@ -121,8 +122,8 @@ export const useCellStore = defineStore('cell', {
     healthy: cloneDeep(cellConfigs[0]) as CellConfig,
     target: cloneDeep(cellConfigs[1]) as CellConfig,
     medium: 'saline',
-    fieldIntensity: 10,            // V/cm — resting baseline; scientist ramps up from here
-    currentBroadcastFrequency: 417, // kHz — matches simulationData default
+    fieldIntensity: 10,
+    currentBroadcastFrequency: 417,
     healthyTemp: BODY_TEMP_C,
     targetTemp: BODY_TEMP_C,
     dutyCycle: 1e-4,               // 0.01% — typical pulsed electroporation default
@@ -130,12 +131,12 @@ export const useCellStore = defineStore('cell', {
     pulseWidthNs: 1000,            // 1 µs — sub-µs range reveals nsEP selectivity for bacteria
     safeMode: false,               // expert mode by default (scientists need full range)
     orientationDeg: 0,             // 0° = field-aligned = maximum transmembrane coupling
-    lysisNPulses: 10,              // 10 above-threshold pulses ≈ typical IRE clinical protocol
+    lysisNPulses: DEFAULT_LYSIS_N_PULSES,
     chartMode: 'schwan' as const,  // default: Schwan/IRE transmembrane potential model
     doubleShellEnabled: false,     // double-shell model off by default
     perfusionRate: 0,              // mL/(g·min); 0 = isolated cell / in-vitro default
     cellPackingFraction: 0,        // φ = 0 (isolated cell); set >0 for dense tissue context
-    _tempTimer: null,
+    tempTimer: null,
     resetCounter: 0,
   }),
 
@@ -577,8 +578,8 @@ export const useCellStore = defineStore('cell', {
     },
 
     startSession() {
-      if (this._tempTimer !== null) return
-      this._tempTimer = setInterval(() => {
+      if (this.tempTimer !== null) return
+      this.tempTimer = setInterval(() => {
         const dc = this.effectiveDutyCycle
         const hCp = this.healthy.specificHeatCapacity
         const hL  = NEWTON_COOLING_LAMBDA + this.perfusionRate * PENNES_BLOOD_COEFF / hCp
@@ -588,7 +589,7 @@ export const useCellStore = defineStore('cell', {
         const tL  = NEWTON_COOLING_LAMBDA + this.perfusionRate * PENNES_BLOOD_COEFF / tCp
         const dTt = (this.targetSAR * dc / tCp - tL * (this.targetTemp - BODY_TEMP_C)) * 0.1
         this.targetTemp = Math.max(BODY_TEMP_C, Math.min(THRESHOLDS.TEMP_CAP, this.targetTemp + dTt))
-      }, TEMP_UPDATE_INTERVAL_MS) as unknown as number
+      }, TEMP_UPDATE_INTERVAL_MS)
     },
 
     setDutyCycle(dc: number) {
@@ -611,9 +612,9 @@ export const useCellStore = defineStore('cell', {
     },
 
     stopSession() {
-      if (this._tempTimer !== null) {
-        clearInterval(this._tempTimer)
-        this._tempTimer = null
+      if (this.tempTimer !== null) {
+        clearInterval(this.tempTimer)
+        this.tempTimer = null
       }
     },
 

@@ -73,10 +73,6 @@ export default defineComponent({
     },
   },
 
-  /** Static helper — call this before rendering the gate */
-  hasAccepted(): boolean {
-    return localStorage.getItem(STORAGE_KEY) === '1'
-  },
 })
 </script>
 

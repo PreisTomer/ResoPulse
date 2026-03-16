@@ -251,12 +251,12 @@ export default defineComponent({
       shatterPending:      false,
       thermalLysis:        false,
       lysisProgressElapsed: 0,
-      _helixTimer:          null as d3.Timer | null,
-      _oscTimer:            null as d3.Timer | null,
-      _particleInterval:    null as number | null,
-      _shatterTimeout:      null as number | null,
-      _shatterDelayTimeout: null as number | null,
-      _progressInterval:    null as ReturnType<typeof setInterval> | null,
+      helixTimer:          null as d3.Timer | null,
+      oscTimer:            null as d3.Timer | null,
+      particleInterval:    null as ReturnType<typeof setInterval> | null,
+      shatterTimeout:      null as ReturnType<typeof setTimeout> | null,
+      shatterDelayTimeout: null as ReturnType<typeof setTimeout> | null,
+      progressInterval:    null as ReturnType<typeof setInterval> | null,
     }
   },
 
@@ -504,19 +504,19 @@ export default defineComponent({
 
     'store.target.id'() {
       if (this.type !== CELL_TYPE.TARGET) return
-      this._helixTimer?.stop()
+      this.helixTimer?.stop()
       this.$nextTick(() => this.drawCell())
     },
 
     'store.resetCounter'() {
       if (this.cellState !== CELL_STATE.LYSED && this.cellState !== CELL_STATE.LYSING) return
-      clearTimeout(this._shatterDelayTimeout ?? undefined)
+      clearTimeout(this.shatterDelayTimeout ?? undefined)
       this.shatterPending = false
       this.thermalLysis   = false
       this.cellState      = CELL_STATE.STABLE
       this.liveAmplitude  = this.cellData?.amplitude ?? 0.8
-      clearInterval(this._particleInterval ?? undefined)
-      this._helixTimer?.stop()
+      clearInterval(this.particleInterval ?? undefined)
+      this.helixTimer?.stop()
       this.$nextTick(() => {
         this.drawCell()
         this.drawOscilloscope()
@@ -528,18 +528,18 @@ export default defineComponent({
 
     'store.lysisDelayMs'() {
       if (this.type !== CELL_TYPE.TARGET || !this.shatterPending) return
-      clearTimeout(this._shatterDelayTimeout ?? undefined)
-      clearInterval(this._progressInterval ?? undefined)
+      clearTimeout(this.shatterDelayTimeout ?? undefined)
+      clearInterval(this.progressInterval ?? undefined)
       this.lysisProgressElapsed = 0
-      this._progressInterval = setInterval(() => {
+      this.progressInterval = setInterval(() => {
         this.lysisProgressElapsed += 50
       }, 50)
-      this._shatterDelayTimeout = setTimeout(() => {
-        clearInterval(this._progressInterval ?? undefined)
-        this._progressInterval = null
+      this.shatterDelayTimeout = setTimeout(() => {
+        clearInterval(this.progressInterval ?? undefined)
+        this.progressInterval = null
         this.shatterPending = false
         if (this.disruptionRatio > DISRUPTION_WARN_THRESHOLD) this.triggerLysis()
-      }, this.store.lysisDelayMs) as unknown as number
+      }, this.store.lysisDelayMs)
     },
   },
 
@@ -551,12 +551,12 @@ export default defineComponent({
   },
 
   beforeUnmount() {
-    this._helixTimer?.stop()
-    this._oscTimer?.stop()
-    clearInterval(this._particleInterval ?? undefined)
-    clearInterval(this._progressInterval ?? undefined)
-    clearTimeout(this._shatterTimeout ?? undefined)
-    clearTimeout(this._shatterDelayTimeout ?? undefined)
+    this.helixTimer?.stop()
+    this.oscTimer?.stop()
+    clearInterval(this.particleInterval ?? undefined)
+    clearInterval(this.progressInterval ?? undefined)
+    clearTimeout(this.shatterTimeout ?? undefined)
+    clearTimeout(this.shatterDelayTimeout ?? undefined)
   },
 
   methods: {
@@ -584,22 +584,22 @@ export default defineComponent({
           if (!this.shatterPending) {
             this.shatterPending = true
             this.lysisProgressElapsed = 0
-            this._progressInterval = setInterval(() => {
+            this.progressInterval = setInterval(() => {
               this.lysisProgressElapsed += 50
             }, 50)
-            this._shatterDelayTimeout = setTimeout(() => {
-              clearInterval(this._progressInterval ?? undefined)
-              this._progressInterval = null
+            this.shatterDelayTimeout = setTimeout(() => {
+              clearInterval(this.progressInterval ?? undefined)
+              this.progressInterval = null
               this.shatterPending = false
               if (this.disruptionRatio > DISRUPTION_WARN_THRESHOLD) this.triggerLysis()
-            }, this.store.lysisDelayMs) as unknown as number
+            }, this.store.lysisDelayMs)
           }
           return
         }
         if (this.shatterPending) {
-          clearTimeout(this._shatterDelayTimeout ?? undefined)
-          clearInterval(this._progressInterval ?? undefined)
-          this._progressInterval = null
+          clearTimeout(this.shatterDelayTimeout ?? undefined)
+          clearInterval(this.progressInterval ?? undefined)
+          this.progressInterval = null
           this.shatterPending = false
           this.lysisProgressElapsed = 0
         }
@@ -632,7 +632,7 @@ export default defineComponent({
       if (!el) return
       const cellCategory = this.type === CELL_TYPE.HEALTHY ? CELL_CATEGORY.MAMMALIAN : this.store.targetCellCategory
       const presetId     = this.type === CELL_TYPE.HEALTHY ? this.store.healthy.id : this.store.target.id
-      this._helixTimer = setupBlobAnimation(
+      this.helixTimer = setupBlobAnimation(
         el, this.type, this.accentColor, cellCategory, presetId,
         () => ({
           impact:                 this.disruptionRatio,
@@ -651,7 +651,7 @@ export default defineComponent({
       if (!this.cellData) return
       const el = this.$refs.oscCanvas as HTMLElement
       if (!el) return
-      this._oscTimer = setupOscilloscope(
+      this.oscTimer = setupOscilloscope(
         el, this.accentColor,
         () => ({
           state:           this.cellState,
@@ -679,13 +679,13 @@ export default defineComponent({
         useImpedanceStore().snapshotSimulatedReading()
       }
       const el = this.$refs.cellCanvas as HTMLElement
-      this._particleInterval = setInterval(() => {
+      this.particleInterval = setInterval(() => {
         if (el) spawnFragment(el)
-      }, FRAGMENT_INTERVAL_MS) as unknown as number
-      this._shatterTimeout = setTimeout(() => {
-        clearInterval(this._particleInterval ?? undefined)
+      }, FRAGMENT_INTERVAL_MS)
+      this.shatterTimeout = setTimeout(() => {
+        clearInterval(this.particleInterval ?? undefined)
         this.cellState = CELL_STATE.LYSED
-      }, LYSIS_DURATION_MS) as unknown as number
+      }, LYSIS_DURATION_MS)
     },
 
     onParamChange(key: string, e: Event) {
