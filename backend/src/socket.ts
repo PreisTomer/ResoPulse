@@ -190,8 +190,15 @@ export function setupSocketServer(httpServer: HttpServer): Server {
   io.on('connection', (socket) => {
     console.log(`[Socket] Client connected: ${socket.id}`)
 
-    // Send current session state to newly connecting client
-    if (lastState) {
+    // Send current session state only if other clients are actively connected —
+    // i.e. there is a live collaborative session in progress.
+    // Sending stale cached state to solo users overwrites their defaults with
+    // whatever the last session left behind (e.g. extreme pulse widths), which
+    // breaks the heatmap and sweep panel for the default cell presets because
+    // loadPresetIfNeeded is a no-op when IDs already match and applyTargetDefaults
+    // is never called to reset the corrupted parameters.
+    const activePeers = io.sockets.sockets.size - 1   // exclude the just-connected socket
+    if (lastState && activePeers > 0) {
       socket.emit(SOCKET_EVENTS.STATE_UPDATE, lastState)
     }
 
