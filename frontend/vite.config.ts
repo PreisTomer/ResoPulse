@@ -14,13 +14,9 @@ export default defineConfig({
     // Disable source maps in production — prevents browser DevTools from
     // exposing readable source code to end users.
     sourcemap: false,
-    // Terser provides more aggressive name mangling than the esbuild default,
-    // making property names and logic harder to reverse-engineer.
-    minify: 'terser',
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    terserOptions: {
-      mangle: { toplevel: true },
-      format: { comments: false },
-    } as any,
+    // esbuild (Vite default) is safe for multi-chunk builds; Terser toplevel
+    // mangling caused fatal name collisions between Vue/Pinia internals and
+    // physics constants across Rollup code-split chunks.
+    minify: 'esbuild',
   },
 })
