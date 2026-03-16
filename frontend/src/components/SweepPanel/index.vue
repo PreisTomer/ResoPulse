@@ -320,7 +320,7 @@ export default defineComponent({
   watch: {
     open(v: boolean) {
       this.$emit('openChange', v)
-      if (v) this.$nextTick(() => { this._initChart(); this._drawChart() })
+      if (v) this.$nextTick(() => requestAnimationFrame(() => { this._initChart(); this._drawChart() }))
     },
     sweepData() {
       if (this.open) this._drawChart()
@@ -366,6 +366,7 @@ export default defineComponent({
       if (!wrap || !svgEl) return
 
       const W = wrap.clientWidth
+      if (W < 10) return   // not yet laid out (accordion still closed)
       const H = 224
       const iW = W - MARGIN.left - MARGIN.right
       const iH = H - MARGIN.top - MARGIN.bottom
