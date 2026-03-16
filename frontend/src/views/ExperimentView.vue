@@ -296,11 +296,11 @@ import { CELL_PRESETS, GROUP_COLORS, GROUP_LABELS } from '@/constants/cellLibrar
 import type { CellPreset, CellGroup } from '@/constants/cellLibrary'
 import { computeSAR } from '@/utils/physics'
 import { formatLysisTime } from '@/tooltips/sliderTooltips'
-import { CATEGORY_DEFAULTS, INITIAL_RESONANT_FIELD_FRACTION, SNAP_CONFIRM_MS } from '@/constants/experimentDefaults'
+import { tipSnapBar as tipSnapBarFn, tipCellBadgeHealthy, tipCellBadgeTarget } from '@/tooltips/experimentTooltips'
+import { CATEGORY_DEFAULTS, INITIAL_RESONANT_FIELD_FRACTION, SNAP_CONFIRM_MS, DEFAULT_LYSIS_N_PULSES } from '@/constants/experimentDefaults'
 import { CELL_CATEGORY, CELL_TYPE, CELL_GROUP, CHART_MODE } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
 import { formatFreqKHz } from '@/utils/format'
-import { UNIT } from '@/constants/units'
 
 export default defineComponent({
   components: {
@@ -330,18 +330,17 @@ export default defineComponent({
       GROUP_LABELS,
       CHART_MODE,
       ICON,
-      UNIT,
     }
   },
 
   created() {
     connectSocket()
     this.store.startSession()
-    this._doseLastMs = Date.now()
-    this._doseTimer = setInterval(() => {
+    this.doseLastMs = Date.now()
+    this.doseTimer = setInterval(() => {
       const now     = Date.now()
-      const dtMs    = now - this._doseLastMs
-      this._doseLastMs = now
+      const dtMs    = now - this.doseLastMs
+      this.doseLastMs = now
       const sar = computeSAR(
         this.store.target,
         this.store.fieldIntensity,
@@ -362,12 +361,11 @@ export default defineComponent({
       sweepPanelOpen: false,
       populationPanelOpen: false,
       snapConfirming: false,
-      _snapResetTimer: null as number | null,
+      snapResetTimer: null as ReturnType<typeof setTimeout> | null,
       showCreateModal: false,
       notesOpen: false,
-      // Dosimetry timer
-      _doseTimer: null as ReturnType<typeof setInterval> | null,
-      _doseLastMs: 0,
+      doseTimer: null as ReturnType<typeof setInterval> | null,
+      doseLastMs: 0,
     }
   },
 
@@ -398,41 +396,17 @@ export default defineComponent({
 
     tipSnapBar(): string {
       if (!this.sweepWindow) return ''
-      const isField = this.sweepWindow.param === 'field'
-      const unit    = isField ? UNIT.V_PER_CM : UNIT.KHZ
-      const param   = isField ? 'field intensity' : 'RF frequency'
-      const center  = Math.round((this.sweepWindow.lo + this.sweepWindow.hi) / 2)
-      return `<strong>⭐ Therapeutic Window</strong>
-The sweep analysis has found a parameter range where:
-  DR_target ≥ 85% — target membrane is at lysis threshold
-  DR_healthy &lt; 50% — healthy cells remain below Rev-EP onset
-
-Window: <span class="tip-val">${this.sweepWindow.lo.toFixed(0)}–${this.sweepWindow.hi.toFixed(0)} ${unit}</span>
-Center: <span class="tip-val">${center} ${unit}</span>
-
-Clicking this button sets the active ${param} to the
-window center, which maximises the selectivity margin —
-the distance from both disruption boundaries simultaneously.
-This is the operating point with the highest safety buffer
-between target lysis and healthy cell injury.`
+      return tipSnapBarFn(this.sweepWindow)
     },
 
     tipHealthyBadge(): string {
       const cell = this.store.healthy
-      return `<strong>Healthy Reference Cell</strong>
-${cell.label}
-Radius: ${cell.radius} µm · Membrane: ${cell.membraneThickness} nm
-Characteristic frequency fc ≈ ${this.healthyFcSetup}
-At quasi-DC this cell's Vm is at its Schwan maximum.`
+      return tipCellBadgeHealthy({ label: cell.label, radius: cell.radius, membraneThickness: cell.membraneThickness, fcDisplay: this.healthyFcSetup })
     },
 
     tipTargetBadge(): string {
       const cell = this.store.target
-      return `<strong>Target Cell</strong>
-${cell.label}
-Radius: ${cell.radius} µm · Membrane: ${cell.membraneThickness} nm
-Characteristic frequency fc ≈ ${this.targetFcSetup}
-Larger radius raises Vm and lowers the lysis field threshold.`
+      return tipCellBadgeTarget({ label: cell.label, radius: cell.radius, membraneThickness: cell.membraneThickness, fcDisplay: this.targetFcSetup })
     },
 
     healthyReferencePresets(): CellPreset[] {
@@ -514,13 +488,13 @@ Larger radius raises Vm and lowers the lysis field threshold.`
       // First click: arm the confirmation state; auto-disarm after 3 s
       if (!this.snapConfirming) {
         this.snapConfirming = true
-        this._snapResetTimer = setTimeout(() => {
+        this.snapResetTimer = setTimeout(() => {
           this.snapConfirming = false
-        }, SNAP_CONFIRM_MS) as unknown as number
+        }, SNAP_CONFIRM_MS)
         return
       }
       // Second click within 3 s: execute the snap
-      clearTimeout(this._snapResetTimer ?? undefined)
+      clearTimeout(this.snapResetTimer ?? undefined)
       this.snapConfirming = false
       const center = Math.round((this.sweepWindow.lo + this.sweepWindow.hi) / 2)
       if (this.sweepWindow.param === 'field') {
@@ -591,7 +565,7 @@ Larger radius raises Vm and lowers the lysis field threshold.`
       this.store.setMedium(d.medium)
       // Reset advanced orientation + lysis-count to category-neutral defaults
       this.store.setOrientationDeg(0)
-      this.store.setLysisNPulses(10)
+      this.store.setLysisNPulses(DEFAULT_LYSIS_N_PULSES)
       // Always start from a thermally neutral state — clears any lysis/destruction
       this.store.resetTemps()
       this.store.setChartMode((cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) ? CHART_MODE.RESONANCE : CHART_MODE.SCHWAN)
@@ -600,8 +574,8 @@ Larger radius raises Vm and lowers the lysis field threshold.`
   },
 
   beforeUnmount() {
-    clearTimeout(this._snapResetTimer ?? undefined)
-    if (this._doseTimer !== null) clearInterval(this._doseTimer)
+    clearTimeout(this.snapResetTimer ?? undefined)
+    if (this.doseTimer !== null) clearInterval(this.doseTimer)
   },
 })
 </script>
