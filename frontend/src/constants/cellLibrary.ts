@@ -1,3 +1,6 @@
+// Copyright © 2026 Tomer Preis. All rights reserved.
+// Unauthorized copying or distribution is prohibited.
+
 /**
  * Biologically realistic cell/pathogen presets.
  * All Schwan model parameters are approximate values from bioelectromagnetics literature.

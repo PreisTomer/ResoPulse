@@ -1,3 +1,6 @@
+// Copyright © 2026 Tomer Preis. All rights reserved.
+// Unauthorized copying or distribution is prohibited.
+
 /**
  * Biomodulation panel tooltip — extracted from BiostimPanel.vue computed property.
  * Follows the same pattern as sliderTooltips.ts: pure function, no store access.

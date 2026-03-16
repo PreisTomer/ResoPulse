@@ -1,3 +1,6 @@
+// Copyright © 2026 Tomer Preis. All rights reserved.
+// Unauthorized copying or distribution is prohibited.
+
 // Biophysics utilities — Schwan single-shell model, SAR, nsEP, acoustic resonance, EM skin depth
 import type { CellConfig } from '@/types/cell'
 import { SCHWAN_SPHERE_FACTOR, WF_CW, EPSILON_R_CYTOPLASM, SIGMA_MEMBRANE_SI } from '@/constants/physics'

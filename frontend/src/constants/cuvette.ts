@@ -1,3 +1,6 @@
+// Copyright © 2026 Tomer Preis. All rights reserved.
+// Unauthorized copying or distribution is prohibited.
+
 /** Electroporation cuvette geometry presets and impedance-feedback constants. */
 
 export interface CuvettePreset {

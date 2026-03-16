@@ -1,3 +1,4 @@
+<!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
 <template>
   <header class="nav-bar">
     <div class="nav-bar__inner">

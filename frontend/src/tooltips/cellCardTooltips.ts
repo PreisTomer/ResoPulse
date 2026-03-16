@@ -1,3 +1,6 @@
+// Copyright © 2026 Tomer Preis. All rights reserved.
+// Unauthorized copying or distribution is prohibited.
+
 /**
  * Tooltip content builders for CellCard components.
  * Pure functions — no Vue component dependency.

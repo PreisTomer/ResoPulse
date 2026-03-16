@@ -1,3 +1,4 @@
+<!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
 <template>
   <div class="imp-meter">
     <div class="imp-meter__header">

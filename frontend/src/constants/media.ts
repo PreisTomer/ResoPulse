@@ -1,3 +1,6 @@
+// Copyright © 2026 Tomer Preis. All rights reserved.
+// Unauthorized copying or distribution is prohibited.
+
 import type { MediaEntry, MediumKey } from '@/types/media'
 
 // permittivity values (ε_r) from Gabriel et al. (1996) "Dielectric properties of biological

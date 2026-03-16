@@ -1,3 +1,6 @@
+// Copyright © 2026 Tomer Preis. All rights reserved.
+// Unauthorized copying or distribution is prohibited.
+
 /**
  * Disruption-bar tooltip builders — extracted from DisruptionBars.vue computed properties.
  * Follows the same pattern as sliderTooltips.ts: pure functions, no store access.

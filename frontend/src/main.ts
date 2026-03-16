@@ -1,3 +1,6 @@
+// Copyright © 2026 Tomer Preis. All rights reserved.
+// Unauthorized copying or distribution is prohibited.
+
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import './style.css'

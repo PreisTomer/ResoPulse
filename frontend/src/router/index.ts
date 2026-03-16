@@ -1,3 +1,6 @@
+// Copyright © 2026 Tomer Preis. All rights reserved.
+// Unauthorized copying or distribution is prohibited.
+
 import { createRouter, createWebHistory } from 'vue-router'
 
 export default createRouter({
@@ -27,6 +30,10 @@ export default createRouter({
     {
       path: '/instrument',
       component: () => import('../views/InstrumentView.vue'),
+    },
+    {
+      path: '/terms',
+      component: () => import('../views/TermsView.vue'),
     },
   ],
 })

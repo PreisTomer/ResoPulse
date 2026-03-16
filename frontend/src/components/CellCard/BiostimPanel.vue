@@ -1,3 +1,4 @@
+<!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
 <template>
   <div class="cell-card__biostim" v-tip="tooltip">
     <div class="cell-card__biostim-header">

@@ -1,3 +1,6 @@
+// Copyright © 2026 Tomer Preis. All rights reserved.
+// Unauthorized copying or distribution is prohibited.
+
 /** Named slider range sets — one per cell-category × chart-mode combination.
  *  Single source of truth: change here to propagate to FrequencySlider & AdvancedSection. */
 

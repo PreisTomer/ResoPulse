@@ -1,3 +1,4 @@
+<!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
 <template>
   <div class="cell-card__header">
     <span :class="['cell-card__icon', `cell-card__icon--${type}`]">{{ ICON.CELL }}</span>

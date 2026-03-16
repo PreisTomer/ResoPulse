@@ -1,3 +1,6 @@
+// Copyright © 2026 Tomer Preis. All rights reserved.
+// Unauthorized copying or distribution is prohibited.
+
 /**
  * Scientifically appropriate field/frequency defaults per target cell category.
  * Applied automatically when the target cell type is switched,
