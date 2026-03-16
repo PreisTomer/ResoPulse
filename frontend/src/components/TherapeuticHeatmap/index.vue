@@ -251,6 +251,7 @@ export default defineComponent({
         s.target.dielectricConstant, s.target.conductivity, s.target.thresholdVoltage,
         t.resonantFreqGHz,
         s.medium, s.waveform, s.dutyCycle, s.pulseWidthNs, s.chartMode,
+        s.resetCounter,   // ensures grid recomputes after a cell reset to the same preset
       ].join('|')
     },
   },
