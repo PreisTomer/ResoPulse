@@ -183,6 +183,8 @@
 
       <!-- Row 1: Cell cards side-by-side + field controls -->
       <div class="experiment__top">
+        <!-- Sentinel: observed by IntersectionObserver to detect when cells scroll out of view -->
+        <div ref="cellsAnchor" class="experiment__cells-anchor"></div>
         <div class="experiment__cells">
           <CellCard
             v-for="cell in cells"
@@ -259,6 +261,26 @@
 
     </div>
   </div>
+
+  <!-- Sticky live cell view — appears when cells scroll out of viewport -->
+  <Transition name="sticky-cells">
+    <div v-if="showStickySimView" class="experiment__sticky-cells">
+      <div class="experiment__sticky-cells-label">⬤ LIVE</div>
+      <div class="experiment__sticky-cells-grid">
+        <CellCard
+          v-for="cell in cells"
+          :key="'sticky-' + cell.id"
+          :type="cell.type"
+          :label="cell.label"
+          :sublabel="cell.sublabel"
+          :sublabel-tip="cell.sublabelTip"
+          :description="cell.description"
+          :cell-data="cell.cellData"
+          :compact="true"
+        />
+      </div>
+    </div>
+  </Transition>
 
   <!-- Create Cell Profile modal -->
   <CreateCellModal
@@ -366,6 +388,8 @@ export default defineComponent({
       notesOpen: false,
       doseTimer: null as ReturnType<typeof setInterval> | null,
       doseLastMs: 0,
+      showStickySimView: false,
+      cellsObserver: null as IntersectionObserver | null,
     }
   },
 
@@ -573,9 +597,21 @@ export default defineComponent({
     },
   },
 
+  mounted() {
+    const sentinel = this.$refs.cellsAnchor as HTMLElement
+    if (sentinel) {
+      this.cellsObserver = new IntersectionObserver(
+        (entries) => { if (entries[0]) this.showStickySimView = !entries[0].isIntersecting },
+        { threshold: 0 },
+      )
+      this.cellsObserver.observe(sentinel)
+    }
+  },
+
   beforeUnmount() {
     clearTimeout(this.snapResetTimer ?? undefined)
     if (this.doseTimer !== null) clearInterval(this.doseTimer)
+    this.cellsObserver?.disconnect()
   },
 })
 </script>
@@ -1231,4 +1267,53 @@ export default defineComponent({
   }
   .experiment__cells > * { min-height: 260px; }
 }
+
+// ── Sticky live cell view ──────────────────────────────────────────────────────
+.experiment__cells-anchor {
+  // Zero-height sentinel — stays in normal flow so IntersectionObserver can track
+  // when the cell cards area exits the viewport.
+  height: 0;
+  grid-column: 1 / -1;
+  pointer-events: none;
+}
+
+.experiment__sticky-cells {
+  position: fixed;
+  top: 68px;   // below NavBar (≈60 px) + small gap
+  right: 1rem;
+  z-index: 150;
+  // Scale the panel to ~44% visual size anchored at top-right
+  transform: scale(0.44);
+  transform-origin: top right;
+  // Panel chrome (rendered at full logical size; visually compact after scale)
+  background: rgba(8, 10, 18, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 10px;
+  box-shadow: 0 6px 40px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.04);
+  padding: 0.6rem 0.6rem 0.4rem;
+  backdrop-filter: blur(10px);
+  pointer-events: none; // non-interactive — purely observational
+
+  &-label {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    color: var(--color-primary);
+    opacity: 0.75;
+    margin-bottom: 0.4rem;
+    padding-left: 0.1rem;
+  }
+
+  &-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+  }
+}
+
+// Fade + slide-down entrance/exit
+.sticky-cells-enter-active { transition: opacity 0.25s ease, transform 0.25s ease; }
+.sticky-cells-leave-active { transition: opacity 0.2s ease, transform 0.2s ease; }
+.sticky-cells-enter-from   { opacity: 0; transform: scale(0.44) translateY(-12px); transform-origin: top right; }
+.sticky-cells-leave-to     { opacity: 0; transform: scale(0.44) translateY(-8px);  transform-origin: top right; }
 </style>

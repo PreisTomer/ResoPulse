@@ -6,7 +6,7 @@ import { cloneDeep } from 'lodash'
 import { cellConfigs } from '@/mockData'
 import { CELL_PRESETS } from '@/constants/cellLibrary'
 import { MEDIA } from '@/constants/media'
-import type { CellConfig } from '@/types/cell'
+import type { CellConfig, CellState } from '@/types/cell'
 import type { MediumKey } from '@/types/media'
 import { computeSchwan, computeSAR, computeFc, computeTau, computeResonantDisruption, computeNuclearVm, computePulseStepResponse, computeSkinDepthMm, computeDepCmReal, computeDepCrossoverKHz } from '@/utils/physics'
 import { CELL_CATEGORY, CHART_MODE, WAVEFORM, CELL_TYPE, FREQ_REGIME } from '@/constants/strings'
@@ -115,6 +115,8 @@ interface CellStoreState {
   cellPackingFraction: number     // φ [0–0.9]; Maxwell-Garnett σ_e correction
   tempTimer: ReturnType<typeof setInterval> | null
   resetCounter: number
+  healthyCellState: CellState
+  targetCellState: CellState
 }
 
 export const useCellStore = defineStore('cell', {
@@ -138,6 +140,8 @@ export const useCellStore = defineStore('cell', {
     cellPackingFraction: 0,        // φ = 0 (isolated cell); set >0 for dense tissue context
     tempTimer: null,
     resetCounter: 0,
+    healthyCellState: 'stable' as CellState,
+    targetCellState:  'stable' as CellState,
   }),
 
   getters: {
@@ -536,6 +540,9 @@ export const useCellStore = defineStore('cell', {
     setBroadcastFreqKHz(khz: number) {
       this.currentBroadcastFrequency = khz
     },
+
+    setHealthyCellState(s: CellState) { this.healthyCellState = s },
+    setTargetCellState(s: CellState)  { this.targetCellState  = s },
 
     handleResonancePacket(packet: FieldPacket) {
       this.currentBroadcastFrequency = packet.activeFrequencyKHz
