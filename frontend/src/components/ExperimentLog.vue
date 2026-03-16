@@ -55,6 +55,8 @@
             <th v-tip="tipThTargetVm">{{ $t('exp.logThTargetVm') }}</th>
             <th v-tip="tipThHealthyVm">{{ $t('exp.logThHealthyVm') }}</th>
             <th v-tip="tipThSel">{{ $t('exp.logThSel') }}</th>
+            <th v-if="!isResonanceMode" v-tip="tipThDepH">{{ $t('log.logThDepH') }}</th>
+            <th v-if="!isResonanceMode" v-tip="tipThDepT">{{ $t('log.logThDepT') }}</th>
             <th v-tip="tipThEvent">{{ $t('exp.logThEvent') }}</th>
           </tr>
         </thead>
@@ -71,12 +73,14 @@
             <td class="exp-log__td-target" v-tip="tipCellTargetVm(e)">{{ e.targetVm }}</td>
             <td class="exp-log__td-healthy" v-tip="tipCellHealthyVm(e)">{{ e.healthyVm }}</td>
             <td class="exp-log__td-sel" v-tip="tipCellSel(e)">{{ e.selectivity.toFixed(2) }}</td>
+            <td v-if="!isResonanceMode" class="exp-log__td-dep" :class="depKClass(e.depHealthyK)">{{ depKDisplay(e.depHealthyK) }}</td>
+            <td v-if="!isResonanceMode" class="exp-log__td-dep" :class="depKClass(e.depTargetK)">{{ depKDisplay(e.depTargetK) }}</td>
             <td class="exp-log__td-event">
               <StatusBadge :label="e.event" :variant="eventVariant(e.event)" :tooltip="tipCellEvent(e)" />
             </td>
           </tr>
           <tr v-if="!hasEntries">
-            <td colspan="8" class="exp-log__td-empty">{{ $t('exp.logEmpty') }}</td>
+            <td :colspan="isResonanceMode ? 8 : 10" class="exp-log__td-empty">{{ $t('exp.logEmpty') }}</td>
           </tr>
         </tbody>
       </table>
@@ -119,6 +123,7 @@ export default defineComponent({
       return this.expStore.entries.slice(-20).reverse()
     },
     hasEntries(): boolean { return this.expStore.entries.length > 0 },
+    isResonanceMode(): boolean { return this.cellStore.chartMode === 'resonance' },
 
     // ── Button tooltips ────────────────────────────────────────────────────────
     tipLogReading(): string { return this.$t('log.tipLogReading') },
@@ -137,6 +142,9 @@ export default defineComponent({
       const { SEL_STRONG: strong, SEL_MARGINAL: marginal } = THRESHOLDS
       return this.$t('log.tipThSel', { strong, marginal })
     },
+
+    tipThDepH(): string { return this.$t('log.tipThDepH') },
+    tipThDepT(): string { return this.$t('log.tipThDepT') },
 
     tipThEvent(): string { return this.$t('log.tipThEvent') },
 
@@ -194,6 +202,14 @@ export default defineComponent({
       return e.event === LOG_EVENT.LYSIS
         ? this.$t('log.tipCellLysis')
         : this.$t('log.tipCellManual')
+    },
+    depKDisplay(k: number | undefined): string {
+      if (k == null) return '—'
+      return k.toFixed(3)
+    },
+    depKClass(k: number | undefined): string {
+      if (k == null) return ''
+      return k > 0 ? 'exp-log__td-pdep' : 'exp-log__td-ndep'
     },
   },
 })
@@ -332,6 +348,9 @@ export default defineComponent({
   &__td-target  { color: var(--color-danger); }
   &__td-healthy { color: var(--color-primary); }
   &__td-sel    { color: var(--color-text-heading); font-weight: 600; }
+  &__td-dep    { opacity: 0.85; }
+  &__td-pdep   { color: var(--color-lime); }
+  &__td-ndep   { color: var(--color-amber); }
   &__td-event  { text-align: right; }
   &__td-empty  { text-align: center; opacity: 0.6; padding: 1rem; }
 }

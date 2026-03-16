@@ -57,6 +57,10 @@ export interface LogEntry {
   sigmaE?: number                // effective σe at log time [S/m]
   healthyNuclearVm?: number      // mV
   targetNuclearVm?: number       // mV
+  depHealthyK?: number           // Re[K] at log-time frequency
+  depTargetK?: number            // Re[K] at log-time frequency
+  depHealthyCrossoverKHz?: number
+  depTargetCrossoverKHz?: number
   healthySnap?: CellParamSnapshot
   targetSnap?: CellParamSnapshot
 }
@@ -98,6 +102,10 @@ interface CellSnapshot {
   targetTemp: number
   healthyNuclearVm: number
   targetNuclearVm: number
+  depHealthyCmReal: number
+  depTargetCmReal: number
+  depHealthyCrossoverKHz: number
+  depTargetCrossoverKHz: number
   healthy: {
     label: string; radius: number; membraneThickness: number
     dielectricConstant: number; conductivity: number; thresholdVoltage: number
@@ -286,6 +294,23 @@ function buildModelSection(isRes: boolean, isPulsed: boolean, isDbl: boolean): s
       '  τ_n = R_n · Cm_n · (2σcyto + σnucleus) / (2σcyto · σnucleus)',
     )
   }
+  if (!isRes) {
+    lines.push(
+      '',
+      'Dielectrophoresis (DEP) — Clausius-Mossotti factor (Gascoyne & Vykoukal 2002):',
+      '  F_DEP ∝ ∇|E|² · Re[K(ω)]',
+      '  K(ω) = (ε*_eff − ε*_m) / (ε*_eff + 2ε*_m)',
+      '  ε*(ω) = ε_r·ε₀ − j·σ/ω   (complex permittivity)',
+      '  Single-shell effective permittivity:',
+      '    γ = ((R−d)/R)³',
+      '    ε*_eff = ε*_mem · [γ(ε*_c + 2ε*_mem) + 2(ε*_c − ε*_mem)]',
+      '                     / [γ(ε*_c + 2ε*_mem) − (ε*_c − ε*_mem)]',
+      '  Re[K] > 0 → positive DEP (attracted to field maxima)',
+      '  Re[K] < 0 → negative DEP (repelled from field maxima)',
+      '  Waveform force scale: CW ×0.5 ; pulsed H-FIRE ×duty-cycle',
+      '  NOTE: model invalid at GHz acoustic resonance frequencies.',
+    )
+  }
   return lines
 }
 
@@ -303,6 +328,12 @@ function buildRefs(isRes: boolean, isDbl: boolean, cat: string): string[] {
     '    on internal membranes of biological cells exposed to electric fields.',
     '    Biophys. J. 90(2), 480–491.',
   )
+  if (!isRes) {
+    refs.push(
+      `[${i++}] Gascoyne, P.R.C. & Vykoukal, J. (2002). Particle separation by dielectrophoresis.`,
+      '    Electrophoresis 23(13), 1973–1983.',
+    )
+  }
   if (isRes) {
     refs.push(
       `[${i++}] Tsen, S.W.D. et al. (2007). Non-thermal effects in the inactivation of viruses.`,
@@ -361,6 +392,10 @@ export const useExperimentStore = defineStore('experiment', {
         sigmaE:            round(snap.effectiveSigmaE, 4),
         healthyNuclearVm:  round(snap.healthyNuclearVm * 1000, 3),
         targetNuclearVm:   round(snap.targetNuclearVm  * 1000, 3),
+        depHealthyK:            snap.chartMode !== 'resonance' ? round(snap.depHealthyCmReal, 4) : undefined,
+        depTargetK:             snap.chartMode !== 'resonance' ? round(snap.depTargetCmReal,  4) : undefined,
+        depHealthyCrossoverKHz: snap.chartMode !== 'resonance' ? round(snap.depHealthyCrossoverKHz, 1) : undefined,
+        depTargetCrossoverKHz:  snap.chartMode !== 'resonance' ? round(snap.depTargetCrossoverKHz,  1) : undefined,
         healthySnap: {
           label: h.label, category: 'mammalian',
           radius: h.radius, membraneThickness: h.membraneThickness,
@@ -508,6 +543,16 @@ export const useExperimentStore = defineStore('experiment', {
           fld('Target nuclear Vm',   `${entry.targetNuclearVm ?? '—'} ${UNIT.MV}`),
         )
       }
+      if (!isRes && entry.depHealthyK !== undefined) {
+        const hXover = entry.depHealthyCrossoverKHz
+        const tXover = entry.depTargetCrossoverKHz
+        const hXoverStr = hXover ? `f_cross = ${hXover.toFixed(1)} ${UNIT.KHZ}` : 'no crossover in range'
+        const tXoverStr = tXover ? `f_cross = ${tXover.toFixed(1)} ${UNIT.KHZ}` : 'no crossover in range'
+        computedLines.push(
+          fld('H Re[K] (DEP)',   `${entry.depHealthyK?.toFixed(4) ?? '—'}  [${entry.depHealthyK != null && entry.depHealthyK > 0 ? 'pDEP' : 'nDEP'}]  ${hXoverStr}`),
+          fld('T Re[K] (DEP)',   `${entry.depTargetK?.toFixed(4)  ?? '—'}  [${entry.depTargetK  != null && entry.depTargetK  > 0 ? 'pDEP' : 'nDEP'}]  ${tXoverStr}`),
+        )
+      }
 
       const lines = [
         'MATERIALS AND METHODS — ResoPulse Electroporation Simulation',
@@ -572,14 +617,20 @@ export const useExperimentStore = defineStore('experiment', {
         `Freq (${UNIT.KHZ})`, `Field (${UNIT.V_PER_CM})`, 'Medium', 'Target',
         `${H}-Vm (${UNIT.MV})`, `${T}-Vm (${UNIT.MV})`, 'Selectivity',
         `${H}-Ratio`, `${T}-Ratio`,
-        `${H}-Temp (${UNIT.DEG_C})`, `${T}-Temp (${UNIT.DEG_C})`, 'Event',
+        `${H}-Temp (${UNIT.DEG_C})`, `${T}-Temp (${UNIT.DEG_C})`,
+        `${H}-Re[K]`, `${T}-Re[K]`,
+        `${H}-f_cross (${UNIT.KHZ})`, `${T}-f_cross (${UNIT.KHZ})`,
+        'Event',
       ]
       const rows = this.entries.map((e) => [
         e.id, e.timestamp, this.sessionName, e.freqKHz, e.fieldVcm, e.medium, e.targetPreset,
         e.healthyVm, e.targetVm, e.selectivity,
         (e.healthyRatio * 100).toFixed(1) + UNIT.PERCENT,
         (e.targetRatio  * 100).toFixed(1) + UNIT.PERCENT,
-        e.healthyTemp, e.targetTemp, e.event,
+        e.healthyTemp, e.targetTemp,
+        e.depHealthyK ?? '—', e.depTargetK ?? '—',
+        e.depHealthyCrossoverKHz ?? '—', e.depTargetCrossoverKHz ?? '—',
+        e.event,
       ])
 
       const csv = meta + '\n' + [headers, ...rows].map((row) => row.join(',')).join('\n')

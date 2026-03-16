@@ -22,7 +22,7 @@
     "eyebrow": "Computational Bioelectrics · Electroporation · Capsid Disruption",
     "title": "ResoPulse",
     "titleAccent": "Research Platform",
-    "description": "A precision simulator for bioelectric field research. Models transmembrane potential via the Schwan equation, SAR-based thermal effects, pulse-width-dependent membrane charging, and frequency-selective disruption of viral capsids and bacterial cell walls.",
+    "description": "A precision simulator for bioelectric field research. Models transmembrane potential via the Schwan equation, SAR-based thermal effects, pulse-width-dependent membrane charging, dielectrophoretic force via the Clausius-Mossotti factor, and frequency-selective disruption of viral capsids and bacterial cell walls.",
     "loadDataSet": "Load Cell Library",
     "viewSampleAnalysis": "View Research Protocol"
   },
@@ -62,6 +62,8 @@
     "lysed": "Membrane Lysed",
     "lysing": "Lysing",
     "states": {
+      "depAttraction": "DEP — ATTRACTED TO FIELD MAXIMA",
+      "depRepulsion": "DEP — REPELLED FROM FIELD MAXIMA",
       "nourishing": "NOURISHING · BMS {bms}%",
       "revEp": "REV. EP WINDOW — MEMBRANE PERMEABILIZED",
       "lysisArmed": "LYSIS ARMED · {protocol}",
@@ -194,6 +196,10 @@
     "logThTargetVm": "T-Vm",
     "logThHealthyVm": "H-Vm",
     "logThSel": "Sel×",
+    "logThDepH": "H Re[K]",
+    "logThDepT": "T Re[K]",
+    "tipThDepH": "<strong>H Re[K] — Healthy DEP</strong>\nClausius-Mossotti factor Re[K(f)] for the healthy cell at log-time frequency.\nRe[K] > 0 → pDEP (attracted to field maxima)\nRe[K] < 0 → nDEP (repelled from field maxima)\nHidden in resonance mode (model invalid at GHz).",
+    "tipThDepT": "<strong>T Re[K] — Target DEP</strong>\nClausius-Mossotti factor Re[K(f)] for the target cell at log-time frequency.\nRe[K] > 0 → pDEP (attracted to field maxima)\nRe[K] < 0 → nDEP (repelled from field maxima)\nHidden in resonance mode (model invalid at GHz).",
     "logThEvent": "Event",
     "zDriftTip": "<strong>⚗ Impedance Drift Detected</strong>\nMedium conductivity has shifted from baseline by more than 5%.\nThis typically indicates ion release from lysing target cells.\n\nClick to open the Instrument Panel for real-time impedance tracking and corrected field voltage."
   },
@@ -290,6 +296,7 @@
     "capImp":         "Impedance Tracking",
     "capBio":         "Biomodulation Scoring",
     "capDr":          "DR(f) Analysis",
+    "capDep":         "DEP / Re[K(f)]",
 
     "wf1Num":   "01",
     "wf1Label": "Configure Phenotypes",
@@ -313,10 +320,10 @@
     "card3Desc":  "Full experiment log with cumulative absorbed dose, selectivity timeline, and one-click CSV export.",
 
     "card4Title": "Cell Library",
-    "card4Desc":  "10 validated presets across mammalian, bacterial, and viral phenotypes — with computed membrane capacitance Cm, time constant τ, and characteristic frequency fc.",
+    "card4Desc":  "10 validated presets across mammalian, bacterial, and viral phenotypes — with computed membrane capacitance Cm, time constant τ, characteristic frequency fc, and DEP crossover frequency f_cross.",
 
     "card5Title": "Research Protocol",
-    "card5Desc":  "Schwan equation derivation, SAR model, pulse-envelope factor, electroporation thresholds, and 8 peer-reviewed literature references.",
+    "card5Desc":  "Schwan equation derivation, SAR model, pulse-envelope factor, electroporation thresholds, DEP Clausius-Mossotti model, and 24 peer-reviewed literature references.",
 
     "stat1Val":   "10",
     "stat1Label": "Cell Presets",

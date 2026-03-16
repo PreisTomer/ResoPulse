@@ -132,6 +132,7 @@ export default defineComponent({
         { icon: ICON.FLASK,       key: 'capImp' },
         { icon: ICON.NOURISH,     key: 'capBio' },
         { icon: ICON.LYSIS_BOLT,  key: 'capDr' },
+        { icon: ICON.DEP,         key: 'capDep' },
       ],
 
       workflowSteps: ['wf1', 'wf2', 'wf3'],
@@ -684,9 +685,26 @@ export default defineComponent({
       &-label { font-size: 0.56rem; }
     }
 
+    // Flatten two rows into one horizontal scroll strip
+    &__caps {
+      flex-direction: row;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      overflow-y: visible;
+      padding-bottom: 0.25rem;
+      // hide scrollbar visually while keeping it functional
+      scrollbar-width: none;
+      &::-webkit-scrollbar { display: none; }
+    }
+
+    &__caps-row {
+      display: contents; // unwrap — pills become direct children of __caps
+    }
+
     &__cap {
       font-size: 0.62rem;
       padding: 0.22rem 0.5rem;
+      flex-shrink: 0;
     }
   }
 }

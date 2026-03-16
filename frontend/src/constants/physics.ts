@@ -57,3 +57,25 @@ export const FREQ_ELECTROLYTIC_LIMIT_KHZ = 300_000  // 300 MHz
  * Ref: Gabriel et al. (1996) — RF tissue dielectric data.
  */
 export const FREQ_NEARFIELD_RF_LIMIT_KHZ = 1_000_000  // 1 GHz
+
+// ── Dielectrophoresis (DEP) — Clausius-Mossotti model ────────────────────────
+
+/**
+ * Relative permittivity of aqueous medium (water / physiological saline) at 37°C.
+ * Used in the DEP Clausius-Mossotti factor as the medium dielectric constant.
+ * Ref: Gabriel et al. (1996) — frequency-dependent permittivity of biological tissues.
+ */
+export const EPSILON_R_MEDIUM_WATER = 80
+
+/**
+ * Effective cytoplasm relative permittivity — lower than bulk water due to macromolecular
+ * crowding and reduced free-water fraction; literature range 50–80, nominal 60.
+ * Ref: Pethig (2010) — Dielectrophoresis: Status of the theory, technology, and applications.
+ */
+export const EPSILON_R_CYTOPLASM = 60
+
+/**
+ * Intact cell membrane conductivity [S/m] — the lipid bilayer is nearly insulating at RF.
+ * Literature range 10⁻⁸–10⁻⁶ S/m; nominal 10⁻⁷ S/m used here (Gascoyne & Vykoukal 2002).
+ */
+export const SIGMA_MEMBRANE_SI = 1e-7

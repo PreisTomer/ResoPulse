@@ -126,6 +126,28 @@ Disruption is via mechanical shell resonance.
 Ref: Tsen et al. (2007); Dykeman &amp; Sankey (2010)${basisNote}`
 }
 
+export function tipDep(opts: { isPdep: boolean; kVal: number; crossoverKHz: number }): string {
+  const direction = opts.isPdep
+    ? 'attracted toward high-field regions (field maxima)'
+    : 'repelled away from high-field regions toward field minima'
+  const crossStr = opts.crossoverKHz > 0
+    ? `Crossover frequency where force reverses: ${opts.crossoverKHz.toFixed(0)} kHz`
+    : 'No crossover frequency in range — force direction does not reverse'
+  return `<strong>Dielectrophoresis (DEP)</strong>
+At this frequency the cell is <em>${direction}</em>.
+
+The DEP force magnitude is proportional to K = ${opts.kVal >= 0 ? '+' : ''}${opts.kVal.toFixed(3)}.
+K is the Clausius-Mossotti factor — a measure of how the cell's
+dielectric properties compare to the surrounding medium.
+  K &gt; 0 → cell pulled toward field maxima (positive DEP)
+  K &lt; 0 → cell pushed toward field minima (negative DEP)
+  K = 0 → no net DEP force (crossover frequency)
+
+${crossStr}
+Waveform scale: CW ×0.5 · pulsed ×duty-cycle
+Ref: Gascoyne &amp; Vykoukal (2002)`
+}
+
 export function tipNuclearBar(): string {
   return `<strong>Nuclear Envelope Disruption (Double-Shell Model)</strong>
 Vm_nuc / V_threshold_nuc

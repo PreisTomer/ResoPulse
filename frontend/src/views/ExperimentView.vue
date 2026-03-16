@@ -1207,9 +1207,43 @@ Larger radius raises Vm and lowers the lysis field threshold.`
 
 // Phone — single-column cells, full cards
 @media (max-width: 540px) {
-  .experiment__header        { flex-wrap: wrap; gap: 0.5rem; padding: 0.5rem; }
-  .experiment__cell-badges   { flex-wrap: wrap; gap: 0.5rem; justify-content: center; }
-  .experiment__cell-badge-row { min-width: 140px; }
+  // Header becomes 2-row: [session name | chip] then [badges full-width]
+  .experiment__header {
+    flex-wrap: wrap;
+    gap: 0.4rem 0;
+    padding: 0.45rem 0.6rem;
+    align-items: center;
+  }
+
+  .experiment__header-left  { flex: 1; order: 1; }
+  .experiment__header-right { flex-shrink: 0; order: 2; }
+
+  .experiment__cell-badges {
+    order: 3;
+    width: 100%;
+    gap: 0.4rem;
+    // override the mixin's row — stretch children edge-to-edge
+    display: flex !important;
+    flex-wrap: nowrap;
+    justify-content: stretch;
+  }
+
+  .experiment__cell-slot {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .experiment__cell-badge {
+    display: flex;
+    width: 100%;
+  }
+
+  .experiment__cell-badge-row {
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+  }
+
   .experiment__cells {
     grid-template-columns: 1fr;
     gap: 0.7rem;
