@@ -65,6 +65,22 @@
 
       <div ref="oscCanvas" class="cell-card__osc-canvas"></div>
 
+      <!-- Compact info strip — only in sticky live-view mode (replaces verbose data strips) -->
+      <div v-if="compact" class="cell-card__compact-strip">
+        <span :class="['cell-card__compact-badge', `cell-card__compact-badge--${type}`]">
+          {{ type === CELL_TYPE.HEALTHY ? 'H' : 'T' }}
+        </span>
+        <span :class="['cell-card__compact-dr', `cell-card__compact-dr--${cellState}`]">
+          DR&nbsp;{{ (disruptionRatio * 100).toFixed(0) }}%
+        </span>
+        <span class="cell-card__compact-sep">·</span>
+        <span class="cell-card__compact-temp">{{ temperature.toFixed(1) }}{{ UNIT.DEG_C }}</span>
+        <span :class="['cell-card__compact-dot', `cell-card__compact-dot--${cellState}`]">●</span>
+        <span :class="['cell-card__compact-state', `cell-card__compact-state--${cellState}`]">
+          {{ compactStateLabel }}
+        </span>
+      </div>
+
       <!-- DEP strip — shows when dielectrophoretic force is active (non-resonance mode) -->
       <div
         v-if="!compact && showDepStrip"
@@ -346,6 +362,22 @@ export default defineComponent({
     canResetToPreset(): boolean {
       const cell = this.type === CELL_TYPE.HEALTHY ? this.store.healthy : this.store.target
       return CELL_PRESETS.some((p) => p.presetId === cell.id)
+    },
+
+    /** Short state label shown in the compact sticky strip. Maps CELL_STATE → i18n key. */
+    compactStateLabel(): string {
+      const keyMap: Record<string, string> = {
+        [CELL_STATE.STABLE]:      'stable',
+        [CELL_STATE.NOURISHING]:  'nourishing',
+        [CELL_STATE.APPROACHING]: 'approaching',
+        [CELL_STATE.REV_EP]:      'revEp',
+        [CELL_STATE.CRITICAL]:    'critical',
+        [CELL_STATE.VIBRATING]:   'vibrating',
+        [CELL_STATE.LYSING]:      'lysing',
+        [CELL_STATE.LYSED]:       'lysed',
+      }
+      const key = keyMap[this.cellState]
+      return key ? (this.$t(`cells.compactStates.${key}`) as string) : ''
     },
 
     cellColor(): string {
@@ -784,6 +816,93 @@ export default defineComponent({
   &--compact {
     padding: 0.5rem;
     border-radius: 6px;
+    // Thin state-colored top border — instant traffic-light feedback at a glance
+    border-top: 3px solid var(--color-border);
+
+    &.cell-card--nourishing  { border-top-color: var(--color-primary); }
+    &.cell-card--approaching { border-top-color: var(--color-amber); }
+    &.cell-card--rev-ep      { border-top-color: var(--color-amber); }
+    &.cell-card--critical    { border-top-color: var(--color-danger); }
+    &.cell-card--vibrating   { border-top-color: var(--color-danger); }
+    &.cell-card--lysing      { border-top-color: var(--color-danger); }
+    &.cell-card--lysed       { border-top-color: rgba(255, 77, 109, 0.45); }
+  }
+
+  // ── Compact info strip ────────────────────────────────────────────────────
+  &__compact-strip {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.45rem 0.5rem 0.25rem;
+    font-family: var(--font-mono);
+    font-size: 1.05rem;   // larger base — reads ~11 px after 0.65 scale
+    white-space: nowrap;
+  }
+
+  &__compact-badge {
+    font-size: 1.0rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    padding: 0.1rem 0.4rem;
+    border-radius: 3px;
+    line-height: 1.4;
+
+    &--healthy { background: rgba(0, 212, 255, 0.15); color: var(--color-primary); }
+    &--target  { background: rgba(255, 77, 109, 0.15); color: var(--color-danger); }
+  }
+
+  &__compact-dr {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+
+    &--nourishing  { color: var(--color-primary); }
+    &--approaching { color: var(--color-amber); }
+    &--rev-ep      { color: var(--color-amber); }
+    &--critical    { color: var(--color-danger); }
+    &--vibrating   { color: var(--color-danger); }
+    &--lysing      { color: var(--color-danger); }
+    &--lysed       { color: rgba(255, 77, 109, 0.6); }
+  }
+
+  &__compact-sep {
+    color: var(--color-text-muted);
+    opacity: 0.45;
+    font-size: 0.9rem;
+  }
+
+  &__compact-temp {
+    font-size: 1.0rem;
+    color: var(--color-text-muted);
+    opacity: 0.8;
+  }
+
+  &__compact-dot {
+    font-size: 0.75rem;
+    margin-left: auto;   // push state indicator to the right
+    color: var(--color-text-muted);
+
+    &--nourishing  { color: var(--color-primary); }
+    &--approaching { color: var(--color-amber); }
+    &--rev-ep      { color: var(--color-amber); }
+    &--critical    { color: var(--color-danger); }
+    &--vibrating   { color: var(--color-danger); animation: warn-fade 0.8s ease-in-out infinite; }
+    &--lysing      { color: var(--color-danger); animation: warn-fade 0.5s ease-in-out infinite; }
+    &--lysed       { color: rgba(255, 77, 109, 0.5); }
+  }
+
+  &__compact-state {
+    font-size: 0.95rem;
+    letter-spacing: 0.1em;
+    color: var(--color-text-muted);
+
+    &--nourishing  { color: var(--color-primary); }
+    &--approaching { color: var(--color-amber); }
+    &--rev-ep      { color: var(--color-amber); }
+    &--critical    { color: var(--color-danger); }
+    &--vibrating   { color: var(--color-danger); font-weight: 600; }
+    &--lysing      { color: var(--color-danger); font-weight: 600; }
+    &--lysed       { color: rgba(255, 77, 109, 0.6); }
   }
   padding: 1.5rem;
   @include flex-col(1rem);

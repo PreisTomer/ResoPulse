@@ -78,7 +78,17 @@
       "reduceFieldThermal": "Reduce field / duty cycle to reset",
       "reduceField": "Reduce field intensity to reset"
     },
-    "integrityLabel": "INTEGRITY"
+    "integrityLabel": "INTEGRITY",
+    "compactStates": {
+      "stable":      "STABLE",
+      "nourishing":  "NOURISH",
+      "approaching": "CAUTION",
+      "revEp":       "REV-EP",
+      "critical":    "CRITICAL",
+      "vibrating":   "LYSIS!",
+      "lysing":      "LYSING",
+      "lysed":       "LYSED"
+    }
   },
   "slider": {
     "title": "Field Control",
