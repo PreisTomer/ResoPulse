@@ -1,3 +1,6 @@
+// Copyright © 2026 Tomer Preis. All rights reserved.
+// Unauthorized copying or distribution is prohibited.
+
 /**
  * Socket service — connects to the ResoPulse backend.
  * Falls back to local mode (state applied directly to Pinia stores) if the

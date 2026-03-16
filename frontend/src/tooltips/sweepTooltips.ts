@@ -1,3 +1,6 @@
+// Copyright © 2026 Tomer Preis. All rights reserved.
+// Unauthorized copying or distribution is prohibited.
+
 /**
  * Sweep-panel tooltip builders — extracted from SweepPanel/index.vue.
  * Follows the same pattern as sliderTooltips.ts: pure functions, no store access.

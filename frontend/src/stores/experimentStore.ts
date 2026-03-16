@@ -1,3 +1,6 @@
+// Copyright © 2026 Tomer Preis. All rights reserved.
+// Unauthorized copying or distribution is prohibited.
+
 import { defineStore } from 'pinia'
 import type { LogEventType } from '@/constants/strings'
 import { CELL_LABEL } from '@/constants/strings'

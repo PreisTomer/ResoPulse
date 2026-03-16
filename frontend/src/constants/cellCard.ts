@@ -1,3 +1,6 @@
+// Copyright © 2026 Tomer Preis. All rights reserved.
+// Unauthorized copying or distribution is prohibited.
+
 // ── Canvas geometry ───────────────────────────────────────────────────────────
 export const CANVAS_W   = 280
 export const CANVAS_H   = 194    // must be ≥ 2×(BASE_R+40)=190 to contain aura rings

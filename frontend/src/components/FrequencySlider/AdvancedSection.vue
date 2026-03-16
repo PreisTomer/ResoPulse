@@ -1,3 +1,4 @@
+<!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
 <template>
   <button class="field-panel__accordion" @click="open = !open">
     <span class="field-panel__accordion-label">{{ $t('slider.advanced') }}</span>

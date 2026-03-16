@@ -1,3 +1,6 @@
+// Copyright © 2026 Tomer Preis. All rights reserved.
+// Unauthorized copying or distribution is prohibited.
+
 /**
  * Therapeutic Window Heatmap — grid constants, zone definitions, and colour palette.
  *

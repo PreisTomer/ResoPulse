@@ -1,3 +1,6 @@
+// Copyright © 2026 Tomer Preis. All rights reserved.
+// Unauthorized copying or distribution is prohibited.
+
 import { createI18n } from 'vue-i18n'
 import en from './locales/en.json'
 import protocol from './locales/protocol.en.json'

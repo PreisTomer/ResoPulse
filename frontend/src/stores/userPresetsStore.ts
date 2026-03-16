@@ -1,3 +1,6 @@
+// Copyright © 2026 Tomer Preis. All rights reserved.
+// Unauthorized copying or distribution is prohibited.
+
 /**
  * User-defined cell presets — persisted to localStorage.
  * Allows scientists to import biophysical parameters from their own literature

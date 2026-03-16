@@ -1,3 +1,4 @@
+<!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
 <template>
   <div class="stat-card" v-tip="tooltip || undefined">
     <span class="stat-card__label">{{ label }}</span>

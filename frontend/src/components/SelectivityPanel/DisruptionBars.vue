@@ -1,3 +1,4 @@
+<!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
 <template>
   <div class="sel-panel__bars">
     <div class="sel-panel__bar-row" v-tip="tipTargetBar">

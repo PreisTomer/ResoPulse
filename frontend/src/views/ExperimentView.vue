@@ -1,3 +1,4 @@
+<!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
 <template>
   <div class="experiment" @click.self="healthyPickerOpen = false; targetPickerOpen = false">
 
@@ -265,6 +266,9 @@
     @close="showCreateModal = false"
     @saved="onUserPresetSaved"
   />
+
+  <!-- Terms of Use gate — shown on first visit -->
+  <TermsGate v-if="showTermsGate" @accepted="showTermsGate = false" />
 </template>
 
 <script lang="ts">
@@ -283,6 +287,7 @@ import SweepPanel from '@/components/SweepPanel/index.vue'
 import PopulationPanel from '@/components/PopulationPanel/index.vue'
 import ExperimentLog from '@/components/ExperimentLog.vue'
 import CreateCellModal from '@/components/CreateCellModal/index.vue'
+import TermsGate from '@/components/TermsGate.vue'
 import { useExperimentStore } from '@/stores/experimentStore'
 import { useImpedanceStore } from '@/stores/impedanceStore'
 import { useUserPresetsStore } from '@/stores/userPresetsStore'
@@ -300,6 +305,7 @@ import { UNIT } from '@/constants/units'
 export default defineComponent({
   components: {
     AccordionPanel,
+    TermsGate,
     CellCard,
     FrequencySlider,
     FrequencyResponseChart,
@@ -348,6 +354,7 @@ export default defineComponent({
 
   data() {
     return {
+      showTermsGate: localStorage.getItem('rp_terms_v1') !== '1',
       healthyPickerOpen: false,
       targetPickerOpen: false,
       targetPickerCategory: CELL_GROUP.CANCER as CellGroup | 'custom',

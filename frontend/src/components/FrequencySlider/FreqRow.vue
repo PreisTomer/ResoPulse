@@ -1,3 +1,4 @@
+<!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
 <template>
   <!-- Snap to Optimal / fc buttons (non-resonance only) -->
   <div v-if="!isResonanceMode" class="field-panel__optimal-row">
