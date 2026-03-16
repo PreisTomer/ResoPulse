@@ -7,6 +7,7 @@
       :subtitle="$t('heatmap.subtitle')"
       :initial-open="false"
       :border-on-toggle="true"
+      @open-change="onAccordionOpen"
     >
     <div class="hmap__body">
 
@@ -637,6 +638,10 @@ export default defineComponent({
     },
 
     // ── Lifecycle ──────────────────────────────────────────────────────────────
+
+    onAccordionOpen(open: boolean) {
+      if (open) this.$nextTick(() => this._recompute())
+    },
 
     _scheduleRecompute() {
       if (this.redrawTimer) clearTimeout(this.redrawTimer)
