@@ -64,6 +64,15 @@
     "switchToResonanceBtn": "→ Switch to Resonance Mode",
 
     "orientFracLabel": "P(lysis) random orientation",
-    "tipOrientFrac": "<strong>Random-Orientation Lysis Probability</strong>\nIn a real experiment cells are randomly oriented. The Schwan Vm has a cosθ factor:\n  Vm(θ) = 1.5·E·R·cosθ / √(1+(ωτ)²)\n\nFor a 3D isotropic distribution, the fraction of cells with Vm > V_thr is:\n  P = max(0, 1 − 1/DR)   where DR = Vm_max / V_thr\n\nExamples:\n  DR = 1.0 → 0% of cells lyse (none aligned enough)\n  DR = 2.0 → 50% lyse\n  DR = 5.0 → 80% lyse\n\n<em>Resonance mode (bacteria/virus)</em>: acoustic pressure is nearly omnidirectional —\nthe cosθ formula does not apply. Orientation fraction shows — in that mode."
+    "tipOrientFrac": "<strong>Random-Orientation Lysis Probability</strong>\nIn a real experiment cells are randomly oriented. The Schwan Vm has a cosθ factor:\n  Vm(θ) = 1.5·E·R·cosθ / √(1+(ωτ)²)\n\nFor a 3D isotropic distribution, the fraction of cells with Vm > V_thr is:\n  P = max(0, 1 − 1/DR)   where DR = Vm_max / V_thr\n\nExamples:\n  DR = 1.0 → 0% of cells lyse (none aligned enough)\n  DR = 2.0 → 50% lyse\n  DR = 5.0 → 80% lyse\n\n<em>Resonance mode (bacteria/virus)</em>: acoustic pressure is nearly omnidirectional —\nthe cosθ formula does not apply. Orientation fraction shows — in that mode.",
+
+    "depTitle": "DIELECTROPHORESIS",
+    "depPdep": "pDEP",
+    "depNdep": "nDEP",
+    "depKLabel": "Re[K]",
+    "depCrossLabel": "f_cross",
+    "depForceLabel": "wf scale",
+    "depCrossNone": "—",
+    "tipDep": "<strong>Dielectrophoresis (DEP)</strong>\nClausius-Mossotti factor K(ω) — single-shell sphere model.\n  K(ω) = (ε*_eff − ε*_m) / (ε*_eff + 2ε*_m)\n  ε*(ω) = ε_r·ε₀ − jσ/ω\n\n<span class=\"tip-ok\">pDEP</span>  Re[K] &gt; 0 — cell attracted to field maxima\n<span class=\"tip-warn\">nDEP</span>  Re[K] &lt; 0 — cell repelled from field maxima\n  f_cross — crossover frequency where Re[K] = 0\n\nEffective time-averaged force scales:\n  CW sinusoidal: × 0.50\n  Pulsed H-FIRE: × duty cycle\n\nRef: Gascoyne &amp; Vykoukal (2002) Curr. Opin. Cell Biol.\nNote: model invalid at GHz acoustic resonance frequencies."
   }
 }

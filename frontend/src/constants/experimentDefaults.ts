@@ -39,7 +39,7 @@ export const DEFAULT_LYSIS_N_PULSES = 10
 export const SWEEP_TI_CAP = 5
 
 export const CATEGORY_DEFAULTS = {
-  mammalian: { fieldVcm: 150,  freqKHz: 417,       waveform: 'pulsed' as const, dutyCycle: 1e-4, pulseWidthNs: 100000, medium: 'saline' as const },
+  mammalian: { fieldVcm: 10,   freqKHz: 417,       waveform: 'pulsed' as const, dutyCycle: 1e-4, pulseWidthNs: 100000, medium: 'saline' as const },
   bacteria:  { fieldVcm: 1000, freqKHz: 500000,    waveform: 'pulsed' as const, dutyCycle: 1e-6, pulseWidthNs: 10,     medium: 'saline' as const },
   virus:     { fieldVcm: 400,  freqKHz: 12000000,  waveform: 'pulsed' as const, dutyCycle: 1e-6, pulseWidthNs: 10,     medium: 'saline' as const },
 } as const

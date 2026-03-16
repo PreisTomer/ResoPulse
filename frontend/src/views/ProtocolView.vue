@@ -233,7 +233,45 @@
               </tbody>
             </table>
 
-            <!-- 2.8 Conductivity Uncertainty -->
+            <!-- 2.8 Dielectrophoresis (DEP) -->
+            <h3 id="dep" class="protocol__subsection-title" v-html="$t('protocol.physics.dep.title')"></h3>
+            <p class="protocol__body-text" v-html="$t('protocol.physics.dep.p1')"></p>
+            <div class="protocol__eq-block">
+              <div class="protocol__eq-main" v-html="$t('protocol.physics.dep.eqForce')"></div>
+              <div class="protocol__eq-sub" v-html="$t('protocol.physics.dep.eqForceSub')"></div>
+            </div>
+            <p class="protocol__body-text" v-html="$t('protocol.physics.dep.p2')"></p>
+            <div class="protocol__eq-block">
+              <div class="protocol__eq-main" v-html="$t('protocol.physics.dep.eqCm')"></div>
+              <div class="protocol__eq-sub" v-html="$t('protocol.physics.dep.eqCmSub1')"></div>
+              <div class="protocol__eq-sub" v-html="$t('protocol.physics.dep.eqCmSub2')"></div>
+              <div class="protocol__eq-sub" v-html="$t('protocol.physics.dep.eqCmSub3')"></div>
+              <div class="protocol__eq-note" v-html="$t('protocol.physics.dep.eqNote')"></div>
+            </div>
+            <p class="protocol__body-text" v-html="$t('protocol.physics.dep.p3')"></p>
+            <p class="protocol__body-text" v-html="$t('protocol.physics.dep.p4')"></p>
+            <div class="protocol__warn-box" v-html="$t('protocol.physics.dep.warnBox')"></div>
+            <table class="protocol__param-table">
+              <caption class="protocol__table-caption" v-html="$t('protocol.physics.dep.tableCaption')"></caption>
+              <thead>
+                <tr>
+                  <th v-html="$t('protocol.physics.dep.thSym')"></th>
+                  <th v-html="$t('protocol.physics.dep.thParam')"></th>
+                  <th v-html="$t('protocol.physics.dep.thUnit')"></th>
+                  <th v-html="$t('protocol.physics.dep.thNote')"></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="row in depRows" :key="row.sym">
+                  <td class="protocol__mono" v-html="row.sym"></td>
+                  <td v-html="row.param"></td>
+                  <td class="protocol__mono" v-html="row.unit"></td>
+                  <td v-html="row.note"></td>
+                </tr>
+              </tbody>
+            </table>
+
+            <!-- 2.9 Conductivity Uncertainty -->
             <h3 id="uncertainty" class="protocol__subsection-title" v-html="$t('protocol.physics.uncertainty.title')"></h3>
             <p class="protocol__body-text" v-html="$t('protocol.physics.uncertainty.p1')"></p>
             <p class="protocol__body-text" v-html="$t('protocol.physics.uncertainty.p2')"></p>
@@ -382,6 +420,7 @@ import { defineComponent } from 'vue'
 interface SchwanParamRow   { sym: string; param: string; unit: string; note: string }
 interface ResonanceRow     { target: string; fres: string; fresClass: string; q: string; ethr: string; ethrClass: string; basis: string }
 interface DoubleshellRow   { cell: string; rnuc: string; rnucClass?: string; dne: string; dneClass?: string; ene: string; eneClass?: string; vthr: string; vThrClass?: string; fpeak: string; fpeakClass: string }
+interface DepRow           { sym: string; param: string; unit: string; note: string }
 interface UncertaintyRow   { category: string; band: string; bandClass: string; range: string; source: string }
 interface SafetyRow        { param: string; value: string; valueClass: string; sig: string }
 interface RawRefItem       { body: string; doi?: string; pmid?: string; note?: string }
@@ -398,6 +437,7 @@ const TOC_ITEMS: TocItem[] = [
   { id: 'resonance',      key: 'resonance',     indent: true },
   { id: 'nsep',           key: 'nsep',          indent: true },
   { id: 'doubleshell',    key: 'doubleshell',   indent: true },
+  { id: 'dep',            key: 'dep',           indent: true },
   { id: 'uncertainty',    key: 'uncertainty',   indent: true },
   { id: 'biomodulation',  key: 'biomodulation', indent: true },
   { id: 'impedance',      key: 'impedance',     indent: true },
@@ -410,12 +450,12 @@ const TOC_ITEMS: TocItem[] = [
 const ALL_SECTION_IDS = [
   'overview',
   'physics', 'schwan', 'thermal', 'maxwell', 'disruption',
-  'resonance', 'nsep', 'doubleshell', 'uncertainty', 'biomodulation',
+  'resonance', 'nsep', 'doubleshell', 'dep', 'uncertainty', 'biomodulation',
   'impedance', 'sonification',
   'protocol-steps', 'safety', 'refs',
 ] as const
 
-const PHYSICS_IDS = new Set(['physics', 'schwan', 'thermal', 'maxwell', 'disruption', 'resonance', 'nsep', 'doubleshell', 'uncertainty', 'biomodulation', 'impedance', 'sonification'])
+const PHYSICS_IDS = new Set(['physics', 'schwan', 'thermal', 'maxwell', 'disruption', 'resonance', 'nsep', 'doubleshell', 'dep', 'uncertainty', 'biomodulation', 'impedance', 'sonification'])
 
 export default defineComponent({
   data() {
@@ -448,6 +488,10 @@ export default defineComponent({
 
     doubleshellRows(): DoubleshellRow[] {
       return (this.$tm as Function)('protocol.physics.doubleshell.rows') as DoubleshellRow[]
+    },
+
+    depRows(): DepRow[] {
+      return (this.$tm as Function)('protocol.physics.dep.params') as DepRow[]
     },
 
     uncertaintyRows(): UncertaintyRow[] {

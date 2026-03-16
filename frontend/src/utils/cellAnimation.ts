@@ -607,29 +607,74 @@ export function setupBlobAnimation(
     cellG.append('circle').attr('r', BASE_R + 40).attr('fill', 'none').attr('stroke', accentColor).attr('stroke-width', 0.5),
   ]
 
+  // ── Cell body group (rotatable — bacteria align to field axis under DEP) ──
+  // Field rays and aura rings stay in cellG (they represent the external field,
+  // not the cell body, so they must not rotate with the cell).
+  const bodyG = cellG.append('g')
+
   // ── Cell body fill ────────────────────────────────────────────────────────
-  const blobFill = cellG.append('path').attr('fill', `url(#${gradId})`)
+  const blobFill = bodyG.append('path').attr('fill', `url(#${gradId})`)
 
   // ── Category-specific anatomy setup ───────────────────────────────────────
   const mammalianAnatomy = cellCategory === CELL_CATEGORY.MAMMALIAN
-    ? setupMammalianAnatomy(cellG, type, accentColor) : null
+    ? setupMammalianAnatomy(bodyG, type, accentColor) : null
   const bacteriaAnatomy  = cellCategory === CELL_CATEGORY.BACTERIA
-    ? setupBacteriaAnatomy(cellG, accentColor, isRod, ROD_A, ROD_B) : null
+    ? setupBacteriaAnatomy(bodyG, accentColor, isRod, ROD_A, ROD_B) : null
   const virusAnatomy     = cellCategory === CELL_CATEGORY.VIRUS
-    ? setupVirusAnatomy(cellG, accentColor, presetId) : null
+    ? setupVirusAnatomy(bodyG, accentColor, presetId) : null
 
   // ── Membrane stroke (on top of all interior elements) ─────────────────────
-  const blobStroke = cellG.append('path').attr('fill', 'none').attr('stroke', accentColor)
+  const blobStroke = bodyG.append('path').attr('fill', 'none').attr('stroke', accentColor)
     .attr('stroke-width', 2.5).attr('filter', `url(#${glowId})`)
 
   // ── Electroporation / capsid pores ────────────────────────────────────────
   // Drawn in BG colour — appear as holes in the membrane at high disruption.
   // Side pores (pore3/4) disabled for rod shape since those positions are off-membrane.
   const SIN60 = Math.sin(Math.PI / 3), COS60 = Math.cos(Math.PI / 3)
-  const northPore = cellG.append('circle').attr('cy', -northPoleR).attr('r', 0).attr('fill', BG)
-  const southPore = cellG.append('circle').attr('cy',  southPoleR).attr('r', 0).attr('fill', BG)
-  const pore3 = cellG.append('circle').attr('cx',  BASE_R * SIN60).attr('cy', -BASE_R * COS60).attr('r', 0).attr('fill', BG)
-  const pore4 = cellG.append('circle').attr('cx', -BASE_R * SIN60).attr('cy',  BASE_R * COS60).attr('r', 0).attr('fill', BG)
+  const northPore = bodyG.append('circle').attr('cy', -northPoleR).attr('r', 0).attr('fill', BG)
+  const southPore = bodyG.append('circle').attr('cy',  southPoleR).attr('r', 0).attr('fill', BG)
+  const pore3 = bodyG.append('circle').attr('cx',  BASE_R * SIN60).attr('cy', -BASE_R * COS60).attr('r', 0).attr('fill', BG)
+  const pore4 = bodyG.append('circle').attr('cx', -BASE_R * SIN60).attr('cy',  BASE_R * COS60).attr('r', 0).attr('fill', BG)
+
+  // ── Pseudo-3D depth cues ───────────────────────────────────────────────────
+  // Equatorial ring: thin horizontal ellipse at the cell's equatorial plane,
+  // foreshortened in perspective (ry ≪ rx). Deforms with DEP force to show
+  // whether the cell is prolate (pDEP, E-W) or oblate (nDEP, N-S).
+  const equatorialRing = bodyG.append('ellipse')
+    .attr('rx', BASE_R * 0.88).attr('ry', BASE_R * 0.13)
+    .attr('fill', 'none')
+    .attr('stroke', accentColor).attr('stroke-width', 0.5).attr('stroke-opacity', 0.07)
+    .attr('pointer-events', 'none')
+
+  // Specular highlight: small soft ellipse on upper-left quadrant.
+  // Simulates a diffuse light source from upper-left — turns the flat blob into a legible sphere.
+  const specularDot = bodyG.append('ellipse')
+    .attr('rx', BASE_R * 0.19).attr('ry', BASE_R * 0.12)
+    .attr('cx', -BASE_R * 0.22).attr('cy', -BASE_R * 0.30)
+    .attr('fill', 'white').attr('fill-opacity', 0.09)
+    .attr('pointer-events', 'none')
+
+  // ── DEP visual effects state ───────────────────────────────────────────────
+  // Three visual cues for DEP — no arrows, no symbols:
+  //
+  // 1. Blob deformation (blobPts map below):
+  //    pDEP (K > 0): cell elongates E-W (toward field-maxima electrodes).
+  //    nDEP (K < 0): cell elongates N-S (squeezed out of high-field zone).
+  //    Formula: depDeform(θ) = K · BASE_R · 0.24 · (−cos 2θ)
+  //    Hidden at |K| < 0.02, field < 5 V/cm, or lysed/lysing.
+  //
+  // 2. Bacteria alignment rotation (bacteria only):
+  //    pDEP → long axis parallel to field (vertical, 0°)
+  //    nDEP → long axis perpendicular to field (horizontal, 90°)
+  //    Smooth exponential interpolation toward target angle.
+  //
+  // 3. Translational drift (all cells):
+  //    pDEP → cell drifts toward field source (upward, −Y)
+  //    nDEP → cell drifts away from field source (downward, +Y)
+  //    Smooth exponential interpolation; max ±8px.
+  let depDeformScale = 0   // updated every timer tick before blobPts
+  let depAlignAngle  = 0   // bacteria rotation toward/from field axis (degrees)
+  let depDriftY      = 0   // whole-cell translational drift (px, toward/from field source)
 
   // ── Blob perimeter control points ─────────────────────────────────────────
   const N = BLOB_POINTS
@@ -654,7 +699,7 @@ export function setupBlobAnimation(
 
   // ── D3 timer loop ──────────────────────────────────────────────────────────
   const timer = d3.timer((elapsed: number) => {
-    const { impact, state, color, temperature, fieldVcm, freqKHz, nuclearDisruptionRatio } = getFrame()
+    const { impact, state, color, temperature, fieldVcm, freqKHz, nuclearDisruptionRatio, depCmReal } = getFrame()
 
     // ── Field ray color + intensity (constant per tick, shared by all states) ─
     // freqKHz log-scale 10 kHz → 30 GHz: cyan (#00d4ff) → violet (#a78bfa)
@@ -671,6 +716,42 @@ export function setupBlobAnimation(
     rayNC.attr('opacity', rayOpacity)
     rayNL.attr('opacity', rayOpacity * 0.38)
     rayNR.attr('opacity', rayOpacity * 0.38)
+
+    // ── DEP blob deformation + concentration halos ───────────────────────────
+    // Computed here so depDeformScale is available in the blobPts map() below.
+    const depAbsK = Math.abs(depCmReal)
+    const depActive = depAbsK >= 0.02 && fieldVcm >= 5
+      && state !== CELL_STATE.LYSED && state !== CELL_STATE.LYSING
+    depDeformScale = depActive ? depCmReal * BASE_R * 0.24 : 0
+
+    // ── DEP: bacteria alignment rotation ─────────────────────────────────────
+    // Bacteria orient along field axis due to DEP torque.
+    // pDEP (K>0): long axis parallel to field = 0° (vertical, field is N-S in canvas)
+    // nDEP (K<0): long axis perpendicular to field = 90° rotation
+    const targetAlignAngle = (cellCategory === CELL_CATEGORY.BACTERIA && depActive)
+      ? (depCmReal > 0 ? 0 : 90)
+      : 0
+    depAlignAngle += (targetAlignAngle - depAlignAngle) * 0.025
+    bodyG.attr('transform', `rotate(${depAlignAngle.toFixed(2)})`)
+
+    // ── DEP: translational drift toward/away from field source ───────────────
+    // pDEP: cell migrates toward high-field region (electrode = top of canvas)
+    // nDEP: cell migrates away from electrode, toward field minimum
+    const targetDrift = depActive ? (depCmReal > 0 ? -8 : 8) : 0
+    depDriftY += (targetDrift - depDriftY) * 0.018
+    cellG.attr('transform', `translate(${cx},${(cy + depDriftY).toFixed(2)})`)
+
+    // ── Pseudo-3D: equatorial ring deformation ────────────────────────────────
+    // Equatorial ring rx tracks the E-W extent of the cell (same axis as depDeformScale).
+    // pDEP: ring widens (prolate, E-W elongation); nDEP: ring narrows (oblate, N-S elongation).
+    const eqRx = Math.max(4, BASE_R * 0.88 + depDeformScale * 0.55)
+    equatorialRing
+      .attr('rx', eqRx)
+      .attr('stroke', color)
+      .attr('stroke-opacity', depActive ? 0.13 + depAbsK * 0.09 : 0.07)
+
+    // Specular highlight — static 3D depth cue; brightens slightly with field intensity
+    specularDot.attr('fill-opacity', 0.07 + fieldNorm * 0.06)
 
     // ── Lysed ──────────────────────────────────────────────────────────────
     if (state === CELL_STATE.LYSED) {
@@ -703,6 +784,8 @@ export function setupBlobAnimation(
         })
       }
       rayNC.attr('opacity', 0); rayNL.attr('opacity', 0); rayNR.attr('opacity', 0)
+      equatorialRing.attr('stroke-opacity', 0)
+      specularDot.attr('fill-opacity', 0)
       northPore.attr('r', 0); southPore.attr('r', 0)
       pore3.attr('r', 0);     pore4.attr('r', 0)
       glowBlur.attr('stdDeviation', '1')
@@ -757,6 +840,8 @@ export function setupBlobAnimation(
       northPore.attr('r', 6 + progress * 8); southPore.attr('r', 6 + progress * 8)
       pore3.attr('r', isRod ? 0 : 3 + progress * 5)
       pore4.attr('r', isRod ? 0 : 3 + progress * 5)
+      equatorialRing.attr('stroke-opacity', Math.max(0, 0.07 - progress * 0.07))
+      specularDot.attr('fill-opacity', Math.max(0, 0.09 - progress * 0.09))
       glowBlur.attr('stdDeviation', (3 + progress * 12).toFixed(1))
       return
     }
@@ -772,10 +857,11 @@ export function setupBlobAnimation(
     const speedMult = isVibrating ? 1 + impact * 5 : isNourishing ? 0.4 + impact * 0.4 : 0.8
 
     const blobPts: BlobPoint[] = blobPhases.map((ph, idx) => {
-      const baseR = shapeBaseR(ph.baseAngle) + (cancerBaseOffsets[idx] ?? 0)
-      const wave  = Math.sin(elapsed * 0.001 * ph.speed * speedMult + ph.phaseOffset) * jitter
-      const noise = (Math.random() - 0.5) * (isVibrating ? jitter * 0.5 : 2.5) * rigidityFactor
-      return { angle: ph.baseAngle, r: baseR * radiusMod + wave + noise }
+      const baseR  = shapeBaseR(ph.baseAngle) + (cancerBaseOffsets[idx] ?? 0)
+      const wave   = Math.sin(elapsed * 0.001 * ph.speed * speedMult + ph.phaseOffset) * jitter
+      const noise  = (Math.random() - 0.5) * (isVibrating ? jitter * 0.5 : 2.5) * rigidityFactor
+      const depR   = depDeformScale !== 0 ? depDeformScale * (-Math.cos(2 * ph.baseAngle)) : 0
+      return { angle: ph.baseAngle, r: baseR * radiusMod + wave + noise + depR }
     })
     const blobPath = blobLine(blobPts) || ''
 

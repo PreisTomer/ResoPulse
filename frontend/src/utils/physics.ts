@@ -1,6 +1,6 @@
 // Biophysics utilities — Schwan single-shell model, SAR, nsEP, acoustic resonance, EM skin depth
 import type { CellConfig } from '@/types/cell'
-import { SCHWAN_SPHERE_FACTOR, WF_CW } from '@/constants/physics'
+import { SCHWAN_SPHERE_FACTOR, WF_CW, EPSILON_R_CYTOPLASM, SIGMA_MEMBRANE_SI } from '@/constants/physics'
 
 export const EPSILON_0 = 8.854187817e-12 // F/m
 
@@ -54,6 +54,96 @@ export function computeSAR(
   const E_si  = fieldVcm * VCM_TO_VM
   const alpha = (3 * sigma_e) / (2 * sigma_e + cell.conductivity)
   return (cell.conductivity * alpha ** 2 * E_si ** 2 * waveformFactor) / cell.density
+}
+
+// ── Dielectrophoresis — Clausius-Mossotti factor (single-shell model) ────────
+
+// Inline complex arithmetic helpers  [real, imaginary]
+type Cpx = [number, number]
+function cadd(a: Cpx, b: Cpx): Cpx { return [a[0]+b[0], a[1]+b[1]] }
+function csub(a: Cpx, b: Cpx): Cpx { return [a[0]-b[0], a[1]-b[1]] }
+function cdiv(a: Cpx, b: Cpx): Cpx {
+  const d = b[0]**2 + b[1]**2
+  return [(a[0]*b[0] + a[1]*b[1])/d, (a[1]*b[0] - a[0]*b[1])/d]
+}
+function cscale(a: Cpx, s: number): Cpx { return [a[0]*s, a[1]*s] }
+function cmul(a: Cpx, b: Cpx): Cpx {
+  return [a[0]*b[0] - a[1]*b[1], a[0]*b[1] + a[1]*b[0]]
+}
+
+/**
+ * Re[K(ω)] — real part of the Clausius-Mossotti factor (single-shell sphere model).
+ *
+ * K(ω) = (ε*_eff − ε*_m) / (ε*_eff + 2ε*_m)
+ *
+ * ε*_eff: single-shell effective complex permittivity (Gascoyne & Vykoukal 2002)
+ * γ = ((R−d)/R)³; ε*_eff = ε*_mem × [γ(ε*_c + 2ε*_mem) + 2(ε*_c − ε*_mem)]
+ *                                   / [γ(ε*_c + 2ε*_mem) − (ε*_c − ε*_mem)]
+ *
+ * Re[K] > 0 → positive DEP (cell attracted to field maxima)
+ * Re[K] < 0 → negative DEP (cell repelled from field maxima)
+ * Re[K] = 0 → crossover frequency (polarity switches)
+ *
+ * For pulsed waveforms the direction (sign) of Re[K] is unchanged; only the
+ * time-averaged force magnitude scales by duty cycle — handled in the store.
+ *
+ * Ref: Gascoyne & Vykoukal, Electrophoresis 23:1973 (2002) [16]
+ * Ref: Pethig, Biomicrofluidics 4:022811 (2010)
+ */
+export function computeDepCmReal(
+  cell: CellConfig,
+  freqKHz: number,
+  sigma_e: number,
+  epsilon_r_medium: number,
+): number {
+  const omega = 2 * Math.PI * freqKHz * KHZ_TO_HZ
+  // DC limit: Re[K] = (σ_i − σ_e) / (σ_i + 2σ_e)
+  if (omega < 1) return (cell.conductivity - sigma_e) / (cell.conductivity + 2 * sigma_e)
+
+  // Complex permittivities: ε*(ω) = ε_r·ε₀ − j·σ/ω
+  const epsCyto: Cpx = [EPSILON_R_CYTOPLASM  * EPSILON_0, -cell.conductivity / omega]
+  const epsMem:  Cpx = [cell.dielectricConstant * EPSILON_0, -SIGMA_MEMBRANE_SI / omega]
+  const epsMed:  Cpx = [epsilon_r_medium * EPSILON_0, -sigma_e / omega]
+
+  // Single-shell geometry: γ = (r_inner/R)³  [thin-shell: d ≪ R]
+  const R     = cell.radius * UM_TO_M
+  const d     = cell.membraneThickness * NM_TO_M
+  const gamma = Math.max(0, ((R - d) / R) ** 3)
+
+  // ε*_eff = ε*_mem × numerator / denominator  (Gascoyne & Vykoukal 2002)
+  const sum  = cadd(epsCyto, cscale(epsMem, 2))   // ε*_c + 2ε*_mem
+  const diff = csub(epsCyto, epsMem)               // ε*_c − ε*_mem
+  const num  = cadd(cscale(sum, gamma), cscale(diff, 2))
+  const den  = csub(cscale(sum, gamma), diff)
+  const epsEff = cmul(epsMem, cdiv(num, den))
+
+  // K = (ε*_eff − ε*_m) / (ε*_eff + 2ε*_m)
+  const K = cdiv(csub(epsEff, epsMed), cadd(epsEff, cscale(epsMed, 2)))
+  return Math.max(-0.5, Math.min(0.5, K[0]))
+}
+
+/**
+ * First DEP crossover frequency [kHz] — where Re[K(f)] changes sign.
+ * Log-space binary search from 1 kHz to 10 GHz (10⁷ kHz).
+ * Returns 0 if no sign change found in this range (always pDEP or always nDEP).
+ */
+export function computeDepCrossoverKHz(
+  cell: CellConfig,
+  sigma_e: number,
+  epsilon_r_medium: number,
+): number {
+  const fLo = 1, fHi = 10_000_000  // kHz: 1 kHz to 10 GHz
+  const kLo = computeDepCmReal(cell, fLo, sigma_e, epsilon_r_medium)
+  const kHi = computeDepCmReal(cell, fHi, sigma_e, epsilon_r_medium)
+  if (kLo * kHi > 0) return 0  // no zero-crossing in range
+  let lo = fLo, hi = fHi
+  for (let i = 0; i < 52; i++) {
+    const mid  = Math.sqrt(lo * hi)  // geometric midpoint (log-scale bisection)
+    const kMid = computeDepCmReal(cell, mid, sigma_e, epsilon_r_medium)
+    if (Math.abs(kMid) < 1e-12) return mid
+    if (kLo * kMid < 0) { hi = mid } else { lo = mid }
+  }
+  return Math.sqrt(lo * hi)
 }
 
 /** fc = 1/(2πτ)  [kHz] */

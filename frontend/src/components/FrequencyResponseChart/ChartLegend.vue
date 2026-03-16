@@ -31,6 +31,16 @@
       class="freq-chart__legend-item"
       v-tip="$t('chart.tipNucT')"
     ><span class="freq-chart__legend-line freq-chart__legend-line--nuc-t"></span> {{ $t('chart.legendNucT') }}</span>
+    <span
+      v-if="store.chartMode !== 'resonance'"
+      class="freq-chart__legend-item"
+      v-tip="$t('chart.tipDepH')"
+    ><span class="freq-chart__legend-line freq-chart__legend-line--dep-h"></span> {{ $t('chart.legendDepH') }}</span>
+    <span
+      v-if="store.chartMode !== 'resonance'"
+      class="freq-chart__legend-item"
+      v-tip="$t('chart.tipDepT')"
+    ><span class="freq-chart__legend-line freq-chart__legend-line--dep-t"></span> {{ $t('chart.legendDepT') }}</span>
   </div>
 </template>
 
@@ -106,6 +116,8 @@ export default defineComponent({
     &--sel { width: 18px; height: 0; border-top: 2px dashed #fbbf24; background: transparent; opacity: 0.8; }
     &--nuc-h { width: 18px; height: 0; border-top: 2px dashed rgba(0, 212, 255, 0.55); background: transparent; }
     &--nuc-t { width: 18px; height: 0; border-top: 2px dashed rgba(255, 77, 109, 0.55); background: transparent; }
+    &--dep-h { width: 18px; height: 0; border-top: 2px dotted rgba(0, 212, 255, 0.50); background: transparent; }
+    &--dep-t { width: 18px; height: 0; border-top: 2px dotted rgba(255, 77, 109, 0.50); background: transparent; }
   }
 }
 </style>

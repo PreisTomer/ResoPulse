@@ -37,10 +37,11 @@
 import { defineComponent } from 'vue'
 import * as d3 from 'd3'
 import { useCellStore } from '@/stores/cellStore'
-import { computeSchwan, computeFc, computeNuclearVm, computeResonantLineshape, computeResonantDisruption, computeTau } from '@/utils/physics'
+import { computeSchwan, computeFc, computeNuclearVm, computeResonantLineshape, computeResonantDisruption, computeTau, computeDepCmReal } from '@/utils/physics'
 import { CELL_PRESETS, GROUP_COLORS } from '@/constants/cellLibrary'
 import { DEFAULT_CAPSID_Q } from '@/constants/cellCard'
 import { CELL_CATEGORY, CHART_MODE, CELL_LABEL } from '@/constants/strings'
+import { MEDIA } from '@/constants/media'
 import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'
 import { broadcastStateSync } from '@/services/socket'
@@ -53,7 +54,7 @@ const F_MAX_HZ = 500_000_000
 const F_CURSOR_MAX_KHZ = 10000  // 10 MHz — covers bacteria fc range
 const N_POINTS = 200
 
-const MARGIN = { top: 22, right: 88, bottom: 52, left: 54 }  // right 68→88 for secondary axis
+const MARGIN = { top: 22, right: 130, bottom: 52, left: 54 }  // right 130 for selectivity + DEP axes
 
 function logspace(min: number, max: number, n: number): number[] {
   const step = (Math.log10(max) - Math.log10(min)) / (n - 1)
@@ -75,6 +76,7 @@ export default defineComponent({
       _xScale: null as d3.ScaleLogarithmic<number, number> | null,
       _yScale: null as d3.ScaleLinear<number, number> | null,
       _yRightScale: null as d3.ScaleLinear<number, number> | null,
+      _yDepScale: null as d3.ScaleLinear<number, number> | null,
       _chartW: 0,
       _chartH: 0,
       _resizeObserver: null as ResizeObserver | null,
@@ -92,6 +94,8 @@ export default defineComponent({
     'store.currentBroadcastFrequency': { handler() { this.updateCursor() } },
     'store.doubleShellEnabled':        { handler() { this.updateChart() } },
     'store.chartMode':                 { handler() { this.updateChart() } },
+    'store.waveform':                  { handler() { this.updateChart() } },
+    'store.dutyCycle':                 { handler() { this.updateChart() } },
   },
 
   mounted() {
@@ -146,6 +150,17 @@ export default defineComponent({
       }))
     },
 
+    // ── DEP Clausius-Mossotti Re[K(f)] curve ─────────────────────────────
+    // Valid in Schwan mode (kHz–500 MHz); not drawn in resonance mode (GHz, model invalid).
+    // Bacteria (rod-shaped) use sphere approximation — qualitatively correct for crossover.
+    // Waveform scale: CW = 0.5, pulsed = dutyCycle (affects magnitude, not direction/sign).
+    computeDepCurve(cell: typeof this.store.healthy, sigma_e: number, eps_r: number): { hz: number; k: number }[] {
+      return F_POINTS_HZ.map((hz) => ({
+        hz,
+        k: computeDepCmReal(cell, hz / 1000, sigma_e, eps_r),
+      }))
+    },
+
     // ── Selectivity ratio curve Vm_T/Vm_H (cos θ cancels in ratio) ──────
     computeSelCurve(sigma_e: number): { hz: number; ratio: number }[] {
       return F_POINTS_HZ.map((hz) => {
@@ -180,9 +195,10 @@ export default defineComponent({
         .attr('class', 'chart-g')
 
       // Scales
-      this._xScale     = d3.scaleLog().domain([F_MIN_HZ, F_MAX_HZ]).range([0, this._chartW])
-      this._yScale     = d3.scaleLinear().domain([0, 100]).range([this._chartH, 0])
+      this._xScale      = d3.scaleLog().domain([F_MIN_HZ, F_MAX_HZ]).range([0, this._chartW])
+      this._yScale      = d3.scaleLinear().domain([0, 100]).range([this._chartH, 0])
       this._yRightScale = d3.scaleLinear().domain([0, 2]).range([this._chartH, 0])
+      this._yDepScale   = d3.scaleLinear().domain([-0.5, 0.5]).range([this._chartH, 0])
 
       // Grid lines (horizontal)
       g.append('g').attr('class', 'grid-h')
@@ -191,6 +207,8 @@ export default defineComponent({
       g.append('g').attr('class', 'x-axis').attr('transform', `translate(0,${this._chartH})`)
       g.append('g').attr('class', 'y-axis')
       g.append('g').attr('class', 'y-right-axis').attr('transform', `translate(${this._chartW},0)`)
+      // DEP Re[K] axis — further right, only shown in Schwan mode
+      g.append('g').attr('class', 'y-dep-axis').attr('transform', `translate(${this._chartW + 90},0)`)
 
       // Axis labels
       g.append('text')
@@ -216,6 +234,19 @@ export default defineComponent({
         .attr('letter-spacing', '0.1em')
         .text(`${this.$t('chart.axisVm')} (${UNIT.MV})`)
 
+      // DEP Re[K] axis label
+      g.append('text')
+        .attr('class', 'axis-label-dep')
+        .attr('text-anchor', 'middle')
+        .attr('transform', 'rotate(-90)')
+        .attr('x', -this._chartH / 2)
+        .attr('y', this._chartW + 122)
+        .attr('fill', 'rgba(255,255,255,0.28)')
+        .attr('font-size', '0.52rem')
+        .attr('font-family', 'var(--font-mono)')
+        .attr('letter-spacing', '0.1em')
+        .text('Re[K] — DEP')
+
       // Curve groups (library first so they're below)
       g.append('g').attr('class', 'curves-library')
       g.append('g').attr('class', 'curves-active')
@@ -228,6 +259,9 @@ export default defineComponent({
 
       // Selectivity ratio curve (above thresholds)
       g.append('g').attr('class', 'sel-curve')
+
+      // DEP Clausius-Mossotti Re[K] curves — drawn above thresholds, Schwan mode only
+      g.append('g').attr('class', 'dep-curves')
 
       // fc markers
       g.append('g').attr('class', 'fc-markers')
@@ -365,6 +399,10 @@ export default defineComponent({
       g.select<SVGGElement>('.y-right-axis').selectAll('*').remove()
       g.select<SVGGElement>('.curves-library').selectAll('*').remove()
       g.select<SVGGElement>('.curves-nuclear').selectAll('*').remove()
+      // DEP single-shell model invalid at GHz resonance frequencies — clear overlay
+      g.select<SVGGElement>('.dep-curves').selectAll('*').remove()
+      g.select<SVGGElement>('.y-dep-axis').selectAll('*').remove()
+      g.select('.axis-label-dep').attr('opacity', 0)
 
       // Lorentzian line generator
       const drLineGen = d3.line<{ hz: number; dr: number }>()
@@ -580,6 +618,72 @@ export default defineComponent({
         .attr('stroke-opacity', 0.75)
         .attr('stroke-dasharray', '6,3')
         .attr('d', selLineGen)
+
+      // ── DEP Re[K(f)] overlay — Clausius-Mossotti single-shell model ─────
+      // Valid for kHz–500 MHz (Schwan mode only). Not shown in resonance mode.
+      // Bacteria use sphere approximation. Waveform: CW = 0.5×, pulsed = dc×.
+      // Medium permittivity is per-medium (Gabriel et al. 1996).
+      const depGroup = g.select<SVGGElement>('.dep-curves')
+      depGroup.selectAll('*').remove()
+      g.select('.axis-label-dep').attr('opacity', 1)
+
+      const eps_r    = MEDIA[this.store.medium].permittivity
+      const depHCurve = this.computeDepCurve(this.store.healthy, sigma_e, eps_r)
+      const depTCurve = this.computeDepCurve(this.store.target,  sigma_e, eps_r)
+
+      // K=0 reference line (pDEP above, nDEP below)
+      const yK0 = this._yDepScale!(0)
+      if (yK0 >= 0 && yK0 <= this._chartH) {
+        depGroup.append('line')
+          .attr('x1', 0).attr('x2', this._chartW)
+          .attr('y1', yK0).attr('y2', yK0)
+          .attr('stroke', 'rgba(255,255,255,0.10)')
+          .attr('stroke-width', 1)
+          .attr('stroke-dasharray', '2,4')
+      }
+
+      // Re[K] curves — raw CM factor (material property, waveform-independent).
+      // Time-averaged force = Re[K] × waveform scale (CW: ×0.5, pulsed: ×dc) — shown in SelectivityPanel.
+      const depLineGen = d3.line<{ hz: number; k: number }>()
+        .x((d) => this._xScale!(d.hz))
+        .y((d) => this._yDepScale!(d.k))
+        .curve(d3.curveBasis)
+
+      depGroup.append('path')
+        .datum(depHCurve)
+        .attr('fill', 'none')
+        .attr('stroke', C.primary)
+        .attr('stroke-width', 1.2)
+        .attr('stroke-opacity', 0.50)
+        .attr('stroke-dasharray', '2,4')
+        .attr('d', depLineGen)
+
+      depGroup.append('path')
+        .datum(depTCurve)
+        .attr('fill', 'none')
+        .attr('stroke', C.danger)
+        .attr('stroke-width', 1.2)
+        .attr('stroke-opacity', 0.50)
+        .attr('stroke-dasharray', '2,4')
+        .attr('d', depLineGen)
+
+      // DEP axis: fixed Re[K] range [-0.5, +0.5]
+      this._yDepScale!.domain([-0.5, 0.5])
+      const yDepAxis = d3.axisRight<number>(this._yDepScale!)
+        .tickValues([-0.5, 0, 0.5])
+        .tickSize(3)
+        .tickFormat((d) => {
+          const v = +d
+          if (Math.abs(v) < 1e-6) return 'K=0'
+          return v > 0 ? `+${v.toFixed(1)}` : v.toFixed(1)
+        })
+
+      g.select<SVGGElement>('.y-dep-axis')
+        .call(yDepAxis)
+        .call((a) => a.select('.domain').attr('stroke', 'rgba(255,255,255,0.12)'))
+        .call((a) => a.selectAll('text').attr('fill', 'rgba(255,255,255,0.38)').attr('font-size', '0.50rem').attr('font-family', 'var(--font-mono)'))
+        .call((a) => a.selectAll('line').attr('stroke', 'rgba(255,255,255,0.15)'))
+      // ── End DEP overlay ──────────────────────────────────────────────────
 
       // Line generator (for Vm curves)
       const lineGen = d3.line<{ hz: number; vm: number }>()

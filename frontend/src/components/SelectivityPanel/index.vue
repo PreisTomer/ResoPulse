@@ -46,6 +46,29 @@
       </div>
     </div>
 
+    <!-- ── DEP (Schwan mode only) ─────────────────────────────── -->
+    <template v-if="store.chartMode !== 'resonance'">
+      <div class="sel-panel__sep"></div>
+      <div class="sel-panel__dep-section" v-tip="tipDepSection">
+        <div class="sel-panel__dep-title">{{ $t('selectivity.depTitle') }}</div>
+        <div class="sel-panel__dep-row">
+          <span class="sel-panel__dep-cell-label sel-panel__dep-cell-label--t">T</span>
+          <span class="sel-panel__dep-badge" :class="targetDepBadgeClass">{{ targetDepLabel }}</span>
+          <span class="sel-panel__dep-k" :class="targetDepKClass">{{ targetDepVal }}</span>
+          <span class="sel-panel__dep-meta">{{ $t('selectivity.depCrossLabel') }} {{ targetXoverLabel }}</span>
+        </div>
+        <div class="sel-panel__dep-row">
+          <span class="sel-panel__dep-cell-label sel-panel__dep-cell-label--h">H</span>
+          <span class="sel-panel__dep-badge" :class="healthyDepBadgeClass">{{ healthyDepLabel }}</span>
+          <span class="sel-panel__dep-k" :class="healthyDepKClass">{{ healthyDepVal }}</span>
+          <span class="sel-panel__dep-meta">{{ $t('selectivity.depCrossLabel') }} {{ healthyXoverLabel }}</span>
+        </div>
+        <div class="sel-panel__dep-scale">
+          {{ $t('selectivity.depForceLabel') }}: ×{{ depForceScaleLabel }}
+        </div>
+      </div>
+    </template>
+
     <!-- ── Vm / Disruption & SAR ─────────────────────────────── -->
     <div class="sel-panel__sep"></div>
     <div class="sel-panel__vm-sar-grid" v-tip="tipVmSar">
@@ -401,6 +424,59 @@ export default defineComponent({
         beyondRange:          khz > 10000,
       })
     },
+
+    // ── DEP computed ──────────────────────────────────────────────
+    targetDepVal(): string {
+      const k = this.store.depTargetCmReal
+      return (k >= 0 ? '+' : '') + k.toFixed(3)
+    },
+    healthyDepVal(): string {
+      const k = this.store.depHealthyCmReal
+      return (k >= 0 ? '+' : '') + k.toFixed(3)
+    },
+    targetDepLabel(): string {
+      return this.store.depTargetCmReal >= 0
+        ? this.$t('selectivity.depPdep')
+        : this.$t('selectivity.depNdep')
+    },
+    healthyDepLabel(): string {
+      return this.store.depHealthyCmReal >= 0
+        ? this.$t('selectivity.depPdep')
+        : this.$t('selectivity.depNdep')
+    },
+    targetDepBadgeClass(): string {
+      return this.store.depTargetCmReal >= 0
+        ? 'sel-panel__dep-badge--pdep'
+        : 'sel-panel__dep-badge--ndep'
+    },
+    healthyDepBadgeClass(): string {
+      return this.store.depHealthyCmReal >= 0
+        ? 'sel-panel__dep-badge--pdep'
+        : 'sel-panel__dep-badge--ndep'
+    },
+    targetDepKClass(): string {
+      return this.store.depTargetCmReal >= 0
+        ? 'sel-panel__dep-k--pdep'
+        : 'sel-panel__dep-k--ndep'
+    },
+    healthyDepKClass(): string {
+      return this.store.depHealthyCmReal >= 0
+        ? 'sel-panel__dep-k--pdep'
+        : 'sel-panel__dep-k--ndep'
+    },
+    depForceScaleLabel(): string {
+      const s = this.store.depForceScale
+      return s >= 0.1 ? s.toFixed(2) : s.toExponential(1)
+    },
+    targetXoverLabel(): string {
+      const f = this.store.depTargetCrossoverKHz
+      return f > 0 ? formatFreqKHz(f) : this.$t('selectivity.depCrossNone')
+    },
+    healthyXoverLabel(): string {
+      const f = this.store.depHealthyCrossoverKHz
+      return f > 0 ? formatFreqKHz(f) : this.$t('selectivity.depCrossNone')
+    },
+    tipDepSection(): string { return this.$t('selectivity.tipDep') },
   },
 
   methods: {
@@ -847,6 +923,86 @@ export default defineComponent({
     &--validated    { color: var(--color-lime);   border-color: rgba(57, 255, 20, 0.3);   background: rgba(57, 255, 20, 0.06); }
     &--extrapolated { color: var(--color-amber);  border-color: rgba(251, 191, 36, 0.3);  background: rgba(251, 191, 36, 0.06); }
     &--speculative  { color: var(--color-danger); border-color: rgba(255, 77, 109, 0.3);  background: rgba(255, 77, 109, 0.06); }
+  }
+
+  /* ── DEP section ───────────────────────────────────────────── */
+  &__dep-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.22rem;
+    padding: 0.35rem 0.55rem;
+    background: rgba(255, 153, 0, 0.04);
+    border: 1px solid rgba(255, 153, 0, 0.15);
+    border-radius: var(--radius);
+    cursor: default;
+  }
+
+  &__dep-title {
+    font-size: 0.53rem;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--color-text-muted);
+    opacity: 0.7;
+    margin-bottom: 0.05rem;
+  }
+
+  &__dep-row {
+    display: flex;
+    align-items: baseline;
+    gap: 0.35rem;
+    flex-wrap: wrap;
+  }
+
+  &__dep-cell-label {
+    font-size: 0.62rem;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    width: 0.7rem;
+    flex-shrink: 0;
+
+    &--t { color: var(--color-danger); }
+    &--h { color: var(--color-primary); }
+  }
+
+  &__dep-badge {
+    font-size: 0.6rem;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    padding: 0.08rem 0.35rem;
+    border-radius: 2px;
+    border: 1px solid;
+    flex-shrink: 0;
+
+    &--pdep { color: #39ff14; border-color: rgba(57, 255, 20, 0.35); background: rgba(57, 255, 20, 0.06); }
+    &--ndep { color: #ff9900; border-color: rgba(255, 153, 0, 0.35); background: rgba(255, 153, 0, 0.06); }
+  }
+
+  &__dep-k {
+    font-size: 0.65rem;
+    font-family: var(--font-mono);
+    font-weight: 600;
+
+    &--pdep { color: #39ff14; }
+    &--ndep { color: #ff9900; }
+  }
+
+  &__dep-meta {
+    font-size: 0.57rem;
+    font-family: var(--font-mono);
+    color: var(--color-text-muted);
+    opacity: 0.7;
+  }
+
+  &__dep-scale {
+    font-size: 0.55rem;
+    font-family: var(--font-mono);
+    color: var(--color-text-muted);
+    opacity: 0.65;
+    margin-top: 0.05rem;
+    padding-top: 0.18rem;
+    border-top: 1px solid rgba(255, 153, 0, 0.12);
   }
 
   /* ── Model warning ─────────────────────────────────────────── */

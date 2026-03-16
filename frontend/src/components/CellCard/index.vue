@@ -62,6 +62,18 @@
 
       <div ref="oscCanvas" class="cell-card__osc-canvas"></div>
 
+      <!-- DEP strip — shows when dielectrophoretic force is active (non-resonance mode) -->
+      <div
+        v-if="showDepStrip"
+        class="cell-card__dep-strip"
+        :class="depStripModifier"
+        v-tip="tipDep"
+      >
+        <span class="cell-card__warn-icon">{{ ICON.DEP }}</span>
+        <span class="cell-card__warn-text">{{ depStripLabel }}</span>
+        <span class="cell-card__warn-pct">K {{ depStripValue }}</span>
+      </div>
+
       <!-- Nourishing strip — healthy cell in active biomodulation window (DR 8–45%) -->
       <div
         v-if="type === CELL_TYPE.HEALTHY && cellState === CELL_STATE.NOURISHING"
@@ -203,7 +215,7 @@ import { CELL_STATE, CELL_TYPE, CELL_CATEGORY } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'
 import { formatFreqKHz } from '@/utils/format'
-import { tipVm as tipVmFn, tipAcousticVm as tipAcousticVmFn, tipTemp as tipTempFn, tipState as tipStateFn, tipDisruption as tipDisruptionFn, tipNuclearBar as tipNuclearBarFn, formatLysisTimeLocal } from '@/tooltips/cellCardTooltips'
+import { tipVm as tipVmFn, tipAcousticVm as tipAcousticVmFn, tipTemp as tipTempFn, tipState as tipStateFn, tipDisruption as tipDisruptionFn, tipNuclearBar as tipNuclearBarFn, tipDep as tipDepFn, formatLysisTimeLocal } from '@/tooltips/cellCardTooltips'
 
 import CellHeader from './CellHeader.vue'
 import CellParamsPanel from './CellParamsPanel.vue'
@@ -358,6 +370,46 @@ export default defineComponent({
 
     tipNuclearBar(): string {
       return tipNuclearBarFn()
+    },
+
+    // ── DEP strip ──────────────────────────────────────────────────────────────
+    depCmRealValue(): number {
+      return this.type === CELL_TYPE.HEALTHY
+        ? this.store.depHealthyCmReal
+        : this.store.depTargetCmReal
+    },
+    depCrossoverKHz(): number {
+      return this.type === CELL_TYPE.HEALTHY
+        ? this.store.depHealthyCrossoverKHz
+        : this.store.depTargetCrossoverKHz
+    },
+    showDepStrip(): boolean {
+      return this.store.chartMode !== 'resonance'
+        && Math.abs(this.depCmRealValue) >= 0.02
+        && this.store.fieldIntensity >= 5
+        && this.cellState !== CELL_STATE.LYSED
+        && this.cellState !== CELL_STATE.LYSING
+    },
+    depStripLabel(): string {
+      return this.depCmRealValue > 0
+        ? this.$t('cells.states.depAttraction')
+        : this.$t('cells.states.depRepulsion')
+    },
+    depStripValue(): string {
+      const sign = this.depCmRealValue >= 0 ? '+' : '−'
+      return `${sign}${Math.abs(this.depCmRealValue).toFixed(3)}`
+    },
+    depStripModifier(): string {
+      return this.depCmRealValue > 0
+        ? 'cell-card__dep-strip--pdep'
+        : 'cell-card__dep-strip--ndep'
+    },
+    tipDep(): string {
+      return tipDepFn({
+        isPdep:       this.depCmRealValue > 0,
+        kVal:         this.depCmRealValue,
+        crossoverKHz: this.depCrossoverKHz,
+      })
     },
 
     tipVm(): string {
@@ -589,6 +641,7 @@ export default defineComponent({
           fieldVcm:               this.store.fieldIntensity,
           freqKHz:                this.store.currentBroadcastFrequency,
           nuclearDisruptionRatio: this.store.doubleShellEnabled ? this.nuclearDisruptionRatio : 0,
+          depCmReal:              this.type === CELL_TYPE.HEALTHY ? this.store.depHealthyCmReal : this.store.depTargetCmReal,
         }),
       )
     },
@@ -1137,6 +1190,16 @@ export default defineComponent({
     line-height: 0;
 
     svg { display: block; width: 100%; height: auto; }
+  }
+
+  /* ── DEP strip (non-resonance, |K| ≥ 0.02) ────────────────────────── */
+  &__dep-strip {
+    @include status-strip(var(--color-lime), rgba(57, 255, 20, 0.05), rgba(57, 255, 20, 0.18));
+    cursor: help;
+
+    &--ndep {
+      @include status-strip(var(--color-amber), rgba(255, 153, 0, 0.05), rgba(255, 153, 0, 0.18));
+    }
   }
 
   /* ── Nourishing strip (healthy, DR 8–45%) ──────────────────────────── */

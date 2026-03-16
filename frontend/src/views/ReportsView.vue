@@ -135,6 +135,8 @@
                 <th :title="$t('reports.colHRatioTitle')">{{ $t('reports.colHRatio') }}</th>
                 <th :title="$t('reports.colTTempTitle')">{{ $t('reports.colTTemp') }}</th>
                 <th :title="$t('reports.colHTempTitle')">{{ $t('reports.colHTemp') }}</th>
+                <th :title="$t('log.tipThDepH')">{{ $t('log.logThDepH') }}</th>
+                <th :title="$t('log.tipThDepT')">{{ $t('log.logThDepT') }}</th>
                 <th :title="$t('reports.colEventTitle')">{{ $t('reports.colEvent') }}</th>
                 <th :title="$t('reports.colMethodsTitle')">{{ $t('reports.colMethods') }}</th>
               </tr>
@@ -166,6 +168,12 @@
                 </td>
                 <td class="reports__mono" :class="e.healthyTemp > THRESHOLDS.TEMP_WARN ? 'reports__warn-val' : ''">
                   {{ e.healthyTemp.toFixed(1) }}
+                </td>
+                <td class="reports__mono" :class="e.depHealthyK != null ? (e.depHealthyK > 0 ? 'reports__green-val' : 'reports__warn-val') : 'reports__muted'">
+                  {{ e.depHealthyK != null ? e.depHealthyK.toFixed(3) : '—' }}
+                </td>
+                <td class="reports__mono" :class="e.depTargetK != null ? (e.depTargetK > 0 ? 'reports__green-val' : 'reports__warn-val') : 'reports__muted'">
+                  {{ e.depTargetK != null ? e.depTargetK.toFixed(3) : '—' }}
                 </td>
                 <td>
                   <StatusBadge :label="e.event" :variant="eventVariant(e.event)" />
@@ -524,7 +532,7 @@ export default defineComponent({
     width: 100%;
     border-collapse: collapse;
     font-size: 0.78rem;
-    min-width: 1200px;
+    min-width: 1400px;
 
     th {
       text-align: left;

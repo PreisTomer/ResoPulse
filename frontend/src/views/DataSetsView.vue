@@ -46,6 +46,7 @@
                 <th :title="$t('datasets.cellLib.colSigITitle')" v-html="$t('datasets.cellLib.colSigI')"></th>
                 <th :title="$t('datasets.cellLib.colCmTitle')" v-html="$t('datasets.cellLib.colCm')"></th>
                 <th :title="$t('datasets.cellLib.colFcTitle')" v-html="$t('datasets.cellLib.colFc')"></th>
+                <th :title="$t('datasets.cellLib.colFcrossTitle')" v-html="$t('datasets.cellLib.colFcross')"></th>
                 <th :title="$t('datasets.cellLib.colVmThrTitle')" v-html="$t('datasets.cellLib.colVmThr')"></th>
                 <th :title="$t('datasets.cellLib.colRnucTitle')" v-html="$t('datasets.cellLib.colRnuc')"></th>
                 <th :title="$t('datasets.cellLib.colRhoTitle')">{{ $t('datasets.cellLib.colRho') }}</th>
@@ -74,6 +75,7 @@
                 <td class="datasets__mono">{{ p.conductivity }}</td>
                 <td class="datasets__mono datasets__primary-val">{{ p.cmDisplay }}</td>
                 <td class="datasets__mono datasets__primary-val">{{ p.fcDisplay }}</td>
+                <td class="datasets__mono" :class="p.fcrossDisplay !== '—' ? 'datasets__dep-val' : 'datasets__muted'">{{ p.fcrossDisplay }}</td>
                 <td
                   class="datasets__mono"
                   :class="p.group === CELL_GROUP.REFERENCE ? 'datasets__ref-val' : 'datasets__cancer-val'"
@@ -458,11 +460,12 @@ import { defineComponent, computed } from 'vue'
 import { CELL_PRESETS, GROUP_COLORS, GROUP_LABELS, type CellGroup, type CellPreset } from '@/constants/cellLibrary'
 import { MEDIA } from '@/constants/media'
 import { CELL_GROUP } from '@/constants/strings'
-import { membraneCm, computeFc, computeTau, computeNuclearTau } from '@/utils/physics'
+import { membraneCm, computeFc, computeTau, computeNuclearTau, computeDepCrossoverKHz } from '@/utils/physics'
 import { THRESHOLDS } from '@/constants/cellCard'
 import { UNIT } from '@/constants/units'
 
-const SIGMA_SALINE = MEDIA.saline.conductivity // 1.5 S/m
+const SIGMA_SALINE      = MEDIA.saline.conductivity  // 1.5 S/m
+const EPS_R_SALINE      = MEDIA.saline.permittivity  // 80
 
 const GROUPS: CellGroup[] = [CELL_GROUP.REFERENCE, CELL_GROUP.CANCER, CELL_GROUP.BACTERIA, CELL_GROUP.VIRUS] as CellGroup[]
 
@@ -497,6 +500,13 @@ export default defineComponent({
         const resEthrDisplay = pr.resonantThresholdVcm
           ? `${pr.resonantThresholdVcm}`
           : '—'
+        // DEP crossover frequency in saline
+        const fcross = computeDepCrossoverKHz(p, SIGMA_SALINE, EPS_R_SALINE)
+        const fcrossDisplay = fcross > 0
+          ? (fcross >= 1000
+              ? `${(fcross / 1000).toFixed(2)} ${UNIT.MHZ}`
+              : `${fcross.toFixed(1)} ${UNIT.KHZ}`)
+          : '—'
         // Nuclear envelope parameters (mammalian nucleated cells)
         const hasNuclear = !!pr.nuclearRadius
         const nucRDisplay = pr.nuclearRadius ? `${pr.nuclearRadius}` : '—'
@@ -515,6 +525,7 @@ export default defineComponent({
           ...p,
           cmDisplay: cm.toFixed(2),
           fcDisplay,
+          fcrossDisplay,
           resFreqDisplay,
           resQDisplay,
           resEthrDisplay,
@@ -695,6 +706,7 @@ export default defineComponent({
   &__ref-val     { color: var(--color-primary); }
   &__warn-val    { color: var(--color-amber);   }
   &__nuc-val     { color: #a78bfa; }
+  &__dep-val     { color: #ff9900; }
   &__muted       { color: var(--color-text-muted); }
   &__cell-name   { font-weight: 500; color: var(--color-text-heading); }
   &__notes-cell  { font-size: 0.71rem; color: var(--color-text-muted); min-width: 160px; }

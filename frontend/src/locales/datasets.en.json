@@ -2,8 +2,8 @@
   "datasets": {
     "eyebrow": "Reference Database",
     "title": "Cell &amp; Pathogen Data Sets",
-    "subtitle": "Biophysical parameters for all presets · Schwan single-shell model · double-shell nuclear envelope (mammalian) · acoustic resonance (bacteria/virus)",
-    "subtitleNote": "Computed in physiological saline (σ<sub>e</sub> = 1.5 S/m) · Kotnik &amp; Miklavcic (2000, 2006)",
+    "subtitle": "Biophysical parameters for all presets · Schwan single-shell model · DEP Clausius-Mossotti crossover · double-shell nuclear envelope (mammalian) · acoustic resonance (bacteria/virus)",
+    "subtitleNote": "Computed in physiological saline (σ<sub>e</sub> = 1.5 S/m) · Kotnik &amp; Miklavcic (2000, 2006) · Gascoyne &amp; Vykoukal (2002)",
 
     "cellLib": {
       "sectionTitle": "Cell Library",
@@ -20,6 +20,8 @@
       "colCmTitle": "Membrane capacitance per area: Cm = ε_r·ε₀/d (F/m², shown as mF/m²). Drives the RC time constant τ. Physical lipid bilayer gives ~0.5–1 µF/cm²; effective Cm elevated by pore complexes and ion channels",
       "colFc": "f<sub>c</sub> in saline",
       "colFcTitle": "Characteristic (−3 dB) frequency: f_c = 1/(2πτ). Above f_c the transmembrane voltage Vm rolls off as 1/f. Computed at σ_e = 1.5 S/m (saline); use the DataSets Media table for τ shifts in other media",
+      "colFcross": "f<sub>cross</sub> DEP",
+      "colFcrossTitle": "DEP crossover frequency — frequency where Re[K(ω)] = 0 and the dielectrophoretic force polarity reverses (pDEP ↔ nDEP). Computed via single-shell Clausius-Mossotti model at σ_e = 1.5 S/m, ε_r = 80 (saline). '—' indicates no crossing found in 1 kHz–10 GHz range.",
       "colVmThr": "V<sub>m,thr</sub> (V)",
       "colVmThrTitle": "Lysis threshold voltage V_m,thr — minimum sustained transmembrane potential for irreversible electroporation. Sets lysis field: E_lysis = V_m,thr / (1.5 × R). Cancer cells have lower thresholds due to structural membrane abnormalities",
       "colRnuc": "R<sub>nuc</sub> (µm)",

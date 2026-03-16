@@ -5,7 +5,7 @@ import { CELL_PRESETS } from '@/constants/cellLibrary'
 import { MEDIA } from '@/constants/media'
 import type { CellConfig } from '@/types/cell'
 import type { MediumKey } from '@/types/media'
-import { computeSchwan, computeSAR, computeFc, computeTau, computeResonantDisruption, computeNuclearVm, computePulseStepResponse, computeSkinDepthMm } from '@/utils/physics'
+import { computeSchwan, computeSAR, computeFc, computeTau, computeResonantDisruption, computeNuclearVm, computePulseStepResponse, computeSkinDepthMm, computeDepCmReal, computeDepCrossoverKHz } from '@/utils/physics'
 import { CELL_CATEGORY, CHART_MODE, WAVEFORM, CELL_TYPE, FREQ_REGIME } from '@/constants/strings'
 import { THRESHOLDS, DEFAULT_CAPSID_Q } from '@/constants/cellCard'
 import {
@@ -118,7 +118,7 @@ export const useCellStore = defineStore('cell', {
     healthy: cloneDeep(cellConfigs[0]) as CellConfig,
     target: cloneDeep(cellConfigs[1]) as CellConfig,
     medium: 'saline',
-    fieldIntensity: 150,           // V/cm — sub-threshold by default
+    fieldIntensity: 10,            // V/cm — resting baseline; scientist ramps up from here
     currentBroadcastFrequency: 417, // kHz — matches simulationData default
     healthyTemp: BODY_TEMP_C,
     targetTemp: BODY_TEMP_C,
@@ -371,6 +371,50 @@ export const useCellStore = defineStore('cell', {
     skinDepthMm(): number {
       const state = this as unknown as CellStoreState
       return computeSkinDepthMm(state.currentBroadcastFrequency, this.effectiveSigmaE)
+    },
+
+    // ── Dielectrophoresis — Clausius-Mossotti factor ────────────────────────────
+
+    /**
+     * Re[K(f)] for healthy cell — Clausius-Mossotti DEP factor (single-shell model).
+     * Uses medium-specific permittivity (Gabriel et al. 1996) and temperature-corrected σ_e.
+     * Re[K] > 0 = positive DEP (attracted to field maxima); Re[K] < 0 = negative DEP.
+     */
+    depHealthyCmReal(): number {
+      const state = this as unknown as CellStoreState
+      const eps_r = MEDIA[state.medium].permittivity
+      return computeDepCmReal(state.healthy, state.currentBroadcastFrequency, this.effectiveSigmaE, eps_r)
+    },
+
+    /** Re[K(f)] for target cell — Clausius-Mossotti DEP factor (single-shell model). */
+    depTargetCmReal(): number {
+      const state = this as unknown as CellStoreState
+      const eps_r = MEDIA[state.medium].permittivity
+      return computeDepCmReal(state.target, state.currentBroadcastFrequency, this.effectiveSigmaE, eps_r)
+    },
+
+    /**
+     * Effective DEP force scale factor [0–1].
+     * CW sinusoidal: time-averaged |E|² = E²_peak/2 → scale = 0.5
+     * Pulsed bipolar (H-FIRE): force averages over duty cycle → scale = dutyCycle.
+     * Re[K] direction is waveform-independent; this factor scales the magnitude only.
+     */
+    depForceScale(state): number {
+      return state.waveform === WAVEFORM.CW ? 0.5 : state.dutyCycle
+    },
+
+    /** First crossover frequency [kHz] where Re[K_H] = 0. 0 if none in 1 kHz–10 GHz. */
+    depHealthyCrossoverKHz(): number {
+      const state = this as unknown as CellStoreState
+      const eps_r = MEDIA[state.medium].permittivity
+      return computeDepCrossoverKHz(state.healthy, this.effectiveSigmaE, eps_r)
+    },
+
+    /** First crossover frequency [kHz] where Re[K_T] = 0. 0 if none in 1 kHz–10 GHz. */
+    depTargetCrossoverKHz(): number {
+      const state = this as unknown as CellStoreState
+      const eps_r = MEDIA[state.medium].permittivity
+      return computeDepCrossoverKHz(state.target, this.effectiveSigmaE, eps_r)
     },
 
     /** dc_max = (TEMP_WARN−BODY_TEMP)·λ·cp_min / SAR_max — keeps T_ss ≤ 42°C in safe mode. */
