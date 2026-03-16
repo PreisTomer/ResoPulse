@@ -243,6 +243,8 @@ import BiostimPanel from './BiostimPanel.vue'
 export default defineComponent({
   components: { CellHeader, CellParamsPanel, BiostimPanel },
 
+  emits: ['stable-reset'],
+
   props: {
     type: {
       type: String as PropType<'healthy' | 'target'>,
@@ -754,6 +756,7 @@ export default defineComponent({
       } else {
         this.store.resetCell(this.type)
       }
+      this.$emit('stable-reset', this.type)
     },
 
     resetToPreset() {
