@@ -168,15 +168,28 @@ export default defineComponent({
     },
 
     yMax(): number {
-      const h = this.store.healthy
-      const t = this.store.target
-      const healthyLysisDC = h.thresholdVoltage / (1.5 * h.radius * 1e-4)   // V/cm
-      let targetLysis = t.thresholdVoltage / (1.5 * t.radius * 1e-4)
-      if (this.store.chartMode === CHART_MODE.RESONANCE) {
-        const tr = t as { resonantThresholdVcm?: number }
-        if (tr.resonantThresholdVcm) targetLysis = tr.resonantThresholdVcm
+      const s      = this.store
+      const sigma  = s.sigma_e
+      const pulsed = s.waveform === WAVEFORM.PULSED
+      const pw_ns  = s.pulseWidthNs
+
+      // Effective lysis field accounts for pulse envelope: E_lysis = V_thr / (1.5·R·PEF)
+      // Without PEF, narrow pulses (e.g. 10 ns bacteria setting) make the effective lysis
+      // field far above the quasi-DC value, so all grid cells would fall in the SUB zone.
+      const hTau = computeTau(s.healthy, sigma)
+      const pefH = pulsed ? Math.max(MIN_PULSE_ENVELOPE, 1 - Math.exp(-pw_ns * 1e-9 / hTau)) : 1.0
+      const healthyLysis = s.healthy.thresholdVoltage / (1.5 * s.healthy.radius * 1e-4 * pefH)
+
+      let targetLysis: number
+      if (s.chartMode === CHART_MODE.RESONANCE) {
+        const tr = s.target as { resonantThresholdVcm?: number }
+        targetLysis = tr.resonantThresholdVcm ?? (s.target.thresholdVoltage / (1.5 * s.target.radius * 1e-4))
+      } else {
+        const tTau = computeTau(s.target, sigma)
+        const pefT = pulsed ? Math.max(MIN_PULSE_ENVELOPE, 1 - Math.exp(-pw_ns * 1e-9 / tTau)) : 1.0
+        targetLysis = s.target.thresholdVoltage / (1.5 * s.target.radius * 1e-4 * pefT)
       }
-      return Math.max(healthyLysisDC, targetLysis) * 2.0
+      return Math.max(healthyLysis, targetLysis) * 2.0
     },
 
     plotW(): number { return this.displayW - HMAP_MARGIN.LEFT - HMAP_MARGIN.RIGHT },
