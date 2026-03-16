@@ -264,32 +264,21 @@ export default defineComponent({
   },
 
   mounted() {
-    const wrap   = this.$refs.wrap   as HTMLElement
-    const canvas = this.$refs.canvas as HTMLCanvasElement
-
-    const setupCanvas = (w: number) => {
-      const aspect = HMAP_CANVAS_H / HMAP_CANVAS_W
-      const dpr    = window.devicePixelRatio || 1
-      this.displayW = w
-      this.displayH = Math.round(w * aspect)
-      canvas.width  = w * dpr
-      canvas.height = this.displayH * dpr
-      this.ctx = canvas.getContext('2d')!
-      this.ctx.scale(dpr, dpr)
-    }
+    const wrap = this.$refs.wrap as HTMLElement
 
     this.resizeObserver = new ResizeObserver((entries) => {
       const entry = entries[0]
       if (!entry) return
-      const w = Math.max(200, Math.round(entry.contentRect.width))
-      setupCanvas(w)
+      const w = Math.round(entry.contentRect.width)
+      if (w <= 0) return   // element still hidden — skip until accordion opens
+      this._setupCanvas(w)
       this._renderCanvas()
     })
     this.resizeObserver.observe(wrap)
 
-    // Initial setup from current width (if already laid out)
+    // Initial setup — fallback width used when accordion is closed on mount
     const initialW = wrap.clientWidth > 0 ? wrap.clientWidth : HMAP_CANVAS_W
-    setupCanvas(initialW)
+    this._setupCanvas(initialW)
     this._recompute()
   },
 
@@ -640,7 +629,30 @@ export default defineComponent({
     // ── Lifecycle ──────────────────────────────────────────────────────────────
 
     onAccordionOpen(open: boolean) {
-      if (open) this.$nextTick(() => this._recompute())
+      if (!open) return
+      // $nextTick guarantees Vue has flushed display:none removal;
+      // requestAnimationFrame guarantees the browser has computed layout
+      // before we read clientWidth and draw.
+      this.$nextTick(() => requestAnimationFrame(() => {
+        const wrap = this.$refs.wrap as HTMLElement
+        if (!wrap) return
+        const w = wrap.clientWidth
+        if (w > 0) this._setupCanvas(w)
+        this._recompute()
+      }))
+    },
+
+    _setupCanvas(w: number) {
+      const canvas = this.$refs.canvas as HTMLCanvasElement
+      if (!canvas) return
+      const aspect  = HMAP_CANVAS_H / HMAP_CANVAS_W
+      const dpr     = window.devicePixelRatio || 1
+      this.displayW = w
+      this.displayH = Math.round(w * aspect)
+      canvas.width  = w * dpr
+      canvas.height = this.displayH * dpr
+      this.ctx      = canvas.getContext('2d')!
+      this.ctx.scale(dpr, dpr)
     },
 
     _scheduleRecompute() {
