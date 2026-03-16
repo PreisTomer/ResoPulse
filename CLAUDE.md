@@ -4,6 +4,62 @@ These rules apply to **every code change** in this project. They are not suggest
 
 ---
 
+## Copyright Header
+
+**Every source file** (`.vue`, `.ts`, `.tsx`, `.js`) must begin with this exact comment:
+
+```
+// Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
+```
+
+For `.vue` files the comment goes in the very first line **before `<template>`**:
+
+```vue
+<!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
+<template>
+```
+
+- Never omit or shorten the copyright line
+- When creating a new file, add it before writing any other content
+- When editing an existing file that is missing this header, add it as the first action
+
+---
+
+## Clean Code Standards
+
+All code must conform to *Clean Code* (Robert C. Martin) principles. The checklist below is non-negotiable:
+
+### Naming
+- **Functions** — verb phrases describing what they do: `computeTau()`, `triggerLysis()`, `formatFreqKHz()`
+- **Booleans** — `is`/`has`/`should` prefix: `isAcousticTarget`, `hasNuclearParams`, `shatterPending`
+- **Constants** — SCREAMING_SNAKE_CASE for module-level constants; PascalCase for enum-like objects (`CELL_STATE`, `ICON`)
+- No abbreviations unless domain-standard (`Vm`, `DR`, `fc`, `SAR`)
+- No single-letter variables except loop counters (`i`, `j`) and physics shorthand (`d`, `s`, `c` inside math functions)
+
+### Functions
+- **Single responsibility** — each function does one thing and does it well
+- **Small** — aim for ≤ 20 lines; anything longer should be split or documented with a clear reason
+- **No side effects** beyond the function's stated purpose
+- **Pure physics functions** live in `utils/physics.ts` and have no store/Vue imports
+- **No boolean flag arguments** — split into two named functions instead
+
+### Comments
+- Comments explain *why*, not *what* — the code should be self-documenting
+- JSDoc on exported functions: `@param`, `@returns`, and a one-line summary
+- Inline `// ──` divider comments for logical sections inside long functions
+- Delete commented-out dead code; use git history to recover it
+
+### Error handling
+- Never silently swallow errors — log or rethrow
+- Guard clauses at the top of functions (early return) rather than deep nesting
+- Validate only at system boundaries (user input, socket packets, CSV import)
+
+### File organisation
+- One concept per file; do not mix unrelated utilities in the same module
+- Imports ordered: Vue core → third-party → `@/stores` → `@/utils` → `@/constants` → `@/types` → relative siblings
+
+---
+
 ## Vue File Structure
 
 Every `.vue` file must follow this exact block order:

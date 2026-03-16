@@ -1,7 +1,8 @@
 <!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
 <template>
-  <div :class="['cell-card', `cell-card--${type}`, `cell-card--${cellState}`]">
+  <div :class="['cell-card', `cell-card--${type}`, `cell-card--${cellState}`, { 'cell-card--compact': compact }]">
     <CellHeader
+      v-if="!compact"
       :type="type"
       :label="label"
       :sublabel="sublabel"
@@ -22,6 +23,7 @@
     />
 
     <CellParamsPanel
+      v-if="!compact"
       :cell-data="cellData"
       :editable-params="editableParams"
       :derived-params="derivedParams"
@@ -179,7 +181,7 @@
     </div>
 
     <!-- Description -->
-    <div class="cell-card__body">
+    <div v-if="!compact" class="cell-card__body">
       <p>{{ description }}</p>
     </div>
   </div>
@@ -238,6 +240,9 @@ export default defineComponent({
       type: Object as PropType<CellRecord | null>,
       default: null,
     },
+    /** When true: hides header/params/body, skips local state machine,
+     *  reads cellState from the store (synced by the non-compact instance). */
+    compact: { type: Boolean, default: false },
   },
 
   setup() {
@@ -523,8 +528,16 @@ export default defineComponent({
       })
     },
 
-    disruptionRatio() { this.updateCellState() },
-    temperature()     { this.updateCellState() },
+    disruptionRatio() { if (!this.compact) this.updateCellState() },
+    temperature()     { if (!this.compact) this.updateCellState() },
+
+    // compact mode: mirror the store's authoritative cell state (set by the non-compact instance)
+    'store.healthyCellState'(s: CellState) {
+      if (this.compact && this.type === CELL_TYPE.HEALTHY) this.cellState = s
+    },
+    'store.targetCellState'(s: CellState) {
+      if (this.compact && this.type === CELL_TYPE.TARGET) this.cellState = s
+    },
 
     'store.lysisDelayMs'() {
       if (this.type !== CELL_TYPE.TARGET || !this.shatterPending) return
@@ -624,6 +637,9 @@ export default defineComponent({
         const ORDER: CellState[] = [CELL_STATE.STABLE, CELL_STATE.NOURISHING, CELL_STATE.APPROACHING, CELL_STATE.CRITICAL]
         this.cellState = ORDER[Math.max(ORDER.indexOf(elState), ORDER.indexOf(thermalFloor))] as CellState
       }
+      // Propagate to store so the compact sticky instance can mirror this state
+      if (this.type === CELL_TYPE.HEALTHY) this.store.setHealthyCellState(this.cellState)
+      else this.store.setTargetCellState(this.cellState)
     },
 
     drawCell() {
@@ -669,7 +685,10 @@ export default defineComponent({
     },
 
     triggerLysis() {
+      if (this.compact) return  // compact instances are read-only; lysis is driven by the main card
       this.cellState = CELL_STATE.LYSING
+      if (this.type === CELL_TYPE.HEALTHY) this.store.setHealthyCellState(CELL_STATE.LYSING)
+      else this.store.setTargetCellState(CELL_STATE.LYSING)
       const expStore = useExperimentStore()
       expStore.logReading(useCellStore(), 'lysis')
       const last = expStore.entries[expStore.entries.length - 1]
@@ -685,6 +704,8 @@ export default defineComponent({
       this.shatterTimeout = setTimeout(() => {
         clearInterval(this.particleInterval ?? undefined)
         this.cellState = CELL_STATE.LYSED
+        if (this.type === CELL_TYPE.HEALTHY) this.store.setHealthyCellState(CELL_STATE.LYSED)
+        else this.store.setTargetCellState(CELL_STATE.LYSED)
       }, LYSIS_DURATION_MS)
     },
 
@@ -759,6 +780,11 @@ export default defineComponent({
   background-color: var(--color-surface-2);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
+
+  &--compact {
+    padding: 0.5rem;
+    border-radius: 6px;
+  }
   padding: 1.5rem;
   @include flex-col(1rem);
   transition: border-color 0.2s, box-shadow 0.3s;
