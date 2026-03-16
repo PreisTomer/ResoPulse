@@ -36,7 +36,7 @@
     <div v-if="cellData" class="cell-card__visual">
       <div ref="cellCanvas" class="cell-card__canvas"></div>
 
-      <div class="cell-card__osc-divider">
+      <div v-if="!compact" class="cell-card__osc-divider">
         <span class="cell-card__osc-label" v-tip="tipVm">OSC · {{ vmDisplay }}</span>
         <span v-if="disruptionRatio > 0.05" class="cell-card__osc-impact" v-tip="tipDisruption">
           {{ ICON.LIGHTNING }} {{ (disruptionRatio * 100).toFixed(0) }}% disruption
@@ -45,7 +45,7 @@
 
       <!-- Nuclear disruption sub-bar — visible when double-shell model active -->
       <div
-        v-if="store.doubleShellEnabled && hasNuclearParams"
+        v-if="!compact && store.doubleShellEnabled && hasNuclearParams"
         class="cell-card__nuclear-bar-row"
         v-tip="tipNuclearBar"
       >
@@ -67,7 +67,7 @@
 
       <!-- DEP strip — shows when dielectrophoretic force is active (non-resonance mode) -->
       <div
-        v-if="showDepStrip"
+        v-if="!compact && showDepStrip"
         class="cell-card__dep-strip"
         :class="depStripModifier"
         v-tip="tipDep"
@@ -79,7 +79,7 @@
 
       <!-- Nourishing strip — healthy cell in active biomodulation window (DR 8–45%) -->
       <div
-        v-if="type === CELL_TYPE.HEALTHY && cellState === CELL_STATE.NOURISHING"
+        v-if="!compact && type === CELL_TYPE.HEALTHY && cellState === CELL_STATE.NOURISHING"
         class="cell-card__nourishing-strip"
         v-tip="tipState"
       >
@@ -90,7 +90,7 @@
 
       <!-- Biomodulation panel — healthy cell only, sub-threshold regime (DR < 45%) -->
       <BiostimPanel
-        v-if="showBiostim"
+        v-if="!compact && showBiostim"
         :stim-index="biostimStimIndex"
         :mech-transd-eff="biostimMechTransd"
         :mild-thermal="biostimMildThermal"
@@ -104,7 +104,7 @@
 
       <!-- Reversible EP strip — target cell 50–85% disruption (pores open/re-seal) -->
       <div
-        v-if="type === CELL_TYPE.TARGET && cellState === CELL_STATE.REV_EP"
+        v-if="!compact && type === CELL_TYPE.TARGET && cellState === CELL_STATE.REV_EP"
         class="cell-card__rev-ep-strip"
         v-tip="tipDisruption"
       >
@@ -115,7 +115,7 @@
 
       <!-- Lysis protocol strip — target cell vibrating state (>85%, lysis armed) -->
       <div
-        v-if="type === CELL_TYPE.TARGET && cellState === CELL_STATE.VIBRATING"
+        v-if="!compact && type === CELL_TYPE.TARGET && cellState === CELL_STATE.VIBRATING"
         class="cell-card__lysis-strip"
         v-tip="tipDisruption"
       >
@@ -126,7 +126,7 @@
 
       <!-- Structural integrity countdown bar — drains 100→0 % as lysis timer runs -->
       <div
-        v-if="lysisIntegrityPct !== null"
+        v-if="!compact && lysisIntegrityPct !== null"
         class="cell-card__integrity-bar-row"
       >
         <span class="cell-card__integrity-label">{{ $t('cells.integrityLabel') }}</span>
@@ -141,7 +141,7 @@
 
       <!-- Electroporation risk warning strip — healthy cell only -->
       <div
-        v-if="type === CELL_TYPE.HEALTHY && (cellState === CELL_STATE.APPROACHING || cellState === CELL_STATE.CRITICAL) && !tempWarning"
+        v-if="!compact && type === CELL_TYPE.HEALTHY && (cellState === CELL_STATE.APPROACHING || cellState === CELL_STATE.CRITICAL) && !tempWarning"
         class="cell-card__healthy-warn"
         :class="{ 'cell-card__healthy-warn--critical': cellState === CELL_STATE.CRITICAL }"
         v-tip="tipState"
@@ -157,7 +157,7 @@
 
       <!-- Thermal warning strip — both cell types -->
       <div
-        v-if="tempWarning && cellState !== CELL_STATE.LYSED && cellState !== CELL_STATE.LYSING"
+        v-if="!compact && tempWarning && cellState !== CELL_STATE.LYSED && cellState !== CELL_STATE.LYSING"
         class="cell-card__thermal-warn"
         :class="{ 'cell-card__thermal-warn--denaturing': tempDenaturing }"
         v-tip="tipTemp"
@@ -172,7 +172,7 @@
       </div>
 
       <!-- Lysis overlay — absolute, covers cell-card__visual without shifting card height -->
-      <div v-if="cellState === CELL_STATE.LYSED" class="cell-card__destroyed">
+      <div v-if="!compact && cellState === CELL_STATE.LYSED" class="cell-card__destroyed">
         <span class="cell-card__destroyed-text">{{ thermalLysis ? $t('cells.states.thermalLysis') : $t('cells.states.membraneLysed') }}</span>
         <span v-if="thermalLysis" class="cell-card__destroyed-sub">{{ $t('cells.states.vaporized') }}</span>
         <button class="cell-card__lysis-btn" :disabled="!canReset" @click="resetToStable">{{ $t('cells.states.resetCell') }}</button>

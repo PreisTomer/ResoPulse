@@ -1282,25 +1282,28 @@ export default defineComponent({
   top: 68px;   // below NavBar (≈60 px) + small gap
   right: 1rem;
   z-index: 150;
-  // Scale the panel to ~44% visual size anchored at top-right
-  transform: scale(0.44);
+  // Explicit width so grid columns have a reference size before scaling.
+  // Two compact CellCards: each ~296 px (280 SVG + 2×8 px compact padding) + 12 px gap + 24 px container padding = 628 px.
+  width: 640px;
+  // Scale the panel to ~65 % visual size anchored at top-right
+  transform: scale(0.65);
   transform-origin: top right;
   // Panel chrome (rendered at full logical size; visually compact after scale)
-  background: rgba(8, 10, 18, 0.96);
-  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(8, 10, 18, 0.97);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 10px;
-  box-shadow: 0 6px 40px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.04);
-  padding: 0.6rem 0.6rem 0.4rem;
-  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 48px rgba(0, 0, 0, 0.80), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  padding: 0.75rem 0.75rem 0.5rem;
+  backdrop-filter: blur(12px);
   pointer-events: none; // non-interactive — purely observational
 
   &-label {
     font-family: var(--font-mono);
     font-size: 0.65rem;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.14em;
     color: var(--color-primary);
-    opacity: 0.75;
-    margin-bottom: 0.4rem;
+    opacity: 0.80;
+    margin-bottom: 0.5rem;
     padding-left: 0.1rem;
   }
 
@@ -1312,8 +1315,46 @@ export default defineComponent({
 }
 
 // Fade + slide-down entrance/exit
-.sticky-cells-enter-active { transition: opacity 0.25s ease, transform 0.25s ease; }
-.sticky-cells-leave-active { transition: opacity 0.2s ease, transform 0.2s ease; }
-.sticky-cells-enter-from   { opacity: 0; transform: scale(0.44) translateY(-12px); transform-origin: top right; }
-.sticky-cells-leave-to     { opacity: 0; transform: scale(0.44) translateY(-8px);  transform-origin: top right; }
+.sticky-cells-enter-active { transition: opacity 0.28s ease, transform 0.28s ease; }
+.sticky-cells-leave-active { transition: opacity 0.2s ease,  transform 0.2s ease; }
+.sticky-cells-enter-from   { opacity: 0; transform: scale(0.65) translateY(-14px); transform-origin: top right; }
+.sticky-cells-leave-to     { opacity: 0; transform: scale(0.65) translateY(-10px); transform-origin: top right; }
+
+// ── Mobile: slide up from the bottom, single-row cells ────────────────────────
+@media (max-width: 768px) {
+  .experiment__sticky-cells {
+    top: auto;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    width: auto;                   // fill the full bottom bar width
+    border-radius: 10px 10px 0 0;
+    transform: scale(1);           // no scaling — let overflow-x handle wider content
+    transform-origin: bottom center;
+    padding: 0.5rem 0.75rem 0.5rem;
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+
+    &-label {
+      text-align: center;
+      margin-bottom: 0.3rem;
+    }
+
+    &-grid {
+      grid-template-columns: 1fr 1fr;
+      // At native size two cards would be ~600 px on a 375 px phone screen;
+      // use horizontal scroll so neither canvas is clipped
+      overflow-x: auto;
+      gap: 0.5rem;
+      // Compact horizontal strip: constrain height so only canvas + osc show
+      max-height: 260px;
+      overflow-y: hidden;
+    }
+  }
+
+  // Mobile transition: slide up from bottom
+  .sticky-cells-enter-from { opacity: 0; transform: translateY(20px); transform-origin: bottom center; }
+  .sticky-cells-leave-to   { opacity: 0; transform: translateY(20px); transform-origin: bottom center; }
+}
 </style>
