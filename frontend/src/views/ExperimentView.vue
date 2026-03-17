@@ -203,22 +203,6 @@
         </div>
       </div>
 
-      <!-- Therapeutic window snap bar — shown whenever a sweep has found an optimal window -->
-      <div v-if="sweepWindow" class="experiment__snap-bar" v-tip="tipSnapBar">
-        <span class="experiment__snap-bar-label">{{ $t('exp.snapBarLabel') }}</span>
-        <span class="experiment__snap-bar-range">
-          {{ sweepWindow.lo.toFixed(0) }}–{{ sweepWindow.hi.toFixed(0) }}
-          {{ sweepWindow.param === 'field' ? $t('sweep.fieldUnit') : $t('sweep.freqUnit') }}
-        </span>
-        <span class="experiment__snap-bar-affects">{{ sweepWindow.param === 'field' ? $t('exp.snapBarSubField') : $t('exp.snapBarSubFreq') }} {{ Math.round((sweepWindow.lo + sweepWindow.hi) / 2) }} {{ sweepWindow.param === 'field' ? $t('sweep.fieldUnit') : $t('sweep.freqUnit') }}</span>
-        <span class="experiment__snap-bar-lysis-warn">{{ $t('exp.snapBarLysisWarn', { cellLabel: snapLysisCellLabel }) }}</span>
-        <button
-          class="experiment__snap-bar-btn"
-          :class="{ 'experiment__snap-bar-btn--confirm': snapConfirming }"
-          @click="snapToWindow"
-        >{{ snapConfirming ? $t('exp.snapBarBtnConfirm', { cellLabel: snapLysisCellLabel }) : $t('exp.snapBarBtn') }}</button>
-      </div>
-
       <!-- Row 2: Chart (full width, collapsible) -->
       <div class="experiment__chart-section">
         <AccordionPanel
@@ -254,6 +238,22 @@
 
       <!-- Row 5 & 6: Research analysis tools — sweep + population (collapsible, full width) -->
       <SweepPanel @window-change="onSweepWindowChange" @open-change="sweepPanelOpen = $event" />
+
+      <!-- Therapeutic window snap bar — appears below sweep results, where the user already is -->
+      <div v-if="sweepWindow" class="experiment__snap-bar" v-tip="tipSnapBar">
+        <span class="experiment__snap-bar-label">{{ $t('exp.snapBarLabel') }}</span>
+        <span class="experiment__snap-bar-range">
+          {{ sweepWindow.lo.toFixed(0) }}–{{ sweepWindow.hi.toFixed(0) }}
+          {{ sweepWindow.param === 'field' ? $t('sweep.fieldUnit') : $t('sweep.freqUnit') }}
+        </span>
+        <span class="experiment__snap-bar-affects">{{ sweepWindow.param === 'field' ? $t('exp.snapBarSubField') : $t('exp.snapBarSubFreq') }} {{ Math.round((sweepWindow.lo + sweepWindow.hi) / 2) }} {{ sweepWindow.param === 'field' ? $t('sweep.fieldUnit') : $t('sweep.freqUnit') }}</span>
+        <span class="experiment__snap-bar-lysis-warn">{{ $t('exp.snapBarLysisWarn', { cellLabel: snapLysisCellLabel }) }}</span>
+        <button
+          class="experiment__snap-bar-btn"
+          :class="{ 'experiment__snap-bar-btn--confirm': snapConfirming }"
+          @click="snapToWindow"
+        >{{ snapConfirming ? $t('exp.snapBarBtnConfirm', { cellLabel: snapLysisCellLabel }) : $t('exp.snapBarBtn') }}</button>
+      </div>
 
       <PopulationPanel @open-change="populationPanelOpen = $event" />
 
