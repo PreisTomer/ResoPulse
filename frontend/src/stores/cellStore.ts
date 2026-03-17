@@ -506,11 +506,16 @@ export const useCellStore = defineStore('cell', {
       const field   = state.fieldIntensity
       const hThr    = state.healthy.thresholdVoltage
       const tThr    = state.target.thresholdVoltage
+      // PEF is frequency-independent (depends on τ, not f), so it scales the DR for each cell
+      // uniformly across the scan — it doesn't shift the argmax but DOES change the TI magnitude.
+      // Include PEF so the returned `sel` matches what the disruption ratio getters compute.
+      const pefH    = this.pulseEnvelopeFactorHealthy
+      const pefT    = this.pulseEnvelopeFactorTarget
       const logMin  = Math.log10(10), logMax = Math.log10(500_000)
       const { khz: optKhz, sel: maxSel } = Array.from({ length: 300 }, (_, i) => {
         const khz = Math.pow(10, logMin + (logMax - logMin) * i / 299)
-        const hDr = computeSchwan(state.healthy, khz, field, sigma_e) / hThr
-        const tDr = computeSchwan(state.target,  khz, field, sigma_e) / tThr
+        const hDr = (computeSchwan(state.healthy, khz, field, sigma_e) * pefH) / hThr
+        const tDr = (computeSchwan(state.target,  khz, field, sigma_e) * pefT) / tThr
         return { khz, sel: hDr > 0 ? tDr / hDr : 0 }
       }).reduce((best, pt) => pt.sel > best.sel ? pt : best, { khz: 10, sel: -Infinity })
       return { khz: optKhz, sel: Math.max(0, maxSel) }
