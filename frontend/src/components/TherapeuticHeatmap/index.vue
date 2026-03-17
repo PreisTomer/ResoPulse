@@ -110,7 +110,7 @@ import {
   computeSchwan, computeTau, computeSAR, computeResonantDisruption,
 } from '@/utils/physics'
 import {
-  BODY_TEMP_C, NEWTON_COOLING_LAMBDA, WF_CW, WF_PULSED, MIN_PULSE_ENVELOPE,
+  BODY_TEMP_C, NEWTON_COOLING_LAMBDA, PENNES_BLOOD_COEFF, WF_CW, WF_PULSED, MIN_PULSE_ENVELOPE,
 } from '@/constants/physics'
 import { formatFreqKHz } from '@/utils/format'
 import AccordionPanel from '@/components/AccordionPanel.vue'
@@ -325,8 +325,10 @@ export default defineComponent({
       const hPEF = pulsed ? Math.max(MIN_PULSE_ENVELOPE, 1 - Math.exp(-pw_ns * 1e-9 / hTau)) : 1.0
       const hVm  = computeSchwan(s.healthy, freqKHz, fieldVcm, sigma_e, 1.0)
       const hDR  = (hVm * hPEF) / s.healthy.thresholdVoltage
+      const hCp_zone  = s.healthy.specificHeatCapacity
       const hSAR = computeSAR(s.healthy, fieldVcm, sigma_e, wf)
-      const hTss = BODY_TEMP_C + hSAR * dc / (NEWTON_COOLING_LAMBDA * s.healthy.specificHeatCapacity)
+      const hLambdaPerf = s.perfusionRate * PENNES_BLOOD_COEFF / hCp_zone
+      const hTss = BODY_TEMP_C + hSAR * dc / ((NEWTON_COOLING_LAMBDA + hLambdaPerf) * hCp_zone)
 
       let tDR = 0
       if (s.chartMode === CHART_MODE.RESONANCE) {
@@ -360,9 +362,10 @@ export default defineComponent({
       const pulsed = s.waveform === WAVEFORM.PULSED
       const isRes  = s.chartMode === CHART_MODE.RESONANCE
 
-      const hTau = computeTau(s.healthy, sigma_e)
-      const hPEF = pulsed ? Math.max(MIN_PULSE_ENVELOPE, 1 - Math.exp(-pw_ns * 1e-9 / hTau)) : 1.0
-      const hCp  = s.healthy.specificHeatCapacity
+      const hTau        = computeTau(s.healthy, sigma_e)
+      const hPEF        = pulsed ? Math.max(MIN_PULSE_ENVELOPE, 1 - Math.exp(-pw_ns * 1e-9 / hTau)) : 1.0
+      const hCp         = s.healthy.specificHeatCapacity
+      const hLambdaPerf = s.perfusionRate * PENNES_BLOOD_COEFF / hCp
 
       const tTau = isRes ? 0 : computeTau(s.target, sigma_e)
       const tPEF = (pulsed && !isRes) ? Math.max(MIN_PULSE_ENVELOPE, 1 - Math.exp(-pw_ns * 1e-9 / tTau)) : 1.0
@@ -382,7 +385,7 @@ export default defineComponent({
           const hVm  = computeSchwan(s.healthy, freqKHz, fieldVcm, sigma_e, 1.0)
           const hDR  = (hVm * hPEF) / s.healthy.thresholdVoltage
           const hSAR = computeSAR(s.healthy, fieldVcm, sigma_e, wf)
-          const hTss = BODY_TEMP_C + hSAR * dc / (NEWTON_COOLING_LAMBDA * hCp)
+          const hTss = BODY_TEMP_C + hSAR * dc / ((NEWTON_COOLING_LAMBDA + hLambdaPerf) * hCp)
 
           let tDR = 0
           if (hasRes) {
@@ -721,8 +724,10 @@ export default defineComponent({
       const hPEF = pulsed ? Math.max(MIN_PULSE_ENVELOPE, 1 - Math.exp(-pw_ns * 1e-9 / hTau)) : 1.0
       const hVm  = computeSchwan(s.healthy, freqKHz, fieldVcm, sigma_e, 1.0)
       const hDR  = (hVm * hPEF) / s.healthy.thresholdVoltage
-      const hSAR = computeSAR(s.healthy, fieldVcm, sigma_e, wf)
-      const hTss = BODY_TEMP_C + hSAR * dc / (NEWTON_COOLING_LAMBDA * s.healthy.specificHeatCapacity)
+      const hCp_hover       = s.healthy.specificHeatCapacity
+      const hSAR            = computeSAR(s.healthy, fieldVcm, sigma_e, wf)
+      const hLambdaPerfHover = s.perfusionRate * PENNES_BLOOD_COEFF / hCp_hover
+      const hTss = BODY_TEMP_C + hSAR * dc / ((NEWTON_COOLING_LAMBDA + hLambdaPerfHover) * hCp_hover)
 
       let tDR = 0
       if (s.chartMode === CHART_MODE.RESONANCE) {
