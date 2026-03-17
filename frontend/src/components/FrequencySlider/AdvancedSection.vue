@@ -122,6 +122,7 @@ import { ICON } from '@/constants/icons'
 import { SLIDER_ADV } from '@/constants/sliderBounds'
 import { tipOrientation, tipLysisN, tipLysisNNote, tipShellModel, tipSingleShell, tipDoubleShell, tipPerfusion, tipCellPacking, formatLysisTime } from '@/tooltips/sliderTooltips'
 import { UNIT } from '@/constants/units'
+import { NEWTON_COOLING_LAMBDA, PENNES_BLOOD_COEFF } from '@/constants/physics'
 
 export default defineComponent({
   setup() {
@@ -179,7 +180,7 @@ export default defineComponent({
 
     tipPerfusionFull(): string {
       const cp_h = this.store.healthy.specificHeatCapacity
-      const lambdaH = 0.02 + this.store.perfusionRate * 63.9 / cp_h
+      const lambdaH = NEWTON_COOLING_LAMBDA + this.store.perfusionRate * PENNES_BLOOD_COEFF / cp_h
       return tipPerfusion(this.store.perfusionRate, lambdaH)
     },
 
