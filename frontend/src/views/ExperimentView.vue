@@ -195,7 +195,6 @@
             :sublabel-tip="cell.sublabelTip"
             :description="cell.description"
             :cell-data="cell.cellData"
-            @stable-reset="applyTargetDefaults"
           />
         </div>
         <div class="experiment__field">
@@ -278,7 +277,6 @@
           :description="cell.description"
           :cell-data="cell.cellData"
           :compact="true"
-          @stable-reset="applyTargetDefaults"
         />
       </div>
     </div>

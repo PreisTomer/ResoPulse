@@ -302,6 +302,7 @@ export const CELL_PRESETS: CellPreset[] = [
     thresholdVoltage: 1.5,
     dielectricConstant: 3.5,
     conductivity: 0.3,
+    membraneConductivity: 1e-5,  // gram-negative outer membrane — porins raise σ_mem ~100× vs mammalian (Markx & Davey 1999)
     resonantFreqGHz: 0.50,
     capsidQ: 4,
     resonantThresholdVcm: 2000,
@@ -327,6 +328,7 @@ export const CELL_PRESETS: CellPreset[] = [
     thresholdVoltage: 2.0,
     dielectricConstant: 4.0,
     conductivity: 0.3,
+    membraneConductivity: 1e-6,  // gram-positive — thick peptidoglycan wall (20 nm) moderately raises effective σ_mem (Arnold & Zimmermann 1988)
     resonantFreqGHz: 1.50,
     capsidQ: 3,
     resonantThresholdVcm: 3000,

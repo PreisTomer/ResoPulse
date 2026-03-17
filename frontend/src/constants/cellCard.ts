@@ -59,8 +59,11 @@ export const THRESHOLDS = {
 
 export type ThresholdKey = keyof typeof THRESHOLDS
 
-/** Default acoustic Q factor used when a preset does not specify capsidQ. */
-export const DEFAULT_CAPSID_Q = 20
+/** Default acoustic Q factor used when a preset does not specify capsidQ.
+ *  Set to 2 (maximally damped / overdamped limit) — the most conservative fallback
+ *  for viscoelastic biological targets where Q is poorly constrained.
+ *  (Rigid protein capsids may reach Q~30; peptidoglycan walls typically Q~3–4.) */
+export const DEFAULT_CAPSID_Q = 2
 
 // Individual named exports — derived from THRESHOLDS for backward compatibility
 export const DISRUPTION_WARN_THRESHOLD     = THRESHOLDS.DISRUPTION_WARN

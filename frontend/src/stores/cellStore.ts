@@ -272,12 +272,35 @@ export const useCellStore = defineStore('cell', {
       return Math.min(THRESHOLDS.TI_DISPLAY_CAP, this.targetDisruptionRatio / hDr)
     },
 
-    /** TI worst-case bounds from ±σ_i uncertainty: mammalian ±20%, bacteria ±35%, virus ±45%.
-     *  Resonance mode returns nominal {TI,TI} — Q-range shown separately. */
+    /** TI worst-case bounds from biological parameter uncertainty.
+     *  Schwan/IRE mode: ±σ_i uncertainty — mammalian ±20%, bacteria ±35%, virus ±45%.
+     *  Resonance mode: acoustic Q uncertainty — [Q_min, Q_max] from preset Lorentzian bounds. */
     tiUncertaintyRange(): { low: number; high: number } {
       const state = this as unknown as CellStoreState
       const nominal = this.therapeuticIndex
-      if (state.chartMode === CHART_MODE.RESONANCE) return { low: nominal, high: nominal }
+      if (state.chartMode === CHART_MODE.RESONANCE) {
+        const cat = this.targetCellCategory
+        const t = state.target as CellConfig & {
+          resonantFreqGHz?: number; capsidQ?: number
+          capsidQMin?: number; capsidQMax?: number; resonantThresholdVcm?: number
+        }
+        if (
+          (cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) &&
+          t.resonantFreqGHz && t.resonantThresholdVcm &&
+          t.capsidQMin !== undefined && t.capsidQMax !== undefined
+        ) {
+          const hDr    = this.healthyDisruptionRatio
+          const freqHz = state.currentBroadcastFrequency * 1e3
+          // Q_min → smaller Lorentzian peak → lower DR_T → lower TI (worst case)
+          const drTMin = computeResonantDisruption(t.resonantFreqGHz, t.capsidQMin, t.resonantThresholdVcm, freqHz, state.fieldIntensity)
+          // Q_max → taller Lorentzian peak → higher DR_T → higher TI (best case)
+          const drTMax = computeResonantDisruption(t.resonantFreqGHz, t.capsidQMax, t.resonantThresholdVcm, freqHz, state.fieldIntensity)
+          const tiFromDr = (dr: number) =>
+            hDr < 1e-9 ? (dr > 0 ? THRESHOLDS.TI_DISPLAY_CAP : 0) : Math.min(THRESHOLDS.TI_DISPLAY_CAP, dr / hDr)
+          return { low: tiFromDr(drTMin), high: tiFromDr(drTMax) }
+        }
+        return { low: nominal, high: nominal }
+      }
       const sigma_e = this.effectiveSigmaE
       const field   = state.fieldIntensity
       const freq    = state.currentBroadcastFrequency
@@ -461,7 +484,7 @@ export const useCellStore = defineStore('cell', {
       const T = this.healthySteadyStateTemp
       if (T <= BODY_TEMP_C) return 0
       if (T <= THERMAL_MA_PEAK_C) return (T - BODY_TEMP_C) / (THERMAL_MA_PEAK_C - BODY_TEMP_C)
-      if (T <= THRESHOLDS.TEMP_WARN) return THRESHOLDS.TEMP_WARN - T
+      if (T <= THRESHOLDS.TEMP_WARN) return (THRESHOLDS.TEMP_WARN - T) / (THRESHOLDS.TEMP_WARN - THERMAL_MA_PEAK_C)
       return 0
     },
 

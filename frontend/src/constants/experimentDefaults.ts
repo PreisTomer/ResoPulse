@@ -9,12 +9,13 @@
  * Values are chosen so T_ss < 38°C for the healthy reference cell (hepatocyte)
  * at every default — researcher can slide UP from a safe starting point.
  *
- * Mammalian: conservative sub-threshold start at 10 V/cm — researcher slides up.
- *   Verified safe at 150 V/cm (reference calculation):
+ * Mammalian: nourishing biomodulation start at 100 V/cm — researcher slides up from active window.
+ *   Verified safe at 100 V/cm (reference calculation):
  *   α = 3σ_e/(2σ_e+σ_i) = 1.286  (hepatocyte, saline)
- *   SAR_peak = σ_i·α²·E²·wf/ρ ≈ 177 kW/kg  ·  SAR_eff = SAR_peak×dc ≈ 17.7 W/kg (dc=1e-4)
- *   T_ss = 37 + 17.7/(λ·cp) = 37 + 17.7/70 ≈ 37.25°C ✓  (λ=0.02 s⁻¹, cp=3500 J/kg·K)
- *   Default starts at 10 V/cm (negligible DR) to prevent accidental lysis on preset load.
+ *   SAR_peak = σ_i·α²·E²·wf/ρ ≈ 7.9 kW/kg  ·  SAR_eff = SAR_peak×dc ≈ 0.79 W/kg (dc=1e-4)
+ *   T_ss = 37 + 0.79/(λ·cp) = 37 + 0.01°C ≈ 37.01°C ✓  (λ=0.02 s⁻¹, cp=3500 J/kg·K)
+ *   DR ≈ 13% — visible in the nourishing biomodulation window (< 45%); well below 50% rev-EP onset.
+ *   Default at 100 V/cm gives researchers immediate visual feedback and a meaningful starting context.
  *
  * Bacteria: nsEP regime — pulse width ≪ τ (τ_ecoli ≈ 14 ns, τ_mrsa ≈ 3.2 ns).
  *   Starts at 1000 V/cm pulsed dc=1e-6:
@@ -42,7 +43,7 @@ export const DEFAULT_LYSIS_N_PULSES = 10
 export const SWEEP_TI_CAP = 5
 
 export const CATEGORY_DEFAULTS = {
-  mammalian: { fieldVcm: 10,   freqKHz: 417,       waveform: 'pulsed' as const, dutyCycle: 1e-4, pulseWidthNs: 100000, medium: 'saline' as const },
+  mammalian: { fieldVcm: 100,  freqKHz: 417,       waveform: 'pulsed' as const, dutyCycle: 1e-4, pulseWidthNs: 100000, medium: 'saline' as const },
   bacteria:  { fieldVcm: 1000, freqKHz: 500000,    waveform: 'pulsed' as const, dutyCycle: 1e-6, pulseWidthNs: 10,     medium: 'saline' as const },
   virus:     { fieldVcm: 400,  freqKHz: 12000000,  waveform: 'pulsed' as const, dutyCycle: 1e-6, pulseWidthNs: 10,     medium: 'saline' as const },
 } as const

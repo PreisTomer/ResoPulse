@@ -105,7 +105,8 @@ export function computeDepCmReal(
 
   // Complex permittivities: ε*(ω) = ε_r·ε₀ − j·σ/ω
   const epsCyto: Cpx = [EPSILON_R_CYTOPLASM  * EPSILON_0, -cell.conductivity / omega]
-  const epsMem:  Cpx = [cell.dielectricConstant * EPSILON_0, -SIGMA_MEMBRANE_SI / omega]
+  const sigma_mem = cell.membraneConductivity ?? SIGMA_MEMBRANE_SI
+  const epsMem:  Cpx = [cell.dielectricConstant * EPSILON_0, -sigma_mem / omega]
   const epsMed:  Cpx = [epsilon_r_medium * EPSILON_0, -sigma_e / omega]
 
   // Single-shell geometry: γ = (r_inner/R)³  [thin-shell: d ≪ R]
