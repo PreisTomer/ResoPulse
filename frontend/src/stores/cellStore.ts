@@ -712,4 +712,25 @@ export const useCellStore = defineStore('cell', {
     },
 
   },
+
+  persist: {
+    key: 'br-cell-store',
+    pick: [
+      'healthy',
+      'target',
+      'medium',
+      'fieldIntensity',
+      'currentBroadcastFrequency',
+      'dutyCycle',
+      'waveform',
+      'pulseWidthNs',
+      'safeMode',
+      'orientationDeg',
+      'lysisNPulses',
+      'chartMode',
+      'doubleShellEnabled',
+      'perfusionRate',
+      'cellPackingFraction',
+    ],
+  },
 })
