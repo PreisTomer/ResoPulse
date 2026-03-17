@@ -524,7 +524,7 @@ export default defineComponent({
     // Schwan physics used for the disruption model on the target cell.
     showBiostim(): boolean {
       return this.type === CELL_TYPE.HEALTHY
-        && this.disruptionRatio < 0.45
+        && this.disruptionRatio < THRESHOLDS.NOURISHING
         && this.cellState !== CELL_STATE.LYSED
         && this.cellState !== CELL_STATE.LYSING
     },

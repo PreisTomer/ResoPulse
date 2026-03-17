@@ -33,6 +33,13 @@ export interface CellConfig {
   nuclearMembraneEps?: number          // ε_r — effective permittivity; lipid bilayer ~2–5, NPC contribution raises to ~10–12
   nucleoplasmConductivity?: number     // S/m — nucleoplasm ionic conductivity (typically > cytoplasm)
   nuclearThresholdVoltage?: number     // V   — Vm_nuc required for nuclear envelope disruption (lower than plasma membrane)
+  /** Outer membrane conductivity [S/m] for DEP Clausius-Mossotti model.
+   *  If absent, falls back to SIGMA_MEMBRANE_SI (10⁻⁷ S/m — mammalian lipid bilayer).
+   *  Gram-negative bacteria (porins in outer membrane): ~10⁻⁵ S/m.
+   *  Gram-positive bacteria (plasma membrane only, no outer membrane): omit (use default).
+   *  Enveloped viruses (fluid lipid bilayer): omit (use default).
+   *  Ref: Markx & Davey (1999); Arnold & Zimmermann (1988). */
+  membraneConductivity?: number
   // Note: nuclear membrane conductivity σ_ne is NOT stored or used. The Kotnik & Miklavcic (2006)
   // double-shell formula used in computeNuclearVm() operates in the thin-membrane capacitive limit
   // (σ_ne → 0). Including σ_ne requires the full complex admittance transfer function which changes
