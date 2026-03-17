@@ -9,14 +9,15 @@
  * Values are chosen so T_ss < 38°C for the healthy reference cell (hepatocyte)
  * at every default — researcher can slide UP from a safe starting point.
  *
- * Mammalian: standard IRE sub-threshold exploration.
- *   150 V/cm pulsed (bipolar sq-wave) dc=0.01%:
+ * Mammalian: conservative sub-threshold start at 10 V/cm — researcher slides up.
+ *   Verified safe at 150 V/cm (reference calculation):
  *   α = 3σ_e/(2σ_e+σ_i) = 1.286  (hepatocyte, saline)
- *   SAR_peak = σ_i·α²·E²·wf/ρ ≈ 177 kW/kg  ·  SAR_eff = SAR_peak×dc ≈ 17.7 W/kg
+ *   SAR_peak = σ_i·α²·E²·wf/ρ ≈ 177 kW/kg  ·  SAR_eff = SAR_peak×dc ≈ 17.7 W/kg (dc=1e-4)
  *   T_ss = 37 + 17.7/(λ·cp) = 37 + 17.7/70 ≈ 37.25°C ✓  (λ=0.02 s⁻¹, cp=3500 J/kg·K)
+ *   Default starts at 10 V/cm (negligible DR) to prevent accidental lysis on preset load.
  *
  * Bacteria: nsEP regime — pulse width ≪ τ (τ_ecoli ≈ 14 ns, τ_mrsa ≈ 3.2 ns).
- *   1000 V/cm pulsed dc=1e-6:
+ *   Starts at 1000 V/cm pulsed dc=1e-6:
  *   α ≈ 1.36  (E. coli, saline)  ·  SAR_eff ≈ 5.1 W/kg  ·  T_ss ≈ 37.06°C ✓
  *   Researcher slides field to ≥10 kV/cm to approach lysis — thermal warnings appear.
  *

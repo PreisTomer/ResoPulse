@@ -328,7 +328,8 @@
       },
       {
         "body": "Eilon D. Kirson, V. Dbaly, F. Tovarys, et al. <em>Alternating electric fields arrest cell proliferation in animal tumor models and human brain tumors.</em> Proceedings of the National Academy of Sciences. 2007;104(24):10152–10157.",
-        "doi": "10.1073/pnas.0702916104"
+        "doi": "10.1073/pnas.0702916104",
+        "note": "Tumor Treating Fields (TTF) — mechanism is disruption of mitotic spindle protein polymerisation at 100–300 kHz, distinct from IRE membrane disruption. Contextualises the broader spectrum of frequency-selective bioelectric effects."
       },
       {
         "body": "James C. Weaver, Yuri A. Chizmadzhev. <em>Theory of electroporation: a review.</em> Bioelectrochemistry and Bioenergetics. 1996;41(2):135–160.",
@@ -360,19 +361,29 @@
         "note": "Source of the corrected τ = R·C<sub>m</sub>·(2σ<sub>e</sub>+σ<sub>i</sub>)/(2σ<sub>e</sub>·σ<sub>i</sub>) formula used in this simulator"
       },
       {
+        "body": "Kwok-tung Tsen, Shaw-wei D. Tsen, Chih-long Chang, Chien-fu Hung, T.-C. Wu, Juliann G. Kiang. <em>Inactivation of viruses by coherent excitations with a low-power visible femtosecond laser.</em> Virology Journal. 2007;4:50.",
+        "doi": "10.1186/1743-422X-4-50",
+        "note": "Original experimental demonstration of selective inactivation of M13 bacteriophage (non-enveloped, icosahedral) via resonant acoustic excitation with femtosecond laser pulses; first evidence of mechanical resonance disruption of protein capsids. f<sub>res</sub> and Q values in Section 2.5 are adapted from this work."
+      },
+      {
         "body": "Shian-wen D. Tsen, Tian-cheng Wu, Juliann G. Kiang, Kwok-tung Tsen. <em>Prospects for a novel ultrashort pulsed laser technology for pathogen inactivation.</em> Journal of Biomedical Science. 2012;19:62.",
         "doi": "10.1186/1423-0127-19-62",
-        "note": "Review consolidating 2007–2012 experimental data on acoustic resonance disruption of viral capsids via femtosecond laser excitation; f<sub>res</sub> and Q values adapted for RF model"
+        "note": "Review consolidating 2007–2012 experimental data on acoustic resonance disruption of viral capsids (M13, TMV, CCMV — all non-enveloped icosahedral capsids) via femtosecond laser excitation. Note: all validated targets are non-enveloped; enveloped lipid-bilayer viruses (influenza, SARS-CoV-2) are extrapolations without experimental support."
       },
       {
         "body": "Eric C. Dykeman, Otto F. Sankey. <em>Atomistic modeling of the low-frequency mechanical modes and Raman spectra of icosahedral virus capsids.</em> Physical Review E. 2010;81:021918.",
         "doi": "10.1103/PhysRevE.81.021918",
-        "note": "Lorentzian resonance lineshape model; Q-factor basis for protein-capsid disruption simulation in Section 2.5"
+        "note": "Lorentzian resonance lineshape and Q-factor basis for non-enveloped protein-capsid disruption simulation in Section 2.5; peptidoglycan Q correction for bacteria follows the same framework with damping adjusted for viscoelastic cross-linked polymers"
       },
       {
         "body": "Karl H. Schoenbach, Stephen J. Beebe, Eric S. Buescher. <em>Intracellular effect of ultrashort electrical pulses.</em> Bioelectromagnetics. 2001;22(6):440–448.",
         "doi": "10.1002/bem.71",
         "note": "Foundational nsEP paper; pulse step-response charging of membranes with t<sub>p</sub> ≪ τ; basis for nsEP selectivity model in Section 2.6"
+      },
+      {
+        "body": "Tina Batista Napotnik, Matej Reberšek, Peter Thomas Vernier, Branka Mali, Damijan Miklavcic. <em>Effects of high voltage nanosecond electric pulses on eukaryotic cells (in vitro): A systematic review.</em> Bioelectrochemistry. 2016;110:1–12.",
+        "doi": "10.1016/j.bioelechem.2016.02.011",
+        "note": "Comprehensive review of nanosecond pulsed electric field (nsPEF) effects on mammalian cells; validates the partial-charging pulse-envelope factor PEF = 1−exp(−t<sub>p</sub>/τ) as a predictor of membrane disruption selectivity between pulse-width regimes (Section 2.6)"
       },
       {
         "body": "Tadej Kotnik, Damijan Miklavcic. <em>Theoretical evaluation of voltage inducement on internal membranes of biological cells exposed to electric fields.</em> Biophysical Journal. 2006;90(2):480–491.",

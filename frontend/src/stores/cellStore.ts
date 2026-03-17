@@ -206,20 +206,27 @@ export const useCellStore = defineStore('cell', {
       return (this.healthyVm * this.pulseEnvelopeFactorHealthy) / this.healthy.thresholdVoltage
     },
 
-    /** DR_T: acoustic Lorentzian for bacteria/virus; (Vm·pulseEnvelope)/Vm_thr for mammalian. */
+    /** DR_T: acoustic Lorentzian for bacteria/virus in resonance mode; (Vm·pulseEnvelope)/Vm_thr otherwise.
+     *  chartMode must be RESONANCE to engage the acoustic model — in Schwan/IRE mode the
+     *  transmembrane-voltage formula applies even for small cells, enabling nsEP simulation. */
     targetDisruptionRatio(): number {
+      const state = this as unknown as CellStoreState
       const cat = this.targetCellCategory
-      const t = this.target as CellConfig & { resonantFreqGHz?: number; capsidQ?: number; resonantThresholdVcm?: number }
-      if ((cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) && t.resonantFreqGHz && t.resonantThresholdVcm) {
+      const t = state.target as CellConfig & { resonantFreqGHz?: number; capsidQ?: number; resonantThresholdVcm?: number }
+      if (
+        state.chartMode === CHART_MODE.RESONANCE &&
+        (cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) &&
+        t.resonantFreqGHz && t.resonantThresholdVcm
+      ) {
         return computeResonantDisruption(
           t.resonantFreqGHz,
           t.capsidQ ?? DEFAULT_CAPSID_Q,
           t.resonantThresholdVcm,
-          this.currentBroadcastFrequency * 1e3,  // kHz → Hz
-          this.fieldIntensity,
+          state.currentBroadcastFrequency * 1e3,  // kHz → Hz
+          state.fieldIntensity,
         )
       }
-      return (this.targetVm * this.pulseEnvelopeFactorTarget) / this.target.thresholdVoltage
+      return (this.targetVm * this.pulseEnvelopeFactorTarget) / state.target.thresholdVoltage
     },
 
     healthySAR(): number {
@@ -458,12 +465,18 @@ export const useCellStore = defineStore('cell', {
       return 0
     },
 
-    /** Optimal frequency for max TI: bacteria/virus→f_res; mammalian→300-pt log scan 10kHz–500MHz. */
+    /** Optimal frequency for max TI.
+     *  Resonance mode + bacteria/virus → snap to f_res (Lorentzian peak).
+     *  Schwan/IRE mode or mammalian → 300-point log scan 10 kHz–500 MHz for best DR_T/DR_H. */
     optimalFreqResult(): { khz: number; sel: number } {
       const state  = this as unknown as CellStoreState
       const target = state.target as CellConfig & { resonantFreqGHz?: number; resonantThresholdVcm?: number }
       const cat    = this.targetCellCategory
-      if ((cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) && target.resonantFreqGHz && target.resonantThresholdVcm) {
+      if (
+        state.chartMode === CHART_MODE.RESONANCE &&
+        (cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) &&
+        target.resonantFreqGHz && target.resonantThresholdVcm
+      ) {
         return { khz: target.resonantFreqGHz * 1e6, sel: THRESHOLDS.TI_DISPLAY_CAP }
       }
       const sigma_e = this.effectiveSigmaE

@@ -549,12 +549,22 @@ export default defineComponent({
 
     'store.resetCounter'() {
       if (this.cellState !== CELL_STATE.LYSED && this.cellState !== CELL_STATE.LYSING) return
+      // Clear ALL lysis timers — including shatterTimeout, which may still be running
+      // if the preset was loaded while the cell was in the LYSING animation phase.
+      // Without this, the timeout callback fires after reset and flips state back to LYSED.
+      clearTimeout(this.shatterTimeout ?? undefined)
       clearTimeout(this.shatterDelayTimeout ?? undefined)
+      clearInterval(this.particleInterval ?? undefined)
+      clearInterval(this.progressInterval ?? undefined)
+      this.shatterTimeout      = null
+      this.shatterDelayTimeout = null
+      this.particleInterval    = null
+      this.progressInterval    = null
       this.shatterPending = false
       this.thermalLysis   = false
+      this.lysisProgressElapsed = 0
       this.cellState      = CELL_STATE.STABLE
       this.liveAmplitude  = this.cellData?.amplitude ?? 0.8
-      clearInterval(this.particleInterval ?? undefined)
       this.helixTimer?.stop()
       this.$nextTick(() => {
         this.drawCell()
