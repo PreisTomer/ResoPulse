@@ -264,6 +264,7 @@ export default defineComponent({
         s.target.dielectricConstant, s.target.conductivity, s.target.thresholdVoltage,
         t.resonantFreqGHz,
         s.medium, s.waveform, s.dutyCycle, s.pulseWidthNs, s.chartMode,
+        s.cellPackingFraction, s.perfusionRate,  // Maxwell-Garnett and Pennes bioheat affect zone boundaries
         s.resetCounter,   // ensures grid recomputes after a cell reset to the same preset
       ].join('|')
     },
