@@ -73,6 +73,13 @@
             :class="{ 'instrument__context-value--warn': impStore.voltageCorrectionFactor > 1.05 }"
           >×{{ impStore.voltageCorrectionFactor.toFixed(3) }}</span>
         </div>
+        <div class="instrument__context-item" v-tip="$t('instrument.view.tipContextJoule')">
+          <span class="instrument__context-label">{{ $t('instrument.view.contextJoule') }}</span>
+          <span
+            class="instrument__context-value"
+            :class="{ 'instrument__context-value--warn': impStore.mediumTempRiseRatePerSec > 1 }"
+          >{{ jouleDisplay }}</span>
+        </div>
       </div>
 
       <!-- Main instrument panel -->
@@ -113,6 +120,13 @@ export default defineComponent({
   computed: {
     targetDR(): number {
       return this.cellStore.targetDisruptionRatio
+    },
+    /** Medium Joule heating display: show mW or W depending on magnitude. */
+    jouleDisplay(): string {
+      const mW = this.impStore.mediumJouleHeatingMilliWatts
+      if (mW >= 1000) return `${(mW / 1000).toFixed(2)} ${this.UNIT.W}`
+      if (mW >= 1)    return `${mW.toFixed(1)} ${this.UNIT.MW}`
+      return `${mW.toFixed(3)} ${this.UNIT.MW}`
     },
   },
 })
@@ -173,53 +187,51 @@ export default defineComponent({
     font-size: 0.875rem;
     color: var(--color-text-muted);
     line-height: 1.65;
-    max-width: 72ch;
     margin: 0;
   }
 
   // ── Physics callout ──────────────────────────────────────────────────────────
 
   &__callout {
-    @include surface-card(var(--radius), 1.1rem 1.4rem);
-    display: flex;
-    align-items: center;
-    gap: 1rem;
+    @include surface-card(var(--radius), 1.25rem 1.5rem);
+    display: grid;
+    grid-template-columns: auto auto auto auto auto;
+    justify-content: space-between;
+    align-items: start;
+    gap: 0;
     border-left: 3px solid var(--color-primary);
-    flex-wrap: wrap;
-    row-gap: 0.75rem;
 
     &-col {
-      display: flex;
-      flex-direction: column;
-      gap: 0.2rem;
-      flex: 1;
-      min-width: 160px;
+      @include flex-col(0.3rem);
+      padding: 0 0.75rem;
     }
 
     &-label {
-      font-size: 0.65rem;
+      @include mono-upper(0.6rem, 0.1em);
       color: var(--color-primary);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
       font-weight: 600;
     }
 
     &-formula {
       font-family: var(--font-mono);
-      font-size: 0.82rem;
+      font-size: 0.78rem;
       color: var(--color-text);
+      line-height: 1.6;
+      word-break: break-word;
     }
 
     &-note {
-      font-size: 0.65rem;
+      font-size: 0.62rem;
       color: var(--color-text-muted);
+      line-height: 1.4;
     }
 
     &-sep {
-      font-size: 1.5rem;
+      font-size: 1.25rem;
       color: var(--color-primary);
-      opacity: 0.4;
+      opacity: 0.35;
       flex-shrink: 0;
+      padding: 0 0.25rem;
       align-self: center;
     }
   }
@@ -308,7 +320,11 @@ export default defineComponent({
 
     &__inner { padding: 0 1rem; gap: 1.5rem; }
     &__title { font-size: 1.5rem; }
-    &__callout { flex-direction: column; &-sep { transform: rotate(90deg); } }
+    &__callout {
+      grid-template-columns: 1fr;
+      &-col { padding: 0.75rem 1rem; border-bottom: 1px solid var(--color-border); &:last-child { border-bottom: none; } }
+      &-sep { display: none; }
+    }
   }
 }
 </style>

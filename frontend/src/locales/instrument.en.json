@@ -2,15 +2,15 @@
   "instrument": {
     "eyebrow": "Lab Instrumentation — PoC",
     "title": "Impedance Feedback",
-    "subtitle": "As target cells lyse, released intracellular ions increase medium conductivity σ_e, lowering cuvette impedance. This creates a voltage-divider mismatch with the generator's source impedance — the delivered field drops below the set point. This panel models the drift and computes the corrected generator output voltage to maintain constant transmembrane potential.",
+    "subtitle": "As target cells lyse, released intracellular ions shift medium conductivity σ_e — modelled via the Maxwell-Garnett mixing rule. The cuvette impedance is computed at the actual broadcast frequency, not just DC. For RF sources (50 Ω), impedance mismatch and power delivery efficiency are tracked. A voltage-divider correction keeps the delivered field at the set point despite conductivity drift.",
 
     "view": {
       "calloutIonTitle":    "Ion Release Model",
-      "calloutIonFormula":  "σ_e(t) = σ_e₀ + φ · f<sub>lysed</sub> · (σ_i − σ_e₀) · 0.8",
-      "calloutIonNote":     "φ = cell volume fraction · f<sub>lysed</sub> derived from disruption ratio DR",
+      "calloutIonFormula":  "σ_eff = σ_m · [σ_i + 2σ_m + 2φ(σ_i−σ_m)] / [σ_i + 2σ_m − φ(σ_i−σ_m)]",
+      "calloutIonNote":     "Maxwell-Garnett mixing rule · φ = φ_cells × f_lysed · valid for both high-σ and low-σ media",
       "calloutZTitle":      "Cuvette Impedance",
       "calloutZFormula":    "Z = d / (σ_e · A)",
-      "calloutZNote":       "DC limit — valid for f ≪ 340 MHz in saline",
+      "calloutZNote":       "DC model (f ≪ 365 MHz) · full complex |Z(f)| computed at broadcast frequency in the panel below",
       "calloutCorrTitle":   "Corrected Generator Output",
       "calloutCorrFormula": "E<sub>gen</sub> = E<sub>target</sub> × (1 + R_s / Z)",
       "calloutCorrNote":    "Voltage divider compensation",
@@ -19,13 +19,15 @@
       "contextSigmaBase":   "σ_e (base)",
       "contextField":       "Target E",
       "contextDR":          "DR (target)",
-      "contextZNominal":    "Z nominal",
+      "contextZNominal":    "Z nominal (DC)",
       "contextCorrection":  "Correction",
+      "contextJoule":       "P_medium",
       "pocTitle":           "Proof of Concept — Simulated Mode",
       "pocBody":            "In simulated mode, impedance drift is computed from the ion-release physics model (cell volume fraction × lysed fraction × σ contrast). Switch to <em>Live Hardware</em> in the Hardware Input panel to replace this with real measurements from a lab impedance analyser or LCR meter connected via the <code>impedanceReading</code> socket event. See the <a href=\"/protocol\" class=\"instrument__poc-link\">Protocol</a> page for the full hardware integration specification.",
       "tipContextTarget":    "<strong>Target Cell</strong>\nCurrently selected target cell type. The impedance model uses its radius and intracellular conductivity to compute ion release on lysis.",
       "tipContextDR":        "<strong>Disruption Ratio (target)</strong>\nDR = (V_m · PEF) / V_threshold. Values above 85% indicate the lysis window has been reached.",
-      "tipContextCorrection": "<strong>Voltage Correction Factor</strong>\n= 1 + R_s / Z_cuvette\nValues above 1 mean the generator must output proportionally more voltage to compensate for impedance drift."
+      "tipContextCorrection": "<strong>Voltage Correction Factor</strong>\n= 1 + R_s / Z_cuvette\nValues above 1 mean the generator must output proportionally more voltage to compensate for impedance drift.",
+      "tipContextJoule":     "<strong>Medium Joule Heating Power [mW]</strong>\nP = |E|² × σ_e × V_cuvette\nTotal power dissipated as heat in the medium between the electrodes.\nHigher σ_e (post-lysis) and higher field → more heating.\nCorresponding adiabatic temperature rise rate: dT/dt = |E|² × σ_e / (ρ × c_p)\nThis is an upper bound — actual rise is lower due to heat loss to cuvette walls."
     },
 
     "setup": {
@@ -50,18 +52,34 @@
 
     "meter": {
       "title": "Live Impedance Status",
-      "sub": "Simulated medium drift from ion release model",
-      "nominalZ": "Nominal Z",
-      "currentZ": "Current Z",
+      "sub": "Maxwell-Garnett ion-release model · frequency-dependent |Z(f)|",
+      "nominalZ": "Z_DC (nominal)",
+      "zAtFreq": "|Z(f)| at freq",
       "sigmaBase": "σ_e (base)",
       "sigmaLive": "σ_e (live)",
       "drift": "Impedance Drift",
       "lysedPct": "Cells Lysed",
+      "lysedPctLabel": "{pct}% lysed",
       "volFraction": "Volume Fraction φ",
-      "tipNominal": "<strong>Nominal Cuvette Impedance Z₀ [Ω]</strong>\nComputed at experiment start with fresh medium and no lysis:\nZ₀ = d / (σ_e_base × A)\nReference for drift percentage.",
-      "tipCurrent": "<strong>Current Cuvette Impedance [Ω]</strong>\nZ corrected for ion release: σ_e rises as cells lyse.\nIn hardware mode, overridden by the live instrument reading.",
+      "relaxFreq": "DC model valid up to",
+      "relaxFreqValue": "f_relax ≈ {freq} MHz",
+      "tipNominal": "<strong>DC Nominal Impedance Z₀ [Ω]</strong>\nComputed at experiment start with fresh medium and no lysis:\nZ_DC = d / (σ_e_base × A)\nDC limit — capacitive term negligible for f ≪ f_relax.\nUsed as reference for drift percentage.",
+      "tipZAtFreq": "<strong>|Z(f)| at {freq} [Ω]</strong>\nComplex impedance magnitude at the current broadcast frequency.\n|Z(f)| = (d/A) / √[σ_e² + (ωε_rε₀)²]\nDC approximation Z₀ = {zDC} Ω · |Z(f)| = {zF} Ω\nMaxwell relaxation frequency: f_relax ≈ {relax} MHz\nAbove f_relax the capacitive term dominates and |Z| falls rapidly.",
       "tipDrift": "<strong>Impedance Drift [%]</strong>\n(Z_current − Z_nominal) / Z_nominal × 100\nNegative = impedance fell (σ_e rose from ion release).\nA −10% drift requires a +11% field correction.",
-      "tipSigmaLive": "<strong>Live σ_e [S/m]</strong>\nMedium conductivity including ion release from lysed cells.\nFormula: σ_e_live = σ_e_base + φ·f_lysed·(σ_i − σ_e_base)·0.8\nφ = cell volume fraction · f_lysed = fraction of cells lysed (DR > 85%)"
+      "tipSigmaBase": "<strong>Base Medium Conductivity σ_e [S/m]</strong>\nNominal conductivity of the selected medium at 37°C.\nThis is the experiment starting point before any cells lyse.",
+      "tipSigmaLive": "<strong>Live σ_e [S/m]</strong>\nEffective medium conductivity after Maxwell-Garnett ion-release correction.\nσ_eff = σ_m × [σ_i + 2σ_m + 2φ(σ_i−σ_m)] / [σ_i + 2σ_m − φ(σ_i−σ_m)]\nφ = φ_cells × f_lysed · Handles both σ_i &gt; σ_m and σ_i &lt; σ_m media.",
+      "tipRelax": "<strong>Maxwell Relaxation Frequency [MHz]</strong>\nf_relax = σ_e / (2π ε_r ε₀)\nBelow this frequency the medium behaves resistively (DC model valid).\nAbove it, capacitive displacement currents become significant and the\nDC impedance formula Z = d/(σ·A) under-estimates the true |Z(f)|.\nFor saline (σ=1.5 S/m, εr=74): f_relax ≈ 365 MHz.",
+      "tipFieldDistortion": "<strong>Electric Field Distortion at φ = {phi}%</strong>\nField enhancement factor: E_local / E_applied = (1 + φ/2) / (1 − φ) = {factor}\nAt high cell density, intact cells (insulating membranes) force current through\nnarrowing extracellular channels, concentrating the field at cell surfaces.\nThe Schwan equation uses E_applied — the actual membrane potential is\nE_local × 1.5R×cosθ / √(1+(ωτ)²), which is {factor}× higher than displayed.\nLevel: {level} — negligible below φ=1%, significant above φ=5%."
+    },
+
+    "bode": {
+      "title": "|Z(f)| Frequency Response",
+      "sub": "Cuvette impedance magnitude vs frequency — log-log scale",
+      "legendZ":     "|Z(f)| curve",
+      "legendFreq":  "Broadcast frequency",
+      "legendRelax": "f_relax (DC limit)",
+      "axisX":       "Frequency (Hz)",
+      "axisY":       "|Z| (Ω)"
     },
 
     "corrector": {
@@ -74,9 +92,19 @@
       "statusOk": "No correction needed",
       "statusNeeded": "Correction needed",
       "statusMinor": "Minor correction",
+      "vswr": "VSWR",
+      "powerEfficiency": "Power Delivery η",
+      "sourceNote": "Source impedance R_s",
+      "formula": "E_gen = E_target × (1 + R_s / Z_cuvette)",
       "tipTarget": "<strong>Target Field [V/cm]</strong>\nThe electric field required inside the cuvette to achieve the desired transmembrane voltage.\nSet in the Experiment Lab Field Control slider.",
       "tipCorrected": "<strong>Corrected Generator Field [V/cm]</strong>\nThe equivalent field the generator must output to deliver E_target inside the cuvette after accounting for the voltage divider:\nE_gen = E_target × (1 + R_s / Z_cuvette)\nSet this value on your function generator or pulser.",
-      "tipFactor": "<strong>Voltage Correction Factor</strong>\n= 1 + R_s / Z_cuvette\nMultiply nominal generator voltage by this factor to compensate for impedance drift."
+      "tipFactor": "<strong>Voltage Correction Factor</strong>\n= 1 + R_s / Z_cuvette\nMultiply nominal generator voltage by this factor to compensate for impedance drift.",
+      "tipVSWR": "<strong>VSWR &amp; Power Delivery (RF mode)</strong>\nReflection coefficient: Γ = |Z_load − Z₀| / |Z_load + Z₀| = {gamma}\nVSWR = (1 + |Γ|) / (1 − |Γ|) = {vswr}\nPower delivery η = 1 − |Γ|² = {efficiency}\n\nZ_load = {zLoad} Ω · Z₀ = {z0} Ω\n\nVSWR ≤ 2.0 is standard practice (η ≥ 88.9%).\nNote: VSWR only matters for RF (50 Ω) sources; IRE pulsers\n(&lt;1 Ω source) are effectively matched to any biological load.",
+      "tipSourceNote": "<strong>Source Impedance R_s [Ω]</strong>\n<em>IRE pulsers (R_s &lt; 1 Ω)</em>: Source ≪ Z_load — voltage divider is negligible; VSWR mismatch analysis does not apply.\n<em>RF generators (R_s = 50 Ω)</em>: Source and load are comparable — field correction and VSWR are critical.\nAt 50 Ω with a saline cuvette (Z ≈ 200–1000 Ω), typical Γ ≈ 0.6, η ≈ 64%. Impedance matching networks improve delivery.",
+      "rcStatus_ok":       "Cuvette RC bandwidth OK — full field delivered",
+      "rcStatus_marginal": "Pulse shorter than 5×τ_RC — partial field attenuation",
+      "rcStatus_critical": "Pulse shorter than τ_RC — severe field attenuation",
+      "tipRCBandwidth": "<strong>Cuvette RC Bandwidth Check</strong>\nτ_RC = ε_r × ε₀ / σ_e = {tau} ns  (geometry-independent)\nt_p = {tp} ns  ·  ratio t_p/τ_RC = {ratio}\n\nThe medium acts as an RC circuit with time constant τ_RC.\nPulses shorter than τ_RC cannot fully charge the cuvette — the\ndelivered field is attenuated before reaching steady state.\n\nRule of thumb:\n  t_p &gt; 5×τ_RC → full field (≥99% of set value)\n  t_p = 1×τ_RC → 63% field delivery\n  t_p &lt; τ_RC  → severe attenuation\n\nσ_e = {sigma} S/m at this moment."
     },
 
     "hardware": {
@@ -136,7 +164,7 @@
       "tipState":        "<strong>Load State</strong>\nBased on absolute impedance drift from nominal.\n<em>Nominal</em>: |ΔZ| &lt; 5% — no correction needed\n<em>Warning</em>: 5–15% — minor correction recommended\n<em>Critical</em>: &gt;15% — significant drift; apply corrected field",
       "tipSigmaBase":    "<strong>Base Medium Conductivity σ_e [S/m]</strong>\nNominal conductivity of the selected medium at 37°C.\nThis is the experiment starting point before any cells lyse.",
       "tipSigmaLive":    "<strong>Live Medium Conductivity σ_e [S/m]</strong>\nCurrent conductivity after accounting for ion release from lysed cells.\nRises (low-σ media) or falls (high-σ media like saline) depending on the σ_i vs σ_e contrast.",
-      "tipDelta":        "<strong>Conductivity Change Δσ_e [S/m]</strong>\nδσ_e = σ_e_live − σ_e_base\nPositive: intracellular σ_i &gt; σ_medium (low-σ media, e.g. PBS)\nNegative: intracellular σ_i &lt; σ_medium (high-σ media, e.g. saline)\nFormula: Δσ_e = φ × f_lysed × (σ_i − σ_base) × 0.8",
+      "tipDelta":        "<strong>Conductivity Change Δσ_e [S/m]</strong>\nδσ_e = σ_e_live − σ_e_base (after Maxwell-Garnett correction)\nPositive: σ_i &gt; σ_m → lysis raises conductivity (PBS, sucrose media)\nNegative: σ_i &lt; σ_m → lysis lowers conductivity (saline)\nMG formula: σ_eff = σ_m × [σ_i + 2σ_m + 2φ_lys(σ_i−σ_m)] / [σ_i + 2σ_m − φ_lys(σ_i−σ_m)]",
       "tipDrift":        "<strong>Impedance Drift [%]</strong>\n(Z_live − Z_nominal) / Z_nominal × 100\nNegative drift (saline): σ_e rises → Z falls → field under-delivered\nPositive drift (PBS): σ_e falls → Z rises → field over-delivered",
       "tipChain":        "<strong>Lysis Feedback Chain</strong>\nThe causal sequence connecting lysis events to generator correction:\n\nf_lysed — fraction of target cells lysed (DR ≥ 85%)\nΔσ_e   — conductivity shift from ion release\nΔZ %   — resulting cuvette impedance drift\nE_gen × — voltage correction factor to maintain target transmembrane Vm\n\nAt high cell density or long exposure, this correction can exceed 20%."
     },

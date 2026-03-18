@@ -18,6 +18,11 @@
       <HardwareInput class="inst-panel__card" />
     </div>
 
+    <!-- |Z(f)| Bode plot (full width) -->
+    <div class="inst-panel__card">
+      <ImpedanceBodePlot />
+    </div>
+
     <!-- Trend (full width) -->
     <div class="inst-panel__card inst-panel__card--trend">
       <ImpedanceTrend />
@@ -27,16 +32,17 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
-import CuvetteSetup    from './CuvetteSetup.vue'
-import ImpedanceMeter  from './ImpedanceMeter.vue'
-import FieldCorrector  from './FieldCorrector.vue'
-import HardwareInput   from './HardwareInput.vue'
-import ImpedanceTrend  from './ImpedanceTrend.vue'
-import LoadMonitor     from './LoadMonitor.vue'
+import CuvetteSetup      from './CuvetteSetup.vue'
+import ImpedanceMeter    from './ImpedanceMeter.vue'
+import ImpedanceBodePlot from './ImpedanceBodePlot.vue'
+import FieldCorrector    from './FieldCorrector.vue'
+import HardwareInput     from './HardwareInput.vue'
+import ImpedanceTrend    from './ImpedanceTrend.vue'
+import LoadMonitor       from './LoadMonitor.vue'
 
 export default defineComponent({
   name: 'InstrumentPanel',
-  components: { CuvetteSetup, ImpedanceMeter, FieldCorrector, HardwareInput, ImpedanceTrend, LoadMonitor },
+  components: { CuvetteSetup, ImpedanceMeter, ImpedanceBodePlot, FieldCorrector, HardwareInput, ImpedanceTrend, LoadMonitor },
 })
 </script>
 

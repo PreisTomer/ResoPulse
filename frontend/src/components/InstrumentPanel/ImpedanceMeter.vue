@@ -14,28 +14,28 @@
           'imp-meter__lysis-pill--full': lysedPct >= 100,
         }"
       >
-        {{ lysedPct.toFixed(0) }}{{ UNIT.PERCENT }} lysed
+        {{ $t('instrument.meter.lysedPctLabel', { pct: lysedPct.toFixed(0) }) }}
       </div>
     </div>
 
     <!-- Stat grid -->
     <div class="imp-meter__grid">
-      <!-- Nominal Z -->
+      <!-- Nominal Z (DC) -->
       <div class="imp-meter__stat" v-tip="$t('instrument.meter.tipNominal')">
         <div class="imp-meter__stat-label">{{ $t('instrument.meter.nominalZ') }}</div>
         <div class="imp-meter__stat-value">{{ nominalDisplay }} <span class="imp-meter__stat-unit">{{ UNIT.OHM }}</span></div>
       </div>
 
-      <!-- Current Z -->
-      <div class="imp-meter__stat imp-meter__stat--live" v-tip="$t('instrument.meter.tipCurrent')">
-        <div class="imp-meter__stat-label">{{ $t('instrument.meter.currentZ') }}</div>
+      <!-- |Z(f)| at broadcast frequency -->
+      <div class="imp-meter__stat imp-meter__stat--live" v-tip="tipZAtFreq">
+        <div class="imp-meter__stat-label">{{ $t('instrument.meter.zAtFreq') }}</div>
         <div class="imp-meter__stat-value imp-meter__stat-value--primary">
-          {{ currentDisplay }} <span class="imp-meter__stat-unit">{{ UNIT.OHM }}</span>
+          {{ zAtFreqDisplay }} <span class="imp-meter__stat-unit">{{ UNIT.OHM }}</span>
         </div>
       </div>
 
       <!-- σ_e base -->
-      <div class="imp-meter__stat" v-tip="$t('instrument.meter.tipSigmaLive')">
+      <div class="imp-meter__stat" v-tip="$t('instrument.meter.tipSigmaBase')">
         <div class="imp-meter__stat-label">{{ $t('instrument.meter.sigmaBase') }}</div>
         <div class="imp-meter__stat-value">{{ sigmaBaseDisplay }} <span class="imp-meter__stat-unit">{{ UNIT.S_PER_M }}</span></div>
       </div>
@@ -47,6 +47,12 @@
           {{ sigmaLiveDisplay }} <span class="imp-meter__stat-unit">{{ UNIT.S_PER_M }}</span>
         </div>
       </div>
+    </div>
+
+    <!-- Relaxation frequency note -->
+    <div class="imp-meter__relax-note" v-tip="$t('instrument.meter.tipRelax')">
+      <span class="imp-meter__relax-label">{{ $t('instrument.meter.relaxFreq') }}</span>
+      <span class="imp-meter__relax-value">{{ $t('instrument.meter.relaxFreqValue', { freq: relaxFreqDisplay }) }}</span>
     </div>
 
     <!-- Drift bar -->
@@ -73,10 +79,21 @@
       </div>
     </div>
 
-    <!-- φ detail -->
-    <div class="imp-meter__phi-row">
+    <!-- φ + field distortion -->
+    <div
+      class="imp-meter__phi-row"
+      :class="{ 'imp-meter__phi-row--warn': store.fieldDistortionLevel !== 'none' }"
+      v-tip="tipFieldDistortion"
+    >
       <span class="imp-meter__phi-label">{{ $t('instrument.meter.volFraction') }}</span>
-      <span class="imp-meter__phi-value">φ = {{ (store.cellVolumeFraction * 100).toFixed(3) }}{{ UNIT.PERCENT }}</span>
+      <span class="imp-meter__phi-value">
+        φ = {{ (store.cellVolumeFraction * 100).toFixed(3) }}{{ UNIT.PERCENT }}
+        <span
+          v-if="store.fieldDistortionLevel !== 'none'"
+          class="imp-meter__phi-factor"
+          :class="{ 'imp-meter__phi-factor--warn': store.fieldDistortionLevel === 'significant' }"
+        > · E ×{{ store.fieldDistortionFactor.toFixed(3) }}</span>
+      </span>
     </div>
   </div>
 </template>
@@ -105,8 +122,8 @@ export default defineComponent({
     nominalDisplay(): string {
       return this.store.nominalImpedanceOhm.toFixed(1)
     },
-    currentDisplay(): string {
-      return this.store.currentImpedanceOhm.toFixed(1)
+    zAtFreqDisplay(): string {
+      return this.store.currentImpedanceMagAtFreqOhm.toFixed(1)
     },
     sigmaBaseDisplay(): string {
       return this.cellStore.effectiveSigmaE.toFixed(3)
@@ -119,6 +136,30 @@ export default defineComponent({
     },
     driftSign(): string {
       return this.driftPct < 0 ? '−' : this.driftPct > 0 ? '+' : ''
+    },
+    relaxFreqDisplay(): string {
+      return this.store.relaxationFreqMHz.toFixed(0)
+    },
+    tipFieldDistortion(): string {
+      return this.$t('instrument.meter.tipFieldDistortion', {
+        phi:    (this.store.cellVolumeFraction * 100).toFixed(3),
+        factor: this.store.fieldDistortionFactor.toFixed(4),
+        level:  this.store.fieldDistortionLevel,
+      })
+    },
+    tipZAtFreq(): string {
+      const freqKHz = this.cellStore.currentBroadcastFrequency
+      const freqLabel = freqKHz >= 1e6
+        ? `${(freqKHz / 1e6).toFixed(3)} ${this.UNIT.GHZ}`
+        : freqKHz >= 1000
+          ? `${(freqKHz / 1000).toFixed(3)} ${this.UNIT.MHZ}`
+          : `${freqKHz.toFixed(1)} ${this.UNIT.KHZ}`
+      return this.$t('instrument.meter.tipZAtFreq', {
+        freq:    freqLabel,
+        relax:   this.store.relaxationFreqMHz.toFixed(0),
+        zDC:     this.store.nominalImpedanceOhm.toFixed(1),
+        zF:      this.store.currentImpedanceMagAtFreqOhm.toFixed(1),
+      })
     },
   },
 })
@@ -248,15 +289,44 @@ export default defineComponent({
   }
 
   &__phi-row {
-    display: flex;
-    justify-content: space-between;
+    @include flex-between();
     font-size: 0.7rem;
     color: var(--color-text-muted);
     padding-top: 0.25rem;
     border-top: 1px solid var(--color-border);
+    cursor: default;
+
+    &--warn { border-top-color: rgba(251, 191, 36, 0.35); }
   }
 
   &__phi-value {
+    font-family: var(--font-mono);
+    color: var(--color-text);
+  }
+
+  &__phi-factor {
+    color: var(--color-primary);
+    &--warn { color: var(--color-amber-warm); }
+  }
+
+  &__relax-note {
+    @include flex-between();
+    font-size: 0.65rem;
+    color: var(--color-text-muted);
+    padding: 0.3rem 0.5rem;
+    background: var(--color-surface-2);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    cursor: default;
+  }
+
+  &__relax-label {
+    @include mono-upper(0.6rem, 0.06em);
+    opacity: 0.7;
+    color: var(--color-text-muted);
+  }
+
+  &__relax-value {
     font-family: var(--font-mono);
     color: var(--color-text);
   }
