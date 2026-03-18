@@ -1,15 +1,15 @@
 {
   "home": {
-    "eyebrow": "Bioelectric Field Research · Electroporation · Acoustic Disruption",
+    "eyebrow": "Bioelectric Field Research · Electroporation · Resonance Modeling",
     "subtitle": "Virtual Biophysics Engine",
-    "taglineMain": "Set an RF frequency, watch the transmembrane voltage climb in real time, and find the precise window where a cancer cell reaches lysis threshold while the healthy cell beside it survives untouched. Built on the Schwan equation, Pennes bioheat model, nsEP pulse-envelope physics, and the Clausius-Mossotti DEP force model, export publication-ready parameters before running a single in-vitro experiment.",
+    "taglineMain": "Set an RF frequency, watch the transmembrane voltage climb in real time, and find the precise window where a cancer cell reaches lysis threshold while the healthy cell beside it remains sub-threshold. Built on the Schwan equation, Pennes bioheat model, nsEP pulse-envelope physics, and the Clausius-Mossotti DEP force model, export publication-ready parameters before running a single in-vitro experiment.",
     "btnPrimary": "Open Experiment Lab",
     "btnGhost": "Read the Science",
     "capVm":          "Schwan Vm Model",
-    "capSelectivity": "Selective TI",
+    "capSelectivity": "Therapeutic Index",
     "capPulse":       "Pulsed IRE / nsEP",
     "capSweep":       "Frequency Sweep",
-    "capPop":         "Population Model",
+    "capPop":         "Size Distribution",
     "capImp":         "Impedance Tracking",
     "capBio":         "Biomodulation Scoring",
     "capDr":          "DR(f) Analysis",
@@ -35,8 +35,8 @@
     "card5Desc": "Full derivations for Schwan Vm, SAR, Lorentzian resonance, nsEP pulse selectivity, DEP Clausius-Mossotti model, impedance feedback, and sonification, plus a 12-step experimental guide.",
     "stat1Val": "10",
     "stat1Label": "Cell Presets",
-    "stat2Val": "12",
-    "stat2Label": "Protocol Steps",
+    "stat2Val": "6",
+    "stat2Label": "Physics Models",
     "stat3Val": "1 GHz",
     "stat3Label": "Max Frequency",
     "stat4Val": "24",
@@ -44,7 +44,7 @@
     "tagCancer": "Cancer",
     "tagBacteria": "Bacteria",
     "tagVirus": "Viruses",
-    "tagRef": "Cell Membranes",
+    "tagRef": "Reference Cells",
     "disclaimer": "for research visualisation only · not a medical device"
   }
 }
