@@ -17,9 +17,10 @@ import heatmap from './locales/heatmap.en.json'
 import userPresets from './locales/userPresets.en.json'
 
 export const i18n = createI18n({
-  legacy: true,
+  legacy: false,
   locale: 'en',
   fallbackLocale: 'en',
+  warnHtmlMessage: false,
   messages: {
     en: {
       ...en,
