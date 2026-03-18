@@ -30,7 +30,7 @@
     >
       <span class="sel-panel__ti-range-label">{{ $t('selectivity.sigmaIRange') }}</span>
       <span class="sel-panel__ti-range-val">
-        [×{{ tiRange.low.toFixed(2) }} – ×{{ tiRange.high >= 99 ? ICON.INFINITY : tiRange.high.toFixed(2) }}]
+        [×{{ tiRange.low.toFixed(2) }} - ×{{ tiRange.high >= 99 ? ICON.INFINITY : tiRange.high.toFixed(2) }}]
       </span>
     </div>
 
@@ -232,7 +232,7 @@ export default defineComponent({
 
     targetResonanceEthr(): string {
       const t = this.store.target as { resonantThresholdVcm?: number }
-      if (!t.resonantThresholdVcm) return '—'
+      if (!t.resonantThresholdVcm) return ', '
       return formatFieldVcm(t.resonantThresholdVcm)
     },
 
@@ -270,26 +270,26 @@ export default defineComponent({
       const cat = this.store.targetCellCategory
       const ti  = this.therapeuticIndex
       const t = this.store.target as { resonantFreqGHz?: number; resonantThresholdVcm?: number }
-      const ghzCaveat = ' · f_res from fs-laser experiments (Tsen et al. [10]); RF delivery at GHz is skin-depth limited (~4–13 mm in saline at 1–12 GHz)'
+      const ghzCaveat = ' · f_res from fs-laser experiments (Tsen et al. [10]); RF delivery at GHz is skin-depth limited (~4-13 mm in saline at 1-12 GHz)'
       if (this.store.chartMode === CHART_MODE.RESONANCE && cat === CELL_CATEGORY.MAMMALIAN) {
-        return `${ICON.WARNING} Resonance mode has no physical meaning for mammalian cells — they have no rigid protein capsid or peptidoglycan cell wall. Switch back to IRE/Vm mode.`
+        return `${ICON.WARNING} Resonance mode has no physical meaning for mammalian cells, they have no rigid protein capsid or peptidoglycan cell wall. Switch back to IRE/Vm mode.`
       }
       if (cat === CELL_CATEGORY.VIRUS) {
         if (t.resonantFreqGHz) {
           return `${ICON.WARNING} IRE model inapplicable for virions (R < 0.1 µm) · Acoustic capsid disruption at ${t.resonantFreqGHz} GHz${ghzCaveat}`
         }
         const tLysis = this.store.targetLysisField
-        return `${ICON.WARNING} IRE not applicable to virions — E_lysis ≈ ${(tLysis / 1000).toFixed(0)} kV/cm · Use Resonance mode`
+        return `${ICON.WARNING} IRE not applicable to virions, E_lysis ≈ ${(tLysis / 1000).toFixed(0)} kV/cm · Use Resonance mode`
       }
       if (cat === CELL_CATEGORY.BACTERIA) {
         const tLysis = this.store.targetLysisField
         if (tLysis > 3000) {
           const res = t.resonantFreqGHz ? ` · Resonance mode (${t.resonantFreqGHz} GHz) available${ghzCaveat}` : ''
-          return `${ICON.WARNING} E_lysis ≈ ${(tLysis / 1000).toFixed(1)} kV/cm — standard IRE impractical · Consider nsEP (pulse width slider)${res}`
+          return `${ICON.WARNING} E_lysis ≈ ${(tLysis / 1000).toFixed(1)} kV/cm, standard IRE impractical · Consider nsEP (pulse width slider)${res}`
         }
       }
       if (ti > 0 && ti < 0.85) {
-        return `${ICON.WARNING} TI = ${ti.toFixed(2)}× — selectivity reversed at DC (τ_T < τ_H) · Short pulses may improve selectivity`
+        return `${ICON.WARNING} TI = ${ti.toFixed(2)}×, selectivity reversed at DC (τ_T < τ_H) · Short pulses may improve selectivity`
       }
       return null
     },
@@ -328,9 +328,9 @@ export default defineComponent({
 
     skinDepthClass(): string {
       const d = this.skinDepthMm
-      if (d >= 20) return 'sel-panel__res-depth--deep'    // ≥20 mm — tissue-penetrating
-      if (d >= 5)  return 'sel-panel__res-depth--medium'  // 5–20 mm — cm-depth accessible
-      return 'sel-panel__res-depth--shallow'              // <5 mm — near-surface / intracavitary
+      if (d >= 20) return 'sel-panel__res-depth--deep'    // ≥20 mm, tissue-penetrating
+      if (d >= 5)  return 'sel-panel__res-depth--medium'  // 5-20 mm, cm-depth accessible
+      return 'sel-panel__res-depth--shallow'              // <5 mm, near-surface / intracavitary
     },
 
     freqDisplayLabel(): string {
@@ -341,18 +341,18 @@ export default defineComponent({
       const t = this.store.target
       const f0 = t.resonantFreqGHz
       const pct = t.resonantFreqUncertaintyPct
-      if (!f0) return '—'
+      if (!f0) return ', '
       const label = (ghz: number) => formatFreqKHz(ghz * 1e6)
       if (!pct) return label(f0)
       const lo = f0 * (1 - pct / 100)
       const hi = f0 * (1 + pct / 100)
-      return `${label(lo)} – ${label(hi)}`
+      return `${label(lo)} - ${label(hi)}`
     },
 
     resonantQRange(): string {
       const t = this.store.target
       if (t.capsidQMin !== undefined && t.capsidQMax !== undefined) {
-        return `${t.capsidQMin} – ${t.capsidQMax}  (nominal Q = ${t.capsidQ ?? '?'})`
+        return `${t.capsidQMin} - ${t.capsidQMax}  (nominal Q = ${t.capsidQ ?? '?'})`
       }
       if (t.capsidQ !== undefined) return `${t.capsidQ}`
       return ''
@@ -401,9 +401,9 @@ export default defineComponent({
     tipModeBadge(): string { return this.$t('selectivity.tipModeBadge') },
 
     targetOrientPct(): string {
-      // Acoustic resonance (bacteria/virus in resonance mode) is omnidirectional —
+      // Acoustic resonance (bacteria/virus in resonance mode) is omnidirectional - 
       // the cosθ Schwan factor does not apply
-      if (this.store.chartMode === CHART_MODE.RESONANCE && this.isResonanceTarget) return '—'
+      if (this.store.chartMode === CHART_MODE.RESONANCE && this.isResonanceTarget) return ', '
       return `${(this.store.targetLysisProbabilityRandom * 100).toFixed(0)}%`
     },
 

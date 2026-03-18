@@ -2,7 +2,7 @@
 // Unauthorized copying or distribution is prohibited.
 
 /**
- * Sweep-panel tooltip builders — extracted from SweepPanel/index.vue.
+ * Sweep-panel tooltip builders - extracted from SweepPanel/index.vue.
  * Follows the same pattern as sliderTooltips.ts: pure functions, no store access.
  */
 import { ICON } from '@/constants/icons'
@@ -37,22 +37,22 @@ or switching from CW to pulsed mode for better selectivity.`
 export function tipThThreshold(isField: boolean): string {
   return `<strong>Operating Threshold</strong>
 Key ${isField ? 'field' : 'frequency'} value where target DR crosses a biophysical milestone:
-  50% — reversible electroporation onset
-  85% — lysis countdown arms (irreversible pore accumulation)
-  100% — lysis threshold reached`
+  50%, reversible electroporation onset
+  85%, lysis countdown arms (irreversible pore accumulation)
+  100%, lysis threshold reached`
 }
 
 export function tipThTI(): string {
   const { TI_STRONG: s, TI_MARGINAL: m } = THRESHOLDS
-  return `<strong>TI — Therapeutic Index</strong>
-TI = DR_T / DR_H — selectivity ratio at this operating point.
-<span class="tip-ok">≥ ${s}×</span> — strong therapeutic window
-<span class="tip-val">${m}–${s}×</span> — marginal window
-<span class="tip-warn">&lt; ${m}×</span> — poor selectivity`
+  return `<strong>TI: Therapeutic Index</strong>
+TI = DR_T / DR_H, selectivity ratio at this operating point.
+<span class="tip-ok">≥ ${s}×</span>, strong therapeutic window
+<span class="tip-val">${m} - ${s}×</span>, marginal window
+<span class="tip-warn">&lt; ${m}×</span>, poor selectivity`
 }
 
 export function tipThTemp(): string {
-  return `<strong>T<sub>target</sub> — Target Steady-State Temperature</strong>
+  return `<strong>T<sub>target</sub>, Target Steady-State Temperature</strong>
 T_ss = 37 + SAR_eff / (λ × cp)
 Coloured: amber ≥ ${THRESHOLDS.TEMP_WARN}°C · red ≥ ${THRESHOLDS.TEMP_DENATURING}°C (denaturation onset)`
 }

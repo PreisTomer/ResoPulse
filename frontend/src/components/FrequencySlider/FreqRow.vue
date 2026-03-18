@@ -160,7 +160,7 @@ export default defineComponent({
       ) {
         const t = this.store.target as { resonantFreqGHz?: number }
         const fRes = t.resonantFreqGHz ? ` (f_res = ${t.resonantFreqGHz} GHz)` : ''
-        tip += `\n\n⚠ Resonance mode active${fRes}: acoustic capsid disruption requires GHz delivery — rectangular waveguide or resonant cavity hardware needed. Current frequency is below the resonant target.`
+        tip += `\n\n⚠ Resonance mode active${fRes}: acoustic capsid disruption requires GHz delivery, rectangular waveguide or resonant cavity hardware needed. Current frequency is below the resonant target.`
       }
       return tip
     },

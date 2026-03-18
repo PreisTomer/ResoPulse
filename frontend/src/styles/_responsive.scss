@@ -2,14 +2,14 @@
 // Unauthorized copying or distribution is prohibited.
 
 // NavBar, ProtocolView, and ExperimentView mobile CSS live in their own scoped
-// <style> blocks (scoped specificity requires co-location) — NOT duplicated here.
+// <style> blocks (scoped specificity requires co-location) - NOT duplicated here.
 //
 // Breakpoints
-//   $bp-phone : 480px  — small phones
-//   $bp-sm    : 640px  — large phones
-//   $bp-md    : 768px  — tablets portrait / hamburger threshold
-//   $bp-lg    : 1024px — small laptops
-//   $bp-xl    : 1200px — wide tablets / 13" laptops
+//   $bp-phone : 480px  - small phones
+//   $bp-sm    : 640px  - large phones
+//   $bp-md    : 768px  - tablets portrait / hamburger threshold
+//   $bp-lg    : 1024px - small laptops
+//   $bp-xl    : 1200px - wide tablets / 13" laptops
 
 // ─── HomeView ─────────────────────────────────────────────────────────────────
 @media (max-width: 768px) {
@@ -95,7 +95,7 @@
   }
 }
 
-// ─── ExperimentView — media queries live in ExperimentView.vue scoped <style>
+// ─── ExperimentView - media queries live in ExperimentView.vue scoped <style>
 //     (scoped specificity requires rules to be co-located with the component)
 
 // ─── DataSetsView ─────────────────────────────────────────────────────────────

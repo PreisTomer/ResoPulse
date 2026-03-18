@@ -2,7 +2,7 @@
 // Unauthorized copying or distribution is prohibited.
 
 /**
- * Therapeutic Window Heatmap — grid constants, zone definitions, and colour palette.
+ * Therapeutic Window Heatmap - grid constants, zone definitions, and colour palette.
  *
  * The 2D heatmap sweeps RF frequency (X, log-scale) × field intensity (Y, linear)
  * and colour-codes each cell by the treatment zone, giving scientists a complete
@@ -57,12 +57,12 @@ export const HMAP_THERM_CRIT_C = 42.0
  * Priority order: THERMAL > ABLATIVE > MARGINAL > THERAPEUTIC > APPROACHING > SUB
  */
 export const HMAP_ZONE = {
-  SUB:         0,  // sub-threshold — no membrane effect
-  APPROACHING: 1,  // target in Rev-EP window (50–85% DR)
+  SUB:         0,  // sub-threshold, no membrane effect
+  APPROACHING: 1,  // target in Rev-EP window (50-85% DR)
   THERAPEUTIC: 2,  // target at lysis, healthy safely below Rev-EP
   MARGINAL:    3,  // target at lysis, healthy in Rev-EP stress zone or T > 40°C
-  ABLATIVE:    4,  // healthy cell also at lysis — non-selective
-  THERMAL:     5,  // healthy tissue temperature > 42°C — thermal damage
+  ABLATIVE:    4,  // healthy cell also at lysis, non-selective
+  THERMAL:     5,  // healthy tissue temperature > 42°C, thermal damage
 } as const
 
 export type HmapZone = typeof HMAP_ZONE[keyof typeof HMAP_ZONE]
@@ -77,7 +77,7 @@ export const HMAP_ZONE_COLOR: Record<HmapZone, string> = {
   [HMAP_ZONE.THERMAL]:     'rgba(255,140,0,0.72)',
 }
 
-/** i18n key suffix per zone — used as `heatmap.zone<suffix>`. */
+/** i18n key suffix per zone - used as `heatmap.zone<suffix>`. */
 export const HMAP_ZONE_KEY: Record<HmapZone, string> = {
   [HMAP_ZONE.SUB]:         'Sub',
   [HMAP_ZONE.APPROACHING]: 'Approaching',

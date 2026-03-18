@@ -2,7 +2,7 @@
 // Unauthorized copying or distribution is prohibited.
 
 /**
- * Disruption-bar tooltip builders — extracted from DisruptionBars.vue computed properties.
+ * Disruption-bar tooltip builders - extracted from DisruptionBars.vue computed properties.
  * Follows the same pattern as sliderTooltips.ts: pure functions, no store access.
  */
 import { ICON } from '@/constants/icons'
@@ -16,7 +16,7 @@ P = 1 / (1 + e^−((ratio−1.0)/0.05))
 }
 
 export function tipHealthyPlysis(): string {
-  return `<strong>P(electroporation) — Healthy</strong>
+  return `<strong>P(electroporation), Healthy</strong>
 Sigmoid probability centered at 100% disruption threshold.
 Keep this value near 0% for selective therapy`
 }
@@ -24,7 +24,7 @@ Keep this value near 0% for selective therapy`
 export function tipNuclearSection(): string {
   return `<strong>Nuclear Envelope Disruption (Double-Shell Model)</strong>
 Vm_nuc / V_threshold_nuc for each cell.
-Bandpass peak at f_peak = 1/(2π√(τ_pm·τ_ne)) — typically 0.87–2.1 MHz.
+Bandpass peak at f_peak = 1/(2π√(τ_pm·τ_ne)), typically 0.87-2.1 MHz.
 Cancer nuclei have thinner/leakier NE and lower thresholds → higher disruption ratio.
 Kotnik &amp; Miklavcic, Biophys. J. 90:480 (2006)`
 }
@@ -41,7 +41,7 @@ export function tipTargetBar(params: {
 }): string {
   const { pct, isResonanceTarget, resonantThresholdVcm, resonantFreqGHz, targetVmMv, thresholdMv, lysisTime, targetRatio } = params
   const warn = targetRatio >= THRESHOLDS.DISRUPTION_WARN
-    ? `\n<span class="tip-warn">${ICON.LIGHTNING} >85% — disruption countdown active (${lysisTime})</span>`
+    ? `\n<span class="tip-warn">${ICON.LIGHTNING} >85%, disruption countdown active (${lysisTime})</span>`
     : ''
   if (isResonanceTarget) {
     return `<strong>Target resonant disruption: <span class="tip-val">${pct}%</span></strong>
@@ -66,14 +66,14 @@ export function tipHealthyBar(params: {
   const { pct, isResonanceTarget, healthyVmMv, thresholdMv, healthyRatio } = params
   if (isResonanceTarget) {
     return `<strong>Healthy cell: <span class="tip-val">${pct}% disruption (≈0)</span></strong>
-Mammalian cells lack rigid-shell resonance — Schwan Vm → 0 at GHz (ωτ ≫ 1).
+Mammalian cells lack rigid-shell resonance, Schwan Vm → 0 at GHz (ωτ ≫ 1).
 No membrane coupling at pathogen-targeting frequencies.
-<span class="tip-ok">${ICON.CHECK} Frequency-selective — healthy tissue unperturbed</span>
+<span class="tip-ok">${ICON.CHECK} Frequency-selective, healthy tissue unperturbed</span>
 Ref: Tsen et al. (2007)`
   }
   const status = healthyRatio < THRESHOLDS.HEALTHY_APPROACHING
     ? `\n<span class="tip-ok">${ICON.CHECK} Healthy cells are safe</span>`
-    : `\n<span class="tip-warn">${ICON.WARNING} Approaching threshold — reduce field</span>`
+    : `\n<span class="tip-warn">${ICON.WARNING} Approaching threshold, reduce field</span>`
   return `<strong>Healthy membrane disruption: <span class="tip-val">${pct}%</span></strong>
 Induced Vm = <span class="tip-val">${healthyVmMv} mV</span>
 Lysis threshold = ${thresholdMv} mV

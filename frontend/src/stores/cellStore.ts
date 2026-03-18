@@ -30,7 +30,7 @@ import {
   FREQ_NEARFIELD_RF_LIMIT_KHZ,
 } from '@/constants/physics'
 
-// ── Module-level computation helpers (pure functions — no store context needed) ──
+// ── Module-level computation helpers (pure functions - no store context needed) ──
 
 /** Pulse envelope for a single cell: 1.0 for CW; 1−exp(−t_p/τ) for pulsed. */
 function pulseEnvelope(cell: CellConfig, pulseWidthNs: number, sigma_e: number): number {
@@ -60,13 +60,6 @@ function uncertaintyFactor(radius: number): number {
   return THRESHOLDS.UNCERTAINTY_MAMMALIAN
 }
 
-// σ_e(T) = σ_e0 × (1 + α × (T−37)) — medium-specific coefficients [1/°C]
-const SIGMA_TEMP_COEFF: Record<string, number> = {
-  saline:  0.020,
-  blood:   0.017,
-  tissue:  0.015,
-  water:   0.028,
-}
 
 export interface FieldPacket {
   timestamp: number
@@ -75,7 +68,7 @@ export interface FieldPacket {
   activeMedium: string
 }
 
-// Legacy alias — services/socket.ts imports this type
+// Legacy alias - services/socket.ts imports this type
 export type ResonancePacket = FieldPacket
 
 /** Full experiment state broadcast between clients */
@@ -106,16 +99,16 @@ interface CellStoreState {
   currentBroadcastFrequency: number // kHz
   healthyTemp: number             // °C
   targetTemp: number              // °C
-  dutyCycle: number               // pulsed on-fraction [0–1]
+  dutyCycle: number               // pulsed on-fraction [0-1]
   waveform: 'cw' | 'pulsed'      // CW (wf=0.5) or pulsed bipolar square-wave H-FIRE (wf=1.0)
   pulseWidthNs: number            // pulse width [ns]
   safeMode: boolean               // clamps dc so T_ss ≤ 42°C
-  orientationDeg: number          // field-cell axis θ [0–90°]
+  orientationDeg: number          // field-cell axis θ [0-90°]
   lysisNPulses: number            // above-threshold pulses before lysis
   chartMode: 'schwan' | 'resonance'
   doubleShellEnabled: boolean     // two-shell nuclear envelope model (Kotnik 2006)
   perfusionRate: number           // ω_b [mL/(g·min)]; 0 = in vitro
-  cellPackingFraction: number     // φ [0–0.9]; Maxwell-Garnett σ_e correction
+  cellPackingFraction: number     // φ [0-0.9]; Maxwell-Garnett σ_e correction
   tempTimer: ReturnType<typeof setInterval> | null
   resetCounter: number
   healthyCellState: CellState
@@ -131,9 +124,9 @@ export const useCellStore = defineStore('cell', {
     currentBroadcastFrequency: 417,
     healthyTemp: BODY_TEMP_C,
     targetTemp: BODY_TEMP_C,
-    dutyCycle: 1e-4,               // 0.01% — typical pulsed electroporation default
+    dutyCycle: 1e-4,               // 0.01%, typical pulsed electroporation default
     waveform: 'pulsed' as const,
-    pulseWidthNs: 100_000,         // 100 µs — mammalian category default; gives ~10 s lysis delay at dc=1e-4
+    pulseWidthNs: 100_000,         // 100 µs, mammalian category default; gives ~10 s lysis delay at dc=1e-4
     safeMode: false,               // expert mode by default (scientists need full range)
     orientationDeg: 0,             // 0° = field-aligned = maximum transmembrane coupling
     lysisNPulses: DEFAULT_LYSIS_N_PULSES,
@@ -148,10 +141,10 @@ export const useCellStore = defineStore('cell', {
   }),
 
   getters: {
-    /** σ_e at reference temperature [S/m] — display only */
+    /** σ_e at reference temperature [S/m] - display only */
     sigma_e: (state): number => MEDIA[state.medium].conductivity,
 
-    /** |cos θ| field-cell axis coupling [0–1]; cancels in Vm_T/Vm_H ratio */
+    /** |cos θ| field-cell axis coupling [0-1]; cancels in Vm_T/Vm_H ratio */
     cosThetaFactor(state): number {
       return Math.abs(Math.cos(state.orientationDeg * Math.PI / 180))
     },
@@ -174,14 +167,14 @@ export const useCellStore = defineStore('cell', {
      *  σ_e(T) = σ_e0·(1+α·(T_mean−37)); Maxwell-Garnett: σ_eff = σ_T·(1−φ)/(1+φ/2). */
     effectiveSigmaE(state): number {
       const sigma_e0 = MEDIA[state.medium].conductivity
-      const alpha    = SIGMA_TEMP_COEFF[state.medium] ?? 0.020
+      const alpha    = MEDIA[state.medium].tempCoeff
       const T_mean   = (state.healthyTemp + state.targetTemp) / 2
       const sigma_T  = sigma_e0 * (1 + alpha * (T_mean - BODY_TEMP_C))
       const phi = Math.min(0.9, Math.max(0, state.cellPackingFraction))
       return sigma_T * (1 - phi) / (1 + phi / 2)
     },
 
-    /** Lysis countdown [ms]: CW→2500 ms; pulsed→N_pulses × (t_p/dc), clamped [200–30000] ms. */
+    /** Lysis countdown [ms]: CW→2500 ms; pulsed→N_pulses × (t_p/dc), clamped [200-30000] ms. */
     lysisDelayMs(state): number {
       if (state.waveform === WAVEFORM.CW || state.dutyCycle >= 1) return 2500
       const pulsePeriodMs = (state.pulseWidthNs * 1e-6) / state.dutyCycle
@@ -210,7 +203,7 @@ export const useCellStore = defineStore('cell', {
     },
 
     /** DR_T: acoustic Lorentzian for bacteria/virus in resonance mode; (Vm·pulseEnvelope)/Vm_thr otherwise.
-     *  chartMode must be RESONANCE to engage the acoustic model — in Schwan/IRE mode the
+     *  chartMode must be RESONANCE to engage the acoustic model - in Schwan/IRE mode the
      *  transmembrane-voltage formula applies even for small cells, enabling nsEP simulation. */
     targetDisruptionRatio(): number {
       const state = this as unknown as CellStoreState
@@ -256,7 +249,7 @@ export const useCellStore = defineStore('cell', {
       return state.healthyTemp < THRESHOLDS.TEMP_WARN && state.targetTemp < THRESHOLDS.TEMP_WARN
     },
 
-    /** Alias for therapeuticIndex — backward compat */
+    /** Alias for therapeuticIndex - backward compat */
     selectivityRatio(): number {
       return this.therapeuticIndex
     },
@@ -274,8 +267,8 @@ export const useCellStore = defineStore('cell', {
     },
 
     /** TI worst-case bounds from biological parameter uncertainty.
-     *  Schwan/IRE mode: ±σ_i uncertainty — mammalian ±20%, bacteria ±35%, virus ±45%.
-     *  Resonance mode: acoustic Q uncertainty — [Q_min, Q_max] from preset Lorentzian bounds. */
+     *  Schwan/IRE mode: ±σ_i uncertainty - mammalian ±20%, bacteria ±35%, virus ±45%.
+     *  Resonance mode: acoustic Q uncertainty - [Q_min, Q_max] from preset Lorentzian bounds. */
     tiUncertaintyRange(): { low: number; high: number } {
       const state = this as unknown as CellStoreState
       const nominal = this.therapeuticIndex
@@ -329,7 +322,7 @@ export const useCellStore = defineStore('cell', {
       return !!state.healthy.nuclearRadius || !!state.target.nuclearRadius
     },
 
-    /** Nuclear Vm for healthy cell [V] — Kotnik 2006 bandpass. 0 if no nuclear params. */
+    /** Nuclear Vm for healthy cell [V] - Kotnik 2006 bandpass. 0 if no nuclear params. */
     healthyNuclearVm(): number {
       const state = this as unknown as CellStoreState
       if (!state.healthy.nuclearRadius) return 0
@@ -375,7 +368,7 @@ export const useCellStore = defineStore('cell', {
       return lysisField(state.target, state.currentBroadcastFrequency, this.effectiveSigmaE, this.cosThetaFactor, this.pulseEnvelopeFactorTarget)
     },
 
-    /** E_lysis for healthy cell [V/cm] — same formula as targetLysisField. */
+    /** E_lysis for healthy cell [V/cm] - same formula as targetLysisField. */
     healthyLysisField(): number {
       const state = this as unknown as CellStoreState
       return lysisField(state.healthy, state.currentBroadcastFrequency, this.effectiveSigmaE, this.cosThetaFactor, this.pulseEnvelopeFactorHealthy)
@@ -410,10 +403,10 @@ export const useCellStore = defineStore('cell', {
       return computeSkinDepthMm(state.currentBroadcastFrequency, this.effectiveSigmaE)
     },
 
-    // ── Dielectrophoresis — Clausius-Mossotti factor ────────────────────────────
+    // ── Dielectrophoresis - Clausius-Mossotti factor ────────────────────────────
 
     /**
-     * Re[K(f)] for healthy cell — Clausius-Mossotti DEP factor (single-shell model).
+     * Re[K(f)] for healthy cell - Clausius-Mossotti DEP factor (single-shell model).
      * Uses medium-specific permittivity (Gabriel et al. 1996) and temperature-corrected σ_e.
      * Re[K] > 0 = positive DEP (attracted to field maxima); Re[K] < 0 = negative DEP.
      */
@@ -423,7 +416,7 @@ export const useCellStore = defineStore('cell', {
       return computeDepCmReal(state.healthy, state.currentBroadcastFrequency, this.effectiveSigmaE, eps_r)
     },
 
-    /** Re[K(f)] for target cell — Clausius-Mossotti DEP factor (single-shell model). */
+    /** Re[K(f)] for target cell - Clausius-Mossotti DEP factor (single-shell model). */
     depTargetCmReal(): number {
       const state = this as unknown as CellStoreState
       const eps_r = MEDIA[state.medium].permittivity
@@ -431,7 +424,7 @@ export const useCellStore = defineStore('cell', {
     },
 
     /**
-     * Effective DEP force scale factor [0–1].
+     * Effective DEP force scale factor [0-1].
      * CW sinusoidal: time-averaged |E|² = E²_peak/2 → scale = 0.5
      * Pulsed bipolar (H-FIRE): force averages over duty cycle → scale = dutyCycle.
      * Re[K] direction is waveform-independent; this factor scales the magnitude only.
@@ -440,21 +433,21 @@ export const useCellStore = defineStore('cell', {
       return state.waveform === WAVEFORM.CW ? 0.5 : state.dutyCycle
     },
 
-    /** First crossover frequency [kHz] where Re[K_H] = 0. 0 if none in 1 kHz–10 GHz. */
+    /** First crossover frequency [kHz] where Re[K_H] = 0. 0 if none in 1 kHz-10 GHz. */
     depHealthyCrossoverKHz(): number {
       const state = this as unknown as CellStoreState
       const eps_r = MEDIA[state.medium].permittivity
       return computeDepCrossoverKHz(state.healthy, this.effectiveSigmaE, eps_r)
     },
 
-    /** First crossover frequency [kHz] where Re[K_T] = 0. 0 if none in 1 kHz–10 GHz. */
+    /** First crossover frequency [kHz] where Re[K_T] = 0. 0 if none in 1 kHz-10 GHz. */
     depTargetCrossoverKHz(): number {
       const state = this as unknown as CellStoreState
       const eps_r = MEDIA[state.medium].permittivity
       return computeDepCrossoverKHz(state.target, this.effectiveSigmaE, eps_r)
     },
 
-    /** dc_max = (TEMP_WARN−BODY_TEMP)·λ·cp_min / SAR_max — keeps T_ss ≤ 42°C in safe mode. */
+    /** dc_max = (TEMP_WARN−BODY_TEMP)·λ·cp_min / SAR_max - keeps T_ss ≤ 42°C in safe mode. */
     maxSafeDutyCycle(): number {
       const maxSAR = Math.max(this.healthySAR, this.targetSAR)
       if (maxSAR <= 0) return 1
@@ -471,14 +464,14 @@ export const useCellStore = defineStore('cell', {
       return Math.max(0, 4 * r * (1 - r))
     },
 
-    /** MTE = 1/√(1+(f/fc)²) — Schwan roll-off; peaks at f≪fc. */
+    /** MTE = 1/√(1+(f/fc)²) - Schwan roll-off; peaks at f≪fc. */
     healthyMechTransductionEff(): number {
       const f  = (this as unknown as CellStoreState).currentBroadcastFrequency  // kHz
       const fc = this.healthyFc                                                  // kHz
       return 1 / Math.sqrt(1 + (f / fc) ** 2)
     },
 
-    /** MA: piecewise bell BODY_TEMP–TEMP_WARN. 0 below BODY_TEMP or above TEMP_WARN; peak at THERMAL_MA_PEAK. */
+    /** MA: piecewise bell BODY_TEMP-TEMP_WARN. 0 below BODY_TEMP or above TEMP_WARN; peak at THERMAL_MA_PEAK. */
     healthyMildThermalActivation(): number {
       const T = this.healthySteadyStateTemp
       if (T <= BODY_TEMP_C) return 0
@@ -489,7 +482,7 @@ export const useCellStore = defineStore('cell', {
 
     /** Optimal frequency for max TI.
      *  Resonance mode + bacteria/virus → snap to f_res (Lorentzian peak).
-     *  Schwan/IRE mode or mammalian → 300-point log scan 10 kHz–500 MHz for best DR_T/DR_H. */
+     *  Schwan/IRE mode or mammalian → 300-point log scan 10 kHz-500 MHz for best DR_T/DR_H. */
     optimalFreqResult(): { khz: number; sel: number } {
       const state  = this as unknown as CellStoreState
       const target = state.target as CellConfig & { resonantFreqGHz?: number; resonantThresholdVcm?: number }
@@ -506,7 +499,7 @@ export const useCellStore = defineStore('cell', {
       const hThr    = state.healthy.thresholdVoltage
       const tThr    = state.target.thresholdVoltage
       // PEF is frequency-independent (depends on τ, not f), so it scales the DR for each cell
-      // uniformly across the scan — it doesn't shift the argmax but DOES change the TI magnitude.
+      // uniformly across the scan - it doesn't shift the argmax but DOES change the TI magnitude.
       // Include PEF so the returned `sel` matches what the disruption ratio getters compute.
       const pefH    = this.pulseEnvelopeFactorHealthy
       const pefT    = this.pulseEnvelopeFactorTarget
@@ -520,7 +513,7 @@ export const useCellStore = defineStore('cell', {
       return { khz: optKhz, sel: Math.max(0, maxSel) }
     },
 
-    /** BMS = BMS_WEIGHT_SI·SI + BMS_WEIGHT_MTE·MTE + BMS_WEIGHT_MA·MA — research indicator, not a clinical index. */
+    /** BMS = BMS_WEIGHT_SI·SI + BMS_WEIGHT_MTE·MTE + BMS_WEIGHT_MA·MA - research indicator, not a clinical index. */
     healthyBiomodScore(): number {
       return (
         THRESHOLDS.BMS_WEIGHT_SI  * this.healthyStimIndex +
@@ -532,7 +525,7 @@ export const useCellStore = defineStore('cell', {
     /**
      * RF coupling regime based on the current operating frequency.
      * Electrolytic  (< 300 MHz): direct electrode contact, DC resistance model valid.
-     * Near-field RF (300 MHz – 1 GHz): coaxial RF probe required; DC model approximate.
+     * Near-field RF (300 MHz-1 GHz): coaxial RF probe required; DC model approximate.
      * Microwave     (> 1 GHz): waveguide / resonant cavity / horn antenna required.
      */
     freqRegime(state): 'electrolytic' | 'nearfield_rf' | 'microwave' {
@@ -544,7 +537,7 @@ export const useCellStore = defineStore('cell', {
 
     /**
      * Fraction of randomly-oriented target cells that exceed the lysis threshold
-     * under the current field and frequency [0–1].
+     * under the current field and frequency [0-1].
      *
      * For a 3D isotropic orientation distribution the Vm at angle θ is
      *   Vm(θ) = Vm_max · |cos θ|
@@ -648,7 +641,7 @@ export const useCellStore = defineStore('cell', {
     },
 
     setWaveform(mode: 'cw' | 'pulsed') {
-      this.waveform = mode  // dutyCycle not overwritten — CW uses effectiveDutyCycle=1.0
+      this.waveform = mode  // dutyCycle not overwritten, CW uses effectiveDutyCycle=1.0
     },
 
     setSafeMode(on: boolean) {

@@ -1,7 +1,7 @@
 // Copyright © 2026 Tomer Preis. All rights reserved.
 // Unauthorized copying or distribution is prohibited.
 
-// Biophysics utilities — Schwan single-shell model, SAR, nsEP, acoustic resonance, EM skin depth
+// Biophysics utilities - Schwan single-shell model, SAR, nsEP, acoustic resonance, EM skin depth
 import type { CellConfig } from '@/types/cell'
 import { SCHWAN_SPHERE_FACTOR, WF_CW, EPSILON_R_CYTOPLASM, SIGMA_MEMBRANE_SI, TWO_PI } from '@/constants/physics'
 
@@ -34,14 +34,14 @@ function tauRC(R: number, Cm: number, sigmaOut: number, sigmaIn: number): number
   return R * Cm * (2 * sigmaOut + sigmaIn) / (2 * sigmaOut * sigmaIn)
 }
 
-/** τ = R·Cm·(2σ_e+σ_i)/(2σ_e·σ_i)  [s]  — Kotnik & Miklavcic 2000 */
+/** τ = R·Cm·(2σ_e+σ_i)/(2σ_e·σ_i)  [s] - Kotnik & Miklavcic 2000 */
 export function computeTau(cell: CellConfig, sigma_e: number): number {
   return tauRC(cell.radius * UM_TO_M, membraneCm(cell), sigma_e, cell.conductivity)
 }
 
 /** Vm = 1.5·E·R·cosθ / √(1+(ωτ)²)  [V]
  *  cosTheta = |cos θ| field-cell axis alignment; cancels in Vm_T/Vm_H ratio.
- *  Pulsed mode uses E_peak directly (H-FIRE convention) — Vm is a lower-bound estimate. */
+ *  Pulsed mode uses E_peak directly (H-FIRE convention) - Vm is a lower-bound estimate. */
 export function computeSchwan(
   cell: CellConfig,
   freqKHz: number,
@@ -57,7 +57,7 @@ export function computeSchwan(
 
 /** SAR = σ_i·α²·E²·wf/ρ  [W/kg],  α = 3σ_e/(2σ_e+σ_i)  (internal field factor, DC limit)
  *  waveformFactor: 0.5 = CW sinusoidal, 1.0 = pulsed square wave.
- *  Uses DC-limit α — upper-bound estimate at f < fc.  Schwan 1957; Foster & Schwan 1989. */
+ *  Uses DC-limit α - upper-bound estimate at f < fc.  Schwan 1957; Foster & Schwan 1989. */
 export function computeSAR(
   cell: CellConfig,
   fieldVcm: number,
@@ -69,7 +69,7 @@ export function computeSAR(
   return (cell.conductivity * alpha ** 2 * E_si ** 2 * waveformFactor) / cell.density
 }
 
-// ── Dielectrophoresis — Clausius-Mossotti factor (single-shell model) ────────
+// ── Dielectrophoresis - Clausius-Mossotti factor (single-shell model) ────────
 
 // Inline complex arithmetic helpers  [real, imaginary]
 type Cpx = [number, number]
@@ -85,7 +85,7 @@ function cmul(a: Cpx, b: Cpx): Cpx {
 }
 
 /**
- * Re[K(ω)] — real part of the Clausius-Mossotti factor (single-shell sphere model).
+ * Re[K(ω)] - real part of the Clausius-Mossotti factor (single-shell sphere model).
  *
  * K(ω) = (ε*_eff − ε*_m) / (ε*_eff + 2ε*_m)
  *
@@ -98,7 +98,7 @@ function cmul(a: Cpx, b: Cpx): Cpx {
  * Re[K] = 0 → crossover frequency (polarity switches)
  *
  * For pulsed waveforms the direction (sign) of Re[K] is unchanged; only the
- * time-averaged force magnitude scales by duty cycle — handled in the store.
+ * time-averaged force magnitude scales by duty cycle - handled in the store.
  *
  * Ref: Gascoyne & Vykoukal, Electrophoresis 23:1973 (2002) [16]
  * Ref: Pethig, Biomicrofluidics 4:022811 (2010)
@@ -137,7 +137,7 @@ export function computeDepCmReal(
 }
 
 /**
- * First DEP crossover frequency [kHz] — where Re[K(f)] changes sign.
+ * First DEP crossover frequency [kHz] - where Re[K(f)] changes sign.
  * Log-space binary search from 1 kHz to 10 GHz (10⁷ kHz).
  * Returns 0 if no sign change found in this range (always pDEP or always nDEP).
  */
@@ -167,7 +167,7 @@ export function computeFc(cell: CellConfig, sigma_e: number): number {
 
 // ── Double-shell nuclear envelope (Kotnik & Miklavcic 2006) ──────────────────
 
-/** τ_ne = R_nuc·Cm_ne·(2σ_i+σ_np)/(2σ_i·σ_np)  [s]  — cytoplasm is the outer medium here */
+/** τ_ne = R_nuc·Cm_ne·(2σ_i+σ_np)/(2σ_i·σ_np)  [s] - cytoplasm is the outer medium here */
 export function computeNuclearTau(cell: CellConfig, _sigma_e: number): number {
   if (!cell.nuclearRadius) return 0
   const Cm_ne    = ((cell.nuclearMembraneEps ?? 10) * EPSILON_0) /
@@ -244,7 +244,7 @@ export function computeResonantDisruption(
   return (fieldVcm / thresholdVcm) * computeResonantLineshape(resonantFreqGHz, Q, freqHz)
 }
 
-/** Sigmoid electroporation probability [0–100 %].
+/** Sigmoid electroporation probability [0-100 %].
  *  P = 1 / (1 + exp(−(dr − center) / slope)), rounded to integer percent.
  *  Typical: center = 1.0 (50% at lysis threshold), slope = 0.05 (sharp). */
 export function computeLysisProbability(dr: number, center: number, slope: number): number {

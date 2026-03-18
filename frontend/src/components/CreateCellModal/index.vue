@@ -337,7 +337,7 @@ export default defineComponent({
     /** Cm = ε_r·ε₀/d  in mF/m² */
     derivedCm(): string {
       const d_m  = this.form.membraneThickness * 1e-9
-      if (!d_m || !this.form.dielectricConstant) return '—'
+      if (!d_m || !this.form.dielectricConstant) return ', '
       const cm = (this.form.dielectricConstant * EPSILON_0) / d_m * 1e3
       return `${cm.toFixed(2)} mF/m²`
     },
@@ -346,19 +346,19 @@ export default defineComponent({
     derivedTau(): string {
       try {
         const tau = computeTau(this.cellLike, this.sigmaE)
-        if (!isFinite(tau) || tau <= 0) return '—'
+        if (!isFinite(tau) || tau <= 0) return ', '
         return `${(tau * 1e9).toFixed(1)} ns`
-      } catch { return '—' }
+      } catch { return ', ' }
     },
 
     /** fc in kHz or MHz */
     derivedFc(): string {
       try {
         const fc = computeFc(this.cellLike, this.sigmaE) // kHz
-        if (!isFinite(fc) || fc <= 0) return '—'
+        if (!isFinite(fc) || fc <= 0) return ', '
         if (fc >= 1000) return `${(fc / 1000).toFixed(2)} MHz`
         return `${fc.toFixed(0)} kHz`
-      } catch { return '—' }
+      } catch { return ', ' }
     },
 
     validationErrors(): string[] {
@@ -417,7 +417,7 @@ export default defineComponent({
         thresholdVoltage:    this.form.thresholdVoltage,
         density:             this.form.density,
         specificHeatCapacity: this.form.specificHeatCapacity,
-        // Resonance fields — only included when bacteria/virus and user provided values
+        // Resonance fields - only included when bacteria/virus and user provided values
         ...(this.form.cellType !== 'mammalian' && this.form.resonantFreqGHz      != null && { resonantFreqGHz:      this.form.resonantFreqGHz }),
         ...(this.form.cellType !== 'mammalian' && this.form.capsidQ              != null && { capsidQ:              this.form.capsidQ }),
         ...(this.form.cellType !== 'mammalian' && this.form.resonantThresholdVcm != null && { resonantThresholdVcm: this.form.resonantThresholdVcm }),

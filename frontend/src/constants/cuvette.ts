@@ -22,8 +22,8 @@ export const CUVETTE_PRESETS: CuvettePreset[] = [
 ]
 
 export const DEFAULT_CUVETTE_ID         = 'btx_2mm'
-export const DEFAULT_SOURCE_IMPEDANCE_OHM = 50     // Ω — typical RF generator / pulsed power output impedance
-export const DEFAULT_CELL_DENSITY_PER_ML  = 1e6    // cells/mL — typical mammalian electroporation density
+export const DEFAULT_SOURCE_IMPEDANCE_OHM = 50     // Ω, typical RF generator / pulsed power output impedance
+export const DEFAULT_CELL_DENSITY_PER_ML  = 1e6    // cells/mL, typical mammalian electroporation density
 
 /**
  * Relative permittivity of aqueous electrolyte media at 37°C.

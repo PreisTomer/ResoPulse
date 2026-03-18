@@ -88,8 +88,8 @@ export const LOAD_STATE = {
  * Determines whether VSWR / reflection coefficient is meaningful.
  */
 export const SOURCE_MODE = {
-  IRE:  'ire',   // high-voltage pulsed power (< 1 Ω) — mismatch negligible
-  RF:   'rf',    // 50 Ω RF / coaxial — mismatch relevant
+  IRE:  'ire',   // high-voltage pulsed power (< 1 Ω), mismatch negligible
+  RF:   'rf',    // 50 Ω RF / coaxial, mismatch relevant
 } as const
 
 /**
@@ -97,9 +97,9 @@ export const SOURCE_MODE = {
  * Drives the hardware-requirement warning badge in the frequency slider.
  */
 export const FREQ_REGIME = {
-  ELECTROLYTIC: 'electrolytic',  // < 300 MHz — direct electrode, DC model valid
-  NEARFIELD_RF: 'nearfield_rf',  // 300 MHz – 1 GHz — coaxial RF probe, DC model approximate
-  MICROWAVE:    'microwave',     // > 1 GHz — waveguide / resonant cavity / horn required
+  ELECTROLYTIC: 'electrolytic',  // < 300 MHz, direct electrode, DC model valid
+  NEARFIELD_RF: 'nearfield_rf',  // 300 MHz-1 GHz, coaxial RF probe, DC model approximate
+  MICROWAVE:    'microwave',     // > 1 GHz, waveguide / resonant cavity / horn required
 } as const
 
 // ── Derived types from constants (single source of truth) ──────────────────

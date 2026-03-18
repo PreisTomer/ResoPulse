@@ -2,7 +2,7 @@
 // Unauthorized copying or distribution is prohibited.
 
 /**
- * User-defined cell presets — persisted to localStorage.
+ * User-defined cell presets - persisted to localStorage.
  * Allows scientists to import biophysical parameters from their own literature
  * or experimental measurements and use them alongside the built-in library.
  */
@@ -20,7 +20,7 @@ export interface UserCellPreset {
   // Required Schwan parameters
   radius:               number           // µm
   membraneThickness:    number           // nm
-  dielectricConstant:   number           // membrane ε_r (effective, typically 5–15)
+  dielectricConstant:   number           // membrane ε_r (effective, typically 5-15)
   conductivity:         number           // intracellular σ_i [S/m]
   thresholdVoltage:     number           // Vm lysis threshold [V]
   // Thermal
@@ -49,7 +49,7 @@ function load(): UserCellPreset[] {
 function save(presets: UserCellPreset[]): void {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(presets))
-  } catch { /* quota exceeded — fail silently */ }
+  } catch { /* quota exceeded, fail silently */ }
 }
 
 // ── Store ──────────────────────────────────────────────────────────────────────
@@ -99,7 +99,7 @@ export const useUserPresetsStore = defineStore('userPresets', {
         density:              preset.density,
         specificHeatCapacity: preset.specificHeatCapacity,
         amplitude:            0.5,
-        // Optional resonance fields (bacteria / virus only) — omit if undefined
+        // Optional resonance fields (bacteria / virus only) - omit if undefined
         ...(preset.resonantFreqGHz       != null && { resonantFreqGHz:      preset.resonantFreqGHz }),
         ...(preset.capsidQ               != null && { capsidQ:              preset.capsidQ }),
         ...(preset.resonantThresholdVcm  != null && { resonantThresholdVcm: preset.resonantThresholdVcm }),

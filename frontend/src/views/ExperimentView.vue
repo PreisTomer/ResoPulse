@@ -235,14 +235,14 @@
       <!-- Row 4: Therapeutic Heatmap (full width, collapsible) -->
       <TherapeuticHeatmap />
 
-      <!-- Row 5 & 6: Research analysis tools — sweep + population (collapsible, full width) -->
+      <!-- Row 5 & 6: Research analysis tools - sweep + population (collapsible, full width) -->
       <SweepPanel @window-change="onSweepWindowChange" @open-change="sweepPanelOpen = $event" />
 
-      <!-- Therapeutic window snap bar — appears below sweep results, where the user already is -->
+      <!-- Therapeutic window snap bar - appears below sweep results, where the user already is -->
       <div v-if="sweepWindow" class="experiment__snap-bar" v-tip="tipSnapBar">
         <span class="experiment__snap-bar-label">{{ $t('exp.snapBarLabel') }}</span>
         <span class="experiment__snap-bar-range">
-          {{ sweepWindow.lo.toFixed(0) }}–{{ sweepWindow.hi.toFixed(0) }}
+          {{ sweepWindow.lo.toFixed(0) }} - {{ sweepWindow.hi.toFixed(0) }}
           {{ sweepWindow.param === 'field' ? $t('sweep.fieldUnit') : $t('sweep.freqUnit') }}
         </span>
         <span class="experiment__snap-bar-affects">{{ sweepWindow.param === 'field' ? $t('exp.snapBarSubField') : $t('exp.snapBarSubFreq') }} {{ Math.round((sweepWindow.lo + sweepWindow.hi) / 2) }} {{ sweepWindow.param === 'field' ? $t('sweep.fieldUnit') : $t('sweep.freqUnit') }}</span>
@@ -263,14 +263,14 @@
     </div>
   </div>
 
-  <!-- Sticky live cell view — appears when cells scroll out of viewport -->
+  <!-- Sticky live cell view - appears when cells scroll out of viewport -->
   <Transition name="sticky-cells">
     <div
       v-if="showStickySimView"
       class="experiment__sticky-cells"
       :class="{ 'experiment__sticky-cells--collapsed': stickyCellsCollapsed }"
     >
-      <!-- Drawer tab — always visible, slides panel in/out -->
+      <!-- Drawer tab - always visible, slides panel in/out -->
       <button
         class="experiment__sticky-cells-tab"
         type="button"
@@ -306,7 +306,7 @@
     @saved="onUserPresetSaved"
   />
 
-  <!-- Terms of Use gate — shown on first visit -->
+  <!-- Terms of Use gate - shown on first visit -->
   <TermsGate v-if="showTermsGate" @accepted="showTermsGate = false" />
 </template>
 
@@ -430,7 +430,7 @@ export default defineComponent({
     },
     /** If the target category becomes mammalian (e.g. via radius edit) while resonance mode
      *  is active, immediately revert to Schwan mode. Resonance has no physical meaning for
-     *  mammalian cells — the button is disabled but state drift can still occur via param editing. */
+     *  mammalian cells - the button is disabled but state drift can still occur via param editing. */
     'store.targetCellCategory'(cat: string) {
       if (cat === CELL_CATEGORY.MAMMALIAN && this.store.chartMode === CHART_MODE.RESONANCE) {
         this.store.setChartMode(CHART_MODE.SCHWAN)
@@ -556,7 +556,7 @@ export default defineComponent({
         this.store.setBroadcastFreqKHz(center)
       }
       broadcastStateSync()
-      // Lock the snap button until the cell is reset — prevents re-snapping mid-lysis.
+      // Lock the snap button until the cell is reset - prevents re-snapping mid-lysis.
       this.snapConfirmed = true
     },
 
@@ -569,7 +569,7 @@ export default defineComponent({
     loadTargetPreset(preset: CellPreset) {
       this.store.loadPreset('target', preset)
       this.targetPickerOpen = false
-      // applyTargetDefaults fires via watcher on currentTargetId — it will call broadcastStateSync
+      // applyTargetDefaults fires via watcher on currentTargetId - it will call broadcastStateSync
     },
 
     loadUserPreset(preset: UserCellPreset) {
@@ -603,7 +603,7 @@ export default defineComponent({
       // For virus/bacteria: auto-tune frequency to preset's resonant frequency if available
       const t = this.store.target as { resonantFreqGHz?: number; resonantThresholdVcm?: number }
       // Virus/bacteria: use the preset's resonant frequency if available.
-      // Mammalian: use category default (417 kHz) — do not auto-snap.
+      // Mammalian: use category default (417 kHz) - do not auto-snap.
       const freqKHz = (cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) && t.resonantFreqGHz
         ? t.resonantFreqGHz * 1e6   // GHz → kHz (1 GHz = 1,000,000 kHz)
         : d.freqKHz
@@ -621,7 +621,7 @@ export default defineComponent({
       // Reset advanced orientation + lysis-count to category-neutral defaults
       this.store.setOrientationDeg(0)
       this.store.setLysisNPulses(DEFAULT_LYSIS_N_PULSES)
-      // Always start from a thermally neutral state — clears any lysis/destruction
+      // Always start from a thermally neutral state - clears any lysis/destruction
       this.store.resetTemps()
       this.store.setChartMode((cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) ? CHART_MODE.RESONANCE : CHART_MODE.SCHWAN)
       broadcastStateSync()
@@ -1249,14 +1249,14 @@ export default defineComponent({
   }
 }
 
-// Tablet — collapse top row into single column
+// Tablet - collapse top row into single column
 @media (max-width: 900px) {
   .experiment__main { padding: 0.85rem; gap: 0.85rem; }
   .experiment__top  { grid-template-columns: 1fr; }
   .experiment__cells { grid-template-columns: 1fr 1fr; }
 }
 
-// Large phone — picker overlay
+// Large phone - picker overlay
 @media (max-width: 768px) {
   .experiment__main   { padding: 0.65rem; gap: 0.7rem; }
   .experiment__header { padding: 0.5rem 0.65rem; }
@@ -1270,7 +1270,7 @@ export default defineComponent({
   }
 }
 
-// Phone — single-column cells, full cards
+// Phone - single-column cells, full cards
 @media (max-width: 540px) {
   // Header becomes 2-row: [session name | chip] then [badges full-width]
   .experiment__header {
@@ -1287,7 +1287,7 @@ export default defineComponent({
     order: 3;
     width: 100%;
     gap: 0.4rem;
-    // override the mixin's row — stretch children edge-to-edge
+    // override the mixin's row - stretch children edge-to-edge
     display: flex !important;
     flex-wrap: nowrap;
     justify-content: stretch;
@@ -1318,7 +1318,7 @@ export default defineComponent({
 
 // ── Sticky live cell view ──────────────────────────────────────────────────────
 .experiment__cells-anchor {
-  // Zero-height sentinel — stays in normal flow so IntersectionObserver can track
+  // Zero-height sentinel - stays in normal flow so IntersectionObserver can track
   // when the cell cards area exits the viewport.
   height: 0;
   grid-column: 1 / -1;
@@ -1341,18 +1341,18 @@ export default defineComponent({
   align-items: center; // vertically center the book tab against the body
 
   // Collapsed: slide body off-screen to the right; tab stays at viewport edge.
-  // translateX(312px) at scale(0.72) = 225 px visual shift — exactly the body width.
+  // translateX(312px) at scale(0.72) = 225 px visual shift - exactly the body width.
   &--collapsed {
     transform: scale(0.72) translateX(312px);
   }
 
-  // ── Drawer tab — book-tab style, centred on the left edge ─────────────────
+  // ── Drawer tab - book-tab style, centred on the left edge ─────────────────
   &-tab {
     pointer-events: auto;
     flex-shrink: 0;
     align-self: center;          // float at vertical midpoint of the body
     width: 32px;
-    height: 88px;                // fixed height — roughly 20 % of two-card panel
+    height: 88px;                // fixed height, roughly 20 % of two-card panel
     background: rgba(8, 10, 18, 0.97);
     border: 1px solid rgba(255, 255, 255, 0.14);
     border-right: none;
@@ -1379,7 +1379,7 @@ export default defineComponent({
 
   // ── Panel body ────────────────────────────────────────────────────────────
   &-body {
-    pointer-events: none; // non-interactive — purely observational
+    pointer-events: none; // non-interactive, purely observational
     width: 312px;
     background: rgba(8, 10, 18, 0.97);
     border: 1px solid rgba(255, 255, 255, 0.12);
@@ -1413,7 +1413,7 @@ export default defineComponent({
 }
 
 // Fade + slide-down entrance/exit
-// Leave uses opacity only — transform is intentionally excluded so the panel
+// Leave uses opacity only - transform is intentionally excluded so the panel
 // fades out from whatever collapsed/expanded state it is currently in, rather
 // than snapping back to expanded before disappearing.
 .sticky-cells-enter-active { transition: opacity 0.28s ease, transform 0.28s ease; }
@@ -1428,9 +1428,9 @@ export default defineComponent({
     bottom: 0;
     right: 0;
     left: 0;
-    transform: scale(1);           // no scaling — let overflow-x handle wider content
+    transform: scale(1);           // no scaling, let overflow-x handle wider content
     transform-origin: bottom center;
-    // On mobile, collapse drawer is not applicable — always show full bar
+    // On mobile, collapse drawer is not applicable - always show full bar
     &--collapsed { transform: scale(1); }
 
     &-tab { display: none; }       // hide drawer handle on mobile

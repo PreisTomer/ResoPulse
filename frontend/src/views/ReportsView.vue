@@ -68,32 +68,32 @@
         />
         <StatCard
           :label="$t('reports.avgSelectivity')"
-          :value="avgSelectivity ?? '—'"
+          :value="avgSelectivity ?? ', '"
           variant="primary"
           :tooltip="$t('reports.avgSelectivityTitle')"
         />
         <StatCard
           :label="$t('reports.peakSelectivity')"
-          :value="peakSelectivity ?? '—'"
+          :value="peakSelectivity ?? ', '"
           variant="ok"
           :tooltip="$t('reports.peakSelectivityTitle')"
         />
         <StatCard
           :label="$t('reports.peakTargetRatio')"
-          :value="peakTargetRatio ?? '—'"
+          :value="peakTargetRatio ?? ', '"
           variant="danger"
           :tooltip="$t('reports.peakTargetRatioTitle')"
         />
         <StatCard
           class="reports__stat-card--wide"
           :label="$t('reports.freqRange')"
-          :value="freqRange ?? '—'"
+          :value="freqRange ?? ', '"
           :tooltip="$t('reports.freqRangeTitle')"
         />
         <StatCard
           class="reports__stat-card--wide"
           :label="$t('reports.fieldRange')"
-          :value="fieldRange ?? '—'"
+          :value="fieldRange ?? ', '"
           :tooltip="$t('reports.fieldRangeTitle')"
         />
       </div>
@@ -150,7 +150,7 @@
                 :key="e.id"
                 :class="{ 'reports__row--lysis': e.event === LOG_EVENT.LYSIS }"
               >
-                <td class="reports__mono reports__session-val" v-tip="tipCellSession(e)">{{ e.sessionName ?? '—' }}</td>
+                <td class="reports__mono reports__session-val" v-tip="tipCellSession(e)">{{ e.sessionName ?? ', ' }}</td>
                 <td class="reports__mono reports__muted">{{ e.id }}</td>
                 <td class="reports__mono reports__timestamp">{{ e.timestamp }}</td>
                 <td class="reports__mono">{{ e.targetPreset }}</td>
@@ -175,10 +175,10 @@
                   {{ e.healthyTemp.toFixed(1) }}
                 </td>
                 <td class="reports__mono" :class="e.depHealthyK != null ? (e.depHealthyK > 0 ? 'reports__green-val' : 'reports__warn-val') : 'reports__muted'" v-tip="tipCellDepH(e)">
-                  {{ e.depHealthyK != null ? e.depHealthyK.toFixed(3) : '—' }}
+                  {{ e.depHealthyK != null ? e.depHealthyK.toFixed(3) : ', ' }}
                 </td>
                 <td class="reports__mono" :class="e.depTargetK != null ? (e.depTargetK > 0 ? 'reports__green-val' : 'reports__warn-val') : 'reports__muted'" v-tip="tipCellDepT(e)">
-                  {{ e.depTargetK != null ? e.depTargetK.toFixed(3) : '—' }}
+                  {{ e.depTargetK != null ? e.depTargetK.toFixed(3) : ', ' }}
                 </td>
                 <td>
                   <StatusBadge :label="e.event" :variant="eventVariant(e.event)" />
@@ -260,7 +260,7 @@ export default defineComponent({
       const freqs = store.entries.map((e) => e.freqKHz)
       const lo = Math.min(...freqs)
       const hi = Math.max(...freqs)
-      return lo === hi ? formatFreqKHz(lo) : `${formatFreqKHz(lo)} – ${formatFreqKHz(hi)}`
+      return lo === hi ? formatFreqKHz(lo) : `${formatFreqKHz(lo)} - ${formatFreqKHz(hi)}`
     })
 
     const fieldRange = computed(() => {
@@ -268,7 +268,7 @@ export default defineComponent({
       const fields = store.entries.map((e) => e.fieldVcm)
       const lo = Math.min(...fields)
       const hi = Math.max(...fields)
-      return lo === hi ? formatFieldVcm(lo) : `${formatFieldVcm(lo)} – ${formatFieldVcm(hi)}`
+      return lo === hi ? formatFieldVcm(lo) : `${formatFieldVcm(lo)} - ${formatFieldVcm(hi)}`
     })
 
     const peakTargetRatio = computed(() => {
@@ -310,7 +310,7 @@ export default defineComponent({
 
   methods: {
     tipCellSession(e: { sessionName?: string; id: number }): string {
-      return this.$t('log.tipCellSession', { name: e.sessionName ?? '—', id: e.id })
+      return this.$t('log.tipCellSession', { name: e.sessionName ?? ', ', id: e.id })
     },
     tipCellFreq(e: { freqKHz: number }): string {
       return this.$t('log.tipCellFreq', { freq: e.freqKHz })
@@ -340,14 +340,14 @@ export default defineComponent({
     },
     tipCellTRatio(e: { targetRatio: number }): string {
       return this.$t('log.tipCellTargetVm', {
-        vm:     '—',
+        vm:     ', ',
         preset: '',
         ratio:  (e.targetRatio * 100).toFixed(1),
       })
     },
     tipCellHRatio(e: { healthyRatio: number }): string {
       return this.$t('log.tipCellHealthyVm', {
-        vm:    '—',
+        vm:    ', ',
         ratio: (e.healthyRatio * 100).toFixed(1),
       })
     },
@@ -359,10 +359,10 @@ export default defineComponent({
       })
     },
     tipCellDepH(e: { depHealthyK?: number }): string {
-      return this.$t('log.tipCellDepH', { k: e.depHealthyK != null ? e.depHealthyK.toFixed(4) : '—' })
+      return this.$t('log.tipCellDepH', { k: e.depHealthyK != null ? e.depHealthyK.toFixed(4) : ', ' })
     },
     tipCellDepT(e: { depTargetK?: number }): string {
-      return this.$t('log.tipCellDepT', { k: e.depTargetK != null ? e.depTargetK.toFixed(4) : '—' })
+      return this.$t('log.tipCellDepT', { k: e.depTargetK != null ? e.depTargetK.toFixed(4) : ', ' })
     },
   },
 })
@@ -645,7 +645,7 @@ export default defineComponent({
     white-space: nowrap;
   }
 
-  /* Event type labels — plain colored text, not styled as buttons */
+  /* Event type labels - plain colored text, not styled as buttons */
   &__ev-badge {
     font-size: 0.7rem;
     font-family: var(--font-mono);

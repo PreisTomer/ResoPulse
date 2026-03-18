@@ -2,7 +2,7 @@
 // Unauthorized copying or distribution is prohibited.
 
 /**
- * Sonification Service — Auditory Display of Experiment State
+ * Sonification Service - Auditory Display of Experiment State
  *
  * Maps live biophysical data (impedance drift, disruption ratio, cell state)
  * to audible tones using the Web Audio API.  This is a legitimate scientific
@@ -10,9 +10,9 @@
  * the screen (Kramer et al., 1999; Walker & Kramer, 2006).
  *
  * ⚠ FREQUENCY DISCLAIMER:
- * The RF frequencies used in the experiment (kHz–MHz) are far above the
- * audible range (20 Hz–20 kHz).  The sounds produced here are NOT the
- * experimental signals — they are a *mapping* of data values (impedance,
+ * The RF frequencies used in the experiment (kHz-MHz) are far above the
+ * audible range (20 Hz-20 kHz).  The sounds produced here are NOT the
+ * experimental signals - they are a *mapping* of data values (impedance,
  * disruption ratio) onto audible pitches as an abstract display.
  *
  * Mappings:
@@ -25,14 +25,14 @@
 
 // ── Pitch mapping constants ────────────────────────────────────────────────────
 
-const BASE_FREQ_HZ     = 220    // A3 — baseline tone at zero drift
-const MAX_FREQ_HZ      = 1760   // A6 — max pitch at ≥30% impedance drift
+const BASE_FREQ_HZ     = 220    // A3, baseline tone at zero drift
+const MAX_FREQ_HZ      = 1760   // A6, max pitch at ≥30% impedance drift
 const DRIFT_SCALE_PCT  = 30     // drift % that maps to MAX_FREQ_HZ
-const LYSIS_FREQ_HZ    = 880    // A5 — lysis event burst tone
-const WARN_FREQ_HZ     = 110    // A2 — healthy cell threshold warning
-const LYSIS_BURST_S    = 0.4    // seconds — lysis burst duration
-const TREMOLO_RATE_HZ  = 6      // Hz — rev-ep AM tremolo rate
-const RAMP_TIME_S      = 0.05   // seconds — pitch/gain ramp for click-prevention
+const LYSIS_FREQ_HZ    = 880    // A5, lysis event burst tone
+const WARN_FREQ_HZ     = 110    // A2, healthy cell threshold warning
+const LYSIS_BURST_S    = 0.4    // seconds, lysis burst duration
+const TREMOLO_RATE_HZ  = 6      // Hz, rev-ep AM tremolo rate
+const RAMP_TIME_S      = 0.05   // seconds, pitch/gain ramp for click-prevention
 
 // ── Service class ──────────────────────────────────────────────────────────────
 
@@ -110,8 +110,8 @@ class SonificationService {
    * Call this on each simulation tick with the current experiment state.
    * Does nothing when the service is disabled.
    *
-   * @param impedanceDriftPct  Cuvette impedance drift [%] — negative = Z fell (cells lysing)
-   * @param disruptionRatio    Target cell disruption ratio [0–n] — 1.0 = lysis threshold
+   * @param impedanceDriftPct  Cuvette impedance drift [%] - negative = Z fell (cells lysing)
+   * @param disruptionRatio    Target cell disruption ratio [0-n] - 1.0 = lysis threshold
    * @param cellState          Current target cell state string
    */
   update(impedanceDriftPct: number, disruptionRatio: number, cellState: string): void {
@@ -139,7 +139,7 @@ class SonificationService {
   }
 
   /**
-   * Trigger the lysis event burst — a sharp 880 Hz tone for 0.4 seconds.
+   * Trigger the lysis event burst - a sharp 880 Hz tone for 0.4 seconds.
    * Call this once when target cell state transitions to 'lysis'.
    */
   triggerLysisBurst(): void {

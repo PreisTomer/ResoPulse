@@ -21,7 +21,7 @@ export const ICON = {
   RELOAD:      '⟳',   // sweep / resample
   GRID:        '⊞',   // population panel
   WAVE:        '∿',   // frequency response chart
-  SELECTIVITY: '⊙',   // selectivity — crosshair/target (target one cell type over another)
+  SELECTIVITY: '⊙',   // selectivity, crosshair/target (target one cell type over another)
   SQUARE:    '■',   // legend color swatch
   CELL:      '◎',   // cell icon in CellCard header
   PLUG:      '⚙',   // instrument / hardware connection

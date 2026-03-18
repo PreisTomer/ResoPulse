@@ -33,7 +33,7 @@
       <!-- Tagline -->
       <p class="home__tagline">{{ $t('home.taglineMain') }}</p>
 
-      <!-- Capability pills — two explicit rows of 4; no flex-wrap required -->
+      <!-- Capability pills - two explicit rows of 4; no flex-wrap required -->
       <div class="home__caps">
         <div class="home__caps-row">
           <span v-for="pill in capPills.slice(0, 4)" :key="pill.key" class="home__cap">
@@ -298,7 +298,7 @@ export default defineComponent({
     margin: 0;
   }
 
-  /* ── Capability pills — two explicit rows of 4 ───────────────── */
+  /* ── Capability pills - two explicit rows of 4 ───────────────── */
   &__caps {
     display: flex;
     flex-direction: column;
@@ -538,7 +538,7 @@ export default defineComponent({
     margin: 0;
   }
 
-  /* ── Responsive — tablet (≤ 768px) ──────────────────────────── */
+  /* ── Responsive - tablet (≤ 768px) ──────────────────────────── */
   @media (max-width: 768px) {
     &__inner {
       gap: 1.4rem;
@@ -591,7 +591,7 @@ export default defineComponent({
     }
   }
 
-  /* ── Responsive — phone (≤ 520px) ───────────────────────────── */
+  /* ── Responsive - phone (≤ 520px) ───────────────────────────── */
   @media (max-width: 520px) {
     &__inner {
       gap: 1.2rem;
@@ -699,7 +699,7 @@ export default defineComponent({
     }
 
     &__caps-row {
-      display: contents; // unwrap — pills become direct children of __caps
+      display: contents; // unwrap, pills become direct children of __caps
     }
 
     &__cap {

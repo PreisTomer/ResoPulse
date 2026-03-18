@@ -7,10 +7,10 @@
     </div>
     <div ref="chartEl" class="resonance-chart__svg-wrap" />
     <div class="resonance-chart__legend">
-      <span class="resonance-chart__legend-item resonance-chart__legend-target">— {{ $t('resonance.legendTarget') }}</span>
+      <span class="resonance-chart__legend-item resonance-chart__legend-target">,  {{ $t('resonance.legendTarget') }}</span>
       <span class="resonance-chart__legend-item resonance-chart__legend-healthy">- - {{ $t('resonance.legendHealthy') }}</span>
-      <span class="resonance-chart__legend-item resonance-chart__legend-dim">— {{ $t('resonance.legendLibrary') }}</span>
-      <span class="resonance-chart__legend-item resonance-chart__legend-disrupt">— {{ $t('resonance.legendThreshold') }}</span>
+      <span class="resonance-chart__legend-item resonance-chart__legend-dim">,  {{ $t('resonance.legendLibrary') }}</span>
+      <span class="resonance-chart__legend-item resonance-chart__legend-disrupt">,  {{ $t('resonance.legendThreshold') }}</span>
     </div>
   </div>
 </template>
@@ -27,7 +27,7 @@ import type { CellConfig } from '@/types/cell'
 import { broadcastStateSync } from '@/services/socket'
 import { C } from '@/theme/colors'
 
-// Frequency range: 10 MHz – 50 GHz
+// Frequency range: 10 MHz-50 GHz
 const F_MIN_HZ = 10_000_000
 const F_MAX_HZ = 50_000_000_000
 const N_POINTS = 300

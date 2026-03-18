@@ -12,7 +12,7 @@
       </div>
     </div>
     <div ref="chartEl" class="dr-chart__svg-wrap" style="position:relative">
-      <!-- Hover tooltip — positioned absolutely over the SVG -->
+      <!-- Hover tooltip - positioned absolutely over the SVG -->
       <div
         v-if="hoverInfo"
         class="dr-chart__tooltip"
@@ -165,13 +165,13 @@ export default defineComponent({
         .append('svg')
         .attr('width',  totalW)
         .attr('height', totalH)
-        .style('overflow', 'hidden')  // clip to SVG bounds — prevents threshold lines overflowing above chart
+        .style('overflow', 'hidden')  // clip to SVG bounds, prevents threshold lines overflowing above chart
 
       this._svg    = svgEl
       this._xScale = d3.scaleLog().domain([F_MIN_HZ, F_MAX_HZ]).range([0, this._chartW])
       this._yScale = d3.scaleLinear().domain([0, Y_MIN_MAX]).range([this._chartH, 0])
 
-      // ClipPath — content group clips to chart plot area so no line can overflow above or below
+      // ClipPath - content group clips to chart plot area so no line can overflow above or below
       svgEl.append('defs').append('clipPath')
         .attr('id', `dr-clip-${this._chartW}`)
         .append('rect')
@@ -185,7 +185,7 @@ export default defineComponent({
         .attr('transform', `translate(${MARGIN.left},${MARGIN.top})`)
         .attr('class', 'dr-g')
 
-      // Clipped inner group — all data elements go here
+      // Clipped inner group - all data elements go here
       const gc = g.append('g')
         .attr('class', 'dr-gc')
         .attr('clip-path', `url(#${clipId})`)
@@ -198,7 +198,7 @@ export default defineComponent({
       gc.append('path').attr('class', 'curve-target')
       gc.append('line').attr('class', 'cursor-line')
 
-      // Axes — outside clip group so tick labels are never cut
+      // Axes - outside clip group so tick labels are never cut
       g.append('g').attr('class', 'x-axis').attr('transform', `translate(0,${this._chartH})`)
       g.append('g').attr('class', 'y-axis')
 
@@ -215,7 +215,7 @@ export default defineComponent({
         .attr('transform', `translate(-38,${this._chartH / 2}) rotate(-90)`)
         .text('DR (%)')
 
-      // Hover overlay — invisible rect covering the full plot area
+      // Hover overlay - invisible rect covering the full plot area
       const self = this
       g.append('rect')
         .attr('class', 'hover-overlay')
@@ -236,7 +236,7 @@ export default defineComponent({
       const yS = this._yScale
       const W  = this._chartW
 
-      // ── Dynamic Y domain — always shows at least up to Y_MIN_MAX (110%) ──────
+      // ── Dynamic Y domain - always shows at least up to Y_MIN_MAX (110%) ──────
       const data   = this.computeCurves()
       this._curveData = data
       const peakDR = data.reduce((m, d) => Math.max(m, d.hDR, d.tDR), 0)

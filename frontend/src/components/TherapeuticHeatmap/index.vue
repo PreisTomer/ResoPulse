@@ -11,7 +11,7 @@
     >
     <div class="hmap__body">
 
-      <!-- Canvas wrapper — v-tip content updates dynamically on move -->
+      <!-- Canvas wrapper - v-tip content updates dynamically on move -->
       <div class="hmap__canvas-wrap" ref="wrap" v-tip="$t('heatmap.tipCanvas')">
         <canvas
           ref="canvas"
@@ -22,7 +22,7 @@
         ></canvas>
       </div>
 
-      <!-- Hover readout bar — updates as cursor moves over canvas -->
+      <!-- Hover readout bar - updates as cursor moves over canvas -->
       <div class="hmap__readout" :class="{ 'hmap__readout--active': !!hoverInfo }">
         <template v-if="hoverInfo">
           <span class="hmap__readout-coord">{{ hoverInfo.freqLabel }}</span>
@@ -43,7 +43,7 @@
         </template>
       </div>
 
-      <!-- Legend strip — hover for full zone guide -->
+      <!-- Legend strip - hover for full zone guide -->
       <div class="hmap__legend" v-tip="$t('heatmap.tipCanvas')">
         <div v-for="(color, zone) in ZONE_COLORS" :key="zone" class="hmap__legend-item">
           <span class="hmap__legend-dot" :style="{ background: color }"></span>
@@ -51,7 +51,7 @@
         </div>
       </div>
 
-      <!-- Stats row — live values at current operating point -->
+      <!-- Stats row - live values at current operating point -->
       <div class="hmap__stats" v-tip="$t('heatmap.tipStats')">
         <span class="hmap__stats-label">{{ $t('heatmap.statsLabel') }}</span>
         <span class="hmap__stat">
@@ -201,12 +201,12 @@ export default defineComponent({
     hDrPct():       string  { return (Math.min(this.store.healthyDisruptionRatio, 9.99) * 100).toFixed(1) },
     healthyTssStr():string  {
       const T = (this.store as unknown as Record<string, number>)['healthySteadyStateTemp'] as number | undefined
-      return T !== undefined ? `${T.toFixed(1)} ${UNIT.DEG_C}` : '—'
+      return T !== undefined ? `${T.toFixed(1)} ${UNIT.DEG_C}` : ', '
     },
     pLysisStr():    string  {
       if (this.store.chartMode === CHART_MODE.RESONANCE) {
         const cat = this.store.targetCellCategory
-        if (cat !== CELL_CATEGORY.MAMMALIAN) return '—'
+        if (cat !== CELL_CATEGORY.MAMMALIAN) return ', '
       }
       return `${(this.store.targetLysisProbabilityRandom * 100).toFixed(0)}%`
     },
@@ -285,13 +285,13 @@ export default defineComponent({
       const entry = entries[0]
       if (!entry) return
       const w = Math.round(entry.contentRect.width)
-      if (w <= 0) return   // element still hidden — skip until accordion opens
+      if (w <= 0) return   // element still hidden, skip until accordion opens
       this._setupCanvas(w)
       this._renderCanvas()
     })
     this.resizeObserver.observe(wrap)
 
-    // Initial setup — fallback width used when accordion is closed on mount
+    // Initial setup - fallback width used when accordion is closed on mount
     const initialW = wrap.clientWidth > 0 ? wrap.clientWidth : HMAP_CANVAS_W
     this._setupCanvas(initialW)
     this._recompute()
@@ -445,7 +445,7 @@ export default defineComponent({
 
       const s = this.store
 
-      // Optimal frequency — yellow dashed
+      // Optimal frequency - yellow dashed
       const optKhz = s.optimalFreqResult.khz
       if (optKhz >= this.xMin && optKhz <= this.xMax) {
         const ox = this._freqToX(optKhz)
@@ -464,7 +464,7 @@ export default defineComponent({
         ctx.restore()
       }
 
-      // f_res — white dashed (resonance mode)
+      // f_res - white dashed (resonance mode)
       if (s.chartMode === CHART_MODE.RESONANCE) {
         const tr = s.target as { resonantFreqGHz?: number }
         if (tr.resonantFreqGHz) {
@@ -487,7 +487,7 @@ export default defineComponent({
         }
       }
 
-      // fc(T) and fc(H) — cyan dotted (Schwan mode)
+      // fc(T) and fc(H) - cyan dotted (Schwan mode)
       if (s.chartMode !== CHART_MODE.RESONANCE) {
         for (const [label, fcKhz] of [['fc(T)', s.targetFc], ['fc(H)', s.healthyFc]] as [string, number][]) {
           if (fcKhz < this.xMin || fcKhz > this.xMax) continue
@@ -745,7 +745,7 @@ export default defineComponent({
 
       const pLysis = (s.chartMode !== CHART_MODE.RESONANCE || s.targetCellCategory === CELL_CATEGORY.MAMMALIAN)
         ? `${(Math.max(0, 1 - 1 / Math.max(0.001, tDR)) * 100).toFixed(0)}%`
-        : '—'
+        : ', '
 
       // ── Outcome badges ────────────────────────────────────────────────────────
       const outcomes: OutcomeItem[] = []
@@ -763,12 +763,12 @@ export default defineComponent({
         outcomes.push({ text: `⛔ Thermal damage (≥${HMAP_THERM_CRIT_C} ${UNIT.DEG_C})`, level: 'danger' })
       } else if (tDR >= HMAP_APPROACH_DR) {
         outcomes.push({ text: '→ Approaching window', level: 'info' })
-        outcomes.push({ text: `T-DR ${(tDR * 100).toFixed(0)}% — lysis at ${(HMAP_LYSIS_DR * 100).toFixed(0)}%`, level: 'info' })
+        outcomes.push({ text: `T-DR ${(tDR * 100).toFixed(0)}%, lysis at ${(HMAP_LYSIS_DR * 100).toFixed(0)}%`, level: 'info' })
       } else {
-        outcomes.push({ text: '— Sub-threshold', level: 'info' })
+        outcomes.push({ text: ',  Sub-threshold', level: 'info' })
       }
       if (hTss >= HMAP_THERM_WARN_C && hTss < HMAP_THERM_CRIT_C) {
-        outcomes.push({ text: `⚠ H-Temp ${hTss.toFixed(1)} ${UNIT.DEG_C} — hyperthermia`, level: 'warn' })
+        outcomes.push({ text: `⚠ H-Temp ${hTss.toFixed(1)} ${UNIT.DEG_C}, hyperthermia`, level: 'warn' })
       }
 
       const freqLabel  = formatFreqKHz(freqKHz, 2)

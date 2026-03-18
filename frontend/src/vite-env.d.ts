@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 
-// Augment Vite's ImportMetaEnv — do NOT re-declare ImportMeta itself
+// Augment Vite's ImportMetaEnv - do NOT re-declare ImportMeta itself
 interface ImportMetaEnv {
   readonly VITE_BACKEND_URL?: string
 }

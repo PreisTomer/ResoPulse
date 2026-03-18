@@ -2,7 +2,7 @@
 // Unauthorized copying or distribution is prohibited.
 
 /**
- * Mock data — default cell configurations used to seed the Pinia store.
+ * Mock data - default cell configurations used to seed the Pinia store.
  * Types  → types/cell.ts, types/media.ts
  * Media  → constants/media.ts
  */

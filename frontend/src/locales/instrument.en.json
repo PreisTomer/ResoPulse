@@ -1,8 +1,8 @@
 {
   "instrument": {
-    "eyebrow": "Lab Instrumentation — PoC",
+    "eyebrow": "Lab Instrumentation: PoC",
     "title": "Impedance Feedback",
-    "subtitle": "As target cells lyse, released intracellular ions shift medium conductivity σ_e — modelled via the Maxwell-Garnett mixing rule. The cuvette impedance is computed at the actual broadcast frequency, not just DC. For RF sources (50 Ω), impedance mismatch and power delivery efficiency are tracked. A voltage-divider correction keeps the delivered field at the set point despite conductivity drift.",
+    "subtitle": "As target cells lyse, released intracellular ions shift medium conductivity σ_e, modelled via the Maxwell-Garnett mixing rule. The cuvette impedance is computed at the actual broadcast frequency, not just DC. For RF sources (50 Ω), impedance mismatch and power delivery efficiency are tracked. A voltage-divider correction keeps the delivered field at the set point despite conductivity drift.",
 
     "view": {
       "calloutIonTitle":    "Ion Release Model",
@@ -22,12 +22,12 @@
       "contextZNominal":    "Z nominal (DC)",
       "contextCorrection":  "Correction",
       "contextJoule":       "P_medium",
-      "pocTitle":           "Proof of Concept — Simulated Mode",
+      "pocTitle":           "Proof of Concept, Simulated Mode",
       "pocBody":            "In simulated mode, impedance drift is computed from the ion-release physics model (cell volume fraction × lysed fraction × σ contrast). Switch to <em>Live Hardware</em> in the Hardware Input panel to replace this with real measurements from a lab impedance analyser or LCR meter connected via the <code>impedanceReading</code> socket event. See the <a href=\"/protocol\" class=\"instrument__poc-link\">Protocol</a> page for the full hardware integration specification.",
       "tipContextTarget":    "<strong>Target Cell</strong>\nCurrently selected target cell type. The impedance model uses its radius and intracellular conductivity to compute ion release on lysis.",
       "tipContextDR":        "<strong>Disruption Ratio (target)</strong>\nDR = (V_m · PEF) / V_threshold. Values above 85% indicate the lysis window has been reached.",
       "tipContextCorrection": "<strong>Voltage Correction Factor</strong>\n= 1 + R_s / Z_cuvette\nValues above 1 mean the generator must output proportionally more voltage to compensate for impedance drift.",
-      "tipContextJoule":     "<strong>Medium Joule Heating Power [mW]</strong>\nP = |E|² × σ_e × V_cuvette\nTotal power dissipated as heat in the medium between the electrodes.\nHigher σ_e (post-lysis) and higher field → more heating.\nCorresponding adiabatic temperature rise rate: dT/dt = |E|² × σ_e / (ρ × c_p)\nThis is an upper bound — actual rise is lower due to heat loss to cuvette walls."
+      "tipContextJoule":     "<strong>Medium Joule Heating Power [mW]</strong>\nP = |E|² × σ_e × V_cuvette\nTotal power dissipated as heat in the medium between the electrodes.\nHigher σ_e (post-lysis) and higher field → more heating.\nCorresponding adiabatic temperature rise rate: dT/dt = |E|² × σ_e / (ρ × c_p)\nThis is an upper bound, actual rise is lower due to heat loss to cuvette walls."
     },
 
     "setup": {
@@ -36,17 +36,17 @@
       "preset": "Cuvette Preset",
       "presetSub": "Standard electroporation cuvette geometries",
       "gap": "Electrode Gap",
-      "gapSub": "Distance between electrodes [mm] — defines E = V/d",
+      "gapSub": "Distance between electrodes [mm], defines E = V/d",
       "area": "Cross-Section",
-      "areaSub": "Electrode face area [cm²] — with gap, sets cuvette resistance Z = d/(σ·A)",
+      "areaSub": "Electrode face area [cm²], with gap, sets cuvette resistance Z = d/(σ·A)",
       "sourceR": "Source Impedance R_s",
-      "sourceRSub": "Generator + cable impedance [Ω] — typically 50 Ω for RF, variable for pulsed",
+      "sourceRSub": "Generator + cable impedance [Ω], typically 50 Ω for RF, variable for pulsed",
       "density": "Cell Density",
-      "densitySub": "Target cell seeding density [cells/mL] — sets ion release magnitude on lysis",
+      "densitySub": "Target cell seeding density [cells/mL], sets ion release magnitude on lysis",
       "tipPreset": "<strong>Cuvette Preset</strong>\nStandard electroporation cuvette geometries from BTX and Bio-Rad.\nGap sets E = V/d; area sets impedance Z = d/(σ·A).\nUse 'Custom' to enter arbitrary geometry.",
       "tipGap": "<strong>Electrode Gap [mm]</strong>\nDetermines the electric field: E = V_applied / d.\nSmaller gap → higher field per volt, but lower cuvette impedance.\nTypical lab cuvettes: 1 mm, 2 mm, 4 mm.",
       "tipArea": "<strong>Electrode Cross-Section [cm²]</strong>\nWith gap, sets cuvette DC resistance: Z = d / (σ_e × A).\nBTX cuvettes ≈ 0.10 cm²; Bio-Rad ≈ 0.13 cm².",
-      "tipSourceR": "<strong>Source Impedance R_s [Ω]</strong>\nGenerator output + cable impedance.\n50 Ω — standard RF / coaxial system\n&lt; 1 Ω — typical high-voltage pulsed power unit\nHigher R_s → larger voltage-divider correction needed.",
+      "tipSourceR": "<strong>Source Impedance R_s [Ω]</strong>\nGenerator output + cable impedance.\n50 Ω, standard RF / coaxial system\n&lt; 1 Ω, typical high-voltage pulsed power unit\nHigher R_s → larger voltage-divider correction needed.",
       "tipDensity": "<strong>Cell Density [cells/mL]</strong>\nSets the volume fraction φ = N × (4/3)π R³.\nHigher density → more ions released per unit volume → larger σ_e rise on lysis.\nTypical: 10⁶ cells/mL mammalian, 10⁸ cells/mL bacteria."
     },
 
@@ -63,18 +63,18 @@
       "volFraction": "Volume Fraction φ",
       "relaxFreq": "DC model valid up to",
       "relaxFreqValue": "f_relax ≈ {freq} MHz",
-      "tipNominal": "<strong>DC Nominal Impedance Z₀ [Ω]</strong>\nComputed at experiment start with fresh medium and no lysis:\nZ_DC = d / (σ_e_base × A)\nDC limit — capacitive term negligible for f ≪ f_relax.\nUsed as reference for drift percentage.",
+      "tipNominal": "<strong>DC Nominal Impedance Z₀ [Ω]</strong>\nComputed at experiment start with fresh medium and no lysis:\nZ_DC = d / (σ_e_base × A)\nDC limit, capacitive term negligible for f ≪ f_relax.\nUsed as reference for drift percentage.",
       "tipZAtFreq": "<strong>|Z(f)| at {freq} [Ω]</strong>\nComplex impedance magnitude at the current broadcast frequency.\n|Z(f)| = (d/A) / √[σ_e² + (ωε_rε₀)²]\nDC approximation Z₀ = {zDC} Ω · |Z(f)| = {zF} Ω\nMaxwell relaxation frequency: f_relax ≈ {relax} MHz\nAbove f_relax the capacitive term dominates and |Z| falls rapidly.",
       "tipDrift": "<strong>Impedance Drift [%]</strong>\n(Z_current − Z_nominal) / Z_nominal × 100\nNegative = impedance fell (σ_e rose from ion release).\nA −10% drift requires a +11% field correction.",
       "tipSigmaBase": "<strong>Base Medium Conductivity σ_e [S/m]</strong>\nNominal conductivity of the selected medium at 37°C.\nThis is the experiment starting point before any cells lyse.",
       "tipSigmaLive": "<strong>Live σ_e [S/m]</strong>\nEffective medium conductivity after Maxwell-Garnett ion-release correction.\nσ_eff = σ_m × [σ_i + 2σ_m + 2φ(σ_i−σ_m)] / [σ_i + 2σ_m − φ(σ_i−σ_m)]\nφ = φ_cells × f_lysed · Handles both σ_i &gt; σ_m and σ_i &lt; σ_m media.",
       "tipRelax": "<strong>Maxwell Relaxation Frequency [MHz]</strong>\nf_relax = σ_e / (2π ε_r ε₀)\nBelow this frequency the medium behaves resistively (DC model valid).\nAbove it, capacitive displacement currents become significant and the\nDC impedance formula Z = d/(σ·A) under-estimates the true |Z(f)|.\nFor saline (σ=1.5 S/m, εr=74): f_relax ≈ 365 MHz.",
-      "tipFieldDistortion": "<strong>Electric Field Distortion at φ = {phi}%</strong>\nField enhancement factor: E_local / E_applied = (1 + φ/2) / (1 − φ) = {factor}\nAt high cell density, intact cells (insulating membranes) force current through\nnarrowing extracellular channels, concentrating the field at cell surfaces.\nThe Schwan equation uses E_applied — the actual membrane potential is\nE_local × 1.5R×cosθ / √(1+(ωτ)²), which is {factor}× higher than displayed.\nLevel: {level} — negligible below φ=1%, significant above φ=5%."
+      "tipFieldDistortion": "<strong>Electric Field Distortion at φ = {phi}%</strong>\nField enhancement factor: E_local / E_applied = (1 + φ/2) / (1 − φ) = {factor}\nAt high cell density, intact cells (insulating membranes) force current through\nnarrowing extracellular channels, concentrating the field at cell surfaces.\nThe Schwan equation uses E_applied, the actual membrane potential is\nE_local × 1.5R×cosθ / √(1+(ωτ)²), which is {factor}× higher than displayed.\nLevel: {level}, negligible below φ=1%, significant above φ=5%."
     },
 
     "bode": {
       "title": "|Z(f)| Frequency Response",
-      "sub": "Cuvette impedance magnitude vs frequency — log-log scale",
+      "sub": "Cuvette impedance magnitude vs frequency, log-log scale",
       "legendZ":     "|Z(f)| curve",
       "legendFreq":  "Broadcast frequency",
       "legendRelax": "f_relax (DC limit)",
@@ -100,11 +100,11 @@
       "tipCorrected": "<strong>Corrected Generator Field [V/cm]</strong>\nThe equivalent field the generator must output to deliver E_target inside the cuvette after accounting for the voltage divider:\nE_gen = E_target × (1 + R_s / Z_cuvette)\nSet this value on your function generator or pulser.",
       "tipFactor": "<strong>Voltage Correction Factor</strong>\n= 1 + R_s / Z_cuvette\nMultiply nominal generator voltage by this factor to compensate for impedance drift.",
       "tipVSWR": "<strong>VSWR &amp; Power Delivery (RF mode)</strong>\nReflection coefficient: Γ = |Z_load − Z₀| / |Z_load + Z₀| = {gamma}\nVSWR = (1 + |Γ|) / (1 − |Γ|) = {vswr}\nPower delivery η = 1 − |Γ|² = {efficiency}\n\nZ_load = {zLoad} Ω · Z₀ = {z0} Ω\n\nVSWR ≤ 2.0 is standard practice (η ≥ 88.9%).\nNote: VSWR only matters for RF (50 Ω) sources; IRE pulsers\n(&lt;1 Ω source) are effectively matched to any biological load.",
-      "tipSourceNote": "<strong>Source Impedance R_s [Ω]</strong>\n<em>IRE pulsers (R_s &lt; 1 Ω)</em>: Source ≪ Z_load — voltage divider is negligible; VSWR mismatch analysis does not apply.\n<em>RF generators (R_s = 50 Ω)</em>: Source and load are comparable — field correction and VSWR are critical.\nAt 50 Ω with a saline cuvette (Z ≈ 200–1000 Ω), typical Γ ≈ 0.6, η ≈ 64%. Impedance matching networks improve delivery.",
-      "rcStatus_ok":       "Cuvette RC bandwidth OK — full field delivered",
-      "rcStatus_marginal": "Pulse shorter than 5×τ_RC — partial field attenuation",
-      "rcStatus_critical": "Pulse shorter than τ_RC — severe field attenuation",
-      "tipRCBandwidth": "<strong>Cuvette RC Bandwidth Check</strong>\nτ_RC = ε_r × ε₀ / σ_e = {tau} ns  (geometry-independent)\nt_p = {tp} ns  ·  ratio t_p/τ_RC = {ratio}\n\nThe medium acts as an RC circuit with time constant τ_RC.\nPulses shorter than τ_RC cannot fully charge the cuvette — the\ndelivered field is attenuated before reaching steady state.\n\nRule of thumb:\n  t_p &gt; 5×τ_RC → full field (≥99% of set value)\n  t_p = 1×τ_RC → 63% field delivery\n  t_p &lt; τ_RC  → severe attenuation\n\nσ_e = {sigma} S/m at this moment."
+      "tipSourceNote": "<strong>Source Impedance R_s [Ω]</strong>\n<em>IRE pulsers (R_s &lt; 1 Ω)</em>: Source ≪ Z_load, voltage divider is negligible; VSWR mismatch analysis does not apply.\n<em>RF generators (R_s = 50 Ω)</em>: Source and load are comparable, field correction and VSWR are critical.\nAt 50 Ω with a saline cuvette (Z ≈ 200-1000 Ω), typical Γ ≈ 0.6, η ≈ 64%. Impedance matching networks improve delivery.",
+      "rcStatus_ok":       "Cuvette RC bandwidth OK, full field delivered",
+      "rcStatus_marginal": "Pulse shorter than 5×τ_RC, partial field attenuation",
+      "rcStatus_critical": "Pulse shorter than τ_RC, severe field attenuation",
+      "tipRCBandwidth": "<strong>Cuvette RC Bandwidth Check</strong>\nτ_RC = ε_r × ε₀ / σ_e = {tau} ns  (geometry-independent)\nt_p = {tp} ns  ·  ratio t_p/τ_RC = {ratio}\n\nThe medium acts as an RC circuit with time constant τ_RC.\nPulses shorter than τ_RC cannot fully charge the cuvette, the\ndelivered field is attenuated before reaching steady state.\n\nRule of thumb:\n  t_p &gt; 5×τ_RC → full field (≥99% of set value)\n  t_p = 1×τ_RC → 63% field delivery\n  t_p &lt; τ_RC  → severe attenuation\n\nσ_e = {sigma} S/m at this moment."
     },
 
     "hardware": {
@@ -121,18 +121,18 @@
       "status": "Sensor Status",
       "statusDisconnected": "No data received",
       "statusFresh": "Live · fresh",
-      "statusStale": "Stale — check instrument",
+      "statusStale": "Stale: check instrument",
       "socketEvent": "Socket Event",
       "schema": "Packet Schema",
       "schemaNote": "Send JSON to the socket event 'impedanceReading' from your instrument bridge. All numeric fields use SI units.",
-      "tipMode": "<strong>Sensor Mode</strong>\n<em>Simulated</em> — impedance is computed from the ion-release physics model based on the current disruption ratio.\n<em>Live Hardware</em> — the simulated value is replaced by Z_real from the last instrument packet.\nSwitch to Live Hardware only after confirming your instrument bridge is sending readings.",
-      "tipSocket": "<strong>Socket Event: impedanceReading</strong>\nYour instrument bridge should emit this event to the ResoPulse backend socket.\nThe backend validates and re-broadcasts to all connected UI clients.\n\nMinimal schema:\n  zReal: number   (Ω — required)\n  zImag: number   (Ω — required)\n  freqHz: number  (Hz — required)\n  timestamp: number  (Unix ms — required)\n  conductivity?: number  (S/m — optional)"
+      "tipMode": "<strong>Sensor Mode</strong>\n<em>Simulated</em>, impedance is computed from the ion-release physics model based on the current disruption ratio.\n<em>Live Hardware</em>, the simulated value is replaced by Z_real from the last instrument packet.\nSwitch to Live Hardware only after confirming your instrument bridge is sending readings.",
+      "tipSocket": "<strong>Socket Event: impedanceReading</strong>\nYour instrument bridge should emit this event to the ResoPulse backend socket.\nThe backend validates and re-broadcasts to all connected UI clients.\n\nMinimal schema:\n  zReal: number   (Ω, required)\n  zImag: number   (Ω, required)\n  freqHz: number  (Hz, required)\n  timestamp: number  (Unix ms, required)\n  conductivity?: number  (S/m, optional)"
     },
 
     "trend": {
       "title": "Impedance Trend",
-      "sub": "Historical Z readings — simulated (grey) or hardware (cyan)",
-      "noData": "No history yet — readings will appear as cells lyse or hardware data arrives",
+      "sub": "Historical Z readings, simulated (grey) or hardware (cyan)",
+      "noData": "No history yet, readings will appear as cells lyse or hardware data arrives",
       "axisZ": "Z",
       "axisTime": "Time",
       "thNum": "#",
@@ -143,7 +143,7 @@
 
     "loadMonitor": {
       "title":           "Load Impedance Monitor",
-      "sub":             "Continuous σ_e and Z tracking — 1 s auto-sampling — 2-minute rolling window",
+      "sub":             "Continuous σ_e and Z tracking, 1 s auto-sampling, 2-minute rolling window",
       "stateNominal":    "Nominal",
       "stateWarning":    "Drift Warning",
       "stateCritical":   "Critical Drift",
@@ -151,7 +151,7 @@
       "statSigmaLive":   "σ_e (live)",
       "statDelta":       "Δσ_e",
       "statDrift":       "Z Drift",
-      "noData":          "Collecting data — chart appears after 3 samples (~3 s)",
+      "noData":          "Collecting data: chart appears after 3 samples (~3 s)",
       "axisTime":        "Time",
       "legendSigma":     "σ_e [S/m]",
       "legendZ":         "Z [Ω]",
@@ -161,19 +161,19 @@
       "chainDeltaSigma": "Δσ_e",
       "chainZDrift":     "ΔZ %",
       "chainCorrection": "E_gen ×",
-      "tipState":        "<strong>Load State</strong>\nBased on absolute impedance drift from nominal.\n<em>Nominal</em>: |ΔZ| &lt; 5% — no correction needed\n<em>Warning</em>: 5–15% — minor correction recommended\n<em>Critical</em>: &gt;15% — significant drift; apply corrected field",
+      "tipState":        "<strong>Load State</strong>\nBased on absolute impedance drift from nominal.\n<em>Nominal</em>: |ΔZ| &lt; 5%, no correction needed\n<em>Warning</em>: 5-15%, minor correction recommended\n<em>Critical</em>: &gt;15%, significant drift; apply corrected field",
       "tipSigmaBase":    "<strong>Base Medium Conductivity σ_e [S/m]</strong>\nNominal conductivity of the selected medium at 37°C.\nThis is the experiment starting point before any cells lyse.",
       "tipSigmaLive":    "<strong>Live Medium Conductivity σ_e [S/m]</strong>\nCurrent conductivity after accounting for ion release from lysed cells.\nRises (low-σ media) or falls (high-σ media like saline) depending on the σ_i vs σ_e contrast.",
       "tipDelta":        "<strong>Conductivity Change Δσ_e [S/m]</strong>\nδσ_e = σ_e_live − σ_e_base (after Maxwell-Garnett correction)\nPositive: σ_i &gt; σ_m → lysis raises conductivity (PBS, sucrose media)\nNegative: σ_i &lt; σ_m → lysis lowers conductivity (saline)\nMG formula: σ_eff = σ_m × [σ_i + 2σ_m + 2φ_lys(σ_i−σ_m)] / [σ_i + 2σ_m − φ_lys(σ_i−σ_m)]",
       "tipDrift":        "<strong>Impedance Drift [%]</strong>\n(Z_live − Z_nominal) / Z_nominal × 100\nNegative drift (saline): σ_e rises → Z falls → field under-delivered\nPositive drift (PBS): σ_e falls → Z rises → field over-delivered",
-      "tipChain":        "<strong>Lysis Feedback Chain</strong>\nThe causal sequence connecting lysis events to generator correction:\n\nf_lysed — fraction of target cells lysed (DR ≥ 85%)\nΔσ_e   — conductivity shift from ion release\nΔZ %   — resulting cuvette impedance drift\nE_gen × — voltage correction factor to maintain target transmembrane Vm\n\nAt high cell density or long exposure, this correction can exceed 20%."
+      "tipChain":        "<strong>Lysis Feedback Chain</strong>\nThe causal sequence connecting lysis events to generator correction:\n\nf_lysed, fraction of target cells lysed (DR ≥ 85%)\nΔσ_e  , conductivity shift from ion release\nΔZ %  , resulting cuvette impedance drift\nE_gen ×, voltage correction factor to maintain target transmembrane Vm\n\nAt high cell density or long exposure, this correction can exceed 20%."
     },
 
     "sonif": {
-      "on":   "Auditory Display — On",
-      "off":  "Auditory Display — Off",
-      "note": "The sounds are NOT the RF frequencies (kHz–MHz range) — those are far above the audible range. This is a scientific data-monitoring technique (sonification).",
-      "tip":  "<strong>Auditory Display (Sonification)</strong>\nMaps live experiment data to audible tones via the Web Audio API.\n\n<em>These sounds are NOT the RF frequencies (kHz–MHz), which are far above the audible range. This is a scientific monitoring technique.</em>\n\nMappings:\n  Impedance drift → pitch (220 Hz – 1760 Hz)\n  Disruption ratio → volume\n  Rev-EP window → 6 Hz tremolo modulation\n  Lysis event → 880 Hz burst\n  Healthy-cell warning → 110 Hz pulse\n\nRef: Kramer et al. (1999); Walker &amp; Kramer (2006)"
+      "on":   "Auditory Display: On",
+      "off":  "Auditory Display: Off",
+      "note": "The sounds are NOT the RF frequencies (kHz-MHz range), those are far above the audible range. This is a scientific data-monitoring technique (sonification).",
+      "tip":  "<strong>Auditory Display (Sonification)</strong>\nMaps live experiment data to audible tones via the Web Audio API.\n\n<em>These sounds are NOT the RF frequencies (kHz-MHz), which are far above the audible range. This is a scientific monitoring technique.</em>\n\nMappings:\n  Impedance drift → pitch (220 Hz-1760 Hz)\n  Disruption ratio → volume\n  Rev-EP window → 6 Hz tremolo modulation\n  Lysis event → 880 Hz burst\n  Healthy-cell warning → 110 Hz pulse\n\nRef: Kramer et al. (1999); Walker &amp; Kramer (2006)"
     }
   }
 }

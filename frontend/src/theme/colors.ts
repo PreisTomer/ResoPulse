@@ -44,7 +44,7 @@ export const C = {
   purpleLight: '#c4b5fd',                   // --color-purple-light
 
   // Semantic one-offs (no CSS var; used only in script/canvas/D3 contexts)
-  navWarning:    '#ffb800',   // nav status warning dot — warm amber
+  navWarning:    '#ffb800',   // nav status warning dot, warm amber
   lysed:         '#882233',   // dead-cell state color
   targetInterp:  '#4d79ff',   // D3 gradient start for target cell interpolation
   nucleusOrange: '#ff8c00',   // nucleus rung color for target cell canvas

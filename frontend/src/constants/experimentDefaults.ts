@@ -7,27 +7,27 @@
  * mimicking a "new experiment" context.
  *
  * Values are chosen so T_ss < 38°C for the healthy reference cell (hepatocyte)
- * at every default — researcher can slide UP from a safe starting point.
+ * at every default - researcher can slide UP from a safe starting point.
  *
- * Mammalian: nourishing biomodulation start at 100 V/cm — researcher slides up from active window.
+ * Mammalian: nourishing biomodulation start at 100 V/cm - researcher slides up from active window.
  *   Verified safe at 100 V/cm (reference calculation):
  *   α = 3σ_e/(2σ_e+σ_i) = 1.286  (hepatocyte, saline)
  *   SAR_peak = σ_i·α²·E²·wf/ρ ≈ 7.9 kW/kg  ·  SAR_eff = SAR_peak×dc ≈ 0.79 W/kg (dc=1e-4)
  *   T_ss = 37 + 0.79/(λ·cp) = 37 + 0.01°C ≈ 37.01°C ✓  (λ=0.02 s⁻¹, cp=3500 J/kg·K)
- *   DR ≈ 13% — visible in the nourishing biomodulation window (< 45%); well below 50% rev-EP onset.
+ *   DR ≈ 13% - visible in the nourishing biomodulation window (< 45%); well below 50% rev-EP onset.
  *   Default at 100 V/cm gives researchers immediate visual feedback and a meaningful starting context.
  *
- * Bacteria: nsEP regime — pulse width ≪ τ (τ_ecoli ≈ 14 ns, τ_mrsa ≈ 3.2 ns).
+ * Bacteria: nsEP regime - pulse width ≪ τ (τ_ecoli ≈ 14 ns, τ_mrsa ≈ 3.2 ns).
  *   Starts at 1000 V/cm pulsed dc=1e-6:
  *   α ≈ 1.36  (E. coli, saline)  ·  SAR_eff ≈ 5.1 W/kg  ·  T_ss ≈ 37.06°C ✓
- *   Researcher slides field to ≥10 kV/cm to approach lysis — thermal warnings appear.
+ *   Researcher slides field to ≥10 kV/cm to approach lysis - thermal warnings appear.
  *
  * Virus: Resonance mode (IRE inapplicable); capsid disruption via acoustic resonance.
  *   400 V/cm pulsed dc=1e-6 @ f_res (influenza 12 GHz):
  *   σ_i ≈ 0.005 S/m (lipid envelope)  ·  SAR_eff ≈ 0.014 W/kg  ·  T_ss ≈ 37.000°C ✓
  *   Auto-tuned to preset's resonantFreqGHz in applyTargetDefaults.
  */
-// Re-exported from physics.ts — single source of truth for waveform factors
+// Re-exported from physics.ts - single source of truth for waveform factors
 export { WF_CW as CW_WAVEFORM_FACTOR, WF_PULSED as PULSED_WAVEFORM_FACTOR } from '@/constants/physics'
 
 /** Initial field as a fraction of a preset's resonant threshold (applied when loading resonant presets) */
