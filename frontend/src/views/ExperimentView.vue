@@ -246,12 +246,13 @@
           {{ sweepWindow.param === 'field' ? $t('sweep.fieldUnit') : $t('sweep.freqUnit') }}
         </span>
         <span class="experiment__snap-bar-affects">{{ sweepWindow.param === 'field' ? $t('exp.snapBarSubField') : $t('exp.snapBarSubFreq') }} {{ Math.round((sweepWindow.lo + sweepWindow.hi) / 2) }} {{ sweepWindow.param === 'field' ? $t('sweep.fieldUnit') : $t('sweep.freqUnit') }}</span>
-        <span class="experiment__snap-bar-lysis-warn">{{ $t('exp.snapBarLysisWarn', { cellLabel: snapLysisCellLabel }) }}</span>
+        <span v-if="!snapConfirmed" class="experiment__snap-bar-lysis-warn">{{ $t('exp.snapBarLysisWarn', { cellLabel: snapLysisCellLabel }) }}</span>
         <button
           class="experiment__snap-bar-btn"
-          :class="{ 'experiment__snap-bar-btn--confirm': snapConfirming }"
+          :class="{ 'experiment__snap-bar-btn--confirm': snapConfirming, 'experiment__snap-bar-btn--confirmed': snapConfirmed }"
+          :disabled="snapConfirmed"
           @click="snapToWindow"
-        >{{ snapConfirming ? $t('exp.snapBarBtnConfirm', { cellLabel: snapLysisCellLabel }) : $t('exp.snapBarBtn') }}</button>
+        >{{ snapConfirming ? $t('exp.snapBarBtnConfirm', { cellLabel: snapLysisCellLabel }) : snapConfirmed ? $t('exp.snapBarBtnApplied') : $t('exp.snapBarBtn') }}</button>
       </div>
 
       <PopulationPanel @open-change="populationPanelOpen = $event" />
@@ -383,6 +384,7 @@ export default defineComponent({
       sweepPanelOpen: false,
       populationPanelOpen: false,
       snapConfirming: false,
+      snapConfirmed: false,
       snapResetTimer: null as ReturnType<typeof setTimeout> | null,
       showCreateModal: false,
       notesOpen: false,
@@ -397,7 +399,13 @@ export default defineComponent({
     /** When the active target cell changes, reset all sliders to category-appropriate
      *  defaults and auto-switch chart mode. Mirrors a "new experiment" context. */
     currentTargetId(newId: string, oldId: string) {
-      if (newId !== oldId) this.applyTargetDefaults()
+      if (newId !== oldId) {
+        this.applyTargetDefaults()
+        this.snapConfirmed = false
+      }
+    },
+    'store.resetCounter'() {
+      this.snapConfirmed = false
     },
     /** If the target category becomes mammalian (e.g. via radius edit) while resonance mode
      *  is active, immediately revert to Schwan mode. Resonance has no physical meaning for
@@ -527,6 +535,8 @@ export default defineComponent({
         this.store.setBroadcastFreqKHz(center)
       }
       broadcastStateSync()
+      // Lock the snap button until the cell is reset — prevents re-snapping mid-lysis.
+      this.snapConfirmed = true
     },
 
     loadHealthyPreset(preset: CellPreset) {
@@ -598,6 +608,11 @@ export default defineComponent({
   },
 
   mounted() {
+    // Ensure pulse-width / duty-cycle / waveform match the current target category.
+    // Without this, a persisted 1µs pulse width (old default) would give a 200ms lysis
+    // delay for mammalian cells, making lysis appear instantaneous.
+    this.applyTargetDefaults()
+
     const sentinel = this.$refs.cellsAnchor as HTMLElement
     if (sentinel) {
       this.cellsObserver = new IntersectionObserver(
@@ -1084,6 +1099,18 @@ export default defineComponent({
         border-color: rgba(239, 68, 68, 0.8);
       }
     }
+
+    &--confirmed {
+      opacity: 0.45;
+      cursor: not-allowed;
+      border-color: rgba(255, 255, 255, 0.15);
+      color: var(--color-text-muted);
+
+      &:hover {
+        background: transparent;
+        border-color: rgba(255, 255, 255, 0.15);
+      }
+    }
   }
 
   @keyframes snap-confirm-pulse {
@@ -1282,11 +1309,10 @@ export default defineComponent({
   top: 68px;   // below NavBar (≈60 px) + small gap
   right: 1rem;
   z-index: 150;
-  // Explicit width so grid columns have a reference size before scaling.
-  // Two compact CellCards: each ~296 px (280 SVG + 2×8 px compact padding) + 12 px gap + 24 px container padding = 628 px.
-  width: 640px;
-  // Scale the panel to ~65 % visual size anchored at top-right
-  transform: scale(0.65);
+  // Single-column width: one compact CellCard (280 SVG + 2×8 px padding) + container padding.
+  width: 312px;
+  // Scale the panel to ~72 % visual size anchored at top-right
+  transform: scale(0.72);
   transform-origin: top right;
   // Panel chrome (rendered at full logical size; visually compact after scale)
   background: rgba(8, 10, 18, 0.97);
@@ -1308,17 +1334,17 @@ export default defineComponent({
   }
 
   &-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.75rem;
+    display: flex;
+    flex-direction: column; // healthy on top, target below
+    gap: 0.5rem;
   }
 }
 
 // Fade + slide-down entrance/exit
 .sticky-cells-enter-active { transition: opacity 0.28s ease, transform 0.28s ease; }
 .sticky-cells-leave-active { transition: opacity 0.2s ease,  transform 0.2s ease; }
-.sticky-cells-enter-from   { opacity: 0; transform: scale(0.65) translateY(-14px); transform-origin: top right; }
-.sticky-cells-leave-to     { opacity: 0; transform: scale(0.65) translateY(-10px); transform-origin: top right; }
+.sticky-cells-enter-from   { opacity: 0; transform: scale(0.72) translateY(-14px); transform-origin: top right; }
+.sticky-cells-leave-to     { opacity: 0; transform: scale(0.72) translateY(-10px); transform-origin: top right; }
 
 // ── Mobile: slide up from the bottom, single-row cells ────────────────────────
 @media (max-width: 768px) {

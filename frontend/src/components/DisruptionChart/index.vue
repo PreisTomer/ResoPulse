@@ -22,11 +22,15 @@ import { CELL_CATEGORY, CHART_MODE } from '@/constants/strings'
 import { C } from '@/theme/colors'
 import type { CellConfig } from '@/types/cell'
 
-const F_MIN_HZ  = 10_000          // 10 kHz
-const F_MAX_HZ  = 500_000_000     // 500 MHz
-const N_POINTS  = 200
-const DR_MAX    = 150             // y-axis max %
-const MARGIN    = { top: 18, right: 16, bottom: 48, left: 54 }
+const F_MIN_HZ    = 10_000          // 10 kHz
+const F_MAX_HZ    = 500_000_000     // 500 MHz
+const N_POINTS    = 200
+const DR_MIN_CEIL = 20              // y-axis never compresses below 20 % even when curves are low
+const DR_HEADROOM = 1.25            // 25 % headroom above the curve peak
+const MARGIN      = { top: 18, right: 16, bottom: 48, left: 54 }
+
+// One label per decade — 5 evenly-spaced positions across the 4.7-decade range
+const X_TICK_VALUES = [1e4, 1e5, 1e6, 1e7, 1e8]
 
 // Horizontal threshold lines
 const DR_REV_EP  = 50   // reversible EP boundary
@@ -142,7 +146,7 @@ export default defineComponent({
 
       this._svg    = svgEl
       this._xScale = d3.scaleLog().domain([F_MIN_HZ, F_MAX_HZ]).range([0, this._chartW])
-      this._yScale = d3.scaleLinear().domain([0, DR_MAX]).range([this._chartH, 0])
+      this._yScale = d3.scaleLinear().domain([0, DR_MIN_CEIL]).range([this._chartH, 0])
 
       const g = svgEl.append('g')
         .attr('transform', `translate(${MARGIN.left},${MARGIN.top})`)
@@ -185,15 +189,25 @@ export default defineComponent({
       const yS = this._yScale
       const W  = this._chartW
 
+      // ── Dynamic Y domain — scale to data so low-DR curves are always visible ──
+      const data     = this.computeCurves()
+      const peakDR   = data.reduce((m, d) => Math.max(m, d.hDR, d.tDR), 0)
+      const yMax     = Math.max(DR_MIN_CEIL, peakDR * DR_HEADROOM)
+      yS.domain([0, yMax])
+
       // ── Axes ─────────────────────────────────────────────────────────────
       const xAxis = d3.axisBottom(xS)
-        .ticks(6, '~s')
+        .tickValues(X_TICK_VALUES)
         .tickFormat((d) => this.formatHz(+d))
       g.select<SVGGElement>('.x-axis')
         .call(xAxis)
-        .selectAll('text')
+        .selectAll<SVGTextElement, unknown>('text')
         .style('fill', C.textMuted)
-        .style('font-size', '0.58rem')
+        .style('font-size', '0.62rem')
+        .attr('transform', 'rotate(-35)')
+        .attr('text-anchor', 'end')
+        .attr('dy', '0.5em')
+        .attr('dx', '-0.3em')
 
       const yAxis = d3.axisLeft(yS)
         .ticks(5)
@@ -219,8 +233,7 @@ export default defineComponent({
         .style('stroke-dasharray', '3,3')
       g.select('.grid-h .domain').remove()
 
-      // ── Data ──────────────────────────────────────────────────────────────
-      const data = this.computeCurves()
+      // data already computed at top for dynamic Y domain
 
       // ── Therapeutic window fill ───────────────────────────────────────────
       // Region where target DR ≥ 85% AND healthy DR < 50%
@@ -230,7 +243,7 @@ export default defineComponent({
       const areaFn = d3.area<{ hz: number; tDR: number }>()
         .x((d) => xS(d.hz))
         .y0(yS(DR_LYSIS))
-        .y1((d) => yS(Math.min(d.tDR, DR_MAX)))
+        .y1((d) => yS(d.tDR))
         .curve(d3.curveLinear)
 
       const windowGroup = g.select<SVGGElement>('.window-fill')
@@ -280,12 +293,12 @@ export default defineComponent({
       // ── Curves ────────────────────────────────────────────────────────────
       const lineFnH = d3.line<{ hz: number; hDR: number }>()
         .x((d) => xS(d.hz))
-        .y((d) => yS(Math.min(d.hDR, DR_MAX)))
+        .y((d) => yS(d.hDR))
         .curve(d3.curveLinear)
 
       const lineFnT = d3.line<{ hz: number; tDR: number }>()
         .x((d) => xS(d.hz))
-        .y((d) => yS(Math.min(d.tDR, DR_MAX)))
+        .y((d) => yS(d.tDR))
         .curve(d3.curveLinear)
 
       g.select<SVGPathElement>('.curve-healthy')
