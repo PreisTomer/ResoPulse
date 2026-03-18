@@ -74,8 +74,8 @@
             <td class="exp-log__td-target" v-tip="tipCellTargetVm(e)">{{ e.targetVm }}</td>
             <td class="exp-log__td-healthy" v-tip="tipCellHealthyVm(e)">{{ e.healthyVm }}</td>
             <td class="exp-log__td-sel" v-tip="tipCellSel(e)">{{ e.selectivity.toFixed(2) }}</td>
-            <td v-if="!isResonanceMode" class="exp-log__td-dep" :class="depKClass(e.depHealthyK)">{{ depKDisplay(e.depHealthyK) }}</td>
-            <td v-if="!isResonanceMode" class="exp-log__td-dep" :class="depKClass(e.depTargetK)">{{ depKDisplay(e.depTargetK) }}</td>
+            <td v-if="!isResonanceMode" class="exp-log__td-dep" :class="depKClass(e.depHealthyK)" v-tip="tipCellDepH(e)">{{ depKDisplay(e.depHealthyK) }}</td>
+            <td v-if="!isResonanceMode" class="exp-log__td-dep" :class="depKClass(e.depTargetK)" v-tip="tipCellDepT(e)">{{ depKDisplay(e.depTargetK) }}</td>
             <td class="exp-log__td-event">
               <StatusBadge :label="e.event" :variant="eventVariant(e.event)" :tooltip="tipCellEvent(e)" />
             </td>
@@ -211,6 +211,12 @@ export default defineComponent({
     depKClass(k: number | undefined): string {
       if (k == null) return ''
       return k > 0 ? 'exp-log__td-pdep' : 'exp-log__td-ndep'
+    },
+    tipCellDepH(e: { depHealthyK?: number }): string {
+      return this.$t('log.tipCellDepH', { k: e.depHealthyK != null ? e.depHealthyK.toFixed(4) : '—' })
+    },
+    tipCellDepT(e: { depTargetK?: number }): string {
+      return this.$t('log.tipCellDepT', { k: e.depTargetK != null ? e.depTargetK.toFixed(4) : '—' })
     },
   },
 })
