@@ -639,6 +639,7 @@ export default defineComponent({
         if (impact > THRESHOLDS.DISRUPTION_WARN) {
           // >85% — lysis is now armed; 'vibrating' exclusively means "lysis imminent"
           this.cellState = CELL_STATE.VIBRATING
+          this.store.setTargetCellState(CELL_STATE.VIBRATING)
           if (!this.shatterPending) {
             this.shatterPending = true
             this.lysisProgressElapsed = 0
