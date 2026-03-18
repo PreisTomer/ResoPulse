@@ -30,7 +30,7 @@ export default defineComponent({
 })
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 #layout {
   min-height: 100vh;
   display: flex;

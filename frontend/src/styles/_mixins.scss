@@ -1,6 +1,8 @@
 // Copyright © 2026 Tomer Preis. All rights reserved.
 // Unauthorized copying or distribution is prohibited.
 
+@use 'sass:list';
+
 // ── Flex utilities ─────────────────────────────────────────────────────────────
 // Usage: @include flex-row(0.5rem);
 @mixin flex-row($gap: 0.5rem) {
@@ -86,10 +88,10 @@ $_cell-states: (
 
 @mixin cell-state-classes() {
   @each $item in $_cell-states {
-    $state: nth($item, 1);
-    $color: nth($item, 2);
-    $anim:  nth($item, 3);
-    $dur:   nth($item, 4);
+    $state: list.nth($item, 1);
+    $color: list.nth($item, 2);
+    $anim:  list.nth($item, 3);
+    $dur:   list.nth($item, 4);
 
     &__state--#{$state} {
       color: $color;
