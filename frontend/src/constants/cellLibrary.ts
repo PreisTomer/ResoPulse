@@ -15,11 +15,11 @@ export interface CellPreset extends CellConfig {
   group: CellGroup
   shortLabel: string
   notes: string
-  /** Extended technical notes shown in tooltip (optional — omit for presets with short notes) */
+  /** Extended technical notes shown in tooltip (optional - omit for presets with short notes) */
   techNotes?: string
 }
 
-// GROUP_COLORS defined in theme/colors.ts — re-exported here for back-compat
+// GROUP_COLORS defined in theme/colors.ts - re-exported here for back-compat
 import { GROUP_COLORS as _GROUP_COLORS } from '@/theme/colors'
 export const GROUP_COLORS: Record<CellGroup, string> = _GROUP_COLORS
 
@@ -177,7 +177,7 @@ export const CELL_PRESETS: CellPreset[] = [
     density: 1080,
     specificHeatCapacity: 3200,
     amplitude: 0.5,
-    // High N/C ratio hallmark of PDAC — thinner, leakier NE → lower f_peak, lower threshold
+    // High N/C ratio hallmark of PDAC - thinner, leakier NE → lower f_peak, lower threshold
     nuclearRadius: 7.5, nuclearMembraneThickness: 11, nuclearMembraneEps: 12,
     nucleoplasmConductivity: 1.1, nuclearThresholdVoltage: 0.35,
   },
@@ -295,14 +295,14 @@ export const CELL_PRESETS: CellPreset[] = [
     label: 'E. coli K-12',
     shortLabel: 'E. coli',
     notes: 'Gram-neg rod · 0.5×2 µm · spherical approx',
-    techNotes: 'Rod geometry modelled as sphere (R = 1 µm).\nσ_i = 0.3 S/m (gram-negative cytoplasm, literature range 0.25–0.5 S/m).\nfc ≈ 11 MHz in saline · τ ≈ 14 ns.\nExpect 1.5–2× Vm underestimate vs rod model (Kotnik 2000).\nAcoustic resonance: f_res ≈ 0.5 GHz (v_wall ≈ 1000 m/s) · Q ≈ 4 · E_thr ≈ 2000 V/cm\n⚠ PEPTIDOGLYCAN NOTE: Dykeman & Sankey (2010) validated Q on icosahedral protein capsids.\nPeptidoglycan is a viscoelastic cross-linked polymer mesh — mechanical Q is substantially lower\nthan rigid protein shells. Q = 4 is a conservative estimate; actual Q may be 2–5.\nRef: Tsen et al. (2007); Dykeman & Sankey (2010)',
+    techNotes: 'Rod geometry modelled as sphere (R = 1 µm).\nσ_i = 0.3 S/m (gram-negative cytoplasm, literature range 0.25-0.5 S/m).\nfc ≈ 11 MHz in saline · τ ≈ 14 ns.\nExpect 1.5-2× Vm underestimate vs rod model (Kotnik 2000).\nAcoustic resonance: f_res ≈ 0.5 GHz (v_wall ≈ 1000 m/s) · Q ≈ 4 · E_thr ≈ 2000 V/cm\n⚠ PEPTIDOGLYCAN NOTE: Dykeman & Sankey (2010) validated Q on icosahedral protein capsids.\nPeptidoglycan is a viscoelastic cross-linked polymer mesh, mechanical Q is substantially lower\nthan rigid protein shells. Q = 4 is a conservative estimate; actual Q may be 2-5.\nRef: Tsen et al. (2007); Dykeman & Sankey (2010)',
     radius: 1,
     membraneThickness: 8,
     naturalFrequency: 300,
     thresholdVoltage: 1.5,
     dielectricConstant: 3.5,
     conductivity: 0.3,
-    membraneConductivity: 1e-5,  // gram-negative outer membrane — porins raise σ_mem ~100× vs mammalian (Markx & Davey 1999)
+    membraneConductivity: 1e-5,  // gram-negative outer membrane, porins raise σ_mem ~100× vs mammalian (Markx & Davey 1999)
     resonantFreqGHz: 0.50,
     capsidQ: 4,
     resonantThresholdVcm: 2000,
@@ -328,7 +328,7 @@ export const CELL_PRESETS: CellPreset[] = [
     thresholdVoltage: 2.0,
     dielectricConstant: 4.0,
     conductivity: 0.3,
-    membraneConductivity: 1e-6,  // gram-positive — thick peptidoglycan wall (20 nm) moderately raises effective σ_mem (Arnold & Zimmermann 1988)
+    membraneConductivity: 1e-6,  // gram-positive, thick peptidoglycan wall (20 nm) moderately raises effective σ_mem (Arnold & Zimmermann 1988)
     resonantFreqGHz: 1.50,
     capsidQ: 3,
     resonantThresholdVcm: 3000,
@@ -348,8 +348,8 @@ export const CELL_PRESETS: CellPreset[] = [
     type: 'target',
     label: 'Influenza A',
     shortLabel: 'Flu A',
-    notes: 'Enveloped RNA virus · diameter 80–120 nm · R ≈ 60 nm',
-    techNotes: 'Single-shell spherical approximation for virion.\nε_r elevated as effective parameter (σ_i-limited regime).\nCharacteristic fc ≈ 0.75 MHz in saline.\n⚠ ENVELOPED VIRUS — lipid bilayer envelope (fluid, not rigid protein shell).\nTsen et al. / Dykeman & Sankey acoustic resonance model was validated on NON-ENVELOPED\nicosahedral protein-capsid viruses (M13, TMV, CCMV). A fluid lipid bilayer has no\ndefined mechanical resonance Q; resonance parameters here are theoretical extrapolations\nnot supported by published experimental data for enveloped viruses.\nAcoustic resonance (speculative): f_res ≈ 12 GHz (v_eff ≈ 1440 m/s, R = 60 nm) · Q ≈ 30 · E_thr ≈ 800 V/cm\nRef: Tsen et al. (2007, 2010) [non-enveloped capsids]; Dykeman & Sankey (2008) [non-enveloped capsids]',
+    notes: 'Enveloped RNA virus · diameter 80-120 nm · R ≈ 60 nm',
+    techNotes: 'Single-shell spherical approximation for virion.\nε_r elevated as effective parameter (σ_i-limited regime).\nCharacteristic fc ≈ 0.75 MHz in saline.\n⚠ ENVELOPED VIRUS, lipid bilayer envelope (fluid, not rigid protein shell).\nTsen et al. / Dykeman & Sankey acoustic resonance model was validated on NON-ENVELOPED\nicosahedral protein-capsid viruses (M13, TMV, CCMV). A fluid lipid bilayer has no\ndefined mechanical resonance Q; resonance parameters here are theoretical extrapolations\nnot supported by published experimental data for enveloped viruses.\nAcoustic resonance (speculative): f_res ≈ 12 GHz (v_eff ≈ 1440 m/s, R = 60 nm) · Q ≈ 30 · E_thr ≈ 800 V/cm\nRef: Tsen et al. (2007, 2010) [non-enveloped capsids]; Dykeman & Sankey (2008) [non-enveloped capsids]',
     radius: 0.060,
     membraneThickness: 10,
     naturalFrequency: 200,
@@ -373,8 +373,8 @@ export const CELL_PRESETS: CellPreset[] = [
     type: 'target',
     label: 'SARS-CoV-2',
     shortLabel: 'CoV-2',
-    notes: 'Enveloped RNA virus · diameter 60–140 nm · R ≈ 60 nm',
-    techNotes: 'Single-shell spherical approximation for virion.\nε_r elevated as effective parameter (spike-protein envelope contribution).\nCharacteristic fc ≈ 0.60 MHz in saline.\n⚠ ENVELOPED VIRUS — lipid bilayer envelope (fluid, not rigid protein shell).\nTsen et al. / Dykeman & Sankey acoustic resonance model was validated on NON-ENVELOPED\nicosahedral protein-capsid viruses (M13, TMV, CCMV). A fluid lipid bilayer has no\ndefined mechanical resonance Q; resonance parameters here are theoretical extrapolations\nnot supported by published experimental data for enveloped viruses.\nAcoustic resonance (speculative): f_res ≈ 10 GHz (v_eff ≈ 1200 m/s, R = 60 nm, larger spike envelope) · Q ≈ 25 · E_thr ≈ 1000 V/cm\nRef: Tsen et al. (2007, 2010) [non-enveloped capsids]; Dykeman & Sankey (2008) [non-enveloped capsids]',
+    notes: 'Enveloped RNA virus · diameter 60-140 nm · R ≈ 60 nm',
+    techNotes: 'Single-shell spherical approximation for virion.\nε_r elevated as effective parameter (spike-protein envelope contribution).\nCharacteristic fc ≈ 0.60 MHz in saline.\n⚠ ENVELOPED VIRUS, lipid bilayer envelope (fluid, not rigid protein shell).\nTsen et al. / Dykeman & Sankey acoustic resonance model was validated on NON-ENVELOPED\nicosahedral protein-capsid viruses (M13, TMV, CCMV). A fluid lipid bilayer has no\ndefined mechanical resonance Q; resonance parameters here are theoretical extrapolations\nnot supported by published experimental data for enveloped viruses.\nAcoustic resonance (speculative): f_res ≈ 10 GHz (v_eff ≈ 1200 m/s, R = 60 nm, larger spike envelope) · Q ≈ 25 · E_thr ≈ 1000 V/cm\nRef: Tsen et al. (2007, 2010) [non-enveloped capsids]; Dykeman & Sankey (2008) [non-enveloped capsids]',
     radius: 0.060,
     membraneThickness: 10,
     naturalFrequency: 200,

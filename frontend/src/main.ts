@@ -21,7 +21,7 @@ app.directive('tip', vTip)
 // Persist experiment log to localStorage on every state change.
 // Uses manual $subscribe rather than the plugin because experimentStore
 // bootstraps its own state via loadState() (handles missing-field defaults
-// for previously saved sessions) — plugin hydration would conflict with that.
+// for previously saved sessions) - plugin hydration would conflict with that.
 const expStore = useExperimentStore()
 expStore.$subscribe((_mutation, state) => {
   localStorage.setItem('br-experiment', JSON.stringify({

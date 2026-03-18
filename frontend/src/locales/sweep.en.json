@@ -10,7 +10,7 @@
     "freqUnit": "kHz",
     "windowLabel": "Therapeutic window:",
     "windowSub": "DR<sub>T</sub> &gt; 85% · DR<sub>H</sub> &lt; 50%",
-    "windowNone": "No therapeutic window found — increase max or adjust pulse/frequency settings.",
+    "windowNone": "No therapeutic window found, increase max or adjust pulse/frequency settings.",
     "tableThreshold": "Threshold",
     "tableDrT": "DR<sub>T</sub>",
     "tableDrH": "DR<sub>H</sub>",
@@ -35,7 +35,7 @@
     "tipExport": "<strong>↓ Export CSV</strong>\nDownload all sweep data points.\nColumns: x · DR_H · DR_T · TI · T_H · T_T · in_window",
     "tipChart": "<strong>Field Sweep Chart</strong>\n<span class=\"tip-val\">Red</span> = Target DR · <span class=\"tip-val\">Cyan</span> = Healthy DR\n<span class=\"tip-val\">Amber dashed</span> = TI (right axis)\n<span class=\"tip-val\">Green fill</span> = Therapeutic window\nWhite cursor = current active value",
 
-    "tipThDrT": "<strong>DR_T — Target Disruption Ratio</strong>\nTarget DR at this operating point.\nDR = Vm × f_pulse / V_threshold\n1.0 = lysis threshold crossed",
-    "tipThDrH": "<strong>DR_H — Healthy Disruption Ratio</strong>\nHealthy DR at the same operating point.\nKeep below 0.50 for a safe therapeutic window."
+    "tipThDrT": "<strong>DR_T, Target Disruption Ratio</strong>\nTarget DR at this operating point.\nDR = Vm × f_pulse / V_threshold\n1.0 = lysis threshold crossed",
+    "tipThDrH": "<strong>DR_H, Healthy Disruption Ratio</strong>\nHealthy DR at the same operating point.\nKeep below 0.50 for a safe therapeutic window."
   }
 }

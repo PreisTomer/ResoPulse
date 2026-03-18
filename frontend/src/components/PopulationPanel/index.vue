@@ -456,7 +456,7 @@ export default defineComponent({
     exportCSV() {
       const { store } = this
       const meta = [
-        `# ResoPulse — Population Monte Carlo Export`,
+        `# ResoPulse: Population Monte Carlo Export`,
         `# Exported: ${new Date().toISOString()}`,
         `# Healthy: ${store.healthy.label} · R=${store.healthy.radius} ${UNIT.UM} · N=${this.nCells} · σ_i ±${this.healthyUncPct}% · R ±${this.rVariancePct}%`,
         `# Target:  ${store.target.label} · R=${store.target.radius} ${UNIT.UM} · N=${this.nCells} · σ_i ±${this.targetUncPct}% · R ±${this.rVariancePct}%`,

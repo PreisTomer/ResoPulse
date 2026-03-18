@@ -8,11 +8,11 @@ export const OSC_W      = 280
 export const OSC_H      = 37     // ~15 % shorter than original 44
 
 // ── Blob cell ─────────────────────────────────────────────────────────────────
-export const BASE_R       = 55    // blob base radius (SVG px) — ~15 % smaller than 65
+export const BASE_R       = 55    // blob base radius (SVG px), ~15 % smaller than 65
 export const BLOB_POINTS  = 16    // number of perimeter control points
 
 // ── Lysis / shatter timing (ms) ───────────────────────────────────────────────
-// LYSIS_DELAY_MS removed — replaced by store.lysisDelayMs (N_pulses × pulse_period, physically grounded)
+// LYSIS_DELAY_MS removed - replaced by store.lysisDelayMs (N_pulses × pulse_period, physically grounded)
 export const LYSIS_DURATION_MS = 2800   // shatter animation length
 export const FRAGMENT_INTERVAL_MS = 80  // ms between spawned fragments
 
@@ -21,7 +21,7 @@ export const FRAGMENT_INTERVAL_MS = 80  // ms between spawned fragments
 export { THRESHOLDS, DEFAULT_CAPSID_Q } from '@/constants/physics'
 export type { ThresholdKey } from '@/constants/physics'
 
-// ── Per-type colors (defined in theme/colors.ts — re-exported here for back-compat) ──
+// ── Per-type colors (defined in theme/colors.ts - re-exported here for back-compat) ──
 export { CELL_COLORS } from '@/theme/colors'
 
 import { UNIT } from '@/constants/units'

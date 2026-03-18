@@ -25,7 +25,7 @@
       </div>
     </div>
 
-    <!-- Row 8: Pulses to Lysis N (pulsed only) — target cell lysis timing only -->
+    <!-- Row 8: Pulses to Lysis N (pulsed only) - target cell lysis timing only -->
     <div v-if="store.waveform === WAVEFORM.PULSED" class="field-panel__row field-panel__row--compact-readout">
       <span
         class="field-panel__row-label"

@@ -3,7 +3,7 @@
 
 /**
  * Tooltip builders for ExperimentView.vue.
- * Pure functions — accept explicit params, no Vue instance dependency.
+ * Pure functions - accept explicit params, no Vue instance dependency.
  */
 
 import { UNIT } from '@/constants/units'
@@ -20,14 +20,14 @@ export function tipSnapBar(opts: {
   const center     = Math.round((lo + hi) / 2)
   return `<strong>⭐ Therapeutic Window</strong>
 The sweep analysis has found a parameter range where:
-  DR_target ≥ 85% — target membrane is at lysis threshold
-  DR_healthy &lt; 50% — healthy cells remain below Rev-EP onset
+  DR_target ≥ 85%, target membrane is at lysis threshold
+  DR_healthy &lt; 50%, healthy cells remain below Rev-EP onset
 
-Window: <span class="tip-val">${lo.toFixed(0)}–${hi.toFixed(0)} ${unit}</span>
+Window: <span class="tip-val">${lo.toFixed(0)} - ${hi.toFixed(0)} ${unit}</span>
 Center: <span class="tip-val">${center} ${unit}</span>
 
 Clicking this button sets the active ${paramLabel} to the
-window center, which maximises the selectivity margin —
+window center, which maximises the selectivity margin , 
 the distance from both disruption boundaries simultaneously.
 This is the operating point with the highest safety buffer
 between target lysis and healthy cell injury.`

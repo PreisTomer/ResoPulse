@@ -11,7 +11,7 @@ export interface CellParamSnapshot {
   dielectricConstant: number
   conductivity: number       // S/m
   thresholdVoltage: number   // V
-  fc: number                 // kHz — corner frequency at log-time medium
+  fc: number                 // kHz, corner frequency at log-time medium
   // Resonance fields (virus / bacteria in resonance mode)
   resonantFreqGHz?: number
   capsidQ?: number

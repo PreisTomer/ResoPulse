@@ -916,7 +916,7 @@ export default defineComponent({
     font-style: italic;
   }
 
-  /* ── Warn box (legacy — kept for forward compat) ─────── */
+  /* ── Warn box (legacy - kept for forward compat) ─────── */
   &__warn-box {
     background: rgba(251, 191, 36, 0.06);
     border: 1px solid rgba(251, 191, 36, 0.25);
@@ -1085,7 +1085,7 @@ export default defineComponent({
   }
 }
 
-// Extra-small phones (≤400px) — tighten further
+// Extra-small phones (≤400px) - tighten further
 @media (max-width: 400px) {
   .protocol__inner {
     padding: 0.75rem 0.75rem 3rem;

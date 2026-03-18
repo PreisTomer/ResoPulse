@@ -14,7 +14,7 @@ export const SCHWAN_SPHERE_FACTOR = 1.5
 /** Normal human body temperature [°C] (ISO 80601-2-56; used as thermal baseline T₀) */
 export const BODY_TEMP_C = 37
 
-/** Newton surface cooling rate λ [1/s] — tissue cooling between pulses (empirical, ~0.02 s⁻¹) */
+/** Newton surface cooling rate λ [1/s] - tissue cooling between pulses (empirical, ~0.02 s⁻¹) */
 export const NEWTON_COOLING_LAMBDA = 0.02
 
 /**
@@ -28,10 +28,10 @@ export const PENNES_BLOOD_COEFF = 63.9
 /** SAR waveform factor for CW sinusoidal field: E²_rms = E²_peak / 2 (Schwan 1957) */
 export const WF_CW = 0.5
 
-/** 2π — used in ω = 2πf and fc = 1/(2πτ) throughout the Schwan model */
+/** 2π - used in ω = 2πf and fc = 1/(2πτ) throughout the Schwan model */
 export const TWO_PI = 2 * Math.PI
 
-/** Epsilon for near-zero disruption-ratio (dimensionless 0–1 scale) zero-checks */
+/** Epsilon for near-zero disruption-ratio (dimensionless 0-1 scale) zero-checks */
 export const NEAR_ZERO_DR = 1e-9
 
 /** Epsilon for near-zero transmembrane voltage [mV scale] zero-checks */
@@ -40,7 +40,7 @@ export const NEAR_ZERO_VM = 1e-12
 /** SAR waveform factor for pulsed bipolar square wave: E²_rms = E²_peak (H-FIRE convention) */
 export const WF_PULSED = 1.0
 
-/** Mild thermal activation (MA) peak temperature [°C] — bell peak in the 37–42°C biomodulation window */
+/** Mild thermal activation (MA) peak temperature [°C] - bell peak in the 37-42°C biomodulation window */
 export const THERMAL_MA_PEAK_C = 41
 
 /** Temperature update timer interval [ms] in the Newton-cooling session loop */
@@ -57,7 +57,7 @@ export const MIN_PULSE_ENVELOPE = 1e-4
  * Above this, the medium transitions from purely resistive to capacitive/reactive behaviour:
  * f_complex = σ / (2π ε₀ εᵣ) ≈ 338 MHz for saline (σ=1.5 S/m, εᵣ=80).
  * Standard cuvette wiring is replaced by near-field RF applicators or coaxial probes.
- * Ref: Foster & Schwan (1989) — Dielectric properties of tissues.
+ * Ref: Foster & Schwan (1989) - Dielectric properties of tissues.
  */
 export const FREQ_ELECTROLYTIC_LIMIT_KHZ = 300_000  // 300 MHz
 
@@ -66,29 +66,29 @@ export const FREQ_ELECTROLYTIC_LIMIT_KHZ = 300_000  // 300 MHz
  * Above this, the in-medium wavelength (λ_water ≈ 3 cm at 1 GHz) approaches typical
  * electrode gaps and lumped-element circuit models fail entirely.
  * Waveguide, resonant cavity, or horn-antenna coupling is required.
- * Ref: Gabriel et al. (1996) — RF tissue dielectric data.
+ * Ref: Gabriel et al. (1996) - RF tissue dielectric data.
  */
 export const FREQ_NEARFIELD_RF_LIMIT_KHZ = 1_000_000  // 1 GHz
 
-// ── Dielectrophoresis (DEP) — Clausius-Mossotti model ────────────────────────
+// ── Dielectrophoresis (DEP) - Clausius-Mossotti model ────────────────────────
 
 /**
  * Relative permittivity of aqueous medium (water / physiological saline) at 37°C.
  * Used in the DEP Clausius-Mossotti factor as the medium dielectric constant.
- * Ref: Gabriel et al. (1996) — frequency-dependent permittivity of biological tissues.
+ * Ref: Gabriel et al. (1996) - frequency-dependent permittivity of biological tissues.
  */
 export const EPSILON_R_MEDIUM_WATER = 80
 
 /**
- * Effective cytoplasm relative permittivity — lower than bulk water due to macromolecular
- * crowding and reduced free-water fraction; literature range 50–80, nominal 60.
- * Ref: Pethig (2010) — Dielectrophoresis: Status of the theory, technology, and applications.
+ * Effective cytoplasm relative permittivity - lower than bulk water due to macromolecular
+ * crowding and reduced free-water fraction; literature range 50-80, nominal 60.
+ * Ref: Pethig (2010) - Dielectrophoresis: Status of the theory, technology, and applications.
  */
 export const EPSILON_R_CYTOPLASM = 60
 
 /**
- * Intact cell membrane conductivity [S/m] — the lipid bilayer is nearly insulating at RF.
- * Literature range 10⁻⁸–10⁻⁶ S/m; nominal 10⁻⁷ S/m used here (Gascoyne & Vykoukal 2002).
+ * Intact cell membrane conductivity [S/m] - the lipid bilayer is nearly insulating at RF.
+ * Literature range 10⁻⁸ - 10⁻⁶ S/m; nominal 10⁻⁷ S/m used here (Gascoyne & Vykoukal 2002).
  */
 export const SIGMA_MEMBRANE_SI = 1e-7
 
@@ -97,7 +97,7 @@ export const SIGMA_MEMBRANE_SI = 1e-7
 /**
  * All disruption ratio, temperature, selectivity, uncertainty, and classification
  * thresholds used across the Schwan model, TI analysis, charts, tooltips, and reports.
- * Single source of truth — imported directly by any domain that needs these values.
+ * Single source of truth - imported directly by any domain that needs these values.
  */
 export const THRESHOLDS = {
   // ── Disruption ratio (DR = Vm × f_pulse / V_threshold) ──────────────────────
@@ -119,7 +119,7 @@ export const THRESHOLDS = {
   SEL_MARGINAL:        1.0,   // Sel above which badge is amber (below = non-selective)
   // ── Lysis probability sigmoid  P = 1 / (1 + exp(−(DR − center) / slope)) ───
   LYSIS_PROB_CENTER:   1.0,   // DR at which P(lysis) = 50%
-  LYSIS_PROB_SLOPE:    0.05,  // sigmoid steepness — smaller = sharper transition
+  LYSIS_PROB_SLOPE:    0.05,  // sigmoid steepness, smaller = sharper transition
   // ── Cell category radius boundaries (µm) ───────────────────────────────────
   RADIUS_VIRUS_MAX:    0.1,   // R < 0.1 µm → VIRUS classification
   RADIUS_BACTERIA_MAX: 2.0,   // 0.1 ≤ R < 2.0 µm → BACTERIA; R ≥ 2.0 µm → MAMMALIAN
@@ -128,9 +128,9 @@ export const THRESHOLDS = {
   // ── Nuclear membrane model ───────────────────────────────────────────────────
   NUCLEAR_VM_DEFAULT:  0.5,   // Default nuclear membrane threshold voltage [V] (Kotnik 2006)
   // ── σ_i uncertainty fractions per cell category (used in TI error bars) ─────
-  UNCERTAINTY_VIRUS:    0.45, // ±45% — lipid envelope σ_i highly variable
-  UNCERTAINTY_BACTERIA: 0.35, // ±35% — cytoplasm σ_i literature range
-  UNCERTAINTY_MAMMALIAN: 0.20,// ±20% — well-characterised cytoplasm σ_i
+  UNCERTAINTY_VIRUS:    0.45, // ±45%, lipid envelope σ_i highly variable
+  UNCERTAINTY_BACTERIA: 0.35, // ±35%, cytoplasm σ_i literature range
+  UNCERTAINTY_MAMMALIAN: 0.20,// ±20%, well-characterised cytoplasm σ_i
   // ── BMS weighting coefficients (sum = 1.0) ───────────────────────────────────
   BMS_WEIGHT_SI:       0.55,  // sub-threshold stimulation index weight
   BMS_WEIGHT_MTE:      0.25,  // mechanical transduction efficiency weight
@@ -140,6 +140,6 @@ export const THRESHOLDS = {
 export type ThresholdKey = keyof typeof THRESHOLDS
 
 /** Default acoustic Q factor when a preset does not specify capsidQ.
- *  Set to 2 (maximally damped) — most conservative fallback for viscoelastic biological targets.
- *  Rigid protein capsids may reach Q~30; peptidoglycan walls typically Q~3–4. */
+ *  Set to 2 (maximally damped) - most conservative fallback for viscoelastic biological targets.
+ *  Rigid protein capsids may reach Q~30; peptidoglycan walls typically Q~3-4. */
 export const DEFAULT_CAPSID_Q = 2

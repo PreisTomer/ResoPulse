@@ -12,21 +12,21 @@
  * heating.
  *
  * References:
- *  - Maxwell-Garnett (1904) — effective medium theory for spherical inclusions
- *  - Kotnik & Miklavcic (2000) — Schwan time constant
- *  - Weaver & Chizmadzhev (1996) — electroporation membrane model
- *  - Neumann et al. (1989) — electroporation in dense cell suspensions
- *  - Hasted (1973) — permittivity of aqueous electrolytes
+ *  - Maxwell-Garnett (1904) - effective medium theory for spherical inclusions
+ *  - Kotnik & Miklavcic (2000) - Schwan time constant
+ *  - Weaver & Chizmadzhev (1996) - electroporation membrane model
+ *  - Neumann et al. (1989) - electroporation in dense cell suspensions
+ *  - Hasted (1973) - permittivity of aqueous electrolytes
  */
 
 import { MEDIUM_RELATIVE_PERMITTIVITY, MEDIUM_DENSITY_KG_M3, MEDIUM_SPECIFIC_HEAT_J_KG_K } from '@/constants/cuvette'
 
-const EPSILON_0 = 8.854187817e-12  // F/m — vacuum permittivity
+const EPSILON_0 = 8.854187817e-12  // F/m, vacuum permittivity
 
 // ── Lysis fraction ─────────────────────────────────────────────────────────────
 
 /**
- * Fraction of target cells lysed based on their disruption ratio [0–1].
+ * Fraction of target cells lysed based on their disruption ratio [0-1].
  *
  * Smooth linear ramp:
  *   DR ≤ 0.85 → 0 (no lysis)
@@ -73,7 +73,7 @@ export function computeCellVolumeFraction(cellDensityPerMl: number, radiusUm: nu
  * @param sigmaMedium          Base medium conductivity σ_m [S/m]
  * @param sigmaIntracellular   Target cell cytoplasm conductivity σ_i [S/m]
  * @param cellVolumeFraction   φ = N × (4/3)π R³ [dimensionless]
- * @param lysedFraction        Fraction of cells fully lysed [0–1]
+ * @param lysedFraction        Fraction of cells fully lysed [0-1]
  * @returns Effective medium conductivity σ_eff [S/m]
  */
 export function computeLysedSigmaE(
@@ -99,7 +99,7 @@ export function computeLysedSigmaE(
  *
  * Z_DC = d / (σ × A)
  *
- * Valid for f ≪ σ_e / (2π ε_r ε₀) — the Maxwell relaxation frequency.
+ * Valid for f ≪ σ_e / (2π ε_r ε₀) - the Maxwell relaxation frequency.
  * For saline (σ=1.5 S/m, εr=74) f_relax ≈ 365 MHz.
  *
  * @param gapMm           Electrode gap [mm]
@@ -170,7 +170,7 @@ export function computeRelaxationFreqHz(
 // ── VSWR / RF reflection ───────────────────────────────────────────────────────
 
 /**
- * Voltage reflection coefficient Γ between generator and cuvette load [dimensionless, 0–1].
+ * Voltage reflection coefficient Γ between generator and cuvette load [dimensionless, 0-1].
  *
  * Γ = |Z_load − Z₀| / |Z_load + Z₀|
  *
@@ -281,8 +281,8 @@ export function computeMediumTempRiseRatePerSec(
  *
  * The actual field at the cell membrane = E_applied × f_field.
  * At φ = 0.01: f ≈ 1.015 (negligible).
- * At φ = 0.10: f ≈ 1.17  (17% — significant).
- * At φ = 0.30: f ≈ 1.64  (64% — major; Schwan Vm is underestimated without this).
+ * At φ = 0.10: f ≈ 1.17  (17% - significant).
+ * At φ = 0.30: f ≈ 1.64  (64% - major; Schwan Vm is underestimated without this).
  *
  * @param cellVolumeFraction  φ = N × (4/3)π R³ [dimensionless]
  * @returns Field enhancement factor (≥ 1)
@@ -297,7 +297,7 @@ export function computeFieldDistortionFactor(cellVolumeFraction: number): number
 /**
  * Cuvette RC time constant [ns].
  *
- * The medium between the electrodes acts as a parallel R–C network.
+ * The medium between the electrodes acts as a parallel R-C network.
  * The geometry cancels and the time constant depends only on material properties:
  *
  *   τ_RC = ε_r × ε₀ / σ_e   (same as the Maxwell relaxation time)

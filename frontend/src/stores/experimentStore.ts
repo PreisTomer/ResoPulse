@@ -16,11 +16,11 @@ interface ExperimentState {
   sessionName: string
   sampleDescription: string   // e.g. "HepG2 passage 12, 80% confluency, PBS buffer"
   sessionNotes: string        // free-form lab notes baked into exports
-  cumulativeDoseJkg: number   // J/kg — cumulative specific energy absorbed this session
-  sessionStartMs: number      // Unix ms — when the current session started
+  cumulativeDoseJkg: number   // J/kg, cumulative specific energy absorbed this session
+  sessionStartMs: number      // Unix ms, when the current session started
 }
 
-// Extended snapshot pulled from cellStore — avoids circular import
+// Extended snapshot pulled from cellStore - avoids circular import
 interface CellSnapshot {
   currentBroadcastFrequency: number
   fieldIntensity: number
@@ -164,7 +164,7 @@ export const useExperimentStore = defineStore('experiment', {
       })
     },
 
-    /** Receive a log entry broadcast from another client — append without re-broadcasting. */
+    /** Receive a log entry broadcast from another client - append without re-broadcasting. */
     receiveEntry(entry: LogEntry) {
       if (this.entries.some(e => e.id === entry.id)) return
       this.entries.push(entry)
@@ -185,9 +185,9 @@ export const useExperimentStore = defineStore('experiment', {
     /**
      * Accumulate dosimetry: SAR_target × dt_s × dutyCycle.
      * Called on a periodic timer in ExperimentView.
-     * @param sarWkg    — instantaneous SAR [W/kg] for the target cell
-     * @param dutyCycle — duty cycle (0–1)
-     * @param dtMs      — elapsed time since last sample [ms]
+     * @param sarWkg - instantaneous SAR [W/kg] for the target cell
+     * @param dutyCycle - duty cycle (0-1)
+     * @param dtMs - elapsed time since last sample [ms]
      */
     addDoseSample(sarWkg: number, dutyCycle: number, dtMs: number) {
       this.cumulativeDoseJkg += sarWkg * dutyCycle * (dtMs * 1e-3)

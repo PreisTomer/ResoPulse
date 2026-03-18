@@ -122,7 +122,7 @@ export default defineComponent({
     &--open { transform: rotate(90deg); }
   }
 
-  /* ── compact variant — SelectivityPanel style ───────────────── */
+  /* ── compact variant - SelectivityPanel style ───────────────── */
   &--compact &__toggle {
     padding: 0.5rem 0;
     &:hover { background: transparent; }
@@ -136,7 +136,7 @@ export default defineComponent({
     padding-top: 0.5rem;
   }
 
-  /* ── border-toggle variant — card header style ──────────────── */
+  /* ── border-toggle variant - card header style ──────────────── */
   &--border-toggle &__toggle {
     border-bottom: 1px solid var(--color-border);
     padding: 0.6rem 1rem;

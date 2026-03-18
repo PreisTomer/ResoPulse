@@ -16,7 +16,7 @@
  *
  * Field rays replace the old polarization pole dots: they represent the applied
  * electric field from the experiment electrodes. Color encodes frequency (cyan →
- * violet, log-scaled 10 kHz–30 GHz). Opacity encodes field intensity (log V/cm).
+ * violet, log-scaled 10 kHz-30 GHz). Opacity encodes field intensity (log V/cm).
  */
 import * as d3 from 'd3'
 import type { BlobPoint, BlobFrame, OscFrame } from '@/types/cell'
@@ -43,7 +43,7 @@ function capsuleR(theta: number, a: number, b: number): number {
   return (a * b) / Math.sqrt(a * a * s * s + b * b * c * c)
 }
 
-// ── Shared D3 generators (stateless — declared once at module scope) ──────────
+// ── Shared D3 generators (stateless - declared once at module scope) ──────────
 const nucLineGen  = d3.lineRadial<BlobPoint>().angle((d) => d.angle).radius((d) => d.r).curve(d3.curveBasisClosed)
 const flagLineGen = d3.line<[number, number]>().x((d) => d[0]).y((d) => d[1]).curve(d3.curveCatmullRom.alpha(0.5))
 
@@ -59,7 +59,7 @@ interface MitoEl {
 }
 
 interface MammalianAnatomy {
-  /** Stored from setup — needed during per-tick updates */
+  /** Stored from setup - needed during per-tick updates */
   type:        string
   accentColor: string
   mitoEls:     MitoEl[]
@@ -79,7 +79,7 @@ interface SpikeEl {
 
 interface BacteriaAnatomy {
   isRod:               boolean
-  /** Semi-major rod axis (equals BASE_R for E. coli) — used to place flagellum */
+  /** Semi-major rod axis (equals BASE_R for E. coli) - used to place flagellum */
   ROD_A:               number
   nucG:                D3Sel<SVGGElement>
   nucleoidBlob:        D3Sel<SVGPathElement>
@@ -113,14 +113,14 @@ function setupMammalianAnatomy(
   const NUC_PTS = type === CELL_TYPE.TARGET ? 14 : 10  // cancer: more control pts → jagged NE
   const NUCL_R  = type === CELL_TYPE.TARGET ? 8.0 : 6.5 // cancer: large prominent nucleolus
 
-  // Cell cortex ring (actin cortex, just inside plasma membrane — gives depth)
+  // Cell cortex ring (actin cortex, just inside plasma membrane - gives depth)
   const cortexRing = cellG.append('circle').attr('r', BASE_R * 0.90)
     .attr('fill', 'none').attr('stroke', accentColor)
     .attr('stroke-width', 0.7).attr('stroke-opacity', 0.09)
 
   // Mitochondria: cancer has 5 small fragmented mito (Warburg effect); healthy has 2 elongated
   const mitoData = type === CELL_TYPE.TARGET
-    ? [  // 5 fragmented mitochondria — smaller, more numerous, scattered
+    ? [  // 5 fragmented mitochondria, smaller, more numerous, scattered
         { x: -20, y: -14, rx: 7,  ry: 2.8, angle: 20  },
         { x:  19, y:  16, rx: 6,  ry: 2.5, angle: -25 },
         { x:  -5, y:  22, rx: 5,  ry: 2.2, angle: 55  },
@@ -152,9 +152,9 @@ function setupMammalianAnatomy(
     return { g, outer, inner, c1, c2, m }
   })
 
-  // Nucleus (organic blob with nuclear envelope — elongates along field axis)
+  // Nucleus (organic blob with nuclear envelope - elongates along field axis)
   const nucG = cellG.append('g')
-  // Outer nuclear envelope (double-membrane dashed ring — drawn first, behind nucBlob)
+  // Outer nuclear envelope (double-membrane dashed ring - drawn first, behind nucBlob)
   // Brightens and changes color when nuclear disruption ratio is elevated.
   const nucOuterEnv = nucG.append('path')
     .attr('fill', 'none').attr('stroke', accentColor)
@@ -167,7 +167,7 @@ function setupMammalianAnatomy(
   // Inner nucleolus suggestion
   nucG.append('circle').attr('r', NUCL_R * 0.45)
     .attr('fill', accentColor).attr('fill-opacity', 0.45)
-  // Second nucleolus — cancer cells characteristically have multiple prominent nucleoli
+  // Second nucleolus - cancer cells characteristically have multiple prominent nucleoli
   let nucleolus2: D3Sel<SVGCircleElement> | null = null
   if (type === CELL_TYPE.TARGET) {
     nucleolus2 = nucG.append('circle').attr('r', NUCL_R * 0.78)
@@ -205,18 +205,18 @@ function setupBacteriaAnatomy(
 
   if (isRod) {
     // ── E. coli: gram-negative rod ────────────────────────────────────────
-    // Outer membrane (outer lipid bilayer) — solid ellipse
+    // Outer membrane (outer lipid bilayer) - solid ellipse
     bacteriaWallElOuter = cellG.append('ellipse')
       .attr('rx', ROD_B + 8).attr('ry', ROD_A + 8)
       .attr('fill', 'none').attr('stroke', accentColor)
       .attr('stroke-width', 1.0).attr('stroke-opacity', 0.22)
-    // Periplasm / thin peptidoglycan ring — dashed ellipse, sits between membranes
+    // Periplasm / thin peptidoglycan ring - dashed ellipse, sits between membranes
     bacteriaWallElInner = cellG.append('ellipse')
       .attr('rx', ROD_B + 4).attr('ry', ROD_A + 4)
       .attr('fill', 'none').attr('stroke', accentColor)
       .attr('stroke-width', 1.0).attr('stroke-opacity', 0.16)
       .attr('stroke-dasharray', '3,3')
-    // Flagellum (peritrichous — animated wiggly path from south pole)
+    // Flagellum (peritrichous - animated wiggly path from south pole)
     flagEl = cellG.append('path')
       .attr('fill', 'none').attr('stroke', accentColor)
       .attr('stroke-width', 0.9).attr('stroke-opacity', 0.30)
@@ -224,7 +224,7 @@ function setupBacteriaAnatomy(
     nucG = cellG.append('g').attr('transform', 'translate(0, 0)')
   } else {
     // ── MRSA: gram-positive coccus ────────────────────────────────────────
-    // Thick peptidoglycan layer (outer ring — wider, denser)
+    // Thick peptidoglycan layer (outer ring - wider, denser)
     bacteriaWallC1 = cellG.append('circle').attr('r', BASE_R + 9)
       .attr('fill', 'none').attr('stroke', accentColor)
       .attr('stroke-width', 3.5).attr('stroke-opacity', 0.16)
@@ -233,7 +233,7 @@ function setupBacteriaAnatomy(
     bacteriaWallC2 = cellG.append('circle').attr('r', BASE_R + 4)
       .attr('fill', 'none').attr('stroke', accentColor)
       .attr('stroke-width', 1.2).attr('stroke-opacity', 0.13)
-    // Division septum (binary fission plane — faint line across equator)
+    // Division septum (binary fission plane - faint line across equator)
     septum = cellG.append('line')
       .attr('x1', -BASE_R * 0.68).attr('y1', 0)
       .attr('x2',  BASE_R * 0.68).attr('y2', 0)
@@ -242,7 +242,7 @@ function setupBacteriaAnatomy(
     nucG = cellG.append('g').attr('transform', 'translate(-4, 3)')
   }
 
-  // Nucleoid (diffuse chromosomal region — no nuclear envelope)
+  // Nucleoid (diffuse chromosomal region - no nuclear envelope)
   const nucleoidBlob = nucG.append('path')
     .attr('fill', accentColor).attr('fill-opacity', 0.11)
     .attr('stroke', 'none')
@@ -297,7 +297,7 @@ function setupVirusAnatomy(
       .attr('stroke-width', 0.7).attr('stroke-opacity', 0.18),
   ]
 
-  // RNA core (genetic material — small filled centre)
+  // RNA core (genetic material - small filled centre)
   const virusCore = cellG.append('circle').attr('r', isCov2 ? 7 : 5)
     .attr('fill', accentColor).attr('fill-opacity', 0.15)
     .attr('stroke', accentColor).attr('stroke-width', 0.8).attr('stroke-opacity', 0.40)
@@ -371,7 +371,7 @@ function updateMammalianAnatomy(anat: MammalianAnatomy, p: MammalianUpdateParams
     const noise = (Math.random() - 0.5) * nucNoise
     return { angle: ph.baseAngle, r: NUC_R + wave + noise }
   })
-  // Outer nuclear envelope — drawn 3.5px outside the blob boundary
+  // Outer nuclear envelope - drawn 3.5px outside the blob boundary
   const nucEnvPts: BlobPoint[] = nucPts.map((pt) => ({ angle: pt.angle, r: pt.r + 3.5 }))
   anat.nucG.attr('transform',
     `translate(${NUC_DX},${NUC_DY}) scale(${nucScaleX.toFixed(3)},${nucScaleY.toFixed(3)})`)
@@ -511,10 +511,10 @@ function updateVirusAnatomy(anat: VirusAnatomy, p: VirusUpdateParams): void {
  * Returns the D3 timer (implements `{ stop() }`).
  *
  * @param el           Container element (cellCanvas ref)
- * @param type         'healthy' | 'target' — used for unique SVG filter/gradient IDs
+ * @param type         'healthy' | 'target' - used for unique SVG filter/gradient IDs
  * @param accentColor  Fixed accent color for this cell type
- * @param cellCategory Biological category — determines internal anatomy drawn
- * @param presetId     Specific preset ID (e.g. 'ecoli', 'mrsa', 'sarscov2') — refines shape
+ * @param cellCategory Biological category - determines internal anatomy drawn
+ * @param presetId     Specific preset ID (e.g. 'ecoli', 'mrsa', 'sarscov2') - refines shape
  * @param getFrame     Called each tick; reads current reactive state from Vue
  */
 export function setupBlobAnimation(
@@ -533,7 +533,7 @@ export function setupBlobAnimation(
   // rodB = semi-axis along θ=π/2 (horizontal, narrow direction) ≈ 45% of BASE_R
   const isRod = presetId === 'ecoli'
   const ROD_A = BASE_R
-  const ROD_B = Math.round(BASE_R * 0.45)   // ≈25px — visibly rod-shaped
+  const ROD_B = Math.round(BASE_R * 0.45)   // ≈25px, visibly rod-shaped
 
   // Per-angle base radius: ellipse for E. coli, circle for everything else
   const shapeBaseR = (theta: number): number =>
@@ -565,7 +565,7 @@ export function setupBlobAnimation(
   rfm.append('feMergeNode').attr('in', 'blur')
   rfm.append('feMergeNode').attr('in', 'SourceGraphic')
 
-  // ── Radial gradient (cytoplasm fill — thermal-tinted in timer loop) ───────
+  // ── Radial gradient (cytoplasm fill - thermal-tinted in timer loop) ───────
   const gradId   = `cellGrad-${type}`
   const cellGrad = defs.append('radialGradient').attr('id', gradId)
     .attr('gradientUnits', 'userSpaceOnUse')
@@ -610,7 +610,7 @@ export function setupBlobAnimation(
     cellG.append('circle').attr('r', BASE_R + 40).attr('fill', 'none').attr('stroke', accentColor).attr('stroke-width', 0.5),
   ]
 
-  // ── Cell body group (rotatable — bacteria align to field axis under DEP) ──
+  // ── Cell body group (rotatable - bacteria align to field axis under DEP) ──
   // Field rays and aura rings stay in cellG (they represent the external field,
   // not the cell body, so they must not rotate with the cell).
   const bodyG = cellG.append('g')
@@ -631,7 +631,7 @@ export function setupBlobAnimation(
     .attr('stroke-width', 2.5).attr('filter', `url(#${glowId})`)
 
   // ── Electroporation / capsid pores ────────────────────────────────────────
-  // Drawn in BG colour — appear as holes in the membrane at high disruption.
+  // Drawn in BG colour - appear as holes in the membrane at high disruption.
   // Side pores (pore3/4) disabled for rod shape since those positions are off-membrane.
   const SIN60 = Math.sin(Math.PI / 3), COS60 = Math.cos(Math.PI / 3)
   const northPore = bodyG.append('circle').attr('cy', -northPoleR).attr('r', 0).attr('fill', BG)
@@ -650,7 +650,7 @@ export function setupBlobAnimation(
     .attr('pointer-events', 'none')
 
   // Specular highlight: small soft ellipse on upper-left quadrant.
-  // Simulates a diffuse light source from upper-left — turns the flat blob into a legible sphere.
+  // Simulates a diffuse light source from upper-left - turns the flat blob into a legible sphere.
   const specularDot = bodyG.append('ellipse')
     .attr('rx', BASE_R * 0.19).attr('ry', BASE_R * 0.12)
     .attr('cx', -BASE_R * 0.22).attr('cy', -BASE_R * 0.30)
@@ -658,7 +658,7 @@ export function setupBlobAnimation(
     .attr('pointer-events', 'none')
 
   // ── DEP visual effects state ───────────────────────────────────────────────
-  // Three visual cues for DEP — no arrows, no symbols:
+  // Three visual cues for DEP - no arrows, no symbols:
   //
   // 1. Blob deformation (blobPts map below):
   //    pDEP (K > 0): cell elongates E-W (toward field-maxima electrodes).
@@ -710,7 +710,7 @@ export function setupBlobAnimation(
       (Math.log10(Math.max(10, freqKHz)) - 1) / (Math.log10(30e6) - 1)
     ))
     const rayColor = d3.interpolateRgbBasis(['#00d4ff', '#4a9eff', '#7c6cff', '#a78bfa'])(freqNorm)
-    // fieldVcm log-scale 10–10,000 V/cm → opacity 0.05–0.72
+    // fieldVcm log-scale 10-10,000 V/cm → opacity 0.05-0.72
     const fieldNorm = Math.max(0, Math.min(1, (Math.log10(Math.max(1, fieldVcm)) - 1) / 3))
     const rayOpacity = state === CELL_STATE.LYSED ? 0 : Math.max(0.04, 0.06 + fieldNorm * 0.66)
 
@@ -753,7 +753,7 @@ export function setupBlobAnimation(
       .attr('stroke', color)
       .attr('stroke-opacity', depActive ? 0.13 + depAbsK * 0.09 : 0.07)
 
-    // Specular highlight — static 3D depth cue; brightens slightly with field intensity
+    // Specular highlight - static 3D depth cue; brightens slightly with field intensity
     specularDot.attr('fill-opacity', 0.07 + fieldNorm * 0.06)
 
     // ── Lysed ──────────────────────────────────────────────────────────────

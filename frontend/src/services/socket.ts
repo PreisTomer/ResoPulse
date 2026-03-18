@@ -2,7 +2,7 @@
 // Unauthorized copying or distribution is prohibited.
 
 /**
- * Socket service — connects to the ResoPulse backend.
+ * Socket service - connects to the ResoPulse backend.
  * Falls back to local mode (state applied directly to Pinia stores) if the
  * backend is unreachable. All reactive getters remain fully functional either way.
  */
@@ -32,7 +32,7 @@ const SOCKET_EVENTS = {
 
 let socket: Socket | null = null
 
-/** Reactive connection flag — import directly in Vue components/templates */
+/** Reactive connection flag - import directly in Vue components/templates */
 export const socketConnected = ref(false)
 
 export function connectSocket(): void {
@@ -51,7 +51,7 @@ export function connectSocket(): void {
     socketConnected.value = false
   })
 
-  // Another client changed experiment state — apply to local stores
+  // Another client changed experiment state - apply to local stores
   socket.on(SOCKET_EVENTS.STATE_UPDATE, (packet: StatePacket) => {
     const store    = useCellStore()
     const expStore = useExperimentStore()
@@ -61,7 +61,7 @@ export function connectSocket(): void {
     }
   })
 
-  // Another client logged an entry — append locally without re-broadcasting
+  // Another client logged an entry - append locally without re-broadcasting
   socket.on(SOCKET_EVENTS.NEW_LOG_ENTRY, (entry: LogEntry) => {
     useExperimentStore().receiveEntry(entry)
   })
@@ -74,7 +74,7 @@ export function connectSocket(): void {
   socket.on(SOCKET_EVENTS.CONNECT_ERROR, () => {
     if (socketConnected.value) {
       socketConnected.value = false
-      console.info('[Socket] Backend unavailable — running in local mode')
+      console.info('[Socket] Backend unavailable: running in local mode')
     }
   })
 }
@@ -82,7 +82,7 @@ export function connectSocket(): void {
 /**
  * Broadcast the full experiment state to all other connected clients.
  * Call this after any store mutation that should be visible to remote users.
- * In local mode this is a no-op — the store is already updated locally.
+ * In local mode this is a no-op - the store is already updated locally.
  */
 export function broadcastStateSync(): void {
   if (!socket?.connected) return

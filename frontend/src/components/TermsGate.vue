@@ -6,7 +6,7 @@
       <div class="terms-gate__panel">
 
         <div class="terms-gate__eyebrow">Research Access</div>
-        <h2 id="tg-title" class="terms-gate__title">Experiment Lab — Terms of Use</h2>
+        <h2 id="tg-title" class="terms-gate__title">Experiment Lab, Terms of Use</h2>
 
         <div class="terms-gate__body">
           <p class="terms-gate__para">
@@ -17,7 +17,7 @@
           <ul class="terms-gate__list">
             <li>All algorithms, physics models, and source code are the exclusive property of <strong>Tomer Preis</strong> and protected by copyright.</li>
             <li>You may not reverse-engineer, clone, or use this tool to build competing software.</li>
-            <li>Biophysical parameters are approximations — real-world results may vary.</li>
+            <li>Biophysical parameters are approximations, real-world results may vary.</li>
             <li>Tomer Preis assumes no liability for experimental outcomes or laboratory decisions.</li>
           </ul>
         </div>

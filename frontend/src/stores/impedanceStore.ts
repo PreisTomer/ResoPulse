@@ -2,7 +2,7 @@
 // Unauthorized copying or distribution is prohibited.
 
 /**
- * Impedance Store — Real-Time Impedance Feedback
+ * Impedance Store - Real-Time Impedance Feedback
  *
  * Tracks cuvette geometry, simulates medium conductivity drift as target cells
  * lyse (ion release model), computes the corrected field intensity needed to
@@ -10,7 +10,7 @@
  * impedance measurements from a lab instrument via the socket 'impedanceReading' event.
  *
  * Physics references:
- *  - Ion release: Neumann et al. (1989) — dense suspension electroporation
+ *  - Ion release: Neumann et al. (1989) - dense suspension electroporation
  *  - Voltage divider: standard RF circuit theory (source impedance matching)
  */
 
@@ -51,17 +51,17 @@ import {
  * Packet emitted by a lab impedance instrument (LCR meter, VNA, etc.)
  * and forwarded through the socket server to all connected UI clients.
  *
- * PoC schema — real instruments can be integrated by mapping their output
+ * PoC schema - real instruments can be integrated by mapping their output
  * to this JSON structure.  All fields except conductivity are required.
  */
 export interface HardwareImpedancePacket {
   /** Real part of measured impedance [Ω] */
   zReal:        number
-  /** Imaginary part of measured impedance [Ω] — negative = capacitive */
+  /** Imaginary part of measured impedance [Ω] - negative = capacitive */
   zImag:        number
   /** Frequency at which the measurement was taken [Hz] */
   freqHz:       number
-  /** Conductivity [S/m] — optionally provided directly by instrument */
+  /** Conductivity [S/m] - optionally provided directly by instrument */
   conductivity?: number
   /** Unix timestamp [ms] when the reading was captured */
   timestamp:    number
@@ -91,7 +91,7 @@ interface ImpedanceStoreState {
   cuvettePresetId:       string
   cuvetteGapMm:          number   // electrode gap [mm]
   cuvetteCrossSectionCm2: number  // electrode cross-section [cm²]
-  sourceImpedanceOhm:    number   // R_source — generator + cable [Ω]
+  sourceImpedanceOhm:    number   // R_source, generator + cable [Ω]
   cellDensityPerMl:      number   // target cell seeding density [cells/mL]
   // Hardware input
   hardwareModeEnabled:   boolean
@@ -127,12 +127,12 @@ export const useImpedanceStore = defineStore('impedance', {
   },
 
   getters: {
-    /** Fraction of target cells lysed (0–1) derived from Schwan disruption ratio. */
+    /** Fraction of target cells lysed (0-1) derived from Schwan disruption ratio. */
     lysedFraction(): number {
       return lysedFractionFromDR(useCellStore().targetDisruptionRatio)
     },
 
-    /** Cell volume fraction φ — dimensionless, from seeding density × cell volume. */
+    /** Cell volume fraction φ - dimensionless, from seeding density × cell volume. */
     cellVolumeFraction(): number {
       const s = this as unknown as ImpedanceStoreState
       return computeCellVolumeFraction(s.cellDensityPerMl, useCellStore().target.radius)
@@ -170,7 +170,7 @@ export const useImpedanceStore = defineStore('impedance', {
     },
 
     /**
-     * Current cuvette impedance — accounts for lysis-induced σ_e rise
+     * Current cuvette impedance - accounts for lysis-induced σ_e rise
      * or is overridden by the live hardware Z_real reading [Ω].
      */
     currentImpedanceOhm(): number {
@@ -241,9 +241,9 @@ export const useImpedanceStore = defineStore('impedance', {
 
     /**
      * Qualitative load state derived from absolute impedance drift.
-     * Nominal: |drift| < 5% — no correction needed.
-     * Warning: 5% ≤ |drift| < 15% — minor correction recommended.
-     * Critical: |drift| ≥ 15% — significant drift; correction essential.
+     * Nominal: |drift| < 5% - no correction needed.
+     * Warning: 5% ≤ |drift| < 15% - minor correction recommended.
+     * Critical: |drift| ≥ 15% - significant drift; correction essential.
      */
     loadState(): LoadState {
       const drift = Math.abs(this.impedanceDriftPct)
@@ -285,7 +285,7 @@ export const useImpedanceStore = defineStore('impedance', {
     },
 
     /**
-     * Voltage reflection coefficient Γ [0–1] between generator source impedance
+     * Voltage reflection coefficient Γ [0-1] between generator source impedance
      * and the cuvette load at the current broadcast frequency.
      * Relevant for RF mode (50 Ω source); negligible for IRE pulsers (< 1 Ω).
      */
@@ -305,7 +305,7 @@ export const useImpedanceStore = defineStore('impedance', {
     },
 
     /**
-     * Fraction of generator power actually delivered to the cuvette [0–1].
+     * Fraction of generator power actually delivered to the cuvette [0-1].
      * η = 1 − |Γ|².
      * Values below 0.9 (90 %) indicate significant mismatch losses.
      */
@@ -363,9 +363,9 @@ export const useImpedanceStore = defineStore('impedance', {
 
     /**
      * Qualitative field distortion level based on volume fraction.
-     * 'none'        — φ < 1%  : correction < 1.5%, negligible
-     * 'minor'       — φ 1–5%  : correction 1.5–8%, worth noting
-     * 'significant' — φ ≥ 5%  : correction ≥ 8%, affects Schwan accuracy
+     * 'none' - φ < 1%  : correction < 1.5%, negligible
+     * 'minor' - φ 1-5%  : correction 1.5-8%, worth noting
+     * 'significant' - φ ≥ 5%  : correction ≥ 8%, affects Schwan accuracy
      */
     fieldDistortionLevel(): 'none' | 'minor' | 'significant' {
       const phi = this.cellVolumeFraction
@@ -375,7 +375,7 @@ export const useImpedanceStore = defineStore('impedance', {
     },
 
     /**
-     * Cuvette RC time constant [ns] — geometry-independent, material-only.
+     * Cuvette RC time constant [ns] - geometry-independent, material-only.
      * τ_RC = ε_r × ε₀ / σ_e = Maxwell relaxation time.
      * Pulses shorter than τ_RC deliver attenuated field due to incomplete
      * charge redistribution in the medium.
@@ -387,8 +387,8 @@ export const useImpedanceStore = defineStore('impedance', {
     /**
      * Ratio of pulse width to cuvette RC time constant.
      * > 5 → full field delivered (τ_RC ≪ t_p)
-     * 1–5 → partial attenuation — field is reduced
-     * < 1 → severe attenuation — cuvette barely charges
+     * 1-5 → partial attenuation - field is reduced
+     * < 1 → severe attenuation - cuvette barely charges
      */
     pulseToRCRatio(): number {
       const tau = this.cuvetteRCTimeConstantNs
@@ -398,10 +398,10 @@ export const useImpedanceStore = defineStore('impedance', {
 
     /**
      * Qualitative pulse bandwidth status relative to the cuvette RC limit.
-     * 'ok'       — t_p / τ > 5   : full field delivery
-     * 'marginal' — t_p / τ 1–5   : partial attenuation
-     * 'critical' — t_p / τ < 1   : severe — cuvette barely charges
-     * 'cw'       — CW waveform   : not applicable
+     * 'ok' - t_p / τ > 5   : full field delivery
+     * 'marginal' - t_p / τ 1-5   : partial attenuation
+     * 'critical' - t_p / τ < 1   : severe - cuvette barely charges
+     * 'cw' - CW waveform   : not applicable
      */
     pulseBandwidthStatus(): 'ok' | 'marginal' | 'critical' | 'cw' {
       const cellStore = useCellStore()

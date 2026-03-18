@@ -267,7 +267,7 @@ export default defineComponent({
     color: var(--color-text-muted);
 
     &::before {
-      content: '—';
+      content: ', ';
       margin-right: 0.3em;
     }
 

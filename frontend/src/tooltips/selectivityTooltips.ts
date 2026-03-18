@@ -2,7 +2,7 @@
 // Unauthorized copying or distribution is prohibited.
 
 /**
- * Selectivity-panel tooltip builders — extracted from SelectivityPanel/index.vue computed properties.
+ * Selectivity-panel tooltip builders - extracted from SelectivityPanel/index.vue computed properties.
  * Follows the same pattern as sliderTooltips.ts: pure functions, no store access.
  */
 import { ICON } from '@/constants/icons'
@@ -39,8 +39,8 @@ export function tipSelectivity(params: {
   const quality = sel >= ss
     ? '<span class="tip-ok">Strong therapeutic window</span>'
     : sel >= sm
-      ? '<span class="tip-warn">Marginal window — adjust field or preset</span>'
-      : '<span class="tip-warn">Non-selective — healthy cells equally at risk</span>'
+      ? '<span class="tip-warn">Marginal window, adjust field or preset</span>'
+      : '<span class="tip-warn">Non-selective, healthy cells equally at risk</span>'
   const selStr = sel >= 99 ? ICON.INFINITY : sel.toFixed(2)
   if (isResonanceTarget) {
     return `<strong>TI (Therapeutic Index) = Target / Healthy disruption ratio</strong>
@@ -50,12 +50,12 @@ ${quality}
 ≥ ${ss} → strong window (green)  ·  < ${sm} → non-selective (red)
 
 <strong>Resonance mode selectivity:</strong>
-Mammalian cells lack rigid-shell resonance — Schwan Vm → 0 at GHz (ωτ ≫ 1).
+Mammalian cells lack rigid-shell resonance, Schwan Vm → 0 at GHz (ωτ ≫ 1).
 At f_res(target), healthy disruption ≈ 0 → TI → ∞
 
-<span class="tip-ok">Frequency-selective — healthy tissue unperturbed at GHz fields</span>
+<span class="tip-ok">Frequency-selective, healthy tissue unperturbed at GHz fields</span>
 Ref: Tsen et al. (2007); Dykeman &amp; Sankey (2008)
-<span class="tip-warn">${ICON.WARNING} Enveloped viruses (Influenza, SARS-CoV-2): lipid envelope has no rigid-shell resonance (Q≈1). f_res/Q/E_thr values are theoretical extrapolations — not experimentally validated.</span>`
+<span class="tip-warn">${ICON.WARNING} Enveloped viruses (Influenza, SARS-CoV-2): lipid envelope has no rigid-shell resonance (Q≈1). f_res/Q/E_thr values are theoretical extrapolations, not experimentally validated.</span>`
   }
   const vmStr = vmSel >= 99 ? ICON.INFINITY : vmSel.toFixed(2)
   return `<strong>TI (Therapeutic Index) = (Vm_T/Vth_T) / (Vm_H/Vth_H)</strong>
@@ -63,7 +63,7 @@ Current: <span class="tip-val">×${selStr}</span>
 
 ${quality}
 ≥ ${ss} → strong window (green)
-${sm}–${ss} → marginal (amber)
+${sm} - ${ss} → marginal (amber)
 < ${sm} → non-selective (red)
 
 TI > 1 → target proportionally closer to lysis threshold than healthy cell.
@@ -71,7 +71,7 @@ For adeno/hepatocyte at DC: TI = (15µm×1.1V)/(10µm×0.70V) = <span class="tip
 
 <strong>Raw Vm selectivity</strong> = Vm_T / Vm_H = R_T/R_H at quasi-DC
 Current: <span class="tip-val">×${vmStr}</span>  (cancer/normal DC limit: 1.5×)
-TI incorporates lysis thresholds — more clinically relevant than Vm ratio alone.`
+TI incorporates lysis thresholds, more clinically relevant than Vm ratio alone.`
 }
 
 export function tipOptimal(params: {
@@ -86,7 +86,7 @@ export function tipOptimal(params: {
   const { isResonanceTarget, resonantFreqGHz, resonantThresholdVcm, capsidQ, optKhz, optSel, beyondRange } = params
   if (isResonanceTarget) {
     const label = formatFreqKHz((resonantFreqGHz ?? 0) * 1e6)
-    return `<strong>Resonant Frequency — f_res = ${label}</strong>
+    return `<strong>Resonant Frequency: f_res = ${label}</strong>
 Acoustic/mechanical resonance: disruption ratio peaks at 1.0 at f_res.
 Lorentzian lineshape L(f) = 1 / √(1 + (Q·(f/f₀ − f₀/f))²)
 
@@ -95,7 +95,7 @@ Healthy cells (R ≈ 10 µm) have no GHz resonance → selectivity → ${ICON.IN
 
 <span class="tip-ok">Click to snap cursor to f_res</span>
 Ref: Tsen et al. (2007); Dykeman &amp; Sankey (2008)
-<span class="tip-warn">${ICON.WARNING} Enveloped viruses (Influenza, SARS-CoV-2): lipid envelope — no rigid-shell resonance. Extrapolated values only.</span>`
+<span class="tip-warn">${ICON.WARNING} Enveloped viruses (Influenza, SARS-CoV-2): lipid envelope, no rigid-shell resonance. Extrapolated values only.</span>`
   }
   const label  = formatFreqKHz(optKhz)
   const cls    = optSel >= 1.5 ? 'tip-ok' : optSel >= 1.0 ? 'tip-val' : 'tip-warn'
@@ -111,7 +111,7 @@ ${snapNote}
 
 Physics:
   f ≪ fc_T and fc_H : sel = R_T/R_H  (quasi-DC; maximum for cancer/normal pairs)
-  When τ_T > τ_H (cancer larger): sel decreases above fc(T) — target rolls off first
-  f ≫ fc_H : sel → (R_T·τ_H)/(R_H·τ_T)  — for adeno/hepatocyte ≈ 0.68× (sub-unity)
-Note: virion fc ~0.6–0.75 MHz per Schwan model (σ_i-limited; model approximate for virions)`
+  When τ_T > τ_H (cancer larger): sel decreases above fc(T), target rolls off first
+  f ≫ fc_H : sel → (R_T·τ_H)/(R_H·τ_T) , for adeno/hepatocyte ≈ 0.68× (sub-unity)
+Note: virion fc ~0.6-0.75 MHz per Schwan model (σ_i-limited; model approximate for virions)`
 }

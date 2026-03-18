@@ -68,7 +68,7 @@
             :key="e.id"
             :class="{ 'exp-log__row--lysis': e.event === LOG_EVENT.LYSIS }"
           >
-            <td v-if="showSessionCol" class="exp-log__td-session" v-tip="tipCellSession(e)">{{ e.sessionName ?? '—' }}</td>
+            <td v-if="showSessionCol" class="exp-log__td-session" v-tip="tipCellSession(e)">{{ e.sessionName ?? ', ' }}</td>
             <td class="exp-log__td-id">{{ e.id }}</td>
             <td class="exp-log__td-mono">{{ e.timestamp }}</td>
             <td class="exp-log__td-mono" v-tip="tipCellFreq(e)">{{ formatFreqKHz(e.freqKHz) }}</td>
@@ -217,7 +217,7 @@ export default defineComponent({
         : this.$t('log.tipCellManual')
     },
     depKDisplay(k: number | undefined): string {
-      if (k == null) return '—'
+      if (k == null) return ', '
       return k.toFixed(3)
     },
     depKClass(k: number | undefined): string {
@@ -225,13 +225,13 @@ export default defineComponent({
       return k > 0 ? 'exp-log__td-pdep' : 'exp-log__td-ndep'
     },
     tipCellSession(e: { sessionName?: string; id: number }): string {
-      return this.$t('log.tipCellSession', { name: e.sessionName ?? '—', id: e.id })
+      return this.$t('log.tipCellSession', { name: e.sessionName ?? ', ', id: e.id })
     },
     tipCellDepH(e: { depHealthyK?: number }): string {
-      return this.$t('log.tipCellDepH', { k: e.depHealthyK != null ? e.depHealthyK.toFixed(4) : '—' })
+      return this.$t('log.tipCellDepH', { k: e.depHealthyK != null ? e.depHealthyK.toFixed(4) : ', ' })
     },
     tipCellDepT(e: { depTargetK?: number }): string {
-      return this.$t('log.tipCellDepT', { k: e.depTargetK != null ? e.depTargetK.toFixed(4) : '—' })
+      return this.$t('log.tipCellDepT', { k: e.depTargetK != null ? e.depTargetK.toFixed(4) : ', ' })
     },
   },
 })

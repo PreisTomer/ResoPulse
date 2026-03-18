@@ -65,7 +65,7 @@ import ChartLegend from './ChartLegend.vue'
 // 200 logarithmically spaced Hz from 10 kHz to 500 MHz
 const F_MIN_HZ = 10_000
 const F_MAX_HZ = 500_000_000
-const F_CURSOR_MAX_KHZ = 10000  // 10 MHz — covers bacteria fc range
+const F_CURSOR_MAX_KHZ = 10000  // 10 MHz, covers bacteria fc range
 const N_POINTS = 200
 
 const MARGIN = { top: 22, right: 130, bottom: 52, left: 54 }  // right 130 for selectivity + DEP axes
@@ -177,8 +177,8 @@ export default defineComponent({
     },
 
     // ── DEP Clausius-Mossotti Re[K(f)] curve ─────────────────────────────
-    // Valid in Schwan mode (kHz–500 MHz); not drawn in resonance mode (GHz, model invalid).
-    // Bacteria (rod-shaped) use sphere approximation — qualitatively correct for crossover.
+    // Valid in Schwan mode (kHz-500 MHz); not drawn in resonance mode (GHz, model invalid).
+    // Bacteria (rod-shaped) use sphere approximation - qualitatively correct for crossover.
     // Waveform scale: CW = 0.5, pulsed = dutyCycle (affects magnitude, not direction/sign).
     computeDepCurve(cell: typeof this.store.healthy, sigma_e: number, eps_r: number): { hz: number; k: number }[] {
       return F_POINTS_HZ.map((hz) => ({
@@ -233,7 +233,7 @@ export default defineComponent({
       g.append('g').attr('class', 'x-axis').attr('transform', `translate(0,${this._chartH})`)
       g.append('g').attr('class', 'y-axis')
       g.append('g').attr('class', 'y-right-axis').attr('transform', `translate(${this._chartW},0)`)
-      // DEP Re[K] axis — further right, only shown in Schwan mode
+      // DEP Re[K] axis - further right, only shown in Schwan mode
       g.append('g').attr('class', 'y-dep-axis').attr('transform', `translate(${this._chartW + 90},0)`)
 
       // Axis labels
@@ -271,7 +271,7 @@ export default defineComponent({
         .attr('font-size', '0.52rem')
         .attr('font-family', 'var(--font-mono)')
         .attr('letter-spacing', '0.1em')
-        .text('Re[K] — DEP')
+        .text('Re[K], DEP')
 
       // Curve groups (library first so they're below)
       g.append('g').attr('class', 'curves-library')
@@ -280,13 +280,13 @@ export default defineComponent({
       // Threshold lines + rev-EP lines
       g.append('g').attr('class', 'thresholds')
 
-      // Nuclear envelope Vm curves (double-shell model — below active curves)
+      // Nuclear envelope Vm curves (double-shell model - below active curves)
       g.append('g').attr('class', 'curves-nuclear')
 
       // Selectivity ratio curve (above thresholds)
       g.append('g').attr('class', 'sel-curve')
 
-      // DEP Clausius-Mossotti Re[K] curves — drawn above thresholds, Schwan mode only
+      // DEP Clausius-Mossotti Re[K] curves - drawn above thresholds, Schwan mode only
       g.append('g').attr('class', 'dep-curves')
 
       // fc markers
@@ -317,7 +317,7 @@ export default defineComponent({
         .attr('font-size', '0.58rem')
         .attr('font-family', 'var(--font-mono)')
 
-      // Drag-discoverability hint — appears above the cursor
+      // Drag-discoverability hint - appears above the cursor
       g.append('text')
         .attr('class', 'cursor-drag-hint')
         .attr('y', -4)
@@ -425,7 +425,7 @@ export default defineComponent({
       g.select<SVGGElement>('.y-right-axis').selectAll('*').remove()
       g.select<SVGGElement>('.curves-library').selectAll('*').remove()
       g.select<SVGGElement>('.curves-nuclear').selectAll('*').remove()
-      // DEP single-shell model invalid at GHz resonance frequencies — clear overlay
+      // DEP single-shell model invalid at GHz resonance frequencies - clear overlay
       g.select<SVGGElement>('.dep-curves').selectAll('*').remove()
       g.select<SVGGElement>('.y-dep-axis').selectAll('*').remove()
       g.select('.axis-label-dep').attr('opacity', 0)
@@ -472,7 +472,7 @@ export default defineComponent({
           .attr('stroke-dasharray', '3,4').attr('d', drLineGen)
       }
 
-      // Main Lorentzian (nominal Q) — solid red
+      // Main Lorentzian (nominal Q) - solid red
       activeGroup.append('path')
         .datum(lorCurve)
         .attr('fill', 'none')
@@ -645,8 +645,8 @@ export default defineComponent({
         .attr('stroke-dasharray', '6,3')
         .attr('d', selLineGen)
 
-      // ── DEP Re[K(f)] overlay — Clausius-Mossotti single-shell model ─────
-      // Valid for kHz–500 MHz (Schwan mode only). Not shown in resonance mode.
+      // ── DEP Re[K(f)] overlay - Clausius-Mossotti single-shell model ─────
+      // Valid for kHz-500 MHz (Schwan mode only). Not shown in resonance mode.
       // Bacteria use sphere approximation. Waveform: CW = 0.5×, pulsed = dc×.
       // Medium permittivity is per-medium (Gabriel et al. 1996).
       const depGroup = g.select<SVGGElement>('.dep-curves')
@@ -668,8 +668,8 @@ export default defineComponent({
           .attr('stroke-dasharray', '2,4')
       }
 
-      // Re[K] curves — raw CM factor (material property, waveform-independent).
-      // Time-averaged force = Re[K] × waveform scale (CW: ×0.5, pulsed: ×dc) — shown in SelectivityPanel.
+      // Re[K] curves - raw CM factor (material property, waveform-independent).
+      // Time-averaged force = Re[K] × waveform scale (CW: ×0.5, pulsed: ×dc) - shown in SelectivityPanel.
       const depLineGen = d3.line<{ hz: number; k: number }>()
         .x((d) => this._xScale!(d.hz))
         .y((d) => this._yDepScale!(d.k))
@@ -717,7 +717,7 @@ export default defineComponent({
         .y((d) => this._yScale!(d.vm))
         .curve(d3.curveBasis)
 
-      // Library preset curves (faint background — no cosTheta, use default 1.0)
+      // Library preset curves (faint background - no cosTheta, use default 1.0)
       const libGroup = g.select<SVGGElement>('.curves-library')
       libGroup.selectAll<SVGPathElement, typeof CELL_PRESETS[0]>('path.lib-curve')
         .data(CELL_PRESETS, (d) => d.presetId)
@@ -738,9 +738,9 @@ export default defineComponent({
       // producing a shaded region representing literature parameter uncertainty.
       // Uncertainty scales with cell category: mammalian 20%, bacteria 35%, virus 45%.
       const sigmaUncPct = (radius: number): number => {
-        if (radius < 0.1) return 45  // virus — lipid bilayer σ_i highly variable
-        if (radius < 2.0) return 35  // bacteria — complex wall composition
-        return 20                     // mammalian — well-characterised reference ranges
+        if (radius < 0.1) return 45  // virus, lipid bilayer σ_i highly variable
+        if (radius < 2.0) return 35  // bacteria, complex wall composition
+        return 20                     // mammalian, well-characterised reference ranges
       }
 
       const computeUncBand = (
@@ -1001,7 +1001,7 @@ export default defineComponent({
       const cat = this.store.targetCellCategory
       const t = this.store.target as { resonantFreqGHz?: number; capsidQ?: number; resonantThresholdVcm?: number }
 
-      // In resonance mode show DR (disruption ratio), not Vm — axes are incompatible
+      // In resonance mode show DR (disruption ratio), not Vm - axes are incompatible
       if (
         this.store.chartMode === CHART_MODE.RESONANCE &&
         (cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) &&

@@ -53,7 +53,7 @@
       <div v-if="windowRange" class="sweep-panel__window-row" v-tip="tipWindow">
         <span class="sweep-panel__window-label">{{ $t('sweep.windowLabel') }}</span>
         <span class="sweep-panel__window-val">
-          {{ windowRange.lo.toFixed(0) }}–{{ windowRange.hi.toFixed(0) }}
+          {{ windowRange.lo.toFixed(0) }} - {{ windowRange.hi.toFixed(0) }}
           {{ sweepParam === 'field' ? $t('sweep.fieldUnit') : $t('sweep.freqUnit') }}
         </span>
         <span class="sweep-panel__window-sub" v-html="$t('sweep.windowSub')"></span>
@@ -133,7 +133,7 @@ import {
 } from '@/constants/physics'
 import { SWEEP_TI_CAP } from '@/constants/experimentDefaults'
 
-const N_POINTS = 400   // sweep resolution — 400 pts over default 1000 V/cm = 2.5 V/cm step, detects narrow windows
+const N_POINTS = 400   // sweep resolution, 400 pts over default 1000 V/cm = 2.5 V/cm step, detects narrow windows
 
 interface SweepPoint {
   x: number    // sweep param value (V/cm or kHz)
@@ -252,9 +252,9 @@ export default defineComponent({
 
     sweepSubtitle(): string {
       if (this.sweepParam === 'field') {
-        return `E: 0–${this.sweepMax} ${UNIT.V_PER_CM} @ ${formatFreqKHz(this.store.currentBroadcastFrequency, 1)}`
+        return `E: 0 - ${this.sweepMax} ${UNIT.V_PER_CM} @ ${formatFreqKHz(this.store.currentBroadcastFrequency, 1)}`
       }
-      return `f: 0–${formatFreqKHz(this.sweepMax, 1)} @ ${this.store.fieldIntensity} ${UNIT.V_PER_CM}`
+      return `f: 0 - ${formatFreqKHz(this.sweepMax, 1)} @ ${this.store.fieldIntensity} ${UNIT.V_PER_CM}`
     },
 
     windowRange(): { lo: number; hi: number } | null {
@@ -505,13 +505,13 @@ export default defineComponent({
     exportCSV() {
       const { store } = this
       const meta = [
-        `# ResoPulse — ${this.sweepParam === 'field' ? 'Field' : 'Frequency'} Sweep Export`,
+        `# ResoPulse: ${this.sweepParam === 'field' ? 'Field' : 'Frequency'} Sweep Export`,
         `# Exported: ${new Date().toISOString()}`,
         `# Healthy: ${store.healthy.label} · R=${store.healthy.radius} ${UNIT.UM} · fc=${store.healthyFc.toFixed(0)} ${UNIT.KHZ}`,
         `# Target:  ${store.target.label} · R=${store.target.radius} ${UNIT.UM} · fc=${store.targetFc.toFixed(0)} ${UNIT.KHZ}`,
         `# Medium: ${store.medium} · σ_e=${store.effectiveSigmaE.toFixed(3)} ${UNIT.S_PER_M}`,
         `# Fixed: ${this.sweepParam === 'field' ? `freq=${store.currentBroadcastFrequency} ${UNIT.KHZ}` : `field=${store.fieldIntensity} ${UNIT.V_PER_CM}`} · ${store.waveform} · dc=${store.dutyCycle.toExponential(2)}`,
-        `# Model: Schwan equation (Kotnik & Miklavcic 2000) — ResoPulse`,
+        `# Model: Schwan equation (Kotnik & Miklavcic 2000), ResoPulse`,
       ].join('\n')
       const dataHeader = this.sweepParam === 'field'
         ? 'E_field_Vcm,DR_healthy,DR_target,TI,T_healthy_C,T_target_C,therapeutic_window'

@@ -43,7 +43,7 @@
         </span>
       </div>
 
-      <!-- Nuclear disruption sub-bar — visible when double-shell model active -->
+      <!-- Nuclear disruption sub-bar - visible when double-shell model active -->
       <div
         v-if="!compact && store.doubleShellEnabled && hasNuclearParams"
         class="cell-card__nuclear-bar-row"
@@ -65,7 +65,7 @@
 
       <div ref="oscCanvas" class="cell-card__osc-canvas"></div>
 
-      <!-- Compact info strip — only in sticky live-view mode (replaces verbose data strips) -->
+      <!-- Compact info strip - only in sticky live-view mode (replaces verbose data strips) -->
       <div v-if="compact" class="cell-card__compact-strip">
         <div class="cell-card__compact-top">
           <span :class="['cell-card__compact-badge', `cell-card__compact-badge--${type}`]">
@@ -85,7 +85,7 @@
         </div>
       </div>
 
-      <!-- DEP strip — shows when dielectrophoretic force is active (non-resonance mode) -->
+      <!-- DEP strip - shows when dielectrophoretic force is active (non-resonance mode) -->
       <div
         v-if="!compact && showDepStrip"
         class="cell-card__dep-strip"
@@ -97,7 +97,7 @@
         <span class="cell-card__warn-pct">K {{ depStripValue }}</span>
       </div>
 
-      <!-- Nourishing strip — healthy cell in active biomodulation window (DR 8–45%) -->
+      <!-- Nourishing strip - healthy cell in active biomodulation window (DR 8-45%) -->
       <div
         v-if="!compact && type === CELL_TYPE.HEALTHY && cellState === CELL_STATE.NOURISHING"
         class="cell-card__nourishing-strip"
@@ -108,7 +108,7 @@
         <span class="cell-card__warn-pct">{{ (disruptionRatio * 100).toFixed(0) }}%</span>
       </div>
 
-      <!-- Biomodulation panel — healthy cell only, sub-threshold regime (DR < 45%) -->
+      <!-- Biomodulation panel - healthy cell only, sub-threshold regime (DR < 45%) -->
       <BiostimPanel
         v-if="!compact && showBiostim"
         :stim-index="biostimStimIndex"
@@ -122,7 +122,7 @@
         :class="{ 'cell-card__biostim--nourishing': cellState === CELL_STATE.NOURISHING }"
       />
 
-      <!-- Reversible EP strip — target cell 50–85% disruption (pores open/re-seal) -->
+      <!-- Reversible EP strip - target cell 50-85% disruption (pores open/re-seal) -->
       <div
         v-if="type === CELL_TYPE.TARGET && cellState === CELL_STATE.REV_EP"
         class="cell-card__rev-ep-strip"
@@ -133,7 +133,7 @@
         <span class="cell-card__warn-pct">{{ (disruptionRatio * 100).toFixed(0) }}%</span>
       </div>
 
-      <!-- Lysis protocol strip — target cell vibrating state (>85%, lysis armed) -->
+      <!-- Lysis protocol strip - target cell vibrating state (>85%, lysis armed) -->
       <div
         v-if="type === CELL_TYPE.TARGET && cellState === CELL_STATE.VIBRATING"
         class="cell-card__lysis-strip"
@@ -144,7 +144,7 @@
         <span class="cell-card__warn-pct">{{ (disruptionRatio * 100).toFixed(0) }}%</span>
       </div>
 
-      <!-- Structural integrity countdown bar — drains 100→0 % as lysis timer runs -->
+      <!-- Structural integrity countdown bar - drains 100→0 % as lysis timer runs -->
       <div
         v-if="lysisIntegrityPct !== null"
         class="cell-card__integrity-bar-row"
@@ -159,7 +159,7 @@
         <span class="cell-card__integrity-pct">{{ lysisIntegrityPct.toFixed(0) }}%</span>
       </div>
 
-      <!-- Electroporation risk warning strip — healthy cell only -->
+      <!-- Electroporation risk warning strip - healthy cell only -->
       <div
         v-if="!compact && type === CELL_TYPE.HEALTHY && (cellState === CELL_STATE.APPROACHING || cellState === CELL_STATE.CRITICAL) && !tempWarning"
         class="cell-card__healthy-warn"
@@ -175,7 +175,7 @@
         <span class="cell-card__warn-pct">{{ (disruptionRatio * 100).toFixed(0) }}%</span>
       </div>
 
-      <!-- Thermal warning strip — both cell types -->
+      <!-- Thermal warning strip - both cell types -->
       <div
         v-if="tempWarning && cellState !== CELL_STATE.LYSED && cellState !== CELL_STATE.LYSING"
         class="cell-card__thermal-warn"
@@ -191,7 +191,7 @@
         <span class="cell-card__warn-pct">{{ temperature.toFixed(0) }}{{ UNIT.DEG_C }}</span>
       </div>
 
-      <!-- Lysis overlay — absolute, covers cell-card__visual without shifting card height -->
+      <!-- Lysis overlay - absolute, covers cell-card__visual without shifting card height -->
       <div v-if="cellState === CELL_STATE.LYSED" class="cell-card__destroyed">
         <span class="cell-card__destroyed-text">{{ thermalLysis ? $t('cells.states.thermalLysis') : $t('cells.states.membraneLysed') }}</span>
         <span v-if="thermalLysis" class="cell-card__destroyed-sub">{{ $t('cells.states.vaporized') }}</span>
@@ -287,7 +287,7 @@ export default defineComponent({
      * True when the target cell uses acoustic/mechanical resonance as its primary
      * disruption model (bacteria or virus with resonantFreqGHz defined).
      * In this regime the Schwan Vm is negligible (~0 at GHz) and should not be
-     * displayed as the primary metric — acoustic DR% is shown instead.
+     * displayed as the primary metric - acoustic DR% is shown instead.
      */
     isAcousticTarget(): boolean {
       if (this.type !== CELL_TYPE.TARGET) return false
@@ -512,11 +512,11 @@ export default defineComponent({
     lysisProtocolStr(): string {
       const n = this.store.lysisNPulses
       const t = formatLysisTimeLocal(this.store.lysisDelayMs)
-      return `${n} pulse${n === 1 ? '' : 's'} — est. ${t}`
+      return `${n} pulse${n === 1 ? '' : 's'}, est. ${t}`
     },
 
     // ── Biomodulation metrics (healthy cell only) ──────────────────────────
-    // Visible when DR < 0.45 — the stimulatory sub-threshold window.
+    // Visible when DR < 0.45 - the stimulatory sub-threshold window.
     // All three getters delegate to cellStore computations that share the same
     // Schwan physics used for the disruption model on the target cell.
     showBiostim(): boolean {
@@ -545,7 +545,7 @@ export default defineComponent({
     },
 
     'store.resetCounter'() {
-      // Always cancel any running lysis timers on reset — including VIBRATING countdown.
+      // Always cancel any running lysis timers on reset - including VIBRATING countdown.
       // The previous guard (only LYSED/LYSING) was too narrow: if the cell was in VIBRATING
       // state (shatterDelayTimeout still ticking), the reset was ignored and lysis fired
       // after the delay even though the researcher had already pressed Reset.
@@ -600,13 +600,13 @@ export default defineComponent({
 
   mounted() {
     if (this.compact) {
-      // Watchers only fire on changes — sync the current store state immediately on mount
+      // Watchers only fire on changes - sync the current store state immediately on mount
       // so the sticky card reflects whatever state the main card is already in.
       this.cellState = this.type === CELL_TYPE.HEALTHY
         ? this.store.healthyCellState
         : this.store.targetCellState
     }
-    // Draw blob animation for both compact and non-compact — sticky view needs live visuals.
+    // Draw blob animation for both compact and non-compact - sticky view needs live visuals.
     if (this.cellData) {
       this.drawCell()
       this.drawOscilloscope()
@@ -642,7 +642,7 @@ export default defineComponent({
 
       if (this.type === CELL_TYPE.TARGET) {
         if (impact > THRESHOLDS.DISRUPTION_WARN) {
-          // >85% — lysis is now armed; 'vibrating' exclusively means "lysis imminent"
+          // >85% - lysis is now armed; 'vibrating' exclusively means "lysis imminent"
           this.cellState = CELL_STATE.VIBRATING
           this.store.setTargetCellState(CELL_STATE.VIBRATING)
           if (!this.shatterPending) {
@@ -667,8 +667,8 @@ export default defineComponent({
           this.shatterPending = false
           this.lysisProgressElapsed = 0
         }
-        // 50–85% → 'rev-ep': reversible electroporation window (Weaver & Chizmadzhev 1996).
-        // Pores open transiently and re-seal — membrane is permeabilized but cells survive.
+        // 50-85% → 'rev-ep': reversible electroporation window (Weaver & Chizmadzhev 1996).
+        // Pores open transiently and re-seal - membrane is permeabilized but cells survive.
         // Distinct from 'vibrating' (>85%, lysis armed) and from 'approaching' (<50%).
         const elState: CellState =
           impact >= THRESHOLDS.HEALTHY_APPROACHING ? CELL_STATE.REV_EP
@@ -677,9 +677,9 @@ export default defineComponent({
         const ORDER: CellState[] = [CELL_STATE.STABLE, CELL_STATE.APPROACHING, CELL_STATE.REV_EP, CELL_STATE.CRITICAL]
         this.cellState = ORDER[Math.max(ORDER.indexOf(elState), ORDER.indexOf(thermalFloor))] as CellState
       } else {
-        // 'nourishing': DR > 8% (THRESHOLDS.VIBRATING_MIN) — sub-threshold membrane oscillations
+        // 'nourishing': DR > 8% (THRESHOLDS.VIBRATING_MIN) - sub-threshold membrane oscillations
         // activate PIEZO1 / Ca²⁺ channels; SI peaks at ~22% of lysis threshold.
-        // 'stable': DR ≤ 8% — field too weak for significant membrane coupling.
+        // 'stable': DR ≤ 8% - field too weak for significant membrane coupling.
         const elState: CellState =
           impact >= THRESHOLDS.HEALTHY_CRITICAL      ? CELL_STATE.CRITICAL
           : impact >= THRESHOLDS.HEALTHY_APPROACHING ? CELL_STATE.APPROACHING
@@ -836,7 +836,7 @@ export default defineComponent({
   &--compact {
     padding: 0.5rem;
     border-radius: 6px;
-    // Thin state-colored top border — instant traffic-light feedback at a glance
+    // Thin state-colored top border - instant traffic-light feedback at a glance
     border-top: 3px solid var(--color-border);
 
     &.cell-card--nourishing  { border-top-color: var(--color-primary); }
@@ -855,7 +855,7 @@ export default defineComponent({
     gap: 0.2rem;
     padding: 0.45rem 0.5rem 0.3rem;
     font-family: var(--font-mono);
-    font-size: 1.05rem;   // larger base — reads ~11 px after 0.72 scale
+    font-size: 1.05rem;   // larger base, reads ~11 px after 0.72 scale
   }
 
   &__compact-top {
@@ -959,7 +959,7 @@ export default defineComponent({
     border-left-color: var(--color-accent) !important;
   }
 
-  /* Reversible EP window (target, 50–85%): amber glow — permeabilized but survivable */
+  /* Reversible EP window (target, 50-85%): amber glow - permeabilized but survivable */
   &--rev-ep.cell-card--target {
     border-left-color: #fbbf24 !important;
     box-shadow: 0 0 22px rgba(251, 191, 36, 0.28);
@@ -1380,13 +1380,13 @@ export default defineComponent({
     }
   }
 
-  /* ── Nourishing strip (healthy, DR 8–45%) ──────────────────────────── */
+  /* ── Nourishing strip (healthy, DR 8-45%) ──────────────────────────── */
   &__nourishing-strip {
     @include status-strip(var(--color-accent), rgba(0, 212, 255, 0.06), rgba(0, 212, 255, 0.22), nourish-text-pulse, 2.8s);
     border-bottom: 1px solid rgba(0, 212, 255, 0.12);
   }
 
-  /* ── Reversible EP strip (target, 50–85%) ──────────────────────────── */
+  /* ── Reversible EP strip (target, 50-85%) ──────────────────────────── */
   &__rev-ep-strip {
     @include status-strip(#fbbf24, rgba(251, 191, 36, 0.08), rgba(251, 191, 36, 0.3), warn-fade, 1.8s);
   }

@@ -21,7 +21,7 @@
     <div v-if="isResonanceMode" class="field-panel__resonance-note">
       <span class="field-panel__resonance-note-icon">{{ ICON.INFO }}</span>
       <span class="field-panel__resonance-note-text">
-        <strong>{{ $t('resonance.noteTitle') }}</strong> — {{ $t('resonance.noteBody') }}
+        <strong>{{ $t('resonance.noteTitle') }}</strong>, {{ $t('resonance.noteBody') }}
       </span>
     </div>
 

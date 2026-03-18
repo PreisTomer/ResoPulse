@@ -13,8 +13,8 @@
     "tipSystemWarning": "<strong>Thermal Alert</strong>\nSteady-state temperature exceeds 42°C.\nReduce duty cycle or field intensity.",
     "themeDark": "◑ Dark",
     "themeOled": "● OLED",
-    "themeSwitchOled": "Switch to OLED Black — maximum contrast, pure black backgrounds",
-    "themeSwitchDark": "Switch to Dark — navy blue tinted dark theme",
+    "themeSwitchOled": "Switch to OLED Black, maximum contrast, pure black backgrounds",
+    "themeSwitchDark": "Switch to Dark, navy blue tinted dark theme",
     "openMenu": "Open menu",
     "closeMenu": "Close menu"
   },
@@ -32,7 +32,7 @@
     "healthy": {
       "label": "Healthy Hepatocyte",
       "sublabel": "Reference Baseline",
-      "description": "Epithelial hepatocyte (R = 10 µm). Lower radius and thicker membrane yield higher Schwan threshold — preserved across the electroporation window targeting larger carcinoma cells.",
+      "description": "Epithelial hepatocyte (R = 10 µm). Lower radius and thicker membrane yield higher Schwan threshold, preserved across the electroporation window targeting larger carcinoma cells.",
       "button": "Cell Parameters"
     },
     "target": {
@@ -55,24 +55,24 @@
       "fc":  "Char. freq fc"
     },
     "derivedLabel": "Derived constants",
-    "derivedTip": "<strong>Derived biophysical parameters</strong>\nComputed in real time from the editable values above.\n\n<span class='tip-val'>Cm</span> = ε_r × ε₀ / d\n  Membrane specific capacitance [mF/m²]\n\n<span class='tip-val'>τ</span> = R·Cm·(2σ_e+σ_i) / (2σ_e·σ_i)\n  Schwan time constant (Kotnik &amp; Miklavcic 2000)\n  Sets the frequency roll-off\n\n<span class='tip-val'>fc</span> = 1/(2πτ)\n  Characteristic frequency — Vm drops −3 dB here\n  Below fc: quasi-DC regime, Vm at maximum",
+    "derivedTip": "<strong>Derived biophysical parameters</strong>\nComputed in real time from the editable values above.\n\n<span class='tip-val'>Cm</span> = ε_r × ε₀ / d\n  Membrane specific capacitance [mF/m²]\n\n<span class='tip-val'>τ</span> = R·Cm·(2σ_e+σ_i) / (2σ_e·σ_i)\n  Schwan time constant (Kotnik &amp; Miklavcic 2000)\n  Sets the frequency roll-off\n\n<span class='tip-val'>fc</span> = 1/(2πτ)\n  Characteristic frequency, Vm drops −3 dB here\n  Below fc: quasi-DC regime, Vm at maximum",
     "resetBtn": "↺ Reset to defaults",
     "resetBtnTip": "<strong>Reset to Preset Defaults</strong>\nRestores all parameters to the original\nvalues for this preset.\nUseful after editing to explore changes.",
-    "tempWarning": "Thermal warning — reduce field intensity",
+    "tempWarning": "Thermal warning: reduce field intensity",
     "lysed": "Membrane Lysed",
     "lysing": "Lysing",
     "states": {
-      "depAttraction": "DEP — ATTRACTED TO FIELD MAXIMA",
-      "depRepulsion": "DEP — REPELLED FROM FIELD MAXIMA",
+      "depAttraction": "DEP: ATTRACTED TO FIELD MAXIMA",
+      "depRepulsion": "DEP: REPELLED FROM FIELD MAXIMA",
       "nourishing": "NOURISHING · BMS {bms}%",
-      "revEp": "REV. EP WINDOW — MEMBRANE PERMEABILIZED",
+      "revEp": "REV. EP WINDOW, MEMBRANE PERMEABILIZED",
       "lysisArmed": "LYSIS ARMED · {protocol}",
-      "critical": "CRITICAL — REDUCE FIELD IMMEDIATELY",
-      "approaching": "APPROACHING THRESHOLD — MONITOR FIELD",
-      "thermalCritical": "THERMAL CRITICAL — PROTEIN DENATURATION — REDUCE DUTY CYCLE",
-      "thermalWarning": "THERMAL WARNING — T > 42°C — MONITOR DUTY CYCLE / FIELD",
-      "thermalLysis": "— THERMAL LYSIS —",
-      "membraneLysed": "— MEMBRANE LYSED —",
+      "critical": "CRITICAL: REDUCE FIELD IMMEDIATELY",
+      "approaching": "APPROACHING THRESHOLD: MONITOR FIELD",
+      "thermalCritical": "THERMAL CRITICAL: PROTEIN DENATURATION: REDUCE DUTY CYCLE",
+      "thermalWarning": "THERMAL WARNING: T > 42°C, MONITOR DUTY CYCLE / FIELD",
+      "thermalLysis": ",  THERMAL LYSIS : ",
+      "membraneLysed": ",  MEMBRANE LYSED : ",
       "vaporized": "Cell vaporized · T ≥ 100°C",
       "resetCell": "Reset Cell",
       "reduceFieldThermal": "Reduce field / duty cycle to reset",
@@ -97,9 +97,9 @@
     "sharedField": "shared field",
     "cardParams": "card params",
     "cellSpecific": "cell-specific",
-    "thermalVaporizing": "VAPORIZING REGIME — cells instantly destroyed",
-    "thermalDenaturing": "PROTEIN DENATURATION — reduce duty cycle",
-    "thermalHyperthermic": "HYPERTHERMIC — thermal damage onset",
+    "thermalVaporizing": "VAPORIZING REGIME: cells instantly destroyed",
+    "thermalDenaturing": "PROTEIN DENATURATION: reduce duty cycle",
+    "thermalHyperthermic": "HYPERTHERMIC: thermal damage onset",
     "snapOptimal": "⭐ Optimal",
     "snapFcH": "→ fc(H)",
     "snapFcT": "→ fc(T)",
@@ -135,14 +135,14 @@
     "doubleShell": "Shell Model",
     "doubleShellSingle": "Single-Shell",
     "doubleShellDouble": "+ Nuclear Envelope",
-    "doubleShellSub": "Kotnik & Miklavcic (2006) · bandpass nuclear Vm · f_peak ≈ 0.7–2 MHz",
+    "doubleShellSub": "Kotnik & Miklavcic (2006) · bandpass nuclear Vm · f_peak ≈ 0.7-2 MHz",
     "protocol": "Protocol",
     "advanced": "Advanced",
     "waveform": "Waveform",
     "pulsed": "Pulsed",
     "cw": "CW",
     "dutyCycle": "Duty Cycle",
-    "safeModeLock": "Safe Mode active — duty cycle capped at T_ss ≤ 42°C",
+    "safeModeLock": "Safe Mode active, duty cycle capped at T_ss ≤ 42°C",
     "orientationTheta": "Orientation θ",
     "pulsesN": "Pulses N",
     "bloodPerfusion": "Blood Perfusion ω_b",
@@ -155,20 +155,20 @@
     "µs": "µs",
     "perfusionInVitro": "0 (in vitro)",
     "cellPackingIsolated": "0% (isolated)",
-    "tipMinPulse": "<strong>Minimum pulse width — 3τ rule</strong>\nFull membrane charging requires t_p ≥ 3τ (≥95% plateau).\nGreen: full charging · Amber: partial (τ–3τ) · Red: sub-threshold (<τ)\nτ = R·Cm·(2σ_e+σ_i)/(2σ_e·σ_i)  [Kotnik & Miklavcic 2000]",
+    "tipMinPulse": "<strong>Minimum pulse width, 3τ rule</strong>\nFull membrane charging requires t_p ≥ 3τ (≥95% plateau).\nGreen: full charging · Amber: partial (τ - 3τ) · Red: sub-threshold (<τ)\nτ = R·Cm·(2σ_e+σ_i)/(2σ_e·σ_i)  [Kotnik & Miklavcic 2000]",
     "regime": {
-      "electrolytic": "Electrolytic — direct electrode",
-      "nearfield_rf":  "Near-field RF — coaxial probe",
-      "microwave":     "Microwave — waveguide required",
+      "electrolytic": "Electrolytic: direct electrode",
+      "nearfield_rf":  "Near-field RF: coaxial probe",
+      "microwave":     "Microwave: waveguide required",
       "tipElectrolytic": "<strong>Electrolytic Regime (&lt;300 MHz)</strong>\nBelow the dielectric relaxation frequency of saline (~338 MHz),\nthe medium behaves as a conductor and direct-contact electrodes work well.\n\nHardware: electroporation cuvette · pulse generator · direct wire connection\nDC impedance model (Z = d/σA) is valid in this regime.\n\nRef: Foster &amp; Schwan (1989) CRC Crit. Rev. Biomed. Eng.",
-      "tipNearfieldRf":  "<strong>Near-field RF Regime (300 MHz – 1 GHz)</strong>\nAbove ~338 MHz the medium transitions from conductor to lossy dielectric.\nDirect electrodes still work for short path lengths, but skin depth\n(~13–41 mm) starts to limit penetration.\n\nHardware: coaxial RF probe · impedance-matched coaxial cable · 50 Ω system\nDC impedance model is approximate — use transmission-line or FEM for accuracy.\n\nRef: Gabriel et al. (1996) Phys. Med. Biol. 41:2271",
-      "tipMicrowave":    "<strong>Microwave Regime (&gt;1 GHz)</strong>\nSkin depth falls below 13 mm. DC electrode coupling is ineffective —\nonly the surface of the sample is accessible.\n\nHardware: rectangular waveguide · resonant cavity · horn antenna\nField uniformity is a major challenge. Cuvette geometry sets up standing waves.\nGHz frequencies are required for acoustic capsid resonance (bacteria/virus).\n\nRef: Gabriel et al. (1996); Tsen et al. (2007) J. Biol. Phys."
+      "tipNearfieldRf":  "<strong>Near-field RF Regime (300 MHz-1 GHz)</strong>\nAbove ~338 MHz the medium transitions from conductor to lossy dielectric.\nDirect electrodes still work for short path lengths, but skin depth\n(~13-41 mm) starts to limit penetration.\n\nHardware: coaxial RF probe · impedance-matched coaxial cable · 50 Ω system\nDC impedance model is approximate, use transmission-line or FEM for accuracy.\n\nRef: Gabriel et al. (1996) Phys. Med. Biol. 41:2271",
+      "tipMicrowave":    "<strong>Microwave Regime (&gt;1 GHz)</strong>\nSkin depth falls below 13 mm. DC electrode coupling is ineffective , \nonly the surface of the sample is accessible.\n\nHardware: rectangular waveguide · resonant cavity · horn antenna\nField uniformity is a major challenge. Cuvette geometry sets up standing waves.\nGHz frequencies are required for acoustic capsid resonance (bacteria/virus).\n\nRef: Gabriel et al. (1996); Tsen et al. (2007) J. Biol. Phys."
     }
   },
   "exp": {
     "renameSession": "Click to rename session",
     "notesToggle": "≡ Notes",
-    "notesToggleTip": "Toggle session metadata panel — sample description and lab notes are baked into CSV exports",
+    "notesToggleTip": "Toggle session metadata panel, sample description and lab notes are baked into CSV exports",
     "notesLabelSample": "Sample",
     "notesSamplePlaceholder": "e.g. HepG2 passage 12, 80% confluency, PBS buffer",
     "notesLabelNotes": "Notes",
@@ -180,8 +180,8 @@
     "localTip": "<strong>Local Mode</strong>\nBackend unreachable · all physics\nrun client-side · no multi-client sync",
     "snapBarLabel": "Therapeutic Window",
     "snapBarBtn": "⭐ Set to Window Center",
-    "snapBarBtnConfirm": "⚡ Confirm — Lyse {cellLabel}?",
-    "snapBarBtnApplied": "✓ Applied — reset cell to reuse",
+    "snapBarBtnConfirm": "⚡ Confirm: Lyse {cellLabel}?",
+    "snapBarBtnApplied": "✓ Applied: reset cell to reuse",
     "snapBarLysisWarn": "⚡ will lyse {cellLabel}",
     "snapBarSubField": "DR_T ≥ 85% · DR_H < 50% · set E →",
     "snapBarSubFreq": "DR_T ≥ 85% · DR_H < 50% · set f →",
@@ -199,7 +199,7 @@
     "logReadingBtn": "Log Reading",
     "logCsvBtn": "CSV",
     "logClearBtn": "Clear",
-    "logEmpty": "No readings yet — click Log Reading to record",
+    "logEmpty": "No readings yet, click Log Reading to record",
     "logThNumber": "#",
     "logThTime": "Time",
     "logThFreq": "Freq",
@@ -209,8 +209,8 @@
     "logThSel": "Sel×",
     "logThDepH": "H Re[K]",
     "logThDepT": "T Re[K]",
-    "tipThDepH": "<strong>H Re[K] — Healthy DEP</strong>\nClausius-Mossotti factor Re[K(f)] for the healthy cell at log-time frequency.\nRe[K] > 0 → pDEP (attracted to field maxima)\nRe[K] < 0 → nDEP (repelled from field maxima)\nHidden in resonance mode (model invalid at GHz).",
-    "tipThDepT": "<strong>T Re[K] — Target DEP</strong>\nClausius-Mossotti factor Re[K(f)] for the target cell at log-time frequency.\nRe[K] > 0 → pDEP (attracted to field maxima)\nRe[K] < 0 → nDEP (repelled from field maxima)\nHidden in resonance mode (model invalid at GHz).",
+    "tipThDepH": "<strong>H Re[K], Healthy DEP</strong>\nClausius-Mossotti factor Re[K(f)] for the healthy cell at log-time frequency.\nRe[K] > 0 → pDEP (attracted to field maxima)\nRe[K] < 0 → nDEP (repelled from field maxima)\nHidden in resonance mode (model invalid at GHz).",
+    "tipThDepT": "<strong>T Re[K], Target DEP</strong>\nClausius-Mossotti factor Re[K(f)] for the target cell at log-time frequency.\nRe[K] > 0 → pDEP (attracted to field maxima)\nRe[K] < 0 → nDEP (repelled from field maxima)\nHidden in resonance mode (model invalid at GHz).",
     "logThEvent": "Event",
     "zDriftTip": "<strong>⚗ Impedance Drift Detected</strong>\nMedium conductivity has shifted from baseline by more than 5%.\nThis typically indicates ion release from lysing target cells.\n\nClick to open the Instrument Panel for real-time impedance tracking and corrected field voltage.",
     "stickyCollapse": "Collapse live cell panel",
@@ -224,7 +224,7 @@
     "legendLibrary": "Preset library",
     "legendThreshold": "≥1.0 Disruption threshold",
     "noteTitle": "Resonance mode",
-    "noteBody": "Acoustic/mechanical capsid & cell-wall disruption. f_res ≈ v_protein/(2R): viral capsids ~10–12 GHz, bacterial walls ~0.5–1.5 GHz. Mammalian cells (R ≈ 10 µm) have no GHz resonance — frequency-selective disruption. Ref: Tsen et al. (2007); Dykeman & Sankey (2008)",
+    "noteBody": "Acoustic/mechanical capsid & cell-wall disruption. f_res ≈ v_protein/(2R): viral capsids ~10-12 GHz, bacterial walls ~0.5-1.5 GHz. Mammalian cells (R ≈ 10 µm) have no GHz resonance, frequency-selective disruption. Ref: Tsen et al. (2007); Dykeman & Sankey (2008)",
     "noResonance": "No resonance parameters for this cell",
     "tipFieldTitle": "Applied Field Intensity (Resonance Mode)",
     "tipFieldFormula": "Disruption ratio = (E / E_threshold) × L(f, f_res, Q)",
@@ -234,8 +234,8 @@
     "tipTargetBadgeFormula": "ratio = (E / E_threshold) × L(f, f_res, Q)",
     "tipTargetBadgeNote": "≥100% at resonance → capsid/cell-wall disruption threshold exceeded",
     "tipHealthyBadgeTitle": "Healthy cell: no GHz resonance",
-    "tipHealthyBadgeBody": "Mammalian cells lack rigid-shell resonance — Schwan Vm → 0 at GHz (ωτ ≫ 1).\nAt f_res(target) in GHz, healthy cell disruption ≈ 0.",
-    "tipHealthyBadgeSafe": "Frequency-selective — healthy tissue is unperturbed"
+    "tipHealthyBadgeBody": "Mammalian cells lack rigid-shell resonance, Schwan Vm → 0 at GHz (ωτ ≫ 1).\nAt f_res(target) in GHz, healthy cell disruption ≈ 0.",
+    "tipHealthyBadgeSafe": "Frequency-selective, healthy tissue is unperturbed"
   },
   "biostim": {
     "title": "Biomodulation",
@@ -263,8 +263,8 @@
     "tipThField": "<strong>Field Intensity (V/cm)</strong>\nApplied electric field at the time of this reading.",
     "tipThTargetVm": "<strong>Target Vm (mV)</strong>\nTransmembrane potential of the target cell\ncomputed via the Schwan equation.",
     "tipThHealthyVm": "<strong>Healthy Vm (mV)</strong>\nTransmembrane potential of the healthy reference cell.",
-    "tipThSel": "<strong>Selectivity (×)</strong>\nTarget-Vm / Healthy-Vm ratio at the time of logging.\n≥{strong}× — strong window · ≥{marginal}× — marginal",
-    "tipThEvent": "<strong>Event Type</strong>\n'manual' — user-triggered reading\n'lysis' — triggered automatically at lysis threshold",
+    "tipThSel": "<strong>Selectivity (×)</strong>\nTarget-Vm / Healthy-Vm ratio at the time of logging.\n≥{strong}×, strong window · ≥{marginal}×, marginal",
+    "tipThEvent": "<strong>Event Type</strong>\n'manual', user-triggered reading\n'lysis', triggered automatically at lysis threshold",
     "tipCellFreq": "<strong>Frequency: {freq} kHz</strong>\nCarrier frequency at the time of this reading.",
     "tipCellField": "<strong>Field Intensity: {field} V/cm</strong>\nApplied electric field at the time of this reading.",
     "tipCellTargetVm": "<strong>Target Vm: {vm} mV</strong>\nCell: {preset}\nDisruption ratio: {ratio}% of lysis threshold",
@@ -273,7 +273,7 @@
     "tipCellLysis": "<strong>Lysis Event</strong>\nCell membrane disruption threshold was exceeded.\nThis reading was auto-logged at the lysis trigger.",
     "tipCellManual": "<strong>Manual Reading</strong>\nUser-triggered snapshot of the current field state.",
     "doseLabel": "Dose",
-    "tipDose": "<strong>Cumulative Dose</strong>\nSpecific energy absorbed (J/kg) estimated from SAR\nand pulse duty cycle across all logged readings.\nApproximation only — ignores blood perfusion and heat loss."
+    "tipDose": "<strong>Cumulative Dose</strong>\nSpecific energy absorbed (J/kg) estimated from SAR\nand pulse duty cycle across all logged readings.\nApproximation only, ignores blood perfusion and heat loss."
   },
   "features": {
     "visualization": {
@@ -333,7 +333,7 @@
     "card3Desc":  "Full experiment log with cumulative absorbed dose, selectivity timeline, and one-click CSV export.",
 
     "card4Title": "Cell Library",
-    "card4Desc":  "10 validated presets across mammalian, bacterial, and viral phenotypes — with computed membrane capacitance Cm, time constant τ, characteristic frequency fc, and DEP crossover frequency f_cross.",
+    "card4Desc":  "10 validated presets across mammalian, bacterial, and viral phenotypes, with computed membrane capacitance Cm, time constant τ, characteristic frequency fc, and DEP crossover frequency f_cross.",
 
     "card5Title": "Research Protocol",
     "card5Desc":  "Schwan equation derivation, SAR model, pulse-envelope factor, electroporation thresholds, DEP Clausius-Mossotti model, and 24 peer-reviewed literature references.",
@@ -355,18 +355,18 @@
     "tagVirus":    "Viral Capsid",
     "tagRef":      "Healthy Reference",
 
-    "disclaimer": "Research simulation — not validated for clinical or therapeutic use · all physics models are approximations for in-vitro modelling"
+    "disclaimer": "Research simulation: not validated for clinical or therapeutic use · all physics models are approximations for in-vitro modelling"
   },
 
   "drChart": {
-    "title": "Disruption Ratio — f-Domain",
-    "tipTitle": "<strong>Disruption Ratio vs Frequency</strong>\nShows DR(f) = V<sub>m</sub>(f) / V<sub>threshold</sub> × PEF for both cells.\n<strong>Green region</strong>: therapeutic window — target DR ≥ 85% while healthy DR &lt; 50%.\nDashed amber line = reversible EP boundary (50%).\nDashed red line = lysis threshold (85%).",
+    "title": "Disruption Ratio: f-Domain",
+    "tipTitle": "<strong>Disruption Ratio vs Frequency</strong>\nShows DR(f) = V<sub>m</sub>(f) / V<sub>threshold</sub> × PEF for both cells.\n<strong>Green region</strong>: therapeutic window, target DR ≥ 85% while healthy DR &lt; 50%.\nDashed amber line = reversible EP boundary (50%).\nDashed red line = lysis threshold (85%).",
     "legendTarget": "Target",
     "legendHealthy": "Healthy",
     "legendWindow": "Therapeutic window",
     "legendRevEp": "Rev-EP (50%)",
     "legendLysis": "Lysis (85%)",
     "sectionTitle": "Disruption Ratio Chart",
-    "sectionTip": "DR(f) = Vm·PEF / Vm_thr — Amber dashed = Rev-EP 50% · Red dashed = Lysis 85% · Green fill = therapeutic window (target ≥ 85%, healthy &lt; 50%)"
+    "sectionTip": "DR(f) = Vm·PEF / Vm_thr, Amber dashed = Rev-EP 50% · Red dashed = Lysis 85% · Green fill = therapeutic window (target ≥ 85%, healthy &lt; 50%)"
   }
 }

@@ -40,7 +40,7 @@ export default defineComponent({
       return `${this.pitchHz.toFixed(0)} Hz`
     },
     barPct(): number {
-      // Map 220–1760 Hz range to 0–100%
+      // Map 220-1760 Hz range to 0-100%
       return Math.min(100, Math.max(0, ((this.pitchHz - 220) / 1540) * 100))
     },
     tipText(): string {
