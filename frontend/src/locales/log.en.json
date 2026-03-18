@@ -39,6 +39,8 @@
     "tipCellHealthyVm": "<strong>Healthy Vm: {vm} mV</strong>\nDisruption ratio at log time: {ratio}%\nKeep below 50% of healthy threshold for selective treatment.\n  &gt; 50% → collateral membrane stress",
     "tipCellSel": "<strong>Selectivity: {sel}×</strong> (Vm_T / Vm_H)\nTarget temperature: {targetTemp} °C\nHealthy temperature: {healthyTemp} °C\nHigher selectivity = more target disruption per unit healthy exposure.",
 
+    "tipCellDepH": "<strong>Re[K] H: {k}</strong> — Healthy cell Clausius-Mossotti factor\n  &gt; 0 → pDEP (cell drawn toward field maxima)\n  &lt; 0 → nDEP (cell repelled from field maxima)\n  = 0 → crossover frequency f_cross",
+    "tipCellDepT": "<strong>Re[K] T: {k}</strong> — Target cell Clausius-Mossotti factor\n  &gt; 0 → pDEP (cell drawn toward field maxima)\n  &lt; 0 → nDEP (cell repelled from field maxima)\n  = 0 → crossover frequency f_cross",
     "tipCellLysis": "<span class=\"tip-warn\">⚡ Lysis event</span>\nTarget membrane irreversibly disrupted.\nAuto-logged when lysis countdown completed.",
     "tipCellManual": "Manual snapshot\nLogged by user at this timestamp.",
 
