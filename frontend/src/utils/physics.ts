@@ -3,9 +3,19 @@
 
 // Biophysics utilities — Schwan single-shell model, SAR, nsEP, acoustic resonance, EM skin depth
 import type { CellConfig } from '@/types/cell'
-import { SCHWAN_SPHERE_FACTOR, WF_CW, EPSILON_R_CYTOPLASM, SIGMA_MEMBRANE_SI } from '@/constants/physics'
+import { SCHWAN_SPHERE_FACTOR, WF_CW, EPSILON_R_CYTOPLASM, SIGMA_MEMBRANE_SI, TWO_PI } from '@/constants/physics'
 
 export const EPSILON_0 = 8.854187817e-12 // F/m
+
+/**
+ * Safe ratio: numerator / denominator, capped at `cap`.
+ * When denominator < epsilon (effectively zero), returns `cap` if numerator > 0, else 0.
+ * @param epsilon - zero threshold; use NEAR_ZERO_DR for disruption ratios, NEAR_ZERO_VM for Vm
+ */
+export function safeRatio(numerator: number, denominator: number, cap: number, epsilon = 1e-9): number {
+  if (denominator < epsilon) return numerator > 0 ? cap : 0
+  return Math.min(cap, numerator / denominator)
+}
 
 // ── Unit conversions ──────────────────────────────────────────────────────────
 const UM_TO_M  = 1e-6   // µm → m
@@ -39,7 +49,7 @@ export function computeSchwan(
   sigma_e: number,
   cosTheta = 1.0,
 ): number {
-  const omega = 2 * Math.PI * freqKHz * KHZ_TO_HZ
+  const omega = TWO_PI * freqKHz * KHZ_TO_HZ
   const tau   = computeTau(cell, sigma_e)
   return (SCHWAN_SPHERE_FACTOR * fieldVcm * VCM_TO_VM * cell.radius * UM_TO_M * cosTheta) /
     Math.sqrt(1 + (omega * tau) ** 2)
@@ -99,7 +109,7 @@ export function computeDepCmReal(
   sigma_e: number,
   epsilon_r_medium: number,
 ): number {
-  const omega = 2 * Math.PI * freqKHz * KHZ_TO_HZ
+  const omega = TWO_PI * freqKHz * KHZ_TO_HZ
   // DC limit: Re[K] = (σ_i − σ_e) / (σ_i + 2σ_e)
   if (omega < 1) return (cell.conductivity - sigma_e) / (cell.conductivity + 2 * sigma_e)
 
@@ -152,7 +162,7 @@ export function computeDepCrossoverKHz(
 
 /** fc = 1/(2πτ)  [kHz] */
 export function computeFc(cell: CellConfig, sigma_e: number): number {
-  return 1 / (2 * Math.PI * computeTau(cell, sigma_e) * 1e3)
+  return 1 / (TWO_PI * computeTau(cell, sigma_e) * 1e3)
 }
 
 // ── Double-shell nuclear envelope (Kotnik & Miklavcic 2006) ──────────────────
@@ -178,7 +188,7 @@ export function computeNuclearVm(
   if (!cell.nuclearRadius) return 0
   const tau_ne = computeNuclearTau(cell, sigma_e)
   if (tau_ne === 0) return 0
-  const omega  = 2 * Math.PI * freqKHz * KHZ_TO_HZ
+  const omega  = TWO_PI * freqKHz * KHZ_TO_HZ
   const wt_out = omega * computeTau(cell, sigma_e)
   const wt_ne  = omega * tau_ne
   return (1.5 * fieldVcm * VCM_TO_VM * cell.nuclearRadius * UM_TO_M * cosTheta * wt_out) /

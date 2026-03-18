@@ -8,21 +8,24 @@ import { CELL_PRESETS } from '@/constants/cellLibrary'
 import { MEDIA } from '@/constants/media'
 import type { CellConfig, CellState } from '@/types/cell'
 import type { MediumKey } from '@/types/media'
-import { computeSchwan, computeSAR, computeFc, computeTau, computeResonantDisruption, computeNuclearVm, computePulseStepResponse, computeSkinDepthMm, computeDepCmReal, computeDepCrossoverKHz } from '@/utils/physics'
+import { computeSchwan, computeSAR, computeFc, computeTau, computeResonantDisruption, computeNuclearVm, computePulseStepResponse, computeSkinDepthMm, computeDepCmReal, computeDepCrossoverKHz, safeRatio } from '@/utils/physics'
 import { CELL_CATEGORY, CHART_MODE, WAVEFORM, CELL_TYPE, FREQ_REGIME } from '@/constants/strings'
-import { THRESHOLDS, DEFAULT_CAPSID_Q } from '@/constants/cellCard'
 import { DEFAULT_LYSIS_N_PULSES } from '@/constants/experimentDefaults'
 import {
+  THRESHOLDS,
+  DEFAULT_CAPSID_Q,
   SCHWAN_SPHERE_FACTOR,
   BODY_TEMP_C,
   NEWTON_COOLING_LAMBDA,
   PENNES_BLOOD_COEFF,
+  TWO_PI,
   WF_CW,
   WF_PULSED,
   THERMAL_MA_PEAK_C,
   TEMP_UPDATE_INTERVAL_MS,
   MIN_COS_THETA,
   MIN_PULSE_ENVELOPE,
+  NEAR_ZERO_DR,
   FREQ_ELECTROLYTIC_LIMIT_KHZ,
   FREQ_NEARFIELD_RF_LIMIT_KHZ,
 } from '@/constants/physics'
@@ -43,7 +46,7 @@ function lysisField(
   pef: number,
 ): number {
   if (cosTheta < MIN_COS_THETA) return 1e6
-  const omega = 2 * Math.PI * freqKHz * 1e3
+  const omega = TWO_PI * freqKHz * 1e3
   const tau   = computeTau(cell, sigma_e)
   return (cell.thresholdVoltage * Math.sqrt(1 + (omega * tau) ** 2)) /
     (SCHWAN_SPHERE_FACTOR * cell.radius * 1e-6 * cosTheta * 100 * Math.max(MIN_PULSE_ENVELOPE, pef))
@@ -265,11 +268,9 @@ export const useCellStore = defineStore('cell', {
       return CELL_CATEGORY.MAMMALIAN
     },
 
-    /** TI = DR_T / DR_H. Caps at 99.9 when healthy DR ≈ 0 (resonance selectivity). */
+    /** TI = DR_T / DR_H. Caps at TI_DISPLAY_CAP when healthy DR ≈ 0 (resonance selectivity). */
     therapeuticIndex(): number {
-      const hDr = this.healthyDisruptionRatio
-      if (hDr < 1e-9) return this.targetDisruptionRatio > 0 ? THRESHOLDS.TI_DISPLAY_CAP : 0
-      return Math.min(THRESHOLDS.TI_DISPLAY_CAP, this.targetDisruptionRatio / hDr)
+      return safeRatio(this.targetDisruptionRatio, this.healthyDisruptionRatio, THRESHOLDS.TI_DISPLAY_CAP, NEAR_ZERO_DR)
     },
 
     /** TI worst-case bounds from biological parameter uncertainty.
@@ -296,7 +297,7 @@ export const useCellStore = defineStore('cell', {
           // Q_max → taller Lorentzian peak → higher DR_T → higher TI (best case)
           const drTMax = computeResonantDisruption(t.resonantFreqGHz, t.capsidQMax, t.resonantThresholdVcm, freqHz, state.fieldIntensity)
           const tiFromDr = (dr: number) =>
-            hDr < 1e-9 ? (dr > 0 ? THRESHOLDS.TI_DISPLAY_CAP : 0) : Math.min(THRESHOLDS.TI_DISPLAY_CAP, dr / hDr)
+            safeRatio(dr, hDr, THRESHOLDS.TI_DISPLAY_CAP, NEAR_ZERO_DR)
           return { low: tiFromDr(drTMin), high: tiFromDr(drTMax) }
         }
         return { low: nominal, high: nominal }
@@ -314,13 +315,13 @@ export const useCellStore = defineStore('cell', {
       const pefH    = this.pulseEnvelopeFactorHealthy
       const drTLow  = (vmTLow  * pefT) / state.target.thresholdVoltage
       const drHHigh = (vmHHigh * pefH) / state.healthy.thresholdVoltage
-      const tiLow   = drHHigh < 1e-9 ? 0 : Math.max(0, Math.min(THRESHOLDS.TI_DISPLAY_CAP, drTLow / drHHigh))
+      const tiLow   = Math.max(0, safeRatio(drTLow, drHHigh, THRESHOLDS.TI_DISPLAY_CAP, NEAR_ZERO_DR))
       // TI_high: strongest target + weakest healthy coupling
       const vmTHigh = computeSchwan({ ...state.target,  conductivity: state.target.conductivity  * (1 + uncT) }, freq, field, sigma_e, cosT)
       const vmHLow  = computeSchwan({ ...state.healthy, conductivity: state.healthy.conductivity * (1 - uncH) }, freq, field, sigma_e, cosT)
       const drTHigh = (vmTHigh * pefT) / state.target.thresholdVoltage
       const drHLow  = (vmHLow  * pefH) / state.healthy.thresholdVoltage
-      const tiHigh  = drHLow  < 1e-9 ? THRESHOLDS.TI_DISPLAY_CAP : Math.min(THRESHOLDS.TI_DISPLAY_CAP, drTHigh / drHLow)
+      const tiHigh  = safeRatio(drTHigh, drHLow, THRESHOLDS.TI_DISPLAY_CAP, NEAR_ZERO_DR)
       return { low: tiLow, high: tiHigh }
     },
 
@@ -362,12 +363,10 @@ export const useCellStore = defineStore('cell', {
 
     /**
      * Nuclear selectivity ratio: target nuclear disruption / healthy nuclear disruption.
-     * Caps at 99.9 when healthy nuclear disruption is negligible.
+     * Caps at TI_DISPLAY_CAP when healthy nuclear disruption is negligible.
      */
     nuclearSelectivityRatio(): number {
-      const hDr = this.healthyNuclearDisruptionRatio
-      if (hDr < 1e-9) return this.targetNuclearDisruptionRatio > 0 ? 99.9 : 0
-      return Math.min(99.9, this.targetNuclearDisruptionRatio / hDr)
+      return safeRatio(this.targetNuclearDisruptionRatio, this.healthyNuclearDisruptionRatio, THRESHOLDS.TI_DISPLAY_CAP, NEAR_ZERO_DR)
     },
 
     /** E_lysis for target [V/cm]: Vm_thr·√(1+(ωτ)²)/(1.5·R·cosθ·pef). Returns 1e6 near θ=90°. */

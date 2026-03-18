@@ -6,7 +6,7 @@
  * Follows the same pattern as sliderTooltips.ts: pure functions, no store access.
  */
 import { ICON } from '@/constants/icons'
-import { THRESHOLDS, DEFAULT_CAPSID_Q } from '@/constants/cellCard'
+import { THRESHOLDS, DEFAULT_CAPSID_Q } from '@/constants/physics'
 import { formatFreqKHz } from '@/utils/format'
 
 export function tipTiRange(params: {

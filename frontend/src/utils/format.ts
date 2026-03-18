@@ -10,7 +10,7 @@ import { UNIT } from '@/constants/units'
 const KHZ_PER_GHZ  = 1_000_000
 const KHZ_PER_MHZ  = 1_000
 const VCM_PER_KVCM = 1_000
-const FIELD_KV_THRESHOLD = 10_000 // V/cm above which kV/cm display is used
+export const FIELD_KV_THRESHOLD = 10_000 // V/cm above which kV/cm display is used
 
 /** Format a frequency [kHz] to a human-readable string.
  *  kHz: rounded integer · MHz/GHz: fixed to `decimals` places (default 2). */

@@ -6,7 +6,7 @@
  * Follows the same pattern as sliderTooltips.ts: pure functions, no store access.
  */
 import { ICON } from '@/constants/icons'
-import { THRESHOLDS } from '@/constants/cellCard'
+import { THRESHOLDS } from '@/constants/physics'
 
 export function tipWindow(params: {
   loStr: string

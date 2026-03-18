@@ -219,13 +219,6 @@ import {
   CELL_COLORS,
   EDITABLE_PARAMS,
   THRESHOLDS,
-  DISRUPTION_WARN_THRESHOLD,
-  HEALTHY_CRITICAL_THRESHOLD,
-  HEALTHY_APPROACHING_THRESHOLD,
-  VIBRATING_MIN_THRESHOLD,
-  TEMP_WARN_CELSIUS,
-  TEMP_DENATURING,
-  TEMP_VAPORIZING,
   LYSIS_DURATION_MS,
   FRAGMENT_INTERVAL_MS,
 } from '@/constants/cellCard'
@@ -313,16 +306,16 @@ export default defineComponent({
       return `${this.vm.toFixed(1)} ${UNIT.MV}`
     },
     tempDisplay(): string  { return `${this.temperature.toFixed(1)} ${UNIT.DEG_C}` },
-    tempWarning():     boolean { return this.temperature > TEMP_WARN_CELSIUS },
-    tempDenaturing():  boolean { return this.temperature >= TEMP_DENATURING },
-    tempVaporizing():  boolean { return this.temperature >= TEMP_VAPORIZING },
+    tempWarning():     boolean { return this.temperature > THRESHOLDS.TEMP_WARN },
+    tempDenaturing():  boolean { return this.temperature >= THRESHOLDS.TEMP_DENATURING },
+    tempVaporizing():  boolean { return this.temperature >= THRESHOLDS.TEMP_VAPORIZING },
 
     disruptionRatio(): number {
       return this.type === CELL_TYPE.HEALTHY
         ? this.store.healthyDisruptionRatio
         : this.store.targetDisruptionRatio
     },
-    canReset(): boolean { return this.disruptionRatio <= DISRUPTION_WARN_THRESHOLD },
+    canReset(): boolean { return this.disruptionRatio <= THRESHOLDS.DISRUPTION_WARN },
 
     /** 100 → 0 % as the lysis countdown drains; null when not armed. */
     lysisIntegrityPct(): number | null {
@@ -595,7 +588,7 @@ export default defineComponent({
         clearInterval(this.progressInterval ?? undefined)
         this.progressInterval = null
         this.shatterPending = false
-        if (this.disruptionRatio > DISRUPTION_WARN_THRESHOLD) this.triggerLysis()
+        if (this.disruptionRatio > THRESHOLDS.DISRUPTION_WARN) this.triggerLysis()
       }, this.store.lysisDelayMs)
     },
   },
@@ -623,19 +616,19 @@ export default defineComponent({
       const impact = this.disruptionRatio
       const temp   = this.temperature
 
-      if (temp >= TEMP_VAPORIZING) {
+      if (temp >= THRESHOLDS.TEMP_VAPORIZING) {
         this.thermalLysis = true
         this.triggerLysis()
         return
       }
 
       const thermalFloor: CellState =
-        temp >= TEMP_DENATURING     ? CELL_STATE.CRITICAL
-        : temp >= TEMP_WARN_CELSIUS ? CELL_STATE.APPROACHING
+        temp >= THRESHOLDS.TEMP_DENATURING     ? CELL_STATE.CRITICAL
+        : temp >= THRESHOLDS.TEMP_WARN ? CELL_STATE.APPROACHING
         : CELL_STATE.STABLE
 
       if (this.type === CELL_TYPE.TARGET) {
-        if (impact > DISRUPTION_WARN_THRESHOLD) {
+        if (impact > THRESHOLDS.DISRUPTION_WARN) {
           // >85% — lysis is now armed; 'vibrating' exclusively means "lysis imminent"
           this.cellState = CELL_STATE.VIBRATING
           if (!this.shatterPending) {
@@ -648,7 +641,7 @@ export default defineComponent({
               clearInterval(this.progressInterval ?? undefined)
               this.progressInterval = null
               this.shatterPending = false
-              if (this.disruptionRatio > DISRUPTION_WARN_THRESHOLD) this.triggerLysis()
+              if (this.disruptionRatio > THRESHOLDS.DISRUPTION_WARN) this.triggerLysis()
             }, this.store.lysisDelayMs)
           }
           return
@@ -664,19 +657,19 @@ export default defineComponent({
         // Pores open transiently and re-seal — membrane is permeabilized but cells survive.
         // Distinct from 'vibrating' (>85%, lysis armed) and from 'approaching' (<50%).
         const elState: CellState =
-          impact >= HEALTHY_APPROACHING_THRESHOLD ? CELL_STATE.REV_EP
-          : impact > VIBRATING_MIN_THRESHOLD      ? CELL_STATE.APPROACHING
+          impact >= THRESHOLDS.HEALTHY_APPROACHING ? CELL_STATE.REV_EP
+          : impact > THRESHOLDS.VIBRATING_MIN      ? CELL_STATE.APPROACHING
           : CELL_STATE.STABLE
         const ORDER: CellState[] = [CELL_STATE.STABLE, CELL_STATE.APPROACHING, CELL_STATE.REV_EP, CELL_STATE.CRITICAL]
         this.cellState = ORDER[Math.max(ORDER.indexOf(elState), ORDER.indexOf(thermalFloor))] as CellState
       } else {
-        // 'nourishing': DR > 8% (VIBRATING_MIN_THRESHOLD) — sub-threshold membrane oscillations
+        // 'nourishing': DR > 8% (THRESHOLDS.VIBRATING_MIN) — sub-threshold membrane oscillations
         // activate PIEZO1 / Ca²⁺ channels; SI peaks at ~22% of lysis threshold.
         // 'stable': DR ≤ 8% — field too weak for significant membrane coupling.
         const elState: CellState =
-          impact >= HEALTHY_CRITICAL_THRESHOLD      ? CELL_STATE.CRITICAL
-          : impact >= HEALTHY_APPROACHING_THRESHOLD ? CELL_STATE.APPROACHING
-          : impact > VIBRATING_MIN_THRESHOLD        ? CELL_STATE.NOURISHING
+          impact >= THRESHOLDS.HEALTHY_CRITICAL      ? CELL_STATE.CRITICAL
+          : impact >= THRESHOLDS.HEALTHY_APPROACHING ? CELL_STATE.APPROACHING
+          : impact > THRESHOLDS.VIBRATING_MIN        ? CELL_STATE.NOURISHING
           : CELL_STATE.STABLE
         const ORDER: CellState[] = [CELL_STATE.STABLE, CELL_STATE.NOURISHING, CELL_STATE.APPROACHING, CELL_STATE.CRITICAL]
         this.cellState = ORDER[Math.max(ORDER.indexOf(elState), ORDER.indexOf(thermalFloor))] as CellState

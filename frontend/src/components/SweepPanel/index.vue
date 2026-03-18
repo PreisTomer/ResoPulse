@@ -107,7 +107,7 @@ import {
   computeResonantDisruption,
 } from '@/utils/physics'
 import { WAVEFORM, CHART_MODE, CELL_CATEGORY } from '@/constants/strings'
-import { THRESHOLDS, DEFAULT_CAPSID_Q } from '@/constants/cellCard'
+import { THRESHOLDS, DEFAULT_CAPSID_Q } from '@/constants/physics'
 import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'
 import type { CellConfig } from '@/types/cell'

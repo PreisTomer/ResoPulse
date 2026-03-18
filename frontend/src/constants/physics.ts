@@ -28,6 +28,15 @@ export const PENNES_BLOOD_COEFF = 63.9
 /** SAR waveform factor for CW sinusoidal field: E²_rms = E²_peak / 2 (Schwan 1957) */
 export const WF_CW = 0.5
 
+/** 2π — used in ω = 2πf and fc = 1/(2πτ) throughout the Schwan model */
+export const TWO_PI = 2 * Math.PI
+
+/** Epsilon for near-zero disruption-ratio (dimensionless 0–1 scale) zero-checks */
+export const NEAR_ZERO_DR = 1e-9
+
+/** Epsilon for near-zero transmembrane voltage [mV scale] zero-checks */
+export const NEAR_ZERO_VM = 1e-12
+
 /** SAR waveform factor for pulsed bipolar square wave: E²_rms = E²_peak (H-FIRE convention) */
 export const WF_PULSED = 1.0
 
@@ -82,3 +91,55 @@ export const EPSILON_R_CYTOPLASM = 60
  * Literature range 10⁻⁸–10⁻⁶ S/m; nominal 10⁻⁷ S/m used here (Gascoyne & Vykoukal 2002).
  */
 export const SIGMA_MEMBRANE_SI = 1e-7
+
+// ── Biophysical model thresholds ─────────────────────────────────────────────
+
+/**
+ * All disruption ratio, temperature, selectivity, uncertainty, and classification
+ * thresholds used across the Schwan model, TI analysis, charts, tooltips, and reports.
+ * Single source of truth — imported directly by any domain that needs these values.
+ */
+export const THRESHOLDS = {
+  // ── Disruption ratio (DR = Vm × f_pulse / V_threshold) ──────────────────────
+  DISRUPTION_WARN:     0.85,  // DR above which lysis countdown arms (IRE onset)
+  HEALTHY_CRITICAL:    0.85,  // healthy cell: electroporation pore-formation imminent
+  HEALTHY_APPROACHING: 0.50,  // healthy cell: membrane stress / ion channel perturbation onset
+  NOURISHING:          0.45,  // healthy-cell nourishing state onset (sub-threshold biomodulation)
+  VIBRATING_MIN:       0.08,  // healthy-cell low-vibration onset
+  // ── Temperature (°C) ────────────────────────────────────────────────────────
+  TEMP_WARN:           42,    // hyperthermic safety limit (IAHT standard)
+  TEMP_DENATURING:     60,    // protein denaturation onset (collagen ~60°C, albumin ~68°C)
+  TEMP_VAPORIZING:     100,   // water boiling / rapid steam-driven cell lysis
+  TEMP_CAP:            150,   // simulation display ceiling
+  // ── Therapeutic Index TI = DR_T / DR_H  (sweep analysis) ───────────────────
+  TI_STRONG:           2.0,   // TI above which the sweep window is therapeutically strong
+  TI_MARGINAL:         1.2,   // TI above which the window is marginal (below = poor selectivity)
+  // ── Vm selectivity Sel = Vm_T / Vm_H  (panel badges & reports) ─────────────
+  SEL_STRONG:          1.5,   // Sel above which selectivity badge is green
+  SEL_MARGINAL:        1.0,   // Sel above which badge is amber (below = non-selective)
+  // ── Lysis probability sigmoid  P = 1 / (1 + exp(−(DR − center) / slope)) ───
+  LYSIS_PROB_CENTER:   1.0,   // DR at which P(lysis) = 50%
+  LYSIS_PROB_SLOPE:    0.05,  // sigmoid steepness — smaller = sharper transition
+  // ── Cell category radius boundaries (µm) ───────────────────────────────────
+  RADIUS_VIRUS_MAX:    0.1,   // R < 0.1 µm → VIRUS classification
+  RADIUS_BACTERIA_MAX: 2.0,   // 0.1 ≤ R < 2.0 µm → BACTERIA; R ≥ 2.0 µm → MAMMALIAN
+  // ── Display caps ─────────────────────────────────────────────────────────────
+  TI_DISPLAY_CAP:      99.9,  // TI display ceiling when healthy DR → 0
+  // ── Nuclear membrane model ───────────────────────────────────────────────────
+  NUCLEAR_VM_DEFAULT:  0.5,   // Default nuclear membrane threshold voltage [V] (Kotnik 2006)
+  // ── σ_i uncertainty fractions per cell category (used in TI error bars) ─────
+  UNCERTAINTY_VIRUS:    0.45, // ±45% — lipid envelope σ_i highly variable
+  UNCERTAINTY_BACTERIA: 0.35, // ±35% — cytoplasm σ_i literature range
+  UNCERTAINTY_MAMMALIAN: 0.20,// ±20% — well-characterised cytoplasm σ_i
+  // ── BMS weighting coefficients (sum = 1.0) ───────────────────────────────────
+  BMS_WEIGHT_SI:       0.55,  // sub-threshold stimulation index weight
+  BMS_WEIGHT_MTE:      0.25,  // mechanical transduction efficiency weight
+  BMS_WEIGHT_MA:       0.20,  // mild thermal activation weight
+} as const
+
+export type ThresholdKey = keyof typeof THRESHOLDS
+
+/** Default acoustic Q factor when a preset does not specify capsidQ.
+ *  Set to 2 (maximally damped) — most conservative fallback for viscoelastic biological targets.
+ *  Rigid protein capsids may reach Q~30; peptidoglycan walls typically Q~3–4. */
+export const DEFAULT_CAPSID_Q = 2

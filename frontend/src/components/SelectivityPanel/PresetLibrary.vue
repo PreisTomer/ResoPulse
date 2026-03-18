@@ -48,7 +48,7 @@ import { CELL_PRESETS, GROUP_COLORS, GROUP_LABELS } from '@/constants/cellLibrar
 import type { CellGroup } from '@/constants/cellLibrary'
 import { CELL_TYPE, CELL_GROUP } from '@/constants/strings'
 import { UNIT } from '@/constants/units'
-import { DEFAULT_CAPSID_Q } from '@/constants/cellCard'
+import { DEFAULT_CAPSID_Q } from '@/constants/physics'
 
 const TARGET_GROUPS: CellGroup[] = [CELL_GROUP.CANCER, CELL_GROUP.BACTERIA, CELL_GROUP.VIRUS] as CellGroup[]
 const HEALTHY_GROUP: CellGroup = CELL_GROUP.REFERENCE as CellGroup

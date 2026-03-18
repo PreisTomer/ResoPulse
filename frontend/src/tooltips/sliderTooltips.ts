@@ -10,7 +10,7 @@
  */
 
 import { MEDIA } from '@/constants/media'
-import { DEFAULT_CAPSID_Q } from '@/constants/cellCard'
+import { DEFAULT_CAPSID_Q } from '@/constants/physics'
 import { CHART_MODE, CELL_CATEGORY, THERMAL_LEVEL } from '@/constants/strings'
 import { UNIT } from '@/constants/units'
 import type { MediumKey } from '@/types/media'
