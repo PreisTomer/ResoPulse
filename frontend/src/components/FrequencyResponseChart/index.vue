@@ -18,12 +18,25 @@
       <div
         v-if="_tooltipData"
         class="freq-chart__tooltip"
+        :class="{ 'freq-chart__tooltip--flip': _tooltipData.flipLeft }"
         :style="{ left: (_tooltipData.x + 54) + 'px' }"
       >
-        <div class="freq-chart__tooltip-freq">{{ formatHz(_tooltipData.freqHz) }}{{ UNIT.HZ }}</div>
+        <div class="freq-chart__tooltip-freq">{{ formatTooltipFreq(_tooltipData.freqHz) }}</div>
         <template v-if="_tooltipData.mode === 'schwan'">
-          <div class="freq-chart__tooltip-row freq-chart__tooltip-row--h">{{ CELL_LABEL.HEALTHY }} {{ _tooltipData.healthyVm.toFixed(2) }} {{ UNIT.MV }}</div>
-          <div class="freq-chart__tooltip-row freq-chart__tooltip-row--t">{{ CELL_LABEL.TARGET }} {{ _tooltipData.targetVm.toFixed(2) }} {{ UNIT.MV }}</div>
+          <div class="freq-chart__tooltip-row freq-chart__tooltip-row--h">
+            {{ CELL_LABEL.HEALTHY }} {{ _tooltipData.healthyVm.toFixed(2) }} {{ UNIT.MV }}
+            <span class="freq-chart__tooltip-dr">DR {{ _tooltipData.healthyDRPct.toFixed(1) }}%</span>
+          </div>
+          <div class="freq-chart__tooltip-row freq-chart__tooltip-row--t">
+            {{ CELL_LABEL.TARGET }} {{ _tooltipData.targetVm.toFixed(2) }} {{ UNIT.MV }}
+            <span class="freq-chart__tooltip-dr">DR {{ _tooltipData.targetDRPct.toFixed(1) }}%</span>
+          </div>
+          <div class="freq-chart__tooltip-sel">
+            {{ $t('chart.tooltipSel') }} {{ _tooltipData.selRatio.toFixed(2) }}×
+          </div>
+          <div v-if="_tooltipData.inWindow" class="freq-chart__tooltip-window">
+            {{ $t('chart.tooltipWindow') }}
+          </div>
         </template>
         <template v-else>
           <div class="freq-chart__tooltip-row freq-chart__tooltip-row--t">{{ $t('chart.tooltipDR') }} {{ (_tooltipData.targetDR * 100).toFixed(1) }}%</div>
@@ -40,7 +53,7 @@ import * as d3 from 'd3'
 import { useCellStore } from '@/stores/cellStore'
 import { computeSchwan, computeFc, computeNuclearVm, computeResonantLineshape, computeResonantDisruption, computeTau, computeDepCmReal } from '@/utils/physics'
 import { CELL_PRESETS, GROUP_COLORS } from '@/constants/cellLibrary'
-import { DEFAULT_CAPSID_Q } from '@/constants/physics'
+import { DEFAULT_CAPSID_Q, THRESHOLDS } from '@/constants/physics'
 import { CELL_CATEGORY, CHART_MODE, CELL_LABEL } from '@/constants/strings'
 import { MEDIA } from '@/constants/media'
 import { ICON } from '@/constants/icons'
@@ -81,7 +94,12 @@ export default defineComponent({
       _chartW: 0,
       _chartH: 0,
       _resizeObserver: null as ResizeObserver | null,
-      _tooltipData: null as { x: number; freqHz: number; mode: 'schwan' | 'resonance'; healthyVm: number; targetVm: number; targetDR: number } | null,
+      _tooltipData: null as {
+        x: number; freqHz: number; mode: 'schwan' | 'resonance'
+        healthyVm: number; targetVm: number; targetDR: number
+        healthyDRPct: number; targetDRPct: number
+        selRatio: number; inWindow: boolean; flipLeft: boolean
+      } | null,
     }
   },
 
@@ -116,6 +134,13 @@ export default defineComponent({
     formatHz(hz: number): string {
       if (hz >= 1e6) return `${hz / 1e6}M`
       return `${hz / 1e3}k`
+    },
+
+    /** Verbose frequency label for hover tooltip (e.g. "12.34 MHz", "750.0 kHz"). */
+    formatTooltipFreq(hz: number): string {
+      if (hz >= 1e9) return `${(hz / 1e9).toFixed(3)} ${UNIT.GHZ}`
+      if (hz >= 1e6) return `${(hz / 1e6).toFixed(3)} ${UNIT.MHZ}`
+      return `${(hz / 1e3).toFixed(1)} ${UNIT.KHZ}`
     },
 
     // ── Optimal frequency scan (300 log-spaced pts, returns Hz) ─────────
@@ -989,13 +1014,27 @@ export default defineComponent({
           hz,
           this.store.fieldIntensity,
         )
-        this._tooltipData = { x: mx, freqHz: hz, mode: 'resonance', healthyVm: 0, targetVm: 0, targetDR: dr }
+        const flipLeft = mx > (this._chartW ?? 0) * 0.55
+        this._tooltipData = {
+          x: mx, freqHz: hz, mode: 'resonance', healthyVm: 0, targetVm: 0, targetDR: dr,
+          healthyDRPct: 0, targetDRPct: dr * 100, selRatio: 0, inWindow: false, flipLeft,
+        }
         return
       }
 
       const hVm = computeSchwan(this.store.healthy, khz, this.store.fieldIntensity, sigma_e, cosTheta) * 1000
       const tVm = computeSchwan(this.store.target,  khz, this.store.fieldIntensity, sigma_e, cosTheta) * 1000
-      this._tooltipData = { x: mx, freqHz: hz, mode: 'schwan', healthyVm: hVm, targetVm: tVm, targetDR: 0 }
+      const hDRPct  = (hVm / (this.store.healthy.thresholdVoltage * 1000)) * 100
+      const tDRPct  = (tVm / (this.store.target.thresholdVoltage  * 1000)) * 100
+      const selRatio = hVm > 0.01 ? tVm / hVm : 0
+      const inWindow = tDRPct >= THRESHOLDS.DISRUPTION_WARN * 100 && hDRPct < THRESHOLDS.HEALTHY_APPROACHING * 100
+      const flipLeft = mx > (this._chartW ?? 0) * 0.55
+      this._tooltipData = {
+        x: mx, freqHz: hz, mode: 'schwan',
+        healthyVm: hVm, targetVm: tVm, targetDR: 0,
+        healthyDRPct: hDRPct, targetDRPct: tDRPct,
+        selRatio, inWindow, flipLeft,
+      }
     },
   },
 })
@@ -1089,24 +1128,57 @@ export default defineComponent({
     background: var(--color-surface-2);
     border: 1px solid var(--color-border);
     border-radius: 4px;
-    padding: 0.35rem 0.55rem;
+    padding: 0.35rem 0.6rem;
     pointer-events: none;
     z-index: 10;
     white-space: nowrap;
 
+    &--flip {
+      transform: translateX(-110%);
+    }
+
     &-freq {
-      font-size: 0.65rem;
+      font-size: 0.68rem;
       font-family: var(--font-mono);
       color: var(--color-text);
-      margin-bottom: 0.15rem;
+      margin-bottom: 0.2rem;
+      letter-spacing: 0.03em;
     }
 
     &-row {
       font-size: 0.68rem;
       font-family: var(--font-mono);
+      display: flex;
+      align-items: baseline;
+      gap: 0.45rem;
 
       &--h { color: var(--color-primary); }
       &--t { color: var(--color-danger); }
+    }
+
+    &-dr {
+      font-size: 0.58rem;
+      opacity: 0.65;
+      font-family: var(--font-mono);
+    }
+
+    &-sel {
+      font-size: 0.62rem;
+      font-family: var(--font-mono);
+      color: #fbbf24;
+      opacity: 0.85;
+      margin-top: 0.18rem;
+    }
+
+    &-window {
+      font-size: 0.62rem;
+      font-family: var(--font-mono);
+      color: #4ade80;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      margin-top: 0.2rem;
+      padding-top: 0.2rem;
+      border-top: 1px solid rgba(74, 222, 128, 0.25);
     }
   }
 }
