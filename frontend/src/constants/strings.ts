@@ -74,6 +74,25 @@ export const EXPERIMENTAL_BASIS = {
 } as const
 
 /**
+ * Cuvette load impedance state derived from drift magnitude.
+ * Used by the Instrument Panel load monitor and field corrector.
+ */
+export const LOAD_STATE = {
+  NOMINAL:  'nominal',
+  WARNING:  'warning',
+  CRITICAL: 'critical',
+} as const
+
+/**
+ * Generator source impedance regime.
+ * Determines whether VSWR / reflection coefficient is meaningful.
+ */
+export const SOURCE_MODE = {
+  IRE:  'ire',   // high-voltage pulsed power (< 1 Ω) — mismatch negligible
+  RF:   'rf',    // 50 Ω RF / coaxial — mismatch relevant
+} as const
+
+/**
  * RF coupling regime determined by the operating frequency.
  * Drives the hardware-requirement warning badge in the frequency slider.
  */
@@ -104,6 +123,10 @@ export type CellGroupType     = typeof CELL_GROUP[keyof typeof CELL_GROUP]
 export type ExperimentalBasis = typeof EXPERIMENTAL_BASIS[keyof typeof EXPERIMENTAL_BASIS]
 /** RF coupling regime based on operating frequency */
 export type FreqRegime        = typeof FREQ_REGIME[keyof typeof FREQ_REGIME]
+/** Cuvette load impedance state */
+export type LoadState         = typeof LOAD_STATE[keyof typeof LOAD_STATE]
+/** Generator source impedance regime */
+export type SourceMode        = typeof SOURCE_MODE[keyof typeof SOURCE_MODE]
 /** Cell preset identifier */
 export type PresetId          = typeof PRESET_ID[keyof typeof PRESET_ID]
 

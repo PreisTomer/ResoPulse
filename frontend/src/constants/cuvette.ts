@@ -26,10 +26,24 @@ export const DEFAULT_SOURCE_IMPEDANCE_OHM = 50     // Ω — typical RF generato
 export const DEFAULT_CELL_DENSITY_PER_ML  = 1e6    // cells/mL — typical mammalian electroporation density
 
 /**
- * Fraction of intracellular ion content released into the medium per lysed cell.
- * Not all ions equilibrate instantly; 0.8 is a conservative estimate.
+ * Relative permittivity of aqueous electrolyte media at 37°C.
+ * Used for frequency-dependent complex impedance calculation.
+ * Water εr ≈ 74 at 37°C; saline and PBS are very close (ionic polarisation is small).
+ * Reference: Hasted (1973) "Aqueous Dielectrics"
  */
-export const ION_RELEASE_EFFICIENCY = 0.8
+export const MEDIUM_RELATIVE_PERMITTIVITY = 74
+
+/**
+ * Density of aqueous medium [kg/m³].
+ * Used for medium Joule heating temperature estimate.
+ */
+export const MEDIUM_DENSITY_KG_M3 = 1000
+
+/**
+ * Specific heat capacity of aqueous medium [J/(kg·K)].
+ * Used for medium Joule heating temperature estimate.
+ */
+export const MEDIUM_SPECIFIC_HEAT_J_KG_K = 4182
 
 /**
  * Age threshold above which a hardware impedance reading is considered stale [ms].

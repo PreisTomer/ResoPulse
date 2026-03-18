@@ -63,9 +63,61 @@
       </span>
     </div>
 
+    <!-- VSWR / power delivery row (RF mode only) -->
+    <div
+      v-if="!store.isLowImpedanceSource"
+      class="field-corrector__rf-section"
+      v-tip="tipVSWR"
+    >
+      <div class="field-corrector__rf-row">
+        <span class="field-corrector__rf-label">{{ $t('instrument.corrector.vswr') }}</span>
+        <span
+          class="field-corrector__rf-value"
+          :class="{
+            'field-corrector__rf-value--ok':   vswrNum <= 2,
+            'field-corrector__rf-value--warn':  vswrNum > 2 && vswrNum <= 5,
+            'field-corrector__rf-value--danger': vswrNum > 5,
+          }"
+        >{{ vswrDisplay }}</span>
+      </div>
+      <div class="field-corrector__rf-row">
+        <span class="field-corrector__rf-label">{{ $t('instrument.corrector.powerEfficiency') }}</span>
+        <span
+          class="field-corrector__rf-value"
+          :class="{
+            'field-corrector__rf-value--ok':     powerEfficiency >= 0.90,
+            'field-corrector__rf-value--warn':   powerEfficiency >= 0.75 && powerEfficiency < 0.90,
+            'field-corrector__rf-value--danger': powerEfficiency < 0.75,
+          }"
+        >{{ powerEfficiencyDisplay }}</span>
+      </div>
+    </div>
+
+    <!-- Pulse RC bandwidth check (pulsed mode only) -->
+    <div
+      v-if="store.pulseBandwidthStatus !== 'cw'"
+      class="field-corrector__rc-row"
+      :class="{
+        'field-corrector__rc-row--ok':       store.pulseBandwidthStatus === 'ok',
+        'field-corrector__rc-row--marginal': store.pulseBandwidthStatus === 'marginal',
+        'field-corrector__rc-row--critical': store.pulseBandwidthStatus === 'critical',
+      }"
+      v-tip="tipRCBandwidth"
+    >
+      <span class="field-corrector__rc-icon">{{ rcIcon }}</span>
+      <span class="field-corrector__rc-text">{{ rcStatusLabel }}</span>
+      <span class="field-corrector__rc-ratio">t_p / τ_RC = {{ store.pulseToRCRatio.toFixed(1) }}</span>
+    </div>
+
+    <!-- Source impedance context note -->
+    <div class="field-corrector__source-note" v-tip="$t('instrument.corrector.tipSourceNote')">
+      <span class="field-corrector__source-label">{{ $t('instrument.corrector.sourceNote') }}</span>
+      <span class="field-corrector__source-value">{{ store.sourceImpedanceOhm }} {{ UNIT.OHM }}</span>
+    </div>
+
     <!-- Formula note -->
     <div class="field-corrector__formula">
-      E_gen = E_target × (1 + R_s / Z_cuvette)
+      {{ $t('instrument.corrector.formula') }}
     </div>
   </div>
 </template>
@@ -75,6 +127,7 @@ import { defineComponent } from 'vue'
 import { useImpedanceStore } from '@/stores/impedanceStore'
 import { useCellStore } from '@/stores/cellStore'
 import { UNIT } from '@/constants/units'
+import { ICON } from '@/constants/icons'
 
 export default defineComponent({
   name: 'FieldCorrector',
@@ -83,6 +136,7 @@ export default defineComponent({
       store:     useImpedanceStore(),
       cellStore: useCellStore(),
       UNIT,
+      ICON,
     }
   },
   computed: {
@@ -97,6 +151,44 @@ export default defineComponent({
     },
     factorDisplay(): string {
       return this.store.voltageCorrectionFactor.toFixed(4)
+    },
+    vswrNum(): number {
+      return isFinite(this.store.vswr) ? this.store.vswr : 99
+    },
+    vswrDisplay(): string {
+      return isFinite(this.store.vswr) ? this.store.vswr.toFixed(2) : '∞'
+    },
+    powerEfficiency(): number {
+      return this.store.powerDeliveryEfficiency
+    },
+    powerEfficiencyDisplay(): string {
+      return `${(this.store.powerDeliveryEfficiency * 100).toFixed(1)}${this.UNIT.PERCENT}`
+    },
+    rcIcon(): string {
+      const s = this.store.pulseBandwidthStatus
+      if (s === 'ok')       return this.ICON.CHECK
+      if (s === 'critical') return this.ICON.WARNING
+      return this.ICON.INFO
+    },
+    rcStatusLabel(): string {
+      return this.$t(`instrument.corrector.rcStatus_${this.store.pulseBandwidthStatus}`)
+    },
+    tipRCBandwidth(): string {
+      return this.$t('instrument.corrector.tipRCBandwidth', {
+        tp:    this.cellStore.pulseWidthNs.toFixed(1),
+        tau:   this.store.cuvetteRCTimeConstantNs.toFixed(2),
+        ratio: this.store.pulseToRCRatio.toFixed(2),
+        sigma: this.store.sigmaEWithLysis.toFixed(3),
+      })
+    },
+    tipVSWR(): string {
+      return this.$t('instrument.corrector.tipVSWR', {
+        vswr:       this.vswrDisplay,
+        efficiency: this.powerEfficiencyDisplay,
+        gamma:      this.store.reflectionCoeff.toFixed(3),
+        z0:         this.store.sourceImpedanceOhm,
+        zLoad:      this.store.currentImpedanceMagAtFreqOhm.toFixed(1),
+      })
     },
   },
 })
@@ -216,6 +308,84 @@ export default defineComponent({
     color: var(--color-text);
 
     &--warn { color: var(--color-amber-warm); }
+  }
+
+  &__rf-section {
+    @include flex-col(0.4rem);
+    padding: 0.55rem 0.7rem;
+    background: rgba(0, 212, 255, 0.04);
+    border: 1px solid rgba(0, 212, 255, 0.18);
+    border-radius: var(--radius);
+    cursor: default;
+  }
+
+  &__rf-row {
+    @include flex-between();
+    font-size: 0.72rem;
+  }
+
+  &__rf-label {
+    color: var(--color-text-muted);
+  }
+
+  &__rf-value {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--color-text);
+
+    &--ok     { color: var(--color-accent); }
+    &--warn   { color: var(--color-amber-warm); }
+    &--danger { color: var(--color-danger, #ff4444); }
+  }
+
+  &__rc-row {
+    @include flex-row(0.45rem);
+    font-size: 0.68rem;
+    padding: 0.35rem 0.6rem;
+    border-radius: var(--radius);
+    border: 1px solid var(--color-border);
+
+    &--ok       { border-color: rgba(0, 255, 100, 0.25);  background: rgba(0, 255, 100, 0.04); }
+    &--marginal { border-color: rgba(251, 191, 36, 0.35); background: rgba(251, 191, 36, 0.05); }
+    &--critical { border-color: rgba(255, 77, 109, 0.4);  background: rgba(255, 77, 109, 0.06); }
+  }
+
+  &__rc-icon {
+    flex-shrink: 0;
+    font-size: 0.7rem;
+  }
+
+  &__rc-text {
+    flex: 1;
+    color: var(--color-text-muted);
+  }
+
+  &__rc-ratio {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    color: var(--color-text);
+    white-space: nowrap;
+  }
+
+  &__source-note {
+    @include flex-between();
+    font-size: 0.65rem;
+    color: var(--color-text-muted);
+    padding: 0.25rem 0;
+    border-top: 1px solid var(--color-border);
+    cursor: default;
+  }
+
+  &__source-label {
+    @include mono-upper(0.6rem, 0.06em);
+    opacity: 0.7;
+    color: var(--color-text-muted);
+  }
+
+  &__source-value {
+    font-family: var(--font-mono);
+    color: var(--color-text);
   }
 
   &__formula {
