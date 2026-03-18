@@ -17,7 +17,6 @@
     <svg
       class="bode-plot__svg"
       :viewBox="`0 0 ${SVG_W} ${SVG_H}`"
-      preserveAspectRatio="none"
     >
       <!-- DC valid region shading -->
       <rect
@@ -89,7 +88,7 @@
 
       <!-- X axis labels -->
       <text v-for="g in xGridLines" :key="`xl${g.x}`"
-        :x="g.x" :y="SVG_H - 2"
+        :x="g.x" :y="SVG_H - MARGIN.bottom + 11"
         text-anchor="middle"
         class="bode-plot__axis-label"
       >{{ g.label }}</text>
@@ -102,7 +101,7 @@
       >{{ g.label }}</text>
 
       <!-- Axis labels -->
-      <text :x="SVG_W / 2" :y="SVG_H" text-anchor="middle" class="bode-plot__axis-title">
+      <text :x="SVG_W / 2" :y="SVG_H - MARGIN.bottom + 26" text-anchor="middle" class="bode-plot__axis-title">
         {{ $t('instrument.bode.axisX') }}
       </text>
       <text
@@ -124,8 +123,8 @@ import { computeCuvetteComplexImpedanceMag } from '@/utils/impedance'
 import { UNIT } from '@/constants/units'
 
 const SVG_W  = 560
-const SVG_H  = 160
-const MARGIN = { left: 38, right: 12, bottom: 22 }
+const SVG_H  = 176
+const MARGIN = { left: 38, right: 12, bottom: 38 }
 const N_POINTS = 200
 const FREQ_MIN_HZ = 1e3      // 1 kHz
 const FREQ_MAX_HZ = 1e10     // 10 GHz
@@ -279,8 +278,8 @@ export default defineComponent({
 
   &__svg {
     width: 100%;
-    height: 160px;
-    overflow: visible;
+    height: auto;
+    display: block;
   }
 
   &__dc-region {
