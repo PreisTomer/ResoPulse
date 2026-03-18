@@ -1413,10 +1413,13 @@ export default defineComponent({
 }
 
 // Fade + slide-down entrance/exit
+// Leave uses opacity only — transform is intentionally excluded so the panel
+// fades out from whatever collapsed/expanded state it is currently in, rather
+// than snapping back to expanded before disappearing.
 .sticky-cells-enter-active { transition: opacity 0.28s ease, transform 0.28s ease; }
-.sticky-cells-leave-active { transition: opacity 0.2s ease,  transform 0.2s ease; }
+.sticky-cells-leave-active { transition: opacity 0.2s ease; }
 .sticky-cells-enter-from   { opacity: 0; transform: scale(0.72) translateY(-14px); transform-origin: top right; }
-.sticky-cells-leave-to     { opacity: 0; transform: scale(0.72) translateY(-10px); transform-origin: top right; }
+.sticky-cells-leave-to     { opacity: 0; }
 
 // ── Mobile: slide up from the bottom, single-row cells ────────────────────────
 @media (max-width: 768px) {
