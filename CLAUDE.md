@@ -97,6 +97,16 @@ const tau = computeTau(cell, sigma_e)
 
 ---
 
+## Punctuation Style
+
+Do not use em dashes (—) or en dashes (–) in any user-visible text: locale strings, tooltips, descriptions, notes, or comments rendered to the UI.
+
+**Acceptable exception:** a lone `—` as a "no value" placeholder in table cells where a data point does not apply (e.g. resonance frequency for mammalian cells, DEP crossover when none exists in range). This is a scientific table convention and is allowed.
+
+Use commas, colons, parentheses, or rephrase the sentence instead of dashes in all other cases.
+
+---
+
 ## No Hardcoded Text or Units
 
 **All user-visible strings** must come from one of:
