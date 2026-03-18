@@ -28,6 +28,16 @@
     "tipThHealthyVm": "<strong>H-Vm — Healthy Transmembrane Potential</strong>\nPeak voltage across healthy reference membrane.\nKeep below 50% of threshold for safe operation.",
     "tipThSel": "<strong>Sel× — Vm Selectivity Ratio</strong>\nT-Vm / H-Vm — raw membrane potential ratio.\n<span class=\"tip-ok\">≥ {strong}×</span> Strong therapeutic window\n<span class=\"tip-val\">{marginal}–{strong}×</span> Marginal window\n<span class=\"tip-warn\">&lt; {marginal}×</span> Non-selective",
     "tipThEvent": "<strong>Event Type</strong>\nmanual — snapshot triggered by user\nlysis — membrane disrupted (auto-logged)",
+    "logThDepH": "Re[K] H",
+    "logThDepT": "Re[K] T",
+    "tipThDepH": "<strong>Re[K] H — Clausius-Mossotti Factor (Healthy)</strong>\nReal part of the CM factor for the healthy cell.\n  Re[K] &gt; 0 → pDEP (attracted to field maxima)\n  Re[K] &lt; 0 → nDEP (repelled from field maxima)\n  Re[K] = 0 → crossover frequency f_cross\nSingle-shell sphere model (Gascoyne &amp; Vykoukal 2002).",
+    "tipThDepT": "<strong>Re[K] T — Clausius-Mossotti Factor (Target)</strong>\nReal part of the CM factor for the target cell.\n  Re[K] &gt; 0 → pDEP (attracted to field maxima)\n  Re[K] &lt; 0 → nDEP (repelled from field maxima)\n  Re[K] = 0 → crossover frequency f_cross\nEffective DEP force ∝ Re[K] × (0.5 for CW, dc for pulsed).",
+
+    "tipCellFreq": "<strong>RF Frequency: {freq} kHz</strong>\nAt the time this reading was logged.\nBelow fc → quasi-DC Vm; above fc → Schwan roll-off decreases Vm.",
+    "tipCellField": "<strong>Applied Field: {field} V/cm</strong>\nElectric field intensity at log time.\nVm scales linearly with E (Schwan equation).",
+    "tipCellTargetVm": "<strong>Target Vm: {vm} mV</strong>\nPreset: {preset}\nDisruption ratio at log time: {ratio}%\n  &gt; 85% → lysis countdown armed (irreversible EP)\n  50–85% → reversible EP (membrane permeabilised)\n  &lt; 50% → sub-electroporation",
+    "tipCellHealthyVm": "<strong>Healthy Vm: {vm} mV</strong>\nDisruption ratio at log time: {ratio}%\nKeep below 50% of healthy threshold for selective treatment.\n  &gt; 50% → collateral membrane stress",
+    "tipCellSel": "<strong>Selectivity: {sel}×</strong> (Vm_T / Vm_H)\nTarget temperature: {targetTemp} °C\nHealthy temperature: {healthyTemp} °C\nHigher selectivity = more target disruption per unit healthy exposure.",
 
     "tipCellLysis": "<span class=\"tip-warn\">⚡ Lysis event</span>\nTarget membrane irreversibly disrupted.\nAuto-logged when lysis countdown completed.",
     "tipCellManual": "Manual snapshot\nLogged by user at this timestamp.",

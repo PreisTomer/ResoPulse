@@ -265,20 +265,36 @@
 
   <!-- Sticky live cell view — appears when cells scroll out of viewport -->
   <Transition name="sticky-cells">
-    <div v-if="showStickySimView" class="experiment__sticky-cells">
-      <div class="experiment__sticky-cells-label">⬤ LIVE</div>
-      <div class="experiment__sticky-cells-grid">
-        <CellCard
-          v-for="cell in cells"
-          :key="'sticky-' + cell.id"
-          :type="cell.type"
-          :label="cell.label"
-          :sublabel="cell.sublabel"
-          :sublabel-tip="cell.sublabelTip"
-          :description="cell.description"
-          :cell-data="cell.cellData"
-          :compact="true"
-        />
+    <div
+      v-if="showStickySimView"
+      class="experiment__sticky-cells"
+      :class="{ 'experiment__sticky-cells--collapsed': stickyCellsCollapsed }"
+    >
+      <!-- Drawer tab — always visible, slides panel in/out -->
+      <button
+        class="experiment__sticky-cells-tab"
+        type="button"
+        v-tip="stickyCellsCollapsed ? $t('exp.stickyExpand') : $t('exp.stickyCollapse')"
+        @click.stop="stickyCellsCollapsed = !stickyCellsCollapsed"
+      >
+        <span class="experiment__sticky-cells-tab-dot">⬤</span>
+      </button>
+      <!-- Panel body -->
+      <div class="experiment__sticky-cells-body">
+        <div class="experiment__sticky-cells-label">⬤ LIVE</div>
+        <div class="experiment__sticky-cells-grid">
+          <CellCard
+            v-for="cell in cells"
+            :key="'sticky-' + cell.id"
+            :type="cell.type"
+            :label="cell.label"
+            :sublabel="cell.sublabel"
+            :sublabel-tip="cell.sublabelTip"
+            :description="cell.description"
+            :cell-data="cell.cellData"
+            :compact="true"
+          />
+        </div>
       </div>
     </div>
   </Transition>
@@ -391,11 +407,16 @@ export default defineComponent({
       doseTimer: null as ReturnType<typeof setInterval> | null,
       doseLastMs: 0,
       showStickySimView: false,
+      stickyCellsCollapsed: false,
       cellsObserver: null as IntersectionObserver | null,
     }
   },
 
   watch: {
+    /** Re-expand the drawer each time the sticky panel comes back into view. */
+    showStickySimView(val: boolean) {
+      if (val) this.stickyCellsCollapsed = false
+    },
     /** When the active target cell changes, reset all sliders to category-appropriate
      *  defaults and auto-switch chart mode. Mirrors a "new experiment" context. */
     currentTargetId(newId: string, oldId: string) {
@@ -1309,19 +1330,65 @@ export default defineComponent({
   top: 68px;   // below NavBar (≈60 px) + small gap
   right: 1rem;
   z-index: 150;
-  // Single-column width: one compact CellCard (280 SVG + 2×8 px padding) + container padding.
-  width: 312px;
   // Scale the panel to ~72 % visual size anchored at top-right
   transform: scale(0.72);
   transform-origin: top right;
-  // Panel chrome (rendered at full logical size; visually compact after scale)
-  background: rgba(8, 10, 18, 0.97);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 10px;
-  box-shadow: 0 8px 48px rgba(0, 0, 0, 0.80), 0 0 0 1px rgba(255, 255, 255, 0.05);
-  padding: 0.75rem 0.75rem 0.5rem;
-  backdrop-filter: blur(12px);
-  pointer-events: none; // non-interactive — purely observational
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none; // tab overrides this below
+  // Flex row: [tab][body]
+  display: flex;
+  flex-direction: row;
+  align-items: center; // vertically center the book tab against the body
+
+  // Collapsed: slide body off-screen to the right; tab stays at viewport edge.
+  // translateX(312px) at scale(0.72) = 225 px visual shift — exactly the body width.
+  &--collapsed {
+    transform: scale(0.72) translateX(312px);
+  }
+
+  // ── Drawer tab — book-tab style, centred on the left edge ─────────────────
+  &-tab {
+    pointer-events: auto;
+    flex-shrink: 0;
+    align-self: center;          // float at vertical midpoint of the body
+    width: 32px;
+    height: 88px;                // fixed height — roughly 20 % of two-card panel
+    background: rgba(8, 10, 18, 0.97);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-right: none;
+    border-radius: 8px 0 0 8px;  // rounded only on the protruding (left) side
+    box-shadow: -3px 0 14px rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(12px);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s, box-shadow 0.15s;
+
+    &:hover {
+      background: rgba(22, 28, 52, 0.99);
+      box-shadow: -4px 0 18px rgba(100, 160, 255, 0.18);
+    }
+
+    &-dot {
+      color: var(--color-primary);
+      font-size: 0.75rem;
+      animation: sticky-pulse 2s ease-in-out infinite;
+    }
+  }
+
+  // ── Panel body ────────────────────────────────────────────────────────────
+  &-body {
+    pointer-events: none; // non-interactive — purely observational
+    width: 312px;
+    background: rgba(8, 10, 18, 0.97);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-left: none;
+    border-radius: 0 10px 10px 0;
+    box-shadow: 0 8px 48px rgba(0, 0, 0, 0.80), 0 0 0 1px rgba(255, 255, 255, 0.05);
+    padding: 0.75rem 0.75rem 0.5rem;
+    backdrop-filter: blur(12px);
+  }
 
   &-label {
     font-family: var(--font-mono);
@@ -1340,6 +1407,11 @@ export default defineComponent({
   }
 }
 
+@keyframes sticky-pulse {
+  0%, 100% { opacity: 0.5; }
+  50%       { opacity: 1.0; }
+}
+
 // Fade + slide-down entrance/exit
 .sticky-cells-enter-active { transition: opacity 0.28s ease, transform 0.28s ease; }
 .sticky-cells-leave-active { transition: opacity 0.2s ease,  transform 0.2s ease; }
@@ -1353,14 +1425,20 @@ export default defineComponent({
     bottom: 0;
     right: 0;
     left: 0;
-    width: auto;                   // fill the full bottom bar width
-    border-radius: 10px 10px 0 0;
     transform: scale(1);           // no scaling — let overflow-x handle wider content
     transform-origin: bottom center;
-    padding: 0.5rem 0.75rem 0.5rem;
-    border-left: none;
-    border-right: none;
-    border-bottom: none;
+    // On mobile, collapse drawer is not applicable — always show full bar
+    &--collapsed { transform: scale(1); }
+
+    &-tab { display: none; }       // hide drawer handle on mobile
+
+    &-body {
+      width: 100%;
+      border-left: 1px solid rgba(255, 255, 255, 0.12); // restore left border
+      border-radius: 10px 10px 0 0;
+      border-bottom: none;
+      padding: 0.5rem 0.75rem 0.5rem;
+    }
 
     &-label {
       text-align: center;

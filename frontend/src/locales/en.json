@@ -212,7 +212,9 @@
     "tipThDepH": "<strong>H Re[K] — Healthy DEP</strong>\nClausius-Mossotti factor Re[K(f)] for the healthy cell at log-time frequency.\nRe[K] > 0 → pDEP (attracted to field maxima)\nRe[K] < 0 → nDEP (repelled from field maxima)\nHidden in resonance mode (model invalid at GHz).",
     "tipThDepT": "<strong>T Re[K] — Target DEP</strong>\nClausius-Mossotti factor Re[K(f)] for the target cell at log-time frequency.\nRe[K] > 0 → pDEP (attracted to field maxima)\nRe[K] < 0 → nDEP (repelled from field maxima)\nHidden in resonance mode (model invalid at GHz).",
     "logThEvent": "Event",
-    "zDriftTip": "<strong>⚗ Impedance Drift Detected</strong>\nMedium conductivity has shifted from baseline by more than 5%.\nThis typically indicates ion release from lysing target cells.\n\nClick to open the Instrument Panel for real-time impedance tracking and corrected field voltage."
+    "zDriftTip": "<strong>⚗ Impedance Drift Detected</strong>\nMedium conductivity has shifted from baseline by more than 5%.\nThis typically indicates ion release from lysing target cells.\n\nClick to open the Instrument Panel for real-time impedance tracking and corrected field voltage.",
+    "stickyCollapse": "Collapse live cell panel",
+    "stickyExpand": "Expand live cell panel"
   },
   "resonance": {
     "chartTitle": "Resonant Capsid / Cell-Wall Disruption",
@@ -362,7 +364,9 @@
     "legendTarget": "Target",
     "legendHealthy": "Healthy",
     "legendWindow": "Therapeutic window",
+    "legendRevEp": "Rev-EP (50%)",
+    "legendLysis": "Lysis (85%)",
     "sectionTitle": "Disruption Ratio Chart",
-    "sectionTip": "Show/hide the disruption ratio vs frequency chart"
+    "sectionTip": "DR(f) = Vm·PEF / Vm_thr — Amber dashed = Rev-EP 50% · Red dashed = Lysis 85% · Green fill = therapeutic window (target ≥ 85%, healthy &lt; 50%)"
   }
 }

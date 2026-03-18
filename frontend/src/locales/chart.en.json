@@ -43,6 +43,8 @@
     "tooltipDR": "T-DR",
     "tooltipNoRes": "H: no resonance",
     "tooltipTauH": "τ(H)",
-    "tooltipTauT": "τ(T)"
+    "tooltipTauT": "τ(T)",
+    "tooltipSel": "Sel Vm(T)/Vm(H)",
+    "tooltipWindow": "✓ THERAPEUTIC WINDOW"
   }
 }

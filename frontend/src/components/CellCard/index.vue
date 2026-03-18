@@ -67,18 +67,22 @@
 
       <!-- Compact info strip — only in sticky live-view mode (replaces verbose data strips) -->
       <div v-if="compact" class="cell-card__compact-strip">
-        <span :class="['cell-card__compact-badge', `cell-card__compact-badge--${type}`]">
-          {{ type === CELL_TYPE.HEALTHY ? 'H' : 'T' }}
-        </span>
-        <span :class="['cell-card__compact-dr', `cell-card__compact-dr--${cellState}`]">
-          DR&nbsp;{{ (disruptionRatio * 100).toFixed(0) }}%
-        </span>
-        <span class="cell-card__compact-sep">·</span>
-        <span class="cell-card__compact-temp">{{ temperature.toFixed(1) }}{{ UNIT.DEG_C }}</span>
-        <span :class="['cell-card__compact-dot', `cell-card__compact-dot--${cellState}`]">●</span>
-        <span :class="['cell-card__compact-state', `cell-card__compact-state--${cellState}`]">
-          {{ compactStateLabel }}
-        </span>
+        <div class="cell-card__compact-top">
+          <span :class="['cell-card__compact-badge', `cell-card__compact-badge--${type}`]">
+            {{ type === CELL_TYPE.HEALTHY ? 'H' : 'T' }}
+          </span>
+          <span :class="['cell-card__compact-dr', `cell-card__compact-dr--${cellState}`]">
+            DR&nbsp;{{ (disruptionRatio * 100).toFixed(0) }}%
+          </span>
+          <span class="cell-card__compact-sep">·</span>
+          <span class="cell-card__compact-temp">{{ temperature.toFixed(1) }}{{ UNIT.DEG_C }}</span>
+        </div>
+        <div class="cell-card__compact-bottom">
+          <span :class="['cell-card__compact-dot', `cell-card__compact-dot--${cellState}`]">●</span>
+          <span :class="['cell-card__compact-state', `cell-card__compact-state--${cellState}`]">
+            {{ compactStateLabel }}
+          </span>
+        </div>
       </div>
 
       <!-- DEP strip — shows when dielectrophoretic force is active (non-resonance mode) -->
@@ -541,10 +545,10 @@ export default defineComponent({
     },
 
     'store.resetCounter'() {
-      if (this.cellState !== CELL_STATE.LYSED && this.cellState !== CELL_STATE.LYSING) return
-      // Clear ALL lysis timers — including shatterTimeout, which may still be running
-      // if the preset was loaded while the cell was in the LYSING animation phase.
-      // Without this, the timeout callback fires after reset and flips state back to LYSED.
+      // Always cancel any running lysis timers on reset — including VIBRATING countdown.
+      // The previous guard (only LYSED/LYSING) was too narrow: if the cell was in VIBRATING
+      // state (shatterDelayTimeout still ticking), the reset was ignored and lysis fired
+      // after the delay even though the researcher had already pressed Reset.
       clearTimeout(this.shatterTimeout ?? undefined)
       clearTimeout(this.shatterDelayTimeout ?? undefined)
       clearInterval(this.particleInterval ?? undefined)
@@ -556,8 +560,9 @@ export default defineComponent({
       this.shatterPending = false
       this.thermalLysis   = false
       this.lysisProgressElapsed = 0
-      this.cellState      = CELL_STATE.STABLE
-      this.liveAmplitude  = this.cellData?.amplitude ?? 0.8
+      if (this.cellState === CELL_STATE.STABLE) return  // nothing to redraw
+      this.cellState     = CELL_STATE.STABLE
+      this.liveAmplitude = this.cellData?.amplitude ?? 0.8
       this.helixTimer?.stop()
       this.$nextTick(() => {
         this.drawCell()
@@ -846,12 +851,25 @@ export default defineComponent({
   // ── Compact info strip ────────────────────────────────────────────────────
   &__compact-strip {
     display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    padding: 0.45rem 0.5rem 0.3rem;
+    font-family: var(--font-mono);
+    font-size: 1.05rem;   // larger base — reads ~11 px after 0.72 scale
+  }
+
+  &__compact-top {
+    display: flex;
     align-items: center;
     gap: 0.45rem;
-    padding: 0.45rem 0.5rem 0.25rem;
-    font-family: var(--font-mono);
-    font-size: 1.05rem;   // larger base — reads ~11 px after 0.65 scale
     white-space: nowrap;
+  }
+
+  &__compact-bottom {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding-left: 0.1rem;
   }
 
   &__compact-badge {
@@ -894,7 +912,6 @@ export default defineComponent({
 
   &__compact-dot {
     font-size: 0.75rem;
-    margin-left: auto;   // push state indicator to the right
     color: var(--color-text-muted);
 
     &--nourishing  { color: var(--color-primary); }

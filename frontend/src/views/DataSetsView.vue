@@ -307,9 +307,14 @@
                   <td>{{ $t('datasets.thresholds.drStableDesc') }}</td>
                 </tr>
                 <tr>
-                  <td class="datasets__mono datasets__primary-val">{{ (THRESHOLDS.VIBRATING_MIN * 100).toFixed(0) }}–{{ (THRESHOLDS.HEALTHY_APPROACHING * 100).toFixed(0) }}%</td>
+                  <td class="datasets__mono datasets__primary-val">{{ (THRESHOLDS.VIBRATING_MIN * 100).toFixed(0) }}–{{ (THRESHOLDS.NOURISHING * 100).toFixed(0) }}%</td>
                   <td class="datasets__primary-val">{{ $t('datasets.thresholds.drNourishingState') }}</td>
                   <td>{{ $t('datasets.thresholds.drNourishingDesc') }}</td>
+                </tr>
+                <tr>
+                  <td class="datasets__mono datasets__warn-val">{{ (THRESHOLDS.NOURISHING * 100).toFixed(0) }}–{{ (THRESHOLDS.HEALTHY_APPROACHING * 100).toFixed(0) }}%</td>
+                  <td class="datasets__warn-val">{{ $t('datasets.thresholds.drApproachingState') }}</td>
+                  <td>{{ $t('datasets.thresholds.drApproachingDesc') }}</td>
                 </tr>
                 <tr>
                   <td class="datasets__mono datasets__warn-val">{{ (THRESHOLDS.HEALTHY_APPROACHING * 100).toFixed(0) }}–{{ (THRESHOLDS.DISRUPTION_WARN * 100).toFixed(0) }}%</td>
