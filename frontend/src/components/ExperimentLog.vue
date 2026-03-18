@@ -101,7 +101,7 @@ import { useCellStore } from '@/stores/cellStore'
 import { broadcastLogEntry } from '@/services/socket'
 import { LOG_EVENT } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
-import { THRESHOLDS } from '@/constants/cellCard'
+import { THRESHOLDS } from '@/constants/physics'
 import { formatFreqKHz } from '@/utils/format'
 import { UNIT } from '@/constants/units'
 

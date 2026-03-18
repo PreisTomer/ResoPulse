@@ -31,11 +31,11 @@
 import { defineComponent } from 'vue'
 import { useCellStore } from '@/stores/cellStore'
 import { CELL_PRESETS, GROUP_COLORS } from '@/constants/cellLibrary'
-import { DEFAULT_CAPSID_Q } from '@/constants/cellCard'
+import { DEFAULT_CAPSID_Q, THRESHOLDS, NEAR_ZERO_DR } from '@/constants/physics'
 import { CELL_CATEGORY, CELL_GROUP } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'
-import { computeSchwan, computeResonantDisruption } from '@/utils/physics'
+import { computeSchwan, computeResonantDisruption, safeRatio } from '@/utils/physics'
 
 export default defineComponent({
   setup() {
@@ -80,12 +80,12 @@ export default defineComponent({
               freq * 1e3,
               field,
             )
-            sel = hDr > 1e-9 ? Math.min(99.9, ratio / hDr) : (ratio > 0 ? 99.9 : 0)
+            sel = safeRatio(ratio, hDr, THRESHOLDS.TI_DISPLAY_CAP, NEAR_ZERO_DR)
             tVmMv = `D:${(ratio * 100).toFixed(0)}%`
           } else {
             const tVm = computeSchwan(p, freq, field, sigma_e)
             const tDr = tVm / p.thresholdVoltage
-            sel = hDr > 1e-9 ? Math.min(99.9, tDr / hDr) : 0
+            sel = hDr > NEAR_ZERO_DR ? Math.min(THRESHOLDS.TI_DISPLAY_CAP, tDr / hDr) : 0
             tVmMv = (tVm * 1000).toFixed(1)
           }
           return { preset: p, sel, tVmMv, isActive: this.store.target.id === p.id, hasRes }

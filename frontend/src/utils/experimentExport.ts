@@ -7,6 +7,7 @@ import { MEDIA } from '@/constants/media'
 import { UNIT } from '@/constants/units'
 import { CELL_LABEL } from '@/constants/strings'
 import { EPSILON_0 } from '@/utils/physics'
+import { TWO_PI } from '@/constants/physics'
 import type { MediumKey } from '@/types/media'
 import type { CellParamSnapshot, LogEntry } from '@/types/experiment'
 
@@ -34,7 +35,7 @@ export function downloadText(txt: string, filename: string, mimeType = 'text/pla
 
 export function buildHealthySection(h: CellParamSnapshot, isDbl: boolean, mediumName: string): string[] {
   const cm   = (h.dielectricConstant * EPSILON_0 / (h.membraneThickness * 1e-9) * 1e3).toFixed(2)
-  const tau  = h.fc > 0 ? (1e6 / (2 * Math.PI * h.fc)).toFixed(0) : '—'
+  const tau  = h.fc > 0 ? (1e6 / (TWO_PI * h.fc)).toFixed(0) : '—'
   const lines: string[] = [
     `Reference (Healthy): ${h.label}`,
     fld('Radius R',               `${h.radius} ${UNIT.UM}`),
@@ -81,7 +82,7 @@ export function buildTargetSection(t: CellParamSnapshot, isRes: boolean, isDbl: 
       fld('Experimental basis',       t.experimentalBasis ?? 'unknown'),
     )
   } else {
-    const tau = t.fc > 0 ? (1e6 / (2 * Math.PI * t.fc)).toFixed(0) : '—'
+    const tau = t.fc > 0 ? (1e6 / (TWO_PI * t.fc)).toFixed(0) : '—'
     lines.push(
       fld('Lysis threshold Vm,thr', `${t.thresholdVoltage} ${UNIT.V}`),
       fld('Time constant τ',        `${tau} ${UNIT.NS}  [medium: ${mediumName}]`),

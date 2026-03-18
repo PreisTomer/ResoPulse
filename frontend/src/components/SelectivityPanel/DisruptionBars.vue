@@ -71,7 +71,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { useCellStore } from '@/stores/cellStore'
-import { THRESHOLDS } from '@/constants/cellCard'
+import { THRESHOLDS } from '@/constants/physics'
 import { CELL_CATEGORY, CELL_LABEL } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
 import { formatLysisTime } from '@/tooltips/sliderTooltips'

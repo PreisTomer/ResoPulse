@@ -462,7 +462,7 @@ import { CELL_PRESETS, GROUP_COLORS, GROUP_LABELS, type CellGroup, type CellPres
 import { MEDIA } from '@/constants/media'
 import { CELL_GROUP } from '@/constants/strings'
 import { membraneCm, computeFc, computeTau, computeNuclearTau, computeDepCrossoverKHz } from '@/utils/physics'
-import { THRESHOLDS } from '@/constants/cellCard'
+import { THRESHOLDS } from '@/constants/physics'
 import { UNIT } from '@/constants/units'
 
 const SIGMA_SALINE      = MEDIA.saline.conductivity  // 1.5 S/m

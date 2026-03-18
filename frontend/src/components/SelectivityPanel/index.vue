@@ -164,11 +164,12 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { useCellStore } from '@/stores/cellStore'
-import { THRESHOLDS, DISRUPTION_WARN_THRESHOLD } from '@/constants/cellCard'
+import { THRESHOLDS, NEAR_ZERO_VM } from '@/constants/physics'
 import { CELL_CATEGORY, CHART_MODE, EXPERIMENTAL_BASIS } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'
 import { formatFreqKHz, formatFieldVcm } from '@/utils/format'
+import { safeRatio } from '@/utils/physics'
 import { broadcastStateSync } from '@/services/socket'
 import { tipTiRange, tipSelectivity, tipOptimal } from '@/tooltips/selectivityTooltips'
 import AccordionPanel from '@/components/AccordionPanel.vue'
@@ -202,18 +203,18 @@ export default defineComponent({
     modeBadge(): { label: string } {
       const t = this.targetRatio
       const h = this.store.healthyDisruptionRatio
-      if (h >= DISRUPTION_WARN_THRESHOLD)                                          return { label: this.$t('selectivity.modeAblative')    }
-      if (t >= DISRUPTION_WARN_THRESHOLD && h < THRESHOLDS.HEALTHY_APPROACHING)   return { label: this.$t('selectivity.modeTherapeutic') }
-      if (t >= DISRUPTION_WARN_THRESHOLD)                                          return { label: this.$t('selectivity.modeMarginal')    }
+      if (h >= THRESHOLDS.DISRUPTION_WARN)                                          return { label: this.$t('selectivity.modeAblative')    }
+      if (t >= THRESHOLDS.DISRUPTION_WARN && h < THRESHOLDS.HEALTHY_APPROACHING)   return { label: this.$t('selectivity.modeTherapeutic') }
+      if (t >= THRESHOLDS.DISRUPTION_WARN)                                          return { label: this.$t('selectivity.modeMarginal')    }
       if (t >= THRESHOLDS.HEALTHY_APPROACHING)                                     return { label: this.$t('selectivity.modeApproaching') }
       return                                                                               { label: this.$t('selectivity.modeSubThreshold') }
     },
 
     modeBadgeClass(): string {
       const t = this.targetRatio, h = this.store.healthyDisruptionRatio
-      if (h >= DISRUPTION_WARN_THRESHOLD)                                        return 'sel-panel__mode-badge--ablative'
-      if (t >= DISRUPTION_WARN_THRESHOLD && h < THRESHOLDS.HEALTHY_APPROACHING) return 'sel-panel__mode-badge--therapeutic'
-      if (t >= DISRUPTION_WARN_THRESHOLD)                                        return 'sel-panel__mode-badge--marginal'
+      if (h >= THRESHOLDS.DISRUPTION_WARN)                                        return 'sel-panel__mode-badge--ablative'
+      if (t >= THRESHOLDS.DISRUPTION_WARN && h < THRESHOLDS.HEALTHY_APPROACHING) return 'sel-panel__mode-badge--therapeutic'
+      if (t >= THRESHOLDS.DISRUPTION_WARN)                                        return 'sel-panel__mode-badge--marginal'
       if (t >= THRESHOLDS.HEALTHY_APPROACHING)                                   return 'sel-panel__mode-badge--approaching'
       return                                                                             'sel-panel__mode-badge--subthreshold'
     },
@@ -259,9 +260,7 @@ export default defineComponent({
     },
 
     vmSelectivityRatio(): number {
-      const hVm = this.store.healthyVm
-      if (hVm < 1e-12) return this.store.targetVm > 0 ? 99.9 : 0
-      return Math.min(99.9, this.store.targetVm / hVm)
+      return safeRatio(this.store.targetVm, this.store.healthyVm, THRESHOLDS.TI_DISPLAY_CAP, NEAR_ZERO_VM)
     },
 
     targetLysisField(): string { return formatFieldVcm(this.store.targetLysisField) },

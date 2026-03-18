@@ -6,7 +6,7 @@
  * Follows the same pattern as sliderTooltips.ts: pure functions, no store access.
  */
 import { ICON } from '@/constants/icons'
-import { THRESHOLDS, DISRUPTION_WARN_THRESHOLD } from '@/constants/cellCard'
+import { THRESHOLDS } from '@/constants/physics'
 
 export function tipTargetPlysis(lysisTime: string): string {
   return `<strong>P(electroporation)</strong>
@@ -40,7 +40,7 @@ export function tipTargetBar(params: {
   targetRatio: number
 }): string {
   const { pct, isResonanceTarget, resonantThresholdVcm, resonantFreqGHz, targetVmMv, thresholdMv, lysisTime, targetRatio } = params
-  const warn = targetRatio >= DISRUPTION_WARN_THRESHOLD
+  const warn = targetRatio >= THRESHOLDS.DISRUPTION_WARN
     ? `\n<span class="tip-warn">${ICON.LIGHTNING} >85% — disruption countdown active (${lysisTime})</span>`
     : ''
   if (isResonanceTarget) {

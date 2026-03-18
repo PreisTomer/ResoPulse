@@ -9,7 +9,7 @@
 import { CELL_STATE, CELL_TYPE, CHART_MODE, WAVEFORM } from '@/constants/strings'
 import { computeTau } from '@/utils/physics'
 import type { CellConfig } from '@/types/cell'
-import { THRESHOLDS } from '@/constants/cellCard'
+import { THRESHOLDS } from '@/constants/physics'
 
 export function formatLysisTimeLocal(ms: number): string {
   return ms < 1000 ? `${ms}ms` : `${(ms / 1000).toFixed(1)}s`

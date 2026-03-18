@@ -62,9 +62,9 @@ import type { PropType } from 'vue'
 import { useCellStore } from '@/stores/cellStore'
 import { broadcastStateSync } from '@/services/socket'
 import { CELL_LABEL, THERMAL_LEVEL } from '@/constants/strings'
-import { THRESHOLDS } from '@/constants/cellCard'
+import { THRESHOLDS } from '@/constants/physics'
 import type { SliderRange } from '@/constants/sliderBounds'
-import { formatFieldVcm } from '@/utils/format'
+import { formatFieldVcm, FIELD_KV_THRESHOLD } from '@/utils/format'
 import { tipField, tipTargetBadge, tipHealthyBadge } from '@/tooltips/sliderTooltips'
 
 export default defineComponent({
@@ -92,8 +92,8 @@ export default defineComponent({
     targetDisruptPercent(): string  { return (this.targetDisruption * 100).toFixed(0) },
     healthyDisruptPercent(): string { return (this.healthyDisruption * 100).toFixed(0) },
 
-    fieldInputUnit(): string { return this.currentField >= 10_000 ? 'kV/cm' : 'V/cm' },
-    fieldInputStep(): number { return this.currentField >= 10_000 ? 0.1 : 1 },
+    fieldInputUnit(): string { return this.currentField >= FIELD_KV_THRESHOLD ? 'kV/cm' : 'V/cm' },
+    fieldInputStep(): number { return this.currentField >= FIELD_KV_THRESHOLD ? 0.1 : 1 },
 
     tipFieldLabel(): string {
       return tipField({
@@ -139,7 +139,7 @@ export default defineComponent({
     },
 
     startEditField() {
-      this.fieldInputVal = this.currentField >= 10_000
+      this.fieldInputVal = this.currentField >= FIELD_KV_THRESHOLD
         ? parseFloat((this.currentField / 1_000).toFixed(1))
         : this.currentField
       this.editingField = true
