@@ -35,15 +35,16 @@
         </div>
       </div>
 
-      <!-- Session name -->
-      <div class="reports__session-row">
-        <label class="reports__session-label">{{ $t('reports.sessionLabel') }}</label>
-        <input
-          v-model="store.sessionName"
-          class="reports__session-input"
-          :placeholder="$t('reports.sessionPlaceholder')"
-          spellcheck="false"
-        />
+      <!-- Session summary (read-only) -->
+      <div class="reports__session-summary">
+        <span class="reports__session-name">{{ store.sessionName }}</span>
+        <span class="reports__session-meta">
+          {{ totalReadings }} {{ totalReadings === 1 ? $t('reports.countSingular') : $t('reports.countPlural') }}
+          <template v-if="distinctSessionCount > 1">
+            · {{ $t('reports.sessionMultiple', { n: distinctSessionCount }) }}
+          </template>
+        </span>
+        <span class="reports__session-hint">{{ $t('reports.sessionEditHint') }}</span>
       </div>
 
       <!-- Stats row -->
@@ -123,23 +124,24 @@
           <table class="reports__table">
             <thead>
               <tr>
+                <th v-tip="$t('reports.colSessionTitle')">{{ $t('reports.colSession') }}</th>
                 <th>{{ $t('reports.colId') }}</th>
                 <th>{{ $t('reports.colTime') }}</th>
                 <th>{{ $t('reports.colTarget') }}</th>
-                <th>{{ $t('reports.colFreq') }}</th>
-                <th>{{ $t('reports.colField') }}</th>
+                <th v-tip="$t('log.tipThFreq')">{{ $t('reports.colFreq') }}</th>
+                <th v-tip="$t('log.tipThField')">{{ $t('reports.colField') }}</th>
                 <th>{{ $t('reports.colMedium') }}</th>
-                <th :title="$t('reports.colTVmTitle')">{{ $t('reports.colTVm') }}</th>
-                <th :title="$t('reports.colHVmTitle')">{{ $t('reports.colHVm') }}</th>
-                <th :title="$t('reports.colSelectivityTitle')">{{ $t('reports.colSelectivity') }}</th>
-                <th :title="$t('reports.colTRatioTitle')">{{ $t('reports.colTRatio') }}</th>
-                <th :title="$t('reports.colHRatioTitle')">{{ $t('reports.colHRatio') }}</th>
-                <th :title="$t('reports.colTTempTitle')">{{ $t('reports.colTTemp') }}</th>
-                <th :title="$t('reports.colHTempTitle')">{{ $t('reports.colHTemp') }}</th>
-                <th :title="$t('log.tipThDepH')">{{ $t('log.logThDepH') }}</th>
-                <th :title="$t('log.tipThDepT')">{{ $t('log.logThDepT') }}</th>
-                <th :title="$t('reports.colEventTitle')">{{ $t('reports.colEvent') }}</th>
-                <th :title="$t('reports.colMethodsTitle')">{{ $t('reports.colMethods') }}</th>
+                <th v-tip="$t('reports.colTVmTitle')">{{ $t('reports.colTVm') }}</th>
+                <th v-tip="$t('reports.colHVmTitle')">{{ $t('reports.colHVm') }}</th>
+                <th v-tip="$t('reports.colSelectivityTitle')">{{ $t('reports.colSelectivity') }}</th>
+                <th v-tip="$t('reports.colTRatioTitle')">{{ $t('reports.colTRatio') }}</th>
+                <th v-tip="$t('reports.colHRatioTitle')">{{ $t('reports.colHRatio') }}</th>
+                <th v-tip="$t('reports.colTTempTitle')">{{ $t('reports.colTTemp') }}</th>
+                <th v-tip="$t('reports.colHTempTitle')">{{ $t('reports.colHTemp') }}</th>
+                <th v-tip="$t('log.tipThDepH')">{{ $t('log.logThDepH') }}</th>
+                <th v-tip="$t('log.tipThDepT')">{{ $t('log.logThDepT') }}</th>
+                <th v-tip="$t('reports.colEventTitle')">{{ $t('reports.colEvent') }}</th>
+                <th v-tip="$t('reports.colMethodsTitle')">{{ $t('reports.colMethods') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -148,32 +150,34 @@
                 :key="e.id"
                 :class="{ 'reports__row--lysis': e.event === LOG_EVENT.LYSIS }"
               >
+                <td class="reports__mono reports__session-val" v-tip="tipCellSession(e)">{{ e.sessionName ?? '—' }}</td>
                 <td class="reports__mono reports__muted">{{ e.id }}</td>
                 <td class="reports__mono reports__timestamp">{{ e.timestamp }}</td>
                 <td class="reports__mono">{{ e.targetPreset }}</td>
-                <td class="reports__mono">{{ formatFreqKHz(e.freqKHz, 1) }}</td>
-                <td class="reports__mono">{{ formatFieldVcm(e.fieldVcm) }}</td>
+                <td class="reports__mono" v-tip="tipCellFreq(e)">{{ formatFreqKHz(e.freqKHz, 1) }}</td>
+                <td class="reports__mono" v-tip="tipCellField(e)">{{ formatFieldVcm(e.fieldVcm) }}</td>
                 <td class="reports__mono reports__muted">{{ e.medium }}</td>
-                <td class="reports__mono reports__cancer-val">{{ e.targetVm.toFixed(3) }}</td>
-                <td class="reports__mono reports__ref-val">{{ e.healthyVm.toFixed(3) }}</td>
-                <td class="reports__mono" :class="selClass(e.selectivity)">
+                <td class="reports__mono reports__cancer-val" v-tip="tipCellTargetVm(e)">{{ e.targetVm.toFixed(3) }}</td>
+                <td class="reports__mono reports__ref-val" v-tip="tipCellHealthyVm(e)">{{ e.healthyVm.toFixed(3) }}</td>
+                <td class="reports__mono" :class="selClass(e.selectivity)" v-tip="tipCellSel(e)">
                   {{ e.selectivity.toFixed(3) }}
                 </td>
                 <td
                   class="reports__mono"
                   :class="e.targetRatio >= THRESHOLDS.LYSIS_PROB_CENTER ? 'reports__cancer-val' : e.targetRatio >= THRESHOLDS.HEALTHY_APPROACHING ? 'reports__warn-val' : ''"
+                  v-tip="tipCellTRatio(e)"
                 >{{ (e.targetRatio * 100).toFixed(1) }}%</td>
-                <td class="reports__mono reports__ref-val">{{ (e.healthyRatio * 100).toFixed(1) }}%</td>
-                <td class="reports__mono" :class="e.targetTemp > THRESHOLDS.TEMP_WARN ? 'reports__warn-val' : ''">
+                <td class="reports__mono reports__ref-val" v-tip="tipCellHRatio(e)">{{ (e.healthyRatio * 100).toFixed(1) }}%</td>
+                <td class="reports__mono" :class="e.targetTemp > THRESHOLDS.TEMP_WARN ? 'reports__warn-val' : ''" v-tip="tipCellTemp(e.targetTemp, 'target')">
                   {{ e.targetTemp.toFixed(1) }}
                 </td>
-                <td class="reports__mono" :class="e.healthyTemp > THRESHOLDS.TEMP_WARN ? 'reports__warn-val' : ''">
+                <td class="reports__mono" :class="e.healthyTemp > THRESHOLDS.TEMP_WARN ? 'reports__warn-val' : ''" v-tip="tipCellTemp(e.healthyTemp, 'healthy')">
                   {{ e.healthyTemp.toFixed(1) }}
                 </td>
-                <td class="reports__mono" :class="e.depHealthyK != null ? (e.depHealthyK > 0 ? 'reports__green-val' : 'reports__warn-val') : 'reports__muted'">
+                <td class="reports__mono" :class="e.depHealthyK != null ? (e.depHealthyK > 0 ? 'reports__green-val' : 'reports__warn-val') : 'reports__muted'" v-tip="tipCellDepH(e)">
                   {{ e.depHealthyK != null ? e.depHealthyK.toFixed(3) : '—' }}
                 </td>
-                <td class="reports__mono" :class="e.depTargetK != null ? (e.depTargetK > 0 ? 'reports__green-val' : 'reports__warn-val') : 'reports__muted'">
+                <td class="reports__mono" :class="e.depTargetK != null ? (e.depTargetK > 0 ? 'reports__green-val' : 'reports__warn-val') : 'reports__muted'" v-tip="tipCellDepT(e)">
                   {{ e.depTargetK != null ? e.depTargetK.toFixed(3) : '—' }}
                 </td>
                 <td>
@@ -234,8 +238,9 @@ export default defineComponent({
   setup() {
     const store = useExperimentStore()
 
-    const totalReadings   = computed(() => store.entries.length)
-    const reversedEntries = computed(() => [...store.entries].reverse())
+    const totalReadings        = computed(() => store.entries.length)
+    const reversedEntries      = computed(() => [...store.entries].reverse())
+    const distinctSessionCount = computed(() => new Set(store.entries.map((e) => e.sessionName ?? store.sessionName)).size)
     const lysisEvents     = computed(() => store.entries.filter((e) => e.event === LOG_EVENT.LYSIS).length)
     const manualReadings  = computed(() => store.entries.filter((e) => e.event === LOG_EVENT.MANUAL).length)
 
@@ -285,6 +290,7 @@ export default defineComponent({
       store,
       totalReadings,
       reversedEntries,
+      distinctSessionCount,
       lysisEvents,
       manualReadings,
       avgSelectivity,
@@ -300,6 +306,64 @@ export default defineComponent({
       THRESHOLDS,
       ICON,
     }
+  },
+
+  methods: {
+    tipCellSession(e: { sessionName?: string; id: number }): string {
+      return this.$t('log.tipCellSession', { name: e.sessionName ?? '—', id: e.id })
+    },
+    tipCellFreq(e: { freqKHz: number }): string {
+      return this.$t('log.tipCellFreq', { freq: e.freqKHz })
+    },
+    tipCellField(e: { fieldVcm: number }): string {
+      return this.$t('log.tipCellField', { field: e.fieldVcm })
+    },
+    tipCellTargetVm(e: { targetVm: number; targetPreset: string; targetRatio: number }): string {
+      return this.$t('log.tipCellTargetVm', {
+        vm:     e.targetVm.toFixed(3),
+        preset: e.targetPreset,
+        ratio:  (e.targetRatio * 100).toFixed(1),
+      })
+    },
+    tipCellHealthyVm(e: { healthyVm: number; healthyRatio: number }): string {
+      return this.$t('log.tipCellHealthyVm', {
+        vm:    e.healthyVm.toFixed(3),
+        ratio: (e.healthyRatio * 100).toFixed(1),
+      })
+    },
+    tipCellSel(e: { selectivity: number; targetTemp: number; healthyTemp: number }): string {
+      return this.$t('log.tipCellSel', {
+        sel:         e.selectivity.toFixed(3),
+        targetTemp:  e.targetTemp.toFixed(1),
+        healthyTemp: e.healthyTemp.toFixed(1),
+      })
+    },
+    tipCellTRatio(e: { targetRatio: number }): string {
+      return this.$t('log.tipCellTargetVm', {
+        vm:     '—',
+        preset: '',
+        ratio:  (e.targetRatio * 100).toFixed(1),
+      })
+    },
+    tipCellHRatio(e: { healthyRatio: number }): string {
+      return this.$t('log.tipCellHealthyVm', {
+        vm:    '—',
+        ratio: (e.healthyRatio * 100).toFixed(1),
+      })
+    },
+    tipCellTemp(temp: number, cell: 'target' | 'healthy'): string {
+      return this.$t('reports.tipCellTemp', {
+        temp: temp.toFixed(1),
+        cell,
+        warn: temp > THRESHOLDS.TEMP_WARN ? ` ⚠ above ${THRESHOLDS.TEMP_WARN}°C hyperthermic limit` : '',
+      })
+    },
+    tipCellDepH(e: { depHealthyK?: number }): string {
+      return this.$t('log.tipCellDepH', { k: e.depHealthyK != null ? e.depHealthyK.toFixed(4) : '—' })
+    },
+    tipCellDepT(e: { depTargetK?: number }): string {
+      return this.$t('log.tipCellDepT', { k: e.depTargetK != null ? e.depTargetK.toFixed(4) : '—' })
+    },
   },
 })
 </script>
@@ -398,32 +462,30 @@ export default defineComponent({
     }
   }
 
-  /* ── Session name ─────────────────────────────────────────────────────────── */
-  &__session-row {
-    @include flex-row(0.85rem);
+  /* ── Session summary (read-only) ──────────────────────────────────────────── */
+  &__session-summary {
+    @include flex-row(0.75rem);
+    align-items: baseline;
+    flex-wrap: wrap;
   }
 
-  &__session-label {
-    @include mono-upper(0.72rem, 0.1em);
-    color: var(--color-text-muted);
-    flex-shrink: 0;
-  }
-
-  &__session-input {
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius);
-    padding: 0.45rem 0.85rem;
-    font-size: 0.9rem;
+  &__session-name {
     font-family: var(--font-mono);
+    font-size: 0.95rem;
+    font-weight: 600;
     color: var(--color-text-heading);
-    width: 240px;
-    transition: border-color 0.15s;
+  }
 
-    &:focus {
-      outline: none;
-      border-color: var(--color-primary);
-    }
+  &__session-meta {
+    @include mono-upper(0.68rem, 0.06em);
+    color: var(--color-primary);
+  }
+
+  &__session-hint {
+    font-size: 0.68rem;
+    font-family: var(--font-mono);
+    color: var(--color-text-muted);
+    margin-left: auto;
   }
 
   /* ── Stats ────────────────────────────────────────────────────────────────── */
@@ -442,8 +504,8 @@ export default defineComponent({
   @media (max-width: 700px) {
     &__inner      { padding: 1rem 0.85rem 3rem; }
     &__header-row { flex-direction: column; align-items: flex-start; }
-    &__session-row { flex-wrap: wrap; }
-    &__session-input { width: 100%; flex: 1 1 180px; }
+    &__session-summary { flex-wrap: wrap; }
+    &__session-hint { margin-left: 0; }
   }
 
   /* ── Log card ─────────────────────────────────────────────────────────────── */
@@ -568,12 +630,20 @@ export default defineComponent({
   }
 
   /* Utility colours */
-  &__mono       { font-family: var(--font-mono); }
-  &__muted      { color: var(--color-text-muted); }
-  &__cancer-val { color: var(--color-danger);  }
-  &__ref-val    { color: var(--color-primary); }
-  &__green-val  { color: var(--color-lime);   }
-  &__warn-val   { color: var(--color-amber);  }
+  &__mono        { font-family: var(--font-mono); }
+  &__muted       { color: var(--color-text-muted); }
+  &__cancer-val  { color: var(--color-danger);  }
+  &__ref-val     { color: var(--color-primary); }
+  &__green-val   { color: var(--color-lime);   }
+  &__warn-val    { color: var(--color-amber);  }
+  &__session-val {
+    color: var(--color-text-muted);
+    font-size: 0.62rem;
+    max-width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 
   /* Event type labels — plain colored text, not styled as buttons */
   &__ev-badge {

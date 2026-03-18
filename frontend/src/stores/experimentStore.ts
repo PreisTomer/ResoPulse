@@ -112,6 +112,7 @@ export const useExperimentStore = defineStore('experiment', {
       const t = snap.target
       this.entries.push({
         id:           this.nextId++,
+        sessionName:  this.sessionName,
         timestamp:    nowHMS(),
         freqKHz:      snap.currentBroadcastFrequency,
         fieldVcm:     snap.fieldIntensity,

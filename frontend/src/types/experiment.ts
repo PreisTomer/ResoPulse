@@ -29,6 +29,7 @@ export interface CellParamSnapshot {
 
 export interface LogEntry {
   id: number
+  sessionName?: string    // snapshot of session name at log time
   timestamp: string       // HH:mm:ss
   freqKHz: number
   fieldVcm: number

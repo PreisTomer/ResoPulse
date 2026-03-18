@@ -49,6 +49,7 @@
       <table class="exp-log__table">
         <thead>
           <tr>
+            <th v-if="showSessionCol" v-tip="tipThSession">{{ $t('log.colSession') }}</th>
             <th v-tip="tipThNumber">{{ $t('exp.logThNumber') }}</th>
             <th v-tip="tipThTime">{{ $t('exp.logThTime') }}</th>
             <th v-tip="tipThFreq">{{ $t('exp.logThFreq') }}</th>
@@ -67,6 +68,7 @@
             :key="e.id"
             :class="{ 'exp-log__row--lysis': e.event === LOG_EVENT.LYSIS }"
           >
+            <td v-if="showSessionCol" class="exp-log__td-session" v-tip="tipCellSession(e)">{{ e.sessionName ?? '—' }}</td>
             <td class="exp-log__td-id">{{ e.id }}</td>
             <td class="exp-log__td-mono">{{ e.timestamp }}</td>
             <td class="exp-log__td-mono" v-tip="tipCellFreq(e)">{{ formatFreqKHz(e.freqKHz) }}</td>
@@ -81,7 +83,7 @@
             </td>
           </tr>
           <tr v-if="!hasEntries">
-            <td :colspan="isResonanceMode ? 8 : 10" class="exp-log__td-empty">{{ $t('exp.logEmpty') }}</td>
+            <td :colspan="emptyColspan" class="exp-log__td-empty">{{ $t('exp.logEmpty') }}</td>
           </tr>
         </tbody>
       </table>
@@ -125,6 +127,15 @@ export default defineComponent({
     },
     hasEntries(): boolean { return this.expStore.entries.length > 0 },
     isResonanceMode(): boolean { return this.cellStore.chartMode === 'resonance' },
+    /** Show the Session column only when entries span more than one named session. */
+    showSessionCol(): boolean {
+      const names = new Set(this.expStore.entries.map((e) => e.sessionName ?? ''))
+      return names.size > 1
+    },
+    emptyColspan(): number {
+      const base = this.isResonanceMode ? 8 : 10
+      return this.showSessionCol ? base + 1 : base
+    },
 
     // ── Button tooltips ────────────────────────────────────────────────────────
     tipLogReading(): string { return this.$t('log.tipLogReading') },
@@ -132,6 +143,7 @@ export default defineComponent({
     tipClearLog(): string   { return this.$t('log.tipClearLog') },
 
     // ── Column header tooltips ─────────────────────────────────────────────────
+    tipThSession(): string  { return this.$t('log.tipThSession') },
     tipThNumber(): string   { return this.$t('log.tipThNumber') },
     tipThTime(): string     { return this.$t('log.tipThTime') },
     tipThFreq(): string     { return this.$t('log.tipThFreq') },
@@ -211,6 +223,9 @@ export default defineComponent({
     depKClass(k: number | undefined): string {
       if (k == null) return ''
       return k > 0 ? 'exp-log__td-pdep' : 'exp-log__td-ndep'
+    },
+    tipCellSession(e: { sessionName?: string; id: number }): string {
+      return this.$t('log.tipCellSession', { name: e.sessionName ?? '—', id: e.id })
     },
     tipCellDepH(e: { depHealthyK?: number }): string {
       return this.$t('log.tipCellDepH', { k: e.depHealthyK != null ? e.depHealthyK.toFixed(4) : '—' })
@@ -350,6 +365,14 @@ export default defineComponent({
     &:hover td { background: rgba(255,77,109,0.10); }
   }
 
+  &__td-session {
+    color: var(--color-text-muted);
+    font-size: 0.58rem;
+    max-width: 80px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
   &__td-id     { text-align: left; opacity: 0.6; }
   &__td-mono   { text-align: left; }
   &__td-target  { color: var(--color-danger); }
