@@ -89,7 +89,7 @@
       <div class="instrument__poc-note">
         <span class="instrument__poc-icon">{{ ICON.INFO }}</span>
         <div>
-          <strong>{{ $t('instrument.view.pocTitle') }}</strong>
+          <strong>{{ $t('instrument.view.pocTitle') }}</strong><br>
           <span v-html="$t('instrument.view.pocBody')"></span>
         </div>
       </div>
