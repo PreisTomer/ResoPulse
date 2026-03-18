@@ -133,7 +133,7 @@ export const useCellStore = defineStore('cell', {
     targetTemp: BODY_TEMP_C,
     dutyCycle: 1e-4,               // 0.01% — typical pulsed electroporation default
     waveform: 'pulsed' as const,
-    pulseWidthNs: 1000,            // 1 µs — sub-µs range reveals nsEP selectivity for bacteria
+    pulseWidthNs: 100_000,         // 100 µs — mammalian category default; gives ~10 s lysis delay at dc=1e-4
     safeMode: false,               // expert mode by default (scientists need full range)
     orientationDeg: 0,             // 0° = field-aligned = maximum transmembrane coupling
     lysisNPulses: DEFAULT_LYSIS_N_PULSES,
@@ -185,7 +185,7 @@ export const useCellStore = defineStore('cell', {
     lysisDelayMs(state): number {
       if (state.waveform === WAVEFORM.CW || state.dutyCycle >= 1) return 2500
       const pulsePeriodMs = (state.pulseWidthNs * 1e-6) / state.dutyCycle
-      return Math.max(200, Math.min(30_000, state.lysisNPulses * pulsePeriodMs))
+      return Math.max(2500, Math.min(30_000, state.lysisNPulses * pulsePeriodMs))
     },
 
     /** Schwan Vm for healthy cell [V]. Pulsed mode uses E_peak (lower-bound; cancels in TI). */

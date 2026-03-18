@@ -120,7 +120,7 @@
 
       <!-- Reversible EP strip — target cell 50–85% disruption (pores open/re-seal) -->
       <div
-        v-if="!compact && type === CELL_TYPE.TARGET && cellState === CELL_STATE.REV_EP"
+        v-if="type === CELL_TYPE.TARGET && cellState === CELL_STATE.REV_EP"
         class="cell-card__rev-ep-strip"
         v-tip="tipDisruption"
       >
@@ -131,7 +131,7 @@
 
       <!-- Lysis protocol strip — target cell vibrating state (>85%, lysis armed) -->
       <div
-        v-if="!compact && type === CELL_TYPE.TARGET && cellState === CELL_STATE.VIBRATING"
+        v-if="type === CELL_TYPE.TARGET && cellState === CELL_STATE.VIBRATING"
         class="cell-card__lysis-strip"
         v-tip="tipDisruption"
       >
@@ -142,7 +142,7 @@
 
       <!-- Structural integrity countdown bar — drains 100→0 % as lysis timer runs -->
       <div
-        v-if="!compact && lysisIntegrityPct !== null"
+        v-if="lysisIntegrityPct !== null"
         class="cell-card__integrity-bar-row"
       >
         <span class="cell-card__integrity-label">{{ $t('cells.integrityLabel') }}</span>
@@ -173,7 +173,7 @@
 
       <!-- Thermal warning strip — both cell types -->
       <div
-        v-if="!compact && tempWarning && cellState !== CELL_STATE.LYSED && cellState !== CELL_STATE.LYSING"
+        v-if="tempWarning && cellState !== CELL_STATE.LYSED && cellState !== CELL_STATE.LYSING"
         class="cell-card__thermal-warn"
         :class="{ 'cell-card__thermal-warn--denaturing': tempDenaturing }"
         v-tip="tipTemp"
@@ -188,7 +188,7 @@
       </div>
 
       <!-- Lysis overlay — absolute, covers cell-card__visual without shifting card height -->
-      <div v-if="!compact && cellState === CELL_STATE.LYSED" class="cell-card__destroyed">
+      <div v-if="cellState === CELL_STATE.LYSED" class="cell-card__destroyed">
         <span class="cell-card__destroyed-text">{{ thermalLysis ? $t('cells.states.thermalLysis') : $t('cells.states.membraneLysed') }}</span>
         <span v-if="thermalLysis" class="cell-card__destroyed-sub">{{ $t('cells.states.vaporized') }}</span>
         <button class="cell-card__lysis-btn" :disabled="!canReset" @click="resetToStable">{{ $t('cells.states.resetCell') }}</button>
@@ -594,6 +594,14 @@ export default defineComponent({
   },
 
   mounted() {
+    if (this.compact) {
+      // Watchers only fire on changes — sync the current store state immediately on mount
+      // so the sticky card reflects whatever state the main card is already in.
+      this.cellState = this.type === CELL_TYPE.HEALTHY
+        ? this.store.healthyCellState
+        : this.store.targetCellState
+    }
+    // Draw blob animation for both compact and non-compact — sticky view needs live visuals.
     if (this.cellData) {
       this.drawCell()
       this.drawOscilloscope()
