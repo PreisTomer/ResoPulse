@@ -595,6 +595,27 @@ export default defineComponent({
       if (this.targetPickerOpen) this.healthyPickerOpen = false
     },
 
+    /** Sanitize time-domain parameters on page load without discarding the user's
+     *  persisted field intensity and frequency. Called only from mounted().
+     *  Fixes the original issue: a persisted 1 µs pulse width (old mammalian default)
+     *  would make lysis appear instantaneous. Only resets the parameters that can
+     *  be dangerously wrong across categories; leaves field/freq untouched. */
+    sanitizeCategoryParams() {
+      const cat = this.store.targetCellCategory
+      const d   = CATEGORY_DEFAULTS[cat]
+      this.store.setWaveform(d.waveform)
+      this.store.setDutyCycle(d.dutyCycle)
+      this.store.setPulseWidthNs(d.pulseWidthNs)
+      this.store.setMedium(d.medium)
+      this.store.setOrientationDeg(0)
+      this.store.setLysisNPulses(DEFAULT_LYSIS_N_PULSES)
+      this.store.resetTemps()
+      // Resonance mode is not valid for mammalian cells; revert if persisted incorrectly.
+      if (cat === CELL_CATEGORY.MAMMALIAN && this.store.chartMode === CHART_MODE.RESONANCE) {
+        this.store.setChartMode(CHART_MODE.SCHWAN)
+      }
+    },
+
     /** Reset field controls and chart mode to scientifically appropriate defaults
      *  for the newly-selected target cell category. */
     applyTargetDefaults() {
@@ -629,10 +650,9 @@ export default defineComponent({
   },
 
   mounted() {
-    // Ensure pulse-width / duty-cycle / waveform match the current target category.
-    // Without this, a persisted 1µs pulse width (old default) would give a 200ms lysis
-    // delay for mammalian cells, making lysis appear instantaneous.
-    this.applyTargetDefaults()
+    // Sanitize time-domain params for the current category without resetting
+    // the user's persisted field intensity and frequency (applyTargetDefaults would do too much).
+    this.sanitizeCategoryParams()
 
     const sentinel = this.$refs.cellsAnchor as HTMLElement
     if (sentinel) {

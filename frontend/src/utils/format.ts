@@ -20,6 +20,19 @@ export function formatFreqKHz(khz: number, decimals = 2): string {
   return `${Math.round(khz)} ${UNIT.KHZ}`
 }
 
+/**
+ * Split a frequency [kHz] into a numeric string and unit string for separate column display.
+ * Selects the most readable scale (GHz / MHz / kHz).
+ * @param khz      - Frequency in kHz
+ * @param decimals - Decimal places for MHz and GHz output (default 2)
+ * @returns `{ value, unit }` suitable for two-column layout
+ */
+export function splitFreqKHz(khz: number, decimals = 2): { value: string; unit: string } {
+  if (khz >= KHZ_PER_GHZ) return { value: (khz / KHZ_PER_GHZ).toFixed(decimals), unit: UNIT.GHZ }
+  if (khz >= KHZ_PER_MHZ) return { value: (khz / KHZ_PER_MHZ).toFixed(decimals), unit: UNIT.MHZ }
+  return { value: Math.round(khz).toString(), unit: UNIT.KHZ }
+}
+
 /** Format a field intensity [V/cm] to a human-readable string.
  *  Values ≥ 10 kV/cm are displayed as kV/cm (1 decimal place). */
 export function formatFieldVcm(vcm: number): string {

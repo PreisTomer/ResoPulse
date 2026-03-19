@@ -28,16 +28,30 @@ import { UNIT } from '@/constants/units'
 
 // ── Editable biophysical parameter definitions ────────────────────────────────
 export interface EditableParamDef {
-  label: string
+  /** i18n key — pass to $t() for display label */
+  labelKey: string
+  /** i18n key — pass to $t() for tooltip */
+  tipKey: string
   key: string
   step: number
   min: number
+  max: number
   unit: string
 }
 
+/** Editable params for mammalian cells (Schwan model). */
 export const EDITABLE_PARAMS: EditableParamDef[] = [
-  { label: 'Radius R',          key: 'radius',            step: 0.001, min: 0.001, unit: UNIT.UM      },
-  { label: 'Eff. membrane ε_r', key: 'dielectricConstant', step: 0.1,  min: 1,     unit: ''           },
-  { label: 'Conductivity σ_i',  key: 'conductivity',      step: 0.01,  min: 0.001, unit: UNIT.S_PER_M },
-  { label: 'Threshold Vm',      key: 'thresholdVoltage',  step: 0.05,  min: 0.1,   unit: UNIT.V       },
+  { labelKey: 'cells.params.radius',            tipKey: 'cells.paramTips.radius',            key: 'radius',            step: 0.001, min: 0.001, max: 100, unit: UNIT.UM      },
+  { labelKey: 'cells.params.membraneThickness',  tipKey: 'cells.paramTips.membraneThickness',  key: 'membraneThickness', step: 0.5,   min: 1,     max: 50,  unit: UNIT.NM      },
+  { labelKey: 'cells.params.dielectricConstant', tipKey: 'cells.paramTips.dielectricConstant', key: 'dielectricConstant', step: 0.1,  min: 1,     max: 100, unit: ''           },
+  { labelKey: 'cells.params.conductivity',       tipKey: 'cells.paramTips.conductivity',       key: 'conductivity',      step: 0.01,  min: 0.001, max: 5,   unit: UNIT.S_PER_M },
+  { labelKey: 'cells.params.thresholdVoltage',   tipKey: 'cells.paramTips.thresholdVoltage',   key: 'thresholdVoltage',  step: 0.05,  min: 0.1,   max: 10,  unit: UNIT.V       },
+]
+
+/** Editable params for bacteria/virus targets (acoustic capsid resonance model). */
+export const EDITABLE_PARAMS_ACOUSTIC: EditableParamDef[] = [
+  { labelKey: 'cells.params.radius',          tipKey: 'cells.paramTips.radius',          key: 'radius',          step: 0.001, min: 0.001, max: 10,  unit: UNIT.UM  },
+  { labelKey: 'cells.params.resonantFreqGHz',  tipKey: 'cells.paramTips.resonantFreqGHz',  key: 'resonantFreqGHz', step: 0.01,  min: 0.001, max: 100, unit: UNIT.GHZ },
+  { labelKey: 'cells.params.capsidQ',          tipKey: 'cells.paramTips.capsidQ',          key: 'capsidQ',         step: 1,     min: 1,     max: 200, unit: ''       },
+  { labelKey: 'cells.params.thresholdVoltage', tipKey: 'cells.paramTips.thresholdVoltage', key: 'thresholdVoltage', step: 0.05,  min: 0.1,   max: 10,  unit: UNIT.V  },
 ]
