@@ -68,7 +68,7 @@
             :key="e.id"
             :class="{ 'exp-log__row--lysis': e.event === LOG_EVENT.LYSIS }"
           >
-            <td v-if="showSessionCol" class="exp-log__td-session" v-tip="tipCellSession(e)">{{ e.sessionName ?? ', ' }}</td>
+            <td v-if="showSessionCol" class="exp-log__td-session" v-tip="tipCellSession(e)">{{ e.sessionName ?? NULL_DISPLAY }}</td>
             <td class="exp-log__td-id">{{ e.id }}</td>
             <td class="exp-log__td-mono">{{ e.timestamp }}</td>
             <td class="exp-log__td-mono" v-tip="tipCellFreq(e)">{{ formatFreqKHz(e.freqKHz) }}</td>
@@ -101,7 +101,7 @@ import StatusBadge from '@/components/StatusBadge.vue'
 import { useExperimentStore } from '@/stores/experimentStore'
 import { useCellStore } from '@/stores/cellStore'
 import { broadcastLogEntry } from '@/services/socket'
-import { LOG_EVENT } from '@/constants/strings'
+import { LOG_EVENT, NULL_DISPLAY } from '@/constants/strings'
 import { eventVariant as sharedEventVariant, depKDisplay, depKDisplayFull } from '@/utils/experimentUtils'
 import {
   tipCellSession as sharedTipCellSession,
@@ -126,6 +126,7 @@ export default defineComponent({
       expStore: useExperimentStore(),
       cellStore: useCellStore(),
       LOG_EVENT,
+      NULL_DISPLAY,
       ICON,
       THRESHOLDS,
       formatFreqKHz,
@@ -332,6 +333,10 @@ export default defineComponent({
         white-space: nowrap;
       }
       tr:hover td { background: rgba(255,255,255,0.025); }
+
+      .exp-log__td-session,
+      .exp-log__td-id,
+      .exp-log__td-mono { text-align: left; }
     }
   }
 
@@ -348,8 +353,8 @@ export default defineComponent({
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  &__td-id     { text-align: left; opacity: 0.6; }
-  &__td-mono   { text-align: left; }
+  &__td-id   { opacity: 0.6; }
+  &__td-mono { }
   &__td-target  { color: var(--color-danger); }
   &__td-healthy { color: var(--color-primary); }
   &__td-sel    { color: var(--color-text-heading); font-weight: 600; }

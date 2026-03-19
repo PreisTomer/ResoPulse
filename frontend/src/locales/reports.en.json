@@ -67,6 +67,7 @@
     "colEvent": "Event",
     "colEventTitle": "LYSIS: auto-triggered when target DR ≥ 85% for the lysis delay period (N × t_p / dc)  ·  MANUAL: saved via Log Reading button",
     "colMethods": "Methods",
+    "colMethodsBtn": "↓ Methods",
     "colMethodsTitle": "Download publication-ready Materials & Methods for this reading",
     "colMethodsLegacy": "Methods export not available, logged before parameter snapshots were introduced",
     "legendTarget": "Target value / high disruption",
