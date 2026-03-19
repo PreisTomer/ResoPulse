@@ -43,19 +43,35 @@
     },
     "params": {
       "radius": "Radius R",
+      "membraneThickness": "Membrane d",
       "dielectricConstant": "Membrane ε_r",
       "conductivity": "Conductivity σ_i",
-      "thresholdVoltage": "Threshold Vm"
+      "thresholdVoltage": "Threshold Vm",
+      "resonantFreqGHz": "Resonant freq",
+      "capsidQ": "Quality factor Q"
+    },
+    "paramTips": {
+      "radius": "<strong>Cell radius R [µm]</strong>\nVm scales linearly with R in the Schwan equation.\nLarger cells reach higher Vm under identical fields,\nwhich is the geometric basis of selective disruption.",
+      "membraneThickness": "<strong>Membrane thickness d [nm]</strong>\nSets capacitance: Cm = ε_r × ε₀ / d.\nThinner membranes in cancer cells raise Cm and τ,\nshifting the corner frequency fc downward.\nTypical lipid bilayer: 4–8 nm.",
+      "dielectricConstant": "<strong>Effective membrane permittivity ε_r</strong>\nRelative permittivity of the lipid bilayer.\nDetermines Cm together with d.\nHigher values reflect altered phospholipid and\ncholesterol composition. Typical range: 4–10.",
+      "conductivity": "<strong>Cytoplasm conductivity σ_i [S/m]</strong>\nAffects the Schwan time constant τ and corner\nfrequency fc. Higher σ_i gives shorter τ and\nhigher fc, compressing the selective window.\nTypical cytoplasm: 0.3–1.0 S/m.",
+      "thresholdVoltage": "<strong>Electroporation threshold Vth [V]</strong>\nTransmembrane potential above which irreversible\npore formation is initiated. Disruption ratio is\nDR = Vm / Vth. Literature range: 0.5–2.0 V.",
+      "resonantFreqGHz": "<strong>Capsid resonance frequency [GHz]</strong>\nFundamental acoustic resonance of the cell wall\nor viral capsid, set by shell geometry and the\ncytoplasm speed of sound.\nBacteria: 0.3–2 GHz; viruses: 5–20 GHz.",
+      "capsidQ": "<strong>Acoustic quality factor Q</strong>\nSets the sharpness of the resonance peak:\nhalf-power bandwidth = f_res / Q.\nBacteria: Q ≈ 3–4 (peptidoglycan viscous damping).\nProtein-capsid viruses: Q ≈ 25–30."
     },
     "paramsToggleLabel": "Cell Parameters",
     "paramsToggleTip": "<strong>Cell Parameters</strong>\nEdit biophysical properties that drive the\nSchwan equation calculation in real time.\nChanges immediately update Vm, selectivity,\nand the frequency response chart.",
+    "paramsToggleTipAcoustic": "<strong>Cell Parameters</strong>\nEdit acoustic and structural properties that drive\nthe capsid resonance model in real time.\nChanges immediately update disruption ratio\nand the frequency response chart.",
     "derivedParams": {
       "cm":  "Membrane Cm",
       "tau": "Time const τ",
-      "fc":  "Char. freq fc"
+      "fc":  "Char. freq fc",
+      "bw":  "Acoustic BW"
     },
     "derivedLabel": "Derived constants",
     "derivedTip": "<strong>Derived biophysical parameters</strong>\nComputed in real time from the editable values above.\n\n<span class='tip-val'>Cm</span> = ε_r × ε₀ / d\n  Membrane specific capacitance [mF/m²]\n\n<span class='tip-val'>τ</span> = R·Cm·(2σ_e+σ_i) / (2σ_e·σ_i)\n  Schwan time constant (Kotnik &amp; Miklavcic 2000)\n  Sets the frequency roll-off\n\n<span class='tip-val'>fc</span> = 1/(2πτ)\n  Characteristic frequency, Vm drops −3 dB here\n  Below fc: quasi-DC regime, Vm at maximum",
+    "derivedLabelAcoustic": "Acoustic constants",
+    "derivedTipAcoustic": "<strong>Acoustic resonance constants</strong>\nComputed from the capsid model parameters.\n\n<span class='tip-val'>τ</span> = R·Cm·(2σ_e+σ_i) / (2σ_e·σ_i)\n  Schwan time constant (electrical coupling)\n\n<span class='tip-val'>fc</span> = 1/(2πτ)\n  Schwan corner frequency (electrical roll-off)\n\n<span class='tip-val'>BW</span> = f_res / Q\n  Half-power bandwidth of the acoustic resonance peak\n  Narrower BW: higher frequency selectivity",
     "resetBtn": "↺ Reset to defaults",
     "resetBtnTip": "<strong>Reset to Preset Defaults</strong>\nRestores all parameters to the original\nvalues for this preset.\nUseful after editing to explore changes.",
     "tempWarning": "Thermal warning: reduce field intensity",

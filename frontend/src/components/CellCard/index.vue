@@ -28,6 +28,9 @@
       :editable-params="editableParams"
       :derived-params="derivedParams"
       :can-reset-to-preset="canResetToPreset"
+      :toggle-tip="paramsToggleTip"
+      :derived-label="derivedSectionLabel"
+      :derived-tip="derivedSectionTip"
       @param-change="onParamChange"
       @reset-to-preset="resetToPreset"
     />
@@ -222,6 +225,7 @@ import type { CellState } from '@/types/cell'
 import {
   CELL_COLORS,
   EDITABLE_PARAMS,
+  EDITABLE_PARAMS_ACOUSTIC,
   THRESHOLDS,
   LYSIS_DURATION_MS,
   FRAGMENT_INTERVAL_MS,
@@ -230,7 +234,7 @@ import { setupBlobAnimation, setupOscilloscope, spawnFragment } from '@/utils/ce
 import { CELL_STATE, CELL_TYPE, CELL_CATEGORY } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'
-import { formatFreqKHz } from '@/utils/format'
+import { splitFreqKHz } from '@/utils/format'
 import { tipVm as tipVmFn, tipAcousticVm as tipAcousticVmFn, tipTemp as tipTempFn, tipState as tipStateFn, tipDisruption as tipDisruptionFn, tipNuclearBar as tipNuclearBarFn, tipDep as tipDepFn, formatLysisTimeLocal } from '@/tooltips/cellCardTooltips'
 
 import CellHeader from './CellHeader.vue'
@@ -386,23 +390,58 @@ export default defineComponent({
 
     editableParams() {
       const cell = this.type === CELL_TYPE.HEALTHY ? this.store.healthy : this.store.target
-      return EDITABLE_PARAMS.map((p) => ({
+      const paramSet = this.isAcousticTarget ? EDITABLE_PARAMS_ACOUSTIC : EDITABLE_PARAMS
+      return paramSet.map((p) => ({
         ...p,
         displayValue: (cell as unknown as Record<string, number>)[p.key] ?? 0,
       }))
     },
 
     derivedParams() {
-      const cell = this.type === CELL_TYPE.HEALTHY ? this.store.healthy : this.store.target
-      const sigma_e = this.store.effectiveSigmaE
-      const Cm  = membraneCm(cell) * 1000
-      const tau = computeTau(cell, sigma_e) * 1e9
-      const fc  = this.type === CELL_TYPE.HEALTHY ? this.store.healthyFc : this.store.targetFc
+      const cell     = this.type === CELL_TYPE.HEALTHY ? this.store.healthy : this.store.target
+      const sigma_e  = this.store.effectiveSigmaE
+      const tauNs    = computeTau(cell, sigma_e) * 1e9
+      const fc       = this.type === CELL_TYPE.HEALTHY ? this.store.healthyFc : this.store.targetFc
+      const fcParts  = splitFreqKHz(fc, 2)
+
+      if (this.isAcousticTarget) {
+        const acousticCell = cell as CellConfig & { resonantFreqGHz?: number; capsidQ?: number }
+        const fResGHz = acousticCell.resonantFreqGHz ?? 0
+        const q       = acousticCell.capsidQ ?? 1
+        // BW = f_res / Q — half-power bandwidth of the Lorentzian resonance peak
+        const bwKHz   = (fResGHz * 1e6) / q
+        const bwParts = splitFreqKHz(bwKHz, 2)
+        return [
+          { label: this.$t('cells.derivedParams.tau'), value: tauNs.toFixed(1), unit: UNIT.NS       },
+          { label: this.$t('cells.derivedParams.fc'),  value: fcParts.value,    unit: fcParts.unit  },
+          { label: this.$t('cells.derivedParams.bw'),  value: bwParts.value,    unit: bwParts.unit  },
+        ]
+      }
+
+      const Cm = membraneCm(cell) * 1000
       return [
-        { label: this.$t('cells.derivedParams.cm'),  value: Cm.toFixed(2),        unit: UNIT.MF_PER_M2 },
-        { label: this.$t('cells.derivedParams.tau'), value: tau.toFixed(1),       unit: UNIT.NS        },
-        { label: this.$t('cells.derivedParams.fc'),  value: formatFreqKHz(fc, 2), unit: ''             },
+        { label: this.$t('cells.derivedParams.cm'),  value: Cm.toFixed(2),    unit: UNIT.MF_PER_M2 },
+        { label: this.$t('cells.derivedParams.tau'), value: tauNs.toFixed(1), unit: UNIT.NS         },
+        { label: this.$t('cells.derivedParams.fc'),  value: fcParts.value,    unit: fcParts.unit    },
       ]
+    },
+
+    paramsToggleTip(): string {
+      return this.isAcousticTarget
+        ? this.$t('cells.paramsToggleTipAcoustic')
+        : this.$t('cells.paramsToggleTip')
+    },
+
+    derivedSectionLabel(): string {
+      return this.isAcousticTarget
+        ? this.$t('cells.derivedLabelAcoustic')
+        : this.$t('cells.derivedLabel')
+    },
+
+    derivedSectionTip(): string {
+      return this.isAcousticTarget
+        ? this.$t('cells.derivedTipAcoustic')
+        : this.$t('cells.derivedTip')
     },
 
     tipNuclearBar(): string {
@@ -760,8 +799,7 @@ export default defineComponent({
       }, LYSIS_DURATION_MS)
     },
 
-    onParamChange(key: string, e: Event) {
-      const value = Number((e.target as HTMLInputElement).value)
+    onParamChange(key: string, value: number) {
       this.store.updateCellParam(this.type, key, value)
     },
 

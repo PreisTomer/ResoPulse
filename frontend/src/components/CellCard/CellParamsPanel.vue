@@ -3,7 +3,7 @@
   <template v-if="cellData">
     <div
       class="cell-card__params-toggle"
-      v-tip="$t('cells.paramsToggleTip')"
+      v-tip="toggleTip"
       @click="paramsExpanded = !paramsExpanded"
     >
       <span class="cell-card__params-toggle-arrow">{{ paramsExpanded ? ICON.EXPAND : ICON.COLLAPSE }}</span>
@@ -12,19 +12,37 @@
     <Transition name="params">
       <div v-if="paramsExpanded" class="cell-card__params-panel">
         <div v-for="p in editableParams" :key="p.key" class="cell-card__param-row">
-          <label class="cell-card__param-label">{{ p.label }}</label>
-          <input
-            type="number" class="cell-card__param-input"
-            :value="p.displayValue" :step="p.step" :min="p.min"
-            @change="$emit('param-change', p.key, $event)"
-          />
+          <label class="cell-card__param-label" v-tip="$t(p.tipKey)">{{ $t(p.labelKey) }}</label>
+          <div class="cell-card__param-control">
+            <button
+              class="cell-card__param-step"
+              @mousedown.prevent="startStep(p, -1)"
+              @mouseup="stopStep"
+              @mouseleave="stopStep"
+            >−</button>
+            <input
+              type="number"
+              class="cell-card__param-input"
+              :value="p.displayValue"
+              :step="p.step"
+              :min="p.min"
+              :max="p.max"
+              @input="onInputChange(p, $event)"
+            />
+            <button
+              class="cell-card__param-step cell-card__param-step--plus"
+              @mousedown.prevent="startStep(p, 1)"
+              @mouseup="stopStep"
+              @mouseleave="stopStep"
+            >+</button>
+          </div>
           <span class="cell-card__param-unit">{{ p.unit }}</span>
         </div>
         <div
           class="cell-card__params-derived-hdr"
-          v-tip="$t('cells.derivedTip')"
+          v-tip="derivedTip"
         >
-          <span class="cell-card__params-derived-label">{{ $t('cells.derivedLabel') }}</span>
+          <span class="cell-card__params-derived-label">{{ derivedLabel }}</span>
         </div>
         <div v-for="p in derivedParams" :key="p.label" class="cell-card__param-row cell-card__param-row--derived">
           <label class="cell-card__param-label">{{ p.label }}</label>
@@ -49,12 +67,29 @@ import type { PropType } from 'vue'
 import type { CellRecord } from '@/types/cell'
 import { ICON } from '@/constants/icons'
 
+type EditableRow = {
+  key: string
+  labelKey: string
+  tipKey: string
+  unit: string
+  step: number
+  min: number
+  max: number
+  displayValue: number
+}
+
+/** Delay before hold-to-repeat activates (ms). */
+const STEP_HOLD_DELAY_MS = 380
+/** Interval between repeated steps while held (ms). */
+const STEP_REPEAT_MS = 80
+
 export default defineComponent({
   setup() { return { ICON } },
+
   props: {
     cellData: { type: Object as PropType<CellRecord | null>, default: null },
     editableParams: {
-      type: Array as PropType<Array<{ key: string; label: string; unit: string; step: number; min: number; displayValue: number }>>,
+      type: Array as PropType<EditableRow[]>,
       required: true,
     },
     derivedParams: {
@@ -62,15 +97,69 @@ export default defineComponent({
       required: true,
     },
     canResetToPreset: { type: Boolean, required: true },
+    toggleTip:    { type: String, required: true },
+    derivedLabel: { type: String, required: true },
+    derivedTip:   { type: String, required: true },
   },
 
   emits: {
-    'param-change':    (_key: string, _event: Event) => true,
+    'param-change':    (_key: string, _value: number) => true,
     'reset-to-preset': () => true,
   },
 
   data() {
-    return { paramsExpanded: false }
+    return {
+      paramsExpanded: false,
+      _stepTimeout:  null as ReturnType<typeof setTimeout>  | null,
+      _stepInterval: null as ReturnType<typeof setInterval> | null,
+    }
+  },
+
+  beforeUnmount() {
+    this.stopStep()
+  },
+
+  methods: {
+    /**
+     * Begin a step-and-hold sequence.
+     * Fires one immediate step, then after STEP_HOLD_DELAY_MS starts repeating
+     * at STEP_REPEAT_MS until the button is released.
+     */
+    startStep(p: EditableRow, dir: 1 | -1) {
+      this.applyStep(p, dir)
+      this._stepTimeout = setTimeout(() => {
+        this._stepInterval = setInterval(() => this.applyStep(p, dir), STEP_REPEAT_MS)
+      }, STEP_HOLD_DELAY_MS)
+    },
+
+    stopStep() {
+      clearTimeout(this._stepTimeout   ?? undefined)
+      clearInterval(this._stepInterval ?? undefined)
+      this._stepTimeout  = null
+      this._stepInterval = null
+    },
+
+    /**
+     * Clamp to [min, max] and round to the same decimal precision as `step`
+     * to prevent floating-point drift (e.g. 0.1 + 0.1 + 0.1 ≠ 0.3).
+     */
+    applyStep(p: EditableRow, dir: 1 | -1) {
+      const raw      = p.displayValue + p.step * dir
+      const decimals = (p.step.toString().split('.')[1] ?? '').length
+      const value    = parseFloat(Math.min(p.max, Math.max(p.min, raw)).toFixed(decimals))
+      this.$emit('param-change', p.key, value)
+    },
+
+    /** Handle direct keyboard / paste input into the text field. */
+    onInputChange(p: EditableRow, e: Event) {
+      const raw = (e.target as HTMLInputElement).value
+      if (raw === '' || raw === '-' || raw.endsWith('.')) return
+      const value = Number(raw)
+      if (isNaN(value)) return
+      const decimals = (p.step.toString().split('.')[1] ?? '').length
+      const clamped  = parseFloat(Math.min(p.max, Math.max(p.min, value)).toFixed(decimals))
+      this.$emit('param-change', p.key, clamped)
+    },
   },
 })
 </script>
@@ -109,7 +198,7 @@ export default defineComponent({
     border: 1px solid var(--color-border);
     border-radius: var(--radius);
     padding: 0.65rem 0.85rem;
-    @include flex-col(0.45rem);
+    @include flex-col(0.5rem);
   }
 
   &__param-row {
@@ -124,25 +213,70 @@ export default defineComponent({
   &__param-label {
     @include mono-upper(0.6rem);
     color: var(--color-text-muted);
+    cursor: default;
+  }
+
+  /* ── Stepper control: [−] [input] [+] ─────────────────────────────── */
+  &__param-control {
+    display: flex;
+    align-items: stretch;
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    overflow: hidden;
+    transition: border-color 0.15s;
+
+    &:focus-within { border-color: var(--color-primary); }
+  }
+
+  &__param-step {
+    flex: 0 0 1.5rem;
+    background: rgba(255, 255, 255, 0.04);
+    border: none;
+    color: var(--color-text-muted);
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    line-height: 1;
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.1s, color 0.1s;
+    border-right: 1px solid var(--color-border);
+
+    &--plus {
+      border-right: none;
+      border-left: 1px solid var(--color-border);
+    }
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--color-text-heading);
+    }
+
+    &:active {
+      background: var(--color-primary);
+      color: #000;
+    }
   }
 
   &__param-input {
-    width: 5rem;
+    flex: 1 1 4.2rem;
+    min-width: 0;
     background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: 3px;
+    border: none;
     color: var(--color-text-heading);
     font-family: var(--font-mono);
-    font-size: 0.7rem;
-    padding: 0.15rem 0.35rem;
-    text-align: right;
+    font-size: 0.75rem;
+    padding: 0.24rem 0.4rem;
+    text-align: left;
     -moz-appearance: textfield;
     appearance: textfield;
 
     &::-webkit-inner-spin-button,
-    &::-webkit-outer-spin-button { opacity: 0.3; }
+    &::-webkit-outer-spin-button { display: none; }
 
-    &:focus { outline: none; border-color: var(--color-primary); }
+    &:focus { outline: none; }
   }
 
   &__param-unit {

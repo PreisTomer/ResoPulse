@@ -276,25 +276,22 @@ export default defineComponent({
     /** Redraw only for operating-point movement. */
     'store.currentBroadcastFrequency'() { this._renderCanvas() },
     'store.fieldIntensity'()            { this._renderCanvas() },
+    /**
+     * The root element is hidden by v-if when the target is not mammalian.
+     * When the category switches to mammalian, $refs.wrap becomes available;
+     * defer one tick so Vue has flushed the DOM before we observe the element.
+     */
+    'store.targetCellCategory'(cat: string) {
+      if (cat !== CELL_CATEGORY.MAMMALIAN || this.resizeObserver) return
+      this.$nextTick(() => this._initObserver())
+    },
   },
 
   mounted() {
-    const wrap = this.$refs.wrap as HTMLElement
-
-    this.resizeObserver = new ResizeObserver((entries) => {
-      const entry = entries[0]
-      if (!entry) return
-      const w = Math.round(entry.contentRect.width)
-      if (w <= 0) return   // element still hidden, skip until accordion opens
-      this._setupCanvas(w)
-      this._renderCanvas()
-    })
-    this.resizeObserver.observe(wrap)
-
-    // Initial setup - fallback width used when accordion is closed on mount
-    const initialW = wrap.clientWidth > 0 ? wrap.clientWidth : HMAP_CANVAS_W
-    this._setupCanvas(initialW)
-    this._recompute()
+    // Guard: when v-if on the root element is false at mount time, $refs.wrap
+    // does not exist. The watcher above handles deferred init when the category
+    // becomes mammalian.
+    this._initObserver()
   },
 
   beforeUnmount() {
@@ -303,6 +300,25 @@ export default defineComponent({
   },
 
   methods: {
+    // ── Lifecycle helpers ──────────────────────────────────────────────────────
+
+    _initObserver() {
+      const wrap = this.$refs.wrap as HTMLElement | null
+      if (!wrap || this.resizeObserver) return
+      this.resizeObserver = new ResizeObserver((entries) => {
+        const entry = entries[0]
+        if (!entry) return
+        const w = Math.round(entry.contentRect.width)
+        if (w <= 0) return   // element still hidden, skip until accordion opens
+        this._setupCanvas(w)
+        this._renderCanvas()
+      })
+      this.resizeObserver.observe(wrap)
+      const initialW = wrap.clientWidth > 0 ? wrap.clientWidth : HMAP_CANVAS_W
+      this._setupCanvas(initialW)
+      this._recompute()
+    },
+
     // ── Physics ────────────────────────────────────────────────────────────────
 
     _freqAt(fi: number): number {
