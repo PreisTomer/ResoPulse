@@ -59,7 +59,7 @@
             <h2 class="protocol__section-title" v-html="$t('protocol.physics.title')"></h2>
 
             <!-- 2.1 Schwan Equation -->
-            <h3 id="schwan" class="protocol__subsection-title" v-html="$t('protocol.physics.schwan.title')"></h3>
+            <h3 id="schwan" class="protocol__subsection-title" v-html="$t('protocol.physics.schwan.title')" v-tip="$t('protocol.physics.schwan.tip')"></h3>
             <p class="protocol__body-text" v-html="$t('protocol.physics.schwan.p1')"></p>
             <div class="protocol__eq-block">
               <div class="protocol__eq-main" v-html="$t('protocol.physics.schwan.eqMain')"></div>
@@ -91,7 +91,7 @@
             </table>
 
             <!-- 2.2 SAR & Pennes Bioheat -->
-            <h3 id="thermal" class="protocol__subsection-title" v-html="$t('protocol.physics.thermal.title')"></h3>
+            <h3 id="thermal" class="protocol__subsection-title" v-html="$t('protocol.physics.thermal.title')" v-tip="$t('protocol.physics.thermal.tip')"></h3>
             <p class="protocol__body-text" v-html="$t('protocol.physics.thermal.p1')"></p>
             <div class="protocol__eq-block">
               <div class="protocol__eq-main" v-html="$t('protocol.physics.thermal.eqSar')"></div>
@@ -109,7 +109,7 @@
             </div>
 
             <!-- 2.3 Maxwell-Garnett -->
-            <h3 id="maxwell" class="protocol__subsection-title" v-html="$t('protocol.physics.maxwell.title')"></h3>
+            <h3 id="maxwell" class="protocol__subsection-title" v-html="$t('protocol.physics.maxwell.title')" v-tip="$t('protocol.physics.maxwell.tip')"></h3>
             <p class="protocol__body-text" v-html="$t('protocol.physics.maxwell.p1')"></p>
             <div class="protocol__eq-block">
               <div class="protocol__eq-main" v-html="$t('protocol.physics.maxwell.eqMain')"></div>
@@ -120,7 +120,7 @@
             <p class="protocol__body-text" v-html="$t('protocol.physics.maxwell.p2')"></p>
 
             <!-- 2.4 Disruption Criterion -->
-            <h3 id="disruption" class="protocol__subsection-title" v-html="$t('protocol.physics.disruption.title')"></h3>
+            <h3 id="disruption" class="protocol__subsection-title" v-html="$t('protocol.physics.disruption.title')" v-tip="$t('protocol.physics.disruption.tip')"></h3>
             <p class="protocol__body-text" v-html="$t('protocol.physics.disruption.p1')"></p>
             <div class="protocol__eq-block">
               <div class="protocol__eq-main" v-html="$t('protocol.physics.disruption.eqMain')"></div>
@@ -137,7 +137,7 @@
             <p class="protocol__body-text" v-html="$t('protocol.physics.disruption.revEp')"></p>
 
             <!-- 2.5 Acoustic Resonance -->
-            <h3 id="resonance" class="protocol__subsection-title" v-html="$t('protocol.physics.resonance.title')"></h3>
+            <h3 id="resonance" class="protocol__subsection-title" v-html="$t('protocol.physics.resonance.title')" v-tip="$t('protocol.physics.resonance.tip')"></h3>
             <p class="protocol__body-text" v-html="$t('protocol.physics.resonance.p1')"></p>
             <div class="protocol__eq-block">
               <div class="protocol__eq-main" v-html="$t('protocol.physics.resonance.eqMain')"></div>
@@ -183,7 +183,7 @@
             </div>
 
             <!-- 2.6 nsEP -->
-            <h3 id="nsep" class="protocol__subsection-title" v-html="$t('protocol.physics.nsep.title')"></h3>
+            <h3 id="nsep" class="protocol__subsection-title" v-html="$t('protocol.physics.nsep.title')" v-tip="$t('protocol.physics.nsep.tip')"></h3>
             <p class="protocol__body-text" v-html="$t('protocol.physics.nsep.p1')"></p>
             <div class="protocol__eq-block">
               <div class="protocol__eq-main" v-html="$t('protocol.physics.nsep.eqMain')"></div>
@@ -196,7 +196,7 @@
             </div>
 
             <!-- 2.7 Double-Shell -->
-            <h3 id="doubleshell" class="protocol__subsection-title" v-html="$t('protocol.physics.doubleshell.title')"></h3>
+            <h3 id="doubleshell" class="protocol__subsection-title" v-html="$t('protocol.physics.doubleshell.title')" v-tip="$t('protocol.physics.doubleshell.tip')"></h3>
             <p class="protocol__body-text" v-html="$t('protocol.physics.doubleshell.p1')"></p>
             <div class="protocol__eq-block">
               <div class="protocol__eq-main" v-html="$t('protocol.physics.doubleshell.eqMain')"></div>
@@ -235,7 +235,7 @@
             </table>
 
             <!-- 2.8 Dielectrophoresis (DEP) -->
-            <h3 id="dep" class="protocol__subsection-title" v-html="$t('protocol.physics.dep.title')"></h3>
+            <h3 id="dep" class="protocol__subsection-title" v-html="$t('protocol.physics.dep.title')" v-tip="$t('protocol.physics.dep.tip')"></h3>
             <p class="protocol__body-text" v-html="$t('protocol.physics.dep.p1')"></p>
             <div class="protocol__eq-block">
               <div class="protocol__eq-main" v-html="$t('protocol.physics.dep.eqForce')"></div>
@@ -273,7 +273,7 @@
             </table>
 
             <!-- 2.9 Conductivity Uncertainty -->
-            <h3 id="uncertainty" class="protocol__subsection-title" v-html="$t('protocol.physics.uncertainty.title')"></h3>
+            <h3 id="uncertainty" class="protocol__subsection-title" v-html="$t('protocol.physics.uncertainty.title')" v-tip="$t('protocol.physics.uncertainty.tip')"></h3>
             <p class="protocol__body-text" v-html="$t('protocol.physics.uncertainty.p1')"></p>
             <p class="protocol__body-text" v-html="$t('protocol.physics.uncertainty.p2')"></p>
             <table class="protocol__param-table">
@@ -296,14 +296,14 @@
             </table>
 
             <!-- 2.9 Sub-threshold Biomodulation -->
-            <h3 id="biomodulation" class="protocol__subsection-title" v-html="$t('protocol.physics.biomodulation.title')"></h3>
+            <h3 id="biomodulation" class="protocol__subsection-title" v-html="$t('protocol.physics.biomodulation.title')" v-tip="$t('protocol.physics.biomodulation.tip')"></h3>
             <p class="protocol__body-text" v-html="$t('protocol.physics.biomodulation.p1')"></p>
             <p class="protocol__body-text" v-html="$t('protocol.physics.biomodulation.p2')"></p>
             <p class="protocol__body-text" v-html="$t('protocol.physics.biomodulation.p3')"></p>
             <p class="protocol__body-text" v-html="$t('protocol.physics.biomodulation.p4')"></p>
 
             <!-- 2.10 Impedance Feedback -->
-            <h3 id="impedance" class="protocol__subsection-title" v-html="$t('protocol.physics.impedance.title')"></h3>
+            <h3 id="impedance" class="protocol__subsection-title" v-html="$t('protocol.physics.impedance.title')" v-tip="$t('protocol.physics.impedance.tip')"></h3>
             <p class="protocol__body-text" v-html="$t('protocol.physics.impedance.p1')"></p>
             <p class="protocol__body-text" v-html="$t('protocol.physics.impedance.p2')"></p>
             <div class="protocol__eq-block">
@@ -323,7 +323,7 @@
             </div>
 
             <!-- 2.11 Auditory Display (Sonification) -->
-            <h3 id="sonification" class="protocol__subsection-title" v-html="$t('protocol.physics.sonification.title')"></h3>
+            <h3 id="sonification" class="protocol__subsection-title" v-html="$t('protocol.physics.sonification.title')" v-tip="$t('protocol.physics.sonification.tip')"></h3>
             <p class="protocol__body-text" v-html="$t('protocol.physics.sonification.p1')"></p>
             <div class="protocol__warn-box" v-html="$t('protocol.physics.sonification.disclaimer')"></div>
             <p class="protocol__body-text" v-html="$t('protocol.physics.sonification.mappingsTitle')"></p>
