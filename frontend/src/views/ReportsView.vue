@@ -72,11 +72,51 @@
           </RouterLink>
         </div>
 
+        <!-- Methods action bar — slides in when a row is selected -->
+        <Transition name="methods-bar">
+          <div v-if="selectedEntry" class="reports__methods-bar">
+            <div class="reports__methods-bar-info">
+              <span class="reports__methods-bar-label">{{ ICON.RETICLE }} {{ $t('reports.actionBarEntry', { id: selectedEntry.id }) }}</span>
+              <span class="reports__methods-bar-chip">{{ selectedEntry.targetPreset }}</span>
+              <span class="reports__methods-bar-chip">{{ formatFreqKHz(selectedEntry.freqKHz, 1) }}</span>
+              <span class="reports__methods-bar-chip">{{ formatFieldVcm(selectedEntry.fieldVcm) }}</span>
+              <span class="reports__methods-bar-chip">{{ selectedEntry.waveform }}</span>
+            </div>
+            <div class="reports__methods-bar-actions">
+              <span v-if="!selectedEntry.healthySnap" class="reports__methods-bar-legacy">
+                {{ $t('reports.actionBarLegacy') }}
+              </span>
+              <button
+                v-else
+                class="reports__methods-bar-btn"
+                @click.stop="downloadSelectedMethods"
+              >{{ $t('reports.actionBarDownload') }}</button>
+              <button
+                class="reports__methods-bar-dismiss"
+                :title="$t('reports.actionBarDismiss')"
+                @click.stop="dismissSelection"
+              >×</button>
+            </div>
+          </div>
+        </Transition>
+
         <!-- Data table -->
-        <div v-else class="reports__table-wrap">
+        <div v-if="totalReadings > 0" class="reports__table-wrap">
           <table class="reports__table">
             <thead>
               <tr>
+                <th class="reports__col-select" v-tip="$t('reports.colMethodsTitle')">
+                  <!-- Animated reticle: communicates "select a row" -->
+                  <svg class="reports__reticle-icon" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1" opacity="0.5"/>
+                    <circle cx="8" cy="8" r="2.5" stroke="currentColor" stroke-width="1"/>
+                    <circle cx="8" cy="8" r="1" fill="currentColor"/>
+                    <line x1="8" y1="1" x2="8" y2="4"   stroke="currentColor" stroke-width="1" opacity="0.6"/>
+                    <line x1="8" y1="12" x2="8" y2="15" stroke="currentColor" stroke-width="1" opacity="0.6"/>
+                    <line x1="1" y1="8" x2="4"  y2="8"  stroke="currentColor" stroke-width="1" opacity="0.6"/>
+                    <line x1="12" y1="8" x2="15" y2="8" stroke="currentColor" stroke-width="1" opacity="0.6"/>
+                  </svg>
+                </th>
                 <th v-tip="$t('reports.colSessionTitle')">{{ $t('reports.colSession') }}</th>
                 <th>{{ $t('reports.colId') }}</th>
                 <th>{{ $t('reports.colTime') }}</th>
@@ -94,15 +134,25 @@
                 <th v-tip="$t('log.tipThDepH')">{{ $t('log.logThDepH') }}</th>
                 <th v-tip="$t('log.tipThDepT')">{{ $t('log.logThDepT') }}</th>
                 <th v-tip="$t('reports.colEventTitle')">{{ $t('reports.colEvent') }}</th>
-                <th v-tip="$t('reports.colMethodsTitle')">{{ $t('reports.colMethods') }}</th>
               </tr>
             </thead>
             <tbody>
               <tr
                 v-for="e in reversedEntries"
                 :key="e.id"
-                :class="{ 'reports__row--lysis': e.event === LOG_EVENT.LYSIS }"
+                class="reports__row--selectable"
+                :class="{
+                  'reports__row--lysis':    e.event === LOG_EVENT.LYSIS,
+                  'reports__row--selected': selectedEntry?.id === e.id,
+                }"
+                @click="selectEntry(e)"
               >
+                <td class="reports__td-select">
+                  <span
+                    class="reports__row-radio"
+                    :class="{ 'reports__row-radio--on': selectedEntry?.id === e.id }"
+                  ></span>
+                </td>
                 <td class="reports__session-val" v-tip="tipCellSession(e)">{{ e.sessionName ?? NULL_DISPLAY }}</td>
                 <td class="reports__muted">{{ e.id }}</td>
                 <td class="reports__timestamp">{{ e.timestamp }}</td>
@@ -124,13 +174,6 @@
                 <td :class="depKClass(e.depTargetK)" v-tip="tipCellDepT(e)">{{ depKDisplay(e.depTargetK) }}</td>
                 <td>
                   <StatusBadge :label="e.event" :variant="eventVariant(e.event)" />
-                </td>
-                <td>
-                  <button
-                    class="reports__methods-row-btn"
-                    :title="e.healthySnap ? $t('reports.colMethodsTitle') : $t('reports.colMethodsLegacy')"
-                    @click="store.exportEntryMethods(e)"
-                  >{{ $t('reports.colMethodsBtn') }}</button>
                 </td>
               </tr>
             </tbody>
@@ -165,8 +208,9 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed } from 'vue'
+import { defineComponent, computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import type { LogEntry } from '@/stores/experimentStore'
 import { useExperimentStore } from '@/stores/experimentStore'
 import { formatFreqKHz, formatFieldVcm, formatRange } from '@/utils/format'
 import { eventVariant as sharedEventVariant, depKDisplay } from '@/utils/experimentUtils'
@@ -193,6 +237,7 @@ export default defineComponent({
   setup() {
     const store = useExperimentStore()
     const { t } = useI18n()
+    const selectedEntry = ref<LogEntry | null>(null)
 
     // ── Helper: returns fn() result or null when there are no entries ──────────
     function withEntries<T>(fn: () => T): T | null {
@@ -242,6 +287,7 @@ export default defineComponent({
 
     return {
       store,
+      selectedEntry,
       totalReadings,
       reversedEntries,
       distinctSessionCount,
@@ -261,6 +307,16 @@ export default defineComponent({
   },
 
   methods: {
+    selectEntry(e: LogEntry) {
+      this.selectedEntry = this.selectedEntry?.id === e.id ? null : e
+    },
+    dismissSelection() {
+      this.selectedEntry = null
+    },
+    downloadSelectedMethods() {
+      if (this.selectedEntry) this.store.exportEntryMethods(this.selectedEntry)
+    },
+
     eventVariant(event: string): string {
       return sharedEventVariant(event)
     },
@@ -577,25 +633,161 @@ export default defineComponent({
     }
   }
 
-  /* Per-row methods download button */
-  &__methods-row-btn {
-    padding: 0.18rem 0.45rem;
-    font-size: 0.62rem;
+  /* ── Row selection ────────────────────────────────────────────────────────── */
+  &__row--selectable {
+    cursor: pointer;
+    user-select: none;
+  }
+
+  &__row--selected td {
+    background: rgba(167, 139, 250, 0.10) !important;
+    border-bottom-color: rgba(167, 139, 250, 0.12) !important;
+  }
+  &__row--selected:hover td { background: rgba(167, 139, 250, 0.16) !important; }
+
+  &__col-select {
+    width: 28px;
+    min-width: 28px;
+    padding: 0.5rem 0.5rem !important;
+    color: #a78bfa !important;
+    text-align: center !important;
+  }
+
+  &__reticle-icon {
+    width: 14px;
+    height: 14px;
+    color: #a78bfa;
+    display: inline-block;
+    vertical-align: middle;
+    // Outer ring pulses opacity; inner crosshairs stay steady
+    circle:first-child {
+      animation: reticle-pulse 2.8s ease-in-out infinite;
+    }
+  }
+
+  @keyframes reticle-pulse {
+    0%, 100% { opacity: 0.25; }
+    50%       { opacity: 0.65; }
+  }
+
+  &__td-select {
+    text-align: center;
+    padding: 0.52rem 0.5rem !important;
+    cursor: pointer;
+  }
+
+  &__row-radio {
+    display: inline-block;
+    cursor: pointer;
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.15s;
+    vertical-align: middle;
+
+    &--on {
+      background: #a78bfa;
+      border-color: #a78bfa;
+      box-shadow: 0 0 6px rgba(167, 139, 250, 0.55);
+    }
+  }
+
+  /* ── Methods action bar ───────────────────────────────────────────────────── */
+  &__methods-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(90deg, rgba(167, 139, 250, 0.10) 0%, rgba(167, 139, 250, 0.05) 100%);
+    border-bottom: 1px solid rgba(167, 139, 250, 0.25);
+    flex-wrap: wrap;
+  }
+
+  &__methods-bar-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  &__methods-bar-label {
     font-family: var(--font-mono);
-    font-weight: 600;
-    letter-spacing: 0.04em;
+    font-size: 0.72rem;
+    font-weight: 700;
     color: #c4b5fd;
-    background: rgba(167, 139, 250, 0.08);
-    border: 1px solid rgba(167, 139, 250, 0.3);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-right: 0.25rem;
+  }
+
+  &__methods-bar-chip {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: rgba(255, 255, 255, 0.65);
+    background: rgba(167, 139, 250, 0.10);
+    border: 1px solid rgba(167, 139, 250, 0.22);
     border-radius: 3px;
+    padding: 0.1rem 0.4rem;
+  }
+
+  &__methods-bar-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    flex-shrink: 0;
+  }
+
+  &__methods-bar-legacy {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: var(--color-text-muted);
+    opacity: 0.7;
+    font-style: italic;
+  }
+
+  &__methods-bar-btn {
+    padding: 0.45rem 1.1rem;
+    font-size: 0.78rem;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: #e9d5ff;
+    background: rgba(167, 139, 250, 0.18);
+    border: 1px solid rgba(167, 139, 250, 0.55);
+    border-radius: var(--radius);
     cursor: pointer;
     transition: all 0.15s;
     white-space: nowrap;
 
     &:hover {
-      background: rgba(167, 139, 250, 0.2);
-      border-color: rgba(167, 139, 250, 0.7);
-      color: #e9d5ff;
+      background: rgba(167, 139, 250, 0.32);
+      border-color: #a78bfa;
+      box-shadow: 0 0 14px rgba(167, 139, 250, 0.25);
+    }
+  }
+
+  &__methods-bar-dismiss {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    line-height: 1;
+    color: var(--color-text-muted);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.15s;
+    padding: 0;
+
+    &:hover {
+      color: var(--color-text-heading);
+      border-color: var(--color-border);
+      background: rgba(255, 255, 255, 0.06);
     }
   }
 
@@ -645,6 +837,12 @@ export default defineComponent({
     }
   }
 }
+
+// ── Methods bar transition ─────────────────────────────────────────────────
+.methods-bar-enter-active { transition: opacity 0.2s ease, transform 0.2s ease; }
+.methods-bar-leave-active { transition: opacity 0.15s ease; }
+.methods-bar-enter-from   { opacity: 0; transform: translateY(-6px); }
+.methods-bar-leave-to     { opacity: 0; }
 
 // Media queries → _responsive.scss
 </style>

@@ -235,6 +235,8 @@ export default defineComponent({
       border-radius: 10px 10px 0 0;
       padding: 1.5rem 1.25rem 1.5rem;
       max-width: 100%;
+      max-height: 92svh;
+      overflow-y: auto;
     }
   }
 }
