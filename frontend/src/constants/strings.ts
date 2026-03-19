@@ -130,6 +130,12 @@ export type SourceMode        = typeof SOURCE_MODE[keyof typeof SOURCE_MODE]
 /** Cell preset identifier */
 export type PresetId          = typeof PRESET_ID[keyof typeof PRESET_ID]
 
+/**
+ * Em dash placeholder shown in table cells where a data point does not apply.
+ * Scientific convention for "no value" (e.g. resonance frequency for mammalian cells).
+ */
+export const NULL_DISPLAY = '\u2014'
+
 /** Cell preset IDs (aligns with CellPreset.id field in cellLibrary.ts) */
 export const PRESET_ID = {
   HEPATOCYTE:     'hepatocyte',

@@ -4,17 +4,12 @@
     <div class="datasets__inner">
 
       <!-- Page header -->
-      <div class="datasets__header">
-        <div class="datasets__eyebrow">
-          <span class="datasets__eyebrow-dot"></span>
-          {{ $t('datasets.eyebrow') }}
-        </div>
-        <h1 class="datasets__title" v-html="$t('datasets.title')"></h1>
+      <PageHeader :eyebrow="$t('datasets.eyebrow')" :title="$t('datasets.title')">
         <p class="datasets__subtitle">
           <span v-html="$t('datasets.subtitle')"></span>
           <br><span v-html="$t('datasets.subtitleNote')"></span>
         </p>
-      </div>
+      </PageHeader>
 
       <!-- Group legend -->
       <div class="datasets__legend-row">
@@ -77,7 +72,7 @@
                 <td class="datasets__mono">{{ p.conductivity }}</td>
                 <td class="datasets__mono datasets__primary-val">{{ p.cmDisplay }}</td>
                 <td class="datasets__mono datasets__primary-val">{{ p.fcDisplay }}</td>
-                <td class="datasets__mono" :class="p.fcrossDisplay !== '—' ? 'datasets__dep-val' : 'datasets__muted'">{{ p.fcrossDisplay }}</td>
+                <td class="datasets__mono" :class="p.fcrossDisplay !== NULL_DISPLAY ? 'datasets__dep-val' : 'datasets__muted'">{{ p.fcrossDisplay }}</td>
                 <td
                   class="datasets__mono"
                   :class="p.group === CELL_GROUP.REFERENCE ? 'datasets__ref-val' : 'datasets__cancer-val'"
@@ -638,7 +633,8 @@
 import { defineComponent, computed } from 'vue'
 import { CELL_PRESETS, GROUP_COLORS, GROUP_LABELS, type CellGroup, type CellPreset } from '@/constants/cellLibrary'
 import { MEDIA } from '@/constants/media'
-import { CELL_GROUP } from '@/constants/strings'
+import { CELL_GROUP, NULL_DISPLAY } from '@/constants/strings'
+import PageHeader from '@/components/PageHeader.vue'
 import { membraneCm, computeFc, computeTau, computeNuclearTau, computeDepCrossoverKHz } from '@/utils/physics'
 import { THRESHOLDS } from '@/constants/physics'
 import { UNIT } from '@/constants/units'
@@ -660,6 +656,8 @@ type ResonantPreset = CellPreset & {
 }
 
 export default defineComponent({
+  components: { PageHeader },
+
   setup() {
     // Augment each preset with computed Cm, fc in saline, and resonance params
     const presets = computed(() =>
@@ -674,23 +672,23 @@ export default defineComponent({
         // Resonance parameters (bacteria/virus only)
         const resFreqDisplay = pr.resonantFreqGHz
           ? `${pr.resonantFreqGHz} ${UNIT.GHZ}`
-          : '—'
-        const resQDisplay = pr.capsidQ ? `${pr.capsidQ}` : '—'
+          : NULL_DISPLAY
+        const resQDisplay = pr.capsidQ ? `${pr.capsidQ}` : NULL_DISPLAY
         const resEthrDisplay = pr.resonantThresholdVcm
           ? `${pr.resonantThresholdVcm}`
-          : '—'
+          : NULL_DISPLAY
         // DEP crossover frequency in saline
         const fcross = computeDepCrossoverKHz(p, SIGMA_SALINE, EPS_R_SALINE)
         const fcrossDisplay = fcross > 0
           ? (fcross >= 1000
               ? `${(fcross / 1000).toFixed(2)} ${UNIT.MHZ}`
               : `${fcross.toFixed(1)} ${UNIT.KHZ}`)
-          : '—'
+          : NULL_DISPLAY
         // Nuclear envelope parameters (mammalian nucleated cells)
         const hasNuclear = !!pr.nuclearRadius
-        const nucRDisplay = pr.nuclearRadius ? `${pr.nuclearRadius}` : '—'
+        const nucRDisplay = pr.nuclearRadius ? `${pr.nuclearRadius}` : NULL_DISPLAY
         // f_peak for nuclear section: 1 / (2π × √(τ_out × τ_ne))
-        let nucFpeakDisplay = '—'
+        let nucFpeakDisplay = NULL_DISPLAY
         if (hasNuclear) {
           const tau_out = computeTau(p, SIGMA_SALINE)
           const tau_ne  = computeNuclearTau(p, SIGMA_SALINE)
@@ -730,7 +728,7 @@ export default defineComponent({
       { id: 'mhb',    sigma: MEDIA.mhb.conductivity.toFixed(3),    epsilonR: MEDIA.mhb.permittivity,    alphaT: (MEDIA.mhb.tempCoeff    * 100).toFixed(1), keyClass: '' },
     ]
 
-    return { presets, nuclearPresets, mediaRows, GROUPS, GROUP_COLORS, GROUP_LABELS, CELL_GROUP, THRESHOLDS }
+    return { presets, nuclearPresets, mediaRows, GROUPS, GROUP_COLORS, GROUP_LABELS, CELL_GROUP, THRESHOLDS, NULL_DISPLAY }
   },
 })
 </script>
@@ -751,28 +749,7 @@ export default defineComponent({
     @include flex-col(1.75rem);
   }
 
-  /* ── Page header ──────────────────────────────────────────────────────────── */
-  &__eyebrow {
-    @include flex-row(0.5rem);
-    @include mono-upper(0.72rem, 0.14em);
-    color: var(--color-primary);
-    margin-bottom: 0.75rem;
-  }
-
-  &__eyebrow-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background-color: var(--color-primary);
-    box-shadow: 0 0 8px var(--color-primary);
-  }
-
-  &__title {
-    font-size: 2rem;
-    font-weight: 800;
-    color: var(--color-text-heading);
-    margin: 0 0 0.5rem;
-  }
+  /* ── Page header subtitle (PageHeader owns eyebrow/dot/title) ─────────────── */
 
   &__subtitle {
     font-size: 0.875rem;
@@ -873,14 +850,12 @@ export default defineComponent({
     tr:hover td { background: rgba(255, 255, 255, 0.025); }
   }
 
-  &__mono        { font-family: var(--font-mono); font-size: 0.78rem; }
+  /* Utility colours — mixin generates __mono (0.78rem), __muted, __cancer-val, __warn-val */
+  @include data-value-classes(0.78rem);
   &__primary-val { color: var(--color-primary); }
-  &__cancer-val  { color: var(--color-danger);  }
   &__ref-val     { color: var(--color-primary); }
-  &__warn-val    { color: var(--color-amber);   }
   &__nuc-val     { color: #a78bfa; }
   &__dep-val     { color: #ff9900; }
-  &__muted       { color: var(--color-text-muted); }
   &__cell-name   { font-weight: 500; color: var(--color-text-heading); }
   &__notes-cell  { font-size: 0.71rem; color: var(--color-text-muted); min-width: 160px; }
 

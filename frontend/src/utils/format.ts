@@ -27,3 +27,15 @@ export function formatFieldVcm(vcm: number): string {
     ? `${(vcm / VCM_PER_KVCM).toFixed(1)} ${UNIT.KV_PER_CM}`
     : `${vcm} ${UNIT.V_PER_CM}`
 }
+
+/**
+ * Format a numeric range from an array of values using a provided formatter.
+ * Returns a single formatted value when min === max, otherwise "min - max".
+ * @param values - Array of raw numeric values
+ * @param fmt    - Formatter function applied to each bound
+ */
+export function formatRange(values: number[], fmt: (v: number) => string): string {
+  const lo = Math.min(...values)
+  const hi = Math.max(...values)
+  return lo === hi ? fmt(lo) : `${fmt(lo)} - ${fmt(hi)}`
+}

@@ -5,12 +5,9 @@
 
       <!-- Page header -->
       <div class="protocol__header">
-        <div class="protocol__eyebrow">
-          <span class="protocol__eyebrow-dot"></span>
-          {{ $t('protocol.header.eyebrow') }}
-        </div>
-        <h1 class="protocol__title">{{ $t('protocol.header.title') }}</h1>
-        <p class="protocol__subtitle" v-html="$t('protocol.header.subtitle')"></p>
+        <PageHeader :eyebrow="$t('protocol.header.eyebrow')" :title="$t('protocol.header.title')">
+          <p class="protocol__subtitle" v-html="$t('protocol.header.subtitle')"></p>
+        </PageHeader>
       </div>
 
       <!-- Mobile-only contents toggle -->
@@ -417,6 +414,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+import PageHeader from '@/components/PageHeader.vue'
 
 interface SchwanParamRow   { sym: string; param: string; unit: string; note: string }
 interface ResonanceRow     { target: string; fres: string; fresClass: string; q: string; ethr: string; ethrClass: string; basis: string }
@@ -459,6 +457,8 @@ const ALL_SECTION_IDS = [
 const PHYSICS_IDS = new Set(['physics', 'schwan', 'thermal', 'maxwell', 'disruption', 'resonance', 'nsep', 'doubleshell', 'dep', 'uncertainty', 'biomodulation', 'impedance', 'sonification'])
 
 export default defineComponent({
+  components: { PageHeader },
+
   data() {
     return {
       activeSection: 'overview' as string,
@@ -566,28 +566,6 @@ export default defineComponent({
 
   &__header {
     margin-bottom: 2.5rem;
-  }
-
-  &__eyebrow {
-    @include flex-row(0.5rem);
-    @include mono-upper(0.72rem, 0.14em);
-    color: var(--color-primary);
-    margin-bottom: 0.75rem;
-  }
-
-  &__eyebrow-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background-color: var(--color-primary);
-    box-shadow: 0 0 8px var(--color-primary);
-  }
-
-  &__title {
-    font-size: 2rem;
-    font-weight: 800;
-    color: var(--color-text-heading);
-    margin: 0 0 0.5rem;
   }
 
   &__subtitle {
@@ -758,13 +736,10 @@ export default defineComponent({
     tr:hover td { background: rgba(255, 255, 255, 0.02); }
   }
 
-  &__mono { font-family: var(--font-mono); font-size: 0.78rem; }
-
-  &__primary-val  { color: var(--color-primary); }
-  &__cancer-val   { color: var(--color-danger); }
-  &__warn-val     { color: var(--color-amber); }
-  &__ref-val      { color: var(--color-lime); }
-  &__muted        { color: var(--color-text-muted); opacity: 0.6; }
+  /* Utility colours — mixin generates __mono (0.78rem), __muted, __cancer-val, __warn-val */
+  @include data-value-classes(0.78rem, 0.6);
+  &__primary-val { color: var(--color-primary); }
+  &__ref-val     { color: var(--color-lime); }
 
   /* ── Info / note boxes ─────────────────────────────────── */
   &__info-box {

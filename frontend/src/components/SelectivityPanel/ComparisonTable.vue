@@ -96,7 +96,7 @@ export default defineComponent({
 
   methods: {
     selClass(sel: number): string {
-      return sel >= 1.5 ? 'sel-panel__cmp--strong' : sel >= 1.0 ? 'sel-panel__cmp--marginal' : 'sel-panel__cmp--weak'
+      return sel >= THRESHOLDS.SEL_STRONG ? 'sel-panel__cmp--strong' : sel >= THRESHOLDS.SEL_MARGINAL ? 'sel-panel__cmp--marginal' : 'sel-panel__cmp--weak'
     },
 
     loadTarget(preset: typeof CELL_PRESETS[0]) {

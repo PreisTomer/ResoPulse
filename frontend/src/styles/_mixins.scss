@@ -214,6 +214,30 @@ $_cell-states: (
   }
 }
 
+// ── Data table value classes ─────────────────────────────────────────────────
+// Generates the four common value-colour modifier classes used in every data
+// table (mono font, muted, danger, amber).  Call inside the component's BEM
+// root selector so `&` resolves to the block prefix.
+//
+// Usage (inside .reports { … }):
+//   @include data-value-classes();
+// Generates: &__mono, &__muted, &__cancer-val, &__warn-val
+//
+// Optional $mono-size param for font-size override (default: none — inherits).
+// Optional $muted-opacity for an extra opacity on muted text (e.g. 0.6 in protocol).
+@mixin data-value-classes($mono-size: null, $muted-opacity: null) {
+  &__mono {
+    font-family: var(--font-mono);
+    @if $mono-size { font-size: $mono-size; }
+  }
+  &__muted {
+    color: var(--color-text-muted);
+    @if $muted-opacity { opacity: $muted-opacity; }
+  }
+  &__cancer-val { color: var(--color-danger); }
+  &__warn-val   { color: var(--color-amber);  }
+}
+
 // ── Readout inline input ────────────────────────────────────────────────────
 // Click-to-edit <input type="number"> that overlays the readout value.
 // Usage: @include readout-inline-input();
