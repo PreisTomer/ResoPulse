@@ -20,7 +20,7 @@ export const NEWTON_COOLING_LAMBDA = 0.02
 /**
  * Pennes blood perfusion energy coefficient [J / (mL · °C)] used to convert
  * ω_b [mL/(g·min)] to [1/s] effective cooling: λ_perf = ω_b × PENNES_BLOOD_COEFF / cp.
- * Derived from ρ_blood(1050 kg/m³) × c_blood(3617 J/(kg·K)) / 60 s/min ≈ 63.3;
+ * Derived from ρ_blood(1060 kg/m³) × c_blood(3617 J/(kg·K)) / 60 s/min ≈ 63.9;
  * the value 63.9 is the literature-rounded figure used in Pennes (1948) re-analyses.
  */
 export const PENNES_BLOOD_COEFF = 63.9

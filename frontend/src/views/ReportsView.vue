@@ -50,51 +50,13 @@
       <!-- Stats row -->
       <div class="reports__stats-grid">
         <StatCard
-          :label="$t('reports.totalReadings')"
-          :value="String(totalReadings)"
-          :variant="totalReadings === 0 ? 'muted' : 'default'"
-          :tooltip="$t('reports.totalReadingsTitle')"
-        />
-        <StatCard
-          :label="$t('reports.lysisEvents')"
-          :value="String(lysisEvents)"
-          variant="danger"
-          :tooltip="$t('reports.lysisEventsTitle')"
-        />
-        <StatCard
-          :label="$t('reports.manualReadings')"
-          :value="String(manualReadings)"
-          :tooltip="$t('reports.manualReadingsTitle')"
-        />
-        <StatCard
-          :label="$t('reports.avgSelectivity')"
-          :value="avgSelectivity ?? ', '"
-          variant="primary"
-          :tooltip="$t('reports.avgSelectivityTitle')"
-        />
-        <StatCard
-          :label="$t('reports.peakSelectivity')"
-          :value="peakSelectivity ?? ', '"
-          variant="ok"
-          :tooltip="$t('reports.peakSelectivityTitle')"
-        />
-        <StatCard
-          :label="$t('reports.peakTargetRatio')"
-          :value="peakTargetRatio ?? ', '"
-          variant="danger"
-          :tooltip="$t('reports.peakTargetRatioTitle')"
-        />
-        <StatCard
-          class="reports__stat-card--wide"
-          :label="$t('reports.freqRange')"
-          :value="freqRange ?? ', '"
-          :tooltip="$t('reports.freqRangeTitle')"
-        />
-        <StatCard
-          class="reports__stat-card--wide"
-          :label="$t('reports.fieldRange')"
-          :value="fieldRange ?? ', '"
-          :tooltip="$t('reports.fieldRangeTitle')"
+          v-for="card in statCards"
+          :key="card.label"
+          :class="{ 'reports__stat-card--wide': card.wide }"
+          :label="card.label"
+          :value="card.value"
+          :variant="card.variant"
+          :tooltip="card.tooltip"
         />
       </div>
 
@@ -224,6 +186,7 @@
 
 <script lang="ts">
 import { defineComponent, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useExperimentStore } from '@/stores/experimentStore'
 import { formatFreqKHz, formatFieldVcm } from '@/utils/format'
 import { LOG_EVENT } from '@/constants/strings'
@@ -237,6 +200,7 @@ export default defineComponent({
 
   setup() {
     const store = useExperimentStore()
+    const { t } = useI18n()
 
     const totalReadings        = computed(() => store.entries.length)
     const reversedEntries      = computed(() => [...store.entries].reverse())
@@ -276,6 +240,17 @@ export default defineComponent({
       return (Math.max(...store.entries.map((e) => e.targetRatio)) * 100).toFixed(1) + '%'
     })
 
+    const statCards = computed(() => [
+      { label: t('reports.totalReadings'),   value: String(totalReadings.value),       variant: totalReadings.value === 0 ? 'muted' : 'default', tooltip: t('reports.totalReadingsTitle') },
+      { label: t('reports.lysisEvents'),     value: String(lysisEvents.value),         variant: 'danger',   tooltip: t('reports.lysisEventsTitle') },
+      { label: t('reports.manualReadings'),  value: String(manualReadings.value),      variant: undefined,  tooltip: t('reports.manualReadingsTitle') },
+      { label: t('reports.avgSelectivity'),  value: avgSelectivity.value  ?? '\u2014', variant: 'primary',  tooltip: t('reports.avgSelectivityTitle') },
+      { label: t('reports.peakSelectivity'), value: peakSelectivity.value ?? '\u2014', variant: 'ok',       tooltip: t('reports.peakSelectivityTitle') },
+      { label: t('reports.peakTargetRatio'), value: peakTargetRatio.value ?? '\u2014', variant: 'danger',   tooltip: t('reports.peakTargetRatioTitle') },
+      { label: t('reports.freqRange'),       value: freqRange.value        ?? '\u2014', variant: undefined,  tooltip: t('reports.freqRangeTitle'),  wide: true },
+      { label: t('reports.fieldRange'),      value: fieldRange.value       ?? '\u2014', variant: undefined,  tooltip: t('reports.fieldRangeTitle'), wide: true },
+    ])
+
     function eventVariant(event: string) {
       return event === LOG_EVENT.LYSIS ? 'danger' : 'primary'
     }
@@ -305,6 +280,7 @@ export default defineComponent({
       LOG_EVENT,
       THRESHOLDS,
       ICON,
+      statCards,
     }
   },
 
