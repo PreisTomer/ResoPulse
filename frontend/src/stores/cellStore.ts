@@ -687,16 +687,17 @@ export const useCellStore = defineStore('cell', {
 
   persist: {
     key: 'br-cell-store',
-    // Only persist user choices and model preferences that are not category-dependent.
-    // Field intensity, frequency, waveform, duty cycle, pulse width, medium, orientation,
-    // and lysis pulses are always re-derived from category defaults on mount via
-    // sanitizeCategoryParams() — persisting them causes stale cross-session physics bugs
-    // (e.g. bacteria pulse width applied to a mammalian cell makes lysis appear instant).
+    // Only persist: which cells the researcher is studying, and the physical model
+    // assumptions about the experimental setup. Everything else (field, frequency,
+    // waveform, duty cycle, pulse width, chart mode, etc.) is re-derived from the
+    // target cell category on mount — persisting it causes stale cross-session bugs
+    // and means a researcher returns to a "lysed" experiment state after a refresh.
+    // chartMode is intentionally excluded: sanitizeCategoryParams() always derives
+    // the correct mode from the loaded target cell category.
     pick: [
       'healthy',
       'target',
       'doubleShellEnabled',
-      'chartMode',
       'perfusionRate',
       'cellPackingFraction',
     ],
