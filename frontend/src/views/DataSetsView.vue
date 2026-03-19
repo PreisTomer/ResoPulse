@@ -256,13 +256,13 @@
                   </span>
                 </td>
                 <td class="datasets__mono datasets__nuc-val">{{ p.nuclearRadius }}</td>
-                <td class="datasets__mono">{{ p.nuclearMembraneThickness ?? 15 }}</td>
-                <td class="datasets__mono">{{ p.nuclearMembraneEps ?? 10 }}</td>
-                <td class="datasets__mono">{{ p.nucleoplasmConductivity ?? 0.9 }}</td>
+                <td class="datasets__mono">{{ p.nuclearMembraneThickness ?? THRESHOLDS.NUCLEAR_MEMBRANE_THICKNESS_NM }}</td>
+                <td class="datasets__mono">{{ p.nuclearMembraneEps ?? THRESHOLDS.NUCLEAR_MEMBRANE_EPS }}</td>
+                <td class="datasets__mono">{{ p.nucleoplasmConductivity ?? THRESHOLDS.NUCLEOPLASM_CONDUCTIVITY }}</td>
                 <td
                   class="datasets__mono"
                   :class="p.group === CELL_GROUP.REFERENCE ? 'datasets__ref-val' : 'datasets__cancer-val'"
-                >{{ p.nuclearThresholdVoltage ?? 0.50 }}</td>
+                >{{ p.nuclearThresholdVoltage ?? THRESHOLDS.NUCLEAR_VM_DEFAULT }}</td>
                 <td class="datasets__mono datasets__nuc-val">{{ p.nucFpeakDisplay }}</td>
               </tr>
             </tbody>

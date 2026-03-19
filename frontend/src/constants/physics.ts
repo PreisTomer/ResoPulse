@@ -126,7 +126,10 @@ export const THRESHOLDS = {
   // ── Display caps ─────────────────────────────────────────────────────────────
   TI_DISPLAY_CAP:      99.9,  // TI display ceiling when healthy DR → 0
   // ── Nuclear membrane model ───────────────────────────────────────────────────
-  NUCLEAR_VM_DEFAULT:  0.5,   // Default nuclear membrane threshold voltage [V] (Kotnik 2006)
+  NUCLEAR_MEMBRANE_THICKNESS_NM: 15,   // Default nuclear envelope thickness [nm] (Bhatt et al. 2021)
+  NUCLEAR_MEMBRANE_EPS:           10,   // Default nuclear envelope relative permittivity (Kotnik 2006)
+  NUCLEOPLASM_CONDUCTIVITY:        0.9, // Default nucleoplasm conductivity [S/m] (Kotnik 2006)
+  NUCLEAR_VM_DEFAULT:              0.5, // Default nuclear membrane threshold voltage [V] (Kotnik 2006)
   // ── σ_i uncertainty fractions per cell category (used in TI error bars) ─────
   UNCERTAINTY_VIRUS:    0.45, // ±45%, lipid envelope σ_i highly variable
   UNCERTAINTY_BACTERIA: 0.35, // ±35%, cytoplasm σ_i literature range

@@ -130,7 +130,7 @@
                     class="reports__methods-row-btn"
                     :title="e.healthySnap ? $t('reports.colMethodsTitle') : $t('reports.colMethodsLegacy')"
                     @click="store.exportEntryMethods(e)"
-                  >↓ Methods</button>
+                  >{{ $t('reports.colMethodsBtn') }}</button>
                 </td>
               </tr>
             </tbody>
