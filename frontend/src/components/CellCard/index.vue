@@ -736,6 +736,9 @@ export default defineComponent({
       if (!this.cellData) return
       const el = this.$refs.cellCanvas as HTMLElement
       if (!el) return
+      // Stop any running animation before creating a new one, so there is never
+      // more than one D3 timer writing to the same canvas element at a time.
+      this.helixTimer?.stop()
       const cellCategory = this.type === CELL_TYPE.HEALTHY ? CELL_CATEGORY.MAMMALIAN : this.store.targetCellCategory
       const presetId     = this.type === CELL_TYPE.HEALTHY ? this.store.healthy.id : this.store.target.id
       this.helixTimer = setupBlobAnimation(
@@ -854,6 +857,11 @@ export default defineComponent({
   45% { opacity: 0.6; }
   50% { opacity: 0.2; }
   55% { opacity: 0.8; }
+}
+
+@keyframes lysis-overlay-appear {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 @keyframes warn-fade {
@@ -1520,6 +1528,9 @@ export default defineComponent({
     gap: 0.75rem;
     background-color: rgba(6, 2, 14, 0.90);
     backdrop-filter: blur(3px);
+    // Fade in over 350 ms so the one-frame gap between Vue state update and the D3
+    // timer's final LYSED cleanup is never visible to the user.
+    animation: lysis-overlay-appear 0.35s ease forwards;
   }
 
   &__destroyed-text {

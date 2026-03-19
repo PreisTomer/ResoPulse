@@ -108,7 +108,6 @@ export function broadcastStateSync(): void {
     orientationDeg:      store.orientationDeg,
     lysisNPulses:        store.lysisNPulses,
     chartMode:           store.chartMode,
-    safeMode:            store.safeMode,
     doubleShellEnabled:  store.doubleShellEnabled,
     perfusionRate:       store.perfusionRate,
     cellPackingFraction: store.cellPackingFraction,

@@ -595,14 +595,32 @@ export default defineComponent({
       if (this.targetPickerOpen) this.healthyPickerOpen = false
     },
 
-    /** Sanitize time-domain parameters on page load without discarding the user's
-     *  persisted field intensity and frequency. Called only from mounted().
-     *  Fixes the original issue: a persisted 1 µs pulse width (old mammalian default)
-     *  would make lysis appear instantaneous. Only resets the parameters that can
-     *  be dangerously wrong across categories; leaves field/freq untouched. */
+    /** Apply category-appropriate defaults on every page load.
+     *  Called only from mounted() — does NOT broadcast (no peers connected yet).
+     *
+     *  Field/frequency are not persisted, so they always start from the store initial
+     *  value (100 V/cm / 417 kHz). This method sets the correct starting point for
+     *  whatever category the persisted target preset belongs to, and also sanitizes
+     *  all time-domain parameters so stale cross-session values cannot cause
+     *  physics bugs (e.g. bacteria pulse width making mammalian lysis instant). */
     sanitizeCategoryParams() {
       const cat = this.store.targetCellCategory
       const d   = CATEGORY_DEFAULTS[cat]
+      const t   = this.store.target as { resonantFreqGHz?: number; resonantThresholdVcm?: number }
+
+      // Field and frequency: use preset resonant values for virus/bacteria if available,
+      // otherwise fall back to category defaults. Mirrors applyTargetDefaults() logic
+      // but without a broadcast (peers are not ready yet at mount time).
+      const isResonant = cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA
+      const freqKHz  = isResonant && t.resonantFreqGHz
+        ? t.resonantFreqGHz * 1e6
+        : d.freqKHz
+      const fieldVcm = isResonant && t.resonantThresholdVcm
+        ? t.resonantThresholdVcm * INITIAL_RESONANT_FIELD_FRACTION
+        : d.fieldVcm
+
+      this.store.setFieldIntensity(fieldVcm)
+      this.store.setBroadcastFreqKHz(freqKHz)
       this.store.setWaveform(d.waveform)
       this.store.setDutyCycle(d.dutyCycle)
       this.store.setPulseWidthNs(d.pulseWidthNs)

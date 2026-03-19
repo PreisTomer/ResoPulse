@@ -30,15 +30,14 @@
     >
       <span class="field-panel__row-label" v-tip="tipDutyCycle">
         {{ $t('slider.dutyCycle') }}
-        <span v-if="isSafeMode" class="field-panel__safe-lock" v-tip="tipSafeModeLock">{{ ICON.LOCK }}</span>
       </span>
       <div class="field-panel__track">
         <input
           class="field-panel__slider"
           type="range"
-          min="-6"
-          :max="isSafeMode ? safeDutyCycleMaxLog : -1"
-          step="0.05"
+          :min="SLIDER_DC.LOG_MIN"
+          :max="SLIDER_DC.LOG_MAX"
+          :step="SLIDER_DC.LOG_STEP"
           :value="dutyCycleLogVal"
           @input="onDutyCycleInput"
         />
@@ -90,8 +89,9 @@ import { broadcastStateSync } from '@/services/socket'
 import { WAVEFORM, THERMAL_LEVEL, CELL_LABEL } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'
-import { tipWaveform, tipDutyCycle, tipPulseWidth, tipSafeModeLock, formatLysisTime } from '@/tooltips/sliderTooltips'
+import { tipWaveform, tipDutyCycle, tipPulseWidth, formatLysisTime } from '@/tooltips/sliderTooltips'
 import { CW_WAVEFORM_FACTOR, PULSED_WAVEFORM_FACTOR } from '@/constants/experimentDefaults'
+import { SLIDER_DC } from '@/constants/sliderBounds'
 
 export default defineComponent({
   props: {
@@ -108,12 +108,10 @@ export default defineComponent({
       required: true,
     },
     maxSteadyTemp:      { type: Number,  required: true },
-    isSafeMode:         { type: Boolean, required: true },
-    safeDutyCycleMaxLog:{ type: Number,  required: true },
   },
 
   setup() {
-    return { store: useCellStore(), WAVEFORM, THERMAL_LEVEL, ICON, UNIT, CELL_LABEL, CW_WAVEFORM_FACTOR, PULSED_WAVEFORM_FACTOR }
+    return { store: useCellStore(), WAVEFORM, THERMAL_LEVEL, ICON, UNIT, CELL_LABEL, CW_WAVEFORM_FACTOR, PULSED_WAVEFORM_FACTOR, SLIDER_DC }
   },
 
   data() {
@@ -165,7 +163,6 @@ export default defineComponent({
       })
     },
 
-    tipSafeModeLock(): string { return tipSafeModeLock() },
     lysisTimeDisplay(): string { return formatLysisTime(this.store.lysisDelayMs) },
 
     /** τ of target cell in ns, derived from fc (τ = 1/2πfc) */
@@ -206,14 +203,7 @@ export default defineComponent({
     },
 
     onDutyCycleInput(e: Event) {
-      let logVal = Number((e.target as HTMLInputElement).value)
-      if (this.isSafeMode) {
-        const maxLog = this.safeDutyCycleMaxLog
-        if (logVal > maxLog) {
-          logVal = maxLog
-          ;(e.target as HTMLInputElement).value = String(logVal)
-        }
-      }
+      const logVal = Number((e.target as HTMLInputElement).value)
       this.store.setDutyCycle(Math.pow(10, logVal))
       broadcastStateSync()
     },

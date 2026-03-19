@@ -21,6 +21,13 @@ export const SLIDER_RANGES = {
   IRE_MAMMALIAN:       { freqMin:        10, freqMax:    100_000, freqStep:      10, fieldMin: 10, fieldMax:   3_000, fieldStep:   1, pwLogMin: 0, pwLogMax: 5 },
 }
 
+/** Duty-cycle log slider bounds (log10 scale: 10^-6 … 10^-1 = 0.0001% … 10%). */
+export const SLIDER_DC = {
+  LOG_MIN:  -6,
+  LOG_MAX:  -1,
+  LOG_STEP:  0.05,
+} as const
+
 /** Advanced-section slider attributes - orientation, pulse count, perfusion, cell packing. */
 export const SLIDER_ADV = {
   ORI_MIN:           0,    ORI_MAX:           90,  ORI_STEP:    1,
