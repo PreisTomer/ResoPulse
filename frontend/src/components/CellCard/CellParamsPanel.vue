@@ -220,6 +220,7 @@ export default defineComponent({
   &__param-control {
     display: flex;
     align-items: stretch;
+    width: 7.8rem;
     border: 1px solid var(--color-border);
     border-radius: 4px;
     overflow: hidden;
