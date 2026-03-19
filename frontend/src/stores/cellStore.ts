@@ -82,7 +82,6 @@ export interface StatePacket {
   orientationDeg:      number
   lysisNPulses:        number
   chartMode:           'schwan' | 'resonance'
-  safeMode:            boolean
   doubleShellEnabled:  boolean
   perfusionRate:       number
   cellPackingFraction: number
@@ -102,7 +101,6 @@ interface CellStoreState {
   dutyCycle: number               // pulsed on-fraction [0-1]
   waveform: 'cw' | 'pulsed'      // CW (wf=0.5) or pulsed bipolar square-wave H-FIRE (wf=1.0)
   pulseWidthNs: number            // pulse width [ns]
-  safeMode: boolean               // clamps dc so T_ss ≤ 42°C
   orientationDeg: number          // field-cell axis θ [0-90°]
   lysisNPulses: number            // above-threshold pulses before lysis
   chartMode: 'schwan' | 'resonance'
@@ -120,14 +118,13 @@ export const useCellStore = defineStore('cell', {
     healthy: cloneDeep(cellConfigs[0]) as CellConfig,
     target: cloneDeep(cellConfigs[1]) as CellConfig,
     medium: 'saline',
-    fieldIntensity: 10,
+    fieldIntensity: 100,              // mammalian category default; overridden per-category in sanitizeCategoryParams()
     currentBroadcastFrequency: 417,
     healthyTemp: BODY_TEMP_C,
     targetTemp: BODY_TEMP_C,
     dutyCycle: 1e-4,               // 0.01%, typical pulsed electroporation default
     waveform: 'pulsed' as const,
     pulseWidthNs: 100_000,         // 100 µs, mammalian category default; gives ~10 s lysis delay at dc=1e-4
-    safeMode: false,               // expert mode by default (scientists need full range)
     orientationDeg: 0,             // 0° = field-aligned = maximum transmembrane coupling
     lysisNPulses: DEFAULT_LYSIS_N_PULSES,
     chartMode: 'schwan' as const,  // default: Schwan/IRE transmembrane potential model
@@ -447,15 +444,6 @@ export const useCellStore = defineStore('cell', {
       return computeDepCrossoverKHz(state.target, this.effectiveSigmaE, eps_r)
     },
 
-    /** dc_max = (TEMP_WARN−BODY_TEMP)·λ·cp_min / SAR_max - keeps T_ss ≤ 42°C in safe mode. */
-    maxSafeDutyCycle(): number {
-      const maxSAR = Math.max(this.healthySAR, this.targetSAR)
-      if (maxSAR <= 0) return 1
-      const minCp = Math.min(this.healthy.specificHeatCapacity, this.target.specificHeatCapacity)
-      const deltaT = THRESHOLDS.TEMP_WARN - BODY_TEMP_C
-      return Math.min(1, (deltaT * NEWTON_COOLING_LAMBDA * minCp) / maxSAR)
-    },
-
     // ── Sub-threshold healthy-cell biomodulation ──────────────────────────────
 
     /** SI = 4·r·(1−r), r = DR/NOURISHING.  Bell peaking at DR≈22.5%; zero above NOURISHING threshold. */
@@ -595,7 +583,6 @@ export const useCellStore = defineStore('cell', {
       this.orientationDeg      = packet.orientationDeg
       this.lysisNPulses        = packet.lysisNPulses
       this.chartMode           = packet.chartMode
-      this.safeMode            = packet.safeMode
       this.doubleShellEnabled  = packet.doubleShellEnabled
       this.perfusionRate       = packet.perfusionRate
       this.cellPackingFraction = packet.cellPackingFraction
@@ -641,14 +628,7 @@ export const useCellStore = defineStore('cell', {
     },
 
     setWaveform(mode: 'cw' | 'pulsed') {
-      this.waveform = mode  // dutyCycle not overwritten, CW uses effectiveDutyCycle=1.0
-    },
-
-    setSafeMode(on: boolean) {
-      this.safeMode = on
-      if (on && this.dutyCycle > this.maxSafeDutyCycle) {
-        this.dutyCycle = Math.max(1e-6, this.maxSafeDutyCycle)
-      }
+      this.waveform = mode
     },
 
     stopSession() {
@@ -707,20 +687,16 @@ export const useCellStore = defineStore('cell', {
 
   persist: {
     key: 'br-cell-store',
+    // Only persist user choices and model preferences that are not category-dependent.
+    // Field intensity, frequency, waveform, duty cycle, pulse width, medium, orientation,
+    // and lysis pulses are always re-derived from category defaults on mount via
+    // sanitizeCategoryParams() — persisting them causes stale cross-session physics bugs
+    // (e.g. bacteria pulse width applied to a mammalian cell makes lysis appear instant).
     pick: [
       'healthy',
       'target',
-      'medium',
-      'fieldIntensity',
-      'currentBroadcastFrequency',
-      'dutyCycle',
-      'waveform',
-      'pulseWidthNs',
-      'safeMode',
-      'orientationDeg',
-      'lysisNPulses',
-      'chartMode',
       'doubleShellEnabled',
+      'chartMode',
       'perfusionRate',
       'cellPackingFraction',
     ],

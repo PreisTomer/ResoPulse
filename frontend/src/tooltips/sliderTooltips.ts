@@ -298,22 +298,6 @@ Frequency that maximises selectivity ratio TI = T-DR / H-DR.
 300-point log scan 10 kHz-500 MHz at current field &amp; medium.${beyondNote}`
 }
 
-export function tipExpertMode(): string {
-  return `<strong>Expert Mode</strong>
-Full parameter range: all duty cycle values allowed.
-Warnings shown; no automatic clamping.
-Recommended for experienced users who understand
-the thermal model.`
-}
-
-export function tipSafeMode(): string {
-  return `<strong>Safe Mode</strong>
-Duty cycle is automatically clamped so that
-projected steady-state temperature T_ss ≤ 42°C.
-Recommended for initial exploration.
-Use Expert mode to override for high-duty protocols.`
-}
-
 export function tipScopeNote(): string {
   return `<strong>Applied field parameters</strong>
 Medium · RF Frequency · Field Intensity · Waveform · Duty Cycle · Pulse Width · Orientation θ
@@ -348,10 +332,6 @@ export function tipSigmaE(conductivity: number): string {
 Used in Schwan time constant:
 τ = R·Cm·(2·<span class="tip-val">σ_e</span>+σ_i)/(2·<span class="tip-val">σ_e</span>·σ_i)
 Change medium to shift the coupling strength`
-}
-
-export function tipSafeModeLock(): string {
-  return 'Safe Mode active, duty cycle capped at T_ss ≤ 42°C'
 }
 
 export function tipShellModel(): string {

@@ -30,8 +30,6 @@
         :slider-ranges="sliderRanges"
         :thermal-danger-level="thermalDangerLevel"
         :max-steady-temp="maxSteadyTemp"
-        :is-safe-mode="isSafeMode"
-        :safe-duty-cycle-max-log="safeDutyCycleMaxLog"
       />
       <AdvancedSection />
     </template>
@@ -86,11 +84,6 @@ export default defineComponent({
       return THERMAL_LEVEL.SAFE
     },
 
-    isSafeMode(): boolean { return this.store.safeMode },
-
-    safeDutyCycleMaxLog(): number {
-      return Math.log10(Math.max(1e-6, this.store.maxSafeDutyCycle))
-    },
   },
 })
 </script>

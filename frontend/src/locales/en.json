@@ -108,8 +108,6 @@
   },
   "slider": {
     "title": "Field Control",
-    "expert": "Expert",
-    "safe": "Safe",
     "sharedField": "shared field",
     "cardParams": "card params",
     "cellSpecific": "cell-specific",
@@ -158,7 +156,6 @@
     "pulsed": "Pulsed",
     "cw": "CW",
     "dutyCycle": "Duty Cycle",
-    "safeModeLock": "Safe Mode active, duty cycle capped at T_ss ≤ 42°C",
     "orientationTheta": "Orientation θ",
     "pulsesN": "Pulses N",
     "bloodPerfusion": "Blood Perfusion ω_b",

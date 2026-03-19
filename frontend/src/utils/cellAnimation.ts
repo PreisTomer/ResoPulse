@@ -632,12 +632,16 @@ export function setupBlobAnimation(
 
   // ── Electroporation / capsid pores ────────────────────────────────────────
   // Drawn in BG colour - appear as holes in the membrane at high disruption.
+  // Centres are inset 18 % from the membrane surface so the circles stay
+  // completely inside the blob at all allowed radii (max r ≤ BASE_R * 0.18).
   // Side pores (pore3/4) disabled for rod shape since those positions are off-membrane.
+  const PORE_INSET  = 0.82   // fraction of membrane radius to the pore centre
+  const PORE_MAX_R  = Math.floor(BASE_R * 0.18)  // ≈ 9 px — hard ceiling keeps pores inside cell
   const SIN60 = Math.sin(Math.PI / 3), COS60 = Math.cos(Math.PI / 3)
-  const northPore = bodyG.append('circle').attr('cy', -northPoleR).attr('r', 0).attr('fill', BG)
-  const southPore = bodyG.append('circle').attr('cy',  southPoleR).attr('r', 0).attr('fill', BG)
-  const pore3 = bodyG.append('circle').attr('cx',  BASE_R * SIN60).attr('cy', -BASE_R * COS60).attr('r', 0).attr('fill', BG)
-  const pore4 = bodyG.append('circle').attr('cx', -BASE_R * SIN60).attr('cy',  BASE_R * COS60).attr('r', 0).attr('fill', BG)
+  const northPore = bodyG.append('circle').attr('cy', -northPoleR * PORE_INSET).attr('r', 0).attr('fill', BG)
+  const southPore = bodyG.append('circle').attr('cy',  southPoleR * PORE_INSET).attr('r', 0).attr('fill', BG)
+  const pore3 = bodyG.append('circle').attr('cx',  BASE_R * SIN60 * PORE_INSET).attr('cy', -BASE_R * COS60 * PORE_INSET).attr('r', 0).attr('fill', BG)
+  const pore4 = bodyG.append('circle').attr('cx', -BASE_R * SIN60 * PORE_INSET).attr('cy',  BASE_R * COS60 * PORE_INSET).attr('r', 0).attr('fill', BG)
 
   // ── Pseudo-3D depth cues ───────────────────────────────────────────────────
   // Equatorial ring: thin horizontal ellipse at the cell's equatorial plane,
@@ -792,6 +796,10 @@ export function setupBlobAnimation(
       northPore.attr('r', 0); southPore.attr('r', 0)
       pore3.attr('r', 0);     pore4.attr('r', 0)
       glowBlur.attr('stdDeviation', '1')
+      // Interrupt and remove any fragment <line> elements that are still mid-transition.
+      // Without this, lines spawned in the final ~1500 ms of LYSING remain in the SVG
+      // and appear as static artefacts once the overlay covers the canvas.
+      d3.select(el).select('svg').selectAll('line').interrupt().remove()
       timer.stop()
       return
     }
@@ -840,9 +848,9 @@ export function setupBlobAnimation(
           stalk.attr('stroke-opacity', op); head.attr('opacity', op)
         })
       }
-      northPore.attr('r', 6 + progress * 8); southPore.attr('r', 6 + progress * 8)
-      pore3.attr('r', isRod ? 0 : 3 + progress * 5)
-      pore4.attr('r', isRod ? 0 : 3 + progress * 5)
+      northPore.attr('r', Math.min(PORE_MAX_R, 3 + progress * 6)); southPore.attr('r', Math.min(PORE_MAX_R, 3 + progress * 6))
+      pore3.attr('r', isRod ? 0 : Math.min(PORE_MAX_R * 0.6, 2 + progress * 3))
+      pore4.attr('r', isRod ? 0 : Math.min(PORE_MAX_R * 0.6, 2 + progress * 3))
       equatorialRing.attr('stroke-opacity', Math.max(0, 0.07 - progress * 0.07))
       specularDot.attr('fill-opacity', Math.max(0, 0.09 - progress * 0.09))
       glowBlur.attr('stdDeviation', (3 + progress * 12).toFixed(1))
@@ -905,8 +913,8 @@ export function setupBlobAnimation(
     }
 
     // ── Electroporation / capsid pores ─────────────────────────────────────
-    const primaryPore   = Math.max(0, (impact - 0.70) / 0.30) * 4.5
-    const secondaryPore = isRod ? 0 : Math.max(0, (impact - 0.88) / 0.15) * 3.5
+    const primaryPore   = Math.min(PORE_MAX_R, Math.max(0, (impact - 0.70) / 0.30) * 4.5)
+    const secondaryPore = isRod ? 0 : Math.min(PORE_MAX_R * 0.6, Math.max(0, (impact - 0.88) / 0.15) * 3.5)
     northPore.attr('r', primaryPore); southPore.attr('r', primaryPore)
     pore3.attr('r', secondaryPore);   pore4.attr('r', secondaryPore)
 
