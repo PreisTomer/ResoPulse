@@ -1439,45 +1439,8 @@ export default defineComponent({
 
 // ── Mobile: slide up from the bottom, single-row cells ────────────────────────
 @media (max-width: 768px) {
-  .experiment__sticky-cells {
-    top: auto;
-    bottom: 0;
-    right: 0;
-    left: 0;
-    transform: scale(1);           // no scaling, let overflow-x handle wider content
-    transform-origin: bottom center;
-    // On mobile, collapse drawer is not applicable - always show full bar
-    &--collapsed { transform: scale(1); }
-
-    &-tab { display: none; }       // hide drawer handle on mobile
-
-    &-body {
-      width: 100%;
-      border-left: 1px solid rgba(255, 255, 255, 0.12); // restore left border
-      border-radius: 10px 10px 0 0;
-      border-bottom: none;
-      padding: 0.5rem 0.75rem 0.5rem;
-    }
-
-    &-label {
-      text-align: center;
-      margin-bottom: 0.3rem;
-    }
-
-    &-grid {
-      grid-template-columns: 1fr 1fr;
-      // At native size two cards would be ~600 px on a 375 px phone screen;
-      // use horizontal scroll so neither canvas is clipped
-      overflow-x: auto;
-      gap: 0.5rem;
-      // Compact horizontal strip: constrain height so only canvas + osc show
-      max-height: 260px;
-      overflow-y: hidden;
-    }
-  }
-
-  // Mobile transition: slide up from bottom
-  .sticky-cells-enter-from { opacity: 0; transform: translateY(20px); transform-origin: bottom center; }
-  .sticky-cells-leave-to   { opacity: 0; transform: translateY(20px); transform-origin: bottom center; }
+  // Hide the sticky cell panel on phone-sized screens — the cards are already
+  // visible at the top of the page and the panel adds no value at this size.
+  .experiment__sticky-cells { display: none; }
 }
 </style>
