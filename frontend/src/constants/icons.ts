@@ -30,6 +30,7 @@ export const ICON = {
   ARROW_R:     '⟶',  // directional CTA arrow
   TRIANGLE_UP: '▲',  // axis tick / chart marker
   DEP:         '⇌',  // DEP bidirectional force / crossover
+  RETICLE:     '⌖',  // position indicator / row selection target
 } as const
 
 export type Icon = typeof ICON[keyof typeof ICON]

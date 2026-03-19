@@ -16,8 +16,18 @@ import type { LogEntry } from '@/stores/experimentStore'
 import { useImpedanceStore } from '@/stores/impedanceStore'
 import type { HardwareImpedancePacket } from '@/stores/impedanceStore'
 
-// Set VITE_BACKEND_URL in Vercel environment variables once Railway is deployed.
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? 'http://localhost:3001'
+// Priority order for backend URL resolution:
+//   1. ?backend=<url> query param  — set at runtime for ngrok demo sessions
+//   2. VITE_BACKEND_URL env var    — baked in at Vercel build time
+//   3. localhost:3001              — local development fallback
+function resolveBackendUrl(): string {
+  const params = new URLSearchParams(window.location.search)
+  const fromQuery = params.get('backend')
+  if (fromQuery) return fromQuery.replace(/\/$/, '')
+  return import.meta.env.VITE_BACKEND_URL ?? 'http://localhost:3001'
+}
+
+const BACKEND_URL = resolveBackendUrl()
 
 const SOCKET_EVENTS = {
   STATE_SYNC:          'stateSync',

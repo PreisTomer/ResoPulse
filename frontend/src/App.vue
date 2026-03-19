@@ -5,6 +5,7 @@
     <main>
       <RouterView />
     </main>
+    <TermsGate v-if="showTermsGate" @accepted="onTermsAccepted" />
     <footer class="app-footer">
       <span class="app-footer__copy">© 2026 Tomer Preis. All rights reserved.</span>
       <RouterLink to="/terms" class="app-footer__link">Terms of Use</RouterLink>
@@ -15,17 +16,38 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import NavBar from './components/NavBar.vue'
+import TermsGate from './components/TermsGate.vue'
 import { useThemeStore } from './stores/themeStore'
 
+const TERMS_KEY = 'rp_terms_v1'
+
 export default defineComponent({
-  components: { NavBar },
+  components: { NavBar, TermsGate },
 
   setup() {
     return { themeStore: useThemeStore() }
   },
 
+  data() {
+    return {
+      termsAccepted: localStorage.getItem(TERMS_KEY) === '1',
+    }
+  },
+
+  computed: {
+    showTermsGate(): boolean {
+      return !this.termsAccepted && this.$route.path === '/experiment'
+    },
+  },
+
   mounted() {
     this.themeStore.init()
+  },
+
+  methods: {
+    onTermsAccepted() {
+      this.termsAccepted = true
+    },
   },
 })
 </script>
