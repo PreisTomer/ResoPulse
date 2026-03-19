@@ -5,7 +5,7 @@
 
       <div class="terms__eyebrow">Legal</div>
       <h1 class="terms__title">Terms of Use</h1>
-      <p class="terms__meta">Last Updated: March 16, 2026 &nbsp;·&nbsp; ResoPulse &nbsp;·&nbsp;
+      <p class="terms__meta">Last Updated: March 20, 2026 &nbsp;·&nbsp; ResoPulse &nbsp;·&nbsp;
         <a href="https://bio-resonance.vercel.app/" class="terms__link" target="_blank" rel="noopener">bio-resonance.vercel.app</a>
       </p>
 

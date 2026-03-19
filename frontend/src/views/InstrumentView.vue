@@ -5,12 +5,9 @@
 
       <!-- Page header -->
       <div class="instrument__header">
-        <div class="instrument__eyebrow">
-          <span class="instrument__eyebrow-dot"></span>
-          {{ $t('instrument.eyebrow') }}
-        </div>
-        <h1 class="instrument__title">{{ $t('instrument.title') }}</h1>
-        <p class="instrument__subtitle">{{ $t('instrument.subtitle') }}</p>
+        <PageHeader :eyebrow="$t('instrument.eyebrow')" :title="$t('instrument.title')">
+          <p class="instrument__subtitle">{{ $t('instrument.subtitle') }}</p>
+        </PageHeader>
       </div>
 
       <!-- Physics callout: why impedance matters -->
@@ -103,12 +100,13 @@ import { defineComponent } from 'vue'
 import { useCellStore } from '@/stores/cellStore'
 import { useImpedanceStore } from '@/stores/impedanceStore'
 import InstrumentPanel from '@/components/InstrumentPanel/index.vue'
+import PageHeader from '@/components/PageHeader.vue'
 import { UNIT } from '@/constants/units'
 import { ICON } from '@/constants/icons'
 
 export default defineComponent({
   name: 'InstrumentView',
-  components: { InstrumentPanel },
+  components: { InstrumentPanel, PageHeader },
   setup() {
     return {
       cellStore: useCellStore(),
@@ -149,38 +147,12 @@ export default defineComponent({
     gap: 2rem;
   }
 
-  // ── Page header ──────────────────────────────────────────────────────────────
+  // ── Page header (PageHeader owns eyebrow/dot/title) ─────────────────────────
 
   &__header {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-  }
-
-  &__eyebrow {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.7rem;
-    color: var(--color-primary);
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    font-weight: 600;
-
-    &-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: var(--color-primary);
-    }
-  }
-
-  &__title {
-    font-size: 2rem;
-    font-weight: 700;
-    color: var(--color-text-heading);
-    margin: 0;
-    line-height: 1.15;
   }
 
   &__subtitle {

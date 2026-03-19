@@ -19,26 +19,26 @@
         spellcheck="false"
       />
       <!-- Dosimetry badge -->
-      <div class="exp-log__dose" v-tip="tipDose">
+      <div class="exp-log__dose" v-tip="$t('log.tipDose')">
         <span class="exp-log__dose-label">{{ $t('log.doseLabel') }}</span>
         <span class="exp-log__dose-val">{{ doseBadge }}</span>
       </div>
       <div class="exp-log__actions">
         <button
           class="exp-log__btn exp-log__btn--primary"
-          v-tip="tipLogReading"
+          v-tip="$t('log.tipLogReading')"
           @click="logReading"
         >{{ $t('exp.logReadingBtn') }}</button>
         <button
           class="exp-log__btn"
           :disabled="!hasEntries"
-          v-tip="tipExportCsv"
+          v-tip="$t('log.tipExportCsv')"
           @click="exportCSV"
         >{{ $t('exp.logCsvBtn') }}</button>
         <button
           class="exp-log__btn"
           :disabled="!hasEntries"
-          v-tip="tipClearLog"
+          v-tip="$t('log.tipClearLog')"
           @click="clearLog"
         >{{ $t('exp.logClearBtn') }}</button>
       </div>
@@ -49,17 +49,17 @@
       <table class="exp-log__table">
         <thead>
           <tr>
-            <th v-if="showSessionCol" v-tip="tipThSession">{{ $t('log.colSession') }}</th>
-            <th v-tip="tipThNumber">{{ $t('exp.logThNumber') }}</th>
-            <th v-tip="tipThTime">{{ $t('exp.logThTime') }}</th>
-            <th v-tip="tipThFreq">{{ $t('exp.logThFreq') }}</th>
-            <th v-tip="tipThField">{{ $t('exp.logThField') }}</th>
-            <th v-tip="tipThTargetVm">{{ $t('exp.logThTargetVm') }}</th>
-            <th v-tip="tipThHealthyVm">{{ $t('exp.logThHealthyVm') }}</th>
+            <th v-if="showSessionCol" v-tip="$t('log.tipThSession')">{{ $t('log.colSession') }}</th>
+            <th v-tip="$t('log.tipThNumber')">{{ $t('exp.logThNumber') }}</th>
+            <th v-tip="$t('log.tipThTime')">{{ $t('exp.logThTime') }}</th>
+            <th v-tip="$t('log.tipThFreq')">{{ $t('exp.logThFreq') }}</th>
+            <th v-tip="$t('log.tipThField')">{{ $t('exp.logThField') }}</th>
+            <th v-tip="$t('log.tipThTargetVm')">{{ $t('exp.logThTargetVm') }}</th>
+            <th v-tip="$t('log.tipThHealthyVm')">{{ $t('exp.logThHealthyVm') }}</th>
             <th v-tip="tipThSel">{{ $t('exp.logThSel') }}</th>
-            <th v-if="!isResonanceMode" v-tip="tipThDepH">{{ $t('log.logThDepH') }}</th>
-            <th v-if="!isResonanceMode" v-tip="tipThDepT">{{ $t('log.logThDepT') }}</th>
-            <th v-tip="tipThEvent">{{ $t('exp.logThEvent') }}</th>
+            <th v-if="!isResonanceMode" v-tip="$t('log.tipThDepH')">{{ $t('log.logThDepH') }}</th>
+            <th v-if="!isResonanceMode" v-tip="$t('log.tipThDepT')">{{ $t('log.logThDepT') }}</th>
+            <th v-tip="$t('log.tipThEvent')">{{ $t('exp.logThEvent') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -102,6 +102,17 @@ import { useExperimentStore } from '@/stores/experimentStore'
 import { useCellStore } from '@/stores/cellStore'
 import { broadcastLogEntry } from '@/services/socket'
 import { LOG_EVENT } from '@/constants/strings'
+import { eventVariant as sharedEventVariant, depKDisplay, depKDisplayFull } from '@/utils/experimentUtils'
+import {
+  tipCellSession as sharedTipCellSession,
+  tipCellFreq as sharedTipCellFreq,
+  tipCellField as sharedTipCellField,
+  tipCellTargetVm as sharedTipCellTargetVm,
+  tipCellHealthyVm as sharedTipCellHealthyVm,
+  tipCellSel as sharedTipCellSel,
+  tipCellDepH as sharedTipCellDepH,
+  tipCellDepT as sharedTipCellDepT,
+} from '@/utils/logTooltips'
 import { ICON } from '@/constants/icons'
 import { THRESHOLDS } from '@/constants/physics'
 import { formatFreqKHz } from '@/utils/format'
@@ -118,6 +129,8 @@ export default defineComponent({
       ICON,
       THRESHOLDS,
       formatFreqKHz,
+      depKDisplay,
+      depKDisplayFull,
     }
   },
 
@@ -137,29 +150,10 @@ export default defineComponent({
       return this.showSessionCol ? base + 1 : base
     },
 
-    // ── Button tooltips ────────────────────────────────────────────────────────
-    tipLogReading(): string { return this.$t('log.tipLogReading') },
-    tipExportCsv(): string  { return this.$t('log.tipExportCsv') },
-    tipClearLog(): string   { return this.$t('log.tipClearLog') },
-
-    // ── Column header tooltips ─────────────────────────────────────────────────
-    tipThSession(): string  { return this.$t('log.tipThSession') },
-    tipThNumber(): string   { return this.$t('log.tipThNumber') },
-    tipThTime(): string     { return this.$t('log.tipThTime') },
-    tipThFreq(): string     { return this.$t('log.tipThFreq') },
-    tipThField(): string    { return this.$t('log.tipThField') },
-    tipThTargetVm(): string { return this.$t('log.tipThTargetVm') },
-    tipThHealthyVm(): string { return this.$t('log.tipThHealthyVm') },
-
     tipThSel(): string {
       const { SEL_STRONG: strong, SEL_MARGINAL: marginal } = THRESHOLDS
       return this.$t('log.tipThSel', { strong, marginal })
     },
-
-    tipThDepH(): string { return this.$t('log.tipThDepH') },
-    tipThDepT(): string { return this.$t('log.tipThDepT') },
-
-    tipThEvent(): string { return this.$t('log.tipThEvent') },
 
     /** Formatted cumulative dose badge text */
     doseBadge(): string {
@@ -168,8 +162,6 @@ export default defineComponent({
       if (dose >= 1)    return `${dose.toFixed(1)} ${UNIT.J_PER_KG}`
       return `${(dose * 1000).toFixed(0)} ${UNIT.MJ_PER_KG}`
     },
-
-    tipDose(): string { return this.$t('log.tipDose') },
   },
 
   methods: {
@@ -180,58 +172,41 @@ export default defineComponent({
     },
     exportCSV()  { this.expStore.exportCSV() },
     clearLog()   { this.expStore.clearLog() },
-    eventVariant(event: string): string {
-      return event === LOG_EVENT.LYSIS ? 'danger' : 'primary'
-    },
+    eventVariant(event: string): string { return sharedEventVariant(event) },
 
     // ── Row cell tooltips ──────────────────────────────────────────────────────
     tipCellFreq(e: { freqKHz: number }): string {
-      return this.$t('log.tipCellFreq', { freq: e.freqKHz })
+      return sharedTipCellFreq(this.$t.bind(this), e)
     },
     tipCellField(e: { fieldVcm: number }): string {
-      return this.$t('log.tipCellField', { field: e.fieldVcm })
+      return sharedTipCellField(this.$t.bind(this), e)
     },
     tipCellTargetVm(e: { targetVm: number; targetPreset: string; targetRatio: number }): string {
-      return this.$t('log.tipCellTargetVm', {
-        vm:     e.targetVm,
-        preset: e.targetPreset,
-        ratio:  (e.targetRatio * 100).toFixed(1),
-      })
+      return sharedTipCellTargetVm(this.$t.bind(this), e)
     },
     tipCellHealthyVm(e: { healthyVm: number; healthyRatio: number }): string {
-      return this.$t('log.tipCellHealthyVm', {
-        vm:    e.healthyVm,
-        ratio: (e.healthyRatio * 100).toFixed(1),
-      })
+      return sharedTipCellHealthyVm(this.$t.bind(this), e)
     },
     tipCellSel(e: { selectivity: number; targetTemp: number; healthyTemp: number }): string {
-      return this.$t('log.tipCellSel', {
-        sel:         e.selectivity.toFixed(2),
-        targetTemp:  e.targetTemp,
-        healthyTemp: e.healthyTemp,
-      })
+      return sharedTipCellSel(this.$t.bind(this), e)
     },
     tipCellEvent(e: { event: string }): string {
       return e.event === LOG_EVENT.LYSIS
         ? this.$t('log.tipCellLysis')
         : this.$t('log.tipCellManual')
     },
-    depKDisplay(k: number | undefined): string {
-      if (k == null) return ', '
-      return k.toFixed(3)
-    },
     depKClass(k: number | undefined): string {
       if (k == null) return ''
       return k > 0 ? 'exp-log__td-pdep' : 'exp-log__td-ndep'
     },
     tipCellSession(e: { sessionName?: string; id: number }): string {
-      return this.$t('log.tipCellSession', { name: e.sessionName ?? ', ', id: e.id })
+      return sharedTipCellSession(this.$t.bind(this), e)
     },
     tipCellDepH(e: { depHealthyK?: number }): string {
-      return this.$t('log.tipCellDepH', { k: e.depHealthyK != null ? e.depHealthyK.toFixed(4) : ', ' })
+      return sharedTipCellDepH(this.$t.bind(this), e)
     },
     tipCellDepT(e: { depTargetK?: number }): string {
-      return this.$t('log.tipCellDepT', { k: e.depTargetK != null ? e.depTargetK.toFixed(4) : ', ' })
+      return sharedTipCellDepT(this.$t.bind(this), e)
     },
   },
 })

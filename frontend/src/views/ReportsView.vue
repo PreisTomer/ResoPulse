@@ -4,18 +4,9 @@
     <div class="reports__inner">
 
       <!-- Page header -->
-      <div class="reports__header">
-        <div class="reports__eyebrow">
-          <span class="reports__eyebrow-dot"></span>
-          {{ $t('reports.eyebrow') }}
-        </div>
+      <PageHeader :eyebrow="$t('reports.eyebrow')" :title="$t('reports.title')">
         <div class="reports__header-row">
-          <div>
-            <h1 class="reports__title">{{ $t('reports.title') }}</h1>
-            <p class="reports__subtitle">
-              {{ $t('reports.subtitle') }}
-            </p>
-          </div>
+          <p class="reports__subtitle">{{ $t('reports.subtitle') }}</p>
           <div class="reports__header-actions">
             <button
               class="reports__btn reports__btn--export"
@@ -33,13 +24,13 @@
             </button>
           </div>
         </div>
-      </div>
+      </PageHeader>
 
       <!-- Session summary (read-only) -->
       <div class="reports__session-summary">
         <span class="reports__session-name">{{ store.sessionName }}</span>
         <span class="reports__session-meta">
-          {{ totalReadings }} {{ totalReadings === 1 ? $t('reports.countSingular') : $t('reports.countPlural') }}
+          {{ totalReadings }} {{ countLabel }}
           <template v-if="distinctSessionCount > 1">
             · {{ $t('reports.sessionMultiple', { n: distinctSessionCount }) }}
           </template>
@@ -65,7 +56,7 @@
         <div class="reports__log-card-hdr">
           <span class="reports__log-title">{{ $t('reports.logTitle') }}</span>
           <span class="reports__log-count">
-            {{ totalReadings }} {{ totalReadings === 1 ? $t('reports.countSingular') : $t('reports.countPlural') }}
+            {{ totalReadings }} {{ countLabel }}
           </span>
         </div>
 
@@ -112,36 +103,25 @@
                 :key="e.id"
                 :class="{ 'reports__row--lysis': e.event === LOG_EVENT.LYSIS }"
               >
-                <td class="reports__mono reports__session-val" v-tip="tipCellSession(e)">{{ e.sessionName ?? ', ' }}</td>
-                <td class="reports__mono reports__muted">{{ e.id }}</td>
-                <td class="reports__mono reports__timestamp">{{ e.timestamp }}</td>
-                <td class="reports__mono">{{ e.targetPreset }}</td>
-                <td class="reports__mono" v-tip="tipCellFreq(e)">{{ formatFreqKHz(e.freqKHz, 1) }}</td>
-                <td class="reports__mono" v-tip="tipCellField(e)">{{ formatFieldVcm(e.fieldVcm) }}</td>
-                <td class="reports__mono reports__muted">{{ e.medium }}</td>
-                <td class="reports__mono reports__cancer-val" v-tip="tipCellTargetVm(e)">{{ e.targetVm.toFixed(3) }}</td>
-                <td class="reports__mono reports__ref-val" v-tip="tipCellHealthyVm(e)">{{ e.healthyVm.toFixed(3) }}</td>
-                <td class="reports__mono" :class="selClass(e.selectivity)" v-tip="tipCellSel(e)">
-                  {{ e.selectivity.toFixed(3) }}
-                </td>
+                <td class="reports__session-val" v-tip="tipCellSession(e)">{{ e.sessionName ?? NULL_DISPLAY }}</td>
+                <td class="reports__muted">{{ e.id }}</td>
+                <td class="reports__timestamp">{{ e.timestamp }}</td>
+                <td>{{ e.targetPreset }}</td>
+                <td v-tip="tipCellFreq(e)">{{ formatFreqKHz(e.freqKHz, 1) }}</td>
+                <td v-tip="tipCellField(e)">{{ formatFieldVcm(e.fieldVcm) }}</td>
+                <td class="reports__muted">{{ e.medium }}</td>
+                <td class="reports__cancer-val" v-tip="tipCellTargetVm(e)">{{ e.targetVm.toFixed(3) }}</td>
+                <td class="reports__ref-val" v-tip="tipCellHealthyVm(e)">{{ e.healthyVm.toFixed(3) }}</td>
+                <td :class="selClass(e.selectivity)" v-tip="tipCellSel(e)">{{ e.selectivity.toFixed(3) }}</td>
                 <td
-                  class="reports__mono"
                   :class="e.targetRatio >= THRESHOLDS.LYSIS_PROB_CENTER ? 'reports__cancer-val' : e.targetRatio >= THRESHOLDS.HEALTHY_APPROACHING ? 'reports__warn-val' : ''"
                   v-tip="tipCellTRatio(e)"
                 >{{ (e.targetRatio * 100).toFixed(1) }}%</td>
-                <td class="reports__mono reports__ref-val" v-tip="tipCellHRatio(e)">{{ (e.healthyRatio * 100).toFixed(1) }}%</td>
-                <td class="reports__mono" :class="e.targetTemp > THRESHOLDS.TEMP_WARN ? 'reports__warn-val' : ''" v-tip="tipCellTemp(e.targetTemp, 'target')">
-                  {{ e.targetTemp.toFixed(1) }}
-                </td>
-                <td class="reports__mono" :class="e.healthyTemp > THRESHOLDS.TEMP_WARN ? 'reports__warn-val' : ''" v-tip="tipCellTemp(e.healthyTemp, 'healthy')">
-                  {{ e.healthyTemp.toFixed(1) }}
-                </td>
-                <td class="reports__mono" :class="e.depHealthyK != null ? (e.depHealthyK > 0 ? 'reports__green-val' : 'reports__warn-val') : 'reports__muted'" v-tip="tipCellDepH(e)">
-                  {{ e.depHealthyK != null ? e.depHealthyK.toFixed(3) : ', ' }}
-                </td>
-                <td class="reports__mono" :class="e.depTargetK != null ? (e.depTargetK > 0 ? 'reports__green-val' : 'reports__warn-val') : 'reports__muted'" v-tip="tipCellDepT(e)">
-                  {{ e.depTargetK != null ? e.depTargetK.toFixed(3) : ', ' }}
-                </td>
+                <td class="reports__ref-val" v-tip="tipCellHRatio(e)">{{ (e.healthyRatio * 100).toFixed(1) }}%</td>
+                <td :class="e.targetTemp > THRESHOLDS.TEMP_WARN ? 'reports__warn-val' : ''" v-tip="tipCellTemp(e.targetTemp, 'target')">{{ e.targetTemp.toFixed(1) }}</td>
+                <td :class="e.healthyTemp > THRESHOLDS.TEMP_WARN ? 'reports__warn-val' : ''" v-tip="tipCellTemp(e.healthyTemp, 'healthy')">{{ e.healthyTemp.toFixed(1) }}</td>
+                <td :class="depKClass(e.depHealthyK)" v-tip="tipCellDepH(e)">{{ depKDisplay(e.depHealthyK) }}</td>
+                <td :class="depKClass(e.depTargetK)" v-tip="tipCellDepT(e)">{{ depKDisplay(e.depTargetK) }}</td>
                 <td>
                   <StatusBadge :label="e.event" :variant="eventVariant(e.event)" />
                 </td>
@@ -188,74 +168,73 @@
 import { defineComponent, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useExperimentStore } from '@/stores/experimentStore'
-import { formatFreqKHz, formatFieldVcm } from '@/utils/format'
-import { LOG_EVENT } from '@/constants/strings'
+import { formatFreqKHz, formatFieldVcm, formatRange } from '@/utils/format'
+import { eventVariant as sharedEventVariant, depKDisplay } from '@/utils/experimentUtils'
+import {
+  tipCellSession as sharedTipCellSession,
+  tipCellFreq as sharedTipCellFreq,
+  tipCellField as sharedTipCellField,
+  tipCellTargetVm as sharedTipCellTargetVm,
+  tipCellHealthyVm as sharedTipCellHealthyVm,
+  tipCellSel as sharedTipCellSel,
+  tipCellDepH as sharedTipCellDepH,
+  tipCellDepT as sharedTipCellDepT,
+} from '@/utils/logTooltips'
+import { LOG_EVENT, NULL_DISPLAY } from '@/constants/strings'
 import { THRESHOLDS } from '@/constants/physics'
 import { ICON } from '@/constants/icons'
 import StatusBadge from '@/components/StatusBadge.vue'
 import StatCard from '@/components/StatCard.vue'
+import PageHeader from '@/components/PageHeader.vue'
 
 export default defineComponent({
-  components: { StatusBadge, StatCard },
+  components: { StatusBadge, StatCard, PageHeader },
 
   setup() {
     const store = useExperimentStore()
     const { t } = useI18n()
 
+    // ── Helper: returns fn() result or null when there are no entries ──────────
+    function withEntries<T>(fn: () => T): T | null {
+      return store.entries.length ? fn() : null
+    }
+
     const totalReadings        = computed(() => store.entries.length)
     const reversedEntries      = computed(() => [...store.entries].reverse())
     const distinctSessionCount = computed(() => new Set(store.entries.map((e) => e.sessionName ?? store.sessionName)).size)
-    const lysisEvents     = computed(() => store.entries.filter((e) => e.event === LOG_EVENT.LYSIS).length)
-    const manualReadings  = computed(() => store.entries.filter((e) => e.event === LOG_EVENT.MANUAL).length)
+    const lysisEvents          = computed(() => store.entries.filter((e) => e.event === LOG_EVENT.LYSIS).length)
+    const manualReadings       = computed(() => store.entries.filter((e) => e.event === LOG_EVENT.MANUAL).length)
+    const countLabel           = computed(() => totalReadings.value === 1 ? t('reports.countSingular') : t('reports.countPlural'))
 
-    const avgSelectivity = computed(() => {
-      if (!store.entries.length) return null
+    const avgSelectivity  = computed(() => withEntries(() => {
       const sum = store.entries.reduce((acc, e) => acc + e.selectivity, 0)
       return (sum / store.entries.length).toFixed(3)
-    })
-
-    const peakSelectivity = computed(() => {
-      if (!store.entries.length) return null
-      return Math.max(...store.entries.map((e) => e.selectivity)).toFixed(3)
-    })
-
-    const freqRange = computed(() => {
-      if (!store.entries.length) return null
-      const freqs = store.entries.map((e) => e.freqKHz)
-      const lo = Math.min(...freqs)
-      const hi = Math.max(...freqs)
-      return lo === hi ? formatFreqKHz(lo) : `${formatFreqKHz(lo)} - ${formatFreqKHz(hi)}`
-    })
-
-    const fieldRange = computed(() => {
-      if (!store.entries.length) return null
-      const fields = store.entries.map((e) => e.fieldVcm)
-      const lo = Math.min(...fields)
-      const hi = Math.max(...fields)
-      return lo === hi ? formatFieldVcm(lo) : `${formatFieldVcm(lo)} - ${formatFieldVcm(hi)}`
-    })
-
-    const peakTargetRatio = computed(() => {
-      if (!store.entries.length) return null
-      return (Math.max(...store.entries.map((e) => e.targetRatio)) * 100).toFixed(1) + '%'
-    })
+    }))
+    const peakSelectivity = computed(() => withEntries(() =>
+      Math.max(...store.entries.map((e) => e.selectivity)).toFixed(3)
+    ))
+    const freqRange       = computed(() => withEntries(() =>
+      formatRange(store.entries.map((e) => e.freqKHz), formatFreqKHz)
+    ))
+    const fieldRange      = computed(() => withEntries(() =>
+      formatRange(store.entries.map((e) => e.fieldVcm), formatFieldVcm)
+    ))
+    const peakTargetRatio = computed(() => withEntries(() =>
+      (Math.max(...store.entries.map((e) => e.targetRatio)) * 100).toFixed(1) + '%'
+    ))
 
     const statCards = computed(() => [
-      { label: t('reports.totalReadings'),   value: String(totalReadings.value),       variant: totalReadings.value === 0 ? 'muted' : 'default', tooltip: t('reports.totalReadingsTitle') },
-      { label: t('reports.lysisEvents'),     value: String(lysisEvents.value),         variant: 'danger',   tooltip: t('reports.lysisEventsTitle') },
-      { label: t('reports.manualReadings'),  value: String(manualReadings.value),      variant: undefined,  tooltip: t('reports.manualReadingsTitle') },
-      { label: t('reports.avgSelectivity'),  value: avgSelectivity.value  ?? '\u2014', variant: 'primary',  tooltip: t('reports.avgSelectivityTitle') },
-      { label: t('reports.peakSelectivity'), value: peakSelectivity.value ?? '\u2014', variant: 'ok',       tooltip: t('reports.peakSelectivityTitle') },
-      { label: t('reports.peakTargetRatio'), value: peakTargetRatio.value ?? '\u2014', variant: 'danger',   tooltip: t('reports.peakTargetRatioTitle') },
-      { label: t('reports.freqRange'),       value: freqRange.value        ?? '\u2014', variant: undefined,  tooltip: t('reports.freqRangeTitle'),  wide: true },
-      { label: t('reports.fieldRange'),      value: fieldRange.value       ?? '\u2014', variant: undefined,  tooltip: t('reports.fieldRangeTitle'), wide: true },
+      { label: t('reports.totalReadings'),   value: String(totalReadings.value),        variant: totalReadings.value === 0 ? 'muted' : 'default', tooltip: t('reports.totalReadingsTitle') },
+      { label: t('reports.lysisEvents'),     value: String(lysisEvents.value),          variant: 'danger',  tooltip: t('reports.lysisEventsTitle') },
+      { label: t('reports.manualReadings'),  value: String(manualReadings.value),       variant: undefined, tooltip: t('reports.manualReadingsTitle') },
+      { label: t('reports.avgSelectivity'),  value: avgSelectivity.value  ?? NULL_DISPLAY, variant: 'primary', tooltip: t('reports.avgSelectivityTitle') },
+      { label: t('reports.peakSelectivity'), value: peakSelectivity.value ?? NULL_DISPLAY, variant: 'ok',      tooltip: t('reports.peakSelectivityTitle') },
+      { label: t('reports.peakTargetRatio'), value: peakTargetRatio.value ?? NULL_DISPLAY, variant: 'danger',  tooltip: t('reports.peakTargetRatioTitle') },
+      { label: t('reports.freqRange'),       value: freqRange.value  ?? NULL_DISPLAY,   variant: undefined, tooltip: t('reports.freqRangeTitle'),  wide: true },
+      { label: t('reports.fieldRange'),      value: fieldRange.value ?? NULL_DISPLAY,   variant: undefined, tooltip: t('reports.fieldRangeTitle'), wide: true },
     ])
 
-    function eventVariant(event: string) {
-      return event === LOG_EVENT.LYSIS ? 'danger' : 'primary'
-    }
-
-    function selClass(sel: number) {
+    function selClass(sel: number): string {
       if (sel >= THRESHOLDS.SEL_STRONG)   return 'reports__green-val'
       if (sel >= THRESHOLDS.SEL_MARGINAL) return 'reports__warn-val'
       return 'reports__cancer-val'
@@ -268,64 +247,50 @@ export default defineComponent({
       distinctSessionCount,
       lysisEvents,
       manualReadings,
-      avgSelectivity,
-      peakSelectivity,
-      freqRange,
-      fieldRange,
-      peakTargetRatio,
-      eventVariant,
+      countLabel,
+      statCards,
       selClass,
       formatFreqKHz,
       formatFieldVcm,
+      depKDisplay,
       LOG_EVENT,
+      NULL_DISPLAY,
       THRESHOLDS,
       ICON,
-      statCards,
     }
   },
 
   methods: {
+    eventVariant(event: string): string {
+      return sharedEventVariant(event)
+    },
+    depKClass(k: number | undefined): string {
+      if (k == null) return 'reports__muted'
+      return k > 0 ? 'reports__green-val' : 'reports__warn-val'
+    },
     tipCellSession(e: { sessionName?: string; id: number }): string {
-      return this.$t('log.tipCellSession', { name: e.sessionName ?? ', ', id: e.id })
+      return sharedTipCellSession(this.$t.bind(this), e)
     },
     tipCellFreq(e: { freqKHz: number }): string {
-      return this.$t('log.tipCellFreq', { freq: e.freqKHz })
+      return sharedTipCellFreq(this.$t.bind(this), e)
     },
     tipCellField(e: { fieldVcm: number }): string {
-      return this.$t('log.tipCellField', { field: e.fieldVcm })
+      return sharedTipCellField(this.$t.bind(this), e)
     },
     tipCellTargetVm(e: { targetVm: number; targetPreset: string; targetRatio: number }): string {
-      return this.$t('log.tipCellTargetVm', {
-        vm:     e.targetVm.toFixed(3),
-        preset: e.targetPreset,
-        ratio:  (e.targetRatio * 100).toFixed(1),
-      })
+      return sharedTipCellTargetVm(this.$t.bind(this), e)
     },
     tipCellHealthyVm(e: { healthyVm: number; healthyRatio: number }): string {
-      return this.$t('log.tipCellHealthyVm', {
-        vm:    e.healthyVm.toFixed(3),
-        ratio: (e.healthyRatio * 100).toFixed(1),
-      })
+      return sharedTipCellHealthyVm(this.$t.bind(this), e)
     },
     tipCellSel(e: { selectivity: number; targetTemp: number; healthyTemp: number }): string {
-      return this.$t('log.tipCellSel', {
-        sel:         e.selectivity.toFixed(3),
-        targetTemp:  e.targetTemp.toFixed(1),
-        healthyTemp: e.healthyTemp.toFixed(1),
-      })
+      return sharedTipCellSel(this.$t.bind(this), e)
     },
     tipCellTRatio(e: { targetRatio: number }): string {
-      return this.$t('log.tipCellTargetVm', {
-        vm:     ', ',
-        preset: '',
-        ratio:  (e.targetRatio * 100).toFixed(1),
-      })
+      return this.$t('log.tipCellTRatio', { ratio: (e.targetRatio * 100).toFixed(1) })
     },
     tipCellHRatio(e: { healthyRatio: number }): string {
-      return this.$t('log.tipCellHealthyVm', {
-        vm:    ', ',
-        ratio: (e.healthyRatio * 100).toFixed(1),
-      })
+      return this.$t('log.tipCellHRatio', { ratio: (e.healthyRatio * 100).toFixed(1) })
     },
     tipCellTemp(temp: number, cell: 'target' | 'healthy'): string {
       return this.$t('reports.tipCellTemp', {
@@ -335,10 +300,10 @@ export default defineComponent({
       })
     },
     tipCellDepH(e: { depHealthyK?: number }): string {
-      return this.$t('log.tipCellDepH', { k: e.depHealthyK != null ? e.depHealthyK.toFixed(4) : ', ' })
+      return sharedTipCellDepH(this.$t.bind(this), e)
     },
     tipCellDepT(e: { depTargetK?: number }): string {
-      return this.$t('log.tipCellDepT', { k: e.depTargetK != null ? e.depTargetK.toFixed(4) : ', ' })
+      return sharedTipCellDepT(this.$t.bind(this), e)
     },
   },
 })
@@ -360,35 +325,12 @@ export default defineComponent({
     @include flex-col(1.5rem);
   }
 
-  /* ── Page header ──────────────────────────────────────────────────────────── */
-  &__eyebrow {
-    @include flex-row(0.5rem);
-    @include mono-upper(0.72rem, 0.14em);
-    color: var(--color-primary);
-    margin-bottom: 0.75rem;
-  }
-
-  &__eyebrow-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background-color: var(--color-primary);
-    box-shadow: 0 0 8px var(--color-primary);
-  }
-
   &__header-row {
     display: flex;
     align-items: flex-end;
     justify-content: space-between;
     gap: 1rem;
     flex-wrap: wrap;
-  }
-
-  &__title {
-    font-size: 2rem;
-    font-weight: 800;
-    color: var(--color-text-heading);
-    margin: 0 0 0.5rem;
   }
 
   &__subtitle {
@@ -590,6 +532,7 @@ export default defineComponent({
       padding: 0.52rem 0.75rem;
       border-bottom: 1px solid rgba(255, 255, 255, 0.04);
       white-space: nowrap;
+      font-family: var(--font-mono);
     }
 
     tr:last-child td { border-bottom: none; }
@@ -605,13 +548,10 @@ export default defineComponent({
     opacity: 0.8;
   }
 
-  /* Utility colours */
-  &__mono        { font-family: var(--font-mono); }
-  &__muted       { color: var(--color-text-muted); }
-  &__cancer-val  { color: var(--color-danger);  }
-  &__ref-val     { color: var(--color-primary); }
-  &__green-val   { color: var(--color-lime);   }
-  &__warn-val    { color: var(--color-amber);  }
+  /* Utility colours — mixin generates __muted, __cancer-val, __warn-val */
+  @include data-value-classes();
+  &__ref-val   { color: var(--color-primary); }
+  &__green-val { color: var(--color-lime);   }
   &__session-val {
     color: var(--color-text-muted);
     font-size: 0.62rem;

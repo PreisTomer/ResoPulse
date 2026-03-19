@@ -279,8 +279,8 @@
       >
         <span class="experiment__sticky-cells-tab-dot">⬤</span>
       </button>
-      <!-- Panel body -->
-      <div class="experiment__sticky-cells-body">
+      <!-- Panel body — click anywhere to scroll back to the live cell cards -->
+      <div class="experiment__sticky-cells-body experiment__sticky-cells-body--clickable" @click.stop="scrollToCells" :title="$t('exp.stickyScrollTip')">
         <div class="experiment__sticky-cells-label">⬤ LIVE</div>
         <div class="experiment__sticky-cells-grid">
           <CellCard
@@ -532,6 +532,11 @@ export default defineComponent({
     },
   },
   methods: {
+    scrollToCells() {
+      const anchor = this.$refs.cellsAnchor as HTMLElement | undefined
+      anchor?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    },
+
     onSweepWindowChange(w: { lo: number; hi: number; param: 'field' | 'freq' } | null) {
       this.sweepWindow = w
     },
@@ -1379,7 +1384,7 @@ export default defineComponent({
 
   // ── Panel body ────────────────────────────────────────────────────────────
   &-body {
-    pointer-events: none; // non-interactive, purely observational
+    pointer-events: none; // non-interactive by default
     width: 312px;
     background: rgba(8, 10, 18, 0.97);
     border: 1px solid rgba(255, 255, 255, 0.12);
@@ -1388,6 +1393,17 @@ export default defineComponent({
     box-shadow: 0 8px 48px rgba(0, 0, 0, 0.80), 0 0 0 1px rgba(255, 255, 255, 0.05);
     padding: 0.75rem 0.75rem 0.5rem;
     backdrop-filter: blur(12px);
+    transition: border-color 0.15s, box-shadow 0.15s;
+
+    &--clickable {
+      pointer-events: auto;
+      cursor: pointer;
+
+      &:hover {
+        border-color: rgba(100, 160, 255, 0.30);
+        box-shadow: 0 8px 48px rgba(0, 0, 0, 0.80), 0 0 0 1px rgba(100, 160, 255, 0.12);
+      }
+    }
   }
 
   &-label {

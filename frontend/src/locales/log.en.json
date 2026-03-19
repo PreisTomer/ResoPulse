@@ -41,6 +41,8 @@
     "tipCellHealthyVm": "<strong>Healthy Vm: {vm} mV</strong>\nDisruption ratio at log time: {ratio}%\nKeep below 50% of healthy threshold for selective treatment.\n  &gt; 50% → collateral membrane stress",
     "tipCellSel": "<strong>Selectivity: {sel}×</strong> (Vm_T / Vm_H)\nTarget temperature: {targetTemp} °C\nHealthy temperature: {healthyTemp} °C\nHigher selectivity = more target disruption per unit healthy exposure.",
 
+    "tipCellTRatio": "<strong>Target disruption ratio: {ratio}%</strong>\nVm_target / V_threshold. Above 85% arms the lysis countdown.\n  85 - 100% → irreversible EP, lysis armed\n  50 - 85%  → reversible EP, membrane permeabilised\n  &lt; 50%     → sub-electroporation",
+    "tipCellHRatio": "<strong>Healthy disruption ratio: {ratio}%</strong>\nVm_healthy / V_threshold — margin of safety for collateral damage.\nKeep below 50% to avoid reversible EP in healthy tissue.",
     "tipCellSession": "<strong>Session: {name}</strong>\nEntry #{id} was logged under this session name.\nRename the session in the Experiment Lab header to track\ndifferent protocol variants within the same log.",
     "tipCellDepH": "<strong>Re[K] H: {k}</strong>, Healthy cell Clausius-Mossotti factor\n  &gt; 0 → pDEP (cell drawn toward field maxima)\n  &lt; 0 → nDEP (cell repelled from field maxima)\n  = 0 → crossover frequency f_cross",
     "tipCellDepT": "<strong>Re[K] T: {k}</strong>, Target cell Clausius-Mossotti factor\n  &gt; 0 → pDEP (cell drawn toward field maxima)\n  &lt; 0 → nDEP (cell repelled from field maxima)\n  = 0 → crossover frequency f_cross",
