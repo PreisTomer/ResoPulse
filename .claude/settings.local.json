@@ -4,7 +4,8 @@
       "Bash(wc -l /e/code/ResoPulse/backend/src/*.ts)",
       "Bash(cd e:/code/ResoPulse/frontend && npm run build)",
       "Bash(cd e:/code/ResoPulse/frontend && npm run type-check)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "WebSearch"
     ]
   }
 }

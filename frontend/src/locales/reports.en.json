@@ -66,6 +66,7 @@
     "colHTempTitle": "Steady-state healthy reference cell temperature, same Newton cooling model applied to reference cell parameters",
     "colEvent": "Event",
     "colEventTitle": "LYSIS: auto-triggered when target DR ≥ 85% for the lysis delay period (N × t_p / dc)  ·  MANUAL: saved via Log Reading button",
+    "rowSelectHint": "Click any row to select it and download its Materials & Methods section",
     "colMethods": "Methods",
     "colMethodsTitle": "Click any row to select it, then download its Materials & Methods section",
     "colMethodsLegacy": "Methods export not available, logged before parameter snapshots were introduced",

@@ -3,6 +3,17 @@
   <div class="home">
     <div class="home__bg-grid" aria-hidden="true"></div>
 
+    <!-- Rotating electric field topology (conic gradient sectors) -->
+    <div class="home__bg-field" aria-hidden="true"></div>
+
+    <!-- Expanding RF pulse rings from centre -->
+    <div class="home__bg-rings" aria-hidden="true">
+      <div class="home__bg-ring"></div>
+      <div class="home__bg-ring"></div>
+      <div class="home__bg-ring"></div>
+      <div class="home__bg-ring"></div>
+    </div>
+
     <div class="home__inner">
 
       <!-- Logo rings -->
@@ -55,6 +66,151 @@
         <RouterLink to="/protocol" class="home__btn home__btn--ghost">
           {{ $t('home.btnGhost') }} <span class="home__btn-arrow">{{ ICON.ARROW_R }}</span>
         </RouterLink>
+      </div>
+
+      <!-- Physics illustration strip: cell cross-section + Schwan Bode chart (hidden on small screens) -->
+      <div class="home__science-strip" aria-hidden="true">
+
+        <!-- Left: animated Schwan cell cross-section -->
+        <div class="home__sci-panel">
+          <p class="home__sci-label">{{ $t('home.sciCellLabel') }}</p>
+          <svg class="home__cell-svg" viewBox="0 0 190 242" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <clipPath id="home-cell-clip">
+                <circle cx="95" cy="122" r="68"/>
+              </clipPath>
+              <linearGradient id="home-vm-grad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="rgb(0,212,255)">
+                  <animate attributeName="stop-opacity" values="0.12;0.26;0.12" dur="3s" repeatCount="indefinite"/>
+                </stop>
+                <stop offset="48%" stop-color="rgb(0,0,0)" stop-opacity="0"/>
+                <stop offset="52%" stop-color="rgb(0,0,0)" stop-opacity="0"/>
+                <stop offset="100%" stop-color="rgb(255,77,109)">
+                  <animate attributeName="stop-opacity" values="0.08;0.20;0.08" dur="3s" repeatCount="indefinite"/>
+                </stop>
+              </linearGradient>
+            </defs>
+            <!-- E-field lines + ions clipped to cell interior -->
+            <g clip-path="url(#home-cell-clip)">
+              <g class="home__efield-arrow home__efield-arrow--1">
+                <line x1="0" y1="94" x2="180" y2="94" stroke="rgba(0,212,255,0.65)" stroke-width="1"/>
+                <polygon points="184,94 175,90 175,98" fill="rgba(0,212,255,0.65)"/>
+              </g>
+              <g class="home__efield-arrow home__efield-arrow--2">
+                <line x1="0" y1="122" x2="180" y2="122" stroke="rgba(0,212,255,0.85)" stroke-width="1"/>
+                <polygon points="184,122 175,118 175,126" fill="rgba(0,212,255,0.85)"/>
+              </g>
+              <g class="home__efield-arrow home__efield-arrow--3">
+                <line x1="0" y1="150" x2="180" y2="150" stroke="rgba(0,212,255,0.65)" stroke-width="1"/>
+                <polygon points="184,150 175,146 175,154" fill="rgba(0,212,255,0.65)"/>
+              </g>
+              <!-- Voltage gradient fill -->
+              <circle cx="95" cy="122" r="68" fill="url(#home-vm-grad)"/>
+              <!-- Positive ions drifting upward — 3 staggered -->
+              <circle cx="83" cy="132" r="2.4" fill="rgb(0,212,255)" opacity="0">
+                <animate attributeName="cy" values="132;64" dur="2.8s" repeatCount="indefinite" begin="0s"/>
+                <animate attributeName="opacity" values="0;0.9;0.9;0" keyTimes="0;0.12;0.78;1" dur="2.8s" repeatCount="indefinite" begin="0s"/>
+              </circle>
+              <circle cx="95" cy="132" r="2.4" fill="rgb(0,212,255)" opacity="0">
+                <animate attributeName="cy" values="132;64" dur="2.8s" repeatCount="indefinite" begin="0.93s"/>
+                <animate attributeName="opacity" values="0;0.9;0.9;0" keyTimes="0;0.12;0.78;1" dur="2.8s" repeatCount="indefinite" begin="0.93s"/>
+              </circle>
+              <circle cx="107" cy="132" r="2.4" fill="rgb(0,212,255)" opacity="0">
+                <animate attributeName="cy" values="132;64" dur="2.8s" repeatCount="indefinite" begin="1.86s"/>
+                <animate attributeName="opacity" values="0;0.9;0.9;0" keyTimes="0;0.12;0.78;1" dur="2.8s" repeatCount="indefinite" begin="1.86s"/>
+              </circle>
+              <!-- Negative ions drifting downward — 3 staggered -->
+              <circle cx="83" cy="112" r="2.4" fill="rgb(255,77,109)" opacity="0">
+                <animate attributeName="cy" values="112;180" dur="2.8s" repeatCount="indefinite" begin="0.47s"/>
+                <animate attributeName="opacity" values="0;0.9;0.9;0" keyTimes="0;0.12;0.78;1" dur="2.8s" repeatCount="indefinite" begin="0.47s"/>
+              </circle>
+              <circle cx="95" cy="112" r="2.4" fill="rgb(255,77,109)" opacity="0">
+                <animate attributeName="cy" values="112;180" dur="2.8s" repeatCount="indefinite" begin="1.4s"/>
+                <animate attributeName="opacity" values="0;0.9;0.9;0" keyTimes="0;0.12;0.78;1" dur="2.8s" repeatCount="indefinite" begin="1.4s"/>
+              </circle>
+              <circle cx="107" cy="112" r="2.4" fill="rgb(255,77,109)" opacity="0">
+                <animate attributeName="cy" values="112;180" dur="2.8s" repeatCount="indefinite" begin="2.33s"/>
+                <animate attributeName="opacity" values="0;0.9;0.9;0" keyTimes="0;0.12;0.78;1" dur="2.8s" repeatCount="indefinite" begin="2.33s"/>
+              </circle>
+            </g>
+            <!-- Outer membrane -->
+            <circle class="home__cell-membrane" cx="95" cy="122" r="70"
+              stroke="rgba(0,212,255,0.55)" stroke-width="3" fill="rgba(0,212,255,0.06)"/>
+            <!-- Lipid bilayer inner edge -->
+            <circle cx="95" cy="122" r="66.5"
+              stroke="rgba(0,212,255,0.18)" stroke-width="1" fill="rgba(0,212,255,0.04)"/>
+            <!-- Nucleus envelope -->
+            <circle cx="95" cy="122" r="25"
+              stroke="rgba(167,139,250,0.75)" stroke-width="1.5" fill="rgba(167,139,250,0.14)"/>
+            <circle cx="95" cy="122" r="22" fill="rgba(167,139,250,0.08)"/>
+            <!-- +Vm cap -->
+            <path class="home__vm-cap home__vm-cap--pos"
+              d="M 61,66 A 70,70 0 0 1 129,66"
+              stroke="rgba(0,212,255,0.9)" stroke-width="2.5" fill="rgba(0,212,255,0.22)"/>
+            <!-- -Vm cap -->
+            <path class="home__vm-cap home__vm-cap--neg"
+              d="M 61,178 A 70,70 0 0 0 129,178"
+              stroke="rgba(255,77,109,0.85)" stroke-width="2.5" fill="rgba(255,77,109,0.16)"/>
+            <!-- Labels -->
+            <text x="95" y="26" text-anchor="middle" font-family="monospace" font-size="9" fill="rgba(0,212,255,0.9)">+Vm</text>
+            <text x="95" y="232" text-anchor="middle" font-family="monospace" font-size="9" fill="rgba(255,77,109,0.9)">-Vm</text>
+            <text x="163" y="96" font-family="monospace" font-size="10" fill="rgba(0,212,255,0.75)">E⃗</text>
+            <text x="95" y="127" text-anchor="middle" font-family="monospace" font-size="7" fill="rgba(167,139,250,0.7)">nucleus</text>
+            <text x="95" y="200" text-anchor="middle" font-family="monospace" font-size="7" fill="rgba(0,212,255,0.45)">membrane</text>
+          </svg>
+          <p class="home__sci-sublabel">{{ $t('home.sciCellSub') }}</p>
+        </div>
+
+        <!-- Divider -->
+        <div class="home__sci-divider" aria-hidden="true"></div>
+
+        <!-- Right: Schwan Vm(f) frequency response with animated operating point -->
+        <div class="home__sci-panel">
+          <p class="home__sci-label">{{ $t('home.sciChartLabel') }}</p>
+          <svg class="home__bode-svg" viewBox="0 0 210 188" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Axes -->
+            <line x1="28" y1="12" x2="28" y2="152" stroke="rgba(255,255,255,0.28)" stroke-width="1"/>
+            <line x1="28" y1="152" x2="196" y2="152" stroke="rgba(255,255,255,0.28)" stroke-width="1"/>
+            <!-- Axis labels -->
+            <text x="10" y="82" text-anchor="middle" font-family="monospace" font-size="7"
+              fill="rgba(255,255,255,0.48)" transform="rotate(-90,10,82)">Vm</text>
+            <text x="112" y="165" text-anchor="middle" font-family="monospace" font-size="7"
+              fill="rgba(255,255,255,0.48)">f (log)</text>
+            <!-- fc marker -->
+            <line x1="108" y1="12" x2="108" y2="152"
+              stroke="rgba(0,212,255,0.45)" stroke-width="1" stroke-dasharray="3 3"/>
+            <text x="111" y="11" font-family="monospace" font-size="7.5" fill="rgba(0,212,255,0.8)">fc</text>
+            <!-- Healthy cell curve (red dashed) -->
+            <path d="M 28,36 C 80,36 100,40 122,92 S 168,148 194,150"
+              stroke="rgba(255,77,109,0.6)" stroke-width="1.5" stroke-dasharray="4 3" stroke-linecap="round"/>
+            <!-- Target cell curve: glow + line -->
+            <path d="M 28,18 C 72,18 90,22 108,82 S 158,148 194,150"
+              stroke="rgba(0,212,255,0.2)" stroke-width="9" stroke-linecap="round"/>
+            <path d="M 28,18 C 72,18 90,22 108,82 S 158,148 194,150"
+              stroke="rgba(0,212,255,0.88)" stroke-width="2" stroke-linecap="round"/>
+            <!-- Animated operating point: halo + dot sweeping back and forth -->
+            <circle r="10" fill="rgba(0,212,255,0.18)">
+              <animateMotion dur="5s" repeatCount="indefinite"
+                calcMode="spline" keyTimes="0;0.5;1" keyPoints="0;1;0"
+                keySplines="0.45 0 0.55 1;0.45 0 0.55 1"
+                path="M 28,18 C 72,18 90,22 108,82 S 158,148 194,150"/>
+            </circle>
+            <circle r="4" fill="rgba(0,212,255,1)">
+              <animateMotion dur="5s" repeatCount="indefinite"
+                calcMode="spline" keyTimes="0;0.5;1" keyPoints="0;1;0"
+                keySplines="0.45 0 0.55 1;0.45 0 0.55 1"
+                path="M 28,18 C 72,18 90,22 108,82 S 158,148 194,150"/>
+            </circle>
+            <!-- Legend -->
+            <line x1="28" y1="175" x2="46" y2="175" stroke="rgba(0,212,255,0.85)" stroke-width="1.5"/>
+            <text x="50" y="178" font-family="monospace" font-size="7" fill="rgba(0,212,255,0.85)">Target</text>
+            <line x1="104" y1="175" x2="122" y2="175"
+              stroke="rgba(255,77,109,0.65)" stroke-width="1.5" stroke-dasharray="3 2"/>
+            <text x="126" y="178" font-family="monospace" font-size="7" fill="rgba(255,77,109,0.65)">Healthy</text>
+          </svg>
+          <p class="home__sci-sublabel">{{ $t('home.sciChartSub') }}</p>
+        </div>
+
       </div>
 
       <!-- 3-step workflow -->
@@ -181,6 +337,87 @@ export default defineComponent({
     background-size: 48px 48px;
     mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
     pointer-events: none;
+  }
+
+  /* Rotating electric-field topology — conic gradient sectors, very slow spin.
+     Represents the phasor rotation of the applied RF field.
+     Hidden on phones: decorative only, no layout impact. */
+  &__bg-field {
+    position: absolute;
+    // Oversized so the corners stay filled during rotation
+    inset: -30%;
+    width: 160%;
+    height: 160%;
+    background: conic-gradient(
+      from 0deg at 50% 80%,
+      transparent           0deg,
+      rgba(0, 212, 255, 0.045)  40deg,
+      transparent          90deg,
+      rgba(167, 139, 250, 0.03) 130deg,
+      transparent          180deg,
+      rgba(0, 212, 255, 0.045)  220deg,
+      transparent          270deg,
+      rgba(167, 139, 250, 0.03) 310deg,
+      transparent          360deg
+    );
+    mask-image: radial-gradient(ellipse 80% 60% at 50% 100%, black 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+    display: none;
+
+    @media (min-width: 768px) {
+      display: block;
+      animation: bg-field-rotate 60s linear infinite;
+    }
+  }
+
+  @keyframes bg-field-rotate {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+  }
+
+  /* Expanding RF pulse rings — origin at bottom-centre so they expand upward
+     into negative space below the content, never across the hero text.
+     Four rings staggered by 2.5 s each, cycling every 10 s.
+     Hidden on phones. */
+  &__bg-rings {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 0;
+  }
+
+  &__bg-ring {
+    position: absolute;
+    border-radius: 50%;
+    width: 220px;
+    height: 220px;
+    // Centre the ring origin at bottom-centre of the home section.
+    // bottom: -110px puts the ring's geometric centre on the bottom edge.
+    bottom: -110px;
+    left: calc(50% - 110px);
+    border: 1px solid rgba(0, 212, 255, 0.18);
+    display: none;
+
+    @media (min-width: 768px) {
+      display: block;
+      animation: bg-ring-expand 10s ease-out infinite;
+    }
+
+    &:nth-child(1) { animation-delay: 0s; }
+    &:nth-child(2) { animation-delay: 2.5s; }
+    &:nth-child(3) { animation-delay: 5s; }
+    &:nth-child(4) { animation-delay: 7.5s; }
+  }
+
+  @keyframes bg-ring-expand {
+    // Rings scale from 0.3 (66px radius) up to 5 (550px radius).
+    // At 550px from the bottom edge they cover most of the page height
+    // but are nearly invisible (opacity → 0) long before that.
+    0%   { transform: scale(0.3); opacity: 0.55; border-color: rgba(0, 212, 255, 0.2); }
+    40%  { opacity: 0.2;          border-color: rgba(167, 139, 250, 0.1); }
+    100% { transform: scale(5);   opacity: 0;    border-color: rgba(167, 139, 250, 0); }
   }
 
   &__inner {
@@ -374,6 +611,102 @@ export default defineComponent({
   }
 
   &__btn:hover &__btn-arrow { transform: translateX(4px); }
+
+  /* ── Science illustration strip ──────────────────────────────── */
+  &__science-strip {
+    display: none; // hidden on small screens — decorative only
+    @media (min-width: 768px) {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 2rem;
+      width: 100%;
+    }
+  }
+
+  &__sci-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  &__sci-label {
+    font-family: monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(0, 212, 255, 0.72);
+    margin: 0;
+  }
+
+  &__sci-sublabel {
+    font-family: monospace;
+    font-size: 0.58rem;
+    letter-spacing: 0.06em;
+    color: rgba(255, 255, 255, 0.38);
+    margin: 0;
+  }
+
+  &__sci-divider {
+    width: 1px;
+    height: 140px;
+    background: linear-gradient(
+      to bottom,
+      transparent,
+      rgba(0, 212, 255, 0.25) 30%,
+      rgba(0, 212, 255, 0.25) 70%,
+      transparent
+    );
+    flex-shrink: 0;
+  }
+
+  &__cell-svg {
+    width: 130px;
+    height: 165px;
+  }
+
+  &__bode-svg {
+    width: 160px;
+    height: 116px;
+  }
+
+  /* E-field drift */
+  @keyframes home-efield-drift {
+    0%   { transform: translateX(-8px); opacity: 0.45; }
+    50%  { transform: translateX(8px);  opacity: 1; }
+    100% { transform: translateX(-8px); opacity: 0.45; }
+  }
+
+  &__efield-arrow {
+    animation: home-efield-drift 3s ease-in-out infinite;
+    &--1 { animation-delay: 0s; }
+    &--2 { animation-delay: 0.6s; }
+    &--3 { animation-delay: 1.2s; }
+  }
+
+  /* Membrane breathe */
+  @keyframes home-cell-breathe {
+    0%, 100% { r: 70; }
+    50%       { r: 72; }
+  }
+
+  &__cell-membrane {
+    animation: home-cell-breathe 4s ease-in-out infinite;
+    transform-box: fill-box;
+    transform-origin: 50% 50%;
+  }
+
+  /* Vm cap pulse */
+  @keyframes home-vm-pulse {
+    0%, 100% { opacity: 0.6; }
+    50%       { opacity: 1; }
+  }
+
+  &__vm-cap {
+    &--pos { animation: home-vm-pulse 2s ease-in-out infinite; }
+    &--neg { animation: home-vm-pulse 2s ease-in-out infinite 1s; }
+  }
 
   /* ── 3-step workflow ─────────────────────────────────────────── */
   &__workflow {

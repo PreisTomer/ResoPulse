@@ -171,7 +171,7 @@ export const useCellStore = defineStore('cell', {
       return sigma_T * (1 - phi) / (1 + phi / 2)
     },
 
-    /** Lysis countdown [ms]: CW→2500 ms; pulsed→N_pulses × (t_p/dc), clamped [200-30000] ms. */
+    /** Lysis countdown [ms]: CW→2500 ms; pulsed→N_pulses × (t_p/dc), clamped [2500-30000] ms. */
     lysisDelayMs(state): number {
       if (state.waveform === WAVEFORM.CW || state.dutyCycle >= 1) return 2500
       const pulsePeriodMs = (state.pulseWidthNs * 1e-6) / state.dutyCycle

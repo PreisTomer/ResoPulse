@@ -97,6 +97,25 @@ const tau = computeTau(cell, sigma_e)
 
 ---
 
+## Responsive Design — Phone and Small Screens
+
+Always consider phone and small screen sizes when adding any UI element.
+
+- Decorative elements (side panels, ambient animations, illustration overlays) **must be hidden on small screens** using a `min-width` media query (typically `1300px` for wide decorations, `768px` for standard responsive breakpoints)
+- Never let decorative content overflow or obscure data on narrow viewports
+- Add `display: none` as the default and `display: flex` / `display: block` only inside the media query
+- Test that all new elements degrade gracefully — if hidden at small sizes, the page must still be fully functional
+
+```scss
+// ✓ correct — decorative panel hidden on small screens
+.home__side-panel {
+  display: none;
+  @media (min-width: 1300px) { display: flex; }
+}
+```
+
+---
+
 ## Punctuation Style
 
 Do not use em dashes (—) or en dashes (–) in any user-visible text: locale strings, tooltips, descriptions, notes, or comments rendered to the UI.
