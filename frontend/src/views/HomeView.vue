@@ -69,11 +69,12 @@
       </div>
 
       <!-- Physics illustration strip: cell cross-section + Schwan Bode chart (hidden on small screens) -->
-      <div class="home__science-strip" aria-hidden="true">
+      <div class="home__science-strip">
 
-        <!-- Left: animated Schwan cell cross-section -->
-        <div class="home__sci-panel">
+        <!-- Left: animated Schwan cell cross-section — links to Experiment Lab -->
+        <RouterLink to="/experiment" class="home__sci-panel" v-tip="$t('home.tipSciCell')">
           <p class="home__sci-label">{{ $t('home.sciCellLabel') }}</p>
+          <div class="home__sci-svg-box">
           <svg class="home__cell-svg" viewBox="0 0 190 242" fill="none" xmlns="http://www.w3.org/2000/svg">
             <defs>
               <clipPath id="home-cell-clip">
@@ -158,15 +159,18 @@
             <text x="95" y="127" text-anchor="middle" font-family="monospace" font-size="7" fill="rgba(167,139,250,0.7)">nucleus</text>
             <text x="95" y="200" text-anchor="middle" font-family="monospace" font-size="7" fill="rgba(0,212,255,0.45)">membrane</text>
           </svg>
+          </div>
           <p class="home__sci-sublabel">{{ $t('home.sciCellSub') }}</p>
-        </div>
+          <span class="home__sci-cta">{{ $t('home.sciCta') }}</span>
+        </RouterLink>
 
         <!-- Divider -->
         <div class="home__sci-divider" aria-hidden="true"></div>
 
-        <!-- Right: Schwan Vm(f) frequency response with animated operating point -->
-        <div class="home__sci-panel">
+        <!-- Right: Schwan Vm(f) Bode response — links to Experiment Lab -->
+        <RouterLink to="/experiment" class="home__sci-panel" v-tip="$t('home.tipSciChart')">
           <p class="home__sci-label">{{ $t('home.sciChartLabel') }}</p>
+          <div class="home__sci-svg-box">
           <svg class="home__bode-svg" viewBox="0 0 210 188" fill="none" xmlns="http://www.w3.org/2000/svg">
             <!-- Axes -->
             <line x1="28" y1="12" x2="28" y2="152" stroke="rgba(255,255,255,0.28)" stroke-width="1"/>
@@ -208,8 +212,10 @@
               stroke="rgba(255,77,109,0.65)" stroke-width="1.5" stroke-dasharray="3 2"/>
             <text x="126" y="178" font-family="monospace" font-size="7" fill="rgba(255,77,109,0.65)">Healthy</text>
           </svg>
+          </div>
           <p class="home__sci-sublabel">{{ $t('home.sciChartSub') }}</p>
-        </div>
+          <span class="home__sci-cta">{{ $t('home.sciCta') }}</span>
+        </RouterLink>
 
       </div>
 
@@ -617,9 +623,9 @@ export default defineComponent({
     display: none; // hidden on small screens — decorative only
     @media (min-width: 768px) {
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: center;
-      gap: 2rem;
+      gap: 1.75rem;
       width: 100%;
     }
   }
@@ -628,15 +634,56 @@ export default defineComponent({
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.55rem;
+    width: 186px;
+    text-decoration: none;
+    border-radius: 12px;
+    border: 1px solid rgba(0, 212, 255, 0.1);
+    background: rgba(0, 212, 255, 0.025);
+    padding: 1rem 0.75rem 0.85rem;
+    transition: transform 0.3s ease, filter 0.3s ease, border-color 0.3s ease, background 0.3s ease;
+    cursor: pointer;
+
+    @media (min-width: 768px) {
+      &:hover {
+        transform: scale(1.03);
+        border-color: rgba(0, 212, 255, 0.32);
+        background: rgba(0, 212, 255, 0.055);
+        filter: drop-shadow(0 0 18px rgba(0, 212, 255, 0.22));
+      }
+
+      &:hover .home__sci-cta {
+        opacity: 1;
+      }
+    }
+  }
+
+  &__sci-svg-box {
+    width: 154px;
+    height: 154px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  &__sci-cta {
+    font-family: monospace;
+    font-size: 0.57rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: rgba(0, 212, 255, 0.8);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    margin-top: 0.1rem;
   }
 
   &__sci-label {
     font-family: monospace;
-    font-size: 0.65rem;
-    letter-spacing: 0.08em;
+    font-size: 0.67rem;
+    letter-spacing: 0.09em;
     text-transform: uppercase;
-    color: rgba(0, 212, 255, 0.72);
+    color: rgba(0, 212, 255, 0.85);
     margin: 0;
   }
 
@@ -644,31 +691,34 @@ export default defineComponent({
     font-family: monospace;
     font-size: 0.58rem;
     letter-spacing: 0.06em;
-    color: rgba(255, 255, 255, 0.38);
+    color: rgba(255, 255, 255, 0.42);
     margin: 0;
   }
 
   &__sci-divider {
     width: 1px;
-    height: 140px;
+    align-self: stretch;
+    margin: 1rem 0;
     background: linear-gradient(
       to bottom,
       transparent,
-      rgba(0, 212, 255, 0.25) 30%,
-      rgba(0, 212, 255, 0.25) 70%,
+      rgba(0, 212, 255, 0.22) 20%,
+      rgba(0, 212, 255, 0.22) 80%,
       transparent
     );
     flex-shrink: 0;
   }
 
   &__cell-svg {
-    width: 130px;
-    height: 165px;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
   }
 
   &__bode-svg {
-    width: 160px;
-    height: 116px;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
   }
 
   /* E-field drift */
