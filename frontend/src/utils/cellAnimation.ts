@@ -216,7 +216,7 @@ function setupBacteriaAnatomy(
       .attr('fill', 'none').attr('stroke', accentColor)
       .attr('stroke-width', 1.0).attr('stroke-opacity', 0.16)
       .attr('stroke-dasharray', '3,3')
-    // Flagellum (peritrichous - animated wiggly path from south pole)
+    // Flagellum (peritrichous - animated wiggly path from south pole, exits just outside outer membrane)
     flagEl = cellG.append('path')
       .attr('fill', 'none').attr('stroke', accentColor)
       .attr('stroke-width', 0.9).attr('stroke-opacity', 0.30)
@@ -426,7 +426,7 @@ function updateBacteriaAnatomy(anat: BacteriaAnatomy, p: BacteriaUpdateParams): 
     const flagPts: Array<[number, number]> = []
     for (let i = 0; i <= 14; i++) {
       const t  = i / 14
-      const fY = ROD_A + 2 + t * 26
+      const fY = ROD_A + 9 + t * 28  // start just outside outer membrane south pole (ry = ROD_A + 8)
       const fX = Math.sin(t * Math.PI * 2.5 + elapsed * 0.003) * 5
       flagPts.push([fX, fY])
     }
@@ -588,6 +588,16 @@ export function setupBlobAnimation(
   const rayNBrightStop = rayNGrad.append('stop').attr('offset', '100%')
     .attr('stop-color', accentColor).attr('stop-opacity', 1.0)
 
+  // ── South field ray gradient (electrode at canvas bottom → south pole) ─────
+  // Symmetric counterpart to north; together they represent the AC dipole field.
+  const raySGradId = `rayS-${type}`
+  const raySGrad   = defs.append('linearGradient').attr('id', raySGradId)
+    .attr('gradientUnits', 'userSpaceOnUse')
+    .attr('x1', 0).attr('y1', cy).attr('x2', 0).attr('y2', southPoleR)
+  raySGrad.append('stop').attr('offset', '0%').attr('stop-color', accentColor).attr('stop-opacity', 0)
+  const raySBrightStop = raySGrad.append('stop').attr('offset', '100%')
+    .attr('stop-color', accentColor).attr('stop-opacity', 1.0)
+
   // ── Main cell group (everything relative to cell centre) ──────────────────
   const cellG = svg.append('g').attr('transform', `translate(${cx},${cy})`)
 
@@ -602,6 +612,15 @@ export function setupBlobAnimation(
     .attr('fill', `url(#${rayNGradId})`)
   const rayNR = cellG.append('rect').attr('x', 11).attr('y', -cy).attr('width', 3).attr('height', rayTopH)
     .attr('fill', `url(#${rayNGradId})`)
+
+  // ── South electrode beam (symmetric, painted after north to maintain z-order) ─
+  const raySTopH = cy - southPoleR
+  const raySC = cellG.append('rect').attr('x', -3).attr('y', southPoleR).attr('width', 6).attr('height', raySTopH)
+    .attr('fill', `url(#${raySGradId})`).attr('filter', `url(#${rayGlowId})`)
+  const raySL = cellG.append('rect').attr('x', -14).attr('y', southPoleR).attr('width', 3).attr('height', raySTopH)
+    .attr('fill', `url(#${raySGradId})`)
+  const raySR = cellG.append('rect').attr('x', 11).attr('y', southPoleR).attr('width', 3).attr('height', raySTopH)
+    .attr('fill', `url(#${raySGradId})`)
 
   // ── Aura rings ────────────────────────────────────────────────────────────
   const auraRings = [
@@ -661,6 +680,21 @@ export function setupBlobAnimation(
     .attr('fill', 'white').attr('fill-opacity', 0.09)
     .attr('pointer-events', 'none')
 
+  // ── Transmembrane Vm pole glow ─────────────────────────────────────────────
+  // Schwan equation: Vm(f) = 1.5·E·R·cosθ / √(1+(ωτ)²), maximum at field-aligned poles.
+  // Elliptical glow at N and S poles grows with disruption ratio (proxy for Vm magnitude).
+  // Rotates with bodyG so it always marks the correct poles relative to the cell body.
+  const northPoleGlow = bodyG.append('ellipse')
+    .attr('cx', 0).attr('cy', -northPoleR * 0.80)
+    .attr('rx', BASE_R * 0.26).attr('ry', BASE_R * 0.13)
+    .attr('fill', accentColor).attr('fill-opacity', 0)
+    .attr('pointer-events', 'none')
+  const southPoleGlow = bodyG.append('ellipse')
+    .attr('cx', 0).attr('cy', southPoleR * 0.80)
+    .attr('rx', BASE_R * 0.26).attr('ry', BASE_R * 0.13)
+    .attr('fill', accentColor).attr('fill-opacity', 0)
+    .attr('pointer-events', 'none')
+
   // ── DEP visual effects state ───────────────────────────────────────────────
   // Three visual cues for DEP - no arrows, no symbols:
   //
@@ -718,11 +752,21 @@ export function setupBlobAnimation(
     const fieldNorm = Math.max(0, Math.min(1, (Math.log10(Math.max(1, fieldVcm)) - 1) / 3))
     const rayOpacity = state === CELL_STATE.LYSED ? 0 : Math.max(0.04, 0.06 + fieldNorm * 0.66)
 
+    // AC modulation: slow visual pulse (~0.5 Hz) to represent field oscillation.
+    // Actual RF frequencies (kHz-GHz) are imperceptible; this is a representational cue.
+    const acPulse   = (Math.sin(elapsed * 0.006) + 1) / 2
+    const modOpacity = rayOpacity * (0.50 + acPulse * 0.50)
+
     // Color via gradient stop-color; intensity via rect opacity (more reliably reactive)
     rayNBrightStop.attr('stop-color', rayColor)
-    rayNC.attr('opacity', rayOpacity)
-    rayNL.attr('opacity', rayOpacity * 0.38)
-    rayNR.attr('opacity', rayOpacity * 0.38)
+    rayNC.attr('opacity', modOpacity)
+    rayNL.attr('opacity', modOpacity * 0.38)
+    rayNR.attr('opacity', modOpacity * 0.38)
+    // South electrode beam: same AC phase (both electrodes switch simultaneously in AC field)
+    raySBrightStop.attr('stop-color', rayColor)
+    raySC.attr('opacity', modOpacity)
+    raySL.attr('opacity', modOpacity * 0.38)
+    raySR.attr('opacity', modOpacity * 0.38)
 
     // ── DEP blob deformation + concentration halos ───────────────────────────
     // Computed here so depDeformScale is available in the blobPts map() below.
@@ -740,6 +784,23 @@ export function setupBlobAnimation(
       : 0
     depAlignAngle += (targetAlignAngle - depAlignAngle) * 0.025
     bodyG.attr('transform', `rotate(${depAlignAngle.toFixed(2)})`)
+
+    // ── Dynamic beam height: tracks actual cell pole extent along field axis ──
+    // When E. coli rotates (nDEP → 90°), its vertical half-size shrinks from
+    // ROD_A (55 px) to ROD_B (25 px). The beam must lengthen to still reach the cell.
+    // capsuleR(angle, ROD_A, ROD_B) gives the ellipse radius at that world angle.
+    const effectivePoleR = isRod
+      ? capsuleR(depAlignAngle * Math.PI / 180, ROD_A, ROD_B)
+      : BASE_R
+    const dynTopH = cy - effectivePoleR
+    rayNGrad.attr('y2', -effectivePoleR)
+    rayNC.attr('y', -cy).attr('height', dynTopH)
+    rayNL.attr('y', -cy).attr('height', dynTopH)
+    rayNR.attr('y', -cy).attr('height', dynTopH)
+    raySGrad.attr('y2', effectivePoleR)
+    raySC.attr('y', effectivePoleR).attr('height', dynTopH)
+    raySL.attr('y', effectivePoleR).attr('height', dynTopH)
+    raySR.attr('y', effectivePoleR).attr('height', dynTopH)
 
     // ── DEP: translational drift toward/away from field source ───────────────
     // pDEP: cell migrates toward high-field region (electrode = top of canvas)
@@ -791,6 +852,8 @@ export function setupBlobAnimation(
         })
       }
       rayNC.attr('opacity', 0); rayNL.attr('opacity', 0); rayNR.attr('opacity', 0)
+      raySC.attr('opacity', 0); raySL.attr('opacity', 0); raySR.attr('opacity', 0)
+      northPoleGlow.attr('fill-opacity', 0); southPoleGlow.attr('fill-opacity', 0)
       equatorialRing.attr('stroke-opacity', 0)
       specularDot.attr('fill-opacity', 0)
       northPore.attr('r', 0); southPore.attr('r', 0)
@@ -853,6 +916,7 @@ export function setupBlobAnimation(
       pore4.attr('r', isRod ? 0 : Math.min(PORE_MAX_R * 0.6, 2 + progress * 3))
       equatorialRing.attr('stroke-opacity', Math.max(0, 0.07 - progress * 0.07))
       specularDot.attr('fill-opacity', Math.max(0, 0.09 - progress * 0.09))
+      northPoleGlow.attr('fill-opacity', 0); southPoleGlow.attr('fill-opacity', 0)
       glowBlur.attr('stdDeviation', (3 + progress * 12).toFixed(1))
       return
     }
@@ -912,11 +976,35 @@ export function setupBlobAnimation(
       updateVirusAnatomy(virusAnatomy, { elapsed, color, impact })
     }
 
+    // ── Transmembrane Vm pole glow ─────────────────────────────────────────
+    // Grows from DR≈5% (Vm begins to build) to full brightness at DR≈100%.
+    // Color interpolates accentColor → amber → red tracking the disruption state.
+    // Modulated by the AC pulse to visually link it to the applied field.
+    const poleGlowIntensity = Math.max(0, (impact - 0.05) * 0.42)
+    const poleGlowColor = impact < 0.5
+      ? color
+      : impact < 0.85
+        ? d3.interpolateRgb(color, '#fbbf24')((impact - 0.5) / 0.35)
+        : '#ff4d6d'
+    northPoleGlow.attr('fill', poleGlowColor).attr('fill-opacity', poleGlowIntensity * modOpacity)
+    southPoleGlow.attr('fill', poleGlowColor).attr('fill-opacity', poleGlowIntensity * modOpacity)
+
     // ── Electroporation / capsid pores ─────────────────────────────────────
+    // Rev-EP (50-85% DR): small amber cycling pores — reversible permeabilisation.
+    // IRE (>85% DR): opaque BG-colour holes — irreversible membrane breach.
+    const isRevEp       = state === CELL_STATE.REV_EP
+    const revEpCycle    = isRevEp ? (Math.sin(elapsed * 0.0022) + 1) / 2 : 0
+    const revEpPoreR    = isRevEp ? 1.0 + revEpCycle * 2.4 : 0
     const primaryPore   = Math.min(PORE_MAX_R, Math.max(0, (impact - 0.70) / 0.30) * 4.5)
     const secondaryPore = isRod ? 0 : Math.min(PORE_MAX_R * 0.6, Math.max(0, (impact - 0.88) / 0.15) * 3.5)
-    northPore.attr('r', primaryPore); southPore.attr('r', primaryPore)
-    pore3.attr('r', secondaryPore);   pore4.attr('r', secondaryPore)
+    const finalPoleR    = Math.max(revEpPoreR, primaryPore)
+    const poreIsHole    = primaryPore > 0.5
+    northPore.attr('r', finalPoleR).attr('fill', poreIsHole ? BG : '#d97706')
+      .attr('fill-opacity', poreIsHole ? 1 : 0.28 + revEpCycle * 0.32)
+    southPore.attr('r', finalPoleR).attr('fill', poreIsHole ? BG : '#d97706')
+      .attr('fill-opacity', poreIsHole ? 1 : 0.28 + revEpCycle * 0.32)
+    pore3.attr('r', secondaryPore).attr('fill', BG).attr('fill-opacity', 1)
+    pore4.attr('r', secondaryPore).attr('fill', BG).attr('fill-opacity', 1)
 
     glowBlur.attr('stdDeviation',
       isNourishing ? (3 + impact * 10).toFixed(1)
