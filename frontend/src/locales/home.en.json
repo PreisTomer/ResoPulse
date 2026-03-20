@@ -45,6 +45,10 @@
     "tagBacteria": "Bacteria",
     "tagVirus": "Viruses",
     "tagRef": "Reference Cells",
+    "sciCellLabel": "Schwan Model",
+    "sciCellSub": "transmembrane voltage",
+    "sciChartLabel": "Bode Response",
+    "sciChartSub": "Vm vs frequency",
     "disclaimer": "for research visualisation only · not a medical device"
   }
 }

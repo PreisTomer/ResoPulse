@@ -72,6 +72,16 @@
           </RouterLink>
         </div>
 
+        <!-- Row-select hint — visible when entries exist but none is selected.
+             Sits in the same slot as the methods bar so it teaches the eye
+             where to look, then disappears the moment a row is clicked. -->
+        <Transition name="methods-bar">
+          <div v-if="totalReadings > 0 && !selectedEntry" class="reports__row-hint" aria-live="polite">
+            <span class="reports__row-hint-icon">{{ ICON.RETICLE }}</span>
+            <span class="reports__row-hint-text">{{ $t('reports.rowSelectHint') }}</span>
+          </div>
+        </Transition>
+
         <!-- Methods action bar — slides in when a row is selected -->
         <Transition name="methods-bar">
           <div v-if="selectedEntry" class="reports__methods-bar">
@@ -691,6 +701,31 @@ export default defineComponent({
       border-color: #a78bfa;
       box-shadow: 0 0 6px rgba(167, 139, 250, 0.55);
     }
+  }
+
+  /* ── Row-select hint ─────────────────────────────────────────────────────── */
+  &__row-hint {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.5rem;
+    border-bottom: 1px solid rgba(167, 139, 250, 0.12);
+    background: rgba(167, 139, 250, 0.04);
+  }
+
+  &__row-hint-icon {
+    font-size: 0.85rem;
+    color: #a78bfa;
+    opacity: 0.6;
+    flex-shrink: 0;
+  }
+
+  &__row-hint-text {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--color-text-muted);
+    opacity: 0.75;
+    letter-spacing: 0.02em;
   }
 
   /* ── Methods action bar ───────────────────────────────────────────────────── */

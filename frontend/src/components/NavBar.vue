@@ -5,7 +5,7 @@
 
       <RouterLink to="/" class="nav-bar__brand" @click="mobileOpen = false">
         <div class="nav-bar__brand-logo">
-          <img src="/logo.png" :alt="$t('hero.title')" />
+          <img src="/logo.png" alt="ResoPulse" />
         </div>
         <div class="nav-bar__brand-text">
           <span class="nav-bar__brand-name">Reso<span class="nav-bar__brand-pulse">Pulse</span></span>

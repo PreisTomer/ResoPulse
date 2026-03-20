@@ -18,14 +18,6 @@
     "openMenu": "Open menu",
     "closeMenu": "Close menu"
   },
-  "hero": {
-    "eyebrow": "Computational Bioelectrics · Electroporation · Capsid Disruption",
-    "title": "ResoPulse",
-    "titleAccent": "Research Platform",
-    "description": "A precision simulator for bioelectric field research. Models transmembrane potential via the Schwan equation, SAR-based thermal effects, pulse-width-dependent membrane charging, dielectrophoretic force via the Clausius-Mossotti factor, and frequency-selective disruption of viral capsids and bacterial cell walls.",
-    "loadDataSet": "Load Cell Library",
-    "viewSampleAnalysis": "View Research Protocol"
-  },
   "cells": {
     "sectionTitle": "Cell Signature Profiles",
     "sectionSub": "Transmembrane potential and thermal response computed via Schwan equation. Drag the Field Intensity slider to explore the therapeutic window.",
@@ -289,25 +281,6 @@
     "doseLabel": "Dose",
     "tipDose": "<strong>Cumulative Dose</strong>\nSpecific energy absorbed (J/kg) estimated from SAR\nand pulse duty cycle across all logged readings.\nApproximation only, ignores blood perfusion and heat loss."
   },
-  "features": {
-    "visualization": {
-      "title": "Big Data Visualization",
-      "description": "Render large-scale frequency JSON data sets as interactive graphs and spectral charts."
-    },
-    "comparative": {
-      "title": "Comparative Analysis",
-      "description": "Side-by-side comparison of healthy vs. target cell signatures to isolate delta frequencies."
-    },
-    "targeting": {
-      "title": "Resonance Targeting",
-      "description": "Identify precise field parameters that disrupt target cells without impacting healthy tissue."
-    },
-    "profiles": {
-      "title": "Extensible Profiles",
-      "description": "Support for multiple cell types, viruses, bacteria, and other organisms as research expands."
-    }
-  },
-
   "drChart": {
     "title": "Disruption Ratio: f-Domain",
     "tipTitle": "<strong>Disruption Ratio vs Frequency</strong>\nShows DR(f) = V<sub>m</sub>(f) / V<sub>threshold</sub> × PEF for both cells.\n<strong>Green region</strong>: therapeutic window, target DR ≥ 85% while healthy DR &lt; 50%.\nDashed amber line = reversible EP boundary (50%).\nDashed red line = lysis threshold (85%).",
