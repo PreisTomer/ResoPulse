@@ -94,7 +94,7 @@ export default defineComponent({
 
   &__legend-item {
     @include flex-row(0.3rem);
-    font-size: 0.62rem;
+    font-size: var(--fs-xxs);
     font-family: var(--font-mono);
     color: var(--color-text);
     white-space: nowrap;
@@ -114,11 +114,11 @@ export default defineComponent({
 
     &--h   { background: var(--color-primary); box-shadow: 0 0 4px var(--color-primary); }
     &--t   { background: var(--color-danger);  box-shadow: 0 0 4px var(--color-danger); }
-    &--sel { width: 18px; height: 0; border-top: 2px dashed #fbbf24; background: transparent; opacity: 0.8; }
-    &--nuc-h { width: 18px; height: 0; border-top: 2px dashed rgba(0, 212, 255, 0.55); background: transparent; }
-    &--nuc-t { width: 18px; height: 0; border-top: 2px dashed rgba(255, 77, 109, 0.55); background: transparent; }
-    &--dep-h { width: 18px; height: 0; border-top: 2px dotted rgba(0, 212, 255, 0.50); background: transparent; }
-    &--dep-t { width: 18px; height: 0; border-top: 2px dotted rgba(255, 77, 109, 0.50); background: transparent; }
+    &--sel { width: 18px; height: 0; border-top: 2px dashed var(--color-amber); background: transparent; opacity: 0.8; }
+    &--nuc-h { width: 18px; height: 0; border-top: 2px dashed color-mix(in srgb, var(--color-primary) 55%, transparent); background: transparent; }
+    &--nuc-t { width: 18px; height: 0; border-top: 2px dashed color-mix(in srgb, var(--color-danger) 55%, transparent); background: transparent; }
+    &--dep-h { width: 18px; height: 0; border-top: 2px dotted color-mix(in srgb, var(--color-primary) 50%, transparent); background: transparent; }
+    &--dep-t { width: 18px; height: 0; border-top: 2px dotted color-mix(in srgb, var(--color-danger) 50%, transparent); background: transparent; }
   }
 }
 </style>

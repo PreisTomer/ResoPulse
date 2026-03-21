@@ -22,6 +22,7 @@ import {
   OSC_W, OSC_H,
 } from '@/constants/cellCard'
 import { CELL_STATE, CELL_CATEGORY, CELL_TYPE, PRESET_ID, MORPHOLOGY_TAG } from '@/constants/strings'
+import { C } from '@/theme/colors'
 
 // ── Type aliases ──────────────────────────────────────────────────────────────
 type D3Sel<E extends Element> = d3.Selection<E, unknown, null, undefined>
@@ -61,9 +62,9 @@ function computeMalignancyScore(thresholdVoltage: number): number {
 const CANVAS_BG = '#080e1a'
 
 /** Lysis / IRE disruption colour */
-const COLOR_LYSIS = '#ff4d6d'
+const COLOR_LYSIS = C.danger
 /** Rev-EP / amber warning colour */
-const COLOR_AMBER = '#fbbf24'
+const COLOR_AMBER = C.amber
 /** Pore amber (darker, inside membrane) */
 const COLOR_PORE_AMBER = '#d97706'
 /** Thermal heat tint (orange) */
@@ -1112,7 +1113,7 @@ export function setupBlobAnimation(
     const freqNorm = Math.max(0, Math.min(1,
       (Math.log10(Math.max(10, freqKHz)) - 1) / (Math.log10(30e6) - 1)
     ))
-    const rayColor = d3.interpolateRgbBasis(['#00d4ff', '#4a9eff', '#7c6cff', '#a78bfa'])(freqNorm)
+    const rayColor = d3.interpolateRgbBasis([C.primary, C.rayInterp1, C.rayInterp2, C.purple])(freqNorm)
     // fieldVcm log-scale 10-10,000 V/cm → opacity 0.05-0.72
     const fieldNorm = Math.max(0, Math.min(1, (Math.log10(Math.max(1, fieldVcm)) - 1) / 3))
     const rayOpacity = state === CELL_STATE.LYSED ? 0 : Math.max(0.04, 0.06 + fieldNorm * 0.66)

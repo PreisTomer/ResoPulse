@@ -291,7 +291,7 @@ export default defineComponent({
   }
 
   &__thr-title {
-    font-size: 0.7rem;
+    font-size: var(--fs-xs);
     font-family: var(--font-mono);
     text-transform: uppercase;
     letter-spacing: 0.12em;
@@ -299,7 +299,7 @@ export default defineComponent({
   }
 
   &__thr-note {
-    font-size: 0.7rem;
+    font-size: var(--fs-xs);
     color: var(--color-text-muted);
     line-height: 1.5;
   }

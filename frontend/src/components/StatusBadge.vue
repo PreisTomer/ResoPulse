@@ -33,7 +33,7 @@ export default defineComponent({
 <style lang="scss" scoped>
 .status-badge {
   display: inline-block;
-  font-size: 0.63rem;
+  font-size: var(--fs-xxs);
   font-family: var(--font-mono);
   font-weight: 600;
   text-transform: uppercase;
@@ -51,29 +51,29 @@ export default defineComponent({
   }
 
   &--ok {
-    color: #4ade80;
-    border-color: rgba(74, 222, 128, 0.35);
-    background: rgba(74, 222, 128, 0.08);
+    color: var(--color-ok);
+    border-color: color-mix(in srgb, var(--color-ok) 35%, transparent);
+    background: color-mix(in srgb, var(--color-ok) 8%, transparent);
   }
 
   &--warn,
   &--amber {
     color: var(--color-amber);
-    border-color: rgba(251, 191, 36, 0.35);
-    background: rgba(251, 191, 36, 0.08);
+    border-color: color-mix(in srgb, var(--color-amber) 35%, transparent);
+    background: color-mix(in srgb, var(--color-amber) 8%, transparent);
   }
 
   &--danger {
     color: var(--color-danger);
-    border-color: rgba(255, 77, 109, 0.35);
-    background: rgba(255, 77, 109, 0.08);
+    border-color: color-mix(in srgb, var(--color-danger) 35%, transparent);
+    background: color-mix(in srgb, var(--color-danger) 8%, transparent);
   }
 
   &--info,
   &--primary {
     color: var(--color-primary);
-    border-color: rgba(0, 212, 255, 0.35);
-    background: rgba(0, 212, 255, 0.08);
+    border-color: color-mix(in srgb, var(--color-primary) 35%, transparent);
+    background: color-mix(in srgb, var(--color-primary) 8%, transparent);
   }
 
   &--muted {

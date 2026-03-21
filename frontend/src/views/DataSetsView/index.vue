@@ -196,7 +196,7 @@ export default defineComponent({
   }
 
   &__subtitle {
-    font-size: 0.875rem;
+    font-size: var(--fs-lg);
     color: var(--color-text-muted);
     margin: 0;
     font-family: var(--font-mono);
@@ -211,7 +211,7 @@ export default defineComponent({
 
   &__legend-item {
     @include flex-row(0.45rem);
-    font-size: 0.78rem;
+    font-size: var(--fs-md);
     color: var(--color-text-muted);
     font-family: var(--font-mono);
   }
@@ -236,22 +236,22 @@ export default defineComponent({
     align-items: center;
     padding: 0.65rem 1.5rem;
     background-color: var(--color-primary);
-    color: #060e1a;
+    color: var(--color-btn-dark);
     font-weight: 600;
-    font-size: 0.9rem;
+    font-size: var(--fs-xl);
     border-radius: var(--radius);
     text-decoration: none;
-    box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+    box-shadow: var(--glow-md);
     transition: all 0.18s;
 
     &:hover {
       filter: brightness(1.1);
-      box-shadow: 0 0 32px rgba(0, 212, 255, 0.5);
+      box-shadow: var(--glow-lg);
     }
   }
 
   &__open-lab-note {
-    font-size: 0.78rem;
+    font-size: var(--fs-md);
     color: var(--color-text-muted);
     font-family: var(--font-mono);
   }

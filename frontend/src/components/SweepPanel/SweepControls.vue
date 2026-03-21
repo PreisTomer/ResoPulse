@@ -84,7 +84,7 @@ export default defineComponent({
   }
 
   &__label {
-    font-size: 0.72rem;
+    font-size: var(--fs-sm);
     font-family: var(--font-mono);
     color: var(--color-text-muted);
     white-space: nowrap;
@@ -92,7 +92,7 @@ export default defineComponent({
   }
 
   &__unit {
-    font-size: 0.72rem;
+    font-size: var(--fs-sm);
     font-family: var(--font-mono);
     color: var(--color-text-muted);
   }
@@ -124,9 +124,9 @@ export default defineComponent({
   &__input {
     width: 80px;
     padding: 0.22rem 0.45rem;
-    font-size: 0.76rem;
+    font-size: var(--fs-sm);
     font-family: var(--font-mono);
-    background: var(--color-surface-2, #0a1628);
+    background: var(--color-surface-2);
     border: 1px solid var(--color-border);
     border-radius: 3px;
     color: var(--color-text);

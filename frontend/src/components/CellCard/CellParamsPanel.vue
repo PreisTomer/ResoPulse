@@ -191,7 +191,7 @@ export default defineComponent({
     }
   }
 
-  &__params-toggle-arrow { font-size: 0.7rem; opacity: 0.75; }
+  &__params-toggle-arrow { font-size: var(--fs-xs); opacity: 0.75; }
 
   &__params-panel {
     background-color: rgba(0, 0, 0, 0.3);
@@ -235,7 +235,7 @@ export default defineComponent({
     border: none;
     color: var(--color-text-muted);
     font-family: var(--font-mono);
-    font-size: 0.9rem;
+    font-size: var(--fs-xl);
     line-height: 1;
     cursor: pointer;
     user-select: none;
@@ -257,7 +257,7 @@ export default defineComponent({
 
     &:active {
       background: var(--color-primary);
-      color: #000;
+      color: var(--color-btn-dark);
     }
   }
 
@@ -268,7 +268,7 @@ export default defineComponent({
     border: none;
     color: var(--color-text-heading);
     font-family: var(--font-mono);
-    font-size: 0.75rem;
+    font-size: var(--fs-sm);
     padding: 0.24rem 0.4rem;
     text-align: left;
     -moz-appearance: textfield;
@@ -281,7 +281,7 @@ export default defineComponent({
   }
 
   &__param-unit {
-    font-size: 0.6rem;
+    font-size: var(--fs-xxs);
     font-family: var(--font-mono);
     color: var(--color-text-muted);
     opacity: 0.6;
@@ -304,7 +304,7 @@ export default defineComponent({
   }
 
   &__param-derived-value {
-    font-size: 0.7rem;
+    font-size: var(--fs-xs);
     font-family: var(--font-mono);
     color: var(--color-text);
     text-align: right;
@@ -324,7 +324,7 @@ export default defineComponent({
     border: 1px solid var(--color-border);
     color: var(--color-text-muted);
     font-family: var(--font-mono);
-    font-size: 0.58rem;
+    font-size: var(--fs-xs);
     text-transform: uppercase;
     letter-spacing: 0.08em;
     padding: 0.18rem 0.55rem;

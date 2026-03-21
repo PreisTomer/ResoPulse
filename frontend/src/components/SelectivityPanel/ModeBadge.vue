@@ -158,10 +158,10 @@ export default defineComponent({
     align-self: flex-start;
     transition: color 0.3s, border-color 0.3s;
 
-    &--therapeutic { color: var(--color-lime);    border-color: rgba(57, 255, 20, 0.33); }
-    &--ablative    { color: var(--color-danger);  border-color: rgba(255, 77, 109, 0.33); }
-    &--marginal    { color: var(--color-amber);   border-color: rgba(251, 191, 36, 0.33); }
-    &--approaching { color: var(--color-amber);   border-color: rgba(251, 191, 36, 0.33); }
+    &--therapeutic { color: var(--color-lime);    border-color: color-mix(in srgb, var(--color-lime)   33%, transparent); }
+    &--ablative    { color: var(--color-danger);  border-color: color-mix(in srgb, var(--color-danger) 33%, transparent); }
+    &--marginal    { color: var(--color-amber);   border-color: color-mix(in srgb, var(--color-amber) 33%, transparent); }
+    &--approaching { color: var(--color-amber);   border-color: color-mix(in srgb, var(--color-amber) 33%, transparent); }
     &--subthreshold { color: var(--color-primary); border-color: var(--color-primary-border); }
   }
 
@@ -172,8 +172,8 @@ export default defineComponent({
     width: 100%;
     text-align: left;
     padding: 0.25rem 0.55rem;
-    background: rgba(251, 191, 36, 0.07);
-    border: 1px solid rgba(251, 191, 36, 0.3);
+    background: color-mix(in srgb, var(--color-amber) 7%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-amber) 30%, transparent);
     border-radius: var(--radius);
     color: var(--color-amber);
     cursor: pointer;
@@ -181,8 +181,8 @@ export default defineComponent({
     transition: background 0.15s, border-color 0.15s;
 
     &:hover {
-      background: rgba(251, 191, 36, 0.14);
-      border-color: rgba(251, 191, 36, 0.6);
+      background: color-mix(in srgb, var(--color-amber) 14%, transparent);
+      border-color: color-mix(in srgb, var(--color-amber) 60%, transparent);
     }
 
     &--beyond {
@@ -200,11 +200,11 @@ export default defineComponent({
 
   /* ── Physics / model warning strip ──────────────────────────── */
   &__warning {
-    font-size: 0.68rem;
+    font-size: var(--fs-xs);
     font-family: var(--font-mono);
     color: var(--color-amber);
-    background: rgba(251, 191, 36, 0.07);
-    border: 1px solid rgba(251, 191, 36, 0.25);
+    background: color-mix(in srgb, var(--color-amber) 7%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-amber) 25%, transparent);
     border-radius: var(--radius);
     padding: 0.3rem 0.55rem;
     line-height: 1.55;
@@ -213,20 +213,20 @@ export default defineComponent({
   &__warning-btn {
     display: block;
     margin-top: 0.4rem;
-    background: rgba(251, 191, 36, 0.12);
-    border: 1px solid rgba(251, 191, 36, 0.4);
+    background: color-mix(in srgb, var(--color-amber) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-amber) 40%, transparent);
     border-radius: 3px;
     color: var(--color-amber);
     font-family: var(--font-mono);
-    font-size: 0.65rem;
+    font-size: var(--fs-xxs);
     letter-spacing: 0.08em;
     padding: 0.2rem 0.55rem;
     cursor: pointer;
     transition: background 0.15s, border-color 0.15s;
 
     &:hover {
-      background: rgba(251, 191, 36, 0.22);
-      border-color: rgba(251, 191, 36, 0.65);
+      background: color-mix(in srgb, var(--color-amber) 22%, transparent);
+      border-color: color-mix(in srgb, var(--color-amber) 65%, transparent);
     }
   }
 }

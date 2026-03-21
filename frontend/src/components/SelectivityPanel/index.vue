@@ -206,14 +206,14 @@ export default defineComponent({
   &__ti-range { @include flex-row(0.4rem); margin-top: -0.3rem; }
 
   &__ti-range-label {
-    font-size: 0.56rem;
+    font-size: var(--fs-xxs);
     font-family: var(--font-mono);
     color: var(--color-text-muted);
     opacity: 0.7;
   }
 
   &__ti-range-val {
-    font-size: 0.58rem;
+    font-size: var(--fs-xs);
     font-family: var(--font-mono);
     color: var(--color-text-muted);
     letter-spacing: 0.02em;
@@ -233,7 +233,7 @@ export default defineComponent({
   &__orient-label { @include mono-upper(0.56rem, 0.07em); color: var(--color-text-muted); flex-shrink: 0; }
   &__orient-vals  { @include flex-row(0.7rem); flex-shrink: 0; }
 
-  &__orient-t { font-size: 0.66rem; font-family: var(--font-mono); font-weight: 600; color: var(--color-danger); }
-  &__orient-h { font-size: 0.66rem; font-family: var(--font-mono); font-weight: 600; color: var(--color-primary); }
+  &__orient-t { font-size: var(--fs-xs); font-family: var(--font-mono); font-weight: 600; color: var(--color-danger); }
+  &__orient-h { font-size: var(--fs-xs); font-family: var(--font-mono); font-weight: 600; color: var(--color-primary); }
 }
 </style>

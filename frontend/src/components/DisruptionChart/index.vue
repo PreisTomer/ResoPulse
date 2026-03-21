@@ -218,7 +218,7 @@ export default defineComponent({
         .call(yAxis)
         .selectAll('text')
         .style('fill', C.textMuted)
-        .style('font-size', '0.58rem')
+        .style('font-size', '0.7rem')
 
       g.selectAll('.domain, .tick line').style('stroke', C.border)
 
@@ -231,7 +231,7 @@ export default defineComponent({
             .tickFormat(() => '')
         )
         .selectAll('line')
-        .style('stroke', 'rgba(30,58,95,0.4)')
+        .style('stroke', 'color-mix(in srgb, var(--color-border) 40%, transparent)')
         .style('stroke-dasharray', '3,3')
       gc.select('.grid-h .domain').remove()
 
@@ -262,7 +262,7 @@ export default defineComponent({
         windowGroup.append('path')
           .datum(s)
           .attr('d', areaFn)
-          .attr('fill', 'rgba(57,255,20,0.12)')
+          .style('fill', 'color-mix(in srgb, var(--color-lime) 12%, transparent)')
           .attr('stroke', 'none')
       }
 
@@ -409,7 +409,7 @@ export default defineComponent({
     :deep(.axis-label-x),
     :deep(.axis-label-y) {
       font-family: var(--font-mono);
-      font-size: 0.58rem;
+      font-size: var(--fs-xs);
       fill: var(--color-text-muted);
     }
   }

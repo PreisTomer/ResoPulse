@@ -122,7 +122,7 @@ export default defineComponent({
   &__library { display: flex; flex-direction: column; gap: 0.4rem; }
 
   &__lib-title {
-    font-size: 0.68rem;
+    font-size: var(--fs-xs);
     font-family: var(--font-mono);
     text-transform: uppercase;
     letter-spacing: 0.1em;
@@ -146,7 +146,7 @@ export default defineComponent({
   }
 
   &__cmp-name {
-    font-size: 0.63rem;
+    font-size: var(--fs-xxs);
     font-family: var(--font-mono);
     text-transform: uppercase;
     letter-spacing: 0.04em;
@@ -174,7 +174,7 @@ export default defineComponent({
   }
 
   &__cmp-sel {
-    font-size: 0.6rem;
+    font-size: var(--fs-xxs);
     font-family: var(--font-mono);
     font-weight: 600;
     text-align: right;

@@ -10,122 +10,45 @@
     >
     <div class="pop-panel__body">
 
-      <!-- Controls -->
-      <div class="pop-panel__controls">
-        <div class="pop-panel__ctrl-group">
-          <span class="pop-panel__ctrl-label" v-tip="$t('population.tipPopSize')">{{ $t('population.ctrlSizeLabel') }}</span>
-          <div class="pop-panel__pills">
-            <button v-for="n in [100, 300, 1000]" :key="n"
-              class="pop-panel__pill"
-              :class="{ 'pop-panel__pill--active': nCells === n }"
-              v-tip="tipNPill(n)"
-              @click="nCells = n; resample()"
-            >N={{ n }}</button>
-          </div>
-        </div>
+      <PopControls
+        :nCells="nCells"
+        :rVariancePct="rVariancePct"
+        :vThVariancePct="vThVariancePct"
+        :normalizeChart="normalizeChart"
+        @update:nCells="nCells = $event"
+        @update:rVariancePct="rVariancePct = $event"
+        @update:vThVariancePct="vThVariancePct = $event"
+        @update:normalizeChart="normalizeChart = $event"
+        @resample="resample"
+        @export-csv="exportCSV"
+        @redraw="_drawChart"
+      />
 
-        <div class="pop-panel__ctrl-group">
-          <span class="pop-panel__ctrl-label" v-tip="$t('population.tipRVariance')">{{ $t('population.ctrlVarianceLabel') }}</span>
-          <input class="pop-panel__input" type="number" v-model.number="rVariancePct"
-            min="1" max="30" step="1" v-tip="$t('population.tipRVariance')"
-          />
-          <span class="pop-panel__ctrl-unit">{{ $t('population.varianceUnit') }}</span>
-        </div>
+      <PopStatCards
+        :targetStats="targetStats"
+        :healthyStats="healthyStats"
+        :targetUncPct="targetUncPct"
+        :healthyUncPct="healthyUncPct"
+        :targetLabel="store.target.label"
+        :healthyLabel="store.healthy.label"
+      />
 
-        <div class="pop-panel__ctrl-group">
-          <span class="pop-panel__ctrl-label" v-tip="$t('population.tipVThVariance')">{{ $t('population.ctrlVThVarianceLabel') }}</span>
-          <input class="pop-panel__input" type="number" v-model.number="vThVariancePct"
-            min="0" max="35" step="1" v-tip="$t('population.tipVThVariance')"
-          />
-          <span class="pop-panel__ctrl-unit">{{ $t('population.varianceUnit') }}</span>
-        </div>
-
-        <button class="pop-panel__resample-btn"
-          v-tip="$t('population.tipResample')"
-          @click="resample"
-        >{{ $t('population.resampleBtn') }}</button>
-
-        <!-- Histogram Y-axis mode toggle -->
-        <div class="pop-panel__norm-toggle" v-tip="$t('population.tipNormalize')">
-          <button
-            class="pop-panel__norm-btn"
-            :class="{ 'pop-panel__norm-btn--active': !normalizeChart }"
-            @click="normalizeChart = false; _drawChart()"
-          >{{ $t('population.normCount') }}</button>
-          <button
-            class="pop-panel__norm-btn"
-            :class="{ 'pop-panel__norm-btn--active': normalizeChart }"
-            @click="normalizeChart = true; _drawChart()"
-          >{{ $t('population.normFraction') }}</button>
-        </div>
-
-        <button class="pop-panel__export-btn"
-          v-tip="$t('population.tipExport')"
-          @click="exportCSV"
-        >{{ $t('population.exportBtn') }}</button>
-      </div>
-
-      <!-- Stats cards -->
-      <div class="pop-panel__stats">
-        <div class="pop-panel__stat pop-panel__stat--target" v-tip="tipTargetCard">
-          <div class="pop-panel__stat-label">{{ store.target.label }}</div>
-          <div class="pop-panel__stat-row">
-            <span class="pop-panel__stat-badge pop-panel__stat-badge--lysed" v-tip="tipLysedTarget">
-              {{ $t('population.badgeLysed', { pct: targetStats.pctLysed }) }}<span class="pop-panel__badge-se"> ±{{ targetStats.seLysed }}%</span>
-            </span>
-            <span class="pop-panel__stat-badge pop-panel__stat-badge--revep" v-tip="tipRevEpTarget">
-              {{ $t('population.badgeRevEp', { pct: targetStats.pctRevEp }) }}<span class="pop-panel__badge-se"> ±{{ targetStats.seRevEp }}%</span>
-            </span>
-            <span class="pop-panel__stat-badge pop-panel__stat-badge--nour" v-tip="tipNourTarget">
-              {{ $t('population.badgeNour', { pct: targetStats.pctNour }) }}<span class="pop-panel__badge-se"> ±{{ targetStats.seNour }}%</span>
-            </span>
-          </div>
-          <div class="pop-panel__stat-sub" v-tip="tipMeanDr(targetStats, targetUncPct)">
-            {{ $t('population.statMeanDr') }} {{ targetStats.meanDr.toFixed(2) }} ± {{ targetStats.stdDr.toFixed(2) }} &nbsp;·&nbsp;
-            σ<sub>i</sub> ±{{ targetUncPct }}%
-          </div>
-        </div>
-        <div class="pop-panel__stat pop-panel__stat--healthy" v-tip="tipHealthyCard">
-          <div class="pop-panel__stat-label">{{ store.healthy.label }}</div>
-          <div class="pop-panel__stat-row">
-            <span class="pop-panel__stat-badge pop-panel__stat-badge--lysed" v-tip="tipLysedHealthy">
-              {{ $t('population.badgeLysed', { pct: healthyStats.pctLysed }) }}<span class="pop-panel__badge-se"> ±{{ healthyStats.seLysed }}%</span>
-            </span>
-            <span class="pop-panel__stat-badge pop-panel__stat-badge--revep" v-tip="tipRevEpHealthy">
-              {{ $t('population.badgeRevEp', { pct: healthyStats.pctRevEp }) }}<span class="pop-panel__badge-se"> ±{{ healthyStats.seRevEp }}%</span>
-            </span>
-            <span class="pop-panel__stat-badge pop-panel__stat-badge--nour" v-tip="tipNourHealthy">
-              {{ $t('population.badgeNour', { pct: healthyStats.pctNour }) }}<span class="pop-panel__badge-se"> ±{{ healthyStats.seNour }}%</span>
-            </span>
-          </div>
-          <div class="pop-panel__stat-sub" v-tip="tipMeanDr(healthyStats, healthyUncPct)">
-            {{ $t('population.statMeanDr') }} {{ healthyStats.meanDr.toFixed(2) }} ± {{ healthyStats.stdDr.toFixed(2) }} &nbsp;·&nbsp;
-            σ<sub>i</sub> ±{{ healthyUncPct }}%
-          </div>
-        </div>
-      </div>
-
-      <!-- Population Treatment Window Score -->
-      <div class="pop-panel__window" :class="windowScoreClass" v-tip="tipWindowScore">
-        <span class="pop-panel__window-label">{{ $t('population.windowScoreLabel') }}</span>
-        <span class="pop-panel__window-score">{{ windowScore.toFixed(2) }}</span>
-        <span class="pop-panel__window-verdict">{{ windowVerdict }}</span>
-      </div>
+      <PopWindowScore
+        :score="windowScore"
+        :scoreClass="windowScoreClass"
+        :verdict="windowVerdict"
+        :tipText="tipWindowScore"
+      />
 
       <!-- D3 histogram -->
       <div ref="chartWrap" class="pop-panel__chart-wrap" v-tip="$t('population.tipChart')">
         <svg ref="svgEl" class="pop-panel__svg"></svg>
       </div>
 
-      <!-- Collateral damage / success note -->
-      <div class="pop-panel__note" v-if="healthyStats.pctLysed > 0">
-        <span class="pop-panel__note-warn">{{ $t('population.warnIcon') }}</span>
-        {{ $t('population.warnCollateral', { pct: healthyStats.pctLysed }) }}
-      </div>
-      <div class="pop-panel__note pop-panel__note--ok" v-else-if="targetStats.pctLysed > 50">
-        <span class="pop-panel__note-ok">{{ $t('population.okIcon') }}</span>
-        {{ $t('population.okWindow', { pct: targetStats.pctLysed }) }}
-      </div>
+      <PopNote
+        :healthyPctLysed="healthyStats.pctLysed"
+        :targetPctLysed="targetStats.pctLysed"
+      />
 
     </div>
     </AccordionPanel>
@@ -135,6 +58,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import * as d3 from 'd3'
+import { C } from '@/theme/colors'
 import { useCellStore } from '@/stores/cellStore'
 import AccordionPanel from '@/components/AccordionPanel.vue'
 import { computeSchwan, computeTau, computePulseStepResponse, computeResonantDisruption } from '@/utils/physics'
@@ -143,51 +67,17 @@ import { THRESHOLDS, DEFAULT_CAPSID_Q } from '@/constants/physics'
 import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'
 import type { CellConfig } from '@/types/cell'
+import { sampleGaussian, binomialSE, MARGIN, N_BINS } from './popPanelCompute'
+import type { PopStats } from './popPanelCompute'
+import PopControls from './PopControls.vue'
+import PopStatCards from './PopStatCards.vue'
+import PopWindowScore from './PopWindowScore.vue'
+import PopNote from './PopNote.vue'
 
 type ResizeObserverInstance = InstanceType<typeof ResizeObserver>
 
-/** Box-Muller Gaussian sample, clamped to [min, max] by rejection. */
-function sampleGaussian(mean: number, stddev: number, min: number, max: number): number {
-  let z: number
-  do {
-    const u1 = Math.max(1e-10, Math.random())
-    const u2 = Math.random()
-    z = mean + stddev * Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2)
-  } while (z < min || z > max)
-  return z
-}
-
-/**
- * Binomial standard error as a percentage: SE(p) = √(p(1−p)/n) × 100.
- * @param count - Number of successes
- * @param n     - Total sample size
- * @returns SE in percentage points, rounded to one decimal
- */
-function binomialSE(count: number, n: number): number {
-  const p = count / n
-  return +(Math.sqrt(p * (1 - p) / n) * 100).toFixed(1)
-}
-
-interface PopStats {
-  pctLysed:  number
-  pctRevEp:  number
-  pctNour:   number
-  pctStable: number
-  meanDr:    number
-  stdDr:     number
-  /** Binomial SE on pctLysed (percentage points) */
-  seLysed: number
-  /** Binomial SE on pctRevEp (percentage points) */
-  seRevEp: number
-  /** Binomial SE on pctNour (percentage points) */
-  seNour:  number
-}
-
-const MARGIN = { top: 14, right: 16, bottom: 40, left: 50 }
-const N_BINS = 20
-
 export default defineComponent({
-  components: { AccordionPanel },
+  components: { AccordionPanel, PopControls, PopStatCards, PopWindowScore, PopNote },
   emits: ['openChange'],
   setup() {
     return { store: useCellStore(), THRESHOLDS, ICON, UNIT }
@@ -244,9 +134,9 @@ export default defineComponent({
 
     windowScoreClass(): string {
       const s = this.windowScore
-      if (s >= 0.5) return 'pop-panel__window--good'
-      if (s >= 0.2) return 'pop-panel__window--marginal'
-      return 'pop-panel__window--poor'
+      if (s >= 0.5) return 'pop-window-score--good'
+      if (s >= 0.2) return 'pop-window-score--marginal'
+      return 'pop-window-score--poor'
     },
 
     windowVerdict(): string {
@@ -260,29 +150,6 @@ export default defineComponent({
       const { nCells, store } = this
       return `N=${nCells} · ${store.fieldIntensity} ${UNIT.V_PER_CM} · ${store.currentBroadcastFrequency} ${UNIT.KHZ}`
     },
-
-    // ── Tooltips ──────────────────────────────────────────────────────────────
-
-    tipTargetCard(): string {
-      return this.$t('population.tipTargetCard', {
-        label: this.store.target.label,
-        uncPct: this.targetUncPct,
-      })
-    },
-
-    tipHealthyCard(): string {
-      return this.$t('population.tipHealthyCard', {
-        label: this.store.healthy.label,
-        uncPct: this.healthyUncPct,
-      })
-    },
-
-    tipLysedTarget(): string  { return this.$t('population.tipLysedTarget',  { pct: this.targetStats.pctLysed,  se: this.targetStats.seLysed  }) },
-    tipRevEpTarget(): string  { return this.$t('population.tipRevEpTarget',  { pct: this.targetStats.pctRevEp,  se: this.targetStats.seRevEp  }) },
-    tipNourTarget(): string   { return this.$t('population.tipNourTarget',   { pct: this.targetStats.pctNour,   se: this.targetStats.seNour   }) },
-    tipLysedHealthy(): string { return this.$t('population.tipLysedHealthy', { pct: this.healthyStats.pctLysed, se: this.healthyStats.seLysed }) },
-    tipRevEpHealthy(): string { return this.$t('population.tipRevEpHealthy', { pct: this.healthyStats.pctRevEp, se: this.healthyStats.seRevEp }) },
-    tipNourHealthy(): string  { return this.$t('population.tipNourHealthy',  { pct: this.healthyStats.pctNour,  se: this.healthyStats.seNour  }) },
 
     tipWindowScore(): string {
       return this.$t('population.tipWindowScore', {
@@ -330,20 +197,6 @@ export default defineComponent({
   methods: {
     onAccordionChange(v: boolean) {
       this.open = v
-    },
-
-    tipNPill(n: number): string {
-      if (n === 100) return this.$t('population.tipNPill100')
-      if (n === 300) return this.$t('population.tipNPill300')
-      return this.$t('population.tipNPill1000')
-    },
-
-    tipMeanDr(stats: PopStats, uncPct: number): string {
-      return this.$t('population.tipMeanDr', {
-        mean: stats.meanDr.toFixed(3),
-        std:  stats.stdDr.toFixed(3),
-        uncPct,
-      })
     },
 
     _startLiveTimer() {
@@ -500,9 +353,9 @@ export default defineComponent({
       )
       const yScale = d3.scaleLinear().domain([0, yMax * 1.1]).range([iH, 0])
 
-      const CSS_PRIMARY = getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim() || '#00d4ff'
-      const CSS_DANGER  = getComputedStyle(document.documentElement).getPropertyValue('--color-danger').trim()  || '#ef4444'
-      const CSS_BORDER  = getComputedStyle(document.documentElement).getPropertyValue('--color-border').trim()  || 'rgba(255,255,255,0.1)'
+      const CSS_PRIMARY = getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim()
+      const CSS_DANGER  = getComputedStyle(document.documentElement).getPropertyValue('--color-danger').trim()
+      const CSS_BORDER  = getComputedStyle(document.documentElement).getPropertyValue('--color-border').trim()
 
       const drawBins = (bins: d3.Bin<number, number>[], color: string, opacity: number, total: number) => {
         g.selectAll(null)
@@ -521,7 +374,7 @@ export default defineComponent({
 
       // ── Threshold reference lines ────────────────────────────────────────────
       const lines = [
-        { x: THRESHOLDS.HEALTHY_APPROACHING, label: this.$t('chart.revEp'),    color: 'rgba(251,191,36,0.7)', dash: '3,2' },
+        { x: THRESHOLDS.HEALTHY_APPROACHING, label: this.$t('chart.revEp'),    color: C.amberChart,          dash: '3,2' },
         { x: THRESHOLDS.DISRUPTION_WARN,     label: this.$t('chart.thresh85'), color: CSS_DANGER,             dash: '3,2' },
         { x: 1.00,                           label: this.$t('chart.lysis'),    color: CSS_DANGER,             dash: '2,2' },
       ]
@@ -623,208 +476,6 @@ export default defineComponent({
     border-top: 1px solid var(--color-border);
   }
 
-  // ── Controls ─────────────────────────────────────────────────────────────────
-
-  &__controls {
-    @include flex-row(0.7rem);
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 0.5rem 0.9rem;
-  }
-
-  &__ctrl-group {
-    @include flex-row(0.45rem);
-    align-items: center;
-  }
-
-  &__ctrl-label {
-    font-size: 0.72rem;
-    font-family: var(--font-mono);
-    color: var(--color-text-muted);
-    white-space: nowrap;
-    cursor: help;
-  }
-
-  &__ctrl-unit {
-    font-size: 0.72rem;
-    color: var(--color-text-muted);
-    font-family: var(--font-mono);
-  }
-
-  &__pills { @include flex-row(0.3rem); }
-
-  &__pill {
-    font-size: 0.72rem;
-    font-family: var(--font-mono);
-    padding: 0.22rem 0.55rem;
-    border-radius: 3px;
-    border: 1px solid var(--color-border);
-    background: transparent;
-    color: var(--color-text-muted);
-    cursor: pointer;
-    transition: all 0.15s;
-
-    &--active { border-color: var(--color-primary); color: var(--color-primary); background: var(--color-primary-dim); }
-    &:hover:not(&--active) { border-color: rgba(255,255,255,0.2); }
-  }
-
-  &__input {
-    width: 52px;
-    padding: 0.22rem 0.4rem;
-    font-size: 0.76rem;
-    font-family: var(--font-mono);
-    background: var(--color-surface-2, #0a1628);
-    border: 1px solid var(--color-border);
-    border-radius: 3px;
-    color: var(--color-text);
-    text-align: right;
-    outline: none;
-
-    &:focus { border-color: var(--color-primary); }
-  }
-
-  &__resample-btn,
-  &__export-btn {
-    font-size: 0.72rem;
-    font-family: var(--font-mono);
-    padding: 0.28rem 0.65rem;
-    border-radius: 3px;
-    border: 1px solid var(--color-border);
-    background: transparent;
-    color: var(--color-text-muted);
-    cursor: pointer;
-    transition: all 0.15s;
-
-    &:hover { border-color: var(--color-primary); color: var(--color-primary); }
-  }
-
-  &__export-btn { margin-left: auto; }
-
-  &__norm-toggle {
-    @include flex-row(0);
-    border: 1px solid var(--color-border);
-    border-radius: 3px;
-    overflow: hidden;
-    cursor: help;
-  }
-
-  &__norm-btn {
-    font-size: 0.68rem;
-    font-family: var(--font-mono);
-    padding: 0.22rem 0.5rem;
-    border: none;
-    background: transparent;
-    color: var(--color-text-muted);
-    cursor: pointer;
-    transition: all 0.15s;
-
-    &--active {
-      background: var(--color-primary-dim);
-      color: var(--color-primary);
-    }
-
-    &:hover:not(&--active) { background: rgba(255,255,255,0.04); }
-  }
-
-  // ── Stats cards ───────────────────────────────────────────────────────────────
-
-  &__stats {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.6rem;
-  }
-
-  &__stat {
-    @include flex-col(0.35rem);
-    padding: 0.65rem 0.8rem;
-    border-radius: var(--radius);
-    border: 1px solid var(--color-border);
-    cursor: help;
-
-    &--target  { border-color: rgba(239,68,68,0.25);  background: rgba(239,68,68,0.04); }
-    &--healthy { border-color: rgba(0,212,255,0.2);   background: rgba(0,212,255,0.03); }
-  }
-
-  &__stat-label {
-    font-size: 0.72rem;
-    font-weight: 600;
-    color: var(--color-text-heading);
-    font-family: var(--font-mono);
-    letter-spacing: 0.03em;
-  }
-
-  &__stat-row {
-    @include flex-row(0.35rem);
-    flex-wrap: wrap;
-  }
-
-  &__stat-badge {
-    font-size: 0.68rem;
-    font-family: var(--font-mono);
-    padding: 0.15rem 0.4rem;
-    border-radius: 3px;
-    cursor: help;
-
-    &--lysed { background: rgba(239,68,68,0.15);  color: var(--color-danger); }
-    &--revep { background: rgba(251,191,36,0.12); color: var(--color-amber);  }
-    &--nour  { background: rgba(0,212,255,0.1);   color: var(--color-primary); }
-  }
-
-  &__badge-se {
-    font-size: 0.75em;
-    opacity: 0.6;
-  }
-
-  &__stat-sub {
-    font-size: 0.68rem;
-    color: var(--color-text-muted);
-    font-family: var(--font-mono);
-    cursor: help;
-  }
-
-  // ── Population Window Score ───────────────────────────────────────────────────
-
-  &__window {
-    display: flex;
-    align-items: center;
-    gap: 0.65rem;
-    padding: 0.45rem 0.8rem;
-    border-radius: var(--radius);
-    border: 1px solid var(--color-border);
-    cursor: help;
-
-    &--good     { border-color: rgba(34,197,94,0.35);  background: rgba(34,197,94,0.05); }
-    &--marginal { border-color: rgba(251,191,36,0.35); background: rgba(251,191,36,0.05); }
-    &--poor     { border-color: rgba(239,68,68,0.25);  background: rgba(239,68,68,0.04); }
-  }
-
-  &__window-label {
-    font-size: 0.65rem;
-    font-family: var(--font-mono);
-    color: var(--color-text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.07em;
-    white-space: nowrap;
-  }
-
-  &__window-score {
-    font-size: 1.05rem;
-    font-family: var(--font-mono);
-    font-weight: 700;
-    color: var(--color-text-heading);
-    letter-spacing: 0.02em;
-  }
-
-  &__window-verdict {
-    font-size: 0.72rem;
-    font-family: var(--font-mono);
-    font-weight: 600;
-
-    .pop-panel__window--good &     { color: rgb(34,197,94); }
-    .pop-panel__window--marginal & { color: var(--color-amber); }
-    .pop-panel__window--poor &     { color: var(--color-danger); }
-  }
-
   // ── Chart ─────────────────────────────────────────────────────────────────────
 
   &__chart-wrap {
@@ -834,26 +485,5 @@ export default defineComponent({
   }
 
   &__svg { display: block; width: 100%; }
-
-  // ── Notes ─────────────────────────────────────────────────────────────────────
-
-  &__note {
-    @include flex-row(0.5rem);
-    align-items: flex-start;
-    padding: 0.55rem 0.75rem;
-    border-radius: var(--radius);
-    font-size: 0.78rem;
-    color: var(--color-text-muted);
-    border: 1px solid rgba(251,191,36,0.3);
-    background: rgba(251,191,36,0.05);
-
-    &--ok {
-      border-color: rgba(34,197,94,0.3);
-      background: rgba(34,197,94,0.05);
-    }
-  }
-
-  &__note-warn { color: var(--color-amber); flex-shrink: 0; }
-  &__note-ok   { color: rgb(34,197,94); flex-shrink: 0; }
 }
 </style>

@@ -55,7 +55,7 @@ export default defineComponent({
 .protocol__ref-item {
   display: flex;
   gap: 0.65rem;
-  font-size: 0.82rem;
+  font-size: var(--fs-md);
   line-height: 1.55;
   color: var(--color-text-muted);
   align-items: flex-start;
@@ -63,7 +63,7 @@ export default defineComponent({
 
 .protocol__ref-num {
   font-family: var(--font-mono);
-  font-size: 0.72rem;
+  font-size: var(--fs-sm);
   color: var(--color-primary);
   opacity: 0.75;
   flex-shrink: 0;
@@ -79,7 +79,7 @@ export default defineComponent({
 
 .protocol__ref-link {
   font-family: var(--font-mono);
-  font-size: 0.7rem;
+  font-size: var(--fs-xs);
   color: var(--color-primary);
   text-decoration: none;
   opacity: 0.8;
@@ -90,7 +90,7 @@ export default defineComponent({
 
 .protocol__ref-note {
   font-family: var(--font-mono);
-  font-size: 0.68rem;
+  font-size: var(--fs-xs);
   color: var(--color-text-muted);
   opacity: 0.6;
   font-style: italic;

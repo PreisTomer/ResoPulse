@@ -25,14 +25,15 @@
       </span>
     </div>
 
-    <template v-if="!isResonanceMode">
+    <div v-if="!isResonanceMode" class="field-panel__protocol-zone">
+      <ProtocolSnapBar :slider-ranges="sliderRanges" />
       <ProtocolSection
         :slider-ranges="sliderRanges"
         :thermal-danger-level="thermalDangerLevel"
         :max-steady-temp="maxSteadyTemp"
       />
       <AdvancedSection />
-    </template>
+    </div>
   </div>
 </template>
 
@@ -50,9 +51,10 @@ import FreqRow from './FreqRow.vue'
 import FieldRow from './FieldRow.vue'
 import ProtocolSection from './ProtocolSection.vue'
 import AdvancedSection from './AdvancedSection.vue'
+import ProtocolSnapBar from './ProtocolSnapBar.vue'
 
 export default defineComponent({
-  components: { TitleRow, ThermalBanner, MediumRow, FreqRow, FieldRow, ProtocolSection, AdvancedSection },
+  components: { TitleRow, ThermalBanner, MediumRow, FreqRow, FieldRow, ProtocolSection, AdvancedSection, ProtocolSnapBar },
 
   setup() {
     return { store: useCellStore(), ICON, THERMAL_LEVEL }
@@ -100,17 +102,28 @@ export default defineComponent({
   container-type: inline-size;
   flex: 1;
 
+  &__protocol-zone {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+    margin: 0 -1.25rem -0.85rem;
+    padding: 0.8rem 1.25rem 0.85rem;
+    border-top: 1px solid var(--color-border);
+    background: rgba(255, 255, 255, 0.018);
+    border-radius: 0 0 var(--radius) var(--radius);
+  }
+
   &__resonance-note {
     display: flex;
     align-items: flex-start;
     gap: 0.5rem;
     padding: 0.45rem 0.65rem;
     border-radius: var(--radius);
-    border: 1px solid rgba(167, 139, 250, 0.3);
-    background: rgba(167, 139, 250, 0.06);
+    border: 1px solid color-mix(in srgb, var(--color-purple) 30%, transparent);
+    background: color-mix(in srgb, var(--color-purple) 6%, transparent);
     color: var(--color-purple);
     font-family: var(--font-mono);
-    font-size: 0.62rem;
+    font-size: var(--fs-xxs);
     line-height: 1.5;
 
     &-icon { flex-shrink: 0; margin-top: 0.05rem; opacity: 0.8; }

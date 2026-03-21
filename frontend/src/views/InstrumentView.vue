@@ -156,7 +156,7 @@ export default defineComponent({
   }
 
   &__subtitle {
-    font-size: 0.875rem;
+    font-size: var(--fs-lg);
     color: var(--color-text-muted);
     line-height: 1.65;
     margin: 0;
@@ -186,14 +186,14 @@ export default defineComponent({
 
     &-formula {
       font-family: var(--font-mono);
-      font-size: 0.78rem;
+      font-size: var(--fs-md);
       color: var(--color-text);
       line-height: 1.6;
       word-break: break-word;
     }
 
     &-note {
-      font-size: 0.62rem;
+      font-size: var(--fs-xxs);
       color: var(--color-text-muted);
       line-height: 1.4;
     }
@@ -231,7 +231,7 @@ export default defineComponent({
   }
 
   &__context-label {
-    font-size: 0.6rem;
+    font-size: var(--fs-xxs);
     color: var(--color-text-muted);
     text-transform: uppercase;
     letter-spacing: 0.07em;
@@ -239,12 +239,12 @@ export default defineComponent({
 
   &__context-value {
     font-family: var(--font-mono);
-    font-size: 0.85rem;
+    font-size: var(--fs-lg);
     font-weight: 600;
     color: var(--color-text);
 
     &--warn   { color: var(--color-amber-warm); }
-    &--danger { color: var(--color-danger, #ff4444); }
+    &--danger { color: var(--color-danger); }
   }
 
   // ── PoC note ──────────────────────────────────────────────────────────────────
@@ -253,11 +253,11 @@ export default defineComponent({
     display: flex;
     gap: 0.75rem;
     align-items: flex-start;
-    background: rgba(0, 212, 255, 0.05);
-    border: 1px solid rgba(0, 212, 255, 0.2);
+    background: color-mix(in srgb, var(--color-primary) 5%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-primary) 20%, transparent);
     border-radius: var(--radius);
     padding: 1rem 1.2rem;
-    font-size: 0.78rem;
+    font-size: var(--fs-md);
     color: var(--color-text-muted);
     line-height: 1.6;
 
@@ -265,8 +265,8 @@ export default defineComponent({
     em     { color: var(--color-primary); font-style: normal; }
     code   {
       font-family: var(--font-mono);
-      font-size: 0.72rem;
-      background: rgba(0, 212, 255, 0.1);
+      font-size: var(--fs-sm);
+      background: color-mix(in srgb, var(--color-primary) 10%, transparent);
       padding: 0.1rem 0.3rem;
       border-radius: 3px;
       color: var(--color-primary);

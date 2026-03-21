@@ -209,13 +209,13 @@ export default defineComponent({
   &__table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 0.78rem;
+    font-size: var(--fs-md);
     min-width: 1400px;
 
     th {
       text-align: left;
       padding: 0.5rem 0.75rem;
-      font-size: 0.62rem;
+      font-size: var(--fs-xxs);
       font-family: var(--font-mono);
       text-transform: uppercase;
       letter-spacing: 0.1em;
@@ -236,14 +236,14 @@ export default defineComponent({
     tr:hover td { background: rgba(255, 255, 255, 0.025); }
   }
 
-  &__row--lysis td { background: rgba(255, 77, 109, 0.04); }
-  &__row--lysis:hover td { background: rgba(255, 77, 109, 0.08) !important; }
+  &__row--lysis td { background: color-mix(in srgb, var(--color-danger) 4%, transparent); }
+  &__row--lysis:hover td { background: color-mix(in srgb, var(--color-danger) 8%, transparent) !important; }
 
   &__row--selected td {
-    background: rgba(167, 139, 250, 0.10) !important;
-    border-bottom-color: rgba(167, 139, 250, 0.12) !important;
+    background: color-mix(in srgb, var(--color-purple) 10%, transparent) !important;
+    border-bottom-color: color-mix(in srgb, var(--color-purple) 12%, transparent) !important;
   }
-  &__row--selected:hover td { background: rgba(167, 139, 250, 0.16) !important; }
+  &__row--selected:hover td { background: color-mix(in srgb, var(--color-purple) 16%, transparent) !important; }
 
   &__row--selectable {
     cursor: pointer;
@@ -254,14 +254,14 @@ export default defineComponent({
     width: 28px;
     min-width: 28px;
     padding: 0.5rem 0.5rem !important;
-    color: #a78bfa !important;
+    color: var(--color-purple) !important;
     text-align: center !important;
   }
 
   &__reticle-icon {
     width: 14px;
     height: 14px;
-    color: #a78bfa;
+    color: var(--color-purple);
     display: inline-block;
     vertical-align: middle;
 
@@ -293,21 +293,21 @@ export default defineComponent({
     vertical-align: middle;
 
     &--on {
-      background: #a78bfa;
-      border-color: #a78bfa;
-      box-shadow: 0 0 6px rgba(167, 139, 250, 0.55);
+      background: var(--color-purple);
+      border-color: var(--color-purple);
+      box-shadow: 0 0 6px color-mix(in srgb, var(--color-purple) 55%, transparent);
     }
   }
 
   &__timestamp {
-    font-size: 0.72rem;
+    font-size: var(--fs-sm);
     letter-spacing: 0.02em;
     opacity: 0.8;
   }
 
   &__session-val {
     color: var(--color-text-muted);
-    font-size: 0.62rem;
+    font-size: var(--fs-xxs);
     max-width: 100px;
     overflow: hidden;
     text-overflow: ellipsis;

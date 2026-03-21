@@ -27,10 +27,10 @@
   }
 
   .datasets__card-tag {
-    font-size: 0.68rem;
+    font-size: var(--fs-xs);
     font-family: var(--font-mono);
     color: var(--color-text-muted);
-    background: var(--color-surface-2, #0a1628);
+    background: var(--color-surface-2);
     border: 1px solid var(--color-border);
     border-radius: 4px;
     padding: 0.2rem 0.55rem;
@@ -45,18 +45,18 @@
   .datasets__table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 0.8rem;
+    font-size: var(--fs-md);
     min-width: 820px;
 
     th {
       text-align: left;
       padding: 0.55rem 0.8rem;
-      font-size: 0.63rem;
+      font-size: var(--fs-xxs);
       font-family: var(--font-mono);
       text-transform: uppercase;
       letter-spacing: 0.1em;
       color: var(--color-text-muted);
-      background: rgba(255, 255, 255, 0.02);
+      background: var(--color-overlay-sm);
       border-bottom: 1px solid var(--color-border);
       white-space: nowrap;
     }
@@ -64,12 +64,12 @@
     td {
       padding: 0.6rem 0.8rem;
       color: var(--color-text);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      border-bottom: 1px solid var(--color-overlay-row);
       vertical-align: middle;
     }
 
     tr:last-child td { border-bottom: none; }
-    tr:hover td { background: rgba(255, 255, 255, 0.025); }
+    tr:hover td { background: var(--color-overlay-md); }
   }
 
   .datasets__table--nuclear {
@@ -84,7 +84,7 @@
 
     th, td {
       padding: 0.32rem 0.55rem;
-      font-size: 0.74rem;
+      font-size: var(--fs-xs);
     }
   }
 }
@@ -97,10 +97,10 @@
     gap: 0;
     padding: 1.1rem 1.5rem;
     border-top: 1px solid var(--color-border);
-    background: rgba(255, 255, 255, 0.012);
+    background: var(--color-overlay-xs);
 
-    &--nuc { background: rgba(167, 139, 250, 0.03); }
-    &--res { background: rgba(251, 191, 36, 0.02); }
+    &--nuc { background: color-mix(in srgb, var(--color-purple) 3%, transparent); }
+    &--res { background: color-mix(in srgb, var(--color-amber) 2%, transparent); }
   }
 
   .datasets__formula-block {
@@ -115,23 +115,23 @@
   }
 
   .datasets__formula-label {
-    @include mono-upper(0.58rem, 0.08em);
+    @include mono-upper(0.7rem, 0.08em);
     color: var(--color-primary);
     opacity: 0.75;
 
-    .datasets__formula-strip--nuc & { color: #a78bfa; }
+    .datasets__formula-strip--nuc & { color: var(--color-purple); }
     .datasets__formula-strip--res & { color: var(--color-amber-warm); }
   }
 
   .datasets__formula-eq {
     font-family: var(--font-mono);
-    font-size: 0.82rem;
+    font-size: var(--fs-md);
     color: var(--color-text);
     line-height: 1.55;
   }
 
   .datasets__formula-note {
-    font-size: 0.64rem;
+    font-size: var(--fs-xxs);
     color: var(--color-text-muted);
     margin-top: 0.2rem;
     line-height: 1.45;
@@ -140,19 +140,19 @@
 
 @mixin datasets-utils() {
   // Flat class selectors — no parent & needed, safe to call at stylesheet root.
-  .datasets__mono      { font-family: var(--font-mono); font-size: 0.78rem; }
+  .datasets__mono      { font-family: var(--font-mono); font-size: var(--fs-md); }
   .datasets__muted     { color: var(--color-text-muted); }
   .datasets__cancer-val { color: var(--color-danger); }
   .datasets__warn-val  { color: var(--color-amber); }
   .datasets__primary-val { color: var(--color-primary); }
   .datasets__ref-val   { color: var(--color-primary); }
-  .datasets__nuc-val   { color: #a78bfa; }
-  .datasets__dep-val   { color: #ff9900; }
+  .datasets__nuc-val   { color: var(--color-purple); }
+  .datasets__dep-val   { color: var(--color-dep); }
   .datasets__cell-name { font-weight: 500; color: var(--color-text-heading); }
-  .datasets__notes-cell { font-size: 0.71rem; color: var(--color-text-muted); min-width: 160px; }
+  .datasets__notes-cell { font-size: var(--fs-xs); color: var(--color-text-muted); min-width: 160px; }
 
   .datasets__group-badge {
-    font-size: 0.63rem;
+    font-size: var(--fs-xxs);
     font-family: var(--font-mono);
     text-transform: uppercase;
     letter-spacing: 0.08em;
@@ -202,7 +202,7 @@
   }
 
   .datasets__ref-block-title {
-    font-size: 0.7rem;
+    font-size: var(--fs-xs);
     font-family: var(--font-mono);
     text-transform: uppercase;
     letter-spacing: 0.12em;
@@ -217,7 +217,7 @@
 
   .datasets__rp-row {
     @include flex-between(0.5rem);
-    font-size: 0.8rem;
+    font-size: var(--fs-md);
     color: var(--color-text-muted);
   }
 
@@ -237,13 +237,13 @@
   }
 
   .datasets__window-label {
-    font-size: 0.7rem;
+    font-size: var(--fs-xs);
     color: var(--color-text-muted);
     line-height: 1.4;
   }
 
   .datasets__window-note {
-    font-size: 0.78rem;
+    font-size: var(--fs-md);
     color: var(--color-text-muted);
     line-height: 1.5;
 
@@ -251,7 +251,7 @@
   }
 
   .datasets__window-range {
-    font-size: 0.78rem;
+    font-size: var(--fs-md);
     color: var(--color-text-muted);
   }
 }

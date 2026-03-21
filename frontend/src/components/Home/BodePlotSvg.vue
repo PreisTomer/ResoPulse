@@ -9,36 +9,36 @@
     <text x="112" y="165" text-anchor="middle" font-family="monospace" font-size="7"
       fill="rgba(255,255,255,0.48)">f (log)</text>
     <!-- fc marker -->
-    <line x1="108" y1="12" x2="108" y2="152"
-      stroke="rgba(0,212,255,0.45)" stroke-width="1" stroke-dasharray="3 3"/>
-    <text x="111" y="11" font-family="monospace" font-size="7.5" fill="rgba(0,212,255,0.8)">fc</text>
+    <line class="home__bode-fc-line" x1="108" y1="12" x2="108" y2="152"
+      stroke-width="1" stroke-dasharray="3 3"/>
+    <text class="home__bode-fc-label" x="111" y="11" font-family="monospace" font-size="7.5">fc</text>
     <!-- Healthy cell curve (dashed red) -->
-    <path d="M 28,36 C 80,36 100,40 122,92 S 168,148 194,150"
-      stroke="rgba(255,77,109,0.6)" stroke-width="1.5" stroke-dasharray="4 3" stroke-linecap="round"/>
+    <path class="home__bode-healthy-curve" d="M 28,36 C 80,36 100,40 122,92 S 168,148 194,150"
+      stroke-width="1.5" stroke-dasharray="4 3" stroke-linecap="round"/>
     <!-- Target cell curve (cyan) with glow -->
-    <path d="M 28,18 C 72,18 90,22 108,82 S 158,148 194,150"
-      stroke="rgba(0,212,255,0.2)" stroke-width="9" stroke-linecap="round"/>
-    <path d="M 28,18 C 72,18 90,22 108,82 S 158,148 194,150"
-      stroke="rgba(0,212,255,0.88)" stroke-width="2" stroke-linecap="round"/>
+    <path class="home__bode-target-glow" d="M 28,18 C 72,18 90,22 108,82 S 158,148 194,150"
+      stroke-width="9" stroke-linecap="round"/>
+    <path class="home__bode-target-line" d="M 28,18 C 72,18 90,22 108,82 S 158,148 194,150"
+      stroke-width="2" stroke-linecap="round"/>
     <!-- Animated cursor tracking the target curve -->
-    <circle r="10" fill="rgba(0,212,255,0.18)">
+    <circle class="home__bode-cursor-halo" r="10">
       <animateMotion dur="5s" repeatCount="indefinite"
         calcMode="spline" keyTimes="0;0.5;1" keyPoints="0;1;0"
         keySplines="0.45 0 0.55 1;0.45 0 0.55 1"
         path="M 28,18 C 72,18 90,22 108,82 S 158,148 194,150"/>
     </circle>
-    <circle r="4" fill="rgba(0,212,255,1)">
+    <circle class="home__bode-cursor-dot" r="4">
       <animateMotion dur="5s" repeatCount="indefinite"
         calcMode="spline" keyTimes="0;0.5;1" keyPoints="0;1;0"
         keySplines="0.45 0 0.55 1;0.45 0 0.55 1"
         path="M 28,18 C 72,18 90,22 108,82 S 158,148 194,150"/>
     </circle>
     <!-- Legend -->
-    <line x1="28" y1="175" x2="46" y2="175" stroke="rgba(0,212,255,0.85)" stroke-width="1.5"/>
-    <text x="50" y="178" font-family="monospace" font-size="7" fill="rgba(0,212,255,0.85)">Target</text>
-    <line x1="104" y1="175" x2="122" y2="175"
-      stroke="rgba(255,77,109,0.65)" stroke-width="1.5" stroke-dasharray="3 2"/>
-    <text x="126" y="178" font-family="monospace" font-size="7" fill="rgba(255,77,109,0.65)">Healthy</text>
+    <line class="home__bode-legend-target-line" x1="28" y1="175" x2="46" y2="175" stroke-width="1.5"/>
+    <text class="home__bode-legend-target-text" x="50" y="178" font-family="monospace" font-size="7">Target</text>
+    <line class="home__bode-healthy-legend-line" x1="104" y1="175" x2="122" y2="175"
+      stroke-width="1.5" stroke-dasharray="3 2"/>
+    <text class="home__bode-healthy-legend-text" x="126" y="178" font-family="monospace" font-size="7">Healthy</text>
   </svg>
 </template>
 
@@ -57,4 +57,16 @@ export default defineComponent({
   overflow: visible;
   mix-blend-mode: screen;
 }
+
+.home__bode-fc-line        { stroke: color-mix(in srgb, var(--color-primary) 45%, transparent); }
+.home__bode-fc-label       { fill: color-mix(in srgb, var(--color-primary) 80%, transparent); }
+.home__bode-target-glow    { stroke: color-mix(in srgb, var(--color-primary) 20%, transparent); }
+.home__bode-target-line    { stroke: color-mix(in srgb, var(--color-primary) 88%, transparent); }
+.home__bode-cursor-halo    { fill: color-mix(in srgb, var(--color-primary) 18%, transparent); }
+.home__bode-cursor-dot     { fill: var(--color-primary); }
+.home__bode-legend-target-line { stroke: color-mix(in srgb, var(--color-primary) 85%, transparent); }
+.home__bode-legend-target-text { fill: color-mix(in srgb, var(--color-primary) 85%, transparent); }
+.home__bode-healthy-curve      { stroke: color-mix(in srgb, var(--color-danger) 60%, transparent); }
+.home__bode-healthy-legend-line { stroke: color-mix(in srgb, var(--color-danger) 65%, transparent); }
+.home__bode-healthy-legend-text { fill: color-mix(in srgb, var(--color-danger) 65%, transparent); }
 </style>

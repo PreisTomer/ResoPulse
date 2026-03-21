@@ -37,14 +37,14 @@ export default defineComponent({
   border-radius: 4px;
   padding: 0.3rem 0.5rem;
   font-family: var(--font-mono);
-  font-size: 0.62rem;
+  font-size: var(--fs-xxs);
   line-height: 1.6;
   white-space: nowrap;
   z-index: 10;
 
   &__freq {
     color: var(--color-text-muted);
-    font-size: 0.58rem;
+    font-size: var(--fs-xs);
     margin-bottom: 0.1rem;
   }
 

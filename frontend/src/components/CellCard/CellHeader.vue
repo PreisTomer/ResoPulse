@@ -114,7 +114,7 @@ export default defineComponent({
   &__meta {
     @include flex-row(0.3rem);
     margin-top: 0.3rem;
-    font-size: 0.68rem;
+    font-size: var(--fs-xs);
     font-family: var(--font-mono);
     color: var(--color-text-muted);
     white-space: nowrap;
@@ -122,13 +122,13 @@ export default defineComponent({
 
   &__meta-sep       { opacity: 0.4; }
   &__meta-state     { text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
-  &__meta-temp-warn { color: #ffb800; }
+  &__meta-temp-warn { color: var(--color-amber-warm); }
 
   &__nuclear-meta {
     @include flex-row(0.35rem);
     font-family: var(--font-mono);
-    font-size: 0.58rem;
-    color: #a78bfa;
+    font-size: var(--fs-xs);
+    color: var(--color-purple);
     margin-top: 0.1rem;
   }
 
@@ -138,8 +138,8 @@ export default defineComponent({
   &__nuclear-ratio {
     opacity: 0.8;
 
-    &--caution { color: #fbbf24; }
-    &--warn    { color: #ff4d6d; animation: state-blink 1s ease-in-out infinite; }
+    &--caution { color: var(--color-amber); }
+    &--warn    { color: var(--color-danger); animation: state-blink 1s ease-in-out infinite; }
   }
 
   @include cell-state-classes();

@@ -9,6 +9,8 @@
  * decision map before activating hardware.
  */
 
+import { C } from '@/theme/colors'
+
 // ── Grid resolution ────────────────────────────────────────────────────────────
 
 /** Number of frequency steps (X-axis columns).  220 cols × 110 rows = 24 200 physics evaluations per sweep. */
@@ -69,12 +71,12 @@ export type HmapZone = typeof HMAP_ZONE[keyof typeof HMAP_ZONE]
 
 /** Canvas fillStyle colour per zone (dark-theme palette). */
 export const HMAP_ZONE_COLOR: Record<HmapZone, string> = {
-  [HMAP_ZONE.SUB]:         'rgba(10,10,26,1)',
-  [HMAP_ZONE.APPROACHING]: 'rgba(0,212,255,0.22)',
-  [HMAP_ZONE.THERAPEUTIC]: 'rgba(57,255,20,0.82)',
-  [HMAP_ZONE.MARGINAL]:    'rgba(251,191,36,0.68)',
-  [HMAP_ZONE.ABLATIVE]:    'rgba(255,77,109,0.78)',
-  [HMAP_ZONE.THERMAL]:     'rgba(255,140,0,0.72)',
+  [HMAP_ZONE.SUB]:         C.bg,
+  [HMAP_ZONE.APPROACHING]: C.primaryFill,
+  [HMAP_ZONE.THERAPEUTIC]: C.limeFill,
+  [HMAP_ZONE.MARGINAL]:    C.amberFill,
+  [HMAP_ZONE.ABLATIVE]:    C.dangerFill,
+  [HMAP_ZONE.THERMAL]:     C.heatFill,
 }
 
 /** i18n key suffix per zone - used as `heatmap.zone<suffix>`. */

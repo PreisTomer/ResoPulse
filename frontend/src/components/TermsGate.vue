@@ -89,7 +89,7 @@ export default defineComponent({
   &__backdrop {
     position: absolute;
     inset: 0;
-    background: rgba(6, 14, 26, 0.88);
+    background: color-mix(in srgb, var(--color-bg) 88%, transparent);
     backdrop-filter: blur(6px);
   }
 
@@ -102,12 +102,12 @@ export default defineComponent({
     padding: 2rem 2rem 1.6rem;
     max-width: 520px;
     width: 100%;
-    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(0, 212, 255, 0.06);
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6), 0 0 0 1px color-mix(in srgb, var(--color-primary) 6%, transparent);
   }
 
   &__eyebrow {
     font-family: var(--font-mono);
-    font-size: 0.6rem;
+    font-size: var(--fs-xxs);
     letter-spacing: 0.18em;
     text-transform: uppercase;
     color: var(--color-primary);
@@ -127,7 +127,7 @@ export default defineComponent({
   }
 
   &__para {
-    font-size: 0.8rem;
+    font-size: var(--fs-md);
     line-height: 1.65;
     color: var(--color-text);
     margin: 0 0 0.9rem;
@@ -141,7 +141,7 @@ export default defineComponent({
     gap: 0.4rem;
 
     li {
-      font-size: 0.77rem;
+      font-size: var(--fs-sm);
       line-height: 1.55;
       color: var(--color-text-muted);
     }
@@ -159,7 +159,7 @@ export default defineComponent({
     margin-bottom: 1.25rem;
     transition: border-color 0.15s;
 
-    &:hover { border-color: rgba(0, 212, 255, 0.3); }
+    &:hover { border-color: color-mix(in srgb, var(--color-primary) 30%, transparent); }
   }
 
   &__checkbox {
@@ -172,7 +172,7 @@ export default defineComponent({
   }
 
   &__check-label {
-    font-size: 0.78rem;
+    font-size: var(--fs-md);
     color: var(--color-text);
     line-height: 1.5;
   }
@@ -193,7 +193,7 @@ export default defineComponent({
 
   &__cancel {
     font-family: var(--font-mono);
-    font-size: 0.68rem;
+    font-size: var(--fs-xs);
     color: var(--color-text-muted);
     text-decoration: none;
     letter-spacing: 0.04em;
@@ -205,7 +205,7 @@ export default defineComponent({
   &__btn {
     padding: 0.6rem 1.4rem;
     border-radius: var(--radius);
-    font-size: 0.82rem;
+    font-size: var(--fs-md);
     font-weight: 600;
     font-family: var(--font-sans);
     border: 1px solid var(--color-border);
@@ -217,13 +217,13 @@ export default defineComponent({
     &--ready {
       background: var(--color-primary);
       border-color: var(--color-primary);
-      color: #060e1a;
+      color: var(--color-btn-dark);
       cursor: pointer;
-      box-shadow: 0 0 18px rgba(0, 212, 255, 0.3);
+      box-shadow: var(--glow-md);
 
       &:hover {
         filter: brightness(1.1);
-        box-shadow: 0 0 28px rgba(0, 212, 255, 0.5);
+        box-shadow: var(--glow-lg);
       }
     }
   }

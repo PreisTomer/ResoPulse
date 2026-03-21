@@ -62,7 +62,7 @@ export default defineComponent({
     padding: 0.3rem 0.65rem;
     border-radius: var(--radius);
     font-family: var(--font-mono);
-    font-size: 0.6rem;
+    font-size: var(--fs-xxs);
     text-transform: uppercase;
     letter-spacing: 0.08em;
     border: 1px solid;
@@ -70,21 +70,21 @@ export default defineComponent({
 
     &--hyperthermic {
       color: var(--color-amber);
-      background: rgba(251, 191, 36, 0.07);
-      border-color: rgba(251, 191, 36, 0.3);
+      background: color-mix(in srgb, var(--color-amber) 7%, transparent);
+      border-color: color-mix(in srgb, var(--color-amber) 30%, transparent);
     }
 
     &--denaturing {
       color: var(--color-orange);
-      background: rgba(251, 130, 20, 0.1);
-      border-color: rgba(251, 130, 20, 0.4);
+      background: color-mix(in srgb, var(--color-orange) 10%, transparent);
+      border-color: color-mix(in srgb, var(--color-orange) 40%, transparent);
       animation: thermal-pulse 1s ease-in-out infinite;
     }
 
     &--vaporizing {
       color: var(--color-danger);
-      background: rgba(255, 77, 109, 0.1);
-      border-color: rgba(255, 77, 109, 0.5);
+      background: color-mix(in srgb, var(--color-danger) 10%, transparent);
+      border-color: color-mix(in srgb, var(--color-danger) 50%, transparent);
       animation: thermal-pulse 0.5s ease-in-out infinite;
     }
   }

@@ -90,13 +90,13 @@ export default defineComponent({
   }
 
   &__icon {
-    font-size: 0.9rem;
+    font-size: var(--fs-xl);
     color: var(--color-primary);
     flex-shrink: 0;
   }
 
   &__title {
-    font-size: 0.82rem;
+    font-size: var(--fs-md);
     font-weight: 600;
     color: var(--color-text-heading);
     font-family: var(--font-mono);
@@ -106,7 +106,7 @@ export default defineComponent({
   }
 
   &__sub {
-    font-size: 0.72rem;
+    font-size: var(--fs-sm);
     color: var(--color-text-muted);
     font-family: var(--font-mono);
     white-space: nowrap;

@@ -208,13 +208,13 @@ export default defineComponent({
   }
 
   &__title {
-    font-size: 0.875rem;
+    font-size: var(--fs-lg);
     font-weight: 600;
     color: var(--color-text);
   }
 
   &__sub {
-    font-size: 0.7rem;
+    font-size: var(--fs-xs);
     color: var(--color-text-muted);
     margin-top: 0.15rem;
   }
@@ -225,15 +225,15 @@ export default defineComponent({
     gap: 0.45rem;
     padding: 0.4rem 0.65rem;
     border-radius: var(--radius);
-    font-size: 0.72rem;
+    font-size: var(--fs-sm);
     font-weight: 600;
     letter-spacing: 0.04em;
     text-transform: uppercase;
     border: 1px solid;
 
-    &--ok      { color: var(--color-accent); border-color: var(--color-accent); background: rgba(0, 255, 100, 0.06); }
-    &--minor   { color: var(--color-amber-warm); border-color: var(--color-amber-warm); background: rgba(255, 180, 50, 0.06); }
-    &--needed  { color: var(--color-primary); border-color: var(--color-primary); background: rgba(0, 212, 255, 0.07); }
+    &--ok      { color: var(--color-accent); border-color: var(--color-accent); background: color-mix(in srgb, var(--color-accent) 6%, transparent); }
+    &--minor   { color: var(--color-amber-warm); border-color: var(--color-amber-warm); background: color-mix(in srgb, var(--color-amber-warm) 6%, transparent); }
+    &--needed  { color: var(--color-primary); border-color: var(--color-primary); background: color-mix(in srgb, var(--color-primary) 7%, transparent); }
 
     &-dot {
       width: 6px;
@@ -256,8 +256,8 @@ export default defineComponent({
     cursor: default;
 
     &--corrected {
-      background: rgba(0, 212, 255, 0.05);
-      border: 1px solid rgba(0, 212, 255, 0.2);
+      background: color-mix(in srgb, var(--color-primary) 5%, transparent);
+      border: 1px solid color-mix(in srgb, var(--color-primary) 20%, transparent);
       border-radius: var(--radius);
       padding: 0.5rem 0.7rem;
     }
@@ -270,7 +270,7 @@ export default defineComponent({
   }
 
   &__field-label {
-    font-size: 0.72rem;
+    font-size: var(--fs-sm);
     color: var(--color-text-muted);
   }
 
@@ -284,7 +284,7 @@ export default defineComponent({
   }
 
   &__field-unit {
-    font-size: 0.65rem;
+    font-size: var(--fs-xxs);
     font-weight: 400;
     color: var(--color-text-muted);
     margin-left: 0.2rem;
@@ -292,7 +292,7 @@ export default defineComponent({
 
   &__factor-row {
     @include flex-between();
-    font-size: 0.75rem;
+    font-size: var(--fs-sm);
     padding: 0.4rem 0;
     border-top: 1px solid var(--color-border);
     cursor: default;
@@ -304,7 +304,7 @@ export default defineComponent({
 
   &__factor-value {
     font-family: var(--font-mono);
-    font-size: 0.9rem;
+    font-size: var(--fs-xl);
     color: var(--color-text);
 
     &--warn { color: var(--color-amber-warm); }
@@ -313,15 +313,15 @@ export default defineComponent({
   &__rf-section {
     @include flex-col(0.4rem);
     padding: 0.55rem 0.7rem;
-    background: rgba(0, 212, 255, 0.04);
-    border: 1px solid rgba(0, 212, 255, 0.18);
+    background: color-mix(in srgb, var(--color-primary) 4%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-primary) 18%, transparent);
     border-radius: var(--radius);
     cursor: default;
   }
 
   &__rf-row {
     @include flex-between();
-    font-size: 0.72rem;
+    font-size: var(--fs-sm);
   }
 
   &__rf-label {
@@ -330,30 +330,30 @@ export default defineComponent({
 
   &__rf-value {
     font-family: var(--font-mono);
-    font-size: 0.8rem;
+    font-size: var(--fs-md);
     font-weight: 600;
     color: var(--color-text);
 
     &--ok     { color: var(--color-accent); }
     &--warn   { color: var(--color-amber-warm); }
-    &--danger { color: var(--color-danger, #ff4444); }
+    &--danger { color: var(--color-danger); }
   }
 
   &__rc-row {
     @include flex-row(0.45rem);
-    font-size: 0.68rem;
+    font-size: var(--fs-xs);
     padding: 0.35rem 0.6rem;
     border-radius: var(--radius);
     border: 1px solid var(--color-border);
 
-    &--ok       { border-color: rgba(0, 255, 100, 0.25);  background: rgba(0, 255, 100, 0.04); }
-    &--marginal { border-color: rgba(251, 191, 36, 0.35); background: rgba(251, 191, 36, 0.05); }
-    &--critical { border-color: rgba(255, 77, 109, 0.4);  background: rgba(255, 77, 109, 0.06); }
+    &--ok       { border-color: color-mix(in srgb, var(--color-accent) 25%, transparent);  background: color-mix(in srgb, var(--color-accent) 4%, transparent); }
+    &--marginal { border-color: color-mix(in srgb, var(--color-amber) 35%, transparent); background: color-mix(in srgb, var(--color-amber) 5%, transparent); }
+    &--critical { border-color: color-mix(in srgb, var(--color-danger) 40%, transparent);  background: color-mix(in srgb, var(--color-danger) 6%, transparent); }
   }
 
   &__rc-icon {
     flex-shrink: 0;
-    font-size: 0.7rem;
+    font-size: var(--fs-xs);
   }
 
   &__rc-text {
@@ -363,14 +363,14 @@ export default defineComponent({
 
   &__rc-ratio {
     font-family: var(--font-mono);
-    font-size: 0.65rem;
+    font-size: var(--fs-xxs);
     color: var(--color-text);
     white-space: nowrap;
   }
 
   &__source-note {
     @include flex-between();
-    font-size: 0.65rem;
+    font-size: var(--fs-xxs);
     color: var(--color-text-muted);
     padding: 0.25rem 0;
     border-top: 1px solid var(--color-border);
@@ -390,7 +390,7 @@ export default defineComponent({
 
   &__formula {
     font-family: var(--font-mono);
-    font-size: 0.65rem;
+    font-size: var(--fs-xxs);
     color: var(--color-text-muted);
     background: var(--color-surface-2);
     border: 1px solid var(--color-border);

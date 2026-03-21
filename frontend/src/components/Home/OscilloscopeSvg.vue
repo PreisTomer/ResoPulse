@@ -83,14 +83,14 @@ export default defineComponent({
 .home__feat-osc-path {
   &--field {
     fill: none;
-    stroke: #00d4ff;
+    stroke: var(--color-primary);
     stroke-width: 1.2;
     stroke-linecap: round;
   }
 
   &--vm {
     fill: none;
-    stroke: #a855f7;
+    stroke: var(--color-purple);
     stroke-width: 1.2;
     stroke-linecap: round;
   }

@@ -42,7 +42,7 @@ export default defineComponent({
   }
 
   &__sub {
-    font-size: 0.82rem;
+    font-size: var(--fs-md);
     color: var(--color-text-muted);
     opacity: 0.65;
     max-width: 380px;
@@ -56,15 +56,15 @@ export default defineComponent({
     padding: 0.55rem 1.25rem;
     background: var(--color-primary-dim);
     color: var(--color-primary);
-    border: 1px solid rgba(0, 212, 255, 0.3);
+    border: 1px solid color-mix(in srgb, var(--color-primary) 30%, transparent);
     border-radius: var(--radius);
     text-decoration: none;
-    font-size: 0.85rem;
+    font-size: var(--fs-lg);
     font-weight: 600;
     transition: all 0.15s;
 
     &:hover {
-      background: rgba(0, 212, 255, 0.15);
+      background: color-mix(in srgb, var(--color-primary) 15%, transparent);
       border-color: var(--color-primary);
     }
   }

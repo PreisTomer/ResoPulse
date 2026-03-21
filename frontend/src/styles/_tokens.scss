@@ -1,0 +1,38 @@
+// Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
+
+// =============================================================================
+// src/styles/_tokens.scss
+//
+// SCSS variables mirroring the CSS custom properties defined in style.css.
+// Import this file in _mixins.scss (and any other pure-SCSS file that needs
+// token values in default parameters or compile-time expressions).
+//
+// In Vue component <style lang="scss"> blocks, prefer var(--fs-*) directly —
+// no import needed since the CSS vars are globally available.
+// =============================================================================
+
+// ── Font-size scale ───────────────────────────────────────────────────────────
+$fs-xxs: 0.65rem;    // section titles, formula annotations, orient labels
+$fs-xs:  0.70rem;    // secondary mono data, stat sub-labels
+$fs-sm:  0.75rem;    // primary mono labels, key data values
+$fs-md:  0.82rem;    // readable data / body labels
+$fs-lg:  0.875rem;   // standard body text
+$fs-xl:  0.90rem;    // significant labels, readout sub-text
+
+// ── Opacity scale ─────────────────────────────────────────────────────────────
+$op-ghost:   0.35;
+$op-muted:   0.55;
+$op-dim:     0.70;
+$op-partial: 0.80;
+$op-strong:  0.90;
+
+// ── Letter-spacing scale ──────────────────────────────────────────────────────
+$ls-tight:  0.02em;
+$ls-normal: 0.06em;
+$ls-wide:   0.10em;
+$ls-wider:  0.12em;
+
+// ── Transition scale ──────────────────────────────────────────────────────────
+$tr-fast:   0.15s ease;
+$tr-normal: 0.20s ease;
+$tr-slow:   0.30s ease;

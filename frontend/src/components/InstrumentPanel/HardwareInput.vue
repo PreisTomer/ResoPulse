@@ -143,13 +143,13 @@ export default defineComponent({
   }
 
   &__title {
-    font-size: 0.875rem;
+    font-size: var(--fs-lg);
     font-weight: 600;
     color: var(--color-text);
   }
 
   &__sub {
-    font-size: 0.7rem;
+    font-size: var(--fs-xs);
     color: var(--color-text-muted);
     margin-top: 0.15rem;
   }
@@ -163,7 +163,7 @@ export default defineComponent({
   }
 
   &__mode-btn {
-    font-size: 0.7rem;
+    font-size: var(--fs-xs);
     padding: 0.3rem 0.7rem;
     background: transparent;
     border: none;
@@ -179,7 +179,7 @@ export default defineComponent({
     }
 
     &--live#{&}--active {
-      background: rgba(0, 212, 255, 0.12);
+      background: color-mix(in srgb, var(--color-primary) 12%, transparent);
       color: var(--color-primary);
     }
   }
@@ -188,14 +188,14 @@ export default defineComponent({
     display: flex;
     align-items: center;
     gap: 0.45rem;
-    font-size: 0.72rem;
+    font-size: var(--fs-sm);
     padding: 0.4rem 0.65rem;
     border-radius: var(--radius);
     border: 1px solid var(--color-border);
     background: var(--color-surface-2);
 
-    &--connected { border-color: var(--color-accent); color: var(--color-accent); background: rgba(0, 255, 100, 0.06); }
-    &--stale     { border-color: var(--color-amber-warm); color: var(--color-amber-warm); background: rgba(255, 180, 50, 0.06); }
+    &--connected { border-color: var(--color-accent); color: var(--color-accent); background: color-mix(in srgb, var(--color-accent) 6%, transparent); }
+    &--stale     { border-color: var(--color-amber-warm); color: var(--color-amber-warm); background: color-mix(in srgb, var(--color-amber-warm) 6%, transparent); }
     &--waiting   { color: var(--color-text-muted); }
 
     &-dot {
@@ -209,7 +209,7 @@ export default defineComponent({
     &-age {
       margin-left: auto;
       font-family: var(--font-mono);
-      font-size: 0.65rem;
+      font-size: var(--fs-xxs);
     }
   }
 
@@ -225,7 +225,7 @@ export default defineComponent({
 
   &__reading-row {
     @include flex-between();
-    font-size: 0.75rem;
+    font-size: var(--fs-sm);
   }
 
   &__reading-label {
@@ -243,7 +243,7 @@ export default defineComponent({
     overflow: hidden;
 
     &-summary {
-      font-size: 0.75rem;
+      font-size: var(--fs-sm);
       color: var(--color-text-muted);
       padding: 0.5rem 0.75rem;
       cursor: pointer;
@@ -259,9 +259,9 @@ export default defineComponent({
 
       code {
         font-family: var(--font-mono);
-        font-size: 0.7rem;
+        font-size: var(--fs-xs);
         color: var(--color-primary);
-        background: rgba(0, 212, 255, 0.08);
+        background: color-mix(in srgb, var(--color-primary) 8%, transparent);
         padding: 0.1rem 0.35rem;
         border-radius: 3px;
       }
@@ -276,7 +276,7 @@ export default defineComponent({
     }
 
     &-note {
-      font-size: 0.7rem;
+      font-size: var(--fs-xs);
       color: var(--color-text-muted);
       line-height: 1.5;
       margin: 0;
@@ -285,7 +285,7 @@ export default defineComponent({
 
   &__schema {
     font-family: var(--font-mono);
-    font-size: 0.7rem;
+    font-size: var(--fs-xs);
     color: var(--color-primary);
     background: var(--color-bg);
     border: 1px solid var(--color-border);

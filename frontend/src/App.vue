@@ -77,7 +77,7 @@ main {
 
   &__copy {
     font-family: var(--font-mono);
-    font-size: 0.6rem;
+    font-size: var(--fs-xxs);
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--color-text-muted);
@@ -86,7 +86,7 @@ main {
 
   &__link {
     font-family: var(--font-mono);
-    font-size: 0.6rem;
+    font-size: var(--fs-xxs);
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--color-primary);

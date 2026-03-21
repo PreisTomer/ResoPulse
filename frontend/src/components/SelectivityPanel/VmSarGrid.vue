@@ -96,7 +96,7 @@ export default defineComponent({
   &__cell { display: flex; align-items: baseline; gap: 0.35rem; flex-wrap: wrap; }
 
   &__type {
-    font-size: 0.65rem;
+    font-size: var(--fs-xxs);
     font-family: var(--font-mono);
     font-weight: 700;
     opacity: 0.85;
@@ -107,7 +107,7 @@ export default defineComponent({
   }
 
   &__vm {
-    font-size: 0.9rem;
+    font-size: var(--fs-xl);
     font-family: var(--font-mono);
     font-weight: 700;
     line-height: 1;
@@ -118,7 +118,7 @@ export default defineComponent({
   }
 
   &__sar {
-    font-size: 0.62rem;
+    font-size: var(--fs-xxs);
     font-family: var(--font-mono);
     color: var(--color-text-muted);
     opacity: 0.85;
@@ -126,7 +126,7 @@ export default defineComponent({
   }
 
   &__elysis {
-    font-size: 0.58rem;
+    font-size: var(--fs-xs);
     font-family: var(--font-mono);
     color: var(--color-text-muted);
     opacity: 0.7;

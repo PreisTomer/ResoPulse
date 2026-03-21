@@ -4,7 +4,46 @@
     class="field-panel__row field-panel__row--interactive"
     :class="thermalDangerLevel !== THERMAL_LEVEL.SAFE ? `field-panel__row--${thermalDangerLevel}` : ''"
   >
-    <span class="field-panel__row-label" v-tip="tipFieldLabel">{{ $t('slider.fieldIntensity') }}</span>
+    <div class="field-panel__row-header">
+      <span class="field-panel__row-label" v-tip="tipFieldLabel">{{ $t('slider.fieldIntensity') }}</span>
+      <div class="field-panel__readout">
+        <div v-if="editingField" class="field-panel__readout-edit">
+          <input
+            ref="fieldInputEl"
+            class="field-panel__readout-input"
+            type="number"
+            :step="fieldInputStep"
+            v-model.number="fieldInputVal"
+            @keydown="onFieldEditKey"
+            @blur="commitFieldEdit"
+          />
+          <span class="field-panel__readout-input-unit">{{ fieldInputUnit }}</span>
+        </div>
+        <span
+          v-else
+          class="field-panel__readout-value field-panel__readout-value--editable"
+          v-tip="tipFieldLabel"
+          @mousedown.prevent="startScrubField"
+        >{{ fieldDisplay }}</span>
+        <div class="field-panel__badges">
+          <span
+            class="field-panel__badge field-panel__badge--target"
+            :class="{ 'field-panel__badge--warn': targetDisruption > THRESHOLDS.DISRUPTION_WARN }"
+            v-tip="tipTargetBadgeLabel"
+          >{{ CELL_LABEL.TARGET }} {{ targetDisruptPercent }}%</span>
+          <span
+            class="field-panel__badge field-panel__badge--healthy"
+            :class="{ 'field-panel__badge--warn': healthyDisruption > THRESHOLDS.DISRUPTION_WARN }"
+            v-tip="tipHealthyBadgeLabel"
+          >{{ CELL_LABEL.HEALTHY }} {{ healthyDisruptPercent }}%</span>
+        </div>
+        <div v-if="!editingField" class="field-panel__readout-steps">
+          <button class="field-panel__readout-step" type="button" @click="stepField(-1)">−</button>
+          <span class="field-panel__readout-steps-unit">{{ fieldInputUnit }}</span>
+          <button class="field-panel__readout-step" type="button" @click="stepField(1)">+</button>
+        </div>
+      </div>
+    </div>
     <div class="field-panel__track">
       <input
         class="field-panel__slider"
@@ -15,43 +54,13 @@
         :value="currentField"
         @input="onFieldInput"
       />
-    </div>
-    <div class="field-panel__readout">
-      <div v-if="editingField" class="field-panel__readout-edit">
-        <input
-          ref="fieldInputEl"
-          class="field-panel__readout-input"
-          type="number"
-          :step="fieldInputStep"
-          v-model.number="fieldInputVal"
-          @keydown="onFieldEditKey"
-          @blur="commitFieldEdit"
-        />
-        <span class="field-panel__readout-input-unit">{{ fieldInputUnit }}</span>
-      </div>
-      <span
-        v-else
-        class="field-panel__readout-value field-panel__readout-value--editable"
-        v-tip="tipFieldLabel"
-        @click="startEditField"
-      >{{ fieldDisplay }}</span>
-      <div class="field-panel__badges">
-        <span
-          class="field-panel__badge field-panel__badge--target"
-          :class="{ 'field-panel__badge--warn': targetDisruption > THRESHOLDS.DISRUPTION_WARN }"
-          v-tip="tipTargetBadgeLabel"
-        >{{ CELL_LABEL.TARGET }} {{ targetDisruptPercent }}%</span>
-        <span
-          class="field-panel__badge field-panel__badge--healthy"
-          :class="{ 'field-panel__badge--warn': healthyDisruption > THRESHOLDS.DISRUPTION_WARN }"
-          v-tip="tipHealthyBadgeLabel"
-        >{{ CELL_LABEL.HEALTHY }} {{ healthyDisruptPercent }}%</span>
-      </div>
-      <div v-if="!editingField" class="field-panel__readout-steps">
-        <button class="field-panel__readout-step" type="button" @click="stepField(-1)">−</button>
-        <span class="field-panel__readout-steps-unit">{{ fieldInputUnit }}</span>
-        <button class="field-panel__readout-step" type="button" @click="stepField(1)">+</button>
-      </div>
+      <div
+        v-for="mark in fieldMarkers"
+        :key="mark.id"
+        class="field-panel__track-mark"
+        :class="`field-panel__track-mark--${mark.color}`"
+        :style="{ left: mark.pct + '%' }"
+      />
     </div>
   </div>
 </template>
@@ -67,6 +76,10 @@ import type { SliderRange } from '@/constants/sliderBounds'
 import { formatFieldVcm, FIELD_KV_THRESHOLD } from '@/utils/format'
 import { tipField, tipTargetBadge, tipHealthyBadge } from '@/tooltips/sliderTooltips'
 
+// 400 px horizontal drag = full slider range
+const SCRUB_PX_FULL_RANGE = 400
+const SCRUB_DEADZONE_PX   = 3
+
 export default defineComponent({
   props: {
     sliderRanges:       { type: Object as PropType<SliderRange>, required: true },
@@ -81,6 +94,10 @@ export default defineComponent({
     return {
       editingField:  false,
       fieldInputVal: 0,
+      scrubbing:     false,
+      scrubStartX:   0,
+      scrubStartVal: 0,
+      scrubMoved:    false,
     }
   },
 
@@ -94,6 +111,19 @@ export default defineComponent({
 
     fieldInputUnit(): string { return this.currentField >= FIELD_KV_THRESHOLD ? 'kV/cm' : 'V/cm' },
     fieldInputStep(): number { return this.currentField >= FIELD_KV_THRESHOLD ? 0.1 : 1 },
+
+    /** Track markers at target and healthy lysis thresholds — positioned on the linear field scale. */
+    fieldMarkers(): Array<{ id: string; pct: number; color: string }> {
+      const { fieldMin, fieldMax } = this.sliderRanges
+      const span = fieldMax - fieldMin
+
+      const linPct = (vcm: number): number => (vcm - fieldMin) / span * 100
+
+      return [
+        { id: 'lysis-t', pct: linPct(this.store.targetLysisField),  color: 'danger'  },
+        { id: 'lysis-h', pct: linPct(this.store.healthyLysisField), color: 'healthy' },
+      ].filter(m => m.pct >= 1 && m.pct <= 99)
+    },
 
     tipFieldLabel(): string {
       return tipField({
@@ -132,12 +162,17 @@ export default defineComponent({
     },
   },
 
+  beforeUnmount() {
+    this.stopScrubField()
+  },
+
   methods: {
     onFieldInput(e: Event) {
       this.store.setFieldIntensity(Number((e.target as HTMLInputElement).value))
       broadcastStateSync()
     },
 
+    // ── Inline type-in edit ───────────────────────────────────────────────────
     startEditField() {
       this.fieldInputVal = this.currentField >= FIELD_KV_THRESHOLD
         ? parseFloat((this.currentField / 1_000).toFixed(1))
@@ -170,6 +205,39 @@ export default defineComponent({
       this.store.setFieldIntensity(next)
       broadcastStateSync()
     },
+
+    // ── Scrub drag on readout value (linear scale) ────────────────────────────
+    // Drag right → increase field, drag left → decrease.
+    // A single click (no movement past deadzone) opens the type-in editor.
+    startScrubField(e: MouseEvent) {
+      if (this.editingField) return
+      this.scrubbing     = true
+      this.scrubMoved    = false
+      this.scrubStartX   = e.clientX
+      this.scrubStartVal = this.currentField
+      document.addEventListener('mousemove', this.onScrubFieldMove)
+      document.addEventListener('mouseup',   this.stopScrubField)
+    },
+
+    onScrubFieldMove(e: MouseEvent) {
+      if (!this.scrubbing) return
+      const dx = e.clientX - this.scrubStartX
+      if (!this.scrubMoved && Math.abs(dx) < SCRUB_DEADZONE_PX) return
+      this.scrubMoved = true
+      const range     = this.sliderRanges.fieldMax - this.sliderRanges.fieldMin
+      const newField  = this.scrubStartVal + dx * (range / SCRUB_PX_FULL_RANGE)
+      const clamped   = Math.max(this.sliderRanges.fieldMin, Math.min(this.sliderRanges.fieldMax, newField))
+      this.store.setFieldIntensity(clamped)
+      broadcastStateSync()
+    },
+
+    stopScrubField() {
+      if (!this.scrubbing) return
+      document.removeEventListener('mousemove', this.onScrubFieldMove)
+      document.removeEventListener('mouseup',   this.stopScrubField)
+      if (!this.scrubMoved) this.startEditField()
+      this.scrubbing = false
+    },
   },
 })
 </script>
@@ -178,8 +246,8 @@ export default defineComponent({
 @use '../../styles/mixins' as *;
 
 @keyframes thumb-danger-pulse {
-  0%, 100% { box-shadow: 0 0 6px rgba(255, 77, 109, 0.6); }
-  50%       { box-shadow: 0 0 16px rgba(255, 77, 109, 1.0); }
+  0%, 100% { box-shadow: 0 0 6px color-mix(in srgb, var(--color-danger) 60%, transparent); }
+  50%       { box-shadow: 0 0 16px var(--color-danger); }
 }
 
 @keyframes state-blink {
@@ -189,27 +257,46 @@ export default defineComponent({
 
 .field-panel {
   &__row {
-    @include field-row-grid(7.5rem, 8.5rem);
+    @include field-row-grid();
+    padding-bottom: 0.45rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 
     &--hyperthermic .field-panel__slider {
-      &::-webkit-slider-thumb { background: var(--color-amber);  box-shadow: 0 0 6px  rgba(251, 191, 36, 0.5); }
+      &::-webkit-slider-thumb { background: var(--color-amber);  box-shadow: 0 0 6px  color-mix(in srgb, var(--color-amber) 50%, transparent); }
       &::-moz-range-thumb     { background: var(--color-amber); }
     }
 
     &--denaturing .field-panel__slider {
-      &::-webkit-slider-thumb { background: var(--color-orange); box-shadow: 0 0 8px  rgba(251, 130, 20, 0.7); }
+      &::-webkit-slider-thumb { background: var(--color-orange); box-shadow: 0 0 8px  color-mix(in srgb, var(--color-orange) 70%, transparent); }
       &::-moz-range-thumb     { background: var(--color-orange); }
     }
 
     &--vaporizing .field-panel__slider {
-      &::-webkit-slider-thumb { background: var(--color-danger); box-shadow: 0 0 10px rgba(255, 77, 109, 0.9); animation: thumb-danger-pulse 0.5s ease-in-out infinite; }
+      &::-webkit-slider-thumb { background: var(--color-danger); box-shadow: 0 0 10px color-mix(in srgb, var(--color-danger) 90%, transparent); animation: thumb-danger-pulse 0.5s ease-in-out infinite; }
       &::-moz-range-thumb     { background: var(--color-danger); }
     }
   }
 
+  &__row-header { @include field-row-header(); }
+
   &__row-label { @include row-label(); }
 
   &__track { position: relative; display: flex; align-items: center; }
+
+  // ── Lysis-field threshold markers on the slider track ───────────────────
+  &__track-mark {
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 2px;
+    height: 10px;
+    border-radius: 1px;
+    pointer-events: none;
+    z-index: 1;
+
+    &--danger  { background: var(--color-danger);  opacity: 0.55; }
+    &--healthy { background: var(--color-primary); opacity: 0.55; }
+  }
 
   &__slider {
     @include slider-track();
@@ -221,8 +308,7 @@ export default defineComponent({
     flex-direction: column;
     align-items: flex-end;
     gap: 0.25rem;
-    width: 8.5rem;
-    overflow: hidden;
+    flex-shrink: 0;
 
     &-value {
       font-size: 1rem;
@@ -234,10 +320,11 @@ export default defineComponent({
       white-space: nowrap;
 
       &--editable {
-        cursor: text;
+        cursor: ew-resize;
+        user-select: none;
         border-bottom: 1px dashed transparent;
-        transition: border-color 0.15s;
-        &:hover { border-bottom-color: rgba(0, 212, 255, 0.4); }
+        transition: border-color var(--tr-fast);
+        &:hover { border-bottom-color: color-mix(in srgb, var(--color-primary) 40%, transparent); }
       }
     }
 
@@ -252,7 +339,7 @@ export default defineComponent({
     &-input { @include readout-inline-input(); }
 
     &-input-unit {
-      font-size: 0.6rem;
+      font-size: var(--fs-xxs);
       font-family: var(--font-mono);
       color: var(--color-primary);
       white-space: nowrap;
@@ -267,7 +354,7 @@ export default defineComponent({
     }
 
     &-steps-unit {
-      font-size: 0.48rem;
+      font-size: var(--fs-xxs);
       font-family: var(--font-mono);
       color: var(--color-text-muted);
       opacity: 0.55;
@@ -283,21 +370,21 @@ export default defineComponent({
   }
 
   &__badge {
-    font-size: 0.6rem;
+    font-size: var(--fs-xxs);
     font-family: var(--font-mono);
     text-transform: uppercase;
     letter-spacing: 0.06em;
     padding: 0.1rem 0.35rem;
     border-radius: 3px;
     border: 1px solid transparent;
-    transition: color 0.2s, border-color 0.2s;
+    transition: color var(--tr-normal), border-color var(--tr-normal);
 
-    &--target  { color: var(--color-danger); border-color: rgba(255, 77, 109, 0.3); }
-    &--healthy { color: var(--color-accent); border-color: rgba(0, 212, 255, 0.3); }
+    &--target  { color: var(--color-danger); border-color: color-mix(in srgb, var(--color-danger) 30%, transparent); }
+    &--healthy { color: var(--color-accent); border-color: color-mix(in srgb, var(--color-primary) 30%, transparent); }
 
     &--warn {
-      &.field-panel__badge--target  { background-color: rgba(255, 77, 109, 0.12); border-color: var(--color-danger); }
-      &.field-panel__badge--healthy { background-color: rgba(0, 212, 255, 0.12);  border-color: var(--color-accent); }
+      &.field-panel__badge--target  { background-color: color-mix(in srgb, var(--color-danger) 12%, transparent); border-color: var(--color-danger); }
+      &.field-panel__badge--healthy { background-color: color-mix(in srgb, var(--color-primary) 12%, transparent);  border-color: var(--color-accent); }
     }
   }
 }

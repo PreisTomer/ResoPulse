@@ -314,13 +314,13 @@ export default defineComponent({
 }
 
 @keyframes card-warn-pulse {
-  0%, 100% { box-shadow: 0 0 22px rgba(251, 130, 20, 0.3); }
-  50%       { box-shadow: 0 0 42px rgba(251, 130, 20, 0.6); }
+  0%, 100% { box-shadow: 0 0 22px color-mix(in srgb, var(--color-orange) 30%, transparent); }
+  50%       { box-shadow: 0 0 42px color-mix(in srgb, var(--color-orange) 60%, transparent); }
 }
 
 @keyframes nourishing-pulse {
-  0%, 100% { box-shadow: 0 0 28px rgba(0, 212, 255, 0.22), 0 0 0 1px rgba(0, 212, 255, 0.10); }
-  50%       { box-shadow: 0 0 52px rgba(0, 212, 255, 0.42), 0 0 0 1px rgba(0, 212, 255, 0.22); }
+  0%, 100% { box-shadow: 0 0 28px color-mix(in srgb, var(--color-primary) 22%, transparent), 0 0 0 1px color-mix(in srgb, var(--color-primary) 10%, transparent); }
+  50%       { box-shadow: 0 0 52px color-mix(in srgb, var(--color-primary) 42%, transparent), 0 0 0 1px color-mix(in srgb, var(--color-primary) 22%, transparent); }
 }
 
 /* ── Block ───────────────────────────────────────────────────────────── */
@@ -347,7 +347,7 @@ export default defineComponent({
     &.cell-card--critical    { border-top-color: var(--color-danger); }
     &.cell-card--vibrating   { border-top-color: var(--color-danger); }
     &.cell-card--lysing      { border-top-color: var(--color-danger); }
-    &.cell-card--lysed       { border-top-color: rgba(255, 77, 109, 0.45); }
+    &.cell-card--lysed       { border-top-color: color-mix(in srgb, var(--color-danger) 45%, transparent); }
   }
 
   /* ── Type modifiers ────────────────────────────────────────────────── */
@@ -369,44 +369,44 @@ export default defineComponent({
 
   // Reversible EP window (target, 50-85%): amber glow — permeabilized but survivable
   &--rev-ep.cell-card--target {
-    border-left-color: #fbbf24 !important;
-    box-shadow: 0 0 22px rgba(251, 191, 36, 0.28);
+    border-left-color: var(--color-amber) !important;
+    box-shadow: 0 0 22px color-mix(in srgb, var(--color-amber) 28%, transparent);
     animation: card-warn-pulse 1.8s ease-in-out infinite;
   }
 
-  &--vibrating { box-shadow: 0 0 24px rgba(255, 77, 109, 0.14); }
+  &--vibrating { box-shadow: 0 0 24px color-mix(in srgb, var(--color-danger) 14%, transparent); }
 
   &--lysing {
-    box-shadow: 0 0 36px rgba(255, 77, 109, 0.4);
+    box-shadow: 0 0 36px color-mix(in srgb, var(--color-danger) 40%, transparent);
     border-color: var(--color-danger) !important;
     animation: card-shake 0.08s linear infinite;
   }
 
   &--lysed {
     opacity: 0.65;
-    border-color: #444 !important;
+    border-color: var(--color-muted-border) !important;
     box-shadow: none;
   }
 
   // Healthy cell electroporation risk states
   &--healthy.cell-card--approaching {
-    border-left-color: #fbbf24 !important;
-    box-shadow: 0 0 22px rgba(251, 191, 36, 0.22);
+    border-left-color: var(--color-amber) !important;
+    box-shadow: 0 0 22px color-mix(in srgb, var(--color-amber) 22%, transparent);
   }
 
   &--healthy.cell-card--critical {
-    border-left-color: #fb923c !important;
+    border-left-color: var(--color-orange) !important;
     animation: card-warn-pulse 1.1s ease-in-out infinite;
   }
 
   // Target thermal states
   &--approaching.cell-card--target {
-    border-left-color: #fbbf24 !important;
-    box-shadow: 0 0 22px rgba(251, 191, 36, 0.18);
+    border-left-color: var(--color-amber) !important;
+    box-shadow: 0 0 22px color-mix(in srgb, var(--color-amber) 18%, transparent);
   }
 
   &--critical.cell-card--target {
-    border-left-color: #fb923c !important;
+    border-left-color: var(--color-orange) !important;
     animation: card-warn-pulse 1.1s ease-in-out infinite;
   }
 }

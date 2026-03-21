@@ -18,13 +18,13 @@ function ensureTip(): HTMLDivElement {
   z-index: 99999;
   max-width: 260px;
   padding: 0.45rem 0.7rem;
-  background: #0b1220;
-  border: 1px solid rgba(0, 212, 255, 0.22);
+  background: var(--color-tooltip-bg);
+  border: 1px solid var(--color-primary-border);
   border-radius: 5px;
   font-family: 'JetBrains Mono', 'Fira Mono', ui-monospace, monospace;
   font-size: 0.6rem;
   line-height: 1.6;
-  color: #8fa3c1;
+  color: var(--color-tooltip-text);
   pointer-events: none;
   opacity: 0;
   transform: translateY(4px);
@@ -37,21 +37,21 @@ function ensureTip(): HTMLDivElement {
   transform: translateY(0);
 }
 #br-tip strong {
-  color: #e2ecf6;
+  color: var(--color-text-heading);
   font-weight: 600;
 }
 #br-tip .tip-val {
-  color: #00d4ff;
+  color: var(--color-primary);
   font-weight: 600;
 }
 #br-tip .tip-warn {
-  color: #ff4d6d;
+  color: var(--color-danger);
 }
 #br-tip .tip-ok {
-  color: #39ff14;
+  color: var(--color-lime);
 }
 #br-tip .tip-note {
-  color: #7a96b8;
+  color: var(--color-tooltip-note);
   font-size: 0.56rem;
   display: block;
   margin-top: 0.35rem;

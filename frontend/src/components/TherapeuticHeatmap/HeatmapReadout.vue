@@ -45,7 +45,7 @@ export default defineComponent({
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   font-family: var(--font-mono);
-  font-size: 0.64rem;
+  font-size: var(--fs-xxs);
   transition: border-color 0.2s;
 
   &--active { border-color: rgba(255, 255, 255, 0.18); }
@@ -55,14 +55,14 @@ export default defineComponent({
   &-zone  { font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
   &-dr    { color: var(--color-text-muted); strong { color: var(--color-text); } }
   &-temp  { color: var(--color-text-muted); }
-  &-hint  { margin-left: auto; color: rgba(255, 255, 255, 0.18); font-size: 0.5rem; }
+  &-hint  { margin-left: auto; color: rgba(255, 255, 255, 0.18); font-size: var(--fs-xxs); }
   &-idle  { color: rgba(255, 255, 255, 0.2); font-style: italic; }
 
   &-outcome {
     font-weight: 600;
-    &--ok     { color: #4ade80; }
-    &--warn   { color: #fbbf24; }
-    &--danger { color: #f87171; }
+    &--ok     { color: var(--color-ok); }
+    &--warn   { color: var(--color-amber); }
+    &--danger { color: var(--color-danger-light); }
     &--info   { color: var(--color-text-muted); }
   }
 }

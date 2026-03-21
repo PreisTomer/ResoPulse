@@ -241,7 +241,7 @@ export default defineComponent({
     border-bottom: 1px solid var(--color-border);
     color: var(--color-text-heading);
     font-family: var(--font-mono);
-    font-size: 0.68rem;
+    font-size: var(--fs-xs);
     padding: 0.1rem 0.2rem;
     outline: none;
     letter-spacing: 0.06em;
@@ -253,16 +253,16 @@ export default defineComponent({
     @include flex-row(0.4rem);
     align-items:   center;
     padding:       0.18rem 0.65rem;
-    border:        1px solid rgba(251, 191, 36, 0.3);
+    border:        1px solid color-mix(in srgb, var(--color-amber) 30%, transparent);
     border-radius: 3px;
-    background:    rgba(251, 191, 36, 0.06);
+    background:    color-mix(in srgb, var(--color-amber) 6%, transparent);
     cursor:        help;
     flex-shrink:   0;
   }
 
   &__dose-label {
     @include mono-upper(0.55rem, 0.08em);
-    color: rgba(251, 191, 36, 0.65);
+    color: color-mix(in srgb, var(--color-amber) 65%, transparent);
   }
 
   &__dose-val {
@@ -275,7 +275,7 @@ export default defineComponent({
   &__actions { @include flex-row(0.35rem); flex-shrink: 0; }
 
   &__btn {
-    @include mono-upper(0.58rem);
+    @include mono-upper(0.7rem);
     padding: 0.22rem 0.6rem;
     border: 1px solid var(--color-border);
     border-radius: 3px;
@@ -305,7 +305,7 @@ export default defineComponent({
   &__table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 0.58rem;
+    font-size: var(--fs-xs);
     font-family: var(--font-mono);
 
     thead th {
@@ -341,13 +341,13 @@ export default defineComponent({
   }
 
   &__row--lysis {
-    td { background: rgba(255,77,109,0.06); }
-    &:hover td { background: rgba(255,77,109,0.10); }
+    td { background: color-mix(in srgb, var(--color-danger) 6%, transparent); }
+    &:hover td { background: color-mix(in srgb, var(--color-danger) 10%, transparent); }
   }
 
   &__td-session {
     color: var(--color-text-muted);
-    font-size: 0.58rem;
+    font-size: var(--fs-xs);
     max-width: 80px;
     overflow: hidden;
     text-overflow: ellipsis;

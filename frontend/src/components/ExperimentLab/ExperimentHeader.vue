@@ -319,7 +319,7 @@ export default defineComponent({
 }
 
 .experiment__notes-toggle {
-  font-size: 0.6rem;
+  font-size: var(--fs-xxs);
   font-family: var(--font-mono);
   letter-spacing: 0.06em;
   padding: 0.14rem 0.5rem;
@@ -338,8 +338,8 @@ export default defineComponent({
 
   &--active {
     color: var(--color-primary);
-    border-color: rgba(0, 212, 255, 0.4);
-    background: rgba(0, 212, 255, 0.06);
+    border-color: color-mix(in srgb, var(--color-primary) 40%, transparent);
+    background: color-mix(in srgb, var(--color-primary) 6%, transparent);
   }
 }
 
@@ -349,7 +349,7 @@ export default defineComponent({
   border-bottom: 1px solid transparent;
   color: var(--color-text-heading);
   font-family: var(--font-mono);
-  font-size: 0.68rem;
+  font-size: var(--fs-xs);
   letter-spacing: 0.06em;
   outline: none;
   min-width: 100px;
@@ -365,7 +365,7 @@ export default defineComponent({
 .experiment__chip {
   @include flex-row(0.3rem);
   font-family: var(--font-mono);
-  font-size: 0.58rem;
+  font-size: var(--fs-xs);
   letter-spacing: 0.1em;
   padding: 0.18rem 0.55rem;
   border-radius: 3px;
@@ -373,8 +373,8 @@ export default defineComponent({
   color: var(--color-text-muted);
   white-space: nowrap;
 
-  &--local     { border-color: rgba(251, 191, 36, 0.3);  color: var(--color-amber); }
-  &--connected { border-color: rgba(57, 255, 20, 0.35);  color: var(--color-lime); }
+  &--local     { border-color: color-mix(in srgb, var(--color-amber) 30%, transparent); color: var(--color-amber); }
+  &--connected { border-color: color-mix(in srgb, var(--color-lime) 35%, transparent);  color: var(--color-lime); }
 }
 
 .experiment__chip-dot {
@@ -393,25 +393,25 @@ export default defineComponent({
   align-items: center;
   gap: 0.25rem;
   font-family: var(--font-mono);
-  font-size: 0.58rem;
+  font-size: var(--fs-xs);
   letter-spacing: 0.08em;
   padding: 0.18rem 0.5rem;
   border-radius: 3px;
-  border: 1px solid rgba(251, 191, 36, 0.45);
+  border: 1px solid color-mix(in srgb, var(--color-amber) 45%, transparent);
   color: var(--color-amber);
-  background: rgba(251, 191, 36, 0.08);
+  background: color-mix(in srgb, var(--color-amber) 8%, transparent);
   text-decoration: none;
   white-space: nowrap;
   animation: pulse-dot 2s ease-in-out infinite;
   transition: background 0.15s;
 
   &:hover {
-    background: rgba(251, 191, 36, 0.16);
+    background: color-mix(in srgb, var(--color-amber) 16%, transparent);
   }
 }
 
 .experiment__z-drift-icon {
-  font-size: 0.7rem;
+  font-size: var(--fs-xs);
 }
 
 .experiment__cell-badges {
@@ -439,7 +439,7 @@ export default defineComponent({
 
 .experiment__cell-badge-type {
   font-family: var(--font-mono);
-  font-size: 0.56rem;
+  font-size: var(--fs-xxs);
   letter-spacing: 0.08em;
   color: var(--color-text-muted);
   white-space: nowrap;
@@ -460,18 +460,18 @@ export default defineComponent({
 }
 
 .experiment__cell-badge--healthy .experiment__cell-badge-row--open {
-  border-color: rgba(0, 212, 255, 0.5);
-  background: rgba(0, 212, 255, 0.04);
+  border-color: color-mix(in srgb, var(--color-primary) 50%, transparent);
+  background: color-mix(in srgb, var(--color-primary) 4%, transparent);
 }
 
 .experiment__cell-badge--target .experiment__cell-badge-row--open {
-  border-color: rgba(255, 77, 109, 0.5);
-  background: rgba(255, 77, 109, 0.04);
+  border-color: color-mix(in srgb, var(--color-danger) 50%, transparent);
+  background: color-mix(in srgb, var(--color-danger) 4%, transparent);
 }
 
 .experiment__cell-badge-selected {
   font-family: var(--font-mono);
-  font-size: 0.82rem;
+  font-size: var(--fs-md);
   font-weight: 600;
   letter-spacing: 0.01em;
   line-height: 1.2;
@@ -485,7 +485,7 @@ export default defineComponent({
 }
 
 .experiment__cell-badge-caret {
-  font-size: 0.65rem;
+  font-size: var(--fs-xxs);
   color: var(--color-text-muted);
   transition: transform 0.2s;
   opacity: 0.80;
@@ -507,7 +507,7 @@ export default defineComponent({
 }
 
 .experiment__cell-picker-title {
-  @include mono-upper(0.58rem, 0.1em);
+  @include mono-upper(0.7rem, 0.1em);
   color: var(--color-text-muted);
   margin-bottom: 0.6rem;
 }
@@ -524,7 +524,7 @@ export default defineComponent({
 
 .experiment__cell-picker-tab {
   font-family: var(--font-mono);
-  font-size: 0.58rem;
+  font-size: var(--fs-xs);
   padding: 0.15rem 0.5rem;
   background: transparent;
   border: 1px solid var(--color-border);
@@ -564,14 +564,14 @@ export default defineComponent({
   }
 
   &--active {
-    background: rgba(0, 212, 255, 0.05);
+    background: color-mix(in srgb, var(--color-primary) 5%, transparent);
     border-color: var(--color-primary);
   }
 }
 
 .experiment__preset-btn-name {
   font-family: var(--font-mono);
-  font-size: 0.7rem;
+  font-size: var(--fs-xs);
   font-weight: 600;
   color: var(--color-text-heading);
   letter-spacing: 0.02em;
@@ -579,7 +579,7 @@ export default defineComponent({
 
 .experiment__preset-btn-sub {
   font-family: var(--font-mono);
-  font-size: 0.58rem;
+  font-size: var(--fs-xs);
   color: var(--color-text-muted);
   line-height: 1.35;
 }
@@ -596,13 +596,13 @@ export default defineComponent({
 
 /* Custom preset tab distinct styling */
 .experiment__cell-picker-tab--custom {
-  border-color: rgba(255, 140, 0, 0.4);
-  color:        rgba(255, 140, 0, 0.8);
+  border-color: color-mix(in srgb, var(--color-vibrating) 40%, transparent);
+  color:        color-mix(in srgb, var(--color-vibrating) 80%, transparent);
 
   &.experiment__cell-picker-tab--active {
-    border-color: rgba(255, 140, 0, 0.7);
-    color:        #ff8c00;
-    background:   rgba(255, 140, 0, 0.08);
+    border-color: color-mix(in srgb, var(--color-vibrating) 70%, transparent);
+    color:        var(--color-vibrating);
+    background:   color-mix(in srgb, var(--color-vibrating) 8%, transparent);
   }
 }
 
@@ -643,7 +643,7 @@ export default defineComponent({
 }
 
 .experiment__custom-hint {
-  font-size: 0.65rem;
+  font-size: var(--fs-xxs);
   opacity:   0.80;
 }
 
@@ -651,10 +651,10 @@ export default defineComponent({
 .experiment__preset-btn-new {
   width:         100%;
   padding:       0.45rem 0.65rem;
-  background:    rgba(255, 140, 0, 0.06);
-  border:        1px dashed rgba(255, 140, 0, 0.35);
+  background:    color-mix(in srgb, var(--color-vibrating) 6%, transparent);
+  border:        1px dashed color-mix(in srgb, var(--color-vibrating) 35%, transparent);
   border-radius: 4px;
-  color:         rgba(255, 140, 0, 0.85);
+  color:         color-mix(in srgb, var(--color-vibrating) 85%, transparent);
   font-family:   var(--font-mono);
   font-size:     0.68rem;
   font-weight:   600;
@@ -665,8 +665,8 @@ export default defineComponent({
   margin-top:    0.1rem;
 
   &:hover {
-    background:    rgba(255, 140, 0, 0.12);
-    border-color:  rgba(255, 140, 0, 0.6);
+    background:    color-mix(in srgb, var(--color-vibrating) 12%, transparent);
+    border-color:  color-mix(in srgb, var(--color-vibrating) 60%, transparent);
   }
 }
 

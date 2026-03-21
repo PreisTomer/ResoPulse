@@ -2,6 +2,7 @@
 // Unauthorized copying or distribution is prohibited.
 
 @use 'sass:list';
+@use 'tokens' as *;
 
 // ── Flex utilities ─────────────────────────────────────────────────────────────
 // Usage: @include flex-row(0.5rem);
@@ -47,7 +48,7 @@
 // Combines font-mono + uppercase + letter-spacing - the most repeated 3-property
 // cluster in the codebase (127+ occurrences of --font-mono alone).
 // Usage: @include mono-upper(0.6rem);  or  @include mono-upper(0.6rem, 0.1em);
-@mixin mono-upper($size: 0.6rem, $spacing: 0.08em) {
+@mixin mono-upper($size: $fs-xxs, $spacing: 0.08em) {
   font-family: var(--font-mono);
   font-size: $size;
   text-transform: uppercase;
@@ -60,7 +61,7 @@
 // Usage: @include status-strip(#color, rgba-bg, rgba-border, anim-name, dur);
 @mixin status-strip($color, $bg, $border-color, $anim: null, $dur: 2s) {
   @include flex-row(0.45rem);
-  @include mono-upper(0.6rem);
+  @include mono-upper($fs-xxs);
   padding: 0.32rem 0.65rem;
   color: $color;
   background: $bg;
@@ -76,14 +77,14 @@
 // Usage: inside .cell-card { @include cell-state-classes(); }
 // Requires _keyframes.scss to be imported for state-blink.
 $_cell-states: (
-  ('stable',      #39ff14, null,        null),
-  ('nourishing',  #00d4ff, null,        null),
-  ('approaching', #fbbf24, null,        null),
-  ('rev-ep',      #fbbf24, state-blink, 1.6s),
-  ('critical',    #fb923c, state-blink, 0.9s),
-  ('vibrating',   #ff8c00, state-blink, 1.1s),
-  ('lysing',      #ff4d6d, state-blink, 0.5s),
-  ('lysed',       #882233, null,        null),
+  ('stable',      var(--color-lime),    null,        null),
+  ('nourishing',  var(--color-primary), null,        null),
+  ('approaching', var(--color-amber),   null,        null),
+  ('rev-ep',      var(--color-amber),   state-blink, 1.6s),
+  ('critical',    var(--color-orange),  state-blink, 0.9s),
+  ('vibrating',   var(--color-vibrating), state-blink, 1.1s),
+  ('lysing',      var(--color-danger),    state-blink, 0.5s),
+  ('lysed',       var(--color-lysed),     null,        null),
 );
 
 @mixin cell-state-classes() {
@@ -115,33 +116,42 @@ $_cell-states: (
   border: none;
   border-top: 1px solid var(--color-border);
   color: var(--color-text-muted);
-  font-size: 0.6rem;
+  font-size: $fs-xxs;
   font-family: var(--font-mono);
   text-transform: uppercase;
   letter-spacing: 0.1em;
   cursor: pointer;
   text-align: left;
-  transition: color 0.15s;
+  transition: color var(--tr-fast);
   margin-top: 0.1rem;
   &:hover { color: var(--color-text); }
 }
 
 // ── Field row grid ──────────────────────────────────────────────────────────
-// Three-column grid: label | slider track | readout.
-// Usage: @include field-row-grid(7.5rem, 8.5rem);
-@mixin field-row-grid($label: 7.5rem, $readout: 8.5rem) {
-  display: grid;
-  grid-template-columns: $label 1fr $readout;
+// Stacked layout: header row (label | readout) above full-width slider track.
+// Params kept for call-site compatibility but are ignored.
+// Usage: @include field-row-grid();
+@mixin field-row-grid($label: null, $readout: null) {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+// ── Field row header ─────────────────────────────────────────────────────────
+// Horizontal bar containing the label (left) and readout (right).
+// Usage: @include field-row-header();
+@mixin field-row-header() {
+  display: flex;
   align-items: center;
-  gap: 0.85rem;
-  min-height: 2.75rem;
+  justify-content: space-between;
+  gap: 0.5rem;
 }
 
 // ── Row label ───────────────────────────────────────────────────────────────
 // Mono uppercase label in the first grid column of every slider row.
 // Usage: @include row-label();
 @mixin row-label() {
-  font-size: 0.62rem;
+  font-size: $fs-xxs;
   font-family: var(--font-mono);
   text-transform: uppercase;
   letter-spacing: 0.1em;
@@ -198,7 +208,7 @@ $_cell-states: (
   width: 1.1rem;
   height: 0.9rem;
   padding: 0;
-  font-size: 0.72rem;
+  font-size: $fs-sm;
   font-weight: 700;
   font-family: var(--font-mono);
   color: var(--color-text-muted);
@@ -210,7 +220,7 @@ $_cell-states: (
   &:hover {
     color: var(--color-primary);
     border-color: var(--color-primary);
-    background: rgba(0, 212, 255, 0.08);
+    background: color-mix(in srgb, var(--color-primary) 8%, transparent);
   }
 }
 
@@ -253,7 +263,7 @@ $_cell-states: (
 // Tiny mono-caps label for named data sections (dep, resonance, etc.)
 // Usage: @include section-title();
 @mixin section-title() {
-  @include mono-upper(0.53rem, 0.12em);
+  @include mono-upper($fs-xxs, 0.12em);
   color: var(--color-text-muted);
   opacity: 0.7;
   margin-bottom: 0.05rem;

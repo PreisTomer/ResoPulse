@@ -183,19 +183,19 @@ export default defineComponent({
   }
 
   &__title {
-    font-size: 0.875rem;
+    font-size: var(--fs-lg);
     font-weight: 600;
     color: var(--color-text);
   }
 
   &__sub {
-    font-size: 0.7rem;
+    font-size: var(--fs-xs);
     color: var(--color-text-muted);
     margin-top: 0.15rem;
   }
 
   &__lysis-pill {
-    font-size: 0.65rem;
+    font-size: var(--fs-xxs);
     font-family: var(--font-mono);
     padding: 0.2rem 0.55rem;
     border-radius: 1rem;
@@ -206,7 +206,7 @@ export default defineComponent({
     flex-shrink: 0;
 
     &--warn   { color: var(--color-amber-warm); border-color: var(--color-amber-warm); }
-    &--full   { color: var(--color-danger, #ff4444); border-color: var(--color-danger, #ff4444); }
+    &--full   { color: var(--color-danger); border-color: var(--color-danger); }
   }
 
   &__grid {
@@ -223,12 +223,12 @@ export default defineComponent({
     cursor: default;
 
     &--live {
-      border-color: rgba(0, 212, 255, 0.25);
-      background: rgba(0, 212, 255, 0.04);
+      border-color: color-mix(in srgb, var(--color-primary) 25%, transparent);
+      background: color-mix(in srgb, var(--color-primary) 4%, transparent);
     }
 
     &-label {
-      font-size: 0.65rem;
+      font-size: var(--fs-xxs);
       color: var(--color-text-muted);
       text-transform: uppercase;
       letter-spacing: 0.06em;
@@ -245,7 +245,7 @@ export default defineComponent({
     }
 
     &-unit {
-      font-size: 0.65rem;
+      font-size: var(--fs-xxs);
       font-weight: 400;
       color: var(--color-text-muted);
     }
@@ -257,18 +257,18 @@ export default defineComponent({
 
   &__drift-label {
     @include flex-between();
-    font-size: 0.75rem;
+    font-size: var(--fs-sm);
     color: var(--color-text-muted);
     margin-bottom: 0.35rem;
   }
 
   &__drift-value {
     font-family: var(--font-mono);
-    font-size: 0.8rem;
+    font-size: var(--fs-md);
     color: var(--color-text);
 
     &--warn   { color: var(--color-amber-warm); }
-    &--danger { color: var(--color-danger, #ff4444); }
+    &--danger { color: var(--color-danger); }
   }
 
   &__drift-track {
@@ -285,18 +285,18 @@ export default defineComponent({
     transition: width 0.3s ease;
 
     &--warn   { background: var(--color-amber-warm); }
-    &--danger { background: var(--color-danger, #ff4444); }
+    &--danger { background: var(--color-danger); }
   }
 
   &__phi-row {
     @include flex-between();
-    font-size: 0.7rem;
+    font-size: var(--fs-xs);
     color: var(--color-text-muted);
     padding-top: 0.25rem;
     border-top: 1px solid var(--color-border);
     cursor: default;
 
-    &--warn { border-top-color: rgba(251, 191, 36, 0.35); }
+    &--warn { border-top-color: color-mix(in srgb, var(--color-amber) 35%, transparent); }
   }
 
   &__phi-value {
@@ -311,7 +311,7 @@ export default defineComponent({
 
   &__relax-note {
     @include flex-between();
-    font-size: 0.65rem;
+    font-size: var(--fs-xxs);
     color: var(--color-text-muted);
     padding: 0.3rem 0.5rem;
     background: var(--color-surface-2);

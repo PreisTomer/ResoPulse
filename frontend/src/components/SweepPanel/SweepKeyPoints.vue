@@ -78,7 +78,7 @@ export default defineComponent({
 .sweep-kp {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.78rem;
+  font-size: var(--fs-md);
 
   th {
     text-align: left;
@@ -99,7 +99,7 @@ export default defineComponent({
 
   tr:last-child td { border-bottom: none; }
 
-  &__td-label  { color: var(--color-text-muted); font-family: inherit; font-size: 0.75rem; }
+  &__td-label  { color: var(--color-text-muted); font-family: inherit; font-size: var(--fs-sm); }
   &__td--ok    { color: rgb(34, 197, 94); }
   &__td--warn  { color: var(--color-amber); }
   &__td--danger { color: var(--color-danger); }

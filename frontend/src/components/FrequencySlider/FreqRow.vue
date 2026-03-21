@@ -19,43 +19,52 @@
 
   <!-- RF Frequency row -->
   <div class="field-panel__row field-panel__row--interactive">
-    <span class="field-panel__row-label" v-tip="tipFreqLabel">{{ $t('slider.rfFrequency') }}</span>
+    <div class="field-panel__row-header">
+      <span class="field-panel__row-label" v-tip="tipFreqLabel">{{ $t('slider.rfFrequency') }}</span>
+      <div class="field-panel__readout">
+        <div v-if="editingFreq" class="field-panel__readout-edit">
+          <input
+            ref="freqInputEl"
+            class="field-panel__readout-input"
+            type="number"
+            :step="freqInputStep"
+            v-model.number="freqInputVal"
+            @keydown="onFreqEditKey"
+            @blur="commitFreqEdit"
+          />
+          <span class="field-panel__readout-input-unit">{{ freqInputUnit }}</span>
+        </div>
+        <span
+          v-else
+          class="field-panel__readout-value field-panel__readout-value--editable"
+          v-tip="tipFreqLabel"
+          @mousedown.prevent="startScrubFreq"
+        >{{ freqDisplay }}</span>
+        <span class="field-panel__readout-sub" v-tip="tipFcSubLabel">{{ freqSubDisplay }}</span>
+        <div v-if="!editingFreq" class="field-panel__readout-steps">
+          <button class="field-panel__readout-step" type="button" @click="stepFreq(-1)">−</button>
+          <span class="field-panel__readout-steps-unit">{{ freqInputUnit }}</span>
+          <button class="field-panel__readout-step" type="button" @click="stepFreq(1)">+</button>
+        </div>
+      </div>
+    </div>
     <div class="field-panel__track">
       <input
         class="field-panel__slider"
         type="range"
-        :min="sliderRanges.freqMin"
-        :max="sliderRanges.freqMax"
-        :step="sliderRanges.freqStep"
-        :value="currentFreq"
+        :min="freqLogMin"
+        :max="freqLogMax"
+        step="0.005"
+        :value="freqLogVal"
         @input="onFreqInput"
       />
-    </div>
-    <div class="field-panel__readout">
-      <div v-if="editingFreq" class="field-panel__readout-edit">
-        <input
-          ref="freqInputEl"
-          class="field-panel__readout-input"
-          type="number"
-          :step="freqInputStep"
-          v-model.number="freqInputVal"
-          @keydown="onFreqEditKey"
-          @blur="commitFreqEdit"
-        />
-        <span class="field-panel__readout-input-unit">{{ freqInputUnit }}</span>
-      </div>
-      <span
-        v-else
-        class="field-panel__readout-value field-panel__readout-value--editable"
-        v-tip="tipFreqLabel"
-        @click="startEditFreq"
-      >{{ freqDisplay }}</span>
-      <span class="field-panel__readout-sub" v-tip="tipFcSubLabel">{{ freqSubDisplay }}</span>
-      <div v-if="!editingFreq" class="field-panel__readout-steps">
-        <button class="field-panel__readout-step" type="button" @click="stepFreq(-1)">−</button>
-        <span class="field-panel__readout-steps-unit">{{ freqInputUnit }}</span>
-        <button class="field-panel__readout-step" type="button" @click="stepFreq(1)">+</button>
-      </div>
+      <div
+        v-for="mark in freqMarkers"
+        :key="mark.id"
+        class="field-panel__track-mark"
+        :class="`field-panel__track-mark--${mark.color}`"
+        :style="{ left: mark.pct + '%' }"
+      />
     </div>
   </div>
 
@@ -81,6 +90,11 @@ import type { SliderRange } from '@/constants/sliderBounds'
 import { formatFreqKHz } from '@/utils/format'
 import { tipFreq, tipFcSub, tipOptimalBtn } from '@/tooltips/sliderTooltips'
 
+// 150 px horizontal drag = one decade of frequency change
+const SCRUB_PX_PER_DECADE = 150
+// Minimum drag before scrub activates (prevents accidental clicks from scrubbing)
+const SCRUB_DEADZONE_PX   = 3
+
 export default defineComponent({
   props: {
     sliderRanges: { type: Object as PropType<SliderRange>, required: true },
@@ -92,17 +106,26 @@ export default defineComponent({
 
   data() {
     return {
-      editingFreq:  false,
-      freqInputVal: 0,
+      editingFreq:   false,
+      freqInputVal:  0,
+      scrubbing:     false,
+      scrubStartX:   0,
+      scrubStartVal: 0,
+      scrubMoved:    false,
     }
   },
 
   computed: {
-    currentFreq(): number       { return this.store.currentBroadcastFrequency },
-    isResonanceMode(): boolean  { return this.store.chartMode === CHART_MODE.RESONANCE },
-    targetFcDisplay(): string   { return formatFreqKHz(this.store.targetFc) },
-    healthyFcDisplay(): string  { return formatFreqKHz(this.store.healthyFc) },
-    freqDisplay(): string       { return formatFreqKHz(this.currentFreq) },
+    currentFreq(): number      { return this.store.currentBroadcastFrequency },
+    isResonanceMode(): boolean { return this.store.chartMode === CHART_MODE.RESONANCE },
+    targetFcDisplay(): string  { return formatFreqKHz(this.store.targetFc) },
+    healthyFcDisplay(): string { return formatFreqKHz(this.store.healthyFc) },
+    freqDisplay(): string      { return formatFreqKHz(this.currentFreq) },
+
+    // ── Log-scale slider bounds ───────────────────────────────────────────────
+    freqLogMin(): number { return Math.log10(Math.max(1, this.sliderRanges.freqMin)) },
+    freqLogMax(): number { return Math.log10(this.sliderRanges.freqMax) },
+    freqLogVal(): number { return Math.log10(Math.max(this.sliderRanges.freqMin || 1, this.currentFreq)) },
 
     freqSubDisplay(): string {
       if (this.isResonanceMode) {
@@ -140,6 +163,32 @@ export default defineComponent({
       return 1
     },
 
+    /** Track markers at fc(T), fc(H), and optimal — positioned on the log scale. */
+    freqMarkers(): Array<{ id: string; pct: number; color: string }> {
+      const logMin = this.freqLogMin
+      const logMax = this.freqLogMax
+      const span   = logMax - logMin
+
+      const logPct = (khz: number): number => {
+        if (khz <= 0) return -1
+        return (Math.log10(khz) - logMin) / span * 100
+      }
+
+      if (this.isResonanceMode) {
+        const t = this.store.target as { resonantFreqGHz?: number }
+        if (!t.resonantFreqGHz) return []
+        const pct = logPct(t.resonantFreqGHz * 1_000_000)
+        if (pct < 1 || pct > 99) return []
+        return [{ id: 'fres', pct, color: 'purple' }]
+      }
+
+      return [
+        { id: 'fc-t', pct: logPct(this.store.targetFc),        color: 'danger'  },
+        { id: 'fc-h', pct: logPct(this.store.healthyFc),       color: 'primary' },
+        { id: 'opt',  pct: logPct(this.optimalFreqResult.khz), color: 'optimal' },
+      ].filter(m => m.pct >= 1 && m.pct <= 99)
+    },
+
     tipFreqLabel(): string       { return tipFreq(this.freqDisplay, this.targetFcDisplay, this.healthyFcDisplay) },
     tipFcSubLabel(): string      { return tipFcSub() },
     tipOptimalBtnLabel(): string { return tipOptimalBtn(this.optimalBeyondRange) },
@@ -166,14 +215,23 @@ export default defineComponent({
     },
   },
 
+  beforeUnmount() {
+    this.stopScrubFreq()
+  },
+
   methods: {
+    // ── Log-scale slider input ────────────────────────────────────────────────
     onFreqInput(e: Event) {
-      this.store.setBroadcastFreqKHz(Number((e.target as HTMLInputElement).value))
+      const logVal = Number((e.target as HTMLInputElement).value)
+      const khz    = Math.round(Math.pow(10, logVal))
+      this.store.setBroadcastFreqKHz(
+        Math.max(this.sliderRanges.freqMin, Math.min(this.sliderRanges.freqMax, khz))
+      )
       broadcastStateSync()
     },
 
     snapToFc(cellType: 'healthy' | 'target') {
-      const fcKhz = cellType === 'healthy' ? this.store.healthyFc : this.store.targetFc
+      const fcKhz   = cellType === 'healthy' ? this.store.healthyFc : this.store.targetFc
       const snapped = Math.round(Math.max(this.sliderRanges.freqMin, Math.min(this.sliderRanges.freqMax, fcKhz)))
       this.store.setBroadcastFreqKHz(snapped)
       broadcastStateSync()
@@ -186,6 +244,7 @@ export default defineComponent({
       broadcastStateSync()
     },
 
+    // ── Inline type-in edit ───────────────────────────────────────────────────
     startEditFreq() {
       const f = this.currentFreq
       if (f >= 1_000_000)      this.freqInputVal = parseFloat((f / 1_000_000).toFixed(3))
@@ -222,6 +281,39 @@ export default defineComponent({
       this.store.setBroadcastFreqKHz(next)
       broadcastStateSync()
     },
+
+    // ── Scrub drag on readout value ───────────────────────────────────────────
+    // Drag right → increase freq (log scale), drag left → decrease.
+    // A single click (no movement past deadzone) opens the type-in editor.
+    startScrubFreq(e: MouseEvent) {
+      if (this.editingFreq) return
+      this.scrubbing     = true
+      this.scrubMoved    = false
+      this.scrubStartX   = e.clientX
+      this.scrubStartVal = this.currentFreq
+      document.addEventListener('mousemove', this.onScrubFreqMove)
+      document.addEventListener('mouseup',   this.stopScrubFreq)
+    },
+
+    onScrubFreqMove(e: MouseEvent) {
+      if (!this.scrubbing) return
+      const dx = e.clientX - this.scrubStartX
+      if (!this.scrubMoved && Math.abs(dx) < SCRUB_DEADZONE_PX) return
+      this.scrubMoved  = true
+      const newFreq    = Math.round(this.scrubStartVal * Math.pow(10, dx / SCRUB_PX_PER_DECADE))
+      const clamped    = Math.max(this.sliderRanges.freqMin, Math.min(this.sliderRanges.freqMax, newFreq))
+      this.store.setBroadcastFreqKHz(clamped)
+      broadcastStateSync()
+    },
+
+    stopScrubFreq() {
+      if (!this.scrubbing) return
+      document.removeEventListener('mousemove', this.onScrubFreqMove)
+      document.removeEventListener('mouseup',   this.stopScrubFreq)
+      // No drag → treat as a click and open the type-in editor
+      if (!this.scrubMoved) this.startEditFreq()
+      this.scrubbing = false
+    },
   },
 })
 </script>
@@ -245,26 +337,26 @@ export default defineComponent({
     align-items: center;
     gap: 0.2rem;
     padding: 0.18rem 0.55rem;
-    font-size: 0.65rem;
+    font-size: var(--fs-xxs);
     font-family: var(--font-mono);
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    color: #a78bfa;
-    background: rgba(167, 139, 250, 0.1);
-    border: 1px solid rgba(167, 139, 250, 0.35);
+    color: var(--color-purple);
+    background: var(--color-purple-dim);
+    border: 1px solid var(--color-purple-border);
     border-radius: 4px;
     white-space: nowrap;
     cursor: pointer;
-    transition: background 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s;
+    transition: background var(--tr-fast), border-color var(--tr-fast), color var(--tr-fast), box-shadow var(--tr-fast);
 
     &:hover {
-      background: rgba(167, 139, 250, 0.18);
-      border-color: rgba(167, 139, 250, 0.6);
-      color: #c4b5fd;
-      box-shadow: 0 0 8px rgba(167, 139, 250, 0.25);
+      background: color-mix(in srgb, var(--color-purple) 18%, transparent);
+      border-color: color-mix(in srgb, var(--color-purple) 60%, transparent);
+      color: var(--color-purple-light);
+      box-shadow: 0 0 8px color-mix(in srgb, var(--color-purple) 25%, transparent);
     }
 
-    &:active { background: rgba(167, 139, 250, 0.25); }
+    &:active { background: color-mix(in srgb, var(--color-purple) 25%, transparent); }
 
     &--beyond {
       color: var(--color-text-muted);
@@ -273,28 +365,51 @@ export default defineComponent({
       &:hover { background: rgba(148, 163, 184, 0.12); border-color: rgba(148, 163, 184, 0.35); box-shadow: none; color: var(--color-text-muted); }
     }
 
-    &--fc   { font-size: 0.62rem; padding: 0.15rem 0.45rem; }
+    &--fc   { font-size: var(--fs-xxs); padding: 0.15rem 0.45rem; }
 
     &--fc-h {
       color: var(--color-primary);
-      background: rgba(0, 212, 255, 0.06);
-      border-color: rgba(0, 212, 255, 0.25);
-      &:hover { background: rgba(0, 212, 255, 0.14); border-color: rgba(0, 212, 255, 0.5); color: var(--color-primary); box-shadow: 0 0 6px rgba(0, 212, 255, 0.2); }
+      background: color-mix(in srgb, var(--color-primary) 6%, transparent);
+      border-color: color-mix(in srgb, var(--color-primary) 25%, transparent);
+      &:hover { background: color-mix(in srgb, var(--color-primary) 14%, transparent); border-color: color-mix(in srgb, var(--color-primary) 50%, transparent); color: var(--color-primary); box-shadow: 0 0 6px color-mix(in srgb, var(--color-primary) 20%, transparent); }
     }
 
     &--fc-t {
       color: var(--color-danger);
-      background: rgba(239, 68, 68, 0.06);
-      border-color: rgba(239, 68, 68, 0.25);
-      &:hover { background: rgba(239, 68, 68, 0.14); border-color: rgba(239, 68, 68, 0.5); color: var(--color-danger); box-shadow: 0 0 6px rgba(239, 68, 68, 0.2); }
+      background: color-mix(in srgb, var(--color-danger) 6%, transparent);
+      border-color: color-mix(in srgb, var(--color-danger) 25%, transparent);
+      &:hover { background: color-mix(in srgb, var(--color-danger) 14%, transparent); border-color: color-mix(in srgb, var(--color-danger) 50%, transparent); color: var(--color-danger); box-shadow: 0 0 6px color-mix(in srgb, var(--color-danger) 20%, transparent); }
     }
   }
 
-  &__row { @include field-row-grid(7.5rem, 8.5rem); }
+  &__row {
+    @include field-row-grid();
+    padding-bottom: 0.45rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  &__row-header { @include field-row-header(); }
 
   &__row-label { @include row-label(); }
 
   &__track { position: relative; display: flex; align-items: center; }
+
+  // ── Significant-value markers on the slider track ────────────────────────
+  &__track-mark {
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 2px;
+    height: 10px;
+    border-radius: 1px;
+    pointer-events: none;
+    z-index: 1;
+
+    &--danger  { background: var(--color-danger);  opacity: 0.55; }
+    &--primary { background: var(--color-primary); opacity: 0.55; }
+    &--optimal { background: var(--color-purple);  opacity: 0.60; }
+    &--purple  { background: var(--color-purple);  opacity: 0.60; }
+  }
 
   &__slider {
     @include slider-track();
@@ -306,8 +421,7 @@ export default defineComponent({
     flex-direction: column;
     align-items: flex-end;
     gap: 0.25rem;
-    width: 8.5rem;
-    overflow: hidden;
+    flex-shrink: 0;
 
     &-value {
       font-size: 1rem;
@@ -319,15 +433,16 @@ export default defineComponent({
       white-space: nowrap;
 
       &--editable {
-        cursor: text;
+        cursor: ew-resize;
+        user-select: none;
         border-bottom: 1px dashed transparent;
-        transition: border-color 0.15s;
-        &:hover { border-bottom-color: rgba(0, 212, 255, 0.4); }
+        transition: border-color var(--tr-fast);
+        &:hover { border-bottom-color: color-mix(in srgb, var(--color-primary) 40%, transparent); }
       }
     }
 
     &-sub {
-      font-size: 0.64rem;
+      font-size: var(--fs-xxs);
       font-family: var(--font-mono);
       color: var(--color-text-muted);
       white-space: nowrap;
@@ -345,7 +460,7 @@ export default defineComponent({
     &-input { @include readout-inline-input(); }
 
     &-input-unit {
-      font-size: 0.6rem;
+      font-size: var(--fs-xxs);
       font-family: var(--font-mono);
       color: var(--color-primary);
       white-space: nowrap;
@@ -360,7 +475,7 @@ export default defineComponent({
     }
 
     &-steps-unit {
-      font-size: 0.48rem;
+      font-size: var(--fs-xxs);
       font-family: var(--font-mono);
       color: var(--color-text-muted);
       opacity: 0.55;
@@ -374,7 +489,7 @@ export default defineComponent({
     align-items: center;
     align-self: flex-start;
     gap: 0.3rem;
-    font-size: 0.58rem;
+    font-size: var(--fs-xs);
     font-family: var(--font-mono);
     text-transform: uppercase;
     letter-spacing: 0.06em;
@@ -385,11 +500,11 @@ export default defineComponent({
     white-space: nowrap;
     margin-top: -0.4rem;
     margin-bottom: -0.25rem;
-    transition: color 0.2s, border-color 0.2s, background 0.2s;
+    transition: color var(--tr-normal), border-color var(--tr-normal), background var(--tr-normal);
 
-    &--electrolytic { color: var(--color-primary);           border-color: rgba(0, 212, 255, 0.3);   background: rgba(0, 212, 255, 0.05); }
-    &--nearfield_rf  { color: var(--color-amber-warm);        border-color: rgba(251, 191, 36, 0.35); background: rgba(251, 191, 36, 0.06); }
-    &--microwave     { color: var(--color-danger, #ff4d6d);   border-color: rgba(255, 77, 109, 0.35); background: rgba(255, 77, 109, 0.06); }
+    &--electrolytic { color: var(--color-primary);    border-color: color-mix(in srgb, var(--color-primary) 30%, transparent); background: color-mix(in srgb, var(--color-primary) 5%, transparent); }
+    &--nearfield_rf { color: var(--color-amber-warm); border-color: color-mix(in srgb, var(--color-amber) 35%, transparent); background: color-mix(in srgb, var(--color-amber) 6%, transparent); }
+    &--microwave    { color: var(--color-danger);      border-color: color-mix(in srgb, var(--color-danger) 35%, transparent); background: color-mix(in srgb, var(--color-danger) 6%, transparent); }
   }
 
   &__regime-dot {
@@ -400,6 +515,6 @@ export default defineComponent({
 
   &__regime--electrolytic &__regime-dot { background: var(--color-primary); }
   &__regime--nearfield_rf &__regime-dot { background: var(--color-amber-warm); }
-  &__regime--microwave    &__regime-dot { background: var(--color-danger, #ff4d6d); }
+  &__regime--microwave    &__regime-dot { background: var(--color-danger); }
 }
 </style>

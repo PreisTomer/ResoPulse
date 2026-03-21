@@ -51,7 +51,7 @@ export default defineComponent({
   align-items: flex-start;
   transition: border-color 0.15s;
 
-  &:hover { border-color: rgba(0, 212, 255, 0.25); }
+  &:hover { border-color: color-mix(in srgb, var(--color-primary) 25%, transparent); }
 }
 
 .protocol__step-num {
@@ -71,13 +71,13 @@ export default defineComponent({
 }
 
 .protocol__step-title {
-  font-size: 0.88rem;
+  font-size: var(--fs-lg);
   font-weight: 600;
   color: var(--color-text-heading);
 }
 
 .protocol__step-desc {
-  font-size: 0.83rem;
+  font-size: var(--fs-md);
   line-height: 1.6;
   color: var(--color-text);
   margin: 0;

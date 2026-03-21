@@ -137,7 +137,7 @@ export default defineComponent({
     }
 
     &-pulse {
-      color: #0a2e58;
+      color: var(--color-primary-deep);
       -webkit-text-stroke: 0.8px var(--color-primary);
       paint-order: stroke fill;
       animation: brand-pulse 2.5s ease-in-out infinite;
@@ -155,7 +155,7 @@ export default defineComponent({
   &__link {
     padding: 0.35rem 0.85rem;
     border-radius: var(--radius);
-    font-size: 0.875rem;
+    font-size: var(--fs-lg);
     color: var(--color-text-muted);
     transition: color 0.15s, background-color 0.15s;
     text-decoration: none;
@@ -253,7 +253,7 @@ export default defineComponent({
 }
 
 @keyframes nav-pulse   { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-@keyframes brand-pulse { 0%, 100% { text-shadow: 0 0 8px var(--color-primary-dim); } 50% { text-shadow: 0 0 18px rgba(0, 212, 255, 0.5); } }
+@keyframes brand-pulse { 0%, 100% { text-shadow: 0 0 8px var(--color-primary-dim); } 50% { text-shadow: 0 0 18px color-mix(in srgb, var(--color-primary) 50%, transparent); } }
 
 /* ── Mobile / tablet (hamburger at ≤ 960px) ─────────────────────────────── */
 @media (max-width: 960px) {

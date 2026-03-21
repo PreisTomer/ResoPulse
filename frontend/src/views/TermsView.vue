@@ -87,7 +87,7 @@ export default defineComponent({
 
   &__eyebrow {
     font-family: var(--font-mono);
-    font-size: 0.65rem;
+    font-size: var(--fs-xxs);
     letter-spacing: 0.18em;
     text-transform: uppercase;
     color: var(--color-primary);
@@ -103,14 +103,14 @@ export default defineComponent({
 
   &__meta {
     font-family: var(--font-mono);
-    font-size: 0.65rem;
+    font-size: var(--fs-xxs);
     color: var(--color-text-muted);
     margin: 0 0 1.75rem;
     letter-spacing: 0.04em;
   }
 
   &__intro {
-    font-size: 0.88rem;
+    font-size: var(--fs-lg);
     line-height: 1.7;
     color: var(--color-text);
     border-left: 2px solid var(--color-primary);
@@ -145,7 +145,7 @@ export default defineComponent({
 
     dt {
       font-family: var(--font-mono);
-      font-size: 0.72rem;
+      font-size: var(--fs-sm);
       font-weight: 700;
       color: var(--color-primary);
       letter-spacing: 0.04em;
@@ -154,7 +154,7 @@ export default defineComponent({
     }
 
     dd {
-      font-size: 0.83rem;
+      font-size: var(--fs-md);
       line-height: 1.65;
       color: var(--color-text);
       margin: 0;
@@ -162,7 +162,7 @@ export default defineComponent({
   }
 
   &__p {
-    font-size: 0.83rem;
+    font-size: var(--fs-md);
     line-height: 1.65;
     color: var(--color-text);
     margin: 0 0 0.75rem;
@@ -176,7 +176,7 @@ export default defineComponent({
     gap: 0.45rem;
 
     li {
-      font-size: 0.83rem;
+      font-size: var(--fs-md);
       line-height: 1.6;
       color: var(--color-text);
     }
@@ -200,7 +200,7 @@ export default defineComponent({
 
   &__back {
     font-family: var(--font-mono);
-    font-size: 0.7rem;
+    font-size: var(--fs-xs);
     color: var(--color-primary);
     text-decoration: none;
     letter-spacing: 0.04em;
@@ -210,7 +210,7 @@ export default defineComponent({
 
   &__copy {
     font-family: var(--font-mono);
-    font-size: 0.62rem;
+    font-size: var(--fs-xxs);
     color: var(--color-text-muted);
     opacity: 0.65;
     letter-spacing: 0.06em;
