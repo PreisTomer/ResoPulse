@@ -9,30 +9,39 @@
       <!-- ── Zone 1: Hero — full viewport, staggered CSS entrance ── -->
       <div class="home__zone home__zone--hero">
 
-        <div class="home__hero-logo">
-          <div class="home__logo-wrap" aria-hidden="true">
-            <div class="home__ring home__ring--1"></div>
-            <div class="home__ring home__ring--2"></div>
-            <div class="home__ring home__ring--3"></div>
-            <div class="home__ring home__ring--4"></div>
-            <div class="home__logo-circle">
-              <img src="/logo.png" alt="ResoPulse" />
-            </div>
-          </div>
+        <!-- Pulse rings — logo motif echoed at page scale + ambient E-field lines -->
+        <div class="home__hero-bg" aria-hidden="true">
+          <svg class="home__hero-bg-svg" viewBox="0 0 900 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Concentric rings: same visual language as the logo rings, amplified -->
+            <circle class="home__hero-bg-ring" cx="450" cy="450" r="148" stroke="rgba(0,212,255,1)"    stroke-width="1.2" fill="none"/>
+            <circle class="home__hero-bg-ring" cx="450" cy="450" r="240" stroke="rgba(0,212,255,0.85)" stroke-width="1"   fill="none"/>
+            <circle class="home__hero-bg-ring" cx="450" cy="450" r="338" stroke="rgba(0,212,255,0.65)" stroke-width="0.9" fill="none"/>
+            <circle class="home__hero-bg-ring" cx="450" cy="450" r="440" stroke="rgba(0,212,255,0.45)" stroke-width="0.8" fill="none"/>
+            <circle class="home__hero-bg-ring" cx="450" cy="450" r="542" stroke="rgba(0,212,255,0.25)" stroke-width="0.7" fill="none"/>
+            <!-- E-field lines — ambient electromagnetic field crossing the hero -->
+            <line x1="0" y1="380" x2="900" y2="380" stroke="rgba(0,212,255,0.5)" stroke-width="0.8"/>
+            <line x1="0" y1="450" x2="900" y2="450" stroke="rgba(0,212,255,0.7)" stroke-width="0.8"/>
+            <line x1="0" y1="520" x2="900" y2="520" stroke="rgba(0,212,255,0.5)" stroke-width="0.8"/>
+          </svg>
         </div>
 
         <div class="home__hero-brand">
-          <div class="home__eyebrow">
-            <span class="home__eyebrow-dot"></span>
-            {{ $t('home.eyebrow') }}
+          <div class="home__title-lockup">
+            <div class="home__logo-inline" aria-hidden="true">
+              <img src="/logo.png" alt="" />
+            </div>
+            <h1 class="home__title">
+              Reso<span class="home__title-accent">Pulse</span>
+            </h1>
           </div>
-          <h1 class="home__title">
-            Reso<span class="home__title-accent">Pulse</span>
-          </h1>
           <div class="home__subtitle">{{ $t('home.subtitle') }}</div>
         </div>
 
         <div class="home__hero-pitch">
+          <div class="home__eyebrow">
+            <span class="home__eyebrow-dot"></span>
+            {{ $t('home.eyebrow') }}
+          </div>
           <p class="home__tagline">{{ $t('home.taglineMain') }}</p>
         </div>
 
@@ -56,6 +65,10 @@
         <div class="home__science-strip">
 
           <RouterLink to="/experiment" class="home__sci-panel" v-tip="$t('home.tipSciCell')">
+            <div class="home__sci-meta">
+              <span class="home__sci-meta-id">{{ $t('home.sciCellMetaId') }}</span>
+              <span class="home__sci-meta-status">{{ $t('home.sciCellMetaStatus') }}</span>
+            </div>
             <p class="home__sci-label">{{ $t('home.sciCellLabel') }}</p>
             <div class="home__sci-svg-box">
             <svg class="home__cell-svg" viewBox="0 0 190 242" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -140,6 +153,10 @@
           <div class="home__sci-divider" aria-hidden="true"></div>
 
           <RouterLink to="/experiment" class="home__sci-panel" v-tip="$t('home.tipSciChart')">
+            <div class="home__sci-meta">
+              <span class="home__sci-meta-id">{{ $t('home.sciChartMetaId') }}</span>
+              <span class="home__sci-meta-status">{{ $t('home.sciChartMetaStatus') }}</span>
+            </div>
             <p class="home__sci-label">{{ $t('home.sciChartLabel') }}</p>
             <div class="home__sci-svg-box">
             <svg class="home__bode-svg" viewBox="0 0 210 188" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -343,16 +360,18 @@ export default defineComponent({
     width: 100%;
 
     &--hero {
+      position: relative;
+      overflow: hidden;
       min-height: calc(100vh - 60px);
       justify-content: center;
       gap: 3.2rem;
-      padding: 4rem 2rem;
+      padding: 4rem 2rem 0;
     }
 
     &--science {
       display: none;
       gap: 1.5rem;
-      padding: 1.5rem 2rem;
+      padding: 0 2rem 1rem;
       @media (min-width: 768px) { display: flex; }
     }
 
@@ -378,8 +397,39 @@ export default defineComponent({
     }
   }
 
+  /* ── Hero background cell illustration ──────────────────────── */
+  &__hero-bg {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    z-index: 0;
+
+    @media (max-width: 520px) { display: none; }
+  }
+
+  &__hero-bg-svg {
+    width: 760px;
+    height: auto;
+    opacity: 0.26;
+    mix-blend-mode: screen;
+  }
+
+  &__hero-bg-ring {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: bg-ring-pulse 3.5s ease-in-out infinite;
+
+    &:nth-of-type(1) { animation-delay: 0s; }
+    &:nth-of-type(2) { animation-delay: 0.7s; }
+    &:nth-of-type(3) { animation-delay: 1.4s; }
+    &:nth-of-type(4) { animation-delay: 2.1s; }
+    &:nth-of-type(5) { animation-delay: 2.8s; }
+  }
+
   /* ── Hero sub-groups (staggered CSS entrance) ────────────────── */
-  &__hero-logo,
   &__hero-brand,
   &__hero-pitch,
   &__hero-cta {
@@ -387,46 +437,33 @@ export default defineComponent({
     flex-direction: column;
     align-items: center;
     animation: hero-enter 0.7s ease both;
+    position: relative;
+    z-index: 1;
   }
 
-  &__hero-logo  { animation-delay: 0.05s; }
-  &__hero-brand { gap: 0.65rem; animation-delay: 0.25s; }
-  &__hero-pitch { animation-delay: 0.45s; }
-  &__hero-cta   { width: 100%; animation-delay: 0.65s; }
+  &__hero-brand { gap: 0.75rem; animation-delay: 0.1s; }
+  &__hero-pitch { gap: 1.4rem; margin-top: -1rem; animation-delay: 0.3s; }
+  &__hero-cta   { width: 100%; animation-delay: 0.5s; }
 
-  /* ── Logo ────────────────────────────────────────────────────── */
-  &__logo-wrap {
-    position: relative;
-    width: 180px;
-    height: 180px;
+  /* ── Logo inline lockup ──────────────────────────────────────── */
+  &__title-lockup {
     display: flex;
     align-items: center;
     justify-content: center;
-    flex-shrink: 0;
+    gap: 1rem;
   }
 
-  &__ring {
-    position: absolute;
-    border-radius: 50%;
-    border: 1px solid var(--color-primary);
-    animation: ring-expand 5s ease-out infinite;
-
-    &--1 { width: 90px;  height: 90px;  animation-delay: 0s;    opacity: 0.8; }
-    &--2 { width: 130px; height: 130px; animation-delay: 1.25s; opacity: 0.5; }
-    &--3 { width: 160px; height: 160px; animation-delay: 2.5s;  opacity: 0.3; }
-    &--4 { width: 185px; height: 185px; animation-delay: 3.75s; opacity: 0.15; }
-  }
-
-  &__logo-circle {
-    width: 90px;
-    height: 90px;
+  &__logo-inline {
+    width: 72px;
+    height: 72px;
     border-radius: 50%;
     overflow: hidden;
-    position: relative;
-    z-index: 1;
-    box-shadow: 0 0 36px rgba(0, 212, 255, 0.5), 0 0 72px rgba(0, 212, 255, 0.2);
+    flex-shrink: 0;
+    align-self: center;
+    transform: translateY(3px);
     border: 1.5px solid var(--color-primary);
     background-color: var(--color-bg);
+    box-shadow: 0 0 24px rgba(0, 212, 255, 0.5), 0 0 52px rgba(0, 212, 255, 0.2);
 
     img {
       width: 100%; height: 100%;
@@ -471,7 +508,8 @@ export default defineComponent({
   /* ── Subtitle ────────────────────────────────────────────────── */
   &__subtitle {
     @include flex-row(0.55rem);
-    @include mono-upper(0.68rem, 0.15em);
+    @include mono-upper(0.82rem, 0.14em);
+    text-transform: none;
     justify-content: center;
     color: var(--color-text-muted);
 
@@ -560,22 +598,20 @@ export default defineComponent({
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.55rem;
-    width: 186px;
+    gap: 0.5rem;
+    width: 230px;
     text-decoration: none;
-    border-radius: 12px;
-    border: 1px solid rgba(0, 212, 255, 0.1);
-    background: rgba(0, 212, 255, 0.025);
-    padding: 1rem 0.75rem 0.85rem;
-    transition: transform 0.3s ease, filter 0.3s ease, border-color 0.3s ease, background 0.3s ease;
+    padding: 0.6rem 0.75rem 0.7rem;
+    border-top:    1px solid rgba(0, 212, 255, 0.45);
+    border-bottom: 1px solid rgba(0, 212, 255, 0.18);
+    transition: transform 0.3s ease, filter 0.3s ease, border-color 0.3s ease;
     cursor: pointer;
 
     @media (min-width: 768px) {
       &:hover {
         transform: scale(1.03);
-        border-color: rgba(0, 212, 255, 0.32);
-        background: rgba(0, 212, 255, 0.055);
-        filter: drop-shadow(0 0 18px rgba(0, 212, 255, 0.22));
+        border-top-color: rgba(0, 212, 255, 0.8);
+        filter: drop-shadow(0 0 28px rgba(0, 212, 255, 0.4));
       }
 
       &:hover .home__sci-cta {
@@ -584,9 +620,31 @@ export default defineComponent({
     }
   }
 
+  &__sci-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+
+    &-id,
+    &-status {
+      font-family: monospace;
+      font-size: 0.5rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(0, 212, 255, 0.45);
+    }
+
+    &-status::before {
+      content: '● ';
+      font-size: 0.42rem;
+      animation: blink 2.5s ease-in-out infinite;
+    }
+  }
+
   &__sci-svg-box {
-    width: 154px;
-    height: 154px;
+    width: 200px;
+    height: 200px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -635,16 +693,12 @@ export default defineComponent({
     flex-shrink: 0;
   }
 
-  &__cell-svg {
-    width: 100%;
-    height: 100%;
-    overflow: visible;
-  }
-
+  &__cell-svg,
   &__bode-svg {
     width: 100%;
     height: 100%;
     overflow: visible;
+    mix-blend-mode: screen;
   }
 
   /* E-field drift */
@@ -857,22 +911,12 @@ export default defineComponent({
     &__zone--features { padding: 3rem 1.5rem; }
     &__zone--bottom   { padding: 1rem 1.5rem 2.5rem; }
 
-    &__logo-wrap {
-      width: 140px;
-      height: 140px;
+    &__logo-inline {
+      width: 56px;
+      height: 56px;
     }
 
-    &__ring {
-      &--1 { width: 68px;  height: 68px; }
-      &--2 { width: 98px;  height: 98px; }
-      &--3 { width: 122px; height: 122px; }
-      &--4 { width: 140px; height: 140px; }
-    }
-
-    &__logo-circle {
-      width: 68px;
-      height: 68px;
-    }
+    &__title-lockup { gap: 0.75rem; }
 
     &__tagline {
       font-size: 0.9rem;
@@ -913,22 +957,12 @@ export default defineComponent({
     &__zone--features { padding: 2.5rem 1rem; }
     &__zone--bottom   { padding: 0.75rem 1rem 2rem; }
 
-    &__logo-wrap {
-      width: 120px;
-      height: 120px;
+    &__logo-inline {
+      width: 44px;
+      height: 44px;
     }
 
-    &__ring {
-      &--1 { width: 58px;  height: 58px; }
-      &--2 { width: 84px;  height: 84px; }
-      &--3 { width: 104px; height: 104px; }
-      &--4 { width: 122px; height: 122px; }
-    }
-
-    &__logo-circle {
-      width: 58px;
-      height: 58px;
-    }
+    &__title-lockup { gap: 0.6rem; }
 
     &__eyebrow {
       font-size: 0.65rem;
@@ -1010,9 +1044,9 @@ export default defineComponent({
   to   { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes ring-expand {
-  0%   { transform: scale(0.8); opacity: 0.8; }
-  100% { transform: scale(1.1); opacity: 0; }
+@keyframes bg-ring-pulse {
+  0%, 100% { opacity: 0.15; }
+  50%       { opacity: 1; }
 }
 
 @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
