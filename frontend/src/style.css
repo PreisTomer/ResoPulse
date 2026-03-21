@@ -40,6 +40,14 @@
   /* ── Layout ──────────────────────────────────────────────────────────── */
   --radius: 8px;
   --radius-lg: 12px;
+
+  /* ── Neon glow system — consistent bloom across all active data elements ── */
+  /* Use these instead of raw rgba values so every glow shares the same radius/intensity curve */
+  --glow-sm:     0 0  8px rgba(0, 212, 255, 0.30);   /* tight: indicators, small icons        */
+  --glow-md:     0 0 20px rgba(0, 212, 255, 0.35);   /* buttons, active interactive elements  */
+  --glow-lg:     0 0 36px rgba(0, 212, 255, 0.55);   /* hover states, hero-scale accents      */
+  --glow-subtle: 0 0 18px rgba(0, 212, 255, 0.08);   /* card hover bloom — barely there       */
+  --glow-logo:   0 0 16px rgba(0, 212, 255, 0.55), 0 0 40px rgba(0, 212, 255, 0.22); /* logo ring */
 }
 
 /* ── OLED Black theme ───────────────────────────────────────────────────── */
