@@ -90,6 +90,7 @@ export const useUserPresetsStore = defineStore('userPresets', {
         id:                   preset.id,
         type:                 type === CELL_TYPE.HEALTHY ? CELL_TYPE.HEALTHY : CELL_TYPE.TARGET,
         label:                preset.label,
+        description:          preset.notes || undefined,
         radius:               preset.radius,
         membraneThickness:    preset.membraneThickness,
         naturalFrequency:     0,              // animation only; not a physics parameter

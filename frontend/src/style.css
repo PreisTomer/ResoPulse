@@ -8,6 +8,8 @@
   /* ── Primary / accent / danger ───────────────────────────────────────── */
   --color-primary: #00d4ff;
   --color-primary-dim: rgba(0, 212, 255, 0.15);
+  --color-primary-surface: rgba(0, 212, 255, 0.06);   /* subtle tint: active pill bg, hover overlays */
+  --color-primary-border: rgba(0, 212, 255, 0.35);    /* primary-tinted borders, scrollbar thumb      */
   --color-accent: #00ff9d;
   --color-accent-dim: rgba(0, 255, 157, 0.12);
   --color-danger: #ff4d6d;

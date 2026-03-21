@@ -10,6 +10,9 @@ export interface CellConfig {
   id: string
   type: CellType
   label: string
+  /** One-line description shown in the cell card body. For library presets this is populated
+   *  from CellPreset.notes at load time. For custom cells it is the user's notes/citation. */
+  description?: string
   // Biophysical - user-editable
   radius: number               // µm
   membraneThickness: number    // nm

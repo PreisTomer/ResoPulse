@@ -34,11 +34,12 @@ export function splitFreqKHz(khz: number, decimals = 2): { value: string; unit: 
 }
 
 /** Format a field intensity [V/cm] to a human-readable string.
- *  Values ≥ 10 kV/cm are displayed as kV/cm (1 decimal place). */
+ *  V/cm: rounded to nearest integer (±1 V/cm is within biological variability).
+ *  Values ≥ 10 kV/cm are displayed as kV/cm with 1 decimal place. */
 export function formatFieldVcm(vcm: number): string {
   return vcm >= FIELD_KV_THRESHOLD
     ? `${(vcm / VCM_PER_KVCM).toFixed(1)} ${UNIT.KV_PER_CM}`
-    : `${vcm} ${UNIT.V_PER_CM}`
+    : `${Math.round(vcm)} ${UNIT.V_PER_CM}`
 }
 
 /**

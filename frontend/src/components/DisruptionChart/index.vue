@@ -34,6 +34,7 @@
 import { defineComponent } from 'vue'
 import * as d3 from 'd3'
 import { useCellStore } from '@/stores/cellStore'
+import { broadcastStateSync } from '@/services/socket'
 import { computeSchwan, computeResonantDisruption } from '@/utils/physics'
 import { CELL_CATEGORY, CHART_MODE } from '@/constants/strings'
 import { C } from '@/theme/colors'
@@ -76,6 +77,7 @@ export default defineComponent({
       _yScale:         null as d3.ScaleLinear<number, number> | null,
       _chartW:         0,
       _chartH:         0,
+      _cursorX:        0,
       _resizeObserver: null as ResizeObserver | null,
       _curveData:      [] as CurvePoint[],
       hoverInfo:       null as { x: number; y: number; freq: string; tDR: string; hDR: string } | null,
@@ -215,16 +217,39 @@ export default defineComponent({
         .attr('transform', `translate(-38,${this._chartH / 2}) rotate(-90)`)
         .text('DR (%)')
 
-      // Hover overlay - invisible rect covering the full plot area
-      const self = this
+      // Drag hint text - appears above the cursor line
+      g.append('text')
+        .attr('class', 'cursor-drag-hint')
+        .attr('y', -4)
+        .attr('text-anchor', 'middle')
+        .attr('fill', 'rgba(255,255,255,0.28)')
+        .attr('font-size', '0.5rem')
+        .attr('font-family', 'var(--font-mono)')
+        .attr('letter-spacing', '0.08em')
+        .attr('pointer-events', 'none')
+        .text(this.$t('chart.dragHint'))
+
+      // Hover + drag overlay - covers the full plot area
+      const dragBehavior = d3.drag<SVGRectElement, unknown>()
+        .on('drag', (event) => {
+          if (!this._xScale) return
+          const xClamped = Math.max(0, Math.min(this._chartW, event.x))
+          const hz = this._xScale.invert(xClamped)
+          const khz = Math.max(10, Math.min(F_MAX_HZ / 1000, hz / 1000))
+          this.store.setBroadcastFreqKHz(Math.round(khz))
+          broadcastStateSync()
+        })
+
       g.append('rect')
         .attr('class', 'hover-overlay')
         .attr('x', 0).attr('y', 0)
         .attr('width', this._chartW)
         .attr('height', this._chartH)
         .attr('fill', 'transparent')
-        .on('mousemove', function(event: MouseEvent) { self.onHover(event) })
+        .style('cursor', 'crosshair')
+        .on('mousemove', (event: MouseEvent) => this.onHover(event))
         .on('mouseleave', () => { this.hoverInfo = null })
+        .call(dragBehavior)
     },
 
     updateChart() {
@@ -360,18 +385,24 @@ export default defineComponent({
     },
 
     updateCursor() {
-      const g = this._svg?.select<SVGGElement>('.dr-gc')
-      if (!g || !this._xScale) return
+      const gc = this._svg?.select<SVGGElement>('.dr-gc')
+      const g  = this._svg?.select<SVGGElement>('.dr-g')
+      if (!gc || !g || !this._xScale) return
 
       const freqHz = this.store.currentBroadcastFrequency * 1000
       const cx     = this._xScale(Math.max(F_MIN_HZ, Math.min(F_MAX_HZ, freqHz)))
 
-      g.select<SVGLineElement>('.cursor-line')
+      this._cursorX = cx
+
+      gc.select<SVGLineElement>('.cursor-line')
         .attr('x1', cx).attr('x2', cx)
         .attr('y1', 0).attr('y2', this._chartH)
         .style('stroke', 'rgba(255,255,255,0.3)')
         .style('stroke-width', 1)
         .style('stroke-dasharray', '3,3')
+
+      g.select<SVGTextElement>('.cursor-drag-hint')
+        .attr('x', cx)
     },
 
     onHover(event: MouseEvent) {
@@ -381,6 +412,16 @@ export default defineComponent({
       const rect = container.getBoundingClientRect()
       // Mouse X relative to the chart plot area (accounting for left margin)
       const mouseX = event.clientX - rect.left - MARGIN.left
+
+      const overlay = this._svg?.select<SVGRectElement>('.hover-overlay')
+
+      // Near the cursor line: switch to drag cursor and suppress tooltip
+      if (Math.abs(mouseX - this._cursorX) < 20) {
+        overlay?.style('cursor', 'ew-resize')
+        this.hoverInfo = null
+        return
+      }
+      overlay?.style('cursor', 'crosshair')
 
       // Find the nearest data point by inverting the log x scale
       const mouseHz = this._xScale.invert(mouseX)

@@ -78,6 +78,41 @@ Every `.vue` file must follow this exact block order:
 
 ---
 
+## File and Folder Naming Conventions
+
+### Component files
+- **PascalCase** for every `.vue` file: `CellCard.vue`, `NavBar.vue`, `HeroRingsSvg.vue`
+- **PascalCase** for every component folder: `CellCard/`, `FrequencySlider/`, `Home/`
+- Multi-file components live in their own folder with an `index.vue` entry point:
+  ```
+  components/
+    CellCard/
+      index.vue          ← public entry point, imported as CellCard
+      CellHeader.vue     ← sub-component, not imported outside this folder
+      CellParamsPanel.vue
+  ```
+- Single-file components that have no sub-components sit directly in `components/` as a flat `.vue` file: `NavBar.vue`, `StatCard.vue`
+
+### Non-component source files
+- **camelCase** for everything else: stores, utils, services, types, constants
+  ```
+  stores/cellStore.ts
+  utils/physics.ts
+  services/socket.ts
+  types/cell.ts
+  constants/physics.ts
+  ```
+
+### Folder ownership rule
+Sub-components inside a component folder (`CellCard/CellHeader.vue`) are private to that component. They must **not** be imported directly by views or other components — always import through the folder's `index.vue`.
+
+### views/ vs components/
+- `views/` — one file per route, named after the route: `HomeView.vue`, `ExperimentView.vue`
+- `components/` — reusable UI pieces consumed by views or other components
+- Views never import other views; components never import views
+
+---
+
 ## No Magic Numbers
 
 Never write a raw numeric constant inline. Always use a named constant.

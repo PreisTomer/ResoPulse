@@ -1,7 +1,8 @@
 {
   "selectivity": {
     "title": "Selectivity Analysis",
-    "ratioLabel": "TI: Selectivity",
+    "ratioLabel": "Therapeutic Index",
+    "vmSelLabel": "Vm sel.",
     "targetBar": "T",
     "healthyBar": "H",
     "tDisr": "T-Disr",
@@ -71,7 +72,7 @@
     "depNdep": "nDEP",
     "depKLabel": "Re[K]",
     "depCrossLabel": "f_cross",
-    "depForceLabel": "wf scale",
+    "depForceLabel": "time-avg. scale",
     "depCrossNone": ", ",
     "tipDep": "<strong>Dielectrophoresis (DEP)</strong>\nClausius-Mossotti factor K(ω), single-shell sphere model.\n  K(ω) = (ε*_eff − ε*_m) / (ε*_eff + 2ε*_m)\n  ε*(ω) = ε_r·ε₀ − jσ/ω\n\n<span class=\"tip-ok\">pDEP</span>  Re[K] &gt; 0, cell attracted to field maxima\n<span class=\"tip-warn\">nDEP</span>  Re[K] &lt; 0, cell repelled from field maxima\n  f_cross, crossover frequency where Re[K] = 0\n\nEffective time-averaged force scales:\n  CW sinusoidal: × 0.50\n  Pulsed H-FIRE: × duty cycle\n\nRef: Gascoyne &amp; Vykoukal (2002) Curr. Opin. Cell Biol.\nNote: model invalid at GHz acoustic resonance frequencies."
   }

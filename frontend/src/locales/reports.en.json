@@ -16,7 +16,6 @@
     "methodsBtnSub": "Plain text · .txt",
     "exportCsv": "↓ Export CSV",
     "clearLog": "Clear Log",
-    "sessionEditHint": "Rename in the Experiment Lab before logging",
     "sessionMultiple": "{n} sessions in log",
     "totalReadings": "Total Readings",
     "totalReadingsTitle": "Total snapshots saved this session, auto-logged lysis events plus manually triggered readings",

@@ -1,5 +1,6 @@
 {
   "nav": {
+    "logoAlt": "ResoPulse",
     "researchPlatform": "Virtual Biophysics Engine",
     "home": "Home",
     "experiment": "Experiment Lab",
@@ -87,6 +88,14 @@
       "reduceField": "Reduce field intensity to reset"
     },
     "integrityLabel": "INTEGRITY",
+    "targetMetrics": {
+      "elysis": "E_lysis",
+      "ti":     "TI",
+      "fc":     "fc",
+      "tipElysis": "<strong>Lysis Field E_lysis</strong>\nMinimum field strength [V/cm] required to lyse this cell at the current frequency, waveform, and pulse width.\nRises above quasi-DC as frequency exceeds f_c (membrane cannot fully charge).\nThe therapeutic window sits between E_lysis(target) and E_lysis(healthy).",
+      "tipTi":    "<strong>Therapeutic Index (TI)</strong>\nTI = DR_target / DR_healthy = ratio of target disruption to healthy disruption at identical field and frequency.\nTI > 1.5: good selectivity window. TI > 2: strong selectivity. TI < 1: healthy cell more affected than target.",
+      "tipFc":    "<strong>Characteristic Frequency f_c</strong>\nf_c = 1 / (2π τ) where τ = R · Cm · (2σ_e + σ_i) / (2σ_e · σ_i).\nBelow f_c the membrane charges fully (quasi-DC regime, maximum Vm). Above f_c, Vm rolls off at -20 dB/decade. Operating below f_c maximises selectivity for mammalian targets."
+    },
     "compactStates": {
       "stable":      "STABLE",
       "nourishing":  "NOURISH",
