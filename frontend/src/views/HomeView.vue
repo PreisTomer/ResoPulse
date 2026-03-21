@@ -377,7 +377,7 @@ export default defineComponent({
 
     &--features {
       gap: 1.4rem;
-      padding: 4rem 2rem;
+      padding: 4rem 2rem 0;
     }
 
     &--bottom {
