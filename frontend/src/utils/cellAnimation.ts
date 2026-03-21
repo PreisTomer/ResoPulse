@@ -43,6 +43,113 @@ function capsuleR(theta: number, a: number, b: number): number {
   return (a * b) / Math.sqrt(a * a * s * s + b * b * c * c)
 }
 
+/**
+ * Per-preset radial offset (px) for each cancer membrane control point.
+ * Positive = outward protrusion (pseudopod/arm). Negative = slight indentation.
+ * Biologically: large pseudopods (adeno), stellate arms (GBM/PANC1), round blast (HL60).
+ */
+function computeCancerBaseOffset(i: number, N: number, presetId: string | undefined): number {
+  const angleDeg = (i / N) * 360
+  const seed = (i * 2971 + 1777) % 2000
+  const nearestSpikeAngle = (spikes: number[]): number => {
+    let minDist = 360
+    for (const s of spikes) {
+      const d = Math.abs(((angleDeg - s) % 360 + 360) % 360)
+      const dist = d > 180 ? 360 - d : d
+      if (dist < minDist) minDist = dist
+    }
+    return minDist
+  }
+  if (presetId === 'gbm') {
+    // 5 stellate invasion protrusions every 72° (glioblastoma stellate morphology)
+    const d = nearestSpikeAngle([0, 72, 144, 216, 288])
+    return d < 20 ? 12 + (seed % 500) / 150 : (seed % 1000) / 500 - 2.5
+  }
+  if (presetId === 'panc1') {
+    // 4 stellate desmoplastic arms (slightly off 90° for natural asymmetry)
+    const d = nearestSpikeAngle([20, 110, 200, 290])
+    return d < 22 ? 10 + (seed % 400) / 150 : (seed % 1000) / 500 - 1.5
+  }
+  if (presetId === 'adenocarcinoma') {
+    // 3 large invasive pseudopods at ~120° spacing
+    const d = nearestSpikeAngle([15, 135, 255])
+    return d < 25 ? 10 + (seed % 600) / 150 : seed / 200 - 3
+  }
+  if (presetId === 'hl60') {
+    // Near-spherical blast cell: minimal bumps
+    return (seed % 1200) / 200 - 2.0
+  }
+  return seed / 200 - 3  // default: -3 to +7 pseudo-random
+}
+
+/**
+ * Returns mitochondria geometry data for a given cell type and preset.
+ * Cancer presets reflect Warburg-effect fragmentation; healthy cells have elongated cristae.
+ */
+function buildMitoData(
+  isTarget: boolean,
+  presetId: string | undefined,
+): Array<{ x: number; y: number; rx: number; ry: number; angle: number }> {
+  if (!isTarget) {
+    return [  // 2 healthy elongated mitochondria with prominent cristae
+      { x: -18, y: -15, rx: 10, ry: 4,   angle:  15 },
+      { x:  20, y:  16, rx:  9, ry: 4,   angle: -20 },
+    ]
+  }
+  switch (presetId) {
+    case 'adenocarcinoma':
+      return [  // 6 highly fragmented (severe Warburg — maximal glycolytic reprogramming)
+        { x: -20, y: -14, rx: 6.0, ry: 2.5, angle:  20 },
+        { x:  19, y:  16, rx: 5.5, ry: 2.2, angle: -25 },
+        { x:  -5, y:  22, rx: 5.0, ry: 2.0, angle:  55 },
+        { x:  13, y:  -9, rx: 5.5, ry: 2.2, angle: -40 },
+        { x: -14, y:   9, rx: 4.5, ry: 1.9, angle:  80 },
+        { x:  -8, y: -23, rx: 4.0, ry: 1.8, angle:  10 },
+      ]
+    case 'gbm':
+      return [  // 2 small disorganized (necrotic core reduces mito density)
+        { x: -15, y: -18, rx: 5, ry: 2.0, angle: -30 },
+        { x:  16, y:  14, rx: 4, ry: 1.8, angle:  45 },
+      ]
+    case 'mcf7':
+      return [  // 4 fragmented (ER+ moderate Warburg effect)
+        { x: -19, y: -12, rx: 7.0, ry: 2.8, angle:  18 },
+        { x:  18, y:  15, rx: 6.0, ry: 2.5, angle: -22 },
+        { x:  -4, y:  20, rx: 5.0, ry: 2.2, angle:  60 },
+        { x:  12, y:  -8, rx: 5.5, ry: 2.0, angle: -35 },
+      ]
+    case 'hl60':
+      return [  // 1 tiny (leukemia blast — nucleus fills most of cell)
+        { x: 20, y: 16, rx: 4, ry: 1.6, angle: -15 },
+      ]
+    case 'panc1':
+      return [  // 2 fragmented, squeezed to periphery by massive nucleus
+        { x: -18, y: -10, rx: 5.5, ry: 2.1, angle:  25 },
+        { x:  17, y:  12, rx: 5.0, ry: 1.9, angle: -30 },
+      ]
+    case 'a549':
+      return [  // 3 fragmented (type II pneumocyte-like surfactant producer)
+        { x: -20, y: -13, rx: 7, ry: 2.7, angle:  15 },
+        { x:  18, y:  14, rx: 6, ry: 2.4, angle: -20 },
+        { x:  -6, y:  20, rx: 5, ry: 2.1, angle:  50 },
+      ]
+    case 'lncap':
+      return [  // 3 elongated (androgen-responsive, better-organised than typical cancer)
+        { x: -18, y: -15, rx: 9, ry: 3.5, angle:  12 },
+        { x:  20, y:  15, rx: 8, ry: 3.5, angle: -18 },
+        { x:  -3, y:  18, rx: 7, ry: 3.0, angle:  55 },
+      ]
+    default:
+      return [  // generic cancer: 5 fragmented
+        { x: -20, y: -14, rx: 7.0, ry: 2.8, angle:  20 },
+        { x:  19, y:  16, rx: 6.0, ry: 2.5, angle: -25 },
+        { x:  -5, y:  22, rx: 5.0, ry: 2.2, angle:  55 },
+        { x:  13, y:  -9, rx: 6.0, ry: 2.2, angle: -40 },
+        { x: -14, y:   9, rx: 5.0, ry: 2.0, angle:  80 },
+      ]
+  }
+}
+
 // ── Shared D3 generators (stateless - declared once at module scope) ──────────
 const nucLineGen  = d3.lineRadial<BlobPoint>().angle((d) => d.angle).radius((d) => d.r).curve(d3.curveBasisClosed)
 const flagLineGen = d3.line<[number, number]>().x((d) => d[0]).y((d) => d[1]).curve(d3.curveCatmullRom.alpha(0.5))
@@ -58,18 +165,32 @@ interface MitoEl {
   m:     { x: number; y: number; rx: number; ry: number; angle: number }
 }
 
+/** A preset-specific intracellular organelle that drifts slowly (Brownian motion). */
+interface OrganelleEl {
+  el:       D3Sel<SVGCircleElement>
+  baseX:    number
+  baseY:    number
+  driftAmp: number
+  opacity:  number
+}
+
 interface MammalianAnatomy {
   /** Stored from setup - needed during per-tick updates */
-  type:        string
-  accentColor: string
-  mitoEls:     MitoEl[]
-  nucG:        D3Sel<SVGGElement>
-  nucBlob:     D3Sel<SVGPathElement>
-  nucOuterEnv: D3Sel<SVGPathElement>
-  nucleolus:   D3Sel<SVGCircleElement>
-  nucleolus2:  D3Sel<SVGCircleElement> | null
-  cortexRing:  D3Sel<SVGCircleElement>
-  nucPhases:   PhaseEntry[]
+  type:         string
+  accentColor:  string
+  presetId:     string | undefined
+  mitoEls:      MitoEl[]
+  nucG:         D3Sel<SVGGElement>
+  nucBlob:      D3Sel<SVGPathElement>
+  nucOuterEnv:  D3Sel<SVGPathElement>
+  nucleolus:    D3Sel<SVGCircleElement>
+  nucleolus2:   D3Sel<SVGCircleElement> | null
+  /** Third nucleolus - adenocarcinoma only (hallmark of high-grade malignancy). */
+  nucleolus3:   D3Sel<SVGCircleElement> | null
+  cortexRing:   D3Sel<SVGCircleElement>
+  nucPhases:    PhaseEntry[]
+  /** Preset-specific animated organelles: lipid droplets, vesicles, chromatin dots. */
+  organelleEls: OrganelleEl[]
 }
 
 interface SpikeEl {
@@ -109,29 +230,31 @@ function setupMammalianAnatomy(
   cellG: D3Sel<SVGGElement>,
   type: string,
   accentColor: string,
+  presetId?: string,
 ): MammalianAnatomy {
-  const NUC_PTS = type === CELL_TYPE.TARGET ? 14 : 10  // cancer: more control pts → jagged NE
-  const NUCL_R  = type === CELL_TYPE.TARGET ? 8.0 : 6.5 // cancer: large prominent nucleolus
+  const isTarget = type === CELL_TYPE.TARGET
+
+  // Per-preset nucleus blob point count (controls membrane irregularity)
+  const NUC_PTS = !isTarget ? 10
+    : presetId === 'adenocarcinoma' ? 16
+    : presetId === 'hl60'           ? 14
+    : 12
+
+  // Per-preset primary nucleolus radius
+  const NUCL_R = !isTarget ? 6.5
+    : presetId === 'adenocarcinoma' ? 9.0
+    : presetId === 'gbm'            ? 8.5
+    : presetId === 'panc1'          ? 8.0
+    : presetId === 'hl60'           ? 4.5  // nucleus fills cell, nucleolus relatively tiny
+    : 7.0
 
   // Cell cortex ring (actin cortex, just inside plasma membrane - gives depth)
   const cortexRing = cellG.append('circle').attr('r', BASE_R * 0.90)
     .attr('fill', 'none').attr('stroke', accentColor)
     .attr('stroke-width', 0.7).attr('stroke-opacity', 0.09)
 
-  // Mitochondria: cancer has 5 small fragmented mito (Warburg effect); healthy has 2 elongated
-  const mitoData = type === CELL_TYPE.TARGET
-    ? [  // 5 fragmented mitochondria, smaller, more numerous, scattered
-        { x: -20, y: -14, rx: 7,  ry: 2.8, angle: 20  },
-        { x:  19, y:  16, rx: 6,  ry: 2.5, angle: -25 },
-        { x:  -5, y:  22, rx: 5,  ry: 2.2, angle: 55  },
-        { x:  13, y:  -9, rx: 6,  ry: 2.2, angle: -40 },
-        { x: -14, y:   9, rx: 5,  ry: 2.0, angle: 80  },
-      ]
-    : [  // 2 healthy elongated mitochondria with prominent cristae
-        { x: -18, y: -15, rx: 10, ry: 4, angle: 15  },
-        { x:  20, y:  16, rx:  9, ry: 4, angle: -20 },
-      ]
-
+  // Mitochondria: number and shape differ by preset (Warburg effect, nuclear crowding, etc.)
+  const mitoData = buildMitoData(isTarget, presetId)
   const mitoG = cellG.append('g')
   const mitoEls: MitoEl[] = mitoData.map((m) => {
     const g     = mitoG.append('g')
@@ -167,13 +290,19 @@ function setupMammalianAnatomy(
   // Inner nucleolus suggestion
   nucG.append('circle').attr('r', NUCL_R * 0.45)
     .attr('fill', accentColor).attr('fill-opacity', 0.45)
-  // Second nucleolus - cancer cells characteristically have multiple prominent nucleoli
+  // Second nucleolus: cancer cells characteristically have multiple prominent nucleoli
   let nucleolus2: D3Sel<SVGCircleElement> | null = null
-  if (type === CELL_TYPE.TARGET) {
+  let nucleolus3: D3Sel<SVGCircleElement> | null = null
+  if (isTarget) {
     nucleolus2 = nucG.append('circle').attr('r', NUCL_R * 0.78)
       .attr('fill', accentColor).attr('fill-opacity', 0.20)
     nucG.append('circle').attr('r', NUCL_R * 0.30)
       .attr('fill', accentColor).attr('fill-opacity', 0.38)
+    // Adenocarcinoma: 3 nucleoli is a hallmark of high-grade malignancy
+    if (presetId === 'adenocarcinoma') {
+      nucleolus3 = nucG.append('circle').attr('r', NUCL_R * 0.62)
+        .attr('fill', accentColor).attr('fill-opacity', 0.18)
+    }
   }
   nucG.attr('transform', 'translate(0,4)')
 
@@ -183,7 +312,75 @@ function setupMammalianAnatomy(
     speed:       0.22 + ((i * 601) % 1000) / 4500,
   }))
 
-  return { type, accentColor, mitoEls, nucG, nucBlob, nucOuterEnv, nucleolus, nucleolus2, cortexRing, nucPhases }
+  // ── Preset-specific organelles and structural features ─────────────────────
+  const organelleEls: OrganelleEl[] = []
+
+  if (isTarget) {
+    if (presetId === 'mcf7') {
+      // Lipid droplets: neutral-lipid vesicles, hallmark of ER+ breast cancer metabolism
+      const droplets = [{ x: -14, y: 15, r: 4.5 }, { x: 16, y: -9, r: 4.0 }, { x: 5, y: 19, r: 3.5 }]
+      droplets.forEach(({ x, y, r }) => {
+        const el = cellG.append('circle').attr('cx', x).attr('cy', y).attr('r', r)
+          .attr('fill', accentColor).attr('fill-opacity', 0.22)
+          .attr('stroke', accentColor).attr('stroke-width', 0.7).attr('stroke-opacity', 0.40)
+        organelleEls.push({ el, baseX: x, baseY: y, driftAmp: 2.5, opacity: 0.22 })
+      })
+
+    } else if (presetId === 'hl60') {
+      // Condensed chromatin granules: leukemia blast cells have dense heterochromatin
+      const chromatinPts = [
+        { x: -10, y: -8 }, { x: 8, y: -13 }, { x: -4, y: 10 }, { x: 12, y: 6 }, { x: 1, y: -16 },
+      ]
+      chromatinPts.forEach(({ x, y }) => {
+        const el = cellG.append('circle').attr('cx', x).attr('cy', y).attr('r', 2.5)
+          .attr('fill', accentColor).attr('fill-opacity', 0.35)
+        organelleEls.push({ el, baseX: x, baseY: y, driftAmp: 0.8, opacity: 0.35 })
+      })
+
+    } else if (presetId === 'lncap') {
+      // Secretory vesicles clustered at apical pole: PSA and androgen-driven secretion
+      const vesicles = [
+        { x: -8,  y: -22, r: 3.5 }, { x:  2, y: -26, r: 3.0 }, { x: 10, y: -20, r: 3.5 },
+        { x: -14, y: -17, r: 2.5 }, { x:  6, y: -14, r: 2.5 },
+      ]
+      vesicles.forEach(({ x, y, r }) => {
+        const el = cellG.append('circle').attr('cx', x).attr('cy', y).attr('r', r)
+          .attr('fill', accentColor).attr('fill-opacity', 0.25)
+          .attr('stroke', accentColor).attr('stroke-width', 0.6).attr('stroke-opacity', 0.38)
+        organelleEls.push({ el, baseX: x, baseY: y, driftAmp: 2.0, opacity: 0.25 })
+      })
+
+    } else if (presetId === 'a549') {
+      // Lamellar bodies: multilamellar vesicles storing pulmonary surfactant (type II pneumocyte)
+      const lamPts = [{ x: -16, y: 13 }, { x: 14, y: -15 }]
+      lamPts.forEach(({ x, y }) => {
+        for (let r = 7; r >= 3; r -= 2) {
+          cellG.append('circle').attr('cx', x).attr('cy', y).attr('r', r)
+            .attr('fill', 'none').attr('stroke', accentColor)
+            .attr('stroke-width', 0.8).attr('stroke-opacity', 0.28)
+        }
+        const el = cellG.append('circle').attr('cx', x).attr('cy', y).attr('r', 2)
+          .attr('fill', accentColor).attr('fill-opacity', 0.22)
+        organelleEls.push({ el, baseX: x, baseY: y, driftAmp: 1.5, opacity: 0.22 })
+      })
+
+    } else if (presetId === 'panc1') {
+      // Dense heterochromatin blocks: condensed chromatin characteristic of PANC-1
+      const hcPts = [{ x: -9, y: -9 }, { x: 9, y: 6 }, { x: -3, y: 13 }, { x: 6, y: -12 }]
+      hcPts.forEach(({ x, y }) => {
+        const el = cellG.append('circle').attr('cx', x).attr('cy', y).attr('r', 3.2)
+          .attr('fill', accentColor).attr('fill-opacity', 0.32)
+        organelleEls.push({ el, baseX: x, baseY: y, driftAmp: 0.5, opacity: 0.32 })
+      })
+    }
+  }
+
+  return {
+    type, accentColor, presetId,
+    mitoEls, nucG, nucBlob, nucOuterEnv,
+    nucleolus, nucleolus2, nucleolus3,
+    cortexRing, nucPhases, organelleEls,
+  }
 }
 
 function setupBacteriaAnatomy(
@@ -359,13 +556,26 @@ function updateMammalianAnatomy(anat: MammalianAnatomy, p: MammalianUpdateParams
   })
 
   // ── Nucleus (organic blob, elongates along applied field axis) ─────────
-  const NUC_R    = type === CELL_TYPE.TARGET ? 26 : 20  // cancer: enlarged nucleus (high N/C ratio)
-  const NUC_DX   = type === CELL_TYPE.TARGET ? -2 : 0   // cancer: slight nuclear displacement
-  const NUC_DY   = type === CELL_TYPE.TARGET ?  6 : 4   // cancer: more off-centre
+  // Per-preset nucleus size: HL60 blast has nucleus filling most of cell;
+  // PANC1 and adeno have very high N/C ratio; healthy cells are moderate.
+  const NUC_R = anat.presetId === 'hl60'          ? 36  // blast cell: nucleus fills ~65% of radius
+    : anat.presetId === 'panc1'                   ? 28  // pancreatic: extremely high N/C ratio
+    : anat.presetId === 'adenocarcinoma'           ? 27  // adeno: very large pleomorphic nucleus
+    : anat.presetId === 'gbm'                     ? 25  // GBM: large aggressive nucleus
+    : type === CELL_TYPE.TARGET                   ? 26  // generic cancer: enlarged nucleus
+    : 20                                                 // healthy: moderate size
+  const NUC_DX = anat.presetId === 'hl60' ? 0 : type === CELL_TYPE.TARGET ? -2 : 0
+  const NUC_DY = anat.presetId === 'hl60' ? 0 : type === CELL_TYPE.TARGET ?  6 : 4
   const nucScaleY  = 1 + impact * 0.28
   const nucScaleX  = 1 - impact * 0.10
   const nucNoise   = isVibrating ? impact * 1.8 : 0
-  const nucWaveAmp = type === CELL_TYPE.TARGET ? 4.5 : 2.5  // cancer: pleomorphic, irregular nucleus
+  // Per-preset nuclear membrane wave amplitude (controls irregularity/pleomorphism)
+  const nucWaveAmp = anat.presetId === 'hl60'          ? 1.8  // round blast: near-spherical
+    : anat.presetId === 'adenocarcinoma'               ? 6.0  // adeno: very pleomorphic
+    : anat.presetId === 'gbm'                          ? 5.5  // GBM: invasive, highly irregular
+    : anat.presetId === 'panc1'                        ? 4.2  // PANC1: moderately irregular
+    : type === CELL_TYPE.TARGET                        ? 4.5  // generic cancer
+    : 2.5                                                     // healthy: smooth
   const nucPts: BlobPoint[] = anat.nucPhases.map((ph) => {
     const wave  = Math.sin(elapsed * 0.0006 * ph.speed + ph.phaseOffset) * nucWaveAmp
     const noise = (Math.random() - 0.5) * nucNoise
@@ -375,8 +585,10 @@ function updateMammalianAnatomy(anat: MammalianAnatomy, p: MammalianUpdateParams
   const nucEnvPts: BlobPoint[] = nucPts.map((pt) => ({ angle: pt.angle, r: pt.r + 3.5 }))
   anat.nucG.attr('transform',
     `translate(${NUC_DX},${NUC_DY}) scale(${nucScaleX.toFixed(3)},${nucScaleY.toFixed(3)})`)
+  // PANC1 has denser heterochromatin - brighter nucleus fill reflects condensed chromatin
+  const nucFillOpacity = anat.presetId === 'panc1' ? 0.20 : 0.12
   anat.nucBlob.attr('d', nucLineGen(nucPts) || '')
-    .attr('fill', color).attr('fill-opacity', 0.12)
+    .attr('fill', color).attr('fill-opacity', nucFillOpacity)
     .attr('stroke', color).attr('stroke-opacity', isNourishing ? 0.60 : 0.42)
   // Nuclear outer envelope: color interpolates based on nuclear disruption ratio
   // accentColor → amber (#fbbf24) at >50%, amber → red (#ff4d6d) at >85%
@@ -402,6 +614,20 @@ function updateMammalianAnatomy(anat: MammalianAnatomy, p: MammalianUpdateParams
     anat.nucleolus2.attr('cx', 6 + nl2Dx).attr('cy', 4 + nl2Dy)
       .attr('fill', color).attr('fill-opacity', 0.20)
   }
+  // Third nucleolus: adenocarcinoma hallmark (high-grade malignancy)
+  if (anat.nucleolus3) {
+    const nl3Dx = Math.sin(elapsed * 0.00028 + 3.8) * 3.0
+    const nl3Dy = Math.cos(elapsed * 0.00031 + 2.5) * 2.5
+    anat.nucleolus3.attr('cx', -5 + nl3Dx).attr('cy', 7 + nl3Dy)
+      .attr('fill', color).attr('fill-opacity', 0.18)
+  }
+  // Preset-specific organelles: slow Brownian drift to show they are mobile structures
+  anat.organelleEls.forEach(({ el, baseX, baseY, driftAmp, opacity }, i) => {
+    const dx = Math.sin(elapsed * 0.00017 + i * 2.3) * driftAmp
+    const dy = Math.cos(elapsed * 0.00019 + i * 1.7) * driftAmp
+    el.attr('cx', baseX + dx).attr('cy', baseY + dy)
+      .attr('fill', color).attr('fill-opacity', opacity)
+  })
 }
 
 interface BacteriaUpdateParams {
@@ -639,7 +865,7 @@ export function setupBlobAnimation(
 
   // ── Category-specific anatomy setup ───────────────────────────────────────
   const mammalianAnatomy = cellCategory === CELL_CATEGORY.MAMMALIAN
-    ? setupMammalianAnatomy(bodyG, type, accentColor) : null
+    ? setupMammalianAnatomy(bodyG, type, accentColor, presetId) : null
   const bacteriaAnatomy  = cellCategory === CELL_CATEGORY.BACTERIA
     ? setupBacteriaAnatomy(bodyG, accentColor, isRod, ROD_A, ROD_B) : null
   const virusAnatomy     = cellCategory === CELL_CATEGORY.VIRUS
@@ -730,11 +956,11 @@ export function setupBlobAnimation(
 
   // Pre-baked membrane irregularity for cancer (mammalian target) cells.
   // Biologically: loss of contact inhibition → invasive pseudopods → irregular membrane outline.
-  // Range: -3 to +7 px asymmetric bumps on top of BASE_R.
+  // Per-preset: stellate arms for GBM/PANC1, large pseudopods for adeno, round for HL60.
   const cancerBaseOffsets: number[] = []
   if (cellCategory === CELL_CATEGORY.MAMMALIAN && type === CELL_TYPE.TARGET) {
     for (let i = 0; i < N; i++) {
-      cancerBaseOffsets.push(((i * 2971 + 1777) % 2000) / 200 - 3)
+      cancerBaseOffsets.push(computeCancerBaseOffset(i, N, presetId))
     }
   }
 
@@ -831,8 +1057,10 @@ export function setupBlobAnimation(
         mammalianAnatomy.nucOuterEnv.attr('stroke-opacity', 0)
         mammalianAnatomy.nucleolus.attr('fill-opacity', 0)
         mammalianAnatomy.nucleolus2?.attr('fill-opacity', 0)
+        mammalianAnatomy.nucleolus3?.attr('fill-opacity', 0)
         mammalianAnatomy.cortexRing.attr('stroke-opacity', 0)
         mammalianAnatomy.mitoEls.forEach(({ g }) => g.attr('opacity', 0))
+        mammalianAnatomy.organelleEls.forEach(({ el }) => el.attr('opacity', 0))
       }
       if (bacteriaAnatomy) {
         bacteriaAnatomy.bacteriaWallElOuter?.attr('stroke-opacity', 0)
@@ -890,8 +1118,10 @@ export function setupBlobAnimation(
           .attr('stroke-opacity', Math.max(0, 0.25 - progress * 0.25))
         mammalianAnatomy.nucleolus.attr('fill-opacity', Math.max(0, 0.28 - progress * 0.28))
         mammalianAnatomy.nucleolus2?.attr('fill-opacity', Math.max(0, 0.20 - progress * 0.20))
+        mammalianAnatomy.nucleolus3?.attr('fill-opacity', Math.max(0, 0.18 - progress * 0.18))
         mammalianAnatomy.cortexRing.attr('stroke-opacity', Math.max(0, 0.09 - progress * 0.09))
         mammalianAnatomy.mitoEls.forEach(({ g }, i) => g.attr('opacity', Math.max(0, 1 - progress * 1.3 - i * 0.12)))
+        mammalianAnatomy.organelleEls.forEach(({ el }, i) => el.attr('opacity', Math.max(0, 1 - progress * 1.3 - i * 0.05)))
       }
       if (bacteriaAnatomy) {
         bacteriaAnatomy.nucleoidBlob.attr('fill-opacity', Math.max(0, 0.11 - progress * 0.11))
