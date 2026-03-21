@@ -202,9 +202,12 @@ export default defineComponent({
       vThVariancePct: 20,
       /** When true histogram Y-axis shows fraction [0,1]; when false shows raw count */
       normalizeChart: false,
-      targetDRs:  [] as number[],
-      healthyDRs: [] as number[],
-      _resizeObs: null as ResizeObserverInstance | null,
+      targetDRs:    [] as number[],
+      healthyDRs:   [] as number[],
+      _resizeObs:     null as ResizeObserverInstance | null,
+      _resampleTimer: null as ReturnType<typeof setTimeout> | null,
+      /** Slow live-update interval: resamples every 2 s when open to show Monte Carlo spread */
+      _liveTimer:     null as ReturnType<typeof setInterval> | null,
     }
   },
 
@@ -297,23 +300,31 @@ export default defineComponent({
       if (v) {
         if (this.targetDRs.length === 0) this.resample()
         this.$nextTick(() => { this._initChart(); this._drawChart() })
+        this._startLiveTimer()
+      } else {
+        this._stopLiveTimer()
       }
     },
     targetDRs() { if (this.open) this._drawChart() },
-    'store.fieldIntensity'()            { if (this.open) this.resample() },
-    'store.currentBroadcastFrequency'() { if (this.open) this.resample() },
-    'store.effectiveSigmaE'()           { if (this.open) this.resample() },
-    'store.waveform'()                  { if (this.open) this.resample() },
-    'store.pulseWidthNs'()              { if (this.open) this.resample() },
-    'store.dutyCycle'()                 { if (this.open) this.resample() },
-    'store.healthy.id'()                { if (this.open) this.resample() },
-    'store.target.id'()                 { if (this.open) this.resample() },
-    rVariancePct()                      { if (this.open) this.resample() },
-    vThVariancePct()                    { if (this.open) this.resample() },
+    // All parameter changes are funnelled through _scheduleResample (150 ms debounce).
+    // This prevents a burst of redraws when a single user action (e.g. snap-to-window)
+    // triggers multiple store mutations in one tick.
+    // Note: no open guard here — _drawChart() is gated on open via the targetDRs watcher.
+    'store.fieldIntensity'()            { this._scheduleResample() },
+    'store.currentBroadcastFrequency'() { this._scheduleResample() },
+    'store.waveform'()                  { this._scheduleResample() },
+    'store.pulseWidthNs'()              { this._scheduleResample() },
+    'store.dutyCycle'()                 { this._scheduleResample() },
+    'store.healthy.id'()                { this._scheduleResample() },
+    'store.target.id'()                 { this._scheduleResample() },
+    rVariancePct()                      { this._scheduleResample() },
+    vThVariancePct()                    { this._scheduleResample() },
   },
 
   beforeUnmount() {
     (this._resizeObs as ResizeObserverInstance | null)?.disconnect()
+    if (this._resampleTimer) clearTimeout(this._resampleTimer)
+    this._stopLiveTimer()
   },
 
   methods: {
@@ -333,6 +344,29 @@ export default defineComponent({
         std:  stats.stdDr.toFixed(3),
         uncPct,
       })
+    },
+
+    _startLiveTimer() {
+      this._stopLiveTimer()
+      this._liveTimer = setInterval(() => { this.resample() }, 2000)
+    },
+
+    _stopLiveTimer() {
+      if (this._liveTimer) { clearInterval(this._liveTimer); this._liveTimer = null }
+    },
+
+    /** Debounced entry-point for resample — collapses multiple synchronous watcher
+     *  firings (e.g. snap-to-window touching field + freq in one tick) into a single
+     *  resample 150 ms later, preventing the chart from jumping repeatedly.
+     *  Non-cancelling: once a timer is in flight, additional calls are ignored so that
+     *  the temperature interval (which continuously updates effectiveSigmaE) cannot
+     *  keep resetting the timer and prevent resample from ever running. */
+    _scheduleResample() {
+      if (this._resampleTimer) return
+      this._resampleTimer = setTimeout(() => {
+        this._resampleTimer = null
+        this.resample()
+      }, 150)
     },
 
     resample() {
