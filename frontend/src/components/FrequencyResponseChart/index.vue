@@ -14,36 +14,7 @@
     <div ref="chartEl" class="freq-chart__svg-wrap"></div>
 
     <!-- Hover tooltip -->
-    <Transition name="tip">
-      <div
-        v-if="_tooltipData"
-        class="freq-chart__tooltip"
-        :class="{ 'freq-chart__tooltip--flip': _tooltipData.flipLeft }"
-        :style="{ left: (_tooltipData.x + 54) + 'px' }"
-      >
-        <div class="freq-chart__tooltip-freq">{{ formatTooltipFreq(_tooltipData.freqHz) }}</div>
-        <template v-if="_tooltipData.mode === 'schwan'">
-          <div class="freq-chart__tooltip-row freq-chart__tooltip-row--h">
-            {{ CELL_LABEL.HEALTHY }} {{ _tooltipData.healthyVm.toFixed(2) }} {{ UNIT.MV }}
-            <span class="freq-chart__tooltip-dr">DR {{ _tooltipData.healthyDRPct.toFixed(1) }}%</span>
-          </div>
-          <div class="freq-chart__tooltip-row freq-chart__tooltip-row--t">
-            {{ CELL_LABEL.TARGET }} {{ _tooltipData.targetVm.toFixed(2) }} {{ UNIT.MV }}
-            <span class="freq-chart__tooltip-dr">DR {{ _tooltipData.targetDRPct.toFixed(1) }}%</span>
-          </div>
-          <div class="freq-chart__tooltip-sel">
-            {{ $t('chart.tooltipSel') }} {{ _tooltipData.selRatio.toFixed(2) }}×
-          </div>
-          <div v-if="_tooltipData.inWindow" class="freq-chart__tooltip-window">
-            {{ $t('chart.tooltipWindow') }}
-          </div>
-        </template>
-        <template v-else>
-          <div class="freq-chart__tooltip-row freq-chart__tooltip-row--t">{{ $t('chart.tooltipDR') }} {{ (_tooltipData.targetDR * 100).toFixed(1) }}%</div>
-          <div class="freq-chart__tooltip-row freq-chart__tooltip-row--h">{{ $t('chart.tooltipNoRes') }}</div>
-        </template>
-      </div>
-    </Transition>
+    <ChartTooltip :data="_tooltipData" />
   </div>
 </template>
 
@@ -51,37 +22,30 @@
 import { defineComponent } from 'vue'
 import * as d3 from 'd3'
 import { useCellStore } from '@/stores/cellStore'
-import { computeSchwan, computeFc, computeNuclearVm, computeResonantLineshape, computeResonantDisruption, computeTau, computeDepCmReal } from '@/utils/physics'
+import { computeSchwan, computeFc, computeResonantLineshape, computeResonantDisruption, computeTau } from '@/utils/physics'
 import { CELL_PRESETS, GROUP_COLORS } from '@/constants/cellLibrary'
 import { DEFAULT_CAPSID_Q, THRESHOLDS } from '@/constants/physics'
-import { CELL_CATEGORY, CHART_MODE, CELL_LABEL } from '@/constants/strings'
+import { CELL_CATEGORY, CHART_MODE } from '@/constants/strings'
 import { MEDIA } from '@/constants/media'
 import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'
 import { broadcastStateSync } from '@/services/socket'
 import { C } from '@/theme/colors'
 import ChartLegend from './ChartLegend.vue'
-
-// 200 logarithmically spaced Hz from 10 kHz to 500 MHz
-const F_MIN_HZ = 10_000
-const F_MAX_HZ = 500_000_000
-const F_CURSOR_MAX_KHZ = 10000  // 10 MHz, covers bacteria fc range
-const N_POINTS = 200
-
-const MARGIN = { top: 22, right: 130, bottom: 52, left: 54 }  // right 130 for selectivity + DEP axes
-
-function logspace(min: number, max: number, n: number): number[] {
-  const step = (Math.log10(max) - Math.log10(min)) / (n - 1)
-  return Array.from({ length: n }, (_, i) => Math.pow(10, Math.log10(min) + i * step))
-}
-
-const F_POINTS_HZ = logspace(F_MIN_HZ, F_MAX_HZ, N_POINTS)
+import ChartTooltip from './ChartTooltip.vue'
+import {
+  F_MIN_HZ, F_MAX_HZ, F_CURSOR_MAX_KHZ, MARGIN,
+  logspace, formatHz,
+  computeVmCurve, computeNuclearVmCurve, computeDepCurve, computeSelCurve,
+  computeOptimalFreqHz, computeUncBand, sigmaUncPct,
+} from './chartCompute'
+import type { TooltipData } from './chartCompute'
 
 export default defineComponent({
-  components: { ChartLegend },
+  components: { ChartLegend, ChartTooltip },
 
   setup() {
-    return { store: useCellStore(), UNIT, CELL_LABEL }
+    return { store: useCellStore(), UNIT }
   },
 
   data() {
@@ -95,12 +59,7 @@ export default defineComponent({
       _chartH: 0,
       _cursorX: 0,
       _resizeObserver: null as ResizeObserver | null,
-      _tooltipData: null as {
-        x: number; freqHz: number; mode: 'schwan' | 'resonance'
-        healthyVm: number; targetVm: number; targetDR: number
-        healthyDRPct: number; targetDRPct: number
-        selRatio: number; inWindow: boolean; flipLeft: boolean
-      } | null,
+      _tooltipData: null as TooltipData | null,
     }
   },
 
@@ -132,71 +91,6 @@ export default defineComponent({
   },
 
   methods: {
-    formatHz(hz: number): string {
-      if (hz >= 1e6) return `${hz / 1e6}M`
-      return `${hz / 1e3}k`
-    },
-
-    /** Verbose frequency label for hover tooltip (e.g. "12.34 MHz", "750.0 kHz"). */
-    formatTooltipFreq(hz: number): string {
-      if (hz >= 1e9) return `${(hz / 1e9).toFixed(3)} ${UNIT.GHZ}`
-      if (hz >= 1e6) return `${(hz / 1e6).toFixed(3)} ${UNIT.MHZ}`
-      return `${(hz / 1e3).toFixed(1)} ${UNIT.KHZ}`
-    },
-
-    // ── Optimal frequency scan (300 log-spaced pts, returns Hz) ─────────
-    computeOptimalFreqHz(sigma_e: number): number {
-      const field = this.store.fieldIntensity
-      let maxSel = -Infinity, optHz = F_MIN_HZ
-      const logMin = Math.log10(F_MIN_HZ)
-      const logMax  = Math.log10(F_MAX_HZ)
-      for (let i = 0; i < 300; i++) {
-        const hz  = Math.pow(10, logMin + (logMax - logMin) * i / 299)
-        const khz = hz / 1000
-        const hVm = computeSchwan(this.store.healthy, khz, field, sigma_e)
-        const tVm = computeSchwan(this.store.target,  khz, field, sigma_e)
-        const sel = hVm > 0 ? tVm / hVm : 0
-        if (sel > maxSel) { maxSel = sel; optHz = hz }
-      }
-      return optHz
-    },
-
-    // ── Compute nuclear Vm curve for one cell (double-shell) ─────────────
-    computeNuclearCurve(cell: typeof this.store.healthy, sigma_e: number, cosTheta = 1.0): { hz: number; vm: number }[] {
-      return F_POINTS_HZ.map((hz) => ({
-        hz,
-        vm: computeNuclearVm(cell, hz / 1000, this.store.fieldIntensity, sigma_e, cosTheta) * 1000, // mV
-      }))
-    },
-
-    // ── Compute Vm curve for one cell ────────────────────────────────────
-    computeCurve(cell: typeof this.store.healthy, sigma_e: number, cosTheta = 1.0): { hz: number; vm: number }[] {
-      return F_POINTS_HZ.map((hz) => ({
-        hz,
-        vm: computeSchwan(cell, hz / 1000, this.store.fieldIntensity, sigma_e, cosTheta) * 1000, // mV
-      }))
-    },
-
-    // ── DEP Clausius-Mossotti Re[K(f)] curve ─────────────────────────────
-    // Valid in Schwan mode (kHz-500 MHz); not drawn in resonance mode (GHz, model invalid).
-    // Bacteria (rod-shaped) use sphere approximation - qualitatively correct for crossover.
-    // Waveform scale: CW = 0.5, pulsed = dutyCycle (affects magnitude, not direction/sign).
-    computeDepCurve(cell: typeof this.store.healthy, sigma_e: number, eps_r: number): { hz: number; k: number }[] {
-      return F_POINTS_HZ.map((hz) => ({
-        hz,
-        k: computeDepCmReal(cell, hz / 1000, sigma_e, eps_r),
-      }))
-    },
-
-    // ── Selectivity ratio curve Vm_T/Vm_H (cos θ cancels in ratio) ──────
-    computeSelCurve(sigma_e: number): { hz: number; ratio: number }[] {
-      return F_POINTS_HZ.map((hz) => {
-        const vmH = computeSchwan(this.store.healthy, hz / 1000, this.store.fieldIntensity, sigma_e)
-        const vmT = computeSchwan(this.store.target,  hz / 1000, this.store.fieldIntensity, sigma_e)
-        return { hz, ratio: vmH < 1e-12 ? 0 : vmT / vmH }
-      })
-    },
-
     // ── Full chart init (called on mount + resize) ───────────────────────
     initChart() {
       const container = this.$refs.chartEl as HTMLElement
@@ -560,8 +454,8 @@ export default defineComponent({
       const cosTheta = this.store.cosThetaFactor
 
       // Compute active-cell curves (include orientation factor)
-      const healthyCurve = this.computeCurve(this.store.healthy, sigma_e, cosTheta)
-      const targetCurve  = this.computeCurve(this.store.target,  sigma_e, cosTheta)
+      const healthyCurve = computeVmCurve(this.store.healthy, this.store.fieldIntensity, sigma_e, cosTheta)
+      const targetCurve  = computeVmCurve(this.store.target,  this.store.fieldIntensity, sigma_e, cosTheta)
 
       // Auto-scale y
       const allVm = [...healthyCurve.map((d) => d.vm), ...targetCurve.map((d) => d.vm)]
@@ -571,7 +465,7 @@ export default defineComponent({
       // Update axes
       const xAxis = d3.axisBottom<number>(this._xScale!)
         .tickValues([1e4, 1e5, 1e6, 1e7, 1e8, 5e8])
-        .tickFormat((d) => this.formatHz(+d))
+        .tickFormat((d) => formatHz(+d))
         .tickSize(4)
 
       const yAxis = d3.axisLeft<number>(this._yScale!)
@@ -599,7 +493,7 @@ export default defineComponent({
         .call((a) => a.selectAll('line').attr('stroke', 'rgba(255,255,255,0.06)'))
 
       // ── Selectivity ratio curve + right Y-axis ──────────────────────────
-      const selData   = this.computeSelCurve(sigma_e)
+      const selData   = computeSelCurve(this.store.healthy, this.store.target, this.store.fieldIntensity, sigma_e)
       const maxRatio  = Math.max(...selData.map((d) => d.ratio), 2.0)
       const rightDomainMax = Math.ceil(maxRatio * 10) / 10
       this._yRightScale!.domain([0, rightDomainMax])
@@ -653,8 +547,8 @@ export default defineComponent({
       g.select('.axis-label-dep').attr('opacity', 1)
 
       const eps_r    = MEDIA[this.store.medium].permittivity
-      const depHCurve = this.computeDepCurve(this.store.healthy, sigma_e, eps_r)
-      const depTCurve = this.computeDepCurve(this.store.target,  sigma_e, eps_r)
+      const depHCurve = computeDepCurve(this.store.healthy, sigma_e, eps_r)
+      const depTCurve = computeDepCurve(this.store.target,  sigma_e, eps_r)
 
       // K=0 reference line (pDEP above, nDEP below)
       const yK0 = this._yDepScale!(0)
@@ -726,7 +620,7 @@ export default defineComponent({
         .attr('stroke', (d) => GROUP_COLORS[d.group])
         .attr('stroke-width', 1)
         .attr('stroke-opacity', 0.18)
-        .attr('d', (d) => lineGen(this.computeCurve(d, sigma_e)) || '')
+        .attr('d', (d) => lineGen(computeVmCurve(d, this.store.fieldIntensity, sigma_e)) || '')
 
       // Active curves
       const activeGroup = g.select<SVGGElement>('.curves-active')
@@ -736,32 +630,6 @@ export default defineComponent({
       // ±pct% variation in internal conductivity σ_i propagates through τ → fc,
       // producing a shaded region representing literature parameter uncertainty.
       // Uncertainty scales with cell category: mammalian 20%, bacteria 35%, virus 45%.
-      const sigmaUncPct = (radius: number): number => {
-        if (radius < 0.1) return 45  // virus, lipid bilayer σ_i highly variable
-        if (radius < 2.0) return 35  // bacteria, complex wall composition
-        return 20                     // mammalian, well-characterised reference ranges
-      }
-
-      const computeUncBand = (
-        cell: typeof this.store.healthy,
-        pct: number,
-      ): { hz: number; vmLow: number; vmHigh: number }[] => {
-        const field = this.store.fieldIntensity
-        return F_POINTS_HZ.map((hz) => {
-          const khz    = hz / 1000
-          const sigma_i = cell.conductivity  // σ_i = cytoplasm conductivity [S/m]
-          const vmLow  = computeSchwan(
-            { ...cell, conductivity: sigma_i * (1 - pct / 100) },
-            khz, field, sigma_e, cosTheta,
-          ) * 1000
-          const vmHigh = computeSchwan(
-            { ...cell, conductivity: sigma_i * (1 + pct / 100) },
-            khz, field, sigma_e, cosTheta,
-          ) * 1000
-          return { hz, vmLow, vmHigh }
-        })
-      }
-
       const areaGen = d3.area<{ hz: number; vmLow: number; vmHigh: number }>()
         .x((d) => this._xScale!(d.hz))
         .y0((d) => this._yScale!(Math.max(0, d.vmLow)))
@@ -772,14 +640,14 @@ export default defineComponent({
       const tPct = sigmaUncPct(this.store.target.radius)
 
       activeGroup.append('path')
-        .datum(computeUncBand(this.store.healthy, hPct))
+        .datum(computeUncBand(this.store.healthy, this.store.fieldIntensity, sigma_e, cosTheta, hPct))
         .attr('fill', C.primary)
         .attr('fill-opacity', 0.10)
         .attr('stroke', 'none')
         .attr('d', areaGen)
 
       activeGroup.append('path')
-        .datum(computeUncBand(this.store.target, tPct))
+        .datum(computeUncBand(this.store.target, this.store.fieldIntensity, sigma_e, cosTheta, tPct))
         .attr('fill', C.danger)
         .attr('fill-opacity', 0.10)
         .attr('stroke', 'none')
@@ -809,8 +677,8 @@ export default defineComponent({
       nucGroup.selectAll('path').remove()
 
       if (this.store.doubleShellEnabled) {
-        const hNucCurve = this.computeNuclearCurve(this.store.healthy, sigma_e, cosTheta)
-        const tNucCurve = this.computeNuclearCurve(this.store.target,  sigma_e, cosTheta)
+        const hNucCurve = computeNuclearVmCurve(this.store.healthy, this.store.fieldIntensity, sigma_e, cosTheta)
+        const tNucCurve = computeNuclearVmCurve(this.store.target,  this.store.fieldIntensity, sigma_e, cosTheta)
 
         nucGroup.append('path')
           .datum(hNucCurve)
@@ -935,7 +803,7 @@ export default defineComponent({
       // Optimal frequency marker (golden dashed line + star label)
       const optGroup = g.select<SVGGElement>('.opt-marker')
       optGroup.selectAll('*').remove()
-      const optHz = this.computeOptimalFreqHz(sigma_e)
+      const optHz = computeOptimalFreqHz(this.store.healthy, this.store.target, this.store.fieldIntensity, sigma_e)
       if (optHz >= F_MIN_HZ && optHz <= F_MAX_HZ) {
         const ox     = this._xScale!(optHz)
         const optKhz = optHz / 1000
@@ -1049,6 +917,8 @@ export default defineComponent({
 <style lang="scss" scoped>
 @use '../../styles/mixins' as *;
 
+$amber: #fbbf24;
+
 /* Expose group colors as CSS vars for the legend dots */
 .freq-chart {
   --group-reference: var(--color-group-reference);
@@ -1074,51 +944,6 @@ export default defineComponent({
     white-space: nowrap;
   }
 
-  &__legend {
-    @include flex-row(0.75rem);
-    flex-wrap: wrap;
-
-    &-item {
-      @include flex-row(0.3rem);
-      font-size: 0.62rem;
-      font-family: var(--font-mono);
-      color: var(--color-text);
-      white-space: nowrap;
-    }
-
-    &-dot {
-      width: 7px; height: 7px;
-      border-radius: 50%;
-      opacity: 0.75;
-      flex-shrink: 0;
-    }
-
-    &-line {
-      width: 14px; height: 2px;
-      border-radius: 1px;
-      flex-shrink: 0;
-
-      &--h   { background: var(--color-primary); box-shadow: 0 0 4px var(--color-primary); }
-      &--t   { background: var(--color-danger);  box-shadow: 0 0 4px var(--color-danger); }
-      &--sel {
-        width: 18px; height: 0;
-        border-top: 2px dashed #fbbf24;
-        background: transparent;
-        opacity: 0.8;
-      }
-      &--nuc-h {
-        width: 18px; height: 0;
-        border-top: 2px dashed rgba(0, 212, 255, 0.55);
-        background: transparent;
-      }
-      &--nuc-t {
-        width: 18px; height: 0;
-        border-top: 2px dashed rgba(255, 77, 109, 0.55);
-        background: transparent;
-      }
-    }
-  }
-
   &__svg-wrap {
     width: 100%;
     height: 260px;
@@ -1126,69 +951,5 @@ export default defineComponent({
 
     svg { display: block; }
   }
-
-  &__tooltip {
-    position: absolute;
-    top: 32px;
-    transform: translateX(-50%);
-    background: var(--color-surface-2);
-    border: 1px solid var(--color-border);
-    border-radius: 4px;
-    padding: 0.35rem 0.6rem;
-    pointer-events: none;
-    z-index: 10;
-    white-space: nowrap;
-
-    &--flip {
-      transform: translateX(-110%);
-    }
-
-    &-freq {
-      font-size: 0.68rem;
-      font-family: var(--font-mono);
-      color: var(--color-text);
-      margin-bottom: 0.2rem;
-      letter-spacing: 0.03em;
-    }
-
-    &-row {
-      font-size: 0.68rem;
-      font-family: var(--font-mono);
-      display: flex;
-      align-items: baseline;
-      gap: 0.45rem;
-
-      &--h { color: var(--color-primary); }
-      &--t { color: var(--color-danger); }
-    }
-
-    &-dr {
-      font-size: 0.58rem;
-      opacity: 0.65;
-      font-family: var(--font-mono);
-    }
-
-    &-sel {
-      font-size: 0.62rem;
-      font-family: var(--font-mono);
-      color: #fbbf24;
-      opacity: 0.85;
-      margin-top: 0.18rem;
-    }
-
-    &-window {
-      font-size: 0.62rem;
-      font-family: var(--font-mono);
-      color: #4ade80;
-      font-weight: 600;
-      letter-spacing: 0.05em;
-      margin-top: 0.2rem;
-      padding-top: 0.2rem;
-      border-top: 1px solid rgba(74, 222, 128, 0.25);
-    }
-  }
 }
-
-.tip-enter-active, .tip-leave-active { transition: opacity 0.1s; }
-.tip-enter-from, .tip-leave-to { opacity: 0; }
 </style>
