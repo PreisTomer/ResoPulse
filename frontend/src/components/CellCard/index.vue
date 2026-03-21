@@ -230,6 +230,7 @@ import {
   FRAGMENT_INTERVAL_MS,
 } from '@/constants/cellCard'
 import { setupBlobAnimation, setupOscilloscope, spawnFragment } from '@/utils/cellAnimation'
+import type { CellVisualProfile } from '@/utils/cellAnimation'
 import { CELL_STATE, CELL_TYPE, CELL_CATEGORY } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'
@@ -742,9 +743,17 @@ export default defineComponent({
       // more than one D3 timer writing to the same canvas element at a time.
       this.helixTimer?.stop()
       const cellCategory = this.type === CELL_TYPE.HEALTHY ? CELL_CATEGORY.MAMMALIAN : this.store.targetCellCategory
-      const presetId     = this.type === CELL_TYPE.HEALTHY ? this.store.healthy.id : this.store.target.id
+      const cell = this.type === CELL_TYPE.HEALTHY ? this.store.healthy : this.store.target
+      const profile: CellVisualProfile = {
+        presetId:         cell.id,
+        morphologyTag:    cell.morphologyTag,
+        thresholdVoltage: cell.thresholdVoltage,
+        conductivity:     cell.conductivity,
+        resonantFreqGHz:  cell.resonantFreqGHz,
+        capsidQ:          cell.capsidQ,
+      }
       this.helixTimer = setupBlobAnimation(
-        el, this.type, this.accentColor, cellCategory, presetId,
+        el, this.type, this.accentColor, cellCategory, profile,
         () => ({
           impact:                 this.disruptionRatio,
           state:                  this.cellState,

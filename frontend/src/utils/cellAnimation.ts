@@ -21,11 +21,39 @@ import {
   LYSIS_DURATION_MS,
   OSC_W, OSC_H,
 } from '@/constants/cellCard'
-import { CELL_STATE, CELL_CATEGORY, CELL_TYPE, PRESET_ID } from '@/constants/strings'
+import { CELL_STATE, CELL_CATEGORY, CELL_TYPE, PRESET_ID, MORPHOLOGY_TAG } from '@/constants/strings'
 
 // ── Type aliases ──────────────────────────────────────────────────────────────
 type D3Sel<E extends Element> = d3.Selection<E, unknown, null, undefined>
 type PhaseEntry = { baseAngle: number; phaseOffset: number; speed: number }
+
+/**
+ * Static visual profile derived from a CellConfig and passed to setupBlobAnimation.
+ * Known presets are resolved by presetId; custom presets fall back to physics-driven derivation
+ * using thresholdVoltage (malignancy), conductivity (mito fragmentation), and resonantFreqGHz (virus spikes).
+ */
+export interface CellVisualProfile {
+  presetId:          string | undefined
+  /** Bacteria shape override for custom presets — 'rod' | 'coccus' | 'coccobacillus'. */
+  morphologyTag?:    string
+  /** V — lower Vth = more malignant = larger nucleus, more pleomorphic membrane, more protrusions. */
+  thresholdVoltage:  number
+  /** S/m — higher σ_i = stronger Warburg effect = more fragmented, more numerous mitochondria. */
+  conductivity:      number
+  /** GHz — lower f_res = larger, more complex virus = more spikes (custom virus fallback only). */
+  resonantFreqGHz?:  number
+  /** Mechanical Q factor — higher Q = longer, narrower spikes (custom virus fallback only). */
+  capsidQ?:          number
+}
+
+/**
+ * Malignancy score [0–1] derived from membrane threshold voltage.
+ * Lower Vth = more aggressive cancer = higher score.
+ * Reference: healthy hepatocyte Vth ≈ 1.1 V; highly aggressive cancer Vth ≈ 0.5 V.
+ */
+function computeMalignancyScore(thresholdVoltage: number): number {
+  return Math.max(0, Math.min(1, (1.15 - thresholdVoltage) / 0.65))
+}
 
 // ── Module-level animation constants ─────────────────────────────────────────
 
@@ -59,8 +87,7 @@ const NUC_R_MAP: Record<string, number> = {
   adenocarcinoma:27,
   gbm:           25,
 }
-const NUC_R_TARGET_DEFAULT = 26
-const NUC_R_HEALTHY        = 20
+const NUC_R_HEALTHY = 20
 
 /** Per-preset nuclear membrane wave amplitude (controls pleomorphism). */
 const NUC_WAVE_AMP_MAP: Record<string, number> = {
@@ -69,8 +96,7 @@ const NUC_WAVE_AMP_MAP: Record<string, number> = {
   gbm:           5.5,
   panc1:         4.2,
 }
-const NUC_WAVE_AMP_TARGET_DEFAULT = 4.5
-const NUC_WAVE_AMP_HEALTHY        = 2.5
+const NUC_WAVE_AMP_HEALTHY = 2.5
 
 /** Number of membrane ion-channel marker dots per cell. */
 const CHAN_COUNT = 8
@@ -98,7 +124,7 @@ function capsuleR(theta: number, a: number, b: number): number {
  * Positive = outward protrusion (pseudopod/arm). Negative = slight indentation.
  * Biologically: large pseudopods (adeno), stellate arms (GBM/PANC1), round blast (HL60).
  */
-function computeCancerBaseOffset(i: number, N: number, presetId: string | undefined): number {
+function computeCancerBaseOffset(i: number, N: number, profile: CellVisualProfile): number {
   const angleDeg = (i / N) * 360
   const seed = (i * 2971 + 1777) % 2000
   const nearestSpikeAngle = (spikes: number[]): number => {
@@ -110,26 +136,41 @@ function computeCancerBaseOffset(i: number, N: number, presetId: string | undefi
     }
     return minDist
   }
-  if (presetId === PRESET_ID.GBM) {
+  // ── Known presets: exact biologically-curated morphologies ────────────────
+  if (profile.presetId === PRESET_ID.GBM) {
     // 5 stellate invasion protrusions at 72° spacing (GBM stellate morphology)
     const d = nearestSpikeAngle([0, 72, 144, 216, 288])
     return d < 20 ? 12 + (seed % 500) / 150 : (seed % 1000) / 500 - 2.5
   }
-  if (presetId === PRESET_ID.PANC1) {
+  if (profile.presetId === PRESET_ID.PANC1) {
     // 4 desmoplastic arms, slightly off 90° for natural asymmetry
     const d = nearestSpikeAngle([20, 110, 200, 290])
     return d < 22 ? 10 + (seed % 400) / 150 : (seed % 1000) / 500 - 1.5
   }
-  if (presetId === PRESET_ID.ADENOCARCINOMA) {
+  if (profile.presetId === PRESET_ID.ADENOCARCINOMA) {
     // 3 large invasive pseudopods at ~120° spacing
     const d = nearestSpikeAngle([15, 135, 255])
     return d < 25 ? 10 + (seed % 600) / 150 : seed / 200 - 3
   }
-  if (presetId === PRESET_ID.HL60) {
+  if (profile.presetId === PRESET_ID.HL60) {
     // Near-spherical blast cell: minimal bumps
     return (seed % 1200) / 200 - 2.0
   }
-  return seed / 200 - 3  // default: -3 to +7 pseudo-random
+  // ── Custom preset: derive shape from thresholdVoltage (malignancy proxy) ──
+  // Lower Vth = more malignant = more pronounced membrane extensions.
+  const score = computeMalignancyScore(profile.thresholdVoltage)
+  if (score > 0.70) {
+    // Highly invasive: 3 pseudopods at ~120° spacing (adenocarcinoma-like)
+    const d = nearestSpikeAngle([15, 135, 255])
+    return d < 25 ? 9 + (seed % 500) / 150 : seed / 200 - 3
+  }
+  if (score > 0.40) {
+    // Moderately invasive: 4 arms at ~90° spacing (PANC1-like)
+    const d = nearestSpikeAngle([20, 110, 200, 290])
+    return d < 22 ? 7 + (seed % 400) / 150 : (seed % 1000) / 500 - 1.5
+  }
+  // Low malignancy (Vth near healthy): near-spherical with mild random bumps
+  return (seed % 1200) / 200 - 1.8
 }
 
 /**
@@ -138,7 +179,7 @@ function computeCancerBaseOffset(i: number, N: number, presetId: string | undefi
  */
 function buildMitoData(
   isTarget: boolean,
-  presetId: string | undefined,
+  profile: CellVisualProfile,
 ): Array<{ x: number; y: number; rx: number; ry: number; angle: number }> {
   if (!isTarget) {
     return [  // 2 healthy elongated mitochondria with prominent cristae
@@ -146,7 +187,7 @@ function buildMitoData(
       { x:  20, y:  16, rx:  9, ry: 4,   angle: -20 },
     ]
   }
-  switch (presetId) {
+  switch (profile.presetId) {
     case PRESET_ID.ADENOCARCINOMA:
       return [  // 6 highly fragmented (severe Warburg — maximal glycolytic reprogramming)
         { x: -20, y: -14, rx: 6.0, ry: 2.5, angle:  20 },
@@ -189,14 +230,24 @@ function buildMitoData(
         { x:  20, y:  15, rx: 8, ry: 3.5, angle: -18 },
         { x:  -3, y:  18, rx: 7, ry: 3.0, angle:  55 },
       ]
-    default:
-      return [  // generic cancer: 5 fragmented
-        { x: -20, y: -14, rx: 7.0, ry: 2.8, angle:  20 },
-        { x:  19, y:  16, rx: 6.0, ry: 2.5, angle: -25 },
-        { x:  -5, y:  22, rx: 5.0, ry: 2.2, angle:  55 },
-        { x:  13, y:  -9, rx: 6.0, ry: 2.2, angle: -40 },
-        { x: -14, y:   9, rx: 5.0, ry: 2.0, angle:  80 },
+    default: {
+      // Custom preset: derive mito count and size from cytoplasmic conductivity.
+      // Higher σ_i = stronger Warburg glycolytic reprogramming = more fragmented, more numerous mito.
+      // σ_i range for mammalian targets: ~0.3 S/m (low metabolism) to ~1.2 S/m (highly active).
+      const sigma = profile.conductivity
+      const count = Math.min(6, Math.max(2, Math.round(sigma * 6.5)))
+      const rxBase = Math.max(4.0, 7.5 - sigma * 1.5)  // smaller mito at higher conductivity (fragmentation)
+      const ryBase = Math.max(1.6, 2.8 - sigma * 0.5)
+      const positions = [
+        { x: -20, y: -14, angle:  20 },
+        { x:  19, y:  16, angle: -25 },
+        { x:  -5, y:  22, angle:  55 },
+        { x:  13, y:  -9, angle: -40 },
+        { x: -14, y:   9, angle:  80 },
+        { x:   8, y: -22, angle:  10 },
       ]
+      return positions.slice(0, count).map(({ x, y, angle }) => ({ x, y, angle, rx: rxBase, ry: ryBase }))
+    }
   }
 }
 
@@ -228,7 +279,7 @@ interface MammalianAnatomy {
   /** Stored from setup - needed during per-tick updates */
   type:         string
   accentColor:  string
-  presetId:     string | undefined
+  profile:      CellVisualProfile
   mitoEls:      MitoEl[]
   nucG:         D3Sel<SVGGElement>
   nucBlob:      D3Sel<SVGPathElement>
@@ -280,27 +331,31 @@ function setupMammalianAnatomy(
   cellG: D3Sel<SVGGElement>,
   type: string,
   accentColor: string,
-  presetId?: string,
+  profile: CellVisualProfile,
 ): MammalianAnatomy {
   const isTarget = type === CELL_TYPE.TARGET
+  const malignancyScore = isTarget ? computeMalignancyScore(profile.thresholdVoltage) : 0
 
-  const NUC_PTS = !isTarget ? 10
-    : presetId === PRESET_ID.ADENOCARCINOMA ? 16
-    : presetId === PRESET_ID.HL60           ? 14
+  // Nuclear blob point count: more points = more irregular membrane (pleomorphism)
+  const NUC_PTS = !isTarget                                    ? 10
+    : profile.presetId === PRESET_ID.ADENOCARCINOMA            ? 16
+    : profile.presetId === PRESET_ID.HL60                      ? 14
+    : (malignancyScore > 0.60)                                 ? 15  // custom high-grade
     : 12
 
-  const NUCL_R = !isTarget ? 6.5
-    : presetId === PRESET_ID.ADENOCARCINOMA ? 9.0
-    : presetId === PRESET_ID.GBM            ? 8.5
-    : presetId === PRESET_ID.PANC1          ? 8.0
-    : presetId === PRESET_ID.HL60           ? 4.5
-    : 7.0
+  // Nucleolus circle radius (px) — higher N/C ratio in aggressive cancers
+  const NUCL_R = !isTarget                                     ? 6.5
+    : profile.presetId === PRESET_ID.ADENOCARCINOMA            ? 9.0
+    : profile.presetId === PRESET_ID.GBM                       ? 8.5
+    : profile.presetId === PRESET_ID.PANC1                     ? 8.0
+    : profile.presetId === PRESET_ID.HL60                      ? 4.5
+    : 6.0 + malignancyScore * 3.0  // custom: 6.0px (low) → 9.0px (high malignancy)
 
   const cortexRing = cellG.append('circle').attr('r', BASE_R * 0.90)
     .attr('fill', 'none').attr('stroke', accentColor)
     .attr('stroke-width', 0.7).attr('stroke-opacity', 0.09)
 
-  const mitoData = buildMitoData(isTarget, presetId)
+  const mitoData = buildMitoData(isTarget, profile)
   const mitoG = cellG.append('g')
   const mitoEls: MitoEl[] = mitoData.map((m) => {
     const g     = mitoG.append('g')
@@ -340,8 +395,11 @@ function setupMammalianAnatomy(
       .attr('fill', accentColor).attr('fill-opacity', 0.20)
     nucG.append('circle').attr('r', NUCL_R * 0.30)
       .attr('fill', accentColor).attr('fill-opacity', 0.38)
-    // 3 nucleoli is a hallmark of high-grade malignancy (adenocarcinoma only)
-    if (presetId === PRESET_ID.ADENOCARCINOMA) {
+    // Third nucleolus: hallmark of high-grade malignancy.
+    // Known preset: adenocarcinoma. Custom: malignancyScore > 0.75 (very low Vth).
+    const isHighGrade = profile.presetId === PRESET_ID.ADENOCARCINOMA
+      || (!Object.values(PRESET_ID).includes(profile.presetId as never) && malignancyScore > 0.75)
+    if (isHighGrade) {
       nucleolus3 = nucG.append('circle').attr('r', NUCL_R * 0.62)
         .attr('fill', accentColor).attr('fill-opacity', 0.18)
     }
@@ -354,11 +412,11 @@ function setupMammalianAnatomy(
     speed:       0.22 + ((i * 601) % 1000) / 4500,
   }))
 
-  // ── Preset-specific organelles and structural features ─────────────────────
+  // ── Organelles: known presets get curated anatomy; custom gets conductivity-driven vesicles ──
   const organelleEls: OrganelleEl[] = []
 
   if (isTarget) {
-    if (presetId === PRESET_ID.MCF7) {
+    if (profile.presetId === PRESET_ID.MCF7) {
       // Lipid droplets: ER+ breast cancer metabolism (MCF7)
       const droplets = [{ x: -14, y: 15, r: 4.5 }, { x: 16, y: -9, r: 4.0 }, { x: 5, y: 19, r: 3.5 }]
       droplets.forEach(({ x, y, r }) => {
@@ -368,7 +426,7 @@ function setupMammalianAnatomy(
         organelleEls.push({ el, baseX: x, baseY: y, driftAmp: 2.5, opacity: 0.22 })
       })
 
-    } else if (presetId === PRESET_ID.HL60) {
+    } else if (profile.presetId === PRESET_ID.HL60) {
       // Condensed chromatin granules (HL60 leukemia blast)
       const chromatinPts = [
         { x: -10, y: -8 }, { x: 8, y: -13 }, { x: -4, y: 10 }, { x: 12, y: 6 }, { x: 1, y: -16 },
@@ -379,7 +437,7 @@ function setupMammalianAnatomy(
         organelleEls.push({ el, baseX: x, baseY: y, driftAmp: 0.8, opacity: 0.35 })
       })
 
-    } else if (presetId === PRESET_ID.LNCAP) {
+    } else if (profile.presetId === PRESET_ID.LNCAP) {
       // Secretory vesicles at apical pole: PSA/androgen-driven secretion
       const vesicles = [
         { x: -8,  y: -22, r: 3.5 }, { x:  2, y: -26, r: 3.0 }, { x: 10, y: -20, r: 3.5 },
@@ -392,7 +450,7 @@ function setupMammalianAnatomy(
         organelleEls.push({ el, baseX: x, baseY: y, driftAmp: 2.0, opacity: 0.25 })
       })
 
-    } else if (presetId === PRESET_ID.A549) {
+    } else if (profile.presetId === PRESET_ID.A549) {
       // Lamellar bodies: pulmonary surfactant vesicles (type II pneumocyte, A549)
       const lamPts = [{ x: -16, y: 13 }, { x: 14, y: -15 }]
       lamPts.forEach(({ x, y }) => {
@@ -406,7 +464,7 @@ function setupMammalianAnatomy(
         organelleEls.push({ el, baseX: x, baseY: y, driftAmp: 1.5, opacity: 0.22 })
       })
 
-    } else if (presetId === PRESET_ID.PANC1) {
+    } else if (profile.presetId === PRESET_ID.PANC1) {
       // Dense heterochromatin blocks (PANC-1)
       const hcPts = [{ x: -9, y: -9 }, { x: 9, y: 6 }, { x: -3, y: 13 }, { x: 6, y: -12 }]
       hcPts.forEach(({ x, y }) => {
@@ -414,11 +472,21 @@ function setupMammalianAnatomy(
           .attr('fill', accentColor).attr('fill-opacity', 0.32)
         organelleEls.push({ el, baseX: x, baseY: y, driftAmp: 0.5, opacity: 0.32 })
       })
+
+    } else if (!Object.values(PRESET_ID).includes(profile.presetId as never) && profile.conductivity > 0.7) {
+      // Custom high-conductivity cancer: generic secretory vesicles (elevated metabolic activity)
+      const vesicles = [{ x: -12, y: 16, r: 3.5 }, { x: 14, y: -12, r: 3.0 }, { x: -4, y: -20, r: 3.0 }]
+      vesicles.forEach(({ x, y, r }) => {
+        const el = cellG.append('circle').attr('cx', x).attr('cy', y).attr('r', r)
+          .attr('fill', accentColor).attr('fill-opacity', 0.20)
+          .attr('stroke', accentColor).attr('stroke-width', 0.6).attr('stroke-opacity', 0.32)
+        organelleEls.push({ el, baseX: x, baseY: y, driftAmp: 2.0, opacity: 0.20 })
+      })
     }
   }
 
   return {
-    type, accentColor, presetId,
+    type, accentColor, profile,
     mitoEls, nucG, nucBlob, nucOuterEnv,
     nucleolus, nucleolus2, nucleolus3,
     cortexRing, nucPhases, organelleEls,
@@ -513,16 +581,29 @@ function setupBacteriaAnatomy(
 function setupVirusAnatomy(
   cellG: D3Sel<SVGGElement>,
   accentColor: string,
-  presetId: string | undefined,
+  profile: CellVisualProfile,
 ): VirusAnatomy {
-  const isCov2    = presetId === PRESET_ID.SARSCOV2
-  const N_SPIKES  = isCov2 ? 16 : 12
-  const STALK_LEN = isCov2 ? 13 : 9
-  const HEAD_R    = isCov2 ? 3.8 : 2.5
+  const isCov2 = profile.presetId === PRESET_ID.SARSCOV2
+  const isInfluenza = profile.presetId === PRESET_ID.INFLUENZA
 
-  // Inner rings: matrix protein (outer) + nucleocapsid/RNP (inner)
-  const innerR1 = isCov2 ? 22 : 18
-  const innerR2 = isCov2 ? 14 : 10
+  // Known presets use exact curated values; custom viruses derive from resonantFreqGHz.
+  // Lower resonant frequency = larger/heavier capsid = more complex surface (more spikes).
+  let N_SPIKES: number, STALK_LEN: number, HEAD_R: number
+  if (isCov2) {
+    N_SPIKES = 16; STALK_LEN = 13; HEAD_R = 3.8
+  } else if (isInfluenza) {
+    N_SPIKES = 12; STALK_LEN = 9;  HEAD_R = 2.5
+  } else {
+    // Custom virus: derive from resonantFreqGHz (lower f_res = larger virus = more spikes)
+    const fGHz = profile.resonantFreqGHz ?? 0.75
+    N_SPIKES  = fGHz < 0.65 ? 16 : fGHz < 0.85 ? 14 : 12
+    STALK_LEN = fGHz < 0.65 ? 13 : fGHz < 0.85 ? 11 : 9
+    HEAD_R    = fGHz < 0.65 ? 3.8 : fGHz < 0.85 ? 3.2 : 2.5
+  }
+
+  // Inner ring radii scale with virus complexity
+  const innerR1 = isCov2 ? 22 : (N_SPIKES >= 16 ? 22 : 18)
+  const innerR2 = isCov2 ? 14 : (N_SPIKES >= 16 ? 14 : 10)
   const virusInnerRings = [
     cellG.append('circle').attr('r', innerR1)
       .attr('fill', 'none').attr('stroke', accentColor)
@@ -598,11 +679,17 @@ function updateMammalianAnatomy(anat: MammalianAnatomy, p: MammalianUpdateParams
     c2.attr('stroke', thermalColor).attr('stroke-opacity', cristaeOp)
   })
 
-  // ── Nucleus: size by preset (HL60 fills cell; PANC1/adeno high N/C ratio) ─
-  const NUC_R = anat.presetId !== undefined && NUC_R_MAP[anat.presetId] !== undefined
-    ? NUC_R_MAP[anat.presetId]!
-    : type === CELL_TYPE.TARGET ? NUC_R_TARGET_DEFAULT : NUC_R_HEALTHY
-  const isHl60 = anat.presetId === PRESET_ID.HL60
+  // ── Nucleus: size and pleomorphism — known presets use curated values; custom uses physics ─
+  const pid = anat.profile.presetId
+  const malignancyScore = type === CELL_TYPE.TARGET
+    ? computeMalignancyScore(anat.profile.thresholdVoltage) : 0
+  // NUC_R: nucleus blob radius in canvas-px (not the same as cell radius µm)
+  const NUC_R = pid !== undefined && NUC_R_MAP[pid] !== undefined
+    ? NUC_R_MAP[pid]!
+    : type === CELL_TYPE.TARGET
+      ? Math.round(22 + malignancyScore * 8)  // 22px (low malignancy) → 30px (highly aggressive)
+      : NUC_R_HEALTHY
+  const isHl60 = pid === PRESET_ID.HL60
   const NUC_DX = isHl60 ? 0 : type === CELL_TYPE.TARGET ? -2 : 0
   const NUC_DY = isHl60 ? 0 : type === CELL_TYPE.TARGET ?  6 : 4
   // Nuclear breathing (nourishing): PIEZO1-Ca2+ chromatin decondensation oscillation (~0.3 Hz)
@@ -610,9 +697,12 @@ function updateMammalianAnatomy(anat: MammalianAnatomy, p: MammalianUpdateParams
   const nucScaleY  = 1 + impact * 0.28 + nucBreath
   const nucScaleX  = 1 - impact * 0.10
   const nucNoise   = isVibrating ? impact * 1.8 : 0
-  const nucWaveAmp = anat.presetId !== undefined && NUC_WAVE_AMP_MAP[anat.presetId] !== undefined
-    ? NUC_WAVE_AMP_MAP[anat.presetId]!
-    : type === CELL_TYPE.TARGET ? NUC_WAVE_AMP_TARGET_DEFAULT : NUC_WAVE_AMP_HEALTHY
+  // nucWaveAmp: controls nuclear membrane pleomorphism (higher = more irregular = more malignant)
+  const nucWaveAmp = pid !== undefined && NUC_WAVE_AMP_MAP[pid] !== undefined
+    ? NUC_WAVE_AMP_MAP[pid]!
+    : type === CELL_TYPE.TARGET
+      ? 2.0 + malignancyScore * 4.5  // 2.0 (near-spherical) → 6.5 (highly pleomorphic)
+      : NUC_WAVE_AMP_HEALTHY
   const nucPts: BlobPoint[] = anat.nucPhases.map((ph) => {
     const wave  = Math.sin(elapsed * 0.0006 * ph.speed + ph.phaseOffset) * nucWaveAmp
     const noise = (Math.random() - 0.5) * nucNoise
@@ -624,7 +714,7 @@ function updateMammalianAnatomy(anat: MammalianAnatomy, p: MammalianUpdateParams
   const nucMigration = isVibrating ? -(impact - 0.85) / 0.15 * 12 : 0
   anat.nucG.attr('transform',
     `translate(${NUC_DX},${(NUC_DY + nucMigration).toFixed(1)}) scale(${nucScaleX.toFixed(3)},${nucScaleY.toFixed(3)})`)
-  const nucFillOpacity = anat.presetId === PRESET_ID.PANC1 ? 0.20 : 0.12
+  const nucFillOpacity = pid === PRESET_ID.PANC1 ? 0.20 : 0.12
   anat.nucBlob.attr('d', nucLineGen(nucPts) || '')
     .attr('fill', color).attr('fill-opacity', nucFillOpacity)
     .attr('stroke', color).attr('stroke-opacity', isNourishing ? 0.60 : 0.42)
@@ -776,7 +866,7 @@ function updateVirusAnatomy(anat: VirusAnatomy, p: VirusUpdateParams): void {
  * @param type         'healthy' | 'target'
  * @param accentColor  Fixed accent color
  * @param cellCategory Biological category — determines anatomy drawn
- * @param presetId     Specific preset ID — refines shape within category
+ * @param profile      Visual profile: known presets resolved by presetId; custom cells use physics fields
  * @param getFrame     Called each tick; reads reactive Vue state
  */
 export function setupBlobAnimation(
@@ -784,15 +874,21 @@ export function setupBlobAnimation(
   type: 'healthy' | 'target',
   accentColor: string,
   cellCategory: 'mammalian' | 'bacteria' | 'virus',
-  presetId: string | undefined,
+  profile: CellVisualProfile,
   getFrame: () => BlobFrame,
 ): d3.Timer {
   const W = CANVAS_W, H = CANVAS_H, cx = W / 2, cy = H / 2
 
-  // rodA = tall semi-axis (= BASE_R), rodB = narrow semi-axis (≈ ROD_RATIO × BASE_R)
-  const isRod = presetId === PRESET_ID.ECOLI
+  // Rod shape: known E. coli preset OR explicit rod morphologyTag.
+  // Coccobacillus (short rod): same isRod path but with a higher ROD_B (lower aspect ratio).
+  const isCoccobacillus = profile.morphologyTag === MORPHOLOGY_TAG.COCCOBACILLUS
+  const isRod = profile.presetId === PRESET_ID.ECOLI
+    || profile.morphologyTag === MORPHOLOGY_TAG.ROD
+    || isCoccobacillus
   const ROD_A = BASE_R
-  const ROD_B = Math.round(BASE_R * ROD_RATIO)
+  const ROD_B = isCoccobacillus
+    ? Math.round(BASE_R * 0.65)   // short rod: aspect ratio ~1.5 (e.g. H. pylori)
+    : Math.round(BASE_R * ROD_RATIO)  // standard rod: aspect ratio ~2.2 (e.g. E. coli)
 
   const shapeBaseR = (theta: number): number =>
     isRod ? capsuleR(theta, ROD_A, ROD_B) : BASE_R
@@ -912,11 +1008,11 @@ export function setupBlobAnimation(
 
   // ── Category-specific anatomy setup ───────────────────────────────────────
   const mammalianAnatomy = cellCategory === CELL_CATEGORY.MAMMALIAN
-    ? setupMammalianAnatomy(bodyG, type, accentColor, presetId) : null
+    ? setupMammalianAnatomy(bodyG, type, accentColor, profile) : null
   const bacteriaAnatomy  = cellCategory === CELL_CATEGORY.BACTERIA
     ? setupBacteriaAnatomy(bodyG, accentColor, isRod, ROD_A, ROD_B) : null
   const virusAnatomy     = cellCategory === CELL_CATEGORY.VIRUS
-    ? setupVirusAnatomy(bodyG, accentColor, presetId) : null
+    ? setupVirusAnatomy(bodyG, accentColor, profile) : null
 
   // ── Membrane stroke (on top of all interior elements) ─────────────────────
   const blobStroke = bodyG.append('path').attr('fill', 'none').attr('stroke', accentColor)
@@ -1004,7 +1100,7 @@ export function setupBlobAnimation(
   const cancerBaseOffsets: number[] = []
   if (cellCategory === CELL_CATEGORY.MAMMALIAN && type === CELL_TYPE.TARGET) {
     for (let i = 0; i < N; i++) {
-      cancerBaseOffsets.push(computeCancerBaseOffset(i, N, presetId))
+      cancerBaseOffsets.push(computeCancerBaseOffset(i, N, profile))
     }
   }
 

@@ -1,7 +1,7 @@
 // Copyright © 2026 Tomer Preis. All rights reserved.
 // Unauthorized copying or distribution is prohibited.
 
-import type { CellState, CellType, ExperimentalBasis } from '@/constants/strings'
+import type { CellState, CellType, ExperimentalBasis, MorphologyTag } from '@/constants/strings'
 export type { CellState, CellType }
 
 // ── Cell configuration ────────────────────────────────────────────────────────
@@ -49,6 +49,9 @@ export interface CellConfig {
   specificHeatCapacity: number // J/(kg·K)
   // Animation
   amplitude: number            // 0-1, drives oscilloscope wave height
+  /** Explicit morphology shape for custom presets — drives animation when no presetId match exists.
+   *  Bacteria only: 'rod' | 'coccus' | 'coccobacillus'. Mammalian and virus cells ignore this field. */
+  morphologyTag?: MorphologyTag
 }
 
 // Type alias for backward compatibility with existing CellCard / store references

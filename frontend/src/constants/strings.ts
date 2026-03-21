@@ -136,6 +136,17 @@ export type PresetId          = typeof PRESET_ID[keyof typeof PRESET_ID]
  */
 export const NULL_DISPLAY = '\u2014'
 
+/**
+ * Bacterial and cellular morphology shape tags.
+ * Used by custom presets to drive animation shape when no presetId match exists.
+ */
+export const MORPHOLOGY_TAG = {
+  ROD:           'rod',           // elongated rod (e.g. E. coli, Lactobacillus)
+  COCCUS:        'coccus',        // spherical (e.g. MRSA, Streptococcus)
+  COCCOBACILLUS: 'coccobacillus', // short rod, low aspect ratio (e.g. H. pylori)
+} as const
+export type MorphologyTag = typeof MORPHOLOGY_TAG[keyof typeof MORPHOLOGY_TAG]
+
 /** Cell preset IDs (aligns with CellPreset.id field in cellLibrary.ts) */
 export const PRESET_ID = {
   HEPATOCYTE:     'hepatocyte',
