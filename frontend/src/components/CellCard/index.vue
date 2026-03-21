@@ -198,8 +198,7 @@
       <div v-if="cellState === CELL_STATE.LYSED" class="cell-card__destroyed">
         <span class="cell-card__destroyed-text">{{ thermalLysis ? $t('cells.states.thermalLysis') : $t('cells.states.membraneLysed') }}</span>
         <span v-if="thermalLysis" class="cell-card__destroyed-sub">{{ $t('cells.states.vaporized') }}</span>
-        <button class="cell-card__lysis-btn" :disabled="!canReset" @click="resetToStable">{{ $t('cells.states.resetCell') }}</button>
-        <span v-if="!canReset" class="cell-card__lysis-btn--locked">{{ thermalLysis ? $t('cells.states.reduceFieldThermal') : $t('cells.states.reduceField') }}</span>
+        <button class="cell-card__lysis-btn" @click="resetToStable">{{ $t('cells.states.resetCell') }}</button>
       </div>
     </div>
 
@@ -323,7 +322,10 @@ export default defineComponent({
         ? this.store.healthyDisruptionRatio
         : this.store.targetDisruptionRatio
     },
-    canReset(): boolean { return this.disruptionRatio <= THRESHOLDS.DISRUPTION_WARN },
+    // After lysis the cell is destroyed — reset is always available regardless of field intensity.
+    // The field gate was causing the overlay to visually change state when the field dropped,
+    // which was confusing: a dead cell should look dead and stay dead until reset is clicked.
+    canReset(): boolean { return this.cellState === CELL_STATE.LYSED },
 
     /** 100 → 0 % as the lysis countdown drains; null when not armed. */
     lysisIntegrityPct(): number | null {
@@ -752,6 +754,7 @@ export default defineComponent({
           freqKHz:                this.store.currentBroadcastFrequency,
           nuclearDisruptionRatio: this.store.doubleShellEnabled ? this.nuclearDisruptionRatio : 0,
           depCmReal:              this.type === CELL_TYPE.HEALTHY ? this.store.depHealthyCmReal : this.store.depTargetCmReal,
+          waveform:               this.store.waveform,
         }),
       )
     },
@@ -760,6 +763,7 @@ export default defineComponent({
       if (!this.cellData) return
       const el = this.$refs.oscCanvas as HTMLElement
       if (!el) return
+      this.oscTimer?.stop()
       this.oscTimer = setupOscilloscope(
         el, this.accentColor,
         () => ({
@@ -796,6 +800,11 @@ export default defineComponent({
       }, FRAGMENT_INTERVAL_MS)
       this.shatterTimeout = setTimeout(() => {
         clearInterval(this.particleInterval ?? undefined)
+        // Stop both animation timers explicitly so no live frame runs after lysis.
+        // The timers also self-stop when they see LYSED in getFrame(), but doing it
+        // here guarantees the canvas is frozen before Vue updates the overlay v-if.
+        this.helixTimer?.stop()
+        this.oscTimer?.stop()
         this.cellState = CELL_STATE.LYSED
         if (this.type === CELL_TYPE.HEALTHY) this.store.setHealthyCellState(CELL_STATE.LYSED)
         else this.store.setTargetCellState(CELL_STATE.LYSED)

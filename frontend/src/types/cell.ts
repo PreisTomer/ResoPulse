@@ -69,6 +69,7 @@ export interface BlobFrame {
   freqKHz: number      // applied frequency [kHz], drives field ray color
   nuclearDisruptionRatio: number  // Vm_nuc / nuclear threshold [0-n]; 0 for non-mammalian or single-shell mode
   depCmReal: number               // Re[K(f)] Clausius-Mossotti DEP factor [-0.5, +0.5]; >0 = pDEP, <0 = nDEP
+  waveform: 'cw' | 'pulsed'
 }
 
 /** Data read by setupOscilloscope on each D3 timer tick */

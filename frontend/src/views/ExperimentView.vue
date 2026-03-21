@@ -246,13 +246,27 @@
           {{ sweepWindow.param === 'field' ? $t('sweep.fieldUnit') : $t('sweep.freqUnit') }}
         </span>
         <span class="experiment__snap-bar-affects">{{ sweepWindow.param === 'field' ? $t('exp.snapBarSubField') : $t('exp.snapBarSubFreq') }} {{ Math.round((sweepWindow.lo + sweepWindow.hi) / 2) }} {{ sweepWindow.param === 'field' ? $t('sweep.fieldUnit') : $t('sweep.freqUnit') }}</span>
-        <span v-if="!snapConfirmed" class="experiment__snap-bar-lysis-warn">{{ $t('exp.snapBarLysisWarn', { cellLabel: snapLysisCellLabel }) }}</span>
-        <button
-          class="experiment__snap-bar-btn"
-          :class="{ 'experiment__snap-bar-btn--confirm': snapConfirming, 'experiment__snap-bar-btn--confirmed': snapConfirmed }"
-          :disabled="snapConfirmed"
-          @click="snapToWindow"
-        >{{ snapConfirming ? $t('exp.snapBarBtnConfirm', { cellLabel: snapLysisCellLabel }) : snapConfirmed ? $t('exp.snapBarBtnApplied') : $t('exp.snapBarBtn') }}</button>
+        <span v-if="snapConfirming" class="experiment__snap-bar-lysis-warn">{{ $t('exp.snapBarLysisWarn', { cellLabel: snapLysisCellLabel }) }}</span>
+        <div class="experiment__snap-confirm-row">
+          <template v-if="!snapConfirming && !snapConfirmed">
+            <button class="experiment__snap-bar-btn" @click="snapToWindow">
+              {{ $t('exp.snapBarBtn') }}
+            </button>
+          </template>
+          <template v-else-if="snapConfirming">
+            <button class="experiment__snap-bar-btn experiment__snap-bar-btn--confirm" @click="snapToWindow">
+              {{ $t('exp.snapBarBtnConfirm') }}
+            </button>
+            <button class="experiment__snap-bar-btn experiment__snap-bar-btn--cancel" @click="cancelSnap">
+              {{ $t('exp.snapBarBtnCancel') }}
+            </button>
+          </template>
+          <template v-else>
+            <button class="experiment__snap-bar-btn experiment__snap-bar-btn--confirmed" disabled>
+              {{ $t('exp.snapBarBtnApplied') }}
+            </button>
+          </template>
+        </div>
       </div>
 
       <PopulationPanel @open-change="populationPanelOpen = $event" />
@@ -558,6 +572,11 @@ export default defineComponent({
       broadcastStateSync()
       // Lock the snap button until the cell is reset - prevents re-snapping mid-lysis.
       this.snapConfirmed = true
+    },
+
+    cancelSnap() {
+      clearTimeout(this.snapResetTimer ?? undefined)
+      this.snapConfirming = false
     },
 
     loadHealthyPreset(preset: CellPreset) {
@@ -1128,8 +1147,15 @@ export default defineComponent({
     white-space: nowrap;
   }
 
-  &__snap-bar-btn {
+  &__snap-confirm-row {
     margin-left: auto;
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  &__snap-bar-btn {
     padding: 0.22rem 0.75rem;
     background: rgba(34, 197, 94, 0.14);
     border: 1px solid rgba(34, 197, 94, 0.4);
@@ -1168,6 +1194,18 @@ export default defineComponent({
       &:hover {
         background: transparent;
         border-color: rgba(255, 255, 255, 0.15);
+      }
+    }
+
+    &--cancel {
+      background: transparent;
+      border-color: rgba(255, 255, 255, 0.18);
+      color: var(--color-text-muted);
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(255, 255, 255, 0.32);
+        color: var(--color-text);
       }
     }
   }
