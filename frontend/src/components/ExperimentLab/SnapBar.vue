@@ -116,8 +116,8 @@ export default defineComponent({
   align-items: center;
   gap: 0.75rem;
   padding: 0.55rem 1.1rem;
-  background: linear-gradient(90deg, rgba(34, 197, 94, 0.08) 0%, rgba(34, 197, 94, 0.04) 100%);
-  border: 1px solid rgba(34, 197, 94, 0.28);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--color-ok) 8%, transparent) 0%, color-mix(in srgb, var(--color-ok) 4%, transparent) 100%);
+  border: 1px solid color-mix(in srgb, var(--color-ok) 28%, transparent);
   border-radius: var(--radius);
   flex-wrap: wrap;
   gap: 0.4rem 0.75rem;
@@ -125,33 +125,33 @@ export default defineComponent({
 
 .experiment__snap-bar-label {
   font-family: var(--font-mono);
-  font-size: 0.68rem;
+  font-size: var(--fs-xs);
   font-weight: 600;
   letter-spacing: 0.06em;
-  color: rgba(34, 197, 94, 0.9);
+  color: color-mix(in srgb, var(--color-ok) 90%, transparent);
   white-space: nowrap;
 }
 
 .experiment__snap-bar-range {
   font-family: var(--font-mono);
-  font-size: 0.75rem;
+  font-size: var(--fs-sm);
   color: var(--color-text-heading);
-  background: rgba(34, 197, 94, 0.12);
-  border: 1px solid rgba(34, 197, 94, 0.25);
+  background: color-mix(in srgb, var(--color-ok) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-ok) 25%, transparent);
   border-radius: 3px;
   padding: 0.1rem 0.45rem;
   white-space: nowrap;
 }
 
 .experiment__snap-bar-affects {
-  font-size: 0.66rem;
+  font-size: var(--fs-xs);
   color: var(--color-text-muted);
   flex: 1;
   white-space: nowrap;
 }
 
 .experiment__snap-bar-lysis-warn {
-  font-size: 0.63rem;
+  font-size: var(--fs-xxs);
   font-family: var(--font-mono);
   color: var(--color-danger);
   opacity: 0.8;
@@ -168,31 +168,31 @@ export default defineComponent({
 
 .experiment__snap-bar-btn {
   padding: 0.22rem 0.75rem;
-  background: rgba(34, 197, 94, 0.14);
-  border: 1px solid rgba(34, 197, 94, 0.4);
+  background: color-mix(in srgb, var(--color-ok) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-ok) 40%, transparent);
   border-radius: 4px;
-  color: rgba(34, 197, 94, 0.95);
+  color: color-mix(in srgb, var(--color-ok) 95%, transparent);
   font-family: var(--font-mono);
-  font-size: 0.7rem;
+  font-size: var(--fs-xs);
   letter-spacing: 0.04em;
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s, color 0.15s;
   white-space: nowrap;
 
   &:hover {
-    background: rgba(34, 197, 94, 0.24);
-    border-color: rgba(34, 197, 94, 0.65);
+    background: color-mix(in srgb, var(--color-ok) 24%, transparent);
+    border-color: color-mix(in srgb, var(--color-ok) 65%, transparent);
   }
 
   &--confirm {
-    background: rgba(239, 68, 68, 0.14);
-    border-color: rgba(239, 68, 68, 0.55);
+    background: color-mix(in srgb, var(--color-danger) 14%, transparent);
+    border-color: color-mix(in srgb, var(--color-danger) 55%, transparent);
     color: var(--color-danger);
     animation: snap-confirm-pulse 0.7s ease-in-out infinite alternate;
 
     &:hover {
-      background: rgba(239, 68, 68, 0.24);
-      border-color: rgba(239, 68, 68, 0.8);
+      background: color-mix(in srgb, var(--color-danger) 24%, transparent);
+      border-color: color-mix(in srgb, var(--color-danger) 80%, transparent);
     }
   }
 

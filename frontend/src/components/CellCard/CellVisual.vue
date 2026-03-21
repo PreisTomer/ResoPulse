@@ -697,8 +697,8 @@ export default defineComponent({
 
   &__nuclear-bar-label {
     font-family: var(--font-mono);
-    font-size: 0.55rem;
-    color: #a78bfa;
+    font-size: var(--fs-xxs);
+    color: var(--color-purple);
     opacity: 0.75;
     white-space: nowrap;
     width: 1.8rem;
@@ -708,25 +708,25 @@ export default defineComponent({
   &__nuclear-bar-track {
     flex: 1;
     height: 3px;
-    background: rgba(167, 139, 250, 0.12);
+    background: color-mix(in srgb, var(--color-purple) 12%, transparent);
     border-radius: 2px;
     overflow: hidden;
   }
 
   &__nuclear-bar-fill {
     height: 100%;
-    background: #a78bfa;
+    background: var(--color-purple);
     border-radius: 2px;
     transition: width 0.3s ease;
 
-    &--caution { background: #fbbf24; }
-    &--warn    { background: #ff4d6d; }
+    &--caution { background: var(--color-amber); }
+    &--warn    { background: var(--color-danger); }
   }
 
   &__nuclear-bar-pct {
     font-family: var(--font-mono);
-    font-size: 0.55rem;
-    color: #a78bfa;
+    font-size: var(--fs-xxs);
+    color: var(--color-purple);
     opacity: 0.75;
     width: 2rem;
     text-align: right;
@@ -752,8 +752,8 @@ export default defineComponent({
     border-radius: 3px;
     line-height: 1.4;
 
-    &--healthy { background: rgba(0, 212, 255, 0.15); color: var(--color-primary); }
-    &--target  { background: rgba(255, 77, 109, 0.15); color: var(--color-danger); }
+    &--healthy { background: color-mix(in srgb, var(--color-primary) 15%, transparent); color: var(--color-primary); }
+    &--target  { background: color-mix(in srgb, var(--color-danger) 15%, transparent); color: var(--color-danger); }
   }
 
   &__compact-dr {
@@ -767,14 +767,14 @@ export default defineComponent({
     &--critical    { color: var(--color-danger); }
     &--vibrating   { color: var(--color-danger); }
     &--lysing      { color: var(--color-danger); }
-    &--lysed       { color: rgba(255, 77, 109, 0.6); }
+    &--lysed       { color: color-mix(in srgb, var(--color-danger) 60%, transparent); }
   }
 
-  &__compact-sep   { color: var(--color-text-muted); opacity: 0.45; font-size: 0.9rem; }
+  &__compact-sep   { color: var(--color-text-muted); opacity: 0.45; font-size: var(--fs-xl); }
   &__compact-temp  { font-size: 1.0rem; color: var(--color-text-muted); opacity: 0.8; }
 
   &__compact-dot {
-    font-size: 0.75rem;
+    font-size: var(--fs-sm);
     color: var(--color-text-muted);
 
     &--nourishing  { color: var(--color-primary); }
@@ -783,11 +783,11 @@ export default defineComponent({
     &--critical    { color: var(--color-danger); }
     &--vibrating   { color: var(--color-danger); animation: warn-fade 0.8s ease-in-out infinite; }
     &--lysing      { color: var(--color-danger); animation: warn-fade 0.5s ease-in-out infinite; }
-    &--lysed       { color: rgba(255, 77, 109, 0.5); }
+    &--lysed       { color: color-mix(in srgb, var(--color-danger) 50%, transparent); }
   }
 
   &__compact-state {
-    font-size: 0.95rem;
+    font-size: var(--fs-xl);
     letter-spacing: 0.1em;
     color: var(--color-text-muted);
 
@@ -797,7 +797,7 @@ export default defineComponent({
     &--critical    { color: var(--color-danger); }
     &--vibrating   { color: var(--color-danger); font-weight: 600; }
     &--lysing      { color: var(--color-danger); font-weight: 600; }
-    &--lysed       { color: rgba(255, 77, 109, 0.6); }
+    &--lysed       { color: color-mix(in srgb, var(--color-danger) 60%, transparent); }
   }
 
   /* ── Shared warn strip elements ─────────────────────────────────────── */
@@ -807,69 +807,69 @@ export default defineComponent({
 
   /* ── DEP strip (non-resonance, |K| ≥ 0.02) ────────────────────────── */
   &__dep-strip {
-    @include status-strip(var(--color-lime), rgba(57, 255, 20, 0.05), rgba(57, 255, 20, 0.18));
+    @include status-strip(var(--color-lime), color-mix(in srgb, var(--color-lime) 5%, transparent), color-mix(in srgb, var(--color-lime) 18%, transparent));
     cursor: help;
 
     &--ndep {
-      @include status-strip(var(--color-amber), rgba(255, 153, 0, 0.05), rgba(255, 153, 0, 0.18));
+      @include status-strip(var(--color-dep), color-mix(in srgb, var(--color-dep) 5%, transparent), color-mix(in srgb, var(--color-dep) 18%, transparent));
     }
   }
 
   /* ── Nourishing strip (healthy, DR 8-45%) ──────────────────────────── */
   &__nourishing-strip {
-    @include status-strip(var(--color-accent), rgba(0, 212, 255, 0.06), rgba(0, 212, 255, 0.22), nourish-text-pulse, 2.8s);
-    border-bottom: 1px solid rgba(0, 212, 255, 0.12);
+    @include status-strip(var(--color-accent), color-mix(in srgb, var(--color-primary) 6%, transparent), color-mix(in srgb, var(--color-primary) 22%, transparent), nourish-text-pulse, 2.8s);
+    border-bottom: 1px solid color-mix(in srgb, var(--color-primary) 12%, transparent);
   }
 
   /* ── Biomodulation panel nourishing modifier (applied to BiostimPanel root) */
   &__biostim--nourishing {
-    background: rgba(0, 212, 255, 0.08) !important;
-    border-color: rgba(0, 212, 255, 0.30) !important;
+    background: color-mix(in srgb, var(--color-primary) 8%, transparent) !important;
+    border-color: color-mix(in srgb, var(--color-primary) 30%, transparent) !important;
   }
 
   /* ── Reversible EP strip (target, 50-85%) ──────────────────────────── */
   &__rev-ep-strip {
-    @include status-strip(#fbbf24, rgba(251, 191, 36, 0.08), rgba(251, 191, 36, 0.3), warn-fade, 1.8s);
+    @include status-strip(var(--color-amber), color-mix(in srgb, var(--color-amber) 8%, transparent), color-mix(in srgb, var(--color-amber) 30%, transparent), warn-fade, 1.8s);
   }
 
   /* ── Lysis armed strip (target, >85%) ──────────────────────────────── */
   &__lysis-strip {
-    @include status-strip(var(--color-danger), rgba(255, 77, 109, 0.08), rgba(255, 77, 109, 0.3), warn-fade, 1.1s);
+    @include status-strip(var(--color-danger), color-mix(in srgb, var(--color-danger) 8%, transparent), color-mix(in srgb, var(--color-danger) 30%, transparent), warn-fade, 1.1s);
   }
 
   /* ── Structural integrity countdown ────────────────────────────────── */
   &__integrity-bar-row {
     @include flex-row(0.45rem);
     padding: 0.3rem 0.75rem 0.35rem;
-    background: rgba(255, 77, 109, 0.05);
-    border-top: 1px solid rgba(255, 77, 109, 0.15);
+    background: color-mix(in srgb, var(--color-danger) 5%, transparent);
+    border-top: 1px solid color-mix(in srgb, var(--color-danger) 15%, transparent);
   }
 
   &__integrity-label {
     @include mono-upper(0.6rem, 0.06em);
     flex-shrink: 0;
-    color: rgba(255, 77, 109, 0.75);
+    color: color-mix(in srgb, var(--color-danger) 75%, transparent);
     white-space: nowrap;
   }
 
   &__integrity-track {
     flex: 1;
     height: 5px;
-    background: rgba(255, 77, 109, 0.15);
+    background: color-mix(in srgb, var(--color-danger) 15%, transparent);
     border-radius: 3px;
     overflow: hidden;
   }
 
   &__integrity-fill {
     height: 100%;
-    background: linear-gradient(90deg, #ff4d6d 0%, #ff8c42 100%);
+    background: linear-gradient(90deg, var(--color-danger) 0%, var(--color-orange) 100%);
     border-radius: 3px;
     transition: width 0.1s linear;
   }
 
   &__integrity-pct {
     font-family: var(--font-mono);
-    font-size: 0.62rem;
+    font-size: var(--fs-xxs);
     font-weight: 700;
     color: var(--color-danger);
     min-width: 2.6rem;
@@ -879,24 +879,24 @@ export default defineComponent({
 
   /* ── Healthy EP risk strip ──────────────────────────────────────────── */
   &__healthy-warn {
-    @include status-strip(#fbbf24, rgba(251, 191, 36, 0.08), rgba(251, 191, 36, 0.3), warn-fade, 2s);
+    @include status-strip(var(--color-amber), color-mix(in srgb, var(--color-amber) 8%, transparent), color-mix(in srgb, var(--color-amber) 30%, transparent), warn-fade, 2s);
 
     &--critical {
-      color: #fb923c;
-      background: rgba(251, 130, 20, 0.12);
-      border-top-color: rgba(251, 130, 20, 0.45);
+      color: var(--color-orange);
+      background: color-mix(in srgb, var(--color-orange) 12%, transparent);
+      border-top-color: color-mix(in srgb, var(--color-orange) 45%, transparent);
       animation-duration: 0.85s;
     }
   }
 
   /* ── Thermal warning strip ──────────────────────────────────────────── */
   &__thermal-warn {
-    @include status-strip(#fbbf24, rgba(251, 191, 36, 0.08), rgba(251, 191, 36, 0.3), warn-fade, 2s);
+    @include status-strip(var(--color-amber), color-mix(in srgb, var(--color-amber) 8%, transparent), color-mix(in srgb, var(--color-amber) 30%, transparent), warn-fade, 2s);
 
     &--denaturing {
-      color: #fb923c;
-      background: rgba(251, 130, 20, 0.12);
-      border-top-color: rgba(251, 130, 20, 0.45);
+      color: var(--color-orange);
+      background: color-mix(in srgb, var(--color-orange) 12%, transparent);
+      border-top-color: color-mix(in srgb, var(--color-orange) 45%, transparent);
       animation-duration: 0.85s;
     }
   }
@@ -916,7 +916,7 @@ export default defineComponent({
 
   &__destroyed-text {
     font-family: var(--font-mono);
-    font-size: 0.75rem;
+    font-size: var(--fs-sm);
     color: var(--color-danger);
     letter-spacing: 0.15em;
     text-transform: uppercase;
@@ -925,8 +925,8 @@ export default defineComponent({
 
   &__destroyed-sub {
     font-family: var(--font-mono);
-    font-size: 0.6rem;
-    color: #ff8c00;
+    font-size: var(--fs-xxs);
+    color: var(--color-vibrating);
     letter-spacing: 0.12em;
     text-transform: uppercase;
     opacity: 0.8;
@@ -938,15 +938,15 @@ export default defineComponent({
     color: var(--color-danger);
     padding: 0.35rem 1rem;
     border-radius: var(--radius);
-    font-size: 0.75rem;
+    font-size: var(--fs-sm);
     font-family: var(--font-mono);
     text-transform: uppercase;
     letter-spacing: 0.08em;
     cursor: pointer;
     transition: all 0.15s;
 
-    &:hover:not(:disabled) { background-color: rgba(255, 77, 109, 0.12); }
-    &:disabled { opacity: 0.35; cursor: not-allowed; border-color: #555; color: #555; }
+    &:hover:not(:disabled) { background-color: color-mix(in srgb, var(--color-danger) 12%, transparent); }
+    &:disabled { opacity: 0.35; cursor: not-allowed; border-color: var(--color-muted-border); color: var(--color-text-muted); }
   }
 }
 </style>

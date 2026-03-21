@@ -174,18 +174,18 @@ export default defineComponent({
   }
 
   &__title {
-    font-size: 0.875rem;
+    font-size: var(--fs-lg);
     font-weight: 600;
     color: var(--color-text);
   }
 
   &__sub {
-    font-size: 0.7rem;
+    font-size: var(--fs-xs);
     color: var(--color-text-muted);
   }
 
   &__empty {
-    font-size: 0.75rem;
+    font-size: var(--fs-sm);
     color: var(--color-text-muted);
     text-align: center;
     padding: 2rem;
@@ -204,7 +204,7 @@ export default defineComponent({
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    font-size: 0.6rem;
+    font-size: var(--fs-xxs);
     font-family: var(--font-mono);
     color: var(--color-text-muted);
     text-align: right;
@@ -227,7 +227,7 @@ export default defineComponent({
     left: -0.5rem;
     top: 50%;
     transform: translateY(-50%) rotate(-90deg);
-    font-size: 0.55rem;
+    font-size: var(--fs-xxs);
     color: var(--color-text-muted);
     white-space: nowrap;
   }
@@ -239,7 +239,7 @@ export default defineComponent({
   &__table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 0.72rem;
+    font-size: var(--fs-sm);
 
     th {
       color: var(--color-text-muted);

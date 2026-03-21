@@ -45,7 +45,7 @@ export default defineComponent({
   }
 
   &__geo-text {
-    font-size: 0.88rem;
+    font-size: var(--fs-lg);
     color: var(--color-text);
     line-height: 1.8;
     margin: 0 0 1.25rem;
@@ -63,22 +63,22 @@ export default defineComponent({
     display: flex;
     align-items: flex-start;
     gap: 0.55rem;
-    font-size: 0.79rem;
+    font-size: var(--fs-sm);
     color: var(--color-text-muted);
     line-height: 1.5;
-    background: rgba(255, 255, 255, 0.03);
+    background: color-mix(in srgb, white 3%, transparent);
     border: 1px solid var(--color-border);
     border-radius: calc(var(--radius) / 2);
     padding: 0.45rem 0.65rem;
 
     &--formula {
-      background: rgba(0, 212, 255, 0.03);
+      background: var(--color-primary-surface);
       border: none;
-      border-left: 2px solid rgba(0, 212, 255, 0.3);
+      border-left: 2px solid var(--color-primary-border);
       border-radius: 0 calc(var(--radius) / 2) calc(var(--radius) / 2) 0;
       padding: 0.55rem 0.85rem;
       font-family: var(--font-mono);
-      font-size: 0.77rem;
+      font-size: var(--fs-sm);
     }
   }
 
@@ -97,7 +97,7 @@ export default defineComponent({
   }
 
   &__geo-sep-label {
-    @include mono-upper(0.58rem, 0.1em);
+    @include mono-upper(0.7rem, 0.1em);
     color: var(--color-text-muted);
     opacity: 0.55;
     white-space: nowrap;

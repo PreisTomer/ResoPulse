@@ -72,11 +72,11 @@
         <!-- Background zones based on drift severity -->
         <defs>
           <linearGradient id="lm-warn-grad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="rgba(251,191,36,0.08)" />
+            <stop offset="0%" style="stop-color: color-mix(in srgb, var(--color-amber) 8%, transparent)" />
             <stop offset="100%" stop-color="transparent" />
           </linearGradient>
           <linearGradient id="lm-danger-grad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="rgba(255,77,109,0.1)" />
+            <stop offset="0%" style="stop-color: color-mix(in srgb, var(--color-danger) 10%, transparent)" />
             <stop offset="100%" stop-color="transparent" />
           </linearGradient>
         </defs>
@@ -104,8 +104,8 @@
 
         <!-- Nominal σ_e reference line (dashed cyan) -->
         <line
+          class="load-monitor__sigma-ref-line"
           :x1="0" :y1="sigmaToY(sigmaBase)" :x2="SVG_W" :y2="sigmaToY(sigmaBase)"
-          stroke="rgba(0,212,255,0.35)"
           stroke-width="1"
           stroke-dasharray="4 3"
         />
@@ -113,13 +113,13 @@
         <!-- Nominal Z reference line (dashed amber) -->
         <line
           :x1="0" :y1="zToY(zNominal)" :x2="SVG_W" :y2="zToY(zNominal)"
-          stroke="rgba(251,191,36,0.35)"
+          class="load-monitor__z-ref-line"
           stroke-width="1"
           stroke-dasharray="4 3"
         />
 
         <!-- σ_e area fill -->
-        <polygon :points="sigmaAreaPoints" fill="rgba(0,212,255,0.07)" />
+        <polygon class="load-monitor__sigma-area" :points="sigmaAreaPoints" />
 
         <!-- σ_e polyline -->
         <polyline
@@ -135,7 +135,7 @@
         <polyline
           :points="zPolyline"
           fill="none"
-          stroke="rgba(251,191,36,0.75)"
+          class="load-monitor__z-polyline"
           stroke-width="1.5"
           stroke-linejoin="round"
           stroke-linecap="round"
@@ -144,7 +144,7 @@
 
         <!-- Latest value dots -->
         <circle :cx="SVG_W" :cy="sigmaToY(samples[samples.length-1]!.sigmaE)" r="3" fill="var(--color-primary)" />
-        <circle :cx="SVG_W" :cy="zToY(samples[samples.length-1]!.zOhm)" r="3" fill="rgba(251,191,36,0.9)" />
+        <circle :cx="SVG_W" :cy="zToY(samples[samples.length-1]!.zOhm)" r="3" class="load-monitor__z-dot" />
       </svg>
 
       <!-- Right Y-axis: Z [Ω] -->
@@ -398,19 +398,19 @@ export default defineComponent({
   }
 
   &__title {
-    font-size: 0.875rem;
+    font-size: var(--fs-lg);
     font-weight: 600;
     color: var(--color-text);
   }
 
   &__sub {
-    font-size: 0.7rem;
+    font-size: var(--fs-xs);
     color: var(--color-text-muted);
     margin-top: 0.15rem;
   }
 
   &__state-badge {
-    font-size: 0.65rem;
+    font-size: var(--fs-xxs);
     font-family: var(--font-mono);
     text-transform: uppercase;
     letter-spacing: 0.07em;
@@ -423,9 +423,9 @@ export default defineComponent({
     flex-shrink: 0;
     cursor: default;
 
-    &--nominal  { color: var(--color-primary);        border-color: rgba(0,212,255,0.4);     background: rgba(0,212,255,0.06); }
-    &--warning  { color: var(--color-amber-warm);     border-color: rgba(251,191,36,0.45);   background: rgba(251,191,36,0.08); }
-    &--critical { color: var(--color-danger, #ff4444); border-color: rgba(255,77,109,0.45);  background: rgba(255,77,109,0.08); }
+    &--nominal  { color: var(--color-primary);        border-color: color-mix(in srgb, var(--color-primary) 40%, transparent);     background: color-mix(in srgb, var(--color-primary) 6%, transparent); }
+    &--warning  { color: var(--color-amber-warm);     border-color: color-mix(in srgb, var(--color-amber) 45%, transparent);   background: color-mix(in srgb, var(--color-amber) 8%, transparent); }
+    &--critical { color: var(--color-danger); border-color: color-mix(in srgb, var(--color-danger) 45%, transparent);  background: color-mix(in srgb, var(--color-danger) 8%, transparent); }
   }
 
   /* ── Stat row ── */
@@ -447,12 +447,12 @@ export default defineComponent({
     padding: 0.5rem 0.65rem;
     cursor: default;
 
-    &--live   { border-color: rgba(0,212,255,0.25);   background: rgba(0,212,255,0.04); }
-    &--warn   { border-color: rgba(251,191,36,0.3);   background: rgba(251,191,36,0.05); }
-    &--danger { border-color: rgba(255,77,109,0.3);   background: rgba(255,77,109,0.05); }
+    &--live   { border-color: color-mix(in srgb, var(--color-primary) 25%, transparent);   background: color-mix(in srgb, var(--color-primary) 4%, transparent); }
+    &--warn   { border-color: color-mix(in srgb, var(--color-amber) 30%, transparent);   background: color-mix(in srgb, var(--color-amber) 5%, transparent); }
+    &--danger { border-color: color-mix(in srgb, var(--color-danger) 30%, transparent);   background: color-mix(in srgb, var(--color-danger) 5%, transparent); }
 
     &-label {
-      font-size: 0.6rem;
+      font-size: var(--fs-xxs);
       color: var(--color-text-muted);
       text-transform: uppercase;
       letter-spacing: 0.06em;
@@ -461,14 +461,14 @@ export default defineComponent({
 
     &-value {
       font-family: var(--font-mono);
-      font-size: 0.88rem;
+      font-size: var(--fs-lg);
       font-weight: 600;
       color: var(--color-text);
       &--primary { color: var(--color-primary); }
     }
 
     &-unit {
-      font-size: 0.6rem;
+      font-size: var(--fs-xxs);
       font-weight: 400;
       color: var(--color-text-muted);
     }
@@ -476,7 +476,7 @@ export default defineComponent({
 
   /* ── Chart ── */
   &__empty {
-    font-size: 0.75rem;
+    font-size: var(--fs-sm);
     color: var(--color-text-muted);
     text-align: center;
     padding: 2rem;
@@ -494,7 +494,7 @@ export default defineComponent({
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    font-size: 0.58rem;
+    font-size: var(--fs-xs);
     font-family: var(--font-mono);
     color: var(--color-text-muted);
     flex-shrink: 0;
@@ -505,7 +505,7 @@ export default defineComponent({
   }
 
   &__axis-unit {
-    font-size: 0.52rem;
+    font-size: var(--fs-xxs);
     opacity: 0.6;
     margin-top: 0.1rem;
   }
@@ -524,14 +524,14 @@ export default defineComponent({
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 0.58rem;
+    font-size: var(--fs-xs);
     font-family: var(--font-mono);
     color: var(--color-text-muted);
     padding: 0 3.55rem;
 
     &-label {
       opacity: 0.5;
-      font-size: 0.55rem;
+      font-size: var(--fs-xxs);
     }
   }
 
@@ -540,13 +540,13 @@ export default defineComponent({
     display: flex;
     align-items: center;
     gap: 0.85rem;
-    font-size: 0.65rem;
+    font-size: var(--fs-xxs);
     font-family: var(--font-mono);
     flex-wrap: wrap;
   }
 
   &__legend-sigma { color: var(--color-primary); }
-  &__legend-z     { color: rgba(251,191,36,0.9); }
+  &__legend-z     { color: color-mix(in srgb, var(--color-amber) 90%, transparent); }
   &__legend-ref   { color: var(--color-text-muted); letter-spacing: 0.04em; }
 
   &__clear-btn {
@@ -554,7 +554,7 @@ export default defineComponent({
     background: transparent;
     border: 1px solid var(--color-border);
     color: var(--color-text-muted);
-    font-size: 0.65rem;
+    font-size: var(--fs-xxs);
     font-family: var(--font-mono);
     padding: 0.2rem 0.6rem;
     border-radius: var(--radius);
@@ -590,13 +590,13 @@ export default defineComponent({
     text-align: center;
     transition: border-color 0.2s, background 0.2s;
 
-    &--active  { border-color: rgba(0,212,255,0.3);   background: rgba(0,212,255,0.06); }
-    &--warn    { border-color: rgba(251,191,36,0.35);  background: rgba(251,191,36,0.07); }
-    &--danger  { border-color: rgba(255,77,109,0.35);  background: rgba(255,77,109,0.07); }
+    &--active  { border-color: color-mix(in srgb, var(--color-primary) 30%, transparent);   background: color-mix(in srgb, var(--color-primary) 6%, transparent); }
+    &--warn    { border-color: color-mix(in srgb, var(--color-amber) 35%, transparent);  background: color-mix(in srgb, var(--color-amber) 7%, transparent); }
+    &--danger  { border-color: color-mix(in srgb, var(--color-danger) 35%, transparent);  background: color-mix(in srgb, var(--color-danger) 7%, transparent); }
   }
 
   &__chain-label {
-    font-size: 0.58rem;
+    font-size: var(--fs-xs);
     color: var(--color-text-muted);
     font-family: var(--font-mono);
     text-transform: uppercase;
@@ -605,16 +605,19 @@ export default defineComponent({
 
   &__chain-value {
     font-family: var(--font-mono);
-    font-size: 0.82rem;
+    font-size: var(--fs-md);
     font-weight: 600;
     color: var(--color-text);
   }
 
   &__chain-arrow {
-    font-size: 0.9rem;
+    font-size: var(--fs-xl);
     color: var(--color-primary);
     opacity: 0.3;
     flex-shrink: 0;
   }
+
+  &__sigma-ref-line { stroke: color-mix(in srgb, var(--color-primary) 35%, transparent); }
+  &__sigma-area     { fill: color-mix(in srgb, var(--color-primary) 7%, transparent); }
 }
 </style>

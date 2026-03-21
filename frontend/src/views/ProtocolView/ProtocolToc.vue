@@ -73,7 +73,7 @@ export default defineComponent({
   }
 
   &-link {
-    font-size: 0.8rem;
+    font-size: var(--fs-md);
     color: var(--color-text-muted);
     text-decoration: none;
     padding: 0.3rem 0.5rem;
@@ -83,12 +83,12 @@ export default defineComponent({
 
     &:hover {
       color: var(--color-primary);
-      background-color: rgba(0, 212, 255, 0.06);
+      background-color: color-mix(in srgb, var(--color-primary) 6%, transparent);
     }
 
     &--active {
       color: var(--color-primary);
-      background-color: rgba(0, 212, 255, 0.08);
+      background-color: color-mix(in srgb, var(--color-primary) 8%, transparent);
       border-left: 2px solid var(--color-primary);
       padding-left: calc(0.5rem - 2px);
     }
@@ -96,7 +96,7 @@ export default defineComponent({
 
   &-indent {
     padding-left: 1.5rem;
-    font-size: 0.73rem;
+    font-size: var(--fs-sm);
 
     &.protocol__toc-link--active {
       padding-left: calc(1.5rem - 2px);
@@ -114,7 +114,7 @@ export default defineComponent({
     height: calc(100vh - 60px);
     height: calc(100dvh - 60px);
     z-index: 90;
-    background: rgba(8, 14, 26, 0.97);
+    background: color-mix(in srgb, var(--color-bg) 97%, transparent);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border-top: 1px solid var(--color-border);
@@ -129,22 +129,22 @@ export default defineComponent({
   }
 
   .protocol__toc-link {
-    font-size: 0.9rem;
+    font-size: var(--fs-xl);
     padding: 0.65rem 0.75rem;
-    border-bottom: 1px solid rgba(30, 58, 95, 0.4);
+    border-bottom: 1px solid color-mix(in srgb, var(--color-border) 40%, transparent);
 
     &:last-child { border-bottom: none; }
   }
 
   .protocol__toc-indent {
     padding-left: 1.75rem;
-    font-size: 0.82rem;
+    font-size: var(--fs-md);
   }
 }
 
 @media (max-width: 400px) {
   .protocol__toc-link {
-    font-size: 0.82rem;
+    font-size: var(--fs-md);
     padding: 0.5rem 0.65rem;
   }
 }

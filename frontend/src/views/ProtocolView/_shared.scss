@@ -19,14 +19,14 @@
   }
 
   .protocol__subsection-title {
-    font-size: 0.95rem;
+    font-size: var(--fs-xl);
     font-weight: 600;
     color: var(--color-text-heading);
     margin: 0;
   }
 
   .protocol__body-text {
-    font-size: 0.875rem;
+    font-size: var(--fs-lg);
     line-height: 1.7;
     color: var(--color-text);
     margin: 0;
@@ -50,7 +50,7 @@
 
   .protocol__eq-main {
     font-family: var(--font-mono);
-    font-size: 0.9rem;
+    font-size: var(--fs-xl);
     font-weight: 600;
     color: var(--color-text-heading);
     letter-spacing: 0.01em;
@@ -58,7 +58,7 @@
 
   .protocol__eq-sub {
     font-family: var(--font-mono);
-    font-size: 0.78rem;
+    font-size: var(--fs-md);
     color: var(--color-text-muted);
     padding-left: 0.5rem;
     line-height: 1.5;
@@ -73,7 +73,7 @@
 
   .protocol__eq-note {
     font-family: var(--font-mono);
-    font-size: 0.68rem;
+    font-size: var(--fs-xs);
     color: var(--color-text-muted);
     opacity: 0.7;
     border-top: 1px solid rgba(255, 255, 255, 0.06);
@@ -85,7 +85,7 @@
 // ── Utility classes ──────────────────────────────────────────────────────────
 @mixin protocol-utils() {
   // Explicit selectors replacing data-value-classes() mixin (which uses & parent selector)
-  .protocol__mono       { font-family: var(--font-mono); font-size: 0.78rem; }
+  .protocol__mono       { font-family: var(--font-mono); font-size: var(--fs-md); }
   .protocol__muted      { color: var(--color-text-muted); opacity: 0.6; }
   .protocol__cancer-val { color: var(--color-danger); }
   .protocol__warn-val   { color: var(--color-amber); }
@@ -94,7 +94,7 @@
 
   .protocol__bullet {
     font-family: var(--font-mono);
-    font-size: 0.78rem;
+    font-size: var(--fs-md);
     color: var(--color-text-muted);
     padding-left: 1.1rem;
     line-height: 1.6;
@@ -109,7 +109,7 @@
     }
 
     &--nourish, &--revep, &--lysis {
-      &::before { content: '●'; top: 0.18em; font-size: 0.52rem; opacity: 1; }
+      &::before { content: '●'; top: 0.18em; font-size: var(--fs-xxs); opacity: 1; }
     }
 
     &--nourish::before { color: var(--color-lime); }
@@ -121,7 +121,7 @@
     border-left: 3px solid var(--color-border);
     padding: 0.55rem 0.85rem;
     background: rgba(255, 255, 255, 0.02);
-    font-size: 0.82rem;
+    font-size: var(--fs-md);
     line-height: 1.6;
     color: var(--color-text-muted);
     display: flex;
@@ -130,7 +130,7 @@
   }
 
   .protocol__note-label {
-    font-size: 0.62rem;
+    font-size: var(--fs-xxs);
     font-family: var(--font-mono);
     text-transform: uppercase;
     letter-spacing: 0.1em;
@@ -143,28 +143,28 @@
     display: flex;
     gap: 0.65rem;
     align-items: flex-start;
-    background: rgba(0, 212, 255, 0.05);
-    border: 1px solid rgba(0, 212, 255, 0.18);
+    background: color-mix(in srgb, var(--color-primary) 5%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-primary) 18%, transparent);
     border-radius: var(--radius);
     padding: 0.65rem 0.85rem;
-    font-size: 0.83rem;
+    font-size: var(--fs-md);
     line-height: 1.6;
     color: var(--color-text);
   }
 
   .protocol__info-icon {
     color: var(--color-primary);
-    font-size: 0.85rem;
+    font-size: var(--fs-lg);
     flex-shrink: 0;
     margin-top: 0.05rem;
   }
 
   .protocol__warn-box {
-    background: rgba(251, 191, 36, 0.06);
-    border: 1px solid rgba(251, 191, 36, 0.25);
+    background: color-mix(in srgb, var(--color-amber) 6%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-amber) 25%, transparent);
     border-radius: var(--radius);
     padding: 0.65rem 0.9rem;
-    font-size: 0.82rem;
+    font-size: var(--fs-md);
     line-height: 1.6;
     color: var(--color-amber);
   }
@@ -175,7 +175,7 @@
   .protocol__param-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 0.8rem;
+    font-size: var(--fs-md);
 
     th, td {
       padding: 0.45rem 0.7rem;
@@ -185,7 +185,7 @@
 
     th {
       font-family: var(--font-mono);
-      font-size: 0.68rem;
+      font-size: var(--fs-xs);
       text-transform: uppercase;
       letter-spacing: 0.07em;
       color: var(--color-text-muted);
@@ -199,7 +199,7 @@
   }
 
   .protocol__table-caption {
-    font-size: 0.72rem;
+    font-size: var(--fs-sm);
     font-family: var(--font-mono);
     color: var(--color-text-muted);
     text-align: left;

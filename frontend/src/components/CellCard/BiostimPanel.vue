@@ -130,16 +130,16 @@ export default defineComponent({
 
 .cell-card {
   &__biostim {
-    background: rgba(0, 212, 255, 0.045);
-    border: 1px solid rgba(0, 212, 255, 0.13);
+    background: color-mix(in srgb, var(--color-primary) 4.5%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-primary) 13%, transparent);
     border-radius: var(--radius);
     padding: 0.5rem 0.65rem;
     margin: 0 0.15rem;
     transition: border-color 0.3s, background 0.3s;
 
     &--nourishing {
-      background: rgba(0, 212, 255, 0.08);
-      border-color: rgba(0, 212, 255, 0.30);
+      background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+      border-color: color-mix(in srgb, var(--color-primary) 30%, transparent);
     }
   }
 
@@ -156,14 +156,14 @@ export default defineComponent({
   }
 
   &__biostim-score {
-    font-size: 0.68rem;
+    font-size: var(--fs-xs);
     font-family: var(--font-mono);
     font-weight: 700;
     transition: color 0.3s;
 
     &--low    { color: var(--color-accent); opacity: 0.40; }
     &--medium { color: var(--color-accent); opacity: 0.75; }
-    &--high   { color: #39ff14; }
+    &--high   { color: var(--color-lime); }
     &--active { animation: nourish-text-pulse 2.2s ease-in-out infinite; }
   }
 
@@ -178,7 +178,7 @@ export default defineComponent({
   }
 
   &__biostim-label {
-    font-size: 0.54rem;
+    font-size: var(--fs-xxs);
     font-family: var(--font-mono);
     color: var(--color-text-muted);
     white-space: nowrap;
@@ -198,12 +198,12 @@ export default defineComponent({
     transition: width 0.25s ease;
 
     &--si  { background: var(--color-accent); }
-    &--mte { background: #7c6cff; }
-    &--ma  { background: #fbbf24; }
+    &--mte { background: var(--color-purple); }
+    &--ma  { background: var(--color-amber); }
   }
 
   &__biostim-val {
-    font-size: 0.54rem;
+    font-size: var(--fs-xxs);
     font-family: var(--font-mono);
     color: var(--color-text-muted);
     text-align: right;

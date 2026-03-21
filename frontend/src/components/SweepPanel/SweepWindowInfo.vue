@@ -72,10 +72,10 @@ export default defineComponent({
   align-items: center;
   flex-wrap: wrap;
   padding: 0.5rem 0.75rem;
-  background: rgba(34, 197, 94, 0.06);
-  border: 1px solid rgba(34, 197, 94, 0.25);
+  background: color-mix(in srgb, var(--color-ok) 6%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-ok) 25%, transparent);
   border-radius: var(--radius);
-  font-size: 0.78rem;
+  font-size: var(--fs-md);
   gap: 0.4rem 0.7rem;
 
   &--none {
@@ -90,18 +90,18 @@ export default defineComponent({
 
   &__label {
     font-family: var(--font-mono);
-    font-size: 0.72rem;
+    font-size: var(--fs-sm);
     color: var(--color-text-muted);
   }
 
   &__val {
     font-family: var(--font-mono);
-    font-size: 0.82rem;
+    font-size: var(--fs-md);
     color: rgb(34, 197, 94);
     font-weight: 600;
   }
 
-  &__sub { font-size: 0.72rem; color: var(--color-text-muted); }
+  &__sub { font-size: var(--fs-sm); color: var(--color-text-muted); }
 
   &__expand {
     padding: 0.18rem 0.6rem;
@@ -110,19 +110,19 @@ export default defineComponent({
     border-radius: 4px;
     color: var(--color-primary);
     font-family: var(--font-mono);
-    font-size: 0.67rem;
+    font-size: var(--fs-xs);
     font-style: normal;
     cursor: pointer;
     transition: background 0.15s, border-color 0.15s;
 
     &:hover {
-      background: rgba(0, 212, 255, 0.20);
-      border-color: rgba(0, 212, 255, 0.60);
+      background: color-mix(in srgb, var(--color-primary) 20%, transparent);
+      border-color: color-mix(in srgb, var(--color-primary) 60%, transparent);
     }
   }
 
   &__best-ti {
-    font-size: 0.66rem;
+    font-size: var(--fs-xs);
     font-style: normal;
     color: var(--color-text-muted);
     opacity: 0.8;

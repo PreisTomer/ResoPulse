@@ -69,7 +69,7 @@ export default defineComponent({
 @use '../../styles/mixins' as *;
 
 .dep-section {
-  @include info-panel(rgba(255, 153, 0, 0.04), rgba(255, 153, 0, 0.15));
+  @include info-panel(color-mix(in srgb, var(--color-dep) 4%, transparent), color-mix(in srgb, var(--color-dep) 15%, transparent));
   cursor: default;
 
   &__title { @include section-title(); }
@@ -82,7 +82,7 @@ export default defineComponent({
   }
 
   &__cell-lbl {
-    font-size: 0.62rem;
+    font-size: var(--fs-xxs);
     font-family: var(--font-mono);
     font-weight: 700;
     width: 0.7rem;
@@ -99,34 +99,34 @@ export default defineComponent({
     border: 1px solid;
     flex-shrink: 0;
 
-    &--pdep { color: #39ff14; border-color: rgba(57, 255, 20, 0.35);  background: rgba(57, 255, 20, 0.06); }
-    &--ndep { color: #ff9900; border-color: rgba(255, 153, 0, 0.35); background: rgba(255, 153, 0, 0.06); }
+    &--pdep { color: var(--color-lime); border-color: color-mix(in srgb, var(--color-lime) 35%, transparent); background: color-mix(in srgb, var(--color-lime) 6%, transparent); }
+    &--ndep { color: var(--color-dep); border-color: color-mix(in srgb, var(--color-dep) 35%, transparent); background: color-mix(in srgb, var(--color-dep) 6%, transparent); }
   }
 
   &__k {
-    font-size: 0.65rem;
+    font-size: var(--fs-xxs);
     font-family: var(--font-mono);
     font-weight: 600;
 
-    &--pdep { color: #39ff14; }
-    &--ndep { color: #ff9900; }
+    &--pdep { color: var(--color-lime); }
+    &--ndep { color: var(--color-dep); }
   }
 
   &__meta {
-    font-size: 0.57rem;
+    font-size: var(--fs-xxs);
     font-family: var(--font-mono);
     color: var(--color-text-muted);
     opacity: 0.7;
   }
 
   &__scale {
-    font-size: 0.55rem;
+    font-size: var(--fs-xxs);
     font-family: var(--font-mono);
     color: var(--color-text-muted);
     opacity: 0.65;
     margin-top: 0.05rem;
     padding-top: 0.18rem;
-    border-top: 1px solid rgba(255, 153, 0, 0.12);
+    border-top: 1px solid color-mix(in srgb, var(--color-dep) 12%, transparent);
   }
 }
 </style>

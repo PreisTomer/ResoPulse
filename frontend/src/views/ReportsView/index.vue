@@ -205,7 +205,7 @@ export default defineComponent({
   }
 
   &__subtitle {
-    font-size: 0.875rem;
+    font-size: var(--fs-lg);
     color: var(--color-text-muted);
     margin: 0;
     font-family: var(--font-mono);
@@ -220,7 +220,7 @@ export default defineComponent({
   &__btn {
     padding: 0.5rem 1.1rem;
     border-radius: var(--radius);
-    font-size: 0.82rem;
+    font-size: var(--fs-md);
     font-family: var(--font-mono);
     font-weight: 600;
     border: 1px solid;
@@ -232,21 +232,21 @@ export default defineComponent({
 
     &--export {
       color: var(--color-primary);
-      border-color: rgba(0, 212, 255, 0.35);
+      border-color: color-mix(in srgb, var(--color-primary) 35%, transparent);
       background: var(--color-primary-dim);
 
       &:hover:not(:disabled) {
-        background: rgba(0, 212, 255, 0.2);
+        background: color-mix(in srgb, var(--color-primary) 20%, transparent);
         border-color: var(--color-primary);
       }
     }
 
     &--clear {
       color: var(--color-danger);
-      border-color: rgba(255, 77, 109, 0.35);
+      border-color: color-mix(in srgb, var(--color-danger) 35%, transparent);
 
       &:hover:not(:disabled) {
-        background: rgba(255, 77, 109, 0.1);
+        background: color-mix(in srgb, var(--color-danger) 10%, transparent);
       }
     }
   }
@@ -295,13 +295,13 @@ export default defineComponent({
   }
 
   &__log-title {
-    font-size: 0.9rem;
+    font-size: var(--fs-xl);
     font-weight: 600;
     color: var(--color-text-heading);
   }
 
   &__log-count {
-    font-size: 0.68rem;
+    font-size: var(--fs-xs);
     font-family: var(--font-mono);
     color: var(--color-text-muted);
     background: rgba(255, 255, 255, 0.04);

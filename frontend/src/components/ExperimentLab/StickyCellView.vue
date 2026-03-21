@@ -112,7 +112,7 @@ export default defineComponent({
 
     &-dot {
       color: var(--color-primary);
-      font-size: 0.75rem;
+      font-size: var(--fs-sm);
       animation: sticky-pulse 2s ease-in-out infinite;
     }
   }
@@ -142,7 +142,7 @@ export default defineComponent({
 
   &-label {
     font-family: var(--font-mono);
-    font-size: 0.65rem;
+    font-size: var(--fs-xxs);
     letter-spacing: 0.14em;
     color: var(--color-primary);
     opacity: 0.80;

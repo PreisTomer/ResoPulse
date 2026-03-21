@@ -231,7 +231,7 @@ export default defineComponent({
   }
 
   &__subtitle {
-    font-size: 0.875rem;
+    font-size: var(--fs-lg);
     color: var(--color-text-muted);
     margin: 0;
     font-family: var(--font-mono);
@@ -253,7 +253,7 @@ export default defineComponent({
   }
 
   &__toc-mobile-caret {
-    font-size: 0.6rem;
+    font-size: var(--fs-xxs);
     opacity: 0.7;
     transition: transform 0.2s;
     margin-left: auto;
@@ -271,22 +271,22 @@ export default defineComponent({
     width: 100%;
     padding: 0.8rem 1.1rem;
     background: var(--color-surface);
-    border: 1.5px solid rgba(0, 212, 255, 0.35);
+    border: 1.5px solid color-mix(in srgb, var(--color-primary) 35%, transparent);
     border-radius: var(--radius);
     color: var(--color-primary);
-    font-size: 0.88rem;
+    font-size: var(--fs-lg);
     font-family: var(--font-mono);
     font-weight: 600;
     letter-spacing: 0.04em;
     cursor: pointer;
     margin-bottom: 0.75rem;
     transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
-    box-shadow: 0 0 12px rgba(0, 212, 255, 0.08);
+    box-shadow: 0 0 12px color-mix(in srgb, var(--color-primary) 8%, transparent);
 
     &:hover, &--open {
       border-color: var(--color-primary);
-      background: rgba(0, 212, 255, 0.06);
-      box-shadow: 0 0 18px rgba(0, 212, 255, 0.18);
+      background: color-mix(in srgb, var(--color-primary) 6%, transparent);
+      box-shadow: 0 0 18px color-mix(in srgb, var(--color-primary) 18%, transparent);
     }
   }
 
@@ -314,7 +314,7 @@ export default defineComponent({
   .protocol__param-table,
   .protocol__doubleshell-table,
   .protocol__safety-table {
-    font-size: 0.72rem;
+    font-size: var(--fs-sm);
     display: block;
     overflow-x: auto;
   }

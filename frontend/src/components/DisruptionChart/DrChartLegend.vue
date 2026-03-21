@@ -18,16 +18,12 @@ export default defineComponent({})
 <style lang="scss" scoped>
 @use '../../styles/mixins' as *;
 
-$lime:        rgba(57, 255, 20, 0.8);
-$lime-bg:     rgba(57, 255, 20, 0.25);
-$lime-border: rgba(57, 255, 20, 0.5);
-
 .dr-legend {
   @include flex-row(0.9rem);
   flex-wrap: wrap;
 
   &__item {
-    @include mono-upper(0.58rem, 0.05em);
+    @include mono-upper(0.7rem, 0.05em);
     display: flex;
     align-items: center;
     gap: 0.3rem;
@@ -62,12 +58,12 @@ $lime-border: rgba(57, 255, 20, 0.5);
     }
 
     &--window {
-      color: $lime;
+      color: color-mix(in srgb, var(--color-lime) 80%, transparent);
       &::before {
         height: 8px;
         border-radius: 2px;
-        background: $lime-bg;
-        border: 1px solid $lime-border;
+        background: color-mix(in srgb, var(--color-lime) 25%, transparent);
+        border: 1px solid color-mix(in srgb, var(--color-lime) 50%, transparent);
       }
     }
   }

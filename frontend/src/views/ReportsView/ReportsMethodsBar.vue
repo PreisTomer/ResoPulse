@@ -64,30 +64,26 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-$violet: #a78bfa;
-$violet-dim: rgba(167, 139, 250, 0.10);
-$violet-border: rgba(167, 139, 250, 0.22);
-
 .reports-methods-bar {
   &__row-hint {
     display: flex;
     align-items: center;
     gap: 0.5rem;
     padding: 0.6rem 1.5rem;
-    border-bottom: 1px solid rgba(167, 139, 250, 0.12);
-    background: rgba(167, 139, 250, 0.04);
+    border-bottom: 1px solid color-mix(in srgb, var(--color-purple) 12%, transparent);
+    background: color-mix(in srgb, var(--color-purple) 4%, transparent);
   }
 
   &__row-hint-icon {
-    font-size: 0.85rem;
-    color: $violet;
+    font-size: var(--fs-lg);
+    color: var(--color-purple);
     opacity: 0.6;
     flex-shrink: 0;
   }
 
   &__row-hint-text {
     font-family: var(--font-mono);
-    font-size: 0.7rem;
+    font-size: var(--fs-xs);
     color: var(--color-text-muted);
     opacity: 0.75;
     letter-spacing: 0.02em;
@@ -99,8 +95,8 @@ $violet-border: rgba(167, 139, 250, 0.22);
     justify-content: space-between;
     gap: 1rem;
     padding: 0.75rem 1.5rem;
-    background: linear-gradient(90deg, rgba(167, 139, 250, 0.10) 0%, rgba(167, 139, 250, 0.05) 100%);
-    border-bottom: 1px solid rgba(167, 139, 250, 0.25);
+    background: linear-gradient(90deg, color-mix(in srgb, var(--color-purple) 10%, transparent) 0%, color-mix(in srgb, var(--color-purple) 5%, transparent) 100%);
+    border-bottom: 1px solid color-mix(in srgb, var(--color-purple) 25%, transparent);
     flex-wrap: wrap;
   }
 
@@ -113,9 +109,9 @@ $violet-border: rgba(167, 139, 250, 0.22);
 
   &__label {
     font-family: var(--font-mono);
-    font-size: 0.72rem;
+    font-size: var(--fs-sm);
     font-weight: 700;
-    color: #c4b5fd;
+    color: var(--color-purple-light);
     letter-spacing: 0.06em;
     text-transform: uppercase;
     margin-right: 0.25rem;
@@ -123,10 +119,10 @@ $violet-border: rgba(167, 139, 250, 0.22);
 
   &__chip {
     font-family: var(--font-mono);
-    font-size: 0.68rem;
+    font-size: var(--fs-xs);
     color: rgba(255, 255, 255, 0.65);
-    background: $violet-dim;
-    border: 1px solid $violet-border;
+    background: var(--color-purple-dim);
+    border: 1px solid color-mix(in srgb, var(--color-purple) 22%, transparent);
     border-radius: 3px;
     padding: 0.1rem 0.4rem;
   }
@@ -140,7 +136,7 @@ $violet-border: rgba(167, 139, 250, 0.22);
 
   &__legacy {
     font-family: var(--font-mono);
-    font-size: 0.68rem;
+    font-size: var(--fs-xs);
     color: var(--color-text-muted);
     opacity: 0.7;
     font-style: italic;
@@ -148,22 +144,22 @@ $violet-border: rgba(167, 139, 250, 0.22);
 
   &__btn {
     padding: 0.45rem 1.1rem;
-    font-size: 0.78rem;
+    font-size: var(--fs-md);
     font-family: var(--font-mono);
     font-weight: 700;
     letter-spacing: 0.05em;
-    color: #e9d5ff;
-    background: rgba(167, 139, 250, 0.18);
-    border: 1px solid rgba(167, 139, 250, 0.55);
+    color: var(--color-purple-light);
+    background: color-mix(in srgb, var(--color-purple) 18%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-purple) 55%, transparent);
     border-radius: var(--radius);
     cursor: pointer;
     transition: all 0.15s;
     white-space: nowrap;
 
     &:hover {
-      background: rgba(167, 139, 250, 0.32);
-      border-color: $violet;
-      box-shadow: 0 0 14px rgba(167, 139, 250, 0.25);
+      background: color-mix(in srgb, var(--color-purple) 32%, transparent);
+      border-color: var(--color-purple);
+      box-shadow: 0 0 14px color-mix(in srgb, var(--color-purple) 25%, transparent);
     }
   }
 

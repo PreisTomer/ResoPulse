@@ -1,6 +1,8 @@
 :root {
   /* ── Backgrounds & surfaces ──────────────────────────────────────────── */
   --color-bg: #080e1a;
+  --color-btn-dark: #060e1a;      /* dark text/bg on primary-colored buttons */
+  --color-primary-deep: #0a2e58;  /* very dark primary tint for text on primary backgrounds */
   --color-surface: #0d1826;
   --color-surface-2: #132035;
   --color-border: #1e3a5f;
@@ -23,8 +25,16 @@
   --color-amber-warm: #ffb800;        /* nav status warning dot */
   --color-orange: #fb923c;
   --color-orange-dim: rgba(251, 130, 20, 0.10);
+  --color-dep: #ff9900;                          /* DEP force indicator orange */
+  --color-vibrating: #ff8c00;    /* cell state: lysis armed (dark orange) */
+  --color-lysed: #882233;        /* cell state: lysed / dead (blood red)  */
+  --color-ok: #4ade80;           /* ok / success state (soft green) */
+  --color-danger-light: #f87171; /* soft danger (readout warn, non-critical) */
+  --color-muted-border: #444;    /* dead / disabled state neutral border  */
   --color-purple: #a78bfa;
   --color-purple-light: #c4b5fd;
+  --color-purple-dim: rgba(167, 139, 250, 0.10);   /* subtle tint: active pill bg, hover overlays */
+  --color-purple-border: rgba(167, 139, 250, 0.35); /* purple-tinted borders */
 
   /* ── Cell-group semantic aliases ─────────────────────────────────────── */
   --color-group-reference: var(--color-primary);
@@ -43,6 +53,17 @@
   --radius: 8px;
   --radius-lg: 12px;
 
+  /* ── Tooltip ──────────────────────────────────────────────────────────────── */
+  --color-tooltip-bg:   #0b1220;  /* floating tooltip panel background */
+  --color-tooltip-text: #8fa3c1;  /* tooltip body text                 */
+  --color-tooltip-note: #7a96b8;  /* tooltip footnote / dim text       */
+
+  /* ── Surface overlays (rgba white tints for layered dark-theme surfaces) ─── */
+  --color-overlay-xs:  rgba(255, 255, 255, 0.012); /* formula strip bg          */
+  --color-overlay-sm:  rgba(255, 255, 255, 0.02);  /* table th bg               */
+  --color-overlay-md:  rgba(255, 255, 255, 0.025); /* table row hover           */
+  --color-overlay-row: rgba(255, 255, 255, 0.04);  /* table td border           */
+
   /* ── Neon glow system — consistent bloom across all active data elements ── */
   /* Use these instead of raw rgba values so every glow shares the same radius/intensity curve */
   --glow-sm:     0 0  8px rgba(0, 212, 255, 0.30);   /* tight: indicators, small icons        */
@@ -50,6 +71,28 @@
   --glow-lg:     0 0 36px rgba(0, 212, 255, 0.55);   /* hover states, hero-scale accents      */
   --glow-subtle: 0 0 18px rgba(0, 212, 255, 0.08);   /* card hover bloom — barely there       */
   --glow-logo:   0 0 16px rgba(0, 212, 255, 0.55), 0 0 40px rgba(0, 212, 255, 0.22); /* logo ring */
+
+  /* ── Font-size scale (--fs-*) ────────────────────────────────────────── */
+  /* Six named tiers; minimum is xxs (0.65rem). Mirror values live in      */
+  /* src/styles/_tokens.scss ($fs-*) and src/theme/tokens.ts (FS.*).       */
+  --fs-xxs:  0.65rem;   /* section titles, formula annotations, orient labels */
+  --fs-xs:   0.70rem;   /* secondary mono data, stat sub-labels               */
+  --fs-sm:   0.75rem;   /* primary mono labels, key data values               */
+  --fs-md:   0.82rem;   /* readable data / body labels                        */
+  --fs-lg:   0.875rem;  /* standard body text                                 */
+  --fs-xl:   0.90rem;   /* significant labels, readout sub-text               */
+
+  /* ── Opacity scale (--op-*) ──────────────────────────────────────────── */
+  --op-ghost:   0.35;   /* near-invisible decorations, disabled states  */
+  --op-muted:   0.55;   /* secondary text overlays, placeholder hints   */
+  --op-dim:     0.70;   /* tertiary badges, background labels           */
+  --op-partial: 0.80;   /* inactive elements, faded highlights          */
+  --op-strong:  0.90;   /* near-opaque elements, strong overlays        */
+
+  /* ── Transition scale (--tr-*) ───────────────────────────────────────── */
+  --tr-fast:   0.15s ease;   /* micro-interactions: thumb glow, icon swap  */
+  --tr-normal: 0.20s ease;   /* hover states, badge colour shifts          */
+  --tr-slow:   0.30s ease;   /* panel open/close, accordion expand         */
 }
 
 /* ── OLED Black theme ───────────────────────────────────────────────────── */

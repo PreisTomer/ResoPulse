@@ -147,7 +147,7 @@ export default defineComponent({
 }
 
 .hmap__stats-label {
-  font-size: 0.63rem;
+  font-size: var(--fs-xxs);
   font-family: var(--font-mono);
   color: var(--color-text-muted);
   text-transform: uppercase;
@@ -162,7 +162,7 @@ export default defineComponent({
 }
 
 .hmap__stat-k {
-  font-size: 0.63rem;
+  font-size: var(--fs-xxs);
   font-family: var(--font-mono);
   color: var(--color-text-muted);
   text-transform: uppercase;
@@ -171,7 +171,7 @@ export default defineComponent({
 }
 
 .hmap__stat-v {
-  font-size: 0.72rem;
+  font-size: var(--fs-sm);
   font-family: var(--font-mono);
   font-weight: 700;
   color: var(--color-text);
@@ -183,7 +183,7 @@ export default defineComponent({
 }
 
 .hmap__stat-badge {
-  font-size: 0.56rem;
+  font-size: var(--fs-xxs);
   font-family: var(--font-mono);
   text-transform: uppercase;
   letter-spacing: 0.07em;
@@ -192,14 +192,14 @@ export default defineComponent({
   border: 1px solid;
 
   &--regime {
-    &--electrolytic { color: var(--color-primary); border-color: rgba(0, 212, 255, 0.35); background: rgba(0, 212, 255, 0.07); }
-    &--nearfield_rf { color: var(--color-amber);   border-color: rgba(251, 191, 36, 0.35); background: rgba(251, 191, 36, 0.07); }
-    &--microwave    { color: var(--color-danger);  border-color: rgba(255, 77, 109, 0.35); background: rgba(255, 77, 109, 0.07); }
+    &--electrolytic { color: var(--color-primary); border-color: color-mix(in srgb, var(--color-primary) 35%, transparent); background: color-mix(in srgb, var(--color-primary) 7%, transparent); }
+    &--nearfield_rf { color: var(--color-amber);   border-color: color-mix(in srgb, var(--color-amber) 35%, transparent); background: color-mix(in srgb, var(--color-amber) 7%, transparent); }
+    &--microwave    { color: var(--color-danger);  border-color: color-mix(in srgb, var(--color-danger) 35%, transparent); background: color-mix(in srgb, var(--color-danger) 7%, transparent); }
   }
 }
 
 .hmap__info-btn {
-  font-size: 0.7rem;
+  font-size: var(--fs-xs);
   color: var(--color-text-muted);
   opacity: 0.55;
   cursor: default;
@@ -211,12 +211,12 @@ export default defineComponent({
 
 .hmap__snap-btn {
   margin-left: auto;
-  background: rgba(251, 191, 36, 0.10);
-  border: 1px solid rgba(251, 191, 36, 0.35);
+  background: color-mix(in srgb, var(--color-amber) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-amber) 35%, transparent);
   border-radius: 3px;
   color: var(--color-amber);
   font-family: var(--font-mono);
-  font-size: 0.58rem;
+  font-size: var(--fs-xs);
   letter-spacing: 0.06em;
   padding: 0.18rem 0.55rem;
   cursor: pointer;
@@ -224,8 +224,8 @@ export default defineComponent({
   white-space: nowrap;
 
   &:hover {
-    background: rgba(251, 191, 36, 0.20);
-    border-color: rgba(251, 191, 36, 0.65);
+    background: color-mix(in srgb, var(--color-amber) 20%, transparent);
+    border-color: color-mix(in srgb, var(--color-amber) 65%, transparent);
   }
 }
 </style>

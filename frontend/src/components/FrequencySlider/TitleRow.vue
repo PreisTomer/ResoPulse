@@ -52,28 +52,28 @@ export default defineComponent({
 
   &__scope-chip {
     font-family: var(--font-mono);
-    font-size: 0.6rem;
+    font-size: var(--fs-xxs);
     font-weight: 700;
     letter-spacing: 0.06em;
     padding: 0.08rem 0.32rem;
     border-radius: 2px;
 
     &--both {
-      background: rgba(0, 212, 255, 0.10);
+      background: color-mix(in srgb, var(--color-primary) 10%, transparent);
       color: var(--color-accent);
-      border: 1px solid rgba(0, 212, 255, 0.20);
+      border: 1px solid color-mix(in srgb, var(--color-primary) 20%, transparent);
     }
 
     &--card {
-      background: rgba(167, 139, 250, 0.10);
-      color: #a78bfa;
-      border: 1px solid rgba(167, 139, 250, 0.20);
+      background: var(--color-purple-dim);
+      color: var(--color-purple);
+      border: 1px solid color-mix(in srgb, var(--color-purple) 20%, transparent);
     }
   }
 
   &__scope-sep {
     font-family: var(--font-mono);
-    font-size: 0.6rem;
+    font-size: var(--fs-xxs);
     color: var(--color-text-muted);
     opacity: 0.75;
     white-space: nowrap;

@@ -103,7 +103,7 @@ export default defineComponent({
     border: 1px solid var(--color-border);
     border-radius: var(--radius);
     color: var(--color-text-muted);
-    font-size: 0.75rem;
+    font-size: var(--fs-sm);
     cursor: pointer;
     transition: border-color 0.15s, color 0.15s, background-color 0.15s;
 
@@ -111,7 +111,7 @@ export default defineComponent({
 
     &--active {
       border-color: var(--color-primary);
-      background: rgba(0, 212, 255, 0.08);
+      background: color-mix(in srgb, var(--color-primary) 8%, transparent);
       color: var(--color-primary);
     }
   }
@@ -121,7 +121,7 @@ export default defineComponent({
 
   &__pitch {
     font-family: var(--font-mono);
-    font-size: 0.68rem;
+    font-size: var(--fs-xs);
     color: var(--color-text-muted);
     margin-left: auto;
   }
@@ -141,12 +141,12 @@ export default defineComponent({
   }
 
   &__disclaimer {
-    font-size: 0.65rem;
+    font-size: var(--fs-xxs);
     color: var(--color-text-muted);
     line-height: 1.4;
     padding: 0.3rem 0.4rem;
-    border-left: 2px solid rgba(0, 212, 255, 0.3);
-    background: rgba(0, 212, 255, 0.04);
+    border-left: 2px solid color-mix(in srgb, var(--color-primary) 30%, transparent);
+    background: color-mix(in srgb, var(--color-primary) 4%, transparent);
     border-radius: 0 var(--radius) var(--radius) 0;
   }
 }

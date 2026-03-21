@@ -29,6 +29,7 @@ import {
   BODY_TEMP_C, NEWTON_COOLING_LAMBDA, PENNES_BLOOD_COEFF, WF_CW, WF_PULSED, MIN_PULSE_ENVELOPE,
 } from '@/constants/physics'
 import { formatFreqKHz } from '@/utils/format'
+import { C } from '@/theme/colors'
 import type { HoverInfo, OutcomeItem } from '@/types/heatmap'
 
 export default defineComponent({
@@ -307,7 +308,7 @@ export default defineComponent({
       ctx.clearRect(0, 0, W, H)
 
       // Background plot area
-      ctx.fillStyle = '#0a0a1a'
+      ctx.fillStyle = C.bg
       ctx.fillRect(ml, mt, pw, ph)
 
       // Grid cells
@@ -330,13 +331,13 @@ export default defineComponent({
       if (optKhz >= this.xMin && optKhz <= this.xMax) {
         const ox = this._freqToX(optKhz)
         ctx.save()
-        ctx.strokeStyle = '#fbbf24'
+        ctx.strokeStyle = C.amber
         ctx.lineWidth = 1.5
         ctx.setLineDash([5, 4])
         ctx.beginPath(); ctx.moveTo(ox, mt); ctx.lineTo(ox, mt + ph); ctx.stroke()
         ctx.restore()
         ctx.save()
-        ctx.fillStyle = '#fbbf24'
+        ctx.fillStyle = C.amber
         ctx.font = '9px monospace'
         ctx.textAlign = 'center'
         ctx.fillText('opt', ox, mt + 9)
@@ -372,13 +373,13 @@ export default defineComponent({
           if (fcKhz < this.xMin || fcKhz > this.xMax) continue
           const fx = this._freqToX(fcKhz)
           ctx.save()
-          ctx.strokeStyle = 'rgba(0,212,255,0.55)'
+          ctx.strokeStyle = C.primaryStroke55
           ctx.lineWidth = 1
           ctx.setLineDash([2, 3])
           ctx.beginPath(); ctx.moveTo(fx, mt); ctx.lineTo(fx, mt + ph); ctx.stroke()
           ctx.restore()
           ctx.save()
-          ctx.fillStyle = 'rgba(0,212,255,0.6)'
+          ctx.fillStyle = C.primaryFill60
           ctx.font = '8px monospace'
           ctx.textAlign = 'center'
           ctx.fillText(label, fx, mt + ph + 14)
@@ -404,14 +405,14 @@ export default defineComponent({
 
       // Crosshair + dot
       ctx.save()
-      ctx.strokeStyle = '#ffffff'
+      ctx.strokeStyle = C.white
       ctx.lineWidth = 1.5
       ctx.setLineDash([])
       ctx.beginPath()
       ctx.moveTo(opX - 8, opY); ctx.lineTo(opX + 8, opY)
       ctx.moveTo(opX, opY - 8); ctx.lineTo(opX, opY + 8)
       ctx.stroke()
-      ctx.fillStyle = '#ffffff'
+      ctx.fillStyle = C.white
       ctx.beginPath()
       ctx.arc(opX, opY, 3.5, 0, Math.PI * 2)
       ctx.fill()

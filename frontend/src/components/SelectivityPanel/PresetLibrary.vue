@@ -114,7 +114,7 @@ export default defineComponent({
   &__library { display: flex; flex-direction: column; gap: 0.4rem; }
 
   &__lib-title {
-    font-size: 0.68rem;
+    font-size: var(--fs-xs);
     font-family: var(--font-mono);
     text-transform: uppercase;
     letter-spacing: 0.1em;
@@ -126,7 +126,7 @@ export default defineComponent({
   &__lib-group { display: flex; flex-direction: column; gap: 0.25rem; margin-bottom: 0.25rem; }
 
   &__lib-group-label {
-    font-size: 0.63rem;
+    font-size: var(--fs-xxs);
     font-family: var(--font-mono);
     text-transform: uppercase;
     letter-spacing: 0.1em;
@@ -137,7 +137,7 @@ export default defineComponent({
   &__lib-pills { display: flex; flex-wrap: wrap; gap: 0.3rem; }
 
   &__preset-pill {
-    font-size: 0.65rem;
+    font-size: var(--fs-xxs);
     font-family: var(--font-mono);
     padding: 0.18rem 0.5rem;
     border: 1px solid var(--color-border);

@@ -143,21 +143,21 @@ export default defineComponent({
         .attr('class', 'disrupt-bg')
         .attr('x', 0).attr('y', 0)
         .attr('width', this._chartW).attr('height', yThresh)
-        .attr('fill', 'rgba(255,77,109,0.07)')
+        .style('fill', 'color-mix(in srgb, var(--color-danger) 7%, transparent)')
 
       // Threshold line at 1.0
       g.append('line')
         .attr('class', 'threshold-line')
         .attr('x1', 0).attr('x2', this._chartW)
         .attr('y1', yThresh).attr('y2', yThresh)
-        .attr('stroke', 'rgba(255,77,109,0.55)')
+        .style('stroke', 'color-mix(in srgb, var(--color-danger) 55%, transparent)')
         .attr('stroke-width', 1)
         .attr('stroke-dasharray', '5,3')
 
       g.append('text')
         .attr('x', this._chartW + 4)
         .attr('y', yThresh + 4)
-        .attr('fill', 'rgba(255,77,109,0.7)')
+        .style('fill', 'color-mix(in srgb, var(--color-danger) 70%, transparent)')
         .attr('font-size', '0.52rem')
         .attr('font-family', 'var(--font-mono)')
         .text('DISRUPT')
@@ -210,7 +210,7 @@ export default defineComponent({
         .attr('y', -6)
         .attr('text-anchor', 'middle')
         .attr('fill', 'rgba(255,255,255,0.85)')
-        .attr('font-size', '0.58rem')
+        .attr('font-size', '0.7rem')
         .attr('font-family', 'var(--font-mono)')
 
       // Drag overlay
@@ -246,7 +246,7 @@ export default defineComponent({
         .call(xAxis as d3.Axis<d3.NumberValue>)
         .attr('color', 'rgba(255,255,255,0.35)')
         .selectAll('text')
-        .attr('font-size', '0.58rem')
+        .attr('font-size', '0.7rem')
         .attr('font-family', 'var(--font-mono)')
 
       // Y axis
@@ -257,7 +257,7 @@ export default defineComponent({
         .call(yAxis as d3.Axis<d3.NumberValue>)
         .attr('color', 'rgba(255,255,255,0.35)')
         .selectAll('text')
-        .attr('font-size', '0.58rem')
+        .attr('font-size', '0.7rem')
         .attr('font-family', 'var(--font-mono)')
 
       // Grid lines
@@ -267,7 +267,7 @@ export default defineComponent({
         gridG.append('line')
           .attr('x1', 0).attr('x2', this._chartW)
           .attr('y1', this._yScale!(tick)).attr('y2', this._yScale!(tick))
-          .attr('stroke', tick === 1.0 ? 'rgba(255,77,109,0.18)' : 'rgba(255,255,255,0.06)')
+          .style('stroke', tick === 1.0 ? 'color-mix(in srgb, var(--color-danger) 18%, transparent)' : 'rgba(255,255,255,0.06)')
           .attr('stroke-width', 1)
       })
 
@@ -302,14 +302,14 @@ export default defineComponent({
       activeG.append('line')
         .attr('x1', 0).attr('x2', this._chartW)
         .attr('y1', y0).attr('y2', y0)
-        .attr('stroke', C.primary)
+        .style('stroke', C.primary)
         .attr('stroke-width', 1.5)
         .attr('stroke-dasharray', '6,4')
         .attr('opacity', 0.55)
       activeG.append('text')
         .attr('x', this._chartW + 4)
         .attr('y', y0 + 4)
-        .attr('fill', C.primary)
+        .style('fill', C.primary)
         .attr('opacity', 0.6)
         .attr('font-size', '0.52rem')
         .attr('font-family', 'var(--font-mono)')
@@ -408,7 +408,7 @@ export default defineComponent({
 
   &__note {
     font-family: var(--font-mono);
-    font-size: 0.55rem;
+    font-size: var(--fs-xxs);
     color: rgba(255,255,255,0.4);
   }
 
@@ -425,14 +425,14 @@ export default defineComponent({
 
     &-item {
       font-family: var(--font-mono);
-      font-size: 0.58rem;
+      font-size: var(--fs-xs);
       letter-spacing: 0.04em;
     }
 
     &-target  { color: var(--color-purple); }
-    &-healthy { color: rgba(0,212,255,0.7); }
+    &-healthy { color: color-mix(in srgb, var(--color-primary) 70%, transparent); }
     &-dim     { color: rgba(255,255,255,0.35); }
-    &-disrupt { color: rgba(255,77,109,0.7); }
+    &-disrupt { color: color-mix(in srgb, var(--color-danger) 70%, transparent); }
   }
 }
 </style>

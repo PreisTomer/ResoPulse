@@ -9,6 +9,7 @@
 import { defineComponent, type PropType } from 'vue'
 import * as d3 from 'd3'
 import { useCellStore } from '@/stores/cellStore'
+import { C } from '@/theme/colors'
 import { THRESHOLDS } from '@/constants/physics'
 import { UNIT } from '@/constants/units'
 
@@ -85,10 +86,10 @@ export default defineComponent({
       const yTI    = d3.scaleLinear().domain([0, tiMax]).range([iH, 0]).clamp(true)
 
       const style       = getComputedStyle(document.documentElement)
-      const CSS_PRIMARY = style.getPropertyValue('--color-primary').trim() || '#00d4ff'
-      const CSS_DANGER  = style.getPropertyValue('--color-danger').trim()  || '#ef4444'
-      const CSS_AMBER   = style.getPropertyValue('--color-amber').trim()   || '#fbbf24'
-      const CSS_BORDER  = style.getPropertyValue('--color-border').trim()  || 'rgba(255,255,255,0.1)'
+      const CSS_PRIMARY = style.getPropertyValue('--color-primary').trim()
+      const CSS_DANGER  = style.getPropertyValue('--color-danger').trim()
+      const CSS_AMBER   = style.getPropertyValue('--color-amber').trim()
+      const CSS_BORDER  = style.getPropertyValue('--color-border').trim()
 
       // ── Therapeutic window fill ───────────────────────────────────────────
       const windowPts = pts.filter(p =>
@@ -100,8 +101,8 @@ export default defineComponent({
         g.append('rect')
           .attr('x', x0).attr('y', 0)
           .attr('width', x1 - x0).attr('height', iH)
-          .attr('fill', 'rgba(34,197,94,0.10)')
-          .attr('stroke', 'rgba(34,197,94,0.35)')
+          .attr('fill', C.okFill10)
+          .attr('stroke', C.okStroke35)
           .attr('stroke-width', 1)
           .attr('stroke-dasharray', '3,3')
       }

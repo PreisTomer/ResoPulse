@@ -50,7 +50,7 @@ export default defineComponent({
   align-items: flex-start;
   gap: 1.25rem;
   padding: 0.65rem 1.75rem;
-  background: var(--color-surface-2, #0a1628);
+  background: var(--color-surface-2);
   border-bottom: 1px solid var(--color-border);
   flex-shrink: 0;
 }
@@ -65,7 +65,7 @@ export default defineComponent({
 }
 
 .experiment__notes-label {
-  font-size: 0.58rem;
+  font-size: var(--fs-xs);
   font-family: var(--font-mono);
   text-transform: uppercase;
   letter-spacing: 0.1em;
@@ -79,7 +79,7 @@ export default defineComponent({
   border-radius: 4px;
   color: var(--color-text);
   font-family: var(--font-sans);
-  font-size: 0.72rem;
+  font-size: var(--fs-sm);
   padding: 0.3rem 0.6rem;
   outline: none;
   transition: border-color 0.15s;
@@ -92,7 +92,7 @@ export default defineComponent({
 .experiment__notes-textarea { line-height: 1.5; }
 
 .experiment__notes-hint {
-  font-size: 0.58rem;
+  font-size: var(--fs-xs);
   font-family: var(--font-mono);
   color: var(--color-text-muted);
   opacity: 0.55;

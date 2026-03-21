@@ -96,7 +96,7 @@ export default defineComponent({
 @use '../../styles/mixins' as *;
 
 .res-info {
-  @include info-panel(rgba(0, 212, 255, 0.04), rgba(0, 212, 255, 0.15));
+  @include info-panel(color-mix(in srgb, var(--color-primary) 4%, transparent), color-mix(in srgb, var(--color-primary) 15%, transparent));
 
   &__title { @include section-title(); }
 
@@ -109,7 +109,7 @@ export default defineComponent({
   }
 
   &__label {
-    font-size: 0.58rem;
+    font-size: var(--fs-xs);
     font-family: var(--font-mono);
     color: var(--color-text-muted);
     min-width: 5.5rem;
@@ -117,7 +117,7 @@ export default defineComponent({
   }
 
   &__val {
-    font-size: 0.65rem;
+    font-size: var(--fs-xxs);
     font-family: var(--font-mono);
     font-weight: 600;
     color: var(--color-text);
@@ -128,7 +128,7 @@ export default defineComponent({
   }
 
   &__note {
-    font-size: 0.63rem;
+    font-size: var(--fs-xxs);
     font-family: var(--font-mono);
     color: var(--color-text-muted);
   }
@@ -139,9 +139,9 @@ export default defineComponent({
     border-radius: 2px;
     border: 1px solid;
 
-    &--validated    { color: var(--color-lime);   border-color: rgba(57, 255, 20, 0.3);   background: rgba(57, 255, 20, 0.06); }
-    &--extrapolated { color: var(--color-amber);  border-color: rgba(251, 191, 36, 0.3);  background: rgba(251, 191, 36, 0.06); }
-    &--speculative  { color: var(--color-danger); border-color: rgba(255, 77, 109, 0.3);  background: rgba(255, 77, 109, 0.06); }
+    &--validated    { color: var(--color-lime);   border-color: color-mix(in srgb, var(--color-lime)   30%, transparent); background: color-mix(in srgb, var(--color-lime)   6%, transparent); }
+    &--extrapolated { color: var(--color-amber);  border-color: color-mix(in srgb, var(--color-amber)  30%, transparent); background: color-mix(in srgb, var(--color-amber)  6%, transparent); }
+    &--speculative  { color: var(--color-danger); border-color: color-mix(in srgb, var(--color-danger) 30%, transparent); background: color-mix(in srgb, var(--color-danger) 6%, transparent); }
   }
 }
 </style>

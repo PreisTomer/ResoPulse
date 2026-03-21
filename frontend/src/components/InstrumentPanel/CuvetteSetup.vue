@@ -140,13 +140,13 @@ export default defineComponent({
   }
 
   &__title {
-    font-size: 0.875rem;
+    font-size: var(--fs-lg);
     font-weight: 600;
     color: var(--color-text);
   }
 
   &__sub {
-    font-size: 0.7rem;
+    font-size: var(--fs-xs);
     color: var(--color-text-muted);
     margin-top: 0.15rem;
   }
@@ -158,7 +158,7 @@ export default defineComponent({
   }
 
   &__label {
-    font-size: 0.75rem;
+    font-size: var(--fs-sm);
     color: var(--color-text-muted);
     display: flex;
     flex-direction: column;
@@ -167,7 +167,7 @@ export default defineComponent({
   }
 
   &__sub-label {
-    font-size: 0.65rem;
+    font-size: var(--fs-xxs);
     color: var(--color-text-muted);
     opacity: 0.6;
   }
@@ -184,7 +184,7 @@ export default defineComponent({
     border: 1px solid var(--color-border);
     border-radius: var(--radius);
     color: var(--color-text);
-    font-size: 0.8rem;
+    font-size: var(--fs-md);
     padding: 0.3rem 0.5rem;
 
     &:focus {
@@ -215,7 +215,7 @@ export default defineComponent({
   }
 
   &__readout {
-    font-size: 0.8rem;
+    font-size: var(--fs-md);
     font-family: var(--font-mono);
     color: var(--color-primary);
     min-width: 3.5rem;
@@ -227,7 +227,7 @@ export default defineComponent({
     border: 1px solid var(--color-border);
     border-radius: var(--radius);
     color: var(--color-text);
-    font-size: 0.8rem;
+    font-size: var(--fs-md);
     padding: 0.35rem 0.5rem;
     cursor: pointer;
     width: 100%;
@@ -243,7 +243,7 @@ export default defineComponent({
   }
 
   &__unit {
-    font-size: 0.7rem;
+    font-size: var(--fs-xs);
     color: var(--color-text-muted);
   }
 }

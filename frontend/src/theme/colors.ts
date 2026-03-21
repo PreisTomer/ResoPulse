@@ -43,11 +43,32 @@ export const C = {
   purple:      '#a78bfa',                   // --color-purple      (virus group)
   purpleLight: '#c4b5fd',                   // --color-purple-light
 
+  // Canvas/D3 rgba strings — canvas API cannot evaluate CSS vars; rgba must be literal.
+  // Centralised here so the RGB values stay as a single source of truth.
+  limeFill:        'rgba(57, 255, 20, 0.82)',    // therapeutic zone heatmap canvas fill
+  primaryFill:     'rgba(0, 212, 255, 0.22)',   // approaching zone heatmap canvas fill
+  primaryStroke55: 'rgba(0, 212, 255, 0.55)',   // heatmap optimal-freq cursor stroke
+  primaryFill60:   'rgba(0, 212, 255, 0.60)',   // heatmap optimal-freq label fill
+  amberFill:    'rgba(251, 191, 36, 0.68)',   // marginal zone heatmap canvas fill
+  amberChart:   'rgba(251, 191, 36, 0.7)',    // D3 threshold reference line color
+  dangerFill:   'rgba(255, 77, 109, 0.78)',   // ablative zone heatmap canvas fill
+  heatFill:     'rgba(255, 140, 0, 0.72)',    // thermal zone heatmap canvas fill
+
   // Semantic one-offs (no CSS var; used only in script/canvas/D3 contexts)
-  navWarning:    '#ffb800',   // nav status warning dot, warm amber
-  lysed:         '#882233',   // dead-cell state color
+  navWarning:    '#ffb800',   // nav status warning dot, warm amber   --color-amber-warm
+  lysed:         '#882233',   // dead-cell state color                --color-lysed
+  vibrating:     '#ff8c00',   // lysis-armed dark orange              --color-vibrating
   targetInterp:  '#4d79ff',   // D3 gradient start for target cell interpolation
   nucleusOrange: '#ff8c00',   // nucleus rung color for target cell canvas
+  dep:           '#ff9900',   // DEP force indicator orange
+  btnDark:       '#060e1a',   // dark text on primary-colored buttons
+  ok:            '#4ade80',   // --color-ok           (ok / success, soft green)
+  okFill10:      'rgba(74, 222, 128, 0.10)',   // D3 ok window fill (10%)
+  okStroke35:    'rgba(74, 222, 128, 0.35)',   // D3 ok window stroke (35%)
+  dangerLight:   '#f87171',   // --color-danger-light (soft danger readout)
+  white:         '#ffffff',   // canvas axis labels, tick marks
+  rayInterp1:    '#4a9eff',   // field-ray frequency gradient: mid blue (cyan→violet scale)
+  rayInterp2:    '#7c6cff',   // field-ray frequency gradient: mid violet
 } as const
 
 export type SystemColor = keyof typeof C

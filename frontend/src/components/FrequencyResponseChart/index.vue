@@ -208,7 +208,7 @@ export default defineComponent({
         .attr('y', 8)
         .attr('text-anchor', 'middle')
         .attr('fill', 'rgba(255,255,255,0.75)')
-        .attr('font-size', '0.58rem')
+        .attr('font-size', '0.7rem')
         .attr('font-family', 'var(--font-mono)')
 
       // Drag-discoverability hint - appears above the cursor line
@@ -506,7 +506,7 @@ export default defineComponent({
       g.select<SVGGElement>('.y-right-axis')
         .call(yRightAxis)
         .call((a) => a.select('.domain').attr('stroke', C.amber + '55'))
-        .call((a) => a.selectAll('text').attr('fill', C.amber).attr('font-size', '0.58rem').attr('font-family', 'var(--font-mono)'))
+        .call((a) => a.selectAll('text').attr('fill', C.amber).attr('font-size', '0.7rem').attr('font-family', 'var(--font-mono)'))
         .call((a) => a.selectAll('line').attr('stroke', C.amber + '55'))
 
       const selLineGen = d3.line<{ hz: number; ratio: number }>()
@@ -823,7 +823,7 @@ export default defineComponent({
         optGroup.append('text')
           .attr('x', optTextX).attr('y', -5)
           .attr('text-anchor', optAnchor)
-          .attr('fill', C.amber).attr('font-size', '0.58rem')
+          .attr('fill', C.amber).attr('font-size', '0.7rem')
           .attr('font-family', 'var(--font-mono)')
           .attr('letter-spacing', '0.04em')
           .text(optLabel)
@@ -916,8 +916,6 @@ export default defineComponent({
 
 <style lang="scss" scoped>
 @use '../../styles/mixins' as *;
-
-$amber: #fbbf24;
 
 /* Expose group colors as CSS vars for the legend dots */
 .freq-chart {

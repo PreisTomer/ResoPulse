@@ -51,7 +51,7 @@ export default defineComponent({
   flex-wrap: wrap;
   padding: 0.75rem 1.5rem;
   border-top: 1px solid var(--color-border);
-  font-size: 0.7rem;
+  font-size: var(--fs-xs);
   font-family: var(--font-mono);
   color: var(--color-text-muted);
 
@@ -62,7 +62,7 @@ export default defineComponent({
   }
 
   &__color {
-    font-size: 0.85rem;
+    font-size: var(--fs-lg);
   }
 
   &__cancer-val { color: var(--color-danger); }
@@ -72,7 +72,7 @@ export default defineComponent({
 
   &__footnote {
     width: 100%;
-    font-size: 0.65rem;
+    font-size: var(--fs-xxs);
     color: var(--color-text-muted);
     opacity: 0.65;
     margin-top: 0.15rem;
@@ -81,7 +81,7 @@ export default defineComponent({
 
   &__instrument-link {
     width: 100%;
-    font-size: 0.65rem;
+    font-size: var(--fs-xxs);
     font-family: var(--font-mono);
     color: var(--color-primary);
     opacity: 0.7;

@@ -48,7 +48,7 @@ export default defineComponent({
   gap: 0.35rem;
 
   &__label {
-    font-size: 0.65rem;
+    font-size: var(--fs-xxs);
     font-family: var(--font-mono);
     text-transform: uppercase;
     letter-spacing: 0.1em;
@@ -63,7 +63,7 @@ export default defineComponent({
     line-height: 1;
 
     &--default  { color: var(--color-text-heading); }
-    &--ok       { color: #4ade80; }
+    &--ok       { color: var(--color-ok); }
     &--warn,
     &--amber    { color: var(--color-amber); }
     &--danger   { color: var(--color-danger); }
@@ -73,7 +73,7 @@ export default defineComponent({
   }
 
   &__sub {
-    font-size: 0.62rem;
+    font-size: var(--fs-xxs);
     font-family: var(--font-mono);
     color: var(--color-text-muted);
     line-height: 1.4;

@@ -3,13 +3,13 @@
   <div class="home__hero-bg" aria-hidden="true">
     <svg class="home__hero-bg-svg" viewBox="0 0 900 900" fill="none" xmlns="http://www.w3.org/2000/svg">
       <!-- Origin dot: blinks first, rings shoot outward from it -->
-      <circle class="home__hero-bg-dot" cx="450" cy="450" r="6" fill="rgba(0,212,255,1)"/>
+      <circle class="home__hero-bg-dot" cx="450" cy="450" r="6"/>
       <!-- Concentric rings: same visual language as the logo rings, amplified -->
-      <circle class="home__hero-bg-ring" cx="450" cy="450" r="148" stroke="rgba(0,212,255,1)"    stroke-width="1.2" fill="none"/>
-      <circle class="home__hero-bg-ring" cx="450" cy="450" r="240" stroke="rgba(0,212,255,0.85)" stroke-width="1"   fill="none"/>
-      <circle class="home__hero-bg-ring" cx="450" cy="450" r="338" stroke="rgba(0,212,255,0.65)" stroke-width="0.9" fill="none"/>
-      <circle class="home__hero-bg-ring" cx="450" cy="450" r="440" stroke="rgba(0,212,255,0.45)" stroke-width="0.8" fill="none"/>
-      <circle class="home__hero-bg-ring" cx="450" cy="450" r="542" stroke="rgba(0,212,255,0.25)" stroke-width="0.7" fill="none"/>
+      <circle class="home__hero-bg-ring home__hero-bg-ring--1" cx="450" cy="450" r="148" stroke-width="1.2" fill="none"/>
+      <circle class="home__hero-bg-ring home__hero-bg-ring--2" cx="450" cy="450" r="240" stroke-width="1"   fill="none"/>
+      <circle class="home__hero-bg-ring home__hero-bg-ring--3" cx="450" cy="450" r="338" stroke-width="0.9" fill="none"/>
+      <circle class="home__hero-bg-ring home__hero-bg-ring--4" cx="450" cy="450" r="440" stroke-width="0.8" fill="none"/>
+      <circle class="home__hero-bg-ring home__hero-bg-ring--5" cx="450" cy="450" r="542" stroke-width="0.7" fill="none"/>
     </svg>
   </div>
 </template>
@@ -43,6 +43,7 @@ export default defineComponent({
   }
 
   &-dot {
+    fill: var(--color-primary);
     transform-box: fill-box;
     transform-origin: center;
     animation: bg-dot-flash 0.45s ease-out forwards;
@@ -57,11 +58,11 @@ export default defineComponent({
       bg-ring-pulse  3.5s ease-in-out infinite;
 
     // [expand-delay, pulse-delay] — rings shoot from center outward, staggered 50ms
-    &:nth-of-type(2) { animation-delay: 0.18s, 0.85s; }
-    &:nth-of-type(3) { animation-delay: 0.23s, 1.55s; }
-    &:nth-of-type(4) { animation-delay: 0.28s, 2.25s; }
-    &:nth-of-type(5) { animation-delay: 0.33s, 2.95s; }
-    &:nth-of-type(6) { animation-delay: 0.38s, 3.65s; }
+    &--1 { stroke: var(--color-primary);                                              animation-delay: 0.18s, 0.85s; }
+    &--2 { stroke: color-mix(in srgb, var(--color-primary) 85%, transparent);        animation-delay: 0.23s, 1.55s; }
+    &--3 { stroke: color-mix(in srgb, var(--color-primary) 65%, transparent);        animation-delay: 0.28s, 2.25s; }
+    &--4 { stroke: color-mix(in srgb, var(--color-primary) 45%, transparent);        animation-delay: 0.33s, 2.95s; }
+    &--5 { stroke: color-mix(in srgb, var(--color-primary) 25%, transparent);        animation-delay: 0.38s, 3.65s; }
   }
 }
 

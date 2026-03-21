@@ -44,7 +44,7 @@ export default defineComponent({
 }
 
 .hmap__legend-label {
-  font-size: 0.64rem;
+  font-size: var(--fs-xxs);
   font-family: var(--font-mono);
   color: var(--color-text-muted);
   white-space: nowrap;

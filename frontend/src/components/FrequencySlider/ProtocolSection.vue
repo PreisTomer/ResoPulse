@@ -8,18 +8,20 @@
   <div v-show="open" class="field-panel__accordion-body">
     <!-- Row 4: Waveform selector -->
     <div class="field-panel__row field-panel__row--medium" v-tip="tipWaveform">
-      <span class="field-panel__row-label">{{ $t('slider.waveform') }}</span>
-      <div class="field-panel__pills">
-        <label class="field-panel__pill" :class="{ 'field-panel__pill--active': currentWaveform === WAVEFORM.PULSED }">
-          <input type="radio" :value="WAVEFORM.PULSED" :checked="currentWaveform === WAVEFORM.PULSED" name="waveform" @change="onWaveformChange(WAVEFORM.PULSED)" />
-          {{ $t('slider.pulsed') }}
-        </label>
-        <label class="field-panel__pill" :class="{ 'field-panel__pill--active': currentWaveform === WAVEFORM.CW }">
-          <input type="radio" :value="WAVEFORM.CW" :checked="currentWaveform === WAVEFORM.CW" name="waveform" @change="onWaveformChange(WAVEFORM.CW)" />
-          {{ $t('slider.cw') }}
-        </label>
+      <div class="field-panel__row-header">
+        <span class="field-panel__row-label">{{ $t('slider.waveform') }}</span>
+        <div class="field-panel__pills">
+          <label class="field-panel__pill" :class="{ 'field-panel__pill--active': currentWaveform === WAVEFORM.PULSED }">
+            <input type="radio" :value="WAVEFORM.PULSED" :checked="currentWaveform === WAVEFORM.PULSED" name="waveform" @change="onWaveformChange(WAVEFORM.PULSED)" />
+            {{ $t('slider.pulsed') }}
+          </label>
+          <label class="field-panel__pill" :class="{ 'field-panel__pill--active': currentWaveform === WAVEFORM.CW }">
+            <input type="radio" :value="WAVEFORM.CW" :checked="currentWaveform === WAVEFORM.CW" name="waveform" @change="onWaveformChange(WAVEFORM.CW)" />
+            {{ $t('slider.cw') }}
+          </label>
+        </div>
+        <span class="field-panel__row-meta">wf×{{ currentWaveform === WAVEFORM.CW ? CW_WAVEFORM_FACTOR : PULSED_WAVEFORM_FACTOR }}</span>
       </div>
-      <span class="field-panel__row-meta">wf×{{ currentWaveform === WAVEFORM.CW ? CW_WAVEFORM_FACTOR : PULSED_WAVEFORM_FACTOR }}</span>
     </div>
 
     <!-- Row 5: Duty Cycle (pulsed only) -->
@@ -28,9 +30,18 @@
       class="field-panel__row field-panel__row--compact-readout"
       :class="thermalDangerLevel !== THERMAL_LEVEL.SAFE ? `field-panel__row--${thermalDangerLevel}` : ''"
     >
-      <span class="field-panel__row-label" v-tip="tipDutyCycle">
-        {{ $t('slider.dutyCycle') }}
-      </span>
+      <div class="field-panel__row-header">
+        <span class="field-panel__row-label" v-tip="tipDutyCycle">{{ $t('slider.dutyCycle') }}</span>
+        <div class="field-panel__readout">
+          <span
+            class="field-panel__readout-value"
+            :class="thermalDangerLevel !== THERMAL_LEVEL.SAFE ? `field-panel__readout--${thermalDangerLevel}` : ''"
+            v-tip="tipDutyCycle"
+          >{{ dutyCycleDisplay }}</span>
+          <span class="field-panel__readout-sub" v-tip="tipDutyCycle">T_ss {{ maxSteadyTemp.toFixed(0) }} {{ UNIT.DEG_C }}</span>
+          <span class="field-panel__readout-sub" v-tip="tipDutyCycle">SAR_eff {{ CELL_LABEL.TARGET }} {{ (store.targetSAR * store.dutyCycle).toFixed(1) }} {{ UNIT.W_PER_KG }}</span>
+        </div>
+      </div>
       <div class="field-panel__track">
         <input
           class="field-panel__slider"
@@ -42,21 +53,18 @@
           @input="onDutyCycleInput"
         />
       </div>
-      <div class="field-panel__readout">
-        <span
-          class="field-panel__readout-value"
-          :class="thermalDangerLevel !== THERMAL_LEVEL.SAFE ? `field-panel__readout--${thermalDangerLevel}` : ''"
-          v-tip="tipDutyCycle"
-        >{{ dutyCycleDisplay }}</span>
-        <span class="field-panel__readout-sub" v-tip="tipDutyCycle">
-          T_ss {{ maxSteadyTemp.toFixed(0) }} {{ UNIT.DEG_C }} · SAR_eff {{ CELL_LABEL.TARGET }} {{ (store.targetSAR * store.dutyCycle).toFixed(1) }} {{ UNIT.W_PER_KG }}
-        </span>
-      </div>
     </div>
 
     <!-- Row 6: Pulse Width (pulsed only) -->
     <div v-if="currentWaveform === WAVEFORM.PULSED" class="field-panel__row field-panel__row--compact-readout">
-      <span class="field-panel__row-label" v-tip="tipPulseWidth">{{ $t('slider.pulseWidth') }}</span>
+      <div class="field-panel__row-header">
+        <span class="field-panel__row-label" v-tip="tipPulseWidth">{{ $t('slider.pulseWidth') }}</span>
+        <div class="field-panel__readout">
+          <span class="field-panel__readout-value" v-tip="tipPulseWidth">{{ pulseWidthDisplay }}</span>
+          <span class="field-panel__readout-sub" v-tip="tipPulseWidth">Lysis {{ lysisTimeDisplay }}</span>
+          <span class="field-panel__readout-sub" :style="minPwStyle" v-tip="tipMinPulse">{{ minPwDisplay }}</span>
+        </div>
+      </div>
       <div class="field-panel__track">
         <input
           class="field-panel__slider"
@@ -67,15 +75,6 @@
           :value="pulseWidthLogVal"
           @input="onPulseWidthInput"
         />
-      </div>
-      <div class="field-panel__readout">
-        <span class="field-panel__readout-value" v-tip="tipPulseWidth">{{ pulseWidthDisplay }}</span>
-        <span class="field-panel__readout-sub" v-tip="tipPulseWidth">
-          Lysis {{ lysisTimeDisplay }}
-        </span>
-        <span class="field-panel__readout-sub" :style="minPwStyle" v-tip="tipMinPulse">
-          {{ minPwDisplay }}
-        </span>
       </div>
     </div>
   </div>
@@ -221,8 +220,8 @@ export default defineComponent({
 @use '../../styles/mixins' as *;
 
 @keyframes thumb-danger-pulse {
-  0%, 100% { box-shadow: 0 0 6px rgba(255, 77, 109, 0.6); }
-  50%       { box-shadow: 0 0 16px rgba(255, 77, 109, 1.0); }
+  0%, 100% { box-shadow: 0 0 6px color-mix(in srgb, var(--color-danger) 60%, transparent); }
+  50%       { box-shadow: 0 0 16px var(--color-danger); }
 }
 
 @keyframes state-blink {
@@ -250,40 +249,34 @@ export default defineComponent({
     &-body { display: flex; flex-direction: column; gap: 0.9rem; padding-top: 0.4rem; }
   }
 
-  &__safe-lock { font-size: 0.55rem; opacity: 0.7; margin-left: 0.2rem; }
+  &__safe-lock { font-size: var(--fs-xxs); opacity: 0.7; margin-left: 0.2rem; }
 
   &__row {
-    @include field-row-grid(7.5rem, 8.5rem);
+    @include field-row-grid();
 
-    &--medium {
-      grid-template-columns: 7.5rem 1fr 8.5rem;
-      > .field-panel__pills { justify-self: center; }
-    }
-
-    &--compact-readout {
-      @include field-row-grid(5.5rem, 7.5rem);
-      .field-panel__readout { width: 7.5rem; }
-    }
+    &--medium .field-panel__row-header .field-panel__pills { flex: 1; justify-content: center; }
 
     &--hyperthermic .field-panel__slider {
-      &::-webkit-slider-thumb { background: var(--color-amber);  box-shadow: 0 0 6px  rgba(251, 191, 36, 0.5); }
+      &::-webkit-slider-thumb { background: var(--color-amber);  box-shadow: 0 0 6px  color-mix(in srgb, var(--color-amber) 50%, transparent); }
       &::-moz-range-thumb     { background: var(--color-amber); }
     }
 
     &--denaturing .field-panel__slider {
-      &::-webkit-slider-thumb { background: var(--color-orange); box-shadow: 0 0 8px  rgba(251, 130, 20, 0.7); }
+      &::-webkit-slider-thumb { background: var(--color-orange); box-shadow: 0 0 8px  color-mix(in srgb, var(--color-orange) 70%, transparent); }
       &::-moz-range-thumb     { background: var(--color-orange); }
     }
 
     &--vaporizing .field-panel__slider {
-      &::-webkit-slider-thumb { background: var(--color-danger); box-shadow: 0 0 10px rgba(255, 77, 109, 0.9); animation: thumb-danger-pulse 0.5s ease-in-out infinite; }
+      &::-webkit-slider-thumb { background: var(--color-danger); box-shadow: 0 0 10px color-mix(in srgb, var(--color-danger) 90%, transparent); animation: thumb-danger-pulse 0.5s ease-in-out infinite; }
       &::-moz-range-thumb     { background: var(--color-danger); }
     }
   }
 
+  &__row-header { @include field-row-header(); }
+
   &__row-label { @include row-label(); }
 
-  &__row-meta { font-size: 0.65rem; font-family: var(--font-mono); color: var(--color-text-muted); white-space: nowrap; opacity: 0.80; text-align: right; justify-self: end; }
+  &__row-meta { font-size: var(--fs-xxs); font-family: var(--font-mono); color: var(--color-text-muted); white-space: nowrap; opacity: 0.80; }
 
   &__pills { display: flex; gap: 0.35rem; flex-wrap: wrap; }
 
@@ -302,13 +295,13 @@ export default defineComponent({
     input { display: none; }
 
     &--active  { border-color: var(--color-primary); color: var(--color-primary); background-color: var(--color-primary-dim); }
-    &--sm      { font-size: 0.58rem; padding: 0.14rem 0.45rem; }
-    &--safe    { border-color: var(--color-lime)  !important; color: var(--color-lime)  !important; background-color: rgba(57, 255, 20, 0.08)   !important; }
-    &--expert  { border-color: var(--color-amber) !important; color: var(--color-amber) !important; background-color: rgba(251, 191, 36, 0.08)  !important; }
+    &--sm      { font-size: var(--fs-xs); padding: 0.14rem 0.45rem; }
+    &--safe    { border-color: var(--color-lime)  !important; color: var(--color-lime)  !important; background-color: color-mix(in srgb, var(--color-lime) 8%, transparent)   !important; }
+    &--expert  { border-color: var(--color-amber) !important; color: var(--color-amber) !important; background-color: color-mix(in srgb, var(--color-amber) 8%, transparent)  !important; }
     &--nuclear {
-      border-color: rgba(167, 139, 250, 0.5) !important;
-      color: #a78bfa !important;
-      &.field-panel__pill--active { border-color: #a78bfa !important; background-color: rgba(167, 139, 250, 0.10) !important; }
+      border-color: color-mix(in srgb, var(--color-purple) 50%, transparent) !important;
+      color: var(--color-purple) !important;
+      &.field-panel__pill--active { border-color: var(--color-purple) !important; background-color: var(--color-purple-dim) !important; }
     }
   }
 
@@ -324,8 +317,7 @@ export default defineComponent({
     flex-direction: column;
     align-items: flex-end;
     gap: 0.25rem;
-    width: 8.5rem;
-    overflow: hidden;
+    flex-shrink: 0;
 
     &-value {
       font-size: 1rem;
@@ -337,7 +329,7 @@ export default defineComponent({
       white-space: nowrap;
     }
 
-    &-sub { font-size: 0.64rem; font-family: var(--font-mono); color: var(--color-text-muted); white-space: nowrap; opacity: 0.82; }
+    &-sub { font-size: var(--fs-xxs); font-family: var(--font-mono); color: var(--color-text-muted); white-space: nowrap; opacity: 0.82; }
 
     &--hyperthermic { color: var(--color-amber)  !important; }
     &--denaturing   { color: var(--color-orange) !important; }

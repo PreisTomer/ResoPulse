@@ -8,7 +8,12 @@
   <div v-show="open" class="field-panel__accordion-body">
     <!-- Row 7: Cell Orientation θ -->
     <div class="field-panel__row field-panel__row--compact-readout">
-      <span class="field-panel__row-label" v-tip="tipOrientation">{{ $t('slider.orientationTheta') }}</span>
+      <div class="field-panel__row-header">
+        <span class="field-panel__row-label" v-tip="tipOrientation">{{ $t('slider.orientationTheta') }}</span>
+        <div class="field-panel__readout" v-tip="tipOrientation">
+          <span class="field-panel__readout-value">{{ cosThetaDisplay }}</span>
+        </div>
+      </div>
       <div class="field-panel__track">
         <input
           class="field-panel__slider"
@@ -20,17 +25,16 @@
           @input="onOrientationInput"
         />
       </div>
-      <div class="field-panel__readout" v-tip="tipOrientation">
-        <span class="field-panel__readout-value">{{ cosThetaDisplay }}</span>
-      </div>
     </div>
 
     <!-- Row 8: Pulses to Lysis N (pulsed only) - target cell lysis timing only -->
     <div v-if="store.waveform === WAVEFORM.PULSED" class="field-panel__row field-panel__row--compact-readout">
-      <span
-        class="field-panel__row-label"
-        v-tip="tipLysisNFull"
-      >{{ $t('slider.pulsesN') }} <span class="field-panel__scope-tag field-panel__scope-tag--target">{{ CELL_LABEL.TARGET }}</span></span>
+      <div class="field-panel__row-header">
+        <span class="field-panel__row-label" v-tip="tipLysisNFull">{{ $t('slider.pulsesN') }} <span class="field-panel__scope-tag field-panel__scope-tag--target">{{ CELL_LABEL.TARGET }}</span></span>
+        <div class="field-panel__readout" v-tip="tipLysisN">
+          <span class="field-panel__readout-value">{{ lysisNDisplay }}</span>
+        </div>
+      </div>
       <div class="field-panel__track">
         <input
           class="field-panel__slider"
@@ -42,9 +46,6 @@
           @input="onLysisNInput"
         />
       </div>
-      <div class="field-panel__readout" v-tip="tipLysisN">
-        <span class="field-panel__readout-value">{{ lysisNDisplay }}</span>
-      </div>
     </div>
 
     <!-- Row 9: Double-Shell Model toggle (mammalian nucleated cells only) -->
@@ -52,30 +53,37 @@
       v-if="store.targetCellCategory === CELL_CATEGORY.MAMMALIAN && store.hasNuclearParams"
       class="field-panel__row field-panel__row--medium"
     >
-      <span class="field-panel__row-label" v-tip="tipShellModel">{{ $t('slider.doubleShell') }}</span>
-      <div class="field-panel__pills">
-        <label
-          class="field-panel__pill"
-          :class="{ 'field-panel__pill--active': !store.doubleShellEnabled }"
-          v-tip="tipSingleShell"
-        >
-          <input type="radio" name="shellModel" :checked="!store.doubleShellEnabled" @change="setShellModel(false)" />
-          {{ $t('slider.doubleShellSingle') }}
-        </label>
-        <label
-          class="field-panel__pill field-panel__pill--nuclear"
-          :class="{ 'field-panel__pill--active': store.doubleShellEnabled }"
-          v-tip="tipDoubleShell"
-        >
-          <input type="radio" name="shellModel" :checked="store.doubleShellEnabled" @change="setShellModel(true)" />
-          {{ $t('slider.doubleShellDouble') }}
-        </label>
+      <div class="field-panel__row-header">
+        <span class="field-panel__row-label" v-tip="tipShellModel">{{ $t('slider.doubleShell') }}</span>
+        <div class="field-panel__pills">
+          <label
+            class="field-panel__pill"
+            :class="{ 'field-panel__pill--active': !store.doubleShellEnabled }"
+            v-tip="tipSingleShell"
+          >
+            <input type="radio" name="shellModel" :checked="!store.doubleShellEnabled" @change="setShellModel(false)" />
+            {{ $t('slider.doubleShellSingle') }}
+          </label>
+          <label
+            class="field-panel__pill field-panel__pill--nuclear"
+            :class="{ 'field-panel__pill--active': store.doubleShellEnabled }"
+            v-tip="tipDoubleShell"
+          >
+            <input type="radio" name="shellModel" :checked="store.doubleShellEnabled" @change="setShellModel(true)" />
+            {{ $t('slider.doubleShellDouble') }}
+          </label>
+        </div>
       </div>
     </div>
 
     <!-- Row 10: Blood Perfusion Rate ω_b (Pennes bioheat) -->
     <div class="field-panel__row">
-      <span class="field-panel__row-label" v-tip="tipPerfusionFull">{{ $t('slider.bloodPerfusion') }}</span>
+      <div class="field-panel__row-header">
+        <span class="field-panel__row-label" v-tip="tipPerfusionFull">{{ $t('slider.bloodPerfusion') }}</span>
+        <div class="field-panel__readout" v-tip="tipPerfusionFull">
+          <span class="field-panel__readout-value">{{ perfusionDisplay }}</span>
+        </div>
+      </div>
       <div class="field-panel__track">
         <input
           class="field-panel__slider"
@@ -87,14 +95,16 @@
           @input="onPerfusionInput"
         />
       </div>
-      <div class="field-panel__readout" v-tip="tipPerfusionFull">
-        <span class="field-panel__readout-value">{{ perfusionDisplay }}</span>
-      </div>
     </div>
 
     <!-- Row 11: Cell Packing Fraction φ (Maxwell-Garnett) -->
     <div class="field-panel__row">
-      <span class="field-panel__row-label" v-tip="tipCellPackingFull">{{ $t('slider.cellPacking') }}</span>
+      <div class="field-panel__row-header">
+        <span class="field-panel__row-label" v-tip="tipCellPackingFull">{{ $t('slider.cellPacking') }}</span>
+        <div class="field-panel__readout" v-tip="tipCellPackingFull">
+          <span class="field-panel__readout-value">{{ cellPackingDisplay }}</span>
+        </div>
+      </div>
       <div class="field-panel__track">
         <input
           class="field-panel__slider"
@@ -105,9 +115,6 @@
           :value="store.cellPackingFraction"
           @input="onCellPackingInput"
         />
-      </div>
-      <div class="field-panel__readout" v-tip="tipCellPackingFull">
-        <span class="field-panel__readout-value">{{ cellPackingDisplay }}</span>
       </div>
     </div>
   </div>
@@ -246,7 +253,7 @@ export default defineComponent({
 
   &__scope-tag {
     display: inline-block;
-    font-size: 0.44rem;
+    font-size: var(--fs-xxs);
     font-weight: 700;
     letter-spacing: 0.04em;
     padding: 0.04rem 0.25rem;
@@ -256,23 +263,17 @@ export default defineComponent({
     position: relative;
     top: -0.5px;
 
-    &--target  { background: rgba(255, 77, 109, 0.12); color: #ff4d6d;            border: 1px solid rgba(255, 77, 109, 0.22); }
-    &--healthy { background: rgba(0, 212, 255, 0.10);  color: var(--color-accent); border: 1px solid rgba(0, 212, 255, 0.20); }
+    &--target  { background: color-mix(in srgb, var(--color-danger) 12%, transparent); color: var(--color-danger); border: 1px solid color-mix(in srgb, var(--color-danger) 22%, transparent); }
+    &--healthy { background: color-mix(in srgb, var(--color-primary) 10%, transparent);  color: var(--color-accent); border: 1px solid color-mix(in srgb, var(--color-primary) 20%, transparent); }
   }
 
   &__row {
-    @include field-row-grid(7.5rem, 8.5rem);
+    @include field-row-grid();
 
-    &--medium {
-      grid-template-columns: 7.5rem 1fr 8.5rem;
-      > .field-panel__pills { grid-column: 2 / -1; }
-    }
-
-    &--compact-readout {
-      @include field-row-grid(5.5rem, 7.5rem);
-      .field-panel__readout { width: 7.5rem; }
-    }
+    &--medium .field-panel__row-header .field-panel__pills { flex: 1; justify-content: center; }
   }
+
+  &__row-header { @include field-row-header(); }
 
   &__row-label { @include row-label(); }
 
@@ -294,9 +295,9 @@ export default defineComponent({
 
     &--active  { border-color: var(--color-primary); color: var(--color-primary); background-color: var(--color-primary-dim); }
     &--nuclear {
-      border-color: rgba(167, 139, 250, 0.5) !important;
-      color: #a78bfa !important;
-      &.field-panel__pill--active { border-color: #a78bfa !important; background-color: rgba(167, 139, 250, 0.10) !important; }
+      border-color: color-mix(in srgb, var(--color-purple) 50%, transparent) !important;
+      color: var(--color-purple) !important;
+      &.field-panel__pill--active { border-color: var(--color-purple) !important; background-color: var(--color-purple-dim) !important; }
     }
   }
 
@@ -312,11 +313,10 @@ export default defineComponent({
     flex-direction: column;
     align-items: flex-end;
     gap: 0.25rem;
-    width: 8.5rem;
-    overflow: hidden;
+    flex-shrink: 0;
 
     &-value {
-      font-size: 0.78rem;
+      font-size: var(--fs-md);
       font-weight: 600;
       font-family: var(--font-mono);
       color: var(--color-text);
@@ -325,7 +325,7 @@ export default defineComponent({
       white-space: nowrap;
     }
 
-    &-sub { font-size: 0.6rem; font-family: var(--font-mono); color: var(--color-text-muted); white-space: nowrap; opacity: 0.75; }
+    &-sub { font-size: var(--fs-xxs); font-family: var(--font-mono); color: var(--color-text-muted); white-space: nowrap; opacity: 0.75; }
   }
 }
 </style>

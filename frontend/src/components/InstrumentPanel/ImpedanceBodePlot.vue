@@ -246,13 +246,13 @@ export default defineComponent({
   }
 
   &__title {
-    font-size: 0.875rem;
+    font-size: var(--fs-lg);
     font-weight: 600;
     color: var(--color-text);
   }
 
   &__sub {
-    font-size: 0.7rem;
+    font-size: var(--fs-xs);
     color: var(--color-text-muted);
     margin-top: 0.15rem;
   }
@@ -263,7 +263,7 @@ export default defineComponent({
   }
 
   &__legend-item {
-    @include mono-upper(0.58rem, 0.06em);
+    @include mono-upper(0.7rem, 0.06em);
     color: var(--color-text-muted);
 
     &::before {
@@ -283,7 +283,7 @@ export default defineComponent({
   }
 
   &__dc-region {
-    fill: rgba(0, 212, 255, 0.04);
+    fill: color-mix(in srgb, var(--color-primary) 4%, transparent);
   }
 
   &__grid-line {

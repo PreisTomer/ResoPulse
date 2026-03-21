@@ -32,7 +32,7 @@
   }
 
   .home .home__tagline {
-    font-size: 0.88rem;
+    font-size: var(--fs-lg);
     max-width: 100%;
     word-break: break-word;
   }
@@ -76,7 +76,7 @@
 
   // Eyebrow text: prevent overflow
   .home .home__eyebrow {
-    font-size: 0.65rem;
+    font-size: var(--fs-xxs);
     text-align: center;
     flex-wrap: wrap;
     justify-content: center;
@@ -130,7 +130,7 @@
     gap: 0.5rem;
   }
   .field-panel__readout { width: 6rem; }
-  .field-panel__readout-value { font-size: 0.85rem; }
+  .field-panel__readout-value { font-size: var(--fs-lg); }
   .field-panel__readout-sub { display: none; }
   .field-panel__row-meta { display: none; }
 }

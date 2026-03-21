@@ -16,8 +16,8 @@
     position: absolute;
     inset: 0;
     background-image:
-      linear-gradient(rgba(0, 212, 255, 0.04) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0, 212, 255, 0.04) 1px, transparent 1px);
+      linear-gradient(color-mix(in srgb, var(--color-primary) 4%, transparent) 1px, transparent 1px),
+      linear-gradient(90deg, color-mix(in srgb, var(--color-primary) 4%, transparent) 1px, transparent 1px);
     background-size: 48px 48px;
     mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
     pointer-events: none;
@@ -161,7 +161,7 @@
     animation: title-glow 3s ease-in-out infinite 1.25s;
 
     &-accent {
-      color: #0a2e58;
+      color: var(--color-primary-deep);
       -webkit-text-stroke: 1.5px var(--color-primary);
       paint-order: stroke fill;
       animation: pulse-glow 2.5s ease-in-out infinite;
@@ -209,14 +209,14 @@
     padding: 0.6rem;
     margin: -0.6rem;
     border-radius: var(--radius-lg);
-    background: rgba(8, 14, 26, 0.18);
+    background: color-mix(in srgb, var(--color-bg) 18%, transparent);
     -webkit-backdrop-filter: blur(6px);
     backdrop-filter: blur(6px);
   }
 
   &__cta-refs {
     font-family: var(--font-mono);
-    font-size: 0.58rem;
+    font-size: var(--fs-xs);
     letter-spacing: 0.08em;
     color: var(--color-text-muted);
     opacity: 0.55;
@@ -229,7 +229,7 @@
     @include flex-row(0.35rem);
     padding: 0.75rem 1.5rem;
     border-radius: var(--radius);
-    font-size: 0.95rem;
+    font-size: var(--fs-xl);
     font-weight: 600;
     text-decoration: none;
     transition: all 0.18s;
@@ -238,7 +238,7 @@
 
     &--primary {
       background-color: var(--color-primary);
-      color: #060e1a;
+      color: var(--color-btn-dark);
       box-shadow: var(--glow-md);
 
       &:hover {
@@ -284,16 +284,16 @@
     width: 230px;
     text-decoration: none;
     padding: 0.6rem 0.75rem 0.7rem;
-    border-top:    1px solid rgba(0, 212, 255, 0.45);
-    border-bottom: 1px solid rgba(0, 212, 255, 0.18);
+    border-top:    1px solid color-mix(in srgb, var(--color-primary) 45%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, var(--color-primary) 18%, transparent);
     transition: transform 0.3s ease, filter 0.3s ease, border-color 0.3s ease;
     cursor: pointer !important;
 
     @media (min-width: 768px) {
       &:hover {
         transform: scale(1.03);
-        border-top-color: rgba(0, 212, 255, 0.8);
-        filter: drop-shadow(0 0 28px rgba(0, 212, 255, 0.4));
+        border-top-color: color-mix(in srgb, var(--color-primary) 80%, transparent);
+        filter: drop-shadow(0 0 28px color-mix(in srgb, var(--color-primary) 40%, transparent));
       }
 
       &:hover .home__sci-cta {
@@ -311,15 +311,15 @@
     &-id,
     &-status {
       font-family: monospace;
-      font-size: 0.5rem;
+      font-size: var(--fs-xxs);
       letter-spacing: 0.12em;
       text-transform: uppercase;
-      color: rgba(0, 212, 255, 0.45);
+      color: color-mix(in srgb, var(--color-primary) 45%, transparent);
     }
 
     &-status::before {
       content: '● ';
-      font-size: 0.42rem;
+      font-size: var(--fs-xxs);
       animation: blink 2.5s ease-in-out infinite;
     }
   }
@@ -335,10 +335,10 @@
 
   &__sci-cta {
     font-family: monospace;
-    font-size: 0.57rem;
+    font-size: var(--fs-xxs);
     letter-spacing: 0.13em;
     text-transform: uppercase;
-    color: rgba(0, 212, 255, 0.8);
+    color: color-mix(in srgb, var(--color-primary) 80%, transparent);
     opacity: 0.35;
     transition: opacity 0.3s ease;
     margin-top: 0.1rem;
@@ -346,16 +346,16 @@
 
   &__sci-label {
     font-family: monospace;
-    font-size: 0.67rem;
+    font-size: var(--fs-xs);
     letter-spacing: 0.09em;
     text-transform: uppercase;
-    color: rgba(0, 212, 255, 0.85);
+    color: color-mix(in srgb, var(--color-primary) 85%, transparent);
     margin: 0;
   }
 
   &__sci-sublabel {
     font-family: monospace;
-    font-size: 0.58rem;
+    font-size: var(--fs-xs);
     letter-spacing: 0.06em;
     color: rgba(255, 255, 255, 0.42);
     margin: 0;
@@ -368,8 +368,8 @@
     background: linear-gradient(
       to bottom,
       transparent,
-      rgba(0, 212, 255, 0.22) 20%,
-      rgba(0, 212, 255, 0.22) 80%,
+      color-mix(in srgb, var(--color-primary) 22%, transparent) 20%,
+      color-mix(in srgb, var(--color-primary) 22%, transparent) 80%,
       transparent
     );
     flex-shrink: 0;
@@ -398,7 +398,7 @@
 
   &__wf-num {
     font-family: var(--font-mono);
-    font-size: 0.62rem;
+    font-size: var(--fs-xxs);
     font-weight: 700;
     letter-spacing: 0.1em;
     color: var(--color-primary);
@@ -406,7 +406,7 @@
   }
 
   &__wf-label {
-    font-size: 0.82rem;
+    font-size: var(--fs-md);
     font-weight: 700;
     color: var(--color-text-heading);
     font-family: var(--font-mono);
@@ -414,7 +414,7 @@
   }
 
   &__wf-desc {
-    font-size: 0.7rem;
+    font-size: var(--fs-xs);
     color: var(--color-text-muted);
     line-height: 1.55;
     max-width: 200px;
@@ -452,7 +452,7 @@
     cursor: pointer;
 
     &:hover {
-      border-color: rgba(0, 212, 255, 0.4);
+      border-color: color-mix(in srgb, var(--color-primary) 40%, transparent);
       box-shadow: var(--glow-subtle);
       text-decoration: none;
     }
@@ -461,12 +461,12 @@
       cursor: crosshair;
       // Dashed border signals non-interactive without dimming the card
       border-style: dashed;
-      border-color: rgba(0, 212, 255, 0.22);
+      border-color: color-mix(in srgb, var(--color-primary) 22%, transparent);
       // Use the opaque surface colour from the mixin — no wave bleed-through
       background: var(--color-surface);
 
       &:hover {
-        border-color: rgba(0, 212, 255, 0.22);
+        border-color: color-mix(in srgb, var(--color-primary) 22%, transparent);
         box-shadow: none;
       }
     }
@@ -475,8 +475,8 @@
   &__fc {
     &-header { display: flex; align-items: center; gap: 0.45rem; }
     &-icon   { font-size: 1rem; opacity: 0.7; flex-shrink: 0; }
-    &-title  { font-size: 0.82rem; font-weight: 600; color: var(--color-text-heading); }
-    &-desc   { font-size: 0.7rem; color: var(--color-text-muted); line-height: 1.6; }
+    &-title  { font-size: var(--fs-md); font-weight: 600; color: var(--color-text-heading); }
+    &-desc   { font-size: var(--fs-xs); color: var(--color-text-muted); line-height: 1.6; }
   }
 
   /* ── Stats card ──────────────────────────────────────────────── */
@@ -504,7 +504,7 @@
     }
 
     &-label {
-      font-size: 0.62rem;
+      font-size: var(--fs-xxs);
       font-family: var(--font-mono);
       text-transform: uppercase;
       letter-spacing: 0.06em;
@@ -521,7 +521,7 @@
   }
 
   &__scope-tag {
-    font-size: 0.65rem;
+    font-size: var(--fs-xxs);
     font-family: var(--font-mono);
     text-transform: uppercase;
     letter-spacing: 0.1em;
@@ -529,14 +529,14 @@
     border-radius: 3px;
     border: 1px solid transparent;
 
-    &--cancer   { color: var(--color-danger);  border-color: rgba(255,77,109,0.35);  background: rgba(255,77,109,0.07); }
-    &--bacteria { color: var(--color-amber);   border-color: rgba(251,191,36,0.35);  background: rgba(251,191,36,0.07); }
-    &--virus    { color: var(--color-purple);  border-color: rgba(167,139,250,0.35); background: rgba(167,139,250,0.07); }
-    &--ref      { color: var(--color-primary); border-color: rgba(0,212,255,0.35);   background: rgba(0,212,255,0.07); }
+    &--cancer   { color: var(--color-danger);  border-color: color-mix(in srgb, var(--color-danger) 35%, transparent);  background: color-mix(in srgb, var(--color-danger) 7%, transparent); }
+    &--bacteria { color: var(--color-amber);   border-color: color-mix(in srgb, var(--color-amber) 35%, transparent);  background: color-mix(in srgb, var(--color-amber) 7%, transparent); }
+    &--virus    { color: var(--color-purple);  border-color: var(--color-purple-border); background: color-mix(in srgb, var(--color-purple) 7%, transparent); }
+    &--ref      { color: var(--color-primary); border-color: color-mix(in srgb, var(--color-primary) 35%, transparent); background: color-mix(in srgb, var(--color-primary) 7%, transparent); }
   }
 
   &__disclaimer {
-    font-size: 0.65rem;
+    font-size: var(--fs-xxs);
     font-family: var(--font-mono);
     color: var(--color-text-muted);
     opacity: 0.65;
@@ -558,7 +558,7 @@
 
 
     &__tagline {
-      font-size: 0.9rem;
+      font-size: var(--fs-xl);
     }
 
     &__actions {
@@ -599,11 +599,11 @@
 
 
     &__eyebrow {
-      font-size: 0.65rem;
+      font-size: var(--fs-xxs);
     }
 
     &__tagline {
-      font-size: 0.85rem;
+      font-size: var(--fs-lg);
     }
 
     &__actions {
@@ -613,7 +613,7 @@
 
     &__btn {
       padding: 0.7rem 1.2rem;
-      font-size: 0.9rem;
+      font-size: var(--fs-xl);
     }
 
     /* workflow: vertical stack */
@@ -651,9 +651,9 @@
     }
 
     &__fc {
-      &-icon  { font-size: 0.9rem; }
-      &-title { font-size: 0.75rem; }
-      &-desc  { font-size: 0.65rem; line-height: 1.5; }
+      &-icon  { font-size: var(--fs-xl); }
+      &-title { font-size: var(--fs-sm); }
+      &-desc  { font-size: var(--fs-xxs); line-height: 1.5; }
     }
 
     /* stats card: horizontal 4-col stat bar */
@@ -666,7 +666,7 @@
 
     &__stat {
       &-val   { font-size: 1.1rem; }
-      &-label { font-size: 0.56rem; }
+      &-label { font-size: var(--fs-xxs); }
     }
 
   }
@@ -679,14 +679,14 @@
 }
 
 @keyframes title-glow {
-  0%, 100% { text-shadow: 0 0 30px rgba(0, 212, 255, 0.08); }
-  50%       { text-shadow: 0 0 60px rgba(0, 212, 255, 0.28), 0 0 20px rgba(0, 212, 255, 0.12); }
+  0%, 100% { text-shadow: 0 0 30px color-mix(in srgb, var(--color-primary) 8%, transparent); }
+  50%       { text-shadow: 0 0 60px color-mix(in srgb, var(--color-primary) 28%, transparent), 0 0 20px color-mix(in srgb, var(--color-primary) 12%, transparent); }
 }
 
 @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
 @keyframes pulse-glow {
-  0%, 100% { text-shadow: 0 0 22px rgba(0, 212, 255, 0.2); }
-  50%       { text-shadow: 0 0 50px rgba(0, 212, 255, 0.65); }
+  0%, 100% { text-shadow: 0 0 22px color-mix(in srgb, var(--color-primary) 20%, transparent); }
+  50%       { text-shadow: 0 0 50px color-mix(in srgb, var(--color-primary) 65%, transparent); }
 }
 

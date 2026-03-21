@@ -57,9 +57,6 @@ export default defineComponent({
 <style lang="scss" scoped>
 @use '../../styles/mixins' as *;
 
-$amber: #fbbf24;
-$lime:  #4ade80;
-
 .chart-tooltip {
   position: absolute;
   top: 32px;
@@ -77,7 +74,7 @@ $lime:  #4ade80;
   }
 
   &__freq {
-    font-size: 0.68rem;
+    font-size: var(--fs-xs);
     font-family: var(--font-mono);
     color: var(--color-text);
     margin-bottom: 0.2rem;
@@ -85,7 +82,7 @@ $lime:  #4ade80;
   }
 
   &__row {
-    font-size: 0.68rem;
+    font-size: var(--fs-xs);
     font-family: var(--font-mono);
     display: flex;
     align-items: baseline;
@@ -96,28 +93,28 @@ $lime:  #4ade80;
   }
 
   &__dr {
-    font-size: 0.58rem;
+    font-size: var(--fs-xs);
     opacity: 0.65;
     font-family: var(--font-mono);
   }
 
   &__sel {
-    font-size: 0.62rem;
+    font-size: var(--fs-xxs);
     font-family: var(--font-mono);
-    color: $amber;
+    color: var(--color-amber);
     opacity: 0.85;
     margin-top: 0.18rem;
   }
 
   &__window {
-    font-size: 0.62rem;
+    font-size: var(--fs-xxs);
     font-family: var(--font-mono);
-    color: $lime;
+    color: var(--color-lime);
     font-weight: 600;
     letter-spacing: 0.05em;
     margin-top: 0.2rem;
     padding-top: 0.2rem;
-    border-top: 1px solid rgba(74, 222, 128, 0.25);
+    border-top: 1px solid color-mix(in srgb, var(--color-ok) 25%, transparent);
   }
 }
 </style>

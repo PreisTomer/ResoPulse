@@ -155,7 +155,7 @@ export default defineComponent({
   &__bar-row { display: flex; align-items: center; gap: 0.5rem; }
 
   &__bar-label {
-    font-size: 0.66rem;
+    font-size: var(--fs-xs);
     font-family: var(--font-mono);
     color: var(--color-text);
     width: 1rem;
@@ -182,7 +182,7 @@ export default defineComponent({
   }
 
   &__bar-val {
-    font-size: 0.66rem;
+    font-size: var(--fs-xs);
     font-family: var(--font-mono);
     color: var(--color-text);
     width: 2.2rem;
@@ -191,7 +191,7 @@ export default defineComponent({
   }
 
   &__bar-plysis {
-    font-size: 0.62rem;
+    font-size: var(--fs-xxs);
     font-family: var(--font-mono);
     color: var(--color-text-muted);
     opacity: 0.7;
@@ -206,8 +206,8 @@ export default defineComponent({
   &__nuc-section {
     margin-top: 0.5rem;
     padding: 0.35rem 0.5rem;
-    background: rgba(167, 139, 250, 0.05);
-    border-left: 2px solid rgba(167, 139, 250, 0.3);
+    background: color-mix(in srgb, var(--color-purple) 5%, transparent);
+    border-left: 2px solid color-mix(in srgb, var(--color-purple) 30%, transparent);
     border-radius: 0 4px 4px 0;
     display: flex;
     flex-direction: column;
@@ -217,9 +217,9 @@ export default defineComponent({
   &__nuc-bar-row { display: flex; align-items: center; gap: 0.5rem; }
 
   &__nuc-bar-label {
-    font-size: 0.58rem;
+    font-size: var(--fs-xs);
     font-family: var(--font-mono);
-    color: #a78bfa;
+    color: var(--color-purple);
     width: 3rem;
     flex-shrink: 0;
   }
@@ -227,7 +227,7 @@ export default defineComponent({
   &__nuc-bar-track {
     flex: 1;
     height: 3px;
-    background: rgba(167, 139, 250, 0.12);
+    background: color-mix(in srgb, var(--color-purple) 12%, transparent);
     border-radius: 2px;
     overflow: hidden;
   }
@@ -237,15 +237,15 @@ export default defineComponent({
     border-radius: 2px;
     transition: width 0.3s ease;
 
-    &--t    { background: #a78bfa; }
-    &--h    { background: rgba(0, 212, 255, 0.7); }
-    &--warn { background: #ff4d6d !important; animation: bar-flash 0.6s ease-in-out infinite alternate; }
+    &--t    { background: var(--color-purple); }
+    &--h    { background: color-mix(in srgb, var(--color-primary) 70%, transparent); }
+    &--warn { background: var(--color-danger) !important; animation: bar-flash 0.6s ease-in-out infinite alternate; }
   }
 
   &__nuc-bar-val {
-    font-size: 0.58rem;
+    font-size: var(--fs-xs);
     font-family: var(--font-mono);
-    color: #a78bfa;
+    color: var(--color-purple);
     width: 2rem;
     text-align: right;
     flex-shrink: 0;
@@ -254,21 +254,21 @@ export default defineComponent({
   &__nuc-sel-row {
     @include flex-between();
     padding-top: 0.15rem;
-    border-top: 1px solid rgba(167, 139, 250, 0.12);
+    border-top: 1px solid color-mix(in srgb, var(--color-purple) 12%, transparent);
     margin-top: 0.05rem;
   }
 
-  &__nuc-sel-label { font-size: 0.58rem; color: rgba(167, 139, 250, 0.7); }
+  &__nuc-sel-label { font-size: var(--fs-xs); color: color-mix(in srgb, var(--color-purple) 70%, transparent); }
 
   &__nuc-sel-val {
-    font-size: 0.68rem;
+    font-size: var(--fs-xs);
     font-family: var(--font-mono);
     font-weight: 600;
-    color: #a78bfa;
+    color: var(--color-purple);
   }
 
-  &__nuc-sel--good { color: #4ade80; }
-  &__nuc-sel--ok   { color: #fbbf24; }
-  &__nuc-sel--low  { color: #ff4d6d; }
+  &__nuc-sel--good { color: var(--color-lime); }
+  &__nuc-sel--ok   { color: var(--color-amber); }
+  &__nuc-sel--low  { color: var(--color-danger); }
 }
 </style>

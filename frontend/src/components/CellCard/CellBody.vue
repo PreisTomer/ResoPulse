@@ -82,7 +82,7 @@ export default defineComponent({
 <style lang="scss" scoped>
 .cell-body {
   color: var(--color-text-muted);
-  font-size: 0.875rem;
+  font-size: var(--fs-lg);
   line-height: 1.65;
   flex: 1;
 
@@ -111,7 +111,7 @@ export default defineComponent({
 
   &__metric-label {
     font-family: var(--font-mono);
-    font-size: 0.58rem;
+    font-size: var(--fs-xs);
     letter-spacing: 0.06em;
     color: var(--color-text-muted);
     text-transform: uppercase;
@@ -119,7 +119,7 @@ export default defineComponent({
 
   &__metric-value {
     font-family: var(--font-mono);
-    font-size: 0.72rem;
+    font-size: var(--fs-sm);
     font-weight: 600;
     color: var(--color-primary);
     letter-spacing: 0.02em;

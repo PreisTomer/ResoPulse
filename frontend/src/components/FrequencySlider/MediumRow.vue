@@ -62,15 +62,16 @@ export default defineComponent({
 
 .field-panel {
   &__row {
-    @include field-row-grid(7.5rem, 8.5rem);
-
-    &--medium { grid-template-columns: 7.5rem 1fr 8.5rem; }
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 0.85rem;
   }
 
   &__row-label { @include row-label(); }
 
   &__row-meta {
-    font-size: 0.58rem;
+    font-size: var(--fs-xs);
     font-family: var(--font-mono);
     color: var(--color-text-muted);
     white-space: nowrap;
@@ -83,9 +84,9 @@ export default defineComponent({
     flex: 1;
     min-width: 0;
     padding: 0.26rem 0.55rem;
-    font-size: 0.62rem;
+    font-size: var(--fs-xxs);
     font-family: var(--font-mono);
-    background: var(--color-surface-2, #0a1628);
+    background: var(--color-surface-2);
     border: 1px solid var(--color-border);
     border-radius: 4px;
     color: var(--color-primary);
@@ -101,7 +102,7 @@ export default defineComponent({
 
     &:focus, &:hover { border-color: var(--color-primary); }
 
-    option, optgroup { background: #0a1628; color: var(--color-text); }
+    option, optgroup { background: var(--color-surface-2); color: var(--color-text); }
     optgroup { color: var(--color-text-muted); font-style: normal; }
   }
 }
