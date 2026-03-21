@@ -12,16 +12,14 @@
         <!-- Pulse rings — logo motif echoed at page scale + ambient E-field lines -->
         <div class="home__hero-bg" aria-hidden="true">
           <svg class="home__hero-bg-svg" viewBox="0 0 900 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Origin dot: blinks first, rings shoot outward from it -->
+            <circle class="home__hero-bg-dot" cx="450" cy="450" r="6" fill="rgba(0,212,255,1)"/>
             <!-- Concentric rings: same visual language as the logo rings, amplified -->
             <circle class="home__hero-bg-ring" cx="450" cy="450" r="148" stroke="rgba(0,212,255,1)"    stroke-width="1.2" fill="none"/>
             <circle class="home__hero-bg-ring" cx="450" cy="450" r="240" stroke="rgba(0,212,255,0.85)" stroke-width="1"   fill="none"/>
             <circle class="home__hero-bg-ring" cx="450" cy="450" r="338" stroke="rgba(0,212,255,0.65)" stroke-width="0.9" fill="none"/>
             <circle class="home__hero-bg-ring" cx="450" cy="450" r="440" stroke="rgba(0,212,255,0.45)" stroke-width="0.8" fill="none"/>
             <circle class="home__hero-bg-ring" cx="450" cy="450" r="542" stroke="rgba(0,212,255,0.25)" stroke-width="0.7" fill="none"/>
-            <!-- E-field lines — ambient electromagnetic field crossing the hero -->
-            <line x1="0" y1="380" x2="900" y2="380" stroke="rgba(0,212,255,0.5)" stroke-width="0.8"/>
-            <line x1="0" y1="450" x2="900" y2="450" stroke="rgba(0,212,255,0.7)" stroke-width="0.8"/>
-            <line x1="0" y1="520" x2="900" y2="520" stroke="rgba(0,212,255,0.5)" stroke-width="0.8"/>
           </svg>
         </div>
 
@@ -206,6 +204,56 @@
       <!-- ── Zone 3: Features — scroll-reveal workflow and cards ── -->
       <div class="home__zone home__zone--features home__zone--anim">
 
+        <!-- Floating cell scatter — decorative background, medium+ screens only -->
+        <svg class="home__feat-scatter" viewBox="0 0 1200 480" fill="none" aria-hidden="true" focusable="false">
+          <!-- band 1 top (y 30-70) — small: molecules / debris -->
+          <circle class="home__feat-dot home__feat-dot--sm home__feat-dot--a" cx="72"   cy="44"  r="2.2"/>
+          <circle class="home__feat-dot home__feat-dot--sm home__feat-dot--b" cx="198"  cy="58"  r="2.0"/>
+          <circle class="home__feat-dot home__feat-dot--sm home__feat-dot--c" cx="340"  cy="36"  r="2.4"/>
+          <circle class="home__feat-dot home__feat-dot--sm home__feat-dot--a" cx="500"  cy="62"  r="2.1"/>
+          <circle class="home__feat-dot home__feat-dot--sm home__feat-dot--b" cx="655"  cy="40"  r="2.3"/>
+          <circle class="home__feat-dot home__feat-dot--sm home__feat-dot--c" cx="810"  cy="55"  r="2.0"/>
+          <circle class="home__feat-dot home__feat-dot--sm home__feat-dot--a" cx="960"  cy="38"  r="2.5"/>
+          <circle class="home__feat-dot home__feat-dot--sm home__feat-dot--b" cx="1110" cy="60"  r="2.2"/>
+          <!-- band 2 (y 100-150) — large: mammalian cells + medium: bacteria -->
+          <circle class="home__feat-dot home__feat-dot--lg home__feat-dot--c" cx="155"  cy="118" r="5.8"/>
+          <circle class="home__feat-dot home__feat-dot--md home__feat-dot--a" cx="310"  cy="140" r="3.8"/>
+          <circle class="home__feat-dot home__feat-dot--lg home__feat-dot--b" cx="490"  cy="108" r="6.2"/>
+          <circle class="home__feat-dot home__feat-dot--md home__feat-dot--c" cx="660"  cy="135" r="3.5"/>
+          <circle class="home__feat-dot home__feat-dot--lg home__feat-dot--a" cx="830"  cy="122" r="5.5"/>
+          <circle class="home__feat-dot home__feat-dot--md home__feat-dot--b" cx="1010" cy="142" r="4.0"/>
+          <circle class="home__feat-dot home__feat-dot--lg home__feat-dot--c" cx="1140" cy="112" r="5.8"/>
+          <!-- band 3 (y 190-240) — medium + small -->
+          <circle class="home__feat-dot home__feat-dot--sm home__feat-dot--b" cx="88"   cy="198" r="2.3"/>
+          <circle class="home__feat-dot home__feat-dot--md home__feat-dot--c" cx="230"  cy="215" r="3.9"/>
+          <circle class="home__feat-dot home__feat-dot--sm home__feat-dot--a" cx="395"  cy="205" r="2.1"/>
+          <circle class="home__feat-dot home__feat-dot--md home__feat-dot--b" cx="545"  cy="228" r="4.2"/>
+          <circle class="home__feat-dot home__feat-dot--sm home__feat-dot--c" cx="710"  cy="195" r="2.4"/>
+          <circle class="home__feat-dot home__feat-dot--md home__feat-dot--a" cx="870"  cy="220" r="3.6"/>
+          <circle class="home__feat-dot home__feat-dot--sm home__feat-dot--b" cx="1030" cy="208" r="2.2"/>
+          <circle class="home__feat-dot home__feat-dot--md home__feat-dot--c" cx="1155" cy="230" r="3.8"/>
+          <!-- band 4 (y 280-340) — large + medium -->
+          <circle class="home__feat-dot home__feat-dot--md home__feat-dot--a" cx="120"  cy="295" r="3.7"/>
+          <circle class="home__feat-dot home__feat-dot--lg home__feat-dot--b" cx="280"  cy="310" r="6.0"/>
+          <circle class="home__feat-dot home__feat-dot--md home__feat-dot--c" cx="445"  cy="288" r="3.5"/>
+          <circle class="home__feat-dot home__feat-dot--lg home__feat-dot--a" cx="615"  cy="325" r="5.5"/>
+          <circle class="home__feat-dot home__feat-dot--md home__feat-dot--b" cx="778"  cy="295" r="4.0"/>
+          <circle class="home__feat-dot home__feat-dot--lg home__feat-dot--c" cx="940"  cy="315" r="5.8"/>
+          <circle class="home__feat-dot home__feat-dot--md home__feat-dot--a" cx="1095" cy="290" r="3.6"/>
+          <!-- band 5 bottom (y 370-420) — small: molecules -->
+          <circle class="home__feat-dot home__feat-dot--sm home__feat-dot--c" cx="60"   cy="385" r="2.1"/>
+          <circle class="home__feat-dot home__feat-dot--sm home__feat-dot--a" cx="195"  cy="405" r="2.3"/>
+          <circle class="home__feat-dot home__feat-dot--sm home__feat-dot--b" cx="345"  cy="378" r="2.0"/>
+          <circle class="home__feat-dot home__feat-dot--sm home__feat-dot--c" cx="505"  cy="400" r="2.4"/>
+          <circle class="home__feat-dot home__feat-dot--sm home__feat-dot--a" cx="665"  cy="382" r="2.2"/>
+          <circle class="home__feat-dot home__feat-dot--sm home__feat-dot--b" cx="830"  cy="410" r="2.1"/>
+          <circle class="home__feat-dot home__feat-dot--sm home__feat-dot--c" cx="990"  cy="388" r="2.3"/>
+          <circle class="home__feat-dot home__feat-dot--sm home__feat-dot--a" cx="1145" cy="402" r="2.0"/>
+        </svg>
+
+        <!-- Corner bloom — soft radial glow anchoring bottom-right of the zone -->
+        <div class="home__feat-bloom" aria-hidden="true"></div>
+
         <div class="home__workflow">
           <template v-for="(step, i) in workflowSteps" :key="step">
             <div class="home__wf-step">
@@ -378,6 +426,7 @@ export default defineComponent({
     }
 
     &--features {
+      position: relative;
       gap: 1.4rem;
       padding: 4rem 2rem 0;
     }
@@ -416,21 +465,33 @@ export default defineComponent({
   &__hero-bg-svg {
     width: 760px;
     height: auto;
-    opacity: 0.26;
     mix-blend-mode: screen;
+    // Start bright so dot flash and ring burst read clearly, then settle to ambient
+    animation: hero-bg-reveal 2s ease-out forwards;
+  }
+
+  &__hero-bg-dot {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: bg-dot-flash 0.45s ease-out forwards;
   }
 
   &__hero-bg-ring {
     transform-box: fill-box;
     transform-origin: center;
-    animation: bg-ring-pulse 3.5s ease-in-out infinite;
+    // expand first, then hand off to the looping pulse
+    animation:
+      bg-ring-expand 0.55s cubic-bezier(0.16, 1, 0.3, 1) both,
+      bg-ring-pulse  3.5s ease-in-out infinite;
 
-    &:nth-of-type(1) { animation-delay: 0s; }
-    &:nth-of-type(2) { animation-delay: 0.7s; }
-    &:nth-of-type(3) { animation-delay: 1.4s; }
-    &:nth-of-type(4) { animation-delay: 2.1s; }
-    &:nth-of-type(5) { animation-delay: 2.8s; }
+    // [expand-delay, pulse-delay] — rings shoot from center outward, staggered 50ms
+    &:nth-of-type(2) { animation-delay: 0.18s, 0.85s; }
+    &:nth-of-type(3) { animation-delay: 0.23s, 1.55s; }
+    &:nth-of-type(4) { animation-delay: 0.28s, 2.25s; }
+    &:nth-of-type(5) { animation-delay: 0.33s, 2.95s; }
+    &:nth-of-type(6) { animation-delay: 0.38s, 3.65s; }
   }
+
 
   /* ── Hero sub-groups (staggered CSS entrance) ────────────────── */
   &__hero-brand,
@@ -444,9 +505,9 @@ export default defineComponent({
     z-index: 1;
   }
 
-  &__hero-brand { gap: 0.75rem; animation-delay: 0.1s; }
-  &__hero-pitch { gap: 1.4rem; margin-top: -1rem; animation-delay: 0.3s; }
-  &__hero-cta   { width: 100%; animation-delay: 0.5s; }
+  &__hero-brand { gap: 0.75rem; animation-delay: 0.4s; }
+  &__hero-pitch { gap: 1.4rem; margin-top: -1rem; animation-delay: 0.6s; }
+  &__hero-cta   { width: 100%; animation-delay: 0.8s; }
 
   /* ── Logo inline lockup ──────────────────────────────────────── */
   &__title-lockup {
@@ -806,6 +867,93 @@ export default defineComponent({
     margin-top: 1.5rem;
   }
 
+  /* ── Features zone: cell-scatter + corner bloom (medium+ screens) ─ */
+  &__feat-scatter {
+    display: none;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+    @media (min-width: 900px) { display: block; }
+  }
+
+  &__feat-dot {
+    fill: rgba(0, 212, 255, 1);
+
+    &--sm { opacity: 0.18; }
+    &--md { opacity: 0.14; }
+    &--lg { opacity: 0.11; }
+
+    // Three independent drift trajectories — no two adjacent dots move identically
+    &--a { animation: feat-float-a 7s ease-in-out infinite; }
+    &--b { animation: feat-float-b 9s ease-in-out infinite; }
+    &--c { animation: feat-float-c 11s ease-in-out infinite; }
+
+    // Stagger each dot's phase so motion looks organic, not synchronised
+    &:nth-child(1)  { animation-delay:  0.0s; }
+    &:nth-child(2)  { animation-delay: -1.6s; }
+    &:nth-child(3)  { animation-delay: -3.2s; }
+    &:nth-child(4)  { animation-delay: -4.9s; }
+    &:nth-child(5)  { animation-delay: -1.1s; }
+    &:nth-child(6)  { animation-delay: -2.7s; }
+    &:nth-child(7)  { animation-delay: -4.4s; }
+    &:nth-child(8)  { animation-delay: -0.7s; }
+    &:nth-child(9)  { animation-delay: -2.3s; }
+    &:nth-child(10) { animation-delay: -4.0s; }
+    &:nth-child(11) { animation-delay: -0.4s; }
+    &:nth-child(12) { animation-delay: -5.6s; }
+    &:nth-child(13) { animation-delay: -1.9s; }
+    &:nth-child(14) { animation-delay: -7.0s; }
+    &:nth-child(15) { animation-delay: -0.9s; }
+    &:nth-child(16) { animation-delay: -3.1s; }
+    &:nth-child(17) { animation-delay: -5.3s; }
+    &:nth-child(18) { animation-delay: -2.0s; }
+    &:nth-child(19) { animation-delay: -3.7s; }
+    &:nth-child(20) { animation-delay: -6.8s; }
+    &:nth-child(21) { animation-delay: -1.4s; }
+    &:nth-child(22) { animation-delay: -4.1s; }
+    &:nth-child(23) { animation-delay: -2.5s; }
+    &:nth-child(24) { animation-delay: -5.8s; }
+    &:nth-child(25) { animation-delay: -0.2s; }
+    &:nth-child(26) { animation-delay: -3.5s; }
+    &:nth-child(27) { animation-delay: -6.1s; }
+    &:nth-child(28) { animation-delay: -1.7s; }
+    &:nth-child(29) { animation-delay: -4.8s; }
+    &:nth-child(30) { animation-delay: -2.9s; }
+    &:nth-child(31) { animation-delay: -7.4s; }
+    &:nth-child(32) { animation-delay: -0.6s; }
+    &:nth-child(33) { animation-delay: -5.2s; }
+    &:nth-child(34) { animation-delay: -3.3s; }
+    &:nth-child(35) { animation-delay: -6.5s; }
+    &:nth-child(36) { animation-delay: -1.2s; }
+    &:nth-child(37) { animation-delay: -4.3s; }
+    &:nth-child(38) { animation-delay: -2.1s; }
+    &:nth-child(39) { animation-delay: -7.8s; }
+  }
+
+  &__feat-bloom {
+    display: none;
+    position: absolute;
+    // Centred on the bottom-right quadrant — radius 300px keeps it fully within the zone
+    bottom: 20px;
+    right: 60px;
+    width: 600px;
+    height: 600px;
+    border-radius: 50%;
+    // Gradient stops at 50% so the visible glow is a soft disc, not a hard ring
+    background: radial-gradient(circle at center, rgba(0, 212, 255, 0.055) 0%, transparent 55%);
+    pointer-events: none;
+    z-index: 0;
+    animation: feat-bloom-pulse 6s ease-in-out infinite;
+    @media (min-width: 900px) { display: block; }
+  }
+
+  // Lift cards above scatter and bloom
+  &__workflow,
+  &__feature-cards { position: relative; z-index: 1; }
+
   /* ── Feature cards ───────────────────────────────────────────── */
   &__feature-cards {
     display: grid;
@@ -1065,6 +1213,25 @@ export default defineComponent({
   50%       { text-shadow: 0 0 60px rgba(0, 212, 255, 0.28), 0 0 20px rgba(0, 212, 255, 0.12); }
 }
 
+@keyframes hero-bg-reveal {
+  // Hold bright while the burst plays, then settle to ambient dim
+  0%, 40% { opacity: 0.85; }
+  100%     { opacity: 0.26; }
+}
+
+@keyframes bg-dot-flash {
+  0%   { opacity: 0; transform: scale(0); }
+  25%  { opacity: 1; transform: scale(3); }
+  65%  { opacity: 0.9; transform: scale(1.5); }
+  100% { opacity: 0; transform: scale(0); }
+}
+
+@keyframes bg-ring-expand {
+  from { transform: scale(0); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+
+
 @keyframes bg-ring-pulse {
   0%, 100% { opacity: 0.15; }
   50%       { opacity: 1; }
@@ -1075,5 +1242,44 @@ export default defineComponent({
 @keyframes pulse-glow {
   0%, 100% { text-shadow: 0 0 22px rgba(0, 212, 255, 0.2); }
   50%       { text-shadow: 0 0 50px rgba(0, 212, 255, 0.65); }
+}
+
+@keyframes feat-float-a {
+  0%        { transform: translate(0px,   0px);  filter: blur(0.4px); }
+  12%       { transform: translate(5px,  -4px);  filter: blur(1.8px); }
+  25%       { transform: translate(14px, -11px); filter: blur(3.0px); }
+  38%       { transform: translate(8px,  -6px);  filter: blur(1.6px); }
+  50%       { transform: translate(6px,   8px);  filter: blur(0.4px); }
+  62%       { transform: translate(0px,   3px);  filter: blur(1.4px); }
+  75%       { transform: translate(-10px, -5px); filter: blur(2.8px); }
+  88%       { transform: translate(-5px, -2px);  filter: blur(1.5px); }
+  100%      { transform: translate(0px,   0px);  filter: blur(0.4px); }
+}
+
+@keyframes feat-float-b {
+  0%        { transform: translate(0px,    0px);  filter: blur(0.4px); }
+  15%       { transform: translate(-5px,   5px);  filter: blur(1.6px); }
+  30%       { transform: translate(-13px,  14px); filter: blur(3.0px); }
+  45%       { transform: translate(-7px,   8px);  filter: blur(1.4px); }
+  60%       { transform: translate(11px,  -8px);  filter: blur(2.8px); }
+  72%       { transform: translate(5px,  -4px);   filter: blur(1.5px); }
+  80%       { transform: translate(-4px,   6px);  filter: blur(0.4px); }
+  90%       { transform: translate(-2px,   3px);  filter: blur(1.2px); }
+  100%      { transform: translate(0px,    0px);  filter: blur(0.4px); }
+}
+
+@keyframes feat-float-c {
+  0%        { transform: translate(0px,   0px);  filter: blur(0.4px); }
+  20%       { transform: translate(4px,   5px);  filter: blur(1.5px); }
+  40%       { transform: translate(10px,  13px); filter: blur(3.0px); }
+  55%       { transform: translate(4px,   7px);  filter: blur(1.8px); }
+  70%       { transform: translate(-11px,  5px); filter: blur(2.6px); }
+  85%       { transform: translate(-5px,   2px); filter: blur(1.3px); }
+  100%      { transform: translate(0px,   0px);  filter: blur(0.4px); }
+}
+
+@keyframes feat-bloom-pulse {
+  0%, 100% { opacity: 0.75; transform: scale(1.00); }
+  50%       { opacity: 1.00; transform: scale(1.10); }
 }
 </style>
