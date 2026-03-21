@@ -410,7 +410,8 @@ export default defineComponent({
       populationPanelOpen: false,
       snapConfirming: false,
       snapConfirmed: false,
-      snapResetTimer: null as ReturnType<typeof setTimeout> | null,
+      snapResetTimer:   null as ReturnType<typeof setTimeout> | null,
+      _sweepNullTimer:  null as ReturnType<typeof setTimeout> | null,
       showCreateModal: false,
       notesOpen: false,
       doseTimer: null as ReturnType<typeof setInterval> | null,
@@ -547,7 +548,24 @@ export default defineComponent({
     },
 
     onSweepWindowChange(w: { lo: number; hi: number; param: 'field' | 'freq' } | null) {
-      this.sweepWindow = w
+      if (w !== null) {
+        // Non-null window: apply immediately and cancel any pending null-out.
+        // This prevents the snap bar from flashing away during a mid-sweep recalculation.
+        if (this._sweepNullTimer) {
+          clearTimeout(this._sweepNullTimer)
+          this._sweepNullTimer = null
+        }
+        this.sweepWindow = w
+      } else {
+        // Null window: hold 450 ms before hiding the snap bar.
+        // If the sweep produces a window again within that window (e.g. after snap settles),
+        // the null is discarded and the bar stays visible without any flash.
+        if (this._sweepNullTimer) clearTimeout(this._sweepNullTimer)
+        this._sweepNullTimer = setTimeout(() => {
+          this._sweepNullTimer = null
+          this.sweepWindow = null
+        }, 450)
+      }
     },
 
     snapToWindow() {
