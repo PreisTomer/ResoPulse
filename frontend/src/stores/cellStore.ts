@@ -107,6 +107,7 @@ interface CellStoreState {
   doubleShellEnabled: boolean     // two-shell nuclear envelope model (Kotnik 2006)
   perfusionRate: number           // ω_b [mL/(g·min)]; 0 = in vitro
   cellPackingFraction: number     // φ [0-0.9]; Maxwell-Garnett σ_e correction
+  sessionName: string             // user-editable experiment session label
   tempTimer: ReturnType<typeof setInterval> | null
   resetCounter: number
   healthyCellState: CellState
@@ -131,6 +132,7 @@ export const useCellStore = defineStore('cell', {
     doubleShellEnabled: false,     // double-shell model off by default
     perfusionRate: 0,              // mL/(g·min); 0 = isolated cell / in-vitro default
     cellPackingFraction: 0,        // φ = 0 (isolated cell); set >0 for dense tissue context
+    sessionName: 'Session 1',
     tempTimer: null,
     resetCounter: 0,
     healthyCellState: 'stable' as CellState,
@@ -594,7 +596,9 @@ export const useCellStore = defineStore('cell', {
       if (!presetId || presetId === this[cellType].id) return
       const preset = CELL_PRESETS.find(c => c.id === presetId)
       if (!preset) return
-      this[cellType] = cloneDeep(preset) as CellConfig
+      const cfg = cloneDeep(preset) as CellConfig
+      if (!cfg.description && preset.notes) cfg.description = preset.notes
+      this[cellType] = cfg
       if (cellType === 'target') this.targetTemp = BODY_TEMP_C
       else this.healthyTemp = BODY_TEMP_C
       this.resetCounter++
@@ -647,7 +651,11 @@ export const useCellStore = defineStore('cell', {
     },
 
     loadPreset(cellType: 'healthy' | 'target', preset: CellConfig) {
-      this[cellType] = cloneDeep(preset) as CellConfig
+      const cfg = cloneDeep(preset) as CellConfig
+      // Carry notes over to description if the preset supplies notes but not description
+      const p = preset as CellConfig & { notes?: string }
+      if (!cfg.description && p.notes) cfg.description = p.notes
+      this[cellType] = cfg
       this.healthyTemp = BODY_TEMP_C
       this.targetTemp = BODY_TEMP_C
       this.resetCounter++  // signals CellCard to reset visual state

@@ -202,9 +202,28 @@
       </div>
     </div>
 
-    <!-- Description -->
+    <!-- Description + target protocol metrics -->
     <div v-if="!compact" class="cell-card__body">
       <p>{{ description }}</p>
+
+      <!-- Target-only: key protocol metrics row -->
+      <div
+        v-if="type === CELL_TYPE.TARGET && cellState !== CELL_STATE.LYSED"
+        class="cell-card__metrics"
+      >
+        <div class="cell-card__metric" v-tip="$t('cells.targetMetrics.tipElysis')">
+          <span class="cell-card__metric-label">{{ $t('cells.targetMetrics.elysis') }}</span>
+          <span class="cell-card__metric-value" :class="metricsElysisClass">{{ metricsElysis }}</span>
+        </div>
+        <div class="cell-card__metric" v-tip="$t('cells.targetMetrics.tipTi')">
+          <span class="cell-card__metric-label">{{ $t('cells.targetMetrics.ti') }}</span>
+          <span class="cell-card__metric-value" :class="metricsTiClass">{{ metricsTi }}</span>
+        </div>
+        <div class="cell-card__metric" v-tip="$t('cells.targetMetrics.tipFc')">
+          <span class="cell-card__metric-label">{{ $t('cells.targetMetrics.fc') }}</span>
+          <span class="cell-card__metric-value">{{ metricsFc }}</span>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -234,7 +253,7 @@ import type { CellVisualProfile } from '@/utils/cellAnimation'
 import { CELL_STATE, CELL_TYPE, CELL_CATEGORY } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'
-import { splitFreqKHz } from '@/utils/format'
+import { splitFreqKHz, formatFieldVcm } from '@/utils/format'
 import { tipVm as tipVmFn, tipAcousticVm as tipAcousticVmFn, tipTemp as tipTempFn, tipState as tipStateFn, tipDisruption as tipDisruptionFn, tipNuclearBar as tipNuclearBarFn, tipDep as tipDepFn, formatLysisTimeLocal } from '@/tooltips/cellCardTooltips'
 
 import CellHeader from './CellHeader.vue'
@@ -573,6 +592,34 @@ export default defineComponent({
     biostimScore():        number { return this.store.healthyBiomodScore },
     biostimFcKHz():        number { return this.store.healthyFc },
     biostimSteadyTemp():   number { return this.store.healthySteadyStateTemp },
+
+    metricsElysis(): string {
+      return formatFieldVcm(this.store.targetLysisField)
+    },
+
+    metricsElysisClass(): string {
+      const ratio = this.store.fieldIntensity / this.store.targetLysisField
+      if (ratio >= 1.0)  return 'cell-card__metric-value--danger'
+      if (ratio >= 0.85) return 'cell-card__metric-value--warn'
+      return ''
+    },
+
+    metricsTi(): string {
+      const ti = this.store.therapeuticIndex
+      return ti >= 10 ? '>10×' : `×${ti.toFixed(1)}`
+    },
+
+    metricsTiClass(): string {
+      const ti = this.store.therapeuticIndex
+      if (ti >= 1.5) return 'cell-card__metric-value--good'
+      if (ti >= 1.0) return 'cell-card__metric-value--warn'
+      return 'cell-card__metric-value--danger'
+    },
+
+    metricsFc(): string {
+      const parts = splitFreqKHz(this.store.targetFc, 2)
+      return `${parts.value} ${parts.unit}`
+    },
   },
 
   watch: {
@@ -1601,6 +1648,48 @@ export default defineComponent({
     font-size: 0.875rem;
     line-height: 1.65;
     flex: 1;
+  }
+
+  /* ── Target protocol metrics row ───────────────────────────────────── */
+  &__metrics {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+    padding-top: 0.6rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  &__metric {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.18rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: var(--radius);
+    padding: 0.35rem 0.4rem;
+    cursor: default;
+  }
+
+  &__metric-label {
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    letter-spacing: 0.06em;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+  }
+
+  &__metric-value {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--color-primary);
+    letter-spacing: 0.02em;
+
+    &--good   { color: var(--color-accent); }
+    &--warn   { color: var(--color-amber); }
+    &--danger { color: var(--color-danger); }
   }
 }
 </style>

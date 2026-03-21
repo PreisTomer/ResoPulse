@@ -238,6 +238,27 @@ $_cell-states: (
   &__warn-val   { color: var(--color-amber);  }
 }
 
+// ── Info panel ──────────────────────────────────────────────────────────────
+// Tinted bordered section panel used for resonance-info, dep-section, etc.
+// Usage: @include info-panel(rgba(0, 212, 255, 0.04), rgba(0, 212, 255, 0.15));
+@mixin info-panel($bg, $border-color) {
+  @include flex-col(0.28rem);
+  padding: 0.4rem 0.6rem;
+  background: $bg;
+  border: 1px solid $border-color;
+  border-radius: var(--radius);
+}
+
+// ── Section title ────────────────────────────────────────────────────────────
+// Tiny mono-caps label for named data sections (dep, resonance, etc.)
+// Usage: @include section-title();
+@mixin section-title() {
+  @include mono-upper(0.53rem, 0.12em);
+  color: var(--color-text-muted);
+  opacity: 0.7;
+  margin-bottom: 0.05rem;
+}
+
 // ── Readout inline input ────────────────────────────────────────────────────
 // Click-to-edit <input type="number"> that overlays the readout value.
 // Usage: @include readout-inline-input();

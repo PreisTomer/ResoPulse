@@ -93,6 +93,7 @@ export default defineComponent({
       _yDepScale: null as d3.ScaleLinear<number, number> | null,
       _chartW: 0,
       _chartH: 0,
+      _cursorX: 0,
       _resizeObserver: null as ResizeObserver | null,
       _tooltipData: null as {
         x: number; freqHz: number; mode: 'schwan' | 'resonance'
@@ -302,7 +303,6 @@ export default defineComponent({
         .attr('stroke', 'rgba(255,255,255,0.85)')
         .attr('stroke-width', 1.5)
         .attr('stroke-dasharray', '4,3')
-        .style('cursor', 'ew-resize')
 
       g.append('rect')
         .attr('class', 'cursor-bg')
@@ -317,7 +317,7 @@ export default defineComponent({
         .attr('font-size', '0.58rem')
         .attr('font-family', 'var(--font-mono)')
 
-      // Drag-discoverability hint - appears above the cursor
+      // Drag-discoverability hint - appears above the cursor line
       g.append('text')
         .attr('class', 'cursor-drag-hint')
         .attr('y', -4)
@@ -329,16 +329,8 @@ export default defineComponent({
         .attr('pointer-events', 'none')
         .text(this.$t('chart.dragHint'))
 
-      // Hover overlay (captures mouse events)
-      g.append('rect')
-        .attr('class', 'hover-overlay')
-        .attr('width', this._chartW).attr('height', this._chartH)
-        .attr('fill', 'transparent')
-        .on('mousemove', (event: MouseEvent) => this.onHover(event))
-        .on('mouseleave', () => { this._tooltipData = null })
-
-      // Draggable handle on cursor area
-      const dragBehavior = d3.drag<SVGLineElement, unknown>()
+      // Hover + drag overlay (covers full chart area)
+      const dragBehavior = d3.drag<SVGRectElement, unknown>()
         .on('drag', (event) => {
           if (!this._xScale) return
           const xClamped = Math.max(0, Math.min(this._chartW, event.x))
@@ -348,7 +340,14 @@ export default defineComponent({
           broadcastStateSync()
         })
 
-      g.select<SVGLineElement>('.cursor-line').call(dragBehavior)
+      g.append('rect')
+        .attr('class', 'hover-overlay')
+        .attr('width', this._chartW).attr('height', this._chartH)
+        .attr('fill', 'transparent')
+        .style('cursor', 'ew-resize')
+        .on('mousemove', (event: MouseEvent) => this.onHover(event))
+        .on('mouseleave', () => { this._tooltipData = null })
+        .call(dragBehavior)
     },
 
     // ── Resonance mode: Lorentzian disruption chart ──────────────────────
@@ -974,6 +973,7 @@ export default defineComponent({
       const [domMin, domMax] = this._xScale.domain() as [number, number]
       const x = this._xScale(Math.max(domMin, Math.min(domMax, hz)))
 
+      this._cursorX = x
       g.select('.cursor-line').attr('x1', x).attr('x2', x)
       g.select('.cursor-drag-hint').attr('x', x)
 
@@ -994,6 +994,12 @@ export default defineComponent({
     onHover(event: MouseEvent) {
       if (!this._xScale || !this._yScale) return
       const [mx] = d3.pointer(event)
+
+      // Near the cursor line: show drag affordance, suppress tooltip
+      const nearCursor = Math.abs(mx - this._cursorX) < 20
+      const overlay = this._svg?.select<SVGRectElement>('.hover-overlay')
+      overlay?.style('cursor', nearCursor ? 'ew-resize' : 'crosshair')
+      if (nearCursor) { this._tooltipData = null; return }
       const hz = this._xScale.invert(mx)
       const khz = hz / 1000
       const sigma_e  = this.store.effectiveSigmaE

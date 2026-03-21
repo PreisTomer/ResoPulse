@@ -1,0 +1,233 @@
+<!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
+<template>
+  <div class="mode-badge">
+
+    <!-- ── Mode label + optimal snap button ─────────────────────── -->
+    <span class="mode-badge__pill" :class="badgeClass" v-tip="$t('selectivity.tipModeBadge')">
+      {{ badge.label }}
+    </span>
+    <button
+      type="button"
+      class="mode-badge__snap-btn"
+      :class="{ 'mode-badge__snap-btn--beyond': optimalFreqResult.khz > 10000 }"
+      @click="snapToOptimal"
+      v-tip="tipOptimal"
+    >{{ optimalNote }}</button>
+
+    <!-- ── Model / physics warning ───────────────────────────────── -->
+    <div v-if="warning" class="mode-badge__warning">
+      {{ warning }}
+      <button
+        v-if="showResonanceSwitchBtn"
+        type="button"
+        class="mode-badge__warning-btn"
+        @click="store.setChartMode(CHART_MODE.RESONANCE)"
+      >{{ $t('selectivity.switchToResonanceBtn') }}</button>
+    </div>
+
+  </div>
+</template>
+
+<script lang="ts">
+import { defineComponent } from 'vue'
+import { useCellStore } from '@/stores/cellStore'
+import { THRESHOLDS } from '@/constants/physics'
+import { CELL_CATEGORY, CHART_MODE } from '@/constants/strings'
+import { ICON } from '@/constants/icons'
+import { formatFreqKHz } from '@/utils/format'
+import { broadcastStateSync } from '@/services/socket'
+import { tipOptimal } from '@/tooltips/selectivityTooltips'
+
+export default defineComponent({
+  setup() {
+    return { store: useCellStore(), CHART_MODE, ICON }
+  },
+
+  computed: {
+    isResonanceTarget(): boolean {
+      const cat = this.store.targetCellCategory
+      const t = this.store.target as { resonantFreqGHz?: number; resonantThresholdVcm?: number }
+      return (cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) && !!t.resonantFreqGHz && !!t.resonantThresholdVcm
+    },
+
+    badge(): { label: string } {
+      const t = this.store.targetDisruptionRatio
+      const h = this.store.healthyDisruptionRatio
+      if (h >= THRESHOLDS.DISRUPTION_WARN)                                        return { label: this.$t('selectivity.modeAblative')    }
+      if (t >= THRESHOLDS.DISRUPTION_WARN && h < THRESHOLDS.HEALTHY_APPROACHING) return { label: this.$t('selectivity.modeTherapeutic') }
+      if (t >= THRESHOLDS.DISRUPTION_WARN)                                        return { label: this.$t('selectivity.modeMarginal')    }
+      if (t >= THRESHOLDS.HEALTHY_APPROACHING)                                    return { label: this.$t('selectivity.modeApproaching') }
+      return                                                                              { label: this.$t('selectivity.modeSubThreshold') }
+    },
+
+    badgeClass(): string {
+      const t = this.store.targetDisruptionRatio, h = this.store.healthyDisruptionRatio
+      if (h >= THRESHOLDS.DISRUPTION_WARN)                                        return 'mode-badge__pill--ablative'
+      if (t >= THRESHOLDS.DISRUPTION_WARN && h < THRESHOLDS.HEALTHY_APPROACHING) return 'mode-badge__pill--therapeutic'
+      if (t >= THRESHOLDS.DISRUPTION_WARN)                                        return 'mode-badge__pill--marginal'
+      if (t >= THRESHOLDS.HEALTHY_APPROACHING)                                    return 'mode-badge__pill--approaching'
+      return                                                                              'mode-badge__pill--subthreshold'
+    },
+
+    optimalFreqResult(): { khz: number; sel: number } { return this.store.optimalFreqResult },
+
+    optimalNote(): string {
+      const { khz, sel } = this.optimalFreqResult
+      const label = formatFreqKHz(khz)
+      if (this.isResonanceTarget) {
+        return `${ICON.STAR} f_res: ${label} · ×${sel >= 99 ? ICON.INFINITY : sel.toFixed(2)} (resonance peak)`
+      }
+      if (khz > 10000) return `${ICON.STAR} Optimal: ${label} · ×${sel.toFixed(2)} ${ICON.BEYOND}`
+      return `${ICON.STAR} Optimal: ${label} · ×${sel.toFixed(2)}`
+    },
+
+    warning(): string | null {
+      const cat = this.store.targetCellCategory
+      const ti  = this.store.therapeuticIndex
+      const t = this.store.target as { resonantFreqGHz?: number; resonantThresholdVcm?: number }
+      const ghzCaveat = ' · f_res from fs-laser experiments (Tsen et al. [10]); RF delivery at GHz is skin-depth limited (~4-13 mm in saline at 1-12 GHz)'
+      if (this.store.chartMode === CHART_MODE.RESONANCE && cat === CELL_CATEGORY.MAMMALIAN) {
+        return `${ICON.WARNING} Resonance mode has no physical meaning for mammalian cells, they have no rigid protein capsid or peptidoglycan cell wall. Switch back to IRE/Vm mode.`
+      }
+      if (cat === CELL_CATEGORY.VIRUS) {
+        if (t.resonantFreqGHz) {
+          return `${ICON.WARNING} IRE model inapplicable for virions (R < 0.1 µm) · Acoustic capsid disruption at ${t.resonantFreqGHz} GHz${ghzCaveat}`
+        }
+        const tLysis = this.store.targetLysisField
+        return `${ICON.WARNING} IRE not applicable to virions, E_lysis ≈ ${(tLysis / 1000).toFixed(0)} kV/cm · Use Resonance mode`
+      }
+      if (cat === CELL_CATEGORY.BACTERIA) {
+        const tLysis = this.store.targetLysisField
+        if (tLysis > 3000) {
+          const res = t.resonantFreqGHz ? ` · Resonance mode (${t.resonantFreqGHz} GHz) available${ghzCaveat}` : ''
+          return `${ICON.WARNING} E_lysis ≈ ${(tLysis / 1000).toFixed(1)} kV/cm, standard IRE impractical · Consider nsEP (pulse width slider)${res}`
+        }
+      }
+      if (ti > 0 && ti < 0.85) {
+        return `${ICON.WARNING} TI = ${ti.toFixed(2)}×, selectivity reversed at DC (tau_T < tau_H) · Short pulses may improve selectivity`
+      }
+      return null
+    },
+
+    showResonanceSwitchBtn(): boolean {
+      const cat = this.store.targetCellCategory
+      const t = this.store.target as { resonantFreqGHz?: number }
+      return !!(cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) &&
+        !!t.resonantFreqGHz &&
+        this.store.chartMode === CHART_MODE.SCHWAN
+    },
+
+    tipOptimal(): string {
+      const { khz, sel } = this.optimalFreqResult
+      const t = this.store.target as { resonantFreqGHz?: number; resonantThresholdVcm?: number; capsidQ?: number }
+      return tipOptimal({
+        isResonanceTarget:    this.isResonanceTarget,
+        resonantFreqGHz:      t.resonantFreqGHz,
+        resonantThresholdVcm: t.resonantThresholdVcm,
+        capsidQ:              t.capsidQ,
+        optKhz:               khz,
+        optSel:               sel,
+        beyondRange:          khz > 10000,
+      })
+    },
+  },
+
+  methods: {
+    snapToOptimal() {
+      const { khz } = this.optimalFreqResult
+      const maxKhz = this.isResonanceTarget ? 50_000_000 : 10_000
+      this.store.setBroadcastFreqKHz(Math.round(Math.max(10, Math.min(maxKhz, khz))))
+      broadcastStateSync()
+    },
+  },
+})
+</script>
+
+<style lang="scss" scoped>
+@use '../../styles/mixins' as *;
+
+.mode-badge {
+  @include flex-col(0.35rem);
+
+  /* ── Mode label pill ─────────────────────────────────────────── */
+  &__pill {
+    @include mono-upper(0.68rem, 0.1em);
+    padding: 0.2rem 0.55rem;
+    border-radius: 3px;
+    border: 1px solid transparent;
+    align-self: flex-start;
+    transition: color 0.3s, border-color 0.3s;
+
+    &--therapeutic { color: var(--color-lime);    border-color: rgba(57, 255, 20, 0.33); }
+    &--ablative    { color: var(--color-danger);  border-color: rgba(255, 77, 109, 0.33); }
+    &--marginal    { color: var(--color-amber);   border-color: rgba(251, 191, 36, 0.33); }
+    &--approaching { color: var(--color-amber);   border-color: rgba(251, 191, 36, 0.33); }
+    &--subthreshold { color: var(--color-primary); border-color: var(--color-primary-border); }
+  }
+
+  /* ── Optimal frequency snap button ──────────────────────────── */
+  &__snap-btn {
+    @include mono-upper(0.62rem, 0.04em);
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 0.25rem 0.55rem;
+    background: rgba(251, 191, 36, 0.07);
+    border: 1px solid rgba(251, 191, 36, 0.3);
+    border-radius: var(--radius);
+    color: var(--color-amber);
+    cursor: pointer;
+    line-height: 1.5;
+    transition: background 0.15s, border-color 0.15s;
+
+    &:hover {
+      background: rgba(251, 191, 36, 0.14);
+      border-color: rgba(251, 191, 36, 0.6);
+    }
+
+    &--beyond {
+      color: var(--color-text-muted);
+      border-color: var(--color-border);
+      background: transparent;
+
+      &:hover {
+        color: var(--color-text);
+        border-color: var(--color-text-muted);
+        background: rgba(255, 255, 255, 0.04);
+      }
+    }
+  }
+
+  /* ── Physics / model warning strip ──────────────────────────── */
+  &__warning {
+    font-size: 0.68rem;
+    font-family: var(--font-mono);
+    color: var(--color-amber);
+    background: rgba(251, 191, 36, 0.07);
+    border: 1px solid rgba(251, 191, 36, 0.25);
+    border-radius: var(--radius);
+    padding: 0.3rem 0.55rem;
+    line-height: 1.55;
+  }
+
+  &__warning-btn {
+    display: block;
+    margin-top: 0.4rem;
+    background: rgba(251, 191, 36, 0.12);
+    border: 1px solid rgba(251, 191, 36, 0.4);
+    border-radius: 3px;
+    color: var(--color-amber);
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.08em;
+    padding: 0.2rem 0.55rem;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+
+    &:hover {
+      background: rgba(251, 191, 36, 0.22);
+      border-color: rgba(251, 191, 36, 0.65);
+    }
+  }
+}
+</style>

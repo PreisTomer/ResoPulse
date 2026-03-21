@@ -82,51 +82,6 @@
     }
   }
 
-  /* ── Hero background cell illustration ──────────────────────── */
-  &__hero-bg {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    pointer-events: none;
-    z-index: 0;
-    mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
-
-    @media (max-width: 520px) { display: none; }
-  }
-
-  &__hero-bg-svg {
-    width: 760px;
-    height: auto;
-    mix-blend-mode: screen;
-    // Start bright so dot flash and ring burst read clearly, then settle to ambient
-    animation: hero-bg-reveal 2s ease-out forwards;
-  }
-
-  &__hero-bg-dot {
-    transform-box: fill-box;
-    transform-origin: center;
-    animation: bg-dot-flash 0.45s ease-out forwards;
-  }
-
-  &__hero-bg-ring {
-    transform-box: fill-box;
-    transform-origin: center;
-    // expand first, then hand off to the looping pulse
-    animation:
-      bg-ring-expand 0.55s cubic-bezier(0.16, 1, 0.3, 1) both,
-      bg-ring-pulse  3.5s ease-in-out infinite;
-
-    // [expand-delay, pulse-delay] — rings shoot from center outward, staggered 50ms
-    &:nth-of-type(2) { animation-delay: 0.18s, 0.85s; }
-    &:nth-of-type(3) { animation-delay: 0.23s, 1.55s; }
-    &:nth-of-type(4) { animation-delay: 0.28s, 2.25s; }
-    &:nth-of-type(5) { animation-delay: 0.33s, 2.95s; }
-    &:nth-of-type(6) { animation-delay: 0.38s, 3.65s; }
-  }
-
-
   /* ── Hero sub-groups (staggered CSS entrance) ────────────────── */
   &__hero-brand,
   &__hero-pitch,
@@ -420,51 +375,6 @@
     flex-shrink: 0;
   }
 
-  &__cell-svg,
-  &__bode-svg {
-    width: 100%;
-    height: 100%;
-    overflow: visible;
-    mix-blend-mode: screen;
-  }
-
-  /* E-field drift */
-  @keyframes home-efield-drift {
-    0%   { transform: translateX(-8px); opacity: 0.45; }
-    50%  { transform: translateX(8px);  opacity: 1; }
-    100% { transform: translateX(-8px); opacity: 0.45; }
-  }
-
-  &__efield-arrow {
-    animation: home-efield-drift 3s ease-in-out infinite;
-    &--1 { animation-delay: 0s; }
-    &--2 { animation-delay: 0.6s; }
-    &--3 { animation-delay: 1.2s; }
-  }
-
-  /* Membrane breathe */
-  @keyframes home-cell-breathe {
-    0%, 100% { r: 70; }
-    50%       { r: 72; }
-  }
-
-  &__cell-membrane {
-    animation: home-cell-breathe 4s ease-in-out infinite;
-    transform-box: fill-box;
-    transform-origin: 50% 50%;
-  }
-
-  /* Vm cap pulse */
-  @keyframes home-vm-pulse {
-    0%, 100% { opacity: 0.6; }
-    50%       { opacity: 1; }
-  }
-
-  &__vm-cap {
-    &--pos { animation: home-vm-pulse 2s ease-in-out infinite; }
-    &--neg { animation: home-vm-pulse 2s ease-in-out infinite 1s; }
-  }
-
   /* ── 3-step workflow ─────────────────────────────────────────── */
   &__workflow {
     @include surface-card(var(--radius), 1.2rem 1.4rem);
@@ -516,82 +426,6 @@
     opacity: 0.35;
     flex-shrink: 0;
     margin-top: 1.5rem;
-  }
-
-  /* ── Features zone: oscilloscope background (medium+ screens) ──── */
-  &__feat-osc {
-    display: none;
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    // Break out of the zone's constrained width to span the full viewport
-    left: 50%;
-    transform: translateX(-50%);
-    width: 100vw;
-    pointer-events: none;
-    z-index: 0;
-    overflow: hidden;
-    // Vertical mask: waves ghost in from the top and dissolve before the section ends
-    -webkit-mask-image: linear-gradient(
-      to bottom,
-      transparent 0%,
-      black 14%,
-      black 76%,
-      transparent 100%
-    );
-    mask-image: linear-gradient(
-      to bottom,
-      transparent 0%,
-      black 14%,
-      black 76%,
-      transparent 100%
-    );
-    @media (min-width: 900px) { display: block; }
-
-    // Scanline texture: horizontal raster lines at 4px pitch — "monitor" aesthetic
-    &::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: repeating-linear-gradient(
-        to bottom,
-        transparent   0px,
-        transparent   3px,
-        rgba(0, 0, 0, 0.07) 3px,
-        rgba(0, 0, 0, 0.07) 4px
-      );
-      pointer-events: none;
-      z-index: 1;
-    }
-  }
-
-  &__feat-osc-svg {
-    width: 100%;
-    height: 100%;
-    display: block;
-    // Ghost opacity — 10% keeps the waves readable but firmly in the background
-    opacity: 0.10;
-    transform-origin: center center;
-  }
-
-  &__feat-osc-track {
-    // double-width group; translateX(-50%) = -1200 units = seamless loop
-    transform-box: fill-box;
-    animation: osc-scroll 8s linear infinite;
-  }
-
-  &__feat-osc-path--field {
-    fill: none;
-    stroke: #00d4ff;
-    stroke-width: 1.2;
-    stroke-linecap: round;
-  }
-
-  &__feat-osc-path--vm {
-    fill: none;
-    stroke: #a855f7;
-    stroke-width: 1.2;
-    stroke-linecap: round;
   }
 
   // Lift workflow and cards above the oscilloscope background
@@ -849,30 +683,6 @@
   50%       { text-shadow: 0 0 60px rgba(0, 212, 255, 0.28), 0 0 20px rgba(0, 212, 255, 0.12); }
 }
 
-@keyframes hero-bg-reveal {
-  // Hold bright while the burst plays, then settle to ambient dim
-  0%, 40% { opacity: 0.85; }
-  100%     { opacity: 0.26; }
-}
-
-@keyframes bg-dot-flash {
-  0%   { opacity: 0; transform: scale(0); }
-  25%  { opacity: 1; transform: scale(3); }
-  65%  { opacity: 0.9; transform: scale(1.5); }
-  100% { opacity: 0; transform: scale(0); }
-}
-
-@keyframes bg-ring-expand {
-  from { transform: scale(0); opacity: 0; }
-  to   { transform: scale(1); opacity: 1; }
-}
-
-
-@keyframes bg-ring-pulse {
-  0%, 100% { opacity: 0.15; }
-  50%       { opacity: 1; }
-}
-
 @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
 @keyframes pulse-glow {
@@ -880,31 +690,3 @@
   50%       { text-shadow: 0 0 50px rgba(0, 212, 255, 0.65); }
 }
 
-@keyframes osc-scroll {
-  from { transform: translateX(0); }
-  to   { transform: translateX(-50%); }
-}
-
-/* ── Scroll-driven wave reveal (progressive enhancement — Chrome 115+) ── */
-/* Falls back gracefully: unsupporting browsers see the static 10% opacity. */
-@supports (animation-timeline: view()) {
-  .home__feat-osc-svg {
-    // As the features zone scrolls into view the waves ghost in and grow to full amplitude.
-    // animation-range "entry 0% cover 50%" = from the moment the element's top edge
-    // hits the viewport bottom, until the section is half covered.
-    animation: osc-scroll-reveal linear both;
-    animation-timeline: view(block);
-    animation-range: entry 0% cover 50%;
-  }
-}
-
-@keyframes osc-scroll-reveal {
-  from {
-    opacity: 0.03;
-    transform: scaleY(0.35);
-  }
-  to {
-    opacity: 0.10;
-    transform: scaleY(1);
-  }
-}

@@ -28,14 +28,12 @@
 
       <!-- Session summary (read-only) -->
       <div class="reports__session-summary">
-        <span class="reports__session-name">{{ store.sessionName }}</span>
         <span class="reports__session-meta">
           {{ totalReadings }} {{ countLabel }}
           <template v-if="distinctSessionCount > 1">
             · {{ $t('reports.sessionMultiple', { n: distinctSessionCount }) }}
           </template>
         </span>
-        <span class="reports__session-hint">{{ $t('reports.sessionEditHint') }}</span>
       </div>
 
       <!-- Stats row -->
@@ -453,23 +451,9 @@ export default defineComponent({
     flex-wrap: wrap;
   }
 
-  &__session-name {
-    font-family: var(--font-mono);
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: var(--color-text-heading);
-  }
-
   &__session-meta {
     @include mono-upper(0.68rem, 0.06em);
     color: var(--color-primary);
-  }
-
-  &__session-hint {
-    font-size: 0.68rem;
-    font-family: var(--font-mono);
-    color: var(--color-text-muted);
-    margin-left: auto;
   }
 
   /* ── Stats ────────────────────────────────────────────────────────────────── */
@@ -489,7 +473,6 @@ export default defineComponent({
     &__inner      { padding: 1rem 0.85rem 3rem; }
     &__header-row { flex-direction: column; align-items: flex-start; }
     &__session-summary { flex-wrap: wrap; }
-    &__session-hint { margin-left: 0; }
   }
 
   /* ── Log card ─────────────────────────────────────────────────────────────── */

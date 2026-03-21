@@ -25,7 +25,7 @@
               class="sweep-panel__pill"
               :class="{ 'sweep-panel__pill--active': sweepParam === 'freq' }"
               v-tip="tipFreqPill"
-              @click="sweepParam = 'freq'; sweepMax = 5000"
+              @click="sweepParam = 'freq'; sweepMax = defaultFreqMax"
             >{{ $t('sweep.sweepFreqPill') }}</button>
           </div>
         </div>
@@ -261,6 +261,18 @@ export default defineComponent({
       return points
     },
 
+    /** Category-appropriate default frequency sweep max.
+     *  Mammalian fc is 100-400 kHz → 5 MHz covers roll-off well.
+     *  Bacteria fc is 10-50 MHz → need 200 MHz to see full curve.
+     *  Virus/resonance targets sweep up to their resonant GHz range, but the
+     *  Schwan model is approximate there — cap at 500 MHz as a practical limit. */
+    defaultFreqMax(): number {
+      const cat = this.store.targetCellCategory
+      if (cat === CELL_CATEGORY.BACTERIA) return 200_000   // 200 MHz in kHz
+      if (cat === CELL_CATEGORY.VIRUS)    return 500_000   // 500 MHz in kHz
+      return 5_000                                         // 5 MHz for mammalian
+    },
+
     sweepSubtitle(): string {
       if (this.sweepParam === 'field') {
         return `E: 0 - ${this.sweepMax} ${UNIT.V_PER_CM} @ ${formatFreqKHz(this.store.currentBroadcastFrequency, 1)}`
@@ -272,7 +284,13 @@ export default defineComponent({
       const pts = this.sweepData
       let lo = -1, hi = -1
       for (const p of pts) {
-        if (p.drT >= THRESHOLDS.DISRUPTION_WARN && p.drH < THRESHOLDS.HEALTHY_APPROACHING) {
+        // Require target above lysis threshold, healthy sub-threshold, AND no thermal denaturing.
+        // A "window" where target temp exceeds 60 °C is not therapeutically viable (protein denaturation).
+        if (
+          p.drT >= THRESHOLDS.DISRUPTION_WARN &&
+          p.drH < THRESHOLDS.HEALTHY_APPROACHING &&
+          p.tT  < THRESHOLDS.TEMP_DENATURING
+        ) {
           if (lo < 0) lo = p.x
           hi = p.x
         }
@@ -425,7 +443,8 @@ export default defineComponent({
       const xScale = d3.scaleLinear().domain([0, this.sweepMax]).range([0, iW])
       const drMax  = Math.max(1.5, d3.max(pts, p => Math.max(p.drH, p.drT)) ?? 1.5) * 1.05
       const yScale = d3.scaleLinear().domain([0, drMax]).range([iH, 0]).clamp(true)
-      const yTI    = d3.scaleLinear().domain([0, 5]).range([iH, 0]).clamp(true)
+      const tiMax  = Math.max(5, (d3.max(pts, p => p.ti) ?? 5) * 1.05)
+      const yTI    = d3.scaleLinear().domain([0, tiMax]).range([iH, 0]).clamp(true)
 
       const CSS_PRIMARY  = getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim() || '#00d4ff'
       const CSS_DANGER   = getComputedStyle(document.documentElement).getPropertyValue('--color-danger').trim()  || '#ef4444'
@@ -446,22 +465,36 @@ export default defineComponent({
           .attr('stroke-dasharray', '3,3')
       }
 
-      // Threshold lines
+      // Threshold lines — draw rules at exact DR positions; labels inside chart with
+      // minimum-separation enforcement so they never stack on top of each other.
       const threshLines = [
-        { dr: THRESHOLDS.HEALTHY_APPROACHING, label: this.$t('chart.revEp'),   color: CSS_AMBER,  dash: '4,3' },
-        { dr: THRESHOLDS.DISRUPTION_WARN,     label: this.$t('chart.thresh85'), color: CSS_DANGER,  dash: '4,3' },
-        { dr: THRESHOLDS.LYSIS_PROB_CENTER,   label: this.$t('chart.lysis'),    color: CSS_DANGER,  dash: '2,2' },
+        { dr: THRESHOLDS.HEALTHY_APPROACHING, label: this.$t('chart.revEp'),    color: CSS_AMBER,  dash: '4,3' },
+        { dr: THRESHOLDS.DISRUPTION_WARN,     label: this.$t('chart.thresh85'), color: CSS_DANGER, dash: '4,3' },
+        { dr: THRESHOLDS.LYSIS_PROB_CENTER,   label: this.$t('chart.lysis'),    color: CSS_DANGER, dash: '2,2' },
       ]
-      for (const { dr, label, color, dash } of threshLines) {
-        if (dr > drMax) continue
-        const y = yScale(dr)
+
+      // Build label entries sorted by screen y (ascending = top of chart)
+      const MIN_LABEL_GAP = 13
+      const threshLabels = threshLines
+        .filter(({ dr }) => dr <= drMax)
+        .map(({ dr, label, color, dash }) => ({ origY: yScale(dr), labelY: yScale(dr), label, color, dash }))
+        .sort((a, b) => a.origY - b.origY)
+
+      // Push labels apart upward when two are within MIN_LABEL_GAP px
+      for (let i = threshLabels.length - 1; i > 0; i--) {
+        const cur = threshLabels[i]!, prev = threshLabels[i - 1]!
+        if (cur.labelY - prev.labelY < MIN_LABEL_GAP) prev.labelY = cur.labelY - MIN_LABEL_GAP
+      }
+
+      for (const { origY, labelY, label, color, dash } of threshLabels) {
         g.append('line')
-          .attr('x1', 0).attr('y1', y).attr('x2', iW).attr('y2', y)
+          .attr('x1', 0).attr('y1', origY).attr('x2', iW).attr('y2', origY)
           .attr('stroke', color).attr('stroke-width', 0.8)
           .attr('stroke-dasharray', dash).attr('opacity', 0.55)
         g.append('text')
-          .attr('x', iW + 3).attr('y', y + 4)
-          .attr('font-size', 9).attr('fill', color).attr('opacity', 0.75)
+          .attr('x', iW - 4).attr('y', labelY + 3.5)
+          .attr('font-size', 9).attr('text-anchor', 'end')
+          .attr('fill', color).attr('opacity', 0.85)
           .text(label)
       }
 
@@ -513,9 +546,9 @@ export default defineComponent({
         .call(ax => ax.selectAll('text').attr('fill', 'rgba(255,255,255,0.55)').attr('font-size', 10))
         .call(ax => ax.selectAll('.tick line').attr('stroke', CSS_BORDER))
 
-      // Y-axis right (TI)
+      // Y-axis right (TI) — dynamic max so peak TI > 5× is always visible
       g.append('g').attr('transform', `translate(${iW},0)`)
-        .call(d3.axisRight(yTI).ticks(5).tickSize(3).tickFormat(d => `${d}×`))
+        .call(d3.axisRight(yTI).ticks(4).tickSize(3).tickFormat(d => `${+d}×`))
         .call(ax => ax.select('.domain').attr('stroke', CSS_BORDER))
         .call(ax => ax.selectAll('text').attr('fill', CSS_AMBER).attr('font-size', 9).attr('opacity', 0.7))
         .call(ax => ax.selectAll('.tick line').attr('stroke', CSS_BORDER))
@@ -531,14 +564,15 @@ export default defineComponent({
         .attr('text-anchor', 'middle').attr('font-size', 10).attr('fill', 'rgba(255,255,255,0.4)')
         .text(this.$t('sweep.axisDisruptionRatio'))
 
-      // Legend
+      // Legend — right-anchored so items can't overflow on narrow charts
       const legend = [
         { color: CSS_DANGER,  label: this.$t('sweep.legendTargetDr'),  dash: '' },
         { color: CSS_PRIMARY, label: this.$t('sweep.legendHealthyDr'), dash: '' },
         { color: CSS_AMBER,   label: this.$t('sweep.legendTI'),        dash: '5,3' },
       ]
+      const LEGEND_STEP = 86
       legend.forEach(({ color, label, dash }, i) => {
-        const lx = i * 90
+        const lx = iW - (legend.length - 1 - i) * LEGEND_STEP
         const lg = g.append('g').attr('transform', `translate(${lx},${iH + 30})`)
         lg.append('line').attr('x1', 0).attr('x2', 16).attr('y1', -9).attr('y2', -9)
           .attr('stroke', color).attr('stroke-width', 2).attr('stroke-dasharray', dash || 'none')

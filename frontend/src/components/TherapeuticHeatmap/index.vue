@@ -848,12 +848,13 @@ export default defineComponent({
     display:       flex;
     flex-direction: column;
     gap:           0.75rem;
-    padding:       0 0 0.75rem;
+    padding:       0 0.75rem 0.75rem;
   }
 
   &__canvas-wrap {
     position: relative;
-    width:    100%;
+    width:    calc(100% + 1.5rem);
+    margin:   0 -0.75rem;
     cursor:   crosshair;
     // Height is set dynamically by ResizeObserver via canvas intrinsic size
     line-height: 0;
@@ -904,7 +905,7 @@ export default defineComponent({
     display: flex;
     flex-wrap: wrap;
     gap: 0.4rem 1rem;
-    padding: 0 0.1rem;
+    padding: 0;
   }
 
   &__legend-item {

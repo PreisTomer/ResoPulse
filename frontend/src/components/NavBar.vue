@@ -5,7 +5,7 @@
 
       <RouterLink to="/" class="nav-bar__brand" @click="mobileOpen = false">
         <div class="nav-bar__brand-logo">
-          <img src="/logo.png" alt="ResoPulse" />
+          <img src="/logo.png" :alt="$t('nav.logoAlt')" />
         </div>
         <div class="nav-bar__brand-text">
           <span class="nav-bar__brand-name">Reso<span class="nav-bar__brand-pulse">Pulse</span></span>
@@ -123,20 +123,10 @@ export default defineComponent({
       outline: 1.5px solid var(--color-border);
       background-color: var(--color-bg);
 
-      img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        transform: scale(1.7);
-        display: block;
-      }
+      img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.7); display: block; }
     }
 
-    &-text {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
+    &-text { @include flex-col(2px); }
 
     &-name {
       font-size: 1.1rem;
@@ -153,19 +143,13 @@ export default defineComponent({
       animation: brand-pulse 2.5s ease-in-out infinite;
     }
 
-    &-tag {
-      font-size: 0.6rem;
-      color: var(--color-text-muted);
-      letter-spacing: 0.02em;
-    }
+    &-tag { @include mono-upper(0.6rem, 0.02em); color: var(--color-text-muted); }
   }
 
   /* ── Nav ────────────────────────────────────────────────────────── */
   &__nav {
-    display: flex;
-    align-items: center;
+    @include flex-row(0.25rem);
     justify-content: center;
-    gap: 0.25rem;
   }
 
   &__link {
@@ -180,18 +164,14 @@ export default defineComponent({
     &.active { color: var(--color-primary); background-color: var(--color-primary-dim); }
   }
 
-  /* ── Right side (status + hamburger) ───────────────────────────── */
+  /* ── Right side ─────────────────────────────────────────────────── */
   &__right {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
+    @include flex-row(0.75rem);
     justify-self: end;
   }
 
   &__status {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+    @include flex-row(0.5rem);
 
     &-dot {
       width: 8px;
@@ -215,10 +195,7 @@ export default defineComponent({
 
   /* ── Theme toggle ───────────────────────────────────────────────── */
   &__theme-toggle {
-    font-size: 0.6rem;
-    font-family: var(--font-mono);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+    @include mono-upper(0.6rem, 0.08em);
     padding: 0.22rem 0.6rem;
     background: transparent;
     border: 1px solid var(--color-border);
@@ -228,15 +205,12 @@ export default defineComponent({
     transition: color 0.15s, border-color 0.15s, background 0.15s;
     white-space: nowrap;
 
-    &:hover {
-      color: var(--color-text);
-      border-color: var(--color-text-muted);
-    }
+    &:hover { color: var(--color-text); border-color: var(--color-text-muted); }
 
     &--oled {
       color: var(--color-primary);
-      border-color: rgba(0, 212, 255, 0.35);
-      background: rgba(0, 212, 255, 0.06);
+      border-color: var(--color-primary-border);
+      background: var(--color-primary-surface);
     }
   }
 
@@ -270,7 +244,6 @@ export default defineComponent({
 
     &--open {
       border-color: var(--color-primary);
-
       span { background: var(--color-primary); }
       span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
       span:nth-child(2) { opacity: 0; transform: scaleX(0); }
@@ -279,10 +252,10 @@ export default defineComponent({
   }
 }
 
-@keyframes nav-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-@keyframes brand-pulse { 0%, 100% { text-shadow: 0 0 8px rgba(0, 212, 255, 0.15); } 50% { text-shadow: 0 0 18px rgba(0, 212, 255, 0.5); } }
+@keyframes nav-pulse   { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+@keyframes brand-pulse { 0%, 100% { text-shadow: 0 0 8px var(--color-primary-dim); } 50% { text-shadow: 0 0 18px rgba(0, 212, 255, 0.5); } }
 
-/* ── Mobile / tablet navigation (hamburger at ≤ 960px) ──────────────────── */
+/* ── Mobile / tablet (hamburger at ≤ 960px) ─────────────────────────────── */
 @media (max-width: 960px) {
   .nav-bar__inner {
     grid-template-columns: auto 1fr auto;
@@ -294,13 +267,11 @@ export default defineComponent({
     display: none;
     position: fixed;
     top: 60px;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    left: 0; right: 0; bottom: 0;
     flex-direction: column;
     align-items: stretch;
     gap: 0;
-    background: rgba(8, 14, 26, 0.97);
+    background: var(--color-bg);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border-top: 1px solid var(--color-border);
@@ -315,11 +286,11 @@ export default defineComponent({
     font-size: 1.1rem;
     padding: 0.9rem 1rem;
     border-radius: var(--radius);
-    border-bottom: 1px solid rgba(30, 58, 95, 0.5);
+    border-bottom: 1px solid var(--color-border);
     color: var(--color-text-muted);
 
     &:last-child { border-bottom: none; }
-    &:hover, &.active { color: var(--color-primary); background: rgba(0, 212, 255, 0.06); }
+    &:hover, &.active { color: var(--color-primary); background: var(--color-primary-surface); }
   }
 
   .nav-bar__hamburger { display: flex; }
