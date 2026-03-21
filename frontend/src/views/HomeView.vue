@@ -6,261 +6,244 @@
 
     <div class="home__inner">
 
-      <!-- Logo rings -->
-      <div class="home__logo-wrap" aria-hidden="true">
-        <div class="home__ring home__ring--1"></div>
-        <div class="home__ring home__ring--2"></div>
-        <div class="home__ring home__ring--3"></div>
-        <div class="home__ring home__ring--4"></div>
-        <div class="home__logo-circle">
-          <img src="/logo.png" alt="ResoPulse" />
-        </div>
-      </div>
+      <!-- ── Zone 1: Hero — full viewport, staggered CSS entrance ── -->
+      <div class="home__zone home__zone--hero">
 
-      <!-- Eyebrow -->
-      <div class="home__eyebrow">
-        <span class="home__eyebrow-dot"></span>
-        {{ $t('home.eyebrow') }}
-      </div>
-
-      <!-- Title -->
-      <h1 class="home__title">
-        Reso<span class="home__title-accent">Pulse</span>
-      </h1>
-
-      <!-- Subtitle -->
-      <div class="home__subtitle">{{ $t('home.subtitle') }}</div>
-
-      <!-- Tagline -->
-      <p class="home__tagline">{{ $t('home.taglineMain') }}</p>
-
-      <!-- Capability pills - two explicit rows of 4; no flex-wrap required -->
-      <div class="home__caps">
-        <div class="home__caps-row">
-          <span v-for="pill in capPills.slice(0, 4)" :key="pill.key" class="home__cap">
-            {{ pill.icon }} {{ $t(`home.${pill.key}`) }}
-          </span>
-        </div>
-        <div class="home__caps-row">
-          <span v-for="pill in capPills.slice(4)" :key="pill.key" class="home__cap">
-            {{ pill.icon }} {{ $t(`home.${pill.key}`) }}
-          </span>
-        </div>
-      </div>
-
-      <!-- CTA -->
-      <div class="home__actions">
-        <RouterLink to="/experiment" class="home__btn home__btn--primary">
-          {{ $t('home.btnPrimary') }} <span class="home__btn-arrow">{{ ICON.ARROW_R }}</span>
-        </RouterLink>
-        <RouterLink to="/protocol" class="home__btn home__btn--ghost">
-          {{ $t('home.btnGhost') }} <span class="home__btn-arrow">{{ ICON.ARROW_R }}</span>
-        </RouterLink>
-      </div>
-
-      <!-- Physics illustration strip: cell cross-section + Schwan Bode chart (hidden on small screens) -->
-      <div class="home__science-strip">
-
-        <!-- Left: animated Schwan cell cross-section — links to Experiment Lab -->
-        <RouterLink to="/experiment" class="home__sci-panel" v-tip="$t('home.tipSciCell')">
-          <p class="home__sci-label">{{ $t('home.sciCellLabel') }}</p>
-          <div class="home__sci-svg-box">
-          <svg class="home__cell-svg" viewBox="0 0 190 242" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <clipPath id="home-cell-clip">
-                <circle cx="95" cy="122" r="68"/>
-              </clipPath>
-              <linearGradient id="home-vm-grad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="rgb(0,212,255)">
-                  <animate attributeName="stop-opacity" values="0.12;0.26;0.12" dur="3s" repeatCount="indefinite"/>
-                </stop>
-                <stop offset="48%" stop-color="rgb(0,0,0)" stop-opacity="0"/>
-                <stop offset="52%" stop-color="rgb(0,0,0)" stop-opacity="0"/>
-                <stop offset="100%" stop-color="rgb(255,77,109)">
-                  <animate attributeName="stop-opacity" values="0.08;0.20;0.08" dur="3s" repeatCount="indefinite"/>
-                </stop>
-              </linearGradient>
-            </defs>
-            <!-- E-field lines + ions clipped to cell interior -->
-            <g clip-path="url(#home-cell-clip)">
-              <g class="home__efield-arrow home__efield-arrow--1">
-                <line x1="0" y1="94" x2="180" y2="94" stroke="rgba(0,212,255,0.65)" stroke-width="1"/>
-                <polygon points="184,94 175,90 175,98" fill="rgba(0,212,255,0.65)"/>
-              </g>
-              <g class="home__efield-arrow home__efield-arrow--2">
-                <line x1="0" y1="122" x2="180" y2="122" stroke="rgba(0,212,255,0.85)" stroke-width="1"/>
-                <polygon points="184,122 175,118 175,126" fill="rgba(0,212,255,0.85)"/>
-              </g>
-              <g class="home__efield-arrow home__efield-arrow--3">
-                <line x1="0" y1="150" x2="180" y2="150" stroke="rgba(0,212,255,0.65)" stroke-width="1"/>
-                <polygon points="184,150 175,146 175,154" fill="rgba(0,212,255,0.65)"/>
-              </g>
-              <!-- Voltage gradient fill -->
-              <circle cx="95" cy="122" r="68" fill="url(#home-vm-grad)"/>
-              <!-- Positive ions drifting upward — 3 staggered -->
-              <circle cx="83" cy="132" r="2.4" fill="rgb(0,212,255)" opacity="0">
-                <animate attributeName="cy" values="132;64" dur="2.8s" repeatCount="indefinite" begin="0s"/>
-                <animate attributeName="opacity" values="0;0.9;0.9;0" keyTimes="0;0.12;0.78;1" dur="2.8s" repeatCount="indefinite" begin="0s"/>
-              </circle>
-              <circle cx="95" cy="132" r="2.4" fill="rgb(0,212,255)" opacity="0">
-                <animate attributeName="cy" values="132;64" dur="2.8s" repeatCount="indefinite" begin="0.93s"/>
-                <animate attributeName="opacity" values="0;0.9;0.9;0" keyTimes="0;0.12;0.78;1" dur="2.8s" repeatCount="indefinite" begin="0.93s"/>
-              </circle>
-              <circle cx="107" cy="132" r="2.4" fill="rgb(0,212,255)" opacity="0">
-                <animate attributeName="cy" values="132;64" dur="2.8s" repeatCount="indefinite" begin="1.86s"/>
-                <animate attributeName="opacity" values="0;0.9;0.9;0" keyTimes="0;0.12;0.78;1" dur="2.8s" repeatCount="indefinite" begin="1.86s"/>
-              </circle>
-              <!-- Negative ions drifting downward — 3 staggered -->
-              <circle cx="83" cy="112" r="2.4" fill="rgb(255,77,109)" opacity="0">
-                <animate attributeName="cy" values="112;180" dur="2.8s" repeatCount="indefinite" begin="0.47s"/>
-                <animate attributeName="opacity" values="0;0.9;0.9;0" keyTimes="0;0.12;0.78;1" dur="2.8s" repeatCount="indefinite" begin="0.47s"/>
-              </circle>
-              <circle cx="95" cy="112" r="2.4" fill="rgb(255,77,109)" opacity="0">
-                <animate attributeName="cy" values="112;180" dur="2.8s" repeatCount="indefinite" begin="1.4s"/>
-                <animate attributeName="opacity" values="0;0.9;0.9;0" keyTimes="0;0.12;0.78;1" dur="2.8s" repeatCount="indefinite" begin="1.4s"/>
-              </circle>
-              <circle cx="107" cy="112" r="2.4" fill="rgb(255,77,109)" opacity="0">
-                <animate attributeName="cy" values="112;180" dur="2.8s" repeatCount="indefinite" begin="2.33s"/>
-                <animate attributeName="opacity" values="0;0.9;0.9;0" keyTimes="0;0.12;0.78;1" dur="2.8s" repeatCount="indefinite" begin="2.33s"/>
-              </circle>
-            </g>
-            <!-- Outer membrane -->
-            <circle class="home__cell-membrane" cx="95" cy="122" r="70"
-              stroke="rgba(0,212,255,0.55)" stroke-width="3" fill="rgba(0,212,255,0.06)"/>
-            <!-- Lipid bilayer inner edge -->
-            <circle cx="95" cy="122" r="66.5"
-              stroke="rgba(0,212,255,0.18)" stroke-width="1" fill="rgba(0,212,255,0.04)"/>
-            <!-- Nucleus envelope -->
-            <circle cx="95" cy="122" r="25"
-              stroke="rgba(167,139,250,0.75)" stroke-width="1.5" fill="rgba(167,139,250,0.14)"/>
-            <circle cx="95" cy="122" r="22" fill="rgba(167,139,250,0.08)"/>
-            <!-- +Vm cap -->
-            <path class="home__vm-cap home__vm-cap--pos"
-              d="M 61,66 A 70,70 0 0 1 129,66"
-              stroke="rgba(0,212,255,0.9)" stroke-width="2.5" fill="rgba(0,212,255,0.22)"/>
-            <!-- -Vm cap -->
-            <path class="home__vm-cap home__vm-cap--neg"
-              d="M 61,178 A 70,70 0 0 0 129,178"
-              stroke="rgba(255,77,109,0.85)" stroke-width="2.5" fill="rgba(255,77,109,0.16)"/>
-            <!-- Labels -->
-            <text x="95" y="26" text-anchor="middle" font-family="monospace" font-size="9" fill="rgba(0,212,255,0.9)">+Vm</text>
-            <text x="95" y="232" text-anchor="middle" font-family="monospace" font-size="9" fill="rgba(255,77,109,0.9)">-Vm</text>
-            <text x="163" y="96" font-family="monospace" font-size="10" fill="rgba(0,212,255,0.75)">E⃗</text>
-            <text x="95" y="127" text-anchor="middle" font-family="monospace" font-size="7" fill="rgba(167,139,250,0.7)">nucleus</text>
-            <text x="95" y="200" text-anchor="middle" font-family="monospace" font-size="7" fill="rgba(0,212,255,0.45)">membrane</text>
-          </svg>
-          </div>
-          <p class="home__sci-sublabel">{{ $t('home.sciCellSub') }}</p>
-          <span class="home__sci-cta">{{ $t('home.sciCta') }}</span>
-        </RouterLink>
-
-        <!-- Divider -->
-        <div class="home__sci-divider" aria-hidden="true"></div>
-
-        <!-- Right: Schwan Vm(f) Bode response — links to Experiment Lab -->
-        <RouterLink to="/experiment" class="home__sci-panel" v-tip="$t('home.tipSciChart')">
-          <p class="home__sci-label">{{ $t('home.sciChartLabel') }}</p>
-          <div class="home__sci-svg-box">
-          <svg class="home__bode-svg" viewBox="0 0 210 188" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <!-- Axes -->
-            <line x1="28" y1="12" x2="28" y2="152" stroke="rgba(255,255,255,0.28)" stroke-width="1"/>
-            <line x1="28" y1="152" x2="196" y2="152" stroke="rgba(255,255,255,0.28)" stroke-width="1"/>
-            <!-- Axis labels -->
-            <text x="10" y="82" text-anchor="middle" font-family="monospace" font-size="7"
-              fill="rgba(255,255,255,0.48)" transform="rotate(-90,10,82)">Vm</text>
-            <text x="112" y="165" text-anchor="middle" font-family="monospace" font-size="7"
-              fill="rgba(255,255,255,0.48)">f (log)</text>
-            <!-- fc marker -->
-            <line x1="108" y1="12" x2="108" y2="152"
-              stroke="rgba(0,212,255,0.45)" stroke-width="1" stroke-dasharray="3 3"/>
-            <text x="111" y="11" font-family="monospace" font-size="7.5" fill="rgba(0,212,255,0.8)">fc</text>
-            <!-- Healthy cell curve (red dashed) -->
-            <path d="M 28,36 C 80,36 100,40 122,92 S 168,148 194,150"
-              stroke="rgba(255,77,109,0.6)" stroke-width="1.5" stroke-dasharray="4 3" stroke-linecap="round"/>
-            <!-- Target cell curve: glow + line -->
-            <path d="M 28,18 C 72,18 90,22 108,82 S 158,148 194,150"
-              stroke="rgba(0,212,255,0.2)" stroke-width="9" stroke-linecap="round"/>
-            <path d="M 28,18 C 72,18 90,22 108,82 S 158,148 194,150"
-              stroke="rgba(0,212,255,0.88)" stroke-width="2" stroke-linecap="round"/>
-            <!-- Animated operating point: halo + dot sweeping back and forth -->
-            <circle r="10" fill="rgba(0,212,255,0.18)">
-              <animateMotion dur="5s" repeatCount="indefinite"
-                calcMode="spline" keyTimes="0;0.5;1" keyPoints="0;1;0"
-                keySplines="0.45 0 0.55 1;0.45 0 0.55 1"
-                path="M 28,18 C 72,18 90,22 108,82 S 158,148 194,150"/>
-            </circle>
-            <circle r="4" fill="rgba(0,212,255,1)">
-              <animateMotion dur="5s" repeatCount="indefinite"
-                calcMode="spline" keyTimes="0;0.5;1" keyPoints="0;1;0"
-                keySplines="0.45 0 0.55 1;0.45 0 0.55 1"
-                path="M 28,18 C 72,18 90,22 108,82 S 158,148 194,150"/>
-            </circle>
-            <!-- Legend -->
-            <line x1="28" y1="175" x2="46" y2="175" stroke="rgba(0,212,255,0.85)" stroke-width="1.5"/>
-            <text x="50" y="178" font-family="monospace" font-size="7" fill="rgba(0,212,255,0.85)">Target</text>
-            <line x1="104" y1="175" x2="122" y2="175"
-              stroke="rgba(255,77,109,0.65)" stroke-width="1.5" stroke-dasharray="3 2"/>
-            <text x="126" y="178" font-family="monospace" font-size="7" fill="rgba(255,77,109,0.65)">Healthy</text>
-          </svg>
-          </div>
-          <p class="home__sci-sublabel">{{ $t('home.sciChartSub') }}</p>
-          <span class="home__sci-cta">{{ $t('home.sciCta') }}</span>
-        </RouterLink>
-
-      </div>
-
-      <!-- 3-step workflow -->
-      <div class="home__workflow">
-        <template v-for="(step, i) in workflowSteps" :key="step">
-          <div class="home__wf-step">
-            <span class="home__wf-num">{{ $t(`home.${step}Num`) }}</span>
-            <span class="home__wf-label">{{ $t(`home.${step}Label`) }}</span>
-            <span class="home__wf-desc">{{ $t(`home.${step}Desc`) }}</span>
-          </div>
-          <span v-if="i < workflowSteps.length - 1" class="home__wf-arrow" aria-hidden="true">{{ ICON.ARROW_R }}</span>
-        </template>
-      </div>
-
-      <!-- Feature cards (3 cols) -->
-      <div class="home__feature-cards">
-
-        <RouterLink
-          v-for="card in featureCards"
-          :key="card.to"
-          :to="card.to"
-          class="home__feature-card"
-          :class="{ 'home__feature-card--primary': card.primary }"
-        >
-          <div class="home__fc-header">
-            <span class="home__fc-icon">{{ card.icon }}</span>
-            <span class="home__fc-title">{{ $t(`home.${card.titleKey}`) }}</span>
-          </div>
-          <span class="home__fc-desc">{{ $t(`home.${card.descKey}`) }}</span>
-        </RouterLink>
-
-        <!-- Stats card -->
-        <div class="home__feature-card home__feature-card--stats">
-          <div class="home__stats-grid">
-            <div v-for="s in homeStats" :key="s" class="home__stat">
-              <span class="home__stat-val">{{ $t(`home.${s}Val`) }}</span>
-              <span class="home__stat-label">{{ $t(`home.${s}Label`) }}</span>
+        <div class="home__hero-logo">
+          <div class="home__logo-wrap" aria-hidden="true">
+            <div class="home__ring home__ring--1"></div>
+            <div class="home__ring home__ring--2"></div>
+            <div class="home__ring home__ring--3"></div>
+            <div class="home__ring home__ring--4"></div>
+            <div class="home__logo-circle">
+              <img src="/logo.png" alt="ResoPulse" />
             </div>
           </div>
         </div>
 
+        <div class="home__hero-brand">
+          <div class="home__eyebrow">
+            <span class="home__eyebrow-dot"></span>
+            {{ $t('home.eyebrow') }}
+          </div>
+          <h1 class="home__title">
+            Reso<span class="home__title-accent">Pulse</span>
+          </h1>
+          <div class="home__subtitle">{{ $t('home.subtitle') }}</div>
+        </div>
+
+        <div class="home__hero-pitch">
+          <p class="home__tagline">{{ $t('home.taglineMain') }}</p>
+        </div>
+
+        <div class="home__hero-cta">
+          <div class="home__actions">
+            <RouterLink to="/experiment" class="home__btn home__btn--primary">
+              {{ $t('home.btnPrimary') }} <span class="home__btn-arrow">{{ ICON.ARROW_R }}</span>
+            </RouterLink>
+            <RouterLink to="/protocol" class="home__btn home__btn--ghost">
+              {{ $t('home.btnGhost') }} <span class="home__btn-arrow">{{ ICON.ARROW_R }}</span>
+            </RouterLink>
+          </div>
+        </div>
+
       </div>
 
-      <!-- Research scope tags -->
-      <div class="home__scope-tags">
-        <span
-          v-for="tag in scopeTags"
-          :key="tag.mod"
-          class="home__scope-tag"
-          :class="`home__scope-tag--${tag.mod}`"
-        >{{ $t(`home.${tag.key}`) }}</span>
+      <!-- ── Zone 2: Science — scroll-reveal physics illustrations ── -->
+      <div class="home__zone home__zone--science home__zone--anim">
+
+        <!-- Physics illustration strip (hidden on small screens) -->
+        <div class="home__science-strip">
+
+          <RouterLink to="/experiment" class="home__sci-panel" v-tip="$t('home.tipSciCell')">
+            <p class="home__sci-label">{{ $t('home.sciCellLabel') }}</p>
+            <div class="home__sci-svg-box">
+            <svg class="home__cell-svg" viewBox="0 0 190 242" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <clipPath id="home-cell-clip">
+                  <circle cx="95" cy="122" r="68"/>
+                </clipPath>
+                <linearGradient id="home-vm-grad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="rgb(0,212,255)">
+                    <animate attributeName="stop-opacity" values="0.12;0.26;0.12" dur="3s" repeatCount="indefinite"/>
+                  </stop>
+                  <stop offset="48%" stop-color="rgb(0,0,0)" stop-opacity="0"/>
+                  <stop offset="52%" stop-color="rgb(0,0,0)" stop-opacity="0"/>
+                  <stop offset="100%" stop-color="rgb(255,77,109)">
+                    <animate attributeName="stop-opacity" values="0.08;0.20;0.08" dur="3s" repeatCount="indefinite"/>
+                  </stop>
+                </linearGradient>
+              </defs>
+              <g clip-path="url(#home-cell-clip)">
+                <g class="home__efield-arrow home__efield-arrow--1">
+                  <line x1="0" y1="94" x2="180" y2="94" stroke="rgba(0,212,255,0.65)" stroke-width="1"/>
+                  <polygon points="184,94 175,90 175,98" fill="rgba(0,212,255,0.65)"/>
+                </g>
+                <g class="home__efield-arrow home__efield-arrow--2">
+                  <line x1="0" y1="122" x2="180" y2="122" stroke="rgba(0,212,255,0.85)" stroke-width="1"/>
+                  <polygon points="184,122 175,118 175,126" fill="rgba(0,212,255,0.85)"/>
+                </g>
+                <g class="home__efield-arrow home__efield-arrow--3">
+                  <line x1="0" y1="150" x2="180" y2="150" stroke="rgba(0,212,255,0.65)" stroke-width="1"/>
+                  <polygon points="184,150 175,146 175,154" fill="rgba(0,212,255,0.65)"/>
+                </g>
+                <circle cx="95" cy="122" r="68" fill="url(#home-vm-grad)"/>
+                <circle cx="83" cy="132" r="2.4" fill="rgb(0,212,255)" opacity="0">
+                  <animate attributeName="cy" values="132;64" dur="2.8s" repeatCount="indefinite" begin="0s"/>
+                  <animate attributeName="opacity" values="0;0.9;0.9;0" keyTimes="0;0.12;0.78;1" dur="2.8s" repeatCount="indefinite" begin="0s"/>
+                </circle>
+                <circle cx="95" cy="132" r="2.4" fill="rgb(0,212,255)" opacity="0">
+                  <animate attributeName="cy" values="132;64" dur="2.8s" repeatCount="indefinite" begin="0.93s"/>
+                  <animate attributeName="opacity" values="0;0.9;0.9;0" keyTimes="0;0.12;0.78;1" dur="2.8s" repeatCount="indefinite" begin="0.93s"/>
+                </circle>
+                <circle cx="107" cy="132" r="2.4" fill="rgb(0,212,255)" opacity="0">
+                  <animate attributeName="cy" values="132;64" dur="2.8s" repeatCount="indefinite" begin="1.86s"/>
+                  <animate attributeName="opacity" values="0;0.9;0.9;0" keyTimes="0;0.12;0.78;1" dur="2.8s" repeatCount="indefinite" begin="1.86s"/>
+                </circle>
+                <circle cx="83" cy="112" r="2.4" fill="rgb(255,77,109)" opacity="0">
+                  <animate attributeName="cy" values="112;180" dur="2.8s" repeatCount="indefinite" begin="0.47s"/>
+                  <animate attributeName="opacity" values="0;0.9;0.9;0" keyTimes="0;0.12;0.78;1" dur="2.8s" repeatCount="indefinite" begin="0.47s"/>
+                </circle>
+                <circle cx="95" cy="112" r="2.4" fill="rgb(255,77,109)" opacity="0">
+                  <animate attributeName="cy" values="112;180" dur="2.8s" repeatCount="indefinite" begin="1.4s"/>
+                  <animate attributeName="opacity" values="0;0.9;0.9;0" keyTimes="0;0.12;0.78;1" dur="2.8s" repeatCount="indefinite" begin="1.4s"/>
+                </circle>
+                <circle cx="107" cy="112" r="2.4" fill="rgb(255,77,109)" opacity="0">
+                  <animate attributeName="cy" values="112;180" dur="2.8s" repeatCount="indefinite" begin="2.33s"/>
+                  <animate attributeName="opacity" values="0;0.9;0.9;0" keyTimes="0;0.12;0.78;1" dur="2.8s" repeatCount="indefinite" begin="2.33s"/>
+                </circle>
+              </g>
+              <circle class="home__cell-membrane" cx="95" cy="122" r="70"
+                stroke="rgba(0,212,255,0.55)" stroke-width="3" fill="rgba(0,212,255,0.06)"/>
+              <circle cx="95" cy="122" r="66.5"
+                stroke="rgba(0,212,255,0.18)" stroke-width="1" fill="rgba(0,212,255,0.04)"/>
+              <circle cx="95" cy="122" r="25"
+                stroke="rgba(167,139,250,0.75)" stroke-width="1.5" fill="rgba(167,139,250,0.14)"/>
+              <circle cx="95" cy="122" r="22" fill="rgba(167,139,250,0.08)"/>
+              <path class="home__vm-cap home__vm-cap--pos"
+                d="M 61,66 A 70,70 0 0 1 129,66"
+                stroke="rgba(0,212,255,0.9)" stroke-width="2.5" fill="rgba(0,212,255,0.22)"/>
+              <path class="home__vm-cap home__vm-cap--neg"
+                d="M 61,178 A 70,70 0 0 0 129,178"
+                stroke="rgba(255,77,109,0.85)" stroke-width="2.5" fill="rgba(255,77,109,0.16)"/>
+              <text x="95" y="26" text-anchor="middle" font-family="monospace" font-size="9" fill="rgba(0,212,255,0.9)">+Vm</text>
+              <text x="95" y="232" text-anchor="middle" font-family="monospace" font-size="9" fill="rgba(255,77,109,0.9)">-Vm</text>
+              <text x="163" y="96" font-family="monospace" font-size="10" fill="rgba(0,212,255,0.75)">E⃗</text>
+              <text x="95" y="127" text-anchor="middle" font-family="monospace" font-size="7" fill="rgba(167,139,250,0.7)">nucleus</text>
+              <text x="95" y="200" text-anchor="middle" font-family="monospace" font-size="7" fill="rgba(0,212,255,0.45)">membrane</text>
+            </svg>
+            </div>
+            <p class="home__sci-sublabel">{{ $t('home.sciCellSub') }}</p>
+            <span class="home__sci-cta">{{ $t('home.sciCta') }}</span>
+          </RouterLink>
+
+          <div class="home__sci-divider" aria-hidden="true"></div>
+
+          <RouterLink to="/experiment" class="home__sci-panel" v-tip="$t('home.tipSciChart')">
+            <p class="home__sci-label">{{ $t('home.sciChartLabel') }}</p>
+            <div class="home__sci-svg-box">
+            <svg class="home__bode-svg" viewBox="0 0 210 188" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <line x1="28" y1="12" x2="28" y2="152" stroke="rgba(255,255,255,0.28)" stroke-width="1"/>
+              <line x1="28" y1="152" x2="196" y2="152" stroke="rgba(255,255,255,0.28)" stroke-width="1"/>
+              <text x="10" y="82" text-anchor="middle" font-family="monospace" font-size="7"
+                fill="rgba(255,255,255,0.48)" transform="rotate(-90,10,82)">Vm</text>
+              <text x="112" y="165" text-anchor="middle" font-family="monospace" font-size="7"
+                fill="rgba(255,255,255,0.48)">f (log)</text>
+              <line x1="108" y1="12" x2="108" y2="152"
+                stroke="rgba(0,212,255,0.45)" stroke-width="1" stroke-dasharray="3 3"/>
+              <text x="111" y="11" font-family="monospace" font-size="7.5" fill="rgba(0,212,255,0.8)">fc</text>
+              <path d="M 28,36 C 80,36 100,40 122,92 S 168,148 194,150"
+                stroke="rgba(255,77,109,0.6)" stroke-width="1.5" stroke-dasharray="4 3" stroke-linecap="round"/>
+              <path d="M 28,18 C 72,18 90,22 108,82 S 158,148 194,150"
+                stroke="rgba(0,212,255,0.2)" stroke-width="9" stroke-linecap="round"/>
+              <path d="M 28,18 C 72,18 90,22 108,82 S 158,148 194,150"
+                stroke="rgba(0,212,255,0.88)" stroke-width="2" stroke-linecap="round"/>
+              <circle r="10" fill="rgba(0,212,255,0.18)">
+                <animateMotion dur="5s" repeatCount="indefinite"
+                  calcMode="spline" keyTimes="0;0.5;1" keyPoints="0;1;0"
+                  keySplines="0.45 0 0.55 1;0.45 0 0.55 1"
+                  path="M 28,18 C 72,18 90,22 108,82 S 158,148 194,150"/>
+              </circle>
+              <circle r="4" fill="rgba(0,212,255,1)">
+                <animateMotion dur="5s" repeatCount="indefinite"
+                  calcMode="spline" keyTimes="0;0.5;1" keyPoints="0;1;0"
+                  keySplines="0.45 0 0.55 1;0.45 0 0.55 1"
+                  path="M 28,18 C 72,18 90,22 108,82 S 158,148 194,150"/>
+              </circle>
+              <line x1="28" y1="175" x2="46" y2="175" stroke="rgba(0,212,255,0.85)" stroke-width="1.5"/>
+              <text x="50" y="178" font-family="monospace" font-size="7" fill="rgba(0,212,255,0.85)">Target</text>
+              <line x1="104" y1="175" x2="122" y2="175"
+                stroke="rgba(255,77,109,0.65)" stroke-width="1.5" stroke-dasharray="3 2"/>
+              <text x="126" y="178" font-family="monospace" font-size="7" fill="rgba(255,77,109,0.65)">Healthy</text>
+            </svg>
+            </div>
+            <p class="home__sci-sublabel">{{ $t('home.sciChartSub') }}</p>
+            <span class="home__sci-cta">{{ $t('home.sciCta') }}</span>
+          </RouterLink>
+
+        </div>
+
       </div>
 
-      <p class="home__disclaimer">{{ $t('home.disclaimer') }}</p>
+      <!-- ── Zone 3: Features — scroll-reveal workflow and cards ── -->
+      <div class="home__zone home__zone--features home__zone--anim">
+
+        <div class="home__workflow">
+          <template v-for="(step, i) in workflowSteps" :key="step">
+            <div class="home__wf-step">
+              <span class="home__wf-num">{{ $t(`home.${step}Num`) }}</span>
+              <span class="home__wf-label">{{ $t(`home.${step}Label`) }}</span>
+              <span class="home__wf-desc">{{ $t(`home.${step}Desc`) }}</span>
+            </div>
+            <span v-if="i < workflowSteps.length - 1" class="home__wf-arrow" aria-hidden="true">{{ ICON.ARROW_R }}</span>
+          </template>
+        </div>
+
+        <div class="home__feature-cards">
+
+          <RouterLink
+            v-for="card in featureCards"
+            :key="card.to"
+            :to="card.to"
+            class="home__feature-card"
+            :class="{ 'home__feature-card--primary': card.primary }"
+          >
+            <div class="home__fc-header">
+              <span class="home__fc-icon">{{ card.icon }}</span>
+              <span class="home__fc-title">{{ $t(`home.${card.titleKey}`) }}</span>
+            </div>
+            <span class="home__fc-desc">{{ $t(`home.${card.descKey}`) }}</span>
+          </RouterLink>
+
+          <div class="home__feature-card home__feature-card--stats">
+            <div class="home__stats-grid">
+              <div v-for="s in homeStats" :key="s" class="home__stat">
+                <span class="home__stat-val">{{ $t(`home.${s}Val`) }}</span>
+                <span class="home__stat-label">{{ $t(`home.${s}Label`) }}</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- ── Zone 4: Bottom — static, no animation ── -->
+      <div class="home__zone home__zone--bottom">
+
+        <div class="home__scope-tags">
+          <span
+            v-for="tag in scopeTags"
+            :key="tag.mod"
+            class="home__scope-tag"
+            :class="`home__scope-tag--${tag.mod}`"
+          >{{ $t(`home.${tag.key}`) }}</span>
+        </div>
+
+        <p class="home__disclaimer">{{ $t('home.disclaimer') }}</p>
+
+      </div>
+
     </div>
   </div>
 </template>
@@ -272,21 +255,25 @@ import { ICON } from '@/constants/icons'
 export default defineComponent({
   name: 'HomeView',
 
+  mounted() {
+    const zones = this.$el.querySelectorAll('.home__zone--anim')
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('home__zone--visible')
+            observer.unobserve(entry.target)
+          }
+        })
+      },
+      { threshold: 0.12 },
+    )
+    zones.forEach((zone: Element) => observer.observe(zone))
+  },
+
   data() {
     return {
       ICON,
-
-      capPills: [
-        { icon: ICON.WAVE,        key: 'capVm' },
-        { icon: ICON.SELECTIVITY, key: 'capSelectivity' },
-        { icon: ICON.LYSIS_BOLT,  key: 'capPulse' },
-        { icon: ICON.RELOAD,      key: 'capSweep' },
-        { icon: ICON.GRID,        key: 'capPop' },
-        { icon: ICON.FLASK,       key: 'capImp' },
-        { icon: ICON.NOURISH,     key: 'capBio' },
-        { icon: ICON.LYSIS_BOLT,  key: 'capDr' },
-        { icon: ICON.DEP,         key: 'capDep' },
-      ],
 
       workflowSteps: ['wf1', 'wf2', 'wf3'],
 
@@ -343,11 +330,69 @@ export default defineComponent({
     flex-direction: column;
     align-items: center;
     text-align: center;
-    gap: 1.8rem;
-    padding: 3rem 2rem;
+    gap: 0;
     max-width: 900px;
     width: 100%;
   }
+
+  /* ── Zones ───────────────────────────────────────────────────── */
+  &__zone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+
+    &--hero {
+      min-height: calc(100vh - 60px);
+      justify-content: center;
+      gap: 3.2rem;
+      padding: 4rem 2rem;
+    }
+
+    &--science {
+      display: none;
+      gap: 1.5rem;
+      padding: 1.5rem 2rem;
+      @media (min-width: 768px) { display: flex; }
+    }
+
+    &--features {
+      gap: 1.4rem;
+      padding: 4rem 2rem;
+    }
+
+    &--bottom {
+      gap: 0.75rem;
+      padding: 1.5rem 2rem 3rem;
+    }
+
+    &--anim {
+      opacity: 0;
+      transform: translateY(40px) scale(0.97);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+
+    &--visible {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  /* ── Hero sub-groups (staggered CSS entrance) ────────────────── */
+  &__hero-logo,
+  &__hero-brand,
+  &__hero-pitch,
+  &__hero-cta {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    animation: hero-enter 0.7s ease both;
+  }
+
+  &__hero-logo  { animation-delay: 0.05s; }
+  &__hero-brand { gap: 0.65rem; animation-delay: 0.25s; }
+  &__hero-pitch { animation-delay: 0.45s; }
+  &__hero-cta   { width: 100%; animation-delay: 0.65s; }
 
   /* ── Logo ────────────────────────────────────────────────────── */
   &__logo-wrap {
@@ -449,35 +494,6 @@ export default defineComponent({
     text-align: center;
     max-width: 620px;
     margin: 0;
-  }
-
-  /* ── Capability pills - two explicit rows of 4 ───────────────── */
-  &__caps {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.5rem;
-  }
-
-  &__caps-row {
-    display: flex;
-    gap: 0.5rem;
-    justify-content: center;
-    flex-wrap: nowrap;
-
-    @media (max-width: 520px) {
-      flex-wrap: wrap;
-    }
-  }
-
-  &__cap {
-    @include mono-upper(0.65rem, 0.06em);
-    padding: 0.22rem 0.6rem;
-    border: 1px solid var(--color-border);
-    border-radius: 20px;
-    color: var(--color-text-muted);
-    background-color: var(--color-surface);
-    white-space: nowrap;
   }
 
   /* ── CTA buttons ─────────────────────────────────────────────── */
@@ -725,7 +741,7 @@ export default defineComponent({
   &__feature-cards {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
-    gap: 0.75rem;
+    gap: 1rem;
     width: 100%;
     max-width: 820px;
   }
@@ -833,10 +849,13 @@ export default defineComponent({
 
   /* ── Responsive - tablet (≤ 768px) ──────────────────────────── */
   @media (max-width: 768px) {
-    &__inner {
-      gap: 1.4rem;
-      padding: 2rem 1.5rem;
+    &__zone--hero {
+      gap: 2.4rem;
+      padding: 3rem 1.5rem;
     }
+
+    &__zone--features { padding: 3rem 1.5rem; }
+    &__zone--bottom   { padding: 1rem 1.5rem 2.5rem; }
 
     &__logo-wrap {
       width: 140px;
@@ -886,10 +905,13 @@ export default defineComponent({
 
   /* ── Responsive - phone (≤ 520px) ───────────────────────────── */
   @media (max-width: 520px) {
-    &__inner {
-      gap: 1.2rem;
-      padding: 1.5rem 1rem;
+    &__zone--hero {
+      gap: 2rem;
+      padding: 2rem 1rem;
     }
+
+    &__zone--features { padding: 2.5rem 1rem; }
+    &__zone--bottom   { padding: 0.75rem 1rem 2rem; }
 
     &__logo-wrap {
       width: 120px;
@@ -979,31 +1001,15 @@ export default defineComponent({
       &-label { font-size: 0.56rem; }
     }
 
-    // Flatten two rows into one horizontal scroll strip
-    &__caps {
-      flex-direction: row;
-      flex-wrap: nowrap;
-      overflow-x: auto;
-      overflow-y: visible;
-      padding-bottom: 0.25rem;
-      // hide scrollbar visually while keeping it functional
-      scrollbar-width: none;
-      &::-webkit-scrollbar { display: none; }
-    }
-
-    &__caps-row {
-      display: contents; // unwrap, pills become direct children of __caps
-    }
-
-    &__cap {
-      font-size: 0.62rem;
-      padding: 0.22rem 0.5rem;
-      flex-shrink: 0;
-    }
   }
 }
 
 /* ── Animations ──────────────────────────────────────────────────────── */
+@keyframes hero-enter {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
 @keyframes ring-expand {
   0%   { transform: scale(0.8); opacity: 0.8; }
   100% { transform: scale(1.1); opacity: 0; }
