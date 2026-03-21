@@ -3,29 +3,10 @@
   <div class="dr-chart">
     <div class="dr-chart__header">
       <span class="dr-chart__title" v-tip="$t('drChart.tipTitle')">{{ $t('drChart.title') }}</span>
-      <div class="dr-chart__legend">
-        <span class="dr-chart__legend-item dr-chart__legend-item--target">{{ $t('drChart.legendTarget') }}</span>
-        <span class="dr-chart__legend-item dr-chart__legend-item--healthy">{{ $t('drChart.legendHealthy') }}</span>
-        <span class="dr-chart__legend-item dr-chart__legend-item--revep">{{ $t('drChart.legendRevEp') }}</span>
-        <span class="dr-chart__legend-item dr-chart__legend-item--lysis">{{ $t('drChart.legendLysis') }}</span>
-        <span class="dr-chart__legend-item dr-chart__legend-item--window">{{ $t('drChart.legendWindow') }}</span>
-      </div>
+      <DrChartLegend />
     </div>
-    <div ref="chartEl" class="dr-chart__svg-wrap" style="position:relative">
-      <!-- Hover tooltip - positioned absolutely over the SVG -->
-      <div
-        v-if="hoverInfo"
-        class="dr-chart__tooltip"
-        :style="{ left: hoverInfo.x + 'px', top: hoverInfo.y + 'px' }"
-      >
-        <div class="dr-chart__tooltip-freq">{{ hoverInfo.freq }}</div>
-        <div class="dr-chart__tooltip-row dr-chart__tooltip-row--target">
-          T: {{ hoverInfo.tDR }}%
-        </div>
-        <div class="dr-chart__tooltip-row dr-chart__tooltip-row--healthy">
-          H: {{ hoverInfo.hDR }}%
-        </div>
-      </div>
+    <div ref="chartEl" class="dr-chart__svg-wrap">
+      <DrChartTooltip :info="hoverInfo" />
     </div>
   </div>
 </template>
@@ -35,37 +16,20 @@ import { defineComponent } from 'vue'
 import * as d3 from 'd3'
 import { useCellStore } from '@/stores/cellStore'
 import { broadcastStateSync } from '@/services/socket'
-import { computeSchwan, computeResonantDisruption } from '@/utils/physics'
 import { CELL_CATEGORY, CHART_MODE } from '@/constants/strings'
 import { C } from '@/theme/colors'
-import type { CellConfig } from '@/types/cell'
-
-const F_MIN_HZ    = 10_000          // 10 kHz
-const F_MAX_HZ    = 500_000_000     // 500 MHz
-const N_POINTS    = 200
-// Y axis always reaches at least 110% so both threshold lines (50% Rev-EP, 85% Lysis)
-// remain inside the visible chart area regardless of how low the current DR curves are.
-const Y_MIN_MAX   = 110
-const DR_HEADROOM = 1.25            // 25% headroom above curve peak (only kicks in above 110%)
-const MARGIN      = { top: 18, right: 16, bottom: 48, left: 54 }
-
-// One label per decade
-const X_TICK_VALUES = [1e4, 1e5, 1e6, 1e7, 1e8]
-
-// Horizontal threshold lines
-const DR_REV_EP  = 50   // reversible EP boundary
-const DR_LYSIS   = 85   // lysis boundary
-
-type CurvePoint = { hz: number; hDR: number; tDR: number }
-
-function logspace(min: number, max: number, n: number): number[] {
-  const step = (Math.log10(max) - Math.log10(min)) / (n - 1)
-  return Array.from({ length: n }, (_, i) => Math.pow(10, Math.log10(min) + i * step))
-}
-
-const F_POINTS_HZ = logspace(F_MIN_HZ, F_MAX_HZ, N_POINTS)
+import DrChartLegend from './DrChartLegend.vue'
+import DrChartTooltip from './DrChartTooltip.vue'
+import type { HoverInfo } from './DrChartTooltip.vue'
+import {
+  F_MIN_HZ, F_MAX_HZ, Y_MIN_MAX, DR_HEADROOM,
+  MARGIN, X_TICK_VALUES, DR_REV_EP, DR_LYSIS,
+  type CurvePoint, formatHz, computeCurves,
+} from './drChartCompute'
 
 export default defineComponent({
+  components: { DrChartLegend, DrChartTooltip },
+
   setup() {
     return { store: useCellStore() }
   },
@@ -80,7 +44,7 @@ export default defineComponent({
       _cursorX:        0,
       _resizeObserver: null as ResizeObserver | null,
       _curveData:      [] as CurvePoint[],
-      hoverInfo:       null as { x: number; y: number; freq: string; tDR: string; hDR: string } | null,
+      hoverInfo:       null as HoverInfo | null,
     }
   },
 
@@ -110,47 +74,6 @@ export default defineComponent({
   },
 
   methods: {
-    formatHz(hz: number): string {
-      if (hz >= 1e9) return `${(hz / 1e9).toFixed(0)} GHz`
-      if (hz >= 1e6) return `${(hz / 1e6).toFixed(1)} MHz`
-      if (hz >= 1e3) return `${(hz / 1e3).toFixed(0)} kHz`
-      return `${hz.toFixed(0)} Hz`
-    },
-
-    /** DR at a given frequency for one cell. Returns value in [0, ∞) */
-    computeDR(cell: CellConfig, hz: number, sigma_e: number, cosTheta: number, pef: number): number {
-      const isAcoustic = (cell as CellConfig & { resonantFreqGHz?: number }).resonantFreqGHz != null
-        && this.store.chartMode === CHART_MODE.RESONANCE
-        && (this.store.targetCellCategory === CELL_CATEGORY.BACTERIA || this.store.targetCellCategory === CELL_CATEGORY.VIRUS)
-
-      if (isAcoustic) {
-        const t = cell as CellConfig & { resonantFreqGHz: number; capsidQ?: number; resonantThresholdVcm?: number }
-        return computeResonantDisruption(
-          t.resonantFreqGHz,
-          t.capsidQ ?? 10,
-          t.resonantThresholdVcm ?? cell.thresholdVoltage * 1000,
-          hz,
-          this.store.fieldIntensity,
-        ) * pef
-      }
-
-      const vm = computeSchwan(cell, hz / 1000, this.store.fieldIntensity, sigma_e, cosTheta)
-      return (vm / cell.thresholdVoltage) * pef
-    },
-
-    computeCurves(): CurvePoint[] {
-      const sigma_e  = this.store.effectiveSigmaE
-      const cosTheta = this.store.cosThetaFactor
-      const pefH     = this.store.pulseEnvelopeFactorHealthy
-      const pefT     = this.store.pulseEnvelopeFactorTarget
-
-      return F_POINTS_HZ.map((hz) => ({
-        hz,
-        hDR: this.computeDR(this.store.healthy, hz, sigma_e, cosTheta, pefH) * 100,
-        tDR: this.computeDR(this.store.target,  hz, sigma_e, cosTheta, pefT) * 100,
-      }))
-    },
-
     initChart() {
       const container = this.$refs.chartEl as HTMLElement
       if (!container) return
@@ -262,7 +185,13 @@ export default defineComponent({
       const W  = this._chartW
 
       // ── Dynamic Y domain - always shows at least up to Y_MIN_MAX (110%) ──────
-      const data   = this.computeCurves()
+      const data = computeCurves(
+        this.store.healthy, this.store.target,
+        this.store.fieldIntensity, this.store.effectiveSigmaE, this.store.cosThetaFactor,
+        this.store.pulseEnvelopeFactorHealthy, this.store.pulseEnvelopeFactorTarget,
+        this.store.chartMode === CHART_MODE.RESONANCE,
+        this.store.targetCellCategory === CELL_CATEGORY.BACTERIA || this.store.targetCellCategory === CELL_CATEGORY.VIRUS,
+      )
       this._curveData = data
       const peakDR = data.reduce((m, d) => Math.max(m, d.hDR, d.tDR), 0)
       const yMax   = Math.max(Y_MIN_MAX, peakDR * DR_HEADROOM)
@@ -271,7 +200,7 @@ export default defineComponent({
       // ── Axes ─────────────────────────────────────────────────────────────
       const xAxis = d3.axisBottom(xS)
         .tickValues(X_TICK_VALUES)
-        .tickFormat((d) => this.formatHz(+d))
+        .tickFormat((d) => formatHz(+d))
       g.select<SVGGElement>('.x-axis')
         .call(xAxis)
         .selectAll<SVGTextElement, unknown>('text')
@@ -441,7 +370,7 @@ export default defineComponent({
       this.hoverInfo = {
         x:    tooltipX,
         y:    tooltipY,
-        freq: this.formatHz(pt.hz),
+        freq: formatHz(pt.hz),
         tDR:  pt.tDR.toFixed(1),
         hDR:  pt.hDR.toFixed(1),
       }
@@ -464,70 +393,13 @@ export default defineComponent({
   }
 
   &__title {
-    font-family: var(--font-mono);
-    font-size: 0.68rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+    @include mono-upper(0.68rem, 0.08em);
     color: var(--color-text-muted);
     cursor: default;
   }
 
-  &__legend {
-    display: flex;
-    gap: 0.9rem;
-    align-items: center;
-    flex-wrap: wrap;
-  }
-
-  &__legend-item {
-    font-family: var(--font-mono);
-    font-size: 0.58rem;
-    letter-spacing: 0.05em;
-    display: flex;
-    align-items: center;
-    gap: 0.3rem;
-
-    &::before {
-      content: '';
-      display: inline-block;
-      width: 14px;
-      height: 2px;
-      border-radius: 1px;
-    }
-
-    &--target::before  { background: var(--color-danger); }
-    &--healthy::before { background: var(--color-primary); }
-
-    &--revep {
-      color: var(--color-amber);
-      &::before {
-        background: transparent;
-        border-top: 2px dashed var(--color-amber);
-        height: 0;
-      }
-    }
-
-    &--lysis {
-      color: var(--color-danger);
-      &::before {
-        background: transparent;
-        border-top: 2px dashed var(--color-danger);
-        height: 0;
-      }
-    }
-
-    &--window {
-      color: rgba(57, 255, 20, 0.8);
-      &::before {
-        height: 8px;
-        border-radius: 2px;
-        background: rgba(57, 255, 20, 0.25);
-        border: 1px solid rgba(57, 255, 20, 0.5);
-      }
-    }
-  }
-
   &__svg-wrap {
+    position: relative;
     width: 100%;
 
     :deep(text) {
@@ -540,32 +412,6 @@ export default defineComponent({
       font-size: 0.58rem;
       fill: var(--color-text-muted);
     }
-  }
-
-  // Hover tooltip
-  &__tooltip {
-    position: absolute;
-    pointer-events: none;
-    background: rgba(10, 15, 30, 0.92);
-    border: 1px solid var(--color-border);
-    border-radius: 4px;
-    padding: 0.3rem 0.5rem;
-    font-family: var(--font-mono);
-    font-size: 0.62rem;
-    line-height: 1.6;
-    white-space: nowrap;
-    z-index: 10;
-  }
-
-  &__tooltip-freq {
-    color: var(--color-text-muted);
-    font-size: 0.58rem;
-    margin-bottom: 0.1rem;
-  }
-
-  &__tooltip-row {
-    &--target  { color: var(--color-danger); }
-    &--healthy { color: var(--color-primary); }
   }
 }
 </style>
