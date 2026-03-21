@@ -1,0 +1,257 @@
+// Shared SCSS mixins for DataSetsView sub-components.
+// No copyright header needed for SCSS partials.
+@use '../../styles/mixins' as *;
+
+@mixin datasets-card() {
+  .datasets__card {
+    @include surface-card(var(--radius-lg));
+    overflow: hidden;
+
+    &--flat .datasets__geo-body {
+      padding: 1.5rem;
+    }
+  }
+
+  .datasets__card-hdr {
+    @include flex-row(1rem);
+    padding: 1.1rem 1.5rem;
+    border-bottom: 1px solid var(--color-border);
+    flex-wrap: wrap;
+  }
+
+  .datasets__card-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--color-text-heading);
+    margin: 0;
+  }
+
+  .datasets__card-tag {
+    font-size: 0.68rem;
+    font-family: var(--font-mono);
+    color: var(--color-text-muted);
+    background: var(--color-surface-2, #0a1628);
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    padding: 0.2rem 0.55rem;
+  }
+}
+
+@mixin datasets-table() {
+  .datasets__table-wrap {
+    overflow-x: auto;
+  }
+
+  .datasets__table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+    min-width: 820px;
+
+    th {
+      text-align: left;
+      padding: 0.55rem 0.8rem;
+      font-size: 0.63rem;
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--color-text-muted);
+      background: rgba(255, 255, 255, 0.02);
+      border-bottom: 1px solid var(--color-border);
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 0.6rem 0.8rem;
+      color: var(--color-text);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      vertical-align: middle;
+    }
+
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255, 255, 255, 0.025); }
+  }
+
+  .datasets__table--nuclear {
+    th:first-child,
+    td:first-child {
+      width: 1%;
+    }
+  }
+
+  .datasets__table--compact {
+    min-width: unset;
+
+    th, td {
+      padding: 0.32rem 0.55rem;
+      font-size: 0.74rem;
+    }
+  }
+}
+
+@mixin datasets-formula-strip() {
+  .datasets__formula-strip {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 0;
+    padding: 1.1rem 1.5rem;
+    border-top: 1px solid var(--color-border);
+    background: rgba(255, 255, 255, 0.012);
+
+    &--nuc { background: rgba(167, 139, 250, 0.03); }
+    &--res { background: rgba(251, 191, 36, 0.02); }
+  }
+
+  .datasets__formula-block {
+    @include flex-col(0.3rem);
+    padding: 0.35rem 1rem;
+    flex: 1;
+    min-width: 190px;
+
+    &--wide { flex: 1.4; }
+
+    &:first-child { padding-left: 0; }
+  }
+
+  .datasets__formula-label {
+    @include mono-upper(0.58rem, 0.08em);
+    color: var(--color-primary);
+    opacity: 0.75;
+
+    .datasets__formula-strip--nuc & { color: #a78bfa; }
+    .datasets__formula-strip--res & { color: var(--color-amber-warm); }
+  }
+
+  .datasets__formula-eq {
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    color: var(--color-text);
+    line-height: 1.55;
+  }
+
+  .datasets__formula-note {
+    font-size: 0.64rem;
+    color: var(--color-text-muted);
+    margin-top: 0.2rem;
+    line-height: 1.45;
+  }
+}
+
+@mixin datasets-utils() {
+  // Flat class selectors — no parent & needed, safe to call at stylesheet root.
+  .datasets__mono      { font-family: var(--font-mono); font-size: 0.78rem; }
+  .datasets__muted     { color: var(--color-text-muted); }
+  .datasets__cancer-val { color: var(--color-danger); }
+  .datasets__warn-val  { color: var(--color-amber); }
+  .datasets__primary-val { color: var(--color-primary); }
+  .datasets__ref-val   { color: var(--color-primary); }
+  .datasets__nuc-val   { color: #a78bfa; }
+  .datasets__dep-val   { color: #ff9900; }
+  .datasets__cell-name { font-weight: 500; color: var(--color-text-heading); }
+  .datasets__notes-cell { font-size: 0.71rem; color: var(--color-text-muted); min-width: 160px; }
+
+  .datasets__group-badge {
+    font-size: 0.63rem;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 0.15rem 0.5rem;
+    border-radius: 3px;
+    border: 1px solid;
+    white-space: nowrap;
+  }
+
+  .datasets__cell-with-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    white-space: nowrap;
+
+    &__name {
+      font-weight: 500;
+      color: var(--color-text-heading);
+    }
+  }
+}
+
+@mixin datasets-ref-grid() {
+  .datasets__ref-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr 1fr;
+    gap: 0;
+
+    &--res { grid-template-columns: 1fr 1.2fr 1fr; }
+  }
+
+  .datasets__ref-block {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+
+    & + & {
+      border-left: 1px solid var(--color-border);
+    }
+
+    &--cancer &-title   { color: var(--color-danger);  }
+    &--healthy &-title  { color: var(--color-primary); }
+    &--window &-title   { color: var(--color-lime);    }
+    &--virus &-title    { color: var(--color-purple);  }
+    &--bacteria &-title { color: var(--color-amber);   }
+  }
+
+  .datasets__ref-block-title {
+    font-size: 0.7rem;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--color-text-muted);
+  }
+
+  .datasets__ref-block-params {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .datasets__rp-row {
+    @include flex-between(0.5rem);
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+  }
+
+  .datasets__window-ratio {
+    font-size: 2.5rem;
+    font-weight: 800;
+    font-family: var(--font-mono);
+    color: var(--color-lime);
+    line-height: 1;
+
+    &--sm    { font-size: 1.1rem; }
+    &--muted { color: var(--color-text-muted); }
+  }
+
+  .datasets__window-stat {
+    &--spaced { margin-top: 0.4rem; }
+  }
+
+  .datasets__window-label {
+    font-size: 0.7rem;
+    color: var(--color-text-muted);
+    line-height: 1.4;
+  }
+
+  .datasets__window-note {
+    font-size: 0.78rem;
+    color: var(--color-text-muted);
+    line-height: 1.5;
+
+    &--spaced { margin-top: 0.6rem; }
+  }
+
+  .datasets__window-range {
+    font-size: 0.78rem;
+    color: var(--color-text-muted);
+  }
+}

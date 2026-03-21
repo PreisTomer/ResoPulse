@@ -17,7 +17,7 @@ export default createRouter({
     },
     {
       path: '/datasets',
-      component: () => import('../views/DataSetsView.vue'),
+      component: () => import('../views/DataSetsView/index.vue'),
     },
     {
       path: '/reports',
@@ -25,7 +25,7 @@ export default createRouter({
     },
     {
       path: '/protocol',
-      component: () => import('../views/ProtocolView.vue'),
+      component: () => import('../views/ProtocolView/index.vue'),
     },
     {
       path: '/instrument',

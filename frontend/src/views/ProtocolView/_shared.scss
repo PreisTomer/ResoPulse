@@ -1,0 +1,209 @@
+// Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
+
+@use '../../styles/mixins' as *;
+
+// ── Section base styles ──────────────────────────────────────────────────────
+@mixin protocol-section() {
+  .protocol__section {
+    @include flex-col(1rem);
+    scroll-margin-top: 5rem;
+  }
+
+  .protocol__section-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--color-text-heading);
+    margin: 0;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .protocol__subsection-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--color-text-heading);
+    margin: 0;
+  }
+
+  .protocol__body-text {
+    font-size: 0.875rem;
+    line-height: 1.7;
+    color: var(--color-text);
+    margin: 0;
+
+    &--spaced { margin-top: 0.6rem; }
+  }
+}
+
+// ── Equation block styles ────────────────────────────────────────────────────
+@mixin protocol-eq-block() {
+  .protocol__eq-block {
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid var(--color-border);
+    border-left: 3px solid var(--color-primary);
+    border-radius: var(--radius);
+    padding: 0.85rem 1.15rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+
+  .protocol__eq-main {
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--color-text-heading);
+    letter-spacing: 0.01em;
+  }
+
+  .protocol__eq-sub {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--color-text-muted);
+    padding-left: 0.5rem;
+    line-height: 1.5;
+  }
+
+  .protocol__eq-divider {
+    height: 1px;
+    background: var(--color-border);
+    opacity: 0.5;
+    margin: 0.2rem 0;
+  }
+
+  .protocol__eq-note {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: var(--color-text-muted);
+    opacity: 0.7;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    padding-top: 0.35rem;
+    margin-top: 0.15rem;
+  }
+}
+
+// ── Utility classes ──────────────────────────────────────────────────────────
+@mixin protocol-utils() {
+  // Explicit selectors replacing data-value-classes() mixin (which uses & parent selector)
+  .protocol__mono       { font-family: var(--font-mono); font-size: 0.78rem; }
+  .protocol__muted      { color: var(--color-text-muted); opacity: 0.6; }
+  .protocol__cancer-val { color: var(--color-danger); }
+  .protocol__warn-val   { color: var(--color-amber); }
+  .protocol__primary-val { color: var(--color-primary); }
+  .protocol__ref-val     { color: var(--color-lime); }
+
+  .protocol__bullet {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--color-text-muted);
+    padding-left: 1.1rem;
+    line-height: 1.6;
+    position: relative;
+
+    &::before {
+      content: '▸';
+      position: absolute;
+      left: 0;
+      color: var(--color-primary);
+      opacity: 0.5;
+    }
+
+    &--nourish, &--revep, &--lysis {
+      &::before { content: '●'; top: 0.18em; font-size: 0.52rem; opacity: 1; }
+    }
+
+    &--nourish::before { color: var(--color-lime); }
+    &--revep::before   { color: var(--color-amber); }
+    &--lysis::before   { color: var(--color-danger); }
+  }
+
+  .protocol__note {
+    border-left: 3px solid var(--color-border);
+    padding: 0.55rem 0.85rem;
+    background: rgba(255, 255, 255, 0.02);
+    font-size: 0.82rem;
+    line-height: 1.6;
+    color: var(--color-text-muted);
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+
+  .protocol__note-label {
+    font-size: 0.62rem;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--color-text-muted);
+    opacity: 0.7;
+    margin-bottom: 0.25rem;
+  }
+
+  .protocol__info-box {
+    display: flex;
+    gap: 0.65rem;
+    align-items: flex-start;
+    background: rgba(0, 212, 255, 0.05);
+    border: 1px solid rgba(0, 212, 255, 0.18);
+    border-radius: var(--radius);
+    padding: 0.65rem 0.85rem;
+    font-size: 0.83rem;
+    line-height: 1.6;
+    color: var(--color-text);
+  }
+
+  .protocol__info-icon {
+    color: var(--color-primary);
+    font-size: 0.85rem;
+    flex-shrink: 0;
+    margin-top: 0.05rem;
+  }
+
+  .protocol__warn-box {
+    background: rgba(251, 191, 36, 0.06);
+    border: 1px solid rgba(251, 191, 36, 0.25);
+    border-radius: var(--radius);
+    padding: 0.65rem 0.9rem;
+    font-size: 0.82rem;
+    line-height: 1.6;
+    color: var(--color-amber);
+  }
+}
+
+// ── Param table styles ───────────────────────────────────────────────────────
+@mixin protocol-param-table() {
+  .protocol__param-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+
+    th, td {
+      padding: 0.45rem 0.7rem;
+      text-align: left;
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    th {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--color-text-muted);
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    td { color: var(--color-text); line-height: 1.45; }
+
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255, 255, 255, 0.02); }
+  }
+
+  .protocol__table-caption {
+    font-size: 0.72rem;
+    font-family: var(--font-mono);
+    color: var(--color-text-muted);
+    text-align: left;
+    padding: 0.3rem 0.7rem 0.2rem;
+    opacity: 0.7;
+  }
+}
