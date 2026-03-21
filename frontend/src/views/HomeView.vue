@@ -25,11 +25,10 @@
 
         <div class="home__hero-brand">
           <div class="home__title-lockup">
-            <div class="home__logo-inline" aria-hidden="true">
-              <img src="/logo.png" alt="" />
-            </div>
             <h1 class="home__title">
-              Reso<span class="home__title-accent">Pulse</span>
+              <span>Reso</span>
+              <span class="home__logo-inline" aria-hidden="true"><img src="/logo.png" alt="" /></span>
+              <span class="home__title-accent">Pulse</span>
             </h1>
           </div>
           <div class="home__subtitle">{{ $t('home.subtitle') }}</div>
@@ -204,55 +203,46 @@
       <!-- ── Zone 3: Features — scroll-reveal workflow and cards ── -->
       <div class="home__zone home__zone--features home__zone--anim">
 
-        <!-- Floating cell scatter — decorative background, medium+ screens only -->
-        <svg class="home__feat-scatter" viewBox="0 0 1200 480" fill="none" aria-hidden="true" focusable="false">
-          <!-- band 1 top (y 30-70) — small: molecules / debris -->
-          <circle class="home__feat-dot home__feat-dot--sm home__feat-dot--a" cx="72"   cy="44"  r="2.2"/>
-          <circle class="home__feat-dot home__feat-dot--sm home__feat-dot--b" cx="198"  cy="58"  r="2.0"/>
-          <circle class="home__feat-dot home__feat-dot--sm home__feat-dot--c" cx="340"  cy="36"  r="2.4"/>
-          <circle class="home__feat-dot home__feat-dot--sm home__feat-dot--a" cx="500"  cy="62"  r="2.1"/>
-          <circle class="home__feat-dot home__feat-dot--sm home__feat-dot--b" cx="655"  cy="40"  r="2.3"/>
-          <circle class="home__feat-dot home__feat-dot--sm home__feat-dot--c" cx="810"  cy="55"  r="2.0"/>
-          <circle class="home__feat-dot home__feat-dot--sm home__feat-dot--a" cx="960"  cy="38"  r="2.5"/>
-          <circle class="home__feat-dot home__feat-dot--sm home__feat-dot--b" cx="1110" cy="60"  r="2.2"/>
-          <!-- band 2 (y 100-150) — large: mammalian cells + medium: bacteria -->
-          <circle class="home__feat-dot home__feat-dot--lg home__feat-dot--c" cx="155"  cy="118" r="5.8"/>
-          <circle class="home__feat-dot home__feat-dot--md home__feat-dot--a" cx="310"  cy="140" r="3.8"/>
-          <circle class="home__feat-dot home__feat-dot--lg home__feat-dot--b" cx="490"  cy="108" r="6.2"/>
-          <circle class="home__feat-dot home__feat-dot--md home__feat-dot--c" cx="660"  cy="135" r="3.5"/>
-          <circle class="home__feat-dot home__feat-dot--lg home__feat-dot--a" cx="830"  cy="122" r="5.5"/>
-          <circle class="home__feat-dot home__feat-dot--md home__feat-dot--b" cx="1010" cy="142" r="4.0"/>
-          <circle class="home__feat-dot home__feat-dot--lg home__feat-dot--c" cx="1140" cy="112" r="5.8"/>
-          <!-- band 3 (y 190-240) — medium + small -->
-          <circle class="home__feat-dot home__feat-dot--sm home__feat-dot--b" cx="88"   cy="198" r="2.3"/>
-          <circle class="home__feat-dot home__feat-dot--md home__feat-dot--c" cx="230"  cy="215" r="3.9"/>
-          <circle class="home__feat-dot home__feat-dot--sm home__feat-dot--a" cx="395"  cy="205" r="2.1"/>
-          <circle class="home__feat-dot home__feat-dot--md home__feat-dot--b" cx="545"  cy="228" r="4.2"/>
-          <circle class="home__feat-dot home__feat-dot--sm home__feat-dot--c" cx="710"  cy="195" r="2.4"/>
-          <circle class="home__feat-dot home__feat-dot--md home__feat-dot--a" cx="870"  cy="220" r="3.6"/>
-          <circle class="home__feat-dot home__feat-dot--sm home__feat-dot--b" cx="1030" cy="208" r="2.2"/>
-          <circle class="home__feat-dot home__feat-dot--md home__feat-dot--c" cx="1155" cy="230" r="3.8"/>
-          <!-- band 4 (y 280-340) — large + medium -->
-          <circle class="home__feat-dot home__feat-dot--md home__feat-dot--a" cx="120"  cy="295" r="3.7"/>
-          <circle class="home__feat-dot home__feat-dot--lg home__feat-dot--b" cx="280"  cy="310" r="6.0"/>
-          <circle class="home__feat-dot home__feat-dot--md home__feat-dot--c" cx="445"  cy="288" r="3.5"/>
-          <circle class="home__feat-dot home__feat-dot--lg home__feat-dot--a" cx="615"  cy="325" r="5.5"/>
-          <circle class="home__feat-dot home__feat-dot--md home__feat-dot--b" cx="778"  cy="295" r="4.0"/>
-          <circle class="home__feat-dot home__feat-dot--lg home__feat-dot--c" cx="940"  cy="315" r="5.8"/>
-          <circle class="home__feat-dot home__feat-dot--md home__feat-dot--a" cx="1095" cy="290" r="3.6"/>
-          <!-- band 5 bottom (y 370-420) — small: molecules -->
-          <circle class="home__feat-dot home__feat-dot--sm home__feat-dot--c" cx="60"   cy="385" r="2.1"/>
-          <circle class="home__feat-dot home__feat-dot--sm home__feat-dot--a" cx="195"  cy="405" r="2.3"/>
-          <circle class="home__feat-dot home__feat-dot--sm home__feat-dot--b" cx="345"  cy="378" r="2.0"/>
-          <circle class="home__feat-dot home__feat-dot--sm home__feat-dot--c" cx="505"  cy="400" r="2.4"/>
-          <circle class="home__feat-dot home__feat-dot--sm home__feat-dot--a" cx="665"  cy="382" r="2.2"/>
-          <circle class="home__feat-dot home__feat-dot--sm home__feat-dot--b" cx="830"  cy="410" r="2.1"/>
-          <circle class="home__feat-dot home__feat-dot--sm home__feat-dot--c" cx="990"  cy="388" r="2.3"/>
-          <circle class="home__feat-dot home__feat-dot--sm home__feat-dot--a" cx="1145" cy="402" r="2.0"/>
-        </svg>
-
-        <!-- Corner bloom — soft radial glow anchoring bottom-right of the zone -->
-        <div class="home__feat-bloom" aria-hidden="true"></div>
+        <!-- Oscilloscope background: two waveforms scroll edge to edge, medium+ screens -->
+        <div class="home__feat-osc" aria-hidden="true">
+          <!-- preserveAspectRatio="none" stretches SVG to fill container width exactly,
+               so waves always reach both screen edges and clip naturally on resize -->
+          <svg class="home__feat-osc-svg" viewBox="0 0 1200 180" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Wave group spans 0-2400 (double width); translateX(-50%) = -1200 units = seamless loop -->
+            <g class="home__feat-osc-track">
+              <!-- Applied field: sine wave, cyan -->
+              <path class="home__feat-osc-path--field"
+                d="M 0,65
+                   C 36,33 64,33 100,65 C 136,97 164,97 200,65
+                   C 236,33 264,33 300,65 C 336,97 364,97 400,65
+                   C 436,33 464,33 500,65 C 536,97 564,97 600,65
+                   C 636,33 664,33 700,65 C 736,97 764,97 800,65
+                   C 836,33 864,33 900,65 C 936,97 964,97 1000,65
+                   C 1036,33 1064,33 1100,65 C 1136,97 1164,97 1200,65
+                   C 1236,33 1264,33 1300,65 C 1336,97 1364,97 1400,65
+                   C 1436,33 1464,33 1500,65 C 1536,97 1564,97 1600,65
+                   C 1636,33 1664,33 1700,65 C 1736,97 1764,97 1800,65
+                   C 1836,33 1864,33 1900,65 C 1936,97 1964,97 2000,65
+                   C 2036,33 2064,33 2100,65 C 2136,97 2164,97 2200,65
+                   C 2236,33 2264,33 2300,65 C 2336,97 2364,97 2400,65"/>
+              <!-- Transmembrane voltage: cosine (90° lag), purple, attenuated Schwan response -->
+              <path class="home__feat-osc-path--vm"
+                d="M 0,128
+                   C 36,128 64,168 100,168 C 136,168 164,128 200,128
+                   C 236,128 264,168 300,168 C 336,168 364,128 400,128
+                   C 436,128 464,168 500,168 C 536,168 564,128 600,128
+                   C 636,128 664,168 700,168 C 736,168 764,128 800,128
+                   C 836,128 864,168 900,168 C 936,168 964,128 1000,128
+                   C 1036,128 1064,168 1100,168 C 1136,168 1164,128 1200,128
+                   C 1236,128 1264,168 1300,168 C 1336,168 1364,128 1400,128
+                   C 1436,128 1464,168 1500,168 C 1536,168 1564,128 1600,128
+                   C 1636,128 1664,168 1700,168 C 1736,168 1764,128 1800,128
+                   C 1836,128 1864,168 1900,168 C 1936,168 1964,128 2000,128
+                   C 2036,128 2064,168 2100,168 C 2136,168 2164,128 2200,128
+                   C 2236,128 2264,168 2300,168 C 2336,168 2364,128 2400,128"/>
+            </g>
+          </svg>
+        </div>
 
         <div class="home__workflow">
           <template v-for="(step, i) in workflowSteps" :key="step">
@@ -509,29 +499,38 @@ export default defineComponent({
   &__hero-pitch { gap: 1.4rem; margin-top: -1rem; animation-delay: 0.6s; }
   &__hero-cta   { width: 100%; animation-delay: 0.8s; }
 
-  /* ── Logo inline lockup ──────────────────────────────────────── */
+  /* ── Logo + title lockup ─────────────────────────────────────── */
   &__title-lockup {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 1rem;
   }
 
   &__logo-inline {
-    width: 72px;
-    height: 72px;
+    width: 0.82em;
+    height: 0.82em;
     border-radius: 50%;
     overflow: hidden;
     flex-shrink: 0;
-    align-self: center;
-    transform: translateY(3px);
-    border: 1.5px solid var(--color-primary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    align-self: flex-end;
+    // lift off the descender space so the logo bottom sits at the text baseline, then nudge down 5px
+    margin: 0 0.12em 0.2em;
+    transform: translateY(10px);
+    border: 1px solid var(--color-primary);
     background-color: var(--color-bg);
-    box-shadow: 0 0 24px rgba(0, 212, 255, 0.5), 0 0 52px rgba(0, 212, 255, 0.2);
+    box-shadow:
+      0 0 16px rgba(0, 212, 255, 0.55),
+      0 0 40px rgba(0, 212, 255, 0.22);
 
     img {
-      width: 100%; height: 100%;
-      object-fit: cover; transform: scale(1.7); display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: scale(1.7);
+      display: block;
     }
   }
 
@@ -560,6 +559,8 @@ export default defineComponent({
     line-height: 1;
     color: var(--color-text-heading);
     margin: 0;
+    display: flex;
+    align-items: center;
     animation: title-glow 3s ease-in-out infinite 1.25s;
 
     &-accent {
@@ -867,90 +868,51 @@ export default defineComponent({
     margin-top: 1.5rem;
   }
 
-  /* ── Features zone: cell-scatter + corner bloom (medium+ screens) ─ */
-  &__feat-scatter {
+  /* ── Features zone: oscilloscope background (medium+ screens) ──── */
+  &__feat-osc {
     display: none;
     position: absolute;
-    inset: 0;
+    top: 0;
+    bottom: 0;
+    // Break out of the zone's constrained width to span the full viewport
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100vw;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+    @media (min-width: 900px) { display: block; }
+  }
+
+  &__feat-osc-svg {
     width: 100%;
     height: 100%;
-    pointer-events: none;
-    z-index: 0;
-    @media (min-width: 900px) { display: block; }
+    display: block;
+    // Very low opacity — the waves are texture, not focal elements
+    opacity: 0.18;
   }
 
-  &__feat-dot {
-    fill: rgba(0, 212, 255, 1);
-
-    &--sm { opacity: 0.18; }
-    &--md { opacity: 0.14; }
-    &--lg { opacity: 0.11; }
-
-    // Three independent drift trajectories — no two adjacent dots move identically
-    &--a { animation: feat-float-a 7s ease-in-out infinite; }
-    &--b { animation: feat-float-b 9s ease-in-out infinite; }
-    &--c { animation: feat-float-c 11s ease-in-out infinite; }
-
-    // Stagger each dot's phase so motion looks organic, not synchronised
-    &:nth-child(1)  { animation-delay:  0.0s; }
-    &:nth-child(2)  { animation-delay: -1.6s; }
-    &:nth-child(3)  { animation-delay: -3.2s; }
-    &:nth-child(4)  { animation-delay: -4.9s; }
-    &:nth-child(5)  { animation-delay: -1.1s; }
-    &:nth-child(6)  { animation-delay: -2.7s; }
-    &:nth-child(7)  { animation-delay: -4.4s; }
-    &:nth-child(8)  { animation-delay: -0.7s; }
-    &:nth-child(9)  { animation-delay: -2.3s; }
-    &:nth-child(10) { animation-delay: -4.0s; }
-    &:nth-child(11) { animation-delay: -0.4s; }
-    &:nth-child(12) { animation-delay: -5.6s; }
-    &:nth-child(13) { animation-delay: -1.9s; }
-    &:nth-child(14) { animation-delay: -7.0s; }
-    &:nth-child(15) { animation-delay: -0.9s; }
-    &:nth-child(16) { animation-delay: -3.1s; }
-    &:nth-child(17) { animation-delay: -5.3s; }
-    &:nth-child(18) { animation-delay: -2.0s; }
-    &:nth-child(19) { animation-delay: -3.7s; }
-    &:nth-child(20) { animation-delay: -6.8s; }
-    &:nth-child(21) { animation-delay: -1.4s; }
-    &:nth-child(22) { animation-delay: -4.1s; }
-    &:nth-child(23) { animation-delay: -2.5s; }
-    &:nth-child(24) { animation-delay: -5.8s; }
-    &:nth-child(25) { animation-delay: -0.2s; }
-    &:nth-child(26) { animation-delay: -3.5s; }
-    &:nth-child(27) { animation-delay: -6.1s; }
-    &:nth-child(28) { animation-delay: -1.7s; }
-    &:nth-child(29) { animation-delay: -4.8s; }
-    &:nth-child(30) { animation-delay: -2.9s; }
-    &:nth-child(31) { animation-delay: -7.4s; }
-    &:nth-child(32) { animation-delay: -0.6s; }
-    &:nth-child(33) { animation-delay: -5.2s; }
-    &:nth-child(34) { animation-delay: -3.3s; }
-    &:nth-child(35) { animation-delay: -6.5s; }
-    &:nth-child(36) { animation-delay: -1.2s; }
-    &:nth-child(37) { animation-delay: -4.3s; }
-    &:nth-child(38) { animation-delay: -2.1s; }
-    &:nth-child(39) { animation-delay: -7.8s; }
+  &__feat-osc-track {
+    // transform-box: fill-box → translateX(-50%) is 50% of the group's 2400-unit width = -1200 units = one seamless repeat
+    transform-box: fill-box;
+    animation: osc-scroll 8s linear infinite;
   }
 
-  &__feat-bloom {
-    display: none;
-    position: absolute;
-    // Centred on the bottom-right quadrant — radius 300px keeps it fully within the zone
-    bottom: 20px;
-    right: 60px;
-    width: 600px;
-    height: 600px;
-    border-radius: 50%;
-    // Gradient stops at 50% so the visible glow is a soft disc, not a hard ring
-    background: radial-gradient(circle at center, rgba(0, 212, 255, 0.055) 0%, transparent 55%);
-    pointer-events: none;
-    z-index: 0;
-    animation: feat-bloom-pulse 6s ease-in-out infinite;
-    @media (min-width: 900px) { display: block; }
+  &__feat-osc-path--field {
+    fill: none;
+    stroke: #00d4ff;
+    stroke-width: 1.2;
+    stroke-linecap: round;
   }
 
-  // Lift cards above scatter and bloom
+  &__feat-osc-path--vm {
+    fill: none;
+    stroke: #a855f7;
+    stroke-width: 1.2;
+    stroke-linecap: round;
+  }
+
+  // Lift workflow and cards above the oscilloscope background
   &__workflow,
   &__feature-cards { position: relative; z-index: 1; }
 
@@ -981,12 +943,14 @@ export default defineComponent({
 
     &--stats {
       cursor: default;
+      // Dashed border signals non-interactive without dimming the card
       border-style: dashed;
-      border-color: rgba(0, 212, 255, 0.18);
-      background: rgba(0, 212, 255, 0.03);
+      border-color: rgba(0, 212, 255, 0.22);
+      // Use the opaque surface colour from the mixin — no wave bleed-through
+      background: var(--color-surface);
 
       &:hover {
-        border-color: rgba(0, 212, 255, 0.28);
+        border-color: rgba(0, 212, 255, 0.22);
         box-shadow: none;
       }
     }
@@ -1075,12 +1039,7 @@ export default defineComponent({
     &__zone--features { padding: 3rem 1.5rem; }
     &__zone--bottom   { padding: 1rem 1.5rem 2.5rem; }
 
-    &__logo-inline {
-      width: 56px;
-      height: 56px;
-    }
 
-    &__title-lockup { gap: 0.75rem; }
 
     &__tagline {
       font-size: 0.9rem;
@@ -1121,12 +1080,7 @@ export default defineComponent({
     &__zone--features { padding: 2.5rem 1rem; }
     &__zone--bottom   { padding: 0.75rem 1rem 2rem; }
 
-    &__logo-inline {
-      width: 44px;
-      height: 44px;
-    }
 
-    &__title-lockup { gap: 0.6rem; }
 
     &__eyebrow {
       font-size: 0.65rem;
@@ -1244,42 +1198,8 @@ export default defineComponent({
   50%       { text-shadow: 0 0 50px rgba(0, 212, 255, 0.65); }
 }
 
-@keyframes feat-float-a {
-  0%        { transform: translate(0px,   0px);  filter: blur(0.4px); }
-  12%       { transform: translate(5px,  -4px);  filter: blur(1.8px); }
-  25%       { transform: translate(14px, -11px); filter: blur(3.0px); }
-  38%       { transform: translate(8px,  -6px);  filter: blur(1.6px); }
-  50%       { transform: translate(6px,   8px);  filter: blur(0.4px); }
-  62%       { transform: translate(0px,   3px);  filter: blur(1.4px); }
-  75%       { transform: translate(-10px, -5px); filter: blur(2.8px); }
-  88%       { transform: translate(-5px, -2px);  filter: blur(1.5px); }
-  100%      { transform: translate(0px,   0px);  filter: blur(0.4px); }
-}
-
-@keyframes feat-float-b {
-  0%        { transform: translate(0px,    0px);  filter: blur(0.4px); }
-  15%       { transform: translate(-5px,   5px);  filter: blur(1.6px); }
-  30%       { transform: translate(-13px,  14px); filter: blur(3.0px); }
-  45%       { transform: translate(-7px,   8px);  filter: blur(1.4px); }
-  60%       { transform: translate(11px,  -8px);  filter: blur(2.8px); }
-  72%       { transform: translate(5px,  -4px);   filter: blur(1.5px); }
-  80%       { transform: translate(-4px,   6px);  filter: blur(0.4px); }
-  90%       { transform: translate(-2px,   3px);  filter: blur(1.2px); }
-  100%      { transform: translate(0px,    0px);  filter: blur(0.4px); }
-}
-
-@keyframes feat-float-c {
-  0%        { transform: translate(0px,   0px);  filter: blur(0.4px); }
-  20%       { transform: translate(4px,   5px);  filter: blur(1.5px); }
-  40%       { transform: translate(10px,  13px); filter: blur(3.0px); }
-  55%       { transform: translate(4px,   7px);  filter: blur(1.8px); }
-  70%       { transform: translate(-11px,  5px); filter: blur(2.6px); }
-  85%       { transform: translate(-5px,   2px); filter: blur(1.3px); }
-  100%      { transform: translate(0px,   0px);  filter: blur(0.4px); }
-}
-
-@keyframes feat-bloom-pulse {
-  0%, 100% { opacity: 0.75; transform: scale(1.00); }
-  50%       { opacity: 1.00; transform: scale(1.10); }
+@keyframes osc-scroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
 }
 </style>

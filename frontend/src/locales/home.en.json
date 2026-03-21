@@ -2,7 +2,7 @@
   "home": {
     "eyebrow": "Bioelectric Field Research · Electroporation · Resonance Modeling",
     "subtitle": "Virtual Biophysics Engine",
-    "taglineMain": "Find the exact frequency where a cancer cell lyses and the healthy cell beside it does not. Live transmembrane voltage, therapeutic index, DEP force, and SAR temperature, six peer-reviewed biophysical models in one workspace, with publication-ready protocol export before your first experiment.",
+    "taglineMain": "Find the exact frequency where a cancer cell lyses and the healthy cell beside it does not. Live transmembrane voltage, therapeutic index, DEP force, and SAR temperature, 10 peer-reviewed biophysical models in one workspace, with publication-ready protocol export before your first experiment.",
     "btnPrimary": "Open Experiment Lab",
     "btnGhost": "Read the Science",
     "capVm":          "Schwan Vm Model",
