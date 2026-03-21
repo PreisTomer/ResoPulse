@@ -54,6 +54,7 @@
               {{ $t('home.btnGhost') }} <span class="home__btn-arrow">{{ ICON.ARROW_R }}</span>
             </RouterLink>
           </div>
+          <p class="home__cta-refs">{{ $t('home.ctaRefs') }}</p>
         </div>
 
       </div>
@@ -327,6 +328,7 @@ export default defineComponent({
   min-height: calc(100vh - 60px);
   position: relative;
   overflow-x: hidden;
+  cursor: crosshair;
 
   &__bg-grid {
     position: absolute;
@@ -406,6 +408,7 @@ export default defineComponent({
     justify-content: center;
     pointer-events: none;
     z-index: 0;
+    mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
 
     @media (max-width: 520px) { display: none; }
   }
@@ -496,6 +499,7 @@ export default defineComponent({
     line-height: 1;
     color: var(--color-text-heading);
     margin: 0;
+    animation: title-glow 3s ease-in-out infinite 1.25s;
 
     &-accent {
       color: #0a2e58;
@@ -541,6 +545,17 @@ export default defineComponent({
     gap: 0.85rem;
     width: 100%;
     max-width: 520px;
+  }
+
+  &__cta-refs {
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    letter-spacing: 0.08em;
+    color: var(--color-text-muted);
+    opacity: 0.55;
+    text-align: center;
+    margin: 0;
+    margin-top: 1.4rem;
   }
 
   &__btn {
@@ -605,7 +620,7 @@ export default defineComponent({
     border-top:    1px solid rgba(0, 212, 255, 0.45);
     border-bottom: 1px solid rgba(0, 212, 255, 0.18);
     transition: transform 0.3s ease, filter 0.3s ease, border-color 0.3s ease;
-    cursor: pointer;
+    cursor: pointer !important;
 
     @media (min-width: 768px) {
       &:hover {
@@ -657,7 +672,7 @@ export default defineComponent({
     letter-spacing: 0.13em;
     text-transform: uppercase;
     color: rgba(0, 212, 255, 0.8);
-    opacity: 0;
+    opacity: 0.35;
     transition: opacity 0.3s ease;
     margin-top: 0.1rem;
   }
@@ -808,6 +823,7 @@ export default defineComponent({
     gap: 0.4rem;
     text-align: left;
     transition: border-color 0.18s, box-shadow 0.18s;
+    cursor: pointer;
 
     &:hover {
       border-color: rgba(0, 212, 255, 0.4);
@@ -1042,6 +1058,11 @@ export default defineComponent({
 @keyframes hero-enter {
   from { opacity: 0; transform: translateY(18px); }
   to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes title-glow {
+  0%, 100% { text-shadow: 0 0 30px rgba(0, 212, 255, 0.08); }
+  50%       { text-shadow: 0 0 60px rgba(0, 212, 255, 0.28), 0 0 20px rgba(0, 212, 255, 0.12); }
 }
 
 @keyframes bg-ring-pulse {
