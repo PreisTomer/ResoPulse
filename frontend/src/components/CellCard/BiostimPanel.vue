@@ -1,14 +1,14 @@
 <!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
 <template>
-  <div class="cell-card__biostim" v-tip="tooltip">
-    <div class="cell-card__biostim-header">
+  <div class="cell-card__biostim">
+    <div class="cell-card__biostim-header" v-tip="tooltipScore">
       <span class="cell-card__biostim-title">{{ ICON.NOURISH }} {{ $t('biostim.title') }}</span>
       <span class="cell-card__biostim-score" :class="scoreClass">
         {{ (biomodScore * 100).toFixed(0) }}{{ UNIT.PERCENT }}
       </span>
     </div>
     <div class="cell-card__biostim-bars">
-      <div class="cell-card__biostim-row">
+      <div class="cell-card__biostim-row" v-tip="tooltipSI">
         <span class="cell-card__biostim-label">{{ $t('biostim.labelSI') }}</span>
         <div class="cell-card__biostim-track">
           <div
@@ -18,7 +18,7 @@
         </div>
         <span class="cell-card__biostim-val">{{ (stimIndex * 100).toFixed(0) }}{{ UNIT.PERCENT }}</span>
       </div>
-      <div class="cell-card__biostim-row">
+      <div class="cell-card__biostim-row" v-tip="tooltipMTE">
         <span class="cell-card__biostim-label">{{ $t('biostim.labelMTE') }}</span>
         <div class="cell-card__biostim-track">
           <div
@@ -28,7 +28,7 @@
         </div>
         <span class="cell-card__biostim-val">{{ (mechTransdEff * 100).toFixed(0) }}{{ UNIT.PERCENT }}</span>
       </div>
-      <div class="cell-card__biostim-row">
+      <div class="cell-card__biostim-row" v-tip="tooltipMA">
         <span class="cell-card__biostim-label">{{ $t('biostim.labelMA') }}</span>
         <div class="cell-card__biostim-track">
           <div
@@ -46,7 +46,7 @@
 import { defineComponent } from 'vue'
 import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'
-import { tipBiomod } from '@/tooltips/biostimTooltips'
+import { tipBiomodScore, tipBiomodSI, tipBiomodMTE, tipBiomodMA } from '@/tooltips/biostimTooltips'
 
 export default defineComponent({
   setup() { return { ICON, UNIT } },
@@ -89,17 +89,30 @@ export default defineComponent({
         : `<${optKHz.toFixed(0)} ${UNIT.KHZ}`
     },
 
-    tooltip(): string {
-      return tipBiomod({
-        si:                   (this.stimIndex       * 100).toFixed(0),
-        mte:                  (this.mechTransdEff   * 100).toFixed(0),
-        ma:                   (this.mildThermal     * 100).toFixed(0),
-        bms:                  (this.biomodScore     * 100).toFixed(0),
-        dr:                   (this.disruptionRatio * 100).toFixed(0),
-        T:                    this.steadyStateTemp.toFixed(1),
+    tooltipScore(): string {
+      return tipBiomodScore({ bms: (this.biomodScore * 100).toFixed(0) })
+    },
+
+    tooltipSI(): string {
+      return tipBiomodSI({
+        si: (this.stimIndex       * 100).toFixed(0),
+        dr: (this.disruptionRatio * 100).toFixed(0),
+      })
+    },
+
+    tooltipMTE(): string {
+      return tipBiomodMTE({
+        mte:                  (this.mechTransdEff * 100).toFixed(0),
         freqLabel:            this.freqLabel,
         fcLabel:              this.fcLabel,
         optCouplingFreqLabel: this.optCouplingFreqLabel,
+      })
+    },
+
+    tooltipMA(): string {
+      return tipBiomodMA({
+        ma: (this.mildThermal   * 100).toFixed(0),
+        T:  this.steadyStateTemp.toFixed(1),
       })
     },
   },
@@ -121,7 +134,6 @@ export default defineComponent({
     border: 1px solid rgba(0, 212, 255, 0.13);
     border-radius: var(--radius);
     padding: 0.5rem 0.65rem;
-    cursor: help;
     margin: 0 0.15rem;
     transition: border-color 0.3s, background 0.3s;
 
@@ -134,6 +146,7 @@ export default defineComponent({
   &__biostim-header {
     @include flex-between();
     margin-bottom: 0.4rem;
+    cursor: help;
   }
 
   &__biostim-title {
@@ -161,6 +174,7 @@ export default defineComponent({
     grid-template-columns: 4.8rem 1fr 2.2rem;
     align-items: center;
     gap: 0.4rem;
+    cursor: help;
   }
 
   &__biostim-label {

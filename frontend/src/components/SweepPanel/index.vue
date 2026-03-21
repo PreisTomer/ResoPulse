@@ -59,7 +59,18 @@
         <span class="sweep-panel__window-sub" v-html="$t('sweep.windowSub')"></span>
       </div>
       <div v-else class="sweep-panel__window-row sweep-panel__window-row--none" v-tip="tipNoWindow">
-        {{ $t('sweep.windowNone') }}
+        <template v-if="recommendedMax !== null">
+          <span>{{ $t('sweep.windowNoneRange', { max: recommendedMax, unit: sweepParam === 'field' ? $t('sweep.fieldUnit') : $t('sweep.freqUnit') }) }}</span>
+          <button class="sweep-panel__expand-btn" @click="sweepMax = recommendedMax">
+            {{ $t('sweep.windowExpandBtn') }}
+          </button>
+        </template>
+        <template v-else>
+          <span>{{ $t('sweep.windowNoneImpossible', { ti: bestTIPoint ? bestTIPoint.ti.toFixed(2) : '—' }) }}</span>
+        </template>
+        <span v-if="bestTIPoint" class="sweep-panel__best-ti">
+          {{ $t('sweep.windowBestTI', { ti: bestTIPoint.ti.toFixed(2), x: bestTIPoint.x.toFixed(0), drT: (bestTIPoint.drT * 100).toFixed(0), unit: sweepParam === 'field' ? $t('sweep.fieldUnit') : $t('sweep.freqUnit') }) }}
+        </span>
       </div>
 
       <!-- Key operating points table -->
@@ -267,6 +278,40 @@ export default defineComponent({
         }
       }
       return lo >= 0 ? { lo, hi } : null
+    },
+
+    /**
+     * Sweep point with the highest therapeutic index.
+     * Used to diagnose why no window was found and what the best achievable selectivity is.
+     */
+    bestTIPoint(): SweepPoint | null {
+      const pts = this.sweepData.filter(p => p.x > 0)
+      if (!pts.length) return null
+      return pts.reduce((a, b) => b.ti > a.ti ? b : a)
+    },
+
+    /**
+     * Whether a therapeutic window is physically achievable at current pulse/frequency settings.
+     * True if any sweep point has TI > 1.7× (= DISRUPTION_WARN / HEALTHY_APPROACHING).
+     * False means no amount of sweep-range expansion will help — the user must change
+     * pulse width or frequency to improve selectivity.
+     */
+    hasTheoreticalWindow(): boolean {
+      const minTI = THRESHOLDS.DISRUPTION_WARN / THRESHOLDS.HEALTHY_APPROACHING
+      return this.sweepData.some(p => p.ti > minTI)
+    },
+
+    /**
+     * Estimated sweep max needed to reach DR_T = 85%, when the window exists but lies
+     * above the current sweep max.  Returns null if window already found or is impossible.
+     * Uses linear extrapolation from the peak DR_T in the sweep, rounded up to nearest 100.
+     */
+    recommendedMax(): number | null {
+      if (this.windowRange || !this.hasTheoreticalWindow) return null
+      const maxDrT = Math.max(0, ...this.sweepData.map(p => p.drT))
+      if (maxDrT < 1e-6) return null
+      const needed = (THRESHOLDS.DISRUPTION_WARN / maxDrT) * this.sweepMax
+      return Math.ceil(needed * 1.2 / 100) * 100  // 20 % buffer, round to nearest 100
     },
 
     keyPoints(): KeyPoint[] {
@@ -651,7 +696,35 @@ export default defineComponent({
       border-color: var(--color-border);
       color: var(--color-text-muted);
       font-style: italic;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.35rem;
     }
+  }
+
+  &__expand-btn {
+    padding: 0.18rem 0.6rem;
+    background: rgba(0, 212, 255, 0.10);
+    border: 1px solid rgba(0, 212, 255, 0.35);
+    border-radius: 4px;
+    color: var(--color-primary);
+    font-family: var(--font-mono);
+    font-size: 0.67rem;
+    font-style: normal;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+
+    &:hover {
+      background: rgba(0, 212, 255, 0.20);
+      border-color: rgba(0, 212, 255, 0.60);
+    }
+  }
+
+  &__best-ti {
+    font-size: 0.66rem;
+    font-style: normal;
+    color: var(--color-text-muted);
+    opacity: 0.8;
   }
 
   &__window-label {

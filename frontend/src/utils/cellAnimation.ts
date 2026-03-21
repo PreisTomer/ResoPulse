@@ -19,7 +19,7 @@
  * violet, log-scaled 10 kHz-30 GHz). Opacity encodes field intensity (log V/cm).
  */
 import * as d3 from 'd3'
-import type { BlobPoint, BlobFrame, OscFrame } from '@/types/cell'
+import type { BlobPoint, BlobFrame, OscFrame, CellState } from '@/types/cell'
 import {
   CANVAS_W, CANVAS_H, BASE_R, BLOB_POINTS,
   LYSIS_DURATION_MS,
@@ -530,11 +530,12 @@ interface MammalianUpdateParams {
   tNorm:                  number
   isNourishing:           boolean
   isVibrating:            boolean
+  isRevEp:                boolean
   nuclearDisruptionRatio: number | undefined
 }
 
 function updateMammalianAnatomy(anat: MammalianAnatomy, p: MammalianUpdateParams): void {
-  const { elapsed, color, thermalColor, impact, tNorm, isNourishing, isVibrating, nuclearDisruptionRatio } = p
+  const { elapsed, color, thermalColor, impact, tNorm, isNourishing, isVibrating, isRevEp, nuclearDisruptionRatio } = p
   const { type, accentColor } = anat
 
   // ── Cell cortex ring ───────────────────────────────────────────────────
@@ -542,13 +543,21 @@ function updateMammalianAnatomy(anat: MammalianAnatomy, p: MammalianUpdateParams
 
   // ── Mitochondria (slow Brownian drift; cristae glow with heat) ─────────
   const mitoIntensity = 0.30 + Math.min(0.50, tNorm * 2.0)
+  // Mitochondrial fission under electroporative / calcium stress (DRP1-mediated fragmentation).
+  // Rev-EP Ca2+ influx triggers fission; at IRE (vibrating), fragmentation is severe.
+  const mitoStress = isRevEp ? (impact - 0.50) / 0.35 : isVibrating ? 1.0 : 0
+  const mitoFragFactor  = Math.max(0.42, 1 - mitoStress * 0.52)   // shrink ellipses
+  const mitoSpreadExtra = mitoStress * 7                           // spread further apart
   anat.mitoEls.forEach(({ g, outer, inner, c1, c2, m }, i) => {
-    const dx  = Math.sin(elapsed * 0.00022 + i * 1.4) * 4
-    const dy  = Math.cos(elapsed * 0.00025 + i * 2.1) * 3
+    const dx  = Math.sin(elapsed * 0.00022 + i * 1.4) * (4 + mitoSpreadExtra)
+    const dy  = Math.cos(elapsed * 0.00025 + i * 2.1) * (3 + mitoSpreadExtra * 0.5)
     const rot = m.angle + Math.sin(elapsed * 0.00012 + i * 1.7) * 12
     g.attr('transform', `translate(${m.x + dx},${m.y + dy}) rotate(${rot})`).attr('opacity', 0.80)
-    outer.attr('stroke', thermalColor).attr('stroke-opacity', mitoIntensity).attr('fill', thermalColor)
-    inner.attr('fill', thermalColor).attr('fill-opacity', Math.min(0.14, tNorm * 0.18 + 0.03))
+    outer.attr('rx', m.rx * mitoFragFactor).attr('ry', m.ry * mitoFragFactor)
+      .attr('stroke', thermalColor).attr('stroke-opacity', mitoIntensity).attr('fill', thermalColor)
+    inner.attr('rx', Math.max(0.5, (m.rx * mitoFragFactor - 2.2) * 0.6))
+      .attr('ry', Math.max(0.5, (m.ry * mitoFragFactor - 1.4) * 0.6))
+      .attr('fill', thermalColor).attr('fill-opacity', Math.min(0.14, tNorm * 0.18 + 0.03))
       .attr('stroke', thermalColor)
     const cristaeOp = Math.min(0.30, mitoIntensity * 0.45)
     c1.attr('stroke', thermalColor).attr('stroke-opacity', cristaeOp)
@@ -566,7 +575,10 @@ function updateMammalianAnatomy(anat: MammalianAnatomy, p: MammalianUpdateParams
     : 20                                                 // healthy: moderate size
   const NUC_DX = anat.presetId === 'hl60' ? 0 : type === CELL_TYPE.TARGET ? -2 : 0
   const NUC_DY = anat.presetId === 'hl60' ? 0 : type === CELL_TYPE.TARGET ?  6 : 4
-  const nucScaleY  = 1 + impact * 0.28
+  // Nuclear breathing: PIEZO1-Ca2+ influx during nourishing increases nuclear pore transport;
+  // subtle chromatin decondensation drives a gentle nuclear volume oscillation (~0.3 Hz).
+  const nucBreath = isNourishing ? Math.sin(elapsed * 0.0018) * 0.045 : 0
+  const nucScaleY  = 1 + impact * 0.28 + nucBreath
   const nucScaleX  = 1 - impact * 0.10
   const nucNoise   = isVibrating ? impact * 1.8 : 0
   // Per-preset nuclear membrane wave amplitude (controls irregularity/pleomorphism)
@@ -583,8 +595,12 @@ function updateMammalianAnatomy(anat: MammalianAnatomy, p: MammalianUpdateParams
   })
   // Outer nuclear envelope - drawn 3.5px outside the blob boundary
   const nucEnvPts: BlobPoint[] = nucPts.map((pt) => ({ angle: pt.angle, r: pt.r + 3.5 }))
+  // Nuclear migration toward high-Vm pole: DEP force on nucleus (different permittivity from
+  // cytoplasm) pulls it toward the north pole; cytoskeletal anchoring weakens at high DR.
+  // Manifests at IRE threshold (DR > 85%); proportional to excess above vibrating onset.
+  const nucMigration = isVibrating ? -(impact - 0.85) / 0.15 * 12 : 0
   anat.nucG.attr('transform',
-    `translate(${NUC_DX},${NUC_DY}) scale(${nucScaleX.toFixed(3)},${nucScaleY.toFixed(3)})`)
+    `translate(${NUC_DX},${(NUC_DY + nucMigration).toFixed(1)}) scale(${nucScaleX.toFixed(3)},${nucScaleY.toFixed(3)})`)
   // PANC1 has denser heterochromatin - brighter nucleus fill reflects condensed chromatin
   const nucFillOpacity = anat.presetId === 'panc1' ? 0.20 : 0.12
   anat.nucBlob.attr('d', nucLineGen(nucPts) || '')
@@ -668,15 +684,21 @@ function updateBacteriaAnatomy(anat: BacteriaAnatomy, p: BacteriaUpdateParams): 
   }
 
   // ── Nucleoid (diffuse chromosomal region) ─────────────────────────────
-  // E. coli nucleoid is elongated along the rod axis; MRSA is roughly circular
+  // E. coli nucleoid is elongated along the rod axis; MRSA is roughly circular.
+  // MRSA: nucleoid elongates in phase with septum pulse (chromosomal segregation precedes
+  // binary fission — Trueba & Woldringh 1980). The two nucleoid lobes form as division proceeds.
   const nucA = isRod ? 18 : 12  // semi-major (vertical for rod)
   const nucB = isRod ? 10 : 12  // semi-minor (horizontal)
   const nucNoise = isVibrating ? impact * 1.2 : 0
+  const septumPhase = !isRod ? (Math.sin(elapsed * 0.0006) + 1) / 2 : 0  // same period as septum
+  const divElongation = !isRod ? 1 + septumPhase * 0.55 : 1  // nucleoid stretches toward +55% at septum peak
   const nucPts: BlobPoint[] = anat.nucleoidPhases.map((ph) => {
-    const nucBaseR = isRod ? capsuleR(ph.baseAngle, nucA, nucB) : nucA
+    // Apply elongation along vertical axis (angle≈0 or π) while keeping horizontal axis constant
+    const elongR = isRod ? capsuleR(ph.baseAngle, nucA, nucB)
+      : capsuleR(ph.baseAngle, nucA * divElongation, nucB)
     const wave  = Math.sin(elapsed * 0.0004 * ph.speed + ph.phaseOffset) * 2
     const noise = (Math.random() - 0.5) * nucNoise
-    return { angle: ph.baseAngle, r: nucBaseR + wave + noise }
+    return { angle: ph.baseAngle, r: elongR + wave + noise }
   })
   anat.nucleoidBlob.attr('d', nucLineGen(nucPts) || '')
     .attr('fill', color).attr('fill-opacity', 0.11)
@@ -689,11 +711,18 @@ interface VirusUpdateParams {
   elapsed: number
   color:   string
   impact:  number
+  state:   CellState
 }
 
 function updateVirusAnatomy(anat: VirusAnatomy, p: VirusUpdateParams): void {
-  const { elapsed, color, impact } = p
+  const { elapsed, color, impact, state } = p
   const { isCov2, N_SPIKES, STALK_LEN, HEAD_R } = anat
+  // Spike approaching-state electric dipole alignment:
+  // HA (influenza) and S-protein (SARS-CoV-2) carry charged residues → net molecular dipole.
+  // Applied E-field (N-S axis) partially aligns dipoles: N/S-pole spikes become more prominent;
+  // equatorial spikes dim slightly. Observable only at sub-lytic DR (approaching state).
+  const isApproaching = state === CELL_STATE.APPROACHING
+  const dipoleStrength = (isApproaching && impact > 0.05) ? (impact - 0.05) / 0.45 : 0
 
   // ── Inner rings (matrix protein layer + nucleocapsid) ─────────────────
   const ringPulse = (Math.sin(elapsed * 0.0008) + 1) / 2
@@ -715,7 +744,11 @@ function updateVirusAnatomy(anat: VirusAnatomy, p: VirusUpdateParams): void {
     const angle     = baseAngle + sway
     const lenFactor = Math.max(0, 1 - impact * 0.70)  // spikes retract as capsid fails
     const curLen    = STALK_LEN * lenFactor
-    const spikeOp   = Math.max(0, 0.75 - impact * 0.65)
+    // Field-aligned poles (baseAngle ≈ 0 or π) have cos²=1; equatorial spikes have cos²=0.
+    // Pole spikes get +30% opacity boost during approaching; equatorial spikes dim −20%.
+    const poleAlign     = Math.cos(baseAngle) ** 2
+    const dipoleOpBoost = dipoleStrength * (poleAlign * 0.30 - (1 - poleAlign) * 0.20)
+    const spikeOp   = Math.max(0, 0.75 - impact * 0.65 + dipoleOpBoost)
     const x1 = BASE_R * Math.cos(angle), y1 = BASE_R * Math.sin(angle)
     const x2 = (BASE_R + curLen) * Math.cos(angle)
     const y2 = (BASE_R + curLen) * Math.sin(angle)
@@ -809,10 +842,13 @@ export function setupBlobAnimation(
     .attr('gradientUnits', 'userSpaceOnUse')
     .attr('x1', 0).attr('y1', -cy).attr('x2', 0).attr('y2', -northPoleR)
   rayNGrad.append('stop').attr('offset', '0%').attr('stop-color', accentColor).attr('stop-opacity', 0)
-  // Gradient bright stop uses fixed opacity=1 so we can control overall brightness
-  // via the rect element's own opacity attribute (more reliable than stop-opacity).
-  const rayNBrightStop = rayNGrad.append('stop').attr('offset', '100%')
+  // Peak brightness at 88% of gradient length (just before cell surface), then fades to 0.
+  // The zero-opacity tail extends into the cell interior — hidden by blobFill — so the
+  // ray tip never appears as an abrupt edge even when the blob membrane oscillates inward.
+  const rayNBrightStop = rayNGrad.append('stop').attr('offset', '88%')
     .attr('stop-color', accentColor).attr('stop-opacity', 1.0)
+  rayNGrad.append('stop').attr('offset', '100%')
+    .attr('stop-color', accentColor).attr('stop-opacity', 0)
 
   // ── South field ray gradient (electrode at canvas bottom → south pole) ─────
   // Symmetric counterpart to north; together they represent the AC dipole field.
@@ -821,8 +857,10 @@ export function setupBlobAnimation(
     .attr('gradientUnits', 'userSpaceOnUse')
     .attr('x1', 0).attr('y1', cy).attr('x2', 0).attr('y2', southPoleR)
   raySGrad.append('stop').attr('offset', '0%').attr('stop-color', accentColor).attr('stop-opacity', 0)
-  const raySBrightStop = raySGrad.append('stop').attr('offset', '100%')
+  const raySBrightStop = raySGrad.append('stop').attr('offset', '88%')
     .attr('stop-color', accentColor).attr('stop-opacity', 1.0)
+  raySGrad.append('stop').attr('offset', '100%')
+    .attr('stop-color', accentColor).attr('stop-opacity', 0)
 
   // ── Main cell group (everything relative to cell centre) ──────────────────
   const cellG = svg.append('g').attr('transform', `translate(${cx},${cy})`)
@@ -830,7 +868,12 @@ export function setupBlobAnimation(
   // ── Electric field ray from above (painted first → behind everything) ──────
   // Represents the applied electric field directed onto the cell from the electrode.
   // Color encodes frequency (cyan→violet, log-scaled). Opacity encodes field intensity.
-  const rayTopH = cy - northPoleR
+  // RAY_OVERLAP: rays extend this many px past the nominal cell surface into the cell interior.
+  // The gradient's zero-opacity tail covers the overlap region, so it is invisible but
+  // provides a buffer — blob membrane oscillations can no longer expose an abrupt ray tip.
+  // The rays paint before bodyG, so blobFill renders on top and hides any interior overlap.
+  const RAY_OVERLAP = Math.round(BASE_R * 0.55)
+  const rayTopH = cy - northPoleR + RAY_OVERLAP
   // Central beam + two fainter flanking rays; all share the same gradient.
   const rayNC = cellG.append('rect').attr('x', -3).attr('y', -cy).attr('width', 6).attr('height', rayTopH)
     .attr('fill', `url(#${rayNGradId})`).attr('filter', `url(#${rayGlowId})`)
@@ -840,12 +883,12 @@ export function setupBlobAnimation(
     .attr('fill', `url(#${rayNGradId})`)
 
   // ── South electrode beam (symmetric, painted after north to maintain z-order) ─
-  const raySTopH = cy - southPoleR
-  const raySC = cellG.append('rect').attr('x', -3).attr('y', southPoleR).attr('width', 6).attr('height', raySTopH)
+  const raySTopH = cy - southPoleR + RAY_OVERLAP
+  const raySC = cellG.append('rect').attr('x', -3).attr('y', southPoleR - RAY_OVERLAP).attr('width', 6).attr('height', raySTopH)
     .attr('fill', `url(#${raySGradId})`).attr('filter', `url(#${rayGlowId})`)
-  const raySL = cellG.append('rect').attr('x', -14).attr('y', southPoleR).attr('width', 3).attr('height', raySTopH)
+  const raySL = cellG.append('rect').attr('x', -14).attr('y', southPoleR - RAY_OVERLAP).attr('width', 3).attr('height', raySTopH)
     .attr('fill', `url(#${raySGradId})`)
-  const raySR = cellG.append('rect').attr('x', 11).attr('y', southPoleR).attr('width', 3).attr('height', raySTopH)
+  const raySR = cellG.append('rect').attr('x', 11).attr('y', southPoleR - RAY_OVERLAP).attr('width', 3).attr('height', raySTopH)
     .attr('fill', `url(#${raySGradId})`)
 
   // ── Aura rings ────────────────────────────────────────────────────────────
@@ -887,6 +930,34 @@ export function setupBlobAnimation(
   const southPore = bodyG.append('circle').attr('cy',  southPoleR * PORE_INSET).attr('r', 0).attr('fill', BG)
   const pore3 = bodyG.append('circle').attr('cx',  BASE_R * SIN60 * PORE_INSET).attr('cy', -BASE_R * COS60 * PORE_INSET).attr('r', 0).attr('fill', BG)
   const pore4 = bodyG.append('circle').attr('cx', -BASE_R * SIN60 * PORE_INSET).attr('cy',  BASE_R * COS60 * PORE_INSET).attr('r', 0).attr('fill', BG)
+
+  // ── Ion streaming particles (Rev-EP ion influx through transient pores) ──────
+  // Biological: Na+, Ca2+, and molecular cargo flow inward through electroporation pores.
+  // 3 particles per pole (±4px, 0, ±4px x-offset) drift from membrane to cell centre.
+  // Visible only in Rev-EP state (50–85% DR); opacity traces a bell-curve per particle.
+  const ION_OFFSETS = [-4, 0, 4]
+  const ionNorth = ION_OFFSETS.map((xOff) =>
+    bodyG.append('circle').attr('cx', xOff).attr('r', 1.6)
+      .attr('fill', accentColor).attr('fill-opacity', 0).attr('pointer-events', 'none')
+  )
+  const ionSouth = ION_OFFSETS.map((xOff) =>
+    bodyG.append('circle').attr('cx', xOff).attr('r', 1.6)
+      .attr('fill', accentColor).attr('fill-opacity', 0).attr('pointer-events', 'none')
+  )
+
+  // ── Membrane ion channel markers ──────────────────────────────────────────────
+  // 8 small dots at 45° intervals just inside the membrane (BASE_R − 5 px).
+  // PIEZO1 / TRPV4 mechanosensitive channels on healthy cells; overexpressed K+/Na+
+  // channels on cancer cells. Brightness increases with bioelectric activation level.
+  const CHAN_COUNT = 8
+  const channelDots = d3.range(CHAN_COUNT).map((i) => {
+    const a = (i / CHAN_COUNT) * Math.PI * 2
+    const r = BASE_R - 5
+    return bodyG.append('circle')
+      .attr('cx', r * Math.sin(a)).attr('cy', -r * Math.cos(a))
+      .attr('r', 2.2).attr('fill', accentColor).attr('fill-opacity', 0.06)
+      .attr('pointer-events', 'none')
+  })
 
   // ── Pseudo-3D depth cues ───────────────────────────────────────────────────
   // Equatorial ring: thin horizontal ellipse at the cell's equatorial plane,
@@ -966,7 +1037,7 @@ export function setupBlobAnimation(
 
   // ── D3 timer loop ──────────────────────────────────────────────────────────
   const timer = d3.timer((elapsed: number) => {
-    const { impact, state, color, temperature, fieldVcm, freqKHz, nuclearDisruptionRatio, depCmReal } = getFrame()
+    const { impact, state, color, temperature, fieldVcm, freqKHz, nuclearDisruptionRatio, depCmReal, waveform } = getFrame()
 
     // ── Field ray color + intensity (constant per tick, shared by all states) ─
     // freqKHz log-scale 10 kHz → 30 GHz: cyan (#00d4ff) → violet (#a78bfa)
@@ -978,9 +1049,13 @@ export function setupBlobAnimation(
     const fieldNorm = Math.max(0, Math.min(1, (Math.log10(Math.max(1, fieldVcm)) - 1) / 3))
     const rayOpacity = state === CELL_STATE.LYSED ? 0 : Math.max(0.04, 0.06 + fieldNorm * 0.66)
 
-    // AC modulation: slow visual pulse (~0.5 Hz) to represent field oscillation.
-    // Actual RF frequencies (kHz-GHz) are imperceptible; this is a representational cue.
-    const acPulse   = (Math.sin(elapsed * 0.006) + 1) / 2
+    // AC modulation: pulse waveform shows fast repeating flash (~10 Hz bursts, representational cue
+    // for discrete pulse delivery); CW shows slow 0.5 Hz sine (continuous wave oscillation).
+    // Neither matches actual RF frequency — both are representational. The distinction is the
+    // scientific content: the scientist can see at a glance whether CW or pulsed is active.
+    const acPulse = waveform === 'pulsed'
+      ? Math.max(0, Math.sin(elapsed * 0.10))   // fast repeating burst envelope (~10 Hz)
+      : (Math.sin(elapsed * 0.006) + 1) / 2     // slow sine for CW (~0.5 Hz)
     const modOpacity = rayOpacity * (0.50 + acPulse * 0.50)
 
     // Color via gradient stop-color; intensity via rect opacity (more reliably reactive)
@@ -1154,11 +1229,16 @@ export function setupBlobAnimation(
     // ── Normal: stable / nourishing / approaching / vibrating ──────────────
     const isVibrating  = state === CELL_STATE.VIBRATING
     const isNourishing = state === CELL_STATE.NOURISHING
+    const isRevEp      = state === CELL_STATE.REV_EP
 
     // Rigid-shell pathogens deform less per unit impact
     const rigidityFactor = cellCategory === CELL_CATEGORY.VIRUS ? 0.40 : cellCategory === CELL_CATEGORY.BACTERIA ? 0.60 : 1.0
     const jitter    = (isVibrating ? 4 + impact * 18 : isNourishing ? 5 : 6) * rigidityFactor
-    const radiusMod = isNourishing ? 1 + impact * 0.12 : 1
+    // Osmotic swelling at Rev-EP: transient pores allow ion influx → osmotic water influx → cell swells.
+    // Proportional to pore extent above 50% DR (Weaver & Chizmadzhev 1996).
+    const radiusMod = isNourishing ? 1 + impact * 0.12
+      : isRevEp      ? 1 + (impact - 0.50) * 0.14
+      : 1
     const speedMult = isVibrating ? 1 + impact * 5 : isNourishing ? 0.4 + impact * 0.4 : 0.8
 
     const blobPts: BlobPoint[] = blobPhases.map((ph, idx) => {
@@ -1196,14 +1276,14 @@ export function setupBlobAnimation(
     // ── Category-specific interior update ─────────────────────────────────
     if (mammalianAnatomy) {
       updateMammalianAnatomy(mammalianAnatomy, {
-        elapsed, color, thermalColor, impact, tNorm, isNourishing, isVibrating, nuclearDisruptionRatio,
+        elapsed, color, thermalColor, impact, tNorm, isNourishing, isVibrating, isRevEp, nuclearDisruptionRatio,
       })
     }
     if (bacteriaAnatomy) {
       updateBacteriaAnatomy(bacteriaAnatomy, { elapsed, color, impact, isVibrating })
     }
     if (virusAnatomy) {
-      updateVirusAnatomy(virusAnatomy, { elapsed, color, impact })
+      updateVirusAnatomy(virusAnatomy, { elapsed, color, impact, state })
     }
 
     // ── Transmembrane Vm pole glow ─────────────────────────────────────────
@@ -1222,7 +1302,6 @@ export function setupBlobAnimation(
     // ── Electroporation / capsid pores ─────────────────────────────────────
     // Rev-EP (50-85% DR): small amber cycling pores — reversible permeabilisation.
     // IRE (>85% DR): opaque BG-colour holes — irreversible membrane breach.
-    const isRevEp       = state === CELL_STATE.REV_EP
     const revEpCycle    = isRevEp ? (Math.sin(elapsed * 0.0022) + 1) / 2 : 0
     const revEpPoreR    = isRevEp ? 1.0 + revEpCycle * 2.4 : 0
     const primaryPore   = Math.min(PORE_MAX_R, Math.max(0, (impact - 0.70) / 0.30) * 4.5)
@@ -1235,6 +1314,40 @@ export function setupBlobAnimation(
       .attr('fill-opacity', poreIsHole ? 1 : 0.28 + revEpCycle * 0.32)
     pore3.attr('r', secondaryPore).attr('fill', BG).attr('fill-opacity', 1)
     pore4.attr('r', secondaryPore).attr('fill', BG).attr('fill-opacity', 1)
+
+    // ── Ion streaming (Rev-EP) ────────────────────────────────────────────────
+    // Ions drift inward from N and S pore positions toward cell centre.
+    // Bell-curve opacity so each particle fades in at the pore and fades out near nucleus.
+    const ION_SPEEDS:    [number, number, number] = [0.00032, 0.00044, 0.00037]
+    const ION_PHASES_N:  [number, number, number] = [0, 0.34, 0.67]
+    const ION_PHASES_S:  [number, number, number] = [0.50, 0.83, 0.17]
+    const nPorePos = -northPoleR * PORE_INSET
+    const sPorePos =  southPoleR * PORE_INSET
+    ionNorth.forEach((ion, i) => {
+      if (!isRevEp) { ion.attr('fill-opacity', 0); return }
+      const speed = ION_SPEEDS[i] ?? 0.00037, phase = ION_PHASES_N[i] ?? 0
+      const t = ((elapsed * speed + phase) % 1)
+      ion.attr('cy', nPorePos * (1 - t)).attr('fill-opacity', Math.sin(t * Math.PI) * 0.70)
+    })
+    ionSouth.forEach((ion, i) => {
+      if (!isRevEp) { ion.attr('fill-opacity', 0); return }
+      const speed = ION_SPEEDS[i] ?? 0.00037, phase = ION_PHASES_S[i] ?? 0.50
+      const t = ((elapsed * speed + phase) % 1)
+      ion.attr('cy', sPorePos * (1 - t)).attr('fill-opacity', Math.sin(t * Math.PI) * 0.70)
+    })
+
+    // ── Membrane channel dots (PIEZO1, TRP, K+/Na+ channels) ─────────────────
+    // Channel gating probability increases with bioelectric activation (nourishing → rev-ep).
+    // Stochastic gating: each channel cycles independently.
+    const chanBaseOp = isVibrating ? 0.44
+      : isRevEp      ? 0.36
+      : isNourishing ? 0.20
+      : state === CELL_STATE.APPROACHING ? 0.26
+      : 0.06
+    channelDots.forEach((dot, i) => {
+      const gate = (Math.sin(elapsed * 0.0022 + i * 1.571) + 1) / 2
+      dot.attr('fill-opacity', chanBaseOp * (0.40 + gate * 0.60))
+    })
 
     glowBlur.attr('stdDeviation',
       isNourishing ? (3 + impact * 10).toFixed(1)
@@ -1283,12 +1396,22 @@ export function setupOscilloscope(
     const amp      = isNourishing ? baseAmp * (1 + impact * 0.4) : baseAmp
     const speedMult = isVibrating ? 1 + impact * 5 : isLysing ? 8 : 1
 
-    const pts = d3.range(120).map((i: number) => ({
-      x: (i / 119) * W,
-      y: H / 2
-        + amp * Math.sin((i / 120) * Math.PI * 8 + elapsed * scrollSpeed * speedMult)
-        + (isLysing ? (Math.random() - 0.5) * H * 0.55 : 0),
-    }))
+    // Waveform clipping at Rev-EP and above: above electroporation threshold the membrane
+    // conductance spikes, clamping Vm — the linear Schwan model no longer applies and the
+    // waveform saturates. Clip level decreases from 1.0 (no clip, 50% DR) to 0.15 (heavy clip, 85% DR).
+    const clipLevel = impact > 0.50
+      ? Math.max(0.15, 1.0 - (impact - 0.50) * 2.0)
+      : 1.0
+    const pts = d3.range(120).map((i: number) => {
+      const sinVal = Math.sin((i / 120) * Math.PI * 8 + elapsed * scrollSpeed * speedMult)
+      const clipped = Math.max(-clipLevel, Math.min(clipLevel, sinVal))
+      return {
+        x: (i / 119) * W,
+        y: H / 2
+          + amp * clipped
+          + (isLysing ? (Math.random() - 0.5) * H * 0.55 : 0),
+      }
+    })
 
     path.attr('d', lineGen(pts) || '').attr('stroke', isLysing ? '#ff4d6d' : cellColor)
   })
