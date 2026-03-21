@@ -2,7 +2,7 @@
   "home": {
     "eyebrow": "Bioelectric Field Research · Electroporation · Resonance Modeling",
     "subtitle": "Virtual Biophysics Engine",
-    "taglineMain": "Set an RF frequency, watch the transmembrane voltage climb in real time, and find the precise window where a cancer cell reaches lysis threshold while the healthy cell beside it remains sub-threshold. Built on the Schwan equation, Pennes bioheat model, nsEP pulse-envelope physics, and the Clausius-Mossotti DEP force model, export publication-ready parameters before running a single in-vitro experiment.",
+    "taglineMain": "Find the exact frequency where a cancer cell lyses and the healthy cell beside it does not. Live transmembrane voltage, therapeutic index, DEP force, and SAR temperature, six peer-reviewed biophysical models in one workspace, with publication-ready protocol export before your first experiment.",
     "btnPrimary": "Open Experiment Lab",
     "btnGhost": "Read the Science",
     "capVm":          "Schwan Vm Model",
