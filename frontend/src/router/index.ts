@@ -21,7 +21,7 @@ export default createRouter({
     },
     {
       path: '/reports',
-      component: () => import('../views/ReportsView.vue'),
+      component: () => import('../views/ReportsView/index.vue'),
     },
     {
       path: '/protocol',
