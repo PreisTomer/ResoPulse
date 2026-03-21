@@ -3,16 +3,6 @@
   <div class="home">
     <div class="home__bg-grid" aria-hidden="true"></div>
 
-    <!-- Rotating electric field topology (conic gradient sectors) -->
-    <div class="home__bg-field" aria-hidden="true"></div>
-
-    <!-- Expanding RF pulse rings from centre -->
-    <div class="home__bg-rings" aria-hidden="true">
-      <div class="home__bg-ring"></div>
-      <div class="home__bg-ring"></div>
-      <div class="home__bg-ring"></div>
-      <div class="home__bg-ring"></div>
-    </div>
 
     <div class="home__inner">
 
@@ -345,86 +335,6 @@ export default defineComponent({
     pointer-events: none;
   }
 
-  /* Rotating electric-field topology — conic gradient sectors, very slow spin.
-     Represents the phasor rotation of the applied RF field.
-     Hidden on phones: decorative only, no layout impact. */
-  &__bg-field {
-    position: absolute;
-    // Oversized so the corners stay filled during rotation
-    inset: -30%;
-    width: 160%;
-    height: 160%;
-    background: conic-gradient(
-      from 0deg at 50% 80%,
-      transparent           0deg,
-      rgba(0, 212, 255, 0.045)  40deg,
-      transparent          90deg,
-      rgba(167, 139, 250, 0.03) 130deg,
-      transparent          180deg,
-      rgba(0, 212, 255, 0.045)  220deg,
-      transparent          270deg,
-      rgba(167, 139, 250, 0.03) 310deg,
-      transparent          360deg
-    );
-    mask-image: radial-gradient(ellipse 80% 60% at 50% 100%, black 0%, transparent 70%);
-    pointer-events: none;
-    z-index: 0;
-    display: none;
-
-    @media (min-width: 768px) {
-      display: block;
-      animation: bg-field-rotate 60s linear infinite;
-    }
-  }
-
-  @keyframes bg-field-rotate {
-    from { transform: rotate(0deg); }
-    to   { transform: rotate(360deg); }
-  }
-
-  /* Expanding RF pulse rings — origin at bottom-centre so they expand upward
-     into negative space below the content, never across the hero text.
-     Four rings staggered by 2.5 s each, cycling every 10 s.
-     Hidden on phones. */
-  &__bg-rings {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    overflow: hidden;
-    z-index: 0;
-  }
-
-  &__bg-ring {
-    position: absolute;
-    border-radius: 50%;
-    width: 220px;
-    height: 220px;
-    // Centre the ring origin at bottom-centre of the home section.
-    // bottom: -110px puts the ring's geometric centre on the bottom edge.
-    bottom: -110px;
-    left: calc(50% - 110px);
-    border: 1px solid rgba(0, 212, 255, 0.18);
-    display: none;
-
-    @media (min-width: 768px) {
-      display: block;
-      animation: bg-ring-expand 10s ease-out infinite;
-    }
-
-    &:nth-child(1) { animation-delay: 0s; }
-    &:nth-child(2) { animation-delay: 2.5s; }
-    &:nth-child(3) { animation-delay: 5s; }
-    &:nth-child(4) { animation-delay: 7.5s; }
-  }
-
-  @keyframes bg-ring-expand {
-    // Rings scale from 0.3 (66px radius) up to 5 (550px radius).
-    // At 550px from the bottom edge they cover most of the page height
-    // but are nearly invisible (opacity → 0) long before that.
-    0%   { transform: scale(0.3); opacity: 0.55; border-color: rgba(0, 212, 255, 0.2); }
-    40%  { opacity: 0.2;          border-color: rgba(167, 139, 250, 0.1); }
-    100% { transform: scale(5);   opacity: 0;    border-color: rgba(167, 139, 250, 0); }
-  }
 
   &__inner {
     position: relative;
