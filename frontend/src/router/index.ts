@@ -9,7 +9,7 @@ export default createRouter({
   routes: [
     {
       path: '/',
-      component: () => import('../views/HomeView.vue'),
+      component: () => import('../views/HomeView/index.vue'),
     },
     {
       path: '/experiment',

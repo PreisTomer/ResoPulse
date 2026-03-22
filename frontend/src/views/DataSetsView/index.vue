@@ -48,7 +48,7 @@ import { CELL_PRESETS, GROUP_COLORS, GROUP_LABELS, type CellGroup } from '@/cons
 import { MEDIA } from '@/constants/media'
 import { CELL_GROUP, NULL_DISPLAY } from '@/constants/strings'
 import { UNIT } from '@/constants/units'
-import { membraneCm, computeFc, computeTau, computeNuclearTau, computeDepCrossoverKHz } from '@/utils/physics'
+import { membraneCm, computeFc, computeTau, computeNuclearTau, computeDepCrossoverKHz, computeDepSecondCrossoverKHz } from '@/utils/physics'
 import PageHeader from '@/components/PageHeader.vue'
 import DatasetsCellTable from './DatasetsCellTable.vue'
 import DatasetsMediaTable from './DatasetsMediaTable.vue'
@@ -109,6 +109,13 @@ export default defineComponent({
               : `${fcross.toFixed(1)} ${UNIT.KHZ}`)
           : NULL_DISPLAY
 
+        const fcross2 = computeDepSecondCrossoverKHz(p, SIGMA_SALINE, EPS_R_SALINE)
+        const fcross2Display = fcross2 > 0
+          ? (fcross2 >= 1000
+              ? `${(fcross2 / 1000).toFixed(2)} ${UNIT.MHZ}`
+              : `${fcross2.toFixed(1)} ${UNIT.KHZ}`)
+          : NULL_DISPLAY
+
         const hasNuclear = !!pr.nuclearRadius
         const nucRDisplay = pr.nuclearRadius ? `${pr.nuclearRadius}` : NULL_DISPLAY
 
@@ -128,6 +135,7 @@ export default defineComponent({
           cmDisplay: cm.toFixed(2),
           fcDisplay,
           fcrossDisplay,
+          fcross2Display,
           resFreqDisplay,
           resQDisplay,
           resEthrDisplay,
@@ -149,6 +157,7 @@ export default defineComponent({
       { id: 'tissue', sigma: MEDIA.tissue.conductivity.toFixed(3), epsilonR: MEDIA.tissue.permittivity, alphaT: (MEDIA.tissue.tempCoeff * 100).toFixed(1), keyClass: '' },
       { id: 'water',  sigma: MEDIA.water.conductivity.toFixed(3),  epsilonR: MEDIA.water.permittivity,  alphaT: (MEDIA.water.tempCoeff  * 100).toFixed(1), keyClass: 'datasets__warn-val' },
       { id: 'dmem',   sigma: MEDIA.dmem.conductivity.toFixed(3),   epsilonR: MEDIA.dmem.permittivity,   alphaT: (MEDIA.dmem.tempCoeff   * 100).toFixed(1), keyClass: 'datasets__primary-val' },
+      { id: 'pbs',    sigma: MEDIA.pbs.conductivity.toFixed(3),    epsilonR: MEDIA.pbs.permittivity,    alphaT: (MEDIA.pbs.tempCoeff    * 100).toFixed(1), keyClass: 'datasets__primary-val' },
       { id: 'rpmi',   sigma: MEDIA.rpmi.conductivity.toFixed(3),   epsilonR: MEDIA.rpmi.permittivity,   alphaT: (MEDIA.rpmi.tempCoeff   * 100).toFixed(1), keyClass: '' },
       { id: 'mhb',    sigma: MEDIA.mhb.conductivity.toFixed(3),    epsilonR: MEDIA.mhb.permittivity,    alphaT: (MEDIA.mhb.tempCoeff    * 100).toFixed(1), keyClass: '' },
     ]
@@ -181,7 +190,7 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-@use '../../styles/mixins' as *;
+
 
 .datasets {
   flex: 1;

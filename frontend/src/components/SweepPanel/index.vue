@@ -288,7 +288,7 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-@use '../../styles/mixins' as *;
+
 
 .sweep-panel {
   @include surface-card(var(--radius-lg));

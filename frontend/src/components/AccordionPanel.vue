@@ -62,7 +62,7 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-@use '../styles/mixins' as *;
+
 
 .accordion-panel {
   /* ── Toggle button ──────────────────────────────────────────── */
@@ -74,7 +74,7 @@ export default defineComponent({
     padding: 0.75rem 1rem;
     cursor: pointer;
     gap: 0.5rem;
-    transition: background 0.15s;
+    transition: background var(--tr-fast);
 
     &:hover { background: rgba(255, 255, 255, 0.04); }
   }
@@ -102,7 +102,7 @@ export default defineComponent({
     font-family: var(--font-mono);
     letter-spacing: 0.04em;
     flex-shrink: 0;
-    transition: color 0.15s;
+    transition: color var(--tr-fast);
   }
 
   &__sub {
@@ -118,7 +118,7 @@ export default defineComponent({
     font-size: 1.1rem;
     color: var(--color-text-muted);
     flex-shrink: 0;
-    transition: transform 0.2s;
+    transition: transform var(--tr-normal);
     &--open { transform: rotate(90deg); }
   }
 

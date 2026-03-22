@@ -78,10 +78,14 @@
       <div class="protocol__eq-divider"></div>
       <div class="protocol__bullet" v-html="$t('protocol.physics.disruption.eqSub6')"></div>
       <div class="protocol__bullet" v-html="$t('protocol.physics.disruption.eqSub7')"></div>
+      <div class="protocol__eq-divider"></div>
+      <div class="protocol__bullet protocol__bullet--hfire" v-html="$t('protocol.physics.disruption.eqSub8')"></div>
       <div class="protocol__eq-note" v-html="$t('protocol.physics.disruption.eqNote')"></div>
     </div>
     <p class="protocol__body-text" v-html="$t('protocol.physics.disruption.p2')"></p>
     <p class="protocol__body-text" v-html="$t('protocol.physics.disruption.revEp')"></p>
+    <p class="protocol__body-text" v-html="$t('protocol.physics.disruption.hfireNote')"></p>
+    <p class="protocol__body-text" v-html="$t('protocol.physics.disruption.windowScoreNote')"></p>
 
     <!-- 2.5 Acoustic Resonance -->
     <h3 id="resonance" class="protocol__subsection-title" v-html="$t('protocol.physics.resonance.title')" v-tip="$t('protocol.physics.resonance.tip')"></h3>
@@ -117,7 +121,7 @@
     </table>
 
     <div class="protocol__info-box">
-      <span class="protocol__info-icon">ℹ</span>
+      <span class="protocol__info-icon">{{ ICON.INFO }}</span>
       <span v-html="$t('protocol.physics.resonance.infoBox')"></span>
     </div>
 
@@ -137,7 +141,7 @@
       <div class="protocol__eq-note" v-html="$t('protocol.physics.nsep.eqNote')"></div>
     </div>
     <div class="protocol__info-box">
-      <span class="protocol__info-icon">ℹ</span>
+      <span class="protocol__info-icon">{{ ICON.INFO }}</span>
       <span v-html="$t('protocol.physics.nsep.scope')"></span>
     </div>
 
@@ -243,6 +247,7 @@
 
     <!-- 2.10 Sub-threshold Biomodulation -->
     <h3 id="biomodulation" class="protocol__subsection-title" v-html="$t('protocol.physics.biomodulation.title')" v-tip="$t('protocol.physics.biomodulation.tip')"></h3>
+    <div class="protocol__warn-box" v-html="$t('protocol.physics.biomodulation.empiricalWarn')"></div>
     <p class="protocol__body-text" v-html="$t('protocol.physics.biomodulation.p1')"></p>
     <div class="protocol__eq-block">
       <div class="protocol__eq-main" v-html="$t('protocol.physics.biomodulation.eqMain')"></div>
@@ -304,9 +309,12 @@
 <script lang="ts">
 import { defineComponent, type PropType } from 'vue'
 import type { SchwanParamRow, ResonanceRow, DoubleshellRow, DepRow, UncertaintyRow, SonificationRow } from './types'
+import { ICON } from '@/constants/icons'
 
 export default defineComponent({
   name: 'ProtocolSectionPhysics',
+
+  setup() { return { ICON } },
 
   props: {
     schwanParams: {
@@ -338,7 +346,7 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-@use '../../styles/mixins' as *;
+
 @use './shared' as proto;
 
 @include proto.protocol-section();

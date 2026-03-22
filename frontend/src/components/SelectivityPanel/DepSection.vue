@@ -6,13 +6,17 @@
       <span class="dep-section__cell-lbl dep-section__cell-lbl--t">T</span>
       <span class="dep-section__badge" :class="targetBadgeClass">{{ targetLabel }}</span>
       <span class="dep-section__k" :class="targetKClass">{{ targetVal }}</span>
+      <span class="dep-section__dir dep-section__meta">{{ targetDirLabel }}</span>
       <span class="dep-section__meta">{{ $t('selectivity.depCrossLabel') }} {{ targetXover }}</span>
+      <span v-if="targetXover2" class="dep-section__meta dep-section__meta--xover2">/ {{ targetXover2 }}</span>
     </div>
     <div class="dep-section__row">
       <span class="dep-section__cell-lbl dep-section__cell-lbl--h">H</span>
       <span class="dep-section__badge" :class="healthyBadgeClass">{{ healthyLabel }}</span>
       <span class="dep-section__k" :class="healthyKClass">{{ healthyVal }}</span>
+      <span class="dep-section__dir dep-section__meta">{{ healthyDirLabel }}</span>
       <span class="dep-section__meta">{{ $t('selectivity.depCrossLabel') }} {{ healthyXover }}</span>
+      <span v-if="healthyXover2" class="dep-section__meta dep-section__meta--xover2">/ {{ healthyXover2 }}</span>
     </div>
     <div class="dep-section__scale">
       {{ $t('selectivity.depForceLabel') }}: ×{{ forceScaleLabel }}
@@ -53,6 +57,9 @@ export default defineComponent({
       return s >= 0.1 ? s.toFixed(2) : s.toExponential(1)
     },
 
+    targetDirLabel(): string  { return this.store.depTargetCmReal  >= 0 ? this.$t('selectivity.depPdepDir') : this.$t('selectivity.depNdepDir') },
+    healthyDirLabel(): string { return this.store.depHealthyCmReal >= 0 ? this.$t('selectivity.depPdepDir') : this.$t('selectivity.depNdepDir') },
+
     targetXover(): string  {
       const f = this.store.depTargetCrossoverKHz
       return f > 0 ? formatFreqKHz(f) : this.$t('selectivity.depCrossNone')
@@ -61,12 +68,21 @@ export default defineComponent({
       const f = this.store.depHealthyCrossoverKHz
       return f > 0 ? formatFreqKHz(f) : this.$t('selectivity.depCrossNone')
     },
+
+    targetXover2(): string {
+      const f = this.store.depTargetSecondCrossoverKHz
+      return f > 0 ? formatFreqKHz(f) : ''
+    },
+    healthyXover2(): string {
+      const f = this.store.depHealthySecondCrossoverKHz
+      return f > 0 ? formatFreqKHz(f) : ''
+    },
   },
 })
 </script>
 
 <style lang="scss" scoped>
-@use '../../styles/mixins' as *;
+
 
 .dep-section {
   @include info-panel(color-mix(in srgb, var(--color-dep) 4%, transparent), color-mix(in srgb, var(--color-dep) 15%, transparent));
@@ -116,14 +132,16 @@ export default defineComponent({
     font-size: var(--fs-xxs);
     font-family: var(--font-mono);
     color: var(--color-text-muted);
-    opacity: 0.7;
+    opacity: var(--op-dim);
+
+    &--xover2 { opacity: var(--op-muted); }
   }
 
   &__scale {
     font-size: var(--fs-xxs);
     font-family: var(--font-mono);
     color: var(--color-text-muted);
-    opacity: 0.65;
+    opacity: 0.65; // intentional between-tier value
     margin-top: 0.05rem;
     padding-top: 0.18rem;
     border-top: 1px solid color-mix(in srgb, var(--color-dep) 12%, transparent);

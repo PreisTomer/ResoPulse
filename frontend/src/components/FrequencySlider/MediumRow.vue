@@ -58,7 +58,7 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-@use '../../styles/mixins' as *;
+
 
 .field-panel {
   &__row {
@@ -75,7 +75,7 @@ export default defineComponent({
     font-family: var(--font-mono);
     color: var(--color-text-muted);
     white-space: nowrap;
-    opacity: 0.65;
+    opacity: 0.65; // intentional between-tier value
     text-align: right;
     justify-self: end;
   }
@@ -98,7 +98,7 @@ export default defineComponent({
     background-repeat: no-repeat;
     background-position: right 0.5rem center;
     padding-right: 1.6rem;
-    transition: border-color 0.15s;
+    transition: border-color var(--tr-fast);
 
     &:focus, &:hover { border-color: var(--color-primary); }
 

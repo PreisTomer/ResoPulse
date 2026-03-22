@@ -89,7 +89,7 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-@use '../styles/mixins' as *;
+
 
 .nav-bar {
   background-color: var(--color-surface);
@@ -157,7 +157,7 @@ export default defineComponent({
     border-radius: var(--radius);
     font-size: var(--fs-lg);
     color: var(--color-text-muted);
-    transition: color 0.15s, background-color 0.15s;
+    transition: color var(--tr-fast), background-color var(--tr-fast);
     text-decoration: none;
 
     &:hover { color: var(--color-text); background-color: var(--color-surface-2); }
@@ -202,7 +202,7 @@ export default defineComponent({
     border-radius: 4px;
     color: var(--color-text-muted);
     cursor: pointer;
-    transition: color 0.15s, border-color 0.15s, background 0.15s;
+    transition: color var(--tr-fast), border-color var(--tr-fast), background var(--tr-fast);
     white-space: nowrap;
 
     &:hover { color: var(--color-text); border-color: var(--color-text-muted); }
@@ -229,7 +229,7 @@ export default defineComponent({
     border-radius: var(--radius);
     cursor: pointer;
     flex-shrink: 0;
-    transition: border-color 0.15s;
+    transition: border-color var(--tr-fast);
 
     &:hover { border-color: var(--color-primary); }
 
@@ -239,7 +239,7 @@ export default defineComponent({
       height: 2px;
       background: var(--color-text-muted);
       border-radius: 2px;
-      transition: transform 0.22s ease, opacity 0.22s ease, background-color 0.15s;
+      transition: transform 0.22s ease, opacity 0.22s ease, background-color var(--tr-fast);
     }
 
     &--open {

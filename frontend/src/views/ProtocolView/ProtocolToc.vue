@@ -54,7 +54,7 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-@use '../../styles/mixins' as *;
+
 
 .protocol__toc {
   @include flex-col(0.05rem);
@@ -78,7 +78,7 @@ export default defineComponent({
     text-decoration: none;
     padding: 0.3rem 0.5rem;
     border-radius: 4px;
-    transition: color 0.15s, background-color 0.15s;
+    transition: color var(--tr-fast), background-color var(--tr-fast);
     line-height: 1.4;
 
     &:hover {

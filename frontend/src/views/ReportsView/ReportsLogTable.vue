@@ -78,7 +78,7 @@ import {
   tipCellSel as sharedTipCellSel,
   tipCellDepH as sharedTipCellDepH,
   tipCellDepT as sharedTipCellDepT,
-} from '@/utils/logTooltips'
+} from '@/tooltips/logTooltips'
 import { formatFreqKHz, formatFieldVcm } from '@/utils/format'
 import { LOG_EVENT, NULL_DISPLAY } from '@/constants/strings'
 import { THRESHOLDS } from '@/constants/physics'
@@ -199,7 +199,7 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-@use '../../styles/mixins' as *;
+
 
 .reports-log-table {
   &__table-wrap {
@@ -289,7 +289,7 @@ export default defineComponent({
     height: 11px;
     border-radius: 50%;
     border: 1.5px solid rgba(255, 255, 255, 0.2);
-    transition: all 0.15s;
+    transition: all var(--tr-fast);
     vertical-align: middle;
 
     &--on {
@@ -302,7 +302,7 @@ export default defineComponent({
   &__timestamp {
     font-size: var(--fs-sm);
     letter-spacing: 0.02em;
-    opacity: 0.8;
+    opacity: var(--op-partial);
   }
 
   &__session-val {

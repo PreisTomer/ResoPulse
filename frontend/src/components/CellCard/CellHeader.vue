@@ -66,8 +66,8 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-@use '../../styles/keyframes' as *;
-@use '../../styles/mixins' as *;
+
+
 
 .cell-card {
   &__header {
@@ -132,11 +132,11 @@ export default defineComponent({
     margin-top: 0.1rem;
   }
 
-  &__nuclear-label { opacity: 0.65; letter-spacing: 0.06em; }
+  &__nuclear-label { opacity: 0.65; letter-spacing: 0.06em; } // intentional between-tier value
   &__nuclear-value { font-weight: 600; }
 
   &__nuclear-ratio {
-    opacity: 0.8;
+    opacity: var(--op-partial);
 
     &--caution { color: var(--color-amber); }
     &--warn    { color: var(--color-danger); animation: state-blink 1s ease-in-out infinite; }

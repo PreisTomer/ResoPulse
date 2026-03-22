@@ -142,7 +142,7 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-@use '../../styles/mixins' as *;
+
 
 @keyframes bar-flash {
   from { opacity: 1; }
@@ -174,7 +174,7 @@ export default defineComponent({
   &__bar-fill {
     height: 100%;
     border-radius: 3px;
-    transition: width 0.3s ease;
+    transition: width var(--tr-slow);
 
     &--t    { background: var(--color-danger); }
     &--h    { background: var(--color-primary); }
@@ -194,11 +194,11 @@ export default defineComponent({
     font-size: var(--fs-xxs);
     font-family: var(--font-mono);
     color: var(--color-text-muted);
-    opacity: 0.7;
+    opacity: var(--op-dim);
     width: 2.6rem;
     text-align: right;
     flex-shrink: 0;
-    transition: color 0.3s, opacity 0.3s;
+    transition: color var(--tr-slow), opacity var(--tr-slow);
 
     &--high { color: var(--color-danger); opacity: 1; font-weight: 600; }
   }
@@ -235,7 +235,7 @@ export default defineComponent({
   &__nuc-bar-fill {
     height: 100%;
     border-radius: 2px;
-    transition: width 0.3s ease;
+    transition: width var(--tr-slow);
 
     &--t    { background: var(--color-purple); }
     &--h    { background: color-mix(in srgb, var(--color-primary) 70%, transparent); }

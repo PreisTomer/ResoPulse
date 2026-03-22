@@ -175,7 +175,7 @@ export default defineComponent({
   font-family: var(--font-mono);
   font-weight: 700;
   color: var(--color-text);
-  transition: color 0.3s;
+  transition: color var(--tr-slow);
 
   &--warn   { color: var(--color-amber); }
   &--danger { color: var(--color-danger); }
@@ -201,10 +201,10 @@ export default defineComponent({
 .hmap__info-btn {
   font-size: var(--fs-xs);
   color: var(--color-text-muted);
-  opacity: 0.55;
+  opacity: var(--op-muted);
   cursor: default;
   flex-shrink: 0;
-  transition: opacity 0.15s;
+  transition: opacity var(--tr-fast);
 
   &:hover { opacity: 1; }
 }
@@ -220,7 +220,7 @@ export default defineComponent({
   letter-spacing: 0.06em;
   padding: 0.18rem 0.55rem;
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
+  transition: background var(--tr-fast), border-color var(--tr-fast);
   white-space: nowrap;
 
   &:hover {

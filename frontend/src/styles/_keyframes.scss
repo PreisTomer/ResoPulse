@@ -1,9 +1,17 @@
 // Copyright © 2026 Tomer Preis. All rights reserved.
 // Unauthorized copying or distribution is prohibited.
 
-// Shared keyframe used by CellCard and FrequencySlider.
+// Shared keyframes used by CellCard and FrequencySlider.
 // Import with: @use '../../styles/keyframes' as *;
+// Global keyframes (non-scoped) are accessible from all scoped style blocks without importing.
+
 @keyframes state-blink {
   0%, 100% { opacity: 1; }
   50%       { opacity: 0.35; }
+}
+
+// Used by FieldRow and ProtocolSection slider thumbs in denaturing / danger states.
+@keyframes thumb-danger-pulse {
+  0%, 100% { box-shadow: 0 0 6px color-mix(in srgb, var(--color-danger) 60%, transparent); }
+  50%       { box-shadow: 0 0 16px var(--color-danger); }
 }

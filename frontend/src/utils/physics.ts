@@ -160,6 +160,38 @@ export function computeDepCrossoverKHz(
   return Math.sqrt(lo * hi)
 }
 
+/**
+ * Second DEP crossover frequency [kHz] - the next Re[K(f)] sign change above f_cross1.
+ * Searches from f_cross1 × 1.01 to 10 GHz using log-space binary search.
+ * Returns 0 if no first crossover exists or no second crossing found above it.
+ *
+ * Physically: a second crossover occurs when the membrane and cytoplasm permittivities
+ * dominate over conductivity (high-frequency dielectric relaxation).
+ * Ref: Pethig, Biomicrofluidics 4:022811 (2010), Fig. 3.
+ */
+export function computeDepSecondCrossoverKHz(
+  cell: CellConfig,
+  sigma_e: number,
+  epsilon_r_medium: number,
+): number {
+  const fFirst = computeDepCrossoverKHz(cell, sigma_e, epsilon_r_medium)
+  if (fFirst <= 0) return 0  // no first crossover, second is impossible
+  const fLo = fFirst * 1.01
+  const fHi = 10_000_000  // kHz: to 10 GHz
+  if (fLo >= fHi) return 0
+  const kLo = computeDepCmReal(cell, fLo, sigma_e, epsilon_r_medium)
+  const kHi = computeDepCmReal(cell, fHi, sigma_e, epsilon_r_medium)
+  if (kLo * kHi > 0) return 0  // same sign above first crossover, no second crossing
+  let lo = fLo, hi = fHi
+  for (let i = 0; i < 52; i++) {
+    const mid  = Math.sqrt(lo * hi)
+    const kMid = computeDepCmReal(cell, mid, sigma_e, epsilon_r_medium)
+    if (Math.abs(kMid) < 1e-12) return mid
+    if (kLo * kMid < 0) { hi = mid } else { lo = mid }
+  }
+  return Math.sqrt(lo * hi)
+}
+
 /** fc = 1/(2πτ)  [kHz] */
 export function computeFc(cell: CellConfig, sigma_e: number): number {
   return 1 / (TWO_PI * computeTau(cell, sigma_e) * 1e3)
@@ -242,6 +274,41 @@ export function computeResonantDisruption(
 ): number {
   if (thresholdVcm <= 0) return 0
   return (fieldVcm / thresholdVcm) * computeResonantLineshape(resonantFreqGHz, Q, freqHz)
+}
+
+// ── Population lysis fraction (log-normal size distribution) ─────────────────
+
+/**
+ * Population-average lysis fraction combining random orientation and log-normal cell size
+ * distribution. Each sub-population of size r has DR(r) = DR_nom × (r/R) and
+ * orientation-averaged P(lysis) = max(0, 1 − 1/DR(r)).
+ *
+ * Integration over 61 Gauss points in z-space (X = exp(σ_ln·z + μ_ln), z ~ N(0,1)).
+ * Degrades gracefully to P = max(0, 1 − 1/DR) when cv = 0.
+ *
+ * @param dr - disruption ratio at mean cell size (field-aligned)
+ * @param cv - coefficient of variation of cell radius (e.g. 0.25 = 25%)
+ * @returns fraction of population at or above lysis threshold [0-1]
+ *
+ * Ref: Tzur et al. (2009) Science 325:167; Altschuler & Wu (2010) Cell 141:559.
+ */
+export function computePopulationLysisFraction(dr: number, cv: number): number {
+  if (dr <= 0) return 0
+  if (cv <= 0) return Math.max(0, Math.min(1, 1 - 1 / dr))
+  const sigmaLn = Math.sqrt(Math.log(1 + cv * cv))
+  const muLn    = -0.5 * sigmaLn * sigmaLn  // ensures E[X] = 1 (mean-normalised)
+  const N       = 60
+  const zMin    = -4.5, zMax = 4.5
+  const dz      = (zMax - zMin) / N
+  let sum = 0
+  for (let i = 0; i <= N; i++) {
+    const z      = zMin + i * dz
+    const x      = Math.exp(sigmaLn * z + muLn)
+    const pLysis = Math.max(0, 1 - 1 / (dr * x))  // cosθ orientation model at this radius
+    const gauss  = Math.exp(-0.5 * z * z)
+    sum += pLysis * gauss * dz
+  }
+  return Math.max(0, Math.min(1, sum / Math.sqrt(TWO_PI)))
 }
 
 /** Sigmoid electroporation probability [0-100 %].

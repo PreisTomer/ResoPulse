@@ -4,7 +4,7 @@ export interface StatePacket {
   medium:              string
   dutyCycle:           number
   pulseWidthNs:        number
-  waveform:            'cw' | 'pulsed'
+  waveform:            'cw' | 'pulsed' | 'hfire'
   orientationDeg:      number
   lysisNPulses:        number
   chartMode:           'schwan' | 'resonance'

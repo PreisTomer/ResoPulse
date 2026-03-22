@@ -105,7 +105,7 @@ export default defineComponent({
     color: var(--color-text-muted);
     font-size: var(--fs-sm);
     cursor: pointer;
-    transition: border-color 0.15s, color 0.15s, background-color 0.15s;
+    transition: border-color var(--tr-fast), color var(--tr-fast), background-color var(--tr-fast);
 
     &:hover { border-color: var(--color-primary); color: var(--color-text); }
 

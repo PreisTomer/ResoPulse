@@ -38,7 +38,7 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-@use '../../styles/mixins' as *;
+
 @use './shared' as proto;
 
 @include proto.protocol-section();
@@ -82,8 +82,8 @@ export default defineComponent({
   font-size: var(--fs-xs);
   color: var(--color-primary);
   text-decoration: none;
-  opacity: 0.8;
-  transition: opacity 0.15s;
+  opacity: var(--op-partial);
+  transition: opacity var(--tr-fast);
 
   &:hover { opacity: 1; text-decoration: underline; }
 }

@@ -165,10 +165,10 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-@use '../../styles/mixins' as *;
+
 
 /* ── Vue Transition (name="params") ──────────────────────────────────── */
-.params-enter-active, .params-leave-active { transition: opacity 0.2s, transform 0.2s; }
+.params-enter-active, .params-leave-active { transition: opacity var(--tr-normal), transform var(--tr-normal); }
 .params-enter-from,  .params-leave-to      { opacity: 0; transform: translateY(-6px); }
 
 .cell-card {
@@ -182,7 +182,7 @@ export default defineComponent({
     border: 1px solid var(--color-border);
     border-radius: var(--radius);
     padding: 0.3rem 0.65rem;
-    transition: border-color 0.15s, background-color 0.15s, color 0.15s;
+    transition: border-color var(--tr-fast), background-color var(--tr-fast), color var(--tr-fast);
 
     &:hover {
       border-color: rgba(255, 255, 255, 0.2);
@@ -191,7 +191,7 @@ export default defineComponent({
     }
   }
 
-  &__params-toggle-arrow { font-size: var(--fs-xs); opacity: 0.75; }
+  &__params-toggle-arrow { font-size: var(--fs-xs); opacity: 0.75; } // intentional between-tier value
 
   &__params-panel {
     background-color: rgba(0, 0, 0, 0.3);
@@ -207,7 +207,7 @@ export default defineComponent({
     align-items: center;
     gap: 0.5rem;
 
-    &--derived { opacity: 0.8; pointer-events: none; }
+    &--derived { opacity: var(--op-partial); pointer-events: none; }
   }
 
   &__param-label {
@@ -224,7 +224,7 @@ export default defineComponent({
     border: 1px solid var(--color-border);
     border-radius: 4px;
     overflow: hidden;
-    transition: border-color 0.15s;
+    transition: border-color var(--tr-fast);
 
     &:focus-within { border-color: var(--color-primary); }
   }
@@ -284,7 +284,7 @@ export default defineComponent({
     font-size: var(--fs-xxs);
     font-family: var(--font-mono);
     color: var(--color-text-muted);
-    opacity: 0.6;
+    opacity: 0.6; // intentional below-tier value
     width: 2.5rem;
     text-align: left;
   }
@@ -300,7 +300,7 @@ export default defineComponent({
   &__params-derived-label {
     @include mono-upper(0.52rem, 0.12em);
     color: var(--color-text-muted);
-    opacity: 0.65;
+    opacity: 0.65; // intentional between-tier value
   }
 
   &__param-derived-value {
@@ -330,7 +330,7 @@ export default defineComponent({
     padding: 0.18rem 0.55rem;
     border-radius: 3px;
     cursor: pointer;
-    transition: border-color 0.15s, color 0.15s;
+    transition: border-color var(--tr-fast), color var(--tr-fast);
 
     &:hover { border-color: var(--color-primary); color: var(--color-primary); }
   }

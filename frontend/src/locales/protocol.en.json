@@ -43,7 +43,7 @@
       "eqMain": "V<sub>m</sub>(f) = (1.5 · E · R · cos θ) / √[1 + (ωτ)²]",
       "eqSub1": "ω = 2πf &nbsp;&nbsp; τ = R · C<sub>m</sub> · (2σ<sub>e</sub> + σ<sub>i</sub>) / (2σ<sub>e</sub> · σ<sub>i</sub>)",
       "eqSub2": "C<sub>m</sub> = ε<sub>r</sub> · ε₀ / d &nbsp;&nbsp; f<sub>c</sub> = 1 / (2πτ)",
-      "eqSub3": "cos θ = |cos(θ)|, field-to-cell-axis coupling factor; θ = 0° (field-aligned) → max V<sub>m</sub>; cancels in V<sub>m,T</sub>/V<sub>m,H</sub> selectivity ratio",
+      "eqSub3": "cos θ = &#124;cos(θ)&#124;, field-to-cell-axis coupling factor; θ = 0° (field-aligned) → max V<sub>m</sub>; θ = 60° default = &lt;&#124;cos θ&#124;&gt; = 0.5 for isotropic 3D suspension; cancels in V<sub>m,T</sub>/V<sub>m,H</sub> selectivity ratio",
       "eqNote": "Tadej Kotnik &amp; Damijan Miklavcic, Biophys. J. 79:670 (2000) [9]",
       "thSym": "Symbol",
       "thParam": "Parameter",
@@ -89,7 +89,7 @@
     },
     "disruption": {
       "title": "2.4 Disruption Criterion (IRE)",
-      "tip": "<strong>Disruption Ratio and IRE Criterion</strong>\nDR = Vm(f) × PEF / Vth  ·  PEF = 1−exp(−tp/τ) (RC charging factor)\n8-45%: Nourishing -- sub-threshold biomodulation active\n50-85%: Rev-EP -- reversible pores, drug/gene delivery regime\n>85%: LYSIS ARMED -- irreversible EP · lysis countdown starts\nFires after N×tp/dc (pulsed) or 2.5 s (CW)",
+      "tip": "<strong>Disruption Ratio and IRE Criterion</strong>\nDR = Vm(f) × PEF / Vth  ·  PEF = 1−exp(−tp/τ) (RC charging factor)\n8-45%: Nourishing -- sub-threshold biomodulation active\n50-85%: Rev-EP -- reversible pores, drug/gene delivery regime\n>85%: LYSIS ARMED -- irreversible EP · lysis countdown starts\nFires after N×tp/dc (pulsed) or 2.5 s (CW)\nH-FIRE: Vth,eff = Vth × 1.75 (bipolar burst, no muscle contraction)",
       "p1": "Membrane disruption (irreversible electroporation; Neumann et al. [7]; membrane deformation dynamics reviewed in Dimova et al. [6]) is initiated when the disruption ratio exceeds threshold for a sustained period. The <strong>pulse-envelope factor</strong> f<sub>pulse</sub> = 1 − exp(−t<sub>p</sub>/τ) captures the RC charging dynamics of the membrane during a rectangular pulse of width t<sub>p</sub> (Weaver &amp; Chizmadzhev [3]): at t<sub>p</sub> ≫ τ (standard IRE with µs pulses), f<sub>pulse</sub> ≈ 1 and the listed V<sub>m,threshold</sub> values apply directly. At t<sub>p</sub> ≪ τ (nsEP with 10 ns pulses), f<sub>pulse</sub> ≈ 0.07 for a hepatocyte, the effective threshold is ~14× higher, requiring proportionally greater field for disruption. CW mode sets f<sub>pulse</sub> = 1.",
       "p2": "Cancer cells exhibit lower V<sub>m,threshold</sub> (~0.65-0.85 V) than healthy tissue (~1.0-1.1 V), creating a therapeutic window where tumour cell disruption occurs at sub-lethal field intensities for normal cells. For adenocarcinoma vs. hepatocyte in saline, maximum V<sub>m</sub> selectivity ≈ R<sub>T</sub>/R<sub>H</sub> = <strong>1.5×</strong> occurs at quasi-DC (f ≪ f<sub>c</sub>(T)); the Therapeutic Index (accounting for different lysis thresholds) reaches <strong>~2.4×</strong> at quasi-DC. Selectivity <em>decreases</em> with increasing frequency as the larger target cell rolls off before the smaller healthy cell.",
       "revEp": "The <strong>Rev-EP window (50-85% disruption ratio)</strong> represents reversible electroporation: pores open transiently and re-seal after the field is removed, the drug/gene delivery regime (cells survive). Displayed as an amber REVERSIBLE EP strip on the target cell card. The Disruption Ratio Chart (↯) shows the frequency range over which this window applies for the current cell pair and field settings, with the rev-EP zone between the amber and red dashed threshold lines. Increasing field or duration beyond 85% transitions to the LYSIS ARMED state and starts the irreversible lysis countdown.",
@@ -101,7 +101,10 @@
       "eqSub5": "Lysis fires after protocol time: t<sub>lysis</sub> = N × t<sub>p</sub>/dc (pulsed) or 2.5 s (CW)",
       "eqSub6": "<strong>Structural Integrity Bar</strong> (below the LYSIS ARMED strip on the target cell card): drains 100 → 0 % in real time as the lysis countdown elapses, visual confirmation that DR threshold has been held for the full protocol duration",
       "eqSub7": "<strong>Disruption Ratio Chart</strong> (↯ accordion in Experiment Lab): shows DR(f) across 10 kHz-500 MHz for both cells simultaneously; green-shaded therapeutic window where DR<sub>T</sub> ≥ 85 % and DR<sub>H</sub> &lt; 50 %; dashed amber = 50 % rev-EP boundary, dashed red = 85 % lysis threshold",
-      "eqNote": "James C. Weaver &amp; Yuri A. Chizmadzhev, Bioelectrochem. Bioenerg. 41:135 (1996) [3]"
+      "eqSub8": "<strong>H-FIRE waveform:</strong> Bipolar burst pulses at carrier frequency &gt;1 kHz raise the effective lysis threshold by ×1.75 vs. monopolar IRE (Arena et al. [27]; Sano et al. [28]). Polarity reversals partially discharge the membrane capacitance between half-cycles, reducing net V<sub>m</sub> per burst. Model: DR<sub>H-FIRE</sub> = V<sub>m</sub> × f<sub>pulse</sub> / (V<sub>m,threshold</sub> × 1.75). Benefit: carrier frequency &gt;1 kHz is below the neuromuscular activation threshold, eliminating muscle contraction in vivo.",
+      "hfireNote": "<strong>H-FIRE (High-Frequency Irreversible Electroporation)</strong> delivers bipolar square-wave bursts at intra-burst carrier frequencies of 1-100 kHz. Each polarity reversal partially discharges the membrane capacitance, so the effective transmembrane voltage per burst is reduced relative to monopolar delivery at the same peak field. The practical consequence is a ×1.5-2× higher field requirement to reach the lysis threshold (×1.75 midpoint used in this model, referenced to Sano et al. [28]). The clinical motivation is that pulses at carrier frequencies &gt;1 kHz fall below the neuromuscular activation threshold (~500 Hz), eliminating painful muscle contractions without general anaesthesia in in vivo procedures (Arena et al. [27]). Select the <strong>H-FIRE</strong> waveform pill in the Protocol accordion of the Field Control panel; the Disruption Ratio, SAR, and lysis countdown automatically account for the elevated effective threshold.",
+      "windowScoreNote": "<strong>Population Window Score (WS)</strong>, shown in the Selectivity Panel, quantifies treatment selectivity at the whole-population level: WS = P(target lysis) × (1 − P(healthy lysis)), where P denotes the fraction of a Gaussian-radius cell population whose disruption ratio exceeds 85%. WS near 1.0 indicates near-complete target ablation with minimal healthy-cell collateral damage; WS near 0 indicates either the target is sub-threshold or healthy cells are co-ablated. Maximising WS is the primary optimisation objective for selective IRE protocols; use the Population Model panel (∑ accordion) to visualise the underlying radius distributions.",
+      "eqNote": "James C. Weaver &amp; Yuri A. Chizmadzhev, Bioelectrochem. Bioenerg. 41:135 (1996) [3] &nbsp;·&nbsp; H-FIRE threshold: Arena et al., Biomed. Eng. Online 10:102 (2011) [27]; Sano et al., Sci. Rep. 5:14999 (2015) [28]"
     },
     "resonance": {
       "title": "2.5 Acoustic / Mechanical Resonance, Virus &amp; Bacteria",
@@ -168,9 +171,9 @@
     },
     "dep": {
       "title": "2.8 Dielectrophoresis (DEP)",
-      "tip": "<strong>Dielectrophoresis -- Clausius-Mossotti Factor</strong>\nRe[K(f)] ∈ [-0.5, +0.5] -- determines DEP force direction.\nRe[K] > 0: pDEP, attracted to field maxima (electrode edges)\nRe[K] < 0: nDEP, repelled from field maxima\nF_DEP = 2π·εm·R³·Re[K]·∇|E|²  ·  Model invalid at GHz resonance frequencies.",
+      "tip": "<strong>Dielectrophoresis -- Clausius-Mossotti Factor</strong>\nRe[K(f)] ∈ [-0.5, +0.5] -- determines DEP force direction.\nRe[K] > 0: pDEP, attracted to field maxima (electrode edges)\nRe[K] < 0: nDEP, repelled from field maxima\nF_DEP = 2π·εm·R³·Re[K]·∇&#124;E&#124;²  ·  Model invalid at GHz resonance frequencies.",
       "p1": "Dielectrophoresis (DEP) is the translational motion of a polarisable particle placed in a spatially non-uniform electric field. Unlike electrophoresis (which requires a net charge), DEP arises from the <em>induced dipole</em> generated by the mismatch between particle and medium permittivity, and operates on all cells regardless of charge. The time-averaged DEP force on a spherical cell of radius R is:",
-      "eqForce": "⟨F<sub>DEP</sub>⟩ = 2π ε<sub>m</sub> R³ Re[K(ω)] ∇|E|²",
+      "eqForce": "⟨F<sub>DEP</sub>⟩ = 2π ε<sub>m</sub> R³ Re[K(ω)] ∇&#124;E&#124;²",
       "eqForceSub": "ε<sub>m</sub> = ε<sub>r,medium</sub> · ε₀, permittivity of the suspension medium",
       "p2": "The sign of the <strong>Clausius-Mossotti (CM) factor</strong> Re[K(ω)] ∈ [−0.5, +0.5] determines the force direction. Re[K] > 0: <em>positive DEP (pDEP)</em>, the cell is attracted to field maxima (electrode edges, channel constrictions). Re[K] < 0: <em>negative DEP (nDEP)</em>, the cell is repelled from field maxima. The <strong>crossover frequency</strong> f<sub>cross</sub> is where Re[K] = 0 and the polarity reverses.",
       "eqCm": "K(ω) = (ε*<sub>eff</sub>(ω) − ε*<sub>m</sub>(ω)) / (ε*<sub>eff</sub>(ω) + 2ε*<sub>m</sub>(ω))",
@@ -212,13 +215,14 @@
       ]
     },
     "biomodulation": {
-      "title": "2.10 Sub-threshold Biomodulation",
-      "tip": "<strong>Sub-threshold Biomodulation</strong>\nAutomatic state, no mode toggle. Active when healthy cell DR 8-45%.\nPathways: PIEZO1 Ca²⁺ influx + CaM-NOS nitric oxide (Pilla 2012; Lee 2018)\nBMS = 0.55·SI + 0.25·MTE + 0.20·MA  (not a clinical index)\nOptimal parameters: pulsed mode, dc ≈ 10⁻⁴, f &lt; fc, DR ≈ 20-40%.",
+      "title": "2.10 Sub-threshold Biomodulation (Empirical Index)",
+      "tip": "<strong>Sub-threshold Biomodulation (Empirical Index)</strong>\nAutomatic state, no mode toggle. Active when healthy cell DR 8-45%.\nPathways: PIEZO1 Ca²⁺ influx + CaM-NOS nitric oxide (Pilla 2012; Lee 2018)\nBMS = 0.55·SI + 0.25·MTE + 0.20·MA\nIMPORTANT: The BMS formula, weighting coefficients, and MTE definition are\nexploratory constructs with no peer-reviewed validation. Use for qualitative\nexploration only. Not a clinical or research-grade index.\nOptimal parameters: pulsed mode, dc ≈ 10⁻⁴, f &lt; fc, DR ≈ 20-40%.",
+      "empiricalWarn": "<strong>Empirical Index Warning:</strong> The Biomodulation Score (BMS) and its components (SI, MTE, MA) are simulator constructs with no peer-reviewed validation for the specific formula, weight coefficients, or MTE definition. The MTE term reuses the Schwan electrical roll-off as a proxy for mechanical coupling, which conflates two distinct physical mechanisms. The underlying Ca²⁺ and NO signalling pathways are experimentally established; the composite BMS scoring is not. Treat this section as a qualitative exploration tool, not a quantitative research output.",
       "p1": "At DR 8-50%, pulsed fields activate mechanosensitive and voltage-gated ion channels without causing lysis. The simulation labels this the <strong>Nourishing</strong> state: a simulator convention for the sub-lytic biomodulation window, not a clinical category. Two established in vitro pathways drive the response:",
-      "eqMain": "BMS = 0.55 · SI + 0.25 · MTE + 0.20 · MA",
+      "eqMain": "BMS = 0.55 · SI + 0.25 · MTE + 0.20 · MA  (empirical — coefficients not peer-reviewed)",
       "eqSub1": "SI = Stimulation Index (sub-threshold V<sub>m</sub> / nourishing threshold) &nbsp;·&nbsp; active at DR 20-40%",
-      "eqSub2": "MTE = Mechano-Transduction Efficiency &nbsp;·&nbsp; MA = Mild Thermal Activation (T 37-41°C window)",
-      "eqNote": "Pilla A.A., Biochem. Biophys. Res. Commun. 426:330 (2012) [18] &nbsp;·&nbsp; Pall M.L., J. Cell Mol. Med. 17:958 (2013) [19]",
+      "eqSub2": "MTE = Electrical coupling factor (Schwan roll-off proxy; not a validated mechanical transduction model) &nbsp;·&nbsp; MA = Mild Thermal Activation (T 37-41°C window)",
+      "eqNote": "Pilla A.A., Biochem. Biophys. Res. Commun. 426:330 (2012) [18] &nbsp;·&nbsp; Pall M.L., J. Cell Mol. Med. 17:958 (2013) [19] &nbsp;·&nbsp; BMS formula: simulator construct, not from cited works",
       "p2": "<strong>(1) PIEZO1 / voltage-gated Ca²⁺:</strong> Sub-threshold fields generate transient intracellular Ca²⁺ spikes at DR 20-40% via PIEZO1 mechanosensitive channels and VGCCs, without permanent permeabilisation. Ca²⁺ drives downstream gene expression and cytoskeletal remodelling (Pall [19]). <strong>(2) CaM-NOS nitric oxide:</strong> Ca²⁺ influx activates calmodulin-dependent NOS, modulating NO production with reported effects on vasodilation and inflammation resolution (Pilla [18]). In vitro evidence is well-established; translation to in vivo outcomes remains an active research area and is not modelled here. Recommended parameters: pulsed mode, dc ≈ 10⁻⁵-10⁻⁴, f &lt; f<sub>c</sub>, DR ≈ 20-40%."
     },
     "impedance": {
@@ -245,7 +249,7 @@
       "disclaimer": "<strong>Important:</strong> These sounds are NOT the RF treatment frequencies. The electroporation and resonance frequencies used in this platform are in the kHz-GHz range, far above the 20 Hz-20 kHz audible spectrum. The sonification maps data <em>values</em> to audible tones; it has no physical relationship to the applied field and does not affect the cells.",
       "mappingsTitle": "Parameter-to-Sound Mappings",
       "mappings": [
-        { "param": "Impedance drift |ΔZ|",       "mapping": "Pitch 220-1760 Hz (A3-A6)",  "note": "Higher drift = higher pitch; maps absolute drift % logarithmically" },
+        { "param": "Impedance drift ∣ΔZ∣",       "mapping": "Pitch 220-1760 Hz (A3-A6)",  "note": "Higher drift = higher pitch; maps absolute drift % logarithmically" },
         { "param": "Disruption ratio (DR)",       "mapping": "Gain 0-0.4",                "note": "Louder = higher DR; scales from 0% to 100% lysis" },
         { "param": "Rev-EP state (DR 50-85%)",   "mapping": "6 Hz tremolo (AM mod.)",    "note": "Amplitude modulation flags the reversible electroporation window" },
         { "param": "Lysis event (DR > 85%)",     "mapping": "880 Hz burst, 0.3 s",       "note": "Single A5 tone marks the lysis threshold crossing" },
@@ -271,7 +275,7 @@
       },
       "s03": {
         "title": "Configure advanced parameters",
-        "desc": "Open the <strong>Advanced</strong> accordion in the Field Control panel to set: <em>Cell Orientation θ</em> (field-to-cell-axis angle; scales V<sub>m</sub> but cancels in selectivity ratio); <em>Blood Perfusion ω<sub>b</sub></em> (0 for in vitro; 0.5-5 mL/(g·min) for tissue; adds Pennes cooling term); <em>Cell Packing φ</em> (0 for isolated cells; up to 0.74 for dense tissue; applies Maxwell-Garnett σ<sub>e</sub> correction). All values update τ, V<sub>m</sub>, SAR, and T<sub>ss</sub> in real time."
+        "desc": "Open the <strong>Advanced</strong> accordion in the Field Control panel to set: <em>Cell Orientation θ</em> (default 60°, the mean &#124;cos θ&#124; = 0.5 for an isotropic 3D suspension; set to 0° only for DEP-aligned cells; orientation scales V<sub>m</sub> equally for both cells so it cancels in the selectivity ratio); <em>Blood Perfusion ω<sub>b</sub></em> (0 for in vitro; 0.5-5 mL/(g·min) for tissue; adds Pennes cooling term); <em>Cell Packing φ</em> (0 for isolated cells; up to 0.74 for dense tissue; applies Maxwell-Garnett σ<sub>e</sub> correction). All values update τ, V<sub>m</sub>, SAR, and T<sub>ss</sub> in real time."
       },
       "s04": {
         "title": "Establish baseline at sub-threshold field",
@@ -287,7 +291,7 @@
       },
       "s07": {
         "title": "Record lysis event and review temperature",
-        "desc": "When DR &gt; 85%, the red <em>LYSIS ARMED</em> strip appears on the target cell card and the <strong>Structural Integrity Bar</strong> begins draining from 100 % → 0 % over the protocol time (t<sub>lysis</sub> = N × t<sub>p</sub>/dc for pulsed, or 2.5 s for CW). When it reaches 0 %, lysis fires and an entry is automatically added to the Experiment Log with event type <em>lysis</em>. Check the temperature readout on both cell cards. If temperature approaches 42 °C, consider reducing field intensity, increasing blood perfusion ω<sub>b</sub>, or switching to a lower-conductivity medium to reduce SAR. For nsEP targeting, reduce duty cycle, SAR<sub>eff</sub> = SAR<sub>peak</sub> × dc."
+        "desc": "When DR &gt; 85%, the red <em>LYSIS ARMED</em> strip appears on the target cell card and the <strong>Structural Integrity Bar</strong> begins draining from 100 % → 0 % over the protocol time (t<sub>lysis</sub> = N × t<sub>p</sub>/dc for pulsed, or 2.5 s for CW). When it reaches 0 %, lysis fires and an entry is automatically added to the Experiment Log with event type <em>lysis</em>. Check the temperature readout on both cell cards. If temperature approaches 42 °C, consider: (a) reducing field intensity, (b) increasing blood perfusion ω<sub>b</sub>, (c) switching to a lower-conductivity medium to reduce SAR, or (d) switching to the <strong>H-FIRE</strong> waveform (×1.75 threshold, requires proportionally higher field but allows lower duty cycle for same effect, reducing SAR<sub>eff</sub>). For nsEP targeting, reduce duty cycle, SAR<sub>eff</sub> = SAR<sub>peak</sub> × dc."
       },
       "s08": {
         "title": "Explore biomodulation window (optional)",
@@ -457,6 +461,16 @@
         "body": "Ronald Pethig. <em>Review article, dielectrophoresis: status of the theory, technology, and applications.</em> Biomicrofluidics. 2010;4(2):022811.",
         "doi": "10.1063/1.3456626",
         "note": "Comprehensive review of DEP theory and single-shell effective permittivity model; crossover frequency dependence on medium conductivity; basis for §2.8 parameter values"
+      },
+      {
+        "body": "Christopher B. Arena, Michael B. Sano, John H. Rossmeisl Jr, Jeffrey L. Caldwell, Paulo A. Garcia, Marissa N. Rylander, Rafael V. Davalos. <em>High-frequency irreversible electroporation (H-FIRE) for non-thermal ablation without muscle contraction.</em> Biomedical Engineering Online. 2011;10:102.",
+        "doi": "10.1186/1475-925X-10-102",
+        "note": "Foundational H-FIRE paper demonstrating that bipolar burst delivery at carrier frequencies &gt;1 kHz eliminates neuromuscular activation while achieving irreversible electroporation; establishes the effective threshold elevation (×1.5-2×) relative to monopolar IRE due to membrane capacitance redistribution between polarity reversals. Basis for the ×1.75 threshold multiplier used in the H-FIRE waveform mode (§2.4)."
+      },
+      {
+        "body": "Michael B. Sano, Christopher B. Arena, Kelly R. Bittleman, Matthew R. DeWitt, Hanna J. Cho, Deepak L. Bhatt, Rafael V. Davalos. <em>Bursts of bipolar microsecond pulses inhibit tumor growth.</em> Scientific Reports. 2015;5:14999.",
+        "doi": "10.1038/srep14999",
+        "note": "In vivo H-FIRE characterisation using bipolar burst protocols; quantifies tumour growth inhibition without muscle contraction in a small-animal model; corroborates the elevated effective lysis threshold of bipolar delivery and supports the ×1.75 midpoint value implemented in §2.4"
       }
     ]
   }

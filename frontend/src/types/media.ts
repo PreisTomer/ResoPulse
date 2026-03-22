@@ -9,4 +9,4 @@ export interface MediaEntry {
   tempCoeff: number
 }
 
-export type MediumKey = 'saline' | 'blood' | 'tissue' | 'water' | 'dmem' | 'rpmi' | 'mhb'
+export type MediumKey = 'saline' | 'blood' | 'tissue' | 'water' | 'dmem' | 'pbs' | 'rpmi' | 'mhb'

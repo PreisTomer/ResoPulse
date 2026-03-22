@@ -12,7 +12,7 @@
       <div class="ccm-resonance__field">
         <label class="ccm-resonance__label">
           {{ $t('userPresets.fieldResFreq') }}
-          <span class="ccm-resonance__unit">GHz</span>
+          <span class="ccm-resonance__unit">{{ UNIT.GHZ }}</span>
           <button class="ccm-resonance__tip-btn" @click="$emit('show-tip', 'resFreq')">?</button>
         </label>
         <input
@@ -49,7 +49,7 @@
       <div class="ccm-resonance__field">
         <label class="ccm-resonance__label">
           {{ $t('userPresets.fieldResThr') }}
-          <span class="ccm-resonance__unit">V/cm</span>
+          <span class="ccm-resonance__unit">{{ UNIT.V_PER_CM }}</span>
           <button class="ccm-resonance__tip-btn" @click="$emit('show-tip', 'resThr')">?</button>
         </label>
         <input
@@ -70,6 +70,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+import { UNIT } from '@/constants/units'
 
 export default defineComponent({
   name: 'CcmResonanceSection',
@@ -79,6 +80,8 @@ export default defineComponent({
   },
 
   emits: ['field-change', 'show-tip'],
+
+  setup() { return { UNIT } },
 
   methods: {
     onNumericInput(key: string, event: Event) {
@@ -90,7 +93,7 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-@use '../../styles/mixins' as *;
+
 
 .ccm-resonance {
   @include flex-col(0.6rem);
@@ -101,7 +104,7 @@ export default defineComponent({
 
   &__title {
     @include flex-col(0.2rem);
-    font-size:      0.73rem;
+    font-size:      var(--fs-sm);
     font-weight:    600;
     color:          var(--color-purple);
     text-transform: uppercase;
@@ -109,7 +112,7 @@ export default defineComponent({
   }
 
   &__sub {
-    font-size:      0.67rem;
+    font-size:      var(--fs-xs);
     font-weight:    400;
     color:          var(--color-text-muted);
     text-transform: none;
@@ -128,7 +131,7 @@ export default defineComponent({
 
   &__label {
     @include flex-row(0.35rem);
-    font-size:      0.73rem;
+    font-size:      var(--fs-sm);
     font-weight:    600;
     color:          var(--color-text-muted);
     text-transform: uppercase;
@@ -137,7 +140,7 @@ export default defineComponent({
 
   &__unit {
     font-weight:    400;
-    font-size:      0.68rem;
+    font-size:      var(--fs-xs);
     opacity:        0.75;
     text-transform: none;
   }
@@ -152,7 +155,7 @@ export default defineComponent({
     width:         100%;
     box-sizing:    border-box;
     outline:       none;
-    transition:    border-color 0.15s;
+    transition:    border-color var(--tr-fast);
 
     &:focus { border-color: var(--color-primary); }
 

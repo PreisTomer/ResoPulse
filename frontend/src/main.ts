@@ -7,9 +7,9 @@ import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 import './style.css'
 import './styles/_responsive.scss'
 import App from './App.vue'
-import { i18n } from './i18n'
+import { i18n } from './plugins/i18n'
 import router from './router'
-import { vTip } from './directives/tip'
+import { vTip } from './directives/vTooltip'
 import { useExperimentStore } from './stores/experimentStore'
 
 const pinia = createPinia()

@@ -92,7 +92,7 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-@use '../../styles/mixins' as *;
+
 
 .snap-bar {
   display: flex;
@@ -103,7 +103,7 @@ export default defineComponent({
   &__label {
     @include mono-upper();
     color: var(--color-text-muted);
-    opacity: 0.65;
+    opacity: 0.65; // intentional between-tier value
     white-space: nowrap;
     flex-shrink: 0;
   }

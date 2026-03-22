@@ -40,6 +40,14 @@ export const NEAR_ZERO_VM = 1e-12
 /** SAR waveform factor for pulsed bipolar square wave: E²_rms = E²_peak (H-FIRE convention) */
 export const WF_PULSED = 1.0
 
+/**
+ * Effective lysis-threshold multiplier for H-FIRE (bipolar) vs monopolar pulsed delivery.
+ * Bipolar charge cancellation per reversal raises the effective pore-nucleation threshold
+ * by 1.5-2.0× (midpoint 1.75 used here).
+ * Ref: Sano et al. (2018) Sci Rep; Dong et al. (2018) IEEE Trans Biomed Eng
+ */
+export const H_FIRE_THRESHOLD_MULTIPLIER = 1.75
+
 /** Mild thermal activation (MA) peak temperature [°C] - bell peak in the 37-42°C biomodulation window */
 export const THERMAL_MA_PEAK_C = 41
 
@@ -51,6 +59,18 @@ export const MIN_COS_THETA = 0.01
 
 /** Guard: minimum pulse envelope factor to prevent division artefacts (t_p → 0 limit) */
 export const MIN_PULSE_ENVELOPE = 1e-4
+
+/**
+ * Electroporation threshold temperature coefficient [1/°C].
+ * Vth decreases with temperature due to Arrhenius pore-nucleation kinetics:
+ * Vth_eff = Vth × max(TEMP_EP_CLAMP_MIN, 1 − TEMP_EP_COEFF × (T − 37))
+ * Empirical: ~−0.3%/°C above 37°C. Ref: Weaver & Chizmadzhev (1996);
+ * DeBruin & Krassowska (1999) — KATP channel activation model.
+ */
+export const TEMP_EP_COEFF = 0.003
+
+/** Lower clamp for Vth correction to prevent unphysical zero/negative threshold at high T. */
+export const TEMP_EP_CLAMP_MIN = 0.70
 
 /**
  * Upper frequency limit of the electrolytic (direct electrode contact) coupling regime [kHz].
@@ -141,6 +161,54 @@ export const THRESHOLDS = {
 } as const
 
 export type ThresholdKey = keyof typeof THRESHOLDS
+
+// ── Population size distribution (log-normal cell radius CV) ─────────────────
+
+/**
+ * Coefficient of variation (CV = σ_R / R_mean) for cell radius in a real suspension.
+ * Log-normal is the standard model for mammalian cell size distributions.
+ * Ref: Tzur et al. (2009) Science 325:167 - single-cell size tracking;
+ *      Altschuler & Wu (2010) Cell 141:559 - phenotypic variability review.
+ */
+/** Mammalian cell line radius CV (~20-30%; nominal 25%). */
+export const POP_CV_MAMMALIAN = 0.25
+/** Bacterial cell radius CV (~20-25%; nominal 22%). */
+export const POP_CV_BACTERIA  = 0.22
+/** Viral capsid radius CV (~5-10%; icosahedral uniformity; nominal 8%). */
+export const POP_CV_VIRUS     = 0.08
+
+// ── Reversible EP membrane resealing model ───────────────────────────────────
+
+/**
+ * Reference membrane resealing time [s] at T=37°C, DR=0.675 (mid rev-EP window), 1 pulse.
+ * From fast-resealing component (~80% of pores); slow component is O(minutes).
+ * Empirical: Rols & Teissie (1990) Biochim. Biophys. Acta 1025:123;
+ * Weaver & Chizmadzhev (1996) Bioelectrochemistry 41:135.
+ */
+export const RESEAL_TIME_REF_S = 5.0
+
+/** Reference DR for resealing time normalisation — midpoint of rev-EP window (50-85%). */
+export const RESEAL_DR_REF = 0.675
+
+/** Power-law exponent for DR scaling of resealing time — steeper near lysis threshold. */
+export const RESEAL_DR_EXPONENT = 2.5
+
+/**
+ * Temperature acceleration coefficient for resealing [1/°C].
+ * Arrhenius-like: τ_reseal × exp(−RESEAL_TEMP_COEFF × (T − 37)).
+ * Faster resealing at elevated T, consistent with increased membrane fluidity.
+ * Empirical: ~6%/°C above 37°C from Rols & Teissie (1990).
+ */
+export const RESEAL_TEMP_COEFF = 0.06
+
+/** Sublinear pulse-count scaling exponent for resealing time — cumulative pore burden. */
+export const RESEAL_PULSE_EXPONENT = 0.3
+
+/** Minimum clamp for resealing time display [s] — below this pores reseal transiently. */
+export const RESEAL_TIME_MIN_S = 0.5
+
+/** Maximum clamp for resealing time display [s] — above this pore damage is effectively permanent. */
+export const RESEAL_TIME_MAX_S = 60.0
 
 /** Default acoustic Q factor when a preset does not specify capsidQ.
  *  Set to 2 (maximally damped) - most conservative fallback for viscoelastic biological targets.

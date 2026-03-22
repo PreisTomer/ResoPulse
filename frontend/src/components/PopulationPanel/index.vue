@@ -289,7 +289,7 @@ export default defineComponent({
         return { pctLysed: 0, pctRevEp: 0, pctNour: 0, pctStable: 0, meanDr: 0, stdDr: 0, seLysed: 0, seRevEp: 0, seNour: 0 }
       }
       const n       = drs.length
-      const nLysed  = drs.filter(d => d >= 1.0).length
+      const nLysed  = drs.filter(d => d >= THRESHOLDS.DISRUPTION_WARN).length
       const nRevEp  = drs.filter(d => d >= THRESHOLDS.HEALTHY_APPROACHING && d < 1.0).length
       const nNour   = drs.filter(d => d >= THRESHOLDS.VIBRATING_MIN && d < THRESHOLDS.HEALTHY_APPROACHING).length
       const nStable = drs.filter(d => d < THRESHOLDS.VIBRATING_MIN).length
@@ -464,7 +464,7 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-@use '../../styles/mixins' as *;
+
 
 .pop-panel {
   @include surface-card(var(--radius-lg));

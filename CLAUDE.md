@@ -211,6 +211,36 @@ descriptions belong in `locales/en.json`. **Never write them inline.**
 
 ---
 
+## CSS — Write Once, Token Always
+
+Before writing any CSS property value or repeating any property group, apply this checklist in order:
+
+1. **Is there a CSS custom property for this value?** → Use `var(--token)`. Never write a raw hex, rgba, rem, opacity, or transition value when a token exists. See the full token tables in [CSS Design Tokens](#css-design-tokens--mandatory-usage).
+2. **Is there an SCSS mixin that generates this property group?** → Call `@include mixin()`. Never copy-paste the same 3+ property block when a mixin already covers it. See the full mixin table in [SCSS Mixin Library](#scss-mixin-library--use-before-writing-inline).
+3. **Is this color value a tint/opacity variant of a base color?** → Use `color-mix(in srgb, var(--color-X) Y%, transparent)`. Never write raw `rgba()`.
+4. **Is this a new repeated pattern that appears in 2+ places?** → Add a mixin to `src/styles/_mixins.scss` or a token to `src/style.css` before duplicating.
+
+```scss
+// ✗ wrong — raw values, repeated block, no tokens
+.my-label {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.55;
+  transition: color 0.15s;
+}
+
+// ✓ correct — mixin + tokens
+.my-label {
+  @include mono-upper(var(--fs-xxs));
+  opacity: var(--op-muted);
+  transition: color var(--tr-fast);
+}
+```
+
+---
+
 ## BEM + Nested SCSS
 
 Use BEM naming with SCSS nesting. Never write flat selectors.
@@ -232,11 +262,220 @@ Use BEM naming with SCSS nesting. Never write flat selectors.
 
 BEM nesting (`&__element`, `&--modifier`) works correctly inside `<style lang="scss" scoped>` — **as long as you are styling elements rendered by the same component**. SCSS's `&` cannot append a text suffix to `:deep(...)`, so never nest `&--modifier` or `&__element` inside a `:deep()` block.
 
+### Single BEM block per component
+
+Every component's style block must have **one root BEM block**. All elements and modifiers nest inside it using `&__element` / `&--modifier`. Never scatter sibling top-level selectors.
+
+```scss
+// ✗ wrong — flat siblings at top level
+.experiment__header { }
+.experiment__header-left { }
+.experiment__chip { }
+.experiment__chip-dot { }
+
+// ✓ correct — one root, full nesting
+.experiment {
+  &__header {
+    &-left { }
+    &-right { }
+  }
+  &__chip {
+    &-dot { &--warn { } }
+    &--connected { }
+  }
+}
+```
+
+When a component's root element has class `experiment__header`, the SCSS block root is `.experiment` — because `experiment` is the BEM block and `header` is the element. All child classes (`experiment__chip`, `experiment__cell-badge`, etc.) then nest as `&__chip`, `&__cell-badge`, etc.
+
+### Nest media queries inside the element they affect
+
+```scss
+// ✗ wrong — media queries as flat siblings at end of file
+.experiment__header { padding: 1rem; }
+@media (max-width: 768px) { .experiment__header { padding: 0.5rem; } }
+
+// ✓ correct — media query nested inside the element
+.experiment {
+  &__header {
+    padding: 1rem;
+    @media (max-width: 768px) { padding: 0.5rem; }
+  }
+}
+```
+
 - Vendor-prefixed properties must always be paired with the standard property:
   ```scss
   -moz-appearance: none;
   appearance: none;
   ```
+
+---
+
+## CSS Design Tokens — Mandatory Usage
+
+**Never write a raw CSS value when a design token exists.** The full token set lives in `src/style.css :root`. Use the correct token in every `<style>` block and `.scss` file.
+
+### Font sizes — `--fs-*`
+
+| Token | Value | Use for |
+|-------|-------|---------|
+| `var(--fs-xxs)` | 0.65rem | Section titles, formula annotations, badge labels |
+| `var(--fs-xs)` | 0.70rem | Secondary mono data, stat sub-labels |
+| `var(--fs-sm)` | 0.75rem | Primary mono labels, key data values |
+| `var(--fs-md)` | 0.82rem | Readable data / body labels |
+| `var(--fs-lg)` | 0.875rem | Standard body text |
+| `var(--fs-xl)` | 0.90rem | Significant labels, readout sub-text |
+
+```scss
+// ✗ wrong
+font-size: 0.65rem;
+font-size: 0.70rem;
+
+// ✓ correct
+font-size: var(--fs-xxs);
+font-size: var(--fs-xs);
+```
+
+Values that do not map to the scale (e.g. `0.6rem` for a deliberate micro-size below the scale) are acceptable exceptions — comment why.
+
+### Opacity — `--op-*`
+
+| Token | Value | Use for |
+|-------|-------|---------|
+| `var(--op-ghost)` | 0.35 | Near-invisible decorations, disabled states |
+| `var(--op-muted)` | 0.55 | Secondary text overlays, placeholder hints |
+| `var(--op-dim)` | 0.70 | Tertiary badges, background labels |
+| `var(--op-partial)` | 0.80 | Inactive elements, faded highlights |
+| `var(--op-strong)` | 0.90 | Near-opaque elements, strong overlays |
+
+```scss
+// ✗ wrong
+opacity: 0.35;
+opacity: 0.55;
+opacity: 0.80;
+
+// ✓ correct
+opacity: var(--op-ghost);
+opacity: var(--op-muted);
+opacity: var(--op-partial);
+```
+
+**Exception:** Raw numeric opacity values are required inside `@keyframes` animation blocks — CSS variables are not interpolated there.
+
+### Transitions — `--tr-*`
+
+| Token | Value | Use for |
+|-------|-------|---------|
+| `var(--tr-fast)` | 0.15s ease | Micro-interactions: thumb glow, icon swap |
+| `var(--tr-normal)` | 0.20s ease | Hover states, badge colour shifts |
+| `var(--tr-slow)` | 0.30s ease | Panel open/close, accordion expand |
+
+```scss
+// ✗ wrong
+transition: color 0.15s, border-color 0.15s, background 0.15s;
+transition: transform 0.2s ease;
+
+// ✓ correct
+transition: color var(--tr-fast), border-color var(--tr-fast), background var(--tr-fast);
+transition: transform var(--tr-normal);
+```
+
+Multi-property transitions: replace each duration separately, do **not** collapse into a single `var(--tr-fast)` unless using `transition: all`.
+
+Off-scale durations (`0.1s`, `0.18s`, `0.7s`, `1s`, entrance animations) are acceptable — leave them as raw values.
+
+### Border radius — `--radius` / `--radius-lg`
+
+```scss
+// ✗ wrong
+border-radius: 8px;
+border-radius: 12px;
+
+// ✓ correct
+border-radius: var(--radius);     // 8px
+border-radius: var(--radius-lg);  // 12px
+```
+
+Fine-detail radii (`2px`, `3px`, `4px`, `5px`, `6px`, `10px`) and partial-corner values (`8px 0 0 8px`) stay as raw values.
+
+### Colors — `--color-*`
+
+All color values must use CSS custom properties. Never write raw hex or `rgba()` in style blocks.
+
+```scss
+// ✗ wrong
+color: #fbbf24;
+background: rgba(0, 212, 255, 0.08);
+
+// ✓ correct
+color: var(--color-amber);
+background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+```
+
+For opacity tints, use `color-mix(in srgb, var(--color-X) Y%, transparent)` — not raw rgba. Named semantic tint tokens (`--color-primary-surface`, `--color-danger-border`, etc.) are also available and preferred when the percentage matches.
+
+D3/canvas contexts that cannot evaluate CSS variables must use the named constants from `src/theme/colors.ts` (`C.amber`, `C.primary`, etc.).
+
+---
+
+## SCSS Mixin Library — Use Before Writing Inline
+
+Before writing any repeated CSS pattern, check if a mixin already exists in `src/styles/_mixins.scss`. **Always prefer a mixin call over repeating the same property group.**
+
+| Mixin | Signature | What it generates |
+|-------|-----------|-------------------|
+| `flex-row` | `($gap: 0.5rem)` | `display:flex; align-items:center; gap:$gap` |
+| `flex-col` | `($gap: 0.5rem)` | `display:flex; flex-direction:column; gap:$gap` |
+| `flex-between` | `($gap: 0)` | flex + space-between + optional gap |
+| `inline-flex-center` | `()` | `display:inline-flex; align-items:center; justify-content:center` |
+| `surface-card` | `($radius, $padding)` | bg + border + radius base for panels |
+| `mono-upper` | `($size, $spacing)` | `font-mono + uppercase + letter-spacing` |
+| `badge-pill` | `($padding, $radius)` | mono-caps inline label with border and rounded corners |
+| `table-header-cell` | `($overlay)` | mono-caps + muted color + overlay bg for `<th>` |
+| `status-strip` | `($color, $bg, $border, $anim, $dur)` | coloured alert strip inside cell cards |
+| `section-title` | `()` | tiny mono-caps label for named data sections |
+| `accordion-header` | `()` | shared collapse-toggle button |
+| `row-label` | `()` | mono uppercase label for slider rows |
+| `slider-track` | `()` | `<input type="range">` appearance reset |
+| `slider-thumb` | `($bg, $shadow)` | webkit + moz thumb styling |
+| `readout-step-btn` | `()` | +/- increment buttons beneath readout |
+| `readout-inline-input` | `()` | click-to-edit number input overlay |
+| `info-panel` | `($bg, $border-color)` | tinted bordered section panel |
+| `cell-state-classes` | `()` | generates `&__state--<name>` rules from state map |
+| `data-value-classes` | `($mono-size, $muted-opacity)` | mono/muted/cancer/warn value classes for data tables |
+
+```scss
+// ✗ wrong — writing the 3-property cluster manually
+font-family: var(--font-mono);
+font-size: var(--fs-xxs);
+text-transform: uppercase;
+letter-spacing: 0.08em;
+display: inline-flex;
+padding: 0.15rem 0.5rem;
+border-radius: 3px;
+border: 1px solid;
+
+// ✓ correct — use the mixin
+@include badge-pill();
+```
+
+### Keyframes — centralised in `src/styles/_keyframes.scss`
+
+All shared keyframe animations live in `_keyframes.scss`. **Never duplicate a keyframe in a component's `<style>` block if it is already defined globally.**
+
+Global keyframes are accessible from all scoped style blocks without any import — do NOT redefine them locally.
+
+```scss
+// ✗ wrong — duplicated in ProtocolSection.vue AND FieldRow.vue
+@keyframes state-blink { ... }
+
+// ✓ correct — defined once in _keyframes.scss, used everywhere
+// (no import needed in scoped blocks)
+animation: state-blink 1.6s ease-in-out infinite;
+```
+
+When adding a new keyframe used by more than one component, add it to `_keyframes.scss`, not to the component file.
 
 ---
 

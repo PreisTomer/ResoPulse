@@ -77,6 +77,24 @@
     <span class="field-panel__regime-dot"></span>
     {{ $t(`slider.regime.${store.freqRegime}`) }}
   </div>
+
+  <!-- Electrode polarization warning (< 50 kHz, IRE mode only) -->
+  <div
+    v-if="store.isElectrodePolarizationRisk"
+    class="field-panel__ep-warn"
+    v-tip="$t('slider.electrodePolarizationTip')"
+  >
+    {{ $t('slider.electrodePolarizationWarn') }}
+  </div>
+
+  <!-- GHz + high-field hardware inaccessibility warning -->
+  <div
+    v-if="store.isGhzHighFieldWarning"
+    class="field-panel__ep-warn field-panel__ep-warn--danger"
+    v-tip="$t('slider.ghzHighFieldTip')"
+  >
+    {{ $t('slider.ghzHighFieldWarn') }}
+  </div>
 </template>
 
 <script lang="ts">
@@ -319,7 +337,7 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-@use '../../styles/mixins' as *;
+
 
 .field-panel {
   &__optimal-row {
@@ -405,10 +423,10 @@ export default defineComponent({
     pointer-events: none;
     z-index: 1;
 
-    &--danger  { background: var(--color-danger);  opacity: 0.55; }
-    &--primary { background: var(--color-primary); opacity: 0.55; }
-    &--optimal { background: var(--color-purple);  opacity: 0.60; }
-    &--purple  { background: var(--color-purple);  opacity: 0.60; }
+    &--danger  { background: var(--color-danger);  opacity: var(--op-muted); }
+    &--primary { background: var(--color-primary); opacity: var(--op-muted); }
+    &--optimal { background: var(--color-purple);  opacity: 0.60; } // intentional between-tier value
+    &--purple  { background: var(--color-purple);  opacity: 0.60; } // intentional between-tier value
   }
 
   &__slider {
@@ -446,7 +464,7 @@ export default defineComponent({
       font-family: var(--font-mono);
       color: var(--color-text-muted);
       white-space: nowrap;
-      opacity: 0.82;
+      opacity: 0.82; // intentional between-tier value
     }
 
     &-edit {
@@ -478,7 +496,7 @@ export default defineComponent({
       font-size: var(--fs-xxs);
       font-family: var(--font-mono);
       color: var(--color-text-muted);
-      opacity: 0.55;
+      opacity: var(--op-muted);
     }
 
     &-step { @include readout-step-btn(); }
@@ -516,5 +534,25 @@ export default defineComponent({
   &__regime--electrolytic &__regime-dot { background: var(--color-primary); }
   &__regime--nearfield_rf &__regime-dot { background: var(--color-amber-warm); }
   &__regime--microwave    &__regime-dot { background: var(--color-danger); }
+
+  &__ep-warn {
+    font-size: var(--fs-xxs);
+    font-family: var(--font-mono);
+    color: var(--color-amber-warm);
+    background: color-mix(in srgb, var(--color-amber) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-amber) 35%, transparent);
+    border-radius: var(--radius);
+    padding: 0.3rem 0.65rem;
+    line-height: 1.4;
+    cursor: default;
+
+    &--danger {
+      color: var(--color-danger);
+      background: color-mix(in srgb, var(--color-danger) 8%, transparent);
+      border-color: color-mix(in srgb, var(--color-danger) 35%, transparent);
+    }
+
+    @media (max-width: 768px) { display: none; }
+  }
 }
 </style>

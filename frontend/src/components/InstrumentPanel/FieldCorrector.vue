@@ -37,7 +37,7 @@
       </div>
 
       <!-- Arrow -->
-      <div class="field-corrector__arrow" aria-hidden="true">↓</div>
+      <div class="field-corrector__arrow" aria-hidden="true">{{ ICON.ARROW_D }}</div>
 
       <!-- Corrected -->
       <div
@@ -59,7 +59,7 @@
         class="field-corrector__factor-value"
         :class="{ 'field-corrector__factor-value--warn': correctionPct > 5 }"
       >
-        ×{{ factorDisplay }}
+        {{ ICON.TIMES }}{{ factorDisplay }}
       </span>
     </div>
 
@@ -195,7 +195,7 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-@use '../../styles/mixins' as *;
+
 
 .field-corrector {
   display: flex;
@@ -379,7 +379,7 @@ export default defineComponent({
 
   &__source-label {
     @include mono-upper(0.6rem, 0.06em);
-    opacity: 0.7;
+    opacity: var(--op-dim);
     color: var(--color-text-muted);
   }
 

@@ -144,7 +144,7 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-@use '../../styles/mixins' as *;
+
 
 .mode-badge {
   @include flex-col(0.35rem);
@@ -156,7 +156,7 @@ export default defineComponent({
     border-radius: 3px;
     border: 1px solid transparent;
     align-self: flex-start;
-    transition: color 0.3s, border-color 0.3s;
+    transition: color var(--tr-slow), border-color var(--tr-slow);
 
     &--therapeutic { color: var(--color-lime);    border-color: color-mix(in srgb, var(--color-lime)   33%, transparent); }
     &--ablative    { color: var(--color-danger);  border-color: color-mix(in srgb, var(--color-danger) 33%, transparent); }
@@ -178,7 +178,7 @@ export default defineComponent({
     color: var(--color-amber);
     cursor: pointer;
     line-height: 1.5;
-    transition: background 0.15s, border-color 0.15s;
+    transition: background var(--tr-fast), border-color var(--tr-fast);
 
     &:hover {
       background: color-mix(in srgb, var(--color-amber) 14%, transparent);
@@ -222,7 +222,7 @@ export default defineComponent({
     letter-spacing: 0.08em;
     padding: 0.2rem 0.55rem;
     cursor: pointer;
-    transition: background 0.15s, border-color 0.15s;
+    transition: background var(--tr-fast), border-color var(--tr-fast);
 
     &:hover {
       background: color-mix(in srgb, var(--color-amber) 22%, transparent);

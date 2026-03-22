@@ -13,6 +13,7 @@ const MEDIUM = {
 const WAVEFORM = {
   CW:     'cw',
   PULSED: 'pulsed',
+  H_FIRE: 'hfire',
 } as const
 
 const CHART_MODE = {
@@ -99,7 +100,7 @@ function validateStatePacket(raw: Record<string, unknown>): StatePacket | null {
     medium:              med,
     dutyCycle:           dc,
     pulseWidthNs:        Math.round(pw),
-    waveform:            waveform as 'cw' | 'pulsed',
+    waveform:            waveform as 'cw' | 'pulsed' | 'hfire',
     orientationDeg:      Math.round(ori),
     lysisNPulses:        Math.round(np),
     chartMode:           mode as 'schwan' | 'resonance',

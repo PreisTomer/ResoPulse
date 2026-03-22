@@ -81,7 +81,7 @@ main {
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--color-text-muted);
-    opacity: 0.55;
+    opacity: var(--op-muted);
   }
 
   &__link {
@@ -91,8 +91,8 @@ main {
     text-transform: uppercase;
     color: var(--color-primary);
     text-decoration: none;
-    opacity: 0.7;
-    transition: opacity 0.15s;
+    opacity: var(--op-dim);
+    transition: opacity var(--tr-fast);
 
     &:hover { opacity: 1; }
   }

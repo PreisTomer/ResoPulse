@@ -6,7 +6,7 @@
     <div class="ccm-params-grid__field">
       <label class="ccm-params-grid__label">
         {{ $t('userPresets.fieldRadius') }}
-        <span class="ccm-params-grid__unit">µm</span>
+        <span class="ccm-params-grid__unit">{{ UNIT.UM }}</span>
         <button class="ccm-params-grid__tip-btn" @click="$emit('show-tip', 'radius')">?</button>
       </label>
       <input
@@ -25,7 +25,7 @@
     <div class="ccm-params-grid__field">
       <label class="ccm-params-grid__label">
         {{ $t('userPresets.fieldMemThick') }}
-        <span class="ccm-params-grid__unit">nm</span>
+        <span class="ccm-params-grid__unit">{{ UNIT.NM }}</span>
         <button class="ccm-params-grid__tip-btn" @click="$emit('show-tip', 'memThick')">?</button>
       </label>
       <input
@@ -62,7 +62,7 @@
     <div class="ccm-params-grid__field">
       <label class="ccm-params-grid__label">
         {{ $t('userPresets.fieldSigmaI') }}
-        <span class="ccm-params-grid__unit">S/m</span>
+        <span class="ccm-params-grid__unit">{{ UNIT.S_PER_M }}</span>
         <button class="ccm-params-grid__tip-btn" @click="$emit('show-tip', 'sigmaI')">?</button>
       </label>
       <input
@@ -81,7 +81,7 @@
     <div class="ccm-params-grid__field">
       <label class="ccm-params-grid__label">
         {{ $t('userPresets.fieldVmThr') }}
-        <span class="ccm-params-grid__unit">V</span>
+        <span class="ccm-params-grid__unit">{{ UNIT.V }}</span>
         <button class="ccm-params-grid__tip-btn" @click="$emit('show-tip', 'vmThr')">?</button>
       </label>
       <input
@@ -100,7 +100,7 @@
     <div class="ccm-params-grid__field">
       <label class="ccm-params-grid__label">
         {{ $t('userPresets.fieldDensity') }}
-        <span class="ccm-params-grid__unit">kg/m³</span>
+        <span class="ccm-params-grid__unit">{{ UNIT.KG_PER_M3 }}</span>
         <button class="ccm-params-grid__tip-btn" @click="$emit('show-tip', 'density')">?</button>
       </label>
       <input
@@ -119,7 +119,7 @@
     <div class="ccm-params-grid__field">
       <label class="ccm-params-grid__label">
         {{ $t('userPresets.fieldCp') }}
-        <span class="ccm-params-grid__unit">J/(kg·K)</span>
+        <span class="ccm-params-grid__unit">{{ UNIT.J_PER_KG_K }}</span>
         <button class="ccm-params-grid__tip-btn" @click="$emit('show-tip', 'cp')">?</button>
       </label>
       <input
@@ -139,6 +139,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+import { UNIT } from '@/constants/units'
 
 export default defineComponent({
   name: 'CcmParamsGrid',
@@ -148,6 +149,8 @@ export default defineComponent({
   },
 
   emits: ['field-change', 'show-tip'],
+
+  setup() { return { UNIT } },
 
   methods: {
     onNumericInput(key: string, event: Event) {
@@ -159,7 +162,7 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-@use '../../styles/mixins' as *;
+
 
 .ccm-params-grid {
   display:               grid;
@@ -172,7 +175,7 @@ export default defineComponent({
 
   &__label {
     @include flex-row(0.35rem);
-    font-size:      0.73rem;
+    font-size:      var(--fs-sm);
     font-weight:    600;
     color:          var(--color-text-muted);
     text-transform: uppercase;
@@ -181,7 +184,7 @@ export default defineComponent({
 
   &__unit {
     font-weight:    400;
-    font-size:      0.68rem;
+    font-size:      var(--fs-xs);
     opacity:        0.75;
     text-transform: none;
   }
@@ -196,7 +199,7 @@ export default defineComponent({
     width:         100%;
     box-sizing:    border-box;
     outline:       none;
-    transition:    border-color 0.15s;
+    transition:    border-color var(--tr-fast);
 
     &:focus { border-color: var(--color-primary); }
 

@@ -17,13 +17,13 @@
           <div class="instrument__callout-formula" v-html="$t('instrument.view.calloutIonFormula')"></div>
           <div class="instrument__callout-note" v-html="$t('instrument.view.calloutIonNote')"></div>
         </div>
-        <div class="instrument__callout-sep" aria-hidden="true">→</div>
+        <div class="instrument__callout-sep" aria-hidden="true">{{ ICON.ARROW_SHORT }}</div>
         <div class="instrument__callout-col">
           <div class="instrument__callout-label">{{ $t('instrument.view.calloutZTitle') }}</div>
           <div class="instrument__callout-formula">{{ $t('instrument.view.calloutZFormula') }}</div>
           <div class="instrument__callout-note">{{ $t('instrument.view.calloutZNote') }}</div>
         </div>
-        <div class="instrument__callout-sep" aria-hidden="true">→</div>
+        <div class="instrument__callout-sep" aria-hidden="true">{{ ICON.ARROW_SHORT }}</div>
         <div class="instrument__callout-col">
           <div class="instrument__callout-label">{{ $t('instrument.view.calloutCorrTitle') }}</div>
           <div class="instrument__callout-formula" v-html="$t('instrument.view.calloutCorrFormula')"></div>
@@ -68,7 +68,7 @@
           <span
             class="instrument__context-value"
             :class="{ 'instrument__context-value--warn': impStore.voltageCorrectionFactor > 1.05 }"
-          >×{{ impStore.voltageCorrectionFactor.toFixed(3) }}</span>
+          >{{ ICON.TIMES }}{{ impStore.voltageCorrectionFactor.toFixed(3) }}</span>
         </div>
         <div class="instrument__context-item" v-tip="$t('instrument.view.tipContextJoule')">
           <span class="instrument__context-label">{{ $t('instrument.view.contextJoule') }}</span>
@@ -131,7 +131,7 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-@use '../styles/mixins' as *;
+
 
 .instrument {
   min-height: 100vh;
@@ -201,7 +201,7 @@ export default defineComponent({
     &-sep {
       font-size: 1.25rem;
       color: var(--color-primary);
-      opacity: 0.35;
+      opacity: var(--op-ghost);
       flex-shrink: 0;
       padding: 0 0.25rem;
       align-self: center;

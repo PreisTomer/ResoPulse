@@ -166,7 +166,7 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-@use '../../styles/mixins' as *;
+
 
 .imp-meter {
   display: flex;
@@ -282,7 +282,7 @@ export default defineComponent({
     height: 100%;
     border-radius: 3px;
     background: var(--color-primary);
-    transition: width 0.3s ease;
+    transition: width var(--tr-slow);
 
     &--warn   { background: var(--color-amber-warm); }
     &--danger { background: var(--color-danger); }
@@ -322,7 +322,7 @@ export default defineComponent({
 
   &__relax-label {
     @include mono-upper(0.6rem, 0.06em);
-    opacity: 0.7;
+    opacity: var(--op-dim);
     color: var(--color-text-muted);
   }
 

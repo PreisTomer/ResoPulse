@@ -32,7 +32,7 @@
             class="reports-methods-bar__dismiss"
             :title="$t('reports.actionBarDismiss')"
             @click.stop="$emit('dismiss')"
-          >×</button>
+          >{{ ICON.CLOSE }}</button>
         </div>
       </div>
     </Transition>
@@ -77,7 +77,7 @@ export default defineComponent({
   &__row-hint-icon {
     font-size: var(--fs-lg);
     color: var(--color-purple);
-    opacity: 0.6;
+    opacity: 0.6; // intentional below-tier value
     flex-shrink: 0;
   }
 
@@ -85,7 +85,7 @@ export default defineComponent({
     font-family: var(--font-mono);
     font-size: var(--fs-xs);
     color: var(--color-text-muted);
-    opacity: 0.75;
+    opacity: 0.75; // intentional between-tier value
     letter-spacing: 0.02em;
   }
 
@@ -138,7 +138,7 @@ export default defineComponent({
     font-family: var(--font-mono);
     font-size: var(--fs-xs);
     color: var(--color-text-muted);
-    opacity: 0.7;
+    opacity: var(--op-dim);
     font-style: italic;
   }
 
@@ -153,7 +153,7 @@ export default defineComponent({
     border: 1px solid color-mix(in srgb, var(--color-purple) 55%, transparent);
     border-radius: var(--radius);
     cursor: pointer;
-    transition: all 0.15s;
+    transition: all var(--tr-fast);
     white-space: nowrap;
 
     &:hover {
@@ -176,7 +176,7 @@ export default defineComponent({
     border: 1px solid transparent;
     border-radius: 50%;
     cursor: pointer;
-    transition: all 0.15s;
+    transition: all var(--tr-fast);
     padding: 0;
 
     &:hover {
@@ -188,8 +188,8 @@ export default defineComponent({
 }
 
 // ── Methods bar transition ──────────────────────────────────────────────────
-.methods-bar-enter-active { transition: opacity 0.2s ease, transform 0.2s ease; }
-.methods-bar-leave-active { transition: opacity 0.15s ease; }
+.methods-bar-enter-active { transition: opacity var(--tr-normal), transform var(--tr-normal); }
+.methods-bar-leave-active { transition: opacity var(--tr-fast); }
 .methods-bar-enter-from   { opacity: 0; transform: translateY(-6px); }
 .methods-bar-leave-to     { opacity: 0; }
 </style>

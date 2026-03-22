@@ -95,7 +95,7 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-@use '../../styles/mixins' as *;
+
 
 .ccm-identity {
   @include flex-col(0.9rem);
@@ -113,7 +113,7 @@ export default defineComponent({
 
   &__label {
     @include flex-row(0.35rem);
-    font-size:      0.73rem;
+    font-size:      var(--fs-sm);
     font-weight:    600;
     color:          var(--color-text-muted);
     text-transform: uppercase;
@@ -130,7 +130,7 @@ export default defineComponent({
     width:         100%;
     box-sizing:    border-box;
     outline:       none;
-    transition:    border-color 0.15s;
+    transition:    border-color var(--tr-fast);
 
     &:focus { border-color: var(--color-primary); }
     &::placeholder { color: rgba(136,153,170,0.45); }
@@ -169,10 +169,10 @@ export default defineComponent({
     border:        1px solid var(--color-border, rgba(255,255,255,0.12));
     background:    transparent;
     color:         var(--color-text-muted);
-    font-size:     0.78rem;
+    font-size:     var(--fs-sm);
     cursor:        pointer;
     text-align:    center;
-    transition:    border-color 0.15s, color 0.15s, background 0.15s;
+    transition:    border-color var(--tr-fast), color var(--tr-fast), background var(--tr-fast);
 
     &:hover {
       border-color: color-mix(in srgb, var(--color-primary) 40%, transparent);

@@ -63,7 +63,7 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-@use '../../styles/mixins' as *;
+
 
 .hmap {
   @include surface-card(var(--radius));

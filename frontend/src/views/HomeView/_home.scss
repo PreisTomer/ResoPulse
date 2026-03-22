@@ -219,7 +219,7 @@
     font-size: var(--fs-xs);
     letter-spacing: 0.08em;
     color: var(--color-text-muted);
-    opacity: 0.55;
+    opacity: var(--op-muted);
     text-align: center;
     margin: 0;
     margin-top: 1.4rem;
@@ -286,7 +286,7 @@
     padding: 0.6rem 0.75rem 0.7rem;
     border-top:    1px solid color-mix(in srgb, var(--color-primary) 45%, transparent);
     border-bottom: 1px solid color-mix(in srgb, var(--color-primary) 18%, transparent);
-    transition: transform 0.3s ease, filter 0.3s ease, border-color 0.3s ease;
+    transition: transform var(--tr-slow), filter var(--tr-slow), border-color var(--tr-slow);
     cursor: pointer !important;
 
     @media (min-width: 768px) {
@@ -310,10 +310,7 @@
 
     &-id,
     &-status {
-      font-family: monospace;
-      font-size: var(--fs-xxs);
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
+      @include mono-upper(var(--fs-xxs), 0.12em);
       color: color-mix(in srgb, var(--color-primary) 45%, transparent);
     }
 
@@ -334,27 +331,21 @@
   }
 
   &__sci-cta {
-    font-family: monospace;
-    font-size: var(--fs-xxs);
-    letter-spacing: 0.13em;
-    text-transform: uppercase;
+    @include mono-upper(var(--fs-xxs), 0.13em);
     color: color-mix(in srgb, var(--color-primary) 80%, transparent);
-    opacity: 0.35;
-    transition: opacity 0.3s ease;
+    opacity: var(--op-ghost);
+    transition: opacity var(--tr-slow);
     margin-top: 0.1rem;
   }
 
   &__sci-label {
-    font-family: monospace;
-    font-size: var(--fs-xs);
-    letter-spacing: 0.09em;
-    text-transform: uppercase;
+    @include mono-upper(var(--fs-xs), 0.09em);
     color: color-mix(in srgb, var(--color-primary) 85%, transparent);
     margin: 0;
   }
 
   &__sci-sublabel {
-    font-family: monospace;
+    font-family: var(--font-mono);
     font-size: var(--fs-xs);
     letter-spacing: 0.06em;
     color: rgba(255, 255, 255, 0.42);
@@ -402,7 +393,7 @@
     font-weight: 700;
     letter-spacing: 0.1em;
     color: var(--color-primary);
-    opacity: 0.7;
+    opacity: var(--op-dim);
   }
 
   &__wf-label {
@@ -423,7 +414,7 @@
   &__wf-arrow {
     font-size: 1.1rem;
     color: var(--color-primary);
-    opacity: 0.35;
+    opacity: var(--op-ghost);
     flex-shrink: 0;
     margin-top: 1.5rem;
   }
@@ -474,7 +465,7 @@
 
   &__fc {
     &-header { display: flex; align-items: center; gap: 0.45rem; }
-    &-icon   { font-size: 1rem; opacity: 0.7; flex-shrink: 0; }
+    &-icon   { font-size: 1rem; opacity: var(--op-dim); flex-shrink: 0; }
     &-title  { font-size: var(--fs-md); font-weight: 600; color: var(--color-text-heading); }
     &-desc   { font-size: var(--fs-xs); color: var(--color-text-muted); line-height: 1.6; }
   }
@@ -504,10 +495,7 @@
     }
 
     &-label {
-      font-size: var(--fs-xxs);
-      font-family: var(--font-mono);
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
+      @include mono-upper(var(--fs-xxs), 0.06em);
       color: var(--color-text-muted);
     }
   }
@@ -521,13 +509,8 @@
   }
 
   &__scope-tag {
-    font-size: var(--fs-xxs);
-    font-family: var(--font-mono);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    padding: 0.15rem 0.55rem;
-    border-radius: 3px;
-    border: 1px solid transparent;
+    @include badge-pill(0.15rem 0.55rem);
+    border-color: transparent;
 
     &--cancer   { color: var(--color-danger);  border-color: color-mix(in srgb, var(--color-danger) 35%, transparent);  background: color-mix(in srgb, var(--color-danger) 7%, transparent); }
     &--bacteria { color: var(--color-amber);   border-color: color-mix(in srgb, var(--color-amber) 35%, transparent);  background: color-mix(in srgb, var(--color-amber) 7%, transparent); }
@@ -536,12 +519,9 @@
   }
 
   &__disclaimer {
-    font-size: var(--fs-xxs);
-    font-family: var(--font-mono);
+    @include mono-upper(var(--fs-xxs), 0.06em);
     color: var(--color-text-muted);
     opacity: 0.65;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
     margin: 0;
   }
 

@@ -5,6 +5,14 @@
       <span class="resonance-chart__title">{{ $t('resonance.chartTitle') }}</span>
       <span class="resonance-chart__note">{{ $t('resonance.chartNote') }}</span>
     </div>
+    <!-- Speculative model warning — shown for enveloped viruses and other unvalidated targets -->
+    <div v-if="isSpeculativeTarget" class="resonance-chart__speculative-banner">
+      <span class="resonance-chart__speculative-icon">{{ ICON.WARNING }}</span>
+      <div class="resonance-chart__speculative-body">
+        <span class="resonance-chart__speculative-title">{{ $t('resonance.speculativeBannerTitle') }}</span>
+        <span class="resonance-chart__speculative-detail">{{ $t('resonance.speculativeBannerDetail') }}</span>
+      </div>
+    </div>
     <div ref="chartEl" class="resonance-chart__svg-wrap" />
     <div class="resonance-chart__legend">
       <span class="resonance-chart__legend-item resonance-chart__legend-target">,  {{ $t('resonance.legendTarget') }}</span>
@@ -26,6 +34,7 @@ import type { CellGroup } from '@/constants/cellLibrary'
 import type { CellConfig } from '@/types/cell'
 import { broadcastStateSync } from '@/services/socket'
 import { C } from '@/theme/colors'
+import { ICON } from '@/constants/icons'
 
 // Frequency range: 10 MHz-50 GHz
 const F_MIN_HZ = 10_000_000
@@ -49,7 +58,14 @@ export default defineComponent({
   name: 'ResonanceChart',
 
   setup() {
-    return { store: useCellStore() }
+    return { store: useCellStore(), ICON }
+  },
+
+  computed: {
+    isSpeculativeTarget(): boolean {
+      const t = this.store.target as { experimentalBasis?: string }
+      return t.experimentalBasis === 'speculative'
+    },
   },
 
   data() {
@@ -388,7 +404,7 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-@use '../../styles/mixins' as *;
+
 
 .resonance-chart {
   @include surface-card(var(--radius), 0.75rem 0.5rem 0.5rem);
@@ -415,6 +431,45 @@ export default defineComponent({
   &__svg-wrap {
     width: 100%;
     min-height: 240px;
+  }
+
+  &__speculative-banner {
+    display: flex;
+    gap: 0.65rem;
+    align-items: flex-start;
+    padding: 0.55rem 0.9rem;
+    background: color-mix(in srgb, var(--color-danger) 10%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-danger) 45%, transparent);
+    border-radius: var(--radius);
+    margin: 0 0.5rem 0.4rem;
+  }
+
+  &__speculative-icon {
+    font-size: 1rem;
+    flex-shrink: 0;
+    color: var(--color-danger);
+  }
+
+  &__speculative-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+
+  &__speculative-title {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    color: var(--color-danger);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  &__speculative-detail {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xxs);
+    color: color-mix(in srgb, var(--color-danger) 75%, var(--color-text-muted));
+    line-height: 1.5;
   }
 
   &__legend {

@@ -100,13 +100,13 @@ import AccordionPanel from '@/components/AccordionPanel.vue'
 import CellCard from '@/components/CellCard/index.vue'
 import FrequencySlider from '@/components/FrequencySlider/index.vue'
 import FrequencyResponseChart from '@/components/FrequencyResponseChart/index.vue'
-import ResonanceChart from '@/components/ResonanceChart/index.vue'
+import ResonanceChart from '@/components/ResonanceChart.vue'
 import DisruptionChart from '@/components/DisruptionChart/index.vue'
 import SelectivityPanel from '@/components/SelectivityPanel/index.vue'
 import TherapeuticHeatmap from '@/components/TherapeuticHeatmap/index.vue'
 import SweepPanel from '@/components/SweepPanel/index.vue'
 import PopulationPanel from '@/components/PopulationPanel/index.vue'
-import ExperimentLog from '@/components/ExperimentLog.vue'
+import ExperimentLog from '@/components/ExperimentLab/ExperimentLog.vue'
 import ExperimentHeader from '@/components/ExperimentLab/ExperimentHeader.vue'
 import ExperimentNotes from '@/components/ExperimentLab/ExperimentNotes.vue'
 import SnapBar from '@/components/ExperimentLab/SnapBar.vue'
@@ -114,7 +114,7 @@ import StickyCellView from '@/components/ExperimentLab/StickyCellView.vue'
 import { useExperimentStore } from '@/stores/experimentStore'
 import { CELL_PRESETS } from '@/constants/cellLibrary'
 import { computeSAR } from '@/utils/physics'
-import { CATEGORY_DEFAULTS, INITIAL_RESONANT_FIELD_FRACTION, DEFAULT_LYSIS_N_PULSES } from '@/constants/experimentDefaults'
+import { CATEGORY_DEFAULTS, INITIAL_RESONANT_FIELD_FRACTION, DEFAULT_LYSIS_N_PULSES, DEFAULT_ORIENTATION_DEG } from '@/constants/experimentDefaults'
 import { CELL_CATEGORY, CELL_TYPE, CHART_MODE } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
 
@@ -302,7 +302,7 @@ export default defineComponent({
       this.store.setDutyCycle(d.dutyCycle)
       this.store.setPulseWidthNs(d.pulseWidthNs)
       this.store.setMedium(d.medium)
-      this.store.setOrientationDeg(0)
+      this.store.setOrientationDeg(DEFAULT_ORIENTATION_DEG)
       this.store.setLysisNPulses(DEFAULT_LYSIS_N_PULSES)
       this.store.resetTemps()
       // Resonance mode is not valid for mammalian cells; revert if persisted incorrectly.
@@ -335,7 +335,7 @@ export default defineComponent({
       this.store.setPulseWidthNs(d.pulseWidthNs)
       this.store.setMedium(d.medium)
       // Reset advanced orientation + lysis-count to category-neutral defaults
-      this.store.setOrientationDeg(0)
+      this.store.setOrientationDeg(DEFAULT_ORIENTATION_DEG)
       this.store.setLysisNPulses(DEFAULT_LYSIS_N_PULSES)
       // Always start from a thermally neutral state - clears any lysis/destruction
       this.store.resetTemps()
@@ -367,7 +367,7 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-@use '../styles/mixins' as *;
+
 
 .experiment {
   display: flex;

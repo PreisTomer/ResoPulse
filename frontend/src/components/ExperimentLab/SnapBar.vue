@@ -154,7 +154,7 @@ export default defineComponent({
   font-size: var(--fs-xxs);
   font-family: var(--font-mono);
   color: var(--color-danger);
-  opacity: 0.8;
+  opacity: var(--op-partial);
   white-space: nowrap;
 }
 
@@ -176,7 +176,7 @@ export default defineComponent({
   font-size: var(--fs-xs);
   letter-spacing: 0.04em;
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  transition: background var(--tr-fast), border-color var(--tr-fast), color var(--tr-fast);
   white-space: nowrap;
 
   &:hover {
