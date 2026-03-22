@@ -102,7 +102,7 @@ import { defineComponent } from 'vue'
 import type { PropType } from 'vue'
 import { useCellStore } from '@/stores/cellStore'
 import { broadcastStateSync } from '@/services/socket'
-import { CHART_MODE, CELL_CATEGORY, FREQ_REGIME } from '@/constants/strings'
+import { CELL_CATEGORY, FREQ_REGIME } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
 import type { SliderRange } from '@/constants/sliderBounds'
 import { formatFreqKHz } from '@/utils/format'
@@ -135,7 +135,7 @@ export default defineComponent({
 
   computed: {
     currentFreq(): number      { return this.store.currentBroadcastFrequency },
-    isResonanceMode(): boolean { return this.store.chartMode === CHART_MODE.RESONANCE },
+    isResonanceMode(): boolean { return this.store.isResonanceMode },
     targetFcDisplay(): string  { return formatFreqKHz(this.store.targetFc) },
     healthyFcDisplay(): string { return formatFreqKHz(this.store.healthyFc) },
     freqDisplay(): string      { return formatFreqKHz(this.currentFreq) },

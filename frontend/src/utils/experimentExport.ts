@@ -5,7 +5,7 @@
 
 import { MEDIA } from '@/constants/media'
 import { UNIT } from '@/constants/units'
-import { CELL_LABEL } from '@/constants/strings'
+import { CELL_LABEL, CHART_MODE } from '@/constants/strings'
 import { EPSILON_0 } from '@/utils/physics'
 import { TWO_PI, THRESHOLDS } from '@/constants/physics'
 import type { MediumKey } from '@/types/media'
@@ -339,7 +339,7 @@ export function buildEntryMethodsText(entry: LogEntry, sessionName: string): { t
 
   const h         = entry.healthySnap
   const t         = entry.targetSnap
-  const isRes           = entry.chartMode === 'resonance'
+  const isRes           = entry.chartMode === CHART_MODE.RESONANCE
   const isPulsed        = entry.waveform === 'pulsed'
   const isHFire         = entry.waveform === 'hfire'
   const isPulsedOrHFire = isPulsed || isHFire

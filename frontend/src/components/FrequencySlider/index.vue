@@ -40,7 +40,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { useCellStore } from '@/stores/cellStore'
-import { CHART_MODE, CELL_CATEGORY, THERMAL_LEVEL } from '@/constants/strings'
+import { CELL_CATEGORY, THERMAL_LEVEL } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
 import { SLIDER_RANGES } from '@/constants/sliderBounds'
 import type { SliderRange } from '@/constants/sliderBounds'
@@ -61,7 +61,7 @@ export default defineComponent({
   },
 
   computed: {
-    isResonanceMode(): boolean { return this.store.chartMode === CHART_MODE.RESONANCE },
+    isResonanceMode(): boolean { return this.store.isResonanceMode },
 
     sliderRanges(): SliderRange {
       const cat = this.store.targetCellCategory

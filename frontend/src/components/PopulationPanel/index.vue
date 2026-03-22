@@ -62,7 +62,7 @@ import { C } from '@/theme/colors'
 import { useCellStore } from '@/stores/cellStore'
 import AccordionPanel from '@/components/AccordionPanel.vue'
 import { computeSchwan, computeTau, computePulseStepResponse, computeResonantDisruption } from '@/utils/physics'
-import { WAVEFORM, CHART_MODE, CELL_CATEGORY } from '@/constants/strings'
+import { WAVEFORM, CELL_CATEGORY } from '@/constants/strings'
 import { THRESHOLDS, DEFAULT_CAPSID_Q } from '@/constants/physics'
 import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'
@@ -107,7 +107,7 @@ export default defineComponent({
       const t = this.store.target as CellConfig & { resonantFreqGHz?: number; resonantThresholdVcm?: number }
       return (cat === CELL_CATEGORY.BACTERIA || cat === CELL_CATEGORY.VIRUS) &&
         !!(t.resonantFreqGHz && t.resonantThresholdVcm) &&
-        this.store.chartMode === CHART_MODE.RESONANCE
+        this.store.isResonanceMode
     },
 
     targetUncPct(): number {

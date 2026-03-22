@@ -2,6 +2,7 @@
 
 import { defineStore } from 'pinia'
 import { useCellStore } from '@/stores/cellStore'
+import { CHART_MODE, DEFAULT_SESSION_NAME } from '@/constants/strings'
 import { downloadText, buildEntryMethodsText, buildCsvText } from '@/utils/experimentExport'
 
 // Re-export types so existing importers (e.g. socket.ts) don't need to change
@@ -96,7 +97,7 @@ function loadState(): ExperimentState {
     }
   } catch { /* ignore corrupt data */ }
   return {
-    entries: [], nextId: 1, sessionName: 'Session 001',
+    entries: [], nextId: 1, sessionName: DEFAULT_SESSION_NAME,
     sampleDescription: '', sessionNotes: '', cumulativeDoseJkg: 0, sessionStartMs: Date.now(),
   }
 }
@@ -136,10 +137,10 @@ export const useExperimentStore = defineStore('experiment', {
         sigmaE:             round(snap.effectiveSigmaE, 4),
         healthyNuclearVm:   round(snap.healthyNuclearVm * 1000, 3),
         targetNuclearVm:    round(snap.targetNuclearVm  * 1000, 3),
-        depHealthyK:            snap.chartMode !== 'resonance' ? round(snap.depHealthyCmReal, 4) : undefined,
-        depTargetK:             snap.chartMode !== 'resonance' ? round(snap.depTargetCmReal,  4) : undefined,
-        depHealthyCrossoverKHz: snap.chartMode !== 'resonance' ? round(snap.depHealthyCrossoverKHz, 1) : undefined,
-        depTargetCrossoverKHz:  snap.chartMode !== 'resonance' ? round(snap.depTargetCrossoverKHz,  1) : undefined,
+        depHealthyK:            snap.chartMode !== CHART_MODE.RESONANCE ? round(snap.depHealthyCmReal, 4) : undefined,
+        depTargetK:             snap.chartMode !== CHART_MODE.RESONANCE ? round(snap.depTargetCmReal,  4) : undefined,
+        depHealthyCrossoverKHz: snap.chartMode !== CHART_MODE.RESONANCE ? round(snap.depHealthyCrossoverKHz, 1) : undefined,
+        depTargetCrossoverKHz:  snap.chartMode !== CHART_MODE.RESONANCE ? round(snap.depTargetCrossoverKHz,  1) : undefined,
         healthySnap: {
           label: h.label, category: 'mammalian',
           radius: h.radius, membraneThickness: h.membraneThickness,

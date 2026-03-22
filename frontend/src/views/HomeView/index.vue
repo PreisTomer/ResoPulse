@@ -28,7 +28,10 @@
             <span class="home__eyebrow-dot"></span>
             {{ $t('home.eyebrow') }}
           </div>
-          <p class="home__tagline">{{ $t('home.taglineMain') }}</p>
+          <div class="home__tagline-group">
+            <p class="home__tagline">{{ $t('home.tagline1') }}</p>
+            <p class="home__tagline home__tagline--secondary">{{ $t('home.tagline2') }}</p>
+          </div>
         </div>
 
         <div class="home__hero-cta">
@@ -40,7 +43,7 @@
               {{ $t('home.btnGhost') }} <span class="home__btn-arrow">{{ ICON.ARROW_R }}</span>
             </RouterLink>
           </div>
-          <p class="home__cta-refs">{{ $t('home.ctaRefs') }}</p>
+          <p class="home__cta-refs">{{ $t('home.ctaRefs1') }}<br>{{ $t('home.ctaRefs2') }}</p>
         </div>
 
       </div>

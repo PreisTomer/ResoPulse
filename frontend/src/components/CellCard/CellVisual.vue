@@ -320,7 +320,7 @@ export default defineComponent({
         : this.store.depTargetCrossoverKHz
     },
     showDepStrip(): boolean {
-      return this.store.chartMode !== 'resonance'
+      return !this.store.isResonanceMode
         && Math.abs(this.depCmRealValue) >= 0.02
         && this.store.fieldIntensity >= 5
         && this.cellState !== CELL_STATE.LYSED
@@ -379,10 +379,13 @@ export default defineComponent({
     tipNuclearBarLocal(): string { return tipNuclearBarFn() },
 
     tipDep(): string {
+      const cell = this.type === CELL_TYPE.HEALTHY ? this.store.healthy : this.store.target
       return tipDepFn({
         isPdep:       this.depCmRealValue > 0,
         kVal:         this.depCmRealValue,
         crossoverKHz: this.depCrossoverKHz,
+        sigmaI:       cell.conductivity,
+        sigmaE:       this.store.effectiveSigmaE,
       })
     },
 
@@ -398,7 +401,7 @@ export default defineComponent({
         lysisDelayMs:        this.store.lysisDelayMs,
         pulseEnvelopeFactor: pef,
         waveform:            this.store.waveform,
-        chartMode:           this.store.chartMode,
+        isResonanceMode:     this.store.isResonanceMode,
         pulseWidthNs:        this.store.pulseWidthNs,
         effectiveSigmaE:     this.store.effectiveSigmaE,
         vmDisplay:           this.vmDisplay,

@@ -45,7 +45,7 @@
           :initial-open="true"
           :border-on-toggle="true"
         >
-          <FrequencyResponseChart v-if="store.chartMode === CHART_MODE.SCHWAN" />
+          <FrequencyResponseChart v-if="!store.isResonanceMode" />
           <ResonanceChart v-else />
         </AccordionPanel>
       </div>
@@ -190,7 +190,7 @@ export default defineComponent({
      *  is active, immediately revert to Schwan mode. Resonance has no physical meaning for
      *  mammalian cells - the button is disabled but state drift can still occur via param editing. */
     'store.targetCellCategory'(cat: string) {
-      if (cat === CELL_CATEGORY.MAMMALIAN && this.store.chartMode === CHART_MODE.RESONANCE) {
+      if (cat === CELL_CATEGORY.MAMMALIAN && this.store.isResonanceMode) {
         this.store.setChartMode(CHART_MODE.SCHWAN)
       }
     },
@@ -202,7 +202,7 @@ export default defineComponent({
     },
 
     chartModeLabel(): string {
-      return this.store.chartMode === CHART_MODE.SCHWAN
+      return !this.store.isResonanceMode
         ? this.$t('exp.chartModeSchwan')
         : this.$t('exp.chartModeResonance')
     },
@@ -306,7 +306,7 @@ export default defineComponent({
       this.store.setLysisNPulses(DEFAULT_LYSIS_N_PULSES)
       this.store.resetTemps()
       // Resonance mode is not valid for mammalian cells; revert if persisted incorrectly.
-      if (cat === CELL_CATEGORY.MAMMALIAN && this.store.chartMode === CHART_MODE.RESONANCE) {
+      if (cat === CELL_CATEGORY.MAMMALIAN && this.store.isResonanceMode) {
         this.store.setChartMode(CHART_MODE.SCHWAN)
       }
     },

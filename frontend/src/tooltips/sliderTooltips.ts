@@ -11,7 +11,7 @@
 
 import { MEDIA } from '@/constants/media'
 import { DEFAULT_CAPSID_Q } from '@/constants/physics'
-import { CHART_MODE, CELL_CATEGORY, THERMAL_LEVEL } from '@/constants/strings'
+import { CELL_CATEGORY, THERMAL_LEVEL } from '@/constants/strings'
 import { UNIT } from '@/constants/units'
 import type { MediumKey } from '@/types/media'
 
@@ -140,7 +140,7 @@ Note: for cancer/normal cell pairs where τ_T > τ_H (typical),
 }
 
 export function tipField(opts: {
-  chartMode: string
+  isResonanceMode: boolean
   target: ResonanceExtra
   fieldDisplay: string
   targetDisruption: number
@@ -149,8 +149,8 @@ export function tipField(opts: {
   healthyLysisField: number
   t: T
 }): string {
-  const { chartMode, target, fieldDisplay, targetDisruption, targetCellCategory, targetLysisField, healthyLysisField, t } = opts
-  if (chartMode === CHART_MODE.RESONANCE) {
+  const { isResonanceMode, target, fieldDisplay, targetDisruption, targetCellCategory, targetLysisField, healthyLysisField, t } = opts
+  if (isResonanceMode) {
     if (target.resonantFreqGHz && target.resonantThresholdVcm) {
       const fStr = target.resonantFreqGHz >= 1
         ? `${target.resonantFreqGHz.toFixed(1)} GHz`
@@ -189,7 +189,7 @@ ${contextNote}`
 }
 
 export function tipTargetBadge(opts: {
-  chartMode: string
+  isResonanceMode: boolean
   target: ResonanceExtra
   targetDisruptPercent: string
   targetDisruption: number
@@ -197,9 +197,9 @@ export function tipTargetBadge(opts: {
   lysisDelayMs: number
   t: T
 }): string {
-  const { chartMode, target, targetDisruptPercent: pct, targetDisruption, targetVmMv, lysisDelayMs, t } = opts
+  const { isResonanceMode, target, targetDisruptPercent: pct, targetDisruption, targetVmMv, lysisDelayMs, t } = opts
   const lysisStr = formatLysisTime(lysisDelayMs)
-  if (chartMode === CHART_MODE.RESONANCE) {
+  if (isResonanceMode) {
     const fStr = target.resonantFreqGHz
       ? (target.resonantFreqGHz >= 1 ? `${target.resonantFreqGHz.toFixed(1)} GHz` : `${(target.resonantFreqGHz * 1000).toFixed(0)} MHz`)
       : ', '
@@ -224,15 +224,15 @@ Vm = <span class="tip-val">${targetVmMv.toFixed(2)} mV</span>  ·  Threshold = $
 }
 
 export function tipHealthyBadge(opts: {
-  chartMode: string
+  isResonanceMode: boolean
   healthyDisruptPercent: string
   healthyDisruption: number
   healthyVmMv: number
   thresholdVoltage: number
   t: T
 }): string {
-  const { chartMode, healthyDisruptPercent: pct, healthyDisruption, healthyVmMv, thresholdVoltage, t } = opts
-  if (chartMode === CHART_MODE.RESONANCE) {
+  const { isResonanceMode, healthyDisruptPercent: pct, healthyDisruption, healthyVmMv, thresholdVoltage, t } = opts
+  if (isResonanceMode) {
     return `<strong>${t('resonance.tipHealthyBadgeTitle')}</strong>
 ${t('resonance.tipHealthyBadgeBody')}
 <span class="tip-ok">✓ ${t('resonance.tipHealthyBadgeSafe')}</span>`

@@ -15,7 +15,7 @@
 import { defineComponent } from 'vue'
 import { useCellStore } from '@/stores/cellStore'
 import { broadcastStateSync } from '@/services/socket'
-import { CHART_MODE, WAVEFORM, CELL_CATEGORY } from '@/constants/strings'
+import { WAVEFORM, CELL_CATEGORY } from '@/constants/strings'
 import { UNIT } from '@/constants/units'
 import {
   HMAP_FREQ_STEPS, HMAP_FIELD_STEPS, HMAP_CANVAS_W, HMAP_CANVAS_H, HMAP_MARGIN,
@@ -59,7 +59,7 @@ export default defineComponent({
 
     xMax(): number {
       const cat = this.store.targetCellCategory
-      if (this.store.chartMode === CHART_MODE.RESONANCE) {
+      if (this.store.isResonanceMode) {
         const t = this.store.target as { resonantFreqGHz?: number }
         if (t.resonantFreqGHz) return Math.max(t.resonantFreqGHz * 1e6 * 2.5, 1_000_000)
       }
@@ -79,7 +79,7 @@ export default defineComponent({
       const healthyLysis = s.healthy.thresholdVoltage / (1.5 * s.healthy.radius * 1e-4 * pefH)
 
       let targetLysis: number
-      if (s.chartMode === CHART_MODE.RESONANCE) {
+      if (s.isResonanceMode) {
         const tr = s.target as { resonantThresholdVcm?: number }
         targetLysis = tr.resonantThresholdVcm ?? (s.target.thresholdVoltage / (1.5 * s.target.radius * 1e-4))
       } else {
@@ -213,7 +213,7 @@ export default defineComponent({
       const hTss = BODY_TEMP_C + hSAR * dc / ((NEWTON_COOLING_LAMBDA + hLambdaPerf) * hCp)
 
       let tDR = 0
-      if (s.chartMode === CHART_MODE.RESONANCE) {
+      if (s.isResonanceMode) {
         const tr = s.target as { resonantFreqGHz?: number; capsidQ?: number; resonantThresholdVcm?: number }
         if (tr.resonantFreqGHz && tr.capsidQ && tr.resonantThresholdVcm) {
           tDR = computeResonantDisruption(tr.resonantFreqGHz, tr.capsidQ, tr.resonantThresholdVcm, freqKHz * 1000, fieldVcm)
@@ -242,7 +242,7 @@ export default defineComponent({
       const dc      = s.dutyCycle
       const pw_ns   = s.pulseWidthNs
       const pulsed  = s.waveform === WAVEFORM.PULSED
-      const isRes   = s.chartMode === CHART_MODE.RESONANCE
+      const isRes   = s.isResonanceMode
 
       const hTau        = computeTau(s.healthy, sigma_e)
       const hPEF        = pulsed ? Math.max(MIN_PULSE_ENVELOPE, 1 - Math.exp(-pw_ns * 1e-9 / hTau)) : 1.0
@@ -345,7 +345,7 @@ export default defineComponent({
       }
 
       // f_res — white dashed (resonance mode)
-      if (s.chartMode === CHART_MODE.RESONANCE) {
+      if (s.isResonanceMode) {
         const tr = s.target as { resonantFreqGHz?: number }
         if (tr.resonantFreqGHz) {
           const resKhz = tr.resonantFreqGHz * 1e6
@@ -368,7 +368,7 @@ export default defineComponent({
       }
 
       // fc(T) and fc(H) — cyan dotted (Schwan mode)
-      if (s.chartMode !== CHART_MODE.RESONANCE) {
+      if (!s.isResonanceMode) {
         for (const [label, fcKhz] of [['fc(T)', s.targetFc], ['fc(H)', s.healthyFc]] as [string, number][]) {
           if (fcKhz < this.xMin || fcKhz > this.xMax) continue
           const fx = this._freqToX(fcKhz)
@@ -573,7 +573,7 @@ export default defineComponent({
       const hTss   = BODY_TEMP_C + hSAR * dc / ((NEWTON_COOLING_LAMBDA + hLPerf) * hCp)
 
       let tDR = 0
-      if (s.chartMode === CHART_MODE.RESONANCE) {
+      if (s.isResonanceMode) {
         const tr = s.target as { resonantFreqGHz?: number; capsidQ?: number; resonantThresholdVcm?: number }
         if (tr.resonantFreqGHz && tr.capsidQ && tr.resonantThresholdVcm) {
           tDR = computeResonantDisruption(tr.resonantFreqGHz, tr.capsidQ, tr.resonantThresholdVcm, freqKHz * 1000, fieldVcm)
@@ -585,7 +585,7 @@ export default defineComponent({
         tDR = (tVm * tPEF) / s.target.thresholdVoltage
       }
 
-      const pLysis = (s.chartMode !== CHART_MODE.RESONANCE || s.targetCellCategory === CELL_CATEGORY.MAMMALIAN)
+      const pLysis = (!s.isResonanceMode || s.targetCellCategory === CELL_CATEGORY.MAMMALIAN)
         ? `${(Math.max(0, 1 - 1 / Math.max(0.001, tDR)) * 100).toFixed(0)}%`
         : '\u2014'
 
@@ -599,7 +599,7 @@ export default defineComponent({
           outcomes.push({ text: '\u2713 Healthy safe', level: 'ok' })
         }
       } else if (hDR >= HMAP_LYSIS_DR) {
-        outcomes.push({ text: '\u26d4 Healthy ablation', level: 'danger' })
+        outcomes.push({ text: '\u26d4 Healthy lysis', level: 'danger' })
         if (tDR >= HMAP_LYSIS_DR) outcomes.push({ text: '\u26d4 Target lysis', level: 'danger' })
       } else if (hTss >= HMAP_THERM_CRIT_C) {
         outcomes.push({ text: `\u26d4 Thermal damage (\u2265${HMAP_THERM_CRIT_C} ${UNIT.DEG_C})`, level: 'danger' })
@@ -610,7 +610,7 @@ export default defineComponent({
         outcomes.push({ text: 'Sub-threshold', level: 'info' })
       }
       if (hTss >= HMAP_THERM_WARN_C && hTss < HMAP_THERM_CRIT_C) {
-        outcomes.push({ text: `\u26a0 H-Temp ${hTss.toFixed(1)} ${UNIT.DEG_C}, hyperthermia`, level: 'warn' })
+        outcomes.push({ text: `\u26a0 H-Temp ${hTss.toFixed(1)} ${UNIT.DEG_C}, elevated`, level: 'warn' })
       }
 
       const freqLabel  = formatFreqKHz(freqKHz, 2)

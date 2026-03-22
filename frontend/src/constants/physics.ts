@@ -214,3 +214,50 @@ export const RESEAL_TIME_MAX_S = 60.0
  *  Set to 2 (maximally damped) - most conservative fallback for viscoelastic biological targets.
  *  Rigid protein capsids may reach Q~30; peptidoglycan walls typically Q~3-4. */
 export const DEFAULT_CAPSID_Q = 2
+
+// ── Unit conversion factors ───────────────────────────────────────────────────
+
+/** Converts field intensity from V/cm (display unit) to V/m (SI unit). */
+export const V_CM_TO_V_M = 100
+
+/** Converts frequency from kHz (store unit) to Hz (SI unit). */
+export const KHZ_TO_HZ = 1e3
+
+/** Converts nanoseconds to seconds. */
+export const NS_TO_S = 1e-9
+
+/** Converts nanoseconds to milliseconds (1 ms = 1e6 ns). */
+export const NS_TO_MS = 1e-6
+
+/** Converts milliseconds to seconds. */
+export const MS_TO_S = 1e-3
+
+/** Converts J/m³ to mJ/cm³ — standard IRE energy dose unit (1 J/m³ = 1e-3 mJ/cm³). */
+export const J_M3_TO_MJ_CM3 = 1e-3
+
+// ── Medium and lysis timing constants ────────────────────────────────────────
+
+/** Density of aqueous media (saline, DMEM, PBS) [kg/m³]. Ref: CRC Handbook. */
+export const RHO_AQUEOUS_KG_M3 = 1000
+
+/** Lysis countdown for CW mode [ms] — 2.5 s is the standard IRE observation window. */
+export const LYSIS_DELAY_CW_MS = 2500
+
+/** Maximum pulsed-mode lysis delay [ms] — clamp ensures the countdown stays within 30 s. */
+export const LYSIS_DELAY_MAX_MS = 30_000
+
+/**
+ * Frequency below which electrode double-layer polarization significantly distorts Vm estimates [kHz].
+ * At sub-50 kHz, the electrode-solution interface Cdl (10-50 µF/cm²) absorbs a measurable voltage
+ * fraction; displayed Vm and DR are overestimates without a Cdl-corrected equivalent circuit.
+ * Ref: Foster and Schwan (1989); Schwan (1966) electrode polarization review.
+ */
+export const ELECTRODE_POLARIZATION_LIMIT_KHZ = 50
+
+/**
+ * Field intensity threshold above which GHz operation is flagged as physically inaccessible [V/cm].
+ * Delivering > 100 V/cm at > 1 GHz requires RF waveguide coupling; skin depth in saline at 1 GHz
+ * is ~13 mm, falling to ~0.8 mm at 12 GHz — the field cannot penetrate a standard cuvette.
+ * Ref: Gabriel et al. (1996); Tsen et al. (2007).
+ */
+export const GHZ_FIELD_WARNING_V_CM = 100

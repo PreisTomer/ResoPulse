@@ -4,6 +4,31 @@ These rules apply to **every code change** in this project. They are not suggest
 
 ---
 
+## Lab Context — In-Vitro Digital Twin (Read First)
+
+This application is a **virtual in-vitro laboratory** — a digital twin of a cuvette or well-plate electroporation / acoustic resonance experiment on single cells or cell suspensions. The user is a bench scientist designing or understanding a cell biology protocol, not a clinician treating a patient.
+
+**Every piece of user-visible text — labels, tooltips, descriptions, protocol docs, error messages — must be written for the lab bench, not the clinic.** Before writing any string, ask: *"Does this make sense to a scientist running an experiment on cells in a dish?"*
+
+### Allowed terminology
+- "target cell" / "reference cell" / "healthy cell" — cell populations being modelled
+- "cell lysis", "membrane disruption", "pore formation" — outcome descriptions
+- "protocol window", "selectivity ratio", "Therapeutic Index" — biophysics model terms (TI is a biophysics metric, not a clinical metric)
+- "cuvette", "well plate", "electrode gap", "EP buffer", "cell suspension" — lab hardware/context
+- "pulse generator", "function generator", "RF amplifier" — lab instrument references
+- "co-culture assay", "population lysis fraction", "viability" — experimental outcomes
+
+### Forbidden framings
+- Clinical procedures: "patient", "surgery", "implant", "probe", "catheter", "clinical device"
+- Clinical outcomes: "tumour ablation zone", "treatment", "clinical window", "clinical advantage"
+- In-vivo context: "tissue penetration for patient treatment", "in-vivo protocol", "animal model outcome" (literature citation bodies may quote paper titles verbatim, but annotation notes must reframe to lab-model relevance)
+- Regulatory language: "FDA", "approval", "contraindication", "prescribe"
+
+### When physics has both in-vitro and in-vivo literature
+Describe the parameter's effect in the simulation model. For example: *"Lower σ_e shifts τ and f_c — relevant when modelling cells in low-conductivity EP buffer"* rather than *"used in intravascular catheter IRE"*.
+
+---
+
 ## Copyright Header
 
 **Every source file** (`.vue`, `.ts`, `.tsx`, `.js`) must begin with this exact comment:

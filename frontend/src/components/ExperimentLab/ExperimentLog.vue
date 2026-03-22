@@ -12,16 +12,18 @@
 
     <!-- Header row -->
     <div class="exp-log__header">
-      <input
-        v-model="expStore.sessionName"
-        class="exp-log__name-input"
-        :placeholder="$t('exp.logSessionPlaceholder')"
-        spellcheck="false"
-      />
-      <!-- Dosimetry badge -->
-      <div class="exp-log__dose" v-tip="$t('log.tipDose')">
-        <span class="exp-log__dose-label">{{ $t('log.doseLabel') }}</span>
-        <span class="exp-log__dose-val">{{ doseBadge }}</span>
+      <!-- Session group: name + cumulative dose badge (both session-level) -->
+      <div class="exp-log__session-group">
+        <input
+          v-model="expStore.sessionName"
+          class="exp-log__name-input"
+          :placeholder="$t('exp.logSessionPlaceholder')"
+          spellcheck="false"
+        />
+        <div class="exp-log__dose" v-tip="$t('log.tipDose')">
+          <span class="exp-log__dose-label">{{ $t('log.doseLabel') }}</span>
+          <span class="exp-log__dose-val">{{ doseBadge }}</span>
+        </div>
       </div>
       <div class="exp-log__actions">
         <button
@@ -34,13 +36,13 @@
           :disabled="!hasEntries"
           v-tip="$t('log.tipExportMethods')"
           @click="exportLastEntryMethods"
-        >{{ $t('exp.logMethodsBtn') }}</button>
+        >{{ ICON.ARROW_D }} {{ $t('exp.logMethodsBtn') }}</button>
         <button
           class="exp-log__btn"
           :disabled="!hasEntries"
           v-tip="$t('log.tipExportCsv')"
           @click="exportCSV"
-        >{{ $t('exp.logCsvBtn') }}</button>
+        >{{ ICON.ARROW_D }} {{ $t('exp.logCsvBtn') }}</button>
         <button
           class="exp-log__btn"
           :disabled="!hasEntries"
@@ -60,9 +62,13 @@
             <th v-tip="$t('log.tipThTime')">{{ $t('exp.logThTime') }}</th>
             <th v-tip="$t('log.tipThFreq')">{{ $t('exp.logThFreq') }}</th>
             <th v-tip="$t('log.tipThField')">{{ $t('exp.logThField') }}</th>
-            <th v-tip="$t('log.tipThTargetVm')">{{ $t('exp.logThTargetVm') }}</th>
-            <th v-tip="$t('log.tipThHealthyVm')">{{ $t('exp.logThHealthyVm') }}</th>
-            <th v-tip="tipThSel">{{ $t('exp.logThSel') }}</th>
+            <!-- Schwan mode: membrane voltage + selectivity ratio -->
+            <th v-if="!isResonanceMode" v-tip="$t('log.tipThTargetVm')">{{ $t('exp.logThTargetVm') }}</th>
+            <th v-if="!isResonanceMode" v-tip="$t('log.tipThHealthyVm')">{{ $t('exp.logThHealthyVm') }}</th>
+            <th v-if="!isResonanceMode" v-tip="tipThSel">{{ $t('exp.logThSel') }}</th>
+            <!-- Resonance mode: disruption ratios (Lorentzian model) -->
+            <th v-if="isResonanceMode" v-tip="$t('log.tipThTargetDR')">{{ $t('log.logThTargetDR') }}</th>
+            <th v-if="isResonanceMode" v-tip="$t('log.tipThHealthyDR')">{{ $t('log.logThHealthyDR') }}</th>
             <th v-if="!isResonanceMode" v-tip="$t('log.tipThDepH')">{{ $t('log.logThDepH') }}</th>
             <th v-if="!isResonanceMode" v-tip="$t('log.tipThDepT')">{{ $t('log.logThDepT') }}</th>
             <th v-tip="$t('log.tipThEvent')">{{ $t('exp.logThEvent') }}</th>
@@ -78,12 +84,16 @@
             <td class="exp-log__td-id">{{ e.id }}</td>
             <td class="exp-log__td-mono">{{ e.timestamp }}</td>
             <td class="exp-log__td-mono" v-tip="tipCellFreq(e)">{{ formatFreqKHz(e.freqKHz) }}</td>
-            <td class="exp-log__td-mono" v-tip="tipCellField(e)">{{ e.fieldVcm }}</td>
-            <td class="exp-log__td-target" v-tip="tipCellTargetVm(e)">{{ e.targetVm }}</td>
-            <td class="exp-log__td-healthy" v-tip="tipCellHealthyVm(e)">{{ e.healthyVm }}</td>
-            <td class="exp-log__td-sel" v-tip="tipCellSel(e)">{{ e.selectivity.toFixed(2) }}</td>
+            <td class="exp-log__td-mono" v-tip="tipCellField(e)">{{ e.fieldVcm != null ? e.fieldVcm : NULL_DISPLAY }}</td>
+            <!-- Schwan mode columns -->
+            <td v-if="!isResonanceMode" class="exp-log__td-target" v-tip="tipCellTargetVm(e)">{{ e.targetVm }}</td>
+            <td v-if="!isResonanceMode" class="exp-log__td-healthy" v-tip="tipCellHealthyVm(e)">{{ e.healthyVm }}</td>
+            <td v-if="!isResonanceMode" class="exp-log__td-sel" v-tip="tipCellSel(e)">{{ e.selectivity.toFixed(2) }}</td>
             <td v-if="!isResonanceMode" class="exp-log__td-dep" :class="depKClass(e.depHealthyK)" v-tip="tipCellDepH(e)">{{ depKDisplay(e.depHealthyK) }}</td>
             <td v-if="!isResonanceMode" class="exp-log__td-dep" :class="depKClass(e.depTargetK)" v-tip="tipCellDepT(e)">{{ depKDisplay(e.depTargetK) }}</td>
+            <!-- Resonance mode columns: disruption ratio replaces Vm (Schwan Vm ≈ 0 at GHz) -->
+            <td v-if="isResonanceMode" class="exp-log__td-target" v-tip="$t('log.tipCellTRatio', { ratio: ((e.targetRatio ?? 0) * 100).toFixed(1) })">{{ e.targetRatio != null ? (e.targetRatio * 100).toFixed(1) + '%' : NULL_DISPLAY }}</td>
+            <td v-if="isResonanceMode" class="exp-log__td-healthy-dr" v-tip="$t('log.tipCellHRatio', { ratio: ((e.healthyRatio ?? 0) * 100).toFixed(1) })">{{ e.healthyRatio != null ? (e.healthyRatio * 100).toFixed(1) + '%' : NULL_DISPLAY }}</td>
             <td class="exp-log__td-event">
               <StatusBadge :label="e.event" :variant="eventVariant(e.event)" :tooltip="tipCellEvent(e)" />
             </td>
@@ -146,14 +156,16 @@ export default defineComponent({
       return this.expStore.entries.slice(-20).reverse()
     },
     hasEntries(): boolean { return this.expStore.entries.length > 0 },
-    isResonanceMode(): boolean { return this.cellStore.chartMode === 'resonance' },
+    isResonanceMode(): boolean { return this.cellStore.isResonanceMode },
     /** Show the Session column only when entries span more than one named session. */
     showSessionCol(): boolean {
       const names = new Set(this.expStore.entries.map((e) => e.sessionName ?? ''))
       return names.size > 1
     },
     emptyColspan(): number {
-      const base = this.isResonanceMode ? 8 : 10
+      // Schwan: #, time, freq, field, T-Vm, H-Vm, sel, DEP-H, DEP-T, event = 10
+      // Resonance: #, time, freq, field, T-DR%, H-DR%, event = 7
+      const base = this.isResonanceMode ? 7 : 10
       return this.showSessionCol ? base + 1 : base
     },
 
@@ -244,9 +256,16 @@ export default defineComponent({
     flex-wrap: wrap;
   }
 
+  &__session-group {
+    @include flex-row(0.5rem);
+    flex: 1;
+    min-width: 140px;
+    align-items: center;
+  }
+
   &__name-input {
     flex: 1;
-    min-width: 100px;
+    min-width: 80px;
     background: transparent;
     border: none;
     border-bottom: 1px solid var(--color-border);
@@ -324,30 +343,24 @@ export default defineComponent({
       top: 0;
       background: var(--color-surface-2);
       padding: 0.3rem 0.45rem;
-      text-align: right;
+      text-align: left;
       color: var(--color-text);
       font-weight: 400;
       text-transform: uppercase;
       letter-spacing: 0.06em;
       white-space: nowrap;
       border-bottom: 1px solid var(--color-border);
-
-      &:first-child { text-align: left; }
     }
 
     tbody {
       td {
         padding: 0.28rem 0.45rem;
-        text-align: right;
+        text-align: left;
         color: var(--color-text);
         border-bottom: 1px solid rgba(255,255,255,0.04);
         white-space: nowrap;
       }
       tr:hover td { background: rgba(255,255,255,0.025); }
-
-      .exp-log__td-session,
-      .exp-log__td-id,
-      .exp-log__td-mono { text-align: left; }
     }
   }
 
@@ -366,13 +379,14 @@ export default defineComponent({
   }
   &__td-id   { opacity: 0.6; }
   &__td-mono { }
-  &__td-target  { color: var(--color-danger); }
-  &__td-healthy { color: var(--color-primary); }
-  &__td-sel    { color: var(--color-text-heading); font-weight: 600; }
-  &__td-dep    { opacity: 0.85; }
-  &__td-pdep   { color: var(--color-lime); }
-  &__td-ndep   { color: var(--color-amber); }
-  &__td-event  { text-align: right; }
-  &__td-empty  { text-align: center; opacity: 0.6; padding: 1rem; }
+  &__td-target     { color: var(--color-danger); }
+  &__td-healthy    { color: var(--color-primary); }
+  &__td-healthy-dr { color: var(--color-primary); opacity: var(--op-dim); }
+  &__td-sel        { color: var(--color-text-heading); font-weight: 600; }
+  &__td-dep        { opacity: 0.85; }
+  &__td-pdep       { color: var(--color-lime); }
+  &__td-ndep       { color: var(--color-amber); }
+  &__td-event      { }
+  &__td-empty      { text-align: center; opacity: 0.6; padding: 1rem; }
 }
 </style>

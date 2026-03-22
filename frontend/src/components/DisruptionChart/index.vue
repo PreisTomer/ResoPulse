@@ -16,7 +16,7 @@ import { defineComponent } from 'vue'
 import * as d3 from 'd3'
 import { useCellStore } from '@/stores/cellStore'
 import { broadcastStateSync } from '@/services/socket'
-import { CELL_CATEGORY, CHART_MODE } from '@/constants/strings'
+import { CELL_CATEGORY } from '@/constants/strings'
 import { C } from '@/theme/colors'
 import DrChartLegend from './DrChartLegend.vue'
 import DrChartTooltip from './DrChartTooltip.vue'
@@ -189,7 +189,7 @@ export default defineComponent({
         this.store.healthy, this.store.target,
         this.store.fieldIntensity, this.store.effectiveSigmaE, this.store.cosThetaFactor,
         this.store.pulseEnvelopeFactorHealthy, this.store.pulseEnvelopeFactorTarget,
-        this.store.chartMode === CHART_MODE.RESONANCE,
+        this.store.isResonanceMode,
         this.store.targetCellCategory === CELL_CATEGORY.BACTERIA || this.store.targetCellCategory === CELL_CATEGORY.VIRUS,
       )
       this._curveData = data

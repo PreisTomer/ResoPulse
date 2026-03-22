@@ -60,7 +60,7 @@
       </div>
 
       <!-- ── DEP (Schwan mode only) ─────────────────────────────── -->
-      <template v-if="store.chartMode !== 'resonance'">
+      <template v-if="!store.isResonanceMode">
         <div class="sel-panel__sep"></div>
         <DepSection />
       </template>
@@ -70,7 +70,7 @@
       <VmSarGrid />
 
       <!-- ── Resonance physics (resonance mode + resonance target) ─ -->
-      <ResonanceInfo v-if="isResonanceTarget && store.chartMode === CHART_MODE.RESONANCE" />
+      <ResonanceInfo v-if="isResonanceTarget && store.isResonanceMode" />
 
       <!-- ── Mode badge + optimal snap + physics warning ────────── -->
       <ModeBadge />
@@ -143,7 +143,7 @@ export default defineComponent({
     tiRange(): { low: number; high: number } { return this.store.tiUncertaintyRange },
 
     showTiUncertainty(): boolean {
-      return this.store.chartMode !== 'resonance' && Math.abs(this.tiRange.high - this.tiRange.low) > 0.01
+      return !this.store.isResonanceMode && Math.abs(this.tiRange.high - this.tiRange.low) > 0.01
     },
 
     tipTiRange(): string {
@@ -163,7 +163,7 @@ export default defineComponent({
     },
 
     targetOrientPct(): string {
-      if (this.store.chartMode === CHART_MODE.RESONANCE && this.isResonanceTarget) return ', '
+      if (this.store.isResonanceMode && this.isResonanceTarget) return ', '
       return `${(this.store.targetLysisProbabilityRandom * 100).toFixed(0)}%`
     },
 
@@ -172,7 +172,7 @@ export default defineComponent({
     },
 
     targetPopDistPct(): string {
-      if (this.store.chartMode === CHART_MODE.RESONANCE && this.isResonanceTarget) return ', '
+      if (this.store.isResonanceMode && this.isResonanceTarget) return ', '
       return `${(this.store.targetPopulationLysisFraction * 100).toFixed(0)}%`
     },
 
