@@ -403,7 +403,6 @@ export default defineComponent({
   &__row {
     @include field-row-grid();
     padding-bottom: 0.45rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   }
 
   &__row-header { @include field-row-header(); }

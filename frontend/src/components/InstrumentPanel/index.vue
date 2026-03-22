@@ -29,7 +29,7 @@
     </div>
 
     <!-- Sonification toggle -->
-    <div class="inst-panel__card inst-panel__card--sonif">
+    <div id="hl-sonif-card" class="inst-panel__card inst-panel__card--sonif">
       <SonificationToggle />
     </div>
   </div>

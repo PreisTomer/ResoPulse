@@ -2,7 +2,7 @@
 <template>
   <section id="protocol-steps" class="protocol__section">
     <h2 class="protocol__section-title" v-html="$t('protocol.protocol.title')"></h2>
-    <ol class="protocol__steps">
+    <ol class="protocol__steps" @click="onStepsClick">
       <li v-for="(stepKey, i) in stepKeys" :key="stepKey" class="protocol__step">
         <div class="protocol__step-num">{{ String(i + 1).padStart(2, '0') }}</div>
         <div class="protocol__step-body">
@@ -16,6 +16,8 @@
 
 <script lang="ts">
 import { defineComponent, type PropType } from 'vue'
+import { useUiStore } from '@/stores/uiStore'
+import { scrollAndHighlight } from '@/utils/highlight'
 
 export default defineComponent({
   name: 'ProtocolSectionSteps',
@@ -24,6 +26,31 @@ export default defineComponent({
     stepKeys: {
       type: Array as PropType<string[]>,
       required: true,
+    },
+  },
+
+  methods: {
+    /**
+     * Event-delegation handler for lab-link spans embedded in step descriptions.
+     * Spans carry data-target (element id) and data-route (path).
+     * If already on the target route, scroll-and-highlight immediately.
+     * Otherwise, stash the target in uiStore and navigate — the destination
+     * view's mounted() hook picks it up and applies the highlight.
+     */
+    onStepsClick(e: MouseEvent) {
+      const link = (e.target as HTMLElement).closest<HTMLElement>('.proto-lab-link')
+      if (!link) return
+      e.preventDefault()
+
+      const targetId = link.dataset.target ?? ''
+      const route    = link.dataset.route  ?? '/experiment'
+
+      if (this.$route.path === route) {
+        scrollAndHighlight(targetId)
+      } else {
+        useUiStore().setPendingHighlight(targetId)
+        this.$router.push(route)
+      }
     },
   },
 })
@@ -81,5 +108,31 @@ export default defineComponent({
   line-height: 1.6;
   color: var(--color-text);
   margin: 0;
+
+  // Inline lab-link spans inside v-html rendered descriptions
+  :deep(.proto-lab-link) {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2em;
+    color: var(--color-primary);
+    font-weight: 500;
+    cursor: pointer;
+    border-bottom: 1px dashed color-mix(in srgb, var(--color-primary) 50%, transparent);
+    transition: color var(--tr-fast), border-color var(--tr-fast);
+
+    &::after {
+      content: '↗';
+      font-size: 0.7em;
+      opacity: var(--op-muted);
+      transition: opacity var(--tr-fast);
+    }
+
+    &:hover {
+      color: var(--color-primary-light, var(--color-primary));
+      border-bottom-color: var(--color-primary);
+
+      &::after { opacity: 1; }
+    }
+  }
 }
 </style>

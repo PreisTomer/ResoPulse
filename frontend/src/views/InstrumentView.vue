@@ -80,7 +80,7 @@
       </div>
 
       <!-- Main instrument panel -->
-      <InstrumentPanel />
+      <InstrumentPanel id="hl-instrument-panel" />
 
       <!-- PoC caveat -->
       <div class="instrument__poc-note">
@@ -99,8 +99,10 @@
 import { defineComponent } from 'vue'
 import { useCellStore } from '@/stores/cellStore'
 import { useImpedanceStore } from '@/stores/impedanceStore'
+import { useUiStore } from '@/stores/uiStore'
 import InstrumentPanel from '@/components/InstrumentPanel/index.vue'
 import PageHeader from '@/components/PageHeader.vue'
+import { scrollAndHighlight } from '@/utils/highlight'
 import { UNIT } from '@/constants/units'
 import { ICON } from '@/constants/icons'
 
@@ -111,10 +113,20 @@ export default defineComponent({
     return {
       cellStore: useCellStore(),
       impStore:  useImpedanceStore(),
+      uiStore:   useUiStore(),
       UNIT,
       ICON,
     }
   },
+
+  mounted() {
+    const targetId = this.uiStore.pendingHighlight
+    if (targetId) {
+      this.uiStore.clearPendingHighlight()
+      scrollAndHighlight(targetId, 300)
+    }
+  },
+
   computed: {
     targetDR(): number {
       return this.cellStore.targetDisruptionRatio

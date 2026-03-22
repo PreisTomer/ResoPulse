@@ -30,6 +30,7 @@
           :active-section="activeSection"
           :is-mobile-open="tocMobileOpen"
           @close="tocMobileOpen = false"
+          @feedback="showFeedbackModal = true"
         />
 
         <!-- Main document -->
@@ -53,6 +54,11 @@
         </article>
       </div>
     </div>
+
+    <ProtocolFeedbackModal
+      v-if="showFeedbackModal"
+      @close="showFeedbackModal = false"
+    />
   </div>
 </template>
 
@@ -65,6 +71,7 @@ import ProtocolSectionPhysics from './ProtocolSectionPhysics.vue'
 import ProtocolSectionSteps from './ProtocolSectionSteps.vue'
 import ProtocolSectionSafety from './ProtocolSectionSafety.vue'
 import ProtocolSectionRefs from './ProtocolSectionRefs.vue'
+import ProtocolFeedbackModal from './ProtocolFeedbackModal.vue'
 import type {
   TocItem,
   SchwanParamRow,
@@ -119,12 +126,14 @@ export default defineComponent({
     ProtocolSectionSteps,
     ProtocolSectionSafety,
     ProtocolSectionRefs,
+    ProtocolFeedbackModal,
   },
 
   data() {
     return {
-      activeSection: 'overview' as string,
-      tocMobileOpen: false,
+      activeSection:     'overview' as string,
+      tocMobileOpen:     false,
+      showFeedbackModal: false,
     }
   },
 

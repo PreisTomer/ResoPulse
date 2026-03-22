@@ -1,11 +1,13 @@
 <!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
 <template>
-  <button class="field-panel__accordion" @click="open = !open">
+  <div class="field-panel__section" :class="{ 'field-panel__section--open': open }">
+  <button class="field-panel__accordion" :class="{ 'field-panel__accordion--open': open }" @click="open = !open">
     <span class="field-panel__accordion-label">{{ $t('slider.protocol') }}</span>
     <span class="field-panel__accordion-chevron" :class="{ 'field-panel__accordion-chevron--open': open }">{{ ICON.CHEVRON }}</span>
   </button>
 
   <div v-show="open" class="field-panel__accordion-body">
+    <ProtocolSnapBar :slider-ranges="sliderRanges" />
     <!-- Row 4: Waveform selector -->
     <div class="field-panel__row field-panel__row--medium" v-tip="tipWaveform">
       <div class="field-panel__row-header">
@@ -86,6 +88,7 @@
       </div>
     </div>
   </div>
+  </div>
 </template>
 
 <script lang="ts">
@@ -100,8 +103,11 @@ import { tipWaveform, tipDutyCycle, tipPulseWidth, formatLysisTime } from '@/too
 import { CW_WAVEFORM_FACTOR, PULSED_WAVEFORM_FACTOR } from '@/constants/experimentDefaults'
 import { H_FIRE_THRESHOLD_MULTIPLIER } from '@/constants/physics'
 import { SLIDER_DC } from '@/constants/sliderBounds'
+import ProtocolSnapBar from './ProtocolSnapBar.vue'
 
 export default defineComponent({
+  components: { ProtocolSnapBar },
+
   props: {
     sliderRanges: {
       type: Object as PropType<{
@@ -233,12 +239,18 @@ export default defineComponent({
 
 <style lang="scss" scoped>
 
-
 // thumb-danger-pulse and state-blink are defined globally in styles/_keyframes.scss
 
 .field-panel {
+  &__section {
+    border-bottom: 1px solid var(--color-border);
+    background: color-mix(in srgb, var(--color-text) 3%, var(--color-surface));
+  }
+
   &__accordion {
     @include accordion-header();
+    border-top: none;
+    padding: 0.65rem 1.25rem;
 
     &-label  { flex: 1; }
 
@@ -253,7 +265,12 @@ export default defineComponent({
       &--open { transform: rotate(90deg); }
     }
 
-    &-body { display: flex; flex-direction: column; gap: 0.9rem; padding-top: 0.4rem; }
+    &-body {
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+      padding: 0.6rem 1.25rem 0.8rem;
+    }
   }
 
   &__safe-lock { font-size: var(--fs-xxs); opacity: var(--op-dim); margin-left: 0.2rem; }
@@ -261,7 +278,8 @@ export default defineComponent({
   &__row {
     @include field-row-grid();
 
-    &--medium .field-panel__row-header .field-panel__pills { flex: 1; justify-content: center; }
+    &--medium .field-panel__row-label { min-width: 4.2rem; flex-shrink: 0; }
+    &--medium .field-panel__row-header .field-panel__pills { flex: 1; justify-content: flex-start; }
     &--medium .field-panel__row-meta {
       min-width: 7.5rem;
       text-align: right;

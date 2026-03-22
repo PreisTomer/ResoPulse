@@ -19,7 +19,7 @@
       <div class="experiment__top">
         <!-- Sentinel: observed by IntersectionObserver to detect when cells scroll out of view -->
         <div ref="cellsAnchor" class="experiment__cells-anchor"></div>
-        <div class="experiment__cells">
+        <div id="hl-cell-cards" class="experiment__cells">
           <CellCard
             v-for="cell in cells"
             :key="cell.id"
@@ -31,13 +31,13 @@
             :cell-data="cell.cellData"
           />
         </div>
-        <div class="experiment__field">
+        <div id="hl-freq-slider" class="experiment__field">
           <FrequencySlider />
         </div>
       </div>
 
       <!-- Row 2: Chart (full width, collapsible) -->
-      <div class="experiment__chart-section">
+      <div id="hl-freq-chart" class="experiment__chart-section">
         <AccordionPanel
           :icon="ICON.WAVE"
           :title="$t('exp.chartSectionTitle')"
@@ -51,7 +51,7 @@
       </div>
 
       <!-- Row 2b: Disruption ratio chart (full width, collapsible) -->
-      <div class="experiment__chart-section">
+      <div id="hl-disruption-chart" class="experiment__chart-section">
         <AccordionPanel
           :icon="ICON.LYSIS_BOLT"
           :title="$t('drChart.sectionTitle')"
@@ -64,21 +64,21 @@
       </div>
 
       <!-- Row 3: Selectivity (full width) -->
-      <SelectivityPanel />
+      <SelectivityPanel id="hl-selectivity-panel" />
 
       <!-- Row 4: Therapeutic Heatmap (full width, collapsible) -->
       <TherapeuticHeatmap />
 
       <!-- Row 5 & 6: Research analysis tools - sweep + population (collapsible, full width) -->
-      <SweepPanel @window-change="onSweepWindowChange" @open-change="sweepPanelOpen = $event" />
+      <SweepPanel id="hl-sweep-panel" @window-change="onSweepWindowChange" @open-change="sweepPanelOpen = $event" />
 
       <!-- Therapeutic window snap bar - appears below sweep results, where the user already is -->
       <SnapBar v-if="sweepWindow" :sweep-window="sweepWindow" />
 
-      <PopulationPanel @open-change="populationPanelOpen = $event" />
+      <PopulationPanel id="hl-population-panel" @open-change="populationPanelOpen = $event" />
 
       <!-- Row 7: Log (full width) -->
-      <ExperimentLog />
+      <ExperimentLog id="hl-experiment-log" />
 
     </div>
   </div>
@@ -112,8 +112,10 @@ import ExperimentNotes from '@/components/ExperimentLab/ExperimentNotes.vue'
 import SnapBar from '@/components/ExperimentLab/SnapBar.vue'
 import StickyCellView from '@/components/ExperimentLab/StickyCellView.vue'
 import { useExperimentStore } from '@/stores/experimentStore'
+import { useUiStore } from '@/stores/uiStore'
 import { CELL_PRESETS } from '@/constants/cellLibrary'
 import { computeSAR } from '@/utils/physics'
+import { scrollAndHighlight } from '@/utils/highlight'
 import { CATEGORY_DEFAULTS, INITIAL_RESONANT_FIELD_FRACTION, DEFAULT_LYSIS_N_PULSES, DEFAULT_ORIENTATION_DEG } from '@/constants/experimentDefaults'
 import { CELL_CATEGORY, CELL_TYPE, CHART_MODE } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
@@ -141,6 +143,7 @@ export default defineComponent({
     return {
       store: useCellStore(),
       expStore: useExperimentStore(),
+      uiStore: useUiStore(),
       CHART_MODE,
       ICON,
     }
@@ -356,6 +359,14 @@ export default defineComponent({
         { threshold: 0 },
       )
       this.cellsObserver.observe(sentinel)
+    }
+
+    // Apply any pending lab-link highlight navigated from the Protocol view.
+    // Delay lets child components finish rendering before the scroll fires.
+    const targetId = this.uiStore.pendingHighlight
+    if (targetId) {
+      this.uiStore.clearPendingHighlight()
+      scrollAndHighlight(targetId, 300)
     }
   },
 

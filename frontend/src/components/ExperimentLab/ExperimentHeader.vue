@@ -1,6 +1,6 @@
 <!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
 <template>
-  <div class="experiment__header">
+  <div id="hl-setup-bar" class="experiment__header">
 
     <!-- Far left: session name + notes toggle -->
     <div class="experiment__header-left">
@@ -20,7 +20,7 @@
     </div>
 
     <!-- Center: cell selectors -->
-    <div class="experiment__cell-badges">
+    <div id="hl-cell-badges" class="experiment__cell-badges">
 
       <!-- Healthy baseline badge + picker -->
       <div class="experiment__cell-slot">
@@ -55,6 +55,7 @@
       <!-- Target cell badge + picker -->
       <div class="experiment__cell-slot">
         <button
+          id="hl-target-badge"
           class="experiment__cell-badge experiment__cell-badge--target"
           @click="toggleTargetPicker"
           v-tip="tipTargetBadge"

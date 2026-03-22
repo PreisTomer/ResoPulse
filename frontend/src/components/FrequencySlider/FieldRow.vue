@@ -1,6 +1,7 @@
 <!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
 <template>
   <div
+    id="hl-field-row"
     class="field-panel__row field-panel__row--interactive"
     :class="thermalDangerLevel !== THERMAL_LEVEL.SAFE ? `field-panel__row--${thermalDangerLevel}` : ''"
   >
@@ -251,7 +252,6 @@ export default defineComponent({
   &__row {
     @include field-row-grid();
     padding-bottom: 0.45rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 
     &--hyperthermic .field-panel__slider {
       &::-webkit-slider-thumb { background: var(--color-amber);  box-shadow: 0 0 6px  color-mix(in srgb, var(--color-amber) 50%, transparent); }

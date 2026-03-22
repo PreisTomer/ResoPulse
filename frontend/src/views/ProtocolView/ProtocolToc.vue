@@ -14,6 +14,12 @@
       @click="$emit('close')"
       v-html="$t(`protocol.toc.${item.key}`)"
     ></a>
+
+    <div class="protocol__toc-divider"></div>
+    <button class="protocol__toc-feedback" @click="$emit('feedback')">
+      <span class="protocol__toc-feedback-main">{{ $t('protocol.feedback.trigger') }}</span>
+      <span class="protocol__toc-feedback-sub">{{ $t('protocol.feedback.triggerSub') }}</span>
+    </button>
   </nav>
 </template>
 
@@ -39,7 +45,7 @@ export default defineComponent({
     },
   },
 
-  emits: ['close'],
+  emits: ['close', 'feedback'],
 
   methods: {
     isActive(item: TocItem): boolean {
@@ -91,6 +97,47 @@ export default defineComponent({
       background-color: color-mix(in srgb, var(--color-primary) 8%, transparent);
       border-left: 2px solid var(--color-primary);
       padding-left: calc(0.5rem - 2px);
+    }
+  }
+
+  &-divider {
+    height: 1px;
+    background: var(--color-border);
+    margin: 0.65rem 0;
+    opacity: var(--op-ghost);
+  }
+
+  &-feedback {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    width: 100%;
+    background: color-mix(in srgb, var(--color-amber) 5%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-amber) 25%, var(--color-border));
+    border-radius: var(--radius);
+    padding: 0.55rem 0.65rem;
+    cursor: pointer;
+    text-align: left;
+    transition: background-color var(--tr-fast), border-color var(--tr-fast);
+
+    &:hover {
+      background: color-mix(in srgb, var(--color-amber) 10%, transparent);
+      border-color: color-mix(in srgb, var(--color-amber) 50%, var(--color-border));
+    }
+
+    &-main {
+      font-size: var(--fs-sm);
+      font-weight: 600;
+      color: var(--color-amber);
+    }
+
+    &-sub {
+      @include mono-upper(var(--fs-xxs), 0.05em);
+      color: var(--color-text-muted);
+      opacity: var(--op-muted);
+      text-transform: none;
+      letter-spacing: 0;
+      font-size: var(--fs-xxs);
     }
   }
 

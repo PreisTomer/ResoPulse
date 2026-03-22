@@ -34,6 +34,7 @@ export const ICON = {
   DEP:         '⇌',  // DEP bidirectional force / crossover
   RETICLE:     '⌖',  // position indicator / row selection target
   CLOSE:       '✕',  // dismiss / delete button
+  MAIL:        '✉',  // email / send report
   TIMES:       '×',  // multiplication prefix (e.g. ×1.75 factor display)
   DOT:         '●',  // filled status dot (compact cell state indicator)
 } as const
