@@ -282,7 +282,10 @@ export default defineComponent({
     &--medium .field-panel__row-header .field-panel__pills { flex: 1; justify-content: center; }
   }
 
-  &__row-header { @include field-row-header(); }
+  &__row-header {
+    @include field-row-header();
+    min-height: 2.2rem;
+  }
 
   &__row-label { @include row-label(); }
 
