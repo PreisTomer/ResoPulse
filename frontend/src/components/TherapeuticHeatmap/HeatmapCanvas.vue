@@ -70,7 +70,7 @@ export default defineComponent({
 
     yMax(): number {
       const s      = this.store
-      const sigma  = s.sigma_e
+      const sigma  = s.effectiveSigmaE
       const pulsed = s.waveform === WAVEFORM.PULSED
       const pw_ns  = s.pulseWidthNs
 
@@ -197,7 +197,7 @@ export default defineComponent({
 
     _zoneAt(freqKHz: number, fieldVcm: number): HmapZone {
       const s = this.store
-      const sigma_e = s.sigma_e
+      const sigma_e = s.effectiveSigmaE
       const wf      = s.waveform === WAVEFORM.PULSED ? WF_PULSED : WF_CW
       const dc      = s.dutyCycle
       const pw_ns   = s.pulseWidthNs
@@ -237,7 +237,7 @@ export default defineComponent({
 
     _computeGrid() {
       const s       = this.store
-      const sigma_e = s.sigma_e
+      const sigma_e = s.effectiveSigmaE
       const wf      = s.waveform === WAVEFORM.PULSED ? WF_PULSED : WF_CW
       const dc      = s.dutyCycle
       const pw_ns   = s.pulseWidthNs
@@ -560,7 +560,7 @@ export default defineComponent({
       const zone     = this._zoneAt(freqKHz, fieldVcm)
 
       // Hover physics
-      const s = this.store, sigma_e = s.sigma_e
+      const s = this.store, sigma_e = s.effectiveSigmaE
       const wf     = s.waveform === WAVEFORM.PULSED ? WF_PULSED : WF_CW
       const dc     = s.dutyCycle, pw_ns = s.pulseWidthNs, pulsed = s.waveform === WAVEFORM.PULSED
       const hTau   = computeTau(s.healthy, sigma_e)

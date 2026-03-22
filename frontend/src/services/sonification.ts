@@ -23,6 +23,8 @@
  *   Healthy-cell warning  → 110 Hz warning pulse
  */
 
+import { CELL_STATE } from '@/constants/strings'
+
 // ── Pitch mapping constants ────────────────────────────────────────────────────
 
 const BASE_FREQ_HZ     = 220    // A3, baseline tone at zero drift
@@ -131,7 +133,7 @@ class SonificationService {
 
     // ── Tremolo: active only in rev-ep state ─────────────────────────────────
     if (this.tremoloGain) {
-      const tremoloAmt = cellState === 'rev-ep' ? 0.08 : 0
+      const tremoloAmt = cellState === CELL_STATE.REV_EP ? 0.08 : 0
       this.tremoloGain.gain.linearRampToValueAtTime(tremoloAmt, now + RAMP_TIME_S)
     }
 
