@@ -33,12 +33,12 @@
       v-tip="$t('chart.tipNucT')"
     ><span class="freq-chart__legend-line freq-chart__legend-line--nuc-t"></span> {{ $t('chart.legendNucT') }}</span>
     <span
-      v-if="store.chartMode !== 'resonance'"
+      v-if="!store.isResonanceMode"
       class="freq-chart__legend-item"
       v-tip="$t('chart.tipDepH')"
     ><span class="freq-chart__legend-line freq-chart__legend-line--dep-h"></span> {{ $t('chart.legendDepH') }}</span>
     <span
-      v-if="store.chartMode !== 'resonance'"
+      v-if="!store.isResonanceMode"
       class="freq-chart__legend-item"
       v-tip="$t('chart.tipDepT')"
     ><span class="freq-chart__legend-line freq-chart__legend-line--dep-t"></span> {{ $t('chart.legendDepT') }}</span>

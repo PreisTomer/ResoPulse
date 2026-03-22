@@ -56,7 +56,7 @@ import {
   computeSchwan, computeSAR, computeTau, computePulseStepResponse,
   computeResonantDisruption,
 } from '@/utils/physics'
-import { WAVEFORM, CHART_MODE, CELL_CATEGORY } from '@/constants/strings'
+import { WAVEFORM, CELL_CATEGORY } from '@/constants/strings'
 import {
   THRESHOLDS, DEFAULT_CAPSID_Q,
   NEWTON_COOLING_LAMBDA, PENNES_BLOOD_COEFF, WF_CW, WF_PULSED, BODY_TEMP_C,
@@ -115,7 +115,7 @@ export default defineComponent({
       const t = this.store.target as CellConfig & { resonantFreqGHz?: number; resonantThresholdVcm?: number }
       return (cat === CELL_CATEGORY.BACTERIA || cat === CELL_CATEGORY.VIRUS) &&
         !!t.resonantFreqGHz && !!t.resonantThresholdVcm &&
-        this.store.chartMode === CHART_MODE.RESONANCE
+        this.store.isResonanceMode
     },
 
     /** Category-appropriate default frequency sweep max.
@@ -270,8 +270,8 @@ export default defineComponent({
         `# Model: Schwan equation (Kotnik & Miklavcic 2000), ResoPulse`,
       ].join('\n')
       const header = this.sweepParam === 'field'
-        ? 'E_field_Vcm,DR_healthy,DR_target,TI,T_healthy_C,T_target_C,therapeutic_window'
-        : 'freq_kHz,DR_healthy,DR_target,TI,T_healthy_C,T_target_C,therapeutic_window'
+        ? 'E_field_Vcm,DR_healthy,DR_target,TI,T_healthy_C,T_target_C,selective_window'
+        : 'freq_kHz,DR_healthy,DR_target,TI,T_healthy_C,T_target_C,selective_window'
       const rows = this.sweepData.map(p => {
         const inWindow = p.drT >= THRESHOLDS.DISRUPTION_WARN && p.drH < THRESHOLDS.HEALTHY_APPROACHING ? 1 : 0
         return `${p.x.toFixed(2)},${p.drH.toFixed(4)},${p.drT.toFixed(4)},${p.ti.toFixed(4)},${p.tH.toFixed(2)},${p.tT.toFixed(2)},${inWindow}`

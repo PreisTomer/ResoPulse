@@ -25,7 +25,7 @@ import { useCellStore } from '@/stores/cellStore'
 import { computeSchwan, computeFc, computeResonantLineshape, computeResonantDisruption, computeTau } from '@/utils/physics'
 import { CELL_PRESETS, GROUP_COLORS } from '@/constants/cellLibrary'
 import { DEFAULT_CAPSID_Q, THRESHOLDS } from '@/constants/physics'
-import { CELL_CATEGORY, CHART_MODE } from '@/constants/strings'
+import { CELL_CATEGORY } from '@/constants/strings'
 import { MEDIA } from '@/constants/media'
 import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'
@@ -60,6 +60,9 @@ export default defineComponent({
       _cursorX: 0,
       _resizeObserver: null as ResizeObserver | null,
       _tooltipData: null as TooltipData | null,
+      _isDragging: false,
+      _pendingDragKhz: null as number | null,
+      _dragRafPending: false,
     }
   },
 
@@ -70,7 +73,7 @@ export default defineComponent({
     'store.medium':                    { handler() { this.updateChart() } },
     'store.effectiveSigmaE':           { handler() { this.updateChart() } },
     'store.cosThetaFactor':            { handler() { this.updateChart() } },
-    'store.currentBroadcastFrequency': { handler() { this.updateCursor() } },
+    'store.currentBroadcastFrequency': { handler() { if (!this._isDragging) this.updateCursor() } },
     'store.doubleShellEnabled':        { handler() { this.updateChart() } },
     'store.chartMode':                 { handler() { this.updateChart() } },
     'store.waveform':                  { handler() { this.updateChart() } },
@@ -225,13 +228,38 @@ export default defineComponent({
 
       // Hover + drag overlay (covers full chart area)
       const dragBehavior = d3.drag<SVGRectElement, unknown>()
+        .on('start', () => { this._isDragging = true })
         .on('drag', (event) => {
           if (!this._xScale) return
           const xClamped = Math.max(0, Math.min(this._chartW, event.x))
           const hz = this._xScale.invert(xClamped)
           const khz = Math.max(10, Math.min(F_CURSOR_MAX_KHZ, hz / 1000))
-          this.store.setBroadcastFreqKHz(Math.round(khz))
-          broadcastStateSync()
+
+          // Immediate visual update — bypass Vue reactivity for smooth dragging
+          this.updateCursor(khz)
+
+          // Throttle store + socket updates to one frame to avoid re-render storms
+          this._pendingDragKhz = khz
+          if (!this._dragRafPending) {
+            this._dragRafPending = true
+            requestAnimationFrame(() => {
+              this._dragRafPending = false
+              if (this._pendingDragKhz !== null) {
+                this.store.setBroadcastFreqKHz(this._pendingDragKhz)
+                broadcastStateSync()
+                this._pendingDragKhz = null
+              }
+            })
+          }
+        })
+        .on('end', () => {
+          this._isDragging = false
+          // Flush any pending update so the store stays in sync
+          if (this._pendingDragKhz !== null) {
+            this.store.setBroadcastFreqKHz(this._pendingDragKhz)
+            broadcastStateSync()
+            this._pendingDragKhz = null
+          }
         })
 
       g.append('rect')
@@ -437,7 +465,7 @@ export default defineComponent({
       const cat = this.store.targetCellCategory
       const t = this.store.target
       if (
-        this.store.chartMode === CHART_MODE.RESONANCE &&
+        this.store.isResonanceMode &&
         (cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) &&
         t.resonantFreqGHz && t.resonantThresholdVcm
       ) {
@@ -833,10 +861,11 @@ export default defineComponent({
     },
 
     // ── Cursor-only update (cheap) ───────────────────────────────────────
-    updateCursor() {
+    updateCursor(overrideKhz?: number) {
       if (!this._svg || !this._xScale) return
       const g = this._svg.select<SVGGElement>('.chart-g')
-      const hz = this.store.currentBroadcastFrequency * 1000
+      const freqKHz = overrideKhz ?? this.store.currentBroadcastFrequency
+      const hz = freqKHz * 1000
       // Use dynamic domain (changes in resonance mode)
       const [domMin, domMax] = this._xScale.domain() as [number, number]
       const x = this._xScale(Math.max(domMin, Math.min(domMax, hz)))
@@ -845,10 +874,9 @@ export default defineComponent({
       g.select('.cursor-line').attr('x1', x).attr('x2', x)
       g.select('.cursor-drag-hint').attr('x', x)
 
-      const freqKHz = this.store.currentBroadcastFrequency
       const label = freqKHz >= 1e6 ? `${(freqKHz / 1e6).toFixed(2)} ${UNIT.GHZ}`
-                  : freqKHz >= 1000 ? `${(freqKHz / 1000).toFixed(1)} ${UNIT.MHZ}`
-                  : `${freqKHz} ${UNIT.KHZ}`
+                  : freqKHz >= 1000 ? `${(freqKHz / 1000).toFixed(2)} ${UNIT.MHZ}`
+                  : `${freqKHz.toFixed(1)} ${UNIT.KHZ}`
       const textEl = g.select<SVGTextElement>('.cursor-label')
       textEl.attr('x', x).text(label)
 
@@ -877,7 +905,7 @@ export default defineComponent({
 
       // In resonance mode show DR (disruption ratio), not Vm - axes are incompatible
       if (
-        this.store.chartMode === CHART_MODE.RESONANCE &&
+        this.store.isResonanceMode &&
         (cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) &&
         t.resonantFreqGHz && t.resonantThresholdVcm
       ) {

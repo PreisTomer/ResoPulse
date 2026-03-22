@@ -167,3 +167,6 @@ export const PRESET_ID = {
   INFLUENZA:      'influenza',
   SARSCOV2:       'sarscov2',
 } as const
+
+/** Default session name used when no prior experiment state is found in localStorage. */
+export const DEFAULT_SESSION_NAME = 'Session 001'

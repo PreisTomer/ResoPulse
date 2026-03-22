@@ -52,7 +52,7 @@
 import { defineComponent } from 'vue'
 import { useCellStore } from '@/stores/cellStore'
 import { broadcastStateSync } from '@/services/socket'
-import { CHART_MODE, CELL_CATEGORY, FREQ_REGIME } from '@/constants/strings'
+import { CELL_CATEGORY, FREQ_REGIME } from '@/constants/strings'
 import { UNIT } from '@/constants/units'
 import { HMAP_LYSIS_DR, HMAP_WARN_DR, HMAP_THERM_WARN_C, HMAP_THERM_CRIT_C } from '@/constants/heatmap'
 
@@ -80,7 +80,7 @@ export default defineComponent({
     },
 
     pLysisStr(): string {
-      if (this.store.chartMode === CHART_MODE.RESONANCE) {
+      if (this.store.isResonanceMode) {
         if (this.store.targetCellCategory !== CELL_CATEGORY.MAMMALIAN) return '\u2014'
       }
       return `${(this.store.targetLysisProbabilityRandom * 100).toFixed(0)}%`

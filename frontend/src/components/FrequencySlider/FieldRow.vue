@@ -127,7 +127,7 @@ export default defineComponent({
 
     tipFieldLabel(): string {
       return tipField({
-        chartMode:          this.store.chartMode,
+        isResonanceMode:    this.store.isResonanceMode,
         target:             this.store.target as Parameters<typeof tipField>[0]['target'],
         fieldDisplay:       this.fieldDisplay,
         targetDisruption:   this.targetDisruption,
@@ -140,7 +140,7 @@ export default defineComponent({
 
     tipTargetBadgeLabel(): string {
       return tipTargetBadge({
-        chartMode:            this.store.chartMode,
+        isResonanceMode:      this.store.isResonanceMode,
         target:               this.store.target as Parameters<typeof tipTargetBadge>[0]['target'],
         targetDisruptPercent: this.targetDisruptPercent,
         targetDisruption:     this.targetDisruption,
@@ -152,7 +152,7 @@ export default defineComponent({
 
     tipHealthyBadgeLabel(): string {
       return tipHealthyBadge({
-        chartMode:             this.store.chartMode,
+        isResonanceMode:       this.store.isResonanceMode,
         healthyDisruptPercent: this.healthyDisruptPercent,
         healthyDisruption:     this.healthyDisruption,
         healthyVmMv:           this.store.healthyVm * 1000,

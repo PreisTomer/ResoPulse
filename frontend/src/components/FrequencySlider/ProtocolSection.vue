@@ -20,7 +20,7 @@
             {{ $t('slider.cw') }}
           </label>
           <label
-            class="field-panel__pill field-panel__pill--expert"
+            class="field-panel__pill field-panel__pill--hfire"
             :class="{ 'field-panel__pill--active': currentWaveform === WAVEFORM.H_FIRE }"
             v-tip="$t('slider.tipHfire')"
           >
@@ -262,6 +262,11 @@ export default defineComponent({
     @include field-row-grid();
 
     &--medium .field-panel__row-header .field-panel__pills { flex: 1; justify-content: center; }
+    &--medium .field-panel__row-meta {
+      min-width: 7.5rem;
+      text-align: right;
+      @media (max-width: 480px) { min-width: 5rem; }
+    }
 
     &--hyperthermic .field-panel__slider {
       &::-webkit-slider-thumb { background: var(--color-amber);  box-shadow: 0 0 6px  color-mix(in srgb, var(--color-amber) 50%, transparent); }
@@ -301,10 +306,20 @@ export default defineComponent({
 
     input { display: none; }
 
+    &:active   { filter: brightness(1.4); transform: scale(0.95); }
     &--active  { border-color: var(--color-primary); color: var(--color-primary); background-color: var(--color-primary-dim); }
     &--sm      { font-size: var(--fs-xs); padding: 0.14rem 0.45rem; }
-    &--safe    { border-color: var(--color-lime)  !important; color: var(--color-lime)  !important; background-color: color-mix(in srgb, var(--color-lime) 8%, transparent)   !important; }
-    &--expert  { border-color: var(--color-amber) !important; color: var(--color-amber) !important; background-color: color-mix(in srgb, var(--color-amber) 8%, transparent)  !important; }
+    &--hfire   {
+      // Inactive: subdued amber tint so it reads as a distinct option, not active
+      border-color: color-mix(in srgb, var(--color-amber) 40%, var(--color-border)) !important;
+      color: color-mix(in srgb, var(--color-amber) 55%, var(--color-text-muted)) !important;
+      &.field-panel__pill--active {
+        border-color: var(--color-amber) !important;
+        color: var(--color-amber) !important;
+        background-color: color-mix(in srgb, var(--color-amber) 24%, transparent) !important;
+        box-shadow: 0 0 8px color-mix(in srgb, var(--color-amber) 28%, transparent);
+      }
+    }
     &--nuclear {
       border-color: color-mix(in srgb, var(--color-purple) 50%, transparent) !important;
       color: var(--color-purple) !important;

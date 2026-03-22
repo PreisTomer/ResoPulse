@@ -6,7 +6,7 @@
  * Pure functions - no Vue component dependency.
  */
 
-import { CELL_STATE, CELL_TYPE, CHART_MODE, WAVEFORM } from '@/constants/strings'
+import { CELL_STATE, CELL_TYPE, WAVEFORM } from '@/constants/strings'
 import { computeTau } from '@/utils/physics'
 import type { CellConfig } from '@/types/cell'
 import { THRESHOLDS } from '@/constants/physics'
@@ -129,25 +129,28 @@ Disruption is via mechanical shell resonance.
 Ref: Tsen et al. (2007); Dykeman &amp; Sankey (2010)${basisNote}`
 }
 
-export function tipDep(opts: { isPdep: boolean; kVal: number; crossoverKHz: number }): string {
+export function tipDep(opts: { isPdep: boolean; kVal: number; crossoverKHz: number; sigmaI: number; sigmaE: number }): string {
   const direction = opts.isPdep
     ? 'attracted toward high-field regions (field maxima)'
     : 'repelled away from high-field regions toward field minima'
-  const crossStr = opts.crossoverKHz > 0
-    ? `Crossover frequency where force reverses: ${opts.crossoverKHz.toFixed(0)} kHz`
-    : 'No crossover frequency in range, force direction does not reverse'
-  return `<strong>Dielectrophoresis (DEP)</strong>
-At this frequency the cell is <em>${direction}</em>.
 
-The DEP force magnitude is proportional to K = ${opts.kVal >= 0 ? '+' : ''}${opts.kVal.toFixed(3)}.
-K is the Clausius-Mossotti factor, a measure of how the cell's
-dielectric properties compare to the surrounding medium.
-  K &gt; 0 → cell pulled toward field maxima (positive DEP)
-  K &lt; 0 → cell pushed toward field minima (negative DEP)
-  K = 0 → no net DEP force (crossover frequency)
+  let crossStr: string
+  if (opts.crossoverKHz > 0) {
+    crossStr = `Crossover frequency where force reverses: ${opts.crossoverKHz.toFixed(0)} kHz`
+  } else if (opts.sigmaI < opts.sigmaE) {
+    crossStr = `No crossover in range. Cell conductivity (σ_i = ${opts.sigmaI.toFixed(2)} S/m) is lower than the medium (σ_e = ${opts.sigmaE.toFixed(2)} S/m), so nDEP persists at all frequencies. Switch to a lower-conductivity EP buffer (tissue 0.4 S/m, water 0.001 S/m) to access a pDEP regime.`
+  } else {
+    crossStr = `No crossover in range. Cell conductivity (σ_i = ${opts.sigmaI.toFixed(2)} S/m) exceeds medium (σ_e = ${opts.sigmaE.toFixed(2)} S/m), so pDEP persists at all accessible frequencies.`
+  }
+
+  return `<strong>Dielectrophoresis (DEP)</strong>
+Cell is <em>${direction}</em>.
+
+K = ${opts.kVal >= 0 ? '+' : ''}${opts.kVal.toFixed(3)} (Clausius-Mossotti factor)
+K &gt; 0 pDEP, K &lt; 0 nDEP, K = 0 crossover (no force)
 
 ${crossStr}
-Waveform scale: CW ×0.5 · pulsed ×duty-cycle
+Waveform scale: CW ×0.5, pulsed ×duty-cycle
 Ref: Gascoyne &amp; Vykoukal (2002)`
 }
 
@@ -165,7 +168,7 @@ export function tipDisruption(opts: {
   lysisDelayMs: number
   pulseEnvelopeFactor: number
   waveform: string
-  chartMode: string
+  isResonanceMode: boolean
   pulseWidthNs: number
   effectiveSigmaE: number
   vmDisplay: string
@@ -174,7 +177,7 @@ export function tipDisruption(opts: {
 }): string {
   const {
     disruptionRatio, thresholdVoltage, lysisNPulses, lysisDelayMs,
-    pulseEnvelopeFactor, waveform, chartMode, pulseWidthNs,
+    pulseEnvelopeFactor, waveform, isResonanceMode, pulseWidthNs,
     effectiveSigmaE, vmDisplay, cellType, cell,
   } = opts
   const pct = (disruptionRatio * 100).toFixed(0)
@@ -182,7 +185,7 @@ export function tipDisruption(opts: {
   const n   = lysisNPulses
   const t   = formatLysisTimeLocal(lysisDelayMs)
 
-  const isResonance = cellType === CELL_TYPE.TARGET && chartMode === CHART_MODE.RESONANCE
+  const isResonance = cellType === CELL_TYPE.TARGET && isResonanceMode
   const tau_ns = (computeTau(cell, effectiveSigmaE) * 1e9).toFixed(1)
 
   const pefNote = (waveform === WAVEFORM.PULSED && pulseEnvelopeFactor < 0.99 && !isResonance)

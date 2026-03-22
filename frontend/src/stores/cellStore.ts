@@ -41,6 +41,17 @@ import {
   RESEAL_PULSE_EXPONENT,
   RESEAL_TIME_MIN_S,
   RESEAL_TIME_MAX_S,
+  V_CM_TO_V_M,
+  KHZ_TO_HZ,
+  NS_TO_S,
+  NS_TO_MS,
+  MS_TO_S,
+  J_M3_TO_MJ_CM3,
+  RHO_AQUEOUS_KG_M3,
+  LYSIS_DELAY_CW_MS,
+  LYSIS_DELAY_MAX_MS,
+  ELECTRODE_POLARIZATION_LIMIT_KHZ,
+  GHZ_FIELD_WARNING_V_CM,
 } from '@/constants/physics'
 
 // ── Module-level computation helpers (pure functions - no store context needed) ──
@@ -168,8 +179,69 @@ export const useCellStore = defineStore('cell', {
     sigma_e: (state): number => MEDIA[state.medium].conductivity,
 
     /** |cos θ| field-cell axis coupling [0-1]; cancels in Vm_T/Vm_H ratio */
-    cosThetaFactor(state): number {
-      return Math.abs(Math.cos(state.orientationDeg * Math.PI / 180))
+    cosThetaFactor: (state): number => Math.abs(Math.cos(state.orientationDeg * Math.PI / 180)),
+
+    /**
+     * True when the acoustic resonance model is active (bacteria / virus targets).
+     * Use this getter everywhere instead of comparing chartMode strings inline.
+     */
+    isResonanceMode: (state): boolean => state.chartMode === CHART_MODE.RESONANCE,
+
+    /** σ_e corrected for temperature and cell packing fraction [S/m].
+     *  σ_e(T) = σ_e0·(1+α·(T_mean−37)); Maxwell-Garnett: σ_eff = σ_T·(1−φ)/(1+φ/2). */
+    effectiveSigmaE: (state): number => {
+      const sigma_e0 = MEDIA[state.medium].conductivity
+      const alpha    = MEDIA[state.medium].tempCoeff
+      const T_mean   = (state.healthyTemp + state.targetTemp) / 2
+      const sigma_T  = sigma_e0 * (1 + alpha * (T_mean - BODY_TEMP_C))
+      const phi = Math.min(0.9, Math.max(0, state.cellPackingFraction))
+      return sigma_T * (1 - phi) / (1 + phi / 2)
+    },
+
+    /** Lysis countdown [ms]: CW→LYSIS_DELAY_CW_MS; pulsed/H-FIRE→N_pulses × (t_p/dc), clamped. */
+    lysisDelayMs: (state): number => {
+      if ((state.waveform !== WAVEFORM.PULSED && state.waveform !== WAVEFORM.H_FIRE) || state.dutyCycle >= 1) return LYSIS_DELAY_CW_MS
+      const pulsePeriodMs = (state.pulseWidthNs * NS_TO_MS) / state.dutyCycle
+      return Math.max(LYSIS_DELAY_CW_MS, Math.min(LYSIS_DELAY_MAX_MS, state.lysisNPulses * pulsePeriodMs))
+    },
+
+    /** dc for thermal calc: CW→1.0, pulsed→stored value */
+    effectiveDutyCycle: (state): number => state.waveform === WAVEFORM.CW ? 1.0 : state.dutyCycle,
+
+    /** virus: R<0.1µm · bacteria: R<2µm · mammalian: R≥2µm */
+    targetCellCategory: (state): 'mammalian' | 'bacteria' | 'virus' => {
+      if (state.target.radius < THRESHOLDS.RADIUS_VIRUS_MAX)    return CELL_CATEGORY.VIRUS
+      if (state.target.radius < THRESHOLDS.RADIUS_BACTERIA_MAX) return CELL_CATEGORY.BACTERIA
+      return CELL_CATEGORY.MAMMALIAN
+    },
+
+    systemReady: (state): boolean =>
+      state.healthyTemp < THRESHOLDS.TEMP_WARN && state.targetTemp < THRESHOLDS.TEMP_WARN,
+
+    hasNuclearParams: (state): boolean =>
+      !!state.healthy.nuclearRadius || !!state.target.nuclearRadius,
+
+    /** Effective DEP force scale factor [0-1].
+     * CW sinusoidal: time-averaged |E|² = E²_peak/2 → scale = 0.5
+     * Pulsed bipolar (H-FIRE): force averages over duty cycle → scale = dutyCycle. */
+    depForceScale: (state): number => state.waveform === WAVEFORM.CW ? 0.5 : state.dutyCycle,
+
+    /** GHz + high-field hardware inaccessibility flag. See GHZ_FIELD_WARNING_V_CM and FREQ_NEARFIELD_RF_LIMIT_KHZ. */
+    isGhzHighFieldWarning: (state): boolean =>
+      state.currentBroadcastFrequency > FREQ_NEARFIELD_RF_LIMIT_KHZ &&
+      state.fieldIntensity > GHZ_FIELD_WARNING_V_CM,
+
+    /**
+     * RF coupling regime based on the current operating frequency.
+     * Electrolytic  (< 300 MHz): direct electrode contact, DC resistance model valid.
+     * Near-field RF (300 MHz-1 GHz): coaxial RF probe required; DC model approximate.
+     * Microwave     (> 1 GHz): waveguide / resonant cavity / horn antenna required.
+     */
+    freqRegime: (state): 'electrolytic' | 'nearfield_rf' | 'microwave' => {
+      const f = state.currentBroadcastFrequency
+      if (f < FREQ_ELECTROLYTIC_LIMIT_KHZ) return FREQ_REGIME.ELECTROLYTIC
+      if (f < FREQ_NEARFIELD_RF_LIMIT_KHZ) return FREQ_REGIME.NEARFIELD_RF
+      return FREQ_REGIME.MICROWAVE
     },
 
     /** Membrane charging fraction per pulse: 1−exp(−t_p/τ). CW → 1.0. */
@@ -183,26 +255,8 @@ export const useCellStore = defineStore('cell', {
     pulseEnvelopeFactorTarget(): number {
       const state = this as unknown as CellStoreState
       const isPulsed = state.waveform === WAVEFORM.PULSED || state.waveform === WAVEFORM.H_FIRE
-      if (!isPulsed || state.chartMode === CHART_MODE.RESONANCE) return 1.0
+      if (!isPulsed || this.isResonanceMode) return 1.0
       return pulseEnvelope(state.target, state.pulseWidthNs, this.effectiveSigmaE)
-    },
-
-    /** σ_e corrected for temperature and cell packing fraction [S/m].
-     *  σ_e(T) = σ_e0·(1+α·(T_mean−37)); Maxwell-Garnett: σ_eff = σ_T·(1−φ)/(1+φ/2). */
-    effectiveSigmaE(state): number {
-      const sigma_e0 = MEDIA[state.medium].conductivity
-      const alpha    = MEDIA[state.medium].tempCoeff
-      const T_mean   = (state.healthyTemp + state.targetTemp) / 2
-      const sigma_T  = sigma_e0 * (1 + alpha * (T_mean - BODY_TEMP_C))
-      const phi = Math.min(0.9, Math.max(0, state.cellPackingFraction))
-      return sigma_T * (1 - phi) / (1 + phi / 2)
-    },
-
-    /** Lysis countdown [ms]: CW→2500 ms; pulsed/H-FIRE→N_pulses × (t_p/dc), clamped [2500-30000] ms. */
-    lysisDelayMs(state): number {
-      if ((state.waveform !== WAVEFORM.PULSED && state.waveform !== WAVEFORM.H_FIRE) || state.dutyCycle >= 1) return 2500
-      const pulsePeriodMs = (state.pulseWidthNs * 1e-6) / state.dutyCycle
-      return Math.max(2500, Math.min(30_000, state.lysisNPulses * pulsePeriodMs))
     },
 
     /** Schwan Vm for healthy cell [V]. Pulsed mode uses E_peak (lower-bound; cancels in TI). */
@@ -239,7 +293,7 @@ export const useCellStore = defineStore('cell', {
       const cat = this.targetCellCategory
       const t = state.target as CellConfig & { resonantFreqGHz?: number; capsidQ?: number; resonantThresholdVcm?: number }
       if (
-        state.chartMode === CHART_MODE.RESONANCE &&
+        this.isResonanceMode &&
         (cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) &&
         t.resonantFreqGHz && t.resonantThresholdVcm
       ) {
@@ -247,7 +301,7 @@ export const useCellStore = defineStore('cell', {
           t.resonantFreqGHz,
           t.capsidQ ?? DEFAULT_CAPSID_Q,
           t.resonantThresholdVcm,
-          state.currentBroadcastFrequency * 1e3,  // kHz → Hz
+          state.currentBroadcastFrequency * KHZ_TO_HZ,  // kHz → Hz
           state.fieldIntensity,
         )
       }
@@ -276,20 +330,9 @@ export const useCellStore = defineStore('cell', {
       return computeFc((this as unknown as CellStoreState).target, this.effectiveSigmaE)
     },
 
-    systemReady(state): boolean {
-      return state.healthyTemp < THRESHOLDS.TEMP_WARN && state.targetTemp < THRESHOLDS.TEMP_WARN
-    },
-
     /** Alias for therapeuticIndex - backward compat */
     selectivityRatio(): number {
       return this.therapeuticIndex
-    },
-
-    /** virus: R<0.1µm · bacteria: R<2µm · mammalian: R≥2µm */
-    targetCellCategory(state): 'mammalian' | 'bacteria' | 'virus' {
-      if (state.target.radius < THRESHOLDS.RADIUS_VIRUS_MAX)    return CELL_CATEGORY.VIRUS
-      if (state.target.radius < THRESHOLDS.RADIUS_BACTERIA_MAX) return CELL_CATEGORY.BACTERIA
-      return CELL_CATEGORY.MAMMALIAN
     },
 
     /** TI = DR_T / DR_H. Caps at TI_DISPLAY_CAP when healthy DR ≈ 0 (resonance selectivity). */
@@ -303,7 +346,7 @@ export const useCellStore = defineStore('cell', {
     tiUncertaintyRange(): { low: number; high: number } {
       const state = this as unknown as CellStoreState
       const nominal = this.therapeuticIndex
-      if (state.chartMode === CHART_MODE.RESONANCE) {
+      if (this.isResonanceMode) {
         const cat = this.targetCellCategory
         const t = state.target as CellConfig & {
           resonantFreqGHz?: number; capsidQ?: number
@@ -315,7 +358,7 @@ export const useCellStore = defineStore('cell', {
           t.capsidQMin !== undefined && t.capsidQMax !== undefined
         ) {
           const hDr    = this.healthyDisruptionRatio
-          const freqHz = state.currentBroadcastFrequency * 1e3
+          const freqHz = state.currentBroadcastFrequency * KHZ_TO_HZ
           // Q_min → smaller Lorentzian peak → lower DR_T → lower TI (worst case)
           const drTMin = computeResonantDisruption(t.resonantFreqGHz, t.capsidQMin, t.resonantThresholdVcm, freqHz, state.fieldIntensity)
           // Q_max → taller Lorentzian peak → higher DR_T → higher TI (best case)
@@ -347,10 +390,6 @@ export const useCellStore = defineStore('cell', {
       const drHLow  = (vmHLow  * pefH) / state.healthy.thresholdVoltage
       const tiHigh  = safeRatio(drTHigh, drHLow, THRESHOLDS.TI_DISPLAY_CAP, NEAR_ZERO_DR)
       return { low: tiLow, high: tiHigh }
-    },
-
-    hasNuclearParams(state): boolean {
-      return !!state.healthy.nuclearRadius || !!state.target.nuclearRadius
     },
 
     /** Nuclear Vm for healthy cell [V] - Kotnik 2006 bandpass. 0 if no nuclear params. */
@@ -405,11 +444,6 @@ export const useCellStore = defineStore('cell', {
       return lysisField(state.healthy, state.currentBroadcastFrequency, this.effectiveSigmaE, this.cosThetaFactor, this.pulseEnvelopeFactorHealthy)
     },
 
-    /** dc for thermal calc: CW→1.0, pulsed→stored value */
-    effectiveDutyCycle(state): number {
-      return state.waveform === WAVEFORM.CW ? 1.0 : state.dutyCycle
-    },
-
     /** T_ss = BODY_TEMP_C + SAR·dc / (λ_eff·cp)  [°C].  λ_eff = λ_Newton + ω_b·PENNES_BLOOD_COEFF/cp. */
     healthySteadyStateTemp(): number {
       const state = this as unknown as CellStoreState
@@ -434,31 +468,29 @@ export const useCellStore = defineStore('cell', {
      * J/m³ = W/m³ × s;  1 J/m³ = 1e-3 mJ/cm³ (1 mL = 1 cm³ = 1e-6 m³; so 1 J/m³ = 1e-3 mJ/mL)
      * This is the standard protocol dose unit published in IRE literature.
      * Ref: Davalos et al. (2005) Ann. Biomed. Eng.; Edd et al. (2006) Technol. Cancer Res. Treat.
-     * CW: t_p = 1 s (per second), dc = 1. Pulsed: t_p = pulseWidthNs × 1e-9, dc = dutyCycle.
+     * CW: t_p = 1 s (per second), dc = 1. Pulsed: t_p = pulseWidthNs × NS_TO_S, dc = dutyCycle.
      */
     pulsedEnergyDensity_mJcm3(): number {
       const state = this as unknown as CellStoreState
-      const E_si  = state.fieldIntensity * 100  // V/cm → V/m
-      const tp_s  = state.waveform === WAVEFORM.CW ? 1.0 : state.pulseWidthNs * 1e-9
+      const E_si  = state.fieldIntensity * V_CM_TO_V_M
+      const tp_s  = state.waveform === WAVEFORM.CW ? 1.0 : state.pulseWidthNs * NS_TO_S
       const dc    = state.waveform === WAVEFORM.CW ? 1.0 : state.dutyCycle
       // P_volume = σ_e × E² [W/m³]; dose per pulse × dc period = energy density [J/m³]
       const energyDensity_J_m3 = this.effectiveSigmaE * E_si ** 2 * tp_s * dc
-      return energyDensity_J_m3 * 1e-3  // J/m³ → mJ/cm³ (both 1:1000)
+      return energyDensity_J_m3 * J_M3_TO_MJ_CM3
     },
 
     /**
      * Joule heating SAR of the extracellular medium [W/kg].
-     * P_medium = σ_e × E²_rms / ρ_water.  This is what a thermocouple in the cuvette reads —
+     * P_medium = σ_e × E²_rms / ρ_aqueous.  This is what a thermocouple in the cuvette reads —
      * it dominates at low cell packing fractions (φ < 0.1) because there is far more medium
-     * than cell volume. Ref: Foster & Schwan (1989); standard Joule heating formula.
-     * ρ_medium ≈ 1000 kg/m³ for all aqueous media (saline, DMEM, PBS).
+     * than cell volume. Ref: Foster and Schwan (1989); standard Joule heating formula.
      */
     mediumJouleHeatingSAR(): number {
       const state = this as unknown as CellStoreState
-      const wf    = state.waveform === WAVEFORM.CW ? WF_CW : WF_PULSED
-      const E_si  = state.fieldIntensity * 100  // V/cm → V/m
-      const RHO_MEDIUM = 1000  // kg/m³ for aqueous media
-      return (this.effectiveSigmaE * E_si ** 2 * wf) / RHO_MEDIUM
+      const wf   = state.waveform === WAVEFORM.CW ? WF_CW : WF_PULSED
+      const E_si = state.fieldIntensity * V_CM_TO_V_M
+      return (this.effectiveSigmaE * E_si ** 2 * wf) / RHO_AQUEOUS_KG_M3
     },
 
     /** δ = √(1/(π·f·μ₀·σ_e)) [mm].  Saline: 100MHz→41mm · 1GHz→13mm · 12GHz→3.8mm. */
@@ -485,16 +517,6 @@ export const useCellStore = defineStore('cell', {
       const state = this as unknown as CellStoreState
       const eps_r = MEDIA[state.medium].permittivity
       return computeDepCmReal(state.target, state.currentBroadcastFrequency, this.effectiveSigmaE, eps_r)
-    },
-
-    /**
-     * Effective DEP force scale factor [0-1].
-     * CW sinusoidal: time-averaged |E|² = E²_peak/2 → scale = 0.5
-     * Pulsed bipolar (H-FIRE): force averages over duty cycle → scale = dutyCycle.
-     * Re[K] direction is waveform-independent; this factor scales the magnitude only.
-     */
-    depForceScale(state): number {
-      return state.waveform === WAVEFORM.CW ? 0.5 : state.dutyCycle
     },
 
     /** First crossover frequency [kHz] where Re[K_H] = 0. 0 if none in 1 kHz-10 GHz. */
@@ -582,7 +604,7 @@ export const useCellStore = defineStore('cell', {
       const target = state.target as CellConfig & { resonantFreqGHz?: number; resonantThresholdVcm?: number }
       const cat    = this.targetCellCategory
       if (
-        state.chartMode === CHART_MODE.RESONANCE &&
+        this.isResonanceMode &&
         (cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) &&
         target.resonantFreqGHz && target.resonantThresholdVcm
       ) {
@@ -617,41 +639,16 @@ export const useCellStore = defineStore('cell', {
     },
 
     /**
-     * GHz + high-field hardware inaccessibility flag.
-     * Delivering > 100 V/cm at > 1 GHz is physically inaccessible with current equipment:
-     * skin depth in saline at 1 GHz ≈ 13 mm, falling to ~0.8 mm at 12 GHz — the field
-     * cannot penetrate a cuvette. Combining f > 1 GHz with E > 100 V/cm is speculative
-     * and has no demonstrated experimental basis. Flag to alert the user.
-     * Ref: Gabriel et al. (1996); Tsen et al. (2007) — used pulsed-laser phonon generation,
-     * not RF fields, for GHz acoustic excitation.
-     */
-    isGhzHighFieldWarning(state): boolean {
-      return state.currentBroadcastFrequency > FREQ_NEARFIELD_RF_LIMIT_KHZ && state.fieldIntensity > 100
-    },
-
-    /**
      * Electrode polarization risk flag.
-     * Below ~50 kHz the electrode double-layer capacitance (Cdl ≈ 10-50 µF/cm²) absorbs
-     * a significant fraction of the applied voltage. The displayed Vm and DR are
-     * overestimates until a Cdl-corrected equivalent circuit is used.
-     * Ref: Foster & Schwan (1989); Schwan (1966) electrode polarization review.
+     * Below ELECTRODE_POLARIZATION_LIMIT_KHZ, the electrode double-layer capacitance
+     * (Cdl ~10-50 µF/cm²) absorbs a significant fraction of the applied voltage.
+     * Displayed Vm and DR are overestimates without a Cdl-corrected equivalent circuit.
      * Only flagged in Schwan/IRE mode — resonance mode targets GHz, not sub-50 kHz.
+     * Ref: Foster and Schwan (1989); Schwan (1966) electrode polarization review.
      */
-    isElectrodePolarizationRisk(state): boolean {
-      return state.chartMode !== 'resonance' && state.currentBroadcastFrequency < 50
-    },
-
-    /**
-     * RF coupling regime based on the current operating frequency.
-     * Electrolytic  (< 300 MHz): direct electrode contact, DC resistance model valid.
-     * Near-field RF (300 MHz-1 GHz): coaxial RF probe required; DC model approximate.
-     * Microwave     (> 1 GHz): waveguide / resonant cavity / horn antenna required.
-     */
-    freqRegime(state): 'electrolytic' | 'nearfield_rf' | 'microwave' {
-      const f = state.currentBroadcastFrequency
-      if (f < FREQ_ELECTROLYTIC_LIMIT_KHZ) return FREQ_REGIME.ELECTROLYTIC
-      if (f < FREQ_NEARFIELD_RF_LIMIT_KHZ) return FREQ_REGIME.NEARFIELD_RF
-      return FREQ_REGIME.MICROWAVE
+    isElectrodePolarizationRisk(): boolean {
+      const state = this as unknown as CellStoreState
+      return !this.isResonanceMode && state.currentBroadcastFrequency < ELECTRODE_POLARIZATION_LIMIT_KHZ
     },
 
     /**
@@ -767,15 +764,17 @@ export const useCellStore = defineStore('cell', {
 
     startSession() {
       if (this.tempTimer !== null) return
+      // dt_s must stay in sync with TEMP_UPDATE_INTERVAL_MS — the Euler integration step equals the timer period
+      const dt_s = TEMP_UPDATE_INTERVAL_MS * MS_TO_S
       this.tempTimer = setInterval(() => {
-        const dc = this.effectiveDutyCycle
+        const dc  = this.effectiveDutyCycle
         const hCp = this.healthy.specificHeatCapacity
         const hL  = NEWTON_COOLING_LAMBDA + this.perfusionRate * PENNES_BLOOD_COEFF / hCp
-        const dTh = (this.healthySAR * dc / hCp - hL * (this.healthyTemp - BODY_TEMP_C)) * 0.1
+        const dTh = (this.healthySAR * dc / hCp - hL * (this.healthyTemp - BODY_TEMP_C)) * dt_s
         this.healthyTemp = Math.max(BODY_TEMP_C, Math.min(THRESHOLDS.TEMP_CAP, this.healthyTemp + dTh))
         const tCp = this.target.specificHeatCapacity
         const tL  = NEWTON_COOLING_LAMBDA + this.perfusionRate * PENNES_BLOOD_COEFF / tCp
-        const dTt = (this.targetSAR * dc / tCp - tL * (this.targetTemp - BODY_TEMP_C)) * 0.1
+        const dTt = (this.targetSAR * dc / tCp - tL * (this.targetTemp - BODY_TEMP_C)) * dt_s
         this.targetTemp = Math.max(BODY_TEMP_C, Math.min(THRESHOLDS.TEMP_CAP, this.targetTemp + dTt))
       }, TEMP_UPDATE_INTERVAL_MS)
     },
