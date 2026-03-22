@@ -29,7 +29,7 @@
             {{ $t('home.eyebrow') }}
           </div>
           <div class="home__tagline-group">
-            <p class="home__tagline">{{ $t('home.tagline1') }}</p>
+            <p class="home__tagline">{{ $t('home.tagline1a') }}<strong class="home__tagline-highlight">{{ $t('home.tagline1Highlight') }}</strong>{{ $t('home.tagline1b') }}</p>
             <p class="home__tagline home__tagline--secondary">{{ $t('home.tagline2') }}</p>
           </div>
         </div>

@@ -2,7 +2,9 @@
   "home": {
     "eyebrow": "Bioelectric Field Research · Electroporation · Resonance Modeling",
     "subtitle": "Virtual Biophysics Engine",
-    "tagline1": "The only real-time workspace where Schwan Vm, DEP force, and SAR update live as you tune. Instantly identify the Window of Selectivity: the exact frequency where target cells lyse while healthy cells thrive.",
+    "tagline1a": "The only real-time workspace where Schwan Vm, DEP force, and SAR update live as you tune. Instantly identify the ",
+    "tagline1Highlight": "Window of Selectivity",
+    "tagline1b": ": the\u00a0exact frequency where target cells lyse while healthy cells thrive.",
     "tagline2": "Powered by nine peer-reviewed biophysical models with zero buffers mixed. Move from virtual hypothesis to publication-ready Methods export before your first experiment.",
     "btnPrimary": "Open Experiment Lab",
     "btnGhost": "Read the Science",
