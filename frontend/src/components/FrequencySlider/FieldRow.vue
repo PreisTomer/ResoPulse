@@ -243,17 +243,9 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-@use '../../styles/mixins' as *;
 
-@keyframes thumb-danger-pulse {
-  0%, 100% { box-shadow: 0 0 6px color-mix(in srgb, var(--color-danger) 60%, transparent); }
-  50%       { box-shadow: 0 0 16px var(--color-danger); }
-}
 
-@keyframes state-blink {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.35; }
-}
+// thumb-danger-pulse and state-blink are defined globally in styles/_keyframes.scss
 
 .field-panel {
   &__row {
@@ -294,8 +286,8 @@ export default defineComponent({
     pointer-events: none;
     z-index: 1;
 
-    &--danger  { background: var(--color-danger);  opacity: 0.55; }
-    &--healthy { background: var(--color-primary); opacity: 0.55; }
+    &--danger  { background: var(--color-danger);  opacity: var(--op-muted); }
+    &--healthy { background: var(--color-primary); opacity: var(--op-muted); }
   }
 
   &__slider {
@@ -357,7 +349,7 @@ export default defineComponent({
       font-size: var(--fs-xxs);
       font-family: var(--font-mono);
       color: var(--color-text-muted);
-      opacity: 0.55;
+      opacity: var(--op-muted);
     }
 
     &-step { @include readout-step-btn(); }

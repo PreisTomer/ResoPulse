@@ -52,7 +52,7 @@ export default defineComponent({
 
 <style lang="scss" scoped>
 .tip-fade-enter-active,
-.tip-fade-leave-active { transition: opacity 0.15s ease; }
+.tip-fade-leave-active { transition: opacity var(--tr-fast); }
 .tip-fade-enter-from,
 .tip-fade-leave-to     { opacity: 0; }
 
@@ -70,10 +70,10 @@ export default defineComponent({
 .ccm-tip-box {
   background:    var(--color-surface);
   border:        1px solid var(--color-border, rgba(255,255,255,0.1));
-  border-radius: 8px;
+  border-radius: var(--radius);
   padding:       1rem 1.25rem;
   max-width:     520px;
-  font-size:     0.82rem;
+  font-size:     var(--fs-md);
   color:         var(--color-text);
   line-height:   1.55;
   white-space:   pre-wrap;

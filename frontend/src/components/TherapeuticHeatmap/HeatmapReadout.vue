@@ -46,7 +46,7 @@ export default defineComponent({
   border-radius: var(--radius);
   font-family: var(--font-mono);
   font-size: var(--fs-xxs);
-  transition: border-color 0.2s;
+  transition: border-color var(--tr-normal);
 
   &--active { border-color: rgba(255, 255, 255, 0.18); }
 

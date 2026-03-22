@@ -16,7 +16,7 @@ export default defineComponent({})
 </script>
 
 <style lang="scss" scoped>
-@use '../../styles/mixins' as *;
+
 
 .dr-legend {
   @include flex-row(0.9rem);

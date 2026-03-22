@@ -32,6 +32,12 @@
         <button
           class="exp-log__btn"
           :disabled="!hasEntries"
+          v-tip="$t('log.tipExportMethods')"
+          @click="exportLastEntryMethods"
+        >{{ $t('exp.logMethodsBtn') }}</button>
+        <button
+          class="exp-log__btn"
+          :disabled="!hasEntries"
           v-tip="$t('log.tipExportCsv')"
           @click="exportCSV"
         >{{ $t('exp.logCsvBtn') }}</button>
@@ -112,7 +118,7 @@ import {
   tipCellSel as sharedTipCellSel,
   tipCellDepH as sharedTipCellDepH,
   tipCellDepT as sharedTipCellDepT,
-} from '@/utils/logTooltips'
+} from '@/tooltips/logTooltips'
 import { ICON } from '@/constants/icons'
 import { THRESHOLDS } from '@/constants/physics'
 import { formatFreqKHz } from '@/utils/format'
@@ -166,6 +172,11 @@ export default defineComponent({
   },
 
   methods: {
+    exportLastEntryMethods() {
+      const last = this.expStore.entries[this.expStore.entries.length - 1]
+      if (last) this.expStore.exportEntryMethods(last)
+    },
+
     logReading() {
       this.expStore.logReading(this.cellStore as Parameters<typeof this.expStore.logReading>[0], LOG_EVENT.MANUAL)
       const last = this.expStore.entries[this.expStore.entries.length - 1]
@@ -214,7 +225,7 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-@use '../styles/mixins' as *;
+
 
 .exp-log {
   background-color: var(--color-surface);
@@ -267,7 +278,7 @@ export default defineComponent({
 
   &__dose-val {
     font-family: var(--font-mono);
-    font-size:   0.68rem;
+    font-size:   var(--fs-xs);
     font-weight: 600;
     color:       var(--color-amber);
   }
@@ -282,7 +293,7 @@ export default defineComponent({
     background: transparent;
     color: var(--color-text);
     cursor: pointer;
-    transition: all 0.15s;
+    transition: all var(--tr-fast);
     white-space: nowrap;
 
     &:hover:not(:disabled) { border-color: var(--color-primary); color: var(--color-primary); }

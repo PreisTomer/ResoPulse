@@ -19,14 +19,22 @@
             <input type="radio" :value="WAVEFORM.CW" :checked="currentWaveform === WAVEFORM.CW" name="waveform" @change="onWaveformChange(WAVEFORM.CW)" />
             {{ $t('slider.cw') }}
           </label>
+          <label
+            class="field-panel__pill field-panel__pill--expert"
+            :class="{ 'field-panel__pill--active': currentWaveform === WAVEFORM.H_FIRE }"
+            v-tip="$t('slider.tipHfire')"
+          >
+            <input type="radio" :value="WAVEFORM.H_FIRE" :checked="currentWaveform === WAVEFORM.H_FIRE" name="waveform" @change="onWaveformChange(WAVEFORM.H_FIRE)" />
+            {{ $t('slider.hfire') }}
+          </label>
         </div>
-        <span class="field-panel__row-meta">wf×{{ currentWaveform === WAVEFORM.CW ? CW_WAVEFORM_FACTOR : PULSED_WAVEFORM_FACTOR }}</span>
+        <span class="field-panel__row-meta">{{ waveformMetaLabel }}</span>
       </div>
     </div>
 
-    <!-- Row 5: Duty Cycle (pulsed only) -->
+    <!-- Row 5: Duty Cycle (pulsed / H-FIRE only) -->
     <div
-      v-if="currentWaveform === WAVEFORM.PULSED"
+      v-if="currentWaveform === WAVEFORM.PULSED || currentWaveform === WAVEFORM.H_FIRE"
       class="field-panel__row field-panel__row--compact-readout"
       :class="thermalDangerLevel !== THERMAL_LEVEL.SAFE ? `field-panel__row--${thermalDangerLevel}` : ''"
     >
@@ -55,8 +63,8 @@
       </div>
     </div>
 
-    <!-- Row 6: Pulse Width (pulsed only) -->
-    <div v-if="currentWaveform === WAVEFORM.PULSED" class="field-panel__row field-panel__row--compact-readout">
+    <!-- Row 6: Pulse Width (pulsed / H-FIRE only) -->
+    <div v-if="currentWaveform === WAVEFORM.PULSED || currentWaveform === WAVEFORM.H_FIRE" class="field-panel__row field-panel__row--compact-readout">
       <div class="field-panel__row-header">
         <span class="field-panel__row-label" v-tip="tipPulseWidth">{{ $t('slider.pulseWidth') }}</span>
         <div class="field-panel__readout">
@@ -85,11 +93,12 @@ import { defineComponent } from 'vue'
 import type { PropType } from 'vue'
 import { useCellStore } from '@/stores/cellStore'
 import { broadcastStateSync } from '@/services/socket'
-import { WAVEFORM, THERMAL_LEVEL, CELL_LABEL } from '@/constants/strings'
+import { WAVEFORM, THERMAL_LEVEL, CELL_LABEL, type WaveformMode } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'
 import { tipWaveform, tipDutyCycle, tipPulseWidth, formatLysisTime } from '@/tooltips/sliderTooltips'
 import { CW_WAVEFORM_FACTOR, PULSED_WAVEFORM_FACTOR } from '@/constants/experimentDefaults'
+import { H_FIRE_THRESHOLD_MULTIPLIER } from '@/constants/physics'
 import { SLIDER_DC } from '@/constants/sliderBounds'
 
 export default defineComponent({
@@ -110,7 +119,7 @@ export default defineComponent({
   },
 
   setup() {
-    return { store: useCellStore(), WAVEFORM, THERMAL_LEVEL, ICON, UNIT, CELL_LABEL, CW_WAVEFORM_FACTOR, PULSED_WAVEFORM_FACTOR, SLIDER_DC }
+    return { store: useCellStore(), WAVEFORM, THERMAL_LEVEL, ICON, UNIT, CELL_LABEL, CW_WAVEFORM_FACTOR, PULSED_WAVEFORM_FACTOR, H_FIRE_THRESHOLD_MULTIPLIER, SLIDER_DC }
   },
 
   data() {
@@ -118,7 +127,13 @@ export default defineComponent({
   },
 
   computed: {
-    currentWaveform(): 'cw' | 'pulsed' { return this.store.waveform },
+    currentWaveform(): 'cw' | 'pulsed' | 'hfire' { return this.store.waveform },
+
+    waveformMetaLabel(): string {
+      if (this.currentWaveform === WAVEFORM.CW)     return `wf×${CW_WAVEFORM_FACTOR}`
+      if (this.currentWaveform === WAVEFORM.H_FIRE) return `wf×${PULSED_WAVEFORM_FACTOR} thr×${H_FIRE_THRESHOLD_MULTIPLIER}`
+      return `wf×${PULSED_WAVEFORM_FACTOR}`
+    },
 
     dutyCycleLogVal(): number { return Math.log10(this.store.dutyCycle) },
 
@@ -196,7 +211,7 @@ export default defineComponent({
   },
 
   methods: {
-    onWaveformChange(mode: typeof WAVEFORM[keyof typeof WAVEFORM]) {
+    onWaveformChange(mode: WaveformMode) {
       this.store.setWaveform(mode)
       broadcastStateSync()
     },
@@ -217,17 +232,9 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-@use '../../styles/mixins' as *;
 
-@keyframes thumb-danger-pulse {
-  0%, 100% { box-shadow: 0 0 6px color-mix(in srgb, var(--color-danger) 60%, transparent); }
-  50%       { box-shadow: 0 0 16px var(--color-danger); }
-}
 
-@keyframes state-blink {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.35; }
-}
+// thumb-danger-pulse and state-blink are defined globally in styles/_keyframes.scss
 
 .field-panel {
   &__accordion {
@@ -240,8 +247,8 @@ export default defineComponent({
       line-height: 1;
       display: inline-block;
       transform: rotate(0deg);
-      transition: transform 0.2s ease;
-      opacity: 0.55;
+      transition: transform var(--tr-normal);
+      opacity: var(--op-muted);
 
       &--open { transform: rotate(90deg); }
     }
@@ -249,7 +256,7 @@ export default defineComponent({
     &-body { display: flex; flex-direction: column; gap: 0.9rem; padding-top: 0.4rem; }
   }
 
-  &__safe-lock { font-size: var(--fs-xxs); opacity: 0.7; margin-left: 0.2rem; }
+  &__safe-lock { font-size: var(--fs-xxs); opacity: var(--op-dim); margin-left: 0.2rem; }
 
   &__row {
     @include field-row-grid();
@@ -276,7 +283,7 @@ export default defineComponent({
 
   &__row-label { @include row-label(); }
 
-  &__row-meta { font-size: var(--fs-xxs); font-family: var(--font-mono); color: var(--color-text-muted); white-space: nowrap; opacity: 0.80; }
+  &__row-meta { font-size: var(--fs-xxs); font-family: var(--font-mono); color: var(--color-text-muted); white-space: nowrap; opacity: var(--op-partial); }
 
   &__pills { display: flex; gap: 0.35rem; flex-wrap: wrap; }
 
@@ -285,10 +292,10 @@ export default defineComponent({
     text-transform: capitalize;
     padding: 0.18rem 0.55rem;
     border: 1px solid var(--color-border);
-    border-radius: 12px;
+    border-radius: var(--radius-lg);
     cursor: pointer;
     color: var(--color-text-muted);
-    transition: border-color 0.15s, color 0.15s, background-color 0.15s;
+    transition: border-color var(--tr-fast), color var(--tr-fast), background-color var(--tr-fast);
     user-select: none;
     white-space: nowrap;
 

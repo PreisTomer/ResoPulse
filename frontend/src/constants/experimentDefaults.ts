@@ -39,6 +39,15 @@ export const SNAP_CONFIRM_MS = 3000
 /** Default lysis N-pulses value applied on cell reset */
 export const DEFAULT_LYSIS_N_PULSES = 10
 
+/**
+ * Default cell-field orientation angle θ [degrees] for random suspension experiments.
+ * At θ = 60°, cosθ = 0.5, which equals the mean of |cosΩ| for a 3D isotropically
+ * distributed suspension: <|cosΩ|> = ∫₀^π |cosΩ|·sinΩ/2 dΩ = 0.5.
+ * Setting θ = 0° (maximum coupling) systematically overestimates Vm by 2× for
+ * typical suspension experiments. Use 0° only for DEP-pre-aligned cell preparations.
+ */
+export const DEFAULT_ORIENTATION_DEG = 60
+
 /** Sweep panel TI Y-axis display ceiling (separate from TI_DISPLAY_CAP in the store) */
 export const SWEEP_TI_CAP = 5
 

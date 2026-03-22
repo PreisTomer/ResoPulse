@@ -152,10 +152,10 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { ICON } from '@/constants/icons'
-import HeroRingsSvg from '@/components/Home/HeroRingsSvg.vue'
-import CellIllustrationSvg from '@/components/Home/CellIllustrationSvg.vue'
-import BodePlotSvg from '@/components/Home/BodePlotSvg.vue'
-import OscilloscopeSvg from '@/components/Home/OscilloscopeSvg.vue'
+import HeroRingsSvg from './HeroRingsSvg.vue'
+import CellIllustrationSvg from './CellIllustrationSvg.vue'
+import BodePlotSvg from './BodePlotSvg.vue'
+import OscilloscopeSvg from './OscilloscopeSvg.vue'
 
 export default defineComponent({
   name: 'HomeView',
@@ -211,6 +211,6 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-@use '../styles/home';
+@use './home';
 
 </style>

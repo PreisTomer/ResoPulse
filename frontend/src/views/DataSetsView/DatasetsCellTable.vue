@@ -18,6 +18,7 @@
             <th v-tip="$t('datasets.tip.colCm')" v-html="$t('datasets.cellLib.colCm')"></th>
             <th v-tip="$t('datasets.tip.colFc')" v-html="$t('datasets.cellLib.colFc')"></th>
             <th v-tip="$t('datasets.tip.colFcross')" v-html="$t('datasets.cellLib.colFcross')"></th>
+            <th v-tip="$t('datasets.tip.colFcross2')" v-html="$t('datasets.cellLib.colFcross2')"></th>
             <th v-tip="$t('datasets.tip.colVmThr')" v-html="$t('datasets.cellLib.colVmThr')"></th>
             <th v-tip="$t('datasets.tip.colRnuc')" v-html="$t('datasets.cellLib.colRnuc')"></th>
             <th v-tip="$t('datasets.tip.colRho')">{{ $t('datasets.cellLib.colRho') }}</th>
@@ -47,6 +48,7 @@
             <td class="datasets__mono datasets__primary-val">{{ p.cmDisplay }}</td>
             <td class="datasets__mono datasets__primary-val">{{ p.fcDisplay }}</td>
             <td class="datasets__mono" :class="p.fcrossDisplay !== nullDisplay ? 'datasets__dep-val' : 'datasets__muted'">{{ p.fcrossDisplay }}</td>
+            <td class="datasets__mono" :class="p.fcross2Display !== nullDisplay ? 'datasets__dep-val' : 'datasets__muted'">{{ p.fcross2Display }}</td>
             <td
               class="datasets__mono"
               :class="p.group === cellGroupReference ? 'datasets__ref-val' : 'datasets__cancer-val'"
@@ -110,7 +112,7 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-@use '../../styles/mixins' as *;
+
 @use './shared' as ds;
 
 @include ds.datasets-card();

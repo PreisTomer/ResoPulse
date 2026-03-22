@@ -84,7 +84,7 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-@use '../../styles/mixins' as *;
+
 
 .freq-chart {
   &__legend {
@@ -103,7 +103,7 @@ export default defineComponent({
   &__legend-dot {
     width: 7px; height: 7px;
     border-radius: 50%;
-    opacity: 0.75;
+    opacity: 0.75; // intentional between-tier value
     flex-shrink: 0;
   }
 
@@ -114,7 +114,7 @@ export default defineComponent({
 
     &--h   { background: var(--color-primary); box-shadow: 0 0 4px var(--color-primary); }
     &--t   { background: var(--color-danger);  box-shadow: 0 0 4px var(--color-danger); }
-    &--sel { width: 18px; height: 0; border-top: 2px dashed var(--color-amber); background: transparent; opacity: 0.8; }
+    &--sel { width: 18px; height: 0; border-top: 2px dashed var(--color-amber); background: transparent; opacity: var(--op-partial); }
     &--nuc-h { width: 18px; height: 0; border-top: 2px dashed color-mix(in srgb, var(--color-primary) 55%, transparent); background: transparent; }
     &--nuc-t { width: 18px; height: 0; border-top: 2px dashed color-mix(in srgb, var(--color-danger) 55%, transparent); background: transparent; }
     &--dep-h { width: 18px; height: 0; border-top: 2px dotted color-mix(in srgb, var(--color-primary) 50%, transparent); background: transparent; }

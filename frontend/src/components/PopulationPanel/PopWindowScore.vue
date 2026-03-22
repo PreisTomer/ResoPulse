@@ -21,7 +21,7 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-@use '../../styles/mixins' as *;
+
 
 .pop-window-score {
   display: flex;

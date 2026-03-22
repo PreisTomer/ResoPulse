@@ -29,6 +29,12 @@
         <span class="vm-sar__elysis" v-tip="$t('selectivity.tipHealthyLysisField')">E<sub>lys</sub> {{ healthyLysisField }}</span>
       </div>
     </template>
+    <!-- Pulse energy dose row (always shown) -->
+    <div class="vm-sar__dose-row" v-tip="$t('selectivity.tipEnergyDose')">
+      <span class="vm-sar__dose-label">{{ $t('selectivity.energyDoseLabel') }}</span>
+      <span class="vm-sar__dose-val">{{ energyDoseDisplay }}</span>
+      <span class="vm-sar__dose-unit">{{ UNIT.MJ_PER_CM3 }}</span>
+    </div>
   </div>
 </template>
 
@@ -78,6 +84,14 @@ export default defineComponent({
     tipNoGhzRes(): string {
       return `<strong>${this.$t('selectivity.tipNoGhzRes')}</strong>\n${this.$t('selectivity.tipNoGhzResBody')}`
     },
+
+    energyDoseDisplay(): string {
+      const e = this.store.pulsedEnergyDensity_mJcm3
+      if (e >= 1000) return (e / 1000).toFixed(2) + 'k'
+      if (e >= 10)   return e.toFixed(2)
+      if (e >= 0.01) return e.toFixed(4)
+      return e.toExponential(2)
+    },
   },
 })
 </script>
@@ -99,7 +113,7 @@ export default defineComponent({
     font-size: var(--fs-xxs);
     font-family: var(--font-mono);
     font-weight: 700;
-    opacity: 0.85;
+    opacity: 0.85; // intentional between-tier value
     flex-shrink: 0;
 
     &--t { color: var(--color-danger); }
@@ -121,7 +135,7 @@ export default defineComponent({
     font-size: var(--fs-xxs);
     font-family: var(--font-mono);
     color: var(--color-text-muted);
-    opacity: 0.85;
+    opacity: 0.85; // intentional between-tier value
     white-space: nowrap;
   }
 
@@ -129,11 +143,45 @@ export default defineComponent({
     font-size: var(--fs-xs);
     font-family: var(--font-mono);
     color: var(--color-text-muted);
-    opacity: 0.7;
+    opacity: var(--op-dim);
     white-space: nowrap;
     cursor: default;
 
     &--safe { color: var(--color-lime); opacity: 1; }
+  }
+
+  &__dose-row {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: baseline;
+    gap: 0.4rem;
+    padding-top: 0.3rem;
+    border-top: 1px solid var(--color-border);
+    cursor: default;
+  }
+
+  &__dose-label {
+    font-size: var(--fs-xxs);
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-text-muted);
+    opacity: var(--op-muted);
+    flex-shrink: 0;
+  }
+
+  &__dose-val {
+    font-size: var(--fs-sm);
+    font-family: var(--font-mono);
+    font-weight: 600;
+    color: var(--color-purple);
+  }
+
+  &__dose-unit {
+    font-size: var(--fs-xxs);
+    font-family: var(--font-mono);
+    color: var(--color-text-muted);
+    opacity: var(--op-muted);
   }
 }
 </style>

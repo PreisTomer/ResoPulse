@@ -16,6 +16,7 @@ export const MEDIA: Record<MediumKey, MediaEntry> = {
   tissue: { name: 'Soft Tissue',                   conductivity: 0.4,   permittivity: 70, tempCoeff: 0.015 },
   water:  { name: 'Distilled Water',               conductivity: 0.001, permittivity: 80, tempCoeff: 0.028 },
   dmem:   { name: 'DMEM',                          conductivity: 1.4,   permittivity: 79, tempCoeff: 0.020 },
+  pbs:    { name: 'PBS (pH 7.4)',                  conductivity: 1.54,  permittivity: 79, tempCoeff: 0.020 },
   rpmi:   { name: 'RPMI 1640',                     conductivity: 1.3,   permittivity: 79, tempCoeff: 0.020 },
   mhb:    { name: 'Mueller-Hinton Broth',          conductivity: 0.8,   permittivity: 78, tempCoeff: 0.019 },
 }

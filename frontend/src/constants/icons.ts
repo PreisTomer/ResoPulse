@@ -27,10 +27,15 @@ export const ICON = {
   PLUG:      '⚙',   // instrument / hardware connection
   FLASK:     '⚗',   // cuvette / lab setup
   SECTION:   '§',   // protocol / science documentation
-  ARROW_R:     '⟶',  // directional CTA arrow
+  ARROW_R:     '⟶',  // directional CTA arrow (long)
+  ARROW_SHORT: '→',  // short directional arrow / chain separator
+  ARROW_D:     '↓',  // downward arrow
   TRIANGLE_UP: '▲',  // axis tick / chart marker
   DEP:         '⇌',  // DEP bidirectional force / crossover
   RETICLE:     '⌖',  // position indicator / row selection target
+  CLOSE:       '✕',  // dismiss / delete button
+  TIMES:       '×',  // multiplication prefix (e.g. ×1.75 factor display)
+  DOT:         '●',  // filled status dot (compact cell state indicator)
 } as const
 
 export type Icon = typeof ICON[keyof typeof ICON]

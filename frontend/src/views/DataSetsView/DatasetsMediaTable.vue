@@ -80,7 +80,7 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-@use '../../styles/mixins' as *;
+
 @use './shared' as ds;
 
 @include ds.datasets-card();

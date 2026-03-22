@@ -9,32 +9,39 @@
 
   /* ── Primary / accent / danger ───────────────────────────────────────── */
   --color-primary: #00d4ff;
-  --color-primary-dim: rgba(0, 212, 255, 0.15);
-  --color-primary-surface: rgba(0, 212, 255, 0.06);   /* subtle tint: active pill bg, hover overlays */
-  --color-primary-border: rgba(0, 212, 255, 0.35);    /* primary-tinted borders, scrollbar thumb      */
+  --color-primary-surface: color-mix(in srgb, var(--color-primary) 6%, transparent);   /* subtle tint: active pill bg, hover overlays */
+  --color-primary-dim:     color-mix(in srgb, var(--color-primary) 15%, transparent);  /* medium tint: dimmed highlights              */
+  --color-primary-border:  color-mix(in srgb, var(--color-primary) 35%, transparent);  /* primary-tinted borders, scrollbar thumb     */
   --color-accent: #00ff9d;
-  --color-accent-dim: rgba(0, 255, 157, 0.12);
+  --color-accent-dim: color-mix(in srgb, var(--color-accent) 12%, transparent);
   --color-danger: #ff4d6d;
-  --color-danger-dim: rgba(255, 77, 109, 0.12);
+  --color-danger-surface: color-mix(in srgb, var(--color-danger) 6%, transparent);   /* subtle danger bg      */
+  --color-danger-dim:     color-mix(in srgb, var(--color-danger) 12%, transparent);  /* medium danger tint    */
+  --color-danger-border:  color-mix(in srgb, var(--color-danger) 30%, transparent);  /* danger-tinted border  */
 
   /* ── Extended palette ────────────────────────────────────────────────── */
   --color-lime: #39ff14;
-  --color-lime-dim: rgba(57, 255, 20, 0.08);
+  --color-lime-dim:    color-mix(in srgb, var(--color-lime) 8%, transparent);
   --color-amber: #fbbf24;
-  --color-amber-dim: rgba(251, 191, 36, 0.08);
+  --color-amber-surface: color-mix(in srgb, var(--color-amber) 6%, transparent);   /* subtle amber bg      */
+  --color-amber-dim:     color-mix(in srgb, var(--color-amber) 12%, transparent);  /* medium amber tint    */
+  --color-amber-border:  color-mix(in srgb, var(--color-amber) 28%, transparent);  /* amber-tinted border  */
   --color-amber-warm: #ffb800;        /* nav status warning dot */
   --color-orange: #fb923c;
-  --color-orange-dim: rgba(251, 130, 20, 0.10);
+  --color-orange-dim: color-mix(in srgb, var(--color-orange) 10%, transparent);
   --color-dep: #ff9900;                          /* DEP force indicator orange */
   --color-vibrating: #ff8c00;    /* cell state: lysis armed (dark orange) */
   --color-lysed: #882233;        /* cell state: lysed / dead (blood red)  */
   --color-ok: #4ade80;           /* ok / success state (soft green) */
+  --color-ok-dim:    color-mix(in srgb, var(--color-ok) 15%, transparent);  /* ok tinted bg / border */
+  --color-ok-border: color-mix(in srgb, var(--color-ok) 30%, transparent);
   --color-danger-light: #f87171; /* soft danger (readout warn, non-critical) */
   --color-muted-border: #444;    /* dead / disabled state neutral border  */
   --color-purple: #a78bfa;
   --color-purple-light: #c4b5fd;
-  --color-purple-dim: rgba(167, 139, 250, 0.10);   /* subtle tint: active pill bg, hover overlays */
-  --color-purple-border: rgba(167, 139, 250, 0.35); /* purple-tinted borders */
+  --color-purple-surface: color-mix(in srgb, var(--color-purple) 6%, transparent);   /* subtle tint: active pill bg, hover overlays */
+  --color-purple-dim:     color-mix(in srgb, var(--color-purple) 12%, transparent);  /* medium purple tint  */
+  --color-purple-border:  color-mix(in srgb, var(--color-purple) 35%, transparent);  /* purple-tinted borders */
 
   /* ── Cell-group semantic aliases ─────────────────────────────────────── */
   --color-group-reference: var(--color-primary);
@@ -66,11 +73,11 @@
 
   /* ── Neon glow system — consistent bloom across all active data elements ── */
   /* Use these instead of raw rgba values so every glow shares the same radius/intensity curve */
-  --glow-sm:     0 0  8px rgba(0, 212, 255, 0.30);   /* tight: indicators, small icons        */
-  --glow-md:     0 0 20px rgba(0, 212, 255, 0.35);   /* buttons, active interactive elements  */
-  --glow-lg:     0 0 36px rgba(0, 212, 255, 0.55);   /* hover states, hero-scale accents      */
-  --glow-subtle: 0 0 18px rgba(0, 212, 255, 0.08);   /* card hover bloom — barely there       */
-  --glow-logo:   0 0 16px rgba(0, 212, 255, 0.55), 0 0 40px rgba(0, 212, 255, 0.22); /* logo ring */
+  --glow-sm:     0 0  8px color-mix(in srgb, var(--color-primary) 30%, transparent);   /* tight: indicators, small icons        */
+  --glow-md:     0 0 20px color-mix(in srgb, var(--color-primary) 35%, transparent);   /* buttons, active interactive elements  */
+  --glow-lg:     0 0 36px color-mix(in srgb, var(--color-primary) 55%, transparent);   /* hover states, hero-scale accents      */
+  --glow-subtle: 0 0 18px color-mix(in srgb, var(--color-primary) 8%, transparent);    /* card hover bloom — barely there       */
+  --glow-logo:   0 0 16px color-mix(in srgb, var(--color-primary) 55%, transparent), 0 0 40px color-mix(in srgb, var(--color-primary) 22%, transparent); /* logo ring */
 
   /* ── Font-size scale (--fs-*) ────────────────────────────────────────── */
   /* Six named tiers; minimum is xxs (0.65rem). Mirror values live in      */
@@ -135,16 +142,16 @@ body {
 /* ── Scrollbar ───────────────────────────────────────────────────────────── */
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(0, 212, 255, 0.35) transparent;
+  scrollbar-color: var(--color-primary-border) transparent;
 }
 
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: rgba(0, 212, 255, 0.35);
+  background: var(--color-primary-border);
   border-radius: 2px;
 }
-::-webkit-scrollbar-thumb:hover { background: rgba(0, 212, 255, 0.65); }
+::-webkit-scrollbar-thumb:hover { background: color-mix(in srgb, var(--color-primary) 65%, transparent); }
 
 h1, h2, h3, h4, h5, h6 {
   color: var(--color-text-heading);
@@ -188,4 +195,15 @@ input[type="checkbox"] {
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-primary-dim);
+}
+
+/* ── Global keyframes ────────────────────────────────────────────────────── */
+@keyframes state-blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.35; }
+}
+
+@keyframes thumb-danger-pulse {
+  0%, 100% { box-shadow: 0 0 6px color-mix(in srgb, var(--color-danger) 60%, transparent); }
+  50%       { box-shadow: 0 0 16px var(--color-danger); }
 }

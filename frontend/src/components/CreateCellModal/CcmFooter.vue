@@ -74,7 +74,7 @@ export default defineComponent({
     font-size:     0.84rem;
     font-weight:   600;
     cursor:        pointer;
-    transition:    background 0.15s, opacity 0.15s;
+    transition:    background var(--tr-fast), opacity var(--tr-fast);
 
     &--cancel {
       background:   transparent;

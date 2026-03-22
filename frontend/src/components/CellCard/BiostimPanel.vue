@@ -3,6 +3,7 @@
   <div class="cell-card__biostim">
     <div class="cell-card__biostim-header" v-tip="tooltipScore">
       <span class="cell-card__biostim-title">{{ ICON.NOURISH }} {{ $t('biostim.title') }}</span>
+      <span class="cell-card__biostim-theoretical">{{ $t('biostim.theoreticalBadge') }}</span>
       <span class="cell-card__biostim-score" :class="scoreClass">
         {{ (biomodScore * 100).toFixed(0) }}{{ UNIT.PERCENT }}
       </span>
@@ -120,8 +121,8 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-@use '../../styles/keyframes' as *;
-@use '../../styles/mixins' as *;
+
+
 
 @keyframes nourish-text-pulse {
   0%, 100% { opacity: 1; }
@@ -135,7 +136,7 @@ export default defineComponent({
     border-radius: var(--radius);
     padding: 0.5rem 0.65rem;
     margin: 0 0.15rem;
-    transition: border-color 0.3s, background 0.3s;
+    transition: border-color var(--tr-slow), background var(--tr-slow);
 
     &--nourishing {
       background: color-mix(in srgb, var(--color-primary) 8%, transparent);
@@ -152,14 +153,24 @@ export default defineComponent({
   &__biostim-title {
     @include mono-upper(0.6rem, 0.09em);
     color: var(--color-accent);
-    opacity: 0.80;
+    opacity: var(--op-partial);
+  }
+
+  &__biostim-theoretical {
+    @include mono-upper(0.52rem, 0.06em);
+    color: var(--color-amber);
+    opacity: 0.65;
+    border: 1px solid color-mix(in srgb, var(--color-amber) 30%, transparent);
+    border-radius: 2px;
+    padding: 0.04rem 0.3rem;
+    flex-shrink: 0;
   }
 
   &__biostim-score {
     font-size: var(--fs-xs);
     font-family: var(--font-mono);
     font-weight: 700;
-    transition: color 0.3s;
+    transition: color var(--tr-slow);
 
     &--low    { color: var(--color-accent); opacity: 0.40; }
     &--medium { color: var(--color-accent); opacity: 0.75; }
@@ -182,7 +193,7 @@ export default defineComponent({
     font-family: var(--font-mono);
     color: var(--color-text-muted);
     white-space: nowrap;
-    opacity: 0.80;
+    opacity: var(--op-partial);
   }
 
   &__biostim-track {
@@ -207,7 +218,7 @@ export default defineComponent({
     font-family: var(--font-mono);
     color: var(--color-text-muted);
     text-align: right;
-    opacity: 0.75;
+    opacity: 0.75; // intentional between-tier value
   }
 }
 </style>

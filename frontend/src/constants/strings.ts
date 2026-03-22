@@ -42,6 +42,10 @@ export const CELL_CATEGORY = {
 export const WAVEFORM = {
   CW:     'cw',
   PULSED: 'pulsed',
+  /** High-Frequency Irreversible Electroporation: bipolar square pulses >100 kHz.
+   *  Reduces muscle contractions; effective lysis threshold ×1.75 vs monopolar pulsed.
+   *  Ref: Sano et al. (2018) Sci Rep; Dong et al. (2018) IEEE Trans Biomed Eng */
+  H_FIRE: 'hfire',
 } as const
 
 /** Thermal danger levels used in field control */

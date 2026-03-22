@@ -67,7 +67,7 @@
   .protocol__eq-divider {
     height: 1px;
     background: var(--color-border);
-    opacity: 0.5;
+    opacity: 0.5; // intentional between-tier value
     margin: 0.2rem 0;
   }
 
@@ -75,7 +75,7 @@
     font-family: var(--font-mono);
     font-size: var(--fs-xs);
     color: var(--color-text-muted);
-    opacity: 0.7;
+    opacity: var(--op-dim);
     border-top: 1px solid rgba(255, 255, 255, 0.06);
     padding-top: 0.35rem;
     margin-top: 0.15rem;
@@ -105,16 +105,17 @@
       position: absolute;
       left: 0;
       color: var(--color-primary);
-      opacity: 0.5;
+      opacity: 0.5; // intentional between-tier value
     }
 
-    &--nourish, &--revep, &--lysis {
+    &--nourish, &--revep, &--lysis, &--hfire {
       &::before { content: '●'; top: 0.18em; font-size: var(--fs-xxs); opacity: 1; }
     }
 
     &--nourish::before { color: var(--color-lime); }
     &--revep::before   { color: var(--color-amber); }
     &--lysis::before   { color: var(--color-danger); }
+    &--hfire::before   { color: var(--color-amber); }
   }
 
   .protocol__note {
@@ -130,12 +131,7 @@
   }
 
   .protocol__note-label {
-    font-size: var(--fs-xxs);
-    font-family: var(--font-mono);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--color-text-muted);
-    opacity: 0.7;
+    @include section-title();
     margin-bottom: 0.25rem;
   }
 
@@ -184,12 +180,9 @@
     }
 
     th {
-      font-family: var(--font-mono);
+      @include table-header-cell(rgba(0, 0, 0, 0.2));
       font-size: var(--fs-xs);
-      text-transform: uppercase;
       letter-spacing: 0.07em;
-      color: var(--color-text-muted);
-      background: rgba(0, 0, 0, 0.2);
     }
 
     td { color: var(--color-text); line-height: 1.45; }
@@ -204,6 +197,6 @@
     color: var(--color-text-muted);
     text-align: left;
     padding: 0.3rem 0.7rem 0.2rem;
-    opacity: 0.7;
+    opacity: var(--op-dim);
   }
 }

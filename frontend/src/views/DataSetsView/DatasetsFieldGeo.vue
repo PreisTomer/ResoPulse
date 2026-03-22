@@ -34,7 +34,7 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-@use '../../styles/mixins' as *;
+
 @use './shared' as ds;
 
 @include ds.datasets-card();
@@ -99,7 +99,7 @@ export default defineComponent({
   &__geo-sep-label {
     @include mono-upper(0.7rem, 0.1em);
     color: var(--color-text-muted);
-    opacity: 0.55;
+    opacity: var(--op-muted);
     white-space: nowrap;
     flex-shrink: 0;
   }

@@ -125,7 +125,7 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-@use '../../styles/mixins' as *;
+
 
 .hw-input {
   display: flex;
@@ -169,7 +169,7 @@ export default defineComponent({
     border: none;
     color: var(--color-text-muted);
     cursor: pointer;
-    transition: background-color 0.15s, color 0.15s;
+    transition: background-color var(--tr-fast), color var(--tr-fast);
 
     &:hover { background: var(--color-surface-2); color: var(--color-text); }
 

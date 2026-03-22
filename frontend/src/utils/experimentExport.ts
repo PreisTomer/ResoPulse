@@ -116,7 +116,7 @@ export function buildTargetSection(t: CellParamSnapshot, isRes: boolean, isDbl: 
   return lines
 }
 
-export function buildModelSection(isRes: boolean, isPulsed: boolean, isDbl: boolean): string[] {
+export function buildModelSection(isRes: boolean, isPulsed: boolean, isDbl: boolean, isHFire = false): string[] {
   const lines: string[] = []
   if (isRes) {
     lines.push(
@@ -146,7 +146,7 @@ export function buildModelSection(isRes: boolean, isPulsed: boolean, isDbl: bool
     '  T_ss = 37 + SAR · dc / (λ · cp)',
     '  λ = 0.02 s⁻¹ (Newton cooling constant)',
   )
-  if (isPulsed && !isRes) {
+  if ((isPulsed || isHFire) && !isRes) {
     lines.push(
       '',
       'Pulse charging: pulse envelope factor (Weaver & Chizmadzhev 1996):',
@@ -154,6 +154,16 @@ export function buildModelSection(isRes: boolean, isPulsed: boolean, isDbl: bool
       '  Effective Vm = Vm(f) · PEF',
       '  At t_p < τ: membrane substantially undercharged (PEF < 0.63)',
       '  At t_p ≥ 3τ: membrane reaches ≥95% plateau (full charging)',
+    )
+  }
+  if (isHFire) {
+    lines.push(
+      '',
+      'H-FIRE waveform: bipolar burst delivery (Arena et al. 2011; Sano et al. 2015):',
+      '  Carrier frequency > 1 kHz → below neuromuscular activation threshold.',
+      '  Polarity reversals partially discharge membrane capacitance between half-cycles.',
+      '  Effective lysis threshold = Vm,threshold × 1.75  (×1.5–2× range, midpoint used).',
+      '  Disruption Ratio in this entry = Vm × PEF / (Vm,threshold × 1.75).',
     )
   }
   if (isDbl) {
@@ -185,7 +195,7 @@ export function buildModelSection(isRes: boolean, isPulsed: boolean, isDbl: bool
   return lines
 }
 
-export function buildRefs(isRes: boolean, isDbl: boolean, cat: string): string[] {
+export function buildRefs(isRes: boolean, isDbl: boolean, cat: string, isHFire = false): string[] {
   const refs: string[] = []
   let i = 1
   refs.push(
@@ -215,6 +225,15 @@ export function buildRefs(isRes: boolean, isDbl: boolean, cat: string): string[]
     if (cat === 'virus') refs.push(
       `[${i++}] Sankey, O.F. et al. (2009). Simulations of the mechanical modes of viral capsids.`,
       '    Proc. Natl. Acad. Sci. USA 106(30), 12347-12352.',
+    )
+  }
+  if (isHFire) {
+    refs.push(
+      `[${i++}] Arena, C.B. et al. (2011). High-frequency irreversible electroporation (H-FIRE)`,
+      '    for non-thermal ablation without muscle contraction.',
+      '    Biomed. Eng. Online 10:102. doi:10.1186/1475-925X-10-102',
+      `[${i++}] Sano, M.B. et al. (2015). Bursts of bipolar microsecond pulses inhibit tumor growth.`,
+      '    Sci. Rep. 5:14999. doi:10.1038/srep14999',
     )
   }
   return refs
@@ -267,7 +286,7 @@ function classifySelectivity(sel: number): string {
  * before lysis is declared.  Matches the lysisDelayMs getter in cellStore.
  */
 function computeLysisDelayMs(entry: LogEntry): number {
-  if (entry.waveform === 'pulsed' && entry.pulseWidthNs && entry.dutyCycle) {
+  if ((entry.waveform === 'pulsed' || entry.waveform === 'hfire') && entry.pulseWidthNs && entry.dutyCycle) {
     const tpS = entry.pulseWidthNs / 1e9
     const raw = (entry.lysisNPulses ?? 1) * (tpS / entry.dutyCycle) * 1000
     return Math.min(Math.max(raw, 200), 30_000)
@@ -320,9 +339,11 @@ export function buildEntryMethodsText(entry: LogEntry, sessionName: string): { t
 
   const h         = entry.healthySnap
   const t         = entry.targetSnap
-  const isRes     = entry.chartMode === 'resonance'
-  const isPulsed  = entry.waveform === 'pulsed'
-  const isDbl     = entry.doubleShellEnabled ?? false
+  const isRes           = entry.chartMode === 'resonance'
+  const isPulsed        = entry.waveform === 'pulsed'
+  const isHFire         = entry.waveform === 'hfire'
+  const isPulsedOrHFire = isPulsed || isHFire
+  const isDbl           = entry.doubleShellEnabled ?? false
   const cat       = t.category
   const medKey    = entry.medium as MediumKey
   const medName   = medKey in MEDIA ? MEDIA[medKey].name : entry.medium
@@ -344,8 +365,8 @@ export function buildEntryMethodsText(entry: LogEntry, sessionName: string): { t
     fld('Conductivity σe',     `${sigE.toFixed(3)} ${UNIT.S_PER_M}  [T-corrected at 37°C]`),
     fld('RF Frequency',        freqDisplay),
     fld('Electric Field E',    fieldDisplay),
-    fld('Waveform',            `${(entry.waveform ?? 'cw').toUpperCase()}`),
-    ...(isPulsed ? [
+    fld('Waveform',            `${(entry.waveform ?? 'cw').toUpperCase()}${isHFire ? '  [H-FIRE bipolar burst, Vth × 1.75]' : ''}`),
+    ...(isPulsedOrHFire ? [
       fld('Duty cycle dc',     `${((entry.dutyCycle ?? 0) * 100).toExponential(2)}%`),
       fld('Pulse width t_p',   `${entry.pulseWidthNs ?? ', '} ${UNIT.NS}`),
       fld('N-pulses (lysis)',  `${entry.lysisNPulses ?? ', '}`),
@@ -356,7 +377,7 @@ export function buildEntryMethodsText(entry: LogEntry, sessionName: string): { t
   // ── Per-cell biophysical results ───────────────────────────────────────────
 
   const sigmaE      = entry.sigmaE ?? 0
-  const isPulsedSch = isPulsed && !isRes   // PEF only applies in Schwan/IRE mode
+  const isPulsedSch = isPulsedOrHFire && !isRes   // PEF only applies in Schwan/IRE mode
 
   // Healthy cell block
   const hSAR     = computeSAR(h.conductivity, sigmaE, entry.fieldVcm)
@@ -384,7 +405,7 @@ export function buildEntryMethodsText(entry: LogEntry, sessionName: string): { t
   // Target cell block
   const tSAR    = computeSAR(t.conductivity, sigmaE, entry.fieldVcm)
   const tSARAvg = tSAR * (entry.dutyCycle ?? 1)
-  const tPEF    = isPulsedSch && entry.pulseWidthNs && !isRes && t.fc > 0
+  const tPEF    = isPulsedSch && entry.pulseWidthNs && t.fc > 0
     ? computePEF(entry.pulseWidthNs, t.fc)
     : null
   const tDRState = classifyDR(entry.targetRatio)
@@ -419,7 +440,7 @@ export function buildEntryMethodsText(entry: LogEntry, sessionName: string): { t
       ? `YES: target DR ${(entry.targetRatio * 100).toFixed(1)}% >= 85%  ·  healthy DR ${(entry.healthyRatio * 100).toFixed(1)}% < 50%`
       : `NO: target DR ${(entry.targetRatio * 100).toFixed(1)}%  ·  healthy DR ${(entry.healthyRatio * 100).toFixed(1)}%`),
     ...(entry.event === 'lysis'
-      ? [fld('Lysis delay (protocol)', `${lysisDelayMs.toFixed(0)} ms  (N=${entry.lysisNPulses ?? 1} × t_p/dc${isPulsed ? ` = ${entry.lysisNPulses ?? 1} × ${entry.pulseWidthNs}ns / ${(entry.dutyCycle ?? 1).toExponential(2)}` : '  [CW default]'})`)]
+      ? [fld('Lysis delay (protocol)', `${lysisDelayMs.toFixed(0)} ms  (N=${entry.lysisNPulses ?? 1} × t_p/dc${isPulsedOrHFire ? ` = ${entry.lysisNPulses ?? 1} × ${entry.pulseWidthNs}ns / ${(entry.dutyCycle ?? 1).toExponential(2)}` : '  [CW default]'})`)]
       : []),
     fld('Event',                 entry.event),
   ]
@@ -456,11 +477,11 @@ export function buildEntryMethodsText(entry: LogEntry, sessionName: string): { t
     '',
     'PHYSICAL MODEL',
     sep(),
-    ...buildModelSection(isRes, isPulsed, isDbl),
+    ...buildModelSection(isRes, isPulsed, isDbl, isHFire),
     '',
     'REFERENCES',
     sep(),
-    ...buildRefs(isRes, isDbl, cat),
+    ...buildRefs(isRes, isDbl, cat, isHFire),
     '',
     sep('═'),
     'Generated by ResoPulse: virtual biophysics engine',

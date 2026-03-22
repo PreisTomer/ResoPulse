@@ -55,7 +55,7 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-@use '../../styles/mixins' as *;
+
 
 .chart-tooltip {
   position: absolute;

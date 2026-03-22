@@ -44,7 +44,7 @@ export default defineComponent({
   &__sub {
     font-size: var(--fs-md);
     color: var(--color-text-muted);
-    opacity: 0.65;
+    opacity: 0.65; // intentional between-tier value
     max-width: 380px;
     line-height: 1.6;
     margin: 0;
@@ -61,7 +61,7 @@ export default defineComponent({
     text-decoration: none;
     font-size: var(--fs-lg);
     font-weight: 600;
-    transition: all 0.15s;
+    transition: all var(--tr-fast);
 
     &:hover {
       background: color-mix(in srgb, var(--color-primary) 15%, transparent);

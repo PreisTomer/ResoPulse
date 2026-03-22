@@ -229,7 +229,7 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-@use '../../styles/mixins' as *;
+
 
 .field-panel {
   &__accordion {
@@ -242,8 +242,8 @@ export default defineComponent({
       line-height: 1;
       display: inline-block;
       transform: rotate(0deg);
-      transition: transform 0.2s ease;
-      opacity: 0.55;
+      transition: transform var(--tr-normal);
+      opacity: var(--op-muted);
 
       &--open { transform: rotate(90deg); }
     }
@@ -284,10 +284,10 @@ export default defineComponent({
     text-transform: capitalize;
     padding: 0.18rem 0.55rem;
     border: 1px solid var(--color-border);
-    border-radius: 12px;
+    border-radius: var(--radius-lg);
     cursor: pointer;
     color: var(--color-text-muted);
-    transition: border-color 0.15s, color 0.15s, background-color 0.15s;
+    transition: border-color var(--tr-fast), color var(--tr-fast), background-color var(--tr-fast);
     user-select: none;
     white-space: nowrap;
 

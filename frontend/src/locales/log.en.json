@@ -19,6 +19,7 @@
     "tipLogReading": "<strong>Log Reading</strong>\nSnapshot current experiment state:\nRF frequency, field, Vm (target &amp; healthy),\nselectivity, temperature, disruption ratios.\nAuto-logged on lysis events.",
     "tipExportCsv": "<strong>Export CSV</strong>\nDownload all log entries.\nColumns: #, time, freq (kHz), field (V/cm),\nT-Vm (mV), H-Vm (mV), selectivity, event type.",
     "tipClearLog": "<strong>Clear Log</strong>\nRemove all readings from this session.\nThis action cannot be undone.",
+    "tipExportMethods": "<strong>Export Methods Text</strong>\nDownload a publication-ready methods paragraph for the most recently logged reading.\nIncludes cell types, field parameters, calculated Vm, DR, and model citations.",
 
     "colSession": "Session",
     "tipThSession": "<strong>Session: Experiment Session Name</strong>\nThe session name active at the time this reading was logged.\nChanging the session name mid-experiment is recorded here,\nallowing entries from multiple sessions to coexist in one log.",

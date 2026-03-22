@@ -32,7 +32,7 @@
 
     "tipFresLine": "<strong>Resonant Frequency Marker (f_res)</strong>\nVertical white dashed line shows the acoustic capsid/cell-wall resonant frequency.\n  f_res ≈ v_shell / (2R)   (Tsen et al. 2007; Dykeman &amp; Sankey 2010)\n\nThe resonance peak width is set by the Q-factor (peptidoglycan/capsid damping).\nLower Q → broader but weaker peak. Higher Q → narrow spike, high selectivity.",
 
-    "tipPLysis":   "<strong>P(lysis), Random Orientation Fraction</strong>\nIn a real experiment, cells are randomly oriented in 3D.\nThe Schwan Vm has a cosθ factor: Vm(θ) = Vm_max · |cosθ|.\n\nFor a 3D isotropic distribution:\n  P = max(0, 1 − 1/DR)\n\nAt DR=1.0: only the perfectly-aligned pole lyses → P = 0%\nAt DR=2.0: 50% of cells lyse\nAt DR=5.0: 80% of cells lyse\n\n<em>Resonance mode</em>: acoustic pressure is omnidirectional, cosθ does not apply.",
+    "tipPLysis":   "<strong>P(lysis), Random Orientation Fraction</strong>\nIn a real experiment, cells are randomly oriented in 3D.\nThe Schwan Vm has a cosθ factor: Vm(θ) = Vm_max · &#124;cosθ&#124;.\n\nFor a 3D isotropic distribution:\n  P = max(0, 1 − 1/DR)\n\nAt DR=1.0: only the perfectly-aligned pole lyses → P = 0%\nAt DR=2.0: 50% of cells lyse\nAt DR=5.0: 80% of cells lyse\n\n<em>Resonance mode</em>: acoustic pressure is omnidirectional, cosθ does not apply.",
 
     "clickToSet":   "↵ click to set",
     "hoverToInspect": "hover to inspect",

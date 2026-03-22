@@ -181,7 +181,7 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-@use '../../styles/mixins' as *;
+
 
 /* ── Page shell ───────────────────────────────────────────────────────────── */
 .reports {
@@ -225,7 +225,7 @@ export default defineComponent({
     font-weight: 600;
     border: 1px solid;
     cursor: pointer;
-    transition: all 0.15s;
+    transition: all var(--tr-fast);
     background: transparent;
 
     &:disabled { opacity: 0.3; cursor: not-allowed; }

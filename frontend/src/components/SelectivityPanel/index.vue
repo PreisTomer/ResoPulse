@@ -22,6 +22,13 @@
         </div>
       </div>
 
+      <!-- ── Population window score (lysis prob × healthy survival) ── -->
+      <div class="sel-panel__ws-row" v-tip="tipWindowScore">
+        <span class="sel-panel__ws-label">{{ $t('selectivity.windowScoreLabel') }}</span>
+        <span class="sel-panel__ws-val" :class="windowScoreClass">{{ (windowScore * 100).toFixed(0) }}%</span>
+        <span class="sel-panel__ws-formula">= P(T)×(1-P(H))</span>
+      </div>
+
       <!-- ── σ_i uncertainty band on TI (Schwan mode only) ─────── -->
       <div v-if="showTiUncertainty" class="sel-panel__ti-range" v-tip="tipTiRange">
         <span class="sel-panel__ti-range-label">{{ $t('selectivity.sigmaIRange') }}</span>
@@ -40,6 +47,15 @@
         <div class="sel-panel__orient-vals">
           <span class="sel-panel__orient-t">T {{ targetOrientPct }}</span>
           <span class="sel-panel__orient-h">H {{ healthyOrientPct }}</span>
+        </div>
+      </div>
+
+      <!-- ── Population + size distribution lysis fraction ─────── -->
+      <div class="sel-panel__orient-row sel-panel__orient-row--popdist" v-tip="$t('selectivity.tipPopDist')">
+        <span class="sel-panel__orient-label">{{ $t('selectivity.popDistLabel') }}</span>
+        <div class="sel-panel__orient-vals">
+          <span class="sel-panel__orient-t">T {{ targetPopDistPct }}</span>
+          <span class="sel-panel__orient-h">H {{ healthyPopDistPct }}</span>
         </div>
       </div>
 
@@ -154,12 +170,40 @@ export default defineComponent({
     healthyOrientPct(): string {
       return `${(this.store.healthyLysisProbabilityRandom * 100).toFixed(0)}%`
     },
+
+    targetPopDistPct(): string {
+      if (this.store.chartMode === CHART_MODE.RESONANCE && this.isResonanceTarget) return ', '
+      return `${(this.store.targetPopulationLysisFraction * 100).toFixed(0)}%`
+    },
+
+    healthyPopDistPct(): string {
+      return `${(this.store.healthyPopulationLysisFraction * 100).toFixed(0)}%`
+    },
+
+    windowScore(): number {
+      const pT = this.store.targetLysisProbabilityRandom
+      const pH = this.store.healthyLysisProbabilityRandom
+      return pT * (1 - pH)
+    },
+
+    windowScoreClass(): string {
+      const s = this.windowScore
+      if (s >= 0.5) return 'sel-panel__ws-val--good'
+      if (s >= 0.2) return 'sel-panel__ws-val--marginal'
+      return 'sel-panel__ws-val--poor'
+    },
+
+    tipWindowScore(): string {
+      const pT = (this.store.targetLysisProbabilityRandom * 100).toFixed(0)
+      const pH = (this.store.healthyLysisProbabilityRandom * 100).toFixed(0)
+      return this.$t('selectivity.tipWindowScore', { score: (this.windowScore * 100).toFixed(0), pT, pH })
+    },
   },
 })
 </script>
 
 <style lang="scss" scoped>
-@use '../../styles/mixins' as *;
+
 
 .sel-panel {
   @include surface-card(var(--radius));
@@ -176,7 +220,7 @@ export default defineComponent({
   &__sep {
     height: 1px;
     background: var(--color-border);
-    opacity: 0.5;
+    opacity: 0.5; // intentional between-tier value
     margin: 0.1rem 0;
     flex-shrink: 0;
   }
@@ -209,7 +253,7 @@ export default defineComponent({
     font-size: var(--fs-xxs);
     font-family: var(--font-mono);
     color: var(--color-text-muted);
-    opacity: 0.7;
+    opacity: var(--op-dim);
   }
 
   &__ti-range-val {
@@ -218,6 +262,33 @@ export default defineComponent({
     color: var(--color-text-muted);
     letter-spacing: 0.02em;
     cursor: help;
+  }
+
+  /* ── Population window score ────────────────────────────────── */
+  &__ws-row {
+    @include flex-row(0.5rem);
+    align-items: baseline;
+    padding: 0.2rem 0;
+    cursor: help;
+  }
+
+  &__ws-label { @include mono-upper(0.56rem, 0.07em); color: var(--color-text-muted); flex-shrink: 0; }
+
+  &__ws-val {
+    font-size: var(--fs-lg);
+    font-family: var(--font-mono);
+    font-weight: 700;
+
+    &--good    { color: var(--color-lime); }
+    &--marginal { color: var(--color-amber); }
+    &--poor    { color: var(--color-danger); }
+  }
+
+  &__ws-formula {
+    font-size: var(--fs-xxs);
+    font-family: var(--font-mono);
+    color: var(--color-text-muted);
+    opacity: 0.6;
   }
 
   /* ── Random-orientation lysis fraction ─────────────────────── */
@@ -235,5 +306,12 @@ export default defineComponent({
 
   &__orient-t { font-size: var(--fs-xs); font-family: var(--font-mono); font-weight: 600; color: var(--color-danger); }
   &__orient-h { font-size: var(--fs-xs); font-family: var(--font-mono); font-weight: 600; color: var(--color-primary); }
+
+  &__orient-row--popdist {
+    opacity: var(--op-partial);
+    font-style: italic;
+    border-top: 1px dotted color-mix(in srgb, var(--color-border) 50%, transparent);
+    padding-top: 0.15rem;
+  }
 }
 </style>

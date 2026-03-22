@@ -157,7 +157,7 @@ export default defineComponent({
     border-radius: 6px;
     background: rgba(255, 255, 255, 0.025);
     margin-bottom: 1.25rem;
-    transition: border-color 0.15s;
+    transition: border-color var(--tr-fast);
 
     &:hover { border-color: color-mix(in srgb, var(--color-primary) 30%, transparent); }
   }
@@ -197,7 +197,7 @@ export default defineComponent({
     color: var(--color-text-muted);
     text-decoration: none;
     letter-spacing: 0.04em;
-    transition: color 0.15s;
+    transition: color var(--tr-fast);
 
     &:hover { color: var(--color-text); }
   }

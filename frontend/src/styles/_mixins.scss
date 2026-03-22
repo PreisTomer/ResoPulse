@@ -248,6 +248,31 @@ $_cell-states: (
   &__warn-val   { color: var(--color-amber);  }
 }
 
+// ── Badge / pill ─────────────────────────────────────────────────────────────
+// Mono-caps inline label with border and rounded corners.
+// Callers set color and background on the element; mixin provides shape + type.
+// Usage: @include badge-pill(); or @include badge-pill(0.1rem 0.6rem, 4px);
+@mixin badge-pill($padding: 0.15rem 0.5rem, $radius: 3px) {
+  @include mono-upper($fs-xxs, 0.08em);
+  display: inline-flex;
+  align-items: center;
+  padding: $padding;
+  border-radius: $radius;
+  border: 1px solid;
+}
+
+// ── Table header cell ────────────────────────────────────────────────────────
+// Mono-caps text + muted overlay background used in all data tables.
+// Usage (inside table th selector): @include table-header-cell();
+@mixin table-header-cell($overlay: var(--color-overlay-sm)) {
+  @include mono-upper($fs-xxs, 0.1em);
+  background: $overlay;
+  color: var(--color-text-muted);
+  padding: 0.35rem 0.6rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
 // ── Info panel ──────────────────────────────────────────────────────────────
 // Tinted bordered section panel used for resonance-info, dep-section, etc.
 // Usage: @include info-panel(rgba(0, 212, 255, 0.04), rgba(0, 212, 255, 0.15));

@@ -915,7 +915,7 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-@use '../../styles/mixins' as *;
+
 
 /* Expose group colors as CSS vars for the legend dots */
 .freq-chart {

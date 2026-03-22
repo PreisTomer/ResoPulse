@@ -65,7 +65,7 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-@use '../../styles/mixins' as *;
+
 
 .sweep-window {
   @include flex-row(0.6rem);
@@ -113,7 +113,7 @@ export default defineComponent({
     font-size: var(--fs-xs);
     font-style: normal;
     cursor: pointer;
-    transition: background 0.15s, border-color 0.15s;
+    transition: background var(--tr-fast), border-color var(--tr-fast);
 
     &:hover {
       background: color-mix(in srgb, var(--color-primary) 20%, transparent);
@@ -125,7 +125,7 @@ export default defineComponent({
     font-size: var(--fs-xs);
     font-style: normal;
     color: var(--color-text-muted);
-    opacity: 0.8;
+    opacity: var(--op-partial);
   }
 }
 </style>

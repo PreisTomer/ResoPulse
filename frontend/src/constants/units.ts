@@ -11,6 +11,7 @@ export const UNIT = {
   NS:        'ns',
   US:        'µs',
   MS:        'ms',
+  S:         's',
   MV:        'mV',
   PERCENT:   '%',
   DEG_C:     '°C',
@@ -24,12 +25,15 @@ export const UNIT = {
   MM:  'mm',
   OHM: 'Ω',
   CM2: 'cm²',
+  MJ_PER_CM3: 'mJ/cm³',
   MJ_PER_KG: 'mJ/kg',
   J_PER_KG:  'J/kg',
   KJ_PER_KG: 'kJ/kg',
   W:   'W',
   MW:  'mW',
   DEG_C_PER_S: '°C/s',
+  KG_PER_M3:   'kg/m³',
+  J_PER_KG_K:  'J/(kg·K)',
 } as const
 
 export type Unit = typeof UNIT[keyof typeof UNIT]

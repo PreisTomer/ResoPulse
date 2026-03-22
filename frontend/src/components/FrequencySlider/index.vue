@@ -126,7 +126,7 @@ export default defineComponent({
     font-size: var(--fs-xxs);
     line-height: 1.5;
 
-    &-icon { flex-shrink: 0; margin-top: 0.05rem; opacity: 0.8; }
+    &-icon { flex-shrink: 0; margin-top: 0.05rem; opacity: var(--op-partial); }
     &-text strong { color: var(--color-purple-light); }
   }
 }

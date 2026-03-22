@@ -30,7 +30,7 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-@use '../../styles/mixins' as *;
+
 @use './shared' as proto;
 
 @include proto.protocol-section();
@@ -49,7 +49,7 @@ export default defineComponent({
   display: flex;
   gap: 1rem;
   align-items: flex-start;
-  transition: border-color 0.15s;
+  transition: border-color var(--tr-fast);
 
   &:hover { border-color: color-mix(in srgb, var(--color-primary) 25%, transparent); }
 }
@@ -59,7 +59,7 @@ export default defineComponent({
   font-size: 1.1rem;
   font-weight: 800;
   color: var(--color-primary);
-  opacity: 0.35;
+  opacity: var(--op-ghost);
   flex-shrink: 0;
   width: 2rem;
   line-height: 1.5;

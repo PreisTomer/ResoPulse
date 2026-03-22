@@ -40,7 +40,7 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-@use '../../styles/mixins' as *;
+
 
 .ccm-derived {
   display:       flex;
@@ -61,7 +61,7 @@ export default defineComponent({
 
   &__label {
     @include flex-row(0.3rem);
-    font-size:      0.68rem;
+    font-size:      var(--fs-xs);
     color:          var(--color-text-muted);
     text-transform: uppercase;
     letter-spacing: 0.05em;

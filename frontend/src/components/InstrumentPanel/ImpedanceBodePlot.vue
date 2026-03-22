@@ -235,7 +235,7 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-@use '../../styles/mixins' as *;
+
 
 .bode-plot {
   @include flex-col(0.75rem);
@@ -299,14 +299,14 @@ export default defineComponent({
   &__relax-line {
     stroke: var(--color-amber-warm);
     stroke-width: 1;
-    opacity: 0.7;
+    opacity: var(--op-dim);
   }
 
   &__relax-label {
     fill: var(--color-amber-warm);
     font-family: var(--font-mono);
     font-size: 7px;
-    opacity: 0.8;
+    opacity: var(--op-partial);
   }
 
   &__freq-line {

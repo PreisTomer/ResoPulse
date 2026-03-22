@@ -39,7 +39,7 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-@use '../styles/mixins' as *;
+
 
 .stat-card {
   @include surface-card(var(--radius), 1rem 1.1rem);

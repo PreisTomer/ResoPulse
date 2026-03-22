@@ -103,7 +103,7 @@ export default defineComponent({
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background 0.15s, box-shadow 0.15s;
+    transition: background var(--tr-fast), box-shadow var(--tr-fast);
 
     &:hover {
       background: rgba(22, 28, 52, 0.99);
@@ -127,7 +127,7 @@ export default defineComponent({
     box-shadow: 0 8px 48px rgba(0, 0, 0, 0.80), 0 0 0 1px rgba(255, 255, 255, 0.05);
     padding: 0.75rem 0.75rem 0.5rem;
     backdrop-filter: blur(12px);
-    transition: border-color 0.15s, box-shadow 0.15s;
+    transition: border-color var(--tr-fast), box-shadow var(--tr-fast);
 
     &--clickable {
       pointer-events: auto;
@@ -145,7 +145,7 @@ export default defineComponent({
     font-size: var(--fs-xxs);
     letter-spacing: 0.14em;
     color: var(--color-primary);
-    opacity: 0.80;
+    opacity: var(--op-partial);
     margin-bottom: 0.5rem;
     padding-left: 0.1rem;
   }
@@ -164,7 +164,7 @@ export default defineComponent({
 
 // Fade + slide-down entrance/exit
 .sticky-cells-enter-active { transition: opacity 0.28s ease, transform 0.28s ease; }
-.sticky-cells-leave-active { transition: opacity 0.2s ease; }
+.sticky-cells-leave-active { transition: opacity var(--tr-normal); }
 .sticky-cells-enter-from   { opacity: 0; transform: scale(0.72) translateY(-14px); transform-origin: top right; }
 .sticky-cells-leave-to     { opacity: 0; }
 

@@ -380,7 +380,7 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-@use '../../styles/mixins' as *;
+
 
 .dr-chart {
   @include surface-card(8px, 0.75rem 0.75rem 0.5rem);

@@ -19,6 +19,10 @@
 
     <!-- Stat row -->
     <div class="load-monitor__stats">
+      <div class="load-monitor__stat" v-tip="$t('instrument.loadMonitor.tipMediumSAR')">
+        <span class="load-monitor__stat-label">{{ $t('instrument.loadMonitor.statMediumSAR') }}</span>
+        <span class="load-monitor__stat-value">{{ mediumSARDisplay }} <span class="load-monitor__stat-unit">{{ UNIT.W_PER_KG }}</span></span>
+      </div>
       <div class="load-monitor__stat" v-tip="$t('instrument.loadMonitor.tipSigmaBase')">
         <span class="load-monitor__stat-label">{{ $t('instrument.loadMonitor.statSigmaBase') }}</span>
         <span class="load-monitor__stat-value">{{ sigmaBaseDisplay }} <span class="load-monitor__stat-unit">{{ UNIT.S_PER_M }}</span></span>
@@ -177,12 +181,12 @@
         <span class="load-monitor__chain-label">{{ $t('instrument.loadMonitor.chainLysed') }}</span>
         <span class="load-monitor__chain-value">{{ (store.lysedFraction * 100).toFixed(0) }}%</span>
       </div>
-      <span class="load-monitor__chain-arrow">→</span>
+      <span class="load-monitor__chain-arrow">{{ ICON.ARROW_SHORT }}</span>
       <div class="load-monitor__chain-step" :class="{ 'load-monitor__chain-step--active': Math.abs(store.conductivityDeltaAbs) > 0.001 }">
         <span class="load-monitor__chain-label">{{ $t('instrument.loadMonitor.chainDeltaSigma') }}</span>
         <span class="load-monitor__chain-value">{{ deltaDisplay }}</span>
       </div>
-      <span class="load-monitor__chain-arrow">→</span>
+      <span class="load-monitor__chain-arrow">{{ ICON.ARROW_SHORT }}</span>
       <div
         class="load-monitor__chain-step"
         :class="{
@@ -193,13 +197,13 @@
         <span class="load-monitor__chain-label">{{ $t('instrument.loadMonitor.chainZDrift') }}</span>
         <span class="load-monitor__chain-value">{{ driftDisplay }}</span>
       </div>
-      <span class="load-monitor__chain-arrow">→</span>
+      <span class="load-monitor__chain-arrow">{{ ICON.ARROW_SHORT }}</span>
       <div
         class="load-monitor__chain-step"
         :class="{ 'load-monitor__chain-step--warn': store.voltageCorrectionFactor > 1.05 }"
       >
         <span class="load-monitor__chain-label">{{ $t('instrument.loadMonitor.chainCorrection') }}</span>
-        <span class="load-monitor__chain-value">×{{ store.voltageCorrectionFactor.toFixed(3) }}</span>
+        <span class="load-monitor__chain-value">{{ ICON.TIMES }}{{ store.voltageCorrectionFactor.toFixed(3) }}</span>
       </div>
     </div>
 
@@ -334,6 +338,13 @@ export default defineComponent({
       }).join(' ')
     },
 
+    mediumSARDisplay(): string {
+      const sar = this.cellStore.mediumJouleHeatingSAR
+      if (sar >= 1000) return (sar / 1000).toFixed(2) + 'k'
+      if (sar >= 10)   return sar.toFixed(1)
+      return sar.toFixed(3)
+    },
+
     /* ── Display helpers ── */
     sigmaBaseDisplay(): string {
       return this.sigmaBase.toFixed(4)
@@ -431,9 +442,10 @@ export default defineComponent({
   /* ── Stat row ── */
   &__stats {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     gap: 0.5rem;
 
+    @media (max-width: 900px) { grid-template-columns: repeat(3, 1fr); }
     @media (max-width: 700px) { grid-template-columns: repeat(2, 1fr); }
   }
 
@@ -559,7 +571,7 @@ export default defineComponent({
     padding: 0.2rem 0.6rem;
     border-radius: var(--radius);
     cursor: pointer;
-    transition: border-color 0.15s, color 0.15s;
+    transition: border-color var(--tr-fast), color var(--tr-fast);
 
     &:hover { border-color: var(--color-primary); color: var(--color-primary); }
   }
@@ -588,7 +600,7 @@ export default defineComponent({
     border: 1px solid transparent;
     min-width: 64px;
     text-align: center;
-    transition: border-color 0.2s, background 0.2s;
+    transition: border-color var(--tr-normal), background var(--tr-normal);
 
     &--active  { border-color: color-mix(in srgb, var(--color-primary) 30%, transparent);   background: color-mix(in srgb, var(--color-primary) 6%, transparent); }
     &--warn    { border-color: color-mix(in srgb, var(--color-amber) 35%, transparent);  background: color-mix(in srgb, var(--color-amber) 7%, transparent); }

@@ -47,7 +47,7 @@
         <span class="cell-visual__compact-temp">{{ temperature.toFixed(1) }}{{ UNIT.DEG_C }}</span>
       </div>
       <div class="cell-visual__compact-bottom">
-        <span :class="['cell-visual__compact-dot', `cell-visual__compact-dot--${cellState}`]">●</span>
+        <span :class="['cell-visual__compact-dot', `cell-visual__compact-dot--${cellState}`]">{{ ICON.DOT }}</span>
         <span :class="['cell-visual__compact-state', `cell-visual__compact-state--${cellState}`]">
           {{ compactStateLabel }}
         </span>
@@ -100,6 +100,7 @@
       <span class="cell-visual__warn-icon">{{ ICON.LIGHTNING }}</span>
       <span class="cell-visual__warn-text">{{ $t('cells.states.revEp') }}</span>
       <span class="cell-visual__warn-pct">{{ (disruptionRatio * 100).toFixed(0) }}%</span>
+      <span class="cell-visual__reseal-time">{{ $t('cells.states.resealTime', { s: resealingTimeDisplay }) }}</span>
     </div>
 
     <!-- Lysis armed strip (target >85%, IRE protocol imminent) -->
@@ -177,8 +178,8 @@ import {
   LYSIS_DURATION_MS,
   FRAGMENT_INTERVAL_MS,
 } from '@/constants/cellCard'
-import { setupBlobAnimation, setupOscilloscope, spawnFragment } from '@/utils/cellAnimation'
-import type { CellVisualProfile } from '@/utils/cellAnimation'
+import { setupBlobAnimation, setupOscilloscope, spawnFragment } from './cellAnimation'
+import type { CellVisualProfile } from './cellAnimation'
 import { CELL_STATE, CELL_TYPE, CELL_CATEGORY } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'
@@ -300,6 +301,11 @@ export default defineComponent({
       const n = this.store.lysisNPulses
       const t = formatLysisTimeLocal(this.store.lysisDelayMs)
       return `${n} pulse${n === 1 ? '' : 's'}, est. ${t}`
+    },
+
+    resealingTimeDisplay(): string {
+      const s = this.store.targetResealingTimeS
+      return s >= 10 ? s.toFixed(0) : s.toFixed(1)
     },
 
     // ── DEP strip ──────────────────────────────────────────────────────
@@ -619,8 +625,8 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-@use '../../styles/keyframes' as *;
-@use '../../styles/mixins' as *;
+
+
 
 /* ── Per-component keyframes ───────────────────────────────────────── */
 @keyframes nourish-text-pulse {
@@ -674,7 +680,7 @@ export default defineComponent({
   &__osc-label {
     @include mono-upper(0.62rem, 0.1em);
     color: var(--color-text-muted);
-    opacity: 0.7;
+    opacity: var(--op-dim);
   }
 
   &__osc-impact {
@@ -699,7 +705,7 @@ export default defineComponent({
     font-family: var(--font-mono);
     font-size: var(--fs-xxs);
     color: var(--color-purple);
-    opacity: 0.75;
+    opacity: 0.75; // intentional between-tier value
     white-space: nowrap;
     width: 1.8rem;
     flex-shrink: 0;
@@ -717,7 +723,7 @@ export default defineComponent({
     height: 100%;
     background: var(--color-purple);
     border-radius: 2px;
-    transition: width 0.3s ease;
+    transition: width var(--tr-slow);
 
     &--caution { background: var(--color-amber); }
     &--warn    { background: var(--color-danger); }
@@ -727,7 +733,7 @@ export default defineComponent({
     font-family: var(--font-mono);
     font-size: var(--fs-xxs);
     color: var(--color-purple);
-    opacity: 0.75;
+    opacity: 0.75; // intentional between-tier value
     width: 2rem;
     text-align: right;
     flex-shrink: 0;
@@ -771,7 +777,7 @@ export default defineComponent({
   }
 
   &__compact-sep   { color: var(--color-text-muted); opacity: 0.45; font-size: var(--fs-xl); }
-  &__compact-temp  { font-size: 1.0rem; color: var(--color-text-muted); opacity: 0.8; }
+  &__compact-temp  { font-size: 1.0rem; color: var(--color-text-muted); opacity: var(--op-partial); }
 
   &__compact-dot {
     font-size: var(--fs-sm);
@@ -801,9 +807,10 @@ export default defineComponent({
   }
 
   /* ── Shared warn strip elements ─────────────────────────────────────── */
-  &__warn-icon { flex-shrink: 0; }
-  &__warn-text { flex: 1; }
-  &__warn-pct  { flex-shrink: 0; font-weight: 700; }
+  &__warn-icon   { flex-shrink: 0; }
+  &__warn-text   { flex: 1; }
+  &__warn-pct    { flex-shrink: 0; font-weight: 700; }
+  &__reseal-time { flex-shrink: 0; opacity: var(--op-muted); font-style: italic; }
 
   /* ── DEP strip (non-resonance, |K| ≥ 0.02) ────────────────────────── */
   &__dep-strip {
@@ -929,7 +936,7 @@ export default defineComponent({
     color: var(--color-vibrating);
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    opacity: 0.8;
+    opacity: var(--op-partial);
   }
 
   &__lysis-btn {
@@ -943,10 +950,10 @@ export default defineComponent({
     text-transform: uppercase;
     letter-spacing: 0.08em;
     cursor: pointer;
-    transition: all 0.15s;
+    transition: all var(--tr-fast);
 
     &:hover:not(:disabled) { background-color: color-mix(in srgb, var(--color-danger) 12%, transparent); }
-    &:disabled { opacity: 0.35; cursor: not-allowed; border-color: var(--color-muted-border); color: var(--color-text-muted); }
+    &:disabled { opacity: var(--op-ghost); cursor: not-allowed; border-color: var(--color-muted-border); color: var(--color-text-muted); }
   }
 }
 </style>

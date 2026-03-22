@@ -1120,7 +1120,7 @@ export function setupBlobAnimation(
 
     // AC modulation: pulsed = fast ~10 Hz flash (discrete pulses); CW = slow 0.5 Hz sine.
     // Both are representational — actual RF is not animated at true frequency.
-    const acPulse = waveform === 'pulsed'
+    const acPulse = (waveform === 'pulsed' || waveform === 'hfire')
       ? Math.max(0, Math.sin(elapsed * 0.10))   // fast repeating burst envelope (~10 Hz)
       : (Math.sin(elapsed * 0.006) + 1) / 2     // slow sine for CW (~0.5 Hz)
     const modOpacity = rayOpacity * (0.50 + acPulse * 0.50)

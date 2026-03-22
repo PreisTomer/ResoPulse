@@ -17,6 +17,7 @@ export interface AugmentedPreset extends CellPreset {
   cmDisplay: string
   fcDisplay: string
   fcrossDisplay: string
+  fcross2Display: string
   resFreqDisplay: string
   resQDisplay: string
   resEthrDisplay: string

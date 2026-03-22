@@ -84,10 +84,10 @@ export default defineComponent({
     font-size: var(--fs-xxs);
     font-family: var(--font-mono);
     color: var(--color-primary);
-    opacity: 0.7;
+    opacity: var(--op-dim);
     text-decoration: none;
     margin-top: 0.1rem;
-    transition: opacity 0.15s;
+    transition: opacity var(--tr-fast);
 
     &:hover {
       opacity: 1;

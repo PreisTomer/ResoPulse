@@ -27,27 +27,33 @@
     <div class="inst-panel__card inst-panel__card--trend">
       <ImpedanceTrend />
     </div>
+
+    <!-- Sonification toggle -->
+    <div class="inst-panel__card inst-panel__card--sonif">
+      <SonificationToggle />
+    </div>
   </div>
 </template>
 
 <script lang="ts">
 import { defineComponent } from 'vue'
-import CuvetteSetup      from './CuvetteSetup.vue'
-import ImpedanceMeter    from './ImpedanceMeter.vue'
-import ImpedanceBodePlot from './ImpedanceBodePlot.vue'
-import FieldCorrector    from './FieldCorrector.vue'
-import HardwareInput     from './HardwareInput.vue'
-import ImpedanceTrend    from './ImpedanceTrend.vue'
-import LoadMonitor       from './LoadMonitor.vue'
+import CuvetteSetup        from './CuvetteSetup.vue'
+import ImpedanceMeter      from './ImpedanceMeter.vue'
+import ImpedanceBodePlot   from './ImpedanceBodePlot.vue'
+import FieldCorrector      from './FieldCorrector.vue'
+import HardwareInput       from './HardwareInput.vue'
+import ImpedanceTrend      from './ImpedanceTrend.vue'
+import LoadMonitor         from './LoadMonitor.vue'
+import SonificationToggle  from './SonificationToggle.vue'
 
 export default defineComponent({
   name: 'InstrumentPanel',
-  components: { CuvetteSetup, ImpedanceMeter, ImpedanceBodePlot, FieldCorrector, HardwareInput, ImpedanceTrend, LoadMonitor },
+  components: { CuvetteSetup, ImpedanceMeter, ImpedanceBodePlot, FieldCorrector, HardwareInput, ImpedanceTrend, LoadMonitor, SonificationToggle },
 })
 </script>
 
 <style lang="scss" scoped>
-@use '../../styles/mixins' as *;
+
 
 .inst-panel {
   display: flex;
@@ -70,6 +76,10 @@ export default defineComponent({
 
     &--trend {
       padding: 1.25rem;
+    }
+
+    &--sonif {
+      padding: 1rem 1.25rem;
     }
   }
 }

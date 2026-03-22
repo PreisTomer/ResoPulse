@@ -214,7 +214,7 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-@use '../../styles/mixins' as *;
+
 
 .protocol {
   flex: 1;
@@ -254,8 +254,8 @@ export default defineComponent({
 
   &__toc-mobile-caret {
     font-size: var(--fs-xxs);
-    opacity: 0.7;
-    transition: transform 0.2s;
+    opacity: var(--op-dim);
+    transition: transform var(--tr-normal);
     margin-left: auto;
 
     &--open { transform: rotate(180deg); }
@@ -280,7 +280,7 @@ export default defineComponent({
     letter-spacing: 0.04em;
     cursor: pointer;
     margin-bottom: 0.75rem;
-    transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+    transition: border-color var(--tr-fast), background var(--tr-fast), box-shadow var(--tr-fast);
     box-shadow: 0 0 12px color-mix(in srgb, var(--color-primary) 8%, transparent);
 
     &:hover, &--open {

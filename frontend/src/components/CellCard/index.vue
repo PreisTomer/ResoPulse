@@ -304,7 +304,7 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-@use '../../styles/mixins' as *;
+
 
 /* ── Keyframes (card-level only) ─────────────────────────────────────── */
 @keyframes card-shake {
@@ -330,7 +330,7 @@ export default defineComponent({
   border-radius: var(--radius-lg);
   padding: 1.5rem;
   @include flex-col(1rem);
-  transition: border-color 0.2s, box-shadow 0.3s;
+  transition: border-color var(--tr-normal), box-shadow var(--tr-slow);
   min-width: 0;
   overflow: hidden;
 
@@ -383,7 +383,7 @@ export default defineComponent({
   }
 
   &--lysed {
-    opacity: 0.65;
+    opacity: 0.65; // intentional between-tier value
     border-color: var(--color-muted-border) !important;
     box-shadow: none;
   }

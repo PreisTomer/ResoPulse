@@ -82,10 +82,10 @@ export default defineComponent({
   font-size: var(--fs-sm);
   padding: 0.3rem 0.6rem;
   outline: none;
-  transition: border-color 0.15s;
+  transition: border-color var(--tr-fast);
   resize: none;
 
-  &::placeholder { color: var(--color-text-muted); opacity: 0.55; }
+  &::placeholder { color: var(--color-text-muted); opacity: var(--op-muted); }
   &:focus { border-color: var(--color-primary); }
 }
 
@@ -95,7 +95,7 @@ export default defineComponent({
   font-size: var(--fs-xs);
   font-family: var(--font-mono);
   color: var(--color-text-muted);
-  opacity: 0.55;
+  opacity: var(--op-muted);
   align-self: flex-end;
   white-space: nowrap;
   margin-top: auto;

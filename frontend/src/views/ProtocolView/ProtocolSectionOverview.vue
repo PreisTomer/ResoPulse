@@ -5,7 +5,7 @@
     <p class="protocol__body-text" v-html="$t('protocol.overview.p1')"></p>
     <p class="protocol__body-text" v-html="$t('protocol.overview.p2')"></p>
     <div class="protocol__info-box">
-      <span class="protocol__info-icon">ℹ</span>
+      <span class="protocol__info-icon">{{ ICON.INFO }}</span>
       <span v-html="$t('protocol.overview.disclaimer')"></span>
     </div>
   </section>
@@ -13,14 +13,16 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+import { ICON } from '@/constants/icons'
 
 export default defineComponent({
   name: 'ProtocolSectionOverview',
+  setup() { return { ICON } },
 })
 </script>
 
 <style lang="scss" scoped>
-@use '../../styles/mixins' as *;
+
 @use './shared' as proto;
 
 @include proto.protocol-section();

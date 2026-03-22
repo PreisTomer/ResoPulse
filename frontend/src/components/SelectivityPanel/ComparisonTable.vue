@@ -127,7 +127,7 @@ export default defineComponent({
     text-transform: uppercase;
     letter-spacing: 0.1em;
     color: var(--color-text-heading);
-    opacity: 0.9;
+    opacity: var(--op-strong);
     margin-bottom: 0.1rem;
   }
 
@@ -166,7 +166,7 @@ export default defineComponent({
   &__cmp-bar {
     height: 100%;
     border-radius: 2px;
-    transition: width 0.3s ease;
+    transition: width var(--tr-slow);
 
     &.sel-panel__cmp--strong   { background: var(--color-lime); }
     &.sel-panel__cmp--marginal { background: var(--color-amber); }

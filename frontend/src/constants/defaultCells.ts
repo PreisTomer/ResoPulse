@@ -6,7 +6,7 @@
  * Types  → types/cell.ts, types/media.ts
  * Media  → constants/media.ts
  */
-import type { CellConfig } from './types/cell'
+import type { CellConfig } from '../types/cell'
 
 // ── Default simulation cells ───────────────────────────────────────────────
 
