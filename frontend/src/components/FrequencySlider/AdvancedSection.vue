@@ -1,6 +1,7 @@
 <!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
 <template>
-  <button class="field-panel__accordion" @click="open = !open">
+  <div class="field-panel__section" :class="{ 'field-panel__section--open': open }">
+  <button class="field-panel__accordion" :class="{ 'field-panel__accordion--open': open }" @click="open = !open">
     <span class="field-panel__accordion-label">{{ $t('slider.advanced') }}</span>
     <span class="field-panel__accordion-chevron" :class="{ 'field-panel__accordion-chevron--open': open }">{{ ICON.CHEVRON }}</span>
   </button>
@@ -118,6 +119,7 @@
       </div>
     </div>
   </div>
+  </div>
 </template>
 
 <script lang="ts">
@@ -230,10 +232,17 @@ export default defineComponent({
 
 <style lang="scss" scoped>
 
-
 .field-panel {
+  &__section {
+    border-bottom: 1px solid var(--color-border);
+
+    &--open { border-bottom: none; }
+  }
+
   &__accordion {
     @include accordion-header();
+    border-top: none;
+    padding: 0.65rem 1.25rem;
 
     &-label  { flex: 1; }
 
@@ -248,7 +257,7 @@ export default defineComponent({
       &--open { transform: rotate(90deg); }
     }
 
-    &-body { display: flex; flex-direction: column; gap: 0.9rem; padding-top: 0.4rem; }
+    &-body { display: flex; flex-direction: column; gap: 1.3rem; padding: 0.9rem 1.25rem 1.1rem; }
   }
 
   &__scope-tag {

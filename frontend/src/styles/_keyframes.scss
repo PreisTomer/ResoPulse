@@ -15,3 +15,18 @@
   0%, 100% { box-shadow: 0 0 6px color-mix(in srgb, var(--color-danger) 60%, transparent); }
   50%       { box-shadow: 0 0 16px var(--color-danger); }
 }
+
+// Protocol lab-link highlight: three slow glow pulses then fades to nothing.
+// Applied by scrollAndHighlight() after cross-route navigation from ProtocolView.
+// Raw opacity values required — CSS variables are not interpolated in @keyframes.
+// color-mix() cannot be reliably interpolated in @keyframes across all browsers,
+// so rgba() literals derived from --color-primary (#00d4ff = rgb(0,212,255)) are used.
+@keyframes lab-highlight-pulse {
+  0%   { outline-color: transparent; box-shadow: none; }
+  10%  { outline-color: #00d4ff;     box-shadow: 0 0 0 4px rgba(0, 212, 255, 0.85), 0 0 24px rgba(0, 212, 255, 0.55); }
+  25%  { outline-color: transparent; box-shadow: none; }
+  38%  { outline-color: #00d4ff;     box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.70), 0 0 18px rgba(0, 212, 255, 0.40); }
+  52%  { outline-color: transparent; box-shadow: none; }
+  63%  { outline-color: #00d4ff;     box-shadow: 0 0 0 2px rgba(0, 212, 255, 0.50), 0 0 12px rgba(0, 212, 255, 0.28); }
+  100% { outline-color: transparent; box-shadow: none; }
+}

@@ -25,14 +25,14 @@
       </span>
     </div>
 
-    <div v-if="!isResonanceMode" class="field-panel__protocol-zone">
-      <ProtocolSnapBar :slider-ranges="sliderRanges" />
+    <div v-if="!isResonanceMode" class="field-panel__sections">
       <ProtocolSection
+        id="hl-proto-section"
         :slider-ranges="sliderRanges"
         :thermal-danger-level="thermalDangerLevel"
         :max-steady-temp="maxSteadyTemp"
       />
-      <AdvancedSection />
+      <AdvancedSection id="hl-adv-section" />
     </div>
   </div>
 </template>
@@ -51,10 +51,9 @@ import FreqRow from './FreqRow.vue'
 import FieldRow from './FieldRow.vue'
 import ProtocolSection from './ProtocolSection.vue'
 import AdvancedSection from './AdvancedSection.vue'
-import ProtocolSnapBar from './ProtocolSnapBar.vue'
 
 export default defineComponent({
-  components: { TitleRow, ThermalBanner, MediumRow, FreqRow, FieldRow, ProtocolSection, AdvancedSection, ProtocolSnapBar },
+  components: { TitleRow, ThermalBanner, MediumRow, FreqRow, FieldRow, ProtocolSection, AdvancedSection },
 
   setup() {
     return { store: useCellStore(), ICON, THERMAL_LEVEL }
@@ -102,14 +101,14 @@ export default defineComponent({
   container-type: inline-size;
   flex: 1;
 
-  &__protocol-zone {
+  // ── Collapsible sections zone ──────────────────────────────────────────────
+  // Zero-gap flex column so protocol's border-bottom = advanced's border-top (one shared line).
+  &__sections {
     display: flex;
     flex-direction: column;
-    gap: 0.9rem;
+    gap: 0;
     margin: 0 -1.25rem -0.85rem;
-    padding: 0.8rem 1.25rem 0.85rem;
     border-top: 1px solid var(--color-border);
-    background: rgba(255, 255, 255, 0.018);
     border-radius: 0 0 var(--radius) var(--radius);
   }
 

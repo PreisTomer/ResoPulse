@@ -4,6 +4,25 @@
     "title": "Research Protocol",
     "subtitle": "Schwan transmembrane potential · SAR / Pennes bioheat · Pulse-envelope factor (nsEP) · Electroporation thresholds · Step-by-step experimental guide"
   },
+  "feedback": {
+    "trigger":               "Spot a discrepancy?",
+    "triggerSub":            "Flag a physics error, step, or wording",
+    "title":                 "Discrepancy Report",
+    "subtitle":              "Something look off? Physics, protocol steps, wording, references, or lab behavior — tell us exactly where and what you expected. Every report is reviewed.",
+    "close":                 "Close",
+    "labelSection":          "Section",
+    "sectionPlaceholder":    "Select a physics section...",
+    "labelEquation":         "Equation, step, or term",
+    "equationPlaceholder":   "e.g. Vm(f) numerator, Step 4 wording, cell library value...",
+    "labelDiscrepancy":      "Discrepancy",
+    "discrepancyPlaceholder":"Describe what the app shows vs. what you expected, including the correct value or derivation if known.",
+    "labelReference":        "Supporting reference (optional)",
+    "referencePlaceholder":  "e.g. Kotnik & Miklavcic 2000, DOI, or equation number",
+    "labelName":             "Your name (optional)",
+    "namePlaceholder":       "Anonymous if left blank",
+    "send":                  "Send Report",
+    "note":                  "Opens your email client"
+  },
   "toc": {
     "title": "Contents",
     "close": "Close",
@@ -94,11 +113,11 @@
       "p2": "Cancer cells exhibit lower V<sub>m,threshold</sub> (~0.65-0.85 V) than healthy tissue (~1.0-1.1 V), creating a therapeutic window where tumour cell disruption occurs at sub-lethal field intensities for normal cells. For adenocarcinoma vs. hepatocyte in saline, maximum V<sub>m</sub> selectivity ≈ R<sub>T</sub>/R<sub>H</sub> = <strong>1.5×</strong> occurs at quasi-DC (f ≪ f<sub>c</sub>(T)); the Therapeutic Index (accounting for different lysis thresholds) reaches <strong>~2.4×</strong> at quasi-DC. Selectivity <em>decreases</em> with increasing frequency as the larger target cell rolls off before the smaller healthy cell.",
       "revEp": "The <strong>Rev-EP window (50-85% disruption ratio)</strong> represents reversible electroporation: pores open transiently and re-seal after the field is removed, the drug/gene delivery regime (cells survive). Displayed as an amber REVERSIBLE EP strip on the target cell card. The Disruption Ratio Chart (↯) shows the frequency range over which this window applies for the current cell pair and field settings, with the rev-EP zone between the amber and red dashed threshold lines. Increasing field or duration beyond 85% transitions to the LYSIS ARMED state and starts the irreversible lysis countdown.",
       "eqMain": "Disruption Ratio = V<sub>m</sub>(f) × f<sub>pulse</sub> / V<sub>m,threshold</sub>",
-      "eqSub1": "f<sub>pulse</sub> = 1 − exp(−t<sub>p</sub> / τ) &nbsp; (pulse-envelope charging factor; pulsed mode only; 1.0 for CW)",
+      "eqSub1": "f<sub>pulse</sub> = 1 − exp(−t<sub>p</sub> / τ) &nbsp; (pulse-envelope charging factor; pulsed mode only; 1.0 for CW and resonance mode, acoustic disruption is not RC membrane charging)",
       "eqSub2": "8-50% → Nourishing: sub-threshold biomodulation window (Ca²⁺ / NO signalling; §2.10)",
       "eqSub3": "50-85% → Rev-EP window: reversible electroporation, pores open transiently and re-seal",
       "eqSub4": "Simulation arms lysis countdown when Disruption Ratio &gt; 85% of threshold",
-      "eqSub5": "Lysis fires after protocol time: t<sub>lysis</sub> = N × t<sub>p</sub>/dc (pulsed) or 2.5 s (CW)",
+      "eqSub5": "Lysis fires after protocol time: t<sub>lysis</sub> = N × (t<sub>p</sub>/dc) (pulsed) or 2.5 s (CW), where t<sub>p</sub>/dc is the pulse period (full cycle duration), not the pulse width alone",
       "eqSub6": "<strong>Structural Integrity Bar</strong> (below the LYSIS ARMED strip on the target cell card): drains 100 → 0 % in real time as the lysis countdown elapses, visual confirmation that DR threshold has been held for the full protocol duration",
       "eqSub7": "<strong>Disruption Ratio Chart</strong> (↯ accordion in Experiment Lab): shows DR(f) across 10 kHz-500 MHz for both cells simultaneously; green-shaded therapeutic window where DR<sub>T</sub> ≥ 85 % and DR<sub>H</sub> &lt; 50 %; dashed amber = 50 % rev-EP boundary, dashed red = 85 % lysis threshold",
       "eqSub8": "<strong>H-FIRE waveform:</strong> Bipolar burst pulses at carrier frequency &gt;1 kHz raise the effective lysis threshold by ×1.75 vs. monopolar IRE (Arena et al. [27]; Sano et al. [28]). Polarity reversals partially discharge the membrane capacitance between half-cycles, reducing net V<sub>m</sub> per burst. Model: DR<sub>H-FIRE</sub> = V<sub>m</sub> × f<sub>pulse</sub> / (V<sub>m,threshold</sub> × 1.75). Benefit: carrier frequency &gt;1 kHz is below the neuromuscular activation threshold, eliminating muscle contraction in vivo.",
@@ -118,7 +137,7 @@
       "eqMain": "Disruption ratio = (E / E<sub>thr</sub>) × L(f, f<sub>res</sub>, Q)",
       "eqSub1": "L(f) = 1 / √[ 1 + (Q · (f/f₀ − f₀/f))² ] &nbsp; (Lorentzian lineshape)",
       "eqSub2": "f<sub>res</sub> ≈ v<sub>shell</sub> / (2R) &nbsp;·&nbsp; v<sub>protein capsid</sub> ≈ 1000-1500 m/s · v<sub>peptidoglycan</sub> ≈ 800-1200 m/s",
-      "eqSub3": "Q, mechanical quality factor (protein capsid Q ≈ 20-50; peptidoglycan Q ≈ 2-5)",
+      "eqSub3": "Q, mechanical quality factor (protein capsid Q ≈ 20-50; peptidoglycan Q ≈ 2-5; default simulation Q = 2 for uncharacterised targets is a conservative lower bound for viscoelastic damping)",
       "eqNote": "Shaw-Wei D. Tsen et al., J. Biomed. Sci. 19:62 (2012) [11]; Eric C. Dykeman &amp; Otto F. Sankey, Phys. Rev. E 81:021918 (2010) [12]",
       "thTarget": "Target",
       "thFres": "f<sub>res</sub>",
@@ -267,31 +286,31 @@
     "steps": {
       "s01": {
         "title": "Select cell pair",
-        "desc": "In the Experiment Lab, use the preset picker in the setup bar to choose healthy reference and target cell types. Each preset loads biophysical parameters from the cell library (see Data Sets tab). Open the Cell Parameters panel on either card to enter custom values or perform sensitivity analysis. For bacteria and virus targets, the mode toggle automatically offers Resonance mode."
+        "desc": "In the Experiment Lab, use the <span class=\"proto-lab-link\" data-target=\"hl-cell-badges\" data-route=\"/experiment\">preset picker in the setup bar</span> to choose healthy reference and target cell types. Each preset loads biophysical parameters from the cell library (see Data Sets tab). Open the <span class=\"proto-lab-link\" data-target=\"hl-cell-cards\" data-route=\"/experiment\">Cell Parameters panel</span> on either card to enter custom values or perform sensitivity analysis. For bacteria and virus targets, the mode toggle automatically offers Resonance mode."
       },
       "s02": {
         "title": "Set propagation medium",
-        "desc": "Choose the extracellular medium using the <strong>Medium dropdown</strong> in the Field Control panel (Saline, Blood, Tissue, DMEM, RPMI, MHB, or Water). Medium conductivity σ<sub>e</sub> directly modifies τ for all cells, shifting f<sub>c</sub> markers on the chart and scaling V<sub>m</sub>. Physiological saline (σ<sub>e</sub> = 1.5 S/m) is the standard reference for in vitro experiments; DMEM (σ<sub>e</sub> = 1.4 S/m) for cell culture. For in vivo tissue modelling, select Tissue (σ<sub>e</sub> = 0.4 S/m) and enable blood perfusion via the Advanced panel. The live conductivity readout (σ_e) is shown in the medium row."
+        "desc": "Choose the extracellular medium using the <span class=\"proto-lab-link\" data-target=\"hl-medium-row\" data-route=\"/experiment\"><strong>Medium dropdown</strong> in the Field Control panel</span> (Saline, Blood, Tissue, DMEM, RPMI, MHB, or Water). Medium conductivity σ<sub>e</sub> directly modifies τ for all cells, shifting f<sub>c</sub> markers on the chart and scaling V<sub>m</sub>. Physiological saline (σ<sub>e</sub> = 1.5 S/m) is the standard reference for in vitro experiments; DMEM (σ<sub>e</sub> = 1.4 S/m) for cell culture. For in vivo tissue modelling, select Tissue (σ<sub>e</sub> = 0.4 S/m) and enable blood perfusion via the <span class=\"proto-lab-link\" data-target=\"hl-adv-section\" data-route=\"/experiment\">Advanced panel</span>. The live conductivity readout (σ_e) is shown in the medium row."
       },
       "s03": {
         "title": "Configure advanced parameters",
-        "desc": "Open the <strong>Advanced</strong> accordion in the Field Control panel to set: <em>Cell Orientation θ</em> (default 60°, the mean &#124;cos θ&#124; = 0.5 for an isotropic 3D suspension; set to 0° only for DEP-aligned cells; orientation scales V<sub>m</sub> equally for both cells so it cancels in the selectivity ratio); <em>Blood Perfusion ω<sub>b</sub></em> (0 for in vitro; 0.5-5 mL/(g·min) for tissue; adds Pennes cooling term); <em>Cell Packing φ</em> (0 for isolated cells; up to 0.74 for dense tissue; applies Maxwell-Garnett σ<sub>e</sub> correction). All values update τ, V<sub>m</sub>, SAR, and T<sub>ss</sub> in real time."
+        "desc": "Open the <span class=\"proto-lab-link\" data-target=\"hl-adv-section\" data-route=\"/experiment\"><strong>Advanced</strong> accordion in the Field Control panel</span> to set: <em>Cell Orientation θ</em> (default 60°, the mean &#124;cos θ&#124; = 0.5 for an isotropic 3D suspension; set to 0° only for DEP-aligned cells; orientation scales V<sub>m</sub> equally for both cells so it cancels in the selectivity ratio); <em>Blood Perfusion ω<sub>b</sub></em> (0 for in vitro; 0.5-5 mL/(g·min) for tissue; adds Pennes cooling term); <em>Cell Packing φ</em> (0 for isolated cells; up to 0.74 for dense tissue; applies Maxwell-Garnett σ<sub>e</sub> correction). All values update τ, V<sub>m</sub>, SAR, and T<sub>ss</sub> in real time."
       },
       "s04": {
         "title": "Establish baseline at sub-threshold field",
-        "desc": "Begin with the default field intensity (150 V/cm for cancer targets). Both cells should display disruption ratios well below 50%. Click <em>Log Reading</em> in the Experiment Log panel to record the baseline state. This first manual entry anchors the session dataset."
+        "desc": "Begin with the default field intensity (150 V/cm for cancer targets). Both cells should display disruption ratios well below 50%. Use the <span class=\"proto-lab-link\" data-target=\"hl-snap-bar\" data-route=\"/experiment\">Protocol snap presets</span> (Quasi-DC, Selective, nsEP, Thermal) at the top of the Protocol section for quick starting configurations. Click <span class=\"proto-lab-link\" data-target=\"hl-experiment-log\" data-route=\"/experiment\"><em>Log Reading</em> in the Experiment Log panel</span> to record the baseline state. This first manual entry anchors the session dataset."
       },
       "s05": {
         "title": "Identify the optimal frequency window",
-        "desc": "<strong>Cancer / IRE mode:</strong> Selectivity is maximised at quasi-DC (f ≪ f<sub>c</sub>(T), V<sub>m</sub> ratio = R<sub>T</sub>/R<sub>H</sub>). Click ⭐ in the Selectivity Panel to snap to the computed optimal. Expand the <strong>Therapeutic Window Planner</strong> heatmap (below the Selectivity Panel) to survey TI across the full frequency × field space; click any cell to navigate there directly. <strong>Bacteria / virus (Resonance mode):</strong> Switch mode via the toggle in the setup bar; the platform auto-tunes to f<sub>res</sub> and sets field to 50% E<sub>thr</sub>."
+        "desc": "<strong>Cancer / IRE mode:</strong> Selectivity is maximised at quasi-DC (f ≪ f<sub>c</sub>(T), V<sub>m</sub> ratio = R<sub>T</sub>/R<sub>H</sub>). Click <span class=\"proto-lab-link\" data-target=\"hl-selectivity-panel\" data-route=\"/experiment\">⭐ in the Selectivity Panel</span> to snap to the computed optimal. Expand the <span class=\"proto-lab-link\" data-target=\"hl-heatmap\" data-route=\"/experiment\"><strong>Therapeutic Window Planner</strong> heatmap</span> (below the Selectivity Panel) to survey TI across the full frequency × field space; click any cell to navigate there directly. <strong>Bacteria / virus (Resonance mode):</strong> Switch mode via the <span class=\"proto-lab-link\" data-target=\"hl-target-badge\" data-route=\"/experiment\">toggle in the setup bar</span>; the platform auto-tunes to f<sub>res</sub> and sets field to 50% E<sub>thr</sub>."
       },
       "s06": {
         "title": "Increase field intensity toward target threshold",
-        "desc": "Raise Field Intensity incrementally; monitor disruption ratios on both cell cards and the Selectivity Panel bars. For adenocarcinoma vs. hepatocyte in saline at quasi-DC, lysis threshold crosses near ~311 V/cm while healthy DR stays below 50%. Expand the <strong>↯ Disruption Ratio Chart</strong> to verify the current frequency sits within the green therapeutic window (DR<sub>T</sub> ≥ 85%, DR<sub>H</sub> &lt; 50%) and assess frequency bandwidth. Use the <strong>Field Sweep</strong> panel to scan DR vs. field; when a window exists the <strong>⭐ Set to Window Center</strong> bar appears below the Selectivity Panel. Log readings at each threshold crossing."
+        "desc": "Raise <span class=\"proto-lab-link\" data-target=\"hl-field-row\" data-route=\"/experiment\">Field Intensity</span> incrementally; monitor disruption ratios on both cell cards and the <span class=\"proto-lab-link\" data-target=\"hl-selectivity-panel\" data-route=\"/experiment\">Selectivity Panel</span> bars. For adenocarcinoma vs. hepatocyte in saline at quasi-DC, lysis threshold crosses near ~311 V/cm while healthy DR stays below 50%. Expand the <span class=\"proto-lab-link\" data-target=\"hl-disruption-chart\" data-route=\"/experiment\"><strong>↯ Disruption Ratio Chart</strong></span> to verify the current frequency sits within the green therapeutic window (DR<sub>T</sub> ≥ 85%, DR<sub>H</sub> &lt; 50%) and assess frequency bandwidth. Use the <span class=\"proto-lab-link\" data-target=\"hl-sweep-panel\" data-route=\"/experiment\"><strong>Field Sweep</strong> panel</span> to scan DR vs. field; when a window exists the <strong>⭐ Set to Window Center</strong> bar appears below the Selectivity Panel. Log readings at each threshold crossing."
       },
       "s07": {
         "title": "Record lysis event and review temperature",
-        "desc": "When DR &gt; 85%, the red <em>LYSIS ARMED</em> strip appears on the target cell card and the <strong>Structural Integrity Bar</strong> begins draining from 100 % → 0 % over the protocol time (t<sub>lysis</sub> = N × t<sub>p</sub>/dc for pulsed, or 2.5 s for CW). When it reaches 0 %, lysis fires and an entry is automatically added to the Experiment Log with event type <em>lysis</em>. Check the temperature readout on both cell cards. If temperature approaches 42 °C, consider: (a) reducing field intensity, (b) increasing blood perfusion ω<sub>b</sub>, (c) switching to a lower-conductivity medium to reduce SAR, or (d) switching to the <strong>H-FIRE</strong> waveform (×1.75 threshold, requires proportionally higher field but allows lower duty cycle for same effect, reducing SAR<sub>eff</sub>). For nsEP targeting, reduce duty cycle, SAR<sub>eff</sub> = SAR<sub>peak</sub> × dc."
+        "desc": "When DR &gt; 85%, the red <em>LYSIS ARMED</em> strip appears on the <span class=\"proto-lab-link\" data-target=\"hl-cell-cards\" data-route=\"/experiment\">target cell card</span> and the <strong>Structural Integrity Bar</strong> begins draining from 100 % → 0 % over the protocol time (t<sub>lysis</sub> = N × t<sub>p</sub>/dc for pulsed, or 2.5 s for CW). When it reaches 0 %, lysis fires and an entry is automatically added to the <span class=\"proto-lab-link\" data-target=\"hl-experiment-log\" data-route=\"/experiment\">Experiment Log</span> with event type <em>lysis</em>. Check the temperature readout on both cell cards. If temperature approaches 42 °C, consider: (a) reducing field intensity, (b) increasing blood perfusion ω<sub>b</sub>, (c) switching to a lower-conductivity medium to reduce SAR, or (d) switching to the <strong>H-FIRE</strong> waveform (×1.75 threshold, requires proportionally higher field but allows lower duty cycle for same effect, reducing SAR<sub>eff</sub>). For nsEP targeting, reduce duty cycle, SAR<sub>eff</sub> = SAR<sub>peak</sub> × dc."
       },
       "s08": {
         "title": "Explore biomodulation window (optional)",
@@ -299,19 +318,19 @@
       },
       "s09": {
         "title": "Change cell preset and repeat parametric study",
-        "desc": "Switch to a different target preset (e.g. GBM, MCF-7, E. coli) and repeat steps 4-7. Compare selectivity ratios, f<sub>c</sub> positions, and lysis thresholds across cell types. Use the Cell Parameters panel and σ<sub>i</sub> uncertainty bands on the chart to assess sensitivity to parameter variability. <strong>Cell Population Model:</strong> Open the Population Model panel and set a radius variance (1-30%) to generate a Gaussian-sampled cell population (Box-Muller sampling, N = 100-1000 cells). The histogram shows the distribution of disruption ratios and the fraction of cells in each state (Lysed %, Rev-EP %, Nourishing %). This quantifies treatment efficacy across biological heterogeneity, critical for assessing whether all target cells are reached by a given protocol while healthy cells remain sub-threshold."
+        "desc": "Switch to a different target preset (e.g. GBM, MCF-7, E. coli) and repeat steps 4-7. Compare selectivity ratios, f<sub>c</sub> positions, and lysis thresholds across cell types. Use the <span class=\"proto-lab-link\" data-target=\"hl-cell-cards\" data-route=\"/experiment\">Cell Parameters panel</span> and σ<sub>i</sub> uncertainty bands on the chart to assess sensitivity to parameter variability. <strong>Cell Population Model:</strong> Open the <span class=\"proto-lab-link\" data-target=\"hl-population-panel\" data-route=\"/experiment\">Population Model panel</span> and set a radius variance (1-30%) to generate a Gaussian-sampled cell population (Box-Muller sampling, N = 100-1000 cells). The histogram shows the distribution of disruption ratios and the fraction of cells in each state (Lysed %, Rev-EP %, Nourishing %). This quantifies treatment efficacy across biological heterogeneity, critical for assessing whether all target cells are reached by a given protocol while healthy cells remain sub-threshold."
       },
       "s10": {
         "title": "Export session data for analysis",
-        "desc": "Navigate to the Reports tab to review the full session log. Edit the session name, then click <em>Export CSV</em> to download a structured file containing all logged parameters: frequency, field, V<sub>m</sub>, selectivity ratio, disruption ratios, temperatures, and event type."
+        "desc": "Navigate to the <span class=\"proto-lab-link\" data-target=\"\" data-route=\"/reports\">Reports tab</span> to review the full session log. Edit the session name, then click <em>Export CSV</em> to download a structured file containing all logged parameters: frequency, field, V<sub>m</sub>, selectivity ratio, disruption ratios, temperatures, and event type."
       },
       "s11": {
         "title": "Monitor and compensate impedance drift (Instrument Panel)",
-        "desc": "Navigate to the <strong>Instrument</strong> tab. Verify the Cuvette Setup card matches your cuvette geometry (gap, cross-section, source impedance R<sub>s</sub>). The Live Impedance card shows simulated σ<sub>e</sub> rise as cells lyse; the Field Correction card shows the corrected generator voltage to maintain constant delivered field. A 1 mm BTX cuvette with 1× PBS starts at Z ≈ 165 Ω; 100% lysis drops impedance 10-20%, requiring ~11-25% generator voltage increase. For live hardware connection via socket (<code>impedanceReading</code> event) and <em>Live Hardware</em> mode, see §2.11."
+        "desc": "Navigate to the <span class=\"proto-lab-link\" data-target=\"hl-instrument-panel\" data-route=\"/instrument\"><strong>Instrument</strong> tab</span>. Verify the <span class=\"proto-lab-link\" data-target=\"hl-instrument-panel\" data-route=\"/instrument\">Cuvette Setup card</span> matches your cuvette geometry (gap, cross-section, source impedance R<sub>s</sub>). The <span class=\"proto-lab-link\" data-target=\"hl-instrument-panel\" data-route=\"/instrument\">Live Impedance card</span> shows simulated σ<sub>e</sub> rise as cells lyse; the <span class=\"proto-lab-link\" data-target=\"hl-field-corrector\" data-route=\"/instrument\">Field Correction card</span> shows the corrected generator voltage to maintain constant delivered field. A 1 mm BTX cuvette with 1× PBS starts at Z ≈ 165 Ω; 100% lysis drops impedance 10-20%, requiring ~11-25% generator voltage increase. For live hardware connection via socket (<code>impedanceReading</code> event) and <em>Live Hardware</em> mode, see §2.11."
       },
       "s12": {
         "title": "Enable auditory display for hands-free monitoring",
-        "desc": "On the Instrument Panel, click <strong>♪ Auditory Display</strong>. Impedance drift maps to pitch (220-1760 Hz); DR controls gain; Rev-EP state triggers 6 Hz AM tremolo; lysis event produces an 880 Hz burst. These tones are data representations only, NOT the RF treatment frequencies. Browser audio permission required. See §2.12 for full mapping table and references."
+        "desc": "On the <span class=\"proto-lab-link\" data-target=\"hl-instrument-panel\" data-route=\"/instrument\">Instrument Panel</span>, click <span class=\"proto-lab-link\" data-target=\"hl-sonif-card\" data-route=\"/instrument\"><strong>♪ Auditory Display</strong></span>. Impedance drift maps to pitch (220-1760 Hz); DR controls gain; Rev-EP state triggers 6 Hz AM tremolo; lysis event produces an 880 Hz burst. These tones are data representations only, NOT the RF treatment frequencies. Browser audio permission required. See §2.12 for full mapping table and references."
       }
     }
   },

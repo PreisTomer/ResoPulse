@@ -1,6 +1,6 @@
 <!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
 <template>
-  <div class="hmap" v-if="store.targetCellCategory === CELL_CATEGORY.MAMMALIAN">
+  <div id="hl-heatmap" class="hmap" v-if="store.targetCellCategory === CELL_CATEGORY.MAMMALIAN">
     <AccordionPanel
       :icon="ICON.WAVE"
       :title="$t('heatmap.title')"

@@ -1,6 +1,6 @@
 <!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
 <template>
-  <div class="field-corrector">
+  <div id="hl-field-corrector" class="field-corrector">
     <div class="field-corrector__header">
       <div class="field-corrector__title">{{ $t('instrument.corrector.title') }}</div>
       <div class="field-corrector__sub">{{ $t('instrument.corrector.sub') }}</div>

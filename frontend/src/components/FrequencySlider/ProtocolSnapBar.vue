@@ -1,6 +1,6 @@
 <!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
 <template>
-  <div class="snap-bar">
+  <div id="hl-snap-bar" class="snap-bar">
     <span class="snap-bar__label">{{ $t('slider.snapBarLabel') }}</span>
     <div class="snap-bar__pills">
       <button class="snap-bar__pill snap-bar__pill--dc"        type="button" v-tip="$t('slider.tipSnapQuasiDC')"   @click="applyQuasiDC">{{ $t('slider.snapQuasiDC') }}</button>
@@ -106,6 +106,7 @@ export default defineComponent({
     opacity: 0.65; // intentional between-tier value
     white-space: nowrap;
     flex-shrink: 0;
+    min-width: 3.9rem; // match "WAVEFORM" row-label width so pills align
   }
 
   &__pills {

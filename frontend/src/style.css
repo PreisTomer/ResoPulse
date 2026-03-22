@@ -207,3 +207,12 @@ input[type="checkbox"] {
   0%, 100% { box-shadow: 0 0 6px color-mix(in srgb, var(--color-danger) 60%, transparent); }
   50%       { box-shadow: 0 0 16px var(--color-danger); }
 }
+
+/* ── Protocol lab-link highlight ─────────────────────────────────────────── */
+/* Applied by scrollAndHighlight() — three fading glow pulses, then clears.   */
+.lab-highlight {
+  outline: 2px solid transparent;
+  outline-offset: 5px;
+  border-radius: var(--radius);
+  animation: lab-highlight-pulse 2.8s ease-out forwards;
+}
