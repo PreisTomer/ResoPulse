@@ -1,3 +1,4 @@
+// Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 import http from 'http'
 import express from 'express'
 import cors from 'cors'
@@ -13,7 +14,7 @@ const ALLOWED_ORIGINS: string[] | true = process.env.FRONTEND_URL
   : true
 
 app.use(cors({ origin: ALLOWED_ORIGINS }))
-app.use(express.json({ limit: '500mb' }))
+app.use(express.json({ limit: '16kb' }))
 
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', service: 'resopulse-api' })
