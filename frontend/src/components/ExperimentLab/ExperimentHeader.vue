@@ -106,17 +106,20 @@
               {{ $t('userPresets.emptyMsg') }}<br />
               <span class="experiment__custom-hint">{{ $t('userPresets.emptyHint') }}</span>
             </p>
-            <button
+            <div
               v-for="p in presetsStore.presets"
               :key="p.id"
               class="experiment__preset-btn experiment__preset-btn--custom"
               :class="{ 'experiment__preset-btn--active': store.target.id === p.id }"
+              role="button"
+              tabindex="0"
               @click="loadUserPreset(p)"
+              @keydown.enter="loadUserPreset(p)"
             >
               <span class="experiment__preset-btn-name">{{ p.shortLabel }}</span>
               <span class="experiment__preset-btn-sub">{{ p.notes || p.label }}</span>
               <button class="experiment__preset-btn-del" @click.stop="presetsStore.remove(p.id)" :title="$t('exp.deletePreset')">{{ ICON.CLOSE }}</button>
-            </button>
+            </div>
             <button class="experiment__preset-btn-new" @click.stop="showCreateModal = true">
               {{ $t('userPresets.createBtn') }}
             </button>

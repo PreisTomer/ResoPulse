@@ -1,3 +1,4 @@
+// Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 import { Server } from 'socket.io'
 import type { Server as HttpServer } from 'http'
 import type { StatePacket, LogEntry, HardwareImpedancePacket } from './types/socket'
@@ -8,6 +9,10 @@ const MEDIUM = {
   BLOOD:  'blood',
   TISSUE: 'tissue',
   WATER:  'water',
+  DMEM:   'dmem',
+  PBS:    'pbs',
+  RPMI:   'rpmi',
+  MHB:    'mhb',
 } as const
 
 const WAVEFORM = {
@@ -104,7 +109,6 @@ function validateStatePacket(raw: Record<string, unknown>): StatePacket | null {
     orientationDeg:      Math.round(ori),
     lysisNPulses:        Math.round(np),
     chartMode:           mode as 'schwan' | 'resonance',
-    safeMode:            !!raw.safeMode,
     doubleShellEnabled:  !!raw.doubleShellEnabled,
     perfusionRate:       prf,
     cellPackingFraction: phi,
@@ -133,6 +137,7 @@ function validateLogEntry(raw: Record<string, unknown>): LogEntry | null {
     healthyTemp:  getNum(raw.healthyTemp,  37),
     targetTemp:   getNum(raw.targetTemp,   37),
     event,
+    sessionName: typeof raw.sessionName === 'string' ? raw.sessionName.slice(0, BOUNDS.SESSION_MAX_LEN) : undefined,
   }
 }
 

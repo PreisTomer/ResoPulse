@@ -1,3 +1,4 @@
+// Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 export interface StatePacket {
   freqKHz:             number
   fieldVcm:            number
@@ -8,7 +9,6 @@ export interface StatePacket {
   orientationDeg:      number
   lysisNPulses:        number
   chartMode:           'schwan' | 'resonance'
-  safeMode:            boolean
   doubleShellEnabled:  boolean
   perfusionRate:       number
   cellPackingFraction: number
@@ -50,4 +50,5 @@ export interface LogEntry {
   healthyTemp:   number
   targetTemp:    number
   event:         string
+  sessionName?:  string
 }
