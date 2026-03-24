@@ -89,6 +89,7 @@
     v-if="showStickySimView"
     :cells="cells"
     @scroll-to-cells="scrollToCells"
+    @full-reset="applyTargetDefaults"
   />
 
 </template>
@@ -263,8 +264,7 @@ export default defineComponent({
 
   methods: {
     scrollToCells() {
-      const anchor = this.$refs.cellsAnchor as HTMLElement | undefined
-      anchor?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      window.scrollTo({ top: 0, behavior: 'smooth' })
     },
 
     onSweepWindowChange(w: { lo: number; hi: number; param: 'field' | 'freq' } | null) {
@@ -369,7 +369,7 @@ export default defineComponent({
     if (sentinel) {
       this.cellsObserver = new IntersectionObserver(
         (entries) => { if (entries[0]) this.showStickySimView = !entries[0].isIntersecting },
-        { threshold: 0 },
+        { threshold: 0, rootMargin: '200px 0px 0px 0px' },
       )
       this.cellsObserver.observe(sentinel)
     }
