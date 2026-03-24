@@ -29,6 +29,7 @@
             :sublabel-tip="cell.sublabelTip"
             :description="cell.description"
             :cell-data="cell.cellData"
+            @full-reset="applyTargetDefaults"
           />
         </div>
         <div id="hl-freq-slider" class="experiment__field">
