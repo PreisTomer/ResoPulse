@@ -84,7 +84,10 @@
       "thermalLysis": ",  THERMAL LYSIS : ",
       "membraneLysed": ",  MEMBRANE LYSED : ",
       "vaporized": "Cell vaporized · T ≥ 100°C",
-      "resetCell": "Reset Cell",
+      "resetCell": "New Sample",
+      "resetCellFull": "Full Reset",
+      "tipResetCell": "Insert fresh cells — keeps current protocol (field, frequency, waveform). Lysis will re-arm immediately if the protocol remains above threshold.",
+      "tipResetCellFull": "Restore safe defaults — resets field and waveform to category-appropriate starting values so both cells return to a stable state.",
       "reduceFieldThermal": "Reduce field / duty cycle to reset",
       "reduceField": "Reduce field intensity to reset",
       "blebbing": "MEMBRANE BLEBS VISIBLE"

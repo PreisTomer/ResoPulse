@@ -155,7 +155,10 @@
     <div v-if="cellState === CELL_STATE.LYSED" class="cell-visual__destroyed">
       <span class="cell-visual__destroyed-text">{{ thermalLysis ? $t('cells.states.thermalLysis') : $t('cells.states.membraneLysed') }}</span>
       <span v-if="thermalLysis" class="cell-visual__destroyed-sub">{{ $t('cells.states.vaporized') }}</span>
-      <button class="cell-visual__lysis-btn" @click="resetToStable">{{ $t('cells.states.resetCell') }}</button>
+      <div class="cell-visual__reset-row">
+        <button class="cell-visual__lysis-btn" v-tip="$t('cells.states.tipResetCell')" @click="resetToStable">{{ $t('cells.states.resetCell') }}</button>
+        <button class="cell-visual__lysis-btn cell-visual__lysis-btn--full" v-tip="$t('cells.states.tipResetCellFull')" @click="resetToSafeDefaults">{{ $t('cells.states.resetCellFull') }}</button>
+      </div>
     </div>
 
   </div>
@@ -188,7 +191,7 @@ import BiostimPanel from './BiostimPanel.vue'
 
 export default defineComponent({
   components: { BiostimPanel },
-  emits: ['stable-reset', 'thermal-lysis'],
+  emits: ['stable-reset', 'full-reset', 'thermal-lysis'],
 
   props: {
     type:     { type: String as PropType<'healthy' | 'target'>, required: true },
@@ -624,6 +627,16 @@ export default defineComponent({
       else this.store.resetCell(this.type)
       this.$emit('stable-reset', this.type)
     },
+
+    /** Full reset: restore cell biology AND signal the parent to apply safe field defaults.
+     *  Use this when you want both cells to return to a genuinely stable state. */
+    resetToSafeDefaults() {
+      const cell   = this.type === CELL_TYPE.HEALTHY ? this.store.healthy : this.store.target
+      const preset = CELL_PRESETS.find(p => p.presetId === cell.id)
+      if (preset) this.store.loadPreset(this.type, preset)
+      else this.store.resetCell(this.type)
+      this.$emit('full-reset', this.type)
+    },
   },
 })
 </script>
@@ -960,6 +973,12 @@ export default defineComponent({
     opacity: var(--op-partial);
   }
 
+  &__reset-row {
+    @include flex-row(0.5rem);
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
   &__lysis-btn {
     background: transparent;
     border: 1px solid var(--color-danger);
@@ -975,6 +994,12 @@ export default defineComponent({
 
     &:hover:not(:disabled) { background-color: color-mix(in srgb, var(--color-danger) 12%, transparent); }
     &:disabled { opacity: var(--op-ghost); cursor: not-allowed; border-color: var(--color-muted-border); color: var(--color-text-muted); }
+
+    &--full {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+      &:hover:not(:disabled) { background-color: color-mix(in srgb, var(--color-primary) 12%, transparent); }
+    }
   }
 }
 </style>

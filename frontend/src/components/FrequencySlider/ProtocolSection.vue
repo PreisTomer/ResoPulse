@@ -66,7 +66,7 @@
     </div>
 
     <!-- Row 6: Pulse Width (pulsed / H-FIRE only) -->
-    <div v-if="currentWaveform === WAVEFORM.PULSED || currentWaveform === WAVEFORM.H_FIRE" class="field-panel__row field-panel__row--compact-readout">
+    <div v-if="currentWaveform === WAVEFORM.PULSED || currentWaveform === WAVEFORM.H_FIRE" class="field-panel__row field-panel__row--compact-readout field-panel__row--pw">
       <div class="field-panel__row-header">
         <span class="field-panel__row-label" v-tip="tipPulseWidth">{{ $t('slider.pulseWidth') }}</span>
         <div class="field-panel__readout">
@@ -300,6 +300,8 @@ export default defineComponent({
       &::-webkit-slider-thumb { background: var(--color-danger); box-shadow: 0 0 10px color-mix(in srgb, var(--color-danger) 90%, transparent); animation: thumb-danger-pulse 0.5s ease-in-out infinite; }
       &::-moz-range-thumb     { background: var(--color-danger); }
     }
+
+    &--pw { margin-bottom: 10px; }
   }
 
   &__row-header { @include field-row-header(); }

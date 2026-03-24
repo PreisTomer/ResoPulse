@@ -41,6 +41,7 @@
       :compact="compact"
       :cell-data="cellData"
       @stable-reset="onStableReset"
+      @full-reset="onFullReset"
       @thermal-lysis="thermalLysis = $event"
     />
 
@@ -80,7 +81,7 @@ import CellBody       from './CellBody.vue'
 export default defineComponent({
   components: { CellHeader, CellParamsPanel, CellVisual, CellBody },
 
-  emits: ['stable-reset'],
+  emits: ['stable-reset', 'full-reset'],
 
   props: {
     type: {
@@ -292,6 +293,10 @@ export default defineComponent({
 
     onStableReset(cellType: string) {
       this.$emit('stable-reset', cellType)
+    },
+
+    onFullReset(cellType: string) {
+      this.$emit('full-reset', cellType)
     },
 
     resetToPreset() {
