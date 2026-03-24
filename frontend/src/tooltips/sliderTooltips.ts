@@ -455,7 +455,7 @@ Pulse width controls:
   1. <span class="tip-val">Effective disruption ratio</span>  →  DR_eff = DR_Schwan × f_pulse
   2. <span class="tip-val">Lysis protocol timing</span>  →  Protocol time = N × (t_p / dc)
        N = ${lysisNPulses}  ·  dc = ${dcPct}%  →  <span class="tip-val">${formatLysisTime(lysisDelayMs)}</span>
-  3. <span class="tip-val">SAR thermal load</span> , waveformFactor = 1.0 (bipolar square wave; E²_rms = E²_peak during on-time)
+  3. <span class="tip-val">SAR thermal load</span> , waveformFactor = 1.0 for square pulses (Monopolar IRE) or bursts (H-FIRE); E²_rms = E²_peak during on-time
 
 Reference time constants (Schwan model):
   τ(target)  = <span class="tip-val">${tTauStr}</span>
