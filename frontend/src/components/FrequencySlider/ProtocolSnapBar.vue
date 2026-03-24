@@ -19,16 +19,23 @@ import { broadcastStateSync } from '@/services/socket'
 import { WAVEFORM } from '@/constants/strings'
 import type { SliderRange } from '@/constants/sliderBounds'
 
-const QUASI_DC_FIELD_FRACTION  = 0.50   // 50% of target lysis field
-const SELECTIVE_FIELD_FRACTION = 0.85   // 85% of target lysis field
-const NSEP_FIELD_FRACTION      = 2.00   // 200% of target lysis field (supralytic)
-const THERMAL_FIELD_FRACTION   = 0.25   // 25% of target lysis field (mild heating)
-const QUASI_DC_FREQ_DIVISOR    = 20     // f = targetFc / 20 (well below fc)
-const SELECTIVE_DC             = 0.01   // 1%  duty cycle
-const NSEP_DC                  = 1e-5   // 0.001% duty cycle
-const SELECTIVE_PW_NS          = 100_000 // 100 µs
-const NSEP_PW_NS               = 10     // 10 ns
-const NSEP_FREQ_KHZ            = 1_000  // 1 MHz
+const QUASI_DC_FIELD_FRACTION  = 0.50    // 50% of target lysis field → DR ~50% (rev-EP zone)
+const SELECTIVE_FIELD_FRACTION = 0.85    // 85% of target lysis field → target at lysis threshold
+const NSEP_FIELD_FRACTION      = 2.00    // 200% of target lysis field (supralytic for nsEP)
+const THERMAL_FIELD_FRACTION   = 0.25    // 25% of target lysis field → sub-lytic mild heating
+const QUASI_DC_FREQ_DIVISOR    = 20      // f = targetFc / 20 (quasi-DC: ωτ << 1, pef ≈ 1.0)
+// Duty cycles are calibrated so SAR_eff = SAR × dc keeps temperature below 42°C at each field level.
+// At lysis-scale fields (300–800 V/cm), SAR is in the MW/kg range; duty cycle is the only
+// thermal safety lever. CW waveform (dc = 1.0) causes boiling at any EP-relevant amplitude.
+const QUASI_DC_DC              = 1e-4    // 0.01% — safe heating (<3°C rise) at 50% lysis field
+const QUASI_DC_PW_NS           = 100_000 // 100 µs — pef ≈ 1.0 for τ~300 ns mammalian cells
+const SELECTIVE_DC             = 1e-4    // 0.01% — was 1%, which caused SAR boiling at 85% field
+const SELECTIVE_PW_NS          = 100_000 // 100 µs — same pulse width; lysis delay ~10 s (N×t_p/dc)
+const NSEP_DC                  = 1e-5    // 0.001% duty cycle
+const NSEP_PW_NS               = 10      // 10 ns — sub-charging for mammalian τ ~300 ns
+const NSEP_FREQ_KHZ            = 1_000   // 1 MHz
+const THERMAL_DC               = 1e-3    // 0.1% — mild heating to ~43°C steady-state at 25% field
+const THERMAL_PW_NS            = 100_000 // 100 µs — pef ≈ 1.0; thermal effect via SAR accumulation
 
 export default defineComponent({
   props: {
@@ -50,41 +57,49 @@ export default defineComponent({
 
     applyQuasiDC() {
       const freqKhz = this.clampFreq(Math.max(this.sliderRanges.freqMin, this.store.targetFc / QUASI_DC_FREQ_DIVISOR))
+      // Apply pulse settings first so targetLysisField uses the correct pulse envelope factor.
+      this.store.setWaveform(WAVEFORM.PULSED)
+      this.store.setDutyCycle(QUASI_DC_DC)
+      this.store.setPulseWidthNs(QUASI_DC_PW_NS)
       const fieldVcm = this.clampField(this.store.targetLysisField * QUASI_DC_FIELD_FRACTION)
       this.store.setBroadcastFreqKHz(freqKhz)
       this.store.setFieldIntensity(fieldVcm)
-      this.store.setWaveform(WAVEFORM.CW)
       broadcastStateSync()
     },
 
     applySelective() {
       const freqKhz = this.clampFreq(this.store.optimalFreqResult.khz)
-      const fieldVcm = this.clampField(this.store.targetLysisField * SELECTIVE_FIELD_FRACTION)
-      this.store.setBroadcastFreqKHz(freqKhz)
-      this.store.setFieldIntensity(fieldVcm)
+      // Apply pulse settings first so targetLysisField uses the correct pulse envelope factor.
       this.store.setWaveform(WAVEFORM.PULSED)
       this.store.setDutyCycle(SELECTIVE_DC)
       this.store.setPulseWidthNs(SELECTIVE_PW_NS)
+      const fieldVcm = this.clampField(this.store.targetLysisField * SELECTIVE_FIELD_FRACTION)
+      this.store.setBroadcastFreqKHz(freqKhz)
+      this.store.setFieldIntensity(fieldVcm)
       broadcastStateSync()
     },
 
     applyNsEP() {
       const freqKhz = this.clampFreq(NSEP_FREQ_KHZ)
-      const fieldVcm = this.clampField(this.store.targetLysisField * NSEP_FIELD_FRACTION)
-      this.store.setBroadcastFreqKHz(freqKhz)
-      this.store.setFieldIntensity(fieldVcm)
+      // Apply pulse settings first so targetLysisField uses the correct pulse envelope factor.
       this.store.setWaveform(WAVEFORM.PULSED)
       this.store.setDutyCycle(NSEP_DC)
       this.store.setPulseWidthNs(NSEP_PW_NS)
+      const fieldVcm = this.clampField(this.store.targetLysisField * NSEP_FIELD_FRACTION)
+      this.store.setBroadcastFreqKHz(freqKhz)
+      this.store.setFieldIntensity(fieldVcm)
       broadcastStateSync()
     },
 
     applyThermal() {
       const freqKhz = this.clampFreq(this.store.optimalFreqResult.khz)
+      // Apply pulse settings first so targetLysisField uses the correct pulse envelope factor.
+      this.store.setWaveform(WAVEFORM.PULSED)
+      this.store.setDutyCycle(THERMAL_DC)
+      this.store.setPulseWidthNs(THERMAL_PW_NS)
       const fieldVcm = this.clampField(this.store.targetLysisField * THERMAL_FIELD_FRACTION)
       this.store.setBroadcastFreqKHz(freqKhz)
       this.store.setFieldIntensity(fieldVcm)
-      this.store.setWaveform(WAVEFORM.CW)
       broadcastStateSync()
     },
   },
