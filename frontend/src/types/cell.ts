@@ -57,7 +57,8 @@ export interface CellConfig {
   morphologyTag?: MorphologyTag
 }
 
-// Type alias for backward compatibility with existing CellCard / store references
+// Semantic alias used by CellCard sub-components (index, CellParamsPanel, CellVisual)
+// to express "a cell configuration object passed as prop data" vs a store reference.
 export type CellRecord = CellConfig
 
 export interface BlobPoint {
@@ -76,6 +77,8 @@ export interface BlobFrame {
   nuclearDisruptionRatio: number  // Vm_nuc / nuclear threshold [0-n]; 0 for non-mammalian or single-shell mode
   depCmReal: number               // Re[K(f)] Clausius-Mossotti DEP factor [-0.5, +0.5]; >0 = pDEP, <0 = nDEP
   waveform: 'cw' | 'pulsed' | 'hfire'
+  /** True when the target cell is an acoustic-resonance target (virus/bacteria with resonantFreqGHz). */
+  isAcousticMode?: boolean
 }
 
 /** Data read by setupOscilloscope on each D3 timer tick */

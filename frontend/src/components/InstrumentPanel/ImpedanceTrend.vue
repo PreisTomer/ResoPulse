@@ -28,14 +28,14 @@
           <line
             v-for="y in gridYs"
             :key="y"
+            class="imp-trend__grid-line"
             :x1="0" :y1="y" :x2="SVG_W" :y2="y"
-            stroke="rgba(255,255,255,0.06)"
             stroke-width="1"
           />
           <!-- Nominal Z reference line -->
           <line
+            class="imp-trend__nominal-line"
             :x1="0" :y1="nominalY" :x2="SVG_W" :y2="nominalY"
-            stroke="rgba(255,255,255,0.25)"
             stroke-width="1"
             stroke-dasharray="4 3"
           />
@@ -222,6 +222,9 @@ export default defineComponent({
     overflow: visible;
   }
 
+  &__grid-line    { stroke: color-mix(in srgb, white 6%, transparent); }
+  &__nominal-line { stroke: color-mix(in srgb, white 25%, transparent); }
+
   &__axis-label {
     position: absolute;
     left: -0.5rem;
@@ -252,7 +255,7 @@ export default defineComponent({
     td {
       padding: 0.3rem 0.5rem;
       color: var(--color-text-muted);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      border-bottom: 1px solid color-mix(in srgb, white 4%, transparent);
     }
   }
 

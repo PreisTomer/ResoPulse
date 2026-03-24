@@ -140,7 +140,7 @@ export default defineComponent({
   align-items: center;
   gap: 0.5rem 1.2rem;
   padding: 0.35rem 0.65rem;
-  background: rgba(0, 0, 0, 0.2);
+  background: color-mix(in srgb, black 20%, transparent);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   cursor: default;

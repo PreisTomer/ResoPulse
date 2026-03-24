@@ -571,6 +571,7 @@ export default defineComponent({
           nuclearDisruptionRatio: this.store.doubleShellEnabled ? this.nuclearDisruptionRatio : 0,
           depCmReal:              this.type === CELL_TYPE.HEALTHY ? this.store.depHealthyCmReal : this.store.depTargetCmReal,
           waveform:               this.store.waveform,
+          isAcousticMode:         this.isAcousticTarget,
         }),
       )
     },
@@ -632,11 +633,6 @@ export default defineComponent({
 
 
 /* ── Per-component keyframes ───────────────────────────────────────── */
-@keyframes nourish-text-pulse {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.80; }
-}
-
 @keyframes flicker {
   0%, 100% { opacity: 1; }
   45%  { opacity: 0.6; }
@@ -649,6 +645,16 @@ export default defineComponent({
   to   { opacity: 1; }
 }
 
+// CSS Option A — gentle Y-axis perspective tilt (±8°, 14 s period).
+// Works in concert with the D3 scaleX spin (Option B) inside bodyG:
+// the canvas frame tilts in 3D space while the cell body itself compresses,
+// together creating the illusion of a sphere tumbling on a microscopy stage.
+@keyframes cell-canvas-tilt {
+  0%   { transform: rotateY(-8deg); }
+  50%  { transform: rotateY(8deg); }
+  100% { transform: rotateY(-8deg); }
+}
+
 @keyframes warn-fade {
   0%, 100% { opacity: 1; }
   50%       { opacity: 0.72; }
@@ -656,7 +662,7 @@ export default defineComponent({
 
 /* ── Root container ─────────────────────────────────────────────────── */
 .cell-visual {
-  background-color: rgba(0, 0, 0, 0.45);
+  background-color: color-mix(in srgb, black 45%, transparent);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   overflow: hidden;
@@ -667,9 +673,21 @@ export default defineComponent({
     display: flex;
     justify-content: center;
     line-height: 0;
-    overflow: hidden;
+    // perspective enables GPU 3D compositing for the CSS rotateY tilt on the SVG child.
+    // overflow:hidden is intentionally omitted here — .cell-visual already clips at the
+    // card boundary, and hiding overflow here would clip the SVG when it tilts in Z.
+    perspective: 800px;
 
-    svg { display: block; width: auto; height: auto; max-width: 100%; max-height: 180px; }
+    svg {
+      display: block;
+      width: auto;
+      height: auto;
+      max-width: 100%;
+      max-height: 180px;
+      // Option A: slow ±8° Y-axis tilt of the entire canvas frame.
+      // Works with Option B (D3 scaleX on bodyG) for combined 3D depth effect.
+      animation: cell-canvas-tilt 14s ease-in-out infinite;
+    }
   }
 
   /* ── Oscilloscope divider ──────────────────────────────────────────── */
@@ -827,7 +845,7 @@ export default defineComponent({
 
   /* ── Nourishing strip (healthy, DR 8-45%) ──────────────────────────── */
   &__nourishing-strip {
-    @include status-strip(var(--color-accent), color-mix(in srgb, var(--color-primary) 6%, transparent), color-mix(in srgb, var(--color-primary) 22%, transparent), nourish-text-pulse, 2.8s);
+    @include status-strip(var(--color-accent), color-mix(in srgb, var(--color-primary) 6%, transparent), color-mix(in srgb, var(--color-primary) 22%, transparent), nourish-strip-pulse, 2.8s);
     border-bottom: 1px solid color-mix(in srgb, var(--color-primary) 12%, transparent);
   }
 
@@ -919,7 +937,7 @@ export default defineComponent({
     @include flex-col(0.75rem);
     align-items: center;
     justify-content: center;
-    background-color: rgba(6, 2, 14, 0.90);
+    background-color: color-mix(in srgb, black 90%, transparent);
     backdrop-filter: blur(3px);
     animation: lysis-overlay-appear 0.35s ease forwards;
   }

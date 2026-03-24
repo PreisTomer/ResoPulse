@@ -76,7 +76,7 @@ export default defineComponent({
     gap: 0.5rem;
     transition: background var(--tr-fast);
 
-    &:hover { background: rgba(255, 255, 255, 0.04); }
+    &:hover { background: color-mix(in srgb, white 4%, transparent); }
   }
 
   &__toggle:hover &__title {

@@ -124,11 +124,6 @@ export default defineComponent({
 
 
 
-@keyframes nourish-text-pulse {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.65; }
-}
-
 .cell-card {
   &__biostim {
     background: color-mix(in srgb, var(--color-primary) 4.5%, transparent);
@@ -198,7 +193,7 @@ export default defineComponent({
 
   &__biostim-track {
     height: 3px;
-    background: rgba(255, 255, 255, 0.06);
+    background: color-mix(in srgb, white 6%, transparent);
     border-radius: 2px;
     overflow: hidden;
   }

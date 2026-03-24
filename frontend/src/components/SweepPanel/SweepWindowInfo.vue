@@ -79,7 +79,7 @@ export default defineComponent({
   gap: 0.4rem 0.7rem;
 
   &--none {
-    background: rgba(255, 255, 255, 0.03);
+    background: color-mix(in srgb, white 3%, transparent);
     border-color: var(--color-border);
     color: var(--color-text-muted);
     font-style: italic;

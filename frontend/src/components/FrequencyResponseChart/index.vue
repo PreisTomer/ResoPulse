@@ -165,7 +165,7 @@ export default defineComponent({
         .attr('transform', 'rotate(-90)')
         .attr('x', -this._chartH / 2)
         .attr('y', this._chartW + 122)
-        .attr('fill', 'rgba(255,255,255,0.28)')
+        .attr('fill', C.w28)
         .attr('font-size', '0.52rem')
         .attr('font-family', 'var(--font-mono)')
         .attr('letter-spacing', '0.1em')
@@ -197,20 +197,20 @@ export default defineComponent({
       g.append('line')
         .attr('class', 'cursor-line')
         .attr('y1', 0).attr('y2', this._chartH)
-        .attr('stroke', 'rgba(255,255,255,0.85)')
+        .attr('stroke', C.w85)
         .attr('stroke-width', 1.5)
         .attr('stroke-dasharray', '4,3')
 
       g.append('rect')
         .attr('class', 'cursor-bg')
         .attr('y', -2).attr('height', 14).attr('rx', 2)
-        .attr('fill', 'rgba(255,255,255,0.12)')
+        .attr('fill', C.w12)
 
       g.append('text')
         .attr('class', 'cursor-label')
         .attr('y', 8)
         .attr('text-anchor', 'middle')
-        .attr('fill', 'rgba(255,255,255,0.75)')
+        .attr('fill', C.w75)
         .attr('font-size', '0.7rem')
         .attr('font-family', 'var(--font-mono)')
 
@@ -219,7 +219,7 @@ export default defineComponent({
         .attr('class', 'cursor-drag-hint')
         .attr('y', -4)
         .attr('text-anchor', 'middle')
-        .attr('fill', 'rgba(255,255,255,0.28)')
+        .attr('fill', C.w28)
         .attr('font-size', '0.5rem')
         .attr('font-family', 'var(--font-mono)')
         .attr('letter-spacing', '0.08em')
@@ -326,20 +326,20 @@ export default defineComponent({
 
       g.select<SVGGElement>('.x-axis')
         .call(d3.axisBottom<number>(this._xScale!).tickValues(tickVals).tickFormat(formatResHz).tickSize(4))
-        .call((a) => a.select('.domain').attr('stroke', 'rgba(255,255,255,0.15)'))
+        .call((a) => a.select('.domain').attr('stroke', C.w15))
         .call((a) => a.selectAll('text').attr('fill', 'var(--color-text)').attr('font-size', '0.64rem').attr('font-family', 'var(--font-mono)'))
-        .call((a) => a.selectAll('line').attr('stroke', 'rgba(255,255,255,0.2)'))
+        .call((a) => a.selectAll('line').attr('stroke', C.w20))
 
       g.select<SVGGElement>('.y-axis')
         .call(d3.axisLeft<number>(this._yScale!).ticks(5).tickSize(4))
-        .call((a) => a.select('.domain').attr('stroke', 'rgba(255,255,255,0.15)'))
+        .call((a) => a.select('.domain').attr('stroke', C.w15))
         .call((a) => a.selectAll('text').attr('fill', 'var(--color-text)').attr('font-size', '0.64rem').attr('font-family', 'var(--font-mono)'))
-        .call((a) => a.selectAll('line').attr('stroke', 'rgba(255,255,255,0.2)'))
+        .call((a) => a.selectAll('line').attr('stroke', C.w20))
 
       g.select<SVGGElement>('.grid-h')
         .call(d3.axisLeft<number>(this._yScale!).ticks(5).tickSize(-this._chartW).tickFormat(() => ''))
         .call((a) => a.select('.domain').remove())
-        .call((a) => a.selectAll('line').attr('stroke', 'rgba(255,255,255,0.06)'))
+        .call((a) => a.selectAll('line').attr('stroke', C.w06))
 
       // Hide selectivity curve and right axis (TI → ∞ in resonance, not useful to plot)
       g.select<SVGGElement>('.sel-curve').selectAll('*').remove()
@@ -502,15 +502,15 @@ export default defineComponent({
 
       g.select<SVGGElement>('.x-axis')
         .call(xAxis)
-        .call((a) => a.select('.domain').attr('stroke', 'rgba(255,255,255,0.15)'))
+        .call((a) => a.select('.domain').attr('stroke', C.w15))
         .call((a) => a.selectAll('text').attr('fill', 'var(--color-text)').attr('font-size', '0.64rem').attr('font-family', 'var(--font-mono)'))
-        .call((a) => a.selectAll('line').attr('stroke', 'rgba(255,255,255,0.2)'))
+        .call((a) => a.selectAll('line').attr('stroke', C.w20))
 
       g.select<SVGGElement>('.y-axis')
         .call(yAxis)
-        .call((a) => a.select('.domain').attr('stroke', 'rgba(255,255,255,0.15)'))
+        .call((a) => a.select('.domain').attr('stroke', C.w15))
         .call((a) => a.selectAll('text').attr('fill', 'var(--color-text)').attr('font-size', '0.64rem').attr('font-family', 'var(--font-mono)'))
-        .call((a) => a.selectAll('line').attr('stroke', 'rgba(255,255,255,0.2)'))
+        .call((a) => a.selectAll('line').attr('stroke', C.w20))
 
       // Grid
       g.select<SVGGElement>('.grid-h')
@@ -518,7 +518,7 @@ export default defineComponent({
           d3.axisLeft<number>(this._yScale!).ticks(5).tickSize(-this._chartW).tickFormat(() => ''),
         )
         .call((a) => a.select('.domain').remove())
-        .call((a) => a.selectAll('line').attr('stroke', 'rgba(255,255,255,0.06)'))
+        .call((a) => a.selectAll('line').attr('stroke', C.w06))
 
       // ── Selectivity ratio curve + right Y-axis ──────────────────────────
       const selData   = computeSelCurve(this.store.healthy, this.store.target, this.store.fieldIntensity, sigma_e)
@@ -551,7 +551,7 @@ export default defineComponent({
         selGroup.append('line')
           .attr('x1', 0).attr('x2', this._chartW)
           .attr('y1', y1).attr('y2', y1)
-          .attr('stroke', 'rgba(255,255,255,0.12)')
+          .attr('stroke', C.w12)
           .attr('stroke-width', 1)
           .attr('stroke-dasharray', '2,4')
       }
@@ -584,7 +584,7 @@ export default defineComponent({
         depGroup.append('line')
           .attr('x1', 0).attr('x2', this._chartW)
           .attr('y1', yK0).attr('y2', yK0)
-          .attr('stroke', 'rgba(255,255,255,0.10)')
+          .attr('stroke', C.w10)
           .attr('stroke-width', 1)
           .attr('stroke-dasharray', '2,4')
       }
@@ -627,9 +627,9 @@ export default defineComponent({
 
       g.select<SVGGElement>('.y-dep-axis')
         .call(yDepAxis)
-        .call((a) => a.select('.domain').attr('stroke', 'rgba(255,255,255,0.12)'))
-        .call((a) => a.selectAll('text').attr('fill', 'rgba(255,255,255,0.38)').attr('font-size', '0.50rem').attr('font-family', 'var(--font-mono)'))
-        .call((a) => a.selectAll('line').attr('stroke', 'rgba(255,255,255,0.15)'))
+        .call((a) => a.select('.domain').attr('stroke', C.w12))
+        .call((a) => a.selectAll('text').attr('fill', C.w38).attr('font-size', '0.50rem').attr('font-family', 'var(--font-mono)'))
+        .call((a) => a.selectAll('line').attr('stroke', C.w15))
       // ── End DEP overlay ──────────────────────────────────────────────────
 
       // Line generator (for Vm curves)
@@ -965,7 +965,7 @@ export default defineComponent({
   }
 
   &__title {
-    @include mono-upper(0.82rem, 0.12em);
+    @include mono-upper(var(--fs-md), 0.12em);
     color: var(--color-text);
     white-space: nowrap;
   }

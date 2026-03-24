@@ -97,7 +97,7 @@ export default defineComponent({
   }
 
   &__geo-sep-label {
-    @include mono-upper(0.7rem, 0.1em);
+    @include mono-upper(var(--fs-xs), 0.1em);
     color: var(--color-text-muted);
     opacity: var(--op-muted);
     white-space: nowrap;

@@ -186,7 +186,7 @@ export default defineComponent({
     }
 
     &-label {
-      @include mono-upper(0.75rem);
+      @include mono-upper(var(--fs-sm));
       color: var(--color-text-muted);
 
       &--warning { color: var(--color-amber-warm); }

@@ -395,7 +395,7 @@ export default defineComponent({
         .attr('transform', `translate(0,${iH})`)
         .call(d3.axisBottom(xScale).ticks(8).tickSize(3).tickFormat(d => `${(+d * 100).toFixed(0)}%`))
         .call(ax => ax.select('.domain').attr('stroke', CSS_BORDER))
-        .call(ax => ax.selectAll('text').attr('fill', 'rgba(255,255,255,0.5)').attr('font-size', 9))
+        .call(ax => ax.selectAll('text').attr('fill', C.w50).attr('font-size', 9))
         .call(ax => ax.selectAll('.tick line').attr('stroke', CSS_BORDER))
 
       const yAxis = normalize
@@ -404,21 +404,21 @@ export default defineComponent({
       g.append('g')
         .call(yAxis)
         .call(ax => ax.select('.domain').attr('stroke', CSS_BORDER))
-        .call(ax => ax.selectAll('text').attr('fill', 'rgba(255,255,255,0.5)').attr('font-size', 9))
+        .call(ax => ax.selectAll('text').attr('fill', C.w50).attr('font-size', 9))
         .call(ax => ax.selectAll('.tick line').attr('stroke', CSS_BORDER))
 
       // ── Axis labels ──────────────────────────────────────────────────────────
       g.append('text')
         .attr('x', iW / 2).attr('y', iH + 32)
         .attr('text-anchor', 'middle')
-        .attr('font-size', 10).attr('fill', 'rgba(255,255,255,0.4)')
+        .attr('font-size', 10).attr('fill', C.w40)
         .text(this.$t('population.chartAxisDr'))
 
       g.append('text')
         .attr('transform', 'rotate(-90)')
         .attr('x', -iH / 2).attr('y', -36)
         .attr('text-anchor', 'middle')
-        .attr('font-size', 10).attr('fill', 'rgba(255,255,255,0.4)')
+        .attr('font-size', 10).attr('fill', C.w40)
         .text(normalize ? this.$t('population.chartAxisFraction') : this.$t('population.chartAxisCount'))
 
       // ── Legend ───────────────────────────────────────────────────────────────
@@ -432,7 +432,7 @@ export default defineComponent({
         lg.append('rect').attr('width', 12).attr('height', 8).attr('y', -8).attr('fill', color).attr('opacity', 0.6)
         lg.append('text')
           .attr('x', 16).attr('y', -1)
-          .attr('font-size', 9).attr('fill', 'rgba(255,255,255,0.5)')
+          .attr('font-size', 9).attr('fill', C.w50)
           .text(label)
       })
     },

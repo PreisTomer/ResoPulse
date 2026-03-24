@@ -166,7 +166,7 @@ export default defineComponent({
   &__bar-track {
     flex: 1;
     height: 6px;
-    background: rgba(255, 255, 255, 0.08);
+    background: color-mix(in srgb, white 8%, transparent);
     border-radius: 3px;
     overflow: hidden;
   }

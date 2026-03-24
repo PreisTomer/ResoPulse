@@ -83,7 +83,7 @@ export default defineComponent({
   th {
     text-align: left;
     padding: 0.35rem 0.6rem;
-    @include mono-upper(0.65rem);
+    @include mono-upper(var(--fs-xxs));
     color: var(--color-text-muted);
     border-bottom: 1px solid var(--color-border);
     cursor: help;
@@ -92,7 +92,7 @@ export default defineComponent({
   td {
     padding: 0.38rem 0.6rem;
     color: var(--color-text);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    border-bottom: 1px solid color-mix(in srgb, white 4%, transparent);
     font-family: var(--font-mono);
     cursor: help;
   }

@@ -3,7 +3,7 @@
 
 // Biophysics utilities - Schwan single-shell model, SAR, nsEP, acoustic resonance, EM skin depth
 import type { CellConfig } from '@/types/cell'
-import { SCHWAN_SPHERE_FACTOR, WF_CW, EPSILON_R_CYTOPLASM, SIGMA_MEMBRANE_SI, TWO_PI } from '@/constants/physics'
+import { SCHWAN_SPHERE_FACTOR, WF_CW, EPSILON_R_CYTOPLASM, SIGMA_MEMBRANE_SI, TWO_PI, POP_LYSIS_GAUSS_N, POP_LYSIS_GAUSS_Z_MAX } from '@/constants/physics'
 
 export const EPSILON_0 = 8.854187817e-12 // F/m
 
@@ -254,14 +254,43 @@ export function computeResonantLineshape(
 
 // ── EM skin depth ────────────────────────────────────────────────────────────
 
-/** δ = √(1/(π·f·μ₀·σ_e))  [mm].  Good-conductor approximation; valid in saline to ~1 GHz.
- *  Saline (1.5 S/m): 100 MHz→41 mm · 1 GHz→13 mm · 5 GHz→5.8 mm · 12 GHz→3.8 mm.
- *  Ref: Gabriel et al. 1996. */
-export function computeSkinDepthMm(freqKHz: number, sigma_e: number): number {
-  const MU_0 = 4 * Math.PI * 1e-7
+/**
+ * EM skin depth [mm] using the exact lossy-dielectric formula.
+ *
+ * δ = 1/α,  α = ω√(με/2) × √(√(1+(σ/ωε)²) − 1)
+ *
+ * Reduces to the good-conductor formula √(1/(π·f·μ₀·σ)) when σ ≫ ωε
+ * (typically valid below ~300 MHz in saline).  Above 300 MHz, saline enters
+ * the lossy-dielectric regime (σ/ωε < 1); the good-conductor formula then
+ * severely underestimates δ (e.g. 13 mm vs 32 mm at 1 GHz).
+ *
+ * In the high-frequency limit (σ ≪ ωε), α → (σ/2)√(μ/ε) = const, so δ
+ * becomes approximately frequency-independent (~31 mm in saline at 37°C).
+ *
+ * Note: this model uses a static ε_r (no Cole-Cole frequency dispersion).
+ * At ≥5 GHz, ε_r decreases significantly (Gabriel et al. 1996), so the
+ * computed δ is a mild overestimate; use Gabriel dispersion data for
+ * quantitative accuracy above 3 GHz.
+ *
+ * @param freqKHz   Operating frequency [kHz]
+ * @param sigma_e   Medium conductivity [S/m]
+ * @param epsilon_r Medium relative permittivity (static, default 80 for saline at 37°C)
+ *
+ * Saline (σ=1.5 S/m, ε_r=80): 100 MHz → 48 mm · 1 GHz → 32 mm · 10 GHz → ~32 mm (static ε_r)
+ * Ref: Gabriel et al. (1996) Phys. Med. Biol. 41:2271
+ */
+export function computeSkinDepthMm(freqKHz: number, sigma_e: number, epsilon_r = 80): number {
+  const MU_0 = 4 * Math.PI * 1e-7  // H/m
   const f    = freqKHz * KHZ_TO_HZ
   if (f <= 0 || sigma_e <= 0) return Infinity
-  return 1000 * Math.sqrt(1 / (Math.PI * f * MU_0 * sigma_e))
+  const omega       = TWO_PI * f
+  const epsilon     = epsilon_r * EPSILON_0
+  // Exact lossy-dielectric attenuation constant (Cheng 1989; Jackson 1999)
+  const lossTangent = sigma_e / (omega * epsilon)
+  const alpha       = omega * Math.sqrt(MU_0 * epsilon / 2) *
+    Math.sqrt(Math.sqrt(1 + lossTangent ** 2) - 1)
+  if (alpha <= 0) return Infinity
+  return (1 / alpha) * 1000  // m → mm
 }
 
 /** Resonant disruption ratio: (E/E_thr)·L(f, f_res, Q).  ≥1.0 → threshold exceeded. */
@@ -283,7 +312,8 @@ export function computeResonantDisruption(
  * distribution. Each sub-population of size r has DR(r) = DR_nom × (r/R) and
  * orientation-averaged P(lysis) = max(0, 1 − 1/DR(r)).
  *
- * Integration over 61 Gauss points in z-space (X = exp(σ_ln·z + μ_ln), z ~ N(0,1)).
+ * Integration over 61 uniformly-spaced points in z-space (rectangle rule on [-4.5σ, 4.5σ]).
+ * Truncation tail probability P(|Z|>4.5) ≈ 7×10⁻⁶ — negligible for all practical CV values.
  * Degrades gracefully to P = max(0, 1 − 1/DR) when cv = 0.
  *
  * @param dr - disruption ratio at mean cell size (field-aligned)
@@ -297,11 +327,11 @@ export function computePopulationLysisFraction(dr: number, cv: number): number {
   if (cv <= 0) return Math.max(0, Math.min(1, 1 - 1 / dr))
   const sigmaLn = Math.sqrt(Math.log(1 + cv * cv))
   const muLn    = -0.5 * sigmaLn * sigmaLn  // ensures E[X] = 1 (mean-normalised)
-  const N       = 60
-  const zMin    = -4.5, zMax = 4.5
-  const dz      = (zMax - zMin) / N
+  const zMin    = -POP_LYSIS_GAUSS_Z_MAX
+  const zMax    =  POP_LYSIS_GAUSS_Z_MAX
+  const dz      = (zMax - zMin) / POP_LYSIS_GAUSS_N
   let sum = 0
-  for (let i = 0; i <= N; i++) {
+  for (let i = 0; i <= POP_LYSIS_GAUSS_N; i++) {
     const z      = zMin + i * dz
     const x      = Math.exp(sigmaLn * z + muLn)
     const pLysis = Math.max(0, 1 - 1 / (dr * x))  // cosθ orientation model at this radius

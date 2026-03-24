@@ -93,7 +93,7 @@ export default defineComponent({
     gap: 0.5rem;
     margin-top: 0.75rem;
     padding-top: 0.6rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    border-top: 1px solid color-mix(in srgb, white 6%, transparent);
   }
 
   &__metric {
@@ -102,8 +102,8 @@ export default defineComponent({
     flex-direction: column;
     align-items: center;
     gap: 0.18rem;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: color-mix(in srgb, white 3%, transparent);
+    border: 1px solid color-mix(in srgb, white 6%, transparent);
     border-radius: var(--radius);
     padding: 0.35rem 0.4rem;
     cursor: default;

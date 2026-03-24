@@ -215,6 +215,30 @@ export const RESEAL_TIME_MAX_S = 60.0
  *  Rigid protein capsids may reach Q~30; peptidoglycan walls typically Q~3-4. */
 export const DEFAULT_CAPSID_Q = 2
 
+// ── Electromagnetic constants ─────────────────────────────────────────────────
+
+/**
+ * Vacuum permeability [H/m] — used in EM skin depth formula δ = √(1/(π·f·μ₀·σ)).
+ * Exact value (pre-2019 SI definition); post-2019 value differs by < 1 ppm.
+ * Ref: CODATA 2018.
+ */
+export const MU_0 = 4 * Math.PI * 1e-7
+
+// ── Population lysis integration parameters ───────────────────────────────────
+
+/**
+ * Number of trapezoid steps for log-normal population lysis fraction integration.
+ * 61-point trapezoidal rule (i = 0..60) over ±POP_LYSIS_GAUSS_Z_MAX sigma.
+ * Converges to < 0.1% error for smooth P(lysis) curves.
+ */
+export const POP_LYSIS_GAUSS_N = 60
+
+/**
+ * Half-width of the integration domain in standard deviations.
+ * ±4.5σ covers > 99.999% of the log-normal distribution — truncation error negligible.
+ */
+export const POP_LYSIS_GAUSS_Z_MAX = 4.5
+
 // ── Unit conversion factors ───────────────────────────────────────────────────
 
 /** Converts field intensity from V/cm (display unit) to V/m (SI unit). */

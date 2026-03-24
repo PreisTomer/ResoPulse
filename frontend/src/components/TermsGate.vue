@@ -155,7 +155,7 @@ export default defineComponent({
     padding: 0.85rem;
     border: 1px solid var(--color-border);
     border-radius: 6px;
-    background: rgba(255, 255, 255, 0.025);
+    background: color-mix(in srgb, white 2.5%, transparent);
     margin-bottom: 1.25rem;
     transition: border-color var(--tr-fast);
 

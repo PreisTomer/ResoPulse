@@ -134,7 +134,7 @@
   /* ── Typography ──────────────────────────────────────────────── */
   &__eyebrow {
     @include flex-row(0.5rem);
-    @include mono-upper(0.75rem, 0.14em);
+    @include mono-upper(var(--fs-sm), 0.14em);
     color: var(--color-primary);
     flex-wrap: wrap;
     justify-content: center;
@@ -171,7 +171,7 @@
   /* ── Subtitle ────────────────────────────────────────────────── */
   &__subtitle {
     @include flex-row(0.55rem);
-    @include mono-upper(0.82rem, 0.14em);
+    @include mono-upper(var(--fs-md), 0.14em);
     text-transform: none;
     justify-content: center;
     color: var(--color-text-muted);
@@ -364,7 +364,7 @@
     font-family: var(--font-mono);
     font-size: var(--fs-xs);
     letter-spacing: 0.06em;
-    color: rgba(255, 255, 255, 0.42);
+    color: color-mix(in srgb, white 42%, transparent);
     margin: 0;
   }
 

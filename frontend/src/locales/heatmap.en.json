@@ -41,6 +41,6 @@
 
     "tipRegime":   "<strong>Frequency Regime at Operating Point</strong>\nDetermines the hardware required for field delivery.\n  Electrolytic (&lt;300 MHz): direct-contact cuvette + pulse generator\n  Near-field RF (300 MHz-1 GHz): 50 Ω coaxial probe + RF amplifier\n  Microwave (&gt;1 GHz): rectangular waveguide or resonant cavity",
 
-    "tipSkinDepth": "<strong>EM Skin Depth at Operating Point</strong>\nδ = √(1/(π·f·μ₀·σ_e))  (Gabriel et al. 1996)\nSets the usable sample depth:\n  ≥20 mm: full cuvette penetration\n  5-20 mm: cm-depth; outer layer accessible\n  &lt;5 mm: near-surface only; intracavitary probe needed for deep tissue"
+    "tipSkinDepth": "<strong>EM Penetration Depth at Operating Point</strong>\nExact lossy-dielectric formula: δ = 1/α,  α = ω√(με/2)×√(√(1+(σ/ωε)²)−1)\n(Gabriel et al. 1996; good-conductor approx. only valid below ~300 MHz in saline)\nSaline: 100 MHz→48 mm · 1 GHz→32 mm · ε_r decreases above 1 GHz (Cole-Cole)\nSets the usable sample depth:\n  ≥20 mm: full cuvette penetration\n  5-20 mm: cm-depth; outer layer accessible\n  &lt;5 mm: near-surface only; waveguide or cavity coupling required"
   }
 }

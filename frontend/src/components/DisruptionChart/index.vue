@@ -145,7 +145,7 @@ export default defineComponent({
         .attr('class', 'cursor-drag-hint')
         .attr('y', -4)
         .attr('text-anchor', 'middle')
-        .attr('fill', 'rgba(255,255,255,0.28)')
+        .attr('fill', C.w28)
         .attr('font-size', '0.5rem')
         .attr('font-family', 'var(--font-mono)')
         .attr('letter-spacing', '0.08em')
@@ -326,7 +326,7 @@ export default defineComponent({
       gc.select<SVGLineElement>('.cursor-line')
         .attr('x1', cx).attr('x2', cx)
         .attr('y1', 0).attr('y2', this._chartH)
-        .style('stroke', 'rgba(255,255,255,0.3)')
+        .style('stroke', C.w30)
         .style('stroke-width', 1)
         .style('stroke-dasharray', '3,3')
 

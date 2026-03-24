@@ -216,7 +216,7 @@ export default defineComponent({
       g.append('line')
         .attr('class', 'cursor-line')
         .attr('y1', 0).attr('y2', this._chartH)
-        .attr('stroke', 'rgba(255,255,255,0.85)')
+        .attr('stroke', C.w85)
         .attr('stroke-width', 1.5)
         .attr('stroke-dasharray', '4,3')
         .style('cursor', 'ew-resize')
@@ -225,7 +225,7 @@ export default defineComponent({
         .attr('class', 'cursor-label')
         .attr('y', -6)
         .attr('text-anchor', 'middle')
-        .attr('fill', 'rgba(255,255,255,0.85)')
+        .attr('fill', C.w85)
         .attr('font-size', '0.7rem')
         .attr('font-family', 'var(--font-mono)')
 
@@ -260,7 +260,7 @@ export default defineComponent({
         .tickFormat((d) => this.formatHz(d as number))
       g.select<SVGGElement>('.x-axis')
         .call(xAxis as d3.Axis<d3.NumberValue>)
-        .attr('color', 'rgba(255,255,255,0.35)')
+        .attr('color', C.w35)
         .selectAll('text')
         .attr('font-size', '0.7rem')
         .attr('font-family', 'var(--font-mono)')
@@ -271,7 +271,7 @@ export default defineComponent({
         .tickFormat(d3.format('.2f'))
       g.select<SVGGElement>('.y-axis')
         .call(yAxis as d3.Axis<d3.NumberValue>)
-        .attr('color', 'rgba(255,255,255,0.35)')
+        .attr('color', C.w35)
         .selectAll('text')
         .attr('font-size', '0.7rem')
         .attr('font-family', 'var(--font-mono)')
@@ -283,7 +283,7 @@ export default defineComponent({
         gridG.append('line')
           .attr('x1', 0).attr('x2', this._chartW)
           .attr('y1', this._yScale!(tick)).attr('y2', this._yScale!(tick))
-          .style('stroke', tick === 1.0 ? 'color-mix(in srgb, var(--color-danger) 18%, transparent)' : 'rgba(255,255,255,0.06)')
+          .style('stroke', tick === 1.0 ? 'color-mix(in srgb, var(--color-danger) 18%, transparent)' : C.w06)
           .attr('stroke-width', 1)
       })
 
@@ -425,7 +425,7 @@ export default defineComponent({
   &__note {
     font-family: var(--font-mono);
     font-size: var(--fs-xxs);
-    color: rgba(255,255,255,0.4);
+    color: color-mix(in srgb, white 40%, transparent);
   }
 
   &__svg-wrap {
@@ -486,7 +486,7 @@ export default defineComponent({
 
     &-target  { color: var(--color-purple); }
     &-healthy { color: color-mix(in srgb, var(--color-primary) 70%, transparent); }
-    &-dim     { color: rgba(255,255,255,0.35); }
+    &-dim     { color: color-mix(in srgb, white 35%, transparent); }
     &-disrupt { color: color-mix(in srgb, var(--color-danger) 70%, transparent); }
   }
 }

@@ -78,10 +78,10 @@ export default defineComponent({
 
     &--cancel {
       background:   transparent;
-      border-color: rgba(255,255,255,0.15);
+      border-color: color-mix(in srgb, white 15%, transparent);
       color:        var(--color-text-muted);
 
-      &:hover { background: rgba(255,255,255,0.05); }
+      &:hover { background: color-mix(in srgb, white 5%, transparent); }
     }
 
     &--save {

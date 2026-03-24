@@ -101,8 +101,8 @@
         <line
           v-for="yFrac in [0.25, 0.5, 0.75]"
           :key="yFrac"
+          class="load-monitor__grid-line"
           :x1="0" :y1="yFrac * SVG_H" :x2="SVG_W" :y2="yFrac * SVG_H"
-          stroke="rgba(255,255,255,0.05)"
           stroke-width="1"
         />
 
@@ -531,6 +531,8 @@ export default defineComponent({
     display: block;
     overflow: visible;
   }
+
+  &__grid-line { stroke: color-mix(in srgb, white 5%, transparent); }
 
   &__axis-x {
     display: flex;

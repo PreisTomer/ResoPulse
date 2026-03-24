@@ -73,7 +73,7 @@ export default defineComponent({
   scrollbar-color: var(--color-border) transparent;
 
   &-title {
-    @include mono-upper(0.65rem, 0.12em);
+    @include mono-upper(var(--fs-xxs), 0.12em);
     color: var(--color-text-muted);
     margin-bottom: 0.65rem;
   }

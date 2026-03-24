@@ -442,6 +442,17 @@ For opacity tints, use `color-mix(in srgb, var(--color-X) Y%, transparent)` — 
 
 D3/canvas contexts that cannot evaluate CSS variables must use the named constants from `src/theme/colors.ts` (`C.amber`, `C.primary`, etc.).
 
+**Exception — hardcoded contexts:** The `no-rgba()` rule applies only to CSS `<style>` blocks. The following contexts **must** use hardcoded values because CSS variables are not evaluated there:
+
+| Context | Rule |
+|---------|------|
+| D3 `.attr('fill'/'stroke', ...)` calls | Use `C.*` constants from `src/theme/colors.ts` |
+| Canvas `ctx.fillStyle` / `ctx.strokeStyle` | Use `C.*` constants from `src/theme/colors.ts` |
+| Static SVG template attributes (`stroke="..."`) | Move to a CSS class in the scoped `<style>` block and use `color-mix()` there |
+| JavaScript template strings injected as CSS (`vTooltip.ts`) | Use `color-mix(in srgb, white X%, transparent)` — CSS variables work once injected |
+
+Never add `C.*` constants to `theme/colors.ts` for values already expressible via `color-mix()` in CSS. Only add `C.*` constants when D3/canvas code genuinely requires a pre-resolved string.
+
 ---
 
 ## SCSS Mixin Library — Use Before Writing Inline

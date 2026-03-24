@@ -16,6 +16,24 @@
   50%       { box-shadow: 0 0 16px var(--color-danger); }
 }
 
+// Used by ExperimentHeader chip-dot (connected indicator) and z-drift badge.
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+
+// Used by CellCard BiostimPanel active indicator (prominent biomodulation pulse).
+@keyframes nourish-text-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.65; }
+}
+
+// Used by CellCard CellVisual nourishing status strip (subtle background pulse).
+@keyframes nourish-strip-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.80; }
+}
+
 // Protocol lab-link highlight: three slow glow pulses then fades to nothing.
 // Applied by scrollAndHighlight() after cross-route navigation from ProtocolView.
 // Raw opacity values required — CSS variables are not interpolated in @keyframes.

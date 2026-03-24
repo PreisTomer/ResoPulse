@@ -189,6 +189,14 @@ export default defineComponent({
         this.applyTargetDefaults()
       }
     },
+
+    /** When the healthy reference cell changes, reset field controls to the same
+     *  stable baseline so the new cell pair starts from a DR < 8% (STABLE) state. */
+    currentHealthyId(newId: string, oldId: string) {
+      if (newId !== oldId) {
+        this.applyTargetDefaults()
+      }
+    },
     /** If the target category becomes mammalian (e.g. via radius edit) while resonance mode
      *  is active, immediately revert to Schwan mode. Resonance has no physical meaning for
      *  mammalian cells - the button is disabled but state drift can still occur via param editing. */
@@ -202,6 +210,10 @@ export default defineComponent({
   computed: {
     currentTargetId(): string {
       return this.store.target.id
+    },
+
+    currentHealthyId(): string {
+      return this.store.healthy.id
     },
 
     chartModeLabel(): string {

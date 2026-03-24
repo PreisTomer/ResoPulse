@@ -378,9 +378,9 @@ export default defineComponent({
 
     &--beyond {
       color: var(--color-text-muted);
-      background: rgba(148, 163, 184, 0.06);
-      border-color: rgba(148, 163, 184, 0.2);
-      &:hover { background: rgba(148, 163, 184, 0.12); border-color: rgba(148, 163, 184, 0.35); box-shadow: none; color: var(--color-text-muted); }
+      background: color-mix(in srgb, var(--color-text-muted) 6%, transparent);
+      border-color: color-mix(in srgb, var(--color-text-muted) 20%, transparent);
+      &:hover { background: color-mix(in srgb, var(--color-text-muted) 12%, transparent); border-color: color-mix(in srgb, var(--color-text-muted) 35%, transparent); box-shadow: none; color: var(--color-text-muted); }
     }
 
     &--fc   { font-size: var(--fs-xxs); padding: 0.15rem 0.45rem; }

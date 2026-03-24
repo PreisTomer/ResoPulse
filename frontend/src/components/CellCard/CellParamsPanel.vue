@@ -178,15 +178,15 @@ export default defineComponent({
     color: var(--color-text);
     cursor: pointer;
     user-select: none;
-    background: rgba(255, 255, 255, 0.03);
+    background: color-mix(in srgb, white 3%, transparent);
     border: 1px solid var(--color-border);
     border-radius: var(--radius);
     padding: 0.3rem 0.65rem;
     transition: border-color var(--tr-fast), background-color var(--tr-fast), color var(--tr-fast);
 
     &:hover {
-      border-color: rgba(255, 255, 255, 0.2);
-      background: rgba(255, 255, 255, 0.06);
+      border-color: color-mix(in srgb, white 20%, transparent);
+      background: color-mix(in srgb, white 6%, transparent);
       color: var(--color-text-heading);
     }
   }
@@ -194,7 +194,7 @@ export default defineComponent({
   &__params-toggle-arrow { font-size: var(--fs-xs); opacity: 0.75; } // intentional between-tier value
 
   &__params-panel {
-    background-color: rgba(0, 0, 0, 0.3);
+    background-color: color-mix(in srgb, black 30%, transparent);
     border: 1px solid var(--color-border);
     border-radius: var(--radius);
     padding: 0.65rem 0.85rem;
@@ -231,7 +231,7 @@ export default defineComponent({
 
   &__param-step {
     flex: 0 0 1.5rem;
-    background: rgba(255, 255, 255, 0.04);
+    background: color-mix(in srgb, white 4%, transparent);
     border: none;
     color: var(--color-text-muted);
     font-family: var(--font-mono);
@@ -251,7 +251,7 @@ export default defineComponent({
     }
 
     &:hover {
-      background: rgba(255, 255, 255, 0.1);
+      background: color-mix(in srgb, white 10%, transparent);
       color: var(--color-text-heading);
     }
 

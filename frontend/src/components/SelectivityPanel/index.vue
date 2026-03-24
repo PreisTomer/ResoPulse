@@ -295,7 +295,7 @@ export default defineComponent({
   &__orient-row {
     @include flex-between(0.4rem);
     padding: 0.25rem 0.5rem;
-    background: rgba(255, 255, 255, 0.03);
+    background: color-mix(in srgb, white 3%, transparent);
     border: 1px solid var(--color-border);
     border-radius: var(--radius);
     cursor: default;
