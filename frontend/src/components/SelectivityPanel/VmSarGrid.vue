@@ -60,8 +60,8 @@ export default defineComponent({
     targetRatioPct(): number { return Math.min(100, this.store.targetDisruptionRatio * 100) },
     targetVmMv(): string    { return (this.store.targetVm  * 1000).toFixed(1) },
     healthyVmMv(): string   { return (this.store.healthyVm * 1000).toFixed(1) },
-    targetSarVal(): string  { return this.store.targetSAR.toFixed(1) },
-    healthySarVal(): string { return this.store.healthySAR.toFixed(1) },
+    targetSarVal(): string  { return (this.store.targetSAR  * this.store.effectiveDutyCycle).toFixed(2) },
+    healthySarVal(): string { return (this.store.healthySAR * this.store.effectiveDutyCycle).toFixed(2) },
 
     targetLysisField(): string  { return formatFieldVcm(this.store.targetLysisField) },
     healthyLysisField(): string { return formatFieldVcm(this.store.healthyLysisField) },

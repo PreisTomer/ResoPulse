@@ -258,7 +258,8 @@ export const useCellStore = defineStore('cell', {
       return pulseEnvelope(state.target, state.pulseWidthNs, this.effectiveSigmaE)
     },
 
-    /** Schwan Vm for healthy cell [V]. Pulsed mode uses E_peak (lower-bound; cancels in TI). */
+    /** Schwan Vm for healthy cell [V] = peak steady-state Vm at E_peak. Upper bound on actual Vm;
+     *  pulse envelope factor (PEF) is applied separately in the disruption ratio getters. */
     healthyVm(): number {
       const state = this as unknown as CellStoreState
       const sigma_e = this.effectiveSigmaE
@@ -266,7 +267,8 @@ export const useCellStore = defineStore('cell', {
       return computeSchwan(state.healthy, state.currentBroadcastFrequency, state.fieldIntensity, sigma_e, cosT)
     },
 
-    /** Schwan Vm for target cell [V]. Resonance mode overrides DR formula separately. */
+    /** Schwan Vm for target cell [V] = peak steady-state Vm at E_peak. Upper bound on actual Vm;
+     *  pulse envelope and resonance mode overrides are applied in targetDisruptionRatio. */
     targetVm(): number {
       const state = this as unknown as CellStoreState
       const sigma_e = this.effectiveSigmaE
@@ -493,23 +495,27 @@ export const useCellStore = defineStore('cell', {
     },
 
     /**
-     * Per-pulse energy density delivered to the medium [mJ/cm³] (= J/mL).
-     * Computed as: σ_e × E²_rms × t_p × dc  [W/m³ × s → J/m³ → mJ/cm³]
+     * Energy density deposited per unit time window [mJ/cm³].
+     * CW: energy per second = σ_e × E²_rms × 1 s  [J/m³/s] (= average power density in W/m³)
+     * Pulsed: energy per pulse = σ_e × E²_peak × t_p  [J/m³/pulse]
+     *
      * E²_rms = E²_peak × wf  (wf = 0.5 for CW sinusoidal, 1.0 for pulsed square wave).
-     * J/m³ = W/m³ × s;  1 J/m³ = 1e-3 mJ/cm³ (1 mL = 1 cm³ = 1e-6 m³; so 1 J/m³ = 1e-3 mJ/mL)
-     * This is the standard protocol dose unit published in IRE literature.
+     * J/m³ → mJ/cm³ via J_M3_TO_MJ_CM3 (1 J/m³ = 1e-3 mJ/cm³).
+     *
+     * This is the standard protocol dose unit in IRE literature.
+     * For pulsed protocols, multiply by N_pulses for cumulative dose.
      * Ref: Davalos et al. (2005) Ann. Biomed. Eng.; Edd et al. (2006) Technol. Cancer Res. Treat.
-     * CW: t_p = 1 s (per second), dc = 1. Pulsed: t_p = pulseWidthNs × NS_TO_S, dc = dutyCycle.
      */
     pulsedEnergyDensity_mJcm3(): number {
       const state = this as unknown as CellStoreState
       const E_si  = state.fieldIntensity * V_CM_TO_V_M
-      // CW sinusoidal: E²_rms = E²_peak × 0.5. Pulsed square wave: E²_rms = E²_peak (wf = 1.0).
-      const wf    = state.waveform === WAVEFORM.CW ? WF_CW : WF_PULSED
-      const tp_s  = state.waveform === WAVEFORM.CW ? 1.0 : state.pulseWidthNs * NS_TO_S
-      const dc    = state.waveform === WAVEFORM.CW ? 1.0 : state.dutyCycle
-      // P_volume = σ_e × E²_rms [W/m³]; dose per second (CW) or per duty-cycle period (pulsed)
-      const energyDensity_J_m3 = this.effectiveSigmaE * E_si ** 2 * wf * tp_s * dc
+      // CW: wf=0.5, tp_s=1s → energy/second. Pulsed: wf=1.0, tp_s=t_p → energy/pulse.
+      const wf   = state.waveform === WAVEFORM.CW ? WF_CW : WF_PULSED
+      const tp_s = state.waveform === WAVEFORM.CW ? 1.0 : state.pulseWidthNs * NS_TO_S
+      // P_volume = σ_e × E²_rms [W/m³] × time window [s] → J/m³
+      // Note: do NOT multiply by dutyCycle here — that would give σ_e × E² × t_p × dc = t_p²/T,
+      // which is neither energy-per-pulse nor average-power and has no standard physical meaning.
+      const energyDensity_J_m3 = this.effectiveSigmaE * E_si ** 2 * wf * tp_s
       return energyDensity_J_m3 * J_M3_TO_MJ_CM3
     },
 

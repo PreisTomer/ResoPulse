@@ -37,6 +37,14 @@
         </span>
       </div>
 
+      <!-- ── Small-cell selectivity disadvantage note ───────────── -->
+      <div v-if="smallCellNote" class="sel-panel__size-note" v-tip="smallCellNoteTip">
+        <span class="sel-panel__size-note-icon">{{ ICON.WARNING }}</span>
+        <span class="sel-panel__size-note-label">{{ $t('selectivity.smallCellNoteLabel') }}</span>
+        <span class="sel-panel__size-note-val">R_T/R_H = {{ smallCellRadiusRatio }}</span>
+        <span class="sel-panel__size-note-limit">TI_DC ≤ {{ smallCellTiDcLimit }}</span>
+      </div>
+
       <!-- ── Disruption progress bars ──────────────────────────── -->
       <div class="sel-panel__sep"></div>
       <DisruptionBars />
@@ -193,6 +201,42 @@ export default defineComponent({
       return 'sel-panel__ws-val--poor'
     },
 
+    /** True when target is physically smaller than healthy cell in Schwan/IRE mode.
+     *  Quasi-DC Vm scales with R, so a smaller target starts at an inherent selectivity deficit.
+     *  TI_DC_limit = (R_T × Vth_H) / (R_H × Vth_T) — if < TI_STRONG, worth flagging. */
+    smallCellNote(): boolean {
+      if (this.store.isResonanceMode) return false
+      const rT = this.store.target.radius
+      const rH = this.store.healthy.radius
+      if (rT >= rH) return false
+      const tiDc = (rT * this.store.healthy.thresholdVoltage) / (rH * this.store.target.thresholdVoltage)
+      return tiDc < THRESHOLDS.TI_STRONG
+    },
+
+    smallCellRadiusRatio(): string {
+      return (this.store.target.radius / this.store.healthy.radius).toFixed(2)
+    },
+
+    smallCellTiDcLimit(): string {
+      const rT = this.store.target.radius, rH = this.store.healthy.radius
+      const vthT = this.store.target.thresholdVoltage, vthH = this.store.healthy.thresholdVoltage
+      return ((rT * vthH) / (rH * vthT)).toFixed(2)
+    },
+
+    smallCellNoteTip(): string {
+      const rT = this.store.target.radius, rH = this.store.healthy.radius
+      const vthT = this.store.target.thresholdVoltage, vthH = this.store.healthy.thresholdVoltage
+      const tiDc = (rT * vthH) / (rH * vthT)
+      return `<strong>Size Disadvantage: Target R &lt; Healthy R</strong>\n` +
+        `At quasi-DC, Vm = 1.5·E·R·cosθ (geometric only).\n` +
+        `TI limit = (R_T/R_H) × (Vth_H/Vth_T) = ${tiDc.toFixed(2)}\n` +
+        `A smaller target cannot be selectively lysed by field strength alone\n` +
+        `if TI_limit &lt; 1.0. Frequency tuning (f ≈ fc_T) recovers partial selectivity\n` +
+        `via τ differences, but the upper bound is (R_T·τ_H)/(R_H·τ_T).\n` +
+        `Consider: different healthy reference, H-FIRE (threshold gap), or\n` +
+        `a frequency between fc_H and fc_T if τ values differ sufficiently.`
+    },
+
     tipWindowScore(): string {
       const pT = (this.store.targetLysisProbabilityRandom * 100).toFixed(0)
       const pH = (this.store.healthyLysisProbabilityRandom * 100).toFixed(0)
@@ -262,6 +306,46 @@ export default defineComponent({
     color: var(--color-text-muted);
     letter-spacing: 0.02em;
     cursor: help;
+  }
+
+  /* ── Small-cell size disadvantage note ─────────────────────── */
+  &__size-note {
+    @include flex-row(0.35rem);
+    align-items: center;
+    flex-wrap: wrap;
+    padding: 0.22rem 0.45rem;
+    border-radius: 3px;
+    background: color-mix(in srgb, var(--color-amber) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-amber) 30%, transparent);
+    margin-top: -0.1rem;
+    cursor: help;
+  }
+
+  &__size-note-icon {
+    font-size: var(--fs-xxs);
+    line-height: 1;
+    flex-shrink: 0;
+  }
+
+  &__size-note-label {
+    @include mono-upper(var(--fs-xxs));
+    color: var(--color-amber);
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  &__size-note-val {
+    font-size: var(--fs-xs);
+    font-family: var(--font-mono);
+    color: var(--color-amber);
+    opacity: var(--op-dim);
+  }
+
+  &__size-note-limit {
+    font-size: var(--fs-xs);
+    font-family: var(--font-mono);
+    color: var(--color-text-muted);
+    opacity: var(--op-muted);
   }
 
   /* ── Population window score ────────────────────────────────── */

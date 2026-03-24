@@ -55,7 +55,12 @@ export const DEFAULT_ORIENTATION_DEG = 60
 export const SWEEP_TI_CAP = 5
 
 export const CATEGORY_DEFAULTS = {
-  mammalian: { fieldVcm: 10,   freqKHz: 417,       waveform: 'pulsed' as const, dutyCycle: 1e-4, pulseWidthNs: 100000, medium: 'saline' as const },
-  bacteria:  { fieldVcm: 1000, freqKHz: 500000,    waveform: 'pulsed' as const, dutyCycle: 1e-6, pulseWidthNs: 10,     medium: 'saline' as const },
-  virus:     { fieldVcm: 400,  freqKHz: 12000000,  waveform: 'pulsed' as const, dutyCycle: 1e-6, pulseWidthNs: 10,     medium: 'saline' as const },
+  mammalian: { fieldVcm: 10,   freqKHz: 417,      waveform: 'pulsed' as const, dutyCycle: 1e-4, pulseWidthNs: 100000, medium: 'saline' as const },
+  bacteria:  { fieldVcm: 1000, freqKHz: 500000,   waveform: 'pulsed' as const, dutyCycle: 1e-6, pulseWidthNs: 10,     medium: 'saline' as const },
+  // freqKHz is a last-resort fallback only. applyTargetDefaults() and sanitizeCategoryParams()
+  // always override this with preset.resonantFreqGHz × 1e6 when the preset carries a resonant
+  // frequency (all current virus presets do). If a future virus preset omits resonantFreqGHz,
+  // the fallback of 12 GHz (= 12,000,000 kHz, Influenza f_res) puts the slider in the right
+  // frequency decade rather than defaulting to a mammalian IRE value.
+  virus:     { fieldVcm: 400,  freqKHz: 12000000, waveform: 'pulsed' as const, dutyCycle: 1e-6, pulseWidthNs: 10,     medium: 'saline' as const },
 } as const

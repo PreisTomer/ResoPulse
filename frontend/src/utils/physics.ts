@@ -40,8 +40,14 @@ export function computeTau(cell: CellConfig, sigma_e: number): number {
 }
 
 /** Vm = 1.5·E·R·cosθ / √(1+(ωτ)²)  [V]
- *  cosTheta = |cos θ| field-cell axis alignment; cancels in Vm_T/Vm_H ratio.
- *  Pulsed mode uses E_peak directly (H-FIRE convention) - Vm is a lower-bound estimate. */
+ *  Returns the peak steady-state transmembrane potential assuming continuous CW excitation
+ *  at E_peak. This is an UPPER bound on achievable Vm for any pulsed waveform:
+ *    - Short pulses (t_p ≪ τ): actual Vm ≈ Vm × PEF where PEF = 1−exp(−t_p/τ) < 1.
+ *      Apply computePulseStepResponse() to the disruption ratio, not to Vm directly.
+ *    - H-FIRE bipolar: bipolar charge cancellation reduces effective membrane stress per
+ *      half-cycle. Modelled by raising the disruption threshold ×1.75 in DR denominator
+ *      (H_FIRE_THRESHOLD_MULTIPLIER), NOT by reducing Vm here.
+ *  cosTheta = |cos θ| field-cell axis alignment; cancels in Vm_T/Vm_H selectivity ratio. */
 export function computeSchwan(
   cell: CellConfig,
   freqKHz: number,

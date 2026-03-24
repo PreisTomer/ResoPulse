@@ -28,8 +28,8 @@
       </div>
     </div>
 
-    <!-- Row 8: Pulses to Lysis N (pulsed only) - target cell lysis timing only -->
-    <div v-if="store.waveform === WAVEFORM.PULSED" class="field-panel__row field-panel__row--compact-readout">
+    <!-- Row 8: Pulses to Lysis N (pulsed/H-FIRE only) - target cell lysis timing only -->
+    <div v-if="store.waveform === WAVEFORM.PULSED || store.waveform === WAVEFORM.H_FIRE" class="field-panel__row field-panel__row--compact-readout">
       <div class="field-panel__row-header">
         <span class="field-panel__row-label" v-tip="tipLysisNFull">{{ $t('slider.pulsesN') }} <span class="field-panel__scope-tag field-panel__scope-tag--target">{{ CELL_LABEL.TARGET }}</span></span>
         <div class="field-panel__readout" v-tip="tipLysisN">
