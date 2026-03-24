@@ -45,11 +45,17 @@ export function tipWaveform(currentField: number, maxSteadyTemp: number): string
   Thermal: effective duty cycle = 1.0 (full continuous heating)
   Use case: continuous RF sinusoidal exposure (e.g. unmodulated carrier)
 
-<span class="tip-val">Pulsed</span> , bipolar square-wave bursts at carrier frequency (H-FIRE/IRE regime)
-  SAR = σ_i·α²·E²/ρ  [waveformFactor = 1.0; bipolar square wave: E²_rms = E²_peak during on-time]
-  Thermal load = SAR_peak × duty cycle (use low dc to limit heating)
-  Vm: Schwan at carrier freq, standard H-FIRE first-order approx
-    True square-wave fundamental Vm ≈ 4/π × shown (+27%); cancels in selectivity ratios${cwWarn}`
+<span class="tip-val">Pulsed (Monopolar IRE)</span> , unipolar square pulses at set duty cycle
+  SAR = σ_i·α²·E²/ρ  [waveformFactor = 1.0; E²_rms = E²_peak during on-time]
+  Thermal load = SAR_peak × duty cycle; pulse-envelope factor applies (PEF = 1−exp(−tp/τ))
+  Lysis threshold: nominal Vth
+  True square-wave fundamental Vm ≈ 4/π × shown (+27%); cancels in selectivity ratios
+
+<span class="tip-val">H-FIRE (Bipolar burst IRE)</span> , bipolar square-wave bursts at intra-burst carrier frequency
+  SAR = σ_i·α²·E²/ρ  [same waveformFactor = 1.0 as monopolar; bipolar E²_rms = E²_peak during on-time]
+  Polarity reversals partially discharge membrane capacitance between half-cycles
+  Effective lysis threshold raised ×1.75 vs. monopolar (Sano et al. 2015; Arena et al. 2011)
+  Benefit: carrier freq &gt;1 kHz is below neuromuscular activation threshold${cwWarn}`
 }
 
 export function tipDutyCycle(opts: {

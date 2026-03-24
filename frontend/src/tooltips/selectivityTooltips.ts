@@ -71,7 +71,7 @@ For adeno/hepatocyte at DC: TI = (15µm×1.1V)/(10µm×0.70V) = <span class="tip
 
 <strong>Raw Vm selectivity</strong> = Vm_T / Vm_H = R_T/R_H at quasi-DC
 Current: <span class="tip-val">×${vmStr}</span>  (cancer/normal DC limit: 1.5×)
-TI incorporates lysis thresholds, more clinically relevant than Vm ratio alone.`
+TI incorporates lysis thresholds, more predictive for protocol selectivity than Vm ratio alone.`
 }
 
 export function tipOptimal(params: {

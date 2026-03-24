@@ -104,7 +104,7 @@ export default defineComponent({
         }
       }
       if (ti > 0 && ti < 0.85) {
-        return `${ICON.WARNING} TI = ${ti.toFixed(2)}×, selectivity reversed at DC (tau_T < tau_H) · Short pulses may improve selectivity`
+        return `${ICON.WARNING} TI = ${ti.toFixed(2)}×, healthy cell DR exceeds target at current settings · Adjust frequency or field to find a selective window`
       }
       return null
     },

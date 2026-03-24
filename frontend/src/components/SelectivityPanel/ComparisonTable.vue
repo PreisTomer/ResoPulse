@@ -35,7 +35,8 @@ import { DEFAULT_CAPSID_Q, THRESHOLDS, NEAR_ZERO_DR } from '@/constants/physics'
 import { CELL_CATEGORY, CELL_GROUP } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'
-import { computeSchwan, computeResonantDisruption, safeRatio } from '@/utils/physics'
+import { computeSchwan, computeResonantDisruption, safeRatio, computeTau, computePulseStepResponse } from '@/utils/physics'
+import { WAVEFORM } from '@/constants/strings'
 
 export default defineComponent({
   setup() {
@@ -55,15 +56,19 @@ export default defineComponent({
     },
 
     presetComparison() {
-      const sigma_e = this.store.effectiveSigmaE
-      const freq    = this.store.currentBroadcastFrequency
-      const field   = this.store.fieldIntensity
+      const sigma_e  = this.store.effectiveSigmaE
+      const freq     = this.store.currentBroadcastFrequency
+      const field    = this.store.fieldIntensity
+      const pwNs     = this.store.pulseWidthNs
+      const isPulsed = this.store.waveform === WAVEFORM.PULSED || this.store.waveform === WAVEFORM.H_FIRE
 
       const cat = this.store.targetCellCategory
       const relevantGroup = cat === CELL_CATEGORY.MAMMALIAN ? CELL_GROUP.CANCER : cat
 
-      const hVm = computeSchwan(this.store.healthy, freq, field, sigma_e)
-      const hDr = hVm / this.store.healthy.thresholdVoltage
+      // PEF for the healthy reference cell (frequency-independent, computed once)
+      const pefH = isPulsed ? computePulseStepResponse(computeTau(this.store.healthy, sigma_e), pwNs) : 1.0
+      const hVm  = computeSchwan(this.store.healthy, freq, field, sigma_e)
+      const hDr  = (hVm * pefH) / this.store.healthy.thresholdVoltage
 
       return CELL_PRESETS
         .filter((p) => p.group === relevantGroup)
@@ -73,6 +78,7 @@ export default defineComponent({
           let sel: number, tVmMv: string
 
           if (hasRes) {
+            // Resonance targets: acoustic mechanism, PEF does not apply
             const ratio = computeResonantDisruption(
               pr.resonantFreqGHz!,
               pr.capsidQ ?? DEFAULT_CAPSID_Q,
@@ -83,8 +89,9 @@ export default defineComponent({
             sel = safeRatio(ratio, hDr, THRESHOLDS.TI_DISPLAY_CAP, NEAR_ZERO_DR)
             tVmMv = `D:${(ratio * 100).toFixed(0)}%`
           } else {
-            const tVm = computeSchwan(p, freq, field, sigma_e)
-            const tDr = tVm / p.thresholdVoltage
+            const pefT = isPulsed ? computePulseStepResponse(computeTau(p, sigma_e), pwNs) : 1.0
+            const tVm  = computeSchwan(p, freq, field, sigma_e)
+            const tDr  = (tVm * pefT) / p.thresholdVoltage
             sel = hDr > NEAR_ZERO_DR ? Math.min(THRESHOLDS.TI_DISPLAY_CAP, tDr / hDr) : 0
             tVmMv = (tVm * 1000).toFixed(1)
           }
