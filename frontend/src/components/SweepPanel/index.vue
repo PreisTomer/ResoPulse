@@ -60,6 +60,7 @@ import { WAVEFORM, CELL_CATEGORY } from '@/constants/strings'
 import {
   THRESHOLDS, DEFAULT_CAPSID_Q,
   NEWTON_COOLING_LAMBDA, PENNES_BLOOD_COEFF, WF_CW, WF_PULSED, BODY_TEMP_C,
+  H_FIRE_THRESHOLD_MULTIPLIER,
 } from '@/constants/physics'
 import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'
@@ -152,8 +153,10 @@ export default defineComponent({
 
       const tauH = computeTau(healthy, sigma_e)
       const tauT = computeTau(target,  sigma_e)
-      const pefH = waveform === WAVEFORM.PULSED ? computePulseStepResponse(tauH, pwNs) : 1.0
-      const pefT = waveform === WAVEFORM.PULSED && !this.isResonanceTarget
+      const isPulsed   = waveform === WAVEFORM.PULSED || waveform === WAVEFORM.H_FIRE
+      const hfireMult  = waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
+      const pefH = isPulsed ? computePulseStepResponse(tauH, pwNs) : 1.0
+      const pefT = isPulsed && !this.isResonanceTarget
         ? computePulseStepResponse(tauT, pwNs)
         : 1.0
 
@@ -166,18 +169,18 @@ export default defineComponent({
 
         if (this.sweepParam === 'field') {
           const vmH = computeSchwan(healthy, freqKHz, x, sigma_e, cosTheta)
-          drH = (vmH * pefH) / healthy.thresholdVoltage
+          drH = (vmH * pefH) / (healthy.thresholdVoltage * hfireMult)
           drT = this.isResonanceTarget
             ? computeResonantDisruption(t.resonantFreqGHz!, t.capsidQ ?? DEFAULT_CAPSID_Q, t.resonantThresholdVcm!, freqKHz * 1e3, x)
-            : (computeSchwan(target, freqKHz, x, sigma_e, cosTheta) * pefT) / target.thresholdVoltage
+            : (computeSchwan(target, freqKHz, x, sigma_e, cosTheta) * pefT) / (target.thresholdVoltage * hfireMult)
           tH = computeTemp(healthy, x, sigma_e, wf, dc, perfRate)
           tT = computeTemp(target,  x, sigma_e, wf, dc, perfRate)
         } else {
           const vmH = computeSchwan(healthy, x, E, sigma_e, cosTheta)
-          drH = (vmH * pefH) / healthy.thresholdVoltage
+          drH = (vmH * pefH) / (healthy.thresholdVoltage * hfireMult)
           drT = this.isResonanceTarget
             ? computeResonantDisruption(t.resonantFreqGHz!, t.capsidQ ?? DEFAULT_CAPSID_Q, t.resonantThresholdVcm!, x * 1e3, E)
-            : (computeSchwan(target, x, E, sigma_e, cosTheta) * pefT) / target.thresholdVoltage
+            : (computeSchwan(target, x, E, sigma_e, cosTheta) * pefT) / (target.thresholdVoltage * hfireMult)
           tH = computeTemp(healthy, E, sigma_e, wf, dc, perfRate)
           tT = computeTemp(target,  E, sigma_e, wf, dc, perfRate)
         }

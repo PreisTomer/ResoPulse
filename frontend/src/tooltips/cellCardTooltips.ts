@@ -24,7 +24,7 @@ export function tipVm(opts: {
   const { vmDisplay, disruptionRatio, thresholdVoltage, waveform } = opts
   const thr = (thresholdVoltage * 1000).toFixed(0)
   const pct = (disruptionRatio * 100).toFixed(0)
-  const pulsedNote = waveform === WAVEFORM.PULSED
+  const pulsedNote = (waveform === WAVEFORM.PULSED || waveform === WAVEFORM.H_FIRE)
     ? '\n<span class="tip-note">Pulsed mode (H-FIRE/IRE): Vm uses E_peak as standard approx.\nTrue square-wave fundamental ≈ 4/π × shown (+27%). Cancels in selectivity ratio.</span>'
     : ''
   return `<strong>Transmembrane Potential (Vm)</strong>
@@ -188,7 +188,7 @@ export function tipDisruption(opts: {
   const isResonance = cellType === CELL_TYPE.TARGET && isResonanceMode
   const tau_ns = (computeTau(cell, effectiveSigmaE) * 1e9).toFixed(1)
 
-  const pefNote = (waveform === WAVEFORM.PULSED && pulseEnvelopeFactor < 0.99 && !isResonance)
+  const pefNote = ((waveform === WAVEFORM.PULSED || waveform === WAVEFORM.H_FIRE) && pulseEnvelopeFactor < 0.99 && !isResonance)
     ? `\n<span class="tip-note">Pulse factor: ${(pulseEnvelopeFactor * 100).toFixed(1)}% (t_p = ${pulseWidthNs} ns vs τ = ${tau_ns} ns).\nMembrane charges to ${(pulseEnvelopeFactor * 100).toFixed(1)}% of Schwan Vm per pulse.\nEffective threshold is ${(1 / pulseEnvelopeFactor).toFixed(1)}× higher at this pulse width.\nRef: Weaver &amp; Chizmadzhev (1996).</span>`
     : ''
 

@@ -63,7 +63,7 @@ import { useCellStore } from '@/stores/cellStore'
 import AccordionPanel from '@/components/AccordionPanel.vue'
 import { computeSchwan, computeTau, computePulseStepResponse, computeResonantDisruption } from '@/utils/physics'
 import { WAVEFORM, CELL_CATEGORY } from '@/constants/strings'
-import { THRESHOLDS, DEFAULT_CAPSID_Q } from '@/constants/physics'
+import { THRESHOLDS, DEFAULT_CAPSID_Q, H_FIRE_THRESHOLD_MULTIPLIER } from '@/constants/physics'
 import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'
 import type { CellConfig } from '@/types/cell'
@@ -272,12 +272,12 @@ export default defineComponent({
         }
 
         // ── Schwan mode (all mammalian; bacteria / virus in IRE / CW mode) ──
-        const tau = computeTau(cell, sigma_e)
-        const pef = waveform === WAVEFORM.PULSED
-          ? computePulseStepResponse(tau, pwNs)
-          : 1.0
-        const vm  = computeSchwan(cell, freqKHz, E, sigma_e, cosTheta)
-        return (vm * pef) / vTh
+        const tau        = computeTau(cell, sigma_e)
+        const isPulsed   = waveform === WAVEFORM.PULSED || waveform === WAVEFORM.H_FIRE
+        const pef        = isPulsed ? computePulseStepResponse(tau, pwNs) : 1.0
+        const hfireMult  = waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
+        const vm         = computeSchwan(cell, freqKHz, E, sigma_e, cosTheta)
+        return (vm * pef) / (vTh * hfireMult)
       }
 
       this.targetDRs  = Array.from({ length: this.nCells }, () => sampleDR(target,  uncT, true))
@@ -290,7 +290,7 @@ export default defineComponent({
       }
       const n       = drs.length
       const nLysed  = drs.filter(d => d >= THRESHOLDS.DISRUPTION_WARN).length
-      const nRevEp  = drs.filter(d => d >= THRESHOLDS.HEALTHY_APPROACHING && d < 1.0).length
+      const nRevEp  = drs.filter(d => d >= THRESHOLDS.HEALTHY_APPROACHING && d < THRESHOLDS.DISRUPTION_WARN).length
       const nNour   = drs.filter(d => d >= THRESHOLDS.VIBRATING_MIN && d < THRESHOLDS.HEALTHY_APPROACHING).length
       const nStable = drs.filter(d => d < THRESHOLDS.VIBRATING_MIN).length
       const mean    = drs.reduce((s, d) => s + d, 0) / n

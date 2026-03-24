@@ -5,7 +5,23 @@
       "Bash(cd e:/code/ResoPulse/frontend && npm run build)",
       "Bash(cd e:/code/ResoPulse/frontend && npm run type-check)",
       "Bash(npm run:*)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(winget search:*)",
+      "Bash(winget install:*)",
+      "Bash(cmd /c \"where python3.12\")",
+      "Bash(cmd /c \"dir /b \"\"C:\\\\Users\\\\Tomer\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python312\\\\python.exe\"\" 2>&1\")",
+      "Bash(cmd /c \"\"\"C:\\\\Users\\\\Tomer\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python312\\\\python.exe\"\" --version\")",
+      "Bash(\"/c/Users/Tomer/AppData/Local/Programs/Python/Python312/python.exe\" --version)",
+      "Bash(py -3.12 --version)",
+      "Bash(py -3.12 -m pip install uv)",
+      "Bash(py -3.12 -m uv --version)",
+      "Bash(\"C:/Users/Tomer/AppData/Local/Programs/Python/Python312/Scripts/uv.exe\" sync:*)",
+      "Bash(\"C:/Users/Tomer/AppData/Local/Programs/Python/Python312/Scripts/uv.exe\" run:*)",
+      "Bash(\"C:/Users/Tomer/AppData/Local/Programs/Python/Python312/Scripts/uv.exe\" run python -c \":*)",
+      "Bash(xargs grep:*)",
+      "Bash(find e:/code/BioResonance/frontend/src -name LoadMonitor* -o -name ImpedancePanel* -o -name CuvettePanel*)",
+      "Bash(grep -r \"InstrumentView\\\\|instrument\" e:/code/BioResonance/frontend/src --include=*.ts -l)",
+      "Bash(grep -rl \"modal\\\\|Modal\\\\|dialog\\\\|Dialog\" e:/code/BioResonance/frontend/src --include=*.vue --include=*.ts)"
     ]
   }
 }

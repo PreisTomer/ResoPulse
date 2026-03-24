@@ -81,6 +81,13 @@
         <p class="hw-input__guide-note" v-html="$t('instrument.hardware.tipSocket').replace(/\n/g, '<br>')"></p>
       </div>
     </details>
+
+    <!-- Bridge setup guide button -->
+    <button class="hw-input__guide-btn" @click="showSetupModal = true" type="button">
+      {{ ICON.PLUG }} {{ $t('instrument.bridgeModal.btnOpen') }}
+    </button>
+
+    <BridgeSetupModal :visible="showSetupModal" @close="showSetupModal = false" />
   </div>
 </template>
 
@@ -90,6 +97,7 @@ import { useImpedanceStore } from '@/stores/impedanceStore'
 import { computeSigmaEFromImpedance } from '@/utils/impedance'
 import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'
+import BridgeSetupModal from '@/components/BridgeSetupModal.vue'
 
 const SCHEMA_EXAMPLE = `{
   "zReal":       245.3,
@@ -101,8 +109,12 @@ const SCHEMA_EXAMPLE = `{
 
 export default defineComponent({
   name: 'HardwareInput',
+  components: { BridgeSetupModal },
   setup() {
     return { store: useImpedanceStore(), ICON, UNIT, schemaExample: SCHEMA_EXAMPLE }
+  },
+  data() {
+    return { showSetupModal: false }
   },
   computed: {
     hasReading(): boolean {
@@ -295,6 +307,25 @@ export default defineComponent({
     overflow-x: auto;
     line-height: 1.6;
     white-space: pre;
+  }
+
+  &__guide-btn {
+    @include flex-row(0.4rem);
+    width: 100%;
+    justify-content: center;
+    background: color-mix(in srgb, var(--color-primary) 6%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-primary) 25%, transparent);
+    border-radius: var(--radius);
+    color: var(--color-primary);
+    font-size: var(--fs-sm);
+    padding: 0.5rem 0.75rem;
+    cursor: pointer;
+    transition: background var(--tr-fast), border-color var(--tr-fast);
+
+    &:hover {
+      background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+      border-color: color-mix(in srgb, var(--color-primary) 40%, transparent);
+    }
   }
 }
 </style>

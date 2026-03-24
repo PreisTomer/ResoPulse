@@ -9,16 +9,17 @@
     "hSafe": "H-Safe",
     "noGhzRes": "No GHz res.",
     "sigmaIRange": "σ_i range:",
+    "smallCellNoteLabel": "Size disadvantage",
 
     "tipEthr": "Target disruption threshold",
     "tipEthrBody": "Resonant field at which capsid/cell-wall disruption triggers.\nDisruption ratio = (E / E_thr) × L(f, f_res, Q) ≥ 1.0 → disruption",
     "tipNoGhzRes": "Healthy cell: no GHz resonance",
     "tipNoGhzResBody": "Mammalian cells lack rigid-shell resonance, Schwan Vm → 0\nat GHz (ωτ ≫ 1). Healthy tissue is unperturbed.",
 
-    "tipVmSarResonance": "<strong>Disruption &amp; Thermal, Resonance Mode</strong>\nT-Disr: capsid disruption % = (E/E_thr) × L(f,f_res,Q)\nH-Safe: healthy Vm → 0 at GHz, unperturbed\nSAR = σ_i·α²·E²·wf / ρ, valid in all modes\nUse duty cycle to limit thermal load.",
+    "tipVmSarResonance": "<strong>Disruption &amp; Thermal, Resonance Mode</strong>\nT-Disr: capsid disruption % = (E/E_thr) × L(f,f_res,Q)\nH-Safe: healthy Vm → 0 at GHz, unperturbed\nSAR_avg = σ_i·α²·E²·wf·dc / ρ (time-averaged, valid in all modes)\nUse duty cycle to limit thermal load.",
     "energyDoseLabel": "E-Dose",
-    "tipEnergyDose": "<strong>Pulse Energy Dose [mJ/cm³ = J/mL]</strong>\nEnergy delivered to the medium per second (CW) or per duty-cycle period (pulsed):\nDose = σ_e × E²_rms × t_p × dc  [J/m³ → mJ/cm³]\n  E²_rms = E²_peak × wf  (wf = 0.5 for CW sinusoidal · wf = 1.0 for pulsed square wave)\nThis is the standard protocol dose unit in IRE literature.\n\nFor CW: dose per second (continuous). For pulsed: energy per repetition period.\nAt high doses (&gt;100 mJ/cm³), electrolytic bubble formation and medium heating\nbecome significant experimental confounders.\n\nRef: Davalos et al. (2005) Ann. Biomed. Eng. 33:223;\nEdd et al. (2006) Technol. Cancer Res. Treat. 5:279.",
-    "tipVmSarSchwan": "<strong>Transmembrane Potential &amp; SAR</strong>\nVm = 1.5·E·R / √(1+(ωτ)²)\n  τ = R·Cm·(2σ_e+σ_i)/(2σ_e·σ_i)\nSAR = σ_i·α²·E²·wf / ρ\n  α = 3σ_e/(2σ_e+σ_i), internal field factor\n  wf = 0.5 (CW) or 1.0 (pulsed)",
+    "tipEnergyDose": "<strong>Pulse Energy Dose [mJ/cm³ = J/mL]</strong>\nCW: energy delivered per second = σ_e × E²_rms × 1 s\nPulsed: energy delivered per pulse = σ_e × E²_peak × t_p\n  E²_rms = E²_peak × wf  (wf = 0.5 for CW sinusoidal · wf = 1.0 for pulsed square wave)\nThis is the standard protocol dose unit in IRE literature.\n\nFor cumulative pulsed dose: multiply by N_pulses.\nAt high doses (&gt;100 mJ/cm³), electrolytic bubble formation and medium heating\nbecome significant experimental confounders.\n\nRef: Davalos et al. (2005) Ann. Biomed. Eng. 33:223;\nEdd et al. (2006) Technol. Cancer Res. Treat. 5:279.",
+    "tipVmSarSchwan": "<strong>Transmembrane Potential &amp; Time-Averaged SAR</strong>\nVm = 1.5·E·R / √(1+(ωτ)²)\n  τ = R·Cm·(2σ_e+σ_i)/(2σ_e·σ_i)\nSAR_avg = σ_i·α²·E²·wf·dc / ρ\n  α = 3σ_e/(2σ_e+σ_i), internal field factor\n  wf = 0.5 (CW) or 1.0 (pulsed) · dc = duty cycle\nTime-averaged SAR drives steady-state heating; T_ss shown in duty cycle control.",
 
     "tipTargetLysisField": "<strong>Target Lysis Field</strong>\nMinimum E to reach lysis threshold at current frequency.\nE_lysis = Vm_thr · √(1+(ωτ)²) / (1.5·R)",
     "tipHealthyLysisField": "<strong>Healthy Lysis Field</strong>\nMinimum E to reach lysis threshold at current frequency.\nKeep operating field below this for selective therapy.",
