@@ -68,7 +68,7 @@
     "switchToResonanceBtn": "→ Switch to Resonance Mode",
 
     "windowScoreLabel": "Pop. Window Score",
-    "tipWindowScore": "<strong>Population Treatment Window Score</strong>\nWS = P(target lysis) × (1 - P(healthy lysis))\n  WS = {score}%  (P_T = {pT}%, P_H = {pH}%)\n\nWS = 100%: all target destroyed, zero healthy collateral (ideal)\nWS = 0%: no target lysis, or complete healthy destruction (unusable)\n≥50%: therapeutically useful window\n20-50%: marginal window\n<20%: poor selectivity at current settings\n\nBased on random-orientation suspension probability model.",
+    "tipWindowScore": "<strong>Population Window Score</strong>\nWS = P(target lysis) × (1 - P(healthy lysis))\n  WS = {score}%  (P_T = {pT}%, P_H = {pH}%)\n\nWS = 100%: all target destroyed, zero healthy collateral (ideal)\nWS = 0%: no target lysis, or complete healthy destruction (unusable)\n≥50%: effective protocol window\n20-50%: marginal window\n<20%: poor selectivity at current settings\n\nBased on random-orientation suspension probability model.",
     "orientFracLabel": "P(lysis) orient.",
     "popDistLabel": "P(lysis) + size dist.",
     "tipPopDist": "<strong>Population Lysis Fraction with Size Distribution</strong>\\nIntegrates random orientation (cosθ) AND log-normal cell size distribution.\\nCV = σ_R/R_mean: mammalian ~25%, bacteria ~22%, virus ~8%.\\nFor each sub-population of radius r: DR(r) = DR_nom × (r/R),\\nthen P(lysis&#124;r) = max(0, 1 − 1/DR(r)).\\nP_pop = ∫ P(lysis&#124;r) × f_lognormal(r) dr  (60-pt numerical integration)\\nRef: Tzur et al. (2009) Science 325:167.\\nMore realistic than orientation-only for heterogeneous cell suspensions.",

@@ -230,7 +230,7 @@
       "drApproachingState": "Approaching",
       "drApproachingDesc": "Membrane stress onset, ion channel perturbation; pore-free but biologically active. Viable membrane",
       "drRevEpState": "Rev-EP",
-      "drRevEpStateTitle": "Reversible electroporation: transient aqueous pores form and reseal within ms-s. Sub-lethal; exploited for drug/gene delivery in clinical EP protocols (e.g., electrochemotherapy)",
+      "drRevEpStateTitle": "Reversible electroporation: transient aqueous pores form and reseal within ms-s. Sub-lethal; exploited for drug/gene delivery in EP protocols (e.g., electrochemotherapy)",
       "drRevEpDesc": "Reversible electroporation: pores open &amp; reseal; drug/gene delivery window",
       "drVibratingState": "Vibrating / Armed",
       "drVibratingDesc": "Lysis countdown armed (target cell only); irreversible pore accumulation begins",
