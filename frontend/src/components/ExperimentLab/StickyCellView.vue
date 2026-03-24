@@ -32,6 +32,7 @@
             :description="cell.description"
             :cell-data="cell.cellData"
             :compact="true"
+            @full-reset="$emit('full-reset', $event)"
           />
         </div>
       </div>
@@ -48,7 +49,7 @@ export default defineComponent({
 
   components: { CellCard },
 
-  emits: ['scroll-to-cells'],
+  emits: ['scroll-to-cells', 'full-reset'],
 
   props: {
     cells: { type: Array as PropType<any[]>, required: true },

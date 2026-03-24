@@ -77,6 +77,11 @@ function show(content: string, e: MouseEvent) {
   positionTip(el, e)
 }
 
+export function hideTip() {
+  if (showTimer) { clearTimeout(showTimer); showTimer = null }
+  ensureTip().classList.remove('br-tip--on')
+}
+
 function hide() {
   ensureTip().classList.remove('br-tip--on')
 }
