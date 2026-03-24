@@ -9,7 +9,7 @@ import { MEDIA } from '@/constants/media'
 import type { CellConfig, CellState } from '@/types/cell'
 import type { MediumKey } from '@/types/media'
 import { computeSchwan, computeSAR, computeFc, computeTau, computeResonantDisruption, computeNuclearVm, computePulseStepResponse, computeSkinDepthMm, computeDepCmReal, computeDepCrossoverKHz, computeDepSecondCrossoverKHz, computePopulationLysisFraction, safeRatio } from '@/utils/physics'
-import { CELL_CATEGORY, CHART_MODE, WAVEFORM, CELL_TYPE, FREQ_REGIME, DEFAULT_SESSION_NAME } from '@/constants/strings'
+import { CELL_CATEGORY, CELL_STATE, CHART_MODE, WAVEFORM, CELL_TYPE, FREQ_REGIME, DEFAULT_SESSION_NAME } from '@/constants/strings'
 import { DEFAULT_LYSIS_N_PULSES, DEFAULT_ORIENTATION_DEG } from '@/constants/experimentDefaults'
 import { MEDIUM_SPECIFIC_HEAT_J_KG_K } from '@/constants/cuvette'
 import {
@@ -849,8 +849,13 @@ export const useCellStore = defineStore('cell', {
     resetCell(cellType: 'healthy' | 'target') {
       const defaultCfg = cellType === CELL_TYPE.HEALTHY ? cellConfigs[0] : cellConfigs[1]
       this[cellType] = cloneDeep(defaultCfg) as CellConfig
-      if (cellType === CELL_TYPE.HEALTHY) this.healthyTemp = BODY_TEMP_C
-      else this.targetTemp = BODY_TEMP_C
+      if (cellType === CELL_TYPE.HEALTHY) {
+        this.healthyTemp = BODY_TEMP_C
+        this.healthyCellState = CELL_STATE.STABLE
+      } else {
+        this.targetTemp = BODY_TEMP_C
+        this.targetCellState = CELL_STATE.STABLE
+      }
       this.resetCounter++
     },
 
@@ -860,8 +865,13 @@ export const useCellStore = defineStore('cell', {
       const p = preset as CellConfig & { notes?: string }
       if (!cfg.description && p.notes) cfg.description = p.notes
       this[cellType] = cfg
-      if (cellType === CELL_TYPE.HEALTHY) this.healthyTemp = BODY_TEMP_C
-      else this.targetTemp = BODY_TEMP_C
+      if (cellType === CELL_TYPE.HEALTHY) {
+        this.healthyTemp = BODY_TEMP_C
+        this.healthyCellState = CELL_STATE.STABLE
+      } else {
+        this.targetTemp = BODY_TEMP_C
+        this.targetCellState = CELL_STATE.STABLE
+      }
       this.resetCounter++  // signals CellCard to reset visual state
     },
 
