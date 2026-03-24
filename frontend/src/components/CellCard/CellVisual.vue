@@ -156,8 +156,8 @@
       <span class="cell-visual__destroyed-text">{{ thermalLysis ? $t('cells.states.thermalLysis') : $t('cells.states.membraneLysed') }}</span>
       <span v-if="thermalLysis" class="cell-visual__destroyed-sub">{{ $t('cells.states.vaporized') }}</span>
       <div class="cell-visual__reset-row">
-        <button class="cell-visual__lysis-btn" v-tip="$t('cells.states.tipResetCell')" @click="resetToStable">{{ $t('cells.states.resetCell') }}</button>
-        <button class="cell-visual__lysis-btn cell-visual__lysis-btn--full" v-tip="$t('cells.states.tipResetCellFull')" @click="resetToSafeDefaults">{{ $t('cells.states.resetCellFull') }}</button>
+        <button class="cell-visual__lysis-btn" v-tip="$t('cells.states.tipResetCell')" @click.stop="resetToStable">{{ $t('cells.states.resetCell') }}</button>
+        <button class="cell-visual__lysis-btn cell-visual__lysis-btn--full" v-tip="$t('cells.states.tipResetCellFull')" @click.stop="resetToSafeDefaults">{{ $t('cells.states.resetCellFull') }}</button>
       </div>
     </div>
 
@@ -187,6 +187,7 @@ import { CELL_STATE, CELL_TYPE, CELL_CATEGORY } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'
 import { formatLysisTimeLocal, tipNuclearBar as tipNuclearBarFn, tipDep as tipDepFn, tipDisruption as tipDisruptionFn, tipVm as tipVmFn, tipAcousticVm as tipAcousticVmFn, tipTemp as tipTempFn, tipState as tipStateFn } from '@/tooltips/cellCardTooltips'
+import { hideTip } from '@/directives/vTooltip'
 import BiostimPanel from './BiostimPanel.vue'
 
 export default defineComponent({
@@ -435,7 +436,6 @@ export default defineComponent({
         this.thermalLysis = false
         this.$emit('thermal-lysis', false)
       }
-      if (this.cellState === CELL_STATE.STABLE) return
       this.cellState     = CELL_STATE.STABLE
       this.liveAmplitude = this.cellData?.amplitude ?? 0.8
       this.helixTimer?.stop()
@@ -631,6 +631,7 @@ export default defineComponent({
     /** Full reset: restore cell biology AND signal the parent to apply safe field defaults.
      *  Use this when you want both cells to return to a genuinely stable state. */
     resetToSafeDefaults() {
+      hideTip()
       const cell   = this.type === CELL_TYPE.HEALTHY ? this.store.healthy : this.store.target
       const preset = CELL_PRESETS.find(p => p.presetId === cell.id)
       if (preset) this.store.loadPreset(this.type, preset)
