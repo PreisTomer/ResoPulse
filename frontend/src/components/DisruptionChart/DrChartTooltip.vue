@@ -32,7 +32,7 @@ export default defineComponent({
 .dr-tooltip {
   position: absolute;
   pointer-events: none;
-  background: rgba(10, 15, 30, 0.92);
+  background: color-mix(in srgb, var(--color-bg) 92%, transparent);
   border: 1px solid var(--color-border);
   border-radius: 4px;
   padding: 0.3rem 0.5rem;

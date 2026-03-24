@@ -81,9 +81,9 @@ export default defineComponent({
     width:         14px;
     height:        14px;
     border-radius: 50%;
-    border:        1px solid rgba(136,153,170,0.45);
+    border:        1px solid color-mix(in srgb, var(--color-text-muted) 45%, transparent);
     background:    transparent;
-    color:         rgba(136,153,170,0.75);
+    color:         color-mix(in srgb, var(--color-text-muted) 75%, transparent);
     font-size:     0.6rem;
     font-weight:   700;
     cursor:        pointer;

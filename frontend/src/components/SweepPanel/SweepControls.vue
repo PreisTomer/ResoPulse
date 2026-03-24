@@ -116,7 +116,7 @@ export default defineComponent({
     }
 
     &:hover:not(&--active) {
-      border-color: rgba(255, 255, 255, 0.2);
+      border-color: color-mix(in srgb, white 20%, transparent);
       color: var(--color-text);
     }
   }

@@ -120,7 +120,7 @@ export default defineComponent({
   &__chip {
     font-family: var(--font-mono);
     font-size: var(--fs-xs);
-    color: rgba(255, 255, 255, 0.65);
+    color: color-mix(in srgb, white 65%, transparent);
     background: var(--color-purple-dim);
     border: 1px solid color-mix(in srgb, var(--color-purple) 22%, transparent);
     border-radius: 3px;
@@ -182,7 +182,7 @@ export default defineComponent({
     &:hover {
       color: var(--color-text-heading);
       border-color: var(--color-border);
-      background: rgba(255, 255, 255, 0.06);
+      background: color-mix(in srgb, white 6%, transparent);
     }
   }
 }

@@ -46,8 +46,8 @@ export default defineComponent({
 
   &--default {
     color: var(--color-text);
-    border-color: rgba(255, 255, 255, 0.2);
-    background: rgba(255, 255, 255, 0.04);
+    border-color: color-mix(in srgb, white 20%, transparent);
+    background: color-mix(in srgb, white 4%, transparent);
   }
 
   &--ok {
@@ -78,8 +78,8 @@ export default defineComponent({
 
   &--muted {
     color: var(--color-text-muted);
-    border-color: rgba(255, 255, 255, 0.1);
-    background: rgba(255, 255, 255, 0.02);
+    border-color: color-mix(in srgb, white 10%, transparent);
+    background: color-mix(in srgb, white 2%, transparent);
   }
 }
 </style>

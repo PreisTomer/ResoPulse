@@ -23,7 +23,7 @@ export default defineComponent({})
   flex-wrap: wrap;
 
   &__item {
-    @include mono-upper(0.7rem, 0.05em);
+    @include mono-upper(var(--fs-xs), 0.05em);
     display: flex;
     align-items: center;
     gap: 0.3rem;

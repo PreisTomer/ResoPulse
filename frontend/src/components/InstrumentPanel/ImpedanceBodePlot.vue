@@ -263,7 +263,7 @@ export default defineComponent({
   }
 
   &__legend-item {
-    @include mono-upper(0.7rem, 0.06em);
+    @include mono-upper(var(--fs-xs), 0.06em);
     color: var(--color-text-muted);
 
     &::before {

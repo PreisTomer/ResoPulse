@@ -106,7 +106,7 @@ export default defineComponent({
 
     &--has-tip {
       cursor: help;
-      border-bottom: 1px dotted rgba(255, 255, 255, 0.25);
+      border-bottom: 1px dotted color-mix(in srgb, white 25%, transparent);
       text-decoration-skip-ink: none;
     }
   }

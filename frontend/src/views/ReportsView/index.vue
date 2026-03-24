@@ -304,7 +304,7 @@ export default defineComponent({
     font-size: var(--fs-xs);
     font-family: var(--font-mono);
     color: var(--color-text-muted);
-    background: rgba(255, 255, 255, 0.04);
+    background: color-mix(in srgb, white 4%, transparent);
     border: 1px solid var(--color-border);
     border-radius: 4px;
     padding: 0.15rem 0.5rem;

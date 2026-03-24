@@ -199,23 +199,23 @@ export default defineComponent({
   &--confirmed {
     opacity: 0.45;
     cursor: not-allowed;
-    border-color: rgba(255, 255, 255, 0.15);
+    border-color: color-mix(in srgb, white 15%, transparent);
     color: var(--color-text-muted);
 
     &:hover {
       background: transparent;
-      border-color: rgba(255, 255, 255, 0.15);
+      border-color: color-mix(in srgb, white 15%, transparent);
     }
   }
 
   &--cancel {
     background: transparent;
-    border-color: rgba(255, 255, 255, 0.18);
+    border-color: color-mix(in srgb, white 18%, transparent);
     color: var(--color-text-muted);
 
     &:hover {
-      background: rgba(255, 255, 255, 0.06);
-      border-color: rgba(255, 255, 255, 0.32);
+      background: color-mix(in srgb, white 6%, transparent);
+      border-color: color-mix(in srgb, white 32%, transparent);
       color: var(--color-text);
     }
   }

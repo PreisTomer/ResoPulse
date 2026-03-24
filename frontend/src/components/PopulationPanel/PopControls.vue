@@ -148,7 +148,7 @@ export default defineComponent({
     transition: all 0.15s;
 
     &--active { border-color: var(--color-primary); color: var(--color-primary); background: var(--color-primary-dim); }
-    &:hover:not(&--active) { border-color: rgba(255,255,255,0.2); }
+    &:hover:not(&--active) { border-color: color-mix(in srgb, white 20%, transparent); }
   }
 
   &__input {
@@ -206,7 +206,7 @@ export default defineComponent({
       color: var(--color-primary);
     }
 
-    &:hover:not(&--active) { background: rgba(255,255,255,0.04); }
+    &:hover:not(&--active) { background: color-mix(in srgb, white 4%, transparent); }
   }
 }
 </style>

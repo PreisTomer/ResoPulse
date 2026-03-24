@@ -2,12 +2,12 @@
 <template>
   <svg class="home__bode-svg" viewBox="0 0 210 188" fill="none" xmlns="http://www.w3.org/2000/svg">
     <!-- Axes -->
-    <line x1="28" y1="12" x2="28" y2="152" stroke="rgba(255,255,255,0.28)" stroke-width="1"/>
-    <line x1="28" y1="152" x2="196" y2="152" stroke="rgba(255,255,255,0.28)" stroke-width="1"/>
-    <text x="10" y="82" text-anchor="middle" font-family="monospace" font-size="7"
-      fill="rgba(255,255,255,0.48)" transform="rotate(-90,10,82)">Vm</text>
-    <text x="112" y="165" text-anchor="middle" font-family="monospace" font-size="7"
-      fill="rgba(255,255,255,0.48)">f (log)</text>
+    <line class="home__bode-axis-line" x1="28" y1="12" x2="28" y2="152" stroke-width="1"/>
+    <line class="home__bode-axis-line" x1="28" y1="152" x2="196" y2="152" stroke-width="1"/>
+    <text class="home__bode-axis-label" x="10" y="82" text-anchor="middle" font-family="monospace" font-size="7"
+      transform="rotate(-90,10,82)">Vm</text>
+    <text class="home__bode-axis-label" x="112" y="165" text-anchor="middle" font-family="monospace" font-size="7"
+      >f (log)</text>
     <!-- fc marker -->
     <line class="home__bode-fc-line" x1="108" y1="12" x2="108" y2="152"
       stroke-width="1" stroke-dasharray="3 3"/>
@@ -69,4 +69,6 @@ export default defineComponent({
 .home__bode-healthy-curve      { stroke: color-mix(in srgb, var(--color-danger) 60%, transparent); }
 .home__bode-healthy-legend-line { stroke: color-mix(in srgb, var(--color-danger) 65%, transparent); }
 .home__bode-healthy-legend-text { fill: color-mix(in srgb, var(--color-danger) 65%, transparent); }
+.home__bode-axis-line  { stroke: color-mix(in srgb, white 28%, transparent); }
+.home__bode-axis-label { fill: color-mix(in srgb, white 48%, transparent); }
 </style>

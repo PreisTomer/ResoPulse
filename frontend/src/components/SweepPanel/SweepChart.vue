@@ -142,11 +142,11 @@ export default defineComponent({
         g.append('line')
           .attr('x1', xScale(curX)).attr('y1', 0)
           .attr('x2', xScale(curX)).attr('y2', iH)
-          .attr('stroke', 'rgba(255,255,255,0.4)').attr('stroke-width', 1.5)
+          .attr('stroke', C.w40).attr('stroke-width', 1.5)
           .attr('stroke-dasharray', '4,3')
         g.append('text')
           .attr('x', xScale(curX) + 3).attr('y', 10)
-          .attr('font-size', 8.5).attr('fill', 'rgba(255,255,255,0.5)')
+          .attr('font-size', 8.5).attr('fill', C.w50)
           .text(this.$t('sweep.cursorCurrent'))
       }
 
@@ -166,13 +166,13 @@ export default defineComponent({
       g.append('g').attr('transform', `translate(0,${iH})`)
         .call(d3.axisBottom(xScale).ticks(6).tickSize(3))
         .call(ax => ax.select('.domain').attr('stroke', CSS_BORDER))
-        .call(ax => ax.selectAll('text').attr('fill', 'rgba(255,255,255,0.55)').attr('font-size', 10))
+        .call(ax => ax.selectAll('text').attr('fill', C.w55).attr('font-size', 10))
         .call(ax => ax.selectAll('.tick line').attr('stroke', CSS_BORDER))
 
       g.append('g')
         .call(d3.axisLeft(yScale).ticks(5).tickSize(3).tickFormat(d => `${(+d * 100).toFixed(0)}%`))
         .call(ax => ax.select('.domain').attr('stroke', CSS_BORDER))
-        .call(ax => ax.selectAll('text').attr('fill', 'rgba(255,255,255,0.55)').attr('font-size', 10))
+        .call(ax => ax.selectAll('text').attr('fill', C.w55).attr('font-size', 10))
         .call(ax => ax.selectAll('.tick line').attr('stroke', CSS_BORDER))
 
       g.append('g').attr('transform', `translate(${iW},0)`)
@@ -183,13 +183,13 @@ export default defineComponent({
 
       // ── Axis labels ───────────────────────────────────────────────────────
       g.append('text').attr('x', iW / 2).attr('y', iH + 30)
-        .attr('text-anchor', 'middle').attr('font-size', 10).attr('fill', 'rgba(255,255,255,0.4)')
+        .attr('text-anchor', 'middle').attr('font-size', 10).attr('fill', C.w40)
         .text(this.sweepParam === 'field'
           ? `${this.$t('sweep.axisFieldIntensity')} (${UNIT.V_PER_CM})`
           : `${this.$t('sweep.axisFrequency')} (${UNIT.KHZ})`)
 
       g.append('text').attr('transform', 'rotate(-90)').attr('x', -iH / 2).attr('y', -40)
-        .attr('text-anchor', 'middle').attr('font-size', 10).attr('fill', 'rgba(255,255,255,0.4)')
+        .attr('text-anchor', 'middle').attr('font-size', 10).attr('fill', C.w40)
         .text(this.$t('sweep.axisDisruptionRatio'))
 
       // ── Legend — right-anchored ───────────────────────────────────────────
@@ -204,7 +204,7 @@ export default defineComponent({
         lg.append('line').attr('x1', 0).attr('x2', 16).attr('y1', -9).attr('y2', -9)
           .attr('stroke', color).attr('stroke-width', 2).attr('stroke-dasharray', dash || 'none')
         lg.append('text').attr('x', 20).attr('y', -5)
-          .attr('font-size', 9).attr('fill', 'rgba(255,255,255,0.5)').text(label)
+          .attr('font-size', 9).attr('fill', C.w50).text(label)
       })
     },
   },

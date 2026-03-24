@@ -41,22 +41,22 @@ export default defineComponent({
   gap: 0.2rem 0.75rem;
   padding: 0.28rem 0.65rem;
   min-height: 1.75rem;
-  background: rgba(0, 0, 0, 0.18);
+  background: color-mix(in srgb, black 18%, transparent);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   font-family: var(--font-mono);
   font-size: var(--fs-xxs);
   transition: border-color var(--tr-normal);
 
-  &--active { border-color: rgba(255, 255, 255, 0.18); }
+  &--active { border-color: color-mix(in srgb, white 18%, transparent); }
 
   &-coord { font-weight: 700; color: var(--color-text); }
-  &-sep   { color: rgba(255, 255, 255, 0.2); }
+  &-sep   { color: color-mix(in srgb, white 20%, transparent); }
   &-zone  { font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
   &-dr    { color: var(--color-text-muted); strong { color: var(--color-text); } }
   &-temp  { color: var(--color-text-muted); }
-  &-hint  { margin-left: auto; color: rgba(255, 255, 255, 0.18); font-size: var(--fs-xxs); }
-  &-idle  { color: rgba(255, 255, 255, 0.2); font-style: italic; }
+  &-hint  { margin-left: auto; color: color-mix(in srgb, white 18%, transparent); font-size: var(--fs-xxs); }
+  &-idle  { color: color-mix(in srgb, white 20%, transparent); font-style: italic; }
 
   &-outcome {
     font-weight: 600;

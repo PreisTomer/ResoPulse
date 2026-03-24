@@ -3,35 +3,38 @@
 
 /**
  * Scientifically appropriate field/frequency defaults per target cell category.
- * Applied automatically when the target cell type is switched,
- * mimicking a "new experiment" context.
+ * Applied automatically when any cell preset is switched, mimicking a fresh experiment setup.
  *
- * Values are chosen so T_ss < 38°C for the healthy reference cell (hepatocyte)
- * at every default - researcher can slide UP from a safe starting point.
+ * All defaults are chosen so BOTH cells start in STABLE state (DR < 8%) at the
+ * default orientation (θ = 60°, cosθ = 0.5). Researchers slide UP from this
+ * zero-effect baseline to find the therapeutic window.
  *
- * Mammalian: nourishing biomodulation start at 100 V/cm - researcher slides up from active window.
- *   Verified safe at 100 V/cm (reference calculation):
+ * Mammalian: 10 V/cm at 417 kHz, pulsed dc=1e-4, pw=100 µs.
+ *   At 10 V/cm both hepatocyte and adenocarcinoma have DR < 2%, clearly STABLE.
+ *   Verified safe (reference calculation at 10 V/cm):
  *   α = 3σ_e/(2σ_e+σ_i) = 1.286  (hepatocyte, saline)
- *   SAR_peak = σ_i·α²·E²·wf/ρ ≈ 7.9 kW/kg  ·  SAR_eff = SAR_peak×dc ≈ 0.79 W/kg (dc=1e-4)
- *   T_ss = 37 + 0.79/(λ·cp) = 37 + 0.01°C ≈ 37.01°C ✓  (λ=0.02 s⁻¹, cp=3500 J/kg·K)
- *   DR ≈ 13% - visible in the nourishing biomodulation window (< 45%); well below 50% rev-EP onset.
- *   Default at 100 V/cm gives researchers immediate visual feedback and a meaningful starting context.
+ *   SAR_eff = σ_i·α²·E²·wf·dc/ρ ≈ 0.0079 W/kg  ·  T_ss ≈ 37.00°C ✓
  *
- * Bacteria: nsEP regime - pulse width ≪ τ (τ_ecoli ≈ 14 ns, τ_mrsa ≈ 3.2 ns).
- *   Starts at 1000 V/cm pulsed dc=1e-6:
- *   α ≈ 1.36  (E. coli, saline)  ·  SAR_eff ≈ 5.1 W/kg  ·  T_ss ≈ 37.06°C ✓
- *   Researcher slides field to ≥10 kV/cm to approach lysis - thermal warnings appear.
+ * Bacteria: nsEP regime — pulse width ≪ τ (τ_ecoli ≈ 14 ns, τ_mrsa ≈ 3.2 ns).
+ *   1000 V/cm at 500 MHz: ωτ ≫ 1 rolls off Vm to < 1 mV → DR ≈ 0 (STABLE).
+ *   SAR_eff ≈ 5.1 W/kg (dc=1e-6)  ·  T_ss ≈ 37.06°C ✓
+ *   Researcher slides field to ≥10 kV/cm to approach disruption.
  *
- * Virus: Resonance mode (IRE inapplicable); capsid disruption via acoustic resonance.
- *   400 V/cm pulsed dc=1e-6 @ f_res (influenza 12 GHz):
- *   σ_i ≈ 0.005 S/m (lipid envelope)  ·  SAR_eff ≈ 0.014 W/kg  ·  T_ss ≈ 37.000°C ✓
+ * Virus: Resonance mode; capsid disruption via acoustic resonance.
+ *   400 V/cm at f_res (≥12 GHz): Schwan Vm → 0 at GHz; DR ≈ 0 (STABLE).
+ *   SAR_eff ≈ 0.014 W/kg  ·  T_ss ≈ 37.000°C ✓
  *   Auto-tuned to preset's resonantFreqGHz in applyTargetDefaults.
  */
 // Re-exported from physics.ts - single source of truth for waveform factors
 export { WF_CW as CW_WAVEFORM_FACTOR, WF_PULSED as PULSED_WAVEFORM_FACTOR } from '@/constants/physics'
 
-/** Initial field as a fraction of a preset's resonant threshold (applied when loading resonant presets) */
-export const INITIAL_RESONANT_FIELD_FRACTION = 0.5
+/**
+ * Initial field as a fraction of a preset's resonant threshold (applied when loading resonant presets).
+ * Set to 5% so that at f = f_res (Lorentzian peak, L=1.0):
+ *   DR = (0.05 × E_thr) / E_thr × 1.0 = 0.05  →  well below the 8% STABLE threshold.
+ * Researchers slide UP from this zero-effect baseline.
+ */
+export const INITIAL_RESONANT_FIELD_FRACTION = 0.05
 
 /** Duration [ms] for the snap-to-window confirmation button state before auto-reset */
 export const SNAP_CONFIRM_MS = 3000
@@ -52,7 +55,7 @@ export const DEFAULT_ORIENTATION_DEG = 60
 export const SWEEP_TI_CAP = 5
 
 export const CATEGORY_DEFAULTS = {
-  mammalian: { fieldVcm: 100,  freqKHz: 417,       waveform: 'pulsed' as const, dutyCycle: 1e-4, pulseWidthNs: 100000, medium: 'saline' as const },
+  mammalian: { fieldVcm: 10,   freqKHz: 417,       waveform: 'pulsed' as const, dutyCycle: 1e-4, pulseWidthNs: 100000, medium: 'saline' as const },
   bacteria:  { fieldVcm: 1000, freqKHz: 500000,    waveform: 'pulsed' as const, dutyCycle: 1e-6, pulseWidthNs: 10,     medium: 'saline' as const },
   virus:     { fieldVcm: 400,  freqKHz: 12000000,  waveform: 'pulsed' as const, dutyCycle: 1e-6, pulseWidthNs: 10,     medium: 'saline' as const },
 } as const

@@ -9,8 +9,9 @@ import { MEDIA } from '@/constants/media'
 import type { CellConfig, CellState } from '@/types/cell'
 import type { MediumKey } from '@/types/media'
 import { computeSchwan, computeSAR, computeFc, computeTau, computeResonantDisruption, computeNuclearVm, computePulseStepResponse, computeSkinDepthMm, computeDepCmReal, computeDepCrossoverKHz, computeDepSecondCrossoverKHz, computePopulationLysisFraction, safeRatio } from '@/utils/physics'
-import { CELL_CATEGORY, CHART_MODE, WAVEFORM, CELL_TYPE, FREQ_REGIME } from '@/constants/strings'
+import { CELL_CATEGORY, CHART_MODE, WAVEFORM, CELL_TYPE, FREQ_REGIME, DEFAULT_SESSION_NAME } from '@/constants/strings'
 import { DEFAULT_LYSIS_N_PULSES, DEFAULT_ORIENTATION_DEG } from '@/constants/experimentDefaults'
+import { MEDIUM_SPECIFIC_HEAT_J_KG_K } from '@/constants/cuvette'
 import {
   THRESHOLDS,
   DEFAULT_CAPSID_Q,
@@ -103,8 +104,6 @@ export interface FieldPacket {
   activeMedium: string
 }
 
-// Legacy alias - services/socket.ts imports this type
-export type ResonancePacket = FieldPacket
 
 /** Full experiment state broadcast between clients */
 export interface StatePacket {
@@ -167,7 +166,7 @@ export const useCellStore = defineStore('cell', {
     doubleShellEnabled: false,     // double-shell model off by default
     perfusionRate: 0,              // mL/(g·min); 0 = isolated cell / in-vitro default
     cellPackingFraction: 0,        // φ = 0 (isolated cell); set >0 for dense tissue context
-    sessionName: 'Session 1',
+    sessionName: DEFAULT_SESSION_NAME,
     tempTimer: null,
     resetCounter: 0,
     healthyCellState: 'stable' as CellState,
@@ -330,7 +329,11 @@ export const useCellStore = defineStore('cell', {
       return computeFc((this as unknown as CellStoreState).target, this.effectiveSigmaE)
     },
 
-    /** Alias for therapeuticIndex - backward compat */
+    /**
+     * Selectivity ratio: DR_T / DR_H.
+     * Same value as therapeuticIndex — exposed under this name for log export
+     * (experimentStore), heatmap stats, and selectivity panel consumers.
+     */
     selectivityRatio(): number {
       return this.therapeuticIndex
     },
@@ -380,14 +383,18 @@ export const useCellStore = defineStore('cell', {
       const vmHHigh = computeSchwan({ ...state.healthy, conductivity: state.healthy.conductivity * (1 + uncH) }, freq, field, sigma_e, cosT)
       const pefT    = this.pulseEnvelopeFactorTarget
       const pefH    = this.pulseEnvelopeFactorHealthy
-      const drTLow  = (vmTLow  * pefT) / state.target.thresholdVoltage
-      const drHHigh = (vmHHigh * pefH) / state.healthy.thresholdVoltage
+      // Apply same temperature correction + H-FIRE multiplier as the live DR getters
+      const hfireMult = state.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
+      const vthT = tempCorrectedVth(state.target.thresholdVoltage, state.targetTemp)
+      const vthH = tempCorrectedVth(state.healthy.thresholdVoltage, state.healthyTemp)
+      const drTLow  = (vmTLow  * pefT) / (vthT * hfireMult)
+      const drHHigh = (vmHHigh * pefH) / (vthH * hfireMult)
       const tiLow   = Math.max(0, safeRatio(drTLow, drHHigh, THRESHOLDS.TI_DISPLAY_CAP, NEAR_ZERO_DR))
       // TI_high: strongest target + weakest healthy coupling
       const vmTHigh = computeSchwan({ ...state.target,  conductivity: state.target.conductivity  * (1 + uncT) }, freq, field, sigma_e, cosT)
       const vmHLow  = computeSchwan({ ...state.healthy, conductivity: state.healthy.conductivity * (1 - uncH) }, freq, field, sigma_e, cosT)
-      const drTHigh = (vmTHigh * pefT) / state.target.thresholdVoltage
-      const drHLow  = (vmHLow  * pefH) / state.healthy.thresholdVoltage
+      const drTHigh = (vmTHigh * pefT) / (vthT * hfireMult)
+      const drHLow  = (vmHLow  * pefH) / (vthH * hfireMult)
       const tiHigh  = safeRatio(drTHigh, drHLow, THRESHOLDS.TI_DISPLAY_CAP, NEAR_ZERO_DR)
       return { low: tiLow, high: tiHigh }
     },
@@ -463,8 +470,32 @@ export const useCellStore = defineStore('cell', {
     },
 
     /**
+     * Projected steady-state bulk medium temperature in the cuvette [°C].
+     *
+     * This is what a thermocouple placed in the cuvette actually reads, driven
+     * by Joule heating of the extracellular medium (σ_e × E²_rms).  It dominates
+     * cell-intrinsic SAR at typical packing fractions (φ < 0.05).
+     *
+     * T_bulk = 37 + (SAR_medium × dc) / ((λ_Newton + λ_perf) × cp_medium)
+     *   SAR_medium = σ_e × E²_rms / ρ_aqueous [W/kg]
+     *   cp_medium  = 4182 J/(kg·K)  (MEDIUM_SPECIFIC_HEAT_J_KG_K)
+     *
+     * Ref: Foster & Schwan (1989); standard Joule heating in electrolytes.
+     */
+    bulkMediumSteadyStateTempC(): number {
+      const dc          = this.effectiveDutyCycle
+      const cp_m        = MEDIUM_SPECIFIC_HEAT_J_KG_K
+      const lambda_perf = (this as unknown as CellStoreState).perfusionRate * PENNES_BLOOD_COEFF / cp_m
+      return Math.min(
+        BODY_TEMP_C + (this.mediumJouleHeatingSAR * dc) / ((NEWTON_COOLING_LAMBDA + lambda_perf) * cp_m),
+        THRESHOLDS.TEMP_CAP,
+      )
+    },
+
+    /**
      * Per-pulse energy density delivered to the medium [mJ/cm³] (= J/mL).
-     * Computed as: σ_e × E²_peak × t_p × dc  [W/m³ × s → J/m³ → mJ/cm³]
+     * Computed as: σ_e × E²_rms × t_p × dc  [W/m³ × s → J/m³ → mJ/cm³]
+     * E²_rms = E²_peak × wf  (wf = 0.5 for CW sinusoidal, 1.0 for pulsed square wave).
      * J/m³ = W/m³ × s;  1 J/m³ = 1e-3 mJ/cm³ (1 mL = 1 cm³ = 1e-6 m³; so 1 J/m³ = 1e-3 mJ/mL)
      * This is the standard protocol dose unit published in IRE literature.
      * Ref: Davalos et al. (2005) Ann. Biomed. Eng.; Edd et al. (2006) Technol. Cancer Res. Treat.
@@ -473,10 +504,12 @@ export const useCellStore = defineStore('cell', {
     pulsedEnergyDensity_mJcm3(): number {
       const state = this as unknown as CellStoreState
       const E_si  = state.fieldIntensity * V_CM_TO_V_M
+      // CW sinusoidal: E²_rms = E²_peak × 0.5. Pulsed square wave: E²_rms = E²_peak (wf = 1.0).
+      const wf    = state.waveform === WAVEFORM.CW ? WF_CW : WF_PULSED
       const tp_s  = state.waveform === WAVEFORM.CW ? 1.0 : state.pulseWidthNs * NS_TO_S
       const dc    = state.waveform === WAVEFORM.CW ? 1.0 : state.dutyCycle
-      // P_volume = σ_e × E² [W/m³]; dose per pulse × dc period = energy density [J/m³]
-      const energyDensity_J_m3 = this.effectiveSigmaE * E_si ** 2 * tp_s * dc
+      // P_volume = σ_e × E²_rms [W/m³]; dose per second (CW) or per duty-cycle period (pulsed)
+      const energyDensity_J_m3 = this.effectiveSigmaE * E_si ** 2 * wf * tp_s * dc
       return energyDensity_J_m3 * J_M3_TO_MJ_CM3
     },
 
@@ -493,10 +526,11 @@ export const useCellStore = defineStore('cell', {
       return (this.effectiveSigmaE * E_si ** 2 * wf) / RHO_AQUEOUS_KG_M3
     },
 
-    /** δ = √(1/(π·f·μ₀·σ_e)) [mm].  Saline: 100MHz→41mm · 1GHz→13mm · 12GHz→3.8mm. */
+    /** δ [mm] — exact lossy-dielectric formula. Saline: 100MHz→48mm · 1GHz→32mm · 10GHz→~32mm. */
     skinDepthMm(): number {
       const state = this as unknown as CellStoreState
-      return computeSkinDepthMm(state.currentBroadcastFrequency, this.effectiveSigmaE)
+      const eps_r = MEDIA[state.medium].permittivity
+      return computeSkinDepthMm(state.currentBroadcastFrequency, this.effectiveSigmaE, eps_r)
     },
 
     // ── Dielectrophoresis - Clausius-Mossotti factor ────────────────────────────
@@ -601,14 +635,28 @@ export const useCellStore = defineStore('cell', {
      *  Schwan/IRE mode or mammalian → 300-point log scan 10 kHz-500 MHz for best DR_T/DR_H. */
     optimalFreqResult(): { khz: number; sel: number } {
       const state  = this as unknown as CellStoreState
-      const target = state.target as CellConfig & { resonantFreqGHz?: number; resonantThresholdVcm?: number }
+      const target = state.target as CellConfig & { resonantFreqGHz?: number; resonantThresholdVcm?: number; capsidQ?: number }
       const cat    = this.targetCellCategory
       if (
         this.isResonanceMode &&
         (cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) &&
         target.resonantFreqGHz && target.resonantThresholdVcm
       ) {
-        return { khz: target.resonantFreqGHz * 1e6, sel: THRESHOLDS.TI_DISPLAY_CAP }
+        // Compute actual TI at f_res instead of returning an arbitrary sentinel value
+        const freqKhz = target.resonantFreqGHz * 1e6  // GHz → kHz
+        const drT = computeResonantDisruption(
+          target.resonantFreqGHz,
+          target.capsidQ ?? DEFAULT_CAPSID_Q,
+          target.resonantThresholdVcm,
+          freqKhz * KHZ_TO_HZ,
+          state.fieldIntensity,
+        )
+        const sigma_e = this.effectiveSigmaE
+        const hVm = computeSchwan(state.healthy, freqKhz, state.fieldIntensity, sigma_e, this.cosThetaFactor)
+        const hfireMult = state.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
+        const vthH = tempCorrectedVth(state.healthy.thresholdVoltage, state.healthyTemp)
+        const drH  = (hVm * this.pulseEnvelopeFactorHealthy) / (vthH * hfireMult)
+        return { khz: freqKhz, sel: safeRatio(drT, drH, THRESHOLDS.TI_DISPLAY_CAP, NEAR_ZERO_DR) }
       }
       const sigma_e = this.effectiveSigmaE
       const field   = state.fieldIntensity
@@ -812,8 +860,8 @@ export const useCellStore = defineStore('cell', {
       const p = preset as CellConfig & { notes?: string }
       if (!cfg.description && p.notes) cfg.description = p.notes
       this[cellType] = cfg
-      this.healthyTemp = BODY_TEMP_C
-      this.targetTemp = BODY_TEMP_C
+      if (cellType === CELL_TYPE.HEALTHY) this.healthyTemp = BODY_TEMP_C
+      else this.targetTemp = BODY_TEMP_C
       this.resetCounter++  // signals CellCard to reset visual state
     },
 

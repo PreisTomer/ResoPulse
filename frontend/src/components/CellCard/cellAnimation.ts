@@ -302,7 +302,7 @@ interface SpikeEl {
 
 interface BacteriaAnatomy {
   isRod:               boolean
-  /** Semi-major rod axis (equals BASE_R for E. coli) - used to place flagellum */
+  /** Semi-major rod axis (equals BASE_R for E. coli) - used to place flagella */
   ROD_A:               number
   nucG:                D3Sel<SVGGElement>
   nucleoidBlob:        D3Sel<SVGPathElement>
@@ -310,17 +310,27 @@ interface BacteriaAnatomy {
   nucleoidPhases:      PhaseEntry[]
   bacteriaWallElOuter: D3Sel<SVGEllipseElement> | null  // E. coli only
   bacteriaWallElInner: D3Sel<SVGEllipseElement> | null  // E. coli only
-  flagEl:              D3Sel<SVGPathElement>    | null  // E. coli only
+  /** 3 peritrichous flagellar filaments (helical segments). E. coli only. */
+  flagEls:             Array<D3Sel<SVGPathElement>> | null
+  /** 3 flagellar hook joints (L-shaped arc from basal body to filament). E. coli only. */
+  hookEls:             Array<D3Sel<SVGPathElement>> | null
   bacteriaWallC1:      D3Sel<SVGCircleElement>  | null  // MRSA only
   bacteriaWallC2:      D3Sel<SVGCircleElement>  | null  // MRSA only
   septum:              D3Sel<SVGLineElement>    | null  // MRSA only
+  /** 20 wall teichoic acid surface protrusions. MRSA only. */
+  teichoicEls:         Array<D3Sel<SVGLineElement>> | null
 }
 
 interface VirusAnatomy {
   isCov2:          boolean
+  isInfluenza:     boolean
   N_SPIKES:        number
   STALK_LEN:       number
   HEAD_R:          number
+  /** Wider mushroom-cap radius for neuraminidase (NA) spikes. Influenza only. */
+  NA_HEAD_R:       number
+  /** Indices of NA (neuraminidase) spikes — every ~6th spike. Influenza only. */
+  naIndices:       Set<number>
   virusInnerRings: Array<D3Sel<SVGCircleElement>>
   virusCore:       D3Sel<SVGCircleElement>
   virusSpikes:     SpikeEl[]
@@ -508,7 +518,9 @@ function setupBacteriaAnatomy(
   let bacteriaWallC1: D3Sel<SVGCircleElement> | null = null
   let bacteriaWallC2: D3Sel<SVGCircleElement> | null = null
   let septum: D3Sel<SVGLineElement> | null = null
-  let flagEl: D3Sel<SVGPathElement> | null = null
+  let flagEls: Array<D3Sel<SVGPathElement>> | null = null
+  let hookEls: Array<D3Sel<SVGPathElement>> | null = null
+  let teichoicEls: Array<D3Sel<SVGLineElement>> | null = null
   let nucG: D3Sel<SVGGElement>
 
   if (isRod) {
@@ -523,10 +535,17 @@ function setupBacteriaAnatomy(
       .attr('fill', 'none').attr('stroke', accentColor)
       .attr('stroke-width', 1.0).attr('stroke-opacity', 0.16)
       .attr('stroke-dasharray', '3,3')
-    flagEl = cellG.append('path')
-      .attr('fill', 'none').attr('stroke', accentColor)
-      .attr('stroke-width', 0.9).attr('stroke-opacity', 0.30)
-      .attr('stroke-linecap', 'round')
+    // 3 peritrichous flagella: hooks drawn first (lower z), filaments on top
+    hookEls = d3.range(3).map(() =>
+      cellG.append('path')
+        .attr('fill', 'none').attr('stroke', accentColor)
+        .attr('stroke-width', 1.1).attr('stroke-linecap', 'round')
+    )
+    flagEls = d3.range(3).map(() =>
+      cellG.append('path')
+        .attr('fill', 'none').attr('stroke', accentColor)
+        .attr('stroke-width', 0.9).attr('stroke-linecap', 'round')
+    )
     nucG = cellG.append('g').attr('transform', 'translate(0, 0)')
   } else {
     // ── MRSA: gram-positive coccus (thick peptidoglycan + division septum) ──
@@ -543,6 +562,16 @@ function setupBacteriaAnatomy(
       .attr('x2',  BASE_R * 0.68).attr('y2', 0)
       .attr('stroke', accentColor).attr('stroke-width', 0.8).attr('stroke-opacity', 0.18)
       .attr('stroke-dasharray', '3,3')
+    // 20 wall teichoic acids: short radial protrusions from outer peptidoglycan ring
+    teichoicEls = d3.range(20).map((i) => {
+      const a  = (i / 20) * Math.PI * 2
+      const r1 = BASE_R + 9
+      const r2 = r1 + 4
+      return cellG.append('line')
+        .attr('x1', r1 * Math.cos(a)).attr('y1', r1 * Math.sin(a))
+        .attr('x2', r2 * Math.cos(a)).attr('y2', r2 * Math.sin(a))
+        .attr('stroke', accentColor).attr('stroke-width', 0.7).attr('stroke-opacity', 0.18)
+    })
     nucG = cellG.append('g').attr('transform', 'translate(-4, 3)')
   }
 
@@ -574,8 +603,8 @@ function setupBacteriaAnatomy(
 
   return {
     isRod, ROD_A, nucG, nucleoidBlob, ribosomeDots, nucleoidPhases,
-    bacteriaWallElOuter, bacteriaWallElInner, flagEl,
-    bacteriaWallC1, bacteriaWallC2, septum,
+    bacteriaWallElOuter, bacteriaWallElInner, flagEls, hookEls,
+    bacteriaWallC1, bacteriaWallC2, septum, teichoicEls,
   }
 }
 
@@ -600,6 +629,13 @@ function setupVirusAnatomy(
     N_SPIKES  = fGHz < 0.65 ? 16 : fGHz < 0.85 ? 14 : 12
     STALK_LEN = fGHz < 0.65 ? 13 : fGHz < 0.85 ? 11 : 9
     HEAD_R    = fGHz < 0.65 ? 3.8 : fGHz < 0.85 ? 3.2 : 2.5
+  }
+
+  // Neuraminidase (NA) spikes: wider mushroom-cap vs HA club shape. Influenza only (~1:5 NA:HA ratio).
+  const NA_HEAD_R = isInfluenza ? 3.8 : 0
+  const naIndices = new Set<number>()
+  if (isInfluenza) {
+    for (let i = 0; i < N_SPIKES; i += 6) naIndices.add(i)
   }
 
   // Inner ring radii scale with virus complexity
@@ -635,7 +671,7 @@ function setupVirusAnatomy(
     return { stalk, head }
   })
 
-  return { isCov2, N_SPIKES, STALK_LEN, HEAD_R, virusInnerRings, virusCore, virusSpikes }
+  return { isCov2, isInfluenza, N_SPIKES, STALK_LEN, HEAD_R, NA_HEAD_R, naIndices, virusInnerRings, virusCore, virusSpikes }
 }
 
 // ── Anatomy update functions ──────────────────────────────────────────────────
@@ -772,21 +808,63 @@ function updateBacteriaAnatomy(anat: BacteriaAnatomy, p: BacteriaUpdateParams): 
     anat.bacteriaWallElOuter!.attr('stroke', color).attr('stroke-opacity', wallOpacity * 0.85)
     anat.bacteriaWallElInner!.attr('stroke', color).attr('stroke-opacity', wallOpacity * 0.60)
 
-    // Flagellum: animated wiggly path from south pole
-    const flagPts: Array<[number, number]> = []
-    for (let i = 0; i <= 14; i++) {
-      const t  = i / 14
-      const fY = ROD_A + 9 + t * 28  // start just outside outer membrane south pole (ry = ROD_A + 8)
-      const fX = Math.sin(t * Math.PI * 2.5 + elapsed * 0.003) * 5
-      flagPts.push([fX, fY])
+    // 3 peritrichous flagella: hook joints + helical filaments bundled during swimming,
+    // splayed during tumbling (CW switch triggers run→tumble).
+    // Biology: E. coli flagella bundle CCW → propulsion; CW switch → individual splay.
+    const FLAG_AMP    = 5.5    // helix amplitude (px)
+    const FLAG_LEN    = 30     // filament length (px)
+    const FLAG_CYCLES = 3.2    // helical turns visible along filament
+    const FLAG_SPEED  = 0.0032 // rotation speed (rad/ms)
+    const HOOK_LEN    = 8      // hook segment length (px)
+    const ATTACH_Y    = ROD_A + 8  // outer membrane south pole
+
+    // Bundled swimming vs tumbling: controls lateral spread of attachment points
+    const bundled = !isVibrating
+    for (let fi = 0; fi < 3; fi++) {
+      const attachX = (fi - 1) * (bundled ? 4 : 10)
+      const phase   = (fi / 3) * Math.PI * 2 + elapsed * FLAG_SPEED
+
+      // ── Hook: L-shaped curve from basal body (cell surface) to filament axis ──
+      const hookMidX = attachX + (fi - 1) * 2.5
+      const hookPts: Array<[number, number]> = [
+        [attachX,          ATTACH_Y],
+        [hookMidX,         ATTACH_Y + 4],
+        [hookMidX * 0.65,  ATTACH_Y + HOOK_LEN],
+      ]
+      anat.hookEls![fi]!
+        .attr('d', flagLineGen(hookPts) ?? '')
+        .attr('stroke', color)
+        .attr('stroke-opacity', Math.max(0, 0.40 - impact * 0.30))
+
+      // ── Filament: helical projection; converges into bundle during swimming ──
+      const startX = hookMidX * 0.65
+      const filPts: Array<[number, number]> = []
+      for (let i = 0; i <= 18; i++) {
+        const t  = i / 18
+        const fY = ATTACH_Y + HOOK_LEN + t * FLAG_LEN
+        // Bundled: x drifts toward 0 (posterior bundle); tumbling: each splay independently
+        const driftX = bundled
+          ? startX * (1 - t * 0.80)
+          : startX + t * (fi - 1) * 14
+        const fX = driftX + Math.sin(t * Math.PI * 2 * FLAG_CYCLES + phase) * FLAG_AMP
+        filPts.push([fX, fY])
+      }
+      anat.flagEls![fi]!
+        .attr('d', flagLineGen(filPts) ?? '')
+        .attr('stroke', color)
+        .attr('stroke-opacity', Math.max(0, 0.28 - impact * 0.20))
     }
-    anat.flagEl!.attr('d', flagLineGen(flagPts) ?? '')
-      .attr('stroke', color).attr('stroke-opacity', Math.max(0, 0.28 - impact * 0.20))
   } else {
     anat.bacteriaWallC1!.attr('stroke', color).attr('stroke-opacity', wallOpacity * 0.90)
     anat.bacteriaWallC2!.attr('stroke', color).attr('stroke-opacity', wallOpacity * 0.55)
     const septumOp = 0.18 * (0.5 + 0.5 * Math.sin(elapsed * 0.0006))
     anat.septum!.attr('stroke', color).attr('stroke-opacity', Math.max(0, septumOp - impact * 0.12))
+    // MRSA teichoic acids: breathe gently; fade under EP disruption
+    anat.teichoicEls!.forEach((line, i) => {
+      const breathe = Math.sin(elapsed * 0.0008 + i * 0.9) * 0.04
+      line.attr('stroke', color)
+        .attr('stroke-opacity', Math.max(0, 0.18 + breathe - impact * 0.12))
+    })
   }
 
   // ── Nucleoid: elongated in rod; MRSA elongates in phase with septum (chromosomal segregation) ─
@@ -909,6 +987,21 @@ export function setupBlobAnimation(
   gm.append('feMergeNode').attr('in', 'coloredBlur')
   gm.append('feMergeNode').attr('in', 'SourceGraphic')
 
+  // Wide soft-blur filter for the nourishing membrane halo — separate from the sharp glow filter
+  const nourishGlowId = `nourishGlow-${type}`
+  const ngf = defs.append('filter').attr('id', nourishGlowId)
+    .attr('x', '-80%').attr('y', '-80%').attr('width', '260%').attr('height', '260%')
+  ngf.append('feGaussianBlur').attr('stdDeviation', '13').attr('result', 'coloredBlur')
+  const ngm = ngf.append('feMerge')
+  ngm.append('feMergeNode').attr('in', 'coloredBlur')
+  ngm.append('feMergeNode').attr('in', 'SourceGraphic')
+
+  // Very large blur for the background bloom — a radial aura behind the whole cell
+  const nourishBloomId = `nourishBloom-${type}`
+  defs.append('filter').attr('id', nourishBloomId)
+    .attr('x', '-120%').attr('y', '-120%').attr('width', '340%').attr('height', '340%')
+    .append('feGaussianBlur').attr('stdDeviation', '20')
+
   const rayGlowId = `rayGlow-${type}`
   const rf = defs.append('filter').attr('id', rayGlowId)
     .attr('x', '-600%').attr('y', '0%').attr('width', '1300%').attr('height', '100%')
@@ -993,12 +1086,20 @@ export function setupBlobAnimation(
   const raySR = raysG.append('rect').attr('x', 11).attr('y', southPoleR - RAY_OVERLAP).attr('width', 3).attr('height', raySTopH)
     .attr('fill', `url(#${raySGradId})`)
 
-  // ── Aura rings ────────────────────────────────────────────────────────────
-  const auraRings = [
-    cellG.append('circle').attr('r', BASE_R + 14).attr('fill', 'none').attr('stroke', accentColor).attr('stroke-width', 1.2),
-    cellG.append('circle').attr('r', BASE_R + 26).attr('fill', 'none').attr('stroke', accentColor).attr('stroke-width', 0.8),
-    cellG.append('circle').attr('r', BASE_R + 40).attr('fill', 'none').attr('stroke', accentColor).attr('stroke-width', 0.5),
-  ]
+  // ── Nourishing background bloom (behind cell body, in cellG) ─────────────
+  // A large softly blurred filled circle that creates a radial glow emanating
+  // from behind the cell into the dark canvas. Hidden in all non-nourishing states.
+  const nourishBloom = cellG.append('circle').attr('r', BASE_R * 1.55)
+    .attr('fill', accentColor).attr('fill-opacity', 0)
+    .attr('filter', `url(#${nourishBloomId})`).attr('pointer-events', 'none')
+
+  // ── Acoustic standing-wave rings (bacteria/virus resonance mode only) ─────
+  // 5 phase-staggered concentric rings that oscillate in radius, representing
+  // the radial displacement field of a spherically oscillating particle.
+  const standingWaveRings = d3.range(5).map((i) =>
+    cellG.append('circle').attr('r', BASE_R + 10 + i * 9).attr('fill', 'none')
+      .attr('stroke', accentColor).attr('stroke-width', Math.max(0.4, 1.0 - i * 0.11)).attr('stroke-opacity', 0)
+  )
 
   // bodyG rotates with the cell (bacteria DEP alignment); field rays stay in cellG
   const bodyG = cellG.append('g')
@@ -1006,6 +1107,20 @@ export function setupBlobAnimation(
   // ── Cell body: opaque BG mask first so rays render behind it, then gradient overlay ─
   const blobBg   = bodyG.append('path').attr('fill', CANVAS_BG)
   const blobFill = bodyG.append('path').attr('fill', `url(#${gradId})`)
+
+  // ── Calcium wave rings (PIEZO1/TRP Ca²⁺ transients, nourishing state) ──────
+  // Ca²⁺ enters through transiently-opened channels at the membrane and diffuses
+  // INWARD toward the nucleus. Each wave is a circle centered at the cell origin
+  // that contracts from BASE_R (membrane) down to ~15% of BASE_R (perinuclear region).
+  // This correctly models inward Ca²⁺ diffusion — not outward aura rings.
+  const calciumWaves = d3.range(5).map((i) => ({
+    el: bodyG.append('circle').attr('r', 0).attr('fill', 'none')
+      .attr('stroke', accentColor).attr('stroke-width', 1.4).attr('stroke-opacity', 0)
+      .attr('pointer-events', 'none'),
+    startElapsed: -(2200 * (i + 1)),
+  }))
+  let calciumWaveIdx     = 0
+  let lastCalciumElapsed = -2000
 
   // ── Category-specific anatomy setup ───────────────────────────────────────
   const mammalianAnatomy = cellCategory === CELL_CATEGORY.MAMMALIAN
@@ -1018,6 +1133,35 @@ export function setupBlobAnimation(
   // ── Membrane stroke (on top of all interior elements) ─────────────────────
   const blobStroke = bodyG.append('path').attr('fill', 'none').attr('stroke', accentColor)
     .attr('stroke-width', 2.5).attr('filter', `url(#${glowId})`)
+
+  // ── Nourishing membrane halo (wide blurred path matching cell border) ──────
+  // Only visible during nourishing/biomodulation state. Sits above the crisp membrane
+  // line, bleeding outward as a diffuse living glow. Conveys that the membrane is
+  // energised — not disrupted. Grows with biomodScore (impact).
+  const nourishGlow = bodyG.append('path').attr('fill', 'none')
+    .attr('stroke', accentColor).attr('stroke-width', 15)
+    .attr('stroke-opacity', 0).attr('pointer-events', 'none')
+    .attr('filter', `url(#${nourishGlowId})`)
+
+  // ── Membrane blebs (mammalian only; circular protrusions at elevated DR) ──
+  // Only the two field-axis poles (north = cathodic, south = anodic) develop significant blebs.
+  // Physics: Maxwell stress is proportional to Vm² ∝ cos²θ — maximum at θ=0/π, zero at equator.
+  // Each pole bleb has an independent pulse phase and speed (stochastic osmotic pressure).
+  const blebData: Array<{ el: D3Sel<SVGCircleElement>; idx: number; phaseShift: number; pulseSpeed: number }> = []
+  if (cellCategory === CELL_CATEGORY.MAMMALIAN) {
+    const N_BLOB = BLOB_POINTS
+    // North pole (angle=0, cathodic, higher Vm) and south pole (angle=π, anodic)
+    const blebIndices = [0, Math.floor(N_BLOB / 2)]
+    const blebPhases  = [0.3, 2.1]   // independent phases
+    const blebSpeeds  = [0.0013, 0.0010]  // independent rates
+    blebIndices.forEach((idx, i) => {
+      const el = bodyG.append('circle').attr('r', 0)
+        .attr('fill', accentColor).attr('fill-opacity', 0.08)
+        .attr('stroke', accentColor).attr('stroke-width', 1.2).attr('stroke-opacity', 0)
+        .attr('pointer-events', 'none')
+      blebData.push({ el, idx, phaseShift: blebPhases[i]!, pulseSpeed: blebSpeeds[i]! })
+    })
+  }
 
   // ── Electroporation pores (BG-coloured holes) ─────────────────────────────
   // Inset PORE_INSET fraction from membrane; max radius = PORE_MAX_R.
@@ -1079,7 +1223,9 @@ export function setupBlobAnimation(
     .attr('pointer-events', 'none')
 
   // ── DEP visual effects state ──────────────────────────────────────────────
-  // 1. Blob deformation: pDEP = E-W elongation; nDEP = N-S elongation; depDeform(θ) = K·BASE_R·0.24·(−cos2θ)
+  // 1. Blob deformation: pDEP = N-S elongation (prolate); nDEP = E-W elongation (oblate).
+  //    depDeform(θ) = K·BASE_R·0.24·cos(2θ) ∝ Re[K]·P₂(cosθ) — elongates along field axis for K>0.
+  //    Ref: Engelhardt & Sackmann (1988) Biophys J 54; Dimova et al. (2007) Soft Matter.
   // 2. Bacteria alignment: pDEP → 0° (field-parallel); nDEP → 90°
   // 3. Translational drift: pDEP → toward electrode (−Y); nDEP → away (+Y); max ±8 px
   let depDeformScale = 0   // updated every timer tick before blobPts
@@ -1107,7 +1253,7 @@ export function setupBlobAnimation(
 
   // ── D3 timer loop ──────────────────────────────────────────────────────────
   const timer = d3.timer((elapsed: number) => {
-    const { impact, state, color, temperature, fieldVcm, freqKHz, nuclearDisruptionRatio, depCmReal, waveform } = getFrame()
+    const { impact, state, color, temperature, fieldVcm, freqKHz, nuclearDisruptionRatio, depCmReal, waveform, isAcousticMode = false } = getFrame()
 
     // ── Field ray color (cyan→violet, log 10 kHz–30 GHz) + intensity ─────────
     const freqNorm = Math.max(0, Math.min(1,
@@ -1147,7 +1293,13 @@ export function setupBlobAnimation(
       ? (depCmReal > 0 ? 0 : 90)
       : 0
     depAlignAngle += (targetAlignAngle - depAlignAngle) * 0.025
-    bodyG.attr('transform', `rotate(${depAlignAngle.toFixed(2)})`)
+    // ── Pseudo-3D Y-axis rotation (mammalian only): scaleX = cos θ illusion ───
+    // Period ≈ 14 s; amplitude ±0.14 gives a 72–100% width oscillation that reads
+    // as a slow tumble on the microscopy stage without distorting bacteria DEP alignment.
+    const spinScaleX = cellCategory === CELL_CATEGORY.MAMMALIAN
+      ? 0.86 + 0.14 * Math.cos(elapsed * 0.00045)
+      : 1.0
+    bodyG.attr('transform', `rotate(${depAlignAngle.toFixed(2)}) scale(${spinScaleX.toFixed(3)},1)`)
 
     // ── Dynamic beam height: tracks pole extent (E. coli shrinks when rotated nDEP) ─
     const effectivePoleR = isRod
@@ -1168,8 +1320,8 @@ export function setupBlobAnimation(
     depDriftY += (targetDrift - depDriftY) * 0.018
     cellG.attr('transform', `translate(${cx},${(cy + depDriftY).toFixed(2)})`)
 
-    // ── Equatorial ring: rx tracks E-W extent (pDEP = wider, nDEP = narrower) ─
-    const eqRx = Math.max(4, BASE_R * 0.88 + depDeformScale * 0.55)
+    // ── Equatorial ring: rx tracks E-W extent (pDEP = narrower equator = prolate; nDEP = wider = oblate) ─
+    const eqRx = Math.max(4, BASE_R * 0.88 - depDeformScale * 0.55)
     equatorialRing
       .attr('rx', eqRx)
       .attr('stroke', color)
@@ -1183,7 +1335,8 @@ export function setupBlobAnimation(
       blobStroke.attr('stroke-opacity', 0)
       blobBg.attr('fill-opacity', 0)
       blobFill.attr('fill-opacity', 0)
-      auraRings.forEach((r) => r.attr('stroke-opacity', 0))
+      nourishBloom.attr('fill-opacity', 0)
+      nourishGlow.attr('stroke-opacity', 0)
       if (mammalianAnatomy) {
         mammalianAnatomy.nucBlob.attr('fill-opacity', 0).attr('stroke-opacity', 0)
         mammalianAnatomy.nucOuterEnv.attr('stroke-opacity', 0)
@@ -1200,7 +1353,8 @@ export function setupBlobAnimation(
         bacteriaAnatomy.bacteriaWallC1?.attr('stroke-opacity', 0)
         bacteriaAnatomy.bacteriaWallC2?.attr('stroke-opacity', 0)
         bacteriaAnatomy.septum?.attr('stroke-opacity', 0)
-        bacteriaAnatomy.flagEl?.attr('stroke-opacity', 0)
+        bacteriaAnatomy.flagEls?.forEach((f) => f.attr('stroke-opacity', 0))
+        bacteriaAnatomy.hookEls?.forEach((h) => h.attr('stroke-opacity', 0))
         bacteriaAnatomy.nucleoidBlob.attr('fill-opacity', 0)
         bacteriaAnatomy.ribosomeDots.forEach((d) => d.attr('opacity', 0))
       }
@@ -1219,6 +1373,9 @@ export function setupBlobAnimation(
       northPore.attr('r', 0); southPore.attr('r', 0)
       pore3.attr('r', 0);     pore4.attr('r', 0)
       glowBlur.attr('stdDeviation', '1')
+      blebData.forEach(({ el: bEl }) => bEl.attr('r', 0).attr('stroke-opacity', 0))
+      standingWaveRings.forEach((r) => r.attr('stroke-opacity', 0))
+      calciumWaves.forEach(({ el: cEl }) => cEl.attr('stroke-opacity', 0))
       // Remove any in-flight fragment lines to prevent static artefacts in lysed state
       d3.select(el).select('svg').selectAll('line').interrupt().remove()
       timer.stop()
@@ -1239,8 +1396,8 @@ export function setupBlobAnimation(
         .attr('stroke-opacity', Math.max(0, 1 - progress * 0.9)).attr('stroke-width', 2.5 + progress * 3)
       blobBg.attr('d', bp).attr('fill-opacity', Math.max(0, 1 - progress * 1.2))
       blobFill.attr('d', bp).attr('fill', COLOR_LYSIS).attr('fill-opacity', Math.max(0, 0.1 - progress * 0.1))
-      auraRings.forEach((ring, i) =>
-        ring.attr('stroke-opacity', Math.max(0, 0.3 - progress * 0.35 - i * 0.05)))
+      nourishBloom.attr('fill-opacity', 0)
+      nourishGlow.attr('stroke-opacity', 0)
       if (mammalianAnatomy) {
         mammalianAnatomy.nucBlob.attr('stroke', COLOR_LYSIS)
           .attr('stroke-opacity', Math.max(0, 0.42 - progress * 0.42))
@@ -1262,7 +1419,8 @@ export function setupBlobAnimation(
         bacteriaAnatomy.bacteriaWallC1?.attr('stroke-opacity', Math.max(0, 0.16 - progress * 0.16))
         bacteriaAnatomy.bacteriaWallC2?.attr('stroke-opacity', Math.max(0, 0.13 - progress * 0.13))
         bacteriaAnatomy.septum?.attr('stroke-opacity', Math.max(0, 0.18 - progress * 0.18))
-        bacteriaAnatomy.flagEl?.attr('stroke-opacity', Math.max(0, 0.30 - progress * 0.30))
+        bacteriaAnatomy.flagEls?.forEach((f) => f.attr('stroke-opacity', Math.max(0, 0.28 - progress * 0.28)))
+        bacteriaAnatomy.hookEls?.forEach((h) => h.attr('stroke-opacity', Math.max(0, 0.40 - progress * 0.40)))
       }
       if (virusAnatomy) {
         virusAnatomy.virusInnerRings.forEach((r) => r.attr('opacity', Math.max(0, 1 - progress * 1.2)))
@@ -1279,6 +1437,9 @@ export function setupBlobAnimation(
       specularDot.attr('fill-opacity', Math.max(0, 0.09 - progress * 0.09))
       northPoleGlow.attr('fill-opacity', 0); southPoleGlow.attr('fill-opacity', 0)
       glowBlur.attr('stdDeviation', (3 + progress * 12).toFixed(1))
+      blebData.forEach(({ el: bEl }) => bEl.attr('r', 0).attr('stroke-opacity', 0))
+      standingWaveRings.forEach((r) => r.attr('stroke-opacity', 0))
+      calciumWaves.forEach(({ el: cEl }) => cEl.attr('stroke-opacity', 0))
       return
     }
 
@@ -1286,6 +1447,8 @@ export function setupBlobAnimation(
     const isVibrating  = state === CELL_STATE.VIBRATING
     const isNourishing = state === CELL_STATE.NOURISHING
     const isRevEp      = state === CELL_STATE.REV_EP
+    // Shared pore-cycle signal — used by membrane flicker AND pore colour/radius below
+    const revEpCycle   = isRevEp ? (Math.sin(elapsed * 0.0022) + 1) / 2 : 0
 
     // Rigid-shell pathogens deform less per unit impact
     const rigidityFactor = cellCategory === CELL_CATEGORY.VIRUS ? 0.40 : cellCategory === CELL_CATEGORY.BACTERIA ? 0.60 : 1.0
@@ -1301,7 +1464,8 @@ export function setupBlobAnimation(
       const baseR  = shapeBaseR(ph.baseAngle) + (cancerBaseOffsets[idx] ?? 0)
       const wave   = Math.sin(elapsed * 0.001 * ph.speed * speedMult + ph.phaseOffset) * jitter
       const noise  = (Math.random() - 0.5) * (isVibrating ? jitter * 0.5 : 2.5) * rigidityFactor
-      const depR   = depDeformScale !== 0 ? depDeformScale * (-Math.cos(2 * ph.baseAngle)) : 0
+      // cos(2θ) ∝ P₂(cosθ): positive at poles, negative at equator → prolate for K>0 (pDEP)
+      const depR   = depDeformScale !== 0 ? depDeformScale * Math.cos(2 * ph.baseAngle) : 0
       return { angle: ph.baseAngle, r: baseR * radiusMod + wave + noise + depR }
     })
     const blobPath = blobLine(blobPts) || ''
@@ -1315,19 +1479,29 @@ export function setupBlobAnimation(
     blobBg.attr('d', blobPath).attr('fill-opacity', 1)
     blobFill.attr('d', blobPath).attr('fill', `url(#${gradId})`)
     gradStop1.attr('stop-color', thermalColor)
-    blobStroke.attr('d', blobPath).attr('stroke', color)
-      .attr('stroke-opacity', 1).attr('stroke-width', isNourishing ? 3 : 2.5)
+    // Rev-EP membrane flicker: stroke pulses toward amber in sync with the pore cycle,
+    // representing transient permeabilisation of the lipid bilayer.
+    const membraneStrokeColor = isRevEp
+      ? d3.interpolateRgb(color, COLOR_AMBER)(revEpCycle * 0.55)
+      : color
+    const membraneStrokeWidth = isRevEp ? 2.5 + revEpCycle * 0.7 : (isNourishing ? 3 : 2.5)
+    blobStroke.attr('d', blobPath).attr('stroke', membraneStrokeColor)
+      .attr('stroke-opacity', 1).attr('stroke-width', membraneStrokeWidth)
 
-    // ── Aura rings ──────────────────────────────────────────────────────────
-    const auraPulseSpeed = isVibrating ? 0.003 + impact * 0.006
-      : isNourishing ? 0.0018 + impact * 0.004 : 0.0012
-    auraRings.forEach((ring, i) => {
-      const pulse       = (Math.sin(elapsed * auraPulseSpeed - i * 0.9) + 1) / 2
-      const baseOpacity = isVibrating ? 0.08 + impact * 0.35
-        : isNourishing ? 0.14 + impact * 0.28 : 0.04 + impact * 0.04
-      ring.attr('stroke', color)
-        .attr('stroke-opacity', baseOpacity * (0.45 + pulse * 0.55))
-        .attr('r', BASE_R + 14 + i * 13 + (isNourishing ? 4 + impact * 14 : isVibrating ? impact * 4 : 0))
+
+    // ── Acoustic standing-wave rings (bacteria/virus resonance mode) ─────────
+    // 5 rings oscillate in radius at staggered phases, representing the radial
+    // displacement field of a spherically resonating capsid/cell wall.
+    standingWaveRings.forEach((ring, i) => {
+      if (!isAcousticMode) { ring.attr('stroke-opacity', 0); return }
+      const baseR = BASE_R + 10 + i * 9
+      const amp   = 2.5 + impact * 7               // oscillation grows with capsid disruption
+      const speed = 0.0038 + impact * 0.0022
+      const phase = i * ((Math.PI * 2) / standingWaveRings.length)
+      const r     = Math.max(2, baseR + amp * Math.sin(elapsed * speed - phase))
+      const opMax = 0.30 - i * 0.04
+      ring.attr('r', r).attr('stroke', rayColor)
+        .attr('stroke-opacity', opMax * (0.35 + impact * 0.65))
     })
 
     // ── Category-specific interior update ─────────────────────────────────
@@ -1343,6 +1517,48 @@ export function setupBlobAnimation(
       updateVirusAnatomy(virusAnatomy, { elapsed, color, impact, state })
     }
 
+    // ── Nourishing background bloom + membrane halo ───────────────────────────
+    // Two layered effects: a large radial bloom behind the cell (background aura)
+    // and a wide blurred membrane halo tracing the cell border.
+    // Both breathe at slightly different rates so the glow feels alive, not mechanical.
+    if (isNourishing) {
+      const breatheFast = (Math.sin(elapsed * 0.0013) + 1) / 2  // ~4.8 s cycle — membrane halo
+      const breatheSlow = (Math.sin(elapsed * 0.0007) + 1) / 2  // ~9.0 s cycle — background bloom
+      // Background bloom: soft radial aura behind the cell body
+      const bloomOp = (0.22 + impact * 0.42) * (0.38 + breatheSlow * 0.62)
+      nourishBloom.attr('fill', color).attr('fill-opacity', bloomOp)
+      // Membrane halo: intense pulsing glow tracing the cell border
+      const glowOp  = (0.28 + impact * 0.52) * (0.50 + breatheFast * 0.50)
+      nourishGlow.attr('d', blobPath).attr('stroke', color).attr('stroke-opacity', glowOp)
+    } else {
+      nourishBloom.attr('fill-opacity', 0)
+      nourishGlow.attr('stroke-opacity', 0)
+    }
+
+    // ── Calcium wave propagation (PIEZO1/TRP Ca²⁺ transients, nourishing state) ──
+    // Waves contract inward from the membrane (BASE_R) toward the perinuclear region,
+    // modelling Ca²⁺ diffusion after membrane entry — not outward expansion.
+    if (isNourishing) {
+      if (elapsed - lastCalciumElapsed > 1800) {
+        lastCalciumElapsed = elapsed
+        const wave = calciumWaves[calciumWaveIdx % calciumWaves.length]
+        if (wave) wave.startElapsed = elapsed
+        calciumWaveIdx++
+      }
+      calciumWaves.forEach((wave) => {
+        const age = elapsed - wave.startElapsed
+        if (age < 0 || age > 2200) { wave.el.attr('stroke-opacity', 0); return }
+        const progress = age / 2200
+        // Contracts from membrane inward to ~15% of cell radius (perinuclear)
+        const waveR   = BASE_R * (1.0 - progress * 0.85)
+        const opacity = Math.sin(progress * Math.PI) * 0.45
+        wave.el.attr('cx', 0).attr('cy', 0)
+          .attr('r', waveR).attr('stroke', color).attr('stroke-opacity', opacity)
+      })
+    } else {
+      calciumWaves.forEach(({ el: cEl }) => cEl.attr('stroke-opacity', 0))
+    }
+
     // ── Vm pole glow: accentColor → amber → red as DR grows; modulated by AC pulse ─
     const poleGlowIntensity = Math.max(0, (impact - 0.05) * 0.42)
     const poleGlowColor = impact < 0.5
@@ -1354,7 +1570,6 @@ export function setupBlobAnimation(
     southPoleGlow.attr('fill', poleGlowColor).attr('fill-opacity', poleGlowIntensity * modOpacity)
 
     // ── Pores: Rev-EP (50–85% DR) = amber cycling; IRE (>85%) = opaque holes ──
-    const revEpCycle    = isRevEp ? (Math.sin(elapsed * 0.0022) + 1) / 2 : 0
     const revEpPoreR    = isRevEp ? 1.0 + revEpCycle * 2.4 : 0
     const primaryPore   = Math.min(PORE_MAX_R, Math.max(0, (impact - 0.70) / 0.30) * 4.5)
     const secondaryPore = isRod ? 0 : Math.min(PORE_MAX_R * 0.6, Math.max(0, (impact - 0.88) / 0.15) * 3.5)
@@ -1381,6 +1596,28 @@ export function setupBlobAnimation(
       const speed = ION_SPEEDS[i] ?? 0.00037, phase = ION_PHASES_S[i] ?? 0.50
       const t = ((elapsed * speed + phase) % 1)
       ion.attr('cy', sPorePos * (1 - t)).attr('fill-opacity', Math.sin(t * Math.PI) * 0.70)
+    })
+
+    // ── Membrane blebs: two field-axis polar protrusions (mammalian only) ────────
+    // Physics: Maxwell stress ∝ Vm² ∝ cos²θ peaks at the anodic and cathodic poles.
+    // Blebs grow from DR ~28% onward; each pulse independently (stochastic osmotic pressure).
+    // Amber at Rev-EP (transient, reseals); danger-red at vibrating (irreversible herniation).
+    blebData.forEach(({ el: bEl, idx, phaseShift, pulseSpeed }) => {
+      const blebActive = state === CELL_STATE.APPROACHING || isRevEp || isVibrating
+      if (!blebActive) { bEl.attr('r', 0).attr('stroke-opacity', 0); return }
+      const blebBaseR = Math.max(0, (impact - 0.28) * BASE_R * 0.32)
+      if (blebBaseR < 0.5) { bEl.attr('r', 0).attr('stroke-opacity', 0); return }
+      const pt = blobPts[idx]
+      if (!pt) return
+      const pulse     = 0.68 + Math.sin(elapsed * pulseSpeed + phaseShift) * 0.32
+      const r         = blebBaseR * pulse
+      const blebColor = isVibrating ? COLOR_LYSIS : COLOR_AMBER
+      bEl.attr('cx', pt.r * Math.sin(pt.angle))
+        .attr('cy', -pt.r * Math.cos(pt.angle))
+        .attr('r', r)
+        .attr('fill', blebColor).attr('fill-opacity', isVibrating ? 0.07 : 0.05)
+        .attr('stroke', blebColor).attr('stroke-width', 1.4)
+        .attr('stroke-opacity', isVibrating ? 0.75 : 0.62)
     })
 
     // ── Membrane channel gating (PIEZO1/TRP/K+Na+; stochastic, state-dependent) ─
@@ -1441,21 +1678,27 @@ export function setupOscilloscope(
     // Waveform clipping at Rev-EP and above: above electroporation threshold the membrane
     // conductance spikes, clamping Vm — the linear Schwan model no longer applies and the
     // waveform saturates. Clip level decreases from 1.0 (no clip, 50% DR) to 0.15 (heavy clip, 85% DR).
-    const clipLevel = impact > 0.50
-      ? Math.max(0.15, 1.0 - (impact - 0.50) * 2.0)
-      : 1.0
+    const clipLevel   = impact > 0.50 ? Math.max(0.15, 1.0 - (impact - 0.50) * 2.0) : 1.0
+    const isEpClipped = clipLevel < 0.95
     const pts = d3.range(120).map((i: number) => {
-      const sinVal = Math.sin((i / 120) * Math.PI * 8 + elapsed * scrollSpeed * speedMult)
+      const sinVal  = Math.sin((i / 120) * Math.PI * 8 + elapsed * scrollSpeed * speedMult)
       const clipped = Math.max(-clipLevel, Math.min(clipLevel, sinVal))
+      // EP noise: on flat-top segments membrane conductance spikes produce high-freq jitter.
+      // Models the stochastic pore opening/closing above the EP threshold.
+      const epNoise = (isEpClipped && Math.abs(sinVal) > clipLevel)
+        ? (Math.random() - 0.5) * (1 - clipLevel) * 0.90
+        : 0
       return {
         x: (i / 119) * W,
         y: H / 2
-          + amp * clipped
+          + amp * (clipped + epNoise)
           + (isLysing ? (Math.random() - 0.5) * H * 0.55 : 0),
       }
     })
 
+    // Thicker stroke when EP clipping is active — signals membrane permeabilisation
     path.attr('d', lineGen(pts) || '').attr('stroke', isLysing ? COLOR_LYSIS : cellColor)
+      .attr('stroke-width', isEpClipped ? 1.9 : 1.5)
   })
 
   return timer
@@ -1464,32 +1707,69 @@ export function setupOscilloscope(
 // ── Fragment spawner ──────────────────────────────────────────────────────────
 
 /**
- * Appends a single lysis fragment line to the cell's SVG and fades it out.
+ * Appends a single lysis fragment to the cell's SVG and animates it outward.
+ * Three variants are randomly chosen each call:
+ *  - Arc shard   (35%): curved membrane fragment — torn lipid bilayer piece
+ *  - Debris dot  (23%): filled circle — cytoplasmic organelle / ribosome cluster
+ *  - Line shard  (42%): original radial line with outward drift
  * Call repeatedly (e.g. every 80 ms) during the lysing state.
  */
 export function spawnFragment(el: HTMLElement): void {
   const svg = d3.select(el).select<SVGSVGElement>('svg')
   if (svg.empty()) return
 
-  const W = CANVAS_W, H = CANVAS_H
-  const angle  = Math.random() * Math.PI * 2
-  const startR = 50 + Math.random() * 20
-  const endR   = 90 + Math.random() * 70
-  const len    = 6  + Math.random() * 14
+  const W   = CANVAS_W, H = CANVAS_H
+  const cx  = W / 2,    cy = H / 2
+  const angle    = Math.random() * Math.PI * 2
+  const startR   = 50 + Math.random() * 20
+  const endR     = 90 + Math.random() * 70
+  const duration = 650 + Math.random() * 900
+  const roll     = Math.random()
 
-  svg.append('line')
-    .attr('x1', W / 2 + Math.cos(angle) * startR)
-    .attr('y1', H / 2 + Math.sin(angle) * startR)
-    .attr('x2', W / 2 + Math.cos(angle) * (startR + len))
-    .attr('y2', H / 2 + Math.sin(angle) * (startR + len))
-    .attr('stroke', COLOR_LYSIS)
-    .attr('stroke-width', 0.5 + Math.random() * 2)
-    .attr('stroke-opacity', 1)
-    .transition().duration(600 + Math.random() * 900).ease(d3.easeQuadOut)
-    .attr('x1', W / 2 + Math.cos(angle) * endR)
-    .attr('y1', H / 2 + Math.sin(angle) * endR)
-    .attr('x2', W / 2 + Math.cos(angle) * (endR + len))
-    .attr('y2', H / 2 + Math.sin(angle) * (endR + len))
-    .attr('stroke-opacity', 0)
-    .remove()
+  if (roll < 0.35) {
+    // ── Arc shard: curved membrane fragment flying radially outward ──────────
+    const arcR    = (startR + endR) * 0.5
+    const arcSpan = 0.38 + Math.random() * 0.85
+    const x1 = (cx + Math.cos(angle)           * arcR).toFixed(1)
+    const y1 = (cy + Math.sin(angle)           * arcR).toFixed(1)
+    const x2 = (cx + Math.cos(angle + arcSpan) * arcR).toFixed(1)
+    const y2 = (cy + Math.sin(angle + arcSpan) * arcR).toFixed(1)
+    svg.append('path')
+      .attr('d', `M${x1},${y1} A${arcR.toFixed(1)},${arcR.toFixed(1)} 0 0,1 ${x2},${y2}`)
+      .attr('fill', 'none').attr('stroke', COLOR_LYSIS)
+      .attr('stroke-width', 0.6 + Math.random() * 1.6)
+      .attr('stroke-linecap', 'round').attr('stroke-opacity', 0.85)
+      .transition().duration(duration).ease(d3.easeQuadOut)
+      .attr('stroke-opacity', 0)
+      .remove()
+  } else if (roll < 0.58) {
+    // ── Debris dot: cytoplasmic content ejected from ruptured membrane ───────
+    const driftR = startR + Math.random() * 45
+    svg.append('circle')
+      .attr('cx', cx + Math.cos(angle) * driftR)
+      .attr('cy', cy + Math.sin(angle) * driftR)
+      .attr('r', 1.2 + Math.random() * 2.8)
+      .attr('fill', COLOR_LYSIS).attr('fill-opacity', 0.72)
+      .transition().duration(duration).ease(d3.easeQuadOut)
+      .attr('fill-opacity', 0)
+      .remove()
+  } else {
+    // ── Line shard: radial tear fragment drifting outward (original behaviour) ─
+    const len = 6 + Math.random() * 14
+    svg.append('line')
+      .attr('x1', cx + Math.cos(angle) * startR)
+      .attr('y1', cy + Math.sin(angle) * startR)
+      .attr('x2', cx + Math.cos(angle) * (startR + len))
+      .attr('y2', cy + Math.sin(angle) * (startR + len))
+      .attr('stroke', COLOR_LYSIS)
+      .attr('stroke-width', 0.5 + Math.random() * 2)
+      .attr('stroke-opacity', 1)
+      .transition().duration(duration).ease(d3.easeQuadOut)
+      .attr('x1', cx + Math.cos(angle) * endR)
+      .attr('y1', cy + Math.sin(angle) * endR)
+      .attr('x2', cx + Math.cos(angle) * (endR + len))
+      .attr('y2', cy + Math.sin(angle) * (endR + len))
+      .attr('stroke-opacity', 0)
+      .remove()
+  }
 }

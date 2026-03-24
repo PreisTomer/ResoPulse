@@ -220,20 +220,20 @@ export default defineComponent({
       text-transform: uppercase;
       letter-spacing: 0.1em;
       color: var(--color-text-muted);
-      background: rgba(255, 255, 255, 0.02);
+      background: color-mix(in srgb, white 2%, transparent);
       border-bottom: 1px solid var(--color-border);
       white-space: nowrap;
     }
 
     td {
       padding: 0.52rem 0.75rem;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      border-bottom: 1px solid color-mix(in srgb, white 4%, transparent);
       white-space: nowrap;
       font-family: var(--font-mono);
     }
 
     tr:last-child td { border-bottom: none; }
-    tr:hover td { background: rgba(255, 255, 255, 0.025); }
+    tr:hover td { background: color-mix(in srgb, white 2.5%, transparent); }
   }
 
   &__row--lysis td { background: color-mix(in srgb, var(--color-danger) 4%, transparent); }
@@ -288,7 +288,7 @@ export default defineComponent({
     width: 11px;
     height: 11px;
     border-radius: 50%;
-    border: 1.5px solid rgba(255, 255, 255, 0.2);
+    border: 1.5px solid color-mix(in srgb, white 20%, transparent);
     transition: all var(--tr-fast);
     vertical-align: middle;
 

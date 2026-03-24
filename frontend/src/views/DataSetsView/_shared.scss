@@ -110,7 +110,7 @@
   }
 
   .datasets__formula-label {
-    @include mono-upper(0.7rem, 0.08em);
+    @include mono-upper(var(--fs-xs), 0.08em);
     color: var(--color-primary);
     opacity: 0.75; // intentional between-tier value
 

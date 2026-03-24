@@ -352,13 +352,13 @@ export default defineComponent({
           if (resKhz >= this.xMin && resKhz <= this.xMax) {
             const rx = this._freqToX(resKhz)
             ctx.save()
-            ctx.strokeStyle = 'rgba(255,255,255,0.7)'
+            ctx.strokeStyle = C.w70
             ctx.lineWidth = 1.5
             ctx.setLineDash([4, 3])
             ctx.beginPath(); ctx.moveTo(rx, mt); ctx.lineTo(rx, mt + ph); ctx.stroke()
             ctx.restore()
             ctx.save()
-            ctx.fillStyle = 'rgba(255,255,255,0.7)'
+            ctx.fillStyle = C.w70
             ctx.font = '9px monospace'
             ctx.textAlign = 'center'
             ctx.fillText('f_res', rx, mt + 9)
@@ -394,7 +394,7 @@ export default defineComponent({
 
       // Projection lines (dashed white)
       ctx.save()
-      ctx.strokeStyle = 'rgba(255,255,255,0.22)'
+      ctx.strokeStyle = C.w22
       ctx.lineWidth = 1
       ctx.setLineDash([3, 3])
       ctx.beginPath()
@@ -429,8 +429,8 @@ export default defineComponent({
 
     _drawAxes(ctx: CanvasRenderingContext2D, ml: number, mt: number, pw: number, ph: number) {
       ctx.save()
-      ctx.strokeStyle = 'rgba(255,255,255,0.45)'
-      ctx.fillStyle   = 'rgba(255,255,255,0.65)'
+      ctx.strokeStyle = C.w45
+      ctx.fillStyle   = C.w65
       ctx.lineWidth   = 1
       ctx.font        = '9px monospace'
 
@@ -452,14 +452,14 @@ export default defineComponent({
       }
 
       // X-axis title
-      ctx.fillStyle    = 'rgba(255,255,255,0.4)'
+      ctx.fillStyle    = C.w40
       ctx.font         = '9px monospace'
       ctx.textAlign    = 'center'
       ctx.textBaseline = 'bottom'
       ctx.fillText('RF Frequency (log)', ml + pw / 2, this.displayH)
 
       // Y-axis ticks
-      ctx.fillStyle    = 'rgba(255,255,255,0.65)'
+      ctx.fillStyle    = C.w65
       ctx.textAlign    = 'right'
       ctx.textBaseline = 'middle'
       for (const tick of this._yTicks()) {
@@ -472,7 +472,7 @@ export default defineComponent({
       ctx.save()
       ctx.translate(10, mt + ph / 2)
       ctx.rotate(-Math.PI / 2)
-      ctx.fillStyle    = 'rgba(255,255,255,0.4)'
+      ctx.fillStyle    = C.w40
       ctx.font         = '9px monospace'
       ctx.textAlign    = 'center'
       ctx.textBaseline = 'middle'

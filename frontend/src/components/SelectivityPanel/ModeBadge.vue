@@ -85,7 +85,7 @@ export default defineComponent({
       const cat = this.store.targetCellCategory
       const ti  = this.store.therapeuticIndex
       const t = this.store.target as { resonantFreqGHz?: number; resonantThresholdVcm?: number }
-      const ghzCaveat = ' · f_res from fs-laser experiments (Tsen et al. [10]); RF delivery at GHz is skin-depth limited (~4-13 mm in saline at 1-12 GHz)'
+      const ghzCaveat = ' · f_res from fs-laser experiments (Tsen et al. [10]); RF delivery at GHz faces EM penetration limits in aqueous media (Debye relaxation above 1 GHz)'
       if (this.store.isResonanceMode && cat === CELL_CATEGORY.MAMMALIAN) {
         return `${ICON.WARNING} Resonance mode has no physical meaning for mammalian cells, they have no rigid protein capsid or peptidoglycan cell wall. Switch back to IRE/Vm mode.`
       }
@@ -193,7 +193,7 @@ export default defineComponent({
       &:hover {
         color: var(--color-text);
         border-color: var(--color-text-muted);
-        background: rgba(255, 255, 255, 0.04);
+        background: color-mix(in srgb, white 4%, transparent);
       }
     }
   }

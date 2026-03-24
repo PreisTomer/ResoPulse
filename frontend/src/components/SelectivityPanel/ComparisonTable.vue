@@ -142,7 +142,7 @@ export default defineComponent({
     border-radius: 3px;
     transition: background 0.1s;
 
-    &--active { background: rgba(255, 255, 255, 0.05); }
+    &--active { background: color-mix(in srgb, white 5%, transparent); }
   }
 
   &__cmp-name {
@@ -158,7 +158,7 @@ export default defineComponent({
 
   &__cmp-bar-track {
     height: 4px;
-    background: rgba(255, 255, 255, 0.08);
+    background: color-mix(in srgb, white 8%, transparent);
     border-radius: 2px;
     overflow: hidden;
   }

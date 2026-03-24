@@ -93,11 +93,11 @@ export default defineComponent({
     align-self: center;
     width: 32px;
     height: 88px;
-    background: rgba(8, 10, 18, 0.97);
-    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: color-mix(in srgb, var(--color-bg) 97%, transparent);
+    border: 1px solid color-mix(in srgb, white 14%, transparent);
     border-right: none;
     border-radius: 8px 0 0 8px;
-    box-shadow: -3px 0 14px rgba(0, 0, 0, 0.55);
+    box-shadow: -3px 0 14px color-mix(in srgb, black 55%, transparent);
     backdrop-filter: blur(12px);
     cursor: pointer;
     display: flex;
@@ -106,8 +106,8 @@ export default defineComponent({
     transition: background var(--tr-fast), box-shadow var(--tr-fast);
 
     &:hover {
-      background: rgba(22, 28, 52, 0.99);
-      box-shadow: -4px 0 18px rgba(100, 160, 255, 0.18);
+      background: color-mix(in srgb, var(--color-surface) 99%, transparent);
+      box-shadow: -4px 0 18px color-mix(in srgb, var(--color-primary) 18%, transparent);
     }
 
     &-dot {
@@ -120,11 +120,11 @@ export default defineComponent({
   &-body {
     pointer-events: none;
     width: 312px;
-    background: rgba(8, 10, 18, 0.97);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: color-mix(in srgb, var(--color-bg) 97%, transparent);
+    border: 1px solid color-mix(in srgb, white 12%, transparent);
     border-left: none;
     border-radius: 0 10px 10px 0;
-    box-shadow: 0 8px 48px rgba(0, 0, 0, 0.80), 0 0 0 1px rgba(255, 255, 255, 0.05);
+    box-shadow: 0 8px 48px color-mix(in srgb, black 80%, transparent), 0 0 0 1px color-mix(in srgb, white 5%, transparent);
     padding: 0.75rem 0.75rem 0.5rem;
     backdrop-filter: blur(12px);
     transition: border-color var(--tr-fast), box-shadow var(--tr-fast);
@@ -134,8 +134,8 @@ export default defineComponent({
       cursor: pointer;
 
       &:hover {
-        border-color: rgba(100, 160, 255, 0.30);
-        box-shadow: 0 8px 48px rgba(0, 0, 0, 0.80), 0 0 0 1px rgba(100, 160, 255, 0.12);
+        border-color: color-mix(in srgb, var(--color-primary) 30%, transparent);
+        box-shadow: 0 8px 48px color-mix(in srgb, black 80%, transparent), 0 0 0 1px color-mix(in srgb, var(--color-primary) 12%, transparent);
       }
     }
   }

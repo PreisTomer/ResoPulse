@@ -69,6 +69,28 @@ export const C = {
   white:         '#ffffff',   // canvas axis labels, tick marks
   rayInterp1:    '#4a9eff',   // field-ray frequency gradient: mid blue (cyan→violet scale)
   rayInterp2:    '#7c6cff',   // field-ray frequency gradient: mid violet
+
+  // ── D3/canvas white semi-transparent ────────────────────────────────────────
+  // canvas ctx and D3 .attr() cannot evaluate CSS custom properties; use these
+  // named constants instead. CSS <style> blocks must use color-mix() instead.
+  w85: 'rgba(255,255,255,0.85)',  // strong: cursor tick labels, cursor line stroke
+  w75: 'rgba(255,255,255,0.75)',  // secondary cursor labels
+  w70: 'rgba(255,255,255,0.70)',  // bright canvas text
+  w65: 'rgba(255,255,255,0.65)',  // canvas label text
+  w55: 'rgba(255,255,255,0.55)',  // primary axis tick text
+  w50: 'rgba(255,255,255,0.50)',  // general chart annotation text
+  w45: 'rgba(255,255,255,0.45)',  // canvas strokes
+  w40: 'rgba(255,255,255,0.40)',  // axis label overlay / canvas fill text
+  w38: 'rgba(255,255,255,0.38)',  // secondary axis text (log axis)
+  w35: 'rgba(255,255,255,0.35)',  // caption / dim chart text
+  w30: 'rgba(255,255,255,0.30)',  // medium grid line stroke
+  w28: 'rgba(255,255,255,0.28)',  // faint annotation / dim label
+  w22: 'rgba(255,255,255,0.22)',  // canvas grid lines
+  w20: 'rgba(255,255,255,0.20)',  // axis major grid lines
+  w15: 'rgba(255,255,255,0.15)',  // axis domain / spine stroke
+  w12: 'rgba(255,255,255,0.12)',  // faint reference lines
+  w10: 'rgba(255,255,255,0.10)',  // near-invisible reference
+  w06: 'rgba(255,255,255,0.06)',  // ghost grid lines
 } as const
 
 export type SystemColor = keyof typeof C

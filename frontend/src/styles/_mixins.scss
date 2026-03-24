@@ -176,7 +176,7 @@ $_cell-states: (
 // ── Slider thumb ────────────────────────────────────────────────────────────
 // Standard webkit + moz thumb. Optional $bg and $shadow overrides.
 // Usage: @include slider-thumb();
-@mixin slider-thumb($bg: var(--color-text-heading), $shadow: rgba(255, 255, 255, 0.2)) {
+@mixin slider-thumb($bg: var(--color-text-heading), $shadow: color-mix(in srgb, white 20%, transparent)) {
   &::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
@@ -187,7 +187,7 @@ $_cell-states: (
     box-shadow: 0 0 5px $shadow;
     cursor: pointer;
     transition: box-shadow 0.15s;
-    &:hover { box-shadow: 0 0 9px rgba(255, 255, 255, 0.45); }
+    &:hover { box-shadow: 0 0 9px color-mix(in srgb, white 45%, transparent); }
   }
   &::-moz-range-thumb {
     width: 15px; height: 15px;

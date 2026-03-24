@@ -56,7 +56,7 @@ function ensureTip(): HTMLDivElement {
   display: block;
   margin-top: 0.35rem;
   padding-top: 0.25rem;
-  border-top: 1px solid rgba(255,255,255,0.07);
+  border-top: 1px solid color-mix(in srgb, white 7%, transparent);
   line-height: 1.55;
 }
 `

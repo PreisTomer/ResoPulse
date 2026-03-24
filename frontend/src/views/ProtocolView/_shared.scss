@@ -38,7 +38,7 @@
 // ── Equation block styles ────────────────────────────────────────────────────
 @mixin protocol-eq-block() {
   .protocol__eq-block {
-    background: rgba(0, 0, 0, 0.25);
+    background: color-mix(in srgb, black 25%, transparent);
     border: 1px solid var(--color-border);
     border-left: 3px solid var(--color-primary);
     border-radius: var(--radius);
@@ -76,7 +76,7 @@
     font-size: var(--fs-xs);
     color: var(--color-text-muted);
     opacity: var(--op-dim);
-    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    border-top: 1px solid color-mix(in srgb, white 6%, transparent);
     padding-top: 0.35rem;
     margin-top: 0.15rem;
   }
@@ -121,7 +121,7 @@
   .protocol__note {
     border-left: 3px solid var(--color-border);
     padding: 0.55rem 0.85rem;
-    background: rgba(255, 255, 255, 0.02);
+    background: color-mix(in srgb, white 2%, transparent);
     font-size: var(--fs-md);
     line-height: 1.6;
     color: var(--color-text-muted);
@@ -180,7 +180,7 @@
     }
 
     th {
-      @include table-header-cell(rgba(0, 0, 0, 0.2));
+      @include table-header-cell(color-mix(in srgb, black 20%, transparent));
       font-size: var(--fs-xs);
       letter-spacing: 0.07em;
     }
@@ -188,7 +188,7 @@
     td { color: var(--color-text); line-height: 1.45; }
 
     tr:last-child td { border-bottom: none; }
-    tr:hover td { background: rgba(255, 255, 255, 0.02); }
+    tr:hover td { background: color-mix(in srgb, white 2%, transparent); }
   }
 
   .protocol__table-caption {

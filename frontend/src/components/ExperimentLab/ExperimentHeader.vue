@@ -101,7 +101,7 @@
             </button>
           </div>
           <!-- Custom presets grid -->
-          <div v-else class="experiment__cell-picker-grid experiment__cell-picker-grid--custom">
+          <div v-else class="experiment__cell-picker-grid">
             <p v-if="!presetsStore.hasPresets" class="experiment__custom-empty">
               {{ $t('userPresets.emptyMsg') }}<br />
               <span class="experiment__custom-hint">{{ $t('userPresets.emptyHint') }}</span>
@@ -166,8 +166,7 @@ import { useCellStore } from '@/stores/cellStore'
 import { useImpedanceStore } from '@/stores/impedanceStore'
 import { useUserPresetsStore } from '@/stores/userPresetsStore'
 import type { UserCellPreset } from '@/stores/userPresetsStore'
-import { broadcastStateSync } from '@/services/socket'
-import { socketConnected } from '@/services/socket'
+import { broadcastStateSync, socketConnected } from '@/services/socket'
 import { CELL_PRESETS, GROUP_COLORS, GROUP_LABELS } from '@/constants/cellLibrary'
 import type { CellPreset, CellGroup } from '@/constants/cellLibrary'
 import { CELL_GROUP } from '@/constants/strings'
@@ -286,7 +285,6 @@ export default defineComponent({
     },
 
     onUserPresetSaved() {
-      this.showCreateModal = false
       // Switch to custom tab so user sees the newly created preset
       this.targetPickerCategory = 'custom'
       this.targetPickerOpen = true
@@ -302,12 +300,6 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-
-
-@keyframes pulse-dot {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.4; }
-}
 
 // ── BEM block: experiment — all child elements nest here ──────────────────────
 .experiment {
@@ -469,8 +461,8 @@ export default defineComponent({
     @media (max-width: 540px) { display: flex; width: 100%; }
 
     &:hover .experiment__cell-badge-row {
-      border-color: rgba(255, 255, 255, 0.18);
-      background: rgba(255, 255, 255, 0.045);
+      border-color: color-mix(in srgb, white 18%, transparent);
+      background: color-mix(in srgb, white 4.5%, transparent);
     }
 
     &--healthy .experiment__cell-badge-row--open {
@@ -499,7 +491,7 @@ export default defineComponent({
       padding: 0.42rem 0.7rem;
       border: 1px solid var(--color-border);
       border-radius: 5px;
-      background: rgba(255, 255, 255, 0.025);
+      background: color-mix(in srgb, white 2.5%, transparent);
       min-width: 160px;
       max-width: 240px;
       transition: border-color var(--tr-fast), background var(--tr-fast);
@@ -542,7 +534,7 @@ export default defineComponent({
     z-index: 200;
     min-width: 280px;
     max-width: 380px;
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 12px 32px color-mix(in srgb, black 50%, transparent);
 
     @media (max-width: 768px) {
       position: fixed;
@@ -553,7 +545,7 @@ export default defineComponent({
     }
 
     &-title {
-      @include mono-upper(0.7rem, 0.1em);
+      @include mono-upper(var(--fs-xs), 0.1em);
       color: var(--color-text-muted);
       margin-bottom: 0.6rem;
     }
@@ -579,10 +571,10 @@ export default defineComponent({
 
       &:hover {
         color: var(--color-text);
-        border-color: rgba(255, 255, 255, 0.2);
+        border-color: color-mix(in srgb, white 20%, transparent);
       }
 
-      &--active { background: rgba(255, 255, 255, 0.04); }
+      &--active { background: color-mix(in srgb, white 4%, transparent); }
 
       &--custom {
         border-color: color-mix(in srgb, var(--color-vibrating) 40%, transparent);
@@ -612,8 +604,8 @@ export default defineComponent({
     width: 100%;
 
     &:hover {
-      background: rgba(255, 255, 255, 0.03);
-      border-color: rgba(255, 255, 255, 0.2);
+      background: color-mix(in srgb, white 3%, transparent);
+      border-color: color-mix(in srgb, white 20%, transparent);
     }
 
     &--active {

@@ -455,7 +455,7 @@
       {
         "body": "Camelia Gabriel, Sami Gabriel, E. Corthout. <em>The dielectric properties of biological tissues: I. Literature survey.</em> Physics in Medicine &amp; Biology. 1996;41(11):2231-2249.",
         "doi": "10.1088/0031-9155/41/11/001",
-        "note": "Comprehensive survey of tissue electrical properties; basis for extracellular conductivity σ<sub>e</sub> values and temperature-dependent correction coefficients used in this simulator. Also underlies the skin depth model δ = √(1/(π·f·μ₀·σ<sub>e</sub>)) displayed in the Selectivity Panel."
+        "note": "Comprehensive survey of tissue electrical properties; basis for extracellular conductivity σ<sub>e</sub> values and temperature-dependent correction coefficients used in this simulator. Also underlies the EM penetration depth model δ = 1/α (exact lossy-dielectric, α = ω√(με/2)×√(√(1+(σ/ωε)²)−1)) displayed in the Selectivity Panel."
       },
       {
         "body": "Tadej Kotnik, Lea Rems, Mounir Tarek, Damijan Miklavcic. <em>Membrane Electroporation and Electropermeabilization: Mechanisms and Models.</em> Annual Review of Biophysics. 2019;48:63-91.",

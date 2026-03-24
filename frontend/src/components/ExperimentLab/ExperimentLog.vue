@@ -305,7 +305,7 @@ export default defineComponent({
   &__actions { @include flex-row(0.35rem); flex-shrink: 0; }
 
   &__btn {
-    @include mono-upper(0.7rem);
+    @include mono-upper(var(--fs-xs));
     padding: 0.22rem 0.6rem;
     border: 1px solid var(--color-border);
     border-radius: 3px;
@@ -357,10 +357,10 @@ export default defineComponent({
         padding: 0.28rem 0.45rem;
         text-align: left;
         color: var(--color-text);
-        border-bottom: 1px solid rgba(255,255,255,0.04);
+        border-bottom: 1px solid color-mix(in srgb, white 4%, transparent);
         white-space: nowrap;
       }
-      tr:hover td { background: rgba(255,255,255,0.025); }
+      tr:hover td { background: color-mix(in srgb, white 2.5%, transparent); }
     }
   }
 
