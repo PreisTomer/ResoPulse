@@ -60,6 +60,7 @@ export const THERMAL_LEVEL = {
 export const LOG_EVENT = {
   LYSIS:   'lysis',
   MANUAL:  'manual',
+  OUTCOME: 'outcome',   // user-rated run outcome, feeds AI training loop
 } as const
 
 /** Cell preset group (aligns with CellPreset.group field in cellLibrary.ts) */

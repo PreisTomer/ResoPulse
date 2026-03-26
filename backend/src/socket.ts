@@ -1,7 +1,7 @@
 // Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 import { Server } from 'socket.io'
 import type { Server as HttpServer } from 'http'
-import type { StatePacket, LogEntry, HardwareImpedancePacket } from './types/socket'
+import type { StatePacket, LogEntry, HardwareImpedancePacket, OutcomeEntry } from './types/socket'
 
 // ── Domain constants ──────────────────────────────────────────────────────────
 const MEDIUM = {
@@ -170,6 +170,61 @@ function validateHardwareImpedancePacket(raw: Record<string, unknown>): Hardware
   return result
 }
 
+// ── Outcome entry validator ────────────────────────────────────────────────
+function validateOutcomeEntry(raw: Record<string, unknown>): OutcomeEntry | null {
+  const freqKHz      = Number(raw.freqKHz)
+  const fieldVcm     = Number(raw.fieldVcm)
+  const dutyCycle    = Number(raw.dutyCycle)
+  const pulseWidthNs = Number(raw.pulseWidthNs)
+  const oriDeg       = Number(raw.orientationDeg)
+  const nPulses      = Number(raw.lysisNPulses)
+  const targetRatio  = Number(raw.targetRatio)
+  const healthyRatio = Number(raw.healthyRatio)
+  const selectivity  = Number(raw.selectivity)
+  const targetTemp   = Number(raw.targetTemp)
+  const healthyTemp  = Number(raw.healthyTemp)
+  const rating       = Number(raw.rating)
+
+  if (!inBounds(freqKHz,      BOUNDS.FREQ_MIN_KHZ,  BOUNDS.FREQ_MAX_KHZ))  return null
+  if (!inBounds(fieldVcm,     BOUNDS.FIELD_MIN_VCM, BOUNDS.FIELD_MAX_VCM)) return null
+  if (!inBounds(dutyCycle,    BOUNDS.DC_MIN,        BOUNDS.DC_MAX))         return null
+  if (!inBounds(pulseWidthNs, BOUNDS.PW_MIN_NS,     BOUNDS.PW_MAX_NS))      return null
+  if (!inBounds(oriDeg,       BOUNDS.ORI_MIN_DEG,   BOUNDS.ORI_MAX_DEG))    return null
+  if (!inBounds(nPulses,      BOUNDS.PULSES_MIN,    BOUNDS.PULSES_MAX))     return null
+  if (isNaN(targetRatio)  || isNaN(healthyRatio) || isNaN(selectivity))     return null
+  if (isNaN(targetTemp)   || isNaN(healthyTemp))                             return null
+  if (!inBounds(rating,       1,                    5))                      return null
+
+  const med      = getString(raw.medium,      MEDIUM.SALINE)
+  const waveform = getString(raw.waveform,    WAVEFORM.CW)
+  const session  = getString(raw.sessionName, '').slice(0, BOUNDS.SESSION_MAX_LEN)
+  const preset   = getString(raw.targetPreset,'')
+
+  if (!VALID_MEDIA.has(med as typeof MEDIUM[keyof typeof MEDIUM]))             return null
+  if (!VALID_WAVEFORM.has(waveform as typeof WAVEFORM[keyof typeof WAVEFORM])) return null
+
+  return {
+    sessionName:         session,
+    timestamp:           typeof raw.timestamp === 'string' ? raw.timestamp : new Date().toISOString(),
+    freqKHz:             Math.round(freqKHz),
+    fieldVcm:            Math.round(fieldVcm),
+    medium:              med,
+    targetPreset:        preset,
+    waveform,
+    dutyCycle,
+    pulseWidthNs:        Math.round(pulseWidthNs),
+    orientationDeg:      Math.round(oriDeg),
+    lysisNPulses:        Math.round(nPulses),
+    targetRatio,
+    healthyRatio,
+    selectivity,
+    targetTemp,
+    healthyTemp,
+    rating:              Math.round(rating),
+    aiSuggestionApplied: !!raw.aiSuggestionApplied,
+  }
+}
+
 // ── Socket server ─────────────────────────────────────────────────────────────
 const SOCKET_EVENTS = {
   STATE_SYNC:          'stateSync',
@@ -178,6 +233,8 @@ const SOCKET_EVENTS = {
   NEW_LOG_ENTRY:       'newLogEntry',
   IMPEDANCE_READING:   'impedanceReading',
   IMPEDANCE_BROADCAST: 'impedanceBroadcast',
+  LOG_OUTCOME:         'logOutcome',
+  NEW_OUTCOME:         'newOutcome',
   DISCONNECT:          'disconnect',
 } as const
 
@@ -223,6 +280,15 @@ export function setupSocketServer(httpServer: HttpServer): Server {
       const entry = validateLogEntry(raw as Record<string, unknown>)
       if (!entry) return
       socket.broadcast.emit(SOCKET_EVENTS.NEW_LOG_ENTRY, entry)
+    })
+
+    // Outcome rating — broadcast to all OTHER clients so collaborators see the rating
+    socket.on(SOCKET_EVENTS.LOG_OUTCOME, (raw: unknown) => {
+      if (!raw || typeof raw !== 'object') return
+      const entry = validateOutcomeEntry(raw as Record<string, unknown>)
+      if (!entry) return
+      socket.broadcast.emit(SOCKET_EVENTS.NEW_OUTCOME, entry)
+      // Phase 1 will persist consented outcomes to SQLite here
     })
 
     // Hardware impedance reading from lab instrument bridge — broadcast to ALL clients

@@ -247,13 +247,13 @@ ${t('resonance.tipHealthyBadgeBody')}
   const ok   = healthyDisruption < 0.5
     ? '\n<span class="tip-ok">✓ Healthy cells are safe</span>'
     : healthyDisruption > 0.85
-      ? '\n<span class="tip-warn">⚠ Approaching ablative, reduce field</span>'
-      : '\n<span class="tip-warn">⚠ Approaching limit, monitor closely</span>'
+      ? '\n<span class="tip-warn">⚠ Healthy cells approaching lysis threshold, reduce field</span>'
+      : '\n<span class="tip-warn">⚠ Approaching rev-EP zone, monitor closely</span>'
   return `<strong>Healthy membrane disruption: <span class="tip-val">${pct}%</span></strong>
 Ratio = Vm / lysis threshold voltage
 
 Vm = <span class="tip-val">${healthyVmMv.toFixed(2)} mV</span>  ·  Threshold = ${hThr} mV${ok}
-Keep below 50% for a safe therapeutic window`
+Keep below 50% for a selective protocol window`
 }
 
 export function tipOrientation(orientationDeg: number, cosThetaFactor: number): string {
@@ -380,7 +380,7 @@ export function tipPerfusion(perfusionRate: number, effLambdaH: number): string 
     : perfusionRate < 0.5 ? 'low perfusion (fat/cartilage)'
     : perfusionRate < 1.5 ? 'moderate perfusion (muscle/liver)'
     : perfusionRate < 3   ? 'high perfusion (brain/heart)'
-    : 'very high perfusion (kidney/tumour)'
+    : 'very high perfusion (kidney)'
   const pct = ((effLambdaH - 0.02) / 0.02 * 100).toFixed(0)
   return `<strong>Blood Perfusion Rate ω_b</strong>
 Current: <span class="tip-val">${perfusionRate.toFixed(2)} mL/(g·min)</span>, ${label}
@@ -405,9 +405,9 @@ export function tipCellPacking(phi: number, sigma_e0: number, sigma_eff: number)
   const reduction = ((1 - sigma_eff / sigma_e0) * 100).toFixed(1)
   const context = phi === 0 ? 'isolated cell (no correction)'
     : phi < 0.3 ? 'sparse suspension'
-    : phi < 0.5 ? 'moderate tissue packing'
-    : phi < 0.7 ? 'dense tissue (~in vivo)'
-    : 'very dense / tumour core'
+    : phi < 0.5 ? 'moderate suspension (pellet density)'
+    : phi < 0.7 ? 'dense suspension (aggregate / spheroid)'
+    : 'very dense / compact cell mass'
   return `<strong>Cell Packing Fraction φ</strong>
 Current: <span class="tip-val">φ = ${(phi * 100).toFixed(0)}%</span>, ${context}
 
@@ -455,7 +455,7 @@ Pulse width controls:
   1. <span class="tip-val">Effective disruption ratio</span>  →  DR_eff = DR_Schwan × f_pulse
   2. <span class="tip-val">Lysis protocol timing</span>  →  Protocol time = N × (t_p / dc)
        N = ${lysisNPulses}  ·  dc = ${dcPct}%  →  <span class="tip-val">${formatLysisTime(lysisDelayMs)}</span>
-  3. <span class="tip-val">SAR thermal load</span> , waveformFactor = 1.0 for square pulses (Monopolar IRE) or bursts (H-FIRE); E²_rms = E²_peak during on-time
+  3. <span class="tip-val">SAR thermal load</span>: waveformFactor = 1.0 for square pulses (Monopolar IRE) or bursts (H-FIRE); E²_rms = E²_peak during on-time
 
 Reference time constants (Schwan model):
   τ(target)  = <span class="tip-val">${tTauStr}</span>

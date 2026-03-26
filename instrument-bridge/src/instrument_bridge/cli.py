@@ -43,6 +43,12 @@ def _create_driver(settings: Settings):
         case "ascii_serial":
             from instrument_bridge.drivers.ascii_serial import AsciiSerialDriver
             return AsciiSerialDriver(settings)
+        case "nanopulse":
+            from instrument_bridge.drivers.pulse_biosciences import NanoPulseDriver
+            return NanoPulseDriver(settings)
+        case "pulse_select":
+            from instrument_bridge.drivers.pulse_biosciences import PulseSelectDriver
+            return PulseSelectDriver(settings)
         case _:
             # Should not reach here — pydantic validates the driver field
             click.echo(f"Unknown driver: {settings.driver!r}", err=True)
@@ -94,7 +100,7 @@ def main():
 @main.command()
 @click.option(
     "--driver",
-    type=click.Choice(["demo", "btx", "visa_lcr", "ascii_serial"]),
+    type=click.Choice(["demo", "btx", "visa_lcr", "ascii_serial", "nanopulse", "pulse_select"]),
     default=None,
     help="Instrument driver (overrides BRIDGE_DRIVER in .env)",
 )
@@ -126,6 +132,17 @@ def main():
     help="Measurement frequency in Hz, e.g. 10000 (overrides BRIDGE_MEAS_FREQ_HZ)",
 )
 @click.option(
+    "--pb-host",
+    default=None,
+    help="Pulse Biosciences instrument IP / hostname, e.g. 192.168.1.100 (overrides BRIDGE_PB_HOST)",
+)
+@click.option(
+    "--pb-tcp-port",
+    type=int,
+    default=None,
+    help="Pulse Biosciences TCP port (overrides BRIDGE_PB_TCP_PORT, default 20000)",
+)
+@click.option(
     "--log-level",
     type=click.Choice(["TRACE", "DEBUG", "INFO", "WARNING", "ERROR"], case_sensitive=False),
     default=None,
@@ -138,6 +155,8 @@ def run(
     visa_resource: Optional[str],
     poll: Optional[float],
     freq: Optional[float],
+    pb_host: Optional[str],
+    pb_tcp_port: Optional[int],
     log_level: Optional[str],
 ):
     """
@@ -167,6 +186,14 @@ def run(
       instrument-bridge run --driver ascii_serial --port /dev/ttyUSB0
 
     \b
+      # Pulse Biosciences NanoPulse on 192.168.1.50
+      instrument-bridge run --driver nanopulse --pb-host 192.168.1.50
+
+    \b
+      # Pulse Biosciences PulseSelect on default IP, custom TCP port
+      instrument-bridge run --driver pulse_select --pb-tcp-port 20001
+
+    \b
       # Connect to a remote ngrok backend
       instrument-bridge run --driver demo --backend-url https://abc123.ngrok.io
     """
@@ -187,6 +214,10 @@ def run(
         overrides["poll_interval_s"] = poll
     if freq is not None:
         overrides["meas_freq_hz"] = freq
+    if pb_host:
+        overrides["pb_host"] = pb_host
+    if pb_tcp_port is not None:
+        overrides["pb_tcp_port"] = pb_tcp_port
     if log_level:
         overrides["log_level"] = log_level.upper()
 
@@ -297,6 +328,10 @@ def _print_startup_summary(settings: Settings) -> None:
                 f"{settings.demo_cuvette_gap_mm} mm gap, "
                 f"{settings.demo_cuvette_area_cm2} cm² area",
             )
+        case "nanopulse" | "pulse_select":
+            table.add_row("Instrument host", settings.pb_host)
+            table.add_row("TCP port", str(settings.pb_tcp_port))
+            table.add_row("TCP timeout", f"{settings.pb_tcp_timeout_s:.1f} s")
 
     from rich.panel import Panel
     console.print(

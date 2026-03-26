@@ -52,3 +52,32 @@ export interface LogEntry {
   event:         string
   sessionName?:  string
 }
+
+/**
+ * Anonymized outcome record emitted after a run when the user rates the result.
+ * Only collected when the client has aiConsentGiven = true.
+ * Stored server-side for AI training; never contains PII.
+ */
+export interface OutcomeEntry {
+  /** Session identifier (user-supplied name, may be a generic default) */
+  sessionName:          string
+  timestamp:            string
+  freqKHz:              number
+  fieldVcm:             number
+  medium:               string
+  targetPreset:         string
+  waveform:             string
+  dutyCycle:            number
+  pulseWidthNs:         number
+  orientationDeg:       number
+  lysisNPulses:         number
+  targetRatio:          number
+  healthyRatio:         number
+  selectivity:          number
+  targetTemp:           number
+  healthyTemp:          number
+  /** User-rated outcome: 1=failed, 2=poor, 3=acceptable, 4=good, 5=excellent */
+  rating:               number
+  /** Whether the protocol was suggested by the AI optimizer */
+  aiSuggestionApplied:  boolean
+}

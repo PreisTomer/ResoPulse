@@ -60,4 +60,9 @@ export interface LogEntry {
   depTargetCrossoverKHz?: number
   healthySnap?: CellParamSnapshot
   targetSnap?: CellParamSnapshot
+  // ── AI training fields (populated via Log Outcome action) ────────────────
+  /** User-rated outcome quality: 1=failed, 2=poor, 3=acceptable, 4=good, 5=excellent */
+  outcomeRating?: number
+  /** Whether this protocol was AI-suggested before the run */
+  aiSuggestionApplied?: boolean
 }

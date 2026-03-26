@@ -276,6 +276,8 @@
       <div class="protocol__note-label" v-html="$t('protocol.physics.impedance.hardwareTitle')"></div>
       <div class="protocol__bullet" v-html="$t('protocol.physics.impedance.hardwareP')"></div>
       <div class="protocol__bullet" v-html="$t('protocol.physics.impedance.hardwareSchema')"></div>
+      <div class="protocol__note-label" v-html="$t('protocol.physics.impedance.hardwareDriversTitle')"></div>
+      <div class="protocol__bullet" v-html="$t('protocol.physics.impedance.hardwareDrivers')"></div>
     </div>
 
     <!-- 2.12 Auditory Display (Sonification) -->

@@ -35,6 +35,8 @@ const SOCKET_EVENTS = {
   LOG_ENTRY:           'logEntry',
   NEW_LOG_ENTRY:       'newLogEntry',
   IMPEDANCE_BROADCAST: 'impedanceBroadcast',
+  LOG_OUTCOME:         'logOutcome',
+  NEW_OUTCOME:         'newOutcome',
   CONNECT:             'connect',
   DISCONNECT:          'disconnect',
   CONNECT_ERROR:       'connect_error',
@@ -45,11 +47,24 @@ let socket: Socket | null = null
 /** Reactive connection flag - import directly in Vue components/templates */
 export const socketConnected = ref(false)
 
-export function connectSocket(): void {
+// Render free-tier instances sleep after 15 minutes of inactivity.
+// A plain HTTP ping to /health wakes the container before the WebSocket
+// handshake — otherwise the socket times out during the cold-start (~30 s).
+async function wakeBackend(): Promise<void> {
+  try {
+    await fetch(`${BACKEND_URL}/health`, { signal: AbortSignal.timeout(35_000) })
+  } catch {
+    // unreachable — fall through to socket connect which will handle it gracefully
+  }
+}
+
+export async function connectSocket(): Promise<void> {
+  await wakeBackend()
+
   socket = io(BACKEND_URL, {
     transports: ['websocket'],
-    timeout: 3000,
-    reconnectionAttempts: 3,
+    timeout: 5000,
+    reconnectionAttempts: 5,
   })
 
   socket.on(SOCKET_EVENTS.CONNECT, () => {
@@ -125,6 +140,35 @@ export function broadcastStateSync(): void {
 export function broadcastLogEntry(entry: LogEntry): void {
   if (!socket?.connected) return
   socket.emit(SOCKET_EVENTS.LOG_ENTRY, entry)
+}
+
+/**
+ * Broadcast a rated outcome to all other connected clients.
+ * Only call this when the user has aiConsentGiven = true — the server does not
+ * check consent; that gate lives in the caller.
+ */
+export function broadcastLogOutcome(entry: LogEntry, rating: number, aiSuggestionApplied: boolean): void {
+  if (!socket?.connected) return
+  socket.emit(SOCKET_EVENTS.LOG_OUTCOME, {
+    sessionName:         entry.sessionName ?? '',
+    timestamp:           entry.timestamp,
+    freqKHz:             entry.freqKHz,
+    fieldVcm:            entry.fieldVcm,
+    medium:              entry.medium,
+    targetPreset:        entry.targetPreset,
+    waveform:            entry.waveform ?? 'cw',
+    dutyCycle:           entry.dutyCycle ?? 1,
+    pulseWidthNs:        entry.pulseWidthNs ?? 100,
+    orientationDeg:      entry.orientationDeg ?? 0,
+    lysisNPulses:        entry.lysisNPulses ?? 1,
+    targetRatio:         entry.targetRatio,
+    healthyRatio:        entry.healthyRatio,
+    selectivity:         entry.selectivity,
+    targetTemp:          entry.targetTemp,
+    healthyTemp:         entry.healthyTemp,
+    rating,
+    aiSuggestionApplied,
+  })
 }
 
 export function disconnectSocket(): void {

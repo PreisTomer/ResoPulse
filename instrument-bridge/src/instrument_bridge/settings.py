@@ -17,7 +17,7 @@ from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-DriverName = Literal["demo", "btx", "visa_lcr", "ascii_serial"]
+DriverName = Literal["demo", "btx", "visa_lcr", "ascii_serial", "nanopulse", "pulse_select"]
 LogLevel    = Literal["TRACE", "DEBUG", "INFO", "WARNING", "ERROR"]
 
 
@@ -93,6 +93,24 @@ class Settings(BaseSettings):
         ge=0.01,
         le=10.0,
         description="Demo cuvette electrode cross-section [cm²]",
+    )
+
+    # ── Pulse Biosciences (NanoPulse / PulseSelect) ───────────────────────────
+    pb_host: str = Field(
+        default="192.168.1.100",
+        description="IP address or hostname of the Pulse Biosciences instrument",
+    )
+    pb_tcp_port: int = Field(
+        default=20000,
+        ge=1,
+        le=65535,
+        description="TCP port on the Pulse Biosciences instrument (default 20000)",
+    )
+    pb_tcp_timeout_s: float = Field(
+        default=5.0,
+        ge=1.0,
+        le=30.0,
+        description="TCP connect/read timeout [seconds] for Pulse Biosciences drivers",
     )
 
     # ── Logging ───────────────────────────────────────────────────────────────

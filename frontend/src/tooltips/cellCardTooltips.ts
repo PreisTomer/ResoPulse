@@ -77,7 +77,7 @@ export function tipState(opts: {
   const lysisTime = formatLysisTimeLocal(lysisDelayMs)
   const labels: Record<string, string> = {
     [CELL_STATE.STABLE]:      'stable, no significant membrane or thermal response',
-    [CELL_STATE.NOURISHING]:  '<span class="tip-ok">nourishing, sub-threshold Ca²⁺ stimulation window (DR 8-50%)\nMembrane intact · PIEZO1 + voltage-gated Ca²⁺ channels activated\nOptimal biomodulation at DR ≈ 20-40% of lysis threshold</span>',
+    [CELL_STATE.NOURISHING]:  '<span class="tip-ok">nourishing, sub-threshold Ca²⁺ stimulation window (DR 8-45%)\nMembrane intact · PIEZO1 + voltage-gated Ca²⁺ channels activated\nOptimal biomodulation at DR ≈ 20-40% of lysis threshold</span>',
     [CELL_STATE.APPROACHING]: '<span class="tip-warn">⚠ approaching, membrane stress OR T ≥ 42°C · ion channel perturbation onset</span>',
     [CELL_STATE.REV_EP]:      '<span class="tip-warn">⚡ reversible EP window (50-85%), membrane transiently permeabilized each pulse.\nPores open and re-seal after the field is removed.\nThis is the drug/gene delivery window, cells survive.\nSustained or increasing field progresses to irreversible lysis.</span>',
     [CELL_STATE.CRITICAL]:    '<span class="tip-warn">⚡ critical, Vm >85% threshold OR T ≥ 60°C (protein denaturation) · reduce field / duty cycle immediately</span>',

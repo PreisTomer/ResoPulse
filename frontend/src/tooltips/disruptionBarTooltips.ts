@@ -18,7 +18,7 @@ P = 1 / (1 + e^−((ratio−1.0)/0.05))
 export function tipHealthyPlysis(): string {
   return `<strong>P(electroporation), Healthy</strong>
 Sigmoid probability centered at 100% disruption threshold.
-Keep this value near 0% for selective therapy`
+Keep this value near 0% for a selective lysis protocol`
 }
 
 export function tipNuclearSection(): string {

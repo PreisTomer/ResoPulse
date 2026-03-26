@@ -45,12 +45,12 @@
     },
     "paramTips": {
       "radius": "<strong>Cell radius R [µm]</strong>\nVm scales linearly with R in the Schwan equation.\nLarger cells reach higher Vm under identical fields,\nwhich is the geometric basis of selective disruption.",
-      "membraneThickness": "<strong>Membrane thickness d [nm]</strong>\nSets capacitance: Cm = ε_r × ε₀ / d.\nThinner membranes in cancer cells raise Cm and τ,\nshifting the corner frequency fc downward.\nTypical lipid bilayer: 4–8 nm.",
-      "dielectricConstant": "<strong>Effective membrane permittivity ε_r</strong>\nRelative permittivity of the lipid bilayer.\nDetermines Cm together with d.\nHigher values reflect altered phospholipid and\ncholesterol composition. Typical range: 4–10.",
-      "conductivity": "<strong>Cytoplasm conductivity σ_i [S/m]</strong>\nAffects the Schwan time constant τ and corner\nfrequency fc. Higher σ_i gives shorter τ and\nhigher fc, compressing the selective window.\nTypical cytoplasm: 0.3–1.0 S/m.",
-      "thresholdVoltage": "<strong>Electroporation threshold Vth [V]</strong>\nTransmembrane potential above which irreversible\npore formation is initiated. Disruption ratio is\nDR = Vm / Vth. Literature range: 0.5–2.0 V.",
-      "resonantFreqGHz": "<strong>Capsid resonance frequency [GHz]</strong>\nFundamental acoustic resonance of the cell wall\nor viral capsid, set by shell geometry and the\ncytoplasm speed of sound.\nBacteria: 0.3–2 GHz; viruses: 5–20 GHz.",
-      "capsidQ": "<strong>Acoustic quality factor Q</strong>\nSets the sharpness of the resonance peak:\nhalf-power bandwidth = f_res / Q.\nBacteria: Q ≈ 3–4 (peptidoglycan viscous damping).\nProtein-capsid viruses: Q ≈ 25–30."
+      "membraneThickness": "<strong>Membrane thickness d [nm]</strong>\nSets capacitance: Cm = ε_r × ε₀ / d.\nThinner membranes in cancer cells raise Cm and τ,\nshifting the corner frequency fc downward.\nTypical lipid bilayer: 4-8 nm.",
+      "dielectricConstant": "<strong>Effective membrane permittivity ε_r</strong>\nRelative permittivity of the lipid bilayer.\nDetermines Cm together with d.\nHigher values reflect altered phospholipid and\ncholesterol composition. Typical range: 4-10.",
+      "conductivity": "<strong>Cytoplasm conductivity σ_i [S/m]</strong>\nAffects the Schwan time constant τ and corner\nfrequency fc. Higher σ_i gives shorter τ and\nhigher fc, compressing the selective window.\nTypical cytoplasm: 0.3-1.0 S/m.",
+      "thresholdVoltage": "<strong>Electroporation threshold Vth [V]</strong>\nTransmembrane potential above which irreversible\npore formation is initiated. Disruption ratio is\nDR = Vm / Vth. Literature range: 0.5-2.0 V.",
+      "resonantFreqGHz": "<strong>Capsid resonance frequency [GHz]</strong>\nFundamental acoustic resonance of the cell wall\nor viral capsid, set by shell geometry and the\ncytoplasm speed of sound.\nBacteria: 0.3-2 GHz; viruses: 5-20 GHz.",
+      "capsidQ": "<strong>Acoustic quality factor Q</strong>\nSets the sharpness of the resonance peak:\nhalf-power bandwidth = f_res / Q.\nBacteria: Q ≈ 3-4 (peptidoglycan viscous damping).\nProtein-capsid viruses: Q ≈ 25-30."
     },
     "paramsToggleLabel": "Cell Parameters",
     "paramsToggleTip": "<strong>Cell Parameters</strong>\nEdit biophysical properties that drive the\nSchwan equation calculation in real time.\nChanges immediately update Vm, selectivity,\nand the frequency response chart.",
@@ -86,8 +86,8 @@
       "vaporized": "Cell vaporized · T ≥ 100°C",
       "resetCell": "New Sample",
       "resetCellFull": "Full Reset",
-      "tipResetCell": "Insert fresh cells — keeps current protocol (field, frequency, waveform). Lysis will re-arm immediately if the protocol remains above threshold.",
-      "tipResetCellFull": "Restore safe defaults — resets field and waveform to category-appropriate starting values so both cells return to a stable state.",
+      "tipResetCell": "Insert fresh cells, keeps current protocol (field, frequency, waveform). Lysis will re-arm immediately if the protocol remains above threshold.",
+      "tipResetCellFull": "Restore safe defaults: resets field and waveform to category-appropriate starting values so both cells return to a stable state.",
       "reduceFieldThermal": "Reduce field / duty cycle to reset",
       "reduceField": "Reduce field intensity to reset",
       "blebbing": "MEMBRANE BLEBS VISIBLE"
@@ -258,7 +258,7 @@
     "stickyScrollTip": "Click to scroll back to the cell cards"
   },
   "resonance": {
-    "speculativeBannerTitle": "SPECULATIVE MODEL — No experimental RF validation",
+    "speculativeBannerTitle": "SPECULATIVE MODEL: No experimental RF validation",
     "speculativeBannerDetail": "The Dykeman & Sankey (2010) acoustic resonance model was validated on non-enveloped icosahedral protein capsids (TMV, CCMV). Enveloped viruses (influenza, SARS-CoV-2) have fluid lipid bilayers with no defined elastic modulus or mechanical resonance Q. GHz RF fields also face severe EM field penetration limits in aqueous media at high frequencies (Debye relaxation of water above 1 GHz). These parameters are theoretical extrapolations.",
     "chartTitle": "Resonant Capsid / Cell-Wall Disruption",
     "chartNote": "Disruption ratio = (E / E_thr) × L(f, f_res, Q)",
