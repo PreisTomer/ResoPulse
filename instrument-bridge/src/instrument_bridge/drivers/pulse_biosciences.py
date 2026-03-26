@@ -63,6 +63,7 @@ from instrument_bridge.drivers.base import (
     InstrumentReadError,
     InstrumentParseError,
 )
+from instrument_bridge.drivers.constants import DC_PROXY_FREQ_HZ, MIN_RESISTANCE_OHM
 from instrument_bridge.models import ImpedanceReading
 from instrument_bridge.settings import Settings
 
@@ -70,13 +71,6 @@ from instrument_bridge.settings import Settings
 # TCP query commands sent to each instrument model
 _NANOPULSE_QUERY     = b"GET LOAD\r\n"
 _PULSE_SELECT_QUERY  = b"GET IMPEDANCE\r\n"
-
-# freqHz placeholder for DC / quasi-DC load measurements (server minimum is 1 Hz)
-_DC_FREQ_HZ = 1.0
-
-# Minimum non-zero resistance [Ω] — below this we assume open circuit (no cuvette)
-_MIN_RESISTANCE_OHM = 0.01
-
 
 # ── Shared TCP machinery ────────────────────────────────────────────────────────
 
@@ -91,6 +85,7 @@ class _PbTcpBase(InstrumentDriver):
 
     def __init__(self, settings: Settings) -> None:
         self._settings = settings
+        self._pulse_biosciences_settings = settings.pulse_biosciences
         self._reader: asyncio.StreamReader | None = None
         self._writer: asyncio.StreamWriter | None = None
 
@@ -98,20 +93,20 @@ class _PbTcpBase(InstrumentDriver):
         try:
             self._reader, self._writer = await asyncio.wait_for(
                 asyncio.open_connection(
-                    self._settings.pb_host,
-                    self._settings.pb_tcp_port,
+                    self._pulse_biosciences_settings.host,
+                    self._pulse_biosciences_settings.tcp_port,
                 ),
-                timeout=self._settings.pb_tcp_timeout_s,
+                timeout=self._pulse_biosciences_settings.tcp_timeout_s,
             )
         except (OSError, asyncio.TimeoutError) as exc:
             raise InstrumentConnectError(
                 f"Cannot connect to Pulse Biosciences instrument at "
-                f"{self._settings.pb_host}:{self._settings.pb_tcp_port} — {exc}"
+                f"{self._pulse_biosciences_settings.host}:{self._pulse_biosciences_settings.tcp_port} — {exc}"
             ) from exc
 
         logger.info(
             f"{self.instrument_name} connected to "
-            f"{self._settings.pb_host}:{self._settings.pb_tcp_port}"
+            f"{self._pulse_biosciences_settings.host}:{self._pulse_biosciences_settings.tcp_port}"
         )
 
     async def disconnect(self) -> None:
@@ -152,12 +147,12 @@ class _PbTcpBase(InstrumentDriver):
         try:
             line_bytes = await asyncio.wait_for(
                 self._reader.readline(),
-                timeout=self._settings.pb_tcp_timeout_s,
+                timeout=self._pulse_biosciences_settings.tcp_timeout_s,
             )
         except asyncio.TimeoutError as exc:
             raise InstrumentReadError(
                 f"{self.instrument_name} read timeout "
-                f"({self._settings.pb_tcp_timeout_s:.1f}s) — "
+                f"({self._pulse_biosciences_settings.tcp_timeout_s:.1f}s) — "
                 "verify the instrument is powered on and not mid-pulse sequence."
             ) from exc
         except OSError as exc:
@@ -184,7 +179,7 @@ class NanoPulseDriver(_PbTcpBase):
 
     @property
     def instrument_name(self) -> str:
-        return f"PB NanoPulse ({self._settings.pb_host})"
+        return f"PB NanoPulse ({self._pulse_biosciences_settings.host})"
 
     async def read_once(self) -> ImpedanceReading:
         raw = await self._send_query(_NANOPULSE_QUERY)
@@ -192,7 +187,7 @@ class NanoPulseDriver(_PbTcpBase):
 
         resistance_ohm = _parse_nanopulse_load(raw)
 
-        if resistance_ohm < _MIN_RESISTANCE_OHM:
+        if resistance_ohm < MIN_RESISTANCE_OHM:
             raise InstrumentReadError(
                 f"NanoPulse returned load {resistance_ohm:.4g} Ω (below minimum) — "
                 "verify the cuvette is loaded and at least one pulse has been triggered."
@@ -201,7 +196,7 @@ class NanoPulseDriver(_PbTcpBase):
         return ImpedanceReading.build(
             z_real=resistance_ohm,
             z_imag=0.0,
-            freq_hz=_DC_FREQ_HZ,
+            freq_hz=DC_PROXY_FREQ_HZ,
             conductivity=None,
         )
 
@@ -284,7 +279,7 @@ class PulseSelectDriver(_PbTcpBase):
 
     @property
     def instrument_name(self) -> str:
-        return f"PB PulseSelect ({self._settings.pb_host})"
+        return f"PB PulseSelect ({self._pulse_biosciences_settings.host})"
 
     async def read_once(self) -> ImpedanceReading:
         raw = await self._send_query(_PULSE_SELECT_QUERY)
@@ -292,7 +287,7 @@ class PulseSelectDriver(_PbTcpBase):
 
         z_real, z_imag, freq_hz = _parse_pulse_select_impedance(raw)
 
-        if z_real < _MIN_RESISTANCE_OHM:
+        if z_real < MIN_RESISTANCE_OHM:
             raise InstrumentReadError(
                 f"PulseSelect returned Z_real={z_real:.4g} Ω (below minimum) — "
                 "verify the cuvette is loaded and the instrument is not mid-pulse."
@@ -337,7 +332,7 @@ def _parse_pulse_select_impedance(raw: str) -> tuple[float, float, float]:
             try:
                 z_real  = float(data["z_real"])
                 z_imag  = float(data.get("z_imag", 0.0))
-                freq_hz = float(data.get("freq_hz", _DC_FREQ_HZ))
+                freq_hz = float(data.get("freq_hz", DC_PROXY_FREQ_HZ))
                 return z_real, z_imag, freq_hz
             except (TypeError, ValueError) as exc:
                 raise InstrumentParseError(
@@ -349,7 +344,7 @@ def _parse_pulse_select_impedance(raw: str) -> tuple[float, float, float]:
         for key in ("resistance_ohm", "resistance", "load_ohm", "load"):
             if key in data:
                 try:
-                    return float(data[key]), 0.0, _DC_FREQ_HZ
+                    return float(data[key]), 0.0, DC_PROXY_FREQ_HZ
                 except (TypeError, ValueError) as exc:
                     raise InstrumentParseError(
                         f"PulseSelect JSON field {key!r} is not numeric: {data[key]!r}",
@@ -372,7 +367,7 @@ def _parse_pulse_select_impedance(raw: str) -> tuple[float, float, float]:
     cleaned = cleaned.split()[0] if cleaned.split() else cleaned
 
     try:
-        return float(cleaned), 0.0, _DC_FREQ_HZ
+        return float(cleaned), 0.0, DC_PROXY_FREQ_HZ
     except ValueError as exc:
         raise InstrumentParseError(
             f"Cannot parse PulseSelect impedance from response: {raw!r}",

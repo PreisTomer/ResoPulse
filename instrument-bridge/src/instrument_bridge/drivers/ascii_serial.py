@@ -1,3 +1,4 @@
+# Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 """
 Generic ASCII serial LCR meter driver.
 
@@ -36,6 +37,7 @@ from instrument_bridge.drivers.base import (
     InstrumentReadError,
     InstrumentParseError,
 )
+from instrument_bridge.drivers.constants import DEFAULT_SERIAL_CONNECT_TIMEOUT_S, DEFAULT_SERIAL_READ_TIMEOUT_S
 from instrument_bridge.models import ImpedanceReading
 from instrument_bridge.settings import Settings
 from instrument_bridge.utils.serial_helpers import open_serial_port, read_line_async
@@ -51,25 +53,27 @@ class AsciiSerialDriver(InstrumentDriver):
 
     def __init__(self, settings: Settings) -> None:
         self._settings = settings
+        self._serial_settings = settings.serial
+        self._measurement_settings = settings.measurement
         self._serial = None
 
     @property
     def instrument_name(self) -> str:
-        return f"ASCII Serial LCR ({self._settings.serial_port})"
+        return f"ASCII Serial LCR ({self._serial_settings.port})"
 
     async def connect(self) -> None:
         try:
             self._serial = open_serial_port(
-                port=self._settings.serial_port,
-                baud_rate=self._settings.baud_rate,
-                timeout_s=2.0,
+                port=self._serial_settings.port,
+                baud_rate=self._serial_settings.baud_rate,
+                timeout_s=DEFAULT_SERIAL_CONNECT_TIMEOUT_S,
             )
         except (ImportError, RuntimeError) as exc:
             raise InstrumentConnectError(str(exc)) from exc
 
         logger.info(
-            f"ASCII serial LCR connected on {self._settings.serial_port} "
-            f"at {self._settings.baud_rate} baud"
+            f"ASCII serial LCR connected on {self._serial_settings.port} "
+            f"at {self._serial_settings.baud_rate} baud"
         )
 
     async def disconnect(self) -> None:
@@ -86,7 +90,7 @@ class AsciiSerialDriver(InstrumentDriver):
             raise InstrumentConnectError("ASCII serial port is not open")
 
         try:
-            line = await read_line_async(self._serial, timeout_s=3.0)
+            line = await read_line_async(self._serial, timeout_s=DEFAULT_SERIAL_READ_TIMEOUT_S)
         except RuntimeError as exc:
             raise InstrumentReadError(str(exc)) from exc
 
@@ -112,7 +116,7 @@ class AsciiSerialDriver(InstrumentDriver):
         return ImpedanceReading.build(
             z_real=z_real,
             z_imag=z_imag,
-            freq_hz=self._settings.meas_freq_hz,
+            freq_hz=self._measurement_settings.freq_hz,
         )
 
 

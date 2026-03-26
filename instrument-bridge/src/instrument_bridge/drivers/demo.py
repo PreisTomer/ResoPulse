@@ -1,3 +1,4 @@
+# Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 """
 Demo driver — synthetic cuvette impedance, no hardware required.
 
@@ -11,6 +12,7 @@ UI shows live readings before connecting real equipment.
 """
 
 from instrument_bridge.drivers.base import InstrumentDriver
+from instrument_bridge.drivers.constants import DEMO_NOISE_FRACTION, DEMO_SWEEP_STEPS
 from instrument_bridge.models import ImpedanceReading
 from instrument_bridge.settings import Settings
 from instrument_bridge.utils.synthetic import (
@@ -19,11 +21,6 @@ from instrument_bridge.utils.synthetic import (
     log_sweep_frequency,
     add_gaussian_noise,
 )
-
-# Number of steps in one full logarithmic frequency sweep.
-# At poll_interval_s = 1.0 s this gives a ~100-second sweep per cycle.
-_SWEEP_STEPS = 100
-
 
 class DemoDriver(InstrumentDriver):
     """
@@ -56,7 +53,7 @@ class DemoDriver(InstrumentDriver):
 
         freq_hz = log_sweep_frequency(
             step=self._step,
-            total_steps=_SWEEP_STEPS,
+            total_steps=DEMO_SWEEP_STEPS,
             freq_min=s.demo_freq_min_hz,
             freq_max=s.demo_freq_max_hz,
         )
@@ -68,8 +65,8 @@ class DemoDriver(InstrumentDriver):
             cross_section_cm2=s.demo_cuvette_area_cm2,
         )
 
-        z_real = add_gaussian_noise(z_real_clean, noise_fraction=0.02)
-        z_imag = add_gaussian_noise(z_imag_clean, noise_fraction=0.02)
+        z_real = add_gaussian_noise(z_real_clean, noise_fraction=DEMO_NOISE_FRACTION)
+        z_imag = add_gaussian_noise(z_imag_clean, noise_fraction=DEMO_NOISE_FRACTION)
 
         # Clamp z_real to the server's minimum to avoid validation rejection
         z_real = max(z_real, 0.01)

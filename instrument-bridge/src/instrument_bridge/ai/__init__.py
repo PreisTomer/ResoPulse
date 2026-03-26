@@ -1,1 +1,7 @@
 # Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
+"""Public package surface for the ResoPulse AI optimizer."""
+
+from .optimizer import run_optimizer
+from .train import ModelBundle, load_model, retrain_model
+
+__all__ = ["ModelBundle", "load_model", "retrain_model", "run_optimizer"]
