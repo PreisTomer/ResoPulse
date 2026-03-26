@@ -1,3 +1,4 @@
+# Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 """
 Helpers for opening and reading from serial ports.
 
@@ -8,8 +9,10 @@ timeout logic lives in one place.
 import asyncio
 from loguru import logger
 
+from instrument_bridge.utils.constants import DEFAULT_SERIAL_OPEN_TIMEOUT_S, DEFAULT_SERIAL_READ_TIMEOUT_S
 
-def open_serial_port(port: str, baud_rate: int, timeout_s: float = 2.0):
+
+def open_serial_port(port: str, baud_rate: int, timeout_s: float = DEFAULT_SERIAL_OPEN_TIMEOUT_S):
     """
     Open a serial port and return the Serial object.
 
@@ -47,7 +50,7 @@ def open_serial_port(port: str, baud_rate: int, timeout_s: float = 2.0):
         raise RuntimeError(f"Cannot open serial port {port!r}: {exc}") from exc
 
 
-async def read_line_async(ser, timeout_s: float = 3.0) -> str:
+async def read_line_async(ser, timeout_s: float = DEFAULT_SERIAL_READ_TIMEOUT_S) -> str:
     """
     Read one line from a serial port, running the blocking readline()
     in a thread executor so the asyncio event loop is not blocked.

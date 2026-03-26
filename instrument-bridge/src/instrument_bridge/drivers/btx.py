@@ -1,3 +1,4 @@
+# Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 """
 BTX ECM 830 / ECM 2001 electroporator bridge — RS-232 serial.
 
@@ -46,6 +47,12 @@ from instrument_bridge.drivers.base import (
     InstrumentReadError,
     InstrumentParseError,
 )
+from instrument_bridge.drivers.constants import (
+    DC_PROXY_FREQ_HZ,
+    DEFAULT_SERIAL_CONNECT_TIMEOUT_S,
+    DEFAULT_SERIAL_READ_TIMEOUT_S,
+    MIN_RESISTANCE_OHM,
+)
 from instrument_bridge.models import ImpedanceReading
 from instrument_bridge.settings import Settings
 from instrument_bridge.utils.serial_helpers import open_serial_port, read_line_async
@@ -53,14 +60,6 @@ from instrument_bridge.utils.serial_helpers import open_serial_port, read_line_a
 # The ASCII command sent to request the last measured resistance.
 # Change to b'S\r\n' or b'\r\n' if your firmware uses a different query byte.
 _QUERY_COMMAND = b"S\r\n"
-
-# freqHz placeholder for DC / quasi-DC measurements (server minimum is 1 Hz)
-_DC_FREQ_HZ = 1.0
-
-# Minimum non-zero resistance the BTX can report [Ω].
-# A reading of 0 means open circuit (no cuvette loaded) — we reject it.
-_MIN_RESISTANCE_OHM = 0.01
-
 
 class BtxDriver(InstrumentDriver):
     """
@@ -74,23 +73,24 @@ class BtxDriver(InstrumentDriver):
 
     def __init__(self, settings: Settings) -> None:
         self._settings = settings
+        self._serial_settings = settings.serial
         self._serial = None
 
     @property
     def instrument_name(self) -> str:
-        return f"BTX ECM ({self._settings.serial_port})"
+        return f"BTX ECM ({self._serial_settings.port})"
 
     async def connect(self) -> None:
         try:
             self._serial = open_serial_port(
-                port=self._settings.serial_port,
-                baud_rate=self._settings.baud_rate,
-                timeout_s=2.0,
+                port=self._serial_settings.port,
+                baud_rate=self._serial_settings.baud_rate,
+                timeout_s=DEFAULT_SERIAL_CONNECT_TIMEOUT_S,
             )
         except (ImportError, RuntimeError) as exc:
             raise InstrumentConnectError(str(exc)) from exc
 
-        logger.info(f"BTX ECM connected on {self._settings.serial_port}")
+        logger.info(f"BTX ECM connected on {self._serial_settings.port}")
 
     async def disconnect(self) -> None:
         if self._serial and self._serial.is_open:
@@ -117,14 +117,14 @@ class BtxDriver(InstrumentDriver):
 
         # Read the response line
         try:
-            line = await read_line_async(self._serial, timeout_s=3.0)
+            line = await read_line_async(self._serial, timeout_s=DEFAULT_SERIAL_READ_TIMEOUT_S)
         except RuntimeError as exc:
             raise InstrumentReadError(str(exc)) from exc
 
         logger.debug(f"BTX raw response: {line!r}")
         resistance_ohm = self._parse_resistance(line)
 
-        if resistance_ohm < _MIN_RESISTANCE_OHM:
+        if resistance_ohm < MIN_RESISTANCE_OHM:
             raise InstrumentReadError(
                 f"BTX returned resistance {resistance_ohm} Ω — "
                 "verify the cuvette is loaded and a pulse has been triggered."
@@ -133,7 +133,7 @@ class BtxDriver(InstrumentDriver):
         return ImpedanceReading.build(
             z_real=resistance_ohm,
             z_imag=0.0,
-            freq_hz=_DC_FREQ_HZ,
+            freq_hz=DC_PROXY_FREQ_HZ,
             conductivity=None,
         )
 

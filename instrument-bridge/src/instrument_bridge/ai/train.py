@@ -26,40 +26,35 @@ from dataclasses import dataclass
 import joblib
 import numpy as np
 
+from .constants import (
+    DATA_DIR_ENV_VAR,
+    DEFAULT_DATA_DIRNAME,
+    FEATURE_COLS,
+    HEALTHY_DR_COL,
+    MIN_TRAINING_SAMPLES,
+    MODEL_BUNDLE_FILENAME,
+    MODEL_DIRNAME,
+    NODE_API_URL_ENV_VAR,
+    OUTCOMES_DB_FILENAME,
+    RATING_COL,
+    TARGET_DR_COL,
+    TRAINING_DATA_SECRET_ENV_VAR,
+    TRAINING_SECRET_HEADER,
+)
+
 logger = logging.getLogger(__name__)
 
-# ── Feature columns pulled from the outcomes table ──────────────────────────
-# These were all pre-computed by the frontend; the model never calls Schwan.
-FEATURE_COLS = [
-    "freq_khz",
-    "field_vcm",
-    "duty_cycle",
-    "pulse_width_ns",
-    "target_tau_ns",
-    "healthy_tau_ns",
-    "target_fc_khz",
-    "healthy_fc_khz",
-    "target_radius_um",
-    "sigma_e",
-    "orientation_deg",
-]
-
-TARGET_DR_COL    = "target_ratio"
-HEALTHY_DR_COL   = "healthy_ratio"
-RATING_COL       = "rating"
-
 # ── Paths ───────────────────────────────────────────────────────────────────
-DATA_DIR      = Path(os.environ.get("DATA_DIR", Path.cwd() / "data"))
-DB_PATH       = DATA_DIR / "outcomes.db"
-MODEL_DIR     = DATA_DIR / "ai_model"
-MODEL_PATH    = MODEL_DIR / "model_bundle.joblib"
-MIN_SAMPLES   = 20   # require at least this many rows before training
+DATA_DIR = Path(os.environ.get(DATA_DIR_ENV_VAR, Path.cwd() / DEFAULT_DATA_DIRNAME))
+DB_PATH = DATA_DIR / OUTCOMES_DB_FILENAME
+MODEL_DIR = DATA_DIR / MODEL_DIRNAME
+MODEL_PATH = MODEL_DIR / MODEL_BUNDLE_FILENAME
 
 # When set, training data is fetched from the Node.js backend via HTTP instead of
 # local SQLite.  Set NODE_API_URL=https://your-backend.onrender.com on the Python
 # service so both Render services don't need to share a filesystem.
-NODE_API_URL    = os.environ.get("NODE_API_URL", "").rstrip("/")
-TRAINING_SECRET = os.environ.get("TRAINING_DATA_SECRET", "")
+NODE_API_URL = os.environ.get(NODE_API_URL_ENV_VAR, "").rstrip("/")
+TRAINING_SECRET = os.environ.get(TRAINING_DATA_SECRET_ENV_VAR, "")
 
 
 @dataclass
@@ -83,7 +78,7 @@ def _fetch_rows_from_api() -> list[tuple] | None:
     try:
         req = urllib.request.Request(url)
         if TRAINING_SECRET:
-            req.add_header("x-training-secret", TRAINING_SECRET)
+            req.add_header(TRAINING_SECRET_HEADER, TRAINING_SECRET)
         with urllib.request.urlopen(req, timeout=15) as resp:
             records: list[dict] = json.loads(resp.read())
     except Exception as exc:
@@ -127,8 +122,8 @@ def _load_training_data() -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarra
             logger.error("[Train] Failed to read outcomes: %s", exc)
             return None
 
-    if len(rows) < MIN_SAMPLES:
-        logger.info("[Train] Only %d samples (need %d) — skipping training", len(rows), MIN_SAMPLES)
+    if len(rows) < MIN_TRAINING_SAMPLES:
+        logger.info("[Train] Only %d samples (need %d) — skipping training", len(rows), MIN_TRAINING_SAMPLES)
         return None
 
     data = np.array(rows, dtype=np.float64)
@@ -145,7 +140,7 @@ def _load_training_data() -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarra
         X[valid], y_target_dr[valid], y_healthy_dr[valid], y_rating[valid],
     )
 
-    if len(X) < MIN_SAMPLES:
+    if len(X) < MIN_TRAINING_SAMPLES:
         logger.info("[Train] After filtering, only %d valid samples — skipping", len(X))
         return None
 

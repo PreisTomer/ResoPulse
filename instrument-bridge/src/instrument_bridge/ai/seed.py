@@ -19,6 +19,8 @@ import math
 import sqlite3
 from pathlib import Path
 
+from .constants import OUTCOMES_DB_FILENAME
+
 logger = logging.getLogger(__name__)
 
 SEED_SESSION = "seed-demo-v1"
@@ -172,7 +174,7 @@ def seed_database(data_dir: Path) -> int:
     Skips if seed rows already present.
     Returns the number of rows inserted.
     """
-    db_path = data_dir / "outcomes.db"
+    db_path = data_dir / OUTCOMES_DB_FILENAME
     data_dir.mkdir(parents=True, exist_ok=True)
 
     conn = sqlite3.connect(db_path)
