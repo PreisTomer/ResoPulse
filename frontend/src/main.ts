@@ -33,6 +33,7 @@ expStore.$subscribe((_mutation, state) => {
     sessionNotes:       state.sessionNotes,
     cumulativeDoseJkg:  state.cumulativeDoseJkg,
     sessionStartMs:     state.sessionStartMs,
+    aiConsentGiven:     state.aiConsentGiven,
   }))
 })
 
