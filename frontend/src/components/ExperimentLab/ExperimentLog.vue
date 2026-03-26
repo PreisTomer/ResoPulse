@@ -72,6 +72,7 @@
             <th v-if="!isResonanceMode" v-tip="$t('log.tipThDepH')">{{ $t('log.logThDepH') }}</th>
             <th v-if="!isResonanceMode" v-tip="$t('log.tipThDepT')">{{ $t('log.logThDepT') }}</th>
             <th v-tip="$t('log.tipThEvent')">{{ $t('exp.logThEvent') }}</th>
+            <th v-if="expStore.aiConsentGiven" class="exp-log__th-rating">{{ $t('ai.rateSubmitBtn').slice(0, 4) }}</th>
           </tr>
         </thead>
         <tbody>
@@ -97,6 +98,24 @@
             <td class="exp-log__td-event">
               <StatusBadge :label="e.event" :variant="eventVariant(e.event)" :tooltip="tipCellEvent(e)" />
             </td>
+            <td v-if="expStore.aiConsentGiven" class="exp-log__td-rating">
+              <div v-if="e.outcomeRating != null" class="exp-log__rating-stars" v-tip="$t('ai.ratedBadge')">
+                <span
+                  v-for="s in 5"
+                  :key="s"
+                  class="exp-log__star"
+                  :class="s <= e.outcomeRating ? 'exp-log__star--filled' : 'exp-log__star--empty'"
+                >{{ s <= e.outcomeRating ? ICON.STAR_RATING : ICON.STAR_EMPTY }}</span>
+              </div>
+              <div v-else class="exp-log__rating-inline" v-tip="$t('ai.rateOutcomePrompt')">
+                <span
+                  v-for="s in 5"
+                  :key="s"
+                  class="exp-log__star exp-log__star--btn"
+                  @click="submitRating(e.id, s)"
+                >{{ ICON.STAR_EMPTY }}</span>
+              </div>
+            </td>
           </tr>
           <tr v-if="!hasEntries">
             <td :colspan="emptyColspan" class="exp-log__td-empty">{{ $t('exp.logEmpty') }}</td>
@@ -116,7 +135,7 @@ import AccordionPanel from '@/components/AccordionPanel.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
 import { useExperimentStore } from '@/stores/experimentStore'
 import { useCellStore } from '@/stores/cellStore'
-import { broadcastLogEntry } from '@/services/socket'
+import { broadcastLogEntry, broadcastLogOutcome } from '@/services/socket'
 import { LOG_EVENT, NULL_DISPLAY } from '@/constants/strings'
 import { eventVariant as sharedEventVariant, depKDisplay, depKDisplayFull } from '@/utils/experimentUtils'
 import {
@@ -219,6 +238,11 @@ export default defineComponent({
         ? this.$t('log.tipCellLysis')
         : this.$t('log.tipCellManual')
     },
+    submitRating(entryId: number, rating: number) {
+      const entry = this.expStore.logOutcome(entryId, rating, false)
+      if (entry) broadcastLogOutcome(entry, rating, false)
+    },
+
     depKClass(k: number | undefined): string {
       if (k == null) return ''
       return k > 0 ? 'exp-log__td-pdep' : 'exp-log__td-ndep'
@@ -388,5 +412,38 @@ export default defineComponent({
   &__td-ndep       { color: var(--color-amber); }
   &__td-event      { }
   &__td-empty      { text-align: center; opacity: 0.6; padding: 1rem; }
+
+  &__th-rating {
+    min-width: 5rem;
+    opacity: var(--op-muted);
+  }
+
+  &__td-rating {
+    min-width: 5rem;
+    padding: 0.18rem 0.45rem;
+  }
+
+  &__rating-stars,
+  &__rating-inline { @include flex-row(0.05rem); }
+
+  &__star {
+    font-size: 0.7rem;
+    line-height: 1;
+    cursor: default;
+
+    &--filled { color: var(--color-amber); }
+    &--empty  { color: var(--color-border); opacity: var(--op-dim); }
+
+    &--btn {
+      cursor: pointer;
+      color: var(--color-border);
+      transition: color var(--tr-fast), transform var(--tr-fast);
+
+      &:hover {
+        color: var(--color-amber);
+        transform: scale(1.2);
+      }
+    }
+  }
 }
 </style>

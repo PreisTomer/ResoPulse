@@ -21,7 +21,9 @@
       "Bash(xargs grep:*)",
       "Bash(find e:/code/BioResonance/frontend/src -name LoadMonitor* -o -name ImpedancePanel* -o -name CuvettePanel*)",
       "Bash(grep -r \"InstrumentView\\\\|instrument\" e:/code/BioResonance/frontend/src --include=*.ts -l)",
-      "Bash(grep -rl \"modal\\\\|Modal\\\\|dialog\\\\|Dialog\" e:/code/BioResonance/frontend/src --include=*.vue --include=*.ts)"
+      "Bash(grep -rl \"modal\\\\|Modal\\\\|dialog\\\\|Dialog\" e:/code/BioResonance/frontend/src --include=*.vue --include=*.ts)",
+      "Bash(npm install:*)",
+      "Bash(npx tsc:*)"
     ]
   }
 }

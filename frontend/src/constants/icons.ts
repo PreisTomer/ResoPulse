@@ -37,6 +37,9 @@ export const ICON = {
   MAIL:        '✉',  // email / send report
   TIMES:       '×',  // multiplication prefix (e.g. ×1.75 factor display)
   DOT:         '●',  // filled status dot (compact cell state indicator)
+  AI:          '◈',  // AI optimizer / ML inference icon
+  STAR_RATING: '★',  // outcome rating star
+  STAR_EMPTY:  '☆',  // empty star for ratings
 } as const
 
 export type Icon = typeof ICON[keyof typeof ICON]

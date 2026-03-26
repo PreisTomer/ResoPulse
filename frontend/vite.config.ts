@@ -34,5 +34,21 @@ export default defineConfig({
     // mangling caused fatal name collisions between Vue/Pinia internals and
     // physics constants across Rollup code-split chunks.
     minify: 'esbuild',
+    rollupOptions: {
+      output: {
+        // Split vendor bundle so each chunk stays well under 500 kB.
+        // Separate chunks also improve browser caching — vendor libs change
+        // far less often than app code, so users only re-download what changed.
+        manualChunks: {
+          // Vue ecosystem — almost never changes between deploys
+          'vue-vendor':    ['vue', 'vue-router', 'pinia', 'pinia-plugin-persistedstate', 'vue-i18n'],
+          // Network layer — socket.io-client is ~50 kB and version-locked independently
+          'socket-vendor': ['socket.io-client'],
+          // Utility libs — lodash is large; versioned separately from Vue
+          'utils-vendor':  ['lodash'],
+          // D3 stays in the lazy ExperimentView chunk — no need to load it on other routes
+        },
+      },
+    },
   },
 })

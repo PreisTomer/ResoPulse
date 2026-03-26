@@ -1,64 +1,61 @@
 <!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
 <template>
   <Transition name="sticky-cells">
-    <div
-      class="experiment__sticky-cells"
-      :class="{ 'experiment__sticky-cells--collapsed': stickyCellsCollapsed }"
+    <SideTabPanel
+      top="68px"
+      :scale="0.72"
+      :panel-width="312"
+      :tab-height="88"
+      :default-collapsed="false"
+      tab-align="center"
+      :expand-tip="$t('exp.stickyExpand')"
+      :collapse-tip="$t('exp.stickyCollapse')"
     >
-      <!-- Drawer tab - always visible, slides panel in/out -->
-      <button
-        class="experiment__sticky-cells-tab"
-        type="button"
-        v-tip="stickyCellsCollapsed ? $t('exp.stickyExpand') : $t('exp.stickyCollapse')"
-        @click.stop="stickyCellsCollapsed = !stickyCellsCollapsed"
-      >
-        <span class="experiment__sticky-cells-tab-dot">⬤</span>
-      </button>
-      <!-- Panel body — click anywhere to scroll back to the live cell cards -->
-      <div
-        class="experiment__sticky-cells-body experiment__sticky-cells-body--clickable"
-        @click.stop="scrollToCells"
-        :title="$t('exp.stickyScrollTip')"
-      >
-        <div class="experiment__sticky-cells-label">⬤ LIVE</div>
-        <div class="experiment__sticky-cells-grid">
-          <CellCard
-            v-for="cell in cells"
-            :key="'sticky-' + cell.id"
-            :type="cell.type"
-            :label="cell.label"
-            :sublabel="cell.sublabel"
-            :sublabel-tip="cell.sublabelTip"
-            :description="cell.description"
-            :cell-data="cell.cellData"
-            :compact="true"
-            @full-reset="$emit('full-reset', $event)"
-          />
+      <template #tab-icon>
+        <span class="experiment__sticky-tab-dot">⬤</span>
+      </template>
+
+      <template #panel>
+        <div
+          class="experiment__sticky-cells-body"
+          @click.stop="scrollToCells"
+          :title="$t('exp.stickyScrollTip')"
+        >
+          <div class="experiment__sticky-cells-label">⬤ LIVE</div>
+          <div class="experiment__sticky-cells-grid">
+            <CellCard
+              v-for="cell in cells"
+              :key="'sticky-' + cell.id"
+              :type="cell.type"
+              :label="cell.label"
+              :sublabel="cell.sublabel"
+              :sublabel-tip="cell.sublabelTip"
+              :description="cell.description"
+              :cell-data="cell.cellData"
+              :compact="true"
+              @full-reset="$emit('full-reset', $event)"
+            />
+          </div>
         </div>
-      </div>
-    </div>
+      </template>
+    </SideTabPanel>
   </Transition>
 </template>
 
 <script lang="ts">
 import { defineComponent, type PropType } from 'vue'
+import SideTabPanel from '@/components/ExperimentLab/SideTabPanel.vue'
 import CellCard from '@/components/CellCard/index.vue'
 
 export default defineComponent({
   name: 'StickyCellView',
 
-  components: { CellCard },
+  components: { SideTabPanel, CellCard },
 
   emits: ['scroll-to-cells', 'full-reset'],
 
   props: {
     cells: { type: Array as PropType<any[]>, required: true },
-  },
-
-  data() {
-    return {
-      stickyCellsCollapsed: false,
-    }
   },
 
   methods: {
@@ -70,75 +67,21 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-// ── Sticky live cell view ──────────────────────────────────────────────────────
-.experiment__sticky-cells {
-  position: fixed;
-  top: 68px;
-  right: 1rem;
-  z-index: 150;
-  transform: scale(0.72);
-  transform-origin: top right;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  pointer-events: none;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
+// ── Sticky tab indicator ────────────────────────────────────────────────────
+.experiment__sticky-tab-dot {
+  color: var(--color-primary);
+  font-size: var(--fs-sm);
+  animation: sticky-pulse 2s ease-in-out infinite;
+}
 
-  &--collapsed {
-    transform: scale(0.72) translateX(312px);
-  }
+// ── Panel body interior ─────────────────────────────────────────────────────
+.experiment__sticky-cells-body {
+  padding: 0.75rem 0.75rem 0.5rem;
+  cursor: pointer;
+  transition: border-color var(--tr-fast);
 
-  &-tab {
-    pointer-events: auto;
-    flex-shrink: 0;
-    align-self: center;
-    width: 32px;
-    height: 88px;
-    background: color-mix(in srgb, var(--color-bg) 97%, transparent);
-    border: 1px solid color-mix(in srgb, white 14%, transparent);
-    border-right: none;
-    border-radius: 8px 0 0 8px;
-    box-shadow: -3px 0 14px color-mix(in srgb, black 55%, transparent);
-    backdrop-filter: blur(12px);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background var(--tr-fast), box-shadow var(--tr-fast);
-
-    &:hover {
-      background: color-mix(in srgb, var(--color-surface) 99%, transparent);
-      box-shadow: -4px 0 18px color-mix(in srgb, var(--color-primary) 18%, transparent);
-    }
-
-    &-dot {
-      color: var(--color-primary);
-      font-size: var(--fs-sm);
-      animation: sticky-pulse 2s ease-in-out infinite;
-    }
-  }
-
-  &-body {
-    pointer-events: none;
-    width: 312px;
-    background: color-mix(in srgb, var(--color-bg) 97%, transparent);
-    border: 1px solid color-mix(in srgb, white 12%, transparent);
-    border-left: none;
-    border-radius: 0 10px 10px 0;
-    box-shadow: 0 8px 48px color-mix(in srgb, black 80%, transparent), 0 0 0 1px color-mix(in srgb, white 5%, transparent);
-    padding: 0.75rem 0.75rem 0.5rem;
-    backdrop-filter: blur(12px);
-    transition: border-color var(--tr-fast), box-shadow var(--tr-fast);
-
-    &--clickable {
-      pointer-events: auto;
-      cursor: pointer;
-
-      &:hover {
-        border-color: color-mix(in srgb, var(--color-primary) 30%, transparent);
-        box-shadow: 0 8px 48px color-mix(in srgb, black 80%, transparent), 0 0 0 1px color-mix(in srgb, var(--color-primary) 12%, transparent);
-      }
-    }
+  &:hover {
+    // border handled by SideTabPanel
   }
 
   &-label {
@@ -158,19 +101,9 @@ export default defineComponent({
   }
 }
 
-@keyframes sticky-pulse {
-  0%, 100% { opacity: 0.5; }
-  50%       { opacity: 1.0; }
-}
-
-// Fade + slide-down entrance/exit
-.sticky-cells-enter-active { transition: opacity 0.28s ease, transform 0.28s ease; }
+// ── Fade entrance/exit ──────────────────────────────────────────────────────
+.sticky-cells-enter-active { transition: opacity 0.28s ease; }
 .sticky-cells-leave-active { transition: opacity var(--tr-normal); }
-.sticky-cells-enter-from   { opacity: 0; transform: scale(0.72) translateY(-14px); transform-origin: top right; }
+.sticky-cells-enter-from   { opacity: 0; }
 .sticky-cells-leave-to     { opacity: 0; }
-
-// Mobile: hide sticky panel on small screens
-@media (max-width: 768px) {
-  .experiment__sticky-cells { display: none; }
-}
 </style>
