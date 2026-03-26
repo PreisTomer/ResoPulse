@@ -1,34 +1,28 @@
 // Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 import { Server } from 'socket.io'
 import type { Server as HttpServer } from 'http'
-import type { StatePacket, LogEntry, HardwareImpedancePacket, OutcomeEntry } from './types/socket'
+import type {
+  StatePacket, LogEntry, HardwareImpedancePacket,
+  OutcomeEntry, AiOptimizeRequest, AiOptimizeResult,
+} from './types/socket'
+import { insertOutcome } from './db'
 
-// ── Domain constants ──────────────────────────────────────────────────────────
+// Domain constants
 const MEDIUM = {
-  SALINE: 'saline',
-  BLOOD:  'blood',
-  TISSUE: 'tissue',
-  WATER:  'water',
-  DMEM:   'dmem',
-  PBS:    'pbs',
-  RPMI:   'rpmi',
-  MHB:    'mhb',
+  SALINE: 'saline', BLOOD: 'blood', TISSUE: 'tissue', WATER: 'water',
+  DMEM: 'dmem', PBS: 'pbs', RPMI: 'rpmi', MHB: 'mhb',
 } as const
 
 const WAVEFORM = {
-  CW:     'cw',
-  PULSED: 'pulsed',
-  H_FIRE: 'hfire',
+  CW: 'cw', PULSED: 'pulsed', H_FIRE: 'hfire',
 } as const
 
 const CHART_MODE = {
-  SCHWAN:    'schwan',
-  RESONANCE: 'resonance',
+  SCHWAN: 'schwan', RESONANCE: 'resonance',
 } as const
 
 const EVENT = {
-  MANUAL: 'manual',
-  LYSIS:  'lysis',
+  MANUAL: 'manual', LYSIS: 'lysis', OUTCOME: 'outcome',
 } as const
 
 const VALID_MEDIA    = new Set(Object.values(MEDIUM))
@@ -36,31 +30,72 @@ const VALID_WAVEFORM = new Set(Object.values(WAVEFORM))
 const VALID_MODE     = new Set(Object.values(CHART_MODE))
 const VALID_EVENT    = new Set(Object.values(EVENT))
 
-// ── Validation bounds ─────────────────────────────────────────────────────────
 const BOUNDS = {
-  FREQ_MIN_KHZ:  10,
-  FREQ_MAX_KHZ:  50_000_000,   // 50 GHz ceiling
-  FIELD_MIN_VCM: 0,
-  FIELD_MAX_VCM: 100_000,      // 100 kV/cm ceiling
-  DC_MIN:        1e-6,
-  DC_MAX:        1,
-  PW_MIN_NS:     1,
-  PW_MAX_NS:     100_000,
-  ORI_MIN_DEG:   0,
-  ORI_MAX_DEG:   90,
-  PULSES_MIN:    1,
-  PULSES_MAX:    1_000,
-  PERF_MIN:      0,
-  PERF_MAX:      10,
-  PHI_MIN:       0,
-  PHI_MAX:       0.9,
-  SESSION_MAX_LEN: 80,
+  FREQ_MIN_KHZ:        10,
+  FREQ_MAX_KHZ:        50_000_000,
+  FIELD_MIN_VCM:       0,
+  FIELD_MAX_VCM:       100_000,
+  DC_MIN:              1e-6,
+  DC_MAX:              1,
+  PW_MIN_NS:           1,
+  PW_MAX_NS:           100_000,
+  ORI_MIN_DEG:         0,
+  ORI_MAX_DEG:         90,
+  PULSES_MIN:          1,
+  PULSES_MAX:          1_000,
+  PERF_MIN:            0,
+  PERF_MAX:            10,
+  PHI_MIN:             0,
+  PHI_MAX:             0.9,
+  SESSION_MAX_LEN:     80,
+  REQUEST_ID_MAX_LEN:  64,
+  TAU_MIN_NS:          0.01,
+  TAU_MAX_NS:          1_000_000,
+  FC_MIN_KHZ:          0.001,
+  FC_MAX_KHZ:          50_000_000,
+  RADIUS_MIN_UM:       0.001,
+  RADIUS_MAX_UM:       100,
+  RATING_MIN:          1,
+  RATING_MAX:          5,
 } as const
 
-// ── In-memory last known state ────────────────────────────────────────────────
-let lastState: StatePacket | null = null
+const IMPEDANCE_BOUNDS = {
+  Z_MIN:     0.01,
+  Z_MAX:     1e6,
+  FREQ_MIN:  1,
+  FREQ_MAX:  1e9,
+  SIGMA_MIN: 0,
+  SIGMA_MAX: 100,
+} as const
 
-// ── Validation helpers ────────────────────────────────────────────────────────
+const AI_RATE_LIMIT_PER_SESSION    = 10
+const AI_SERVICE_TIMEOUT_MS        = 8_000
+const AI_BASELINE_CONFIDENCE_SCORE = 0.5
+const DEFAULT_ROOM                 = 'session:default'
+
+const SOCKET_EVENTS = {
+  STATE_SYNC:          'stateSync',
+  STATE_UPDATE:        'stateUpdate',
+  LOG_ENTRY:           'logEntry',
+  NEW_LOG_ENTRY:       'newLogEntry',
+  IMPEDANCE_READING:   'impedanceReading',
+  IMPEDANCE_BROADCAST: 'impedanceBroadcast',
+  LOG_OUTCOME:         'logOutcome',
+  NEW_OUTCOME:         'newOutcome',
+  AI_OPTIMIZE_REQUEST: 'aiOptimizeRequest',
+  AI_OPTIMIZE_RESULT:  'aiOptimizeResult',
+  DISCONNECT:          'disconnect',
+} as const
+
+// Session room state
+const lastStateByRoom = new Map<string, StatePacket>()
+const socketToRoom    = new Map<string, string>()
+const aiRequestCounts = new Map<string, number>()
+
+// AI service URL: set AI_SERVICE_URL env var to point at the Python FastAPI service.
+const AI_SERVICE_URL = (process.env.AI_SERVICE_URL ?? 'http://localhost:8000').replace(/\/$/, '')
+
+// Validation helpers
 const inBounds = (v: number, min: number, max: number): boolean =>
   !isNaN(v) && v >= min && v <= max
 
@@ -72,9 +107,9 @@ const getNum = (v: unknown, fallback: number): number => {
   return isNaN(n) ? fallback : n
 }
 
-// ── Validators ────────────────────────────────────────────────────────────────
+// Validators
 function validateStatePacket(raw: Record<string, unknown>): StatePacket | null {
-  const fKHz = Number(raw.freqKHz),  fVcm = Number(raw.fieldVcm)
+  const fKHz = Number(raw.freqKHz), fVcm = Number(raw.fieldVcm)
   const dc   = Number(raw.dutyCycle), pw  = Number(raw.pulseWidthNs)
   const ori  = Number(raw.orientationDeg), np = Number(raw.lysisNPulses)
   const prf  = Number(raw.perfusionRate),  phi = Number(raw.cellPackingFraction)
@@ -88,16 +123,16 @@ function validateStatePacket(raw: Record<string, unknown>): StatePacket | null {
   if (!inBounds(prf,  BOUNDS.PERF_MIN,      BOUNDS.PERF_MAX))       return null
   if (!inBounds(phi,  BOUNDS.PHI_MIN,       BOUNDS.PHI_MAX))        return null
 
-  const med      = getString(raw.medium,          MEDIUM.SALINE)
-  const waveform = getString(raw.waveform,         WAVEFORM.CW)
-  const mode     = getString(raw.chartMode,        CHART_MODE.SCHWAN)
-  const targetId = getString(raw.targetPresetId,   '')
-  const healthyId= getString(raw.healthyPresetId,  '')
-  const session  = getString(raw.sessionName,      '').slice(0, BOUNDS.SESSION_MAX_LEN)
+  const med       = getString(raw.medium,         MEDIUM.SALINE)
+  const waveform  = getString(raw.waveform,        WAVEFORM.CW)
+  const mode      = getString(raw.chartMode,       CHART_MODE.SCHWAN)
+  const targetId  = getString(raw.targetPresetId,  '')
+  const healthyId = getString(raw.healthyPresetId, '')
+  const session   = getString(raw.sessionName,     '').slice(0, BOUNDS.SESSION_MAX_LEN)
 
-  if (!VALID_MEDIA.has(med as typeof MEDIUM[keyof typeof MEDIUM]))               return null
-  if (!VALID_WAVEFORM.has(waveform as typeof WAVEFORM[keyof typeof WAVEFORM]))   return null
-  if (!VALID_MODE.has(mode as typeof CHART_MODE[keyof typeof CHART_MODE]))       return null
+  if (!VALID_MEDIA.has(med as typeof MEDIUM[keyof typeof MEDIUM]))             return null
+  if (!VALID_WAVEFORM.has(waveform as typeof WAVEFORM[keyof typeof WAVEFORM])) return null
+  if (!VALID_MODE.has(mode as typeof CHART_MODE[keyof typeof CHART_MODE]))     return null
 
   return {
     freqKHz:             Math.round(fKHz),
@@ -137,68 +172,71 @@ function validateLogEntry(raw: Record<string, unknown>): LogEntry | null {
     healthyTemp:  getNum(raw.healthyTemp,  37),
     targetTemp:   getNum(raw.targetTemp,   37),
     event,
-    sessionName: typeof raw.sessionName === 'string' ? raw.sessionName.slice(0, BOUNDS.SESSION_MAX_LEN) : undefined,
+    sessionName: typeof raw.sessionName === 'string'
+      ? raw.sessionName.slice(0, BOUNDS.SESSION_MAX_LEN)
+      : undefined,
   }
 }
 
-// ── Impedance packet validator ─────────────────────────────────────────────────
-const IMP_BOUNDS = {
-  Z_MIN:    0.01,   // Ω — sub-ohm readings indicate instrument error
-  Z_MAX:    1e6,    // Ω — 1 MΩ upper ceiling
-  FREQ_MIN: 1,      // Hz
-  FREQ_MAX: 1e9,    // 1 GHz
-  SIGMA_MIN: 0,
-  SIGMA_MAX: 100,   // S/m
-} as const
-
-function validateHardwareImpedancePacket(raw: Record<string, unknown>): HardwareImpedancePacket | null {
-  const zReal = Number(raw.zReal)
-  const zImag = Number(raw.zImag)
+function validateImpedancePacket(raw: Record<string, unknown>): HardwareImpedancePacket | null {
+  const zReal  = Number(raw.zReal)
+  const zImag  = Number(raw.zImag)
   const freqHz = Number(raw.freqHz)
-  const ts = Number(raw.timestamp)
+  const ts     = Number(raw.timestamp)
 
-  if (!inBounds(zReal,  IMP_BOUNDS.Z_MIN,    IMP_BOUNDS.Z_MAX))    return null
-  if (isNaN(zImag))                                                  return null
-  if (!inBounds(freqHz, IMP_BOUNDS.FREQ_MIN, IMP_BOUNDS.FREQ_MAX))  return null
-  if (isNaN(ts) || ts <= 0)                                          return null
+  if (!inBounds(zReal,  IMPEDANCE_BOUNDS.Z_MIN,    IMPEDANCE_BOUNDS.Z_MAX))   return null
+  if (isNaN(zImag))                                                             return null
+  if (!inBounds(freqHz, IMPEDANCE_BOUNDS.FREQ_MIN, IMPEDANCE_BOUNDS.FREQ_MAX)) return null
+  if (isNaN(ts) || ts <= 0)                                                     return null
 
   const result: HardwareImpedancePacket = { zReal, zImag, freqHz, timestamp: ts }
   const sigma = Number(raw.conductivity)
-  if (!isNaN(sigma) && inBounds(sigma, IMP_BOUNDS.SIGMA_MIN, IMP_BOUNDS.SIGMA_MAX)) {
+  if (!isNaN(sigma) && inBounds(sigma, IMPEDANCE_BOUNDS.SIGMA_MIN, IMPEDANCE_BOUNDS.SIGMA_MAX)) {
     result.conductivity = sigma
   }
   return result
 }
 
-// ── Outcome entry validator ────────────────────────────────────────────────
 function validateOutcomeEntry(raw: Record<string, unknown>): OutcomeEntry | null {
-  const freqKHz      = Number(raw.freqKHz)
-  const fieldVcm     = Number(raw.fieldVcm)
-  const dutyCycle    = Number(raw.dutyCycle)
-  const pulseWidthNs = Number(raw.pulseWidthNs)
-  const oriDeg       = Number(raw.orientationDeg)
-  const nPulses      = Number(raw.lysisNPulses)
-  const targetRatio  = Number(raw.targetRatio)
-  const healthyRatio = Number(raw.healthyRatio)
-  const selectivity  = Number(raw.selectivity)
-  const targetTemp   = Number(raw.targetTemp)
-  const healthyTemp  = Number(raw.healthyTemp)
-  const rating       = Number(raw.rating)
+  const freqKHz        = Number(raw.freqKHz)
+  const fieldVcm       = Number(raw.fieldVcm)
+  const dutyCycle      = Number(raw.dutyCycle)
+  const pulseWidthNs   = Number(raw.pulseWidthNs)
+  const oriDeg         = Number(raw.orientationDeg)
+  const nPulses        = Number(raw.lysisNPulses)
+  const targetRatio    = Number(raw.targetRatio)
+  const healthyRatio   = Number(raw.healthyRatio)
+  const selectivity    = Number(raw.selectivity)
+  const targetTemp     = Number(raw.targetTemp)
+  const healthyTemp    = Number(raw.healthyTemp)
+  const rating         = Number(raw.rating)
+  const targetTauNs    = Number(raw.targetTauNs)
+  const healthyTauNs   = Number(raw.healthyTauNs)
+  const targetFcKhz    = Number(raw.targetFcKhz)
+  const healthyFcKhz   = Number(raw.healthyFcKhz)
+  const targetRadiusUm = Number(raw.targetRadiusUm)
+  const sigmaE         = Number(raw.sigmaE)
 
-  if (!inBounds(freqKHz,      BOUNDS.FREQ_MIN_KHZ,  BOUNDS.FREQ_MAX_KHZ))  return null
-  if (!inBounds(fieldVcm,     BOUNDS.FIELD_MIN_VCM, BOUNDS.FIELD_MAX_VCM)) return null
-  if (!inBounds(dutyCycle,    BOUNDS.DC_MIN,        BOUNDS.DC_MAX))         return null
-  if (!inBounds(pulseWidthNs, BOUNDS.PW_MIN_NS,     BOUNDS.PW_MAX_NS))      return null
-  if (!inBounds(oriDeg,       BOUNDS.ORI_MIN_DEG,   BOUNDS.ORI_MAX_DEG))    return null
-  if (!inBounds(nPulses,      BOUNDS.PULSES_MIN,    BOUNDS.PULSES_MAX))     return null
-  if (isNaN(targetRatio)  || isNaN(healthyRatio) || isNaN(selectivity))     return null
-  if (isNaN(targetTemp)   || isNaN(healthyTemp))                             return null
-  if (!inBounds(rating,       1,                    5))                      return null
+  if (!inBounds(freqKHz,        BOUNDS.FREQ_MIN_KHZ,  BOUNDS.FREQ_MAX_KHZ))  return null
+  if (!inBounds(fieldVcm,       BOUNDS.FIELD_MIN_VCM, BOUNDS.FIELD_MAX_VCM)) return null
+  if (!inBounds(dutyCycle,      BOUNDS.DC_MIN,         BOUNDS.DC_MAX))        return null
+  if (!inBounds(pulseWidthNs,   BOUNDS.PW_MIN_NS,      BOUNDS.PW_MAX_NS))     return null
+  if (!inBounds(oriDeg,         BOUNDS.ORI_MIN_DEG,    BOUNDS.ORI_MAX_DEG))   return null
+  if (!inBounds(nPulses,        BOUNDS.PULSES_MIN,     BOUNDS.PULSES_MAX))    return null
+  if (isNaN(targetRatio) || isNaN(healthyRatio) || isNaN(selectivity))        return null
+  if (isNaN(targetTemp)  || isNaN(healthyTemp))                                return null
+  if (!inBounds(rating,         BOUNDS.RATING_MIN,     BOUNDS.RATING_MAX))    return null
+  if (!inBounds(targetTauNs,    BOUNDS.TAU_MIN_NS,     BOUNDS.TAU_MAX_NS))    return null
+  if (!inBounds(healthyTauNs,   BOUNDS.TAU_MIN_NS,     BOUNDS.TAU_MAX_NS))    return null
+  if (!inBounds(targetFcKhz,    BOUNDS.FC_MIN_KHZ,     BOUNDS.FC_MAX_KHZ))   return null
+  if (!inBounds(healthyFcKhz,   BOUNDS.FC_MIN_KHZ,     BOUNDS.FC_MAX_KHZ))   return null
+  if (!inBounds(targetRadiusUm, BOUNDS.RADIUS_MIN_UM,  BOUNDS.RADIUS_MAX_UM)) return null
+  if (isNaN(sigmaE) || sigmaE <= 0)                                            return null
 
-  const med      = getString(raw.medium,      MEDIUM.SALINE)
-  const waveform = getString(raw.waveform,    WAVEFORM.CW)
-  const session  = getString(raw.sessionName, '').slice(0, BOUNDS.SESSION_MAX_LEN)
-  const preset   = getString(raw.targetPreset,'')
+  const med      = getString(raw.medium,       MEDIUM.SALINE)
+  const waveform = getString(raw.waveform,     WAVEFORM.CW)
+  const session  = getString(raw.sessionName,  '').slice(0, BOUNDS.SESSION_MAX_LEN)
+  const preset   = getString(raw.targetPreset, '')
 
   if (!VALID_MEDIA.has(med as typeof MEDIUM[keyof typeof MEDIUM]))             return null
   if (!VALID_WAVEFORM.has(waveform as typeof WAVEFORM[keyof typeof WAVEFORM])) return null
@@ -222,21 +260,66 @@ function validateOutcomeEntry(raw: Record<string, unknown>): OutcomeEntry | null
     healthyTemp,
     rating:              Math.round(rating),
     aiSuggestionApplied: !!raw.aiSuggestionApplied,
+    targetTauNs,
+    healthyTauNs,
+    targetFcKhz,
+    healthyFcKhz,
+    targetRadiusUm,
+    sigmaE,
   }
 }
 
-// ── Socket server ─────────────────────────────────────────────────────────────
-const SOCKET_EVENTS = {
-  STATE_SYNC:          'stateSync',
-  STATE_UPDATE:        'stateUpdate',
-  LOG_ENTRY:           'logEntry',
-  NEW_LOG_ENTRY:       'newLogEntry',
-  IMPEDANCE_READING:   'impedanceReading',
-  IMPEDANCE_BROADCAST: 'impedanceBroadcast',
-  LOG_OUTCOME:         'logOutcome',
-  NEW_OUTCOME:         'newOutcome',
-  DISCONNECT:          'disconnect',
-} as const
+function validateAiOptimizeRequest(raw: Record<string, unknown>): AiOptimizeRequest | null {
+  if (typeof raw.requestId !== 'string' || raw.requestId.length === 0) return null
+  if (!raw.sessionState    || typeof raw.sessionState    !== 'object') return null
+  if (!raw.features        || typeof raw.features        !== 'object') return null
+  if (!raw.physicsBaseline || typeof raw.physicsBaseline !== 'object') return null
+  if (!raw.targetCell      || typeof raw.targetCell      !== 'object') return null
+  if (!raw.healthyCell     || typeof raw.healthyCell     !== 'object') return null
+
+  const state = validateStatePacket(raw.sessionState as Record<string, unknown>)
+  if (!state) return null
+
+  return {
+    requestId:       raw.requestId.slice(0, BOUNDS.REQUEST_ID_MAX_LEN),
+    sessionState:    state,
+    features:        raw.features        as AiOptimizeRequest['features'],
+    physicsBaseline: raw.physicsBaseline as AiOptimizeRequest['physicsBaseline'],
+    targetCell:      raw.targetCell      as AiOptimizeRequest['targetCell'],
+    healthyCell:     raw.healthyCell     as AiOptimizeRequest['healthyCell'],
+  }
+}
+
+// Room name sanitised to safe chars; scoped to "session:" namespace.
+function sessionRoom(name: string): string {
+  const safe = (name || 'default')
+    .replace(/[^a-zA-Z0-9_\-.]/g, '_')
+    .slice(0, BOUNDS.SESSION_MAX_LEN)
+  return `session:${safe}`
+}
+
+/**
+ * Calls the Python FastAPI AI optimizer.
+ * Returns null if the service is unreachable; callers fall back to the physics baseline.
+ */
+async function callPythonOptimizer(request: AiOptimizeRequest): Promise<AiOptimizeResult | null> {
+  try {
+    const response = await fetch(`${AI_SERVICE_URL}/ai/optimize`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify(request),
+      signal:  AbortSignal.timeout(AI_SERVICE_TIMEOUT_MS),
+    })
+    if (!response.ok) {
+      console.warn(`[AI] Python service returned ${response.status}`)
+      return null
+    }
+    return await response.json() as AiOptimizeResult
+  } catch (err) {
+    console.warn('[AI] Python service unavailable, using physics baseline:', (err as Error).message)
+    return null
+  }
+}
 
 export function setupSocketServer(httpServer: HttpServer): Server {
   const ALLOWED_ORIGINS: string[] | true = process.env.FRONTEND_URL
@@ -244,64 +327,99 @@ export function setupSocketServer(httpServer: HttpServer): Server {
     : true
 
   const io = new Server(httpServer, {
-    cors: {
-      origin: ALLOWED_ORIGINS,
-      methods: ['GET', 'POST'],
-    },
+    cors: { origin: ALLOWED_ORIGINS, methods: ['GET', 'POST'] },
   })
 
   io.on('connection', (socket) => {
+    // Start in the default room; moved to the correct session room on first stateSync.
+    socket.join(DEFAULT_ROOM)
+    socketToRoom.set(socket.id, DEFAULT_ROOM)
     console.log(`[Socket] Client connected: ${socket.id}`)
 
-    // Send current session state only if other clients are actively connected —
-    // i.e. there is a live collaborative session in progress.
-    // Sending stale cached state to solo users overwrites their defaults with
-    // whatever the last session left behind (e.g. extreme pulse widths), which
-    // breaks the heatmap and sweep panel for the default cell presets because
-    // loadPresetIfNeeded is a no-op when IDs already match and applyTargetDefaults
-    // is never called to reset the corrupted parameters.
-    const activePeers = io.sockets.sockets.size - 1   // exclude the just-connected socket
-    if (lastState && activePeers > 0) {
-      socket.emit(SOCKET_EVENTS.STATE_UPDATE, lastState)
-    }
-
-    // Full state sync — broadcast to all OTHER clients
     socket.on(SOCKET_EVENTS.STATE_SYNC, (raw: unknown) => {
       if (!raw || typeof raw !== 'object') return
       const packet = validateStatePacket(raw as Record<string, unknown>)
       if (!packet) return
-      lastState = packet
-      socket.broadcast.emit(SOCKET_EVENTS.STATE_UPDATE, packet)
+
+      const targetRoom  = sessionRoom(packet.sessionName)
+      const currentRoom = socketToRoom.get(socket.id) ?? DEFAULT_ROOM
+
+      if (targetRoom !== currentRoom) {
+        socket.leave(currentRoom)
+        socket.join(targetRoom)
+        socketToRoom.set(socket.id, targetRoom)
+
+        // Sync new joiner with the room's current state if peers are present.
+        const roomPeers     = io.sockets.adapter.rooms.get(targetRoom)?.size ?? 0
+        const roomLastState = lastStateByRoom.get(targetRoom)
+        if (roomLastState && roomPeers > 1) {
+          socket.emit(SOCKET_EVENTS.STATE_UPDATE, roomLastState)
+        }
+      }
+
+      lastStateByRoom.set(targetRoom, packet)
+      socket.to(targetRoom).emit(SOCKET_EVENTS.STATE_UPDATE, packet)
     })
 
-    // Log entry (lysis / manual) — broadcast to all OTHER clients
     socket.on(SOCKET_EVENTS.LOG_ENTRY, (raw: unknown) => {
       if (!raw || typeof raw !== 'object') return
       const entry = validateLogEntry(raw as Record<string, unknown>)
       if (!entry) return
-      socket.broadcast.emit(SOCKET_EVENTS.NEW_LOG_ENTRY, entry)
+      const room = socketToRoom.get(socket.id) ?? DEFAULT_ROOM
+      socket.to(room).emit(SOCKET_EVENTS.NEW_LOG_ENTRY, entry)
     })
 
-    // Outcome rating — broadcast to all OTHER clients so collaborators see the rating
     socket.on(SOCKET_EVENTS.LOG_OUTCOME, (raw: unknown) => {
       if (!raw || typeof raw !== 'object') return
       const entry = validateOutcomeEntry(raw as Record<string, unknown>)
       if (!entry) return
-      socket.broadcast.emit(SOCKET_EVENTS.NEW_OUTCOME, entry)
-      // Phase 1 will persist consented outcomes to SQLite here
+      insertOutcome(entry)
+      const room = socketToRoom.get(socket.id) ?? DEFAULT_ROOM
+      socket.to(room).emit(SOCKET_EVENTS.NEW_OUTCOME, entry)
     })
 
-    // Hardware impedance reading from lab instrument bridge — broadcast to ALL clients
-    // (the instrument bridge is a separate process, not a UI client, so all UIs should see it)
+    socket.on(SOCKET_EVENTS.AI_OPTIMIZE_REQUEST, async (raw: unknown) => {
+      if (!raw || typeof raw !== 'object') return
+      const request = validateAiOptimizeRequest(raw as Record<string, unknown>)
+      if (!request) return
+
+      const count = (aiRequestCounts.get(socket.id) ?? 0) + 1
+      aiRequestCounts.set(socket.id, count)
+      if (count > AI_RATE_LIMIT_PER_SESSION) {
+        console.warn(`[AI] Rate limit exceeded for socket ${socket.id}`)
+        return
+      }
+
+      const room     = socketToRoom.get(socket.id) ?? DEFAULT_ROOM
+      const baseline = request.physicsBaseline
+      const result   = await callPythonOptimizer(request)
+
+      // Broadcast to all session room collaborators; fall back to physics baseline if ML unavailable.
+      io.to(room).emit(SOCKET_EVENTS.AI_OPTIMIZE_RESULT, result ?? {
+        requestId:          request.requestId,
+        suggestion:         baseline.suggestion,
+        predictedTargetDr:  baseline.predictedTargetDr,
+        predictedHealthyDr: baseline.predictedHealthyDr,
+        predictedTi:        baseline.predictedTi,
+        confidenceScore:    AI_BASELINE_CONFIDENCE_SCORE,
+        explanation:        'Physics baseline (Schwan model). AI service offline or not yet trained.',
+        featureImportance:  {},
+        isPhysicsBaseline:  true,
+      })
+    })
+
+    // Instrument bridge readings are broadcast to all clients regardless of session.
     socket.on(SOCKET_EVENTS.IMPEDANCE_READING, (raw: unknown) => {
       if (!raw || typeof raw !== 'object') return
-      const packet = validateHardwareImpedancePacket(raw as Record<string, unknown>)
+      const packet = validateImpedancePacket(raw as Record<string, unknown>)
       if (!packet) return
       io.emit(SOCKET_EVENTS.IMPEDANCE_BROADCAST, packet)
     })
 
     socket.on(SOCKET_EVENTS.DISCONNECT, () => {
       console.log(`[Socket] Client disconnected: ${socket.id}`)
+      socketToRoom.delete(socket.id)
+      aiRequestCounts.delete(socket.id)
     })
   })
 

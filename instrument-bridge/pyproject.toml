@@ -15,7 +15,15 @@ dependencies = [
 [project.optional-dependencies]
 serial = ["pyserial>=3.5"]
 visa   = ["pyvisa>=1.14", "pyvisa-py>=0.7"]
-all    = ["instrument-bridge[serial,visa]"]
+ai     = [
+    "fastapi>=0.111",
+    "uvicorn[standard]>=0.29",
+    "xgboost>=2.0",
+    "scikit-learn>=1.5",
+    "numpy>=1.26",
+    "joblib>=1.4",
+]
+all    = ["instrument-bridge[serial,visa,ai]"]
 
 [project.scripts]
 instrument-bridge = "instrument_bridge.cli:main"

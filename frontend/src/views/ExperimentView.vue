@@ -92,6 +92,9 @@
     @full-reset="applyTargetDefaults"
   />
 
+  <!-- AI Protocol Optimizer side tab - always visible, starts collapsed -->
+  <AiOptimizerTab />
+
 </template>
 
 <script lang="ts">
@@ -113,6 +116,7 @@ import ExperimentHeader from '@/components/ExperimentLab/ExperimentHeader.vue'
 import ExperimentNotes from '@/components/ExperimentLab/ExperimentNotes.vue'
 import SnapBar from '@/components/ExperimentLab/SnapBar.vue'
 import StickyCellView from '@/components/ExperimentLab/StickyCellView.vue'
+import AiOptimizerTab from '@/components/ExperimentLab/AiOptimizerTab.vue'
 import { useExperimentStore } from '@/stores/experimentStore'
 import { useUiStore } from '@/stores/uiStore'
 import { CELL_PRESETS } from '@/constants/cellLibrary'
@@ -139,6 +143,7 @@ export default defineComponent({
     ExperimentNotes,
     SnapBar,
     StickyCellView,
+    AiOptimizerTab,
   },
 
   setup() {

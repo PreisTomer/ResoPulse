@@ -1,4 +1,5 @@
 // Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
+
 export interface StatePacket {
   freqKHz:             number
   fieldVcm:            number
@@ -17,22 +18,13 @@ export interface StatePacket {
   sessionName:         string
 }
 
-/**
- * Packet emitted by a lab impedance instrument and forwarded to all UI clients.
- * Instrument bridges should map their output to this JSON schema and emit via
- * the 'impedanceReading' socket event.
- */
+/** Emitted by a lab instrument bridge and forwarded to all UI clients. */
 export interface HardwareImpedancePacket {
-  /** Real part of measured impedance [Ω] */
-  zReal:         number
-  /** Imaginary part of measured impedance [Ω] — negative = capacitive */
-  zImag:         number
-  /** Frequency at which the measurement was taken [Hz] */
-  freqHz:        number
-  /** Medium conductivity [S/m] — optionally derived/provided by instrument */
-  conductivity?: number
-  /** Unix timestamp [ms] when the reading was captured by the instrument */
-  timestamp:     number
+  zReal:         number   // Real part of impedance [Ohm]
+  zImag:         number   // Imaginary part [Ohm], negative = capacitive
+  freqHz:        number   // Measurement frequency [Hz]
+  conductivity?: number   // Medium conductivity [S/m], optional
+  timestamp:     number   // Unix timestamp [ms]
 }
 
 export interface LogEntry {
@@ -53,31 +45,104 @@ export interface LogEntry {
   sessionName?:  string
 }
 
+// AI Optimizer types
+
+/** Biophysical params for one cell in the experiment pair. */
+export interface CellBiophysics {
+  id:               string
+  label:            string
+  radiusUm:         number   // [um]
+  memThicknessNm:   number   // [nm]
+  dielectricConst:  number
+  conductivitySi:   number   // sigma_i [S/m]
+  thresholdV:       number   // [V]
+  resonantFreqGhz?: number   // Resonance fields, virus/bacteria only
+  capsidQ?:         number
+}
+
+/** Physics-derived features pre-computed by the frontend; Python uses as ML input. */
+export interface AiPhysicsFeatures {
+  targetTauNs:          number   // tau_target [ns]
+  healthyTauNs:         number   // tau_healthy [ns]
+  targetFcKhz:          number   // corner frequency [kHz]
+  healthyFcKhz:         number   // corner frequency [kHz]
+  sigmaE:               number   // effective medium conductivity [S/m]
+  optimalFreqKhz:       number   // physics-optimal frequency from frontend grid scan
+  selectivityAtOptimal: number   // Vm_T / Vm_H at optimalFreqKhz
+}
+
+/** Physics baseline used immediately if the ML model has insufficient training data. */
+export interface AiPhysicsBaseline {
+  suggestion: {
+    freqKHz:      number
+    fieldVcm:     number
+    dutyCycle:    number
+    pulseWidthNs: number
+    waveform:     'cw' | 'pulsed' | 'hfire'
+  }
+  predictedTargetDr:  number
+  predictedHealthyDr: number
+  predictedTi:        number
+}
+
+/** Request payload sent by a client asking the AI optimizer for a recommendation. */
+export interface AiOptimizeRequest {
+  requestId:       string
+  sessionState:    StatePacket
+  healthyCell:     CellBiophysics
+  targetCell:      CellBiophysics
+  features:        AiPhysicsFeatures
+  physicsBaseline: AiPhysicsBaseline
+}
+
+export interface AiParamSuggestion {
+  freqKHz:      number
+  fieldVcm:     number
+  dutyCycle:    number
+  pulseWidthNs: number
+  waveform:     'cw' | 'pulsed' | 'hfire'
+}
+
+/** Response broadcast to all clients after the model returns. */
+export interface AiOptimizeResult {
+  requestId:          string
+  suggestion:         AiParamSuggestion | null
+  predictedTargetDr:  number
+  predictedHealthyDr: number
+  predictedTi:        number
+  confidenceScore:    number   // 0-1; below 0.4 = insufficient training examples
+  explanation:        string
+  featureImportance:  Record<string, number>
+  isPhysicsBaseline:  boolean   // true when ML fell back to physics-only optimisation
+}
+
 /**
- * Anonymized outcome record emitted after a run when the user rates the result.
- * Only collected when the client has aiConsentGiven = true.
- * Stored server-side for AI training; never contains PII.
+ * Anonymized outcome record stored for AI training after the user rates a run.
+ * Only collected when aiConsentGiven = true. Never contains PII.
  */
 export interface OutcomeEntry {
-  /** Session identifier (user-supplied name, may be a generic default) */
-  sessionName:          string
-  timestamp:            string
-  freqKHz:              number
-  fieldVcm:             number
-  medium:               string
-  targetPreset:         string
-  waveform:             string
-  dutyCycle:            number
-  pulseWidthNs:         number
-  orientationDeg:       number
-  lysisNPulses:         number
-  targetRatio:          number
-  healthyRatio:         number
-  selectivity:          number
-  targetTemp:           number
-  healthyTemp:          number
-  /** User-rated outcome: 1=failed, 2=poor, 3=acceptable, 4=good, 5=excellent */
-  rating:               number
-  /** Whether the protocol was suggested by the AI optimizer */
-  aiSuggestionApplied:  boolean
+  sessionName:         string
+  timestamp:           string
+  freqKHz:             number
+  fieldVcm:            number
+  medium:              string
+  targetPreset:        string
+  waveform:            string
+  dutyCycle:           number
+  pulseWidthNs:        number
+  orientationDeg:      number
+  lysisNPulses:        number
+  targetRatio:         number
+  healthyRatio:        number
+  selectivity:         number
+  targetTemp:          number
+  healthyTemp:         number
+  rating:              number   // 1=failed, 2=poor, 3=acceptable, 4=good, 5=excellent
+  aiSuggestionApplied: boolean
+  targetTauNs:         number   // tau_target [ns]
+  healthyTauNs:        number   // tau_healthy [ns]
+  targetFcKhz:         number   // fc_target [kHz]
+  healthyFcKhz:        number   // fc_healthy [kHz]
+  targetRadiusUm:      number   // [um]
+  sigmaE:              number   // effective medium conductivity [S/m]
 }
