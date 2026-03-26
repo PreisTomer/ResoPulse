@@ -70,13 +70,18 @@ export default defineComponent({
 
   data() {
     return {
-      isCollapsed: this.defaultCollapsed as boolean,
-      introActive: false,
-      _introTimer: null as ReturnType<typeof setTimeout> | null,
+      isCollapsed:     this.defaultCollapsed as boolean,
+      introActive:     false,
+      transitionReady: false,
+      _introTimer:     null as ReturnType<typeof setTimeout> | null,
     }
   },
 
   mounted() {
+    // Defer enabling the CSS transition by one tick so the initial transform
+    // (applied via inline :style) is never animated — only collapse/expand
+    // interactions after first paint should trigger the transition.
+    this.$nextTick(() => { this.transitionReady = true })
     if (this.introAnimation) {
       setTimeout(() => {
         this.introActive = true
@@ -101,6 +106,9 @@ export default defineComponent({
         zIndex:    String(this.zIndex),
         transform: this.isCollapsed ? closeTransform : openTransform,
       }
+      // Suppress the CSS `transition: transform` until after first paint so the
+      // browser never animates from the default `none` to the initial scale value.
+      if (!this.transitionReady) style.transition = 'none'
       if (isLeft) {
         style.left  = '1rem'
         style.right = 'auto'

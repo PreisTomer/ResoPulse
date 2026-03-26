@@ -34,6 +34,12 @@
   50%       { opacity: 0.80; }
 }
 
+// Used by StickyCellView tab dot — slow breathe pulse on the live indicator.
+@keyframes sticky-pulse {
+  0%, 100% { opacity: 0.5; }
+  50%       { opacity: 1.0; }
+}
+
 // Protocol lab-link highlight: three slow glow pulses then fades to nothing.
 // Applied by scrollAndHighlight() after cross-route navigation from ProtocolView.
 // Raw opacity values required — CSS variables are not interpolated in @keyframes.
