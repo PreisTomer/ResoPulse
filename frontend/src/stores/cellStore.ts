@@ -665,7 +665,6 @@ export const useCellStore = defineStore('cell', {
         return { khz: freqKhz, sel: safeRatio(drT, drH, THRESHOLDS.TI_DISPLAY_CAP, NEAR_ZERO_DR) }
       }
       const sigma_e = this.effectiveSigmaE
-      const field   = state.fieldIntensity
       const hThr    = state.healthy.thresholdVoltage
       const tThr    = state.target.thresholdVoltage
       // PEF is frequency-independent (depends on τ, not f), so it scales the DR for each cell
@@ -673,14 +672,39 @@ export const useCellStore = defineStore('cell', {
       // Include PEF so the returned `sel` matches what the disruption ratio getters compute.
       const pefH    = this.pulseEnvelopeFactorHealthy
       const pefT    = this.pulseEnvelopeFactorTarget
+      // Field cancels in the tDr/hDr selectivity ratio (both Vm ∝ E), so using unit field
+      // avoids a reactive dependency on fieldIntensity that would cause 300 unnecessary
+      // Schwan evaluations on every slider move.
+      const UNIT_FIELD = 1.0
       const logMin  = Math.log10(10), logMax = Math.log10(500_000)
       const { khz: optKhz, sel: maxSel } = Array.from({ length: 300 }, (_, i) => {
         const khz = Math.pow(10, logMin + (logMax - logMin) * i / 299)
-        const hDr = (computeSchwan(state.healthy, khz, field, sigma_e) * pefH) / hThr
-        const tDr = (computeSchwan(state.target,  khz, field, sigma_e) * pefT) / tThr
+        const hDr = (computeSchwan(state.healthy, khz, UNIT_FIELD, sigma_e) * pefH) / hThr
+        const tDr = (computeSchwan(state.target,  khz, UNIT_FIELD, sigma_e) * pefT) / tThr
         return { khz, sel: hDr > 0 ? tDr / hDr : 0 }
       }).reduce((best, pt) => pt.sel > best.sel ? pt : best, { khz: 10, sel: -Infinity })
       return { khz: optKhz, sel: Math.max(0, maxSel) }
+    },
+
+    /** Heatmap X-axis upper frequency bound [kHz].
+     *  Non-mammalian: fixed per category (bacteria / virus / resonance).
+     *  Mammalian: baseline 10 MHz, extended to the next decade above optimalFreqResult.khz
+     *  when the optimal lies beyond it, so the opt line is always visible on the canvas.
+     *  Capped at 100 MHz (IRE_MAMMALIAN slider max — frequencies above are inaccessible). */
+    hmapFreqMaxKHz(): number {
+      if (this.isResonanceMode) {
+        const state = this as unknown as CellStoreState
+        const t = state.target as { resonantFreqGHz?: number }
+        if (t.resonantFreqGHz) return Math.max(t.resonantFreqGHz * 1e6 * 2.5, 1_000_000)
+      }
+      const cat = this.targetCellCategory
+      if (cat === CELL_CATEGORY.VIRUS)    return 50_000_000
+      if (cat === CELL_CATEGORY.BACTERIA) return  1_000_000
+      const MAMMALIAN_DEFAULT = 10_000   // 10 MHz baseline
+      const MAMMALIAN_CAP     = 100_000  // 100 MHz — IRE_MAMMALIAN freqMax
+      const optKhz = this.optimalFreqResult.khz
+      if (optKhz <= MAMMALIAN_DEFAULT) return MAMMALIAN_DEFAULT
+      return Math.min(MAMMALIAN_CAP, Math.pow(10, Math.ceil(Math.log10(optKhz))))
     },
 
     /** BMS = BMS_WEIGHT_SI·SI + BMS_WEIGHT_MTE·MTE + BMS_WEIGHT_MA·MA - research indicator, not a clinical index. */

@@ -57,17 +57,7 @@ export default defineComponent({
 
   computed: {
     xMin(): number { return 10 },
-
-    xMax(): number {
-      const cat = this.store.targetCellCategory
-      if (this.store.isResonanceMode) {
-        const t = this.store.target as { resonantFreqGHz?: number }
-        if (t.resonantFreqGHz) return Math.max(t.resonantFreqGHz * 1e6 * 2.5, 1_000_000)
-      }
-      if (cat === CELL_CATEGORY.VIRUS)    return 50_000_000
-      if (cat === CELL_CATEGORY.BACTERIA) return  1_000_000
-      return 10_000
-    },
+    xMax(): number { return this.store.hmapFreqMaxKHz },
 
     yMax(): number {
       const s      = this.store
@@ -539,10 +529,20 @@ export default defineComponent({
       const rect   = canvas.getBoundingClientRect()
       const cx = e.clientX - rect.left
       const cy = e.clientY - rect.top
-      if (cx < HMAP_MARGIN.LEFT || cx > this.displayW - HMAP_MARGIN.RIGHT) return
-      if (cy < HMAP_MARGIN.TOP  || cy > this.displayH - HMAP_MARGIN.BOTTOM) return
-      this.store.setBroadcastFreqKHz(Math.round(this._xToFreq(cx)))
-      this.store.setFieldIntensity(Math.round(this._yToField(cy)))
+      // Use rect dimensions directly — they always reflect the current rendered size,
+      // avoiding any lag between displayW/displayH and the actual CSS layout.
+      const rW = rect.width
+      const rH = rect.height
+      if (cx < HMAP_MARGIN.LEFT || cx > rW - HMAP_MARGIN.RIGHT) return
+      if (cy < HMAP_MARGIN.TOP  || cy > rH - HMAP_MARGIN.BOTTOM) return
+      const pW = rW - HMAP_MARGIN.LEFT - HMAP_MARGIN.RIGHT
+      const pH = rH - HMAP_MARGIN.TOP  - HMAP_MARGIN.BOTTOM
+      const tX = Math.max(0, Math.min(1, (cx - HMAP_MARGIN.LEFT) / pW))
+      const tY = 1 - Math.max(0, Math.min(1, (cy - HMAP_MARGIN.TOP) / pH))
+      const freq  = this.xMin * Math.pow(this.xMax / this.xMin, tX)
+      const field = Math.max(0, Math.min(this.yMax, tY * this.yMax))
+      this.store.setBroadcastFreqKHz(Math.round(freq))
+      this.store.setFieldIntensity(Math.round(field))
       broadcastStateSync()
     },
 
@@ -551,16 +551,22 @@ export default defineComponent({
       const rect   = canvas.getBoundingClientRect()
       const cx = e.clientX - rect.left
       const cy = e.clientY - rect.top
+      const rW = rect.width
+      const rH = rect.height
 
-      if (cx < HMAP_MARGIN.LEFT || cx > this.displayW - HMAP_MARGIN.RIGHT ||
-          cy < HMAP_MARGIN.TOP  || cy > this.displayH - HMAP_MARGIN.BOTTOM) {
+      if (cx < HMAP_MARGIN.LEFT || cx > rW - HMAP_MARGIN.RIGHT ||
+          cy < HMAP_MARGIN.TOP  || cy > rH - HMAP_MARGIN.BOTTOM) {
         this.$emit('hover-info-change', null)
         this._resetCanvasTip()
         return
       }
 
-      const freqKHz  = this._xToFreq(cx)
-      const fieldVcm = this._yToField(cy)
+      const pW = rW - HMAP_MARGIN.LEFT - HMAP_MARGIN.RIGHT
+      const pH = rH - HMAP_MARGIN.TOP  - HMAP_MARGIN.BOTTOM
+      const tX = Math.max(0, Math.min(1, (cx - HMAP_MARGIN.LEFT) / pW))
+      const tY = 1 - Math.max(0, Math.min(1, (cy - HMAP_MARGIN.TOP) / pH))
+      const freqKHz  = this.xMin * Math.pow(this.xMax / this.xMin, tX)
+      const fieldVcm = Math.max(0, Math.min(this.yMax, tY * this.yMax))
       const zone     = this._zoneAt(freqKHz, fieldVcm)
 
       // Hover physics

@@ -126,7 +126,10 @@ export default defineComponent({
 
   methods: {
     snapToOptimal() {
-      this.store.setBroadcastFreqKHz(Math.round(this.store.optimalFreqResult.khz))
+      const clamped = Math.round(
+        Math.max(10, Math.min(this.store.hmapFreqMaxKHz, this.store.optimalFreqResult.khz))
+      )
+      this.store.setBroadcastFreqKHz(clamped)
       broadcastStateSync()
     },
   },
