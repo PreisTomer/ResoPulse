@@ -12,51 +12,48 @@ The service is stateless between requests; the model bundle is loaded once at st
 """
 
 import logging
+import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException
 
 from .ai_models import OptimizeRequest, OptimizeResponse
+from .constants import (
+    AI_SERVICE_DESCRIPTION,
+    AI_SERVICE_NAME,
+    AI_SERVICE_TITLE,
+    AI_SERVICE_VERSION,
+    DEMO_SEED_ENV_VAR,
+    DEMO_SEED_TRUTHY_VALUES,
+)
 from .optimizer import run_optimizer
+from .service_state import get_model_bundle, set_model_bundle
 from .train import load_model, retrain_model, ModelBundle
 
 logger = logging.getLogger(__name__)
-
-# ── Module-level model state ─────────────────────────────────────────────────
-_model_bundle: ModelBundle | None = None
-
-
-def _get_bundle() -> ModelBundle | None:
-    return _model_bundle
-
-
-def _set_bundle(bundle: ModelBundle | None) -> None:
-    global _model_bundle
-    _model_bundle = bundle
 
 
 # ── Application lifecycle ────────────────────────────────────────────────────
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
-    _set_bundle(load_model())
-    if _get_bundle():
-        logger.info("[AI Service] Model loaded — %d training samples", _get_bundle().n_samples)  # type: ignore[union-attr]
+    set_model_bundle(load_model())
+    bundle = get_model_bundle()
+    if bundle is not None:
+        logger.info("[AI Service] Model loaded — %d training samples", bundle.n_samples)
     else:
         logger.info("[AI Service] No trained model found — attempting auto-seed + train")
         try:
-            import os
-            from pathlib import Path
             from .seed import seed_database
             from .train import DATA_DIR, retrain_model
             # Only auto-seed when DEMO_SEED env var is set (opt-in so production
             # deployments don't silently inject synthetic data)
-            if os.environ.get("DEMO_SEED", "").lower() in ("1", "true", "yes"):
+            if os.environ.get(DEMO_SEED_ENV_VAR, "").lower() in DEMO_SEED_TRUTHY_VALUES:
                 n = seed_database(DATA_DIR)
                 if n:
                     logger.info("[AI Service] Seeded %d demo rows", n)
                 n_trained = retrain_model()
                 if n_trained:
-                    _set_bundle(load_model())
+                    set_model_bundle(load_model())
                     logger.info("[AI Service] Auto-trained on %d samples", n_trained)
                 else:
                     logger.info("[AI Service] Auto-seed done but training skipped — physics baseline active")
@@ -69,9 +66,9 @@ async def lifespan(_app: FastAPI):
 
 
 app = FastAPI(
-    title="ResoPulse AI Optimizer",
-    description="ML-only protocol optimization service. Physics is pre-computed by the frontend.",
-    version="0.1.0",
+    title=AI_SERVICE_TITLE,
+    description=AI_SERVICE_DESCRIPTION,
+    version=AI_SERVICE_VERSION,
     lifespan=lifespan,
 )
 
@@ -80,12 +77,12 @@ app = FastAPI(
 
 @app.get("/health")
 async def health() -> dict:
-    bundle = _get_bundle()
+    bundle = get_model_bundle()
     return {
-        "status":         "ok",
-        "service":        "resopulse-ai",
-        "modelReady":     bundle is not None,
-        "trainingSamples":bundle.n_samples if bundle else 0,
+        "status": "ok",
+        "service": AI_SERVICE_NAME,
+        "modelReady": bundle is not None,
+        "trainingSamples": bundle.n_samples if bundle else 0,
         "isPhysicsBaseline": bundle is None,
     }
 
@@ -100,7 +97,7 @@ async def optimize(request: OptimizeRequest) -> OptimizeResponse:
     Falls back to the physics baseline gracefully on any error.
     """
     try:
-        return run_optimizer(request, _get_bundle())
+        return run_optimizer(request, get_model_bundle())
     except Exception as exc:
         logger.error("[AI Service] Unhandled error in /ai/optimize: %s", exc, exc_info=True)
         raise HTTPException(status_code=500, detail="Optimizer failed — check service logs")
@@ -115,9 +112,9 @@ async def retrain() -> dict:
     try:
         n = retrain_model()
         if n > 0:
-            _set_bundle(load_model())
+            set_model_bundle(load_model())
             logger.info("[AI Service] Model retrained on %d samples", n)
-        return {"status": "ok", "samplesUsed": n, "modelReady": _get_bundle() is not None}
+        return {"status": "ok", "samplesUsed": n, "modelReady": get_model_bundle() is not None}
     except Exception as exc:
         logger.error("[AI Service] Retraining failed: %s", exc, exc_info=True)
         raise HTTPException(status_code=500, detail="Retraining failed — check service logs")

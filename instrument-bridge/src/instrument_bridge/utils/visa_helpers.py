@@ -1,3 +1,4 @@
+# Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 """
 Helpers for opening and communicating with VISA instruments.
 
@@ -7,8 +8,10 @@ package remains importable in environments without a VISA backend.
 
 from loguru import logger
 
+from instrument_bridge.utils.constants import DEFAULT_VISA_TIMEOUT_MS
 
-def open_visa_resource(resource_string: str, timeout_ms: int = 5000):
+
+def open_visa_resource(resource_string: str, timeout_ms: int = DEFAULT_VISA_TIMEOUT_MS):
     """
     Open a VISA resource and return the instrument handle.
 

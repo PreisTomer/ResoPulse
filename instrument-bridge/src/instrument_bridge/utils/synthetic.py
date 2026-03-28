@@ -1,3 +1,4 @@
+# Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 """
 Physics functions for the demo driver's synthetic impedance generator.
 
@@ -12,22 +13,15 @@ Reference: Maxwell-Wagner relaxation model for a resistive-capacitive cell.
 import math
 import random
 
-# Permittivity of free space [F/m]
-_EPSILON_0 = 8.854187817e-12
-
-# Relative permittivity of water/saline at room temperature (dimensionless)
-_EPSILON_R_SALINE = 80.0
-
-# Nominal saline conductivity at 25 °C [S/m]
-_SIGMA_E_SALINE = 1.5
+from instrument_bridge.utils.constants import EPSILON_0, EPSILON_R_SALINE, SIGMA_E_SALINE
 
 
 def compute_cuvette_complex_impedance(
     freq_hz: float,
     gap_mm: float,
     cross_section_cm2: float,
-    sigma_e: float = _SIGMA_E_SALINE,
-    epsilon_r: float = _EPSILON_R_SALINE,
+    sigma_e: float = SIGMA_E_SALINE,
+    epsilon_r: float = EPSILON_R_SALINE,
 ) -> tuple[float, float]:
     """
     Return (Z_real, Z_imag) [Ω] for a parallel-plate cuvette at a given frequency.
@@ -54,7 +48,7 @@ def compute_cuvette_complex_impedance(
     geometry_factor = gap_m / area_m2         # [m / m²] = [1/m]
 
     omega = 2.0 * math.pi * freq_hz
-    epsilon = epsilon_r * _EPSILON_0          # absolute permittivity [F/m]
+    epsilon = epsilon_r * EPSILON_0           # absolute permittivity [F/m]
 
     # Z = geometry / (sigma + j * omega * epsilon)
     # Split into real and imaginary:

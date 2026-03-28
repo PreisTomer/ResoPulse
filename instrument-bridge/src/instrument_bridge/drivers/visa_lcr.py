@@ -1,3 +1,4 @@
+# Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 """
 VISA LCR meter driver — Keysight E4980A, Hioki IM3533, Agilent 4284A,
 and any SCPI-compliant impedance analyser reachable via GPIB, USB, or LAN.
@@ -86,17 +87,19 @@ class VisaLcrDriver(InstrumentDriver):
 
     def __init__(self, settings: Settings) -> None:
         self._settings = settings
+        self._visa_settings = settings.visa
+        self._measurement_settings = settings.measurement
         self._instrument = None
 
     @property
     def instrument_name(self) -> str:
-        return f"VISA LCR ({self._settings.visa_resource})"
+        return f"VISA LCR ({self._visa_settings.resource})"
 
     async def connect(self) -> None:
         loop = asyncio.get_event_loop()
         try:
             self._instrument = await loop.run_in_executor(
-                None, open_visa_resource, self._settings.visa_resource
+                None, open_visa_resource, self._visa_settings.resource
             )
         except (ImportError, RuntimeError) as exc:
             raise InstrumentConnectError(str(exc)) from exc
@@ -111,7 +114,7 @@ class VisaLcrDriver(InstrumentDriver):
         # Set measurement frequency and apply init commands
         init_with_freq = [
             *_INIT_COMMANDS,
-            f":FREQ {self._settings.meas_freq_hz:.6g}",
+            f":FREQ {self._measurement_settings.freq_hz:.6g}",
         ]
         for command in init_with_freq:
             try:
@@ -122,8 +125,8 @@ class VisaLcrDriver(InstrumentDriver):
                 ) from exc
 
         logger.info(
-            f"VISA LCR initialised at {self._settings.meas_freq_hz:.0f} Hz"
-            f" via {self._settings.visa_resource}"
+            f"VISA LCR initialised at {self._measurement_settings.freq_hz:.0f} Hz"
+            f" via {self._visa_settings.resource}"
         )
 
     async def disconnect(self) -> None:
@@ -161,7 +164,7 @@ class VisaLcrDriver(InstrumentDriver):
         return ImpedanceReading.build(
             z_real=z_real,
             z_imag=z_imag,
-            freq_hz=self._settings.meas_freq_hz,
+            freq_hz=self._measurement_settings.freq_hz,
         )
 
     @staticmethod

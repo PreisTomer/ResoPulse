@@ -14,17 +14,16 @@ import logging
 import numpy as np
 
 from .ai_models import OptimizeRequest, OptimizeResponse, AiParamSuggestion
-from .train import ModelBundle, FEATURE_COLS, MIN_SAMPLES
+from .constants import CONFIDENCE_BASE, CONFIDENCE_ML_MAX, FEATURE_COLS, MIN_TRAINING_SAMPLES
+from .train import ModelBundle
 
 logger = logging.getLogger(__name__)
 
 # Minimum training samples needed before trusting ML over physics baseline
-ML_ACTIVATION_THRESHOLD = MIN_SAMPLES
+ML_ACTIVATION_THRESHOLD = MIN_TRAINING_SAMPLES
 
-# Confidence blending: at MIN_SAMPLES the ML weight starts at 0.2 and grows
-# linearly to 0.8 at 5 × MIN_SAMPLES, then plateaus.
-CONFIDENCE_BASE    = 0.50   # physics baseline confidence
-CONFIDENCE_ML_MAX  = 0.90   # asymptotic ML confidence at large N
+# Confidence blending: at MIN_TRAINING_SAMPLES the ML weight starts at 0.2 and grows
+# linearly to 0.8 at 5 × MIN_TRAINING_SAMPLES, then plateaus.
 
 
 def _physics_baseline_response(request: OptimizeRequest) -> OptimizeResponse:
@@ -74,7 +73,7 @@ def _build_feature_vector(request: OptimizeRequest) -> np.ndarray:
 
 
 def _ml_confidence(n_samples: int) -> float:
-    """Confidence score growing from 0.5 at MIN_SAMPLES to CONFIDENCE_ML_MAX."""
+    """Confidence score growing from 0.5 at MIN_TRAINING_SAMPLES to CONFIDENCE_ML_MAX."""
     if n_samples < ML_ACTIVATION_THRESHOLD:
         return CONFIDENCE_BASE
     progress = min(1.0, (n_samples - ML_ACTIVATION_THRESHOLD) / (4 * ML_ACTIVATION_THRESHOLD))

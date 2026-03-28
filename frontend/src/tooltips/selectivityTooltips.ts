@@ -100,7 +100,7 @@ Ref: Tsen et al. (2007); Dykeman &amp; Sankey (2008)
   const label  = formatFreqKHz(optKhz)
   const cls    = optSel >= 1.5 ? 'tip-ok' : optSel >= 1.0 ? 'tip-val' : 'tip-warn'
   const snapNote = beyondRange
-    ? `<span class="tip-warn">${ICON.WARNING} Optimal is beyond 10 MHz slider cap.\n  Snap sets 10 MHz (best reachable frequency).\n  Bacteria/virus targeting requires >10 MHz RF equipment.</span>`
+    ? `<span class="tip-warn">${ICON.WARNING} Optimal lies outside the current slider range.\n  Snap sets frequency to the nearest reachable bound.</span>`
     : `<span class="tip-ok">Click to snap cursor to this frequency</span>`
   return `<strong>Optimal Broadcast Frequency (Schwan mode)</strong>
 Scanned 300 log-spaced points from 10 kHz → 500 MHz.

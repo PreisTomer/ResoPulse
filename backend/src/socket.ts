@@ -387,6 +387,18 @@ export function setupSocketServer(httpServer: HttpServer): Server {
       aiRequestCounts.set(socket.id, count)
       if (count > AI_RATE_LIMIT_PER_SESSION) {
         console.warn(`[AI] Rate limit exceeded for socket ${socket.id}`)
+        const baseline = request.physicsBaseline
+        socket.emit(SOCKET_EVENTS.AI_OPTIMIZE_RESULT, {
+          requestId:          request.requestId,
+          suggestion:         baseline.suggestion,
+          predictedTargetDr:  baseline.predictedTargetDr,
+          predictedHealthyDr: baseline.predictedHealthyDr,
+          predictedTi:        baseline.predictedTi,
+          confidenceScore:    AI_BASELINE_CONFIDENCE_SCORE,
+          explanation:        'AI request limit reached for this session. Physics baseline applied.',
+          featureImportance:  {},
+          isPhysicsBaseline:  true,
+        })
         return
       }
 
