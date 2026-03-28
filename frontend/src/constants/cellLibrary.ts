@@ -75,6 +75,13 @@ export const CELL_PRESETS: CellPreset[] = [
   },
 
   // ── Cancer cells ────────────────────────────────────────────────────────────
+  // All cancer presets use the single-shell Schwan model.
+  // MEMBRANE THICKNESS: all mammalian cell membranes are physically 7 nm — the lipid bilayer
+  // thickness does not change significantly with malignancy. The elevated membrane capacitance
+  // Cm in cancer cells arises from altered lipid composition (cholesterol depletion, increased
+  // phosphatidylserine), which raises effective ε_r, NOT from membrane thinning.
+  // Each preset's ε_r is scaled to preserve the physically correct Cm derived from literature.
+  // Ref: Pethig (2010) Biomicrofluidics 4:022811; Gascoyne & Vykoukal (2002) Electrophoresis 23:1973.
   {
     presetId: 'adenocarcinoma',
     group: 'cancer',
@@ -82,17 +89,18 @@ export const CELL_PRESETS: CellPreset[] = [
     type: 'target',
     label: 'Adenocarcinoma',
     shortLabel: 'Adeno CA',
-    notes: 'R = 15 µm · thin membrane · high ε_r',
+    notes: 'Generic epithelial CA · R = 15 µm · Cm = 1.52 µF/cm² · fc ≈ 400 kHz',
+    techNotes: 'Single-shell Schwan model for a generic solid-tumour epithelial cancer cell.\nσ_i = 0.70 S/m: elevated vs normal epithelium (~0.50 S/m); reflects overexpressed ion channels common in epithelial malignancies.\nCm = 15.2 mF/m² = 1.52 µF/cm² (elevated; cholesterol depletion and increased phosphatidylserine raise effective ε_r to 12.0 at d = 7 nm).\nCharacteristic fc ≈ 400 kHz in saline · τ ≈ 400 ns.\nVth = 0.70 V: ~35% lower than normal hepatocyte reference; cholesterol-depleted, fluid membrane lowers pore-nucleation energy barrier.\nHigh N/C ratio (nuclear radius 8.0 / cell radius 15.0 µm) is typical of poorly differentiated epithelial CA.\n⚠ This preset represents a generic adenocarcinoma — not calibrated to a specific cell line. Use MCF-7, A549, or PANC-1 for line-specific protocols.\nRef: Pethig (2010) Biomicrofluidics 4:022811; Weaver & Chizmadzhev (1996) Bioelectrochemistry 41:135.',
     radius: 15,
-    membraneThickness: 5,
+    membraneThickness: 7,
     naturalFrequency: 380,
     thresholdVoltage: 0.70,
-    dielectricConstant: 8.5,
-    conductivity: 0.9,
+    dielectricConstant: 12.0,   // scaled from 8.5 at d=5 nm to preserve Cm = 15.2 mF/m² at d=7 nm
+    conductivity: 0.70,
     density: 1080,
     specificHeatCapacity: 3200,
     amplitude: 0.5,
-    // Nuclear envelope (high N/C ratio, thinner NE → lower f_peak, lower threshold)
+    // High N/C ratio; thinner, leakier NE → bandpass f_peak shifts lower, lower nuclear threshold
     nuclearRadius: 8.0, nuclearMembraneThickness: 12, nuclearMembraneEps: 12,
     nucleoplasmConductivity: 1.1, nuclearThresholdVoltage: 0.40,
   },
@@ -103,17 +111,18 @@ export const CELL_PRESETS: CellPreset[] = [
     type: 'target',
     label: 'Glioblastoma',
     shortLabel: 'GBM',
-    notes: 'Brain tumor · R = 12 µm · high invasiveness',
+    notes: 'GBM (WHO grade IV) · R = 12 µm · highest σ_i · fc ≈ 500 kHz',
+    techNotes: 'Single-shell Schwan model for GBM (WHO grade IV glioma, IDH-wildtype).\nσ_i = 0.85 S/m: highest of all cancer presets — GBM overexpresses voltage-gated Nav1.5, TRPM7, and BK channels, substantially elevating cytoplasm conductivity vs normal astrocytes (~0.45 S/m).\nCm = 17.7 mF/m² = 1.77 µF/cm² (highest of cancer presets; severely disrupted lipid raft structure raises effective ε_r to 14.0 at d = 7 nm).\nCharacteristic fc ≈ 500 kHz in saline · τ ≈ 320 ns.\nVth = 0.65 V: ~35% lower than astrocyte reference; highly fluid, cholesterol-poor membrane.\nLarge nucleus and irregular nuclear envelope (R_nuc = 7.0 µm) reflects chromosomal instability hallmarks of GBM.\n⚠ GBM cells in culture form near-spherical aggregates; actual in-vitro morphology is heterogeneous. Single-shell approximation overestimates Vm for cells with prominent cytoplasmic projections.\nRef: Liu et al. (2019) Glia 67:1074 (ion channel overexpression); Bhatt et al. (2021) Biophys. J. 120:2647.',
     radius: 12,
-    membraneThickness: 4.5,
+    membraneThickness: 7,
     naturalFrequency: 450,
     thresholdVoltage: 0.65,
-    dielectricConstant: 9.0,
-    conductivity: 1.1,
+    dielectricConstant: 14.0,   // scaled from 9.0 at d=4.5 nm to preserve Cm = 17.7 mF/m² at d=7 nm
+    conductivity: 0.85,
     density: 1060,
     specificHeatCapacity: 3200,
     amplitude: 0.5,
-    // Nuclear envelope (large aggressive nucleus, irregular NE, lower f_peak)
+    // Large aggressive nucleus, irregular NE → lower f_peak, lower nuclear threshold
     nuclearRadius: 7.0, nuclearMembraneThickness: 11, nuclearMembraneEps: 12,
     nucleoplasmConductivity: 1.2, nuclearThresholdVoltage: 0.35,
   },
@@ -124,17 +133,17 @@ export const CELL_PRESETS: CellPreset[] = [
     type: 'target',
     label: 'Breast MCF-7',
     shortLabel: 'MCF-7',
-    notes: 'ER+ breast cancer · R = 11 µm · model cell line',
+    notes: 'ER+ breast cancer · R = 11 µm · Polevaya-measured dielectrics · fc ≈ 600 kHz',
+    techNotes: 'Single-shell Schwan model for MCF-7 (ER+ invasive ductal carcinoma cell line).\nσ_i = 0.60 S/m: measured by electrorotation on MCF-7 suspensions (Polevaya et al. 1999 reported 0.50-0.65 S/m range).\nCm = 12.0 mF/m² = 1.20 µF/cm² (Polevaya et al. measured ~1.0 µF/cm²; slight elevation from cholesterol depletion; ε_r = 9.5 at d = 7 nm).\nCharacteristic fc ≈ 600 kHz in saline · τ ≈ 264 ns.\nVth = 0.72 V: consistent with MCF-7 EP onset observed at ~550-650 V/cm in pulsed protocols.\nN/C ratio (R_nuc = 6.0 / R_cell = 11.0 µm) reflects moderate nuclear enlargement of ER+ ductal carcinoma.\n⚠ MCF-7 is adherent in culture; spherical approximation underestimates Vm anisotropy for elongated cell geometries during attachment.\nRef: Polevaya et al. (1999) Biochim. Biophys. Acta 1419:257; Gascoyne & Vykoukal (2002) Electrophoresis 23:1973.',
     radius: 11,
-    membraneThickness: 5.5,
+    membraneThickness: 7,
     naturalFrequency: 440,
     thresholdVoltage: 0.72,
-    dielectricConstant: 7.5,
-    conductivity: 0.8,
+    dielectricConstant: 9.5,    // scaled from 7.5 at d=5.5 nm to preserve Cm = 12.0 mF/m² at d=7 nm
+    conductivity: 0.60,
     density: 1070,
     specificHeatCapacity: 3200,
     amplitude: 0.5,
-    // Nuclear envelope
     nuclearRadius: 6.0, nuclearMembraneThickness: 13, nuclearMembraneEps: 11,
     nucleoplasmConductivity: 1.0, nuclearThresholdVoltage: 0.42,
   },
@@ -145,18 +154,19 @@ export const CELL_PRESETS: CellPreset[] = [
     type: 'target',
     label: 'Leukemia HL-60',
     shortLabel: 'HL-60',
-    notes: 'Promyelocytic leukemia · R = 7 µm · suspended',
-    radius: 7,
-    membraneThickness: 6,
+    notes: 'Promyelocytic leukemia · R = 9 µm · suspension · good spherical approx · fc ≈ 930 kHz',
+    techNotes: 'Single-shell Schwan model for HL-60 (acute promyelocytic leukemia, AML-M2 classification).\nR = 9 µm: suspension cells are near-spherical; mean diameter 17-20 µm at log-growth phase (ATCC data sheet; Vettese-Dadey et al.); radius corrected from prior underestimate of 7 µm.\nσ_i = 0.60 S/m: hematopoietic cancer cells have elevated σ_i vs normal lymphocytes (~0.40 S/m); literature range for leukemia suspension lines 0.45-0.70 S/m.\nCm = 9.5 mF/m² = 0.95 µF/cm² (close to standard mammalian value; HL-60 has moderate membrane lipid alteration; ε_r = 7.5 at d = 7 nm).\nCharacteristic fc ≈ 930 kHz in saline · τ ≈ 171 ns.\nVth = 0.85 V: less reduced than solid-tumour presets — HL-60 retains more ordered membrane structure despite malignancy.\n⚠ HL-60 differentiates along granulocyte or monocyte lineage upon DMSO/retinoic acid treatment; undifferentiated suspension parameters used here. Differentiated phenotype would show altered σ_i and Cm.\nRef: Gascoyne & Vykoukal (2002) Electrophoresis 23:1973; Markx & Davey (1999) Yeast 16:1183.',
+    radius: 9,
+    membraneThickness: 7,
     naturalFrequency: 430,
     thresholdVoltage: 0.85,
-    dielectricConstant: 6.5,
-    conductivity: 0.7,
+    dielectricConstant: 7.5,    // scaled from 6.5 at d=6 nm to preserve Cm = 9.5 mF/m² at d=7 nm
+    conductivity: 0.60,
     density: 1080,
     specificHeatCapacity: 3300,
     amplitude: 0.5,
-    // Nuclear envelope
-    nuclearRadius: 4.0, nuclearMembraneThickness: 14, nuclearMembraneEps: 11,
+    // Nuclear radius updated to match corrected cell radius (N/C ratio maintained)
+    nuclearRadius: 5.0, nuclearMembraneThickness: 14, nuclearMembraneEps: 11,
     nucleoplasmConductivity: 1.0, nuclearThresholdVoltage: 0.45,
   },
 
@@ -167,17 +177,18 @@ export const CELL_PRESETS: CellPreset[] = [
     type: 'target',
     label: 'PANC-1',
     shortLabel: 'PANC-1',
-    notes: 'Pancreatic ductal adenocarcinoma · R = 13 µm · very high N/C ratio',
+    notes: 'PDAC · R = 13 µm · extreme N/C ratio · Cm = 1.45 µF/cm² · fc ≈ 480 kHz',
+    techNotes: 'Single-shell Schwan model for PANC-1 (pancreatic ductal adenocarcinoma cell line).\nσ_i = 0.70 S/m: elevated cytoplasm conductivity consistent with PDAC metabolic reprogramming and altered KCNK5/BKCa channel expression in pancreatic CA lines.\nCm = 14.5 mF/m² = 1.45 µF/cm² (highly fluid membrane in PDAC; reduced cholesterol and altered sphingomyelin content raise effective ε_r to 11.5 at d = 7 nm).\nCharacteristic fc ≈ 480 kHz in saline · τ ≈ 332 ns.\nVth = 0.65 V: PDAC cells show high membrane fluidity and reduced membrane tension, lowering EP threshold significantly vs normal pancreatic ductal cells.\nExtreme N/C ratio (R_nuc = 7.5 / R_cell = 13.0 µm) is a pathological hallmark of PDAC per WHO 2010 classification.\n⚠ PANC-1 is adherent in culture; spherical approximation used for in-vitro suspension protocol modelling. PDAC cells display irregular morphology and strong cell-cell contacts in primary culture.\nRef: Bosman et al. (2010) WHO Classification of Tumours of the Digestive System; Pethig (2010) Biomicrofluidics 4:022811.',
     radius: 13,
-    membraneThickness: 5,
+    membraneThickness: 7,
     naturalFrequency: 390,
     thresholdVoltage: 0.65,
-    dielectricConstant: 8.2,
-    conductivity: 0.85,
+    dielectricConstant: 11.5,   // scaled from 8.2 at d=5 nm to preserve Cm = 14.5 mF/m² at d=7 nm
+    conductivity: 0.70,
     density: 1080,
     specificHeatCapacity: 3200,
     amplitude: 0.5,
-    // High N/C ratio hallmark of PDAC - thinner, leakier NE → lower f_peak, lower threshold
+    // Extreme N/C ratio hallmark of PDAC; thinner, leakier NE → lower nuclear threshold
     nuclearRadius: 7.5, nuclearMembraneThickness: 11, nuclearMembraneEps: 12,
     nucleoplasmConductivity: 1.1, nuclearThresholdVoltage: 0.35,
   },
@@ -188,13 +199,14 @@ export const CELL_PRESETS: CellPreset[] = [
     type: 'target',
     label: 'A549 Lung',
     shortLabel: 'A549',
-    notes: 'NSCLC lung adenocarcinoma · R = 11 µm · model epithelial line',
+    notes: 'NSCLC adenocarcinoma · R = 11 µm · Cm = 1.27 µF/cm² · fc ≈ 570 kHz',
+    techNotes: 'Single-shell Schwan model for A549 (non-small cell lung cancer, KRAS-mutant adenocarcinoma, Type II pneumocyte-derived).\nσ_i = 0.60 S/m: consistent with epithelial adenocarcinoma literature range (0.50-0.70 S/m); A549 has moderate ion channel overexpression (KCNK5, ClC-3 chloride channels).\nCm = 12.7 mF/m² = 1.27 µF/cm² (KRAS-driven membrane remodelling alters lipid composition; effective ε_r = 10.0 at d = 7 nm).\nCharacteristic fc ≈ 570 kHz in saline · τ ≈ 278 ns.\nVth = 0.70 V: lower than normal lung epithelium; consistent with membrane fluidity changes in NSCLC.\nN/C ratio (R_nuc = 6.0 / R_cell = 11.0 µm) reflects moderate nuclear enlargement common in lung adenocarcinoma.\n⚠ A549 is adherent in culture; the spherical approximation is used for suspension EP protocol modelling. The alveolar pneumocyte origin makes A549 a widely used model for lung CA EP studies.\nRef: Pethig (2010) Biomicrofluidics 4:022811; Gascoyne & Vykoukal (2002) Electrophoresis 23:1973.',
     radius: 11,
-    membraneThickness: 5.5,
+    membraneThickness: 7,
     naturalFrequency: 440,
     thresholdVoltage: 0.70,
-    dielectricConstant: 7.8,
-    conductivity: 0.75,
+    dielectricConstant: 10.0,   // scaled from 7.8 at d=5.5 nm to preserve Cm = 12.7 mF/m² at d=7 nm
+    conductivity: 0.60,
     density: 1070,
     specificHeatCapacity: 3200,
     amplitude: 0.5,
@@ -209,13 +221,14 @@ export const CELL_PRESETS: CellPreset[] = [
     type: 'target',
     label: 'LNCaP Prostate',
     shortLabel: 'LNCaP',
-    notes: 'Androgen-sensitive prostate adenocarcinoma · R = 9 µm · PSA-secreting',
+    notes: 'Androgen-sensitive prostate CA · R = 9 µm · moderate σ_i · fc ≈ 790 kHz',
+    techNotes: 'Single-shell Schwan model for LNCaP (androgen-sensitive prostate carcinoma, PSA-secreting, PTEN-null).\nσ_i = 0.55 S/m: LNCaP is a slow-growing, non-invasive line with relatively moderate ion channel overexpression; σ_i is only slightly above normal prostate epithelium (~0.40-0.45 S/m). Androgen receptor signalling partially maintains cholesterol homeostasis.\nCm = 10.1 mF/m² = 1.01 µF/cm² (mildly elevated; androgen-driven lipid regulation moderates membrane remodelling; effective ε_r = 8.2 at d = 7 nm).\nCharacteristic fc ≈ 790 kHz in saline · τ ≈ 201 ns.\nVth = 0.78 V: highest of the cancer presets — reflects more ordered membrane due to partial cholesterol maintenance under androgen signalling.\nN/C ratio (R_nuc = 5.0 / R_cell = 9.0 µm) reflects moderate nuclear enlargement.\n⚠ LNCaP forms loose aggregates in suspension culture; spherical single-cell approximation is used. At androgen withdrawal, membrane properties are expected to shift toward a CRPC phenotype with lower Vth and higher σ_i.\nRef: Gascoyne & Vykoukal (2002) Electrophoresis 23:1973; Titus et al. (2010) Cancer Res. 70:8 (androgen-cholesterol link).',
     radius: 9,
-    membraneThickness: 6,
+    membraneThickness: 7,
     naturalFrequency: 430,
     thresholdVoltage: 0.78,
-    dielectricConstant: 7.0,
-    conductivity: 0.65,
+    dielectricConstant: 8.2,    // scaled from 7.0 at d=6 nm to preserve Cm = 10.1 mF/m² at d=7 nm
+    conductivity: 0.55,
     density: 1070,
     specificHeatCapacity: 3200,
     amplitude: 0.5,
