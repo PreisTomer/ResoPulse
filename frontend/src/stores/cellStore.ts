@@ -296,20 +296,22 @@ export const useCellStore = defineStore('cell', {
       const state = this as unknown as CellStoreState
       const cat = this.targetCellCategory
       const t = state.target as CellConfig & { resonantFreqGHz?: number; capsidQ?: number; resonantThresholdVcm?: number }
+      const hfireMult = state.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
       if (
         this.isResonanceMode &&
         (cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) &&
         t.resonantFreqGHz && t.resonantThresholdVcm
       ) {
+        // Apply same temperature correction + H-FIRE threshold scaling as the Schwan path
+        const effThreshold = tempCorrectedVth(t.resonantThresholdVcm, state.targetTemp) * hfireMult
         return computeResonantDisruption(
           t.resonantFreqGHz,
           t.capsidQ ?? DEFAULT_CAPSID_Q,
-          t.resonantThresholdVcm,
+          effThreshold,
           state.currentBroadcastFrequency * KHZ_TO_HZ,  // kHz → Hz
           state.fieldIntensity,
         )
       }
-      const hfireMult = state.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
       const vthEff = tempCorrectedVth(state.target.thresholdVoltage, state.targetTemp)
       return (this.targetVm * this.pulseEnvelopeFactorTarget) / (vthEff * hfireMult)
     },
@@ -365,12 +367,14 @@ export const useCellStore = defineStore('cell', {
           t.resonantFreqGHz && t.resonantThresholdVcm &&
           t.capsidQMin !== undefined && t.capsidQMax !== undefined
         ) {
+          const hfireMult = state.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
+          const effThr    = tempCorrectedVth(t.resonantThresholdVcm, state.targetTemp) * hfireMult
           const hDr    = this.healthyDisruptionRatio
           const freqHz = state.currentBroadcastFrequency * KHZ_TO_HZ
           // Q_min → smaller Lorentzian peak → lower DR_T → lower TI (worst case)
-          const drTMin = computeResonantDisruption(t.resonantFreqGHz, t.capsidQMin, t.resonantThresholdVcm, freqHz, state.fieldIntensity)
+          const drTMin = computeResonantDisruption(t.resonantFreqGHz, t.capsidQMin, effThr, freqHz, state.fieldIntensity)
           // Q_max → taller Lorentzian peak → higher DR_T → higher TI (best case)
-          const drTMax = computeResonantDisruption(t.resonantFreqGHz, t.capsidQMax, t.resonantThresholdVcm, freqHz, state.fieldIntensity)
+          const drTMax = computeResonantDisruption(t.resonantFreqGHz, t.capsidQMax, effThr, freqHz, state.fieldIntensity)
           const tiFromDr = (dr: number) =>
             safeRatio(dr, hDr, THRESHOLDS.TI_DISPLAY_CAP, NEAR_ZERO_DR)
           return { low: tiFromDr(drTMin), high: tiFromDr(drTMax) }
@@ -425,7 +429,7 @@ export const useCellStore = defineStore('cell', {
     /** Nuclear disruption ratio for healthy cell: Vm_nuc / (nuclear threshold · hfireMult). */
     healthyNuclearDisruptionRatio(): number {
       const state     = this as unknown as CellStoreState
-      const vth       = state.healthy.nuclearThresholdVoltage ?? THRESHOLDS.NUCLEAR_VM_DEFAULT
+      const vth       = tempCorrectedVth(state.healthy.nuclearThresholdVoltage ?? THRESHOLDS.NUCLEAR_VM_DEFAULT, state.healthyTemp)
       const hfireMult = state.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
       return this.healthyNuclearVm / (vth * hfireMult)
     },
@@ -433,7 +437,7 @@ export const useCellStore = defineStore('cell', {
     /** Nuclear disruption ratio for target cell: Vm_nuc / (nuclear threshold · hfireMult). */
     targetNuclearDisruptionRatio(): number {
       const state     = this as unknown as CellStoreState
-      const vth       = state.target.nuclearThresholdVoltage ?? THRESHOLDS.NUCLEAR_VM_DEFAULT
+      const vth       = tempCorrectedVth(state.target.nuclearThresholdVoltage ?? THRESHOLDS.NUCLEAR_VM_DEFAULT, state.targetTemp)
       const hfireMult = state.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
       return this.targetNuclearVm / (vth * hfireMult)
     },
@@ -657,16 +661,17 @@ export const useCellStore = defineStore('cell', {
       ) {
         // Compute actual TI at f_res instead of returning an arbitrary sentinel value
         const freqKhz = target.resonantFreqGHz * 1e6  // GHz → kHz
+        const hfireMult = state.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
+        const effThr    = tempCorrectedVth(target.resonantThresholdVcm, state.targetTemp) * hfireMult
         const drT = computeResonantDisruption(
           target.resonantFreqGHz,
           target.capsidQ ?? DEFAULT_CAPSID_Q,
-          target.resonantThresholdVcm,
+          effThr,
           freqKhz * KHZ_TO_HZ,
           state.fieldIntensity,
         )
         const sigma_e = this.effectiveSigmaE
         const hVm = computeSchwan(state.healthy, freqKhz, state.fieldIntensity, sigma_e, this.cosThetaFactor)
-        const hfireMult = state.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
         const vthH = tempCorrectedVth(state.healthy.thresholdVoltage, state.healthyTemp)
         const drH  = (hVm * this.pulseEnvelopeFactorHealthy) / (vthH * hfireMult)
         return { khz: freqKhz, sel: safeRatio(drT, drH, THRESHOLDS.TI_DISPLAY_CAP, NEAR_ZERO_DR) }
@@ -710,7 +715,7 @@ export const useCellStore = defineStore('cell', {
       const MAMMALIAN_DEFAULT = 10_000   // 10 MHz baseline
       const MAMMALIAN_CAP     = 100_000  // 100 MHz — IRE_MAMMALIAN freqMax
       const optKhz = this.optimalFreqResult.khz
-      if (optKhz <= MAMMALIAN_DEFAULT) return MAMMALIAN_DEFAULT
+      if (optKhz <= MAMMALIAN_DEFAULT || !isFinite(optKhz)) return MAMMALIAN_DEFAULT
       return Math.min(MAMMALIAN_CAP, Math.pow(10, Math.ceil(Math.log10(optKhz))))
     },
 
@@ -844,6 +849,7 @@ export const useCellStore = defineStore('cell', {
       this.cellPackingFraction = packet.cellPackingFraction
       this.loadPresetIfNeeded('target',  packet.targetPresetId)
       this.loadPresetIfNeeded('healthy', packet.healthyPresetId)
+      if (packet.sessionName) this.sessionName = packet.sessionName
     },
 
     loadPresetIfNeeded(cellType: 'healthy' | 'target', presetId: string) {

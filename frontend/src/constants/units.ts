@@ -14,6 +14,7 @@ export const UNIT = {
   S:         's',
   MV:        'mV',
   PERCENT:   '%',
+  DEG:       '°',
   DEG_C:     '°C',
   W_PER_KG:  'W/kg',
   S_PER_M:      'S/m',
