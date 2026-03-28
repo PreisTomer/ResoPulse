@@ -20,8 +20,8 @@ export const NEWTON_COOLING_LAMBDA = 0.02
 /**
  * Pennes blood perfusion energy coefficient [J / (mL · °C)] used to convert
  * ω_b [mL/(g·min)] to [1/s] effective cooling: λ_perf = ω_b × PENNES_BLOOD_COEFF / cp.
- * Derived from ρ_blood(1060 kg/m³) × c_blood(3617 J/(kg·K)) / 60 s/min ≈ 63.9;
- * the value 63.9 is the literature-rounded figure used in Pennes (1948) re-analyses.
+ * Derived from ρ_blood(1060 kg/m³) × c_blood(3617 J/(kg·K)) × (1 mL/(g·min) → SI conversion 1/60000)
+ * = 1060 × 3617 / 60000 = 63.9.  The factor 1/60000 = 1e-6/(1e-3×60) converts mL/(g·min) to m³/(kg·s).
  */
 export const PENNES_BLOOD_COEFF = 63.9
 
@@ -44,7 +44,7 @@ export const WF_PULSED = 1.0
  * Effective lysis-threshold multiplier for H-FIRE (bipolar) vs monopolar pulsed delivery.
  * Bipolar charge cancellation per reversal raises the effective pore-nucleation threshold
  * by 1.5-2.0× (midpoint 1.75 used here).
- * Ref: Sano et al. (2018) Sci Rep; Dong et al. (2018) IEEE Trans Biomed Eng
+ * Ref: Arena et al. (2011) Biomed. Eng. Online 10:102; Sano et al. (2015) Sci. Rep. 5:14999
  */
 export const H_FIRE_THRESHOLD_MULTIPLIER = 1.75
 
@@ -97,8 +97,11 @@ export const FREQ_NEARFIELD_RF_LIMIT_KHZ = 1_000_000  // 1 GHz
 // ── Dielectrophoresis (DEP) - Clausius-Mossotti model ────────────────────────
 
 /**
- * Relative permittivity of aqueous medium (water / physiological saline) at 37°C.
- * Used in the DEP Clausius-Mossotti factor as the medium dielectric constant.
+ * Relative permittivity of aqueous medium (water / physiological saline) used for DEP
+ * Clausius-Mossotti calculations. The physical value at 37°C is ~74 (Hasted 1973); 80 is
+ * retained here to match the Schwan / Gabriel et al. (1996) bioelectromagnetics literature
+ * convention. The impedance and RC-time-constant calculations in utils/impedance.ts use
+ * the temperature-accurate value of 74 from constants/cuvette.ts.
  * Ref: Gabriel et al. (1996) - frequency-dependent permittivity of biological tissues.
  */
 export const EPSILON_R_MEDIUM_WATER = 80
