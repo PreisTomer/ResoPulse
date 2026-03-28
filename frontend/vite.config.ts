@@ -33,10 +33,6 @@ export default defineConfig({
       },
     },
   },
-  test: {
-    environment: 'node',
-    include: ['src/**/*.test.ts'],
-  },
   build: {
     // Disable source maps in production — prevents browser DevTools from
     // exposing readable source code to end users.
