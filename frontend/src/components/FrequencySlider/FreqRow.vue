@@ -159,7 +159,8 @@ export default defineComponent({
     optimalFreqResult(): { khz: number; sel: number } { return this.store.optimalFreqResult },
 
     optimalBeyondRange(): boolean {
-      return this.optimalFreqResult.khz > this.sliderRanges.freqMax
+      const { khz } = this.optimalFreqResult
+      return khz > this.sliderRanges.freqMax || khz < this.sliderRanges.freqMin
     },
 
     optimalFreqLabel(): string {

@@ -297,7 +297,7 @@ At CW waveform a fixed 2.5 s delay is used instead.`
 
 export function tipOptimalBtn(beyondRange: boolean): string {
   const beyondNote = beyondRange
-    ? '\n<span class="tip-warn">Optimal lies beyond current slider range, slider clamped to maximum.</span>'
+    ? '\n<span class="tip-warn">Optimal lies outside current slider range, slider clamped to nearest bound.</span>'
     : '\nClick to set frequency to optimal.'
   return `<strong>⭐ Snap to Optimal Frequency</strong>
 Frequency that maximises selectivity ratio TI = T-DR / H-DR.

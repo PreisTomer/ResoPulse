@@ -126,7 +126,9 @@ export default defineComponent({
 
   methods: {
     snapToOptimal() {
-      this.store.setBroadcastFreqKHz(Math.round(this.store.optimalFreqResult.khz))
+      const { freqMin, freqMax } = this.store.sliderRanges
+      const clamped = Math.round(Math.max(freqMin, Math.min(freqMax, this.store.optimalFreqResult.khz)))
+      this.store.setBroadcastFreqKHz(clamped)
       broadcastStateSync()
     },
   },

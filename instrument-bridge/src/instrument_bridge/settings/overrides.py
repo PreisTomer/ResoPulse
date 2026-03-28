@@ -1,19 +1,16 @@
 # Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 """Helpers for translating CLI inputs into Settings override dictionaries."""
 
-from typing import Optional
-
-
 def build_run_overrides(
-    driver: Optional[str],
-    backend_url: Optional[str],
-    port: Optional[str],
-    visa_resource: Optional[str],
-    poll: Optional[float],
-    freq: Optional[float],
-    pb_host: Optional[str],
-    pb_tcp_port: Optional[int],
-    log_level: Optional[str],
+    driver: str | None,
+    backend_url: str | None,
+    port: str | None,
+    visa_resource: str | None,
+    poll: float | None,
+    freq: float | None,
+    pb_host: str | None,
+    pb_tcp_port: int | None,
+    log_level: str | None,
 ) -> dict[str, object]:
     """Build flat CLI overrides for the env-facing Settings model."""
     overrides: dict[str, object] = {}

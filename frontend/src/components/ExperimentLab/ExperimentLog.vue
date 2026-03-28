@@ -135,6 +135,7 @@ import AccordionPanel from '@/components/AccordionPanel.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
 import { useExperimentStore } from '@/stores/experimentStore'
 import { useCellStore } from '@/stores/cellStore'
+import { useAiStore } from '@/stores/aiStore'
 import { broadcastLogEntry, broadcastLogOutcome } from '@/services/socket'
 import { LOG_EVENT, NULL_DISPLAY } from '@/constants/strings'
 import { eventVariant as sharedEventVariant, depKDisplay, depKDisplayFull } from '@/utils/experimentUtils'
@@ -160,6 +161,7 @@ export default defineComponent({
     return {
       expStore: useExperimentStore(),
       cellStore: useCellStore(),
+      aiStore: useAiStore(),
       LOG_EVENT,
       NULL_DISPLAY,
       ICON,
@@ -239,8 +241,9 @@ export default defineComponent({
         : this.$t('log.tipCellManual')
     },
     submitRating(entryId: number, rating: number) {
-      const entry = this.expStore.logOutcome(entryId, rating, false)
-      if (entry) broadcastLogOutcome(entry, rating, false)
+      const aiApplied = this.aiStore.suggestionApplied
+      const entry = this.expStore.logOutcome(entryId, rating, aiApplied)
+      if (entry) broadcastLogOutcome(entry, rating, aiApplied)
     },
 
     depKClass(k: number | undefined): string {

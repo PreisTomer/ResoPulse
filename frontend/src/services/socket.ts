@@ -233,7 +233,7 @@ function lysisFieldAtFreq(
     { radius: radiusUm, membraneThickness: memThicknessNm, dielectricConstant: dielectricConst, conductivity: conductivitySi } as Parameters<typeof computeTau>[0],
     sigmaE,
   )
-  const pef   = waveform === 'pulsed' ? Math.max(MIN_PULSE_ENVELOPE, computePulseStepResponse(tau, pulseWidthNs)) : 1.0
+  const pef   = (waveform === 'pulsed' || waveform === 'hfire') ? Math.max(MIN_PULSE_ENVELOPE, computePulseStepResponse(tau, pulseWidthNs)) : 1.0
   const omega = TWO_PI * freqKhz * 1e3
   const E_vm  = thresholdV * Math.sqrt(1 + (omega * tau) ** 2) /
                 (SCHWAN_SPHERE_FACTOR * radiusUm * 1e-6 * pef)
@@ -271,10 +271,11 @@ export function requestAiOptimization(requestId: string, onResult: AiResultCallb
   )
 
   // Predict DRs at the suggested parameters
-  const pefTarget  = waveform === 'pulsed'
+  const isPulsedWaveform = waveform === 'pulsed' || waveform === 'hfire'
+  const pefTarget  = isPulsedWaveform
     ? Math.max(MIN_PULSE_ENVELOPE, computePulseStepResponse(tauTargetS, pulseWidthNs))
     : 1.0
-  const pefHealthy = waveform === 'pulsed'
+  const pefHealthy = isPulsedWaveform
     ? Math.max(MIN_PULSE_ENVELOPE, computePulseStepResponse(tauHealthyS, pulseWidthNs))
     : 1.0
 

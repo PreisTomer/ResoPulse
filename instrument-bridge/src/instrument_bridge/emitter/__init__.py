@@ -29,7 +29,7 @@ from instrument_bridge.settings import Settings
 
 from .backend_socket import BackendSocketClient
 from .bridge_runtime import BridgeRuntimeState
-from .constants import BACKOFF_MAX_S, MAX_CONSECUTIVE_ERRORS
+from .constants import BACKOFF_MAX_S, MAX_CONSECUTIVE_ERRORS, MAX_RETRY_ATTEMPTS
 from .status_display import BridgeStatusDisplay, console
 
 
@@ -51,6 +51,7 @@ class BridgeEmitter:
         self._measurement_settings = settings.measurement
         self._state = BridgeRuntimeState()
         self._status_display = BridgeStatusDisplay()
+        self._live: Live | None = None
         self._backend_client = BackendSocketClient(
             backend_url=self._connection_settings.backend_url,
             on_disconnect=self._handle_backend_disconnect,
@@ -81,7 +82,7 @@ class BridgeEmitter:
 
     async def _connect_backend(self) -> None:
         """Connect to the Socket.IO backend with exponential back-off."""
-        for attempt in range(999):
+        for attempt in range(MAX_RETRY_ATTEMPTS):
             try:
                 logger.info(
                     f"Connecting to backend {self._connection_settings.backend_url} "
@@ -101,7 +102,7 @@ class BridgeEmitter:
 
     async def _connect_driver(self) -> None:
         """Connect to the instrument with exponential back-off."""
-        for attempt in range(999):
+        for attempt in range(MAX_RETRY_ATTEMPTS):
             try:
                 logger.info(
                     f"Connecting to {self._driver.instrument_name} (attempt {attempt + 1})..."
@@ -194,7 +195,7 @@ class BridgeEmitter:
     # ── Rich display ───────────────────────────────────────────────────────────
 
     def _refresh_display(self) -> None:
-        if hasattr(self, "_live"):
+        if self._live is not None:
             self._live.update(self._build_status_panel())
 
     def _build_status_panel(self):

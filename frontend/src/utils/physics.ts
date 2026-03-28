@@ -7,11 +7,7 @@ import { SCHWAN_SPHERE_FACTOR, WF_CW, EPSILON_R_CYTOPLASM, SIGMA_MEMBRANE_SI, TW
 
 export const EPSILON_0 = 8.854187817e-12 // F/m
 
-/**
- * Safe ratio: numerator / denominator, capped at `cap`.
- * When denominator < epsilon (effectively zero), returns `cap` if numerator > 0, else 0.
- * @param epsilon - zero threshold; use NEAR_ZERO_DR for disruption ratios, NEAR_ZERO_VM for Vm
- */
+/** numerator/denominator capped at `cap`; returns 0 or `cap` when denominator < epsilon. */
 export function safeRatio(numerator: number, denominator: number, cap: number, epsilon = 1e-9): number {
   if (denominator < epsilon) return numerator > 0 ? cap : 0
   return Math.min(cap, numerator / denominator)
@@ -39,15 +35,8 @@ export function computeTau(cell: CellConfig, sigma_e: number): number {
   return tauRC(cell.radius * UM_TO_M, membraneCm(cell), sigma_e, cell.conductivity)
 }
 
-/** Vm = 1.5·E·R·cosθ / √(1+(ωτ)²)  [V]
- *  Returns the peak steady-state transmembrane potential assuming continuous CW excitation
- *  at E_peak. This is an UPPER bound on achievable Vm for any pulsed waveform:
- *    - Short pulses (t_p ≪ τ): actual Vm ≈ Vm × PEF where PEF = 1−exp(−t_p/τ) < 1.
- *      Apply computePulseStepResponse() to the disruption ratio, not to Vm directly.
- *    - H-FIRE bipolar: bipolar charge cancellation reduces effective membrane stress per
- *      half-cycle. Modelled by raising the disruption threshold ×1.75 in DR denominator
- *      (H_FIRE_THRESHOLD_MULTIPLIER), NOT by reducing Vm here.
- *  cosTheta = |cos θ| field-cell axis alignment; cancels in Vm_T/Vm_H selectivity ratio. */
+/** Vm = 1.5·E·R·cosθ / √(1+(ωτ)²)  [V] — peak CW Schwan potential (upper bound for pulsed).
+ *  Pulse step response and H-FIRE threshold scaling are applied downstream, not here. */
 export function computeSchwan(
   cell: CellConfig,
   freqKHz: number,
@@ -90,25 +79,9 @@ function cmul(a: Cpx, b: Cpx): Cpx {
   return [a[0]*b[0] - a[1]*b[1], a[0]*b[1] + a[1]*b[0]]
 }
 
-/**
- * Re[K(ω)] - real part of the Clausius-Mossotti factor (single-shell sphere model).
- *
- * K(ω) = (ε*_eff − ε*_m) / (ε*_eff + 2ε*_m)
- *
- * ε*_eff: single-shell effective complex permittivity (Gascoyne & Vykoukal 2002)
- * γ = ((R−d)/R)³; ε*_eff = ε*_mem × [γ(ε*_c + 2ε*_mem) + 2(ε*_c − ε*_mem)]
- *                                   / [γ(ε*_c + 2ε*_mem) − (ε*_c − ε*_mem)]
- *
- * Re[K] > 0 → positive DEP (cell attracted to field maxima)
- * Re[K] < 0 → negative DEP (cell repelled from field maxima)
- * Re[K] = 0 → crossover frequency (polarity switches)
- *
- * For pulsed waveforms the direction (sign) of Re[K] is unchanged; only the
- * time-averaged force magnitude scales by duty cycle - handled in the store.
- *
- * Ref: Gascoyne & Vykoukal, Electrophoresis 23:1973 (2002) [16]
- * Ref: Pethig, Biomicrofluidics 4:022811 (2010)
- */
+/** Re[K(ω)] — Clausius-Mossotti factor, single-shell sphere model.
+ *  K = (ε*_eff − ε*_m) / (ε*_eff + 2ε*_m); Re[K] > 0 = pDEP, < 0 = nDEP.
+ *  Ref: Gascoyne & Vykoukal, Electrophoresis 23:1973 (2002). */
 export function computeDepCmReal(
   cell: CellConfig,
   freqKHz: number,
@@ -142,11 +115,7 @@ export function computeDepCmReal(
   return Math.max(-0.5, Math.min(0.5, K[0]))
 }
 
-/**
- * First DEP crossover frequency [kHz] - where Re[K(f)] changes sign.
- * Log-space binary search from 1 kHz to 10 GHz (10⁷ kHz).
- * Returns 0 if no sign change found in this range (always pDEP or always nDEP).
- */
+/** First DEP crossover [kHz] — log-space bisection 1 kHz–10 GHz; 0 if none found. */
 export function computeDepCrossoverKHz(
   cell: CellConfig,
   sigma_e: number,
@@ -166,15 +135,8 @@ export function computeDepCrossoverKHz(
   return Math.sqrt(lo * hi)
 }
 
-/**
- * Second DEP crossover frequency [kHz] - the next Re[K(f)] sign change above f_cross1.
- * Searches from f_cross1 × 1.01 to 10 GHz using log-space binary search.
- * Returns 0 if no first crossover exists or no second crossing found above it.
- *
- * Physically: a second crossover occurs when the membrane and cytoplasm permittivities
- * dominate over conductivity (high-frequency dielectric relaxation).
- * Ref: Pethig, Biomicrofluidics 4:022811 (2010), Fig. 3.
- */
+/** Second DEP crossover [kHz] — next Re[K] sign change above f_cross1; 0 if none.
+ *  High-frequency dielectric relaxation. Ref: Pethig, Biomicrofluidics 4:022811 (2010). */
 export function computeDepSecondCrossoverKHz(
   cell: CellConfig,
   sigma_e: number,
@@ -260,31 +222,9 @@ export function computeResonantLineshape(
 
 // ── EM skin depth ────────────────────────────────────────────────────────────
 
-/**
- * EM skin depth [mm] using the exact lossy-dielectric formula.
- *
- * δ = 1/α,  α = ω√(με/2) × √(√(1+(σ/ωε)²) − 1)
- *
- * Reduces to the good-conductor formula √(1/(π·f·μ₀·σ)) when σ ≫ ωε
- * (typically valid below ~300 MHz in saline).  Above 300 MHz, saline enters
- * the lossy-dielectric regime (σ/ωε < 1); the good-conductor formula then
- * severely underestimates δ (e.g. 13 mm vs 32 mm at 1 GHz).
- *
- * In the high-frequency limit (σ ≪ ωε), α → (σ/2)√(μ/ε) = const, so δ
- * becomes approximately frequency-independent (~31 mm in saline at 37°C).
- *
- * Note: this model uses a static ε_r (no Cole-Cole frequency dispersion).
- * At ≥5 GHz, ε_r decreases significantly (Gabriel et al. 1996), so the
- * computed δ is a mild overestimate; use Gabriel dispersion data for
- * quantitative accuracy above 3 GHz.
- *
- * @param freqKHz   Operating frequency [kHz]
- * @param sigma_e   Medium conductivity [S/m]
- * @param epsilon_r Medium relative permittivity (static, default 80 for saline at 37°C)
- *
- * Saline (σ=1.5 S/m, ε_r=80): 100 MHz → 48 mm · 1 GHz → 32 mm · 10 GHz → ~32 mm (static ε_r)
- * Ref: Gabriel et al. (1996) Phys. Med. Biol. 41:2271
- */
+/** EM skin depth [mm]: δ = 1/α, α = ω√(με/2)·√(√(1+(σ/ωε)²)−1) — exact lossy-dielectric.
+ *  Uses static ε_r (no Cole-Cole dispersion); mild overestimate above 3 GHz.
+ *  Ref: Gabriel et al. (1996) Phys. Med. Biol. 41:2271. */
 export function computeSkinDepthMm(freqKHz: number, sigma_e: number, epsilon_r = 80): number {
   const MU_0 = 4 * Math.PI * 1e-7  // H/m
   const f    = freqKHz * KHZ_TO_HZ
@@ -313,21 +253,8 @@ export function computeResonantDisruption(
 
 // ── Population lysis fraction (log-normal size distribution) ─────────────────
 
-/**
- * Population-average lysis fraction combining random orientation and log-normal cell size
- * distribution. Each sub-population of size r has DR(r) = DR_nom × (r/R) and
- * orientation-averaged P(lysis) = max(0, 1 − 1/DR(r)).
- *
- * Integration over 61 uniformly-spaced points in z-space (rectangle rule on [-4.5σ, 4.5σ]).
- * Truncation tail probability P(|Z|>4.5) ≈ 7×10⁻⁶ — negligible for all practical CV values.
- * Degrades gracefully to P = max(0, 1 − 1/DR) when cv = 0.
- *
- * @param dr - disruption ratio at mean cell size (field-aligned)
- * @param cv - coefficient of variation of cell radius (e.g. 0.25 = 25%)
- * @returns fraction of population at or above lysis threshold [0-1]
- *
- * Ref: Tzur et al. (2009) Science 325:167; Altschuler & Wu (2010) Cell 141:559.
- */
+/** Population lysis fraction integrating log-normal cell size distribution (cv) and random
+ *  orientation. Rectangle rule over 61 z-points; degrades to max(0,1−1/DR) when cv=0. */
 export function computePopulationLysisFraction(dr: number, cv: number): number {
   if (dr <= 0) return 0
   if (cv <= 0) return Math.max(0, Math.min(1, 1 - 1 / dr))
