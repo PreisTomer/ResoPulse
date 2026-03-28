@@ -79,10 +79,10 @@ app = FastAPI(
 async def health() -> dict:
     bundle = get_model_bundle()
     return {
-        "status":         "ok",
-        "service":        AI_SERVICE_NAME,
-        "modelReady":     bundle is not None,
-        "trainingSamples":bundle.n_samples if bundle else 0,
+        "status": "ok",
+        "service": AI_SERVICE_NAME,
+        "modelReady": bundle is not None,
+        "trainingSamples": bundle.n_samples if bundle else 0,
         "isPhysicsBaseline": bundle is None,
     }
 

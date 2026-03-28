@@ -12,7 +12,7 @@ UI shows live readings before connecting real equipment.
 """
 
 from instrument_bridge.drivers.base import InstrumentDriver
-from instrument_bridge.drivers.constants import DEMO_NOISE_FRACTION, DEMO_SWEEP_STEPS
+from instrument_bridge.drivers.constants import DEMO_NOISE_FRACTION, DEMO_SWEEP_STEPS, MIN_RESISTANCE_OHM
 from instrument_bridge.models import ImpedanceReading
 from instrument_bridge.settings import Settings
 from instrument_bridge.utils.synthetic import (
@@ -21,6 +21,7 @@ from instrument_bridge.utils.synthetic import (
     log_sweep_frequency,
     add_gaussian_noise,
 )
+
 
 class DemoDriver(InstrumentDriver):
     """
@@ -34,7 +35,7 @@ class DemoDriver(InstrumentDriver):
     """
 
     def __init__(self, settings: Settings) -> None:
-        self._settings = settings
+        self._demo_settings = settings.demo
         self._step = 0
 
     @property
@@ -49,32 +50,32 @@ class DemoDriver(InstrumentDriver):
         pass  # Nothing to close
 
     async def read_once(self) -> ImpedanceReading:
-        s = self._settings
+        s = self._demo_settings
 
         freq_hz = log_sweep_frequency(
             step=self._step,
             total_steps=DEMO_SWEEP_STEPS,
-            freq_min=s.demo_freq_min_hz,
-            freq_max=s.demo_freq_max_hz,
+            freq_min=s.freq_min_hz,
+            freq_max=s.freq_max_hz,
         )
         self._step += 1
 
         z_real_clean, z_imag_clean = compute_cuvette_complex_impedance(
             freq_hz=freq_hz,
-            gap_mm=s.demo_cuvette_gap_mm,
-            cross_section_cm2=s.demo_cuvette_area_cm2,
+            gap_mm=s.cuvette_gap_mm,
+            cross_section_cm2=s.cuvette_area_cm2,
         )
 
         z_real = add_gaussian_noise(z_real_clean, noise_fraction=DEMO_NOISE_FRACTION)
         z_imag = add_gaussian_noise(z_imag_clean, noise_fraction=DEMO_NOISE_FRACTION)
 
         # Clamp z_real to the server's minimum to avoid validation rejection
-        z_real = max(z_real, 0.01)
+        z_real = max(z_real, MIN_RESISTANCE_OHM)
 
         conductivity = derive_conductivity_from_z_real(
             z_real=z_real,
-            gap_mm=s.demo_cuvette_gap_mm,
-            cross_section_cm2=s.demo_cuvette_area_cm2,
+            gap_mm=s.cuvette_gap_mm,
+            cross_section_cm2=s.cuvette_area_cm2,
         )
 
         return ImpedanceReading.build(

@@ -9,7 +9,7 @@
     <button
       type="button"
       class="mode-badge__snap-btn"
-      :class="{ 'mode-badge__snap-btn--beyond': optimalFreqResult.khz > 10000 }"
+      :class="{ 'mode-badge__snap-btn--beyond': isBeyondSliderRange }"
       @click="snapToOptimal"
       v-tip="tipOptimal"
     >{{ optimalNote }}</button>
@@ -71,13 +71,18 @@ export default defineComponent({
 
     optimalFreqResult(): { khz: number; sel: number } { return this.store.optimalFreqResult },
 
+    isBeyondSliderRange(): boolean {
+      const { khz } = this.optimalFreqResult
+      return khz > this.store.sliderRanges.freqMax || khz < this.store.sliderRanges.freqMin
+    },
+
     optimalNote(): string {
       const { khz, sel } = this.optimalFreqResult
       const label = formatFreqKHz(khz)
       if (this.isResonanceTarget) {
         return `${ICON.STAR} f_res: ${label} · ×${sel >= 99 ? ICON.INFINITY : sel.toFixed(2)} (resonance peak)`
       }
-      if (khz > 10000) return `${ICON.STAR} Optimal: ${label} · ×${sel.toFixed(2)} ${ICON.BEYOND}`
+      if (this.isBeyondSliderRange) return `${ICON.STAR} Optimal: ${label} · ×${sel.toFixed(2)} ${ICON.BEYOND}`
       return `${ICON.STAR} Optimal: ${label} · ×${sel.toFixed(2)}`
     },
 
@@ -127,7 +132,7 @@ export default defineComponent({
         capsidQ:              t.capsidQ,
         optKhz:               khz,
         optSel:               sel,
-        beyondRange:          khz > 10000,
+        beyondRange:          this.isBeyondSliderRange,
       })
     },
   },
@@ -135,8 +140,8 @@ export default defineComponent({
   methods: {
     snapToOptimal() {
       const { khz } = this.optimalFreqResult
-      const maxKhz = this.isResonanceTarget ? 50_000_000 : 10_000
-      this.store.setBroadcastFreqKHz(Math.round(Math.max(10, Math.min(maxKhz, khz))))
+      const { freqMin, freqMax } = this.store.sliderRanges
+      this.store.setBroadcastFreqKHz(Math.round(Math.max(freqMin, Math.min(freqMax, khz))))
       broadcastStateSync()
     },
   },

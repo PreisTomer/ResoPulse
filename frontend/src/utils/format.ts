@@ -20,13 +20,7 @@ export function formatFreqKHz(khz: number, decimals = 2): string {
   return `${Math.round(khz)} ${UNIT.KHZ}`
 }
 
-/**
- * Split a frequency [kHz] into a numeric string and unit string for separate column display.
- * Selects the most readable scale (GHz / MHz / kHz).
- * @param khz      - Frequency in kHz
- * @param decimals - Decimal places for MHz and GHz output (default 2)
- * @returns `{ value, unit }` suitable for two-column layout
- */
+/** Split a frequency [kHz] into `{ value, unit }` for two-column layout. */
 export function splitFreqKHz(khz: number, decimals = 2): { value: string; unit: string } {
   if (khz >= KHZ_PER_GHZ) return { value: (khz / KHZ_PER_GHZ).toFixed(decimals), unit: UNIT.GHZ }
   if (khz >= KHZ_PER_MHZ) return { value: (khz / KHZ_PER_MHZ).toFixed(decimals), unit: UNIT.MHZ }
@@ -42,12 +36,7 @@ export function formatFieldVcm(vcm: number): string {
     : `${Math.round(vcm)} ${UNIT.V_PER_CM}`
 }
 
-/**
- * Format a numeric range from an array of values using a provided formatter.
- * Returns a single formatted value when min === max, otherwise "min - max".
- * @param values - Array of raw numeric values
- * @param fmt    - Formatter function applied to each bound
- */
+/** Format [min, max] of `values` via `fmt`; single value when min === max. */
 export function formatRange(values: number[], fmt: (v: number) => string): string {
   const lo = Math.min(...values)
   const hi = Math.max(...values)

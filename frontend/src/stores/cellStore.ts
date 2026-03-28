@@ -8,6 +8,7 @@ import { CELL_PRESETS } from '@/constants/cellLibrary'
 import { MEDIA } from '@/constants/media'
 import type { CellConfig, CellState } from '@/types/cell'
 import type { MediumKey } from '@/types/media'
+import { SLIDER_RANGES, type SliderRange } from '@/constants/sliderBounds'
 import { computeSchwan, computeSAR, computeFc, computeTau, computeResonantDisruption, computeNuclearVm, computePulseStepResponse, computeSkinDepthMm, computeDepCmReal, computeDepCrossoverKHz, computeDepSecondCrossoverKHz, computePopulationLysisFraction, safeRatio } from '@/utils/physics'
 import { CELL_CATEGORY, CELL_STATE, CHART_MODE, WAVEFORM, CELL_TYPE, FREQ_REGIME, DEFAULT_SESSION_NAME } from '@/constants/strings'
 import { DEFAULT_LYSIS_N_PULSES, DEFAULT_ORIENTATION_DEG } from '@/constants/experimentDefaults'
@@ -62,18 +63,20 @@ function pulseEnvelope(cell: CellConfig, pulseWidthNs: number, sigma_e: number):
   return computePulseStepResponse(computeTau(cell, sigma_e), pulseWidthNs)
 }
 
-/** Lysis field [V/cm]: Vth·√(1+(ωτ)²) / (1.5·R·cosθ·100·pef). Returns 1e6 near θ=90°. */
+/** Lysis field [V/cm]: Vth·hfireMult·√(1+(ωτ)²) / (1.5·R·cosθ·100·pef). Returns 1e6 near θ=90°.
+ *  H-FIRE raises the effective threshold via hfireMult, so more field is needed to reach lysis. */
 function lysisField(
   cell: CellConfig,
   freqKHz: number,
   sigma_e: number,
   cosTheta: number,
   pef: number,
+  hfireMult: number,
 ): number {
   if (cosTheta < MIN_COS_THETA) return 1e6
   const omega = TWO_PI * freqKHz * 1e3
   const tau   = computeTau(cell, sigma_e)
-  return (cell.thresholdVoltage * Math.sqrt(1 + (omega * tau) ** 2)) /
+  return (cell.thresholdVoltage * hfireMult * Math.sqrt(1 + (omega * tau) ** 2)) /
     (SCHWAN_SPHERE_FACTOR * cell.radius * 1e-6 * cosTheta * 100 * Math.max(MIN_PULSE_ENVELOPE, pef))
 }
 
@@ -419,18 +422,20 @@ export const useCellStore = defineStore('cell', {
       return computeNuclearVm(state.target, state.currentBroadcastFrequency, state.fieldIntensity, sigma_e, cosT)
     },
 
-    /** Nuclear disruption ratio for healthy cell: Vm_nuc / nuclear threshold voltage. */
+    /** Nuclear disruption ratio for healthy cell: Vm_nuc / (nuclear threshold · hfireMult). */
     healthyNuclearDisruptionRatio(): number {
-      const state = this as unknown as CellStoreState
-      const vth = state.healthy.nuclearThresholdVoltage ?? THRESHOLDS.NUCLEAR_VM_DEFAULT
-      return this.healthyNuclearVm / vth
+      const state     = this as unknown as CellStoreState
+      const vth       = state.healthy.nuclearThresholdVoltage ?? THRESHOLDS.NUCLEAR_VM_DEFAULT
+      const hfireMult = state.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
+      return this.healthyNuclearVm / (vth * hfireMult)
     },
 
-    /** Nuclear disruption ratio for target cell: Vm_nuc / nuclear threshold voltage. */
+    /** Nuclear disruption ratio for target cell: Vm_nuc / (nuclear threshold · hfireMult). */
     targetNuclearDisruptionRatio(): number {
-      const state = this as unknown as CellStoreState
-      const vth = state.target.nuclearThresholdVoltage ?? THRESHOLDS.NUCLEAR_VM_DEFAULT
-      return this.targetNuclearVm / vth
+      const state     = this as unknown as CellStoreState
+      const vth       = state.target.nuclearThresholdVoltage ?? THRESHOLDS.NUCLEAR_VM_DEFAULT
+      const hfireMult = state.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
+      return this.targetNuclearVm / (vth * hfireMult)
     },
 
     /**
@@ -441,16 +446,18 @@ export const useCellStore = defineStore('cell', {
       return safeRatio(this.targetNuclearDisruptionRatio, this.healthyNuclearDisruptionRatio, THRESHOLDS.TI_DISPLAY_CAP, NEAR_ZERO_DR)
     },
 
-    /** E_lysis for target [V/cm]: Vm_thr·√(1+(ωτ)²)/(1.5·R·cosθ·pef). Returns 1e6 near θ=90°. */
+    /** E_lysis for target [V/cm]: Vm_thr·hfireMult·√(1+(ωτ)²)/(1.5·R·cosθ·pef). Returns 1e6 near θ=90°. */
     targetLysisField(): number {
-      const state = this as unknown as CellStoreState
-      return lysisField(state.target, state.currentBroadcastFrequency, this.effectiveSigmaE, this.cosThetaFactor, this.pulseEnvelopeFactorTarget)
+      const state    = this as unknown as CellStoreState
+      const hfireMult = state.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
+      return lysisField(state.target, state.currentBroadcastFrequency, this.effectiveSigmaE, this.cosThetaFactor, this.pulseEnvelopeFactorTarget, hfireMult)
     },
 
-    /** E_lysis for healthy cell [V/cm] - same formula as targetLysisField. */
+    /** E_lysis for healthy cell [V/cm] — same formula as targetLysisField. */
     healthyLysisField(): number {
-      const state = this as unknown as CellStoreState
-      return lysisField(state.healthy, state.currentBroadcastFrequency, this.effectiveSigmaE, this.cosThetaFactor, this.pulseEnvelopeFactorHealthy)
+      const state    = this as unknown as CellStoreState
+      const hfireMult = state.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
+      return lysisField(state.healthy, state.currentBroadcastFrequency, this.effectiveSigmaE, this.cosThetaFactor, this.pulseEnvelopeFactorHealthy, hfireMult)
     },
 
     /** T_ss = BODY_TEMP_C + SAR·dc / (λ_eff·cp)  [°C].  λ_eff = λ_Newton + ω_b·PENNES_BLOOD_COEFF/cp. */
@@ -703,6 +710,21 @@ export const useCellStore = defineStore('cell', {
     isElectrodePolarizationRisk(): boolean {
       const state = this as unknown as CellStoreState
       return !this.isResonanceMode && state.currentBroadcastFrequency < ELECTRODE_POLARIZATION_LIMIT_KHZ
+    },
+
+    /** Active slider range for the current cell category and chart mode.
+     *  Single source of truth used by FrequencySlider and any component that needs
+     *  to clamp or validate frequency/field values against the slider bounds. */
+    sliderRanges(): SliderRange {
+      const cat = this.targetCellCategory
+      if (this.isResonanceMode) {
+        if (cat === CELL_CATEGORY.VIRUS)     return SLIDER_RANGES.RESONANCE_VIRUS
+        if (cat === CELL_CATEGORY.MAMMALIAN) return SLIDER_RANGES.RESONANCE_MAMMALIAN
+        return SLIDER_RANGES.RESONANCE_BACTERIA
+      }
+      if (cat === CELL_CATEGORY.VIRUS)    return SLIDER_RANGES.IRE_VIRUS
+      if (cat === CELL_CATEGORY.BACTERIA) return SLIDER_RANGES.IRE_BACTERIA
+      return SLIDER_RANGES.IRE_MAMMALIAN
     },
 
     /**
