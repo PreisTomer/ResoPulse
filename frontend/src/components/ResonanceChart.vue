@@ -35,6 +35,7 @@ import type { CellConfig } from '@/types/cell'
 import { broadcastStateSync } from '@/services/socket'
 import { C } from '@/theme/colors'
 import { ICON } from '@/constants/icons'
+import { UNIT } from '@/constants/units'
 
 // Frequency range: 10 MHz-50 GHz
 const F_MIN_HZ = 10_000_000
@@ -394,9 +395,9 @@ export default defineComponent({
       g.select('.cursor-line').attr('x1', cx).attr('x2', cx)
       const khz = this.store.currentBroadcastFrequency
       let label: string
-      if (khz >= 1_000_000) label = `${(khz / 1_000_000).toFixed(2)} GHz`
-      else if (khz >= 1_000) label = `${(khz / 1_000).toFixed(2)} MHz`
-      else label = `${khz} kHz`
+      if (khz >= 1_000_000) label = `${(khz / 1_000_000).toFixed(2)} ${UNIT.GHZ}`
+      else if (khz >= 1_000) label = `${(khz / 1_000).toFixed(2)} ${UNIT.MHZ}`
+      else label = `${khz} ${UNIT.KHZ}`
       g.select('.cursor-label').attr('x', cx).text(label)
     },
   },

@@ -422,8 +422,8 @@ export default defineComponent({
       fcGroup.selectAll('*').remove()
       const xRes = this._xScale!(f0_hz)
       const fResLabel = t.resonantFreqGHz >= 1
-        ? `f_res ${t.resonantFreqGHz.toFixed(1)} GHz`
-        : `f_res ${(t.resonantFreqGHz * 1000).toFixed(0)} MHz`
+        ? `f_res ${t.resonantFreqGHz.toFixed(1)} ${UNIT.GHZ}`
+        : `f_res ${(t.resonantFreqGHz * 1000).toFixed(0)} ${UNIT.MHZ}`
       fcGroup.append('line')
         .attr('x1', xRes).attr('x2', xRes).attr('y1', 0).attr('y2', this._chartH)
         .attr('stroke', C.danger).attr('stroke-width', 1)

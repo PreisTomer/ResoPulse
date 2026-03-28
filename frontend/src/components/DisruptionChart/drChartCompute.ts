@@ -2,6 +2,7 @@
 
 import { computeSchwan, computeResonantDisruption } from '@/utils/physics'
 import type { CellConfig } from '@/types/cell'
+import { UNIT } from '@/constants/units'
 
 // ── Chart domain constants ──────────────────────────────────────────────────
 
@@ -50,10 +51,10 @@ export const F_POINTS_HZ: number[] = logspace(F_MIN_HZ, F_MAX_HZ, N_POINTS)
  * @returns   Verbose label such as "500 MHz" or "10 kHz"
  */
 export function formatHz(hz: number): string {
-  if (hz >= 1e9) return `${(hz / 1e9).toFixed(0)} GHz`
-  if (hz >= 1e6) return `${(hz / 1e6).toFixed(1)} MHz`
-  if (hz >= 1e3) return `${(hz / 1e3).toFixed(0)} kHz`
-  return `${hz.toFixed(0)} Hz`
+  if (hz >= 1e9) return `${(hz / 1e9).toFixed(0)} ${UNIT.GHZ}`
+  if (hz >= 1e6) return `${(hz / 1e6).toFixed(1)} ${UNIT.MHZ}`
+  if (hz >= 1e3) return `${(hz / 1e3).toFixed(0)} ${UNIT.KHZ}`
+  return `${hz.toFixed(0)} ${UNIT.HZ}`
 }
 
 // ── DR computation ──────────────────────────────────────────────────────────

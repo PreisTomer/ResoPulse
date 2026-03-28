@@ -123,9 +123,9 @@ export default defineComponent({
     freqDisplay(): string {
       const hz = this.store.hardwareFreqHz
       if (hz === null) return ', '
-      if (hz >= 1e6) return `${(hz / 1e6).toFixed(2)} MHz`
-      if (hz >= 1e3) return `${(hz / 1e3).toFixed(1)} kHz`
-      return `${hz} Hz`
+      if (hz >= 1e6) return `${(hz / 1e6).toFixed(2)} ${UNIT.MHZ}`
+      if (hz >= 1e3) return `${(hz / 1e3).toFixed(1)} ${UNIT.KHZ}`
+      return `${hz} ${UNIT.HZ}`
     },
     derivedSigma(): string {
       const z = this.store.hardwareZReal

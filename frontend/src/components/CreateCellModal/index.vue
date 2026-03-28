@@ -57,6 +57,7 @@ import { useUserPresetsStore } from '@/stores/userPresetsStore'
 import type { UserCellPreset } from '@/stores/userPresetsStore'
 import { useCellStore } from '@/stores/cellStore'
 import { EPSILON_0, computeTau, computeFc } from '@/utils/physics'
+import { UNIT } from '@/constants/units'
 import CcmHeader from './CcmHeader.vue'
 import CcmTipPanel from './CcmTipPanel.vue'
 import CcmIdentitySection from './CcmIdentitySection.vue'
@@ -149,7 +150,7 @@ export default defineComponent({
       const d_m = this.form.membraneThickness * 1e-9
       if (!d_m || !this.form.dielectricConstant) return ', '
       const cm = (this.form.dielectricConstant * EPSILON_0) / d_m * 1e3
-      return `${cm.toFixed(2)} mF/m²`
+      return `${cm.toFixed(2)} ${UNIT.MF_PER_M2}`
     },
 
     /** τ in ns */
@@ -157,7 +158,7 @@ export default defineComponent({
       try {
         const tau = computeTau(this.cellLike, this.sigmaE)
         if (!isFinite(tau) || tau <= 0) return ', '
-        return `${(tau * 1e9).toFixed(1)} ns`
+        return `${(tau * 1e9).toFixed(1)} ${UNIT.NS}`
       } catch { return ', ' }
     },
 
@@ -166,8 +167,8 @@ export default defineComponent({
       try {
         const fc = computeFc(this.cellLike, this.sigmaE) // kHz
         if (!isFinite(fc) || fc <= 0) return ', '
-        if (fc >= 1000) return `${(fc / 1000).toFixed(2)} MHz`
-        return `${fc.toFixed(0)} kHz`
+        if (fc >= 1000) return `${(fc / 1000).toFixed(2)} ${UNIT.MHZ}`
+        return `${fc.toFixed(0)} ${UNIT.KHZ}`
       } catch { return ', ' }
     },
 

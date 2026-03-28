@@ -39,10 +39,10 @@ export function buildHealthySection(h: CellParamSnapshot, isDbl: boolean, medium
   const lines: string[] = [
     `Reference (Healthy): ${h.label}`,
     fld('Radius R',               `${h.radius} ${UNIT.UM}`),
-    fld('Membrane thickness d',   `${h.membraneThickness} nm`),
+    fld('Membrane thickness d',   `${h.membraneThickness} ${UNIT.NM}`),
     fld('Permittivity εr',        `${h.dielectricConstant}`),
     fld('Conductivity σi',        `${h.conductivity} ${UNIT.S_PER_M}`),
-    fld('Membrane capacitance Cm', `${cm} mF/m²  [εr·ε0/d]`),
+    fld('Membrane capacitance Cm', `${cm} ${UNIT.MF_PER_M2}  [εr·ε0/d]`),
     fld('Lysis threshold Vm,thr', `${h.thresholdVoltage} ${UNIT.V}`),
     fld('Time constant τ',        `${tau} ${UNIT.NS}  [medium: ${mediumName}]`),
     fld('Corner frequency fc',    `${h.fc.toFixed(0)} ${UNIT.KHZ}  [1/(2πτ)]`),
@@ -50,7 +50,7 @@ export function buildHealthySection(h: CellParamSnapshot, isDbl: boolean, medium
   if (isDbl && h.nuclearRadius) {
     lines.push(
       fld('Nuclear radius R_n',     `${h.nuclearRadius} ${UNIT.UM}`),
-      fld('Nuclear mem. thickness', `${h.nuclearMembraneThickness ?? 'n/a'} nm`),
+      fld('Nuclear mem. thickness', `${h.nuclearMembraneThickness ?? 'n/a'} ${UNIT.NM}`),
       fld('Nuclear mem. εr',        `${h.nuclearMembraneEps ?? 'n/a'}`),
       fld('Nucleoplasm σn',         `${h.nucleoplasmConductivity ?? 'n/a'} ${UNIT.S_PER_M}`),
     )
@@ -63,10 +63,10 @@ export function buildTargetSection(t: CellParamSnapshot, isRes: boolean, isDbl: 
   const lines: string[] = [
     `Target Cell: ${t.label}  [category: ${t.category}]`,
     fld('Radius R',               `${t.radius} ${UNIT.UM}`),
-    fld('Membrane thickness d',   `${t.membraneThickness} nm`),
+    fld('Membrane thickness d',   `${t.membraneThickness} ${UNIT.NM}`),
     fld('Permittivity εr',        `${t.dielectricConstant}`),
     fld('Conductivity σi',        `${t.conductivity} ${UNIT.S_PER_M}`),
-    fld('Membrane capacitance Cm', `${cm} mF/m²  [εr·ε0/d]`),
+    fld('Membrane capacitance Cm', `${cm} ${UNIT.MF_PER_M2}  [εr·ε0/d]`),
   ]
   if (isRes && t.resonantFreqGHz) {
     const fResGHz  = t.resonantFreqGHz.toFixed(3)
@@ -75,7 +75,7 @@ export function buildTargetSection(t: CellParamSnapshot, isRes: boolean, isDbl: 
     const qMin     = t.capsidQMin?.toFixed(0) ?? qNominal
     const qMax     = t.capsidQMax?.toFixed(0) ?? qNominal
     lines.push(
-      fld('Resonant frequency f_res', `${fResGHz} GHz  (${fResMHz} MHz)`),
+      fld('Resonant frequency f_res', `${fResGHz} ${UNIT.GHZ}  (${fResMHz} ${UNIT.MHZ})`),
       fld('Quality factor Q',         `${qNominal}  [range: ${qMin} - ${qMax}]`),
       fld('Resonant threshold E_thr', `${t.resonantThresholdVcm?.toFixed(0) ?? ', '} ${UNIT.V_PER_CM}`),
       fld('f_res uncertainty',        `±${t.resonantFreqUncertaintyPct?.toFixed(0) ?? ', '}%`),
@@ -92,7 +92,7 @@ export function buildTargetSection(t: CellParamSnapshot, isRes: boolean, isDbl: 
   if (isDbl && t.nuclearRadius) {
     lines.push(
       fld('Nuclear radius R_n',     `${t.nuclearRadius} ${UNIT.UM}`),
-      fld('Nuclear mem. thickness', `${t.nuclearMembraneThickness ?? 'n/a'} nm`),
+      fld('Nuclear mem. thickness', `${t.nuclearMembraneThickness ?? 'n/a'} ${UNIT.NM}`),
       fld('Nuclear mem. εr',        `${t.nuclearMembraneEps ?? 'n/a'}`),
       fld('Nucleoplasm σn',         `${t.nucleoplasmConductivity ?? 'n/a'} ${UNIT.S_PER_M}`),
     )
@@ -352,9 +352,9 @@ export function buildEntryMethodsText(entry: LogEntry, sessionName: string): { t
   const modelLabel = isRes ? 'Lorentzian resonance model' : 'Schwan model'
 
   const freqDisplay = entry.freqKHz >= 1e6
-    ? `${(entry.freqKHz / 1e6).toFixed(3)} GHz`
+    ? `${(entry.freqKHz / 1e6).toFixed(3)} ${UNIT.GHZ}`
     : entry.freqKHz >= 1000
-      ? `${(entry.freqKHz / 1000).toFixed(3)} MHz`
+      ? `${(entry.freqKHz / 1000).toFixed(3)} ${UNIT.MHZ}`
       : `${entry.freqKHz} ${UNIT.KHZ}`
   const fieldDisplay = entry.fieldVcm >= 10000
     ? `${(entry.fieldVcm / 1000).toFixed(1)} ${UNIT.KV_PER_CM}`

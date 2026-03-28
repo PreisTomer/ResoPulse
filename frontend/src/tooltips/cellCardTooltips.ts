@@ -7,12 +7,13 @@
  */
 
 import { CELL_STATE, CELL_TYPE, WAVEFORM } from '@/constants/strings'
+import { UNIT } from '@/constants/units'
 import { computeTau } from '@/utils/physics'
 import type { CellConfig } from '@/types/cell'
 import { THRESHOLDS } from '@/constants/physics'
 
 export function formatLysisTimeLocal(ms: number): string {
-  return ms < 1000 ? `${ms}ms` : `${(ms / 1000).toFixed(1)}s`
+  return ms < 1000 ? `${ms}${UNIT.MS}` : `${(ms / 1000).toFixed(1)}${UNIT.S}`
 }
 
 export function tipVm(opts: {
@@ -136,11 +137,11 @@ export function tipDep(opts: { isPdep: boolean; kVal: number; crossoverKHz: numb
 
   let crossStr: string
   if (opts.crossoverKHz > 0) {
-    crossStr = `Crossover frequency where force reverses: ${opts.crossoverKHz.toFixed(0)} kHz`
+    crossStr = `Crossover frequency where force reverses: ${opts.crossoverKHz.toFixed(0)} ${UNIT.KHZ}`
   } else if (opts.sigmaI < opts.sigmaE) {
-    crossStr = `No crossover in range. Cell conductivity (σ_i = ${opts.sigmaI.toFixed(2)} S/m) is lower than the medium (σ_e = ${opts.sigmaE.toFixed(2)} S/m), so nDEP persists at all frequencies. Switch to a lower-conductivity EP buffer (tissue 0.4 S/m, water 0.001 S/m) to access a pDEP regime.`
+    crossStr = `No crossover in range. Cell conductivity (σ_i = ${opts.sigmaI.toFixed(2)} ${UNIT.S_PER_M}) is lower than the medium (σ_e = ${opts.sigmaE.toFixed(2)} ${UNIT.S_PER_M}), so nDEP persists at all frequencies. Switch to a lower-conductivity EP buffer (tissue 0.4 S/m, water 0.001 ${UNIT.S_PER_M}) to access a pDEP regime.`
   } else {
-    crossStr = `No crossover in range. Cell conductivity (σ_i = ${opts.sigmaI.toFixed(2)} S/m) exceeds medium (σ_e = ${opts.sigmaE.toFixed(2)} S/m), so pDEP persists at all accessible frequencies.`
+    crossStr = `No crossover in range. Cell conductivity (σ_i = ${opts.sigmaI.toFixed(2)} ${UNIT.S_PER_M}) exceeds medium (σ_e = ${opts.sigmaE.toFixed(2)} ${UNIT.S_PER_M}), so pDEP persists at all accessible frequencies.`
   }
 
   return `<strong>Dielectrophoresis (DEP)</strong>

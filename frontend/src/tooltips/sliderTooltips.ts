@@ -30,14 +30,14 @@ interface ResonanceExtra {
 // ── Helper ────────────────────────────────────────────────────────────────────
 
 export function formatLysisTime(ms: number): string {
-  return ms < 1000 ? `${ms}ms` : `${(ms / 1000).toFixed(1)}s`
+  return ms < 1000 ? `${ms}${UNIT.MS}` : `${(ms / 1000).toFixed(1)}${UNIT.S}`
 }
 
 // ── Tooltip builders ──────────────────────────────────────────────────────────
 
 export function tipWaveform(currentField: number, maxSteadyTemp: number): string {
   const cwWarn = maxSteadyTemp > 42
-    ? `\n\n<span class="tip-warn">⚠ At current field (${currentField} V/cm), CW would heat cells to T_ss ≈ ${Math.min(maxSteadyTemp, 150).toFixed(0)}°C, reduce field before switching to CW.</span>`
+    ? `\n\n<span class="tip-warn">⚠ At current field (${currentField} ${UNIT.V_PER_CM}), CW would heat cells to T_ss ≈ ${Math.min(maxSteadyTemp, 150).toFixed(0)}${UNIT.DEG_C}, reduce field before switching to CW.</span>`
     : ''
   return `<strong>Waveform Type</strong>
 <span class="tip-val">CW (sinusoidal)</span> , continuous wave, always on
@@ -83,16 +83,16 @@ Fraction of time the field is active.
 Scales effective SAR → thermal load:
   SAR_eff = SAR_peak × duty_cycle
 
-<span class="tip-val">T: ${effT} W/kg</span>  ·  <span class="tip-val">H: ${effH} W/kg</span>
+<span class="tip-val">T: ${effT} ${UNIT.W_PER_KG}</span>  ·  <span class="tip-val">H: ${effH} ${UNIT.W_PER_KG}</span>
 
-Projected T_ss = <span class="tip-val">${maxSteadyTemp.toFixed(0)}°C</span>  (T_ss = 37 + SAR_eff/(λ·cp))
+Projected T_ss = <span class="tip-val">${maxSteadyTemp.toFixed(0)}${UNIT.DEG_C}</span>  (T_ss = 37 + SAR_eff/(λ·cp))
 Typical pulsed electroporation: 0.001%-1%${warnText}`
 }
 
 export function tipMedium(medium: MediumKey): string {
   const m = MEDIA[medium]
   return `<strong>Propagation Medium</strong>
-Sets external conductivity <span class="tip-val">σ_e = ${m.conductivity} S/m</span>
+Sets external conductivity <span class="tip-val">σ_e = ${m.conductivity} ${UNIT.S_PER_M}</span>
 Used in Schwan time constant:
   τ = R·Cm·(2σ_e+σ_i) / (2σ_e·σ_i)
 Higher σ_e → lower τ → higher fc → broader quasi-DC regime`
@@ -112,7 +112,7 @@ export function tipMediumKeys(): Record<string, string> {
   for (const key of Object.keys(MEDIA)) {
     const m = MEDIA[key as MediumKey]
     out[key] = `<strong>${m.name}</strong>
-σ_e = <span class="tip-val">${m.conductivity} S/m</span>
+σ_e = <span class="tip-val">${m.conductivity} ${UNIT.S_PER_M}</span>
 ${descs[key] ?? ''}`
   }
   return out
@@ -159,9 +159,9 @@ export function tipField(opts: {
   if (isResonanceMode) {
     if (target.resonantFreqGHz && target.resonantThresholdVcm) {
       const fStr = target.resonantFreqGHz >= 1
-        ? `${target.resonantFreqGHz.toFixed(1)} GHz`
-        : `${(target.resonantFreqGHz * 1000).toFixed(0)} MHz`
-      const thrStr = `${target.resonantThresholdVcm} V/cm`
+        ? `${target.resonantFreqGHz.toFixed(1)} ${UNIT.GHZ}`
+        : `${(target.resonantFreqGHz * 1000).toFixed(0)} ${UNIT.MHZ}`
+      const thrStr = `${target.resonantThresholdVcm} ${UNIT.V_PER_CM}`
       const pct = (targetDisruption * 100).toFixed(0) + '%'
       const warn = targetDisruption >= 1.0
         ? '\n<span class="tip-warn">⚡ Disruption threshold exceeded, capsid/cell-wall rupture</span>'
@@ -181,8 +181,8 @@ ${t('resonance.tipFieldDisruptNote')}${warn}`
   }
   const tLysis = targetLysisField
   const hLysis = healthyLysisField
-  const tStr   = tLysis >= LYSIS_FIELD_SENTINEL ? 'N/A (perpendicular)' : tLysis >= 1000 ? `${(tLysis / 1000).toFixed(1)} kV/cm` : `${tLysis.toFixed(0)} V/cm`
-  const hStr   = hLysis >= LYSIS_FIELD_SENTINEL ? 'N/A (perpendicular)' : hLysis >= 1000 ? `${(hLysis / 1000).toFixed(1)} kV/cm` : `${hLysis.toFixed(0)} V/cm`
+  const tStr   = tLysis >= LYSIS_FIELD_SENTINEL ? 'N/A (perpendicular)' : tLysis >= 1000 ? `${(tLysis / 1000).toFixed(1)} ${UNIT.KV_PER_CM}` : `${tLysis.toFixed(0)} ${UNIT.V_PER_CM}`
+  const hStr   = hLysis >= LYSIS_FIELD_SENTINEL ? 'N/A (perpendicular)' : hLysis >= 1000 ? `${(hLysis / 1000).toFixed(1)} ${UNIT.KV_PER_CM}` : `${hLysis.toFixed(0)} ${UNIT.V_PER_CM}`
   const contextNote = targetCellCategory === CELL_CATEGORY.VIRUS
     ? `\n<span class="tip-warn">⚠ Virion IRE threshold ≈ ${tStr}, impractical at any safe field.\nSwitch to Resonance mode for virion disruption.</span>`
     : targetCellCategory === CELL_CATEGORY.BACTERIA
@@ -207,7 +207,7 @@ export function tipTargetBadge(opts: {
   const lysisStr = formatLysisTime(lysisDelayMs)
   if (isResonanceMode) {
     const fStr = target.resonantFreqGHz
-      ? (target.resonantFreqGHz >= 1 ? `${target.resonantFreqGHz.toFixed(1)} GHz` : `${(target.resonantFreqGHz * 1000).toFixed(0)} MHz`)
+      ? (target.resonantFreqGHz >= 1 ? `${target.resonantFreqGHz.toFixed(1)} ${UNIT.GHZ}` : `${(target.resonantFreqGHz * 1000).toFixed(0)} ${UNIT.MHZ}`)
       : ', '
     const warn = targetDisruption >= 1.0
       ? '\n<span class="tip-warn">⚡ Disruption threshold exceeded, capsid/cell-wall rupture imminent</span>'
@@ -225,7 +225,7 @@ ${t('resonance.tipTargetBadgeNote')}`
   return `<strong>Target membrane disruption: <span class="tip-val">${pct}%</span></strong>
 Ratio = Vm / lysis threshold voltage
 
-Vm = <span class="tip-val">${targetVmMv.toFixed(2)} mV</span>  ·  Threshold = ${tThr} mV${warn}
+Vm = <span class="tip-val">${targetVmMv.toFixed(2)} ${UNIT.MV}</span>  ·  Threshold = ${tThr} ${UNIT.MV}${warn}
 >85% held for ${lysisStr} → irreversible membrane lysis`
 }
 
@@ -252,14 +252,14 @@ ${t('resonance.tipHealthyBadgeBody')}
   return `<strong>Healthy membrane disruption: <span class="tip-val">${pct}%</span></strong>
 Ratio = Vm / lysis threshold voltage
 
-Vm = <span class="tip-val">${healthyVmMv.toFixed(2)} mV</span>  ·  Threshold = ${hThr} mV${ok}
+Vm = <span class="tip-val">${healthyVmMv.toFixed(2)} ${UNIT.MV}</span>  ·  Threshold = ${hThr} ${UNIT.MV}${ok}
 Keep below 50% for a selective protocol window`
 }
 
 export function tipOrientation(orientationDeg: number, cosThetaFactor: number): string {
   const cosT = (cosThetaFactor * 100).toFixed(0)
-  return `<strong>Cell Orientation  θ = ${orientationDeg}°</strong>
-|cos(θ)| = <span class="tip-val">${cosT}%</span> of maximum Vm coupling
+  return `<strong>Cell Orientation  θ = ${orientationDeg}${UNIT.DEG}</strong>
+|cos(θ)| = <span class="tip-val">${cosT}${UNIT.PERCENT}</span> of maximum Vm coupling
 
 Schwan equation:  Vm = 1.5·E·R·<span class="tip-val">cos(θ)</span> / √(1+(ωτ)²)
 θ = angle between applied field vector and cell symmetry axis.
@@ -280,7 +280,7 @@ export function tipLysisN(opts: {
   const { lysisNPulses: n, lysisDelayMs, dutyCycle, pulseWidthNs } = opts
   const periodMs  = dutyCycle > 0 ? (pulseWidthNs * 1e-6) / dutyCycle : 0
   const periodStr = periodMs > 0
-    ? (periodMs < 1 ? `${(periodMs * 1000).toFixed(1)} µs` : `${periodMs.toFixed(3)} ms`)
+    ? (periodMs < 1 ? `${(periodMs * 1000).toFixed(1)} ${UNIT.US}` : `${periodMs.toFixed(3)} ${UNIT.MS}`)
     : ', '
   return `<strong>Pulses to Lysis  N = ${n}</strong>
 Estimated protocol time: <span class="tip-val">${formatLysisTime(lysisDelayMs)}</span>
