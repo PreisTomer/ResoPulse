@@ -1,0 +1,8 @@
+#!/bin/sh
+# Run tests before every push. Push is aborted if any test fails.
+echo "Running tests before push..."
+cd frontend && npm run test
+if [ $? -ne 0 ]; then
+  echo "Tests failed. Push aborted."
+  exit 1
+fi
