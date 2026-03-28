@@ -27,7 +27,7 @@ import {
 } from '@/utils/physics'
 import {
   BODY_TEMP_C, NEWTON_COOLING_LAMBDA, PENNES_BLOOD_COEFF, WF_CW, WF_PULSED, MIN_PULSE_ENVELOPE,
-  H_FIRE_THRESHOLD_MULTIPLIER,
+  H_FIRE_THRESHOLD_MULTIPLIER, TEMP_EP_COEFF,
 } from '@/constants/physics'
 import { formatFreqKHz } from '@/utils/format'
 import { C } from '@/theme/colors'
@@ -209,7 +209,11 @@ export default defineComponent({
       if (s.isResonanceMode) {
         const tr = s.target as { resonantFreqGHz?: number; capsidQ?: number; resonantThresholdVcm?: number }
         if (tr.resonantFreqGHz && tr.capsidQ && tr.resonantThresholdVcm) {
-          tDR = computeResonantDisruption(tr.resonantFreqGHz, tr.capsidQ, tr.resonantThresholdVcm, freqKHz * 1000, fieldVcm)
+          // Mirror cellStore.targetDisruptionRatio: apply temperature correction + H-FIRE multiplier
+          // so zone colours stay in sync with the disruption ratio display.
+          const effThreshold = tr.resonantThresholdVcm *
+            (1 - TEMP_EP_COEFF * Math.max(0, s.targetTemp - BODY_TEMP_C)) * hfireMult
+          tDR = computeResonantDisruption(tr.resonantFreqGHz, tr.capsidQ, effThreshold, freqKHz * 1000, fieldVcm)
         }
       } else {
         const tTau = computeTau(s.target, sigma_e)
@@ -248,6 +252,11 @@ export default defineComponent({
 
       const tr     = s.target as { resonantFreqGHz?: number; capsidQ?: number; resonantThresholdVcm?: number }
       const hasRes = isRes && !!tr.resonantFreqGHz && !!tr.capsidQ && !!tr.resonantThresholdVcm
+      // Pre-compute temperature-corrected resonant threshold so zone colours match the DR display.
+      const resEffThreshold = hasRes
+        ? tr.resonantThresholdVcm! *
+          (1 - TEMP_EP_COEFF * Math.max(0, s.targetTemp - BODY_TEMP_C)) * hfireMult
+        : 0
 
       const result = new Array<number>(HMAP_FREQ_STEPS * HMAP_FIELD_STEPS)
 
@@ -265,7 +274,7 @@ export default defineComponent({
 
           let tDR = 0
           if (hasRes) {
-            tDR = computeResonantDisruption(tr.resonantFreqGHz!, tr.capsidQ!, tr.resonantThresholdVcm!, freqHz, fieldVcm)
+            tDR = computeResonantDisruption(tr.resonantFreqGHz!, tr.capsidQ!, resEffThreshold, freqHz, fieldVcm)
           } else {
             const tVm = computeSchwan(s.target, freqKHz, fieldVcm, sigma_e, 1.0)
             tDR = (tVm * tPEF) / (s.target.thresholdVoltage * hfireMult)
