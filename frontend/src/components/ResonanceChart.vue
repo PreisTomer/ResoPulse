@@ -25,6 +25,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+import { mapStores } from 'pinia'
 import * as d3 from 'd3'
 import { useCellStore } from '@/stores/cellStore'
 import { computeResonantDisruption } from '@/utils/physics'
@@ -58,19 +59,18 @@ const F_POINTS_HZ = logspace(F_MIN_HZ, F_MAX_HZ, N_POINTS)
 export default defineComponent({
   name: 'ResonanceChart',
 
-  setup() {
-    return { store: useCellStore(), ICON }
-  },
-
   computed: {
+    ...mapStores(useCellStore),
+
     isSpeculativeTarget(): boolean {
-      const t = this.store.target as { experimentalBasis?: string }
+      const t = this.cellStore.target as { experimentalBasis?: string }
       return t.experimentalBasis === 'speculative'
     },
   },
 
   data() {
     return {
+      ICON,
       _svg: null as d3.Selection<SVGSVGElement, unknown, null, undefined> | null,
       _xScale: null as d3.ScaleLogarithmic<number, number> | null,
       _yScale: null as d3.ScaleLinear<number, number> | null,
@@ -81,10 +81,10 @@ export default defineComponent({
   },
 
   watch: {
-    'store.target':         { handler() { this.updateChart() }, deep: true },
-    'store.healthy':        { handler() { this.updateChart() }, deep: true },
-    'store.fieldIntensity': { handler() { this.updateChart() } },
-    'store.currentBroadcastFrequency': { handler() { this.updateCursor() } },
+    'cellStore.target':         { handler() { this.updateChart() }, deep: true },
+    'cellStore.healthy':        { handler() { this.updateChart() }, deep: true },
+    'cellStore.fieldIntensity': { handler() { this.updateChart() } },
+    'cellStore.currentBroadcastFrequency': { handler() { this.updateCursor() } },
   },
 
   mounted() {
@@ -118,7 +118,7 @@ export default defineComponent({
           cell.capsidQ ?? DEFAULT_CAPSID_Q,
           cell.resonantThresholdVcm!,
           hz,
-          this.store.fieldIntensity,
+          this.cellStore.fieldIntensity,
         ),
       }))
     },
@@ -245,7 +245,7 @@ export default defineComponent({
               if (!xScale) return
               const hz = Math.max(F_MIN_HZ, Math.min(F_MAX_HZ, xScale.invert(event.x)))
               const khz = Math.round(Math.min(hz / 1000, F_CURSOR_MAX_KHZ))
-              self.store.setBroadcastFreqKHz(khz)
+              self.cellStore.setBroadcastFreqKHz(khz)
               broadcastStateSync()
             })
         )
@@ -333,7 +333,7 @@ export default defineComponent({
         .text('H: 0')
 
       // Active target curve
-      const t = this.store.target as ResonantCell
+      const t = this.cellStore.target as ResonantCell
       if (t.resonantFreqGHz && t.resonantThresholdVcm) {
         const targetPts = this.computeCurve(t)
         const targetColor = t.group ? GROUP_COLORS[t.group] : C.purple
@@ -357,7 +357,7 @@ export default defineComponent({
       const markG = g.select<SVGGElement>('.resonance-markers')
       markG.selectAll('*').remove()
 
-      const t = this.store.target as ResonantCell
+      const t = this.cellStore.target as ResonantCell
       if (!t.resonantFreqGHz) return
 
       const fHz = t.resonantFreqGHz * 1e9
@@ -390,10 +390,10 @@ export default defineComponent({
     updateCursor() {
       const g = this._svg?.select('.chart-g')
       if (!g || !this._xScale) return
-      const freqHz = this.store.currentBroadcastFrequency * 1000
+      const freqHz = this.cellStore.currentBroadcastFrequency * 1000
       const cx = this._xScale(Math.max(F_MIN_HZ, Math.min(F_MAX_HZ, freqHz)))
       g.select('.cursor-line').attr('x1', cx).attr('x2', cx)
-      const khz = this.store.currentBroadcastFrequency
+      const khz = this.cellStore.currentBroadcastFrequency
       let label: string
       if (khz >= 1_000_000) label = `${(khz / 1_000_000).toFixed(2)} ${UNIT.GHZ}`
       else if (khz >= 1_000) label = `${(khz / 1_000).toFixed(2)} ${UNIT.MHZ}`

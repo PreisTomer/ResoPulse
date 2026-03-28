@@ -192,7 +192,9 @@ export const useCellStore = defineStore('cell', {
     isResonanceMode: (state): boolean => state.chartMode === CHART_MODE.RESONANCE,
 
     /** σ_e corrected for temperature and cell packing fraction [S/m].
-     *  σ_e(T) = σ_e0·(1+α·(T_mean−37)); Maxwell-Garnett: σ_eff = σ_T·(1−φ)/(1+φ/2). */
+     *  Two stages: temp correction σ_T = σ_e0·(1+α·(T−37)), then Maxwell-Garnett mixing
+     *  σ_eff = σ_T·(1−φ)/(1+φ/2).  MG accounts for dipole distortion by spherical inclusions
+     *  (linear mixing would overestimate conductivity at φ > 0.1). Ref: Foster & Schwan (1989). */
     effectiveSigmaE: (state): number => {
       const sigma_e0 = MEDIA[state.medium].conductivity
       const alpha    = MEDIA[state.medium].tempCoeff

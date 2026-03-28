@@ -5,20 +5,17 @@
       <div class="terms-gate__backdrop" />
       <div class="terms-gate__panel">
 
-        <div class="terms-gate__eyebrow">Research Access</div>
-        <h2 id="tg-title" class="terms-gate__title">Experiment Lab, Terms of Use</h2>
+        <div class="terms-gate__eyebrow">{{ $t('termsGate.eyebrow') }}</div>
+        <h2 id="tg-title" class="terms-gate__title">{{ $t('termsGate.title') }}</h2>
 
         <div class="terms-gate__body">
-          <p class="terms-gate__para">
-            ResoPulse is a <strong>computational simulation tool for in-vitro laboratory research only.</strong>
-            It is not a medical device and must not be used for clinical diagnostics or human treatment.
-          </p>
+          <p class="terms-gate__para" v-html="$t('termsGate.para')"></p>
 
           <ul class="terms-gate__list">
-            <li>All algorithms, physics models, and source code are the exclusive property of <strong>Tomer Preis</strong> and protected by copyright.</li>
-            <li>You may not reverse-engineer, clone, or use this tool to build competing software.</li>
-            <li>Biophysical parameters are approximations, real-world results may vary.</li>
-            <li>Tomer Preis assumes no liability for experimental outcomes or laboratory decisions.</li>
+            <li v-html="$t('termsGate.li1')"></li>
+            <li>{{ $t('termsGate.li2') }}</li>
+            <li>{{ $t('termsGate.li3') }}</li>
+            <li>{{ $t('termsGate.li4') }}</li>
           </ul>
         </div>
 
@@ -29,19 +26,19 @@
             type="checkbox"
           />
           <span class="terms-gate__check-label">
-            I have read and agree to the
-            <RouterLink to="/terms" class="terms-gate__link" target="_blank">Terms of Use</RouterLink>
+            {{ $t('termsGate.checkLabel') }}
+            <RouterLink to="/terms" class="terms-gate__link" target="_blank">{{ $t('termsGate.termsLink') }}</RouterLink>
           </span>
         </label>
 
         <div class="terms-gate__actions">
-          <RouterLink to="/" class="terms-gate__cancel">← Go back</RouterLink>
+          <RouterLink to="/" class="terms-gate__cancel">{{ $t('termsGate.cancelBtn') }}</RouterLink>
           <button
             class="terms-gate__btn"
             :class="{ 'terms-gate__btn--ready': agreed }"
             :disabled="!agreed"
             @click="accept"
-          >Enter Experiment Lab</button>
+          >{{ $t('termsGate.enterBtn') }}</button>
         </div>
 
       </div>

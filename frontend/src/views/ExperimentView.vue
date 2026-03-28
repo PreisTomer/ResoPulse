@@ -1,6 +1,6 @@
 <!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
 <template>
-  <div class="experiment" @click.self="($refs.header as any)?.closeAllPickers()">
+  <div class="experiment" @click.self="($refs.header as ExperimentHeaderInstance)?.closeAllPickers()">
 
     <!-- ── Combined header bar ───────────────────────────────────── -->
     <ExperimentHeader
@@ -113,9 +113,10 @@ import SweepPanel from '@/components/SweepPanel/index.vue'
 import PopulationPanel from '@/components/PopulationPanel/index.vue'
 import ExperimentLog from '@/components/ExperimentLab/ExperimentLog.vue'
 import ExperimentHeader from '@/components/ExperimentLab/ExperimentHeader.vue'
+type ExperimentHeaderInstance = InstanceType<typeof ExperimentHeader>
 import ExperimentNotes from '@/components/ExperimentLab/ExperimentNotes.vue'
 import SnapBar from '@/components/ExperimentLab/SnapBar.vue'
-import StickyCellView from '@/components/ExperimentLab/StickyCellView.vue'
+import StickyCellView, { type CellCardRow } from '@/components/ExperimentLab/StickyCellView.vue'
 import AiOptimizerTab from '@/components/ExperimentLab/AiOptimizerTab.vue'
 import { useExperimentStore } from '@/stores/experimentStore'
 import { useUiStore } from '@/stores/uiStore'
@@ -229,7 +230,7 @@ export default defineComponent({
         : this.$t('exp.chartModeResonance')
     },
 
-    cells() {
+    cells(): CellCardRow[] {
       // Resolve label + sublabel from the live store cell (changes when preset loads)
       const cellLabel = (type: 'healthy' | 'target') => {
         return type === CELL_TYPE.HEALTHY ? this.store.healthy.label : this.store.target.label

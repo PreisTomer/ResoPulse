@@ -68,6 +68,7 @@
     "switchToResonanceBtn": "→ Switch to Resonance Mode",
 
     "windowScoreLabel": "Pop. Window Score",
+    "wsFormula": "= P(T)\u00d7(1-P(H))",
     "tipWindowScore": "<strong>Population Window Score</strong>\nWS = P(target lysis) × (1 - P(healthy lysis))\n  WS = {score}%  (P_T = {pT}%, P_H = {pH}%)\n\nWS = 100%: all target destroyed, zero healthy collateral (ideal)\nWS = 0%: no target lysis, or complete healthy destruction (unusable)\n≥50%: effective protocol window\n20-50%: marginal window\n<20%: poor selectivity at current settings\n\nBased on random-orientation suspension probability model.",
     "orientFracLabel": "P(lysis) orient.",
     "popDistLabel": "P(lysis) + size dist.",

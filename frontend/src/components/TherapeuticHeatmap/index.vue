@@ -1,6 +1,6 @@
 <!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
 <template>
-  <div id="hl-heatmap" class="hmap" v-if="store.targetCellCategory === CELL_CATEGORY.MAMMALIAN">
+  <div id="hl-heatmap" class="hmap" v-if="cellStore.targetCellCategory === CELL_CATEGORY.MAMMALIAN">
     <AccordionPanel
       :icon="ICON.WAVE"
       :title="$t('heatmap.title')"
@@ -30,6 +30,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+import { mapStores } from 'pinia'
 import { useCellStore } from '@/stores/cellStore'
 import { CELL_CATEGORY } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
@@ -44,12 +45,14 @@ export default defineComponent({
   name: 'TherapeuticHeatmap',
   components: { AccordionPanel, HeatmapCanvas, HeatmapReadout, HeatmapLegend, HeatmapStats },
 
-  setup() {
-    return { store: useCellStore(), CELL_CATEGORY, ICON }
+  computed: {
+    ...mapStores(useCellStore),
   },
 
   data() {
     return {
+      CELL_CATEGORY,
+      ICON,
       open:        false,
       hoverInfo:   null as HoverInfo | null,
       opZoneColor: 'var(--color-text)',

@@ -40,34 +40,36 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+import { mapStores } from 'pinia'
 import { useCellStore } from '@/stores/cellStore'
 import { CELL_CATEGORY } from '@/constants/strings'
 import { UNIT } from '@/constants/units'
 import { formatFieldVcm, formatLysisFieldVcm } from '@/utils/format'
 
 export default defineComponent({
-  setup() {
-    return { store: useCellStore(), UNIT }
+  data() {
+    return { UNIT }
   },
 
   computed: {
+    ...mapStores(useCellStore),
     isResonanceTarget(): boolean {
-      const cat = this.store.targetCellCategory
-      const t = this.store.target as { resonantFreqGHz?: number; resonantThresholdVcm?: number }
+      const cat = this.cellStore.targetCellCategory
+      const t = this.cellStore.target as { resonantFreqGHz?: number; resonantThresholdVcm?: number }
       return (cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) && !!t.resonantFreqGHz && !!t.resonantThresholdVcm
     },
 
-    targetRatioPct(): number { return Math.min(100, this.store.targetDisruptionRatio * 100) },
-    targetVmMv(): string    { return (this.store.targetVm  * 1000).toFixed(1) },
-    healthyVmMv(): string   { return (this.store.healthyVm * 1000).toFixed(1) },
-    targetSarVal(): string  { return (this.store.targetSAR  * this.store.effectiveDutyCycle).toFixed(2) },
-    healthySarVal(): string { return (this.store.healthySAR * this.store.effectiveDutyCycle).toFixed(2) },
+    targetRatioPct(): number { return Math.min(100, this.cellStore.targetDisruptionRatio * 100) },
+    targetVmMv(): string    { return (this.cellStore.targetVm  * 1000).toFixed(1) },
+    healthyVmMv(): string   { return (this.cellStore.healthyVm * 1000).toFixed(1) },
+    targetSarVal(): string  { return (this.cellStore.targetSAR  * this.cellStore.effectiveDutyCycle).toFixed(2) },
+    healthySarVal(): string { return (this.cellStore.healthySAR * this.cellStore.effectiveDutyCycle).toFixed(2) },
 
-    targetLysisField(): string  { return formatLysisFieldVcm(this.store.targetLysisField) },
-    healthyLysisField(): string { return formatLysisFieldVcm(this.store.healthyLysisField) },
+    targetLysisField(): string  { return formatLysisFieldVcm(this.cellStore.targetLysisField) },
+    healthyLysisField(): string { return formatLysisFieldVcm(this.cellStore.healthyLysisField) },
 
     targetResonanceEthr(): string {
-      const t = this.store.target as { resonantThresholdVcm?: number }
+      const t = this.cellStore.target as { resonantThresholdVcm?: number }
       return t.resonantThresholdVcm ? formatFieldVcm(t.resonantThresholdVcm) : ', '
     },
 
@@ -86,7 +88,7 @@ export default defineComponent({
     },
 
     energyDoseDisplay(): string {
-      const e = this.store.pulsedEnergyDensity_mJcm3
+      const e = this.cellStore.pulsedEnergyDensity_mJcm3
       if (e >= 1000) return (e / 1000).toFixed(2) + 'k'
       if (e >= 10)   return e.toFixed(2)
       if (e >= 0.01) return e.toFixed(4)

@@ -76,11 +76,11 @@
         <!-- Background zones based on drift severity -->
         <defs>
           <linearGradient id="lm-warn-grad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" style="stop-color: color-mix(in srgb, var(--color-amber) 8%, transparent)" />
+            <stop class="lm-grad-stop--warn" offset="0%" />
             <stop offset="100%" stop-color="transparent" />
           </linearGradient>
           <linearGradient id="lm-danger-grad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" style="stop-color: color-mix(in srgb, var(--color-danger) 10%, transparent)" />
+            <stop class="lm-grad-stop--danger" offset="0%" />
             <stop offset="100%" stop-color="transparent" />
           </linearGradient>
         </defs>
@@ -633,5 +633,10 @@ export default defineComponent({
 
   &__sigma-ref-line { stroke: color-mix(in srgb, var(--color-primary) 35%, transparent); }
   &__sigma-area     { fill: color-mix(in srgb, var(--color-primary) 7%, transparent); }
+}
+
+.lm-grad-stop {
+  &--warn   { stop-color: color-mix(in srgb, var(--color-amber)  8%, transparent); }
+  &--danger { stop-color: color-mix(in srgb, var(--color-danger) 10%, transparent); }
 }
 </style>

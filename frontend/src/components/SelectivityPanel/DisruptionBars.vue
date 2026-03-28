@@ -6,7 +6,7 @@
       <div class="sel-panel__bar-track">
         <div
           class="sel-panel__bar-fill sel-panel__bar-fill--t"
-          :style="{ width: targetRatioPct + '%' }"
+          :style="{ '--bar-w': targetRatioPct + '%' }"
           :class="{ 'sel-panel__bar-fill--warn': targetRatio >= THRESHOLDS.DISRUPTION_WARN }"
         ></div>
       </div>
@@ -22,7 +22,7 @@
       <div class="sel-panel__bar-track">
         <div
           class="sel-panel__bar-fill sel-panel__bar-fill--h"
-          :style="{ width: healthyRatioPct + '%' }"
+          :style="{ '--bar-w': healthyRatioPct + '%' }"
           :class="{ 'sel-panel__bar-fill--warn': healthyRatio >= THRESHOLDS.DISRUPTION_WARN }"
         ></div>
       </div>
@@ -36,32 +36,32 @@
   </div>
 
   <!-- Nuclear envelope disruption bars (double-shell model) -->
-  <template v-if="store.doubleShellEnabled && store.targetCellCategory === CELL_CATEGORY.MAMMALIAN">
+  <template v-if="cellStore.doubleShellEnabled && cellStore.targetCellCategory === CELL_CATEGORY.MAMMALIAN">
     <div class="sel-panel__nuc-section" v-tip="tipNuclearSection">
       <div class="sel-panel__nuc-bar-row">
         <span class="sel-panel__nuc-bar-label">{{ $t('labels.neTarget') }}</span>
         <div class="sel-panel__nuc-bar-track">
           <div class="sel-panel__nuc-bar-fill sel-panel__nuc-bar-fill--t"
-            :style="{ width: Math.min(100, store.targetNuclearDisruptionRatio * 100) + '%' }"
-            :class="{ 'sel-panel__nuc-bar-fill--warn': store.targetNuclearDisruptionRatio >= THRESHOLDS.DISRUPTION_WARN }"
+            :style="{ '--bar-w': Math.min(100, cellStore.targetNuclearDisruptionRatio * 100) + '%' }"
+            :class="{ 'sel-panel__nuc-bar-fill--warn': cellStore.targetNuclearDisruptionRatio >= THRESHOLDS.DISRUPTION_WARN }"
           ></div>
         </div>
-        <span class="sel-panel__nuc-bar-val">{{ (store.targetNuclearDisruptionRatio * 100).toFixed(0) }}%</span>
+        <span class="sel-panel__nuc-bar-val">{{ (cellStore.targetNuclearDisruptionRatio * 100).toFixed(0) }}%</span>
       </div>
       <div class="sel-panel__nuc-bar-row">
         <span class="sel-panel__nuc-bar-label">{{ $t('labels.neHealthy') }}</span>
         <div class="sel-panel__nuc-bar-track">
           <div class="sel-panel__nuc-bar-fill sel-panel__nuc-bar-fill--h"
-            :style="{ width: Math.min(100, store.healthyNuclearDisruptionRatio * 100) + '%' }"
-            :class="{ 'sel-panel__nuc-bar-fill--warn': store.healthyNuclearDisruptionRatio >= THRESHOLDS.DISRUPTION_WARN }"
+            :style="{ '--bar-w': Math.min(100, cellStore.healthyNuclearDisruptionRatio * 100) + '%' }"
+            :class="{ 'sel-panel__nuc-bar-fill--warn': cellStore.healthyNuclearDisruptionRatio >= THRESHOLDS.DISRUPTION_WARN }"
           ></div>
         </div>
-        <span class="sel-panel__nuc-bar-val">{{ (store.healthyNuclearDisruptionRatio * 100).toFixed(0) }}%</span>
+        <span class="sel-panel__nuc-bar-val">{{ (cellStore.healthyNuclearDisruptionRatio * 100).toFixed(0) }}%</span>
       </div>
       <div class="sel-panel__nuc-sel-row">
         <span class="sel-panel__nuc-sel-label">{{ $t('selectivity.neSelectivity') }}</span>
-        <span class="sel-panel__nuc-sel-val" :class="store.nuclearSelectivityRatio >= THRESHOLDS.SEL_STRONG ? 'sel-panel__nuc-sel--good' : store.nuclearSelectivityRatio >= THRESHOLDS.SEL_MARGINAL ? 'sel-panel__nuc-sel--ok' : 'sel-panel__nuc-sel--low'">
-          ×{{ store.nuclearSelectivityRatio >= 99 ? ICON.INFINITY : store.nuclearSelectivityRatio.toFixed(2) }}
+        <span class="sel-panel__nuc-sel-val" :class="cellStore.nuclearSelectivityRatio >= THRESHOLDS.SEL_STRONG ? 'sel-panel__nuc-sel--good' : cellStore.nuclearSelectivityRatio >= THRESHOLDS.SEL_MARGINAL ? 'sel-panel__nuc-sel--ok' : 'sel-panel__nuc-sel--low'">
+          {{ ICON.TIMES }}{{ cellStore.nuclearSelectivityRatio >= 99 ? ICON.INFINITY : cellStore.nuclearSelectivityRatio.toFixed(2) }}
         </span>
       </div>
     </div>
@@ -70,6 +70,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+import { mapStores } from 'pinia'
 import { useCellStore } from '@/stores/cellStore'
 import { THRESHOLDS } from '@/constants/physics'
 import { CELL_CATEGORY, CELL_LABEL } from '@/constants/strings'
@@ -85,13 +86,14 @@ import {
 } from '@/tooltips/disruptionBarTooltips'
 
 export default defineComponent({
-  setup() {
-    return { store: useCellStore(), CELL_CATEGORY, CELL_LABEL, ICON, THRESHOLDS }
+  data() {
+    return { CELL_CATEGORY, CELL_LABEL, ICON, THRESHOLDS }
   },
 
   computed: {
-    targetRatio(): number  { return this.store.targetDisruptionRatio },
-    healthyRatio(): number { return this.store.healthyDisruptionRatio },
+    ...mapStores(useCellStore),
+    targetRatio(): number  { return this.cellStore.targetDisruptionRatio },
+    healthyRatio(): number { return this.cellStore.healthyDisruptionRatio },
     targetRatioPct(): number  { return Math.min(100, this.targetRatio  * 100) },
     healthyRatioPct(): number { return Math.min(100, this.healthyRatio * 100) },
 
@@ -102,11 +104,11 @@ export default defineComponent({
       return computeLysisProbability(this.healthyRatio, THRESHOLDS.LYSIS_PROB_CENTER, THRESHOLDS.LYSIS_PROB_SLOPE)
     },
 
-    lysisTimeDisplay(): string { return formatLysisTime(this.store.lysisDelayMs) },
+    lysisTimeDisplay(): string { return formatLysisTime(this.cellStore.lysisDelayMs) },
 
     isResonanceTarget(): boolean {
-      const cat = this.store.targetCellCategory
-      const t = this.store.target as { resonantFreqGHz?: number; resonantThresholdVcm?: number }
+      const cat = this.cellStore.targetCellCategory
+      const t = this.cellStore.target as { resonantFreqGHz?: number; resonantThresholdVcm?: number }
       return (cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) && !!t.resonantFreqGHz && !!t.resonantThresholdVcm
     },
 
@@ -115,14 +117,14 @@ export default defineComponent({
     tipNuclearSection(): string { return tipNuclearSection() },
 
     tipTargetBar(): string {
-      const t = this.store.target as { resonantFreqGHz?: number; resonantThresholdVcm?: number }
+      const t = this.cellStore.target as { resonantFreqGHz?: number; resonantThresholdVcm?: number }
       return tipTargetBar({
         pct:                  this.targetRatioPct.toFixed(0),
         isResonanceTarget:    this.isResonanceTarget,
         resonantFreqGHz:      t.resonantFreqGHz,
         resonantThresholdVcm: t.resonantThresholdVcm,
-        targetVmMv:           (this.store.targetVm * 1000).toFixed(2),
-        thresholdMv:          (this.store.target.thresholdVoltage * 1000).toFixed(0),
+        targetVmMv:           (this.cellStore.targetVm * 1000).toFixed(2),
+        thresholdMv:          (this.cellStore.target.thresholdVoltage * 1000).toFixed(0),
         lysisTime:            this.lysisTimeDisplay,
         targetRatio:          this.targetRatio,
       })
@@ -132,8 +134,8 @@ export default defineComponent({
       return tipHealthyBar({
         pct:               this.healthyRatioPct.toFixed(0),
         isResonanceTarget: this.isResonanceTarget,
-        healthyVmMv:       (this.store.healthyVm * 1000).toFixed(2),
-        thresholdMv:       (this.store.healthy.thresholdVoltage * 1000).toFixed(0),
+        healthyVmMv:       (this.cellStore.healthyVm * 1000).toFixed(2),
+        thresholdMv:       (this.cellStore.healthy.thresholdVoltage * 1000).toFixed(0),
         healthyRatio:      this.healthyRatio,
       })
     },
@@ -173,6 +175,7 @@ export default defineComponent({
 
   &__bar-fill {
     height: 100%;
+    width: var(--bar-w, 0%);
     border-radius: 3px;
     transition: width var(--tr-slow);
 
@@ -234,6 +237,7 @@ export default defineComponent({
 
   &__nuc-bar-fill {
     height: 100%;
+    width: var(--bar-w, 0%);
     border-radius: 2px;
     transition: width var(--tr-slow);
 

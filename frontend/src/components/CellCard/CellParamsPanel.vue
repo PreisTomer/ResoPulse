@@ -84,8 +84,6 @@ const STEP_HOLD_DELAY_MS = 380
 const STEP_REPEAT_MS = 80
 
 export default defineComponent({
-  setup() { return { ICON } },
-
   props: {
     cellData: { type: Object as PropType<CellRecord | null>, default: null },
     editableParams: {
@@ -109,6 +107,7 @@ export default defineComponent({
 
   data() {
     return {
+      ICON,
       paramsExpanded: false,
       _stepTimeout:  null as ReturnType<typeof setTimeout>  | null,
       _stepInterval: null as ReturnType<typeof setInterval> | null,

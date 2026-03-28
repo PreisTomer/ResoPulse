@@ -46,6 +46,17 @@
 import { defineComponent, type PropType } from 'vue'
 import SideTabPanel from '@/components/ExperimentLab/SideTabPanel.vue'
 import CellCard from '@/components/CellCard/index.vue'
+import type { CellRecord } from '@/types/cell'
+
+export interface CellCardRow {
+  id: string
+  type: 'healthy' | 'target'
+  label: string
+  sublabel: string
+  sublabelTip: string
+  description: string
+  cellData: CellRecord
+}
 
 export default defineComponent({
   name: 'StickyCellView',
@@ -55,7 +66,7 @@ export default defineComponent({
   emits: ['scroll-to-cells', 'full-reset'],
 
   props: {
-    cells: { type: Array as PropType<any[]>, required: true },
+    cells: { type: Array as PropType<CellCardRow[]>, required: true },
   },
 
   methods: {

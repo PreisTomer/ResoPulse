@@ -14,11 +14,11 @@
       <!-- ── Selectivity ratio + Vm selectivity ──────────────────── -->
       <div class="sel-panel__ratio-wrap" v-tip="tipSelectivity">
         <span class="sel-panel__ratio" :class="selectivityClass">
-          ×{{ selectivity.toFixed(2) }}
+          {{ ICON.TIMES }}{{ selectivity.toFixed(2) }}
         </span>
         <div class="sel-panel__ratio-labels">
           <span class="sel-panel__ratio-label">{{ $t('selectivity.ratioLabel') }}</span>
-          <span class="sel-panel__ti-label">Vm ×<span>{{ vmSelectivityRatio >= 99 ? ICON.INFINITY : vmSelectivityRatio.toFixed(2) }}</span></span>
+          <span class="sel-panel__ti-label">Vm {{ ICON.TIMES }}<span>{{ vmSelectivityRatio >= 99 ? ICON.INFINITY : vmSelectivityRatio.toFixed(2) }}</span></span>
         </div>
       </div>
 
@@ -26,14 +26,14 @@
       <div class="sel-panel__ws-row" v-tip="tipWindowScore">
         <span class="sel-panel__ws-label">{{ $t('selectivity.windowScoreLabel') }}</span>
         <span class="sel-panel__ws-val" :class="windowScoreClass">{{ (windowScore * 100).toFixed(0) }}%</span>
-        <span class="sel-panel__ws-formula">= P(T)×(1-P(H))</span>
+        <span class="sel-panel__ws-formula">{{ $t('selectivity.wsFormula') }}</span>
       </div>
 
       <!-- ── σ_i uncertainty band on TI (Schwan mode only) ─────── -->
       <div v-if="showTiUncertainty" class="sel-panel__ti-range" v-tip="tipTiRange">
         <span class="sel-panel__ti-range-label">{{ $t('selectivity.sigmaIRange') }}</span>
         <span class="sel-panel__ti-range-val">
-          [×{{ tiRange.low.toFixed(2) }} - ×{{ tiRange.high >= 99 ? ICON.INFINITY : tiRange.high.toFixed(2) }}]
+          [{{ ICON.TIMES }}{{ tiRange.low.toFixed(2) }} - {{ ICON.TIMES }}{{ tiRange.high >= 99 ? ICON.INFINITY : tiRange.high.toFixed(2) }}]
         </span>
       </div>
 
@@ -68,7 +68,7 @@
       </div>
 
       <!-- ── DEP (Schwan mode only) ─────────────────────────────── -->
-      <template v-if="!store.isResonanceMode">
+      <template v-if="!cellStore.isResonanceMode">
         <div class="sel-panel__sep"></div>
         <DepSection />
       </template>
@@ -78,7 +78,7 @@
       <VmSarGrid />
 
       <!-- ── Resonance physics (resonance mode + resonance target) ─ -->
-      <ResonanceInfo v-if="isResonanceTarget && store.isResonanceMode" />
+      <ResonanceInfo v-if="isResonanceTarget && cellStore.isResonanceMode" />
 
       <!-- ── Mode badge + optimal snap + physics warning ────────── -->
       <ModeBadge />
@@ -94,6 +94,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+import { mapStores } from 'pinia'
 import { useCellStore } from '@/stores/cellStore'
 import { THRESHOLDS, NEAR_ZERO_VM } from '@/constants/physics'
 import { CELL_CATEGORY, CHART_MODE } from '@/constants/strings'
@@ -111,23 +112,24 @@ import ModeBadge from './ModeBadge.vue'
 export default defineComponent({
   components: { AccordionPanel, DisruptionBars, ComparisonTable, DepSection, VmSarGrid, ResonanceInfo, ModeBadge },
 
-  setup() {
-    return { store: useCellStore(), CHART_MODE, ICON }
+  data() {
+    return { CHART_MODE, ICON }
   },
 
   computed: {
-    selectivity(): number { return this.store.selectivityRatio },
+    ...mapStores(useCellStore),
+    selectivity(): number { return this.cellStore.selectivityRatio },
 
     isResonanceTarget(): boolean {
-      const cat = this.store.targetCellCategory
-      const t = this.store.target as { resonantFreqGHz?: number; resonantThresholdVcm?: number }
+      const cat = this.cellStore.targetCellCategory
+      const t = this.cellStore.target as { resonantFreqGHz?: number; resonantThresholdVcm?: number }
       return (cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) && !!t.resonantFreqGHz && !!t.resonantThresholdVcm
     },
 
     toggleSubtitle(): string {
       const sel = this.selectivity
       const selStr = sel >= 99 ? ICON.INFINITY : `×${sel.toFixed(2)}`
-      const t = this.store.targetDisruptionRatio, h = this.store.healthyDisruptionRatio
+      const t = this.cellStore.targetDisruptionRatio, h = this.cellStore.healthyDisruptionRatio
       const modeLabel = (() => {
         if (h >= THRESHOLDS.DISRUPTION_WARN)                                        return this.$t('selectivity.modeAblative')
         if (t >= THRESHOLDS.DISRUPTION_WARN && h < THRESHOLDS.HEALTHY_APPROACHING) return this.$t('selectivity.modeTherapeutic')
@@ -145,20 +147,20 @@ export default defineComponent({
     },
 
     vmSelectivityRatio(): number {
-      return safeRatio(this.store.targetVm, this.store.healthyVm, THRESHOLDS.TI_DISPLAY_CAP, NEAR_ZERO_VM)
+      return safeRatio(this.cellStore.targetVm, this.cellStore.healthyVm, THRESHOLDS.TI_DISPLAY_CAP, NEAR_ZERO_VM)
     },
 
-    tiRange(): { low: number; high: number } { return this.store.tiUncertaintyRange },
+    tiRange(): { low: number; high: number } { return this.cellStore.tiUncertaintyRange },
 
     showTiUncertainty(): boolean {
-      return !this.store.isResonanceMode && Math.abs(this.tiRange.high - this.tiRange.low) > 0.01
+      return !this.cellStore.isResonanceMode && Math.abs(this.tiRange.high - this.tiRange.low) > 0.01
     },
 
     tipTiRange(): string {
       const { low, high } = this.tiRange
       const { RADIUS_VIRUS_MAX: rv, RADIUS_BACTERIA_MAX: rb } = THRESHOLDS
-      const uncH = this.store.healthy.radius < rb ? '35%' : '20%'
-      const uncT = this.store.target.radius < rv ? '45%' : this.store.target.radius < rb ? '35%' : '20%'
+      const uncH = this.cellStore.healthy.radius < rb ? '35%' : '20%'
+      const uncT = this.cellStore.target.radius < rv ? '45%' : this.cellStore.target.radius < rb ? '35%' : '20%'
       return tipTiRange({ low, high, uncH, uncT })
     },
 
@@ -171,26 +173,26 @@ export default defineComponent({
     },
 
     targetOrientPct(): string {
-      if (this.store.isResonanceMode && this.isResonanceTarget) return ', '
-      return `${(this.store.targetLysisProbabilityRandom * 100).toFixed(0)}%`
+      if (this.cellStore.isResonanceMode && this.isResonanceTarget) return ', '
+      return `${(this.cellStore.targetLysisProbabilityRandom * 100).toFixed(0)}%`
     },
 
     healthyOrientPct(): string {
-      return `${(this.store.healthyLysisProbabilityRandom * 100).toFixed(0)}%`
+      return `${(this.cellStore.healthyLysisProbabilityRandom * 100).toFixed(0)}%`
     },
 
     targetPopDistPct(): string {
-      if (this.store.isResonanceMode && this.isResonanceTarget) return ', '
-      return `${(this.store.targetPopulationLysisFraction * 100).toFixed(0)}%`
+      if (this.cellStore.isResonanceMode && this.isResonanceTarget) return ', '
+      return `${(this.cellStore.targetPopulationLysisFraction * 100).toFixed(0)}%`
     },
 
     healthyPopDistPct(): string {
-      return `${(this.store.healthyPopulationLysisFraction * 100).toFixed(0)}%`
+      return `${(this.cellStore.healthyPopulationLysisFraction * 100).toFixed(0)}%`
     },
 
     windowScore(): number {
-      const pT = this.store.targetLysisProbabilityRandom
-      const pH = this.store.healthyLysisProbabilityRandom
+      const pT = this.cellStore.targetLysisProbabilityRandom
+      const pH = this.cellStore.healthyLysisProbabilityRandom
       return pT * (1 - pH)
     },
 
@@ -205,27 +207,27 @@ export default defineComponent({
      *  Quasi-DC Vm scales with R, so a smaller target starts at an inherent selectivity deficit.
      *  TI_DC_limit = (R_T × Vth_H) / (R_H × Vth_T) — if < TI_STRONG, worth flagging. */
     smallCellNote(): boolean {
-      if (this.store.isResonanceMode) return false
-      const rT = this.store.target.radius
-      const rH = this.store.healthy.radius
+      if (this.cellStore.isResonanceMode) return false
+      const rT = this.cellStore.target.radius
+      const rH = this.cellStore.healthy.radius
       if (rT >= rH) return false
-      const tiDc = (rT * this.store.healthy.thresholdVoltage) / (rH * this.store.target.thresholdVoltage)
+      const tiDc = (rT * this.cellStore.healthy.thresholdVoltage) / (rH * this.cellStore.target.thresholdVoltage)
       return tiDc < THRESHOLDS.TI_STRONG
     },
 
     smallCellRadiusRatio(): string {
-      return (this.store.target.radius / this.store.healthy.radius).toFixed(2)
+      return (this.cellStore.target.radius / this.cellStore.healthy.radius).toFixed(2)
     },
 
     smallCellTiDcLimit(): string {
-      const rT = this.store.target.radius, rH = this.store.healthy.radius
-      const vthT = this.store.target.thresholdVoltage, vthH = this.store.healthy.thresholdVoltage
+      const rT = this.cellStore.target.radius, rH = this.cellStore.healthy.radius
+      const vthT = this.cellStore.target.thresholdVoltage, vthH = this.cellStore.healthy.thresholdVoltage
       return ((rT * vthH) / (rH * vthT)).toFixed(2)
     },
 
     smallCellNoteTip(): string {
-      const rT = this.store.target.radius, rH = this.store.healthy.radius
-      const vthT = this.store.target.thresholdVoltage, vthH = this.store.healthy.thresholdVoltage
+      const rT = this.cellStore.target.radius, rH = this.cellStore.healthy.radius
+      const vthT = this.cellStore.target.thresholdVoltage, vthH = this.cellStore.healthy.thresholdVoltage
       const tiDc = (rT * vthH) / (rH * vthT)
       return `<strong>Size Disadvantage: Target R &lt; Healthy R</strong>\n` +
         `At quasi-DC, Vm = 1.5·E·R·cosθ (geometric only).\n` +
@@ -238,8 +240,8 @@ export default defineComponent({
     },
 
     tipWindowScore(): string {
-      const pT = (this.store.targetLysisProbabilityRandom * 100).toFixed(0)
-      const pH = (this.store.healthyLysisProbabilityRandom * 100).toFixed(0)
+      const pT = (this.cellStore.targetLysisProbabilityRandom * 100).toFixed(0)
+      const pH = (this.cellStore.healthyLysisProbabilityRandom * 100).toFixed(0)
       return this.$t('selectivity.tipWindowScore', { score: (this.windowScore * 100).toFixed(0), pT, pH })
     },
   },

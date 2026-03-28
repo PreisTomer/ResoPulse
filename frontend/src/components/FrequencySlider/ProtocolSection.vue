@@ -49,7 +49,7 @@
             v-tip="tipDutyCycle"
           >{{ dutyCycleDisplay }}</span>
           <span class="field-panel__readout-sub" v-tip="tipDutyCycle">T_ss {{ maxSteadyTemp.toFixed(0) }} {{ UNIT.DEG_C }}</span>
-          <span class="field-panel__readout-sub" v-tip="tipDutyCycle">SAR_eff {{ CELL_LABEL.TARGET }} {{ (store.targetSAR * store.dutyCycle).toFixed(1) }} {{ UNIT.W_PER_KG }}</span>
+          <span class="field-panel__readout-sub" v-tip="tipDutyCycle">SAR_eff {{ CELL_LABEL.TARGET }} {{ (cellStore.targetSAR * cellStore.dutyCycle).toFixed(1) }} {{ UNIT.W_PER_KG }}</span>
         </div>
       </div>
       <div class="field-panel__track">
@@ -72,7 +72,7 @@
         <div class="field-panel__readout">
           <span class="field-panel__readout-value" v-tip="tipPulseWidth">{{ pulseWidthDisplay }}</span>
           <span class="field-panel__readout-sub" v-tip="tipPulseWidth">Lysis {{ lysisTimeDisplay }}</span>
-          <span class="field-panel__readout-sub" :style="minPwStyle" v-tip="tipMinPulse">{{ minPwDisplay }}</span>
+          <span class="field-panel__readout-sub" :class="`field-panel__readout-sub--pw-${pwSufficiency}`" v-tip="tipMinPulse">{{ minPwDisplay }}</span>
         </div>
       </div>
       <div class="field-panel__track">
@@ -93,6 +93,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+import { mapStores } from 'pinia'
 import type { PropType } from 'vue'
 import { useCellStore } from '@/stores/cellStore'
 import { broadcastStateSync } from '@/services/socket'
@@ -124,16 +125,14 @@ export default defineComponent({
     maxSteadyTemp:      { type: Number,  required: true },
   },
 
-  setup() {
-    return { store: useCellStore(), WAVEFORM, THERMAL_LEVEL, ICON, UNIT, CELL_LABEL, CW_WAVEFORM_FACTOR, PULSED_WAVEFORM_FACTOR, H_FIRE_THRESHOLD_MULTIPLIER, SLIDER_DC }
-  },
-
   data() {
-    return { open: true }
+    return { open: true, WAVEFORM, THERMAL_LEVEL, ICON, UNIT, CELL_LABEL, CW_WAVEFORM_FACTOR, PULSED_WAVEFORM_FACTOR, H_FIRE_THRESHOLD_MULTIPLIER, SLIDER_DC }
   },
 
   computed: {
-    currentWaveform(): 'cw' | 'pulsed' | 'hfire' { return this.store.waveform },
+    ...mapStores(useCellStore),
+
+    currentWaveform(): 'cw' | 'pulsed' | 'hfire' { return this.cellStore.waveform },
 
     waveformMetaLabel(): string {
       if (this.currentWaveform === WAVEFORM.CW)     return `wf×${CW_WAVEFORM_FACTOR}`
@@ -141,31 +140,31 @@ export default defineComponent({
       return `wf×${PULSED_WAVEFORM_FACTOR}`
     },
 
-    dutyCycleLogVal(): number { return Math.log10(this.store.dutyCycle) },
+    dutyCycleLogVal(): number { return Math.log10(this.cellStore.dutyCycle) },
 
     dutyCycleDisplay(): string {
-      const pct = this.store.dutyCycle * 100
+      const pct = this.cellStore.dutyCycle * 100
       if (pct < 0.001) return (pct * 1000).toFixed(1) + ' µ%'
       return pct.toFixed(2) + '%'
     },
 
-    pulseWidthLogVal(): number { return Math.log10(this.store.pulseWidthNs) },
+    pulseWidthLogVal(): number { return Math.log10(this.cellStore.pulseWidthNs) },
 
     pulseWidthDisplay(): string {
-      const ns = this.store.pulseWidthNs
+      const ns = this.cellStore.pulseWidthNs
       if (ns >= 1000) return (ns / 1000).toFixed(ns >= 10000 ? 0 : 1) + ' ' + UNIT.US
       return ns.toFixed(0) + ' ' + UNIT.NS
     },
 
     tipWaveform(): string {
-      return tipWaveform(this.store.fieldIntensity, this.maxSteadyTemp)
+      return tipWaveform(this.cellStore.fieldIntensity, this.maxSteadyTemp)
     },
 
     tipDutyCycle(): string {
       return tipDutyCycle({
-        effectiveDutyCycle: this.store.effectiveDutyCycle,
-        targetSAR:          this.store.targetSAR,
-        healthySAR:         this.store.healthySAR,
+        effectiveDutyCycle: this.cellStore.effectiveDutyCycle,
+        targetSAR:          this.cellStore.targetSAR,
+        healthySAR:         this.cellStore.healthySAR,
         maxSteadyTemp:      this.maxSteadyTemp,
         thermalDangerLevel: this.thermalDangerLevel,
         dutyCycleDisplay:   this.dutyCycleDisplay,
@@ -174,20 +173,20 @@ export default defineComponent({
 
     tipPulseWidth(): string {
       return tipPulseWidth({
-        targetFc:          this.store.targetFc,
-        healthyFc:         this.store.healthyFc,
+        targetFc:          this.cellStore.targetFc,
+        healthyFc:         this.cellStore.healthyFc,
         pulseWidthDisplay: this.pulseWidthDisplay,
-        lysisDelayMs:      this.store.lysisDelayMs,
-        lysisNPulses:      this.store.lysisNPulses,
-        dutyCycle:         this.store.dutyCycle,
+        lysisDelayMs:      this.cellStore.lysisDelayMs,
+        lysisNPulses:      this.cellStore.lysisNPulses,
+        dutyCycle:         this.cellStore.dutyCycle,
       })
     },
 
-    lysisTimeDisplay(): string { return formatLysisTime(this.store.lysisDelayMs) },
+    lysisTimeDisplay(): string { return formatLysisTime(this.cellStore.lysisDelayMs) },
 
     /** τ of target cell in ns, derived from fc (τ = 1/2πfc) */
     tauTargetNs(): number {
-      return this.store.targetFc > 0 ? 1e6 / (2 * Math.PI * this.store.targetFc) : 0
+      return this.cellStore.targetFc > 0 ? 1e6 / (2 * Math.PI * this.cellStore.targetFc) : 0
     },
 
     /** Minimum effective pulse width for full membrane charging (3τ) */
@@ -201,16 +200,10 @@ export default defineComponent({
     },
 
     pwSufficiency(): 'ok' | 'marginal' | 'below' {
-      const pw = this.store.pulseWidthNs
+      const pw = this.cellStore.pulseWidthNs
       if (pw >= this.minPwNs) return 'ok'
       if (pw >= this.tauTargetNs) return 'marginal'
       return 'below'
-    },
-
-    minPwStyle(): string {
-      if (this.pwSufficiency === 'ok')       return 'color: var(--color-lime)'
-      if (this.pwSufficiency === 'marginal') return 'color: var(--color-amber)'
-      return 'color: var(--color-danger)'
     },
 
     tipMinPulse(): string { return this.$t('slider.tipMinPulse') },
@@ -218,19 +211,19 @@ export default defineComponent({
 
   methods: {
     onWaveformChange(mode: WaveformMode) {
-      this.store.setWaveform(mode)
+      this.cellStore.setWaveform(mode)
       broadcastStateSync()
     },
 
     onDutyCycleInput(e: Event) {
       const logVal = Number((e.target as HTMLInputElement).value)
-      this.store.setDutyCycle(Math.pow(10, logVal))
+      this.cellStore.setDutyCycle(Math.pow(10, logVal))
       broadcastStateSync()
     },
 
     onPulseWidthInput(e: Event) {
       const logVal = Number((e.target as HTMLInputElement).value)
-      this.store.setPulseWidthNs(Math.round(Math.pow(10, logVal)))
+      this.cellStore.setPulseWidthNs(Math.round(Math.pow(10, logVal)))
       broadcastStateSync()
     },
   },
@@ -371,7 +364,17 @@ export default defineComponent({
       white-space: nowrap;
     }
 
-    &-sub { font-size: var(--fs-xxs); font-family: var(--font-mono); color: var(--color-text-muted); white-space: nowrap; opacity: 0.82; }
+    &-sub {
+      font-size: var(--fs-xxs);
+      font-family: var(--font-mono);
+      color: var(--color-text-muted);
+      white-space: nowrap;
+      opacity: 0.82;
+
+      &--pw-ok      { color: var(--color-lime);   opacity: 1; }
+      &--pw-marginal { color: var(--color-amber);  opacity: 1; }
+      &--pw-below   { color: var(--color-danger);  opacity: 1; }
+    }
 
     &--hyperthermic { color: var(--color-amber)  !important; }
     &--denaturing   { color: var(--color-orange) !important; }

@@ -1,11 +1,11 @@
 <!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
 <template>
-  <div class="hmap__stats" v-tip="$t('heatmap.tipStats')">
+  <div class="hmap__stats" v-tip="$t('heatmap.tipStats')" :style="{ '--op-zone-color': opZoneColor }">
     <span class="hmap__stats-label">{{ $t('heatmap.statsLabel') }}</span>
 
     <span class="hmap__stat">
       <span class="hmap__stat-k">{{ $t('heatmap.statTDr') }}</span>
-      <span class="hmap__stat-v" :style="{ color: opZoneColor }">{{ tDrPct }}%</span>
+      <span class="hmap__stat-v hmap__stat-v--zone">{{ tDrPct }}%</span>
     </span>
 
     <span class="hmap__stat">
@@ -25,14 +25,14 @@
 
     <span class="hmap__stat">
       <span class="hmap__stat-k">{{ $t('heatmap.statSel') }}</span>
-      <span class="hmap__stat-v" :style="{ color: opZoneColor }">&times;{{ selStr }}</span>
+      <span class="hmap__stat-v hmap__stat-v--zone">&times;{{ selStr }}</span>
     </span>
 
     <span class="hmap__stat" v-tip="$t('heatmap.tipRegime')">
       <span
         class="hmap__stat-badge hmap__stat-badge--regime"
-        :class="`hmap__stat-badge--${store.freqRegime}`"
-      >{{ $t(`slider.regime.${store.freqRegime}`) }}</span>
+        :class="`hmap__stat-badge--${cellStore.freqRegime}`"
+      >{{ $t(`slider.regime.${cellStore.freqRegime}`) }}</span>
     </span>
 
     <span class="hmap__stat" v-if="showSkinDepth" v-tip="$t('heatmap.tipSkinDepth')">
@@ -50,6 +50,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+import { mapStores } from 'pinia'
 import { useCellStore } from '@/stores/cellStore'
 import { broadcastStateSync } from '@/services/socket'
 import { CELL_CATEGORY, FREQ_REGIME } from '@/constants/strings'
@@ -61,45 +62,42 @@ export default defineComponent({
     opZoneColor: { type: String, default: 'var(--color-text)' },
   },
 
-  setup() {
-    return { store: useCellStore(), FREQ_REGIME }
-  },
-
   computed: {
+    ...mapStores(useCellStore),
     tDrPct(): string {
-      return (Math.min(this.store.targetDisruptionRatio,  9.99) * 100).toFixed(1)
+      return (Math.min(this.cellStore.targetDisruptionRatio,  9.99) * 100).toFixed(1)
     },
 
     hDrPct(): string {
-      return (Math.min(this.store.healthyDisruptionRatio, 9.99) * 100).toFixed(1)
+      return (Math.min(this.cellStore.healthyDisruptionRatio, 9.99) * 100).toFixed(1)
     },
 
     healthyTssStr(): string {
-      const T = (this.store as unknown as Record<string, number>)['healthySteadyStateTemp'] as number | undefined
+      const T = (this.cellStore as unknown as Record<string, number>)['healthySteadyStateTemp'] as number | undefined
       return T !== undefined ? `${T.toFixed(1)} ${UNIT.DEG_C}` : '\u2014'
     },
 
     pLysisStr(): string {
-      if (this.store.isResonanceMode) {
-        if (this.store.targetCellCategory !== CELL_CATEGORY.MAMMALIAN) return '\u2014'
+      if (this.cellStore.isResonanceMode) {
+        if (this.cellStore.targetCellCategory !== CELL_CATEGORY.MAMMALIAN) return '\u2014'
       }
-      return `${(this.store.targetLysisProbabilityRandom * 100).toFixed(0)}%`
+      return `${(this.cellStore.targetLysisProbabilityRandom * 100).toFixed(0)}%`
     },
 
     selStr(): string {
-      const sel = this.store.selectivityRatio
+      const sel = this.cellStore.selectivityRatio
       return sel >= 99 ? '\u221e' : sel.toFixed(2)
     },
 
     healthyDrClass(): string {
-      const dr = this.store.healthyDisruptionRatio
+      const dr = this.cellStore.healthyDisruptionRatio
       if (dr >= HMAP_LYSIS_DR) return 'hmap__stat-v--danger'
       if (dr >= HMAP_WARN_DR)  return 'hmap__stat-v--warn'
       return ''
     },
 
     tempClass(): string {
-      const T = (this.store as unknown as Record<string, number>)['healthySteadyStateTemp'] as number | undefined
+      const T = (this.cellStore as unknown as Record<string, number>)['healthySteadyStateTemp'] as number | undefined
       if (!T) return ''
       if (T >= HMAP_THERM_CRIT_C) return 'hmap__stat-v--danger'
       if (T >= HMAP_THERM_WARN_C) return 'hmap__stat-v--warn'
@@ -107,17 +105,17 @@ export default defineComponent({
     },
 
     showSkinDepth(): boolean {
-      return this.store.freqRegime === FREQ_REGIME.NEARFIELD_RF || this.store.freqRegime === FREQ_REGIME.MICROWAVE
+      return this.cellStore.freqRegime === FREQ_REGIME.NEARFIELD_RF || this.cellStore.freqRegime === FREQ_REGIME.MICROWAVE
     },
 
     skinDepthStr(): string {
-      const d = this.store.skinDepthMm
+      const d = this.cellStore.skinDepthMm
       if (!isFinite(d)) return '\u221e'
       return d >= 10 ? `${d.toFixed(0)} ${UNIT.MM}` : `${d.toFixed(1)} ${UNIT.MM}`
     },
 
     skinDepthClass(): string {
-      const d = this.store.skinDepthMm
+      const d = this.cellStore.skinDepthMm
       if (d >= 20) return 'hmap__stat-v--ok'
       if (d >= 5)  return 'hmap__stat-v--warn'
       return 'hmap__stat-v--danger'
@@ -126,9 +124,9 @@ export default defineComponent({
 
   methods: {
     snapToOptimal() {
-      const { freqMin, freqMax } = this.store.sliderRanges
-      const clamped = Math.round(Math.max(freqMin, Math.min(freqMax, this.store.optimalFreqResult.khz)))
-      this.store.setBroadcastFreqKHz(clamped)
+      const { freqMin, freqMax } = this.cellStore.sliderRanges
+      const clamped = Math.round(Math.max(freqMin, Math.min(freqMax, this.cellStore.optimalFreqResult.khz)))
+      this.cellStore.setBroadcastFreqKHz(clamped)
       broadcastStateSync()
     },
   },
@@ -182,6 +180,7 @@ export default defineComponent({
   &--warn   { color: var(--color-amber); }
   &--danger { color: var(--color-danger); }
   &--ok     { color: var(--color-lime); }
+  &--zone   { color: var(--op-zone-color, var(--color-text)); }
 }
 
 .hmap__stat-badge {
