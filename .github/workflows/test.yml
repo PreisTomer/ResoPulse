@@ -18,11 +18,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
 
       - name: Install dependencies
-        run: npm --prefix frontend ci
+        # npm install (not npm ci) because package-lock.json is generated on Windows and
+        # does not contain the Linux-specific @rollup/rollup-linux-x64-gnu optional binary.
+        # npm ci enforces the lockfile strictly and fails; npm install resolves optional
+        # platform deps for the current OS.
+        run: npm --prefix frontend install
 
       - name: Run tests
         run: npm --prefix frontend run test
