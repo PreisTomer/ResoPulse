@@ -20,11 +20,10 @@ jobs:
           node-version: 20
 
       - name: Install dependencies
-        # npm install (not npm ci) because package-lock.json is generated on Windows and
-        # does not contain the Linux-specific @rollup/rollup-linux-x64-gnu optional binary.
-        # npm ci enforces the lockfile strictly and fails; npm install resolves optional
-        # platform deps for the current OS.
-        run: npm --prefix frontend install
+        # Delete the Windows-generated lockfile before installing so npm resolves
+        # platform-specific optional binaries (e.g. @rollup/rollup-linux-x64-gnu)
+        # for the current OS rather than skipping entries absent from the lockfile.
+        run: rm -f frontend/package-lock.json && npm --prefix frontend install
 
       - name: Run tests
         run: npm --prefix frontend run test
