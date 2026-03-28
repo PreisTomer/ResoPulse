@@ -10,7 +10,7 @@
  */
 
 import { MEDIA } from '@/constants/media'
-import { DEFAULT_CAPSID_Q } from '@/constants/physics'
+import { DEFAULT_CAPSID_Q, LYSIS_FIELD_SENTINEL } from '@/constants/physics'
 import { CELL_CATEGORY, THERMAL_LEVEL } from '@/constants/strings'
 import { UNIT } from '@/constants/units'
 import type { MediumKey } from '@/types/media'
@@ -181,8 +181,8 @@ ${t('resonance.tipFieldDisruptNote')}${warn}`
   }
   const tLysis = targetLysisField
   const hLysis = healthyLysisField
-  const tStr   = tLysis >= 1000 ? `${(tLysis / 1000).toFixed(1)} kV/cm` : `${tLysis.toFixed(0)} V/cm`
-  const hStr   = hLysis >= 1000 ? `${(hLysis / 1000).toFixed(1)} kV/cm` : `${hLysis.toFixed(0)} V/cm`
+  const tStr   = tLysis >= LYSIS_FIELD_SENTINEL ? 'N/A (perpendicular)' : tLysis >= 1000 ? `${(tLysis / 1000).toFixed(1)} kV/cm` : `${tLysis.toFixed(0)} V/cm`
+  const hStr   = hLysis >= LYSIS_FIELD_SENTINEL ? 'N/A (perpendicular)' : hLysis >= 1000 ? `${(hLysis / 1000).toFixed(1)} kV/cm` : `${hLysis.toFixed(0)} V/cm`
   const contextNote = targetCellCategory === CELL_CATEGORY.VIRUS
     ? `\n<span class="tip-warn">⚠ Virion IRE threshold ≈ ${tStr}, impractical at any safe field.\nSwitch to Resonance mode for virion disruption.</span>`
     : targetCellCategory === CELL_CATEGORY.BACTERIA

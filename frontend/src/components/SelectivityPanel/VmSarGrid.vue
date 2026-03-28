@@ -43,7 +43,7 @@ import { defineComponent } from 'vue'
 import { useCellStore } from '@/stores/cellStore'
 import { CELL_CATEGORY } from '@/constants/strings'
 import { UNIT } from '@/constants/units'
-import { formatFieldVcm } from '@/utils/format'
+import { formatFieldVcm, formatLysisFieldVcm } from '@/utils/format'
 
 export default defineComponent({
   setup() {
@@ -63,8 +63,8 @@ export default defineComponent({
     targetSarVal(): string  { return (this.store.targetSAR  * this.store.effectiveDutyCycle).toFixed(2) },
     healthySarVal(): string { return (this.store.healthySAR * this.store.effectiveDutyCycle).toFixed(2) },
 
-    targetLysisField(): string  { return formatFieldVcm(this.store.targetLysisField) },
-    healthyLysisField(): string { return formatFieldVcm(this.store.healthyLysisField) },
+    targetLysisField(): string  { return formatLysisFieldVcm(this.store.targetLysisField) },
+    healthyLysisField(): string { return formatLysisFieldVcm(this.store.healthyLysisField) },
 
     targetResonanceEthr(): string {
       const t = this.store.target as { resonantThresholdVcm?: number }

@@ -6,6 +6,7 @@
  */
 
 import { UNIT } from '@/constants/units'
+import { LYSIS_FIELD_SENTINEL } from '@/constants/physics'
 
 const KHZ_PER_GHZ  = 1_000_000
 const KHZ_PER_MHZ  = 1_000
@@ -34,6 +35,12 @@ export function formatFieldVcm(vcm: number): string {
   return vcm >= FIELD_KV_THRESHOLD
     ? `${(vcm / VCM_PER_KVCM).toFixed(1)} ${UNIT.KV_PER_CM}`
     : `${Math.round(vcm)} ${UNIT.V_PER_CM}`
+}
+
+/** Format a lysis field [V/cm], returning 'N/A' when the sentinel (θ → 90°) is detected. */
+export function formatLysisFieldVcm(vcm: number): string {
+  if (vcm >= LYSIS_FIELD_SENTINEL) return 'N/A'
+  return formatFieldVcm(vcm)
 }
 
 /** Format [min, max] of `values` via `fmt`; single value when min === max. */

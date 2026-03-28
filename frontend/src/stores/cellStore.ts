@@ -27,6 +27,7 @@ import {
   THERMAL_MA_PEAK_C,
   TEMP_UPDATE_INTERVAL_MS,
   MIN_COS_THETA,
+  LYSIS_FIELD_SENTINEL,
   MIN_PULSE_ENVELOPE,
   NEAR_ZERO_DR,
   FREQ_ELECTROLYTIC_LIMIT_KHZ,
@@ -63,7 +64,8 @@ function pulseEnvelope(cell: CellConfig, pulseWidthNs: number, sigma_e: number):
   return computePulseStepResponse(computeTau(cell, sigma_e), pulseWidthNs)
 }
 
-/** Lysis field [V/cm]: Vth·hfireMult·√(1+(ωτ)²) / (1.5·R·cosθ·100·pef). Returns 1e6 near θ=90°.
+/** Lysis field [V/cm]: Vth·hfireMult·√(1+(ωτ)²) / (1.5·R·cosθ·100·pef).
+ *  Returns LYSIS_FIELD_SENTINEL near θ=90° — callers must display 'N/A' for sentinel.
  *  H-FIRE raises the effective threshold via hfireMult, so more field is needed to reach lysis. */
 function lysisField(
   cell: CellConfig,
@@ -73,7 +75,7 @@ function lysisField(
   pef: number,
   hfireMult: number,
 ): number {
-  if (cosTheta < MIN_COS_THETA) return 1e6
+  if (cosTheta < MIN_COS_THETA) return LYSIS_FIELD_SENTINEL
   const omega = TWO_PI * freqKHz * 1e3
   const tau   = computeTau(cell, sigma_e)
   return (cell.thresholdVoltage * hfireMult * Math.sqrt(1 + (omega * tau) ** 2)) /
@@ -684,9 +686,10 @@ export const useCellStore = defineStore('cell', {
       // Include PEF so the returned `sel` matches what the disruption ratio getters compute.
       const pefH    = this.pulseEnvelopeFactorHealthy
       const pefT    = this.pulseEnvelopeFactorTarget
-      // Field cancels in the tDr/hDr selectivity ratio (both Vm ∝ E), so using unit field
-      // avoids a reactive dependency on fieldIntensity that would cause 300 unnecessary
-      // Schwan evaluations on every slider move.
+      // Field largely cancels in tDr/hDr for cell pairs with similar τ (both Vm ∝ E).
+      // Using unit field avoids a reactive dependency on fieldIntensity that would cause
+      // 300 unnecessary Schwan evaluations on every slider move. Minor inaccuracy when the
+      // two cells have very different τ (different fc), but negligible for typical mammalian pairs.
       const UNIT_FIELD = 1.0
       const logMin  = Math.log10(10), logMax = Math.log10(500_000)
       const { khz: optKhz, sel: maxSel } = Array.from({ length: 300 }, (_, i) => {

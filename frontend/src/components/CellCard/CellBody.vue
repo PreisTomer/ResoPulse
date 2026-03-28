@@ -29,7 +29,8 @@ import { defineComponent } from 'vue'
 import type { PropType } from 'vue'
 import { useCellStore } from '@/stores/cellStore'
 import { CELL_STATE, CELL_TYPE } from '@/constants/strings'
-import { splitFreqKHz, formatFieldVcm } from '@/utils/format'
+import { splitFreqKHz, formatLysisFieldVcm } from '@/utils/format'
+import { LYSIS_FIELD_SENTINEL } from '@/constants/physics'
 
 export default defineComponent({
   props: {
@@ -49,11 +50,13 @@ export default defineComponent({
     },
 
     metricsElysis(): string {
-      return formatFieldVcm(this.store.targetLysisField)
+      return formatLysisFieldVcm(this.store.targetLysisField)
     },
 
     metricsElysisClass(): string {
-      const ratio = this.store.fieldIntensity / this.store.targetLysisField
+      const lf = this.store.targetLysisField
+      if (lf >= LYSIS_FIELD_SENTINEL) return ''
+      const ratio = this.store.fieldIntensity / lf
       if (ratio >= 1.0)  return 'cell-body__metric-value--danger'
       if (ratio >= 0.85) return 'cell-body__metric-value--warn'
       return ''

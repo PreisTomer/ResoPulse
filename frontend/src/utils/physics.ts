@@ -59,6 +59,7 @@ export function computeSAR(
   sigma_e: number,
   waveformFactor = WF_CW,
 ): number {
+  if (cell.conductivity <= 0 || cell.density <= 0) return 0
   const E_si  = fieldVcm * VCM_TO_VM
   const alpha = (3 * sigma_e) / (2 * sigma_e + cell.conductivity)
   return (cell.conductivity * alpha ** 2 * E_si ** 2 * waveformFactor) / cell.density

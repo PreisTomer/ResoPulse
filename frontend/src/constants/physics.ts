@@ -54,15 +54,19 @@ export const THERMAL_MA_PEAK_C = 41
 /** Temperature update timer interval [ms] in the Newton-cooling session loop */
 export const TEMP_UPDATE_INTERVAL_MS = 100
 
-/** Guard: |cos θ| below this value is treated as near-perpendicular → return sentinel lysis field 1e6 V/cm */
+/** Guard: |cos θ| below this value is treated as near-perpendicular → lysis field is undefined. */
 export const MIN_COS_THETA = 0.01
+
+/** Sentinel value returned by lysisField() when θ → 90° (perpendicular orientation).
+ *  Any display code must detect this and render 'N/A' rather than a raw kV/cm string. */
+export const LYSIS_FIELD_SENTINEL = 1e6
 
 /** Guard: minimum pulse envelope factor to prevent division artefacts (t_p → 0 limit) */
 export const MIN_PULSE_ENVELOPE = 1e-4
 
 /**
  * Electroporation threshold temperature coefficient [1/°C].
- * Vth decreases with temperature due to Arrhenius pore-nucleation kinetics:
+ * Vth decreases with temperature (linear first-order approximation to pore-nucleation kinetics):
  * Vth_eff = Vth × max(TEMP_EP_CLAMP_MIN, 1 − TEMP_EP_COEFF × (T − 37))
  * Empirical: ~−0.3%/°C above 37°C. Ref: Weaver & Chizmadzhev (1996);
  * DeBruin & Krassowska (1999) — KATP channel activation model.
