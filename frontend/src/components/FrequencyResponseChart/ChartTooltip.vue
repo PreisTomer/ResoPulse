@@ -20,6 +20,17 @@
         <div class="chart-tooltip__sel">
           {{ $t('chart.tooltipSel') }} {{ data.selRatio.toFixed(2) }}×
         </div>
+        <div v-if="data.depHealthyK !== undefined && data.depTargetK !== undefined" class="chart-tooltip__dep">
+          <span class="chart-tooltip__dep-row chart-tooltip__dep-row--h">
+            {{ $t('chart.tooltipDepH') }} <span :class="depKClass(data.depHealthyK)">{{ depKLabel(data.depHealthyK) }} {{ data.depHealthyK.toFixed(3) }}</span>
+          </span>
+          <span class="chart-tooltip__dep-row chart-tooltip__dep-row--t">
+            {{ $t('chart.tooltipDepT') }} <span :class="depKClass(data.depTargetK)">{{ depKLabel(data.depTargetK) }} {{ data.depTargetK.toFixed(3) }}</span>
+          </span>
+          <span v-if="isDepSeparation(data.depHealthyK, data.depTargetK)" class="chart-tooltip__dep-sep">
+            {{ $t('chart.tooltipDepSep') }}
+          </span>
+        </div>
         <div v-if="data.inWindow" class="chart-tooltip__window">
           {{ $t('chart.tooltipWindow') }}
         </div>
@@ -50,6 +61,13 @@ export default defineComponent({
 
   setup() {
     return { formatTooltipFreq, CELL_LABEL, UNIT }
+  },
+
+  methods: {
+    depKLabel(k: number): string { return k >= 0 ? 'pDEP' : 'nDEP' },
+    depKClass(k: number): string { return k >= 0 ? 'chart-tooltip__dep-pdep' : 'chart-tooltip__dep-ndep' },
+    /** True when H and T are in opposite DEP regimes — cells migrate apart, enabling separation. */
+    isDepSeparation(kH: number, kT: number): boolean { return (kH >= 0) !== (kT >= 0) },
   },
 })
 </script>
@@ -115,6 +133,34 @@ export default defineComponent({
     margin-top: 0.2rem;
     padding-top: 0.2rem;
     border-top: 1px solid color-mix(in srgb, var(--color-ok) 25%, transparent);
+  }
+
+  &__dep {
+    @include flex-col(0.08rem);
+    margin-top: 0.18rem;
+    padding-top: 0.18rem;
+    border-top: 1px solid color-mix(in srgb, var(--color-dep) 18%, transparent);
+  }
+
+  &__dep-row {
+    font-size: var(--fs-xxs);
+    font-family: var(--font-mono);
+    display: flex;
+    gap: 0.35rem;
+    align-items: baseline;
+
+    &--h { color: var(--color-text-muted); }
+    &--t { color: var(--color-text-muted); }
+  }
+
+  &__dep-pdep { color: var(--color-lime); }
+  &__dep-ndep { color: var(--color-dep); }
+
+  &__dep-sep {
+    @include mono-upper(0.48rem, 0.07em);
+    color: var(--color-dep);
+    margin-top: 0.1rem;
+    opacity: var(--op-dim);
   }
 }
 </style>

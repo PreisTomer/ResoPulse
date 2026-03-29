@@ -306,7 +306,13 @@
     "legendRevEp": "Rev-EP (50%)",
     "legendLysis": "Lysis (85%)",
     "sectionTitle": "Disruption Ratio Chart",
-    "sectionTip": "DR(f) = Vm·PEF / Vm_thr, Amber dashed = Rev-EP 50% · Red dashed = Lysis 85% · Green fill = therapeutic window (target ≥ 85%, healthy &lt; 50%)"
+    "sectionTip": "DR(f) = Vm·PEF / Vm_thr, Amber dashed = Rev-EP 50% · Red dashed = Lysis 85% · Green fill = therapeutic window (target ≥ 85%, healthy &lt; 50%)",
+    "zoomIn": "Zoom",
+    "zoomFull": "Full",
+    "zoomTip": "Toggle Y-axis scale. Zoom: fits axis to current data range (min 20%). Full: always shows 0-110% with both threshold lines visible.",
+    "disclaimerLowField": "Both cells are below 5% DR across all frequencies. Increase the field intensity to see meaningful disruption curves.",
+    "disclaimerBacteriaVirus": "Bacteria and virus targets cannot be disrupted at IRE field strengths. These cell types require acoustic resonance protocols (GHz). Switch to Resonance mode.",
+    "offscreenLysis": "Lysis 85% above"
   },
   "ai": {
     "panelTitle": "AI Protocol Optimizer",

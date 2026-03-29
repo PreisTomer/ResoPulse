@@ -3,10 +3,22 @@
   <div class="dr-chart">
     <div class="dr-chart__header">
       <span class="dr-chart__title" v-tip="$t('drChart.tipTitle')">{{ $t('drChart.title') }}</span>
-      <DrChartLegend />
+      <div class="dr-chart__header-right">
+        <button
+          class="dr-chart__zoom-btn"
+          :class="{ 'dr-chart__zoom-btn--active': zoomMode }"
+          v-tip="$t('drChart.zoomTip')"
+          @click="toggleZoom"
+        >{{ zoomMode ? $t('drChart.zoomFull') : $t('drChart.zoomIn') }}</button>
+        <DrChartLegend />
+      </div>
     </div>
     <div ref="chartEl" class="dr-chart__svg-wrap">
       <DrChartTooltip :info="hoverInfo" />
+      <div v-if="showDisclaimer" class="dr-chart__disclaimer">
+        <span class="dr-chart__disclaimer-icon">{{ warningIcon }}</span>
+        <span class="dr-chart__disclaimer-text">{{ isDisclaimerBacteriaVirus ? $t('drChart.disclaimerBacteriaVirus') : $t('drChart.disclaimerLowField') }}</span>
+      </div>
     </div>
   </div>
 </template>
@@ -17,12 +29,13 @@ import * as d3 from 'd3'
 import { useCellStore } from '@/stores/cellStore'
 import { broadcastStateSync } from '@/services/socket'
 import { CELL_CATEGORY } from '@/constants/strings'
+import { ICON } from '@/constants/icons'
 import { C } from '@/theme/colors'
 import DrChartLegend from './DrChartLegend.vue'
 import DrChartTooltip from './DrChartTooltip.vue'
 import type { HoverInfo } from './DrChartTooltip.vue'
 import {
-  F_MIN_HZ, F_MAX_HZ, Y_MIN_MAX, DR_HEADROOM,
+  F_MIN_HZ, F_MAX_HZ, Y_MIN_MAX, Y_ZOOM_MIN, DR_HEADROOM, DR_DISCLAIMER_PCT,
   MARGIN, X_TICK_VALUES, DR_REV_EP, DR_LYSIS,
   type CurvePoint, formatHz, computeCurves,
 } from './drChartCompute'
@@ -36,16 +49,25 @@ export default defineComponent({
 
   data() {
     return {
-      _svg:            null as d3.Selection<SVGSVGElement, unknown, null, undefined> | null,
-      _xScale:         null as d3.ScaleLogarithmic<number, number> | null,
-      _yScale:         null as d3.ScaleLinear<number, number> | null,
-      _chartW:         0,
-      _chartH:         0,
-      _cursorX:        0,
-      _resizeObserver: null as ResizeObserver | null,
-      _curveData:      [] as CurvePoint[],
-      hoverInfo:       null as HoverInfo | null,
+      _svg:                    null as d3.Selection<SVGSVGElement, unknown, null, undefined> | null,
+      _xScale:                 null as d3.ScaleLogarithmic<number, number> | null,
+      _yScale:                 null as d3.ScaleLinear<number, number> | null,
+      _chartW:                 0,
+      _chartH:                 0,
+      _cursorX:                0,
+      _resizeObserver:         null as ResizeObserver | null,
+      _curveData:              [] as CurvePoint[],
+      hoverInfo:               null as HoverInfo | null,
+      zoomMode:                false,
+      showDisclaimer:          false,
+      isDisclaimerBacteriaVirus: false,
     }
+  },
+
+  computed: {
+    warningIcon(): string {
+      return ICON.WARNING
+    },
   },
 
   watch: {
@@ -74,6 +96,11 @@ export default defineComponent({
   },
 
   methods: {
+    toggleZoom() {
+      this.zoomMode = !this.zoomMode
+      this.updateChart()
+    },
+
     initChart() {
       const container = this.$refs.chartEl as HTMLElement
       if (!container) return
@@ -90,27 +117,24 @@ export default defineComponent({
         .append('svg')
         .attr('width',  totalW)
         .attr('height', totalH)
-        .style('overflow', 'hidden')  // clip to SVG bounds, prevents threshold lines overflowing above chart
+        .style('overflow', 'hidden')
 
       this._svg    = svgEl
       this._xScale = d3.scaleLog().domain([F_MIN_HZ, F_MAX_HZ]).range([0, this._chartW])
       this._yScale = d3.scaleLinear().domain([0, Y_MIN_MAX]).range([this._chartH, 0])
 
-      // ClipPath - content group clips to chart plot area so no line can overflow above or below
+      const clipId = `dr-clip-${this._chartW}`
       svgEl.append('defs').append('clipPath')
-        .attr('id', `dr-clip-${this._chartW}`)
+        .attr('id', clipId)
         .append('rect')
         .attr('x', 0).attr('y', 0)
         .attr('width', this._chartW)
         .attr('height', this._chartH)
 
-      const clipId = `dr-clip-${this._chartW}`
-
       const g = svgEl.append('g')
         .attr('transform', `translate(${MARGIN.left},${MARGIN.top})`)
         .attr('class', 'dr-g')
 
-      // Clipped inner group - all data elements go here
       const gc = g.append('g')
         .attr('class', 'dr-gc')
         .attr('clip-path', `url(#${clipId})`)
@@ -123,11 +147,9 @@ export default defineComponent({
       gc.append('path').attr('class', 'curve-target')
       gc.append('line').attr('class', 'cursor-line')
 
-      // Axes - outside clip group so tick labels are never cut
       g.append('g').attr('class', 'x-axis').attr('transform', `translate(0,${this._chartH})`)
       g.append('g').attr('class', 'y-axis')
 
-      // Axis labels
       g.append('text')
         .attr('class', 'axis-label-x')
         .attr('text-anchor', 'middle')
@@ -140,7 +162,18 @@ export default defineComponent({
         .attr('transform', `translate(-38,${this._chartH / 2}) rotate(-90)`)
         .text('DR (%)')
 
-      // Drag hint text - appears above the cursor line
+      // Off-screen lysis threshold label — shown in zoom mode when 85% line exits chart top
+      g.append('text')
+        .attr('class', 'offscreen-lysis-label')
+        .attr('x', this._chartW)
+        .attr('y', -4)
+        .attr('text-anchor', 'end')
+        .attr('font-size', '0.52rem')
+        .attr('font-family', 'var(--font-mono)')
+        .attr('letter-spacing', '0.06em')
+        .attr('fill', C.danger)
+        .attr('opacity', 0)
+
       g.append('text')
         .attr('class', 'cursor-drag-hint')
         .attr('y', -4)
@@ -152,7 +185,6 @@ export default defineComponent({
         .attr('pointer-events', 'none')
         .text(this.$t('chart.dragHint'))
 
-      // Hover + drag overlay - covers the full plot area
       const dragBehavior = d3.drag<SVGRectElement, unknown>()
         .on('drag', (event) => {
           if (!this._xScale) return
@@ -184,20 +216,37 @@ export default defineComponent({
       const yS = this._yScale
       const W  = this._chartW
 
-      // ── Dynamic Y domain - always shows at least up to Y_MIN_MAX (110%) ──────
+      // ── Compute curves ────────────────────────────────────────────────────
+      const isAcousticTarget = this.store.targetCellCategory === CELL_CATEGORY.BACTERIA
+        || this.store.targetCellCategory === CELL_CATEGORY.VIRUS
+
       const data = computeCurves(
         this.store.healthy, this.store.target,
         this.store.fieldIntensity, this.store.effectiveSigmaE, this.store.cosThetaFactor,
         this.store.pulseEnvelopeFactorHealthy, this.store.pulseEnvelopeFactorTarget,
         this.store.isResonanceMode,
-        this.store.targetCellCategory === CELL_CATEGORY.BACTERIA || this.store.targetCellCategory === CELL_CATEGORY.VIRUS,
+        isAcousticTarget,
       )
       this._curveData = data
       const peakDR = data.reduce((m, d) => Math.max(m, d.hDR, d.tDR), 0)
-      const yMax   = Math.max(Y_MIN_MAX, peakDR * DR_HEADROOM)
+
+      // ── Disclaimer: show in full-scale mode when chart is informationally flat ──
+      this.showDisclaimer   = !this.zoomMode && !this.store.isResonanceMode && peakDR < DR_DISCLAIMER_PCT
+      this.isDisclaimerBacteriaVirus = isAcousticTarget
+
+      // ── Dynamic Y domain ──────────────────────────────────────────────────
+      const yMax = this.zoomMode
+        ? Math.max(Y_ZOOM_MIN, peakDR * DR_HEADROOM)
+        : Math.max(Y_MIN_MAX, peakDR * DR_HEADROOM)
       yS.domain([0, yMax])
 
-      // ── Axes ─────────────────────────────────────────────────────────────
+      // Off-screen lysis label: visible in zoom mode when 85% line is above yMax
+      const lysisOffscreen = this.zoomMode && DR_LYSIS > yMax
+      g.select<SVGTextElement>('.offscreen-lysis-label')
+        .attr('opacity', lysisOffscreen ? 0.85 : 0)
+        .text(lysisOffscreen ? this.$t('drChart.offscreenLysis') : '')
+
+      // ── Axes ──────────────────────────────────────────────────────────────
       const xAxis = d3.axisBottom(xS)
         .tickValues(X_TICK_VALUES)
         .tickFormat((d) => formatHz(+d))
@@ -339,12 +388,10 @@ export default defineComponent({
 
       const container = this.$refs.chartEl as HTMLElement
       const rect = container.getBoundingClientRect()
-      // Mouse X relative to the chart plot area (accounting for left margin)
       const mouseX = event.clientX - rect.left - MARGIN.left
 
       const overlay = this._svg?.select<SVGRectElement>('.hover-overlay')
 
-      // Near the cursor line: switch to drag cursor and suppress tooltip
       if (Math.abs(mouseX - this._cursorX) < 20) {
         overlay?.style('cursor', 'ew-resize')
         this.hoverInfo = null
@@ -352,7 +399,6 @@ export default defineComponent({
       }
       overlay?.style('cursor', 'crosshair')
 
-      // Find the nearest data point by inverting the log x scale
       const mouseHz = this._xScale.invert(mouseX)
       const bisect  = d3.bisector<CurvePoint, number>((d) => d.hz).left
       const idx     = Math.max(0, Math.min(
@@ -362,8 +408,6 @@ export default defineComponent({
       const pt = this._curveData[idx]
       if (!pt) return
 
-      // Tooltip position: offset so it doesn't overlap the cursor line
-      // Place relative to the container div (chartEl)
       const tooltipX = event.clientX - rect.left + 10
       const tooltipY = event.clientY - rect.top  - 10
 
@@ -381,7 +425,6 @@ export default defineComponent({
 
 <style lang="scss" scoped>
 
-
 .dr-chart {
   @include surface-card(8px, 0.75rem 0.75rem 0.5rem);
 
@@ -392,10 +435,36 @@ export default defineComponent({
     gap: 0.3rem;
   }
 
+  &__header-right {
+    @include flex-row(0.5rem);
+  }
+
   &__title {
     @include mono-upper(0.68rem, 0.08em);
     color: var(--color-text-muted);
     cursor: default;
+  }
+
+  &__zoom-btn {
+    @include mono-upper(var(--fs-xxs), 0.07em);
+    color: var(--color-text-muted);
+    background: transparent;
+    border: 1px solid var(--color-border);
+    border-radius: 3px;
+    padding: 0.1rem 0.4rem;
+    cursor: pointer;
+    transition: color var(--tr-fast), border-color var(--tr-fast), background var(--tr-fast);
+
+    &:hover {
+      color: var(--color-primary);
+      border-color: var(--color-primary);
+    }
+
+    &--active {
+      color: var(--color-primary);
+      border-color: var(--color-primary);
+      background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+    }
   }
 
   &__svg-wrap {
@@ -412,6 +481,39 @@ export default defineComponent({
       font-size: var(--fs-xs);
       fill: var(--color-text-muted);
     }
+  }
+
+  &__disclaimer {
+    position: absolute;
+    bottom: 2.5rem;
+    left: 3.5rem;
+    right: 1rem;
+    @include flex-row(0.4rem);
+    align-items: flex-start;
+    background: color-mix(in srgb, var(--color-surface) 85%, transparent);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    padding: 0.4rem 0.6rem;
+    pointer-events: none;
+
+    @media (max-width: 480px) {
+      left: 1rem;
+      bottom: 1.5rem;
+    }
+  }
+
+  &__disclaimer-icon {
+    font-size: var(--fs-sm);
+    color: var(--color-amber);
+    flex-shrink: 0;
+    line-height: 1.4;
+  }
+
+  &__disclaimer-text {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xxs);
+    color: var(--color-text-muted);
+    line-height: 1.5;
   }
 }
 </style>

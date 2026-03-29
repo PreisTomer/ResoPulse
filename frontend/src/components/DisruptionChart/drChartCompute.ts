@@ -11,8 +11,13 @@ export const F_MAX_HZ      = 500_000_000
 export const N_POINTS      = 200
 // Y axis always reaches at least 110% so both threshold lines (50% Rev-EP, 85% Lysis)
 // remain inside the visible chart area regardless of how low the current DR curves are.
-export const Y_MIN_MAX     = 110
-export const DR_HEADROOM   = 1.25
+export const Y_MIN_MAX         = 110
+export const DR_HEADROOM       = 1.25
+// Zoom mode: data-fit Y axis, minimum 20% so the axis is never uselessly compressed.
+export const Y_ZOOM_MIN        = 20
+// When peakDR stays below this value in full-scale mode, the chart is informationally
+// flat — show a contextual disclaimer instead of a silent near-zero curve.
+export const DR_DISCLAIMER_PCT = 5
 export const MARGIN        = { top: 18, right: 16, bottom: 48, left: 54 }
 
 // One label per decade

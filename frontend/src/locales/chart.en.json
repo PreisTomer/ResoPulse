@@ -45,6 +45,14 @@
     "tooltipTauH": "τ(H)",
     "tooltipTauT": "τ(T)",
     "tooltipSel": "Sel Vm(T)/Vm(H)",
-    "tooltipWindow": "✓ THERAPEUTIC WINDOW"
+    "tooltipWindow": "✓ THERAPEUTIC WINDOW",
+    "tooltipDepH": "H Re[K]",
+    "tooltipDepT": "T Re[K]",
+    "tooltipDepSep": "DEP sep.",
+
+    "depCrossH": "K=0 H",
+    "depCrossH2": "K=0 H2",
+    "depCrossT": "K=0 T",
+    "depCrossT2": "K=0 T2"
   }
 }

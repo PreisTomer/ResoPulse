@@ -84,6 +84,18 @@
     "depCrossLabel": "f_cross",
     "depForceLabel": "time-avg. scale",
     "depCrossNone": ", ",
-    "tipDep": "<strong>Dielectrophoresis (DEP)</strong>\nClausius-Mossotti factor K(ω), single-shell sphere model.\n  K(ω) = (ε*_eff − ε*_m) / (ε*_eff + 2ε*_m)\n  ε*(ω) = ε_r·ε₀ − jσ/ω\n\n<span class=\"tip-ok\">pDEP</span>  Re[K] &gt; 0, cell attracted to field maxima\n<span class=\"tip-warn\">nDEP</span>  Re[K] &lt; 0, cell repelled from field maxima\n  f_cross, crossover frequency where Re[K] = 0\n\nEffective time-averaged force scales:\n  CW sinusoidal: × 0.50\n  Pulsed H-FIRE: × duty cycle\n\nRef: Gascoyne &amp; Vykoukal (2002) Electrophoresis 23:1973.\nNote: model invalid at GHz acoustic resonance frequencies."
+    "tipDep": "<strong>Dielectrophoresis (DEP)</strong>\nClausius-Mossotti factor K(ω), single-shell sphere model.\n  K(ω) = (ε*_eff − ε*_m) / (ε*_eff + 2ε*_m)\n  ε*(ω) = ε_r·ε₀ − jσ/ω\n\n<span class=\"tip-ok\">pDEP</span>  Re[K] &gt; 0, cell attracted to field maxima\n<span class=\"tip-warn\">nDEP</span>  Re[K] &lt; 0, cell repelled from field maxima\n  f_cross, crossover frequency where Re[K] = 0\n\nEffective time-averaged force scales:\n  CW sinusoidal: × 0.50\n  Pulsed H-FIRE: × duty cycle\n\nRef: Gascoyne &amp; Vykoukal (2002) Electrophoresis 23:1973.\nNote: model invalid at GHz acoustic resonance frequencies.",
+
+    "depForceRatioLabel": "|K_T/K_H|",
+    "depForceRatioTip": "<strong>DEP Force Ratio |Re[K_T] / Re[K_H]|</strong>\nRatio of Clausius-Mossotti magnitudes at current frequency.\n&gt;1: target experiences stronger DEP force than healthy cell.\n= 1: equal DEP forces (no DEP selectivity).\n→ max: healthy cell near crossover (K_H → 0), ideal for separation.\n\nNote: ratio only indicates relative force magnitude, not direction.\nFor directional separation see the pDEP/nDEP badges above.",
+
+    "depSepWindow": "DEP SEPARATION WINDOW",
+    "depSepWindowTip": "<strong>DEP Separation Window</strong>\nTarget and healthy cells are in opposite DEP regimes at this frequency:\n  Target: {tdep} (Re[K_T] = {tk})\n  Healthy: {hdep} (Re[K_H] = {hk})\n\nCells migrate in opposite directions under non-uniform fields.\nThis is the optimal DEP condition for cell sorting and isolation.\nIn a DEP chip or microfluidic channel, the two populations will\nmigrate to opposite electrodes simultaneously.\n\nRef: Gascoyne &amp; Vykoukal (2002) Electrophoresis 23:1973.",
+
+    "depMedSensTitle": "f_cross vs buffer",
+    "depMedSensTip": "<strong>DEP Crossover Frequency vs Buffer Conductivity</strong>\nf_cross is the frequency where Re[K(ω)] = 0 and DEP force reverses.\nIt is exquisitely sensitive to medium conductivity σ_e:\n  Low σ_e: f_cross shifts to lower frequency\n  High σ_e: f_cross shifts to higher frequency\n\nChoosing a buffer where f_cross(T) and f_cross(H) differ maximally\nallows selective targeting of one population by frequency tuning.\nHighlighted row: currently selected buffer.\n\nBisection computed over 1 kHz to 10 GHz log range.\nRef: Gascoyne &amp; Vykoukal (2002); Markx &amp; Davey (1999).",
+    "depMedSensNoXover": ", ",
+    "depMedSensH": "H",
+    "depMedSensT": "T"
   }
 }

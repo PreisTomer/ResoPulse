@@ -22,7 +22,7 @@
 import { defineComponent } from 'vue'
 import * as d3 from 'd3'
 import { useCellStore } from '@/stores/cellStore'
-import { computeSchwan, computeFc, computeResonantLineshape, computeResonantDisruption, computeTau } from '@/utils/physics'
+import { computeSchwan, computeFc, computeResonantLineshape, computeResonantDisruption, computeTau, computeDepCmReal } from '@/utils/physics'
 import { CELL_PRESETS, GROUP_COLORS } from '@/constants/cellLibrary'
 import { DEFAULT_CAPSID_Q, THRESHOLDS } from '@/constants/physics'
 import { CELL_CATEGORY } from '@/constants/strings'
@@ -187,6 +187,9 @@ export default defineComponent({
       // DEP Clausius-Mossotti Re[K] curves - drawn above thresholds, Schwan mode only
       g.append('g').attr('class', 'dep-curves')
 
+      // DEP crossover frequency markers (f_cross where Re[K]=0) - Schwan mode only
+      g.append('g').attr('class', 'dep-crossover')
+
       // fc markers
       g.append('g').attr('class', 'fc-markers')
 
@@ -346,8 +349,9 @@ export default defineComponent({
       g.select<SVGGElement>('.y-right-axis').selectAll('*').remove()
       g.select<SVGGElement>('.curves-library').selectAll('*').remove()
       g.select<SVGGElement>('.curves-nuclear').selectAll('*').remove()
-      // DEP single-shell model invalid at GHz resonance frequencies - clear overlay
+      // DEP single-shell model invalid at GHz resonance frequencies - clear overlays
       g.select<SVGGElement>('.dep-curves').selectAll('*').remove()
+      g.select<SVGGElement>('.dep-crossover').selectAll('*').remove()
       g.select<SVGGElement>('.y-dep-axis').selectAll('*').remove()
       g.select('.axis-label-dep').attr('opacity', 0)
 
@@ -631,6 +635,41 @@ export default defineComponent({
         .call((a) => a.selectAll('text').attr('fill', C.w38).attr('font-size', '0.50rem').attr('font-family', 'var(--font-mono)'))
         .call((a) => a.selectAll('line').attr('stroke', C.w15))
       // ── End DEP overlay ──────────────────────────────────────────────────
+
+      // ── DEP crossover frequency markers (f_cross where Re[K] = 0) ────────
+      // Vertical hairlines inside the chart area at each crossover frequency.
+      // Distinct from fc markers: grey-blue diamond label, drawn inside chart, no below-axis text.
+      const crossGroup = g.select<SVGGElement>('.dep-crossover')
+      crossGroup.selectAll('*').remove()
+
+      const crossMarkers = [
+        { fKhz: this.store.depHealthyCrossoverKHz,       color: C.primary, tag: this.$t('chart.depCrossH')  },
+        { fKhz: this.store.depHealthySecondCrossoverKHz, color: C.primary, tag: this.$t('chart.depCrossH2') },
+        { fKhz: this.store.depTargetCrossoverKHz,        color: C.danger,  tag: this.$t('chart.depCrossT')  },
+        { fKhz: this.store.depTargetSecondCrossoverKHz,  color: C.danger,  tag: this.$t('chart.depCrossT2') },
+      ]
+
+      crossMarkers.forEach(({ fKhz, color, tag }) => {
+        if (!fKhz || fKhz <= 0) return
+        const fHz = fKhz * 1000
+        if (fHz < F_MIN_HZ || fHz > F_MAX_HZ) return
+        const cx = this._xScale!(fHz)
+        crossGroup.append('line')
+          .attr('x1', cx).attr('x2', cx)
+          .attr('y1', 0).attr('y2', this._chartH)
+          .attr('stroke', color)
+          .attr('stroke-width', 0.75)
+          .attr('stroke-dasharray', '1,4')
+          .attr('stroke-opacity', 0.45)
+        crossGroup.append('text')
+          .attr('x', cx + 3).attr('y', 10)
+          .attr('fill', color)
+          .attr('font-size', '0.48rem')
+          .attr('font-family', 'var(--font-mono)')
+          .attr('opacity', 0.65)
+          .text(tag)
+      })
+      // ── End crossover markers ─────────────────────────────────────────────
 
       // Line generator (for Vm curves)
       const lineGen = d3.line<{ hz: number; vm: number }>()
@@ -931,11 +970,15 @@ export default defineComponent({
       const selRatio = hVm > 0.01 ? tVm / hVm : 0
       const inWindow = tDRPct >= THRESHOLDS.DISRUPTION_WARN * 100 && hDRPct < THRESHOLDS.HEALTHY_APPROACHING * 100
       const flipLeft = mx > (this._chartW ?? 0) * 0.55
+      const eps_r = MEDIA[this.store.medium].permittivity
+      const depHealthyK = computeDepCmReal(this.store.healthy, khz, sigma_e, eps_r)
+      const depTargetK  = computeDepCmReal(this.store.target,  khz, sigma_e, eps_r)
       this._tooltipData = {
         x: mx, freqHz: hz, mode: 'schwan',
         healthyVm: hVm, targetVm: tVm, targetDR: 0,
         healthyDRPct: hDRPct, targetDRPct: tDRPct,
         selRatio, inWindow, flipLeft,
+        depHealthyK, depTargetK,
       }
     },
   },

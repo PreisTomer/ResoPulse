@@ -229,4 +229,8 @@ export interface TooltipData {
   selRatio: number
   inWindow: boolean
   flipLeft: boolean
+  /** Re[K_H] Clausius-Mossotti at cursor frequency (Schwan mode only) */
+  depHealthyK?: number
+  /** Re[K_T] Clausius-Mossotti at cursor frequency (Schwan mode only) */
+  depTargetK?: number
 }
