@@ -223,12 +223,12 @@ export const CELL_PRESETS: CellPreset[] = [
     label: 'LNCaP Prostate',
     shortLabel: 'LNCaP',
     notes: 'Androgen-sensitive prostate CA · R = 9 µm · moderate σ_i · fc ≈ 790 kHz',
-    techNotes: 'Single-shell Schwan model for LNCaP (androgen-sensitive prostate carcinoma, PSA-secreting, PTEN-null).\nσ_i = 0.55 S/m: LNCaP is a slow-growing, non-invasive line with relatively moderate ion channel overexpression; σ_i is only slightly above normal prostate epithelium (~0.40-0.45 S/m). Androgen receptor signalling partially maintains cholesterol homeostasis.\nCm = 10.1 mF/m² = 1.01 µF/cm² (mildly elevated; androgen-driven lipid regulation moderates membrane remodelling; effective ε_r = 8.2 at d = 7 nm).\nCharacteristic fc ≈ 790 kHz in saline · τ ≈ 201 ns.\nVth = 0.78 V: highest of the cancer presets — reflects more ordered membrane due to partial cholesterol maintenance under androgen signalling.\nN/C ratio (R_nuc = 5.0 / R_cell = 9.0 µm) reflects moderate nuclear enlargement.\n⚠ LNCaP forms loose aggregates in suspension culture; spherical single-cell approximation is used. At androgen withdrawal, membrane properties are expected to shift toward a CRPC phenotype with lower Vth and higher σ_i.\nRef: Gascoyne & Vykoukal (2002) Electrophoresis 23:1973; Titus et al. (2010) Cancer Res. 70:8 (androgen-cholesterol link).',
+    techNotes: 'Single-shell Schwan model for LNCaP (androgen-sensitive prostate carcinoma, PSA-secreting, PTEN-null).\nσ_i = 0.55 S/m: LNCaP is a slow-growing, non-invasive line with relatively moderate ion channel overexpression; σ_i is only slightly above normal prostate epithelium (~0.40-0.45 S/m). Androgen receptor signalling partially maintains cholesterol homeostasis.\nCm = 10.4 mF/m² = 1.04 µF/cm² (mildly elevated; androgen-driven lipid regulation moderates membrane remodelling; effective ε_r = 8.2 at d = 7 nm; exact: ε_r·ε₀/d = 10.37 mF/m²).\nCharacteristic fc ≈ 790 kHz in saline · τ ≈ 201 ns.\nVth = 0.78 V: highest of the cancer presets — reflects more ordered membrane due to partial cholesterol maintenance under androgen signalling.\nN/C ratio (R_nuc = 5.0 / R_cell = 9.0 µm) reflects moderate nuclear enlargement.\n⚠ LNCaP forms loose aggregates in suspension culture; spherical single-cell approximation is used. At androgen withdrawal, membrane properties are expected to shift toward a CRPC phenotype with lower Vth and higher σ_i.\nRef: Gascoyne & Vykoukal (2002) Electrophoresis 23:1973; Titus et al. (2010) Cancer Res. 70:8 (androgen-cholesterol link).',
     radius: 9,
     membraneThickness: 7,
     naturalFrequency: 430,
     thresholdVoltage: 0.78,
-    dielectricConstant: 8.2,    // scaled from 7.0 at d=6 nm to preserve Cm = 10.1 mF/m² at d=7 nm
+    dielectricConstant: 8.2,    // scaled from 7.0 at d=6 nm to match Cm; actual Cm = 10.37 mF/m² at ε_r=8.2, d=7 nm
     conductivity: 0.55,
     density: 1070,
     specificHeatCapacity: 3200,
