@@ -358,12 +358,12 @@ export default defineComponent({
   /* ── Type modifiers ────────────────────────────────────────────────── */
   &--healthy {
     border-left: 3px solid var(--color-accent);
-    &:hover { border-color: var(--color-accent); }
+    &:hover:not(.cell-card--lysed) { border-color: var(--color-accent); }
   }
 
   &--target {
     border-left: 3px solid var(--color-danger);
-    &:hover { border-color: var(--color-danger); }
+    &:hover:not(.cell-card--lysed) { border-color: var(--color-danger); }
   }
 
   /* ── State modifiers ───────────────────────────────────────────────── */

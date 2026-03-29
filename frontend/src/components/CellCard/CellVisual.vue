@@ -1,6 +1,6 @@
 <!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
 <template>
-  <div v-if="cellData" class="cell-visual">
+  <div v-if="cellData" :class="['cell-visual', { 'cell-visual--lysed': cellState === CELL_STATE.LYSED }]">
 
     <div ref="cellCanvas" class="cell-visual__canvas"></div>
 
@@ -703,6 +703,9 @@ export default defineComponent({
       animation: cell-canvas-tilt 14s ease-in-out infinite;
     }
   }
+
+  /* ── Lysed state: pause canvas animation to prevent compositor jitter ─ */
+  &--lysed &__canvas svg { animation-play-state: paused; }
 
   /* ── Oscilloscope divider ──────────────────────────────────────────── */
   &__osc-divider {
