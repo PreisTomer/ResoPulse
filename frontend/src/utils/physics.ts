@@ -1,5 +1,4 @@
-// Copyright © 2026 Tomer Preis. All rights reserved.
-// Unauthorized copying or distribution is prohibited.
+// Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 
 // Biophysics utilities - Schwan single-shell model, SAR, nsEP, acoustic resonance, EM skin depth
 import type { CellConfig } from '@/types/cell'
@@ -7,7 +6,7 @@ import { SCHWAN_SPHERE_FACTOR, WF_CW, EPSILON_R_CYTOPLASM, SIGMA_MEMBRANE_SI, TW
 
 export const EPSILON_0 = 8.854187817e-12 // F/m
 
-/** numerator/denominator capped at `cap`; returns 0 or `cap` when denominator < epsilon. */
+// numerator/denominator capped at cap; returns 0 or cap when denominator < epsilon.
 export function safeRatio(numerator: number, denominator: number, cap: number, epsilon = 1e-9): number {
   if (denominator < epsilon) return numerator > 0 ? cap : 0
   return Math.min(cap, numerator / denominator)
@@ -20,23 +19,22 @@ const KHZ_TO_HZ = 1e3   // kHz → Hz
 const VCM_TO_VM = 100   // V/cm → V/m
 const NS_TO_S   = 1e-9  // ns → s
 
-/** Cm = ε_r·ε₀/d  [F/m²] */
+// Cm = ε_r·ε₀/d  [F/m²]
 export function membraneCm(cell: CellConfig): number {
   return (cell.dielectricConstant * EPSILON_0) / (cell.membraneThickness * NM_TO_M)
 }
 
-/** Shared RC time-constant formula: τ = R·Cm·(2σ_out+σ_in)/(2σ_out·σ_in) [s] */
+// τ = R·Cm·(2σ_out+σ_in)/(2σ_out·σ_in) [s]
 function tauRC(R: number, Cm: number, sigmaOut: number, sigmaIn: number): number {
   return R * Cm * (2 * sigmaOut + sigmaIn) / (2 * sigmaOut * sigmaIn)
 }
 
-/** τ = R·Cm·(2σ_e+σ_i)/(2σ_e·σ_i)  [s] - Kotnik & Miklavcic 2000 */
+// τ = R·Cm·(2σ_e+σ_i)/(2σ_e·σ_i) [s] - Kotnik & Miklavcic 2000
 export function computeTau(cell: CellConfig, sigma_e: number): number {
   return tauRC(cell.radius * UM_TO_M, membraneCm(cell), sigma_e, cell.conductivity)
 }
 
-/** Vm = 1.5·E·R·cosθ / √(1+(ωτ)²)  [V] — peak CW Schwan potential (upper bound for pulsed).
- *  Pulse step response and H-FIRE threshold scaling are applied downstream, not here. */
+// Vm = 1.5·E·R·cosθ / √(1+(ωτ)²) [V] — peak CW; pulse step response applied downstream.
 export function computeSchwan(
   cell: CellConfig,
   freqKHz: number,
@@ -50,9 +48,7 @@ export function computeSchwan(
     Math.sqrt(1 + (omega * tau) ** 2)
 }
 
-/** SAR = σ_i·α²·E²·wf/ρ  [W/kg],  α = 3σ_e/(2σ_e+σ_i)  (internal field factor, DC limit)
- *  waveformFactor: 0.5 = CW sinusoidal, 1.0 = pulsed square wave.
- *  Uses DC-limit α - upper-bound estimate at f < fc.  Schwan 1957; Foster & Schwan 1989. */
+// SAR = σ_i·α²·E²·wf/ρ [W/kg], α = 3σ_e/(2σ_e+σ_i). wf: 0.5=CW, 1.0=pulsed. Schwan 1957.
 export function computeSAR(
   cell: CellConfig,
   fieldVcm: number,
@@ -80,9 +76,7 @@ function cmul(a: Cpx, b: Cpx): Cpx {
   return [a[0]*b[0] - a[1]*b[1], a[0]*b[1] + a[1]*b[0]]
 }
 
-/** Re[K(ω)] — Clausius-Mossotti factor, single-shell sphere model.
- *  K = (ε*_eff − ε*_m) / (ε*_eff + 2ε*_m); Re[K] > 0 = pDEP, < 0 = nDEP.
- *  Ref: Gascoyne & Vykoukal, Electrophoresis 23:1973 (2002). */
+// Re[K(ω)] — Clausius-Mossotti, single-shell. K=(ε*_eff−ε*_m)/(ε*_eff+2ε*_m). Gascoyne 2002.
 export function computeDepCmReal(
   cell: CellConfig,
   freqKHz: number,
@@ -116,7 +110,7 @@ export function computeDepCmReal(
   return Math.max(-0.5, Math.min(0.5, K[0]))
 }
 
-/** First DEP crossover [kHz] — log-space bisection 1 kHz–10 GHz; 0 if none found. */
+// First DEP crossover [kHz] — log-space bisection 1 kHz to 10 GHz; 0 if none found.
 export function computeDepCrossoverKHz(
   cell: CellConfig,
   sigma_e: number,
@@ -136,8 +130,7 @@ export function computeDepCrossoverKHz(
   return Math.sqrt(lo * hi)
 }
 
-/** Second DEP crossover [kHz] — next Re[K] sign change above f_cross1; 0 if none.
- *  High-frequency dielectric relaxation. Ref: Pethig, Biomicrofluidics 4:022811 (2010). */
+// Second DEP crossover [kHz] — Re[K] sign change above f_cross1; 0 if none. Pethig 2010.
 export function computeDepSecondCrossoverKHz(
   cell: CellConfig,
   sigma_e: number,
@@ -161,14 +154,14 @@ export function computeDepSecondCrossoverKHz(
   return Math.sqrt(lo * hi)
 }
 
-/** fc = 1/(2πτ)  [kHz] */
+// fc = 1/(2πτ) [kHz]
 export function computeFc(cell: CellConfig, sigma_e: number): number {
   return 1 / (TWO_PI * computeTau(cell, sigma_e) * 1e3)
 }
 
 // ── Double-shell nuclear envelope (Kotnik & Miklavcic 2006) ──────────────────
 
-/** τ_ne = R_nuc·Cm_ne·(2σ_i+σ_np)/(2σ_i·σ_np)  [s] - cytoplasm is the outer medium here */
+// τ_ne = R_nuc·Cm_ne·(2σ_i+σ_np)/(2σ_i·σ_np) [s] — cytoplasm is outer medium. Kotnik 2006.
 export function computeNuclearTau(cell: CellConfig, _sigma_e: number): number {
   if (!cell.nuclearRadius) return 0
   const Cm_ne    = ((cell.nuclearMembraneEps ?? 10) * EPSILON_0) /
@@ -177,8 +170,7 @@ export function computeNuclearTau(cell: CellConfig, _sigma_e: number): number {
   return tauRC(cell.nuclearRadius * UM_TO_M, Cm_ne, cell.conductivity, sigma_np)
 }
 
-/** Vm_nuc = 1.5·E·R_nuc·cosθ·(ωτ_out) / √((1+(ωτ_out)²)·(1+(ωτ_ne)²))  [V]
- *  Bandpass: zero at DC and HF, peak at f = 1/(2π√(τ_out·τ_ne)). */
+// Vm_nuc = 1.5·E·R_nuc·cosθ·(ωτ_out) / √((1+(ωτ_out)²)·(1+(ωτ_ne)²)) [V] — bandpass.
 export function computeNuclearVm(
   cell: CellConfig,
   freqKHz: number,
@@ -198,18 +190,14 @@ export function computeNuclearVm(
 
 // ── nsEP pulse step response ─────────────────────────────────────────────────
 
-/** Membrane charging fraction per pulse: 1−exp(−t_p/τ).
- *  Short pulses (t_p≪τ) leave the membrane partially charged → higher field needed for lysis.
- *  Not applied in resonance mode (acoustic coupling, not RC charging). */
+// Membrane charging fraction per pulse: 1−exp(−t_p/τ). Not applied in resonance mode.
 export function computePulseStepResponse(tau_s: number, pulseWidthNs: number): number {
   return 1 - Math.exp(-(pulseWidthNs * NS_TO_S) / tau_s)
 }
 
 // ── Acoustic resonance (virus/bacteria) ─────────────────────────────────────
 
-/** Lorentzian lineshape: 1/√(1+(Q·(f/f₀−f₀/f))²). Returns 1.0 at f=f_res.
- *  f_res ≈ v_shell/(2R): Influenza 12 GHz, E. coli 0.5 GHz, MRSA 1.5 GHz.
- *  Ref: Tsen et al. 2007; Dykeman & Sankey 2010. */
+// Lorentzian: 1/√(1+(Q·(f/f₀−f₀/f))²), =1 at f=f_res. Tsen 2007; Dykeman 2010.
 export function computeResonantLineshape(
   resonantFreqGHz: number,
   Q: number,
@@ -223,9 +211,7 @@ export function computeResonantLineshape(
 
 // ── EM skin depth ────────────────────────────────────────────────────────────
 
-/** EM skin depth [mm]: δ = 1/α, α = ω√(με/2)·√(√(1+(σ/ωε)²)−1) — exact lossy-dielectric.
- *  Uses static ε_r (no Cole-Cole dispersion); mild overestimate above 3 GHz.
- *  Ref: Gabriel et al. (1996) Phys. Med. Biol. 41:2271. */
+// EM skin depth [mm]: δ=1/α, α=ω√(με/2)·√(√(1+(σ/ωε)²)−1). Gabriel 1996.
 export function computeSkinDepthMm(freqKHz: number, sigma_e: number, epsilon_r = 80): number {
   const MU_0 = 4 * Math.PI * 1e-7  // H/m
   const f    = freqKHz * KHZ_TO_HZ
@@ -240,7 +226,7 @@ export function computeSkinDepthMm(freqKHz: number, sigma_e: number, epsilon_r =
   return (1 / alpha) * 1000  // m → mm
 }
 
-/** Resonant disruption ratio: (E/E_thr)·L(f, f_res, Q).  ≥1.0 → threshold exceeded. */
+// Resonant disruption ratio: (E/E_thr)·L(f,f_res,Q). >=1.0 → threshold exceeded.
 export function computeResonantDisruption(
   resonantFreqGHz: number,
   Q: number,
@@ -254,8 +240,7 @@ export function computeResonantDisruption(
 
 // ── Population lysis fraction (log-normal size distribution) ─────────────────
 
-/** Population lysis fraction integrating log-normal cell size distribution (cv) and random
- *  orientation. Rectangle rule over 61 z-points; degrades to max(0,1−1/DR) when cv=0. */
+// Lysis fraction over log-normal size distribution (cv). Rectangle rule, 61 z-points.
 export function computePopulationLysisFraction(dr: number, cv: number): number {
   if (dr <= 0) return 0
   if (cv <= 0) return Math.max(0, Math.min(1, 1 - 1 / dr))
@@ -275,9 +260,7 @@ export function computePopulationLysisFraction(dr: number, cv: number): number {
   return Math.max(0, Math.min(1, sum / Math.sqrt(TWO_PI)))
 }
 
-/** Sigmoid electroporation probability [0-100 %].
- *  P = 1 / (1 + exp(−(dr − center) / slope)), rounded to integer percent.
- *  Typical: center = 1.0 (50% at lysis threshold), slope = 0.05 (sharp). */
+// Sigmoid EP probability [0-100%]: P=1/(1+exp(−(dr−center)/slope)).
 export function computeLysisProbability(dr: number, center: number, slope: number): number {
   return Math.round(100 / (1 + Math.exp(-(dr - center) / slope)))
 }

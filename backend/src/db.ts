@@ -1,11 +1,7 @@
 // Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 
-/**
- * SQLite persistence layer for AI training data.
- * Data directory: DATA_DIR env var (Render Disk mount) or ./data/ fallback.
- * On Render free tier (ephemeral FS), outcomes survive the session but are lost
- * on redeploy unless a Render Disk is mounted at DATA_DIR.
- */
+// SQLite persistence layer for AI training data.
+// DATA_DIR env var (Render Disk mount) or ./data/ fallback. Outcomes are ephemeral on Render free tier.
 
 import Database from 'better-sqlite3'
 import { mkdirSync } from 'fs'
@@ -62,7 +58,6 @@ function initSchema(instance: Database.Database): void {
   `)
 }
 
-/** Lazily opens the DB on first use; returns null if the FS is unavailable. */
 function getDb(): Database.Database | null {
   if (db) return db
   try {
@@ -98,7 +93,6 @@ function getInsertStatement(instance: Database.Database): Database.Statement {
   return insertStmt
 }
 
-/** Persist a consented outcome entry. No-ops silently if the DB is unavailable. */
 export function insertOutcome(entry: OutcomeEntry): void {
   const instance = getDb()
   if (!instance) return
@@ -134,10 +128,6 @@ export function insertOutcome(entry: OutcomeEntry): void {
   }
 }
 
-/**
- * Returns all outcome rows as plain objects for the Python training bridge.
- * Only the columns needed by the XGBoost feature matrix are returned.
- */
 export function fetchTrainingRows(): Record<string, unknown>[] {
   const instance = getDb()
   if (!instance) return []
@@ -156,7 +146,6 @@ export function fetchTrainingRows(): Record<string, unknown>[] {
   }
 }
 
-/** Returns total stored outcomes, or -1 if the DB is unavailable. */
 export function countOutcomes(): number {
   const instance = getDb()
   if (!instance) return -1

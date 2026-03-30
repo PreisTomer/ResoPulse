@@ -24,9 +24,7 @@ const SELECTIVE_FIELD_FRACTION = 0.85    // 85% of target lysis field → target
 const NSEP_FIELD_FRACTION      = 2.00    // 200% of target lysis field (supralytic for nsEP)
 const THERMAL_FIELD_FRACTION   = 0.25    // 25% of target lysis field → sub-lytic mild heating
 const QUASI_DC_FREQ_DIVISOR    = 20      // f = targetFc / 20 (quasi-DC: ωτ << 1, pef ≈ 1.0)
-// Duty cycles are calibrated so SAR_eff = SAR × dc keeps temperature below 42°C at each field level.
-// At lysis-scale fields (300–800 V/cm), SAR is in the MW/kg range; duty cycle is the only
-// thermal safety lever. CW waveform (dc = 1.0) causes boiling at any EP-relevant amplitude.
+// DC calibrated so SAR_eff = SAR × dc stays below 42°C (lysis-scale fields put SAR in MW/kg range)
 const QUASI_DC_DC              = 1e-4    // 0.01% — safe heating (<3°C rise) at 50% lysis field
 const QUASI_DC_PW_NS           = 100_000 // 100 µs — pef ≈ 1.0 for τ~300 ns mammalian cells
 const SELECTIVE_DC             = 1e-4    // 0.01% — was 1%, which caused SAR boiling at 85% field

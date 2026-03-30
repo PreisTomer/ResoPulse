@@ -96,8 +96,6 @@ export default defineComponent({
       type: Object as PropType<CellRecord | null>,
       default: null,
     },
-    /** When true: hides header/params/body, skips local state machine,
-     *  reads cellState from the store (synced by the non-compact instance). */
     compact: { type: Boolean, default: false },
   },
 
@@ -118,10 +116,6 @@ export default defineComponent({
         : this.store.targetCellState
     },
 
-    /**
-     * True when the target cell uses acoustic/mechanical resonance as its primary
-     * disruption model (bacteria or virus with resonantFreqGHz defined).
-     */
     isAcousticTarget(): boolean {
       if (this.type !== CELL_TYPE.TARGET) return false
       const cat = this.store.targetCellCategory

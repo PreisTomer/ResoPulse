@@ -119,10 +119,7 @@ export default defineComponent({
         this.store.isResonanceMode
     },
 
-    /** Category-appropriate default frequency sweep max.
-     *  Mammalian fc is 100-400 kHz → 5 MHz covers the full Schwan roll-off.
-     *  Bacteria fc is 10-50 MHz → 200 MHz needed to see the full curve.
-     *  Virus targets: cap at 500 MHz (GHz range is hardware-inaccessible). */
+    // Category sweep max: mammalian=5MHz, bacteria=200MHz, virus=500MHz (GHz inaccessible)
     defaultFreqMax(): number {
       const cat = this.store.targetCellCategory
       if (cat === CELL_CATEGORY.BACTERIA) return 200_000   // 200 MHz in kHz
@@ -218,7 +215,6 @@ export default defineComponent({
       return this.sweepData.some(p => p.ti > minTI)
     },
 
-    /** Estimated sweep max to reach DR_T = 85%, when a window exists but lies above current range. */
     recommendedMax(): number | null {
       if (this.windowRange || !this.hasTheoreticalWindow) return null
       const maxDrT = Math.max(0, ...this.sweepData.map(p => p.drT))

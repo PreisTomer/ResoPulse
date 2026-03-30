@@ -15,9 +15,7 @@ import { defineComponent } from 'vue'
 
 export default defineComponent({
   props: {
-    /** Uppercase mono label above the title (e.g. "Session Reports") */
     eyebrow: { type: String, required: true },
-    /** Page title — supports HTML for styled sub-strings (rendered via v-html) */
     title: { type: String, required: true },
   },
 })

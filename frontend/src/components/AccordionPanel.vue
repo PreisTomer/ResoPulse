@@ -37,9 +37,7 @@ export default defineComponent({
     title:         { type: String,  required: true },
     subtitle:      { type: String,  default: '' },
     initialOpen:   { type: Boolean, default: false },
-    /** Compact variant: no hover background, border-bottom only when open (SelectivityPanel style) */
     compact:       { type: Boolean, default: false },
-    /** Border-toggle variant: always-visible border-bottom on toggle header (card header style) */
     borderOnToggle: { type: Boolean, default: false },
   },
 

@@ -30,13 +30,7 @@ export default defineComponent({
   },
 
   methods: {
-    /**
-     * Event-delegation handler for lab-link spans embedded in step descriptions.
-     * Spans carry data-target (element id) and data-route (path).
-     * If already on the target route, scroll-and-highlight immediately.
-     * Otherwise, stash the target in uiStore and navigate — the destination
-     * view's mounted() hook picks it up and applies the highlight.
-     */
+    // Handles lab-link spans in step descriptions: scroll-highlight on current route, or navigate then highlight.
     onStepsClick(e: MouseEvent) {
       const link = (e.target as HTMLElement).closest<HTMLElement>('.proto-lab-link')
       if (!link) return

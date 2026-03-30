@@ -47,22 +47,14 @@ export default defineComponent({
   name: 'SideTabPanel',
 
   props: {
-    /** CSS top value, e.g. '68px' */
     top:              { type: String,  required: true },
-    /** Which viewport edge to anchor to */
     side:             { type: String,  default: 'right' },
-    /** Panel body width in px */
     panelWidth:       { type: Number,  default: 320 },
-    /** Tab button height in px */
     tabHeight:        { type: Number,  default: 88 },
-    /** CSS transform scale applied to the whole component */
     scale:            { type: Number,  default: 1 },
     zIndex:           { type: Number,  default: 150 },
-    /** Start in collapsed state */
     defaultCollapsed: { type: Boolean, default: true },
-    /** Play a glow-pulse intro animation for ~3 s on mount */
     introAnimation:   { type: Boolean, default: false },
-    /** Vertical alignment of the tab button relative to the panel body */
     tabAlign:         { type: String,  default: 'flex-start' },
     expandTip:        { type: String,  default: '' },
     collapseTip:      { type: String,  default: '' },

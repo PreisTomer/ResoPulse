@@ -78,10 +78,8 @@ type EditableRow = {
   displayValue: number
 }
 
-/** Delay before hold-to-repeat activates (ms). */
-const STEP_HOLD_DELAY_MS = 380
-/** Interval between repeated steps while held (ms). */
-const STEP_REPEAT_MS = 80
+const STEP_HOLD_DELAY_MS = 380  // delay before hold-to-repeat activates
+const STEP_REPEAT_MS = 80        // interval between repeated steps while held
 
 export default defineComponent({
   props: {
@@ -119,11 +117,6 @@ export default defineComponent({
   },
 
   methods: {
-    /**
-     * Begin a step-and-hold sequence.
-     * Fires one immediate step, then after STEP_HOLD_DELAY_MS starts repeating
-     * at STEP_REPEAT_MS until the button is released.
-     */
     startStep(p: EditableRow, dir: 1 | -1) {
       this.applyStep(p, dir)
       this._stepTimeout = setTimeout(() => {
@@ -138,10 +131,7 @@ export default defineComponent({
       this._stepInterval = null
     },
 
-    /**
-     * Clamp to [min, max] and round to the same decimal precision as `step`
-     * to prevent floating-point drift (e.g. 0.1 + 0.1 + 0.1 ≠ 0.3).
-     */
+    // Round to step precision to prevent floating-point drift (e.g. 0.1+0.1+0.1 ≠ 0.3)
     applyStep(p: EditableRow, dir: 1 | -1) {
       const raw      = p.displayValue + p.step * dir
       const decimals = (p.step.toString().split('.')[1] ?? '').length
@@ -149,7 +139,6 @@ export default defineComponent({
       this.$emit('param-change', p.key, value)
     },
 
-    /** Handle direct keyboard / paste input into the text field. */
     onInputChange(p: EditableRow, e: Event) {
       const raw = (e.target as HTMLInputElement).value
       if (raw === '' || raw === '-' || raw.endsWith('.')) return

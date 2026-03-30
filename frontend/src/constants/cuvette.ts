@@ -1,7 +1,4 @@
-// Copyright © 2026 Tomer Preis. All rights reserved.
-// Unauthorized copying or distribution is prohibited.
-
-/** Electroporation cuvette geometry presets and impedance-feedback constants. */
+// Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 
 export interface CuvettePreset {
   id:               string
@@ -21,41 +18,18 @@ export const CUVETTE_PRESETS: CuvettePreset[] = [
   { id: 'custom',     label: 'Custom',                gapMm: 2, crossSectionCm2: 0.10, manufacturer: '' },
 ]
 
+export const CUSTOM_CUVETTE_ID          = 'custom'
 export const DEFAULT_CUVETTE_ID         = 'btx_2mm'
 export const DEFAULT_SOURCE_IMPEDANCE_OHM = 50     // Ω, typical RF generator / pulsed power output impedance
 export const DEFAULT_CELL_DENSITY_PER_ML  = 1e6    // cells/mL, typical mammalian electroporation density
 
-/**
- * Relative permittivity of aqueous electrolyte media at 37°C.
- * Used for frequency-dependent complex impedance calculation.
- * Water εr ≈ 74 at 37°C; saline and PBS are very close (ionic polarisation is small).
- * Reference: Hasted (1973) "Aqueous Dielectrics"
- */
+// εr of aqueous electrolyte at 37°C. Water ~74; saline/PBS close. Hasted 1973.
 export const MEDIUM_RELATIVE_PERMITTIVITY = 74
+export const MEDIUM_DENSITY_KG_M3         = 1000  // [kg/m³], for Joule heating estimate
+export const MEDIUM_SPECIFIC_HEAT_J_KG_K  = 4182  // [J/(kg·K)], for Joule heating estimate
 
-/**
- * Density of aqueous medium [kg/m³].
- * Used for medium Joule heating temperature estimate.
- */
-export const MEDIUM_DENSITY_KG_M3 = 1000
-
-/**
- * Specific heat capacity of aqueous medium [J/(kg·K)].
- * Used for medium Joule heating temperature estimate.
- */
-export const MEDIUM_SPECIFIC_HEAT_J_KG_K = 4182
-
-/**
- * Age threshold above which a hardware impedance reading is considered stale [ms].
- * After this time without an update the UI shows a "stale" warning.
- */
-export const HARDWARE_READING_STALE_MS = 5_000
-
-/** Maximum impedance history entries kept for the trend sparkline. */
-export const IMPEDANCE_HISTORY_MAX = 120
-
-/** Number of continuously auto-sampled conductivity points kept for the Load Monitor chart. */
-export const CONDUCTIVITY_SAMPLE_MAX = 120
-
-/** Interval between auto-sampled conductivity readings for the Load Monitor [ms]. */
-export const CONDUCTIVITY_SAMPLE_INTERVAL_MS = 1_000
+// Age threshold after which a hardware impedance reading triggers a "stale" UI warning [ms]
+export const HARDWARE_READING_STALE_MS         = 5_000
+export const IMPEDANCE_HISTORY_MAX             = 120   // max entries kept for trend sparkline
+export const CONDUCTIVITY_SAMPLE_MAX           = 120   // Load Monitor chart history length
+export const CONDUCTIVITY_SAMPLE_INTERVAL_MS   = 1_000 // auto-sample interval [ms]

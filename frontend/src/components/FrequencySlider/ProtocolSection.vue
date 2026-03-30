@@ -184,12 +184,10 @@ export default defineComponent({
 
     lysisTimeDisplay(): string { return formatLysisTime(this.cellStore.lysisDelayMs) },
 
-    /** τ of target cell in ns, derived from fc (τ = 1/2πfc) */
     tauTargetNs(): number {
       return this.cellStore.targetFc > 0 ? 1e6 / (2 * Math.PI * this.cellStore.targetFc) : 0
     },
 
-    /** Minimum effective pulse width for full membrane charging (3τ) */
     minPwNs(): number { return 3 * this.tauTargetNs },
 
     minPwDisplay(): string {

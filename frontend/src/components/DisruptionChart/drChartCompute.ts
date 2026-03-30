@@ -33,28 +33,17 @@ export type CurvePoint = { hz: number; hDR: number; tDR: number }
 
 // ── Frequency point generation ──────────────────────────────────────────────
 
-/**
- * Returns N logarithmically-spaced points between min and max.
- * @param min  Lower bound (inclusive)
- * @param max  Upper bound (inclusive)
- * @param n    Number of points
- * @returns    Array of n values spanning [min, max] on a log scale
- */
+// N logarithmically-spaced points between min and max
 export function logspace(min: number, max: number, n: number): number[] {
   const step = (Math.log10(max) - Math.log10(min)) / (n - 1)
   return Array.from({ length: n }, (_, i) => Math.pow(10, Math.log10(min) + i * step))
 }
 
-/** Pre-computed frequency points [Hz] spanning the chart domain */
 export const F_POINTS_HZ: number[] = logspace(F_MIN_HZ, F_MAX_HZ, N_POINTS)
 
 // ── Axis formatting ─────────────────────────────────────────────────────────
 
-/**
- * Formats a frequency in Hz as a human-readable string with SI prefix.
- * @param hz  Frequency in Hz
- * @returns   Verbose label such as "500 MHz" or "10 kHz"
- */
+// Format frequency [Hz] → "500 MHz" / "10 kHz"
 export function formatHz(hz: number): string {
   if (hz >= 1e9) return `${(hz / 1e9).toFixed(0)} ${UNIT.GHZ}`
   if (hz >= 1e6) return `${(hz / 1e6).toFixed(1)} ${UNIT.MHZ}`
@@ -64,19 +53,7 @@ export function formatHz(hz: number): string {
 
 // ── DR computation ──────────────────────────────────────────────────────────
 
-/**
- * Disruption ratio for one cell at one frequency.
- * Pure — caller passes all needed values; no store access.
- * @param cell              CellConfig of the cell
- * @param hz                Frequency in Hz
- * @param field             Field intensity [V/cm]
- * @param sigma_e           Effective medium conductivity [S/m]
- * @param cosTheta          cos(orientation angle)
- * @param pef               Pulse envelope factor (1.0 for CW)
- * @param isResonanceMode   True when chartMode === CHART_MODE.RESONANCE
- * @param isResonanceTarget True when targetCellCategory is BACTERIA or VIRUS
- * @returns                 Disruption ratio in [0, ∞) (multiply by 100 for percent)
- */
+// Disruption ratio for one cell at one frequency. Pure — no store access.
 export function computeDR(
   cell: CellConfig,
   hz: number,
@@ -106,19 +83,7 @@ export function computeDR(
   return (vm / cell.thresholdVoltage) * pef
 }
 
-/**
- * Full DR curve for both healthy and target over F_POINTS_HZ.
- * @param healthy           Healthy cell configuration
- * @param target            Target cell configuration
- * @param field             Field intensity [V/cm]
- * @param sigma_e           Effective medium conductivity [S/m]
- * @param cosTheta          cos(orientation angle)
- * @param pefH              Pulse envelope factor for healthy cell
- * @param pefT              Pulse envelope factor for target cell
- * @param isResonanceMode   True when chartMode === CHART_MODE.RESONANCE
- * @param isResonanceTarget True when targetCellCategory is BACTERIA or VIRUS
- * @returns                 Array of CurvePoint with hz, hDR, and tDR in percent
- */
+// DR curve [%] for both cells over F_POINTS_HZ
 export function computeCurves(
   healthy: CellConfig,
   target: CellConfig,

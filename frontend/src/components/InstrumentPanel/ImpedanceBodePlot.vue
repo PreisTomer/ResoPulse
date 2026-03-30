@@ -129,14 +129,12 @@ const N_POINTS = 200
 const FREQ_MIN_HZ = 1e3      // 1 kHz
 const FREQ_MAX_HZ = 1e10     // 10 GHz
 
-/** Map a frequency [Hz] to an SVG x coordinate (log scale). */
 function freqToX(hz: number): number {
   const logMin = Math.log10(FREQ_MIN_HZ)
   const logMax = Math.log10(FREQ_MAX_HZ)
   return MARGIN.left + (Math.log10(hz) - logMin) / (logMax - logMin) * (SVG_W - MARGIN.left - MARGIN.right)
 }
 
-/** Map an impedance value [Ω] to an SVG y coordinate (log scale). */
 function zToY(z: number, zMin: number, zMax: number): number {
   const logMin = Math.log10(Math.max(zMin, 1e-3))
   const logMax = Math.log10(Math.max(zMax, 1))
@@ -169,7 +167,6 @@ export default defineComponent({
     freqHz(): number    { return this.cellStore.currentBroadcastFrequency * 1e3 },
     relaxHz(): number   { return this.store.relaxationFreqMHz * 1e6 },
 
-    /** Compute |Z(f)| for N logarithmically spaced frequencies. */
     zValues(): { hz: number; z: number }[] {
       const points: { hz: number; z: number }[] = []
       for (let i = 0; i <= N_POINTS; i++) {

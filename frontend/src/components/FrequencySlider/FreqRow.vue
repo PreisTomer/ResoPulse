@@ -182,7 +182,6 @@ export default defineComponent({
       return 1
     },
 
-    /** Track markers at fc(T), fc(H), and optimal — positioned on the log scale. */
     freqMarkers(): Array<{ id: string; pct: number; color: string }> {
       const logMin = this.freqLogMin
       const logMax = this.freqLogMax
@@ -228,7 +227,7 @@ export default defineComponent({
       ) {
         const t = this.store.target as { resonantFreqGHz?: number }
         const fRes = t.resonantFreqGHz ? ` (f_res = ${t.resonantFreqGHz} GHz)` : ''
-        tip += `\n\n⚠ Resonance mode active${fRes}: acoustic capsid disruption requires GHz delivery, rectangular waveguide or resonant cavity hardware needed. Current frequency is below the resonant target.`
+        tip += `\n\n${this.ICON.WARNING} Resonance mode active${fRes}: acoustic capsid disruption requires GHz delivery, rectangular waveguide or resonant cavity hardware needed. Current frequency is below the resonant target.`
       }
       return tip
     },

@@ -1,11 +1,6 @@
-// Copyright © 2026 Tomer Preis. All rights reserved.
-// Unauthorized copying or distribution is prohibited.
+// Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 
-/**
- * Mock data - default cell configurations used to seed the Pinia store.
- * Types  → types/cell.ts, types/media.ts
- * Media  → constants/media.ts
- */
+// Default cell configurations used to seed the Pinia store.
 import type { CellConfig } from '../types/cell'
 
 // ── Default simulation cells ───────────────────────────────────────────────
@@ -38,7 +33,6 @@ const simulationData = {
   ],
 }
 
-/** Extended cell configs with thermal, animation, and nuclear envelope defaults. */
 export const cellConfigs: [CellConfig, CellConfig] = [
   {
     ...simulationData.cells[0]!,

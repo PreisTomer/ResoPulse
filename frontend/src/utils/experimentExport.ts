@@ -13,14 +13,11 @@ import type { CellParamSnapshot, LogEntry } from '@/types/experiment'
 
 // ── Low-level text helpers ─────────────────────────────────────────────────
 
-/** Horizontal rule of `n` repeated `ch` characters. */
-export const sep = (ch = '─', n = 54): string => ch.repeat(n)
+export const sep = (ch = '─', n = 54): string => ch.repeat(n)  // horizontal rule
 
-/** Left-padded key=value field line for methods files. */
-export const fld = (label: string, value: string, width = 26): string =>
+export const fld = (label: string, value: string, width = 26): string =>  // left-padded key=value line
   `  ${label.padEnd(width)}= ${value}`
 
-/** Trigger a browser download of text content with the given MIME type. */
 export function downloadText(txt: string, filename: string, mimeType = 'text/plain'): void {
   const blob = new Blob([txt], { type: mimeType })
   const url  = URL.createObjectURL(blob)
@@ -241,11 +238,7 @@ export function buildRefs(isRes: boolean, isDbl: boolean, cat: string, isHFire =
 
 // ── Per-entry computation helpers (pure - no store/Vue imports) ───────────
 
-/**
- * Instantaneous specific absorption rate [W/kg] inside the cell.
- * SAR = σ_i · α² · E² / ρ   where α = 3σ_e / (2σ_e + σ_i).
- * Multiply by duty cycle for time-averaged SAR.
- */
+// SAR = σ_i·α²·E²/ρ, α = 3σ_e/(2σ_e+σ_i)
 function computeSAR(sigmaI: number, sigmaE: number, fieldVcm: number): number {
   const alpha  = (3 * sigmaE) / (2 * sigmaE + sigmaI)
   const E_vm   = fieldVcm * 100           // V/cm → V/m
@@ -253,19 +246,13 @@ function computeSAR(sigmaI: number, sigmaE: number, fieldVcm: number): number {
   return sigmaI * alpha * alpha * E_vm * E_vm / rho
 }
 
-/**
- * Pulse envelope factor - fraction of steady-state Vm reached during a pulse.
- * PEF = 1 − exp(−t_p / τ)   where τ = 1/(2π·fc).
- * @param pulseWidthNs  pulse width [ns]
- * @param fcKHz         membrane corner frequency [kHz]
- */
+// PEF = 1−exp(−t_p/τ), τ = 1/(2π·fc)
 function computePEF(pulseWidthNs: number, fcKHz: number): number {
   const tauS = 1 / (TWO_PI * fcKHz * 1000)   // τ [s]
   const tpS  = pulseWidthNs / 1e9             // t_p [s]
   return 1 - Math.exp(-tpS / tauS)
 }
 
-/** Human-readable classification of a disruption ratio (0-1 fraction). */
 function classifyDR(ratio: number): string {
   if (ratio >= THRESHOLDS.DISRUPTION_WARN)     return 'LYSIS-ARMED, irreversible EP zone (sustained → lysis)'
   if (ratio >= THRESHOLDS.HEALTHY_APPROACHING) return 'Reversible EP, membrane transiently permeabilised, recoverable'
@@ -274,17 +261,13 @@ function classifyDR(ratio: number): string {
   return 'Sub-threshold, minimal membrane effect'
 }
 
-/** Human-readable Vm selectivity classification. */
 function classifySelectivity(sel: number): string {
   if (sel >= THRESHOLDS.SEL_STRONG)   return 'Strong therapeutic window'
   if (sel >= THRESHOLDS.SEL_MARGINAL) return 'Marginal window'
   return 'Non-selective'
 }
 
-/**
- * Lysis delay in milliseconds - time the target must sustain DR ≥ 85%
- * before lysis is declared.  Matches the lysisDelayMs getter in cellStore.
- */
+// Lysis delay [ms] — matches lysisDelayMs getter in cellStore
 function computeLysisDelayMs(entry: LogEntry): number {
   if ((entry.waveform === 'pulsed' || entry.waveform === 'hfire') && entry.pulseWidthNs && entry.dutyCycle) {
     const tpS = entry.pulseWidthNs / 1e9
@@ -296,10 +279,6 @@ function computeLysisDelayMs(entry: LogEntry): number {
 
 // ── Full document assemblers ───────────────────────────────────────────────
 
-/**
- * Builds the full methods .txt text for a single log entry.
- * Returns the text and a suggested filename.
- */
 export function buildEntryMethodsText(entry: LogEntry, sessionName: string): { text: string; filename: string } {
   const entrySession = entry.sessionName ?? sessionName
   const filename = `${entrySession.replace(/\s+/g, '_')}_entry${entry.id}_methods.txt`
@@ -491,7 +470,6 @@ export function buildEntryMethodsText(entry: LogEntry, sessionName: string): { t
   return { text, filename }
 }
 
-/** Cell metadata needed for the CSV header block - passed in by the store action. */
 export interface CellExportMeta {
   healthyLabel: string
   healthyRadius: number
@@ -508,10 +486,6 @@ export interface CellExportMeta {
   pulseWidthNs: number
 }
 
-/**
- * Builds the full CSV text for the experiment log.
- * Returns the text and a suggested filename.
- */
 export function buildCsvText(
   entries: LogEntry[],
   sessionName: string,

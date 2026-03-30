@@ -1,8 +1,6 @@
-// Copyright © 2026 Tomer Preis. All rights reserved.
-// Unauthorized copying or distribution is prohibited.
+// Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 
-/** Named slider range sets - one per cell-category × chart-mode combination.
- *  Single source of truth: change here to propagate to FrequencySlider & AdvancedSection. */
+// Named slider range sets — one per cell-category × chart-mode. Single source of truth.
 
 export interface SliderRange {
   freqMin: number; freqMax: number; freqStep: number
@@ -21,14 +19,14 @@ export const SLIDER_RANGES = {
   IRE_MAMMALIAN:       { freqMin:        10, freqMax:    100_000, freqStep:      10, fieldMin: 10, fieldMax:   3_000, fieldStep:   1, pwLogMin: 0, pwLogMax: 5 },
 }
 
-/** Duty-cycle log slider bounds (log10 scale: 10^-6 … 10^-1 = 0.0001% … 10%). */
+// Duty-cycle log slider bounds (log10 scale: 10^-6 to 10^-1 = 0.0001% to 10%)
 export const SLIDER_DC = {
   LOG_MIN:  -6,
   LOG_MAX:  -1,
   LOG_STEP:  0.05,
 } as const
 
-/** Advanced-section slider attributes - orientation, pulse count, perfusion, cell packing. */
+// Advanced-section slider attributes — orientation, pulse count, perfusion, cell packing
 export const SLIDER_ADV = {
   ORI_MIN:           0,    ORI_MAX:           90,  ORI_STEP:    1,
   LYSIS_N_LOG_MIN:   0,    LYSIS_N_LOG_MAX:    3,  LYSIS_N_LOG_STEP: 0.05,  // 10⁰=1 … 10³=1000

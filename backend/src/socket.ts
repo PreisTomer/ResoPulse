@@ -298,10 +298,6 @@ function sessionRoom(name: string): string {
   return `session:${safe}`
 }
 
-/**
- * Calls the Python FastAPI AI optimizer.
- * Returns null if the service is unreachable; callers fall back to the physics baseline.
- */
 async function callPythonOptimizer(request: AiOptimizeRequest): Promise<AiOptimizeResult | null> {
   try {
     const response = await fetch(`${AI_SERVICE_URL}/ai/optimize`, {

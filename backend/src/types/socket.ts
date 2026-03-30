@@ -18,7 +18,6 @@ export interface StatePacket {
   sessionName:         string
 }
 
-/** Emitted by a lab instrument bridge and forwarded to all UI clients. */
 export interface HardwareImpedancePacket {
   zReal:         number   // Real part of impedance [Ohm]
   zImag:         number   // Imaginary part [Ohm], negative = capacitive
@@ -47,7 +46,6 @@ export interface LogEntry {
 
 // AI Optimizer types
 
-/** Biophysical params for one cell in the experiment pair. */
 export interface CellBiophysics {
   id:               string
   label:            string
@@ -60,7 +58,6 @@ export interface CellBiophysics {
   capsidQ?:         number
 }
 
-/** Physics-derived features pre-computed by the frontend; Python uses as ML input. */
 export interface AiPhysicsFeatures {
   targetTauNs:          number   // tau_target [ns]
   healthyTauNs:         number   // tau_healthy [ns]
@@ -71,7 +68,6 @@ export interface AiPhysicsFeatures {
   selectivityAtOptimal: number   // Vm_T / Vm_H at optimalFreqKhz
 }
 
-/** Physics baseline used immediately if the ML model has insufficient training data. */
 export interface AiPhysicsBaseline {
   suggestion: {
     freqKHz:      number
@@ -85,7 +81,6 @@ export interface AiPhysicsBaseline {
   predictedTi:        number
 }
 
-/** Request payload sent by a client asking the AI optimizer for a recommendation. */
 export interface AiOptimizeRequest {
   requestId:       string
   sessionState:    StatePacket
@@ -103,7 +98,6 @@ export interface AiParamSuggestion {
   waveform:     'cw' | 'pulsed' | 'hfire'
 }
 
-/** Response broadcast to all clients after the model returns. */
 export interface AiOptimizeResult {
   requestId:          string
   suggestion:         AiParamSuggestion | null
@@ -116,10 +110,7 @@ export interface AiOptimizeResult {
   isPhysicsBaseline:  boolean   // true when ML fell back to physics-only optimisation
 }
 
-/**
- * Anonymized outcome record stored for AI training after the user rates a run.
- * Only collected when aiConsentGiven = true. Never contains PII.
- */
+// Anonymized, only collected when aiConsentGiven = true, never contains PII.
 export interface OutcomeEntry {
   sessionName:         string
   timestamp:           string

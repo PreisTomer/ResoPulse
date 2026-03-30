@@ -1,10 +1,6 @@
-// Copyright © 2026 Tomer Preis. All rights reserved.
-// Unauthorized copying or distribution is prohibited.
+// Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 
-/**
- * Selectivity-panel tooltip builders - extracted from SelectivityPanel/index.vue computed properties.
- * Follows the same pattern as sliderTooltips.ts: pure functions, no store access.
- */
+// Selectivity-panel tooltip builders. Pure — no store access.
 import { ICON } from '@/constants/icons'
 import { THRESHOLDS, DEFAULT_CAPSID_Q } from '@/constants/physics'
 import { formatFreqKHz } from '@/utils/format'

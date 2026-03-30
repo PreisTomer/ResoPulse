@@ -2,15 +2,10 @@
 
 import { defineStore } from 'pinia'
 
-/**
- * UI transient state that does not belong in domain stores (cellStore, experimentStore).
- * Currently used to communicate a pending element-highlight from ProtocolView to
- * ExperimentView / InstrumentView after a cross-route navigation.
- */
+// UI transient state: pending element-highlight after route navigation
 
 interface UiState {
-  /** ID of a DOM element to scroll-and-highlight after the next route transition. */
-  pendingHighlight: string | null
+  pendingHighlight: string | null  // DOM element ID to scroll-highlight after next route mount
 }
 
 export const useUiStore = defineStore('ui', {
@@ -19,12 +14,10 @@ export const useUiStore = defineStore('ui', {
   }),
 
   actions: {
-    /** Queue an element highlight for after the next route mount. */
     setPendingHighlight(targetId: string) {
       this.pendingHighlight = targetId
     },
 
-    /** Consume and clear the pending highlight. */
     clearPendingHighlight() {
       this.pendingHighlight = null
     },

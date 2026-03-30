@@ -40,9 +40,8 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { useCellStore } from '@/stores/cellStore'
-import { CELL_CATEGORY, THERMAL_LEVEL } from '@/constants/strings'
+import { THERMAL_LEVEL } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
-import { SLIDER_RANGES } from '@/constants/sliderBounds'
 import type { SliderRange } from '@/constants/sliderBounds'
 import TitleRow from './TitleRow.vue'
 import ThermalBanner from './ThermalBanner.vue'
@@ -62,17 +61,7 @@ export default defineComponent({
   computed: {
     isResonanceMode(): boolean { return this.store.isResonanceMode },
 
-    sliderRanges(): SliderRange {
-      const cat = this.store.targetCellCategory
-      if (this.isResonanceMode) {
-        if (cat === CELL_CATEGORY.VIRUS)     return SLIDER_RANGES.RESONANCE_VIRUS
-        if (cat === CELL_CATEGORY.MAMMALIAN) return SLIDER_RANGES.RESONANCE_MAMMALIAN
-        return SLIDER_RANGES.RESONANCE_BACTERIA
-      }
-      if (cat === CELL_CATEGORY.VIRUS)    return SLIDER_RANGES.IRE_VIRUS
-      if (cat === CELL_CATEGORY.BACTERIA) return SLIDER_RANGES.IRE_BACTERIA
-      return SLIDER_RANGES.IRE_MAMMALIAN
-    },
+    sliderRanges(): SliderRange { return this.store.sliderRanges },
 
     maxSteadyTemp(): number {
       return Math.max(this.store.healthySteadyStateTemp, this.store.targetSteadyStateTemp)

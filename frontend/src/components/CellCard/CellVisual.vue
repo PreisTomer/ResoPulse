@@ -628,8 +628,6 @@ export default defineComponent({
       this.$emit('stable-reset', this.type)
     },
 
-    /** Full reset: restore cell biology AND signal the parent to apply safe field defaults.
-     *  Use this when you want both cells to return to a genuinely stable state. */
     resetToSafeDefaults() {
       hideTip()
       const cell   = this.type === CELL_TYPE.HEALTHY ? this.store.healthy : this.store.target

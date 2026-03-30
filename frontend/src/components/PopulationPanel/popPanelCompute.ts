@@ -1,9 +1,6 @@
 // Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 
-/**
- * Pure computation utilities for PopulationPanel.
- * No Vue or store imports — all functions are side-effect-free.
- */
+// Pure computation utilities for PopulationPanel. No Vue/store imports.
 
 export const MARGIN = { top: 14, right: 16, bottom: 40, left: 50 }
 export const N_BINS = 20
@@ -15,22 +12,12 @@ export interface PopStats {
   pctStable: number
   meanDr:    number
   stdDr:     number
-  /** Binomial SE on pctLysed (percentage points) */
-  seLysed: number
-  /** Binomial SE on pctRevEp (percentage points) */
-  seRevEp: number
-  /** Binomial SE on pctNour (percentage points) */
-  seNour:  number
+  seLysed: number  // binomial SE on pctLysed (percentage points)
+  seRevEp: number  // binomial SE on pctRevEp
+  seNour:  number  // binomial SE on pctNour
 }
 
-/**
- * Box-Muller Gaussian sample, clamped to [min, max] by rejection.
- * @param mean   - Distribution mean
- * @param stddev - Standard deviation
- * @param min    - Lower bound (reject and retry if below)
- * @param max    - Upper bound (reject and retry if above)
- * @returns A sample drawn from the truncated Gaussian distribution
- */
+// Box-Muller Gaussian sample clamped to [min, max] by rejection
 export function sampleGaussian(mean: number, stddev: number, min: number, max: number): number {
   let z: number
   do {
@@ -41,12 +28,7 @@ export function sampleGaussian(mean: number, stddev: number, min: number, max: n
   return z
 }
 
-/**
- * Binomial standard error as a percentage: SE(p) = √(p(1−p)/n) × 100.
- * @param count - Number of successes
- * @param n     - Total sample size
- * @returns SE in percentage points, rounded to one decimal
- */
+// SE(p) = √(p(1−p)/n) × 100 [percentage points]
 export function binomialSE(count: number, n: number): number {
   const p = count / n
   return +(Math.sqrt(p * (1 - p) / n) * 100).toFixed(1)

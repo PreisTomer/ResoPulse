@@ -19,8 +19,7 @@ interface ExperimentState {
   sessionNotes: string        // free-form lab notes baked into exports
   cumulativeDoseJkg: number   // J/kg, cumulative specific energy absorbed this session
   sessionStartMs: number      // Unix ms, when the current session started
-  /** User opted in to anonymized outcome logging for AI protocol training */
-  aiConsentGiven: boolean
+  aiConsentGiven: boolean  // user opted in to anonymized outcome logging for AI training
 }
 
 // Extended snapshot pulled from cellStore - avoids circular import
@@ -169,7 +168,6 @@ export const useExperimentStore = defineStore('experiment', {
       })
     },
 
-    /** Receive a log entry broadcast from another client - append without re-broadcasting. */
     receiveEntry(entry: LogEntry) {
       if (this.entries.some(e => e.id === entry.id)) return
       this.entries.push(entry)
@@ -181,13 +179,6 @@ export const useExperimentStore = defineStore('experiment', {
     setSessionNotes(notes: string)        { this.sessionNotes        = notes },
     setAiConsent(value: boolean)          { this.aiConsentGiven     = value },
 
-    /**
-     * Attach a user outcome rating to an existing log entry.
-     * @param entryId - id of the LogEntry to rate
-     * @param rating - 1 (failed) to 5 (excellent)
-     * @param aiSuggestionApplied - whether this protocol came from the AI optimizer
-     * @returns the updated entry, or null if not found
-     */
     logOutcome(entryId: number, rating: number, aiSuggestionApplied: boolean): LogEntry | null {
       const entry = this.entries.find(e => e.id === entryId)
       if (!entry) return null
@@ -203,18 +194,10 @@ export const useExperimentStore = defineStore('experiment', {
       this.sessionStartMs    = Date.now()
     },
 
-    /**
-     * Accumulate dosimetry: SAR_target × dt_s × dutyCycle.
-     * Called on a periodic timer in ExperimentView.
-     * @param sarWkg - instantaneous SAR [W/kg] for the target cell
-     * @param dutyCycle - duty cycle (0-1)
-     * @param dtMs - elapsed time since last sample [ms]
-     */
     addDoseSample(sarWkg: number, dutyCycle: number, dtMs: number) {
       this.cumulativeDoseJkg += sarWkg * dutyCycle * (dtMs * 1e-3)
     },
 
-    /** Generate a publication-ready methods .txt file for a single log entry. */
     exportEntryMethods(entry: LogEntry) {
       const { text, filename } = buildEntryMethodsText(entry, this.sessionName)
       downloadText(text, filename)

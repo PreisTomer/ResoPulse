@@ -378,7 +378,7 @@ export default defineComponent({
   position:        fixed;
   inset:           0;
   z-index:         9000;
-  background:      rgba(0, 0, 0, 0.72);
+  background:      color-mix(in srgb, black 72%, transparent);
   display:         flex;
   align-items:     center;
   justify-content: center;

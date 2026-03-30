@@ -1,10 +1,6 @@
-// Copyright © 2026 Tomer Preis. All rights reserved.
-// Unauthorized copying or distribution is prohibited.
+// Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 
-/**
- * Tooltip builders for ExperimentView.vue.
- * Pure functions - accept explicit params, no Vue instance dependency.
- */
+// Tooltip builders for ExperimentView. Pure — no Vue dependency.
 
 import { UNIT } from '@/constants/units'
 

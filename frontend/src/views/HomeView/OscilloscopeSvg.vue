@@ -57,8 +57,8 @@ export default defineComponent({
       to bottom,
       transparent   0px,
       transparent   3px,
-      rgba(0, 0, 0, 0.07) 3px,
-      rgba(0, 0, 0, 0.07) 4px
+      color-mix(in srgb, black 7%, transparent) 3px,
+      color-mix(in srgb, black 7%, transparent) 4px
     );
     pointer-events: none;
     z-index: 1;

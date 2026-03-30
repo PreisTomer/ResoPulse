@@ -1,9 +1,6 @@
 // Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 
-/**
- * Advanced physics unit tests — nuclear Vm, acoustic resonance, skin depth,
- * population lysis fraction, and DEP Clausius-Mossotti factor.
- */
+// Advanced physics tests: nuclear Vm, acoustic resonance, skin depth, population lysis, DEP CM
 
 import { describe, it, expect } from 'vitest'
 import {
@@ -22,7 +19,6 @@ import type { CellConfig } from '@/types/cell'
 
 // ── Nuclear Vm (double-shell model) ─────────────────────────────────────────
 
-/** Mammalian cell with nuclear envelope parameters. */
 const NUCLEAR_CELL: CellConfig = {
   ...TARGET_CELL,
   nuclearRadius:           5,      // µm (50% of cell radius, typical mammalian)

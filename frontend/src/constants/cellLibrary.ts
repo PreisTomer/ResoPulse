@@ -1,11 +1,7 @@
 // Copyright © 2026 Tomer Preis. All rights reserved.
 // Unauthorized copying or distribution is prohibited.
 
-/**
- * Biologically realistic cell/pathogen presets.
- * All Schwan model parameters are approximate values from bioelectromagnetics literature.
- * Bacterial and viral values use a spherical single-shell approximation.
- */
+// Biologically realistic cell/pathogen presets. All Schwan parameters from bioelectromagnetics literature.
 import type { CellConfig } from '@/types/cell'
 
 export type CellGroup = 'reference' | 'cancer' | 'bacteria' | 'virus'
@@ -15,8 +11,7 @@ export interface CellPreset extends CellConfig {
   group: CellGroup
   shortLabel: string
   notes: string
-  /** Extended technical notes shown in tooltip (optional - omit for presets with short notes) */
-  techNotes?: string
+  techNotes?: string  // extended tooltip notes (optional; omit for presets with short notes)
 }
 
 // GROUP_COLORS defined in theme/colors.ts - re-exported here for back-compat
@@ -407,12 +402,10 @@ export const CELL_PRESETS: CellPreset[] = [
   },
 ]
 
-/** Lookup by presetId */
 export function getPreset(id: string): CellPreset | undefined {
   return CELL_PRESETS.find((p) => p.presetId === id)
 }
 
-/** All presets in a given group */
 export function getPresetsByGroup(group: CellGroup): CellPreset[] {
   return CELL_PRESETS.filter((p) => p.group === group)
 }

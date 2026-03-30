@@ -82,7 +82,7 @@ export default defineComponent({
         : `${this.fcKHz.toFixed(0)} ${UNIT.KHZ}`
     },
 
-    /** Recommended max frequency for ≥70% coupling efficiency: f < fc/√2 */
+    // Max frequency for >= 70% coupling efficiency: f < fc/sqrt(2)
     optCouplingFreqLabel(): string {
       const optKHz = this.fcKHz / Math.SQRT2
       return optKHz >= 1000

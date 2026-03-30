@@ -88,16 +88,13 @@ export default defineComponent({
       open: false,
       nCells: 300,
       rVariancePct:   10,
-      /** V_th CV as % — cell-to-cell lysis threshold variation (Weaver & Chizmadzhev 1996) */
-      vThVariancePct: 20,
-      /** When true histogram Y-axis shows fraction [0,1]; when false shows raw count */
+      vThVariancePct: 20,  // V_th CV as % (Weaver & Chizmadzhev 1996)
       normalizeChart: false,
       targetDRs:    [] as number[],
       healthyDRs:   [] as number[],
       _resizeObs:     null as ResizeObserverInstance | null,
       _resampleTimer: null as ReturnType<typeof setTimeout> | null,
-      /** Slow live-update interval: resamples every 2 s when open to show Monte Carlo spread */
-      _liveTimer:     null as ReturnType<typeof setInterval> | null,
+      _liveTimer:     null as ReturnType<typeof setInterval> | null,  // resamples every 2s when open
     }
   },
 
@@ -122,12 +119,7 @@ export default defineComponent({
     targetStats(): PopStats  { return this._calcStats(this.targetDRs) },
     healthyStats(): PopStats { return this._calcStats(this.healthyDRs) },
 
-    /**
-     * Population Treatment Window Score.
-     * WS = (% target lysed / 100) × (1 − % healthy lysed / 100)
-     * WS = 1.0: all target destroyed, zero healthy collateral (ideal).
-     * WS = 0.0: no target lysis, or complete healthy destruction (unusable).
-     */
+    // WS = (% target lysed / 100) × (1 − % healthy lysed / 100). 1.0=ideal, 0.0=unusable.
     windowScore(): number {
       return (this.targetStats.pctLysed / 100) * (1 - this.healthyStats.pctLysed / 100)
     },
@@ -208,12 +200,8 @@ export default defineComponent({
       if (this._liveTimer) { clearInterval(this._liveTimer); this._liveTimer = null }
     },
 
-    /** Debounced entry-point for resample — collapses multiple synchronous watcher
-     *  firings (e.g. snap-to-window touching field + freq in one tick) into a single
-     *  resample 150 ms later, preventing the chart from jumping repeatedly.
-     *  Non-cancelling: once a timer is in flight, additional calls are ignored so that
-     *  the temperature interval (which continuously updates effectiveSigmaE) cannot
-     *  keep resetting the timer and prevent resample from ever running. */
+    // Debounced resample: collapses simultaneous watcher firings into one call 150 ms later.
+    // Non-cancelling so the temperature interval cannot prevent resample from ever running.
     _scheduleResample() {
       if (this._resampleTimer) return
       this._resampleTimer = setTimeout(() => {

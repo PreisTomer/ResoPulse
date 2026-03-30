@@ -1,11 +1,6 @@
-// Copyright © 2026 Tomer Preis. All rights reserved.
-// Unauthorized copying or distribution is prohibited.
+// Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 
-/**
- * Socket service - connects to the ResoPulse backend.
- * Falls back to local mode (state applied directly to Pinia stores) if the
- * backend is unreachable. All reactive getters remain fully functional either way.
- */
+// Socket service — connects to ResoPulse backend. Falls back to local store state when unreachable.
 import { ref } from 'vue'
 import { io } from 'socket.io-client'
 import type { Socket } from 'socket.io-client'
@@ -19,10 +14,7 @@ import { computeTau, computeSchwan, computePulseStepResponse } from '@/utils/phy
 import { SCHWAN_SPHERE_FACTOR, TWO_PI, MIN_PULSE_ENVELOPE } from '@/constants/physics'
 import { useAiStore } from '@/stores/aiStore'
 
-// Priority order for backend URL resolution:
-//   1. ?backend=<url> query param  — set at runtime for ngrok demo sessions
-//   2. VITE_BACKEND_URL env var    — baked in at Vercel build time
-//   3. localhost:3001              — local development fallback
+// URL priority: ?backend=<url> → VITE_BACKEND_URL → localhost:3001
 function resolveBackendUrl(): string {
   const params = new URLSearchParams(window.location.search)
   const fromQuery = params.get('backend')
@@ -49,18 +41,13 @@ const SOCKET_EVENTS = {
 
 let socket: Socket | null = null
 
-/** Reactive connection flag - import directly in Vue components/templates */
 export const socketConnected = ref(false)
 
-// Render free-tier instances sleep after 15 minutes of inactivity.
-// A plain HTTP ping to /health wakes the container before the WebSocket
-// handshake — otherwise the socket times out during the cold-start (~30 s).
+// Render free-tier containers sleep after 15 min. HTTP ping wakes them before socket connect (~30s cold start).
 async function wakeBackend(): Promise<void> {
   try {
     await fetch(`${BACKEND_URL}/health`, { signal: AbortSignal.timeout(35_000) })
-  } catch {
-    // unreachable — fall through to socket connect which will handle it gracefully
-  }
+  } catch { /* fall through to socket connect */ }
 }
 
 export async function connectSocket(): Promise<void> {
@@ -114,11 +101,6 @@ export async function connectSocket(): Promise<void> {
   })
 }
 
-/**
- * Broadcast the full experiment state to all other connected clients.
- * Call this after any store mutation that should be visible to remote users.
- * In local mode this is a no-op - the store is already updated locally.
- */
 export function broadcastStateSync(): void {
   if (!socket?.connected) return
   const store    = useCellStore()
@@ -143,24 +125,12 @@ export function broadcastStateSync(): void {
   socket.emit(SOCKET_EVENTS.STATE_SYNC, packet)
 }
 
-/**
- * Broadcast a log entry (lysis / manual) to all other connected clients.
- * Call immediately after logReading() so remote users see the event.
- */
 export function broadcastLogEntry(entry: LogEntry): void {
   if (!socket?.connected) return
   socket.emit(SOCKET_EVENTS.LOG_ENTRY, entry)
 }
 
-/**
- * Broadcast a rated outcome to all other connected clients.
- * Only call this when the user has aiConsentGiven = true — the server does not
- * check consent; that gate lives in the caller.
- *
- * Includes pre-computed cell biophysical features (τ, fc, radius) so the SQLite
- * training corpus carries enough context for the ML model to learn cell-type
- * specific patterns rather than just raw frequency/field correlations.
- */
+// Broadcast rated outcome — caller must verify aiConsentGiven before calling.
 export function broadcastLogOutcome(entry: LogEntry, rating: number, aiSuggestionApplied: boolean): void {
   if (!socket?.connected) return
   const store   = useCellStore()
@@ -222,7 +192,7 @@ type AiResultCallback = (result: AiOptimizeResult) => void
 
 // ── Physics baseline helpers (pure, no store dependency) ─────────────────────
 
-/** Lysis-threshold field [V/cm] at a given frequency, accounting for pulse width. */
+// Lysis-threshold field [V/cm] at a given frequency, accounting for pulse width.
 function lysisFieldAtFreq(
   radiusUm: number, memThicknessNm: number, dielectricConst: number,
   conductivitySi: number, thresholdV: number,
@@ -240,16 +210,7 @@ function lysisFieldAtFreq(
   return Math.min(Math.max(E_vm / 100, 10), 100_000)   // V/m → V/cm, clamped
 }
 
-/**
- * Emit an AI optimisation request and register a one-time result callback.
- *
- * The frontend pre-computes all physics values (τ, fc, physics-optimal frequency,
- * physics baseline suggestion) so the Python service is pure ML — no Schwan
- * equations are reproduced in Python.
- *
- * The callback fires when the server responds with aiOptimizeResult for this
- * specific requestId, guarding against stale responses from previous requests.
- */
+// Emit AI optimisation request. Frontend pre-computes all physics; Python service is pure ML.
 export function requestAiOptimization(requestId: string, onResult: AiResultCallback): void {
   if (!socket?.connected) return
   const store    = useCellStore()

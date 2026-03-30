@@ -85,7 +85,6 @@ export default defineComponent({
     plotW(): number { return this.displayW - HMAP_MARGIN.LEFT - HMAP_MARGIN.RIGHT },
     plotH(): number { return this.displayH - HMAP_MARGIN.TOP  - HMAP_MARGIN.BOTTOM },
 
-    /** Triggers full grid recompute when any physics input changes. */
     physicsKey(): string {
       const s = this.store
       const t = s.target as { resonantFreqGHz?: number }

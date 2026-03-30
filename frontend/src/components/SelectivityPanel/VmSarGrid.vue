@@ -103,7 +103,7 @@ export default defineComponent({
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0.5rem;
-  background: rgba(0, 0, 0, 0.2);
+  background: color-mix(in srgb, black 20%, transparent);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   padding: 0.45rem 0.65rem;

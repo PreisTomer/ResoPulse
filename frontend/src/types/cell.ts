@@ -1,5 +1,4 @@
-// Copyright © 2026 Tomer Preis. All rights reserved.
-// Unauthorized copying or distribution is prohibited.
+// Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 
 import type { CellState, CellType, ExperimentalBasis, MorphologyTag } from '@/constants/strings'
 export type { CellState, CellType }
@@ -10,9 +9,7 @@ export interface CellConfig {
   id: string
   type: CellType
   label: string
-  /** One-line description shown in the cell card body. For library presets this is populated
-   *  from CellPreset.notes at load time. For custom cells it is the user's notes/citation. */
-  description?: string
+  description?: string  // shown in cell card body; library presets use CellPreset.notes
   // Biophysical - user-editable
   radius: number               // µm
   membraneThickness: number    // nm
@@ -36,12 +33,9 @@ export interface CellConfig {
   nuclearMembraneEps?: number          // ε_r, effective permittivity; lipid bilayer ~2-5, NPC contribution raises to ~10-12
   nucleoplasmConductivity?: number     // S/m, nucleoplasm ionic conductivity (typically > cytoplasm)
   nuclearThresholdVoltage?: number     // V  , Vm_nuc required for nuclear envelope disruption (lower than plasma membrane)
-  /** Outer membrane conductivity [S/m] for DEP Clausius-Mossotti model.
-   *  If absent, falls back to SIGMA_MEMBRANE_SI (10⁻⁷ S/m - mammalian lipid bilayer).
-   *  Gram-negative bacteria (porins in outer membrane): ~10⁻⁵ S/m.
-   *  Gram-positive bacteria (plasma membrane only, no outer membrane): omit (use default).
-   *  Enveloped viruses (fluid lipid bilayer): omit (use default).
-   *  Ref: Markx & Davey (1999); Arnold & Zimmermann (1988). */
+  // σ_mem [S/m] for DEP CM model. Default 10⁻⁷ S/m (mammalian bilayer).
+  // Gram-negative bacteria (porins): ~10⁻⁵ S/m. Gram-positive/enveloped virus: omit.
+  // Markx & Davey 1999; Arnold & Zimmermann 1988.
   membraneConductivity?: number
   // Note: nuclear membrane conductivity σ_ne is NOT stored or used. The Kotnik & Miklavcic (2006)
   // double-shell formula used in computeNuclearVm() operates in the thin-membrane capacitive limit
@@ -52,9 +46,7 @@ export interface CellConfig {
   specificHeatCapacity: number // J/(kg·K)
   // Animation
   amplitude: number            // 0-1, drives oscilloscope wave height
-  /** Explicit morphology shape for custom presets — drives animation when no presetId match exists.
-   *  Bacteria only: 'rod' | 'coccus' | 'coccobacillus'. Mammalian and virus cells ignore this field. */
-  morphologyTag?: MorphologyTag
+  morphologyTag?: MorphologyTag  // bacteria only: 'rod' | 'coccus' | 'coccobacillus'; others ignore
 }
 
 // Semantic alias used by CellCard sub-components (index, CellParamsPanel, CellVisual)
@@ -66,7 +58,6 @@ export interface BlobPoint {
   r: number
 }
 
-/** Data read by setupBlobAnimation on each D3 timer tick */
 export interface BlobFrame {
   impact: number       // disruptionRatio  [0-n]
   state: CellState
@@ -77,17 +68,13 @@ export interface BlobFrame {
   nuclearDisruptionRatio: number  // Vm_nuc / nuclear threshold [0-n]; 0 for non-mammalian or single-shell mode
   depCmReal: number               // Re[K(f)] Clausius-Mossotti DEP factor [-0.5, +0.5]; >0 = pDEP, <0 = nDEP
   waveform: 'cw' | 'pulsed' | 'hfire'
-  /** True when the target cell is an acoustic-resonance target (virus/bacteria with resonantFreqGHz). */
-  isAcousticMode?: boolean
+  isAcousticMode?: boolean  // true when target is virus/bacteria with resonantFreqGHz
 }
 
-/** Data read by setupOscilloscope on each D3 timer tick */
 export interface OscFrame {
   state: CellState
   impact: number
   liveAmplitude: number
   cellColor: string
-  /** Oscilloscope scroll-speed frequency [kHz]. For acoustic targets this tracks the
-   *  live broadcast frequency so the waveform responds to the slider in real time. */
-  naturalFrequency: number
+  naturalFrequency: number  // scroll-speed [kHz]; acoustic targets track live broadcast freq
 }

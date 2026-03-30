@@ -1,20 +1,14 @@
-// Copyright © 2026 Tomer Preis. All rights reserved.
-// Unauthorized copying or distribution is prohibited.
+// Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 
-/**
- * Tooltip content builders for CellCard components.
- * Pure functions - no Vue component dependency.
- */
+// Tooltip builders for CellCard. Pure — no Vue dependency.
 
 import { CELL_STATE, CELL_TYPE, WAVEFORM } from '@/constants/strings'
 import { UNIT } from '@/constants/units'
 import { computeTau } from '@/utils/physics'
 import type { CellConfig } from '@/types/cell'
 import { THRESHOLDS } from '@/constants/physics'
-
-export function formatLysisTimeLocal(ms: number): string {
-  return ms < 1000 ? `${ms}${UNIT.MS}` : `${(ms / 1000).toFixed(1)}${UNIT.S}`
-}
+import { formatLysisTime as formatLysisTimeLocal } from '@/utils/format'
+export { formatLysisTimeLocal }
 
 export function tipVm(opts: {
   vmDisplay: string

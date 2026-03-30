@@ -190,24 +190,18 @@ export default defineComponent({
   },
 
   watch: {
-    /** When the active target cell changes, reset all sliders to category-appropriate
-     *  defaults and auto-switch chart mode. Mirrors a "new experiment" context. */
     currentTargetId(newId: string, oldId: string) {
       if (newId !== oldId) {
         this.applyTargetDefaults()
       }
     },
 
-    /** When the healthy reference cell changes, reset field controls to the same
-     *  stable baseline so the new cell pair starts from a DR < 8% (STABLE) state. */
     currentHealthyId(newId: string, oldId: string) {
       if (newId !== oldId) {
         this.applyTargetDefaults()
       }
     },
-    /** If the target category becomes mammalian (e.g. via radius edit) while resonance mode
-     *  is active, immediately revert to Schwan mode. Resonance has no physical meaning for
-     *  mammalian cells - the button is disabled but state drift can still occur via param editing. */
+    // Resonance mode has no physical meaning for mammalian cells; revert if category changes via param editing.
     'store.targetCellCategory'(cat: string) {
       if (cat === CELL_CATEGORY.MAMMALIAN && this.store.isResonanceMode) {
         this.store.setChartMode(CHART_MODE.SCHWAN)
@@ -294,22 +288,13 @@ export default defineComponent({
       }
     },
 
-    /** Apply category-appropriate defaults on every page load.
-     *  Called only from mounted() — does NOT broadcast (no peers connected yet).
-     *
-     *  Field/frequency are not persisted, so they always start from the store initial
-     *  value (100 V/cm / 417 kHz). This method sets the correct starting point for
-     *  whatever category the persisted target preset belongs to, and also sanitizes
-     *  all time-domain parameters so stale cross-session values cannot cause
-     *  physics bugs (e.g. bacteria pulse width making mammalian lysis instant). */
+    // Sets category-appropriate starting params at mount; does NOT broadcast (peers not ready yet).
+    // Sanitizes time-domain params to prevent cross-session physics bugs.
     sanitizeCategoryParams() {
       const cat = this.store.targetCellCategory
       const d   = CATEGORY_DEFAULTS[cat]
       const t   = this.store.target as { resonantFreqGHz?: number; resonantThresholdVcm?: number }
 
-      // Field and frequency: use preset resonant values for virus/bacteria if available,
-      // otherwise fall back to category defaults. Mirrors applyTargetDefaults() logic
-      // but without a broadcast (peers are not ready yet at mount time).
       const isResonant = cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA
       const freqKHz  = isResonant && t.resonantFreqGHz
         ? t.resonantFreqGHz * 1e6
@@ -333,21 +318,13 @@ export default defineComponent({
       }
     },
 
-    /** Reset field controls and chart mode to scientifically appropriate defaults
-     *  for the newly-selected target cell category. */
     applyTargetDefaults() {
       const cat = this.store.targetCellCategory
       const d   = CATEGORY_DEFAULTS[cat]
-      // For virus/bacteria: auto-tune frequency to preset's resonant frequency if available
       const t = this.store.target as { resonantFreqGHz?: number; resonantThresholdVcm?: number }
-      // Virus/bacteria: use the preset's resonant frequency if available.
-      // Mammalian: use category default (417 kHz) - do not auto-snap.
-      const freqKHz = (cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) && t.resonantFreqGHz
-        ? t.resonantFreqGHz * 1e6   // GHz → kHz (1 GHz = 1,000,000 kHz)
-        : d.freqKHz
-      // Start at 50% of disruption threshold for intuitive first contact (virus/bacteria),
-      // or category default field for mammalian (150 V/cm).
-      const fieldVcm = (cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) && t.resonantThresholdVcm
+      const isResonant = cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA
+      const freqKHz = isResonant && t.resonantFreqGHz ? t.resonantFreqGHz * 1e6 : d.freqKHz
+      const fieldVcm = isResonant && t.resonantThresholdVcm
         ? t.resonantThresholdVcm * INITIAL_RESONANT_FIELD_FRACTION
         : d.fieldVcm
       this.store.setFieldIntensity(fieldVcm)
@@ -356,10 +333,8 @@ export default defineComponent({
       this.store.setDutyCycle(d.dutyCycle)
       this.store.setPulseWidthNs(d.pulseWidthNs)
       this.store.setMedium(d.medium)
-      // Reset advanced orientation + lysis-count to category-neutral defaults
       this.store.setOrientationDeg(DEFAULT_ORIENTATION_DEG)
       this.store.setLysisNPulses(DEFAULT_LYSIS_N_PULSES)
-      // Always start from a thermally neutral state - clears any lysis/destruction
       this.store.resetTemps()
       this.store.setChartMode((cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) ? CHART_MODE.RESONANCE : CHART_MODE.SCHWAN)
       broadcastStateSync()

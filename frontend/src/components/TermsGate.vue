@@ -99,7 +99,7 @@ export default defineComponent({
     padding: 2rem 2rem 1.6rem;
     max-width: 520px;
     width: 100%;
-    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6), 0 0 0 1px color-mix(in srgb, var(--color-primary) 6%, transparent);
+    box-shadow: 0 24px 64px color-mix(in srgb, black 60%, transparent), 0 0 0 1px color-mix(in srgb, var(--color-primary) 6%, transparent);
   }
 
   &__eyebrow {

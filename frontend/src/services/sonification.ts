@@ -1,27 +1,7 @@
-// Copyright © 2026 Tomer Preis. All rights reserved.
-// Unauthorized copying or distribution is prohibited.
+// Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 
-/**
- * Sonification Service - Auditory Display of Experiment State
- *
- * Maps live biophysical data (impedance drift, disruption ratio, cell state)
- * to audible tones using the Web Audio API.  This is a legitimate scientific
- * technique that lets researchers "hear" membrane events without looking at
- * the screen (Kramer et al., 1999; Walker & Kramer, 2006).
- *
- * ⚠ FREQUENCY DISCLAIMER:
- * The RF frequencies used in the experiment (kHz-MHz) are far above the
- * audible range (20 Hz-20 kHz).  The sounds produced here are NOT the
- * experimental signals - they are a *mapping* of data values (impedance,
- * disruption ratio) onto audible pitches as an abstract display.
- *
- * Mappings:
- *   Impedance drift %     → oscillator pitch  (220 Hz base → up to 1760 Hz)
- *   Disruption ratio      → overall gain       (0 = silent → 0.85+ = full)
- *   Cell state 'rev-ep'   → tremolo (6 Hz AM modulation)
- *   Lysis event           → 880 Hz 0.4 s burst
- *   Healthy-cell warning  → 110 Hz warning pulse
- */
+// Sonification: maps impedance drift to pitch, DR to gain, rev-ep to tremolo (Web Audio API).
+// Sounds are NOT experimental RF signals — they are an abstract auditory display (Kramer 1999).
 
 import { CELL_STATE } from '@/constants/strings'
 
@@ -108,14 +88,6 @@ class SonificationService {
 
   // ── Live update ───────────────────────────────────────────────────────────────
 
-  /**
-   * Call this on each simulation tick with the current experiment state.
-   * Does nothing when the service is disabled.
-   *
-   * @param impedanceDriftPct  Cuvette impedance drift [%] - negative = Z fell (cells lysing)
-   * @param disruptionRatio    Target cell disruption ratio [0-n] - 1.0 = lysis threshold
-   * @param cellState          Current target cell state string
-   */
   update(impedanceDriftPct: number, disruptionRatio: number, cellState: string): void {
     if (!this._enabled || !this.ctx || !this.osc || !this.gainNode) return
 
@@ -140,10 +112,6 @@ class SonificationService {
     this.gainNode.gain.linearRampToValueAtTime(drGain, now + RAMP_TIME_S)
   }
 
-  /**
-   * Trigger the lysis event burst - a sharp 880 Hz tone for 0.4 seconds.
-   * Call this once when target cell state transitions to 'lysis'.
-   */
   triggerLysisBurst(): void {
     if (!this._enabled || !this.ctx) return
     const burstCtx = this.ctx
@@ -161,10 +129,6 @@ class SonificationService {
     osc.stop(now + LYSIS_BURST_S)
   }
 
-  /**
-   * Trigger a warning pulse when healthy cell approaches its threshold.
-   * Call this once when healthy DR crosses 50%.
-   */
   triggerHealthyWarningPulse(): void {
     if (!this._enabled || !this.ctx) return
     const burstCtx = this.ctx
@@ -182,12 +146,11 @@ class SonificationService {
     osc.stop(now + 0.3)
   }
 
-  /** Pitch mapped from current state, for UI display [Hz] */
+  // Pitch mapped from current state, for UI display [Hz]
   get currentPitchHz(): number {
     if (!this._enabled || !this.osc) return 0
     return this.osc.frequency.value
   }
 }
 
-/** Singleton instance shared across all components */
 export const sonification = new SonificationService()

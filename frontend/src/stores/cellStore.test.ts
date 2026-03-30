@@ -1,16 +1,7 @@
 // Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 // @vitest-environment jsdom
 
-/**
- * Store getter integration tests.
- *
- * These tests verify that the cellStore wires physics functions, constants,
- * and state correctly. They do NOT re-test the physics equations themselves
- * (that is covered by physics.test.ts and physicsAdvanced.test.ts).
- *
- * Tests run in jsdom so localStorage is available for Pinia persistence.
- * Each test gets a fresh store via setActivePinia(createPinia()).
- */
+// Store getter integration tests. Wiring of physics/constants/state only; equations covered in physics.test.ts.
 
 import { describe, it, expect } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'

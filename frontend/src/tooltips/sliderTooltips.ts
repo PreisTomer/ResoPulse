@@ -1,24 +1,18 @@
-// Copyright © 2026 Tomer Preis. All rights reserved.
-// Unauthorized copying or distribution is prohibited.
+// Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 
-/**
- * Tooltip content builders for FrequencySlider.vue.
- *
- * All functions are pure - they accept explicit parameters so they remain
- * testable and reusable without a Vue component instance.
- * Functions that render i18n strings receive a `t` translator.
- */
+// Tooltip builders for FrequencySlider. Pure — no Vue dependency.
 
 import { MEDIA } from '@/constants/media'
 import { DEFAULT_CAPSID_Q, LYSIS_FIELD_SENTINEL } from '@/constants/physics'
 import { CELL_CATEGORY, THERMAL_LEVEL } from '@/constants/strings'
 import { UNIT } from '@/constants/units'
+import { formatLysisTime } from '@/utils/format'
 import type { MediumKey } from '@/types/media'
 
-/** i18n translator signature (matches vue-i18n's `useI18n().t`) */
+export { formatLysisTime }
+
 type T = (key: string, params?: Record<string, unknown>) => string
 
-/** Resonance-specific fields that cell presets may carry (beyond CellConfig). */
 interface ResonanceExtra {
   resonantFreqGHz?: number
   capsidQ?: number
@@ -26,14 +20,6 @@ interface ResonanceExtra {
   label: string
   thresholdVoltage: number
 }
-
-// ── Helper ────────────────────────────────────────────────────────────────────
-
-export function formatLysisTime(ms: number): string {
-  return ms < 1000 ? `${ms}${UNIT.MS}` : `${(ms / 1000).toFixed(1)}${UNIT.S}`
-}
-
-// ── Tooltip builders ──────────────────────────────────────────────────────────
 
 export function tipWaveform(currentField: number, maxSteadyTemp: number): string {
   const cwWarn = maxSteadyTemp > 42

@@ -290,7 +290,6 @@ export default defineComponent({
       this.targetPickerOpen = true
     },
 
-    /** Called by ExperimentView via $refs when clicking outside the header. */
     closeAllPickers() {
       this.healthyPickerOpen = false
       this.targetPickerOpen = false

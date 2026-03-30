@@ -237,14 +237,10 @@ export default defineComponent({
   data() {
     return {
       showOfflineNote: false,
-      /** Training sample count fetched from /ai/health */
       modelTrainingSamples: 0,
-      /** True while the retrain HTTP request is in flight */
       isRetraining: false,
-      /** Feedback message after a retrain attempt */
       retrainMessage: '' as string,
       retrainMsgClass: '' as string,
-      /** Polling timer for /ai/health */
       _healthPollTimer: null as ReturnType<typeof setInterval> | null,
     }
   },

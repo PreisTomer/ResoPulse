@@ -60,7 +60,7 @@ export default defineComponent({
   position:        fixed;
   inset:           0;
   z-index:         9100;
-  background:      rgba(0,0,0,0.5);
+  background:      color-mix(in srgb, black 50%, transparent);
   display:         flex;
   align-items:     center;
   justify-content: center;

@@ -1,14 +1,8 @@
-// Copyright © 2026 Tomer Preis. All rights reserved.
-// Unauthorized copying or distribution is prohibited.
-
-/**
- * User-defined cell presets - persisted to localStorage.
- * Allows scientists to import biophysical parameters from their own literature
- * or experimental measurements and use them alongside the built-in library.
- */
+// Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 import { defineStore } from 'pinia'
 import type { CellConfig } from '@/types/cell'
 import { CELL_TYPE } from '@/constants/strings'
+import type { CellType } from '@/constants/strings'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -64,7 +58,6 @@ export const useUserPresetsStore = defineStore('userPresets', {
   },
 
   actions: {
-    /** Add a new user preset and persist. */
     add(preset: Omit<UserCellPreset, 'id' | 'createdAt'>) {
       const entry: UserCellPreset = {
         ...preset,
@@ -75,17 +68,12 @@ export const useUserPresetsStore = defineStore('userPresets', {
       save(this.presets)
     },
 
-    /** Remove a preset by ID and persist. */
     remove(id: string) {
       this.presets = this.presets.filter(p => p.id !== id)
       save(this.presets)
     },
 
-    /**
-     * Convert a UserCellPreset to a full CellConfig that can be loaded
-     * into cellStore via `store.loadPreset(cellType, config)`.
-     */
-    toCellConfig(preset: UserCellPreset, type: 'healthy' | 'target' = 'target'): CellConfig {
+    toCellConfig(preset: UserCellPreset, type: CellType = CELL_TYPE.TARGET): CellConfig {
       return {
         id:                   preset.id,
         type:                 type === CELL_TYPE.HEALTHY ? CELL_TYPE.HEALTHY : CELL_TYPE.TARGET,
@@ -93,7 +81,7 @@ export const useUserPresetsStore = defineStore('userPresets', {
         description:          preset.notes || undefined,
         radius:               preset.radius,
         membraneThickness:    preset.membraneThickness,
-        naturalFrequency:     0,              // animation only; not a physics parameter
+        naturalFrequency:     0,              // animation only
         thresholdVoltage:     preset.thresholdVoltage,
         dielectricConstant:   preset.dielectricConstant,
         conductivity:         preset.conductivity,
@@ -107,7 +95,6 @@ export const useUserPresetsStore = defineStore('userPresets', {
       }
     },
 
-    /** Re-load from localStorage (called on app init if needed). */
     reload() {
       this.presets = load()
     },

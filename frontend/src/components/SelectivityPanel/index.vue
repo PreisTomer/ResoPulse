@@ -203,9 +203,6 @@ export default defineComponent({
       return 'sel-panel__ws-val--poor'
     },
 
-    /** True when target is physically smaller than healthy cell in Schwan/IRE mode.
-     *  Quasi-DC Vm scales with R, so a smaller target starts at an inherent selectivity deficit.
-     *  TI_DC_limit = (R_T × Vth_H) / (R_H × Vth_T) — if < TI_STRONG, worth flagging. */
     smallCellNote(): boolean {
       if (this.cellStore.isResonanceMode) return false
       const rT = this.cellStore.target.radius

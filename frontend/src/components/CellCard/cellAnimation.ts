@@ -1,19 +1,11 @@
-// Copyright © 2026 Tomer Preis. All rights reserved.
-// Unauthorized copying or distribution is prohibited.
+// Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 
-/**
- * Pure D3 animation helpers for CellCard. Each setup function accepts a DOM element
- * and a `getFrame()` callback that reads Vue reactive state each tick.
- *
- * Anatomy by category:
- *  mammalian : nucleus + mitochondria + cortex ring + field rays + pores
- *  ecoli     : rod blob + double membrane + nucleoid + ribosomes + flagellum + field rays
- *  mrsa      : spherical blob + thick peptidoglycan rings + septum + nucleoid + field rays
- *  influenza : 12 club spikes + RNP ring + RNA core + field rays
- *  sarscov2  : 16 club spikes + lipid envelope ring + nucleocapsid ring + RNA core + field rays
- *
- * Field rays: color = frequency (cyan → violet, log 10 kHz–30 GHz); opacity = field intensity.
- */
+// Pure D3 animation helpers for CellCard. Each setup function takes a DOM element
+// and a getFrame() callback that reads Vue reactive state on each tick.
+// Anatomy: mammalian=nucleus+mito+cortex+rays+pores; ecoli=rod+dbl-mem+nucleoid+ribosome+flagellum+rays;
+// mrsa=sphere+peptidoglycan+septum+nucleoid+rays; influenza=12 spikes+RNP+RNA+rays;
+// sarscov2=16 spikes+lipid envelope+nucleocapsid+RNA+rays.
+// Field rays: color=frequency (cyan→violet, log 10kHz–30GHz); opacity=field intensity.
 import * as d3 from 'd3'
 import type { BlobPoint, BlobFrame, OscFrame, CellState } from '@/types/cell'
 import {
@@ -28,60 +20,37 @@ import { C } from '@/theme/colors'
 type D3Sel<E extends Element> = d3.Selection<E, unknown, null, undefined>
 type PhaseEntry = { baseAngle: number; phaseOffset: number; speed: number }
 
-/**
- * Static visual profile derived from a CellConfig and passed to setupBlobAnimation.
- * Known presets are resolved by presetId; custom presets fall back to physics-driven derivation
- * using thresholdVoltage (malignancy), conductivity (mito fragmentation), and resonantFreqGHz (virus spikes).
- */
+// Visual profile derived from CellConfig. Known presets use curated values; custom presets
+// fall back to physics-driven derivation (thresholdVoltage=malignancy, conductivity=mito fragmentation).
 export interface CellVisualProfile {
   presetId:          string | undefined
-  /** Bacteria shape override for custom presets — 'rod' | 'coccus' | 'coccobacillus'. */
-  morphologyTag?:    string
-  /** V — lower Vth = more malignant = larger nucleus, more pleomorphic membrane, more protrusions. */
-  thresholdVoltage:  number
-  /** S/m — higher σ_i = stronger Warburg effect = more fragmented, more numerous mitochondria. */
-  conductivity:      number
-  /** GHz — lower f_res = larger, more complex virus = more spikes (custom virus fallback only). */
-  resonantFreqGHz?:  number
-  /** Mechanical Q factor — higher Q = longer, narrower spikes (custom virus fallback only). */
-  capsidQ?:          number
+  morphologyTag?:    string    // bacteria shape override: 'rod' | 'coccus' | 'coccobacillus'
+  thresholdVoltage:  number    // V — lower=more malignant=larger nucleus+more protrusions
+  conductivity:      number    // S/m — higher=stronger Warburg=more fragmented mitochondria
+  resonantFreqGHz?:  number    // GHz — lower=larger/more complex virus=more spikes (custom fallback)
+  capsidQ?:          number    // higher Q=longer/narrower spikes (custom virus fallback)
 }
 
-/**
- * Malignancy score [0–1] derived from membrane threshold voltage.
- * Lower Vth = more aggressive cancer = higher score.
- * Reference: healthy hepatocyte Vth ≈ 1.1 V; highly aggressive cancer Vth ≈ 0.5 V.
- */
+// Malignancy score [0–1]: lower Vth=more aggressive. Hepatocyte Vth≈1.1V; aggressive cancer≈0.5V.
 function computeMalignancyScore(thresholdVoltage: number): number {
   return Math.max(0, Math.min(1, (1.15 - thresholdVoltage) / 0.65))
 }
 
 // ── Module-level animation constants ─────────────────────────────────────────
 
-/** Background colour matching the dark canvas fill (used for pore holes and BG mask). */
-const CANVAS_BG = '#080e1a'
+const CANVAS_BG       = '#080e1a'   // dark canvas fill (used for pore holes and BG mask)
+const COLOR_LYSIS     = C.danger    // lysis / IRE disruption colour
+const COLOR_AMBER     = C.amber     // rev-EP / amber warning colour
+const COLOR_PORE_AMBER = '#d97706'  // pore amber (darker, inside membrane)
+const COLOR_HEAT      = '#fb923c'   // thermal heat tint (orange)
 
-/** Lysis / IRE disruption colour */
-const COLOR_LYSIS = C.danger
-/** Rev-EP / amber warning colour */
-const COLOR_AMBER = C.amber
-/** Pore amber (darker, inside membrane) */
-const COLOR_PORE_AMBER = '#d97706'
-/** Thermal heat tint (orange) */
-const COLOR_HEAT = '#fb923c'
-
-/** Rod semi-axis ratio: ROD_B = BASE_R × ROD_RATIO */
-const ROD_RATIO = 0.45
-
-/** Fraction of membrane radius to the pore centre (keeps pores inside the blob). */
-const PORE_INSET = 0.82
-
-/** Ion streaming speeds and phases — moved here so they are not re-allocated every tick. */
+const ROD_RATIO       = 0.45    // rod semi-axis: ROD_B = BASE_R × ROD_RATIO
+const PORE_INSET      = 0.82    // pore centre as fraction of membrane radius
 const ION_SPEEDS:   [number, number, number] = [0.00032, 0.00044, 0.00037]
 const ION_PHASES_N: [number, number, number] = [0, 0.34, 0.67]
 const ION_PHASES_S: [number, number, number] = [0.50, 0.83, 0.17]
 
-/** Per-preset nucleus blob radius (px). Missing key → use default. */
+// Per-preset nucleus blob radius (px); missing key falls back to NUC_R_HEALTHY
 const NUC_R_MAP: Record<string, number> = {
   hl60:          36,
   panc1:         28,
@@ -90,7 +59,7 @@ const NUC_R_MAP: Record<string, number> = {
 }
 const NUC_R_HEALTHY = 20
 
-/** Per-preset nuclear membrane wave amplitude (controls pleomorphism). */
+// Per-preset nuclear membrane wave amplitude (controls pleomorphism)
 const NUC_WAVE_AMP_MAP: Record<string, number> = {
   hl60:          1.8,
   adenocarcinoma:6.0,
@@ -99,32 +68,19 @@ const NUC_WAVE_AMP_MAP: Record<string, number> = {
 }
 const NUC_WAVE_AMP_HEALTHY = 2.5
 
-/** Number of membrane ion-channel marker dots per cell. */
-const CHAN_COUNT = 8
-
-/** Ion streaming particle x-offsets (3 per pole). */
-const ION_OFFSETS = [-4, 0, 4]
-
-/** Ray overlap into cell interior (px) — gradient fades to 0 over this region, hiding abrupt tip. */
-const RAY_OVERLAP_RATIO = 0.55
+const CHAN_COUNT       = 8           // membrane ion-channel marker dots per cell
+const ION_OFFSETS      = [-4, 0, 4] // ion streaming particle x-offsets (3 per pole)
+const RAY_OVERLAP_RATIO = 0.55      // ray overlap into cell interior; gradient hides abrupt tip
 
 // ── Shape helper ──────────────────────────────────────────────────────────────
 
-/**
- * Polar radius of a vertical ellipse at angle θ (D3 lineRadial convention:
- * θ=0 → top/up, θ=π/2 → right).
- * a = semi-axis along θ=0 (vertical/tall), b = semi-axis along θ=π/2 (horizontal/narrow).
- */
+// Polar radius of a vertical ellipse; D3 lineRadial: θ=0→top, θ=π/2→right
 function capsuleR(theta: number, a: number, b: number): number {
   const s = Math.sin(theta), c = Math.cos(theta)
   return (a * b) / Math.sqrt(a * a * s * s + b * b * c * c)
 }
 
-/**
- * Per-preset radial offset (px) for each cancer membrane control point.
- * Positive = outward protrusion (pseudopod/arm). Negative = slight indentation.
- * Biologically: large pseudopods (adeno), stellate arms (GBM/PANC1), round blast (HL60).
- */
+// Per-preset radial offset [px] per control point: +ve=pseudopod, −ve=indentation
 function computeCancerBaseOffset(i: number, N: number, profile: CellVisualProfile): number {
   const angleDeg = (i / N) * 360
   const seed = (i * 2971 + 1777) % 2000
@@ -174,10 +130,7 @@ function computeCancerBaseOffset(i: number, N: number, profile: CellVisualProfil
   return (seed % 1200) / 200 - 1.8
 }
 
-/**
- * Returns mitochondria geometry data for a given cell type and preset.
- * Cancer presets reflect Warburg-effect fragmentation; healthy cells have elongated cristae.
- */
+// Mitochondria geometry: cancer=Warburg fragmented, healthy=elongated cristae
 function buildMitoData(
   isTarget: boolean,
   profile: CellVisualProfile,
@@ -267,7 +220,7 @@ interface MitoEl {
   m:     { x: number; y: number; rx: number; ry: number; angle: number }
 }
 
-/** A preset-specific intracellular organelle that drifts slowly (Brownian motion). */
+// Preset-specific intracellular organelle that drifts slowly (Brownian motion)
 interface OrganelleEl {
   el:       D3Sel<SVGCircleElement>
   baseX:    number
@@ -277,8 +230,7 @@ interface OrganelleEl {
 }
 
 interface MammalianAnatomy {
-  /** Stored from setup - needed during per-tick updates */
-  type:         string
+  type:         string  // stored from setup — needed during per-tick updates
   accentColor:  string
   profile:      CellVisualProfile
   mitoEls:      MitoEl[]
@@ -287,12 +239,10 @@ interface MammalianAnatomy {
   nucOuterEnv:  D3Sel<SVGPathElement>
   nucleolus:    D3Sel<SVGCircleElement>
   nucleolus2:   D3Sel<SVGCircleElement> | null
-  /** Third nucleolus - adenocarcinoma only (hallmark of high-grade malignancy). */
-  nucleolus3:   D3Sel<SVGCircleElement> | null
+  nucleolus3:   D3Sel<SVGCircleElement> | null  // third nucleolus; adenocarcinoma only
   cortexRing:   D3Sel<SVGCircleElement>
   nucPhases:    PhaseEntry[]
-  /** Preset-specific animated organelles: lipid droplets, vesicles, chromatin dots. */
-  organelleEls: OrganelleEl[]
+  organelleEls: OrganelleEl[]  // lipid droplets, vesicles, chromatin dots
 }
 
 interface SpikeEl {
@@ -302,23 +252,19 @@ interface SpikeEl {
 
 interface BacteriaAnatomy {
   isRod:               boolean
-  /** Semi-major rod axis (equals BASE_R for E. coli) - used to place flagella */
-  ROD_A:               number
+  ROD_A:               number  // semi-major rod axis (=BASE_R for E. coli); used to place flagella
   nucG:                D3Sel<SVGGElement>
   nucleoidBlob:        D3Sel<SVGPathElement>
   ribosomeDots:        Array<D3Sel<SVGCircleElement>>
   nucleoidPhases:      PhaseEntry[]
   bacteriaWallElOuter: D3Sel<SVGEllipseElement> | null  // E. coli only
   bacteriaWallElInner: D3Sel<SVGEllipseElement> | null  // E. coli only
-  /** 3 peritrichous flagellar filaments (helical segments). E. coli only. */
-  flagEls:             Array<D3Sel<SVGPathElement>> | null
-  /** 3 flagellar hook joints (L-shaped arc from basal body to filament). E. coli only. */
-  hookEls:             Array<D3Sel<SVGPathElement>> | null
+  flagEls:             Array<D3Sel<SVGPathElement>> | null  // 3 peritrichous flagellar filaments (E. coli)
+  hookEls:             Array<D3Sel<SVGPathElement>> | null  // 3 flagellar hook joints (E. coli)
   bacteriaWallC1:      D3Sel<SVGCircleElement>  | null  // MRSA only
   bacteriaWallC2:      D3Sel<SVGCircleElement>  | null  // MRSA only
   septum:              D3Sel<SVGLineElement>    | null  // MRSA only
-  /** 20 wall teichoic acid surface protrusions. MRSA only. */
-  teichoicEls:         Array<D3Sel<SVGLineElement>> | null
+  teichoicEls:         Array<D3Sel<SVGLineElement>> | null  // 20 wall teichoic acid protrusions (MRSA)
 }
 
 interface VirusAnatomy {
@@ -327,10 +273,8 @@ interface VirusAnatomy {
   N_SPIKES:        number
   STALK_LEN:       number
   HEAD_R:          number
-  /** Wider mushroom-cap radius for neuraminidase (NA) spikes. Influenza only. */
-  NA_HEAD_R:       number
-  /** Indices of NA (neuraminidase) spikes — every ~6th spike. Influenza only. */
-  naIndices:       Set<number>
+  NA_HEAD_R:       number     // wider mushroom-cap for NA spikes (influenza only)
+  naIndices:       Set<number>  // indices of NA spikes, every ~6th (influenza only)
   virusInnerRings: Array<D3Sel<SVGCircleElement>>
   virusCore:       D3Sel<SVGCircleElement>
   virusSpikes:     SpikeEl[]
@@ -939,15 +883,7 @@ function updateVirusAnatomy(anat: VirusAnatomy, p: VirusUpdateParams): void {
 
 // ── Blob cell animation ───────────────────────────────────────────────────────
 
-/**
- * Initialises the cell SVG animation and returns the D3 timer.
- * @param el           Container element (cellCanvas ref)
- * @param type         'healthy' | 'target'
- * @param accentColor  Fixed accent color
- * @param cellCategory Biological category — determines anatomy drawn
- * @param profile      Visual profile: known presets resolved by presetId; custom cells use physics fields
- * @param getFrame     Called each tick; reads reactive Vue state
- */
+// Initialise cell SVG animation; returns D3 timer. getFrame() reads reactive Vue state each tick.
 export function setupBlobAnimation(
   el: HTMLElement,
   type: 'healthy' | 'target',
@@ -1642,7 +1578,6 @@ export function setupBlobAnimation(
 
 // ── Oscilloscope strip ────────────────────────────────────────────────────────
 
-/** Initialises the oscilloscope waveform SVG animation; returns the D3 timer. */
 export function setupOscilloscope(
   el: HTMLElement,
   accentColor: string,
@@ -1706,14 +1641,8 @@ export function setupOscilloscope(
 
 // ── Fragment spawner ──────────────────────────────────────────────────────────
 
-/**
- * Appends a single lysis fragment to the cell's SVG and animates it outward.
- * Three variants are randomly chosen each call:
- *  - Arc shard   (35%): curved membrane fragment — torn lipid bilayer piece
- *  - Debris dot  (23%): filled circle — cytoplasmic organelle / ribosome cluster
- *  - Line shard  (42%): original radial line with outward drift
- * Call repeatedly (e.g. every 80 ms) during the lysing state.
- */
+// Append one lysis fragment and animate it outward. Call every ~80 ms during lysing state.
+// Variants: arc shard 35%, debris dot 23%, line shard 42%.
 export function spawnFragment(el: HTMLElement): void {
   const svg = d3.select(el).select<SVGSVGElement>('svg')
   if (svg.empty()) return

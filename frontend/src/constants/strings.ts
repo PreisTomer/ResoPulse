@@ -1,13 +1,12 @@
-// Copyright © 2026 Tomer Preis. All rights reserved.
-// Unauthorized copying or distribution is prohibited.
+// Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 
-/** Short display labels for healthy / target cell roles (domain notation: H / T) */
+// Short display labels for healthy / target cell roles (domain notation: H / T)
 export const CELL_LABEL = {
   HEALTHY: 'H',
   TARGET:  'T',
 } as const
 
-/** Cell lifecycle states (matches CellState union in types/cell.ts) */
+// Cell lifecycle states (matches CellState union in types/cell.ts)
 export const CELL_STATE = {
   STABLE:      'stable',
   NOURISHING:  'nourishing',
@@ -19,36 +18,33 @@ export const CELL_STATE = {
   LYSED:       'lysed',
 } as const
 
-/** Cell role within an experiment pair */
+// Cell role within an experiment pair
 export const CELL_TYPE = {
   HEALTHY: 'healthy',
   TARGET:  'target',
 } as const
 
-/** Active chart / simulation mode */
+// Active chart / simulation mode
 export const CHART_MODE = {
   SCHWAN:    'schwan',
   RESONANCE: 'resonance',
 } as const
 
-/** Biological category of the target cell (determined by radius) */
+// Biological category of the target cell (determined by radius)
 export const CELL_CATEGORY = {
   MAMMALIAN: 'mammalian',
   BACTERIA:  'bacteria',
   VIRUS:     'virus',
 } as const
 
-/** Applied waveform mode */
+// Applied waveform mode
 export const WAVEFORM = {
   CW:     'cw',
   PULSED: 'pulsed',
-  /** High-Frequency Irreversible Electroporation: bipolar square pulses >100 kHz.
-   *  Reduces muscle contractions; effective lysis threshold ×1.75 vs monopolar pulsed.
-   *  Ref: Sano et al. (2018) Sci Rep; Dong et al. (2018) IEEE Trans Biomed Eng */
-  H_FIRE: 'hfire',
+  H_FIRE: 'hfire',  // H-FIRE: bipolar pulses >100 kHz; lysis threshold ×1.75. Sano 2018; Dong 2018.
 } as const
 
-/** Thermal danger levels used in field control */
+// Thermal danger levels used in field control
 export const THERMAL_LEVEL = {
   SAFE:         'safe',
   HYPERTHERMIC: 'hyperthermic',
@@ -56,14 +52,14 @@ export const THERMAL_LEVEL = {
   VAPORIZING:   'vaporizing',
 } as const
 
-/** Experiment log event types */
+// Experiment log event types
 export const LOG_EVENT = {
   LYSIS:   'lysis',
   MANUAL:  'manual',
   OUTCOME: 'outcome',   // user-rated run outcome, feeds AI training loop
 } as const
 
-/** Cell preset group (aligns with CellPreset.group field in cellLibrary.ts) */
+// Cell preset group (aligns with CellPreset.group field in cellLibrary.ts)
 export const CELL_GROUP = {
   REFERENCE: 'reference',
   CANCER:    'cancer',
@@ -71,36 +67,42 @@ export const CELL_GROUP = {
   VIRUS:     'virus',
 } as const
 
-/** Experimental validation basis for resonance presets */
+// Experimental validation basis for resonance presets
 export const EXPERIMENTAL_BASIS = {
   LASER_VALIDATED: 'laser-validated',
   RF_EXTRAPOLATED: 'rf-extrapolated',
   SPECULATIVE:     'speculative',
 } as const
 
-/**
- * Cuvette load impedance state derived from drift magnitude.
- * Used by the Instrument Panel load monitor and field corrector.
- */
+// Cuvette load impedance state derived from drift magnitude
 export const LOAD_STATE = {
   NOMINAL:  'nominal',
   WARNING:  'warning',
   CRITICAL: 'critical',
 } as const
 
-/**
- * Generator source impedance regime.
- * Determines whether VSWR / reflection coefficient is meaningful.
- */
+// Cell volume-fraction field distortion level (Maxwell-Garnett mixing)
+export const FIELD_DISTORTION = {
+  NONE:        'none',
+  MINOR:       'minor',
+  SIGNIFICANT: 'significant',
+} as const
+
+// Pulse-to-RC bandwidth adequacy status
+export const PULSE_BW_STATUS = {
+  OK:       'ok',
+  MARGINAL: 'marginal',
+  CRITICAL: 'critical',
+  CW:       'cw',
+} as const
+
+// Generator source impedance regime (determines whether VSWR is meaningful)
 export const SOURCE_MODE = {
   IRE:  'ire',   // high-voltage pulsed power (< 1 Ω), mismatch negligible
   RF:   'rf',    // 50 Ω RF / coaxial, mismatch relevant
 } as const
 
-/**
- * RF coupling regime determined by the operating frequency.
- * Drives the hardware-requirement warning badge in the frequency slider.
- */
+// RF coupling regime determined by operating frequency; drives hardware-requirement warning badge
 export const FREQ_REGIME = {
   ELECTROLYTIC: 'electrolytic',  // < 300 MHz, direct electrode, DC model valid
   NEARFIELD_RF: 'nearfield_rf',  // 300 MHz-1 GHz, coaxial RF probe, DC model approximate
@@ -108,43 +110,26 @@ export const FREQ_REGIME = {
 } as const
 
 // ── Derived types from constants (single source of truth) ──────────────────
-/** All valid cell lifecycle states */
 export type CellState         = typeof CELL_STATE[keyof typeof CELL_STATE]
-/** Cell role in an experiment pair: 'healthy' | 'target' */
 export type CellType          = typeof CELL_TYPE[keyof typeof CELL_TYPE]
-/** Active simulation chart mode */
 export type ChartMode         = typeof CHART_MODE[keyof typeof CHART_MODE]
-/** Biological category of the target cell */
 export type CellCategory      = typeof CELL_CATEGORY[keyof typeof CELL_CATEGORY]
-/** Applied waveform mode */
 export type WaveformMode      = typeof WAVEFORM[keyof typeof WAVEFORM]
-/** Thermal hazard level */
 export type ThermalLevel      = typeof THERMAL_LEVEL[keyof typeof THERMAL_LEVEL]
-/** Experiment log event type */
 export type LogEventType      = typeof LOG_EVENT[keyof typeof LOG_EVENT]
-/** Cell preset group identifier */
 export type CellGroupType     = typeof CELL_GROUP[keyof typeof CELL_GROUP]
-/** Experimental validation basis for resonance presets */
 export type ExperimentalBasis = typeof EXPERIMENTAL_BASIS[keyof typeof EXPERIMENTAL_BASIS]
-/** RF coupling regime based on operating frequency */
 export type FreqRegime        = typeof FREQ_REGIME[keyof typeof FREQ_REGIME]
-/** Cuvette load impedance state */
 export type LoadState         = typeof LOAD_STATE[keyof typeof LOAD_STATE]
-/** Generator source impedance regime */
 export type SourceMode        = typeof SOURCE_MODE[keyof typeof SOURCE_MODE]
-/** Cell preset identifier */
 export type PresetId          = typeof PRESET_ID[keyof typeof PRESET_ID]
+export type FieldDistortion   = typeof FIELD_DISTORTION[keyof typeof FIELD_DISTORTION]
+export type PulseBwStatus     = typeof PULSE_BW_STATUS[keyof typeof PULSE_BW_STATUS]
 
-/**
- * Em dash placeholder shown in table cells where a data point does not apply.
- * Scientific convention for "no value" (e.g. resonance frequency for mammalian cells).
- */
+// Em dash "—" placeholder for table cells where a data point does not apply (scientific convention)
 export const NULL_DISPLAY = '\u2014'
 
-/**
- * Bacterial and cellular morphology shape tags.
- * Used by custom presets to drive animation shape when no presetId match exists.
- */
+// Morphology shape tags for custom presets (drives animation shape when no presetId match)
 export const MORPHOLOGY_TAG = {
   ROD:           'rod',           // elongated rod (e.g. E. coli, Lactobacillus)
   COCCUS:        'coccus',        // spherical (e.g. MRSA, Streptococcus)
@@ -152,7 +137,7 @@ export const MORPHOLOGY_TAG = {
 } as const
 export type MorphologyTag = typeof MORPHOLOGY_TAG[keyof typeof MORPHOLOGY_TAG]
 
-/** Cell preset IDs (aligns with CellPreset.id field in cellLibrary.ts) */
+// Cell preset IDs (aligns with CellPreset.id field in cellLibrary.ts)
 export const PRESET_ID = {
   HEPATOCYTE:     'hepatocyte',
   RBC:            'rbc',
@@ -169,5 +154,4 @@ export const PRESET_ID = {
   SARSCOV2:       'sarscov2',
 } as const
 
-/** Default session name used when no prior experiment state is found in localStorage. */
 export const DEFAULT_SESSION_NAME = 'Session 001'

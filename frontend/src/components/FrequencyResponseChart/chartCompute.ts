@@ -14,38 +14,23 @@ export const MARGIN            = { top: 22, right: 130, bottom: 52, left: 54 }
 
 // ── Frequency grid ────────────────────────────────────────────────────────────
 
-/**
- * N logarithmically-spaced points between min and max.
- * @param min - lower bound (same units as max)
- * @param max - upper bound
- * @param n   - number of points
- * @returns array of n values evenly spaced in log10
- */
+// N logarithmically-spaced points between min and max
 export function logspace(min: number, max: number, n: number): number[] {
   const step = (Math.log10(max) - Math.log10(min)) / (n - 1)
   return Array.from({ length: n }, (_, i) => Math.pow(10, Math.log10(min) + i * step))
 }
 
-/** Pre-computed frequency points [Hz] used for all Schwan-mode curves. */
 export const F_POINTS_HZ: number[] = logspace(F_MIN_HZ, F_MAX_HZ, N_POINTS)
 
 // ── Frequency label formatters ────────────────────────────────────────────────
 
-/**
- * Short tick-axis label: "500M", "10k".
- * @param hz - frequency in Hz
- * @returns compact string without unit space
- */
+// Short tick-axis label: "500M", "10k"
 export function formatHz(hz: number): string {
   if (hz >= 1e6) return `${hz / 1e6}M`
   return `${hz / 1e3}k`
 }
 
-/**
- * Verbose tooltip frequency label: "12.345 MHz", "750.0 kHz".
- * @param hz - frequency in Hz
- * @returns human-readable string with SI unit suffix
- */
+// Verbose tooltip frequency label: "12.345 MHz", "750.0 kHz"
 export function formatTooltipFreq(hz: number): string {
   if (hz >= 1e9) return `${(hz / 1e9).toFixed(3)} ${UNIT.GHZ}`
   if (hz >= 1e6) return `${(hz / 1e6).toFixed(3)} ${UNIT.MHZ}`
@@ -54,14 +39,7 @@ export function formatTooltipFreq(hz: number): string {
 
 // ── Uncertainty ───────────────────────────────────────────────────────────────
 
-/**
- * σ_i uncertainty percentage by cell category.
- * Virus (R < 0.1 µm): 45% — lipid bilayer σ_i highly variable.
- * Bacteria (R < 2 µm): 35% — complex wall composition.
- * Mammalian: 20% — well-characterised reference ranges.
- * @param radius - cell radius in µm
- * @returns uncertainty percentage (0–100)
- */
+// σ_i uncertainty % by category: virus R<0.1µm=45%, bacteria R<2µm=35%, mammalian=20%
 export function sigmaUncPct(radius: number): number {
   if (radius < 0.1) return 45
   if (radius < 2.0) return 35
@@ -70,14 +48,7 @@ export function sigmaUncPct(radius: number): number {
 
 // ── Curve computers ───────────────────────────────────────────────────────────
 
-/**
- * Vm [mV] Schwan curve for one cell over F_POINTS_HZ.
- * @param cell     - cell biophysical configuration
- * @param field    - applied field [V/cm]
- * @param sigma_e  - effective external conductivity [S/m]
- * @param cosTheta - field-axis orientation factor (|cos θ|), default 1.0
- * @returns array of { hz, vm } pairs (vm in mV)
- */
+// Vm [mV] Schwan curve for one cell over F_POINTS_HZ
 export function computeVmCurve(
   cell: CellConfig,
   field: number,
@@ -90,15 +61,7 @@ export function computeVmCurve(
   }))
 }
 
-/**
- * Nuclear Vm [mV] curve (Kotnik & Miklavcic 2006 double-shell) over F_POINTS_HZ.
- * Returns zero for cells without a nuclearRadius (anucleate / prokaryotes).
- * @param cell     - cell biophysical configuration
- * @param field    - applied field [V/cm]
- * @param sigma_e  - effective external conductivity [S/m]
- * @param cosTheta - field-axis orientation factor, default 1.0
- * @returns array of { hz, vm } pairs (vm in mV)
- */
+// Nuclear Vm [mV] curve (Kotnik & Miklavcic 2006 double-shell); zero for anucleate/prokaryotes
 export function computeNuclearVmCurve(
   cell: CellConfig,
   field: number,
@@ -111,14 +74,7 @@ export function computeNuclearVmCurve(
   }))
 }
 
-/**
- * DEP Clausius-Mossotti Re[K(f)] curve over F_POINTS_HZ.
- * Valid for Schwan mode (kHz–500 MHz). Not drawn in resonance mode.
- * @param cell    - cell biophysical configuration
- * @param sigma_e - effective external conductivity [S/m]
- * @param eps_r   - relative permittivity of the medium
- * @returns array of { hz, k } pairs (k in [-0.5, 0.5])
- */
+// DEP Re[K(f)] curve [−0.5, +0.5]; Schwan mode only (kHz–500 MHz)
 export function computeDepCurve(
   cell: CellConfig,
   sigma_e: number,
@@ -130,15 +86,7 @@ export function computeDepCurve(
   }))
 }
 
-/**
- * Vm selectivity ratio Vm_T/Vm_H curve over F_POINTS_HZ.
- * cos θ cancels in the ratio so it is not required as a parameter.
- * @param healthy  - healthy cell configuration
- * @param target   - target cell configuration
- * @param field    - applied field [V/cm]
- * @param sigma_e  - effective external conductivity [S/m]
- * @returns array of { hz, ratio } pairs
- */
+// Vm_T/Vm_H selectivity ratio curve; cosθ cancels so not required
 export function computeSelCurve(
   healthy: CellConfig,
   target: CellConfig,
@@ -152,15 +100,7 @@ export function computeSelCurve(
   })
 }
 
-/**
- * Optimal frequency [Hz] that maximises Vm_T/Vm_H selectivity ratio.
- * Uses a 300-point logarithmic scan over [F_MIN_HZ, F_MAX_HZ].
- * @param healthy  - healthy cell configuration
- * @param target   - target cell configuration
- * @param field    - applied field [V/cm]
- * @param sigma_e  - effective external conductivity [S/m]
- * @returns frequency in Hz at which Vm_T/Vm_H is maximised
- */
+// Frequency [Hz] maximising Vm_T/Vm_H; 300-point log scan
 export function computeOptimalFreqHz(
   healthy: CellConfig,
   target: CellConfig,
@@ -182,16 +122,7 @@ export function computeOptimalFreqHz(
   return optHz
 }
 
-/**
- * σ_i uncertainty band for one cell [mV] over F_POINTS_HZ.
- * Varies σ_i by ±pct% to produce vmLow and vmHigh bounds.
- * @param cell     - cell biophysical configuration
- * @param field    - applied field [V/cm]
- * @param sigma_e  - effective external conductivity [S/m]
- * @param cosTheta - field-axis orientation factor, default 1.0
- * @param pct      - fractional uncertainty percentage (0–100)
- * @returns array of { hz, vmLow, vmHigh } triples (voltages in mV)
- */
+// σ_i uncertainty band [mV]: varies σ_i by ±pct% to produce vmLow/vmHigh bounds
 export function computeUncBand(
   cell: CellConfig,
   field: number,
@@ -216,7 +147,6 @@ export function computeUncBand(
 
 // ── Tooltip data shape ────────────────────────────────────────────────────────
 
-/** All data needed to render the hover tooltip overlay. */
 export interface TooltipData {
   x: number
   freqHz: number
@@ -229,8 +159,6 @@ export interface TooltipData {
   selRatio: number
   inWindow: boolean
   flipLeft: boolean
-  /** Re[K_H] Clausius-Mossotti at cursor frequency (Schwan mode only) */
-  depHealthyK?: number
-  /** Re[K_T] Clausius-Mossotti at cursor frequency (Schwan mode only) */
-  depTargetK?: number
+  depHealthyK?: number  // Re[K_H] CM factor at cursor frequency (Schwan mode only)
+  depTargetK?: number   // Re[K_T] CM factor at cursor frequency (Schwan mode only)
 }

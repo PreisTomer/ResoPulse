@@ -113,7 +113,6 @@ export default defineComponent({
     fieldInputUnit(): string { return this.currentField >= FIELD_KV_THRESHOLD ? 'kV/cm' : 'V/cm' },
     fieldInputStep(): number { return this.currentField >= FIELD_KV_THRESHOLD ? 0.1 : 1 },
 
-    /** Track markers at target and healthy lysis thresholds — positioned on the linear field scale. */
     fieldMarkers(): Array<{ id: string; pct: number; color: string }> {
       const { fieldMin, fieldMax } = this.sliderRanges
       const span = fieldMax - fieldMin

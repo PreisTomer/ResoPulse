@@ -66,8 +66,7 @@ export default defineComponent({
   methods: {
     depKLabel(k: number): string { return k >= 0 ? 'pDEP' : 'nDEP' },
     depKClass(k: number): string { return k >= 0 ? 'chart-tooltip__dep-pdep' : 'chart-tooltip__dep-ndep' },
-    /** True when H and T are in opposite DEP regimes — cells migrate apart, enabling separation. */
-    isDepSeparation(kH: number, kT: number): boolean { return (kH >= 0) !== (kT >= 0) },
+    isDepSeparation(kH: number, kT: number): boolean { return (kH >= 0) !== (kT >= 0) },  // opposite regimes = cells migrate apart
   },
 })
 </script>

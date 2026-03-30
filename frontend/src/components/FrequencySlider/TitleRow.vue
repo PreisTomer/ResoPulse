@@ -12,14 +12,9 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
-import { useCellStore } from '@/stores/cellStore'
 import { tipScopeNote } from '@/tooltips/sliderTooltips'
 
 export default defineComponent({
-  setup() {
-    return { store: useCellStore() }
-  },
-
   computed: {
     tipScopeNote(): string { return tipScopeNote() },
   },

@@ -1,12 +1,7 @@
 // Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 
-/**
- * Biomodulation panel per-parameter tooltips.
- * Each function covers one mechanism shown in BiostimPanel.vue.
- * Pure functions, no store access.
- */
+// Biomodulation panel tooltip builders. Pure — no store access.
 
-/** Tooltip for the BMS header / score badge. */
 export function tipBiomodScore(params: { bms: string }): string {
   const { bms } = params
   return `<strong>Biomodulation Score: <span class="tip-val">${bms}%</span></strong>
@@ -15,7 +10,6 @@ Weighted combination of the three sub-threshold mechanisms:
 <span class="tip-note">Research indicator only, coefficients are not peer-reviewed and this index has no established in-vitro reference range.\\nRefs: Pilla (2006) JRSE 8:72 · Lepock (2003) Int J Hyperthermia 19:252\\nLee et al. (2018) Sci Rep 8:8184 · Ikai et al. (2008) J Orthop Sci 13:550</span>`
 }
 
-/** Tooltip for the SI (Sub-threshold Stimulation Index) row. */
 export function tipBiomodSI(params: { si: string; dr: string }): string {
   const { si, dr } = params
   const optDrLow = '5', optDrHigh = '40'
@@ -28,7 +22,6 @@ Model: SI = 4·r·(1−r)   r = DR / 0.45   (quadratic bell, peak at 22%)
 <span class="tip-note">Raise field intensity to push DR into 20-40% range for peak SI.\\nAbove 45% DR the healthy membrane enters the stress regime.</span>`
 }
 
-/** Tooltip for the MTE (Mechano-Transduction Efficiency) row. */
 export function tipBiomodMTE(params: {
   mte: string
   freqLabel: string
@@ -46,7 +39,6 @@ Optimal: ${optCouplingFreqLabel} for ≥70% coupling efficiency
 <span class="tip-note">Reduce carrier frequency toward 10-50 kHz to maximise coupling.\\nTarget cell disruption also scales with Vm, so lower frequency\\nbenefits selectivity only if R_T/R_H > 1 (cancer vs normal).</span>`
 }
 
-/** Tooltip for the MA (Mild Thermal Activation) row. */
 export function tipBiomodMA(params: { ma: string; T: string }): string {
   const { ma, T } = params
   return `<strong>③ Mild Thermal Activation (MA): <span class="tip-val">${ma}%</span></strong>

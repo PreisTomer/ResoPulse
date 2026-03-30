@@ -1,10 +1,6 @@
-// Copyright © 2026 Tomer Preis. All rights reserved.
-// Unauthorized copying or distribution is prohibited.
+// Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 
-/**
- * Sweep-panel tooltip builders - extracted from SweepPanel/index.vue.
- * Follows the same pattern as sliderTooltips.ts: pure functions, no store access.
- */
+// Sweep-panel tooltip builders. Pure — no store access.
 import { ICON } from '@/constants/icons'
 import { THRESHOLDS } from '@/constants/physics'
 

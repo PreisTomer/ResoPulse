@@ -178,7 +178,6 @@ export default defineComponent({
     },
     hasEntries(): boolean { return this.expStore.entries.length > 0 },
     isResonanceMode(): boolean { return this.cellStore.isResonanceMode },
-    /** Show the Session column only when entries span more than one named session. */
     showSessionCol(): boolean {
       const names = new Set(this.expStore.entries.map((e) => e.sessionName ?? ''))
       return names.size > 1
@@ -195,7 +194,6 @@ export default defineComponent({
       return this.$t('log.tipThSel', { strong, marginal })
     },
 
-    /** Formatted cumulative dose badge text */
     doseBadge(): string {
       const dose = this.expStore.cumulativeDoseJkg
       if (dose >= 1000) return `${(dose / 1000).toFixed(2)} ${UNIT.KJ_PER_KG}`

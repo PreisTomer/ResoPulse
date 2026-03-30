@@ -1,15 +1,6 @@
 // Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 
-/**
- * Unit tests for core physics functions and the cellStore getters that derive
- * clinical-facing numbers. These tests guard against regressions in:
- *   - Schwan equation (Vm, τ)
- *   - H-FIRE threshold multiplier consistency
- *   - Pulse step response (PEF)
- *   - Lysis-field computation with and without H-FIRE
- *   - Disruption-ratio field independence (for optimal-frequency scan)
- *   - Slider range bounds for all cell categories
- */
+// Unit tests: Schwan Vm/τ, H-FIRE threshold, PEF, lysis field, DR field independence, slider bounds
 
 import { describe, it, expect } from 'vitest'
 import {

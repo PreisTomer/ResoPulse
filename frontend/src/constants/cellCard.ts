@@ -28,10 +28,8 @@ import { UNIT } from '@/constants/units'
 
 // ── Editable biophysical parameter definitions ────────────────────────────────
 export interface EditableParamDef {
-  /** i18n key — pass to $t() for display label */
-  labelKey: string
-  /** i18n key — pass to $t() for tooltip */
-  tipKey: string
+  labelKey: string  // i18n key — pass to $t() for display label
+  tipKey: string    // i18n key — pass to $t() for tooltip
   key: string
   step: number
   min: number
@@ -39,7 +37,7 @@ export interface EditableParamDef {
   unit: string
 }
 
-/** Editable params for mammalian cells (Schwan model). */
+// Editable params for mammalian cells (Schwan model)
 export const EDITABLE_PARAMS: EditableParamDef[] = [
   { labelKey: 'cells.params.radius',            tipKey: 'cells.paramTips.radius',            key: 'radius',            step: 0.001, min: 0.001, max: 100, unit: UNIT.UM      },
   { labelKey: 'cells.params.membraneThickness',  tipKey: 'cells.paramTips.membraneThickness',  key: 'membraneThickness', step: 0.5,   min: 1,     max: 50,  unit: UNIT.NM      },
@@ -48,7 +46,7 @@ export const EDITABLE_PARAMS: EditableParamDef[] = [
   { labelKey: 'cells.params.thresholdVoltage',   tipKey: 'cells.paramTips.thresholdVoltage',   key: 'thresholdVoltage',  step: 0.05,  min: 0.1,   max: 10,  unit: UNIT.V       },
 ]
 
-/** Editable params for bacteria/virus targets (acoustic capsid resonance model). */
+// Editable params for bacteria/virus targets (acoustic capsid resonance model)
 export const EDITABLE_PARAMS_ACOUSTIC: EditableParamDef[] = [
   { labelKey: 'cells.params.radius',          tipKey: 'cells.paramTips.radius',          key: 'radius',          step: 0.001, min: 0.001, max: 10,  unit: UNIT.UM  },
   { labelKey: 'cells.params.resonantFreqGHz',  tipKey: 'cells.paramTips.resonantFreqGHz',  key: 'resonantFreqGHz', step: 0.01,  min: 0.001, max: 100, unit: UNIT.GHZ },

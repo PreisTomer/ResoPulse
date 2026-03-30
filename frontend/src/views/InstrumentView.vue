@@ -131,7 +131,6 @@ export default defineComponent({
     targetDR(): number {
       return this.cellStore.targetDisruptionRatio
     },
-    /** Medium Joule heating display: show mW or W depending on magnitude. */
     jouleDisplay(): string {
       const mW = this.impStore.mediumJouleHeatingMilliWatts
       if (mW >= 1000) return `${(mW / 1000).toFixed(2)} ${this.UNIT.W}`

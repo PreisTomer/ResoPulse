@@ -125,12 +125,10 @@ export default defineComponent({
     presetsStore() { return useUserPresetsStore() },
     cellStore()    { return useCellStore() },
 
-    /** Current medium σ_e from cellStore */
     sigmaE(): number {
       return this.cellStore.effectiveSigmaE
     },
 
-    /** Approximate cell config object for physics helpers */
     cellLike() {
       return {
         radius:               this.form.radius,
@@ -145,7 +143,7 @@ export default defineComponent({
       }
     },
 
-    /** Cm = ε_r·ε₀/d  in mF/m² */
+    // Cm = ε_r·ε₀/d [mF/m²]
     derivedCm(): string {
       const d_m = this.form.membraneThickness * 1e-9
       if (!d_m || !this.form.dielectricConstant) return ', '
@@ -153,7 +151,6 @@ export default defineComponent({
       return `${cm.toFixed(2)} ${UNIT.MF_PER_M2}`
     },
 
-    /** τ in ns */
     derivedTau(): string {
       try {
         const tau = computeTau(this.cellLike, this.sigmaE)
@@ -162,7 +159,6 @@ export default defineComponent({
       } catch { return ', ' }
     },
 
-    /** fc in kHz or MHz */
     derivedFc(): string {
       try {
         const fc = computeFc(this.cellLike, this.sigmaE) // kHz
@@ -206,8 +202,6 @@ export default defineComponent({
       (this.form as Record<string, unknown>)[key] = value
     },
 
-    /** Switch cell type and reset physics fields to type-appropriate defaults
-     *  while preserving the user's label / shortLabel / notes. */
     onCellTypeChange(ct: CellFormType) {
       const { label, shortLabel, notes } = this.form
       Object.assign(this.form, TYPE_DEFAULTS[ct], { cellType: ct, label, shortLabel, notes })
@@ -253,7 +247,7 @@ export default defineComponent({
   position:        fixed;
   inset:           0;
   z-index:         9000;
-  background:      rgba(0, 0, 0, 0.72);
+  background:      color-mix(in srgb, black 72%, transparent);
   display:         flex;
   align-items:     center;
   justify-content: center;

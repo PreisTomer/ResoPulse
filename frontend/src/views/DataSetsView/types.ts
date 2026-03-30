@@ -2,7 +2,6 @@
 
 import type { CellPreset } from '@/constants/cellLibrary'
 
-/** CellPreset extended with computed display fields used in DataSetsView tables. */
 export interface AugmentedPreset extends CellPreset {
   // Optional resonance/nuclear fields present on some presets
   resonantFreqGHz?: number
