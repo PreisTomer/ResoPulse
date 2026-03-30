@@ -234,35 +234,13 @@ export default defineComponent({
         .on('start', () => { this._isDragging = true })
         .on('drag', (event) => {
           if (!this._xScale) return
-          const xClamped = Math.max(0, Math.min(this._chartW, event.x))
-          const hz = this._xScale.invert(xClamped)
-          const khz = Math.max(10, Math.min(F_CURSOR_MAX_KHZ, hz / 1000))
-
-          // Immediate visual update — bypass Vue reactivity for smooth dragging
+          const khz = this.clampEventToKhz(event.x)
           this.updateCursor(khz)
-
-          // Throttle store + socket updates to one frame to avoid re-render storms
-          this._pendingDragKhz = khz
-          if (!this._dragRafPending) {
-            this._dragRafPending = true
-            requestAnimationFrame(() => {
-              this._dragRafPending = false
-              if (this._pendingDragKhz !== null) {
-                this.store.setBroadcastFreqKHz(this._pendingDragKhz)
-                broadcastStateSync()
-                this._pendingDragKhz = null
-              }
-            })
-          }
+          this.scheduleDragUpdate(khz)
         })
         .on('end', () => {
           this._isDragging = false
-          // Flush any pending update so the store stays in sync
-          if (this._pendingDragKhz !== null) {
-            this.store.setBroadcastFreqKHz(this._pendingDragKhz)
-            broadcastStateSync()
-            this._pendingDragKhz = null
-          }
+          this.flushDragUpdate()
         })
 
       g.append('rect')
@@ -897,6 +875,34 @@ export default defineComponent({
       }
 
       this.updateCursor()
+    },
+
+    // ── Drag helpers ─────────────────────────────────────────────────────
+
+    // Convert a raw chart-space x coordinate to a clamped frequency [kHz]
+    clampEventToKhz(eventX: number): number {
+      const xClamped = Math.max(0, Math.min(this._chartW, eventX))
+      const hz = this._xScale!.invert(xClamped)
+      return Math.max(10, Math.min(F_CURSOR_MAX_KHZ, hz / 1000))
+    },
+
+    // Throttle store + socket updates to one animation frame to avoid re-render storms
+    scheduleDragUpdate(khz: number): void {
+      this._pendingDragKhz = khz
+      if (this._dragRafPending) return
+      this._dragRafPending = true
+      requestAnimationFrame(() => {
+        this._dragRafPending = false
+        this.flushDragUpdate()
+      })
+    },
+
+    // Commit the latest pending frequency to the store and broadcast
+    flushDragUpdate(): void {
+      if (this._pendingDragKhz === null) return
+      this.store.setBroadcastFreqKHz(this._pendingDragKhz)
+      broadcastStateSync()
+      this._pendingDragKhz = null
     },
 
     // ── Cursor-only update (cheap) ───────────────────────────────────────

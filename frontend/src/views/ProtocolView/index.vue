@@ -134,6 +134,7 @@ export default defineComponent({
       activeSection:     'overview' as string,
       tocMobileOpen:     false,
       showFeedbackModal: false,
+      _scrollHandler:    null as EventListener | null,
     }
   },
 
@@ -206,12 +207,11 @@ export default defineComponent({
     }
     window.addEventListener('scroll', handler, { passive: true })
     handler()
-    ;(this as unknown as Record<string, unknown>)._scrollHandler = handler
+    this._scrollHandler = handler
   },
 
   beforeUnmount() {
-    const handler = (this as unknown as Record<string, unknown>)._scrollHandler as EventListener | undefined
-    if (handler) window.removeEventListener('scroll', handler)
+    if (this._scrollHandler) window.removeEventListener('scroll', this._scrollHandler)
   },
 
   methods: {

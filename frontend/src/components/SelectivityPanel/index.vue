@@ -25,7 +25,7 @@
       <!-- ── Population window score (lysis prob × healthy survival) ── -->
       <div class="sel-panel__ws-row" v-tip="tipWindowScore">
         <span class="sel-panel__ws-label">{{ $t('selectivity.windowScoreLabel') }}</span>
-        <span class="sel-panel__ws-val" :class="windowScoreClass">{{ (windowScore * 100).toFixed(0) }}%</span>
+        <span class="sel-panel__ws-val" :class="windowScoreClass">{{ windowScorePct }}</span>
         <span class="sel-panel__ws-formula">{{ $t('selectivity.wsFormula') }}</span>
       </div>
 
@@ -100,6 +100,7 @@ import { THRESHOLDS, NEAR_ZERO_VM } from '@/constants/physics'
 import { CELL_CATEGORY, CHART_MODE } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
 import { safeRatio } from '@/utils/physics'
+import { formatPct } from '@/utils/format'
 import { tipTiRange, tipSelectivity } from '@/tooltips/selectivityTooltips'
 import AccordionPanel from '@/components/AccordionPanel.vue'
 import DisruptionBars from './DisruptionBars.vue'
@@ -174,26 +175,37 @@ export default defineComponent({
 
     targetOrientPct(): string {
       if (this.cellStore.isResonanceMode && this.isResonanceTarget) return ', '
-      return `${(this.cellStore.targetLysisProbabilityRandom * 100).toFixed(0)}%`
+      return formatPct(this.cellStore.targetLysisProbabilityRandom)
     },
 
     healthyOrientPct(): string {
-      return `${(this.cellStore.healthyLysisProbabilityRandom * 100).toFixed(0)}%`
+      return formatPct(this.cellStore.healthyLysisProbabilityRandom)
     },
 
     targetPopDistPct(): string {
       if (this.cellStore.isResonanceMode && this.isResonanceTarget) return ', '
-      return `${(this.cellStore.targetPopulationLysisFraction * 100).toFixed(0)}%`
+      return formatPct(this.cellStore.targetPopulationLysisFraction)
     },
 
     healthyPopDistPct(): string {
-      return `${(this.cellStore.healthyPopulationLysisFraction * 100).toFixed(0)}%`
+      return formatPct(this.cellStore.healthyPopulationLysisFraction)
     },
 
     windowScore(): number {
       const pT = this.cellStore.targetLysisProbabilityRandom
       const pH = this.cellStore.healthyLysisProbabilityRandom
       return pT * (1 - pH)
+    },
+
+    windowScorePct(): string { return formatPct(this.windowScore) },
+
+    cellSizeParams(): { rT: number; rH: number; vthT: number; vthH: number } {
+      return {
+        rT:   this.cellStore.target.radius,
+        rH:   this.cellStore.healthy.radius,
+        vthT: this.cellStore.target.thresholdVoltage,
+        vthH: this.cellStore.healthy.thresholdVoltage,
+      }
     },
 
     windowScoreClass(): string {
@@ -205,26 +217,24 @@ export default defineComponent({
 
     smallCellNote(): boolean {
       if (this.cellStore.isResonanceMode) return false
-      const rT = this.cellStore.target.radius
-      const rH = this.cellStore.healthy.radius
+      const { rT, rH, vthT, vthH } = this.cellSizeParams
       if (rT >= rH) return false
-      const tiDc = (rT * this.cellStore.healthy.thresholdVoltage) / (rH * this.cellStore.target.thresholdVoltage)
+      const tiDc = (rT * vthH) / (rH * vthT)
       return tiDc < THRESHOLDS.TI_STRONG
     },
 
     smallCellRadiusRatio(): string {
-      return (this.cellStore.target.radius / this.cellStore.healthy.radius).toFixed(2)
+      const { rT, rH } = this.cellSizeParams
+      return (rT / rH).toFixed(2)
     },
 
     smallCellTiDcLimit(): string {
-      const rT = this.cellStore.target.radius, rH = this.cellStore.healthy.radius
-      const vthT = this.cellStore.target.thresholdVoltage, vthH = this.cellStore.healthy.thresholdVoltage
+      const { rT, rH, vthT, vthH } = this.cellSizeParams
       return ((rT * vthH) / (rH * vthT)).toFixed(2)
     },
 
     smallCellNoteTip(): string {
-      const rT = this.cellStore.target.radius, rH = this.cellStore.healthy.radius
-      const vthT = this.cellStore.target.thresholdVoltage, vthH = this.cellStore.healthy.thresholdVoltage
+      const { rT, rH, vthT, vthH } = this.cellSizeParams
       const tiDc = (rT * vthH) / (rH * vthT)
       return `<strong>Size Disadvantage: Target R &lt; Healthy R</strong>\n` +
         `At quasi-DC, Vm = 1.5·E·R·cosθ (geometric only).\n` +
@@ -237,9 +247,9 @@ export default defineComponent({
     },
 
     tipWindowScore(): string {
-      const pT = (this.cellStore.targetLysisProbabilityRandom * 100).toFixed(0)
-      const pH = (this.cellStore.healthyLysisProbabilityRandom * 100).toFixed(0)
-      return this.$t('selectivity.tipWindowScore', { score: (this.windowScore * 100).toFixed(0), pT, pH })
+      const pT = formatPct(this.cellStore.targetLysisProbabilityRandom)
+      const pH = formatPct(this.cellStore.healthyLysisProbabilityRandom)
+      return this.$t('selectivity.tipWindowScore', { score: this.windowScorePct, pT, pH })
     },
   },
 })

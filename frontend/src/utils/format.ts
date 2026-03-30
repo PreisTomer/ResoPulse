@@ -46,3 +46,8 @@ export function formatRange(values: number[], fmt: (v: number) => string): strin
 export function formatLysisTime(ms: number): string {
   return ms < 1000 ? `${ms}${UNIT.MS}` : `${(ms / 1000).toFixed(1)}${UNIT.S}`
 }
+
+// Format fraction (0–1) as a percentage string: 0.735 → "74%"
+export function formatPct(value: number, decimals = 0): string {
+  return `${(value * 100).toFixed(decimals)}%`
+}

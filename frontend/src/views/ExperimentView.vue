@@ -124,7 +124,8 @@ import { CELL_PRESETS } from '@/constants/cellLibrary'
 import { computeSAR } from '@/utils/physics'
 import { scrollAndHighlight } from '@/utils/highlight'
 import { CATEGORY_DEFAULTS, INITIAL_RESONANT_FIELD_FRACTION, DEFAULT_LYSIS_N_PULSES, DEFAULT_ORIENTATION_DEG } from '@/constants/experimentDefaults'
-import { CELL_CATEGORY, CELL_TYPE, CHART_MODE } from '@/constants/strings'
+import { WF_CW, WF_PULSED } from '@/constants/physics'
+import { CELL_CATEGORY, CELL_TYPE, CHART_MODE, WAVEFORM } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
 
 export default defineComponent({
@@ -169,7 +170,7 @@ export default defineComponent({
         this.store.target,
         this.store.fieldIntensity,
         this.store.effectiveSigmaE,
-        this.store.waveform === 'cw' ? 0.5 : 1.0,
+        this.store.waveform === WAVEFORM.CW ? WF_CW : WF_PULSED,
       )
       this.expStore.addDoseSample(sar, this.store.dutyCycle, dtMs)
     }, 1000)

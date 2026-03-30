@@ -15,7 +15,7 @@
       <!-- Session group: name + cumulative dose badge (both session-level) -->
       <div class="exp-log__session-group">
         <input
-          v-model="expStore.sessionName"
+          v-model="sessionName"
           class="exp-log__name-input"
           :placeholder="$t('exp.logSessionPlaceholder')"
           spellcheck="false"
@@ -173,6 +173,11 @@ export default defineComponent({
   },
 
   computed: {
+    sessionName: {
+      get(): string { return this.expStore.sessionName },
+      set(v: string) { this.expStore.setSessionName(v) },
+    },
+
     entries() {
       return this.expStore.entries.slice(-20).reverse()
     },
