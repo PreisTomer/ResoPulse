@@ -6,3 +6,7 @@ backend/dist/
 .env
 .env.local
 *.log
+
+# Claude Code
+.claude/
+CLAUDE.md
