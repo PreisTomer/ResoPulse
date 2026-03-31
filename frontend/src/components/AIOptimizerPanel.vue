@@ -11,14 +11,14 @@
       <div class="ai-panel__body">
 
         <!-- ── Consent gate ──────────────────────────────────────────── -->
-        <div v-if="!expStore.aiConsentGiven" class="ai-panel__consent">
+        <div v-if="!experimentStore.aiConsentGiven" class="ai-panel__consent">
           <div class="ai-panel__consent-header">{{ $t('ai.consentGateTitle') }}</div>
           <p class="ai-panel__consent-body">{{ $t('ai.consentGateBody') }}</p>
           <label class="ai-panel__consent-toggle">
             <input
               type="checkbox"
-              :checked="expStore.aiConsentGiven"
-              @change="expStore.setAiConsent(($event.target as HTMLInputElement).checked)"
+              :checked="experimentStore.aiConsentGiven"
+              @change="experimentStore.setAiConsent(($event.target as HTMLInputElement).checked)"
             />
             <span>{{ $t('ai.consentToggleLabel') }}</span>
           </label>
@@ -119,11 +119,11 @@
                 <span class="ai-panel__param-key">{{ $t('slider.freq') }}</span>
                 <span class="ai-panel__param-val">{{ formatFreqKHz(aiStore.result.suggestion.freqKHz) }}</span>
                 <span class="ai-panel__param-key">{{ $t('slider.field') }}</span>
-                <span class="ai-panel__param-val">{{ aiStore.result.suggestion.fieldVcm }} V/cm</span>
+                <span class="ai-panel__param-val">{{ aiStore.result.suggestion.fieldVcm }} {{ UNIT.V_PER_CM }}</span>
                 <span class="ai-panel__param-key">{{ $t('slider.dutyCycle') }}</span>
                 <span class="ai-panel__param-val">{{ formatDutyCycle(aiStore.result.suggestion.dutyCycle) }}</span>
                 <span class="ai-panel__param-key">{{ $t('slider.pulseWidth') }}</span>
-                <span class="ai-panel__param-val">{{ aiStore.result.suggestion.pulseWidthNs }} ns</span>
+                <span class="ai-panel__param-val">{{ aiStore.result.suggestion.pulseWidthNs }} {{ UNIT.NS }}</span>
                 <span class="ai-panel__param-key">{{ $t('slider.waveform') }}</span>
                 <span class="ai-panel__param-val ai-panel__param-val--upper">{{ aiStore.result.suggestion.waveform }}</span>
               </div>
@@ -215,24 +215,18 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+import { mapStores } from 'pinia'
 import AccordionPanel from '@/components/AccordionPanel.vue'
 import { useAiStore } from '@/stores/aiStore'
 import { useExperimentStore } from '@/stores/experimentStore'
 import { requestAiOptimization, broadcastStateSync } from '@/services/socket'
 import { formatFreqKHz } from '@/utils/format'
 import { ICON } from '@/constants/icons'
+import { UNIT } from '@/constants/units'
 import { THRESHOLDS } from '@/constants/physics'
 
 export default defineComponent({
   components: { AccordionPanel },
-
-  setup() {
-    return {
-      aiStore:   useAiStore(),
-      expStore:  useExperimentStore(),
-      ICON,
-    }
-  },
 
   data() {
     return {
@@ -255,6 +249,10 @@ export default defineComponent({
   },
 
   computed: {
+    ICON() { return ICON },
+    UNIT() { return UNIT },
+    ...mapStores(useAiStore, useExperimentStore),
+
     panelSubtitle(): string {
       if (this.aiStore.isLoading)  return this.$t('ai.panelSubtitleLoading')
       if (this.aiStore.hasResult)  return this.$t('ai.panelSubtitleResult', { conf: this.confidencePct })

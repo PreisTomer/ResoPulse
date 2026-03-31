@@ -46,8 +46,11 @@ export default defineComponent({
   data() {
     return {
       isOpen: this.initialOpen,
-      ICON,
     }
+  },
+
+  computed: {
+    ICON() { return ICON },
   },
 
   methods: {

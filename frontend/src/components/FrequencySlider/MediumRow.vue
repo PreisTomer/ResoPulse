@@ -30,6 +30,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+import { mapStores } from 'pinia'
 import { useCellStore } from '@/stores/cellStore'
 import { broadcastStateSync } from '@/services/socket'
 import { MEDIA } from '@/constants/media'
@@ -37,12 +38,14 @@ import type { MediumKey } from '@/types/media'
 import { tipMedium, tipMediumKeys, tipSigmaE } from '@/tooltips/sliderTooltips'
 
 export default defineComponent({
-  setup() {
-    return { store: useCellStore(), MEDIA }
+  data() {
+    return { MEDIA }
   },
 
   computed: {
-    currentMedium(): MediumKey                   { return this.store.medium },
+    ...mapStores(useCellStore),
+
+    currentMedium(): MediumKey                   { return this.cellStore.medium },
     tipMediumLabel(): string                     { return tipMedium(this.currentMedium) },
     tipMediumKeys(): Record<string, string>      { return tipMediumKeys() },
     tipSigmaELabel(): string                     { return tipSigmaE(this.MEDIA[this.currentMedium].conductivity) },
@@ -50,7 +53,7 @@ export default defineComponent({
 
   methods: {
     onMediumChange(key: MediumKey) {
-      this.store.setMedium(key)
+      this.cellStore.setMedium(key)
       broadcastStateSync()
     },
   },

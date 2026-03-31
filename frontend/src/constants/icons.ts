@@ -39,6 +39,8 @@ export const ICON = {
   AI:          '◈',  // AI optimizer / ML inference icon
   STAR_RATING: '★',  // outcome rating star
   STAR_EMPTY:  '☆',  // empty star for ratings
+  MENU:        '☰',  // mobile TOC hamburger toggle
+  CARET_DOWN:  '▼',  // collapsed accordion / dropdown indicator
 } as const
 
 export type Icon = typeof ICON[keyof typeof ICON]

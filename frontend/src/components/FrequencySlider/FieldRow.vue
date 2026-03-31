@@ -69,6 +69,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import type { PropType } from 'vue'
+import { mapStores } from 'pinia'
 import { useCellStore } from '@/stores/cellStore'
 import { broadcastStateSync } from '@/services/socket'
 import { CELL_LABEL, THERMAL_LEVEL } from '@/constants/strings'
@@ -87,12 +88,9 @@ export default defineComponent({
     thermalDangerLevel: { type: String as PropType<'safe' | 'hyperthermic' | 'denaturing' | 'vaporizing'>, required: true },
   },
 
-  setup() {
-    return { store: useCellStore(), CELL_LABEL, THERMAL_LEVEL, THRESHOLDS }
-  },
-
   data() {
     return {
+      THERMAL_LEVEL,
       editingField:  false,
       fieldInputVal: 0,
       scrubbing:     false,
@@ -103,9 +101,13 @@ export default defineComponent({
   },
 
   computed: {
-    currentField(): number       { return this.store.fieldIntensity },
-    targetDisruption(): number   { return this.store.targetDisruptionRatio },
-    healthyDisruption(): number  { return this.store.healthyDisruptionRatio },
+    THRESHOLDS() { return THRESHOLDS },
+    CELL_LABEL() { return CELL_LABEL },
+    ...mapStores(useCellStore),
+
+    currentField(): number       { return this.cellStore.fieldIntensity },
+    targetDisruption(): number   { return this.cellStore.targetDisruptionRatio },
+    healthyDisruption(): number  { return this.cellStore.healthyDisruptionRatio },
     fieldDisplay(): string       { return formatFieldVcm(this.currentField) },
     targetDisruptPercent(): string  { return (this.targetDisruption * 100).toFixed(0) },
     healthyDisruptPercent(): string { return (this.healthyDisruption * 100).toFixed(0) },
@@ -120,43 +122,43 @@ export default defineComponent({
       const linPct = (vcm: number): number => (vcm - fieldMin) / span * 100
 
       return [
-        { id: 'lysis-t', pct: linPct(this.store.targetLysisField),  color: 'danger'  },
-        { id: 'lysis-h', pct: linPct(this.store.healthyLysisField), color: 'healthy' },
+        { id: 'lysis-t', pct: linPct(this.cellStore.targetLysisField),  color: 'danger'  },
+        { id: 'lysis-h', pct: linPct(this.cellStore.healthyLysisField), color: 'healthy' },
       ].filter(m => m.pct >= 1 && m.pct <= 99)
     },
 
     tipFieldLabel(): string {
       return tipField({
-        isResonanceMode:    this.store.isResonanceMode,
-        target:             this.store.target as Parameters<typeof tipField>[0]['target'],
+        isResonanceMode:    this.cellStore.isResonanceMode,
+        target:             this.cellStore.target as Parameters<typeof tipField>[0]['target'],
         fieldDisplay:       this.fieldDisplay,
         targetDisruption:   this.targetDisruption,
-        targetCellCategory: this.store.targetCellCategory,
-        targetLysisField:   this.store.targetLysisField,
-        healthyLysisField:  this.store.healthyLysisField,
+        targetCellCategory: this.cellStore.targetCellCategory,
+        targetLysisField:   this.cellStore.targetLysisField,
+        healthyLysisField:  this.cellStore.healthyLysisField,
         t:                  this.$t.bind(this),
       })
     },
 
     tipTargetBadgeLabel(): string {
       return tipTargetBadge({
-        isResonanceMode:      this.store.isResonanceMode,
-        target:               this.store.target as Parameters<typeof tipTargetBadge>[0]['target'],
+        isResonanceMode:      this.cellStore.isResonanceMode,
+        target:               this.cellStore.target as Parameters<typeof tipTargetBadge>[0]['target'],
         targetDisruptPercent: this.targetDisruptPercent,
         targetDisruption:     this.targetDisruption,
-        targetVmMv:           this.store.targetVm * 1000,
-        lysisDelayMs:         this.store.lysisDelayMs,
+        targetVmMv:           this.cellStore.targetVm * 1000,
+        lysisDelayMs:         this.cellStore.lysisDelayMs,
         t:                    this.$t.bind(this),
       })
     },
 
     tipHealthyBadgeLabel(): string {
       return tipHealthyBadge({
-        isResonanceMode:       this.store.isResonanceMode,
+        isResonanceMode:       this.cellStore.isResonanceMode,
         healthyDisruptPercent: this.healthyDisruptPercent,
         healthyDisruption:     this.healthyDisruption,
-        healthyVmMv:           this.store.healthyVm * 1000,
-        thresholdVoltage:      this.store.healthy.thresholdVoltage,
+        healthyVmMv:           this.cellStore.healthyVm * 1000,
+        thresholdVoltage:      this.cellStore.healthy.thresholdVoltage,
         t:                     this.$t.bind(this),
       })
     },
@@ -168,7 +170,7 @@ export default defineComponent({
 
   methods: {
     onFieldInput(e: Event) {
-      this.store.setFieldIntensity(Number((e.target as HTMLInputElement).value))
+      this.cellStore.setFieldIntensity(Number((e.target as HTMLInputElement).value))
       broadcastStateSync()
     },
 
@@ -189,7 +191,7 @@ export default defineComponent({
       let vcm = this.fieldInputVal
       if (this.fieldInputUnit === 'kV/cm') vcm = this.fieldInputVal * 1_000
       const clamped = Math.max(this.sliderRanges.fieldMin, Math.min(this.sliderRanges.fieldMax, vcm))
-      this.store.setFieldIntensity(clamped)
+      this.cellStore.setFieldIntensity(clamped)
       broadcastStateSync()
       this.editingField = false
     },
@@ -202,7 +204,7 @@ export default defineComponent({
     stepField(dir: number) {
       const stepVcm = this.fieldInputUnit === 'kV/cm' ? this.fieldInputStep * 1_000 : this.fieldInputStep
       const next    = Math.max(this.sliderRanges.fieldMin, Math.min(this.sliderRanges.fieldMax, this.currentField + dir * stepVcm))
-      this.store.setFieldIntensity(next)
+      this.cellStore.setFieldIntensity(next)
       broadcastStateSync()
     },
 
@@ -227,7 +229,7 @@ export default defineComponent({
       const range     = this.sliderRanges.fieldMax - this.sliderRanges.fieldMin
       const newField  = this.scrubStartVal + dx * (range / SCRUB_PX_FULL_RANGE)
       const clamped   = Math.max(this.sliderRanges.fieldMin, Math.min(this.sliderRanges.fieldMax, newField))
-      this.store.setFieldIntensity(clamped)
+      this.cellStore.setFieldIntensity(clamped)
       broadcastStateSync()
     },
 

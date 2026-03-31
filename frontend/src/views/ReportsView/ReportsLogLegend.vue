@@ -38,7 +38,7 @@ import { ICON } from '@/constants/icons'
 export default defineComponent({
   name: 'ReportsLogLegend',
 
-  setup() {
+  data() {
     return { ICON, THRESHOLDS }
   },
 })

@@ -46,7 +46,7 @@
           :initial-open="true"
           :border-on-toggle="true"
         >
-          <FrequencyResponseChart v-if="!store.isResonanceMode" />
+          <FrequencyResponseChart v-if="!cellStore.isResonanceMode" />
           <ResonanceChart v-else />
         </AccordionPanel>
       </div>
@@ -99,6 +99,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+import { mapStores } from 'pinia'
 import { useCellStore } from '@/stores/cellStore'
 import { connectSocket, broadcastStateSync } from '@/services/socket'
 import AccordionPanel from '@/components/AccordionPanel.vue'
@@ -148,31 +149,21 @@ export default defineComponent({
     AiOptimizerTab,
   },
 
-  setup() {
-    return {
-      store: useCellStore(),
-      expStore: useExperimentStore(),
-      uiStore: useUiStore(),
-      CHART_MODE,
-      ICON,
-    }
-  },
-
   created() {
     connectSocket()
-    this.store.startSession()
+    this.cellStore.startSession()
     this.doseLastMs = Date.now()
     this.doseTimer = setInterval(() => {
       const now     = Date.now()
       const dtMs    = now - this.doseLastMs
       this.doseLastMs = now
       const sar = computeSAR(
-        this.store.target,
-        this.store.fieldIntensity,
-        this.store.effectiveSigmaE,
-        this.store.waveform === WAVEFORM.CW ? WF_CW : WF_PULSED,
+        this.cellStore.target,
+        this.cellStore.fieldIntensity,
+        this.cellStore.effectiveSigmaE,
+        this.cellStore.waveform === WAVEFORM.CW ? WF_CW : WF_PULSED,
       )
-      this.expStore.addDoseSample(sar, this.store.dutyCycle, dtMs)
+      this.experimentStore.addDoseSample(sar, this.cellStore.dutyCycle, dtMs)
     }, 1000)
   },
 
@@ -203,24 +194,28 @@ export default defineComponent({
       }
     },
     // Resonance mode has no physical meaning for mammalian cells; revert if category changes via param editing.
-    'store.targetCellCategory'(cat: string) {
-      if (cat === CELL_CATEGORY.MAMMALIAN && this.store.isResonanceMode) {
-        this.store.setChartMode(CHART_MODE.SCHWAN)
+    'cellStore.targetCellCategory'(cat: string) {
+      if (cat === CELL_CATEGORY.MAMMALIAN && this.cellStore.isResonanceMode) {
+        this.cellStore.setChartMode(CHART_MODE.SCHWAN)
       }
     },
   },
 
   computed: {
+    ICON() { return ICON },
+    CHART_MODE() { return CHART_MODE },
+    ...mapStores(useCellStore, useExperimentStore, useUiStore),
+
     currentTargetId(): string {
-      return this.store.target.id
+      return this.cellStore.target.id
     },
 
     currentHealthyId(): string {
-      return this.store.healthy.id
+      return this.cellStore.healthy.id
     },
 
     chartModeLabel(): string {
-      return !this.store.isResonanceMode
+      return !this.cellStore.isResonanceMode
         ? this.$t('exp.chartModeSchwan')
         : this.$t('exp.chartModeResonance')
     },
@@ -228,15 +223,15 @@ export default defineComponent({
     cells(): CellCardRow[] {
       // Resolve label + sublabel from the live store cell (changes when preset loads)
       const cellLabel = (type: 'healthy' | 'target') => {
-        return type === CELL_TYPE.HEALTHY ? this.store.healthy.label : this.store.target.label
+        return type === CELL_TYPE.HEALTHY ? this.cellStore.healthy.label : this.cellStore.target.label
       }
       const cellSublabel = (type: 'healthy' | 'target') => {
-        const cell = type === CELL_TYPE.HEALTHY ? this.store.healthy : this.store.target
+        const cell = type === CELL_TYPE.HEALTHY ? this.cellStore.healthy : this.cellStore.target
         const preset = CELL_PRESETS.find((p) => p.presetId === cell.id)
         return preset ? preset.notes : this.$t(`cells.${type}.sublabel`)
       }
       const cellSublabelTip = (type: 'healthy' | 'target') => {
-        const cell = type === CELL_TYPE.HEALTHY ? this.store.healthy : this.store.target
+        const cell = type === CELL_TYPE.HEALTHY ? this.cellStore.healthy : this.cellStore.target
         const preset = CELL_PRESETS.find((p) => p.presetId === cell.id)
         return preset?.techNotes ?? ''
       }
@@ -247,8 +242,8 @@ export default defineComponent({
           label: cellLabel('healthy'),
           sublabel: cellSublabel('healthy'),
           sublabelTip: cellSublabelTip('healthy'),
-          description: this.store.healthy.description ?? this.$t('cells.healthy.description'),
-          cellData: this.store.healthy,
+          description: this.cellStore.healthy.description ?? this.$t('cells.healthy.description'),
+          cellData: this.cellStore.healthy,
         },
         {
           id: 'target',
@@ -256,8 +251,8 @@ export default defineComponent({
           label: cellLabel('target'),
           sublabel: cellSublabel('target'),
           sublabelTip: cellSublabelTip('target'),
-          description: this.store.target.description ?? this.$t('cells.target.description'),
-          cellData: this.store.target,
+          description: this.cellStore.target.description ?? this.$t('cells.target.description'),
+          cellData: this.cellStore.target,
         },
       ]
     },
@@ -292,9 +287,9 @@ export default defineComponent({
     // Sets category-appropriate starting params at mount; does NOT broadcast (peers not ready yet).
     // Sanitizes time-domain params to prevent cross-session physics bugs.
     sanitizeCategoryParams() {
-      const cat = this.store.targetCellCategory
+      const cat = this.cellStore.targetCellCategory
       const d   = CATEGORY_DEFAULTS[cat]
-      const t   = this.store.target as { resonantFreqGHz?: number; resonantThresholdVcm?: number }
+      const t   = this.cellStore.target as { resonantFreqGHz?: number; resonantThresholdVcm?: number }
 
       const isResonant = cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA
       const freqKHz  = isResonant && t.resonantFreqGHz
@@ -304,40 +299,40 @@ export default defineComponent({
         ? t.resonantThresholdVcm * INITIAL_RESONANT_FIELD_FRACTION
         : d.fieldVcm
 
-      this.store.setFieldIntensity(fieldVcm)
-      this.store.setBroadcastFreqKHz(freqKHz)
-      this.store.setWaveform(d.waveform)
-      this.store.setDutyCycle(d.dutyCycle)
-      this.store.setPulseWidthNs(d.pulseWidthNs)
-      this.store.setMedium(d.medium)
-      this.store.setOrientationDeg(DEFAULT_ORIENTATION_DEG)
-      this.store.setLysisNPulses(DEFAULT_LYSIS_N_PULSES)
-      this.store.resetTemps()
+      this.cellStore.setFieldIntensity(fieldVcm)
+      this.cellStore.setBroadcastFreqKHz(freqKHz)
+      this.cellStore.setWaveform(d.waveform)
+      this.cellStore.setDutyCycle(d.dutyCycle)
+      this.cellStore.setPulseWidthNs(d.pulseWidthNs)
+      this.cellStore.setMedium(d.medium)
+      this.cellStore.setOrientationDeg(DEFAULT_ORIENTATION_DEG)
+      this.cellStore.setLysisNPulses(DEFAULT_LYSIS_N_PULSES)
+      this.cellStore.resetTemps()
       // Resonance mode is not valid for mammalian cells; revert if persisted incorrectly.
-      if (cat === CELL_CATEGORY.MAMMALIAN && this.store.isResonanceMode) {
-        this.store.setChartMode(CHART_MODE.SCHWAN)
+      if (cat === CELL_CATEGORY.MAMMALIAN && this.cellStore.isResonanceMode) {
+        this.cellStore.setChartMode(CHART_MODE.SCHWAN)
       }
     },
 
     applyTargetDefaults() {
-      const cat = this.store.targetCellCategory
+      const cat = this.cellStore.targetCellCategory
       const d   = CATEGORY_DEFAULTS[cat]
-      const t = this.store.target as { resonantFreqGHz?: number; resonantThresholdVcm?: number }
+      const t = this.cellStore.target as { resonantFreqGHz?: number; resonantThresholdVcm?: number }
       const isResonant = cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA
       const freqKHz = isResonant && t.resonantFreqGHz ? t.resonantFreqGHz * 1e6 : d.freqKHz
       const fieldVcm = isResonant && t.resonantThresholdVcm
         ? t.resonantThresholdVcm * INITIAL_RESONANT_FIELD_FRACTION
         : d.fieldVcm
-      this.store.setFieldIntensity(fieldVcm)
-      this.store.setBroadcastFreqKHz(freqKHz)
-      this.store.setWaveform(d.waveform)
-      this.store.setDutyCycle(d.dutyCycle)
-      this.store.setPulseWidthNs(d.pulseWidthNs)
-      this.store.setMedium(d.medium)
-      this.store.setOrientationDeg(DEFAULT_ORIENTATION_DEG)
-      this.store.setLysisNPulses(DEFAULT_LYSIS_N_PULSES)
-      this.store.resetTemps()
-      this.store.setChartMode((cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) ? CHART_MODE.RESONANCE : CHART_MODE.SCHWAN)
+      this.cellStore.setFieldIntensity(fieldVcm)
+      this.cellStore.setBroadcastFreqKHz(freqKHz)
+      this.cellStore.setWaveform(d.waveform)
+      this.cellStore.setDutyCycle(d.dutyCycle)
+      this.cellStore.setPulseWidthNs(d.pulseWidthNs)
+      this.cellStore.setMedium(d.medium)
+      this.cellStore.setOrientationDeg(DEFAULT_ORIENTATION_DEG)
+      this.cellStore.setLysisNPulses(DEFAULT_LYSIS_N_PULSES)
+      this.cellStore.resetTemps()
+      this.cellStore.setChartMode((cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) ? CHART_MODE.RESONANCE : CHART_MODE.SCHWAN)
       broadcastStateSync()
     },
   },

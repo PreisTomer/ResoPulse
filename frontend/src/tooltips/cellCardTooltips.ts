@@ -2,7 +2,7 @@
 
 // Tooltip builders for CellCard. Pure — no Vue dependency.
 
-import { CELL_STATE, CELL_TYPE, WAVEFORM } from '@/constants/strings'
+import { CELL_STATE, CELL_TYPE, WAVEFORM, EXPERIMENTAL_BASIS } from '@/constants/strings'
 import { UNIT } from '@/constants/units'
 import { computeTau } from '@/utils/physics'
 import type { CellConfig } from '@/types/cell'
@@ -103,9 +103,9 @@ export function tipAcousticVm(opts: {
   const { disruptionRatio, resonantFreqGHz, capsidQ, freqKHz, fieldVcm, experimentalBasis } = opts
   const pct = (disruptionRatio * 100).toFixed(0)
   const freqGHz = (freqKHz / 1e6).toFixed(3)
-  const basisNote = experimentalBasis === 'speculative'
+  const basisNote = experimentalBasis === EXPERIMENTAL_BASIS.SPECULATIVE
     ? '\n<span class="tip-warn">⚠ ENVELOPED VIRUS: lipid bilayer has no rigid resonance.\nParameters are theoretical extrapolations, not RF-validated.</span>'
-    : experimentalBasis === 'rf-extrapolated'
+    : experimentalBasis === EXPERIMENTAL_BASIS.RF_EXTRAPOLATED
       ? '\n<span class="tip-note">Acoustic resonance extrapolated from RF data.\nTsen et al. (2007) experiments used femtosecond laser pulses, not RF.\nRF coupling mechanism is the unvalidated extrapolation.</span>'
       : ''
   return `<strong>Acoustic Disruption Ratio (DR)</strong>

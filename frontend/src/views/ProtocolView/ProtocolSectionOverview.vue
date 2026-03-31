@@ -17,7 +17,7 @@ import { ICON } from '@/constants/icons'
 
 export default defineComponent({
   name: 'ProtocolSectionOverview',
-  setup() { return { ICON } },
+  data() { return { ICON } },
 })
 </script>
 

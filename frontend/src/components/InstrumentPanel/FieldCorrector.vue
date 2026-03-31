@@ -65,7 +65,7 @@
 
     <!-- VSWR / power delivery row (RF mode only) -->
     <div
-      v-if="!store.isLowImpedanceSource"
+      v-if="!impedanceStore.isLowImpedanceSource"
       class="field-corrector__rf-section"
       v-tip="tipVSWR"
     >
@@ -95,24 +95,24 @@
 
     <!-- Pulse RC bandwidth check (pulsed mode only) -->
     <div
-      v-if="store.pulseBandwidthStatus !== 'cw'"
+      v-if="impedanceStore.pulseBandwidthStatus !== 'cw'"
       class="field-corrector__rc-row"
       :class="{
-        'field-corrector__rc-row--ok':       store.pulseBandwidthStatus === 'ok',
-        'field-corrector__rc-row--marginal': store.pulseBandwidthStatus === 'marginal',
-        'field-corrector__rc-row--critical': store.pulseBandwidthStatus === 'critical',
+        'field-corrector__rc-row--ok':       impedanceStore.pulseBandwidthStatus === 'ok',
+        'field-corrector__rc-row--marginal': impedanceStore.pulseBandwidthStatus === 'marginal',
+        'field-corrector__rc-row--critical': impedanceStore.pulseBandwidthStatus === 'critical',
       }"
       v-tip="tipRCBandwidth"
     >
       <span class="field-corrector__rc-icon">{{ rcIcon }}</span>
       <span class="field-corrector__rc-text">{{ rcStatusLabel }}</span>
-      <span class="field-corrector__rc-ratio">t_p / τ_RC = {{ store.pulseToRCRatio.toFixed(1) }}</span>
+      <span class="field-corrector__rc-ratio">t_p / τ_RC = {{ impedanceStore.pulseToRCRatio.toFixed(1) }}</span>
     </div>
 
     <!-- Source impedance context note -->
     <div class="field-corrector__source-note" v-tip="$t('instrument.corrector.tipSourceNote')">
       <span class="field-corrector__source-label">{{ $t('instrument.corrector.sourceNote') }}</span>
-      <span class="field-corrector__source-value">{{ store.sourceImpedanceOhm }} {{ UNIT.OHM }}</span>
+      <span class="field-corrector__source-value">{{ impedanceStore.sourceImpedanceOhm }} {{ UNIT.OHM }}</span>
     </div>
 
     <!-- Formula note -->
@@ -124,6 +124,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+import { mapStores } from 'pinia'
 import { useImpedanceStore } from '@/stores/impedanceStore'
 import { useCellStore } from '@/stores/cellStore'
 import { UNIT } from '@/constants/units'
@@ -131,63 +132,62 @@ import { ICON } from '@/constants/icons'
 
 export default defineComponent({
   name: 'FieldCorrector',
-  setup() {
-    return {
-      store:     useImpedanceStore(),
-      cellStore: useCellStore(),
-      UNIT,
-      ICON,
-    }
+
+  data() {
+    return { UNIT, ICON }
   },
+
   computed: {
+    ...mapStores(useImpedanceStore, useCellStore),
+
     correctionPct(): number {
-      return Math.max(0, (this.store.voltageCorrectionFactor - 1) * 100)
+      return Math.max(0, (this.impedanceStore.voltageCorrectionFactor - 1) * 100)
     },
     targetFieldDisplay(): string {
       return this.cellStore.fieldIntensity.toFixed(0)
     },
     correctedFieldDisplay(): string {
-      return this.store.correctedFieldVcm.toFixed(1)
+      return this.impedanceStore.correctedFieldVcm.toFixed(1)
     },
     factorDisplay(): string {
-      return this.store.voltageCorrectionFactor.toFixed(4)
+      return this.impedanceStore.voltageCorrectionFactor.toFixed(4)
     },
     vswrNum(): number {
-      return isFinite(this.store.vswr) ? this.store.vswr : 99
+      return isFinite(this.impedanceStore.vswr) ? this.impedanceStore.vswr : 99
     },
     vswrDisplay(): string {
-      return isFinite(this.store.vswr) ? this.store.vswr.toFixed(2) : '∞'
+      return isFinite(this.impedanceStore.vswr) ? this.impedanceStore.vswr.toFixed(2) : '∞'
     },
     powerEfficiency(): number {
-      return this.store.powerDeliveryEfficiency
+      return this.impedanceStore.powerDeliveryEfficiency
     },
     powerEfficiencyDisplay(): string {
-      return `${(this.store.powerDeliveryEfficiency * 100).toFixed(1)}${this.UNIT.PERCENT}`
+      return `${(this.impedanceStore.powerDeliveryEfficiency * 100).toFixed(1)}${this.UNIT.PERCENT}`
     },
     rcIcon(): string {
-      const s = this.store.pulseBandwidthStatus
+      const s = this.impedanceStore.pulseBandwidthStatus
       if (s === 'ok')       return this.ICON.CHECK
       if (s === 'critical') return this.ICON.WARNING
       return this.ICON.INFO
     },
     rcStatusLabel(): string {
-      return this.$t(`instrument.corrector.rcStatus_${this.store.pulseBandwidthStatus}`)
+      return this.$t(`instrument.corrector.rcStatus_${this.impedanceStore.pulseBandwidthStatus}`)
     },
     tipRCBandwidth(): string {
       return this.$t('instrument.corrector.tipRCBandwidth', {
         tp:    this.cellStore.pulseWidthNs.toFixed(1),
-        tau:   this.store.cuvetteRCTimeConstantNs.toFixed(2),
-        ratio: this.store.pulseToRCRatio.toFixed(2),
-        sigma: this.store.sigmaEWithLysis.toFixed(3),
+        tau:   this.impedanceStore.cuvetteRCTimeConstantNs.toFixed(2),
+        ratio: this.impedanceStore.pulseToRCRatio.toFixed(2),
+        sigma: this.impedanceStore.sigmaEWithLysis.toFixed(3),
       })
     },
     tipVSWR(): string {
       return this.$t('instrument.corrector.tipVSWR', {
         vswr:       this.vswrDisplay,
         efficiency: this.powerEfficiencyDisplay,
-        gamma:      this.store.reflectionCoeff.toFixed(3),
-        z0:         this.store.sourceImpedanceOhm,
-        zLoad:      this.store.currentImpedanceMagAtFreqOhm.toFixed(1),
+        gamma:      this.impedanceStore.reflectionCoeff.toFixed(3),
+        z0:         this.impedanceStore.sourceImpedanceOhm,
+        zLoad:      this.impedanceStore.currentImpedanceMagAtFreqOhm.toFixed(1),
       })
     },
   },

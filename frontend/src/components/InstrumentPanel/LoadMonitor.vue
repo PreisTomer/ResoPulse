@@ -10,10 +10,10 @@
       </div>
       <div
         class="load-monitor__state-badge"
-        :class="`load-monitor__state-badge--${store.loadState}`"
+        :class="`load-monitor__state-badge--${impedanceStore.loadState}`"
         v-tip="$t('instrument.loadMonitor.tipState')"
       >
-        {{ $t(`instrument.loadMonitor.state${capitalize(store.loadState)}`) }}
+        {{ $t(`instrument.loadMonitor.state${capitalize(impedanceStore.loadState)}`) }}
       </div>
     </div>
 
@@ -33,7 +33,7 @@
       </div>
       <div
         class="load-monitor__stat"
-        :class="{ 'load-monitor__stat--warn': Math.abs(store.conductivityDeltaAbs) > 0.001 }"
+        :class="{ 'load-monitor__stat--warn': Math.abs(impedanceStore.conductivityDeltaAbs) > 0.001 }"
         v-tip="$t('instrument.loadMonitor.tipDelta')"
       >
         <span class="load-monitor__stat-label">{{ $t('instrument.loadMonitor.statDelta') }}</span>
@@ -42,8 +42,8 @@
       <div
         class="load-monitor__stat"
         :class="{
-          'load-monitor__stat--warn':   Math.abs(store.impedanceDriftPct) > 5,
-          'load-monitor__stat--danger': Math.abs(store.impedanceDriftPct) > 15,
+          'load-monitor__stat--warn':   Math.abs(impedanceStore.impedanceDriftPct) > 5,
+          'load-monitor__stat--danger': Math.abs(impedanceStore.impedanceDriftPct) > 15,
         }"
         v-tip="$t('instrument.loadMonitor.tipDrift')"
       >
@@ -87,12 +87,12 @@
 
         <!-- Drift zone fills behind chart -->
         <rect
-          v-if="Math.abs(store.impedanceDriftPct) > 15"
+          v-if="Math.abs(impedanceStore.impedanceDriftPct) > 15"
           :x="0" :y="0" :width="SVG_W" :height="SVG_H"
           fill="url(#lm-danger-grad)"
         />
         <rect
-          v-else-if="Math.abs(store.impedanceDriftPct) > 5"
+          v-else-if="Math.abs(impedanceStore.impedanceDriftPct) > 5"
           :x="0" :y="0" :width="SVG_W" :height="SVG_H"
           fill="url(#lm-warn-grad)"
         />
@@ -177,12 +177,12 @@
 
     <!-- Feedback chain strip -->
     <div class="load-monitor__chain" v-tip="$t('instrument.loadMonitor.tipChain')">
-      <div class="load-monitor__chain-step" :class="{ 'load-monitor__chain-step--active': store.lysedFraction > 0 }">
+      <div class="load-monitor__chain-step" :class="{ 'load-monitor__chain-step--active': impedanceStore.lysedFraction > 0 }">
         <span class="load-monitor__chain-label">{{ $t('instrument.loadMonitor.chainLysed') }}</span>
-        <span class="load-monitor__chain-value">{{ (store.lysedFraction * 100).toFixed(0) }}%</span>
+        <span class="load-monitor__chain-value">{{ (impedanceStore.lysedFraction * 100).toFixed(0) }}%</span>
       </div>
       <span class="load-monitor__chain-arrow">{{ ICON.ARROW_SHORT }}</span>
-      <div class="load-monitor__chain-step" :class="{ 'load-monitor__chain-step--active': Math.abs(store.conductivityDeltaAbs) > 0.001 }">
+      <div class="load-monitor__chain-step" :class="{ 'load-monitor__chain-step--active': Math.abs(impedanceStore.conductivityDeltaAbs) > 0.001 }">
         <span class="load-monitor__chain-label">{{ $t('instrument.loadMonitor.chainDeltaSigma') }}</span>
         <span class="load-monitor__chain-value">{{ deltaDisplay }}</span>
       </div>
@@ -190,8 +190,8 @@
       <div
         class="load-monitor__chain-step"
         :class="{
-          'load-monitor__chain-step--warn':   Math.abs(store.impedanceDriftPct) > 5,
-          'load-monitor__chain-step--danger': Math.abs(store.impedanceDriftPct) > 15,
+          'load-monitor__chain-step--warn':   Math.abs(impedanceStore.impedanceDriftPct) > 5,
+          'load-monitor__chain-step--danger': Math.abs(impedanceStore.impedanceDriftPct) > 15,
         }"
       >
         <span class="load-monitor__chain-label">{{ $t('instrument.loadMonitor.chainZDrift') }}</span>
@@ -200,10 +200,10 @@
       <span class="load-monitor__chain-arrow">{{ ICON.ARROW_SHORT }}</span>
       <div
         class="load-monitor__chain-step"
-        :class="{ 'load-monitor__chain-step--warn': store.voltageCorrectionFactor > 1.05 }"
+        :class="{ 'load-monitor__chain-step--warn': impedanceStore.voltageCorrectionFactor > 1.05 }"
       >
         <span class="load-monitor__chain-label">{{ $t('instrument.loadMonitor.chainCorrection') }}</span>
-        <span class="load-monitor__chain-value">{{ ICON.TIMES }}{{ store.voltageCorrectionFactor.toFixed(3) }}</span>
+        <span class="load-monitor__chain-value">{{ ICON.TIMES }}{{ impedanceStore.voltageCorrectionFactor.toFixed(3) }}</span>
       </div>
     </div>
 
@@ -212,6 +212,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+import { mapStores } from 'pinia'
 import { useImpedanceStore } from '@/stores/impedanceStore'
 import type { ConductivitySample } from '@/stores/impedanceStore'
 import { useCellStore } from '@/stores/cellStore'
@@ -226,27 +227,18 @@ const Y_PAD = 4
 export default defineComponent({
   name: 'LoadMonitor',
 
-  setup() {
-    return {
-      store:     useImpedanceStore(),
-      cellStore: useCellStore(),
-      UNIT,
-      ICON,
-      SVG_W,
-      SVG_H,
-    }
-  },
-
   data() {
     return {
+      SVG_W,
+      SVG_H,
       _timer: null as ReturnType<typeof setInterval> | null,
     }
   },
 
   mounted() {
-    this.store.addConductivitySample()
+    this.impedanceStore.addConductivitySample()
     this._timer = setInterval(() => {
-      this.store.addConductivitySample()
+      this.impedanceStore.addConductivitySample()
     }, CONDUCTIVITY_SAMPLE_INTERVAL_MS)
   },
 
@@ -255,8 +247,12 @@ export default defineComponent({
   },
 
   computed: {
+    ICON() { return ICON },
+    UNIT() { return UNIT },
+    ...mapStores(useImpedanceStore, useCellStore),
+
     samples(): ConductivitySample[] {
-      return this.store.conductivitySamples
+      return this.impedanceStore.conductivitySamples
     },
 
     sigmaBase(): number {
@@ -264,7 +260,7 @@ export default defineComponent({
     },
 
     zNominal(): number {
-      return this.store.nominalImpedanceOhm
+      return this.impedanceStore.nominalImpedanceOhm
     },
 
     /* ── σ_e Y-axis range ── */
@@ -350,15 +346,15 @@ export default defineComponent({
       return this.sigmaBase.toFixed(4)
     },
     sigmaLiveDisplay(): string {
-      return this.store.sigmaEWithLysis.toFixed(4)
+      return this.impedanceStore.sigmaEWithLysis.toFixed(4)
     },
     deltaDisplay(): string {
-      const d = this.store.conductivityDeltaAbs
+      const d = this.impedanceStore.conductivityDeltaAbs
       const sign = d > 0 ? '+' : ''
       return `${sign}${d.toFixed(4)}`
     },
     driftDisplay(): string {
-      const d = this.store.impedanceDriftPct
+      const d = this.impedanceStore.impedanceDriftPct
       const sign = d > 0 ? '+' : d < 0 ? '−' : ''
       return `${sign}${Math.abs(d).toFixed(1)}%`
     },
@@ -386,7 +382,7 @@ export default defineComponent({
     },
 
     clearSamples() {
-      this.store.clearConductivitySamples()
+      this.impedanceStore.clearConductivitySamples()
     },
   },
 })

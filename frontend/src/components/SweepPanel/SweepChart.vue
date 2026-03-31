@@ -8,6 +8,7 @@
 <script lang="ts">
 import { defineComponent, type PropType } from 'vue'
 import * as d3 from 'd3'
+import { mapStores } from 'pinia'
 import { useCellStore } from '@/stores/cellStore'
 import { C } from '@/theme/colors'
 import { THRESHOLDS } from '@/constants/physics'
@@ -31,12 +32,12 @@ export default defineComponent({
     open:       { type: Boolean, required: true },
   },
 
-  setup() {
-    return { store: useCellStore() }
-  },
-
   data() {
     return { _resizeObs: null as ResizeObserverInstance | null }
+  },
+
+  computed: {
+    ...mapStores(useCellStore),
   },
 
   watch: {
@@ -46,8 +47,8 @@ export default defineComponent({
     sweepData()  { if (this.open) this._drawChart() },
     sweepParam() { if (this.open) this._drawChart() },
     sweepMax()   { if (this.open) this._drawChart() },
-    'store.fieldIntensity'()            { if (this.open) this._drawChart() },
-    'store.currentBroadcastFrequency'() { if (this.open) this._drawChart() },
+    'cellStore.fieldIntensity'()            { if (this.open) this._drawChart() },
+    'cellStore.currentBroadcastFrequency'() { if (this.open) this._drawChart() },
   },
 
   beforeUnmount() {
@@ -136,8 +137,8 @@ export default defineComponent({
 
       // ── Current param cursor ──────────────────────────────────────────────
       const curX = this.sweepParam === 'field'
-        ? this.store.fieldIntensity
-        : this.store.currentBroadcastFrequency
+        ? this.cellStore.fieldIntensity
+        : this.cellStore.currentBroadcastFrequency
       if (curX <= this.sweepMax) {
         g.append('line')
           .attr('x1', xScale(curX)).attr('y1', 0)

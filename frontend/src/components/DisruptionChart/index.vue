@@ -26,6 +26,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import * as d3 from 'd3'
+import { mapStores } from 'pinia'
 import { useCellStore } from '@/stores/cellStore'
 import { broadcastStateSync } from '@/services/socket'
 import { CELL_CATEGORY } from '@/constants/strings'
@@ -42,10 +43,6 @@ import {
 
 export default defineComponent({
   components: { DrChartLegend, DrChartTooltip },
-
-  setup() {
-    return { store: useCellStore() }
-  },
 
   data() {
     return {
@@ -65,21 +62,24 @@ export default defineComponent({
   },
 
   computed: {
+    ...mapStores(useCellStore),
+    ICON() { return ICON },
+
     warningIcon(): string {
       return ICON.WARNING
     },
   },
 
   watch: {
-    'store.healthy':                   { handler() { this.updateChart() }, deep: true },
-    'store.target':                    { handler() { this.updateChart() }, deep: true },
-    'store.fieldIntensity':            { handler() { this.updateChart() } },
-    'store.effectiveSigmaE':           { handler() { this.updateChart() } },
-    'store.cosThetaFactor':            { handler() { this.updateChart() } },
-    'store.pulseEnvelopeFactorHealthy':{ handler() { this.updateChart() } },
-    'store.pulseEnvelopeFactorTarget': { handler() { this.updateChart() } },
-    'store.chartMode':                 { handler() { this.updateChart() } },
-    'store.currentBroadcastFrequency': { handler() { this.updateCursor() } },
+    'cellStore.healthy':                   { handler() { this.updateChart() }, deep: true },
+    'cellStore.target':                    { handler() { this.updateChart() }, deep: true },
+    'cellStore.fieldIntensity':            { handler() { this.updateChart() } },
+    'cellStore.effectiveSigmaE':           { handler() { this.updateChart() } },
+    'cellStore.cosThetaFactor':            { handler() { this.updateChart() } },
+    'cellStore.pulseEnvelopeFactorHealthy':{ handler() { this.updateChart() } },
+    'cellStore.pulseEnvelopeFactorTarget': { handler() { this.updateChart() } },
+    'cellStore.chartMode':                 { handler() { this.updateChart() } },
+    'cellStore.currentBroadcastFrequency': { handler() { this.updateCursor() } },
   },
 
   mounted() {
@@ -191,7 +191,7 @@ export default defineComponent({
           const xClamped = Math.max(0, Math.min(this._chartW, event.x))
           const hz = this._xScale.invert(xClamped)
           const khz = Math.max(10, Math.min(F_MAX_HZ / 1000, hz / 1000))
-          this.store.setBroadcastFreqKHz(Math.round(khz))
+          this.cellStore.setBroadcastFreqKHz(Math.round(khz))
           broadcastStateSync()
         })
 
@@ -217,21 +217,21 @@ export default defineComponent({
       const W  = this._chartW
 
       // ── Compute curves ────────────────────────────────────────────────────
-      const isAcousticTarget = this.store.targetCellCategory === CELL_CATEGORY.BACTERIA
-        || this.store.targetCellCategory === CELL_CATEGORY.VIRUS
+      const isAcousticTarget = this.cellStore.targetCellCategory === CELL_CATEGORY.BACTERIA
+        || this.cellStore.targetCellCategory === CELL_CATEGORY.VIRUS
 
       const data = computeCurves(
-        this.store.healthy, this.store.target,
-        this.store.fieldIntensity, this.store.effectiveSigmaE, this.store.cosThetaFactor,
-        this.store.pulseEnvelopeFactorHealthy, this.store.pulseEnvelopeFactorTarget,
-        this.store.isResonanceMode,
+        this.cellStore.healthy, this.cellStore.target,
+        this.cellStore.fieldIntensity, this.cellStore.effectiveSigmaE, this.cellStore.cosThetaFactor,
+        this.cellStore.pulseEnvelopeFactorHealthy, this.cellStore.pulseEnvelopeFactorTarget,
+        this.cellStore.isResonanceMode,
         isAcousticTarget,
       )
       this._curveData = data
       const peakDR = data.reduce((m, d) => Math.max(m, d.hDR, d.tDR), 0)
 
       // ── Disclaimer: show in full-scale mode when chart is informationally flat ──
-      this.showDisclaimer   = !this.zoomMode && !this.store.isResonanceMode && peakDR < DR_DISCLAIMER_PCT
+      this.showDisclaimer   = !this.zoomMode && !this.cellStore.isResonanceMode && peakDR < DR_DISCLAIMER_PCT
       this.isDisclaimerBacteriaVirus = isAcousticTarget
 
       // ── Dynamic Y domain ──────────────────────────────────────────────────
@@ -367,7 +367,7 @@ export default defineComponent({
       const g  = this._svg?.select<SVGGElement>('.dr-g')
       if (!gc || !g || !this._xScale) return
 
-      const freqHz = this.store.currentBroadcastFrequency * 1000
+      const freqHz = this.cellStore.currentBroadcastFrequency * 1000
       const cx     = this._xScale(Math.max(F_MIN_HZ, Math.min(F_MAX_HZ, freqHz)))
 
       this._cursorX = cx

@@ -24,17 +24,16 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+import { mapStores } from 'pinia'
 import { useCellStore } from '@/stores/cellStore'
 import { EXPERIMENTAL_BASIS } from '@/constants/strings'
 import { formatFreqKHz } from '@/utils/format'
 
 export default defineComponent({
-  setup() {
-    return { store: useCellStore() }
-  },
-
   computed: {
-    skinDepthMm(): number { return this.store.skinDepthMm },
+    ...mapStores(useCellStore),
+
+    skinDepthMm(): number { return this.cellStore.skinDepthMm },
 
     skinDepthLabel(): string {
       const d = this.skinDepthMm
@@ -50,11 +49,11 @@ export default defineComponent({
     },
 
     freqDisplayLabel(): string {
-      return formatFreqKHz(this.store.currentBroadcastFrequency)
+      return formatFreqKHz(this.cellStore.currentBroadcastFrequency)
     },
 
     resonantFreqRange(): string {
-      const t = this.store.target
+      const t = this.cellStore.target
       const f0 = t.resonantFreqGHz
       if (!f0) return ', '
       const label = (ghz: number) => formatFreqKHz(ghz * 1e6)
@@ -64,7 +63,7 @@ export default defineComponent({
     },
 
     resonantQRange(): string {
-      const t = this.store.target
+      const t = this.cellStore.target
       if (t.capsidQMin !== undefined && t.capsidQMax !== undefined) {
         return `${t.capsidQMin} - ${t.capsidQMax}  (nominal Q = ${t.capsidQ ?? '?'})`
       }
@@ -73,7 +72,7 @@ export default defineComponent({
     },
 
     basisLabel(): string {
-      switch (this.store.target.experimentalBasis) {
+      switch (this.cellStore.target.experimentalBasis) {
         case EXPERIMENTAL_BASIS.LASER_VALIDATED: return this.$t('selectivity.basisLaserValidated')
         case EXPERIMENTAL_BASIS.RF_EXTRAPOLATED: return this.$t('selectivity.basisRfExtrapolated')
         case EXPERIMENTAL_BASIS.SPECULATIVE:     return this.$t('selectivity.basisSpeculative')
@@ -82,7 +81,7 @@ export default defineComponent({
     },
 
     basisClass(): string {
-      switch (this.store.target.experimentalBasis) {
+      switch (this.cellStore.target.experimentalBasis) {
         case EXPERIMENTAL_BASIS.LASER_VALIDATED: return 'res-info__badge--validated'
         case EXPERIMENTAL_BASIS.RF_EXTRAPOLATED: return 'res-info__badge--extrapolated'
         default:                                  return 'res-info__badge--speculative'

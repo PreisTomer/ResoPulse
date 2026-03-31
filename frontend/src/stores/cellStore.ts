@@ -9,7 +9,7 @@ import { MEDIA } from '@/constants/media'
 import type { CellConfig, CellState } from '@/types/cell'
 import type { MediumKey } from '@/types/media'
 import { SLIDER_RANGES, type SliderRange } from '@/constants/sliderBounds'
-import { computeSchwan, computeSAR, computeFc, computeTau, computeResonantDisruption, computeNuclearVm, computePulseStepResponse, computeSkinDepthMm, computeDepCmReal, computeDepCrossoverKHz, computeDepSecondCrossoverKHz, computePopulationLysisFraction, safeRatio } from '@/utils/physics'
+import { computeSchwan, computeSAR, computeFc, computeTau, computeResonantDisruption, computeNuclearVm, computePulseStepResponse, computeSkinDepthMm, computeDepCmReal, computeDepCrossoverKHz, computeDepSecondCrossoverKHz, computePopulationLysisFraction, safeRatio, tempCorrectedVth } from '@/utils/physics'
 import { CELL_CATEGORY, CELL_STATE, CHART_MODE, WAVEFORM, CELL_TYPE, FREQ_REGIME, DEFAULT_SESSION_NAME } from '@/constants/strings'
 import { DEFAULT_LYSIS_N_PULSES, DEFAULT_ORIENTATION_DEG } from '@/constants/experimentDefaults'
 import { MEDIUM_SPECIFIC_HEAT_J_KG_K } from '@/constants/cuvette'
@@ -32,8 +32,6 @@ import {
   NEAR_ZERO_DR,
   FREQ_ELECTROLYTIC_LIMIT_KHZ,
   FREQ_NEARFIELD_RF_LIMIT_KHZ,
-  TEMP_EP_COEFF,
-  TEMP_EP_CLAMP_MIN,
   POP_CV_MAMMALIAN,
   POP_CV_BACTERIA,
   POP_CV_VIRUS,
@@ -78,12 +76,6 @@ function lysisField(
   const tau   = computeTau(cell, sigma_e)
   return (cell.thresholdVoltage * hfireMult * Math.sqrt(1 + (omega * tau) ** 2)) /
     (SCHWAN_SPHERE_FACTOR * cell.radius * 1e-6 * cosTheta * 100 * Math.max(MIN_PULSE_ENVELOPE, pef))
-}
-
-// Vth_eff = Vth × clamp(1 − 0.003×(T−37), 0.70, ∞). Weaver 1996; DeBruin 1999.
-function tempCorrectedVth(nominalVth: number, tempC: number): number {
-  const correction = Math.max(TEMP_EP_CLAMP_MIN, 1 - TEMP_EP_COEFF * Math.max(0, tempC - BODY_TEMP_C))
-  return nominalVth * correction
 }
 
 // σ_i uncertainty: virus 45%, bacteria 35%, mammalian 20%

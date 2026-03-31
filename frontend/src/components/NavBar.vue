@@ -58,6 +58,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+import { mapStores } from 'pinia'
 import { useCellStore } from '@/stores/cellStore'
 import { useThemeStore } from '@/stores/themeStore'
 
@@ -73,16 +74,15 @@ const NAV_LINKS = [
 export default defineComponent({
   name: 'NavBar',
 
-  setup() {
-    return { store: useCellStore(), themeStore: useThemeStore() }
-  },
-
   data() {
     return { mobileOpen: false, navLinks: NAV_LINKS }
   },
 
   computed: {
-    systemReady(): boolean { return this.store.systemReady },
+    ...mapStores(useCellStore),
+    themeStore() { return useThemeStore() },
+
+    systemReady(): boolean { return this.cellStore.systemReady },
     isOled(): boolean { return this.themeStore.theme === 'oled' },
   },
 })

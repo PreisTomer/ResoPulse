@@ -97,6 +97,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+import { mapStores } from 'pinia'
 import { useCellStore } from '@/stores/cellStore'
 import { useImpedanceStore } from '@/stores/impedanceStore'
 import { useUiStore } from '@/stores/uiStore'
@@ -109,14 +110,8 @@ import { ICON } from '@/constants/icons'
 export default defineComponent({
   name: 'InstrumentView',
   components: { InstrumentPanel, PageHeader },
-  setup() {
-    return {
-      cellStore: useCellStore(),
-      impStore:  useImpedanceStore(),
-      uiStore:   useUiStore(),
-      UNIT,
-      ICON,
-    }
+  data() {
+    return { UNIT, ICON }
   },
 
   mounted() {
@@ -128,6 +123,11 @@ export default defineComponent({
   },
 
   computed: {
+    ...mapStores(useCellStore, useImpedanceStore, useUiStore),
+    cellStore() { return useCellStore() },
+    impStore() { return useImpedanceStore() },
+    uiStore() { return useUiStore() },
+
     targetDR(): number {
       return this.cellStore.targetDisruptionRatio
     },

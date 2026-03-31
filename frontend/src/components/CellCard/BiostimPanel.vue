@@ -50,8 +50,6 @@ import { UNIT } from '@/constants/units'
 import { tipBiomodScore, tipBiomodSI, tipBiomodMTE, tipBiomodMA } from '@/tooltips/biostimTooltips'
 
 export default defineComponent({
-  setup() { return { ICON, UNIT } },
-
   props: {
     stimIndex:       { type: Number, required: true },
     mechTransdEff:   { type: Number, required: true },
@@ -64,6 +62,9 @@ export default defineComponent({
   },
 
   computed: {
+    ICON() { return ICON },
+    UNIT() { return UNIT },
+
     scoreClass(): string {
       if (this.biomodScore < 0.25) return 'cell-card__biostim-score--low'
       if (this.biomodScore < 0.55) return 'cell-card__biostim-score--medium'

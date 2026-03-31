@@ -14,6 +14,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import type { PropType } from 'vue'
+import { mapStores } from 'pinia'
 import { useCellStore } from '@/stores/cellStore'
 import { broadcastStateSync } from '@/services/socket'
 import { WAVEFORM } from '@/constants/strings'
@@ -40,8 +41,8 @@ export default defineComponent({
     sliderRanges: { type: Object as PropType<SliderRange>, required: true },
   },
 
-  setup() {
-    return { store: useCellStore() }
+  computed: {
+    ...mapStores(useCellStore),
   },
 
   methods: {
@@ -54,50 +55,50 @@ export default defineComponent({
     },
 
     applyQuasiDC() {
-      const freqKhz = this.clampFreq(Math.max(this.sliderRanges.freqMin, this.store.targetFc / QUASI_DC_FREQ_DIVISOR))
+      const freqKhz = this.clampFreq(Math.max(this.sliderRanges.freqMin, this.cellStore.targetFc / QUASI_DC_FREQ_DIVISOR))
       // Apply pulse settings first so targetLysisField uses the correct pulse envelope factor.
-      this.store.setWaveform(WAVEFORM.PULSED)
-      this.store.setDutyCycle(QUASI_DC_DC)
-      this.store.setPulseWidthNs(QUASI_DC_PW_NS)
-      const fieldVcm = this.clampField(this.store.targetLysisField * QUASI_DC_FIELD_FRACTION)
-      this.store.setBroadcastFreqKHz(freqKhz)
-      this.store.setFieldIntensity(fieldVcm)
+      this.cellStore.setWaveform(WAVEFORM.PULSED)
+      this.cellStore.setDutyCycle(QUASI_DC_DC)
+      this.cellStore.setPulseWidthNs(QUASI_DC_PW_NS)
+      const fieldVcm = this.clampField(this.cellStore.targetLysisField * QUASI_DC_FIELD_FRACTION)
+      this.cellStore.setBroadcastFreqKHz(freqKhz)
+      this.cellStore.setFieldIntensity(fieldVcm)
       broadcastStateSync()
     },
 
     applySelective() {
-      const freqKhz = this.clampFreq(this.store.optimalFreqResult.khz)
+      const freqKhz = this.clampFreq(this.cellStore.optimalFreqResult.khz)
       // Apply pulse settings first so targetLysisField uses the correct pulse envelope factor.
-      this.store.setWaveform(WAVEFORM.PULSED)
-      this.store.setDutyCycle(SELECTIVE_DC)
-      this.store.setPulseWidthNs(SELECTIVE_PW_NS)
-      const fieldVcm = this.clampField(this.store.targetLysisField * SELECTIVE_FIELD_FRACTION)
-      this.store.setBroadcastFreqKHz(freqKhz)
-      this.store.setFieldIntensity(fieldVcm)
+      this.cellStore.setWaveform(WAVEFORM.PULSED)
+      this.cellStore.setDutyCycle(SELECTIVE_DC)
+      this.cellStore.setPulseWidthNs(SELECTIVE_PW_NS)
+      const fieldVcm = this.clampField(this.cellStore.targetLysisField * SELECTIVE_FIELD_FRACTION)
+      this.cellStore.setBroadcastFreqKHz(freqKhz)
+      this.cellStore.setFieldIntensity(fieldVcm)
       broadcastStateSync()
     },
 
     applyNsEP() {
       const freqKhz = this.clampFreq(NSEP_FREQ_KHZ)
       // Apply pulse settings first so targetLysisField uses the correct pulse envelope factor.
-      this.store.setWaveform(WAVEFORM.PULSED)
-      this.store.setDutyCycle(NSEP_DC)
-      this.store.setPulseWidthNs(NSEP_PW_NS)
-      const fieldVcm = this.clampField(this.store.targetLysisField * NSEP_FIELD_FRACTION)
-      this.store.setBroadcastFreqKHz(freqKhz)
-      this.store.setFieldIntensity(fieldVcm)
+      this.cellStore.setWaveform(WAVEFORM.PULSED)
+      this.cellStore.setDutyCycle(NSEP_DC)
+      this.cellStore.setPulseWidthNs(NSEP_PW_NS)
+      const fieldVcm = this.clampField(this.cellStore.targetLysisField * NSEP_FIELD_FRACTION)
+      this.cellStore.setBroadcastFreqKHz(freqKhz)
+      this.cellStore.setFieldIntensity(fieldVcm)
       broadcastStateSync()
     },
 
     applyThermal() {
-      const freqKhz = this.clampFreq(this.store.optimalFreqResult.khz)
+      const freqKhz = this.clampFreq(this.cellStore.optimalFreqResult.khz)
       // Apply pulse settings first so targetLysisField uses the correct pulse envelope factor.
-      this.store.setWaveform(WAVEFORM.PULSED)
-      this.store.setDutyCycle(THERMAL_DC)
-      this.store.setPulseWidthNs(THERMAL_PW_NS)
-      const fieldVcm = this.clampField(this.store.targetLysisField * THERMAL_FIELD_FRACTION)
-      this.store.setBroadcastFreqKHz(freqKhz)
-      this.store.setFieldIntensity(fieldVcm)
+      this.cellStore.setWaveform(WAVEFORM.PULSED)
+      this.cellStore.setDutyCycle(THERMAL_DC)
+      this.cellStore.setPulseWidthNs(THERMAL_PW_NS)
+      const fieldVcm = this.clampField(this.cellStore.targetLysisField * THERMAL_FIELD_FRACTION)
+      this.cellStore.setBroadcastFreqKHz(freqKhz)
+      this.cellStore.setFieldIntensity(fieldVcm)
       broadcastStateSync()
     },
   },

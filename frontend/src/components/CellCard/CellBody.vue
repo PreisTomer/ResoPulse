@@ -27,6 +27,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import type { PropType } from 'vue'
+import { mapStores } from 'pinia'
 import { useCellStore } from '@/stores/cellStore'
 import { CELL_STATE, CELL_TYPE } from '@/constants/strings'
 import { splitFreqKHz, formatLysisFieldVcm } from '@/utils/format'
@@ -38,44 +39,44 @@ export default defineComponent({
     description: { type: String, required: true },
   },
 
-  setup() {
-    return { store: useCellStore(), CELL_STATE, CELL_TYPE }
-  },
-
   computed: {
+    ...mapStores(useCellStore),
+    CELL_STATE() { return CELL_STATE },
+    CELL_TYPE()  { return CELL_TYPE },
+
     cellState() {
       return this.type === CELL_TYPE.HEALTHY
-        ? this.store.healthyCellState
-        : this.store.targetCellState
+        ? this.cellStore.healthyCellState
+        : this.cellStore.targetCellState
     },
 
     metricsElysis(): string {
-      return formatLysisFieldVcm(this.store.targetLysisField)
+      return formatLysisFieldVcm(this.cellStore.targetLysisField)
     },
 
     metricsElysisClass(): string {
-      const lf = this.store.targetLysisField
+      const lf = this.cellStore.targetLysisField
       if (lf >= LYSIS_FIELD_SENTINEL) return ''
-      const ratio = this.store.fieldIntensity / lf
+      const ratio = this.cellStore.fieldIntensity / lf
       if (ratio >= 1.0)  return 'cell-body__metric-value--danger'
       if (ratio >= 0.85) return 'cell-body__metric-value--warn'
       return ''
     },
 
     metricsTi(): string {
-      const ti = this.store.therapeuticIndex
+      const ti = this.cellStore.therapeuticIndex
       return ti >= 10 ? '>10\u00D7' : `\u00D7${ti.toFixed(1)}`
     },
 
     metricsTiClass(): string {
-      const ti = this.store.therapeuticIndex
+      const ti = this.cellStore.therapeuticIndex
       if (ti >= 1.5) return 'cell-body__metric-value--good'
       if (ti >= 1.0) return 'cell-body__metric-value--warn'
       return 'cell-body__metric-value--danger'
     },
 
     metricsFc(): string {
-      const parts = splitFreqKHz(this.store.targetFc, 2)
+      const parts = splitFreqKHz(this.cellStore.targetFc, 2)
       return `${parts.value} ${parts.unit}`
     },
   },

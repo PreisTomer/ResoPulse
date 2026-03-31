@@ -150,7 +150,7 @@ export default defineComponent({
 
   emits: ['field-change', 'show-tip'],
 
-  setup() { return { UNIT } },
+  data() { return { UNIT } },
 
   methods: {
     onNumericInput(key: string, event: Event) {

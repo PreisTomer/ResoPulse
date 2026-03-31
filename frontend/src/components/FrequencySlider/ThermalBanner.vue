@@ -34,11 +34,11 @@ export default defineComponent({
     maxSteadyTemp: { type: Number, required: true },
   },
 
-  setup() {
-    return { THERMAL_LEVEL, ICON, UNIT }
-  },
-
   computed: {
+    THERMAL_LEVEL() { return THERMAL_LEVEL },
+    ICON()          { return ICON },
+    UNIT()          { return UNIT },
+
     tipThermalBanner(): string {
       return tipThermalBanner(
         this.thermalDangerLevel as typeof THERMAL_LEVEL.VAPORIZING | typeof THERMAL_LEVEL.DENATURING | typeof THERMAL_LEVEL.HYPERTHERMIC,

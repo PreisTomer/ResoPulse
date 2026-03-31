@@ -5,7 +5,7 @@
     <!-- Far left: session name + notes toggle -->
     <div class="experiment__header-left">
       <input
-        v-model="store.sessionName"
+        v-model="cellStore.sessionName"
         class="experiment__session-name"
         spellcheck="false"
         :title="$t('exp.renameSession')"
@@ -42,7 +42,7 @@
               v-for="p in healthyReferencePresets"
               :key="p.presetId"
               class="experiment__preset-btn experiment__preset-btn--healthy"
-              :class="{ 'experiment__preset-btn--active': store.healthy.id === p.presetId }"
+              :class="{ 'experiment__preset-btn--active': cellStore.healthy.id === p.presetId }"
               @click="loadHealthyPreset(p)"
             >
               <span class="experiment__preset-btn-name">{{ p.shortLabel }}</span>
@@ -62,7 +62,7 @@
         >
           <div class="experiment__cell-badge-row" :class="{ 'experiment__cell-badge-row--open': targetPickerOpen }">
             <span class="experiment__cell-badge-type">{{ $t('exp.badgeTarget') }}</span>
-            <span class="experiment__cell-badge-selected experiment__cell-badge-selected--target">{{ store.target.label }}</span>
+            <span class="experiment__cell-badge-selected experiment__cell-badge-selected--target">{{ cellStore.target.label }}</span>
             <span class="experiment__cell-badge-caret" :class="{ 'experiment__cell-badge-caret--open': targetPickerOpen }">{{ ICON.EXPAND }}</span>
           </div>
         </button>
@@ -92,8 +92,8 @@
               v-for="p in targetPresetsForCategory"
               :key="p.presetId"
               class="experiment__preset-btn"
-              :class="{ 'experiment__preset-btn--active': store.target.id === p.presetId }"
-              :style="store.target.id === p.presetId ? { borderColor: GROUP_COLORS[targetPickerCategory as CellGroup], color: GROUP_COLORS[targetPickerCategory as CellGroup] } : {}"
+              :class="{ 'experiment__preset-btn--active': cellStore.target.id === p.presetId }"
+              :style="cellStore.target.id === p.presetId ? { borderColor: GROUP_COLORS[targetPickerCategory as CellGroup], color: GROUP_COLORS[targetPickerCategory as CellGroup] } : {}"
               @click="loadTargetPreset(p)"
             >
               <span class="experiment__preset-btn-name">{{ p.shortLabel }}</span>
@@ -102,15 +102,15 @@
           </div>
           <!-- Custom presets grid -->
           <div v-else class="experiment__cell-picker-grid">
-            <p v-if="!presetsStore.hasPresets" class="experiment__custom-empty">
+            <p v-if="!userPresetsStore.hasPresets" class="experiment__custom-empty">
               {{ $t('userPresets.emptyMsg') }}<br />
               <span class="experiment__custom-hint">{{ $t('userPresets.emptyHint') }}</span>
             </p>
             <div
-              v-for="p in presetsStore.presets"
+              v-for="p in userPresetsStore.presets"
               :key="p.id"
               class="experiment__preset-btn experiment__preset-btn--custom"
-              :class="{ 'experiment__preset-btn--active': store.target.id === p.id }"
+              :class="{ 'experiment__preset-btn--active': cellStore.target.id === p.id }"
               role="button"
               tabindex="0"
               @click="loadUserPreset(p)"
@@ -118,7 +118,7 @@
             >
               <span class="experiment__preset-btn-name">{{ p.shortLabel }}</span>
               <span class="experiment__preset-btn-sub">{{ p.notes || p.label }}</span>
-              <button class="experiment__preset-btn-del" @click.stop="presetsStore.remove(p.id)" :title="$t('exp.deletePreset')">{{ ICON.CLOSE }}</button>
+              <button class="experiment__preset-btn-del" @click.stop="userPresetsStore.remove(p.id)" :title="$t('exp.deletePreset')">{{ ICON.CLOSE }}</button>
             </div>
             <button class="experiment__preset-btn-new" @click.stop="showCreateModal = true">
               {{ $t('userPresets.createBtn') }}
@@ -138,7 +138,7 @@
         v-tip="$t('exp.zDriftTip')"
       >
         <span class="experiment__z-drift-icon">{{ ICON.FLASK }}</span>
-        {{ $t('exp.zDriftLabel') }} {{ impStore.impedanceDriftPct.toFixed(1) }}%
+        {{ $t('exp.zDriftLabel') }} {{ impedanceStore.impedanceDriftPct.toFixed(1) }}%
       </RouterLink>
       <span
         class="experiment__chip"
@@ -162,6 +162,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+import { mapStores } from 'pinia'
 import { useCellStore } from '@/stores/cellStore'
 import { useImpedanceStore } from '@/stores/impedanceStore'
 import { useUserPresetsStore } from '@/stores/userPresetsStore'
@@ -186,20 +187,11 @@ export default defineComponent({
 
   emits: ['notes-toggle', 'load-healthy-preset', 'load-target-preset'],
 
-  setup() {
+  data() {
     return {
-      store: useCellStore(),
-      impStore: useImpedanceStore(),
-      presetsStore: useUserPresetsStore(),
       socketConnected,
       GROUP_COLORS,
       GROUP_LABELS,
-      ICON,
-    }
-  },
-
-  data() {
-    return {
       healthyPickerOpen: false,
       targetPickerOpen: false,
       targetPickerCategory: CELL_GROUP.CANCER as CellGroup | 'custom',
@@ -208,12 +200,15 @@ export default defineComponent({
   },
 
   computed: {
+    ICON() { return ICON },
+    ...mapStores(useCellStore, useImpedanceStore, useUserPresetsStore),
+
     showZDriftBadge(): boolean {
-      return Math.abs(this.impStore.impedanceDriftPct) > 5
+      return Math.abs(this.impedanceStore.impedanceDriftPct) > 5
     },
 
     tipHealthyBadge(): string {
-      const cell = this.store.healthy
+      const cell = this.cellStore.healthy
       return tipCellBadgeHealthy({
         label: cell.label,
         radius: cell.radius,
@@ -223,7 +218,7 @@ export default defineComponent({
     },
 
     tipTargetBadge(): string {
-      const cell = this.store.target
+      const cell = this.cellStore.target
       return tipCellBadgeTarget({
         label: cell.label,
         radius: cell.radius,
@@ -246,11 +241,11 @@ export default defineComponent({
     },
 
     healthyLabelShort(): string {
-      return this.store.healthy.label.replace(/^Healthy\s+/i, '')
+      return this.cellStore.healthy.label.replace(/^Healthy\s+/i, '')
     },
 
-    healthyFcSetup(): string { return formatFreqKHz(this.store.healthyFc, 1) },
-    targetFcSetup(): string  { return formatFreqKHz(this.store.targetFc, 1) },
+    healthyFcSetup(): string { return formatFreqKHz(this.cellStore.healthyFc, 1) },
+    targetFcSetup(): string  { return formatFreqKHz(this.cellStore.targetFc, 1) },
   },
 
   methods: {
@@ -265,22 +260,22 @@ export default defineComponent({
     },
 
     loadHealthyPreset(preset: CellPreset) {
-      this.store.loadPreset('healthy', preset)
+      this.cellStore.loadPreset('healthy', preset)
       this.healthyPickerOpen = false
       broadcastStateSync()
       this.$emit('load-healthy-preset', preset)
     },
 
     loadTargetPreset(preset: CellPreset) {
-      this.store.loadPreset('target', preset)
+      this.cellStore.loadPreset('target', preset)
       this.targetPickerOpen = false
       // applyTargetDefaults fires via watcher on currentTargetId in ExperimentView
       this.$emit('load-target-preset', preset)
     },
 
     loadUserPreset(preset: UserCellPreset) {
-      const config = this.presetsStore.toCellConfig(preset, 'target')
-      this.store.loadPreset('target', config)
+      const config = this.userPresetsStore.toCellConfig(preset, 'target')
+      this.cellStore.loadPreset('target', config)
       this.targetPickerOpen = false
     },
 

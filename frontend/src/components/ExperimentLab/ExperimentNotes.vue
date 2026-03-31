@@ -29,17 +29,19 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+import { mapStores } from 'pinia'
 import { useExperimentStore } from '@/stores/experimentStore'
 
 export default defineComponent({
   name: 'ExperimentNotes',
 
-  setup() {
-    return { expStore: useExperimentStore() }
-  },
-
   props: {
     open: { type: Boolean, default: false },
+  },
+
+  computed: {
+    ...mapStores(useExperimentStore),
+    expStore() { return useExperimentStore() },
   },
 })
 </script>

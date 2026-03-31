@@ -21,6 +21,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import * as d3 from 'd3'
+import { mapStores } from 'pinia'
 import { useCellStore } from '@/stores/cellStore'
 import { computeSchwan, computeFc, computeResonantLineshape, computeResonantDisruption, computeTau, computeDepCmReal } from '@/utils/physics'
 import { CELL_PRESETS, GROUP_COLORS } from '@/constants/cellLibrary'
@@ -44,10 +45,6 @@ import type { TooltipData } from './chartCompute'
 export default defineComponent({
   components: { ChartLegend, ChartTooltip },
 
-  setup() {
-    return { store: useCellStore(), UNIT }
-  },
-
   data() {
     return {
       _svg: null as d3.Selection<SVGSVGElement, unknown, null, undefined> | null,
@@ -66,18 +63,23 @@ export default defineComponent({
     }
   },
 
+  computed: {
+    ...mapStores(useCellStore),
+    UNIT() { return UNIT },
+  },
+
   watch: {
-    'store.healthy':                   { handler() { this.updateChart() }, deep: true },
-    'store.target':                    { handler() { this.updateChart() }, deep: true },
-    'store.fieldIntensity':            { handler() { this.updateChart() } },
-    'store.medium':                    { handler() { this.updateChart() } },
-    'store.effectiveSigmaE':           { handler() { this.updateChart() } },
-    'store.cosThetaFactor':            { handler() { this.updateChart() } },
-    'store.currentBroadcastFrequency': { handler() { if (!this._isDragging) this.updateCursor() } },
-    'store.doubleShellEnabled':        { handler() { this.updateChart() } },
-    'store.chartMode':                 { handler() { this.updateChart() } },
-    'store.waveform':                  { handler() { this.updateChart() } },
-    'store.dutyCycle':                 { handler() { this.updateChart() } },
+    'cellStore.healthy':                   { handler() { this.updateChart() }, deep: true },
+    'cellStore.target':                    { handler() { this.updateChart() }, deep: true },
+    'cellStore.fieldIntensity':            { handler() { this.updateChart() } },
+    'cellStore.medium':                    { handler() { this.updateChart() } },
+    'cellStore.effectiveSigmaE':           { handler() { this.updateChart() } },
+    'cellStore.cosThetaFactor':            { handler() { this.updateChart() } },
+    'cellStore.currentBroadcastFrequency': { handler() { if (!this._isDragging) this.updateCursor() } },
+    'cellStore.doubleShellEnabled':        { handler() { this.updateChart() } },
+    'cellStore.chartMode':                 { handler() { this.updateChart() } },
+    'cellStore.waveform':                  { handler() { this.updateChart() } },
+    'cellStore.dutyCycle':                 { handler() { this.updateChart() } },
   },
 
   mounted() {
@@ -256,7 +258,7 @@ export default defineComponent({
     // ── Resonance mode: Lorentzian disruption chart ──────────────────────
     updateChartResonance() {
       if (!this._svg || !this._xScale || !this._yScale) return
-      const t = this.store.target
+      const t = this.cellStore.target
       if (!t.resonantFreqGHz || !t.resonantThresholdVcm) return
 
       const g = this._svg.select<SVGGElement>('.chart-g')
@@ -264,7 +266,7 @@ export default defineComponent({
       const Q    = t.capsidQ ?? DEFAULT_CAPSID_Q
       const Qmin = t.capsidQMin ?? Q
       const Qmax = t.capsidQMax ?? Q
-      const E    = this.store.fieldIntensity
+      const E    = this.cellStore.fieldIntensity
       const Ethr = t.resonantThresholdVcm
 
       // Frequency range: 2 decades below and above f_res
@@ -444,10 +446,10 @@ export default defineComponent({
       const g = this._svg.select<SVGGElement>('.chart-g')
 
       // Branch: resonance mode shows Lorentzian disruption chart
-      const cat = this.store.targetCellCategory
-      const t = this.store.target
+      const cat = this.cellStore.targetCellCategory
+      const t = this.cellStore.target
       if (
-        this.store.isResonanceMode &&
+        this.cellStore.isResonanceMode &&
         (cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) &&
         t.resonantFreqGHz && t.resonantThresholdVcm
       ) {
@@ -460,12 +462,12 @@ export default defineComponent({
       this._xScale!.domain([F_MIN_HZ, F_MAX_HZ])
       g.select('.axis-label-y').text(`${this.$t('chart.axisVm')} (${UNIT.MV})`)
 
-      const sigma_e  = this.store.effectiveSigmaE
-      const cosTheta = this.store.cosThetaFactor
+      const sigma_e  = this.cellStore.effectiveSigmaE
+      const cosTheta = this.cellStore.cosThetaFactor
 
       // Compute active-cell curves (include orientation factor)
-      const healthyCurve = computeVmCurve(this.store.healthy, this.store.fieldIntensity, sigma_e, cosTheta)
-      const targetCurve  = computeVmCurve(this.store.target,  this.store.fieldIntensity, sigma_e, cosTheta)
+      const healthyCurve = computeVmCurve(this.cellStore.healthy, this.cellStore.fieldIntensity, sigma_e, cosTheta)
+      const targetCurve  = computeVmCurve(this.cellStore.target,  this.cellStore.fieldIntensity, sigma_e, cosTheta)
 
       // Auto-scale y
       const allVm = [...healthyCurve.map((d) => d.vm), ...targetCurve.map((d) => d.vm)]
@@ -503,7 +505,7 @@ export default defineComponent({
         .call((a) => a.selectAll('line').attr('stroke', C.w06))
 
       // ── Selectivity ratio curve + right Y-axis ──────────────────────────
-      const selData   = computeSelCurve(this.store.healthy, this.store.target, this.store.fieldIntensity, sigma_e)
+      const selData   = computeSelCurve(this.cellStore.healthy, this.cellStore.target, this.cellStore.fieldIntensity, sigma_e)
       const maxRatio  = Math.max(...selData.map((d) => d.ratio), 2.0)
       const rightDomainMax = Math.ceil(maxRatio * 10) / 10
       this._yRightScale!.domain([0, rightDomainMax])
@@ -556,9 +558,9 @@ export default defineComponent({
       depGroup.selectAll('*').remove()
       g.select('.axis-label-dep').attr('opacity', 1)
 
-      const eps_r    = MEDIA[this.store.medium].permittivity
-      const depHCurve = computeDepCurve(this.store.healthy, sigma_e, eps_r)
-      const depTCurve = computeDepCurve(this.store.target,  sigma_e, eps_r)
+      const eps_r    = MEDIA[this.cellStore.medium].permittivity
+      const depHCurve = computeDepCurve(this.cellStore.healthy, sigma_e, eps_r)
+      const depTCurve = computeDepCurve(this.cellStore.target,  sigma_e, eps_r)
 
       // K=0 reference line (pDEP above, nDEP below)
       const yK0 = this._yDepScale!(0)
@@ -621,10 +623,10 @@ export default defineComponent({
       crossGroup.selectAll('*').remove()
 
       const crossMarkers = [
-        { fKhz: this.store.depHealthyCrossoverKHz,       color: C.primary, tag: this.$t('chart.depCrossH')  },
-        { fKhz: this.store.depHealthySecondCrossoverKHz, color: C.primary, tag: this.$t('chart.depCrossH2') },
-        { fKhz: this.store.depTargetCrossoverKHz,        color: C.danger,  tag: this.$t('chart.depCrossT')  },
-        { fKhz: this.store.depTargetSecondCrossoverKHz,  color: C.danger,  tag: this.$t('chart.depCrossT2') },
+        { fKhz: this.cellStore.depHealthyCrossoverKHz,       color: C.primary, tag: this.$t('chart.depCrossH')  },
+        { fKhz: this.cellStore.depHealthySecondCrossoverKHz, color: C.primary, tag: this.$t('chart.depCrossH2') },
+        { fKhz: this.cellStore.depTargetCrossoverKHz,        color: C.danger,  tag: this.$t('chart.depCrossT')  },
+        { fKhz: this.cellStore.depTargetSecondCrossoverKHz,  color: C.danger,  tag: this.$t('chart.depCrossT2') },
       ]
 
       crossMarkers.forEach(({ fKhz, color, tag }) => {
@@ -665,7 +667,7 @@ export default defineComponent({
         .attr('stroke', (d) => GROUP_COLORS[d.group])
         .attr('stroke-width', 1)
         .attr('stroke-opacity', 0.18)
-        .attr('d', (d) => lineGen(computeVmCurve(d, this.store.fieldIntensity, sigma_e)) || '')
+        .attr('d', (d) => lineGen(computeVmCurve(d, this.cellStore.fieldIntensity, sigma_e)) || '')
 
       // Active curves
       const activeGroup = g.select<SVGGElement>('.curves-active')
@@ -681,18 +683,18 @@ export default defineComponent({
         .y1((d) => this._yScale!(Math.min(maxVm, d.vmHigh)))
         .curve(d3.curveBasis)
 
-      const hPct = sigmaUncPct(this.store.healthy.radius)
-      const tPct = sigmaUncPct(this.store.target.radius)
+      const hPct = sigmaUncPct(this.cellStore.healthy.radius)
+      const tPct = sigmaUncPct(this.cellStore.target.radius)
 
       activeGroup.append('path')
-        .datum(computeUncBand(this.store.healthy, this.store.fieldIntensity, sigma_e, cosTheta, hPct))
+        .datum(computeUncBand(this.cellStore.healthy, this.cellStore.fieldIntensity, sigma_e, cosTheta, hPct))
         .attr('fill', C.primary)
         .attr('fill-opacity', 0.10)
         .attr('stroke', 'none')
         .attr('d', areaGen)
 
       activeGroup.append('path')
-        .datum(computeUncBand(this.store.target, this.store.fieldIntensity, sigma_e, cosTheta, tPct))
+        .datum(computeUncBand(this.cellStore.target, this.cellStore.fieldIntensity, sigma_e, cosTheta, tPct))
         .attr('fill', C.danger)
         .attr('fill-opacity', 0.10)
         .attr('stroke', 'none')
@@ -721,9 +723,9 @@ export default defineComponent({
       const nucGroup = g.select<SVGGElement>('.curves-nuclear')
       nucGroup.selectAll('path').remove()
 
-      if (this.store.doubleShellEnabled) {
-        const hNucCurve = computeNuclearVmCurve(this.store.healthy, this.store.fieldIntensity, sigma_e, cosTheta)
-        const tNucCurve = computeNuclearVmCurve(this.store.target,  this.store.fieldIntensity, sigma_e, cosTheta)
+      if (this.cellStore.doubleShellEnabled) {
+        const hNucCurve = computeNuclearVmCurve(this.cellStore.healthy, this.cellStore.fieldIntensity, sigma_e, cosTheta)
+        const tNucCurve = computeNuclearVmCurve(this.cellStore.target,  this.cellStore.fieldIntensity, sigma_e, cosTheta)
 
         nucGroup.append('path')
           .datum(hNucCurve)
@@ -749,8 +751,8 @@ export default defineComponent({
       thrGroup.selectAll('*').remove()
 
       const thrData = [
-        { label: this.$t('chart.thrH'), vm: this.store.healthy.thresholdVoltage * 1000, color: C.primary },
-        { label: this.$t('chart.thrT'), vm: this.store.target.thresholdVoltage * 1000,  color: C.danger  },
+        { label: this.$t('chart.thrH'), vm: this.cellStore.healthy.thresholdVoltage * 1000, color: C.primary },
+        { label: this.$t('chart.thrT'), vm: this.cellStore.target.thresholdVoltage * 1000,  color: C.danger  },
       ]
       thrData.forEach(({ label, vm, color }) => {
         // Lysis threshold line
@@ -789,11 +791,11 @@ export default defineComponent({
       // fc markers
       const fcGroup = g.select<SVGGElement>('.fc-markers')
       fcGroup.selectAll('*').remove()
-      const tauHNs = computeTau(this.store.healthy, sigma_e) * 1e9
-      const tauTNs = computeTau(this.store.target,  sigma_e) * 1e9
+      const tauHNs = computeTau(this.cellStore.healthy, sigma_e) * 1e9
+      const tauTNs = computeTau(this.cellStore.target,  sigma_e) * 1e9
       const fcData = [
-        { fc: computeFc(this.store.healthy, sigma_e), color: C.primary, label: this.$t('chart.fcH'), tauNs: tauHNs },
-        { fc: computeFc(this.store.target,  sigma_e), color: C.danger,  label: this.$t('chart.fcT'), tauNs: tauTNs },
+        { fc: computeFc(this.cellStore.healthy, sigma_e), color: C.primary, label: this.$t('chart.fcH'), tauNs: tauHNs },
+        { fc: computeFc(this.cellStore.target,  sigma_e), color: C.danger,  label: this.$t('chart.fcT'), tauNs: tauTNs },
       ]
       // Build visible fc markers (within chart x domain)
       const visibleFc = fcData
@@ -848,12 +850,12 @@ export default defineComponent({
       // Optimal frequency marker (golden dashed line + star label)
       const optGroup = g.select<SVGGElement>('.opt-marker')
       optGroup.selectAll('*').remove()
-      const optHz = computeOptimalFreqHz(this.store.healthy, this.store.target, this.store.fieldIntensity, sigma_e)
+      const optHz = computeOptimalFreqHz(this.cellStore.healthy, this.cellStore.target, this.cellStore.fieldIntensity, sigma_e)
       if (optHz >= F_MIN_HZ && optHz <= F_MAX_HZ) {
         const ox     = this._xScale!(optHz)
         const optKhz = optHz / 1000
-        const hVmOpt = computeSchwan(this.store.healthy, optKhz, this.store.fieldIntensity, sigma_e)
-        const tVmOpt = computeSchwan(this.store.target,  optKhz, this.store.fieldIntensity, sigma_e)
+        const hVmOpt = computeSchwan(this.cellStore.healthy, optKhz, this.cellStore.fieldIntensity, sigma_e)
+        const tVmOpt = computeSchwan(this.cellStore.target,  optKhz, this.cellStore.fieldIntensity, sigma_e)
         const optSel = hVmOpt > 0 ? tVmOpt / hVmOpt : 0
         const optLabel = optHz >= 1e6
           ? `${ICON.STAR} ${(optHz / 1e6).toFixed(2)}M Vm×${optSel.toFixed(1)}`
@@ -900,7 +902,7 @@ export default defineComponent({
     // Commit the latest pending frequency to the store and broadcast
     flushDragUpdate(): void {
       if (this._pendingDragKhz === null) return
-      this.store.setBroadcastFreqKHz(this._pendingDragKhz)
+      this.cellStore.setBroadcastFreqKHz(this._pendingDragKhz)
       broadcastStateSync()
       this._pendingDragKhz = null
     },
@@ -909,7 +911,7 @@ export default defineComponent({
     updateCursor(overrideKhz?: number) {
       if (!this._svg || !this._xScale) return
       const g = this._svg.select<SVGGElement>('.chart-g')
-      const freqKHz = overrideKhz ?? this.store.currentBroadcastFrequency
+      const freqKHz = overrideKhz ?? this.cellStore.currentBroadcastFrequency
       const hz = freqKHz * 1000
       // Use dynamic domain (changes in resonance mode)
       const [domMin, domMax] = this._xScale.domain() as [number, number]
@@ -943,14 +945,14 @@ export default defineComponent({
       if (nearCursor) { this._tooltipData = null; return }
       const hz = this._xScale.invert(mx)
       const khz = hz / 1000
-      const sigma_e  = this.store.effectiveSigmaE
-      const cosTheta = this.store.cosThetaFactor
-      const cat = this.store.targetCellCategory
-      const t = this.store.target as { resonantFreqGHz?: number; capsidQ?: number; resonantThresholdVcm?: number }
+      const sigma_e  = this.cellStore.effectiveSigmaE
+      const cosTheta = this.cellStore.cosThetaFactor
+      const cat = this.cellStore.targetCellCategory
+      const t = this.cellStore.target as { resonantFreqGHz?: number; capsidQ?: number; resonantThresholdVcm?: number }
 
       // In resonance mode show DR (disruption ratio), not Vm - axes are incompatible
       if (
-        this.store.isResonanceMode &&
+        this.cellStore.isResonanceMode &&
         (cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) &&
         t.resonantFreqGHz && t.resonantThresholdVcm
       ) {
@@ -959,7 +961,7 @@ export default defineComponent({
           t.capsidQ ?? DEFAULT_CAPSID_Q,
           t.resonantThresholdVcm,
           hz,
-          this.store.fieldIntensity,
+          this.cellStore.fieldIntensity,
         )
         const flipLeft = mx > (this._chartW ?? 0) * 0.55
         this._tooltipData = {
@@ -969,16 +971,16 @@ export default defineComponent({
         return
       }
 
-      const hVm = computeSchwan(this.store.healthy, khz, this.store.fieldIntensity, sigma_e, cosTheta) * 1000
-      const tVm = computeSchwan(this.store.target,  khz, this.store.fieldIntensity, sigma_e, cosTheta) * 1000
-      const hDRPct  = (hVm / (this.store.healthy.thresholdVoltage * 1000)) * 100
-      const tDRPct  = (tVm / (this.store.target.thresholdVoltage  * 1000)) * 100
+      const hVm = computeSchwan(this.cellStore.healthy, khz, this.cellStore.fieldIntensity, sigma_e, cosTheta) * 1000
+      const tVm = computeSchwan(this.cellStore.target,  khz, this.cellStore.fieldIntensity, sigma_e, cosTheta) * 1000
+      const hDRPct  = (hVm / (this.cellStore.healthy.thresholdVoltage * 1000)) * 100
+      const tDRPct  = (tVm / (this.cellStore.target.thresholdVoltage  * 1000)) * 100
       const selRatio = hVm > 0.01 ? tVm / hVm : 0
       const inWindow = tDRPct >= THRESHOLDS.DISRUPTION_WARN * 100 && hDRPct < THRESHOLDS.HEALTHY_APPROACHING * 100
       const flipLeft = mx > (this._chartW ?? 0) * 0.55
-      const eps_r = MEDIA[this.store.medium].permittivity
-      const depHealthyK = computeDepCmReal(this.store.healthy, khz, sigma_e, eps_r)
-      const depTargetK  = computeDepCmReal(this.store.target,  khz, sigma_e, eps_r)
+      const eps_r = MEDIA[this.cellStore.medium].permittivity
+      const depHealthyK = computeDepCmReal(this.cellStore.healthy, khz, sigma_e, eps_r)
+      const depTargetK  = computeDepCmReal(this.cellStore.target,  khz, sigma_e, eps_r)
       this._tooltipData = {
         x: mx, freqHz: hz, mode: 'schwan',
         healthyVm: hVm, targetVm: tVm, targetDR: 0,

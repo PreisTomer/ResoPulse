@@ -57,7 +57,7 @@ export default defineComponent({
 
   emits: ['download', 'dismiss'],
 
-  setup() {
+  data() {
     return { ICON, formatFreqKHz, formatFieldVcm }
   },
 })

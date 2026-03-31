@@ -14,7 +14,7 @@
 
     <!-- Nuclear envelope disruption bar (double-shell model) -->
     <div
-      v-if="!compact && store.doubleShellEnabled && hasNuclearParams"
+      v-if="!compact && cellStore.doubleShellEnabled && hasNuclearParams"
       class="cell-visual__nuclear-bar-row"
       v-tip="tipNuclearBarLocal"
     >
@@ -80,14 +80,14 @@
     <!-- Biomodulation panel (healthy cell only, sub-threshold) -->
     <BiostimPanel
       v-if="!compact && showBiostim"
-      :stim-index="store.healthyStimIndex"
-      :mech-transd-eff="store.healthyMechTransductionEff"
-      :mild-thermal="store.healthyMildThermalActivation"
+      :stim-index="cellStore.healthyStimIndex"
+      :mech-transd-eff="cellStore.healthyMechTransductionEff"
+      :mild-thermal="cellStore.healthyMildThermalActivation"
       :biomod-score="biostimScore"
       :disruption-ratio="disruptionRatio"
-      :freq-k-hz="store.currentBroadcastFrequency"
-      :fc-k-hz="store.healthyFc"
-      :steady-state-temp="store.healthySteadyStateTemp"
+      :freq-k-hz="cellStore.currentBroadcastFrequency"
+      :fc-k-hz="cellStore.healthyFc"
+      :steady-state-temp="cellStore.healthySteadyStateTemp"
       :class="{ 'cell-visual__biostim--nourishing': cellState === CELL_STATE.NOURISHING }"
     />
 
@@ -168,6 +168,7 @@
 import { defineComponent } from 'vue'
 import type { PropType } from 'vue'
 import * as d3 from 'd3'
+import { mapStores } from 'pinia'
 import { useCellStore } from '@/stores/cellStore'
 import { useExperimentStore } from '@/stores/experimentStore'
 import { useImpedanceStore } from '@/stores/impedanceStore'
@@ -200,10 +201,6 @@ export default defineComponent({
     cellData: { type: Object as PropType<CellRecord | null>, default: null },
   },
 
-  setup() {
-    return { store: useCellStore(), CELL_STATE, CELL_TYPE, ICON, UNIT, THRESHOLDS }
-  },
-
   data() {
     return {
       liveAmplitude:        this.cellData?.amplitude ?? 0.8,
@@ -221,11 +218,18 @@ export default defineComponent({
   },
 
   computed: {
+    ...mapStores(useCellStore, useExperimentStore, useImpedanceStore),
+    CELL_STATE() { return CELL_STATE },
+    CELL_TYPE()  { return CELL_TYPE },
+    ICON()       { return ICON },
+    UNIT()       { return UNIT },
+    THRESHOLDS() { return THRESHOLDS },
+
     isAcousticTarget(): boolean {
       if (this.type !== CELL_TYPE.TARGET) return false
-      const cat = this.store.targetCellCategory
+      const cat = this.cellStore.targetCellCategory
       if (cat !== CELL_CATEGORY.BACTERIA && cat !== CELL_CATEGORY.VIRUS) return false
-      const t = this.store.target as CellConfig & { resonantFreqGHz?: number }
+      const t = this.cellStore.target as CellConfig & { resonantFreqGHz?: number }
       return !!t.resonantFreqGHz
     },
 
@@ -233,16 +237,16 @@ export default defineComponent({
 
     disruptionRatio(): number {
       return this.type === CELL_TYPE.HEALTHY
-        ? this.store.healthyDisruptionRatio
-        : this.store.targetDisruptionRatio
+        ? this.cellStore.healthyDisruptionRatio
+        : this.cellStore.targetDisruptionRatio
     },
 
     temperature(): number {
-      return this.type === CELL_TYPE.HEALTHY ? this.store.healthyTemp : this.store.targetTemp
+      return this.type === CELL_TYPE.HEALTHY ? this.cellStore.healthyTemp : this.cellStore.targetTemp
     },
 
     vm(): number {
-      return (this.type === CELL_TYPE.HEALTHY ? this.store.healthyVm : this.store.targetVm) * 1000
+      return (this.type === CELL_TYPE.HEALTHY ? this.cellStore.healthyVm : this.cellStore.targetVm) * 1000
     },
 
     vmDisplay(): string {
@@ -255,19 +259,19 @@ export default defineComponent({
     tempVaporizing(): boolean { return this.temperature >= THRESHOLDS.TEMP_VAPORIZING },
 
     hasNuclearParams(): boolean {
-      const cell = this.type === CELL_TYPE.HEALTHY ? this.store.healthy : this.store.target
+      const cell = this.type === CELL_TYPE.HEALTHY ? this.cellStore.healthy : this.cellStore.target
       return !!cell.nuclearRadius
     },
 
     nuclearDisruptionRatio(): number {
       return this.type === CELL_TYPE.HEALTHY
-        ? this.store.healthyNuclearDisruptionRatio
-        : this.store.targetNuclearDisruptionRatio
+        ? this.cellStore.healthyNuclearDisruptionRatio
+        : this.cellStore.targetNuclearDisruptionRatio
     },
 
     lysisIntegrityPct(): number | null {
       if (this.type !== CELL_TYPE.TARGET || !this.shatterPending) return null
-      const delay = this.store.lysisDelayMs
+      const delay = this.cellStore.lysisDelayMs
       if (delay <= 0) return 0
       return Math.max(0, 100 - (this.lysisProgressElapsed / delay) * 100)
     },
@@ -292,7 +296,7 @@ export default defineComponent({
       return d3.interpolateRgb(interpFrom, interpTo)(Math.min(1, this.disruptionRatio))
     },
 
-    biostimScore(): number { return this.store.healthyBiomodScore },
+    biostimScore(): number { return this.cellStore.healthyBiomodScore },
 
     showBiostim(): boolean {
       return this.type === CELL_TYPE.HEALTHY
@@ -302,31 +306,31 @@ export default defineComponent({
     },
 
     lysisProtocolStr(): string {
-      const n = this.store.lysisNPulses
-      const t = formatLysisTimeLocal(this.store.lysisDelayMs)
+      const n = this.cellStore.lysisNPulses
+      const t = formatLysisTimeLocal(this.cellStore.lysisDelayMs)
       return `${n} pulse${n === 1 ? '' : 's'}, est. ${t}`
     },
 
     resealingTimeDisplay(): string {
-      const s = this.store.targetResealingTimeS
+      const s = this.cellStore.targetResealingTimeS
       return s >= 10 ? s.toFixed(0) : s.toFixed(1)
     },
 
     // ── DEP strip ──────────────────────────────────────────────────────
     depCmRealValue(): number {
       return this.type === CELL_TYPE.HEALTHY
-        ? this.store.depHealthyCmReal
-        : this.store.depTargetCmReal
+        ? this.cellStore.depHealthyCmReal
+        : this.cellStore.depTargetCmReal
     },
     depCrossoverKHz(): number {
       return this.type === CELL_TYPE.HEALTHY
-        ? this.store.depHealthyCrossoverKHz
-        : this.store.depTargetCrossoverKHz
+        ? this.cellStore.depHealthyCrossoverKHz
+        : this.cellStore.depTargetCrossoverKHz
     },
     showDepStrip(): boolean {
-      return !this.store.isResonanceMode
+      return !this.cellStore.isResonanceMode
         && Math.abs(this.depCmRealValue) >= 0.02
-        && this.store.fieldIntensity >= 5
+        && this.cellStore.fieldIntensity >= 5
         && this.cellState !== CELL_STATE.LYSED
         && this.cellState !== CELL_STATE.LYSING
     },
@@ -348,18 +352,18 @@ export default defineComponent({
     // ── Local tooltips (for strips only; index.vue owns the CellHeader copies) ──
     tipVmLocal(): string {
       if (this.isAcousticTarget) {
-        const t = this.store.target as CellConfig & { resonantFreqGHz?: number; capsidQ?: number; experimentalBasis?: string }
+        const t = this.cellStore.target as CellConfig & { resonantFreqGHz?: number; capsidQ?: number; experimentalBasis?: string }
         return tipAcousticVmFn({
           disruptionRatio:   this.disruptionRatio,
           resonantFreqGHz:   t.resonantFreqGHz ?? 0,
           capsidQ:           t.capsidQ ?? 1,
-          freqKHz:           this.store.currentBroadcastFrequency,
-          fieldVcm:          this.store.fieldIntensity,
+          freqKHz:           this.cellStore.currentBroadcastFrequency,
+          fieldVcm:          this.cellStore.fieldIntensity,
           experimentalBasis: t.experimentalBasis,
         })
       }
-      const cell = this.type === CELL_TYPE.HEALTHY ? this.store.healthy : this.store.target
-      return tipVmFn({ vmDisplay: this.vmDisplay, disruptionRatio: this.disruptionRatio, thresholdVoltage: cell.thresholdVoltage, waveform: this.store.waveform })
+      const cell = this.type === CELL_TYPE.HEALTHY ? this.cellStore.healthy : this.cellStore.target
+      return tipVmFn({ vmDisplay: this.vmDisplay, disruptionRatio: this.disruptionRatio, thresholdVoltage: cell.thresholdVoltage, waveform: this.cellStore.waveform })
     },
 
     tipTempLocal(): string {
@@ -376,38 +380,38 @@ export default defineComponent({
         cellState:    this.cellState,
         thermalLysis: this.thermalLysis,
         cellType:     this.type,
-        lysisDelayMs: this.store.lysisDelayMs,
+        lysisDelayMs: this.cellStore.lysisDelayMs,
       })
     },
 
     tipNuclearBarLocal(): string { return tipNuclearBarFn() },
 
     tipDep(): string {
-      const cell = this.type === CELL_TYPE.HEALTHY ? this.store.healthy : this.store.target
+      const cell = this.type === CELL_TYPE.HEALTHY ? this.cellStore.healthy : this.cellStore.target
       return tipDepFn({
         isPdep:       this.depCmRealValue > 0,
         kVal:         this.depCmRealValue,
         crossoverKHz: this.depCrossoverKHz,
         sigmaI:       cell.conductivity,
-        sigmaE:       this.store.effectiveSigmaE,
+        sigmaE:       this.cellStore.effectiveSigmaE,
       })
     },
 
     tipDisruption(): string {
-      const cell = this.type === CELL_TYPE.HEALTHY ? this.store.healthy : this.store.target
+      const cell = this.type === CELL_TYPE.HEALTHY ? this.cellStore.healthy : this.cellStore.target
       const pef  = this.type === CELL_TYPE.HEALTHY
-        ? this.store.pulseEnvelopeFactorHealthy
-        : this.store.pulseEnvelopeFactorTarget
+        ? this.cellStore.pulseEnvelopeFactorHealthy
+        : this.cellStore.pulseEnvelopeFactorTarget
       return tipDisruptionFn({
         disruptionRatio:     this.disruptionRatio,
         thresholdVoltage:    cell.thresholdVoltage,
-        lysisNPulses:        this.store.lysisNPulses,
-        lysisDelayMs:        this.store.lysisDelayMs,
+        lysisNPulses:        this.cellStore.lysisNPulses,
+        lysisDelayMs:        this.cellStore.lysisDelayMs,
         pulseEnvelopeFactor: pef,
-        waveform:            this.store.waveform,
-        isResonanceMode:     this.store.isResonanceMode,
-        pulseWidthNs:        this.store.pulseWidthNs,
-        effectiveSigmaE:     this.store.effectiveSigmaE,
+        waveform:            this.cellStore.waveform,
+        isResonanceMode:     this.cellStore.isResonanceMode,
+        pulseWidthNs:        this.cellStore.pulseWidthNs,
+        effectiveSigmaE:     this.cellStore.effectiveSigmaE,
         vmDisplay:           this.vmDisplay,
         cellType:            this.type,
         cell,
@@ -418,13 +422,13 @@ export default defineComponent({
   watch: {
     'cellData.amplitude'(v: number) { this.liveAmplitude = v },
 
-    'store.target.id'() {
+    'cellStore.target.id'() {
       if (this.type !== CELL_TYPE.TARGET) return
       this.helixTimer?.stop()
       this.$nextTick(() => this.drawCell())
     },
 
-    'store.resetCounter'() {
+    'cellStore.resetCounter'() {
       clearTimeout(this.shatterTimeout ?? undefined)
       clearTimeout(this.shatterDelayTimeout ?? undefined)
       clearInterval(this.particleInterval ?? undefined)
@@ -445,14 +449,14 @@ export default defineComponent({
     disruptionRatio() { if (!this.compact) this.updateCellState() },
     temperature()     { if (!this.compact) this.updateCellState() },
 
-    'store.healthyCellState'(s: CellState) {
+    'cellStore.healthyCellState'(s: CellState) {
       if (this.compact && this.type === CELL_TYPE.HEALTHY) this.cellState = s
     },
-    'store.targetCellState'(s: CellState) {
+    'cellStore.targetCellState'(s: CellState) {
       if (this.compact && this.type === CELL_TYPE.TARGET) this.cellState = s
     },
 
-    'store.lysisDelayMs'() {
+    'cellStore.lysisDelayMs'() {
       if (this.type !== CELL_TYPE.TARGET || !this.shatterPending) return
       clearTimeout(this.shatterDelayTimeout ?? undefined)
       clearInterval(this.progressInterval ?? undefined)
@@ -463,15 +467,15 @@ export default defineComponent({
         this.progressInterval = null
         this.shatterPending = false
         if (this.disruptionRatio > THRESHOLDS.DISRUPTION_WARN) this.triggerLysis()
-      }, this.store.lysisDelayMs)
+      }, this.cellStore.lysisDelayMs)
     },
   },
 
   mounted() {
     if (this.compact) {
       this.cellState = this.type === CELL_TYPE.HEALTHY
-        ? this.store.healthyCellState
-        : this.store.targetCellState
+        ? this.cellStore.healthyCellState
+        : this.cellStore.targetCellState
     }
     if (this.cellData) { this.drawCell(); this.drawOscilloscope() }
   },
@@ -507,7 +511,7 @@ export default defineComponent({
       if (this.type === CELL_TYPE.TARGET) {
         if (impact > THRESHOLDS.DISRUPTION_WARN) {
           this.cellState = CELL_STATE.VIBRATING
-          this.store.setTargetCellState(CELL_STATE.VIBRATING)
+          this.cellStore.setTargetCellState(CELL_STATE.VIBRATING)
           if (!this.shatterPending) {
             this.shatterPending = true
             this.lysisProgressElapsed = 0
@@ -517,7 +521,7 @@ export default defineComponent({
               this.progressInterval = null
               this.shatterPending   = false
               if (this.disruptionRatio > THRESHOLDS.DISRUPTION_WARN) this.triggerLysis()
-            }, this.store.lysisDelayMs)
+            }, this.cellStore.lysisDelayMs)
           }
           return
         }
@@ -543,8 +547,8 @@ export default defineComponent({
         const ORDER: CellState[] = [CELL_STATE.STABLE, CELL_STATE.NOURISHING, CELL_STATE.APPROACHING, CELL_STATE.CRITICAL]
         this.cellState = ORDER[Math.max(ORDER.indexOf(elState), ORDER.indexOf(thermalFloor))] as CellState
       }
-      if (this.type === CELL_TYPE.HEALTHY) this.store.setHealthyCellState(this.cellState)
-      else this.store.setTargetCellState(this.cellState)
+      if (this.type === CELL_TYPE.HEALTHY) this.cellStore.setHealthyCellState(this.cellState)
+      else this.cellStore.setTargetCellState(this.cellState)
     },
 
     drawCell() {
@@ -552,8 +556,8 @@ export default defineComponent({
       const el = this.$refs.cellCanvas as HTMLElement
       if (!el) return
       this.helixTimer?.stop()
-      const cellCategory = this.type === CELL_TYPE.HEALTHY ? CELL_CATEGORY.MAMMALIAN : this.store.targetCellCategory
-      const cell = this.type === CELL_TYPE.HEALTHY ? this.store.healthy : this.store.target
+      const cellCategory = this.type === CELL_TYPE.HEALTHY ? CELL_CATEGORY.MAMMALIAN : this.cellStore.targetCellCategory
+      const cell = this.type === CELL_TYPE.HEALTHY ? this.cellStore.healthy : this.cellStore.target
       const profile: CellVisualProfile = {
         presetId:         cell.id,
         morphologyTag:    cell.morphologyTag,
@@ -569,11 +573,11 @@ export default defineComponent({
           state:                  this.cellState,
           color:                  this.cellColor,
           temperature:            this.temperature,
-          fieldVcm:               this.store.fieldIntensity,
-          freqKHz:                this.store.currentBroadcastFrequency,
-          nuclearDisruptionRatio: this.store.doubleShellEnabled ? this.nuclearDisruptionRatio : 0,
-          depCmReal:              this.type === CELL_TYPE.HEALTHY ? this.store.depHealthyCmReal : this.store.depTargetCmReal,
-          waveform:               this.store.waveform,
+          fieldVcm:               this.cellStore.fieldIntensity,
+          freqKHz:                this.cellStore.currentBroadcastFrequency,
+          nuclearDisruptionRatio: this.cellStore.doubleShellEnabled ? this.nuclearDisruptionRatio : 0,
+          depCmReal:              this.type === CELL_TYPE.HEALTHY ? this.cellStore.depHealthyCmReal : this.cellStore.depTargetCmReal,
+          waveform:               this.cellStore.waveform,
           isAcousticMode:         this.isAcousticTarget,
         }),
       )
@@ -592,7 +596,7 @@ export default defineComponent({
           liveAmplitude:   this.liveAmplitude,
           cellColor:       this.cellColor,
           naturalFrequency: this.isAcousticTarget
-            ? this.store.currentBroadcastFrequency
+            ? this.cellStore.currentBroadcastFrequency
             : (this.cellData?.naturalFrequency ?? 400),
         }),
       )
@@ -601,8 +605,8 @@ export default defineComponent({
     triggerLysis() {
       if (this.compact) return
       this.cellState = CELL_STATE.LYSING
-      if (this.type === CELL_TYPE.HEALTHY) this.store.setHealthyCellState(CELL_STATE.LYSING)
-      else this.store.setTargetCellState(CELL_STATE.LYSING)
+      if (this.type === CELL_TYPE.HEALTHY) this.cellStore.setHealthyCellState(CELL_STATE.LYSING)
+      else this.cellStore.setTargetCellState(CELL_STATE.LYSING)
       const expStore = useExperimentStore()
       expStore.logReading(useCellStore(), 'lysis')
       const last = expStore.entries[expStore.entries.length - 1]
@@ -615,25 +619,25 @@ export default defineComponent({
         this.helixTimer?.stop()
         this.oscTimer?.stop()
         this.cellState = CELL_STATE.LYSED
-        if (this.type === CELL_TYPE.HEALTHY) this.store.setHealthyCellState(CELL_STATE.LYSED)
-        else this.store.setTargetCellState(CELL_STATE.LYSED)
+        if (this.type === CELL_TYPE.HEALTHY) this.cellStore.setHealthyCellState(CELL_STATE.LYSED)
+        else this.cellStore.setTargetCellState(CELL_STATE.LYSED)
       }, LYSIS_DURATION_MS)
     },
 
     resetToStable() {
-      const cell   = this.type === CELL_TYPE.HEALTHY ? this.store.healthy : this.store.target
+      const cell   = this.type === CELL_TYPE.HEALTHY ? this.cellStore.healthy : this.cellStore.target
       const preset = CELL_PRESETS.find(p => p.presetId === cell.id)
-      if (preset) this.store.loadPreset(this.type, preset)
-      else this.store.resetCell(this.type)
+      if (preset) this.cellStore.loadPreset(this.type, preset)
+      else this.cellStore.resetCell(this.type)
       this.$emit('stable-reset', this.type)
     },
 
     resetToSafeDefaults() {
       hideTip()
-      const cell   = this.type === CELL_TYPE.HEALTHY ? this.store.healthy : this.store.target
+      const cell   = this.type === CELL_TYPE.HEALTHY ? this.cellStore.healthy : this.cellStore.target
       const preset = CELL_PRESETS.find(p => p.presetId === cell.id)
-      if (preset) this.store.loadPreset(this.type, preset)
-      else this.store.resetCell(this.type)
+      if (preset) this.cellStore.loadPreset(this.type, preset)
+      else this.cellStore.resetCell(this.type)
       this.$emit('full-reset', this.type)
     },
   },

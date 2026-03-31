@@ -10,16 +10,16 @@
       <div class="hw-input__mode-toggle" v-tip="$t('instrument.hardware.tipMode')">
         <button
           class="hw-input__mode-btn"
-          :class="{ 'hw-input__mode-btn--active': !store.hardwareModeEnabled }"
-          @click="store.hardwareModeEnabled && store.toggleHardwareMode()"
+          :class="{ 'hw-input__mode-btn--active': !impedanceStore.hardwareModeEnabled }"
+          @click="impedanceStore.hardwareModeEnabled && impedanceStore.toggleHardwareMode()"
           type="button"
         >
           {{ $t('instrument.hardware.modeSimulated') }}
         </button>
         <button
           class="hw-input__mode-btn hw-input__mode-btn--live"
-          :class="{ 'hw-input__mode-btn--active': store.hardwareModeEnabled }"
-          @click="!store.hardwareModeEnabled && store.toggleHardwareMode()"
+          :class="{ 'hw-input__mode-btn--active': impedanceStore.hardwareModeEnabled }"
+          @click="!impedanceStore.hardwareModeEnabled && impedanceStore.toggleHardwareMode()"
           type="button"
         >
           {{ ICON.PLUG }} {{ $t('instrument.hardware.modeLive') }}
@@ -28,13 +28,13 @@
     </div>
 
     <!-- Live readings (when hardware mode enabled) -->
-    <template v-if="store.hardwareModeEnabled">
+    <template v-if="impedanceStore.hardwareModeEnabled">
       <!-- Status banner -->
       <div
         class="hw-input__status"
         :class="{
-          'hw-input__status--connected': hasReading && !store.hardwareReadingIsStale,
-          'hw-input__status--stale':     hasReading && store.hardwareReadingIsStale,
+          'hw-input__status--connected': hasReading && !impedanceStore.hardwareReadingIsStale,
+          'hw-input__status--stale':     hasReading && impedanceStore.hardwareReadingIsStale,
           'hw-input__status--waiting':   !hasReading,
         }"
       >
@@ -42,22 +42,22 @@
         <span>{{
           !hasReading
             ? $t('instrument.hardware.statusDisconnected')
-            : store.hardwareReadingIsStale
+            : impedanceStore.hardwareReadingIsStale
               ? $t('instrument.hardware.statusStale')
               : $t('instrument.hardware.statusFresh')
         }}</span>
-        <span v-if="hasReading" class="hw-input__status-age">{{ store.hardwareReadingAgeLabel }}</span>
+        <span v-if="hasReading" class="hw-input__status-age">{{ impedanceStore.hardwareReadingAgeLabel }}</span>
       </div>
 
       <!-- Reading data -->
       <div v-if="hasReading" class="hw-input__readings">
         <div class="hw-input__reading-row">
           <span class="hw-input__reading-label">{{ $t('instrument.hardware.zReal') }}</span>
-          <span class="hw-input__reading-value">{{ store.hardwareZReal!.toFixed(2) }} {{ UNIT.OHM }}</span>
+          <span class="hw-input__reading-value">{{ impedanceStore.hardwareZReal!.toFixed(2) }} {{ UNIT.OHM }}</span>
         </div>
         <div class="hw-input__reading-row">
           <span class="hw-input__reading-label">{{ $t('instrument.hardware.zImag') }}</span>
-          <span class="hw-input__reading-value">{{ store.hardwareZImag!.toFixed(2) }} {{ UNIT.OHM }}</span>
+          <span class="hw-input__reading-value">{{ impedanceStore.hardwareZImag!.toFixed(2) }} {{ UNIT.OHM }}</span>
         </div>
         <div class="hw-input__reading-row">
           <span class="hw-input__reading-label">{{ $t('instrument.hardware.freqHz') }}</span>
@@ -93,6 +93,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+import { mapStores } from 'pinia'
 import { useImpedanceStore } from '@/stores/impedanceStore'
 import { computeSigmaEFromImpedance } from '@/utils/impedance'
 import { ICON } from '@/constants/icons'
@@ -110,27 +111,27 @@ const SCHEMA_EXAMPLE = `{
 export default defineComponent({
   name: 'HardwareInput',
   components: { BridgeSetupModal },
-  setup() {
-    return { store: useImpedanceStore(), ICON, UNIT, schemaExample: SCHEMA_EXAMPLE }
-  },
   data() {
-    return { showSetupModal: false }
+    return { ICON, UNIT, schemaExample: SCHEMA_EXAMPLE, showSetupModal: false }
   },
+
   computed: {
+    ...mapStores(useImpedanceStore),
+
     hasReading(): boolean {
-      return this.store.hardwareZReal !== null
+      return this.impedanceStore.hardwareZReal !== null
     },
     freqDisplay(): string {
-      const hz = this.store.hardwareFreqHz
+      const hz = this.impedanceStore.hardwareFreqHz
       if (hz === null) return ', '
       if (hz >= 1e6) return `${(hz / 1e6).toFixed(2)} ${UNIT.MHZ}`
       if (hz >= 1e3) return `${(hz / 1e3).toFixed(1)} ${UNIT.KHZ}`
       return `${hz} ${UNIT.HZ}`
     },
     derivedSigma(): string {
-      const z = this.store.hardwareZReal
+      const z = this.impedanceStore.hardwareZReal
       if (z === null) return ', '
-      return computeSigmaEFromImpedance(this.store.cuvetteGapMm, this.store.cuvetteCrossSectionCm2, z).toFixed(4)
+      return computeSigmaEFromImpedance(this.impedanceStore.cuvetteGapMm, this.impedanceStore.cuvetteCrossSectionCm2, z).toFixed(4)
     },
   },
 })

@@ -14,8 +14,8 @@
       <label class="cuvette-setup__label">{{ $t('instrument.setup.preset') }}</label>
       <select
         class="cuvette-setup__select"
-        :value="store.cuvettePresetId"
-        @change="store.setCuvettePreset(($event.target as HTMLSelectElement).value)"
+        :value="impedanceStore.cuvettePresetId"
+        @change="impedanceStore.setCuvettePreset(($event.target as HTMLSelectElement).value)"
       >
         <option v-for="p in CUVETTE_PRESETS" :key="p.id" :value="p.id">{{ p.label }}</option>
       </select>
@@ -34,8 +34,8 @@
           min="0.5"
           max="10"
           step="0.5"
-          :value="store.cuvetteGapMm"
-          @change="store.setCuvetteGapMm(Number(($event.target as HTMLInputElement).value))"
+          :value="impedanceStore.cuvetteGapMm"
+          @change="impedanceStore.setCuvetteGapMm(Number(($event.target as HTMLInputElement).value))"
         />
         <span class="cuvette-setup__unit">{{ UNIT.MM }}</span>
       </div>
@@ -54,8 +54,8 @@
           min="0.01"
           max="2"
           step="0.01"
-          :value="store.cuvetteCrossSectionCm2"
-          @change="store.setCuvetteCrossSectionCm2(Number(($event.target as HTMLInputElement).value))"
+          :value="impedanceStore.cuvetteCrossSectionCm2"
+          @change="impedanceStore.setCuvetteCrossSectionCm2(Number(($event.target as HTMLInputElement).value))"
         />
         <span class="cuvette-setup__unit">{{ UNIT.CM2 }}</span>
       </div>
@@ -74,10 +74,10 @@
           min="0"
           max="200"
           step="1"
-          :value="store.sourceImpedanceOhm"
-          @input="store.setSourceImpedanceOhm(Number(($event.target as HTMLInputElement).value))"
+          :value="impedanceStore.sourceImpedanceOhm"
+          @input="impedanceStore.setSourceImpedanceOhm(Number(($event.target as HTMLInputElement).value))"
         />
-        <span class="cuvette-setup__readout">{{ store.sourceImpedanceOhm }} {{ UNIT.OHM }}</span>
+        <span class="cuvette-setup__readout">{{ impedanceStore.sourceImpedanceOhm }} {{ UNIT.OHM }}</span>
       </div>
     </div>
 
@@ -90,8 +90,8 @@
       <div class="cuvette-setup__input-row">
         <select
           class="cuvette-setup__select cuvette-setup__select--sm"
-          :value="String(store.cellDensityPerMl)"
-          @change="store.setCellDensityPerMl(Number(($event.target as HTMLSelectElement).value))"
+          :value="String(impedanceStore.cellDensityPerMl)"
+          @change="impedanceStore.setCellDensityPerMl(Number(($event.target as HTMLSelectElement).value))"
         >
           <option value="1e5">10⁵ cells/mL</option>
           <option value="1e6">10⁶ cells/mL</option>
@@ -106,6 +106,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+import { mapStores } from 'pinia'
 import { useImpedanceStore } from '@/stores/impedanceStore'
 import { CUVETTE_PRESETS } from '@/constants/cuvette'
 import { ICON } from '@/constants/icons'
@@ -113,8 +114,13 @@ import { UNIT } from '@/constants/units'
 
 export default defineComponent({
   name: 'CuvetteSetup',
-  setup() {
-    return { store: useImpedanceStore(), CUVETTE_PRESETS, ICON, UNIT }
+
+  data() {
+    return { CUVETTE_PRESETS, ICON, UNIT }
+  },
+
+  computed: {
+    ...mapStores(useImpedanceStore),
   },
 })
 </script>

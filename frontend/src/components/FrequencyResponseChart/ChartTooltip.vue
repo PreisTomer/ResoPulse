@@ -59,8 +59,10 @@ export default defineComponent({
     },
   },
 
-  setup() {
-    return { formatTooltipFreq, CELL_LABEL, UNIT }
+  computed: {
+    CELL_LABEL() { return CELL_LABEL },
+    UNIT()       { return UNIT },
+    formatTooltipFreq(): typeof formatTooltipFreq { return formatTooltipFreq },
   },
 
   methods: {

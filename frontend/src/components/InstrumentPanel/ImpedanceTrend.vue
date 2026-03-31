@@ -88,6 +88,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+import { mapStores } from 'pinia'
 import { useImpedanceStore } from '@/stores/impedanceStore'
 import type { ImpedanceHistoryPoint } from '@/stores/impedanceStore'
 import { UNIT } from '@/constants/units'
@@ -98,12 +99,16 @@ const RECENT_N = 8
 
 export default defineComponent({
   name: 'ImpedanceTrend',
-  setup() {
-    return { store: useImpedanceStore(), UNIT, SVG_W, SVG_H }
+
+  data() {
+    return { UNIT, SVG_W, SVG_H }
   },
+
   computed: {
+    ...mapStores(useImpedanceStore),
+
     points(): ImpedanceHistoryPoint[] {
-      return this.store.impedanceHistory
+      return this.impedanceStore.impedanceHistory
     },
     totalPoints(): number {
       return this.points.length
@@ -121,7 +126,7 @@ export default defineComponent({
       return (this.yMin + this.yMax) / 2
     },
     nominalY(): number {
-      const z = this.store.nominalImpedanceOhm
+      const z = this.impedanceStore.nominalImpedanceOhm
       return this.toSvgY(z)
     },
     gridYs(): number[] {
@@ -139,7 +144,7 @@ export default defineComponent({
     },
     hwPoints(): Array<{ cx: number; cy: number }> {
       // Mark the last hardware reading if hardware mode is on
-      if (!this.store.hardwareModeEnabled || this.store.hardwareZReal === null) return []
+      if (!this.impedanceStore.hardwareModeEnabled || this.impedanceStore.hardwareZReal === null) return []
       const last = this.points[this.points.length - 1]
       if (!last) return []
       return [{

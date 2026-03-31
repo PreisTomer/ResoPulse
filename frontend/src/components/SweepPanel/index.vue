@@ -46,6 +46,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+import { mapStores } from 'pinia'
 import { useCellStore } from '@/stores/cellStore'
 import AccordionPanel from '@/components/AccordionPanel.vue'
 import SweepControls  from './SweepControls.vue'
@@ -98,10 +99,6 @@ export default defineComponent({
   components: { AccordionPanel, SweepControls, SweepChart, SweepWindowInfo, SweepKeyPoints },
   emits: ['windowChange', 'openChange'],
 
-  setup() {
-    return { store: useCellStore(), ICON }
-  },
-
   data() {
     return {
       open: false,
@@ -111,17 +108,20 @@ export default defineComponent({
   },
 
   computed: {
+    ICON() { return ICON },
+    ...mapStores(useCellStore),
+
     isResonanceTarget(): boolean {
-      const cat = this.store.targetCellCategory
-      const t = this.store.target as CellConfig & { resonantFreqGHz?: number; resonantThresholdVcm?: number }
+      const cat = this.cellStore.targetCellCategory
+      const t = this.cellStore.target as CellConfig & { resonantFreqGHz?: number; resonantThresholdVcm?: number }
       return (cat === CELL_CATEGORY.BACTERIA || cat === CELL_CATEGORY.VIRUS) &&
         !!t.resonantFreqGHz && !!t.resonantThresholdVcm &&
-        this.store.isResonanceMode
+        this.cellStore.isResonanceMode
     },
 
     // Category sweep max: mammalian=5MHz, bacteria=200MHz, virus=500MHz (GHz inaccessible)
     defaultFreqMax(): number {
-      const cat = this.store.targetCellCategory
+      const cat = this.cellStore.targetCellCategory
       if (cat === CELL_CATEGORY.BACTERIA) return 200_000   // 200 MHz in kHz
       if (cat === CELL_CATEGORY.VIRUS)    return 500_000   // 500 MHz in kHz
       return 5_000                                         // 5 MHz for mammalian
@@ -129,23 +129,23 @@ export default defineComponent({
 
     sweepSubtitle(): string {
       if (this.sweepParam === 'field') {
-        return `E: 0 - ${this.sweepMax} ${UNIT.V_PER_CM} @ ${formatFreqKHz(this.store.currentBroadcastFrequency, 1)}`
+        return `E: 0 - ${this.sweepMax} ${UNIT.V_PER_CM} @ ${formatFreqKHz(this.cellStore.currentBroadcastFrequency, 1)}`
       }
-      return `f: 0 - ${formatFreqKHz(this.sweepMax, 1)} @ ${this.store.fieldIntensity} ${UNIT.V_PER_CM}`
+      return `f: 0 - ${formatFreqKHz(this.sweepMax, 1)} @ ${this.cellStore.fieldIntensity} ${UNIT.V_PER_CM}`
     },
 
     sweepData(): SweepPoint[] {
-      const { store }  = this
-      const sigma_e    = store.effectiveSigmaE
-      const cosTheta   = store.cosThetaFactor
-      const waveform   = store.waveform
-      const dc         = store.dutyCycle
-      const pwNs       = store.pulseWidthNs
-      const freqKHz    = store.currentBroadcastFrequency
-      const E          = store.fieldIntensity
-      const healthy    = store.healthy
-      const target     = store.target
-      const perfRate   = store.perfusionRate
+      const cellStore  = this.cellStore
+      const sigma_e    = cellStore.effectiveSigmaE
+      const cosTheta   = cellStore.cosThetaFactor
+      const waveform   = cellStore.waveform
+      const dc         = cellStore.dutyCycle
+      const pwNs       = cellStore.pulseWidthNs
+      const freqKHz    = cellStore.currentBroadcastFrequency
+      const E          = cellStore.fieldIntensity
+      const healthy    = cellStore.healthy
+      const target     = cellStore.target
+      const perfRate   = cellStore.perfusionRate
       const wf         = waveform === WAVEFORM.CW ? WF_CW : WF_PULSED
 
       const tauH = computeTau(healthy, sigma_e)
@@ -258,14 +258,14 @@ export default defineComponent({
     },
 
     exportCSV() {
-      const { store } = this
+      const { cellStore } = this
       const meta = [
         `# ResoPulse: ${this.sweepParam === 'field' ? 'Field' : 'Frequency'} Sweep Export`,
         `# Exported: ${new Date().toISOString()}`,
-        `# Healthy: ${store.healthy.label} · R=${store.healthy.radius} ${UNIT.UM} · fc=${store.healthyFc.toFixed(0)} ${UNIT.KHZ}`,
-        `# Target:  ${store.target.label} · R=${store.target.radius} ${UNIT.UM} · fc=${store.targetFc.toFixed(0)} ${UNIT.KHZ}`,
-        `# Medium: ${store.medium} · σ_e=${store.effectiveSigmaE.toFixed(3)} ${UNIT.S_PER_M}`,
-        `# Fixed: ${this.sweepParam === 'field' ? `freq=${store.currentBroadcastFrequency} ${UNIT.KHZ}` : `field=${store.fieldIntensity} ${UNIT.V_PER_CM}`} · ${store.waveform} · dc=${store.dutyCycle.toExponential(2)}`,
+        `# Healthy: ${cellStore.healthy.label} · R=${cellStore.healthy.radius} ${UNIT.UM} · fc=${cellStore.healthyFc.toFixed(0)} ${UNIT.KHZ}`,
+        `# Target:  ${cellStore.target.label} · R=${cellStore.target.radius} ${UNIT.UM} · fc=${cellStore.targetFc.toFixed(0)} ${UNIT.KHZ}`,
+        `# Medium: ${cellStore.medium} · σ_e=${cellStore.effectiveSigmaE.toFixed(3)} ${UNIT.S_PER_M}`,
+        `# Fixed: ${this.sweepParam === 'field' ? `freq=${cellStore.currentBroadcastFrequency} ${UNIT.KHZ}` : `field=${cellStore.fieldIntensity} ${UNIT.V_PER_CM}`} · ${cellStore.waveform} · dc=${cellStore.dutyCycle.toExponential(2)}`,
         `# Model: Schwan equation (Kotnik & Miklavcic 2000), ResoPulse`,
       ].join('\n')
       const header = this.sweepParam === 'field'

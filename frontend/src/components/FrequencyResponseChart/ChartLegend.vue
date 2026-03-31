@@ -23,22 +23,22 @@
       v-tip="$t('chart.tipVmRatio')"
     ><span class="freq-chart__legend-line freq-chart__legend-line--sel"></span> {{ $t('chart.legendVmRatio') }}</span>
     <span
-      v-if="store.doubleShellEnabled"
+      v-if="cellStore.doubleShellEnabled"
       class="freq-chart__legend-item"
       v-tip="$t('chart.tipNucH')"
     ><span class="freq-chart__legend-line freq-chart__legend-line--nuc-h"></span> {{ $t('chart.legendNucH') }}</span>
     <span
-      v-if="store.doubleShellEnabled"
+      v-if="cellStore.doubleShellEnabled"
       class="freq-chart__legend-item"
       v-tip="$t('chart.tipNucT')"
     ><span class="freq-chart__legend-line freq-chart__legend-line--nuc-t"></span> {{ $t('chart.legendNucT') }}</span>
     <span
-      v-if="!store.isResonanceMode"
+      v-if="!cellStore.isResonanceMode"
       class="freq-chart__legend-item"
       v-tip="$t('chart.tipDepH')"
     ><span class="freq-chart__legend-line freq-chart__legend-line--dep-h"></span> {{ $t('chart.legendDepH') }}</span>
     <span
-      v-if="!store.isResonanceMode"
+      v-if="!cellStore.isResonanceMode"
       class="freq-chart__legend-item"
       v-tip="$t('chart.tipDepT')"
     ><span class="freq-chart__legend-line freq-chart__legend-line--dep-t"></span> {{ $t('chart.legendDepT') }}</span>
@@ -47,6 +47,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+import { mapStores } from 'pinia'
 import { useCellStore } from '@/stores/cellStore'
 import { GROUP_COLORS } from '@/constants/cellLibrary'
 import type { CellGroup } from '@/constants/cellLibrary'
@@ -66,11 +67,10 @@ const GROUP_LABEL_KEYS: Record<CellGroup, string> = {
 }
 
 export default defineComponent({
-  setup() {
-    return { store: useCellStore(), GROUP_COLORS }
-  },
-
   computed: {
+    ...mapStores(useCellStore),
+    GROUP_COLORS() { return GROUP_COLORS },
+
     groups(): CellGroup[] {
       return ['reference', 'cancer', 'bacteria', 'virus']
     },

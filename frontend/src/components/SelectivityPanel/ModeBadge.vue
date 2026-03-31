@@ -21,7 +21,7 @@
         v-if="showResonanceSwitchBtn"
         type="button"
         class="mode-badge__warning-btn"
-        @click="store.setChartMode(CHART_MODE.RESONANCE)"
+        @click="cellStore.setChartMode(CHART_MODE.RESONANCE)"
       >{{ $t('selectivity.switchToResonanceBtn') }}</button>
     </div>
 
@@ -30,6 +30,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+import { mapStores } from 'pinia'
 import { useCellStore } from '@/stores/cellStore'
 import { THRESHOLDS } from '@/constants/physics'
 import { CELL_CATEGORY, CHART_MODE } from '@/constants/strings'
@@ -39,20 +40,20 @@ import { broadcastStateSync } from '@/services/socket'
 import { tipOptimal } from '@/tooltips/selectivityTooltips'
 
 export default defineComponent({
-  setup() {
-    return { store: useCellStore(), CHART_MODE, ICON }
-  },
-
   computed: {
+    ...mapStores(useCellStore),
+    CHART_MODE() { return CHART_MODE },
+    ICON()       { return ICON },
+
     isResonanceTarget(): boolean {
-      const cat = this.store.targetCellCategory
-      const t = this.store.target as { resonantFreqGHz?: number; resonantThresholdVcm?: number }
+      const cat = this.cellStore.targetCellCategory
+      const t = this.cellStore.target as { resonantFreqGHz?: number; resonantThresholdVcm?: number }
       return (cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) && !!t.resonantFreqGHz && !!t.resonantThresholdVcm
     },
 
     badge(): { label: string } {
-      const t = this.store.targetDisruptionRatio
-      const h = this.store.healthyDisruptionRatio
+      const t = this.cellStore.targetDisruptionRatio
+      const h = this.cellStore.healthyDisruptionRatio
       if (h >= THRESHOLDS.DISRUPTION_WARN)                                        return { label: this.$t('selectivity.modeAblative')    }
       if (t >= THRESHOLDS.DISRUPTION_WARN && h < THRESHOLDS.HEALTHY_APPROACHING) return { label: this.$t('selectivity.modeTherapeutic') }
       if (t >= THRESHOLDS.DISRUPTION_WARN)                                        return { label: this.$t('selectivity.modeMarginal')    }
@@ -61,7 +62,7 @@ export default defineComponent({
     },
 
     badgeClass(): string {
-      const t = this.store.targetDisruptionRatio, h = this.store.healthyDisruptionRatio
+      const t = this.cellStore.targetDisruptionRatio, h = this.cellStore.healthyDisruptionRatio
       if (h >= THRESHOLDS.DISRUPTION_WARN)                                        return 'mode-badge__pill--ablative'
       if (t >= THRESHOLDS.DISRUPTION_WARN && h < THRESHOLDS.HEALTHY_APPROACHING) return 'mode-badge__pill--therapeutic'
       if (t >= THRESHOLDS.DISRUPTION_WARN)                                        return 'mode-badge__pill--marginal'
@@ -69,11 +70,11 @@ export default defineComponent({
       return                                                                              'mode-badge__pill--subthreshold'
     },
 
-    optimalFreqResult(): { khz: number; sel: number } { return this.store.optimalFreqResult },
+    optimalFreqResult(): { khz: number; sel: number } { return this.cellStore.optimalFreqResult },
 
     isBeyondSliderRange(): boolean {
       const { khz } = this.optimalFreqResult
-      return khz > this.store.sliderRanges.freqMax || khz < this.store.sliderRanges.freqMin
+      return khz > this.cellStore.sliderRanges.freqMax || khz < this.cellStore.sliderRanges.freqMin
     },
 
     optimalNote(): string {
@@ -87,22 +88,22 @@ export default defineComponent({
     },
 
     warning(): string | null {
-      const cat = this.store.targetCellCategory
-      const ti  = this.store.therapeuticIndex
-      const t = this.store.target as { resonantFreqGHz?: number; resonantThresholdVcm?: number }
+      const cat = this.cellStore.targetCellCategory
+      const ti  = this.cellStore.therapeuticIndex
+      const t = this.cellStore.target as { resonantFreqGHz?: number; resonantThresholdVcm?: number }
       const ghzCaveat = ' · f_res from fs-laser experiments (Tsen et al. [10]); RF delivery at GHz faces EM penetration limits in aqueous media (Debye relaxation above 1 GHz)'
-      if (this.store.isResonanceMode && cat === CELL_CATEGORY.MAMMALIAN) {
+      if (this.cellStore.isResonanceMode && cat === CELL_CATEGORY.MAMMALIAN) {
         return `${ICON.WARNING} Resonance mode has no physical meaning for mammalian cells, they have no rigid protein capsid or peptidoglycan cell wall. Switch back to IRE/Vm mode.`
       }
       if (cat === CELL_CATEGORY.VIRUS) {
         if (t.resonantFreqGHz) {
           return `${ICON.WARNING} IRE model inapplicable for virions (R < 0.1 µm) · Acoustic capsid disruption at ${t.resonantFreqGHz} GHz${ghzCaveat}`
         }
-        const tLysis = this.store.targetLysisField
+        const tLysis = this.cellStore.targetLysisField
         return `${ICON.WARNING} IRE not applicable to virions, E_lysis ≈ ${(tLysis / 1000).toFixed(0)} kV/cm · Use Resonance mode`
       }
       if (cat === CELL_CATEGORY.BACTERIA) {
-        const tLysis = this.store.targetLysisField
+        const tLysis = this.cellStore.targetLysisField
         if (tLysis > 3000) {
           const res = t.resonantFreqGHz ? ` · Resonance mode (${t.resonantFreqGHz} GHz) available${ghzCaveat}` : ''
           return `${ICON.WARNING} E_lysis ≈ ${(tLysis / 1000).toFixed(1)} kV/cm, standard IRE impractical · Consider nsEP (pulse width slider)${res}`
@@ -115,16 +116,16 @@ export default defineComponent({
     },
 
     showResonanceSwitchBtn(): boolean {
-      const cat = this.store.targetCellCategory
-      const t = this.store.target as { resonantFreqGHz?: number }
+      const cat = this.cellStore.targetCellCategory
+      const t = this.cellStore.target as { resonantFreqGHz?: number }
       return !!(cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) &&
         !!t.resonantFreqGHz &&
-        !this.store.isResonanceMode
+        !this.cellStore.isResonanceMode
     },
 
     tipOptimal(): string {
       const { khz, sel } = this.optimalFreqResult
-      const t = this.store.target as { resonantFreqGHz?: number; resonantThresholdVcm?: number; capsidQ?: number }
+      const t = this.cellStore.target as { resonantFreqGHz?: number; resonantThresholdVcm?: number; capsidQ?: number }
       return tipOptimal({
         isResonanceTarget:    this.isResonanceTarget,
         resonantFreqGHz:      t.resonantFreqGHz,
@@ -140,8 +141,8 @@ export default defineComponent({
   methods: {
     snapToOptimal() {
       const { khz } = this.optimalFreqResult
-      const { freqMin, freqMax } = this.store.sliderRanges
-      this.store.setBroadcastFreqKHz(Math.round(Math.max(freqMin, Math.min(freqMax, khz))))
+      const { freqMin, freqMax } = this.cellStore.sliderRanges
+      this.cellStore.setBroadcastFreqKHz(Math.round(Math.max(freqMin, Math.min(freqMax, khz))))
       broadcastStateSync()
     },
   },

@@ -5,7 +5,7 @@
     <AccordionPanel
       :icon="ICON.LINES"
       :title="$t('exp.logTitle')"
-      :subtitle="hasEntries ? $t('exp.logReadingsCount', { n: expStore.entries.length }) : $t('exp.logNoReadings')"
+      :subtitle="hasEntries ? $t('exp.logReadingsCount', { n: experimentStore.entries.length }) : $t('exp.logNoReadings')"
       :border-on-toggle="true"
     >
     <div>
@@ -72,7 +72,7 @@
             <th v-if="!isResonanceMode" v-tip="$t('log.tipThDepH')">{{ $t('log.logThDepH') }}</th>
             <th v-if="!isResonanceMode" v-tip="$t('log.tipThDepT')">{{ $t('log.logThDepT') }}</th>
             <th v-tip="$t('log.tipThEvent')">{{ $t('exp.logThEvent') }}</th>
-            <th v-if="expStore.aiConsentGiven" class="exp-log__th-rating">{{ $t('ai.rateSubmitBtn').slice(0, 4) }}</th>
+            <th v-if="experimentStore.aiConsentGiven" class="exp-log__th-rating">{{ $t('ai.rateSubmitBtn').slice(0, 4) }}</th>
           </tr>
         </thead>
         <tbody>
@@ -98,7 +98,7 @@
             <td class="exp-log__td-event">
               <StatusBadge :label="e.event" :variant="eventVariant(e.event)" :tooltip="tipCellEvent(e)" />
             </td>
-            <td v-if="expStore.aiConsentGiven" class="exp-log__td-rating">
+            <td v-if="experimentStore.aiConsentGiven" class="exp-log__td-rating">
               <div v-if="e.outcomeRating != null" class="exp-log__rating-stars" v-tip="$t('ai.ratedBadge')">
                 <span
                   v-for="s in 5"
@@ -131,6 +131,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+import { mapStores } from 'pinia'
 import AccordionPanel from '@/components/AccordionPanel.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
 import { useExperimentStore } from '@/stores/experimentStore'
@@ -157,34 +158,25 @@ import { UNIT } from '@/constants/units'
 export default defineComponent({
   components: { AccordionPanel, StatusBadge },
 
-  setup() {
-    return {
-      expStore: useExperimentStore(),
-      cellStore: useCellStore(),
-      aiStore: useAiStore(),
-      LOG_EVENT,
-      NULL_DISPLAY,
-      ICON,
-      THRESHOLDS,
-      formatFreqKHz,
-      depKDisplay,
-      depKDisplayFull,
-    }
-  },
-
   computed: {
+    ...mapStores(useExperimentStore, useCellStore, useAiStore),
+    LOG_EVENT()    { return LOG_EVENT },
+    NULL_DISPLAY() { return NULL_DISPLAY },
+    ICON()         { return ICON },
+    THRESHOLDS()   { return THRESHOLDS },
+
     sessionName: {
-      get(): string { return this.expStore.sessionName },
-      set(v: string) { this.expStore.setSessionName(v) },
+      get(): string { return this.experimentStore.sessionName },
+      set(v: string) { this.experimentStore.setSessionName(v) },
     },
 
     entries() {
-      return this.expStore.entries.slice(-20).reverse()
+      return this.experimentStore.entries.slice(-20).reverse()
     },
-    hasEntries(): boolean { return this.expStore.entries.length > 0 },
+    hasEntries(): boolean { return this.experimentStore.entries.length > 0 },
     isResonanceMode(): boolean { return this.cellStore.isResonanceMode },
     showSessionCol(): boolean {
-      const names = new Set(this.expStore.entries.map((e) => e.sessionName ?? ''))
+      const names = new Set(this.experimentStore.entries.map((e) => e.sessionName ?? ''))
       return names.size > 1
     },
     emptyColspan(): number {
@@ -200,7 +192,7 @@ export default defineComponent({
     },
 
     doseBadge(): string {
-      const dose = this.expStore.cumulativeDoseJkg
+      const dose = this.experimentStore.cumulativeDoseJkg
       if (dose >= 1000) return `${(dose / 1000).toFixed(2)} ${UNIT.KJ_PER_KG}`
       if (dose >= 1)    return `${dose.toFixed(1)} ${UNIT.J_PER_KG}`
       return `${(dose * 1000).toFixed(0)} ${UNIT.MJ_PER_KG}`
@@ -208,18 +200,22 @@ export default defineComponent({
   },
 
   methods: {
+    formatFreqKHz(khz: number): string { return formatFreqKHz(khz) },
+    depKDisplay(k: number | undefined): string { return depKDisplay(k) },
+    depKDisplayFull(k: number | undefined): string { return depKDisplayFull(k) },
+
     exportLastEntryMethods() {
-      const last = this.expStore.entries[this.expStore.entries.length - 1]
-      if (last) this.expStore.exportEntryMethods(last)
+      const last = this.experimentStore.entries[this.experimentStore.entries.length - 1]
+      if (last) this.experimentStore.exportEntryMethods(last)
     },
 
     logReading() {
-      this.expStore.logReading(this.cellStore as Parameters<typeof this.expStore.logReading>[0], LOG_EVENT.MANUAL)
-      const last = this.expStore.entries[this.expStore.entries.length - 1]
+      this.experimentStore.logReading(this.cellStore as Parameters<typeof this.experimentStore.logReading>[0], LOG_EVENT.MANUAL)
+      const last = this.experimentStore.entries[this.experimentStore.entries.length - 1]
       if (last) broadcastLogEntry(last)
     },
-    exportCSV()  { this.expStore.exportCSV() },
-    clearLog()   { this.expStore.clearLog() },
+    exportCSV()  { this.experimentStore.exportCSV() },
+    clearLog()   { this.experimentStore.clearLog() },
     eventVariant(event: string): string { return sharedEventVariant(event) },
 
     // ── Row cell tooltips ──────────────────────────────────────────────────────
@@ -245,7 +241,7 @@ export default defineComponent({
     },
     submitRating(entryId: number, rating: number) {
       const aiApplied = this.aiStore.suggestionApplied
-      const entry = this.expStore.logOutcome(entryId, rating, aiApplied)
+      const entry = this.experimentStore.logOutcome(entryId, rating, aiApplied)
       if (entry) broadcastLogOutcome(entry, rating, aiApplied)
     },
 
@@ -357,6 +353,7 @@ export default defineComponent({
   }
 
   &__table-wrap {
+    overflow-x: auto;
     overflow-y: auto;
     flex: 1;
     max-height: 220px;

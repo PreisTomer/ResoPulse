@@ -29,6 +29,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+import { mapStores } from 'pinia'
 import { useCellStore } from '@/stores/cellStore'
 import { CELL_PRESETS, GROUP_COLORS } from '@/constants/cellLibrary'
 import { DEFAULT_CAPSID_Q, THRESHOLDS, NEAR_ZERO_DR } from '@/constants/physics'
@@ -39,36 +40,37 @@ import { computeSchwan, computeResonantDisruption, safeRatio, computeTau, comput
 import { WAVEFORM } from '@/constants/strings'
 
 export default defineComponent({
-  setup() {
-    return { store: useCellStore(), CELL_PRESETS, GROUP_COLORS, UNIT }
-  },
-
   computed: {
+    ...mapStores(useCellStore),
+    CELL_PRESETS()  { return CELL_PRESETS },
+    GROUP_COLORS()  { return GROUP_COLORS },
+    UNIT()          { return UNIT },
+
     cmpTitleTip(): string {
       return `<strong>${this.presetCompTitleDynamic}</strong>\n${this.$t('selectivity.presetCompTip')}`
     },
 
     presetCompTitleDynamic(): string {
-      const cat = this.store.targetCellCategory
+      const cat = this.cellStore.targetCellCategory
       if (cat === CELL_CATEGORY.BACTERIA) return this.$t('selectivity.compAltBacteria')
       if (cat === CELL_CATEGORY.VIRUS)    return this.$t('selectivity.compAltViruses')
       return this.$t('selectivity.compAltCancer')
     },
 
     presetComparison() {
-      const sigma_e  = this.store.effectiveSigmaE
-      const freq     = this.store.currentBroadcastFrequency
-      const field    = this.store.fieldIntensity
-      const pwNs     = this.store.pulseWidthNs
-      const isPulsed = this.store.waveform === WAVEFORM.PULSED || this.store.waveform === WAVEFORM.H_FIRE
+      const sigma_e  = this.cellStore.effectiveSigmaE
+      const freq     = this.cellStore.currentBroadcastFrequency
+      const field    = this.cellStore.fieldIntensity
+      const pwNs     = this.cellStore.pulseWidthNs
+      const isPulsed = this.cellStore.waveform === WAVEFORM.PULSED || this.cellStore.waveform === WAVEFORM.H_FIRE
 
-      const cat = this.store.targetCellCategory
+      const cat = this.cellStore.targetCellCategory
       const relevantGroup = cat === CELL_CATEGORY.MAMMALIAN ? CELL_GROUP.CANCER : cat
 
       // PEF for the healthy reference cell (frequency-independent, computed once)
-      const pefH = isPulsed ? computePulseStepResponse(computeTau(this.store.healthy, sigma_e), pwNs) : 1.0
-      const hVm  = computeSchwan(this.store.healthy, freq, field, sigma_e)
-      const hDr  = (hVm * pefH) / this.store.healthy.thresholdVoltage
+      const pefH = isPulsed ? computePulseStepResponse(computeTau(this.cellStore.healthy, sigma_e), pwNs) : 1.0
+      const hVm  = computeSchwan(this.cellStore.healthy, freq, field, sigma_e)
+      const hDr  = (hVm * pefH) / this.cellStore.healthy.thresholdVoltage
 
       return CELL_PRESETS
         .filter((p) => p.group === relevantGroup)
@@ -95,7 +97,7 @@ export default defineComponent({
             sel = hDr > NEAR_ZERO_DR ? Math.min(THRESHOLDS.TI_DISPLAY_CAP, tDr / hDr) : 0
             tVmMv = (tVm * 1000).toFixed(1)
           }
-          return { preset: p, sel, tVmMv, isActive: this.store.target.id === p.id, hasRes }
+          return { preset: p, sel, tVmMv, isActive: this.cellStore.target.id === p.id, hasRes }
         })
         .sort((a, b) => b.sel - a.sel)
     },
@@ -107,7 +109,7 @@ export default defineComponent({
     },
 
     loadTarget(preset: typeof CELL_PRESETS[0]) {
-      this.store.loadPreset('target', preset)
+      this.cellStore.loadPreset('target', preset)
     },
 
     cmpTip(row: { preset: typeof CELL_PRESETS[0]; sel: number; tVmMv: string; hasRes: boolean }): string {

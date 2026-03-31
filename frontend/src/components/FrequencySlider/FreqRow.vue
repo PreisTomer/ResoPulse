@@ -71,16 +71,16 @@
   <!-- Frequency coupling regime badge -->
   <div
     class="field-panel__regime"
-    :class="`field-panel__regime--${store.freqRegime}`"
+    :class="`field-panel__regime--${cellStore.freqRegime}`"
     v-tip="tipFreqRegime"
   >
     <span class="field-panel__regime-dot"></span>
-    {{ $t(`slider.regime.${store.freqRegime}`) }}
+    {{ $t(`slider.regime.${cellStore.freqRegime}`) }}
   </div>
 
   <!-- Electrode polarization warning (< 50 kHz, IRE mode only) -->
   <div
-    v-if="store.isElectrodePolarizationRisk"
+    v-if="cellStore.isElectrodePolarizationRisk"
     class="field-panel__ep-warn"
     v-tip="$t('slider.electrodePolarizationTip')"
   >
@@ -89,7 +89,7 @@
 
   <!-- GHz + high-field hardware inaccessibility warning -->
   <div
-    v-if="store.isGhzHighFieldWarning"
+    v-if="cellStore.isGhzHighFieldWarning"
     class="field-panel__ep-warn field-panel__ep-warn--danger"
     v-tip="$t('slider.ghzHighFieldTip')"
   >
@@ -100,6 +100,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import type { PropType } from 'vue'
+import { mapStores } from 'pinia'
 import { useCellStore } from '@/stores/cellStore'
 import { broadcastStateSync } from '@/services/socket'
 import { CELL_CATEGORY, FREQ_REGIME } from '@/constants/strings'
@@ -118,10 +119,6 @@ export default defineComponent({
     sliderRanges: { type: Object as PropType<SliderRange>, required: true },
   },
 
-  setup() {
-    return { store: useCellStore(), ICON }
-  },
-
   data() {
     return {
       editingFreq:   false,
@@ -134,10 +131,13 @@ export default defineComponent({
   },
 
   computed: {
-    currentFreq(): number      { return this.store.currentBroadcastFrequency },
-    isResonanceMode(): boolean { return this.store.isResonanceMode },
-    targetFcDisplay(): string  { return formatFreqKHz(this.store.targetFc) },
-    healthyFcDisplay(): string { return formatFreqKHz(this.store.healthyFc) },
+    ...mapStores(useCellStore),
+    ICON() { return ICON },
+
+    currentFreq(): number      { return this.cellStore.currentBroadcastFrequency },
+    isResonanceMode(): boolean { return this.cellStore.isResonanceMode },
+    targetFcDisplay(): string  { return formatFreqKHz(this.cellStore.targetFc) },
+    healthyFcDisplay(): string { return formatFreqKHz(this.cellStore.healthyFc) },
     freqDisplay(): string      { return formatFreqKHz(this.currentFreq) },
 
     // ── Log-scale slider bounds ───────────────────────────────────────────────
@@ -147,7 +147,7 @@ export default defineComponent({
 
     freqSubDisplay(): string {
       if (this.isResonanceMode) {
-        const t = this.store.target as { resonantFreqGHz?: number }
+        const t = this.cellStore.target as { resonantFreqGHz?: number }
         if (t.resonantFreqGHz) {
           return this.$t('slider.fResSub', { freq: formatFreqKHz(t.resonantFreqGHz * 1_000_000) })
         }
@@ -156,7 +156,7 @@ export default defineComponent({
       return this.$t('slider.fcSub', { target: this.targetFcDisplay, healthy: this.healthyFcDisplay })
     },
 
-    optimalFreqResult(): { khz: number; sel: number } { return this.store.optimalFreqResult },
+    optimalFreqResult(): { khz: number; sel: number } { return this.cellStore.optimalFreqResult },
 
     optimalBeyondRange(): boolean {
       const { khz } = this.optimalFreqResult
@@ -193,7 +193,7 @@ export default defineComponent({
       }
 
       if (this.isResonanceMode) {
-        const t = this.store.target as { resonantFreqGHz?: number }
+        const t = this.cellStore.target as { resonantFreqGHz?: number }
         if (!t.resonantFreqGHz) return []
         const pct = logPct(t.resonantFreqGHz * 1_000_000)
         if (pct < 1 || pct > 99) return []
@@ -201,8 +201,8 @@ export default defineComponent({
       }
 
       return [
-        { id: 'fc-t', pct: logPct(this.store.targetFc),        color: 'danger'  },
-        { id: 'fc-h', pct: logPct(this.store.healthyFc),       color: 'primary' },
+        { id: 'fc-t', pct: logPct(this.cellStore.targetFc),        color: 'danger'  },
+        { id: 'fc-h', pct: logPct(this.cellStore.healthyFc),       color: 'primary' },
         { id: 'opt',  pct: logPct(this.optimalFreqResult.khz), color: 'optimal' },
       ].filter(m => m.pct >= 1 && m.pct <= 99)
     },
@@ -219,13 +219,13 @@ export default defineComponent({
         nearfield_rf: this.$t('slider.regime.tipNearfieldRf'),
         microwave:    this.$t('slider.regime.tipMicrowave'),
       }
-      let tip = tips[this.store.freqRegime] ?? ''
+      let tip = tips[this.cellStore.freqRegime] ?? ''
       if (
         this.isResonanceMode &&
-        this.store.targetCellCategory !== CELL_CATEGORY.MAMMALIAN &&
-        this.store.freqRegime !== FREQ_REGIME.MICROWAVE
+        this.cellStore.targetCellCategory !== CELL_CATEGORY.MAMMALIAN &&
+        this.cellStore.freqRegime !== FREQ_REGIME.MICROWAVE
       ) {
-        const t = this.store.target as { resonantFreqGHz?: number }
+        const t = this.cellStore.target as { resonantFreqGHz?: number }
         const fRes = t.resonantFreqGHz ? ` (f_res = ${t.resonantFreqGHz} GHz)` : ''
         tip += `\n\n${this.ICON.WARNING} Resonance mode active${fRes}: acoustic capsid disruption requires GHz delivery, rectangular waveguide or resonant cavity hardware needed. Current frequency is below the resonant target.`
       }
@@ -242,23 +242,23 @@ export default defineComponent({
     onFreqInput(e: Event) {
       const logVal = Number((e.target as HTMLInputElement).value)
       const khz    = Math.round(Math.pow(10, logVal))
-      this.store.setBroadcastFreqKHz(
+      this.cellStore.setBroadcastFreqKHz(
         Math.max(this.sliderRanges.freqMin, Math.min(this.sliderRanges.freqMax, khz))
       )
       broadcastStateSync()
     },
 
     snapToFc(cellType: 'healthy' | 'target') {
-      const fcKhz   = cellType === 'healthy' ? this.store.healthyFc : this.store.targetFc
+      const fcKhz   = cellType === 'healthy' ? this.cellStore.healthyFc : this.cellStore.targetFc
       const snapped = Math.round(Math.max(this.sliderRanges.freqMin, Math.min(this.sliderRanges.freqMax, fcKhz)))
-      this.store.setBroadcastFreqKHz(snapped)
+      this.cellStore.setBroadcastFreqKHz(snapped)
       broadcastStateSync()
     },
 
     snapToOptimal() {
       const { khz } = this.optimalFreqResult
       const snapped = Math.round(Math.max(this.sliderRanges.freqMin, Math.min(this.sliderRanges.freqMax, khz)))
-      this.store.setBroadcastFreqKHz(snapped)
+      this.cellStore.setBroadcastFreqKHz(snapped)
       broadcastStateSync()
     },
 
@@ -281,7 +281,7 @@ export default defineComponent({
       if (this.freqInputUnit === 'GHz')      khz = this.freqInputVal * 1_000_000
       else if (this.freqInputUnit === 'MHz') khz = this.freqInputVal * 1_000
       const clamped = Math.max(this.sliderRanges.freqMin, Math.min(this.sliderRanges.freqMax, Math.round(khz)))
-      this.store.setBroadcastFreqKHz(clamped)
+      this.cellStore.setBroadcastFreqKHz(clamped)
       broadcastStateSync()
       this.editingFreq = false
     },
@@ -296,7 +296,7 @@ export default defineComponent({
       const step    = this.freqInputStep
       const stepKhz = unit === 'GHz' ? step * 1_000_000 : unit === 'MHz' ? step * 1_000 : step
       const next    = Math.max(this.sliderRanges.freqMin, Math.min(this.sliderRanges.freqMax, this.currentFreq + dir * stepKhz))
-      this.store.setBroadcastFreqKHz(next)
+      this.cellStore.setBroadcastFreqKHz(next)
       broadcastStateSync()
     },
 
@@ -320,7 +320,7 @@ export default defineComponent({
       this.scrubMoved  = true
       const newFreq    = Math.round(this.scrubStartVal * Math.pow(10, dx / SCRUB_PX_PER_DECADE))
       const clamped    = Math.max(this.sliderRanges.freqMin, Math.min(this.sliderRanges.freqMax, newFreq))
-      this.store.setBroadcastFreqKHz(clamped)
+      this.cellStore.setBroadcastFreqKHz(clamped)
       broadcastStateSync()
     },
 

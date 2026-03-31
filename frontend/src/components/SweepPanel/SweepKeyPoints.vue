@@ -52,7 +52,7 @@ export default defineComponent({
     sweepParam: { type: String as () => 'field' | 'freq', required: true },
   },
 
-  setup() {
+  data() {
     return { THRESHOLDS }
   },
 

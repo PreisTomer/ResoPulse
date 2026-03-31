@@ -44,7 +44,7 @@
       {{ $t('heatmap.snapBtn') }}
     </button>
 
-    <span class="hmap__info-btn" v-tip="$t('heatmap.tipCanvas')">&#x2139;</span>
+    <span class="hmap__info-btn" v-tip="$t('heatmap.tipCanvas')">{{ ICON.INFO }}</span>
   </div>
 </template>
 
@@ -54,12 +54,17 @@ import { mapStores } from 'pinia'
 import { useCellStore } from '@/stores/cellStore'
 import { broadcastStateSync } from '@/services/socket'
 import { CELL_CATEGORY, FREQ_REGIME } from '@/constants/strings'
+import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'
 import { HMAP_LYSIS_DR, HMAP_WARN_DR, HMAP_THERM_WARN_C, HMAP_THERM_CRIT_C } from '@/constants/heatmap'
 
 export default defineComponent({
   props: {
     opZoneColor: { type: String, default: 'var(--color-text)' },
+  },
+
+  data() {
+    return { ICON }
   },
 
   computed: {
@@ -73,8 +78,7 @@ export default defineComponent({
     },
 
     healthyTssStr(): string {
-      const T = (this.cellStore as unknown as Record<string, number>)['healthySteadyStateTemp'] as number | undefined
-      return T !== undefined ? `${T.toFixed(1)} ${UNIT.DEG_C}` : '\u2014'
+      return `${this.cellStore.healthySteadyStateTemp.toFixed(1)} ${UNIT.DEG_C}`
     },
 
     pLysisStr(): string {
@@ -97,8 +101,7 @@ export default defineComponent({
     },
 
     tempClass(): string {
-      const T = (this.cellStore as unknown as Record<string, number>)['healthySteadyStateTemp'] as number | undefined
-      if (!T) return ''
+      const T = this.cellStore.healthySteadyStateTemp
       if (T >= HMAP_THERM_CRIT_C) return 'hmap__stat-v--danger'
       if (T >= HMAP_THERM_WARN_C) return 'hmap__stat-v--warn'
       return ''

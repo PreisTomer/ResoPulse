@@ -13,6 +13,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+import { mapStores } from 'pinia'
 import { useCellStore } from '@/stores/cellStore'
 import { broadcastStateSync } from '@/services/socket'
 import { WAVEFORM, CELL_CATEGORY } from '@/constants/strings'
@@ -23,11 +24,11 @@ import {
   HMAP_ZONE, HMAP_ZONE_COLOR, HMAP_ZONE_CSS, HMAP_ZONE_KEY, type HmapZone,
 } from '@/constants/heatmap'
 import {
-  computeSchwan, computeTau, computeSAR, computeResonantDisruption,
+  computeSchwan, computeTau, computeSAR, computeResonantDisruption, tempCorrectedVth,
 } from '@/utils/physics'
 import {
   BODY_TEMP_C, NEWTON_COOLING_LAMBDA, PENNES_BLOOD_COEFF, WF_CW, WF_PULSED, MIN_PULSE_ENVELOPE,
-  H_FIRE_THRESHOLD_MULTIPLIER, TEMP_EP_COEFF,
+  H_FIRE_THRESHOLD_MULTIPLIER,
 } from '@/constants/physics'
 import { formatFreqKHz } from '@/utils/format'
 import { C } from '@/theme/colors'
@@ -39,10 +40,6 @@ export default defineComponent({
   },
 
   emits: ['hover-info-change', 'op-zone-change'],
-
-  setup() {
-    return { store: useCellStore() }
-  },
 
   data() {
     return {
@@ -56,28 +53,33 @@ export default defineComponent({
   },
 
   computed: {
+    ...mapStores(useCellStore),
+
     xMin(): number { return 10 },
-    xMax(): number { return this.store.hmapFreqMaxKHz },
+    xMax(): number { return this.cellStore.hmapFreqMaxKHz },
 
     yMax(): number {
-      const s      = this.store
-      const sigma  = s.effectiveSigmaE
+      const s          = this.cellStore
+      const sigma      = s.effectiveSigmaE
+      const cosT       = s.cosThetaFactor
       const isPulsed   = s.waveform === WAVEFORM.PULSED || s.waveform === WAVEFORM.H_FIRE
       const hfireMult  = s.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
       const pw_ns      = s.pulseWidthNs
 
       const hTau = computeTau(s.healthy, sigma)
       const pefH = isPulsed ? Math.max(MIN_PULSE_ENVELOPE, 1 - Math.exp(-pw_ns * 1e-9 / hTau)) : 1.0
-      const healthyLysis = (s.healthy.thresholdVoltage * hfireMult) / (1.5 * s.healthy.radius * 1e-4 * pefH)
+      // Lysis field: E_lysis = Vth / (1.5 × R × cosθ × pef). cosT must match live sim.
+      const healthyLysis = (s.healthy.thresholdVoltage * hfireMult) / (1.5 * s.healthy.radius * 1e-4 * cosT * pefH)
 
       let targetLysis: number
       if (s.isResonanceMode) {
         const tr = s.target as { resonantThresholdVcm?: number }
-        targetLysis = tr.resonantThresholdVcm ?? (s.target.thresholdVoltage / (1.5 * s.target.radius * 1e-4))
+        // Resonance threshold is already in V/cm and independent of cosTheta orientation
+        targetLysis = tr.resonantThresholdVcm ?? (s.target.thresholdVoltage / (1.5 * s.target.radius * 1e-4 * cosT))
       } else {
         const tTau = computeTau(s.target, sigma)
         const pefT = isPulsed ? Math.max(MIN_PULSE_ENVELOPE, 1 - Math.exp(-pw_ns * 1e-9 / tTau)) : 1.0
-        targetLysis = (s.target.thresholdVoltage * hfireMult) / (1.5 * s.target.radius * 1e-4 * pefT)
+        targetLysis = (s.target.thresholdVoltage * hfireMult) / (1.5 * s.target.radius * 1e-4 * cosT * pefT)
       }
       return Math.max(healthyLysis, targetLysis) * 2.0
     },
@@ -86,7 +88,7 @@ export default defineComponent({
     plotH(): number { return this.displayH - HMAP_MARGIN.TOP  - HMAP_MARGIN.BOTTOM },
 
     physicsKey(): string {
-      const s = this.store
+      const s = this.cellStore
       const t = s.target as { resonantFreqGHz?: number }
       return [
         s.healthy.id, s.healthy.radius, s.healthy.membraneThickness,
@@ -96,6 +98,7 @@ export default defineComponent({
         t.resonantFreqGHz,
         s.medium, s.waveform, s.dutyCycle, s.pulseWidthNs, s.chartMode,
         s.cellPackingFraction, s.perfusionRate,
+        s.orientationDeg,
         s.resetCounter,
       ].join('|')
     },
@@ -115,9 +118,9 @@ export default defineComponent({
       }))
     },
     physicsKey()                        { this._scheduleRecompute() },
-    'store.currentBroadcastFrequency'() { this._renderCanvas() },
-    'store.fieldIntensity'()            { this._renderCanvas() },
-    'store.targetCellCategory'(cat: string) {
+    'cellStore.currentBroadcastFrequency'() { this._renderCanvas() },
+    'cellStore.fieldIntensity'()            { this._renderCanvas() },
+    'cellStore.targetCellCategory'(cat: string) {
       if (cat !== CELL_CATEGORY.MAMMALIAN || this.resizeObserver) return
       this.$nextTick(() => this._initObserver())
     },
@@ -187,8 +190,9 @@ export default defineComponent({
     },
 
     _zoneAt(freqKHz: number, fieldVcm: number): HmapZone {
-      const s = this.store
-      const sigma_e = s.effectiveSigmaE
+      const s          = this.cellStore
+      const sigma_e    = s.effectiveSigmaE
+      const cosT       = s.cosThetaFactor
       const isPulsed   = s.waveform === WAVEFORM.PULSED || s.waveform === WAVEFORM.H_FIRE
       const hfireMult  = s.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
       const wf         = isPulsed ? WF_PULSED : WF_CW
@@ -197,12 +201,12 @@ export default defineComponent({
 
       const hTau = computeTau(s.healthy, sigma_e)
       const hPEF = isPulsed ? Math.max(MIN_PULSE_ENVELOPE, 1 - Math.exp(-pw_ns * 1e-9 / hTau)) : 1.0
-      const hVm  = computeSchwan(s.healthy, freqKHz, fieldVcm, sigma_e, 1.0)
-      const hDR  = (hVm * hPEF) / (s.healthy.thresholdVoltage * hfireMult)
       const hCp  = s.healthy.specificHeatCapacity
       const hSAR = computeSAR(s.healthy, fieldVcm, sigma_e, wf)
       const hLambdaPerf = s.perfusionRate * PENNES_BLOOD_COEFF / hCp
       const hTss = BODY_TEMP_C + hSAR * dc / ((NEWTON_COOLING_LAMBDA + hLambdaPerf) * hCp)
+      const hVm  = computeSchwan(s.healthy, freqKHz, fieldVcm, sigma_e, cosT)
+      const hDR  = (hVm * hPEF) / (tempCorrectedVth(s.healthy.thresholdVoltage, hTss) * hfireMult)
 
       let tDR = 0
       if (s.isResonanceMode) {
@@ -210,15 +214,18 @@ export default defineComponent({
         if (tr.resonantFreqGHz && tr.capsidQ && tr.resonantThresholdVcm) {
           // Mirror cellStore.targetDisruptionRatio: apply temperature correction + H-FIRE multiplier
           // so zone colours stay in sync with the disruption ratio display.
-          const effThreshold = tr.resonantThresholdVcm *
-            (1 - TEMP_EP_COEFF * Math.max(0, s.targetTemp - BODY_TEMP_C)) * hfireMult
+          const effThreshold = tempCorrectedVth(tr.resonantThresholdVcm, s.targetTemp) * hfireMult
           tDR = computeResonantDisruption(tr.resonantFreqGHz, tr.capsidQ, effThreshold, freqKHz * 1000, fieldVcm)
         }
       } else {
+        const tCp  = s.target.specificHeatCapacity
+        const tSAR = computeSAR(s.target, fieldVcm, sigma_e, wf)
+        const tLambdaPerf = s.perfusionRate * PENNES_BLOOD_COEFF / tCp
+        const tTss = BODY_TEMP_C + tSAR * dc / ((NEWTON_COOLING_LAMBDA + tLambdaPerf) * tCp)
         const tTau = computeTau(s.target, sigma_e)
         const tPEF = isPulsed ? Math.max(MIN_PULSE_ENVELOPE, 1 - Math.exp(-pw_ns * 1e-9 / tTau)) : 1.0
-        const tVm  = computeSchwan(s.target, freqKHz, fieldVcm, sigma_e, 1.0)
-        tDR = (tVm * tPEF) / (s.target.thresholdVoltage * hfireMult)
+        const tVm  = computeSchwan(s.target, freqKHz, fieldVcm, sigma_e, cosT)
+        tDR = (tVm * tPEF) / (tempCorrectedVth(s.target.thresholdVoltage, tTss) * hfireMult)
       }
 
       if (hTss >= HMAP_THERM_CRIT_C) return HMAP_ZONE.THERMAL
@@ -232,8 +239,9 @@ export default defineComponent({
     },
 
     _computeGrid() {
-      const s       = this.store
-      const sigma_e = s.effectiveSigmaE
+      const s          = this.cellStore
+      const sigma_e    = s.effectiveSigmaE
+      const cosT       = s.cosThetaFactor
       const isPulsed   = s.waveform === WAVEFORM.PULSED || s.waveform === WAVEFORM.H_FIRE
       const hfireMult  = s.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
       const wf         = isPulsed ? WF_PULSED : WF_CW
@@ -246,15 +254,16 @@ export default defineComponent({
       const hCp         = s.healthy.specificHeatCapacity
       const hLambdaPerf = s.perfusionRate * PENNES_BLOOD_COEFF / hCp
 
-      const tTau = isRes ? 0 : computeTau(s.target, sigma_e)
-      const tPEF = (isPulsed && !isRes) ? Math.max(MIN_PULSE_ENVELOPE, 1 - Math.exp(-pw_ns * 1e-9 / tTau)) : 1.0
+      const tTau        = isRes ? 0 : computeTau(s.target, sigma_e)
+      const tPEF        = (isPulsed && !isRes) ? Math.max(MIN_PULSE_ENVELOPE, 1 - Math.exp(-pw_ns * 1e-9 / tTau)) : 1.0
+      const tCp         = s.target.specificHeatCapacity
+      const tLambdaPerf = s.perfusionRate * PENNES_BLOOD_COEFF / tCp
 
       const tr     = s.target as { resonantFreqGHz?: number; capsidQ?: number; resonantThresholdVcm?: number }
       const hasRes = isRes && !!tr.resonantFreqGHz && !!tr.capsidQ && !!tr.resonantThresholdVcm
       // Pre-compute temperature-corrected resonant threshold so zone colours match the DR display.
       const resEffThreshold = hasRes
-        ? tr.resonantThresholdVcm! *
-          (1 - TEMP_EP_COEFF * Math.max(0, s.targetTemp - BODY_TEMP_C)) * hfireMult
+        ? tempCorrectedVth(tr.resonantThresholdVcm!, s.targetTemp) * hfireMult
         : 0
 
       const result = new Array<number>(HMAP_FREQ_STEPS * HMAP_FIELD_STEPS)
@@ -266,17 +275,19 @@ export default defineComponent({
         for (let vi = 0; vi < HMAP_FIELD_STEPS; vi++) {
           const fieldVcm = this._fieldAt(vi)
 
-          const hVm  = computeSchwan(s.healthy, freqKHz, fieldVcm, sigma_e, 1.0)
-          const hDR  = (hVm * hPEF) / (s.healthy.thresholdVoltage * hfireMult)
           const hSAR = computeSAR(s.healthy, fieldVcm, sigma_e, wf)
           const hTss = BODY_TEMP_C + hSAR * dc / ((NEWTON_COOLING_LAMBDA + hLambdaPerf) * hCp)
+          const hVm  = computeSchwan(s.healthy, freqKHz, fieldVcm, sigma_e, cosT)
+          const hDR  = (hVm * hPEF) / (tempCorrectedVth(s.healthy.thresholdVoltage, hTss) * hfireMult)
 
           let tDR = 0
           if (hasRes) {
             tDR = computeResonantDisruption(tr.resonantFreqGHz!, tr.capsidQ!, resEffThreshold, freqHz, fieldVcm)
           } else {
-            const tVm = computeSchwan(s.target, freqKHz, fieldVcm, sigma_e, 1.0)
-            tDR = (tVm * tPEF) / (s.target.thresholdVoltage * hfireMult)
+            const tSAR = computeSAR(s.target, fieldVcm, sigma_e, wf)
+            const tTss = BODY_TEMP_C + tSAR * dc / ((NEWTON_COOLING_LAMBDA + tLambdaPerf) * tCp)
+            const tVm  = computeSchwan(s.target, freqKHz, fieldVcm, sigma_e, cosT)
+            tDR = (tVm * tPEF) / (tempCorrectedVth(s.target.thresholdVoltage, tTss) * hfireMult)
           }
 
           if (hTss >= HMAP_THERM_CRIT_C) { result[fi * HMAP_FIELD_STEPS + vi] = HMAP_ZONE.THERMAL;    continue }
@@ -326,7 +337,7 @@ export default defineComponent({
 
       // ── Overlay lines ──────────────────────────────────────────────────────
 
-      const s = this.store
+      const s = this.cellStore
 
       // Optimal frequency — yellow dashed
       const optKhz = s.optimalFreqResult.khz
@@ -478,7 +489,7 @@ export default defineComponent({
       ctx.font         = '9px monospace'
       ctx.textAlign    = 'center'
       ctx.textBaseline = 'middle'
-      ctx.fillText('Field Intensity [V/cm]', 0, 0)
+      ctx.fillText(`Field Intensity [${UNIT.V_PER_CM}]`, 0, 0)
       ctx.restore()
 
       ctx.restore()
@@ -549,8 +560,8 @@ export default defineComponent({
       const tY = 1 - Math.max(0, Math.min(1, (cy - HMAP_MARGIN.TOP) / pH))
       const freq  = this.xMin * Math.pow(this.xMax / this.xMin, tX)
       const field = Math.max(0, Math.min(this.yMax, tY * this.yMax))
-      this.store.setBroadcastFreqKHz(Math.round(freq))
-      this.store.setFieldIntensity(Math.round(field))
+      this.cellStore.setBroadcastFreqKHz(Math.round(freq))
+      this.cellStore.setFieldIntensity(Math.round(field))
       broadcastStateSync()
     },
 
@@ -578,31 +589,38 @@ export default defineComponent({
       const zone     = this._zoneAt(freqKHz, fieldVcm)
 
       // Hover physics
-      const s = this.store, sigma_e = s.effectiveSigmaE
+      const s          = this.cellStore, sigma_e = s.effectiveSigmaE
+      const cosT       = s.cosThetaFactor
       const isHoverPulsed  = s.waveform === WAVEFORM.PULSED || s.waveform === WAVEFORM.H_FIRE
       const hoverHfireMult = s.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
       const wf             = isHoverPulsed ? WF_PULSED : WF_CW
       const dc             = s.dutyCycle, pw_ns = s.pulseWidthNs
+      const hCp    = s.healthy.specificHeatCapacity
       const hTau   = computeTau(s.healthy, sigma_e)
       const hPEF   = isHoverPulsed ? Math.max(MIN_PULSE_ENVELOPE, 1 - Math.exp(-pw_ns * 1e-9 / hTau)) : 1.0
-      const hVm    = computeSchwan(s.healthy, freqKHz, fieldVcm, sigma_e, 1.0)
-      const hDR    = (hVm * hPEF) / (s.healthy.thresholdVoltage * hoverHfireMult)
-      const hCp    = s.healthy.specificHeatCapacity
       const hSAR   = computeSAR(s.healthy, fieldVcm, sigma_e, wf)
       const hLPerf = s.perfusionRate * PENNES_BLOOD_COEFF / hCp
       const hTss   = BODY_TEMP_C + hSAR * dc / ((NEWTON_COOLING_LAMBDA + hLPerf) * hCp)
+      const hVm    = computeSchwan(s.healthy, freqKHz, fieldVcm, sigma_e, cosT)
+      const hDR    = (hVm * hPEF) / (tempCorrectedVth(s.healthy.thresholdVoltage, hTss) * hoverHfireMult)
 
       let tDR = 0
       if (s.isResonanceMode) {
         const tr = s.target as { resonantFreqGHz?: number; capsidQ?: number; resonantThresholdVcm?: number }
         if (tr.resonantFreqGHz && tr.capsidQ && tr.resonantThresholdVcm) {
-          tDR = computeResonantDisruption(tr.resonantFreqGHz, tr.capsidQ, tr.resonantThresholdVcm, freqKHz * 1000, fieldVcm)
+          // Mirror cellStore.targetDisruptionRatio: apply temperature correction + H-FIRE multiplier
+          const effThreshold = tempCorrectedVth(tr.resonantThresholdVcm, s.targetTemp) * hoverHfireMult
+          tDR = computeResonantDisruption(tr.resonantFreqGHz, tr.capsidQ, effThreshold, freqKHz * 1000, fieldVcm)
         }
       } else {
+        const tCp  = s.target.specificHeatCapacity
+        const tSAR = computeSAR(s.target, fieldVcm, sigma_e, wf)
+        const tLPerf = s.perfusionRate * PENNES_BLOOD_COEFF / tCp
+        const tTss = BODY_TEMP_C + tSAR * dc / ((NEWTON_COOLING_LAMBDA + tLPerf) * tCp)
         const tTau = computeTau(s.target, sigma_e)
         const tPEF = isHoverPulsed ? Math.max(MIN_PULSE_ENVELOPE, 1 - Math.exp(-pw_ns * 1e-9 / tTau)) : 1.0
-        const tVm  = computeSchwan(s.target, freqKHz, fieldVcm, sigma_e, 1.0)
-        tDR = (tVm * tPEF) / (s.target.thresholdVoltage * hoverHfireMult)
+        const tVm  = computeSchwan(s.target, freqKHz, fieldVcm, sigma_e, cosT)
+        tDR = (tVm * tPEF) / (tempCorrectedVth(s.target.thresholdVoltage, tTss) * hoverHfireMult)
       }
 
       const pLysis = (!s.isResonanceMode || s.targetCellCategory === CELL_CATEGORY.MAMMALIAN)

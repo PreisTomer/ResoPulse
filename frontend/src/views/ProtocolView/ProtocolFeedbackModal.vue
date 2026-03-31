@@ -110,12 +110,13 @@ export default defineComponent({
 
   emits: ['close'],
 
-  setup() {
-    return { ICON, SECTIONS }
+  computed: {
+    ICON() { return ICON },
   },
 
   data() {
     return {
+      SECTIONS,
       form: {
         section:     '',
         equation:    '',

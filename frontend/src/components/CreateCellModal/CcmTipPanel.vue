@@ -5,7 +5,7 @@
       <div class="ccm-tip-box" @click.stop>
         <!-- eslint-disable-next-line vue/no-v-html -->
         <span v-html="activeTipHtml" />
-        <button class="ccm-tip-box__close" @click="$emit('close')">&#x2715;</button>
+        <button class="ccm-tip-box__close" @click="$emit('close')">{{ ICON.CLOSE }}</button>
       </div>
     </div>
   </transition>
@@ -13,6 +13,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+import { ICON } from '@/constants/icons'
 
 type TipKey = 'radius' | 'memThick' | 'epsR' | 'sigmaI' | 'vmThr' | 'density' | 'cp' | 'derivedFc' | 'cellType' | 'resFreq' | 'capsidQ' | 'resThr'
 
@@ -39,6 +40,10 @@ export default defineComponent({
   },
 
   emits: ['close'],
+
+  data() {
+    return { ICON }
+  },
 
   computed: {
     activeTipHtml(): string {

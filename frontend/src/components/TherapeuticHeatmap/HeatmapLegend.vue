@@ -16,7 +16,7 @@ const ZONE_COLORS = HMAP_ZONE_COLOR as Record<number, string>
 const ZONE_KEY    = HMAP_ZONE_KEY    as Record<number, string>
 
 export default defineComponent({
-  setup() {
+  data() {
     return { ZONE_COLORS, ZONE_KEY }
   },
 })

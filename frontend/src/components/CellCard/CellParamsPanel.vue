@@ -105,11 +105,14 @@ export default defineComponent({
 
   data() {
     return {
-      ICON,
       paramsExpanded: false,
       _stepTimeout:  null as ReturnType<typeof setTimeout>  | null,
       _stepInterval: null as ReturnType<typeof setInterval> | null,
     }
+  },
+
+  computed: {
+    ICON() { return ICON },
   },
 
   beforeUnmount() {

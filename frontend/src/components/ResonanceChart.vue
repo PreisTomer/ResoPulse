@@ -60,6 +60,7 @@ export default defineComponent({
   name: 'ResonanceChart',
 
   computed: {
+    ICON() { return ICON },
     ...mapStores(useCellStore),
 
     isSpeculativeTarget(): boolean {
@@ -70,7 +71,6 @@ export default defineComponent({
 
   data() {
     return {
-      ICON,
       _svg: null as d3.Selection<SVGSVGElement, unknown, null, undefined> | null,
       _xScale: null as d3.ScaleLogarithmic<number, number> | null,
       _yScale: null as d3.ScaleLinear<number, number> | null,

@@ -46,13 +46,13 @@ export default defineComponent({
   components: { AccordionPanel, HeatmapCanvas, HeatmapReadout, HeatmapLegend, HeatmapStats },
 
   computed: {
+    ICON() { return ICON },
+    CELL_CATEGORY() { return CELL_CATEGORY },
     ...mapStores(useCellStore),
   },
 
   data() {
     return {
-      CELL_CATEGORY,
-      ICON,
       open:        false,
       hoverInfo:   null as HoverInfo | null,
       opZoneColor: 'var(--color-text)',

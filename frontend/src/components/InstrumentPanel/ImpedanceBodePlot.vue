@@ -117,6 +117,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+import { mapStores } from 'pinia'
 import { useImpedanceStore } from '@/stores/impedanceStore'
 import { useCellStore }      from '@/stores/cellStore'
 import { computeCuvetteComplexImpedanceMag } from '@/utils/impedance'
@@ -149,23 +150,18 @@ const X_LABELS  = ['1k', '10k', '100k', '1M', '10M', '100M', '1G', '10G']
 export default defineComponent({
   name: 'ImpedanceBodePlot',
 
-  setup() {
-    return {
-      store:     useImpedanceStore(),
-      cellStore: useCellStore(),
-      UNIT,
-      SVG_W,
-      SVG_H,
-      MARGIN,
-    }
+  data() {
+    return { UNIT, SVG_W, SVG_H, MARGIN }
   },
 
   computed: {
-    sigmaE(): number    { return this.store.sigmaEWithLysis },
-    gapMm(): number     { return this.store.cuvetteGapMm },
-    areaCm2(): number   { return this.store.cuvetteCrossSectionCm2 },
+    ...mapStores(useImpedanceStore, useCellStore),
+
+    sigmaE(): number    { return this.impedanceStore.sigmaEWithLysis },
+    gapMm(): number     { return this.impedanceStore.cuvetteGapMm },
+    areaCm2(): number   { return this.impedanceStore.cuvetteCrossSectionCm2 },
     freqHz(): number    { return this.cellStore.currentBroadcastFrequency * 1e3 },
-    relaxHz(): number   { return this.store.relaxationFreqMHz * 1e6 },
+    relaxHz(): number   { return this.impedanceStore.relaxationFreqMHz * 1e6 },
 
     zValues(): { hz: number; z: number }[] {
       const points: { hz: number; z: number }[] = []

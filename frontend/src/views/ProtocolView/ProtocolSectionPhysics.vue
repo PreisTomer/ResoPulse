@@ -316,7 +316,7 @@ import { ICON } from '@/constants/icons'
 export default defineComponent({
   name: 'ProtocolSectionPhysics',
 
-  setup() { return { ICON } },
+  data() { return { ICON } },
 
   props: {
     schwanParams: {

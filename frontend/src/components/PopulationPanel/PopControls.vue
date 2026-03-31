@@ -92,7 +92,7 @@ export default defineComponent({
     'redraw',
   ],
 
-  setup() {
+  data() {
     return { N_PILL_OPTIONS }
   },
 

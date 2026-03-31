@@ -82,17 +82,17 @@
     <!-- φ + field distortion -->
     <div
       class="imp-meter__phi-row"
-      :class="{ 'imp-meter__phi-row--warn': store.fieldDistortionLevel !== 'none' }"
+      :class="{ 'imp-meter__phi-row--warn': impedanceStore.fieldDistortionLevel !== 'none' }"
       v-tip="tipFieldDistortion"
     >
       <span class="imp-meter__phi-label">{{ $t('instrument.meter.volFraction') }}</span>
       <span class="imp-meter__phi-value">
-        φ = {{ (store.cellVolumeFraction * 100).toFixed(3) }}{{ UNIT.PERCENT }}
+        φ = {{ (impedanceStore.cellVolumeFraction * 100).toFixed(3) }}{{ UNIT.PERCENT }}
         <span
-          v-if="store.fieldDistortionLevel !== 'none'"
+          v-if="impedanceStore.fieldDistortionLevel !== 'none'"
           class="imp-meter__phi-factor"
-          :class="{ 'imp-meter__phi-factor--warn': store.fieldDistortionLevel === 'significant' }"
-        > · E ×{{ store.fieldDistortionFactor.toFixed(3) }}</span>
+          :class="{ 'imp-meter__phi-factor--warn': impedanceStore.fieldDistortionLevel === 'significant' }"
+        > · E ×{{ impedanceStore.fieldDistortionFactor.toFixed(3) }}</span>
       </span>
     </div>
   </div>
@@ -100,6 +100,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+import { mapStores } from 'pinia'
 import { useImpedanceStore } from '@/stores/impedanceStore'
 import { useCellStore } from '@/stores/cellStore'
 import { UNIT } from '@/constants/units'
@@ -107,44 +108,43 @@ import { ICON } from '@/constants/icons'
 
 export default defineComponent({
   name: 'ImpedanceMeter',
-  setup() {
-    return {
-      store:     useImpedanceStore(),
-      cellStore: useCellStore(),
-      UNIT,
-      ICON,
-    }
+
+  data() {
+    return { UNIT, ICON }
   },
+
   computed: {
+    ...mapStores(useImpedanceStore, useCellStore),
+
     lysedPct(): number {
-      return this.store.lysedFraction * 100
+      return this.impedanceStore.lysedFraction * 100
     },
     nominalDisplay(): string {
-      return this.store.nominalImpedanceOhm.toFixed(1)
+      return this.impedanceStore.nominalImpedanceOhm.toFixed(1)
     },
     zAtFreqDisplay(): string {
-      return this.store.currentImpedanceMagAtFreqOhm.toFixed(1)
+      return this.impedanceStore.currentImpedanceMagAtFreqOhm.toFixed(1)
     },
     sigmaBaseDisplay(): string {
       return this.cellStore.effectiveSigmaE.toFixed(3)
     },
     sigmaLiveDisplay(): string {
-      return this.store.sigmaEWithLysis.toFixed(3)
+      return this.impedanceStore.sigmaEWithLysis.toFixed(3)
     },
     driftPct(): number {
-      return this.store.impedanceDriftPct
+      return this.impedanceStore.impedanceDriftPct
     },
     driftSign(): string {
       return this.driftPct < 0 ? '−' : this.driftPct > 0 ? '+' : ''
     },
     relaxFreqDisplay(): string {
-      return this.store.relaxationFreqMHz.toFixed(0)
+      return this.impedanceStore.relaxationFreqMHz.toFixed(0)
     },
     tipFieldDistortion(): string {
       return this.$t('instrument.meter.tipFieldDistortion', {
-        phi:    (this.store.cellVolumeFraction * 100).toFixed(3),
-        factor: this.store.fieldDistortionFactor.toFixed(4),
-        level:  this.store.fieldDistortionLevel,
+        phi:    (this.impedanceStore.cellVolumeFraction * 100).toFixed(3),
+        factor: this.impedanceStore.fieldDistortionFactor.toFixed(4),
+        level:  this.impedanceStore.fieldDistortionLevel,
       })
     },
     tipZAtFreq(): string {
@@ -156,9 +156,9 @@ export default defineComponent({
           : `${freqKHz.toFixed(1)} ${this.UNIT.KHZ}`
       return this.$t('instrument.meter.tipZAtFreq', {
         freq:    freqLabel,
-        relax:   this.store.relaxationFreqMHz.toFixed(0),
-        zDC:     this.store.nominalImpedanceOhm.toFixed(1),
-        zF:      this.store.currentImpedanceMagAtFreqOhm.toFixed(1),
+        relax:   this.impedanceStore.relaxationFreqMHz.toFixed(0),
+        zDC:     this.impedanceStore.nominalImpedanceOhm.toFixed(1),
+        zF:      this.impedanceStore.currentImpedanceMagAtFreqOhm.toFixed(1),
       })
     },
   },

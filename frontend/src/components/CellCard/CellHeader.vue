@@ -41,8 +41,6 @@ import { UNIT } from '@/constants/units'
 import { THRESHOLDS } from '@/constants/cellCard'
 
 export default defineComponent({
-  setup() { return { ICON, UNIT, THRESHOLDS } },
-
   props: {
     type:               { type: String as PropType<'healthy' | 'target'>, required: true },
     label:              { type: String, required: true },
@@ -61,6 +59,12 @@ export default defineComponent({
     nuclearVmMv:        { type: Number, required: true },
     nuclearDisruptionRatio: { type: Number, required: true },
     hasCellData:        { type: Boolean, required: true },
+  },
+
+  computed: {
+    ICON()       { return ICON },
+    UNIT()       { return UNIT },
+    THRESHOLDS() { return THRESHOLDS },
   },
 })
 </script>

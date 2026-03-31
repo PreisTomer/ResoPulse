@@ -33,6 +33,7 @@
 
 <script lang="ts">
 import { defineComponent, type PropType } from 'vue'
+import { mapStores } from 'pinia'
 import { useCellStore } from '@/stores/cellStore'
 import { broadcastStateSync } from '@/services/socket'
 import { tipSnapBar as tipSnapBarFn } from '@/tooltips/experimentTooltips'
@@ -43,10 +44,6 @@ type SweepWindow = { lo: number; hi: number; param: 'field' | 'freq' }
 
 export default defineComponent({
   name: 'SnapBar',
-
-  setup() {
-    return { store: useCellStore() }
-  },
 
   props: {
     sweepWindow: { type: Object as PropType<SweepWindow>, required: true },
@@ -61,17 +58,19 @@ export default defineComponent({
   },
 
   watch: {
-    'store.target.id'() { this.snapConfirmed = false },
-    'store.resetCounter'() { this.snapConfirmed = false },
+    'cellStore.target.id'() { this.snapConfirmed = false },
+    'cellStore.resetCounter'() { this.snapConfirmed = false },
   },
 
   computed: {
+    ...mapStores(useCellStore),
+
     tipSnapBar(): string {
       return tipSnapBarFn(this.sweepWindow)
     },
 
     snapLysisCellLabel(): string {
-      return `${this.store.target.label} (~${formatLysisTime(this.store.lysisDelayMs)})`
+      return `${this.cellStore.target.label} (~${formatLysisTime(this.cellStore.lysisDelayMs)})`
     },
   },
 
@@ -88,9 +87,9 @@ export default defineComponent({
       this.snapConfirming = false
       const center = Math.round((this.sweepWindow.lo + this.sweepWindow.hi) / 2)
       if (this.sweepWindow.param === 'field') {
-        this.store.setFieldIntensity(center)
+        this.cellStore.setFieldIntensity(center)
       } else {
-        this.store.setBroadcastFreqKHz(center)
+        this.cellStore.setBroadcastFreqKHz(center)
       }
       broadcastStateSync()
       this.snapConfirmed = true

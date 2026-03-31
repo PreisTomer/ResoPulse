@@ -29,8 +29,8 @@
         :healthyStats="healthyStats"
         :targetUncPct="targetUncPct"
         :healthyUncPct="healthyUncPct"
-        :targetLabel="store.target.label"
-        :healthyLabel="store.healthy.label"
+        :targetLabel="cellStore.target.label"
+        :healthyLabel="cellStore.healthy.label"
       />
 
       <PopWindowScore
@@ -59,6 +59,7 @@
 import { defineComponent } from 'vue'
 import * as d3 from 'd3'
 import { C } from '@/theme/colors'
+import { mapStores } from 'pinia'
 import { useCellStore } from '@/stores/cellStore'
 import AccordionPanel from '@/components/AccordionPanel.vue'
 import { computeSchwan, computeTau, computePulseStepResponse, computeResonantDisruption } from '@/utils/physics'
@@ -79,10 +80,6 @@ type ResizeObserverInstance = InstanceType<typeof ResizeObserver>
 export default defineComponent({
   components: { AccordionPanel, PopControls, PopStatCards, PopWindowScore, PopNote },
   emits: ['openChange'],
-  setup() {
-    return { store: useCellStore(), THRESHOLDS, ICON, UNIT }
-  },
-
   data() {
     return {
       open: false,
@@ -99,16 +96,21 @@ export default defineComponent({
   },
 
   computed: {
+    ...mapStores(useCellStore),
+    THRESHOLDS() { return THRESHOLDS },
+    ICON()       { return ICON },
+    UNIT()       { return UNIT },
+
     isResonanceTarget(): boolean {
-      const cat = this.store.targetCellCategory
-      const t = this.store.target as CellConfig & { resonantFreqGHz?: number; resonantThresholdVcm?: number }
+      const cat = this.cellStore.targetCellCategory
+      const t = this.cellStore.target as CellConfig & { resonantFreqGHz?: number; resonantThresholdVcm?: number }
       return (cat === CELL_CATEGORY.BACTERIA || cat === CELL_CATEGORY.VIRUS) &&
         !!(t.resonantFreqGHz && t.resonantThresholdVcm) &&
-        this.store.isResonanceMode
+        this.cellStore.isResonanceMode
     },
 
     targetUncPct(): number {
-      const cat = this.store.targetCellCategory
+      const cat = this.cellStore.targetCellCategory
       if (cat === CELL_CATEGORY.VIRUS)    return 45
       if (cat === CELL_CATEGORY.BACTERIA) return 35
       return 20
@@ -139,8 +141,8 @@ export default defineComponent({
     },
 
     subtitle(): string {
-      const { nCells, store } = this
-      return `N=${nCells} · ${store.fieldIntensity} ${UNIT.V_PER_CM} · ${store.currentBroadcastFrequency} ${UNIT.KHZ}`
+      const { nCells } = this
+      return `N=${nCells} · ${this.cellStore.fieldIntensity} ${UNIT.V_PER_CM} · ${this.cellStore.currentBroadcastFrequency} ${UNIT.KHZ}`
     },
 
     tipWindowScore(): string {
@@ -169,13 +171,13 @@ export default defineComponent({
     // This prevents a burst of redraws when a single user action (e.g. snap-to-window)
     // triggers multiple store mutations in one tick.
     // Note: no open guard here — _drawChart() is gated on open via the targetDRs watcher.
-    'store.fieldIntensity'()            { this._scheduleResample() },
-    'store.currentBroadcastFrequency'() { this._scheduleResample() },
-    'store.waveform'()                  { this._scheduleResample() },
-    'store.pulseWidthNs'()              { this._scheduleResample() },
-    'store.dutyCycle'()                 { this._scheduleResample() },
-    'store.healthy.id'()                { this._scheduleResample() },
-    'store.target.id'()                 { this._scheduleResample() },
+    'cellStore.fieldIntensity'()            { this._scheduleResample() },
+    'cellStore.currentBroadcastFrequency'() { this._scheduleResample() },
+    'cellStore.waveform'()                  { this._scheduleResample() },
+    'cellStore.pulseWidthNs'()              { this._scheduleResample() },
+    'cellStore.dutyCycle'()                 { this._scheduleResample() },
+    'cellStore.healthy.id'()                { this._scheduleResample() },
+    'cellStore.target.id'()                 { this._scheduleResample() },
     rVariancePct()                      { this._scheduleResample() },
     vThVariancePct()                    { this._scheduleResample() },
   },
@@ -211,16 +213,16 @@ export default defineComponent({
     },
 
     resample() {
-      const { store } = this
-      const sigma_e  = store.effectiveSigmaE
-      const cosTheta = store.cosThetaFactor
-      const waveform = store.waveform
-      const pwNs     = store.pulseWidthNs
-      const freqKHz  = store.currentBroadcastFrequency
-      const E        = store.fieldIntensity
+      const { cellStore } = this
+      const sigma_e  = cellStore.effectiveSigmaE
+      const cosTheta = cellStore.cosThetaFactor
+      const waveform = cellStore.waveform
+      const pwNs     = cellStore.pulseWidthNs
+      const freqKHz  = cellStore.currentBroadcastFrequency
+      const E        = cellStore.fieldIntensity
 
-      const healthy = store.healthy
-      const target  = store.target
+      const healthy = cellStore.healthy
+      const target  = cellStore.target
       const t = target as CellConfig & {
         resonantFreqGHz?: number
         capsidQ?: number
@@ -411,8 +413,8 @@ export default defineComponent({
 
       // ── Legend ───────────────────────────────────────────────────────────────
       const legend = [
-        { color: CSS_DANGER,  label: `${this.$t('population.chartLegendTarget')} (${this.store.target.label})` },
-        { color: CSS_PRIMARY, label: `${this.$t('population.chartLegendHealthy')} (${this.store.healthy.label})` },
+        { color: CSS_DANGER,  label: `${this.$t('population.chartLegendTarget')} (${this.cellStore.target.label})` },
+        { color: CSS_PRIMARY, label: `${this.$t('population.chartLegendHealthy')} (${this.cellStore.healthy.label})` },
       ]
       legend.forEach(({ color, label }, i) => {
         const lx = i * 160
@@ -426,14 +428,14 @@ export default defineComponent({
     },
 
     exportCSV() {
-      const { store } = this
+      const { cellStore } = this
       const meta = [
         `# ResoPulse: Population Monte Carlo Export`,
         `# Exported: ${new Date().toISOString()}`,
-        `# Healthy: ${store.healthy.label} · R=${store.healthy.radius} ${UNIT.UM} · N=${this.nCells} · σ_i ±${this.healthyUncPct}% · R ±${this.rVariancePct}% · V_th ±${this.vThVariancePct}%`,
-        `# Target:  ${store.target.label} · R=${store.target.radius} ${UNIT.UM} · N=${this.nCells} · σ_i ±${this.targetUncPct}% · R ±${this.rVariancePct}% · V_th ±${this.vThVariancePct}%`,
-        `# Medium: ${store.medium} · σ_e=${store.effectiveSigmaE.toFixed(3)} ${UNIT.S_PER_M}`,
-        `# Field: ${store.currentBroadcastFrequency} ${UNIT.KHZ} · ${store.fieldIntensity} ${UNIT.V_PER_CM} · ${store.waveform} · dc=${store.dutyCycle.toExponential(2)} · pw=${store.pulseWidthNs} ${UNIT.NS}`,
+        `# Healthy: ${cellStore.healthy.label} · R=${cellStore.healthy.radius} ${UNIT.UM} · N=${this.nCells} · σ_i ±${this.healthyUncPct}% · R ±${this.rVariancePct}% · V_th ±${this.vThVariancePct}%`,
+        `# Target:  ${cellStore.target.label} · R=${cellStore.target.radius} ${UNIT.UM} · N=${this.nCells} · σ_i ±${this.targetUncPct}% · R ±${this.rVariancePct}% · V_th ±${this.vThVariancePct}%`,
+        `# Medium: ${cellStore.medium} · σ_e=${cellStore.effectiveSigmaE.toFixed(3)} ${UNIT.S_PER_M}`,
+        `# Field: ${cellStore.currentBroadcastFrequency} ${UNIT.KHZ} · ${cellStore.fieldIntensity} ${UNIT.V_PER_CM} · ${cellStore.waveform} · dc=${cellStore.dutyCycle.toExponential(2)} · pw=${cellStore.pulseWidthNs} ${UNIT.NS}`,
         `# Window Score: ${this.windowScore.toFixed(3)} (${this.windowVerdict}) — WS = (pctLysedTarget/100) × (1 − pctLysedHealthy/100)`,
         `# Model: Schwan + Box-Muller Gaussian sampling (Kotnik & Miklavcic 2000; V_th: Weaver & Chizmadzhev 1996)`,
         `cell_type,sample_index,DR`,

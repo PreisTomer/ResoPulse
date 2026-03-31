@@ -16,7 +16,7 @@
       :tip-vm="tipVm"
       :tip-temp="tipTemp"
       :tip-state="tipState"
-      :double-shell-enabled="store.doubleShellEnabled"
+      :double-shell-enabled="cellStore.doubleShellEnabled"
       :has-nuclear-params="hasNuclearParams"
       :nuclear-vm-mv="nuclearVmMv"
       :nuclear-disruption-ratio="nuclearDisruptionRatio"
@@ -57,6 +57,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import type { PropType } from 'vue'
+import { mapStores } from 'pinia'
 import { useCellStore } from '@/stores/cellStore'
 import { CELL_PRESETS } from '@/constants/cellLibrary'
 import type { CellConfig, CellRecord } from '@/types/cell'
@@ -99,10 +100,6 @@ export default defineComponent({
     compact: { type: Boolean, default: false },
   },
 
-  setup() {
-    return { store: useCellStore(), CELL_STATE, CELL_TYPE }
-  },
-
   data() {
     return {
       thermalLysis: false,
@@ -110,32 +107,36 @@ export default defineComponent({
   },
 
   computed: {
+    ...mapStores(useCellStore),
+    CELL_STATE() { return CELL_STATE },
+    CELL_TYPE()  { return CELL_TYPE },
+
     cellState(): CellState {
       return this.type === CELL_TYPE.HEALTHY
-        ? this.store.healthyCellState
-        : this.store.targetCellState
+        ? this.cellStore.healthyCellState
+        : this.cellStore.targetCellState
     },
 
     isAcousticTarget(): boolean {
       if (this.type !== CELL_TYPE.TARGET) return false
-      const cat = this.store.targetCellCategory
+      const cat = this.cellStore.targetCellCategory
       if (cat !== CELL_CATEGORY.BACTERIA && cat !== CELL_CATEGORY.VIRUS) return false
-      const t = this.store.target as CellConfig & { resonantFreqGHz?: number }
+      const t = this.cellStore.target as CellConfig & { resonantFreqGHz?: number }
       return !!t.resonantFreqGHz
     },
 
     vm(): number {
-      return (this.type === CELL_TYPE.HEALTHY ? this.store.healthyVm : this.store.targetVm) * 1000
+      return (this.type === CELL_TYPE.HEALTHY ? this.cellStore.healthyVm : this.cellStore.targetVm) * 1000
     },
 
     temperature(): number {
-      return this.type === CELL_TYPE.HEALTHY ? this.store.healthyTemp : this.store.targetTemp
+      return this.type === CELL_TYPE.HEALTHY ? this.cellStore.healthyTemp : this.cellStore.targetTemp
     },
 
     disruptionRatio(): number {
       return this.type === CELL_TYPE.HEALTHY
-        ? this.store.healthyDisruptionRatio
-        : this.store.targetDisruptionRatio
+        ? this.cellStore.healthyDisruptionRatio
+        : this.cellStore.targetDisruptionRatio
     },
 
     vmDisplay(): string {
@@ -151,18 +152,18 @@ export default defineComponent({
     tempVaporizing(): boolean { return this.temperature >= THRESHOLDS.TEMP_VAPORIZING },
 
     hasNuclearParams(): boolean {
-      const cell = this.type === CELL_TYPE.HEALTHY ? this.store.healthy : this.store.target
+      const cell = this.type === CELL_TYPE.HEALTHY ? this.cellStore.healthy : this.cellStore.target
       return !!cell.nuclearRadius
     },
 
     nuclearVmMv(): number {
-      return (this.type === CELL_TYPE.HEALTHY ? this.store.healthyNuclearVm : this.store.targetNuclearVm) * 1000
+      return (this.type === CELL_TYPE.HEALTHY ? this.cellStore.healthyNuclearVm : this.cellStore.targetNuclearVm) * 1000
     },
 
     nuclearDisruptionRatio(): number {
       return this.type === CELL_TYPE.HEALTHY
-        ? this.store.healthyNuclearDisruptionRatio
-        : this.store.targetNuclearDisruptionRatio
+        ? this.cellStore.healthyNuclearDisruptionRatio
+        : this.cellStore.targetNuclearDisruptionRatio
     },
 
     metaStateClass(): string {
@@ -180,12 +181,12 @@ export default defineComponent({
     },
 
     canResetToPreset(): boolean {
-      const cell = this.type === CELL_TYPE.HEALTHY ? this.store.healthy : this.store.target
+      const cell = this.type === CELL_TYPE.HEALTHY ? this.cellStore.healthy : this.cellStore.target
       return CELL_PRESETS.some((p) => p.presetId === cell.id)
     },
 
     editableParams() {
-      const cell     = this.type === CELL_TYPE.HEALTHY ? this.store.healthy : this.store.target
+      const cell     = this.type === CELL_TYPE.HEALTHY ? this.cellStore.healthy : this.cellStore.target
       const paramSet = this.isAcousticTarget ? EDITABLE_PARAMS_ACOUSTIC : EDITABLE_PARAMS
       return paramSet.map((p) => ({
         ...p,
@@ -194,10 +195,10 @@ export default defineComponent({
     },
 
     derivedParams() {
-      const cell    = this.type === CELL_TYPE.HEALTHY ? this.store.healthy : this.store.target
-      const sigma_e = this.store.effectiveSigmaE
+      const cell    = this.type === CELL_TYPE.HEALTHY ? this.cellStore.healthy : this.cellStore.target
+      const sigma_e = this.cellStore.effectiveSigmaE
       const tauNs   = computeTau(cell, sigma_e) * 1e9
-      const fc      = this.type === CELL_TYPE.HEALTHY ? this.store.healthyFc : this.store.targetFc
+      const fc      = this.type === CELL_TYPE.HEALTHY ? this.cellStore.healthyFc : this.cellStore.targetFc
       const fcParts = splitFreqKHz(fc, 2)
 
       if (this.isAcousticTarget) {
@@ -242,22 +243,22 @@ export default defineComponent({
 
     tipVm(): string {
       if (this.isAcousticTarget) {
-        const t = this.store.target as CellConfig & { resonantFreqGHz?: number; capsidQ?: number; experimentalBasis?: string }
+        const t = this.cellStore.target as CellConfig & { resonantFreqGHz?: number; capsidQ?: number; experimentalBasis?: string }
         return tipAcousticVmFn({
           disruptionRatio:   this.disruptionRatio,
           resonantFreqGHz:   t.resonantFreqGHz ?? 0,
           capsidQ:           t.capsidQ ?? 1,
-          freqKHz:           this.store.currentBroadcastFrequency,
-          fieldVcm:          this.store.fieldIntensity,
+          freqKHz:           this.cellStore.currentBroadcastFrequency,
+          fieldVcm:          this.cellStore.fieldIntensity,
           experimentalBasis: t.experimentalBasis,
         })
       }
-      const cell = this.type === CELL_TYPE.HEALTHY ? this.store.healthy : this.store.target
+      const cell = this.type === CELL_TYPE.HEALTHY ? this.cellStore.healthy : this.cellStore.target
       return tipVmFn({
         vmDisplay:        this.vmDisplay,
         disruptionRatio:  this.disruptionRatio,
         thresholdVoltage: cell.thresholdVoltage,
-        waveform:         this.store.waveform,
+        waveform:         this.cellStore.waveform,
       })
     },
 
@@ -275,14 +276,14 @@ export default defineComponent({
         cellState:    this.cellState,
         thermalLysis: this.thermalLysis,
         cellType:     this.type,
-        lysisDelayMs: this.store.lysisDelayMs,
+        lysisDelayMs: this.cellStore.lysisDelayMs,
       })
     },
   },
 
   methods: {
     onParamChange(key: string, value: number) {
-      this.store.updateCellParam(this.type, key, value)
+      this.cellStore.updateCellParam(this.type, key, value)
     },
 
     onStableReset(cellType: string) {
@@ -294,9 +295,9 @@ export default defineComponent({
     },
 
     resetToPreset() {
-      const cell   = this.type === CELL_TYPE.HEALTHY ? this.store.healthy : this.store.target
+      const cell   = this.type === CELL_TYPE.HEALTHY ? this.cellStore.healthy : this.cellStore.target
       const preset = CELL_PRESETS.find((p) => p.presetId === cell.id)
-      if (preset) this.store.loadPreset(this.type, preset)
+      if (preset) this.cellStore.loadPreset(this.type, preset)
     },
   },
 })

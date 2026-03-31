@@ -16,9 +16,9 @@
         :class="{ 'protocol__toc-mobile-btn--open': tocMobileOpen }"
         @click="tocMobileOpen = !tocMobileOpen"
       >
-        <span class="protocol__toc-mobile-icon">&#9776;</span>
+        <span class="protocol__toc-mobile-icon">{{ ICON.MENU }}</span>
         <span class="protocol__toc-mobile-label">{{ tocMobileOpen ? $t('protocol.toc.close') : $t('protocol.toc.contents') }}</span>
-        <span class="protocol__toc-mobile-caret" :class="{ 'protocol__toc-mobile-caret--open': tocMobileOpen }">&#9660;</span>
+        <span class="protocol__toc-mobile-caret" :class="{ 'protocol__toc-mobile-caret--open': tocMobileOpen }">{{ ICON.CARET_DOWN }}</span>
       </button>
 
       <!-- Two-column layout: TOC + content -->
@@ -64,6 +64,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+import { ICON } from '@/constants/icons'
 import PageHeader from '@/components/PageHeader.vue'
 import ProtocolToc from './ProtocolToc.vue'
 import ProtocolSectionOverview from './ProtocolSectionOverview.vue'
@@ -139,6 +140,7 @@ export default defineComponent({
   },
 
   computed: {
+    ICON() { return ICON },
     tocItems(): TocItem[] {
       return TOC_ITEMS
     },

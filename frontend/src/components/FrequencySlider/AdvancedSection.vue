@@ -29,7 +29,7 @@
     </div>
 
     <!-- Row 8: Pulses to Lysis N (pulsed/H-FIRE only) - target cell lysis timing only -->
-    <div v-if="store.waveform === WAVEFORM.PULSED || store.waveform === WAVEFORM.H_FIRE" class="field-panel__row field-panel__row--compact-readout">
+    <div v-if="cellStore.waveform === WAVEFORM.PULSED || cellStore.waveform === WAVEFORM.H_FIRE" class="field-panel__row field-panel__row--compact-readout">
       <div class="field-panel__row-header">
         <span class="field-panel__row-label" v-tip="tipLysisNFull">{{ $t('slider.pulsesN') }} <span class="field-panel__scope-tag field-panel__scope-tag--target">{{ CELL_LABEL.TARGET }}</span></span>
         <div class="field-panel__readout" v-tip="tipLysisN">
@@ -51,7 +51,7 @@
 
     <!-- Row 9: Double-Shell Model toggle (mammalian nucleated cells only) -->
     <div
-      v-if="store.targetCellCategory === CELL_CATEGORY.MAMMALIAN && store.hasNuclearParams"
+      v-if="cellStore.targetCellCategory === CELL_CATEGORY.MAMMALIAN && cellStore.hasNuclearParams"
       class="field-panel__row field-panel__row--medium"
     >
       <div class="field-panel__row-header">
@@ -59,18 +59,18 @@
         <div class="field-panel__pills">
           <label
             class="field-panel__pill"
-            :class="{ 'field-panel__pill--active': !store.doubleShellEnabled }"
+            :class="{ 'field-panel__pill--active': !cellStore.doubleShellEnabled }"
             v-tip="tipSingleShell"
           >
-            <input type="radio" name="shellModel" :checked="!store.doubleShellEnabled" @change="setShellModel(false)" />
+            <input type="radio" name="shellModel" :checked="!cellStore.doubleShellEnabled" @change="setShellModel(false)" />
             {{ $t('slider.doubleShellSingle') }}
           </label>
           <label
             class="field-panel__pill field-panel__pill--nuclear"
-            :class="{ 'field-panel__pill--active': store.doubleShellEnabled }"
+            :class="{ 'field-panel__pill--active': cellStore.doubleShellEnabled }"
             v-tip="tipDoubleShell"
           >
-            <input type="radio" name="shellModel" :checked="store.doubleShellEnabled" @change="setShellModel(true)" />
+            <input type="radio" name="shellModel" :checked="cellStore.doubleShellEnabled" @change="setShellModel(true)" />
             {{ $t('slider.doubleShellDouble') }}
           </label>
         </div>
@@ -92,7 +92,7 @@
           :min="SLIDER_ADV.PERF_MIN"
           :max="SLIDER_ADV.PERF_MAX"
           :step="SLIDER_ADV.PERF_STEP"
-          :value="store.perfusionRate"
+          :value="cellStore.perfusionRate"
           @input="onPerfusionInput"
         />
       </div>
@@ -113,7 +113,7 @@
           :min="SLIDER_ADV.PHI_MIN"
           :max="SLIDER_ADV.PHI_MAX"
           :step="SLIDER_ADV.PHI_STEP"
-          :value="store.cellPackingFraction"
+          :value="cellStore.cellPackingFraction"
           @input="onCellPackingInput"
         />
       </div>
@@ -124,6 +124,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+import { mapStores } from 'pinia'
 import { useCellStore } from '@/stores/cellStore'
 import { broadcastStateSync } from '@/services/socket'
 import { WAVEFORM, CELL_CATEGORY, CELL_LABEL } from '@/constants/strings'
@@ -134,41 +135,45 @@ import { UNIT } from '@/constants/units'
 import { NEWTON_COOLING_LAMBDA, PENNES_BLOOD_COEFF } from '@/constants/physics'
 
 export default defineComponent({
-  setup() {
-    return { store: useCellStore(), WAVEFORM, CELL_CATEGORY, CELL_LABEL, ICON, UNIT, SLIDER_ADV }
-  },
-
   data() {
     return { open: false }
   },
 
   computed: {
-    orientationDeg(): number { return this.store.orientationDeg },
+    ...mapStores(useCellStore),
+    WAVEFORM()      { return WAVEFORM },
+    CELL_CATEGORY() { return CELL_CATEGORY },
+    CELL_LABEL()    { return CELL_LABEL },
+    ICON()          { return ICON },
+    UNIT()          { return UNIT },
+    SLIDER_ADV()    { return SLIDER_ADV },
+
+    orientationDeg(): number { return this.cellStore.orientationDeg },
 
     cosThetaDisplay(): string {
-      const pct = (this.store.cosThetaFactor * 100).toFixed(0)
-      return `${this.store.orientationDeg}° · cos ${pct}%`
+      const pct = (this.cellStore.cosThetaFactor * 100).toFixed(0)
+      return `${this.cellStore.orientationDeg}° · cos ${pct}%`
     },
 
     lysisNLogVal(): number {
-      return Math.log10(Math.max(1, this.store.lysisNPulses))
+      return Math.log10(Math.max(1, this.cellStore.lysisNPulses))
     },
 
     lysisNDisplay(): string {
-      const n = this.store.lysisNPulses
-      return `×${n} · ~${formatLysisTime(this.store.lysisDelayMs)}`
+      const n = this.cellStore.lysisNPulses
+      return `×${n} · ~${formatLysisTime(this.cellStore.lysisDelayMs)}`
     },
 
     tipOrientation(): string {
-      return tipOrientation(this.store.orientationDeg, this.store.cosThetaFactor)
+      return tipOrientation(this.cellStore.orientationDeg, this.cellStore.cosThetaFactor)
     },
 
     tipLysisN(): string {
       return tipLysisN({
-        lysisNPulses: this.store.lysisNPulses,
-        lysisDelayMs: this.store.lysisDelayMs,
-        dutyCycle:    this.store.dutyCycle,
-        pulseWidthNs: this.store.pulseWidthNs,
+        lysisNPulses: this.cellStore.lysisNPulses,
+        lysisDelayMs: this.cellStore.lysisDelayMs,
+        dutyCycle:    this.cellStore.dutyCycle,
+        pulseWidthNs: this.cellStore.pulseWidthNs,
       })
     },
 
@@ -178,52 +183,52 @@ export default defineComponent({
     tipDoubleShell(): string { return tipDoubleShell() },
 
     perfusionDisplay(): string {
-      const r = this.store.perfusionRate
+      const r = this.cellStore.perfusionRate
       return r === 0 ? this.$t('slider.perfusionInVitro') : `${r.toFixed(2)} ${UNIT.ML_PER_G_MIN}`
     },
 
     cellPackingDisplay(): string {
-      const phi = this.store.cellPackingFraction
+      const phi = this.cellStore.cellPackingFraction
       return phi === 0 ? this.$t('slider.cellPackingIsolated') : `${(phi * 100).toFixed(0)}${UNIT.PERCENT}`
     },
 
     tipPerfusionFull(): string {
-      const cp_h = this.store.healthy.specificHeatCapacity
-      const lambdaH = NEWTON_COOLING_LAMBDA + this.store.perfusionRate * PENNES_BLOOD_COEFF / cp_h
-      return tipPerfusion(this.store.perfusionRate, lambdaH)
+      const cp_h = this.cellStore.healthy.specificHeatCapacity
+      const lambdaH = NEWTON_COOLING_LAMBDA + this.cellStore.perfusionRate * PENNES_BLOOD_COEFF / cp_h
+      return tipPerfusion(this.cellStore.perfusionRate, lambdaH)
     },
 
     tipCellPackingFull(): string {
-      const sigma_e0 = this.store.sigma_e
-      const sigma_eff = this.store.effectiveSigmaE
-      return tipCellPacking(this.store.cellPackingFraction, sigma_e0, sigma_eff)
+      const sigma_e0 = this.cellStore.sigma_e
+      const sigma_eff = this.cellStore.effectiveSigmaE
+      return tipCellPacking(this.cellStore.cellPackingFraction, sigma_e0, sigma_eff)
     },
   },
 
   methods: {
     onOrientationInput(e: Event) {
-      this.store.setOrientationDeg(Number((e.target as HTMLInputElement).value))
+      this.cellStore.setOrientationDeg(Number((e.target as HTMLInputElement).value))
       broadcastStateSync()
     },
 
     onLysisNInput(e: Event) {
       const logVal = Number((e.target as HTMLInputElement).value)
-      this.store.setLysisNPulses(Math.round(Math.pow(10, logVal)))
+      this.cellStore.setLysisNPulses(Math.round(Math.pow(10, logVal)))
       broadcastStateSync()
     },
 
     setShellModel(enable: boolean) {
-      if (this.store.doubleShellEnabled !== enable) this.store.toggleDoubleShell()
+      if (this.cellStore.doubleShellEnabled !== enable) this.cellStore.toggleDoubleShell()
       broadcastStateSync()
     },
 
     onPerfusionInput(e: Event) {
-      this.store.setPerfusionRate(Number((e.target as HTMLInputElement).value))
+      this.cellStore.setPerfusionRate(Number((e.target as HTMLInputElement).value))
       broadcastStateSync()
     },
 
     onCellPackingInput(e: Event) {
-      this.store.setCellPackingFraction(Number((e.target as HTMLInputElement).value))
+      this.cellStore.setCellPackingFraction(Number((e.target as HTMLInputElement).value))
       broadcastStateSync()
     },
   },

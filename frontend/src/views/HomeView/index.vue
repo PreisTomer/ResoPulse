@@ -186,10 +186,12 @@ export default defineComponent({
     zones.forEach((zone: Element) => observer.observe(zone))
   },
 
+  computed: {
+    ICON() { return ICON },
+  },
+
   data() {
     return {
-      ICON,
-
       workflowSteps: ['wf1', 'wf2', 'wf3'],
 
       featureCards: [

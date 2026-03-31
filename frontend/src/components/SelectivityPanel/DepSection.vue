@@ -26,55 +26,54 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+import { mapStores } from 'pinia'
 import { useCellStore } from '@/stores/cellStore'
 import { formatFreqKHz } from '@/utils/format'
 
 export default defineComponent({
-  setup() {
-    return { store: useCellStore() }
-  },
-
   computed: {
+    ...mapStores(useCellStore),
+
     targetVal(): string {
-      const k = this.store.depTargetCmReal
+      const k = this.cellStore.depTargetCmReal
       return (k >= 0 ? '+' : '') + k.toFixed(3)
     },
     healthyVal(): string {
-      const k = this.store.depHealthyCmReal
+      const k = this.cellStore.depHealthyCmReal
       return (k >= 0 ? '+' : '') + k.toFixed(3)
     },
 
-    targetLabel(): string  { return this.store.depTargetCmReal  >= 0 ? this.$t('selectivity.depPdep') : this.$t('selectivity.depNdep') },
-    healthyLabel(): string { return this.store.depHealthyCmReal >= 0 ? this.$t('selectivity.depPdep') : this.$t('selectivity.depNdep') },
+    targetLabel(): string  { return this.cellStore.depTargetCmReal  >= 0 ? this.$t('selectivity.depPdep') : this.$t('selectivity.depNdep') },
+    healthyLabel(): string { return this.cellStore.depHealthyCmReal >= 0 ? this.$t('selectivity.depPdep') : this.$t('selectivity.depNdep') },
 
-    targetBadgeClass(): string  { return this.store.depTargetCmReal  >= 0 ? 'dep-section__badge--pdep' : 'dep-section__badge--ndep' },
-    healthyBadgeClass(): string { return this.store.depHealthyCmReal >= 0 ? 'dep-section__badge--pdep' : 'dep-section__badge--ndep' },
-    targetKClass(): string      { return this.store.depTargetCmReal  >= 0 ? 'dep-section__k--pdep'    : 'dep-section__k--ndep' },
-    healthyKClass(): string     { return this.store.depHealthyCmReal >= 0 ? 'dep-section__k--pdep'    : 'dep-section__k--ndep' },
+    targetBadgeClass(): string  { return this.cellStore.depTargetCmReal  >= 0 ? 'dep-section__badge--pdep' : 'dep-section__badge--ndep' },
+    healthyBadgeClass(): string { return this.cellStore.depHealthyCmReal >= 0 ? 'dep-section__badge--pdep' : 'dep-section__badge--ndep' },
+    targetKClass(): string      { return this.cellStore.depTargetCmReal  >= 0 ? 'dep-section__k--pdep'    : 'dep-section__k--ndep' },
+    healthyKClass(): string     { return this.cellStore.depHealthyCmReal >= 0 ? 'dep-section__k--pdep'    : 'dep-section__k--ndep' },
 
     forceScaleLabel(): string {
-      const s = this.store.depForceScale
+      const s = this.cellStore.depForceScale
       return s >= 0.1 ? s.toFixed(2) : s.toExponential(1)
     },
 
-    targetDirLabel(): string  { return this.store.depTargetCmReal  >= 0 ? this.$t('selectivity.depPdepDir') : this.$t('selectivity.depNdepDir') },
-    healthyDirLabel(): string { return this.store.depHealthyCmReal >= 0 ? this.$t('selectivity.depPdepDir') : this.$t('selectivity.depNdepDir') },
+    targetDirLabel(): string  { return this.cellStore.depTargetCmReal  >= 0 ? this.$t('selectivity.depPdepDir') : this.$t('selectivity.depNdepDir') },
+    healthyDirLabel(): string { return this.cellStore.depHealthyCmReal >= 0 ? this.$t('selectivity.depPdepDir') : this.$t('selectivity.depNdepDir') },
 
     targetXover(): string  {
-      const f = this.store.depTargetCrossoverKHz
+      const f = this.cellStore.depTargetCrossoverKHz
       return f > 0 ? formatFreqKHz(f) : this.$t('selectivity.depCrossNone')
     },
     healthyXover(): string {
-      const f = this.store.depHealthyCrossoverKHz
+      const f = this.cellStore.depHealthyCrossoverKHz
       return f > 0 ? formatFreqKHz(f) : this.$t('selectivity.depCrossNone')
     },
 
     targetXover2(): string {
-      const f = this.store.depTargetSecondCrossoverKHz
+      const f = this.cellStore.depTargetSecondCrossoverKHz
       return f > 0 ? formatFreqKHz(f) : ''
     },
     healthyXover2(): string {
-      const f = this.store.depHealthySecondCrossoverKHz
+      const f = this.cellStore.depHealthySecondCrossoverKHz
       return f > 0 ? formatFreqKHz(f) : ''
     },
   },

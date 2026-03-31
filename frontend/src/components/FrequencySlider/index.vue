@@ -39,6 +39,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+import { mapStores } from 'pinia'
 import { useCellStore } from '@/stores/cellStore'
 import { THERMAL_LEVEL } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
@@ -54,17 +55,17 @@ import AdvancedSection from './AdvancedSection.vue'
 export default defineComponent({
   components: { TitleRow, ThermalBanner, MediumRow, FreqRow, FieldRow, ProtocolSection, AdvancedSection },
 
-  setup() {
-    return { store: useCellStore(), ICON, THERMAL_LEVEL }
-  },
-
   computed: {
-    isResonanceMode(): boolean { return this.store.isResonanceMode },
+    ...mapStores(useCellStore),
+    ICON()         { return ICON },
+    THERMAL_LEVEL() { return THERMAL_LEVEL },
 
-    sliderRanges(): SliderRange { return this.store.sliderRanges },
+    isResonanceMode(): boolean { return this.cellStore.isResonanceMode },
+
+    sliderRanges(): SliderRange { return this.cellStore.sliderRanges },
 
     maxSteadyTemp(): number {
-      return Math.max(this.store.healthySteadyStateTemp, this.store.targetSteadyStateTemp)
+      return Math.max(this.cellStore.healthySteadyStateTemp, this.cellStore.targetSteadyStateTemp)
     },
 
     thermalDangerLevel(): 'safe' | 'hyperthermic' | 'denaturing' | 'vaporizing' {

@@ -53,6 +53,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+import { mapStores } from 'pinia'
 import { useUserPresetsStore } from '@/stores/userPresetsStore'
 import type { UserCellPreset } from '@/stores/userPresetsStore'
 import { useCellStore } from '@/stores/cellStore'
@@ -122,6 +123,7 @@ export default defineComponent({
   },
 
   computed: {
+    ...mapStores(useUserPresetsStore, useCellStore),
     presetsStore() { return useUserPresetsStore() },
     cellStore()    { return useCellStore() },
 

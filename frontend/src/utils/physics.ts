@@ -2,7 +2,7 @@
 
 // Biophysics utilities - Schwan single-shell model, SAR, nsEP, acoustic resonance, EM skin depth
 import type { CellConfig } from '@/types/cell'
-import { SCHWAN_SPHERE_FACTOR, WF_CW, EPSILON_R_CYTOPLASM, SIGMA_MEMBRANE_SI, TWO_PI, POP_LYSIS_GAUSS_N, POP_LYSIS_GAUSS_Z_MAX } from '@/constants/physics'
+import { SCHWAN_SPHERE_FACTOR, WF_CW, EPSILON_R_CYTOPLASM, SIGMA_MEMBRANE_SI, TWO_PI, POP_LYSIS_GAUSS_N, POP_LYSIS_GAUSS_Z_MAX, BODY_TEMP_C, TEMP_EP_COEFF, TEMP_EP_CLAMP_MIN } from '@/constants/physics'
 
 export const EPSILON_0 = 8.854187817e-12 // F/m
 
@@ -236,6 +236,14 @@ export function computeResonantDisruption(
 ): number {
   if (thresholdVcm <= 0) return 0
   return (fieldVcm / thresholdVcm) * computeResonantLineshape(resonantFreqGHz, Q, freqHz)
+}
+
+// ── Electroporation threshold temperature correction ──────────────────────────
+
+// Vth_eff = Vth × clamp(1 − 0.003×(T−37), 0.70, ∞). Weaver 1996; DeBruin 1999.
+export function tempCorrectedVth(nominalVth: number, tempC: number): number {
+  const correction = Math.max(TEMP_EP_CLAMP_MIN, 1 - TEMP_EP_COEFF * Math.max(0, tempC - BODY_TEMP_C))
+  return nominalVth * correction
 }
 
 // ── Population lysis fraction (log-normal size distribution) ─────────────────

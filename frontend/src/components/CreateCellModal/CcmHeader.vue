@@ -3,7 +3,7 @@
   <div class="ccm-header">
     <div class="ccm-header__row">
       <span class="ccm-header__title">{{ $t('userPresets.modalTitle') }}</span>
-      <button class="ccm-header__close" @click="$emit('cancel')">&#x2715;</button>
+      <button class="ccm-header__close" @click="$emit('cancel')">{{ ICON.CLOSE }}</button>
     </div>
     <p class="ccm-header__sub">{{ $t('userPresets.modalSub') }}</p>
   </div>
@@ -11,11 +11,16 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+import { ICON } from '@/constants/icons'
 
 export default defineComponent({
   name: 'CcmHeader',
 
   emits: ['cancel'],
+
+  data() {
+    return { ICON }
+  },
 })
 </script>
 
