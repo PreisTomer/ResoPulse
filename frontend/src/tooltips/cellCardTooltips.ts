@@ -2,6 +2,7 @@
 
 // Tooltip builders for CellCard. Pure — no Vue dependency.
 
+import { MEDIA } from '@/constants/media'
 import { CELL_STATE, CELL_TYPE, WAVEFORM, EXPERIMENTAL_BASIS } from '@/constants/strings'
 import { UNIT } from '@/constants/units'
 import { computeTau } from '@/utils/physics'
@@ -133,7 +134,7 @@ export function tipDep(opts: { isPdep: boolean; kVal: number; crossoverKHz: numb
   if (opts.crossoverKHz > 0) {
     crossStr = `Crossover frequency where force reverses: ${opts.crossoverKHz.toFixed(0)} ${UNIT.KHZ}`
   } else if (opts.sigmaI < opts.sigmaE) {
-    crossStr = `No crossover in range. Cell conductivity (σ_i = ${opts.sigmaI.toFixed(2)} ${UNIT.S_PER_M}) is lower than the medium (σ_e = ${opts.sigmaE.toFixed(2)} ${UNIT.S_PER_M}), so nDEP persists at all frequencies. Switch to a lower-conductivity EP buffer (tissue 0.4 S/m, water 0.001 ${UNIT.S_PER_M}) to access a pDEP regime.`
+    crossStr = `No crossover in range. Cell conductivity (σ_i = ${opts.sigmaI.toFixed(2)} ${UNIT.S_PER_M}) is lower than the medium (σ_e = ${opts.sigmaE.toFixed(2)} ${UNIT.S_PER_M}), so nDEP persists at all frequencies. Switch to a lower-conductivity EP buffer (${MEDIA.tissue.name} ${MEDIA.tissue.conductivity} ${UNIT.S_PER_M}, ${MEDIA.water.name} ${MEDIA.water.conductivity} ${UNIT.S_PER_M}) to access a pDEP regime.`
   } else {
     crossStr = `No crossover in range. Cell conductivity (σ_i = ${opts.sigmaI.toFixed(2)} ${UNIT.S_PER_M}) exceeds medium (σ_e = ${opts.sigmaE.toFixed(2)} ${UNIT.S_PER_M}), so pDEP persists at all accessible frequencies.`
   }

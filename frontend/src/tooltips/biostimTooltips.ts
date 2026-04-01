@@ -1,6 +1,7 @@
 // Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 
 // Biomodulation panel tooltip builders. Pure — no store access.
+import { THRESHOLDS } from '@/constants/physics'
 
 export function tipBiomodScore(params: { bms: string }): string {
   const { bms } = params
@@ -12,14 +13,15 @@ Weighted combination of the three sub-threshold mechanisms:
 
 export function tipBiomodSI(params: { si: string; dr: string }): string {
   const { si, dr } = params
-  const optDrLow = '5', optDrHigh = '40'
+  const { BIOSTIM_DR_OPT_LOW_PCT: lo, BIOSTIM_DR_OPT_HIGH_PCT: hi, NOURISHING } = THRESHOLDS
+  const peakPct = (NOURISHING / 2 * 100).toFixed(0)
   return `<strong>① Sub-threshold Stimulation Index: <span class="tip-val">${si}%</span></strong>
-DR = ${dr}% of lysis threshold (optimal: ${optDrLow}-${optDrHigh}%)
+DR = ${dr}% of lysis threshold (optimal: ${lo}-${hi}%)
 Mechanism: sub-threshold Vm oscillations activate PIEZO1 and
 voltage-gated Ca²⁺ channels → Ca²⁺ influx, growth factor release,
 cytoskeletal remodelling, without membrane perforation.
-Model: SI = 4·r·(1−r)   r = DR / 0.45   (quadratic bell, peak at 22%)
-<span class="tip-note">Raise field intensity to push DR into 20-40% range for peak SI.\\nAbove 45% DR the healthy membrane enters the stress regime.</span>`
+Model: SI = 4·r·(1−r)   r = DR / ${NOURISHING}   (quadratic bell, peak at ${peakPct}%)
+<span class="tip-note">Raise field intensity to push DR into 20-40% range for peak SI.\\nAbove ${NOURISHING * 100}% DR the healthy membrane enters the stress regime.</span>`
 }
 
 export function tipBiomodMTE(params: {
@@ -29,14 +31,15 @@ export function tipBiomodMTE(params: {
   optCouplingFreqLabel: string
 }): string {
   const { mte, freqLabel, fcLabel, optCouplingFreqLabel } = params
+  const couplingPct = THRESHOLDS.MTE_COUPLING_THRESHOLD_PCT
   return `<strong>② Frequency Coupling (MTE): <span class="tip-val">${mte}%</span></strong>
 f = ${freqLabel} · fc = ${fcLabel}
 Mechanism: at f ≪ fc the applied field fully couples across the membrane
 (quasi-DC regime). Above fc the membrane acts as a capacitive shield:
 ωτ ≫ 1 → Vm → 0 → less stimulation per V/cm.
 Model: MTE = 1 / √(1 + (f/fc)²) , identical to Schwan roll-off
-Optimal: ${optCouplingFreqLabel} for ≥70% coupling efficiency
-<span class="tip-note">Reduce carrier frequency toward 10-50 kHz to maximise coupling.\\nTarget cell disruption also scales with Vm, so lower frequency\\nbenefits selectivity only if R_T/R_H > 1 (cancer vs normal).</span>`
+Optimal: ${optCouplingFreqLabel} for ≥${couplingPct}% coupling efficiency
+<span class="tip-note">Reduce carrier frequency to stay below fc to maximise coupling.\\nTarget cell disruption also scales with Vm, so lower frequency\\nbenefits selectivity only if R_T/R_H > 1 (cancer vs normal).</span>`
 }
 
 export function tipBiomodMA(params: { ma: string; T: string }): string {

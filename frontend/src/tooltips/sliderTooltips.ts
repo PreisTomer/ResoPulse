@@ -3,7 +3,7 @@
 // Tooltip builders for FrequencySlider. Pure — no Vue dependency.
 
 import { MEDIA } from '@/constants/media'
-import { DEFAULT_CAPSID_Q, LYSIS_FIELD_SENTINEL, THRESHOLDS } from '@/constants/physics'
+import { DEFAULT_CAPSID_Q, LYSIS_FIELD_SENTINEL, THRESHOLDS, NEWTON_COOLING_LAMBDA, PENNES_BLOOD_COEFF, BLOOD_DENSITY_KG_M3, BLOOD_SPECIFIC_HEAT_J_KGK } from '@/constants/physics'
 import { CELL_CATEGORY, THERMAL_LEVEL } from '@/constants/strings'
 import { UNIT } from '@/constants/units'
 import { formatLysisTime } from '@/utils/format'
@@ -117,18 +117,26 @@ Below fc → quasi-DC regime, Vm at maximum
 Above fc → Vm rolls off toward zero`
 }
 
-export function tipFcSub(): string {
+export function tipFcSub(params: {
+  targetLabel: string
+  healthyLabel: string
+  targetFcDisplay: string
+  healthyFcDisplay: string
+  targetCategory: string
+}): string {
+  const { targetLabel, healthyLabel, targetFcDisplay, healthyFcDisplay, targetCategory } = params
+  const virionNote = targetCategory === CELL_CATEGORY.VIRUS
+    ? `\n<span class="tip-note">Virion fc is σ_i-limited; Schwan model is an approximation for virions.</span>`
+    : ''
   return `<strong>Characteristic Frequency  fc = 1 / (2πτ)</strong>
 At f = fc,  Vm = 0.707 × Vm_DC  (−3 dB point)
-τ = R·Cm·(2σ_e+σ_i)/(2σ_e·σ_i)  [Kotnik & Miklavcic 2000]
+τ = R·Cm·(2σ_e+σ_i)/(2σ_e·σ_i)  [Kotnik &amp; Miklavcic 2000]
 
-Depends on cell size and membrane properties:
-  Reference cells: ~1.1-1.4 MHz  (hepatocyte ~1.08 MHz)
-  Cancer cells:    ~0.5-1.4 MHz  (adenocarcinoma ~0.49 MHz, HL-60 ~1.35 MHz)
-  Bacteria:        ~11-49 MHz  (E. coli ~11 MHz, MRSA ~49 MHz; σ_i = 0.3 S/m)
-  Virions:         fc ~0.6-0.75 MHz (σ_i-limited; Schwan model is approximate for virions)
-
-Note: for cancer/normal cell pairs where τ_T > τ_H (typical),
+Current pair:
+  fc(T) = <span class="tip-val">${targetFcDisplay}</span>  (${targetLabel})
+  fc(H) = <span class="tip-val">${healthyFcDisplay}</span>  (${healthyLabel})
+${virionNote}
+Note: for pairs where τ_T > τ_H (target larger/higher Cm),
   maximum selectivity is at quasi-DC. Above fc(T) selectivity decreases.`
 }
 
@@ -344,17 +352,36 @@ Default mode. Applicable to all cell types.
 Ref: Kotnik &amp; Miklavcic, Biophys. J. 79:670 (2000)`
 }
 
-export function tipDoubleShell(): string {
+export function tipDoubleShell(params: {
+  targetLabel: string
+  healthyLabel: string
+  targetVmNucMv: number
+  healthyVmNucMv: number
+  targetFpeakKHz: number
+  healthyFpeakKHz: number
+  freqDisplay: string
+  fieldDisplay: string
+  hasTargetNucleus: boolean
+  hasHealthyNucleus: boolean
+}): string {
+  const { targetLabel, healthyLabel, targetVmNucMv, healthyVmNucMv, targetFpeakKHz, healthyFpeakKHz,
+          freqDisplay, fieldDisplay, hasTargetNucleus, hasHealthyNucleus } = params
+  const fmtMhz = (khz: number) => khz >= 1000 ? `${(khz / 1000).toFixed(2)} MHz` : `${khz.toFixed(0)} kHz`
+  const targetRow = hasTargetNucleus
+    ? `  ${targetLabel}:  Vm_nuc = <span class="tip-val">${targetVmNucMv.toFixed(0)} mV</span>  (f_peak = ${fmtMhz(targetFpeakKHz)})`
+    : `  ${targetLabel}:  <span class="tip-note">no nuclear params</span>`
+  const healthyRow = hasHealthyNucleus
+    ? `  ${healthyLabel}:  Vm_nuc = <span class="tip-val">${healthyVmNucMv.toFixed(0)} mV</span>  (f_peak = ${fmtMhz(healthyFpeakKHz)})`
+    : `  ${healthyLabel}:  <span class="tip-note">no nuclear params</span>`
   return `<strong>+ Nuclear Envelope (Double-Shell)</strong>
 Adds nuclear membrane Vm as a two-pole bandpass function.
 Vm_nuc peaks at f_peak = 1/(2π√(τ_out·τ_ne))
 τ_ne = R_nuc·Cm_ne·(2σ_i+σ_np)/(2σ_i·σ_np)  [σ_i = cytoplasm, external medium for nucleus]
-Cancer nuclei: thinner NE, lower σ_ne threshold → additional selectivity axis.
+Cancer nuclei: thinner NE, lower σ_ne threshold, additional selectivity axis.
 
-Expected at 417 kHz / 150 V/cm / saline:
-  Hepatocyte:    Vm_nuc ≈ 40 mV  (f_peak ≈ 1.66 MHz)
-  Adeno CA:      Vm_nuc ≈ 113 mV (f_peak ≈ 0.87 MHz)
-  GBM:           Vm_nuc ≈ 87 mV  (f_peak ≈ 1.05 MHz)
+At ${freqDisplay} / ${fieldDisplay}:
+${targetRow}
+${healthyRow}
 
 Ref: Kotnik &amp; Miklavcic, Biophys. J. 90:480 (2006)`
 }
@@ -370,18 +397,19 @@ export function tipPerfusion(perfusionRate: number, effLambdaH: number): string 
     : perfusionRate < 1.5 ? 'moderate perfusion (muscle/liver)'
     : perfusionRate < 3   ? 'high perfusion (brain/heart)'
     : 'very high perfusion (kidney)'
-  const pct = ((effLambdaH - 0.02) / 0.02 * 100).toFixed(0)
+  const lambdaPerf = effLambdaH - NEWTON_COOLING_LAMBDA
+  const pct = (lambdaPerf / NEWTON_COOLING_LAMBDA * 100).toFixed(0)
   return `<strong>Blood Perfusion Rate ω_b</strong>
 Current: <span class="tip-val">${perfusionRate.toFixed(2)} mL/(g·min)</span>, ${label}
 
 Pennes bioheat equation (1948):
   λ_eff = λ_Newton + λ_perf
   λ_perf = ω_b × ρ_b × c_b / cp
-         = ω_b × 63.9 / cp  [1/s]
-  ρ_b = 1060 kg/m³  ·  c_b = 3617 J/(kg·K)
+         = ω_b × ${PENNES_BLOOD_COEFF} / cp  [1/s]
+  ρ_b = ${BLOOD_DENSITY_KG_M3} kg/m³  ·  c_b = ${BLOOD_SPECIFIC_HEAT_J_KGK} J/(kg·K)
 
-λ_Newton = 0.02 /s  (surface/diffusion cooling)
-λ_perf   = ${(effLambdaH - 0.02).toFixed(4)} /s  (+${pct}% additional cooling)
+λ_Newton = ${NEWTON_COOLING_LAMBDA} /s  (surface/diffusion cooling)
+λ_perf   = ${lambdaPerf.toFixed(4)} /s  (+${pct}% additional cooling)
 
 T_ss = 37 + SAR_eff / (λ_eff × cp)
 

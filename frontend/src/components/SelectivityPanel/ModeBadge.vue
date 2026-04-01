@@ -147,6 +147,9 @@ export default defineComponent({
         optKhz:               khz,
         optSel:               sel,
         beyondRange:          this.isBeyondSliderRange,
+        tiHighFreqLimit:      this.cellStore.tiHighFreqLimit,
+        healthyRadius:        this.cellStore.healthy.radius,
+        healthyLabel:         this.cellStore.healthy.label,
       })
     },
   },

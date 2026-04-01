@@ -180,7 +180,22 @@ export default defineComponent({
     tipLysisNFull(): string  { return this.tipLysisN + tipLysisNNote() },
     tipShellModel(): string  { return tipShellModel() },
     tipSingleShell(): string { return tipSingleShell() },
-    tipDoubleShell(): string { return tipDoubleShell() },
+    tipDoubleShell(): string {
+      return tipDoubleShell({
+        targetLabel:       this.cellStore.target.label,
+        healthyLabel:      this.cellStore.healthy.label,
+        targetVmNucMv:     this.cellStore.targetNuclearVm * 1000,
+        healthyVmNucMv:    this.cellStore.healthyNuclearVm * 1000,
+        targetFpeakKHz:    this.cellStore.targetNuclearFpeakKHz,
+        healthyFpeakKHz:   this.cellStore.healthyNuclearFpeakKHz,
+        freqDisplay:       this.cellStore.currentBroadcastFrequency >= 1000
+          ? `${(this.cellStore.currentBroadcastFrequency / 1000).toFixed(2)} MHz`
+          : `${this.cellStore.currentBroadcastFrequency} kHz`,
+        fieldDisplay:      `${this.cellStore.fieldIntensity} V/cm`,
+        hasTargetNucleus:  !!this.cellStore.target.nuclearRadius,
+        hasHealthyNucleus: !!this.cellStore.healthy.nuclearRadius,
+      })
+    },
 
     perfusionDisplay(): string {
       const r = this.cellStore.perfusionRate

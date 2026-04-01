@@ -29,8 +29,12 @@ export function tipSelectivity(params: {
   sel: number
   vmSel: number
   isResonanceTarget: boolean
+  tiDc: number
+  tiHighFreqLimit: number
+  targetLabel: string
+  healthyLabel: string
 }): string {
-  const { sel, vmSel, isResonanceTarget } = params
+  const { sel, vmSel, isResonanceTarget, tiDc, tiHighFreqLimit, targetLabel, healthyLabel } = params
   const { SEL_STRONG: ss, SEL_MARGINAL: sm } = THRESHOLDS
   const quality = sel >= ss
     ? '<span class="tip-ok">Strong selectivity window</span>'
@@ -53,20 +57,26 @@ At f_res(target), healthy disruption ≈ 0 → TI → ∞
 Ref: Tsen et al. (2007); Dykeman &amp; Sankey (2008)
 <span class="tip-warn">${ICON.WARNING} Enveloped viruses (Influenza, SARS-CoV-2): lipid envelope has no rigid-shell resonance (Q≈1). f_res/Q/E_thr values are theoretical extrapolations, not experimentally validated.</span>`
   }
-  const vmStr = vmSel >= 99 ? ICON.INFINITY : vmSel.toFixed(2)
+  const vmStr    = vmSel >= 99 ? ICON.INFINITY : vmSel.toFixed(2)
+  const tiDcStr  = tiDc  >= 99 ? ICON.INFINITY : tiDc.toFixed(2)
+  const tiHfStr  = tiHighFreqLimit.toFixed(2)
+  const tiHfNote = tiHighFreqLimit < 1.0
+    ? `<span class="tip-warn"> (sub-unity — counter-selective at high f)</span>`
+    : tiHighFreqLimit < 1.5 ? ` (marginal at high f)` : ''
   return `<strong>Selectivity Index (TI) = (Vm_T/Vth_T) / (Vm_H/Vth_H)</strong>
-Current: <span class="tip-val">×${selStr}</span>
+Current: <span class="tip-val">×${selStr}</span>  ·  ${targetLabel} vs ${healthyLabel}
 
 ${quality}
 ≥ ${ss} → strong window (green)
 ${sm} - ${ss} → marginal (amber)
 < ${sm} → non-selective (red)
 
-TI > 1 → target proportionally closer to lysis threshold than healthy cell.
-For adeno/hepatocyte at DC: TI = (15µm×1.1V)/(10µm×0.70V) = <span class="tip-val">2.36×</span>
+TI bounds for current pair:
+  Quasi-DC ceiling:   ×${tiDcStr}  = (R_T·Vth_H)/(R_H·Vth_T)
+  High-f limit:       ×${tiHfStr}${tiHfNote}
 
-<strong>Raw Vm selectivity</strong> = Vm_T / Vm_H = R_T/R_H at quasi-DC
-Current: <span class="tip-val">×${vmStr}</span>  (cancer/normal DC limit: 1.5×)
+<strong>Raw Vm ratio</strong> = Vm_T / Vm_H (current frequency)
+Current: <span class="tip-val">×${vmStr}</span>
 TI incorporates lysis thresholds, more predictive for protocol selectivity than Vm ratio alone.`
 }
 
@@ -96,16 +106,20 @@ export function tipOptimal(params: {
   optKhz: number
   optSel: number
   beyondRange: boolean
+  tiHighFreqLimit: number
+  healthyRadius: number
+  healthyLabel: string
 }): string {
-  const { isResonanceTarget, resonantFreqGHz, resonantThresholdVcm, capsidQ, optKhz, optSel, beyondRange } = params
+  const { isResonanceTarget, resonantFreqGHz, resonantThresholdVcm, capsidQ, optKhz, optSel, beyondRange, tiHighFreqLimit, healthyRadius, healthyLabel } = params
   if (isResonanceTarget) {
     const label = formatFreqKHz((resonantFreqGHz ?? 0) * 1e6)
+    const rStr  = healthyRadius >= 1 ? `${healthyRadius.toFixed(1)} µm` : `${(healthyRadius * 1000).toFixed(0)} nm`
     return `<strong>Resonant Frequency: f_res = ${label}</strong>
 Acoustic/mechanical resonance: disruption ratio peaks at 1.0 at f_res.
 Lorentzian lineshape L(f) = 1 / √(1 + (Q·(f/f₀ − f₀/f))²)
 
 E_threshold = ${resonantThresholdVcm} V/cm  ·  Q = ${capsidQ ?? DEFAULT_CAPSID_Q}
-Healthy cells (R ≈ 10 µm) have no GHz resonance → selectivity → ${ICON.INFINITY}
+${healthyLabel} (R = ${rStr}) has no GHz resonance → selectivity → ${ICON.INFINITY}
 
 <span class="tip-ok">Click to snap cursor to f_res</span>
 Ref: Tsen et al. (2007); Dykeman &amp; Sankey (2008)
@@ -124,8 +138,8 @@ Peak: <span class="${cls}">${label} · ×${optSel.toFixed(2)}</span>
 ${snapNote}
 
 Physics:
-  f ≪ fc_T and fc_H : sel = R_T/R_H  (quasi-DC; maximum for cancer/normal pairs)
-  When τ_T > τ_H (cancer larger): sel decreases above fc(T), target rolls off first
-  f ≫ fc_H : sel → (R_T·τ_H)/(R_H·τ_T) , for adeno/hepatocyte ≈ 0.68× (sub-unity)
+  f ≪ fc_T and fc_H : sel = (R_T·Vth_H)/(R_H·Vth_T)  (quasi-DC ceiling)
+  When τ_T > τ_H (target larger/higher Cm): sel decreases above fc(T), target rolls off first
+  f ≫ fc_H : sel → (R_T·τ_H·Vth_H)/(R_H·τ_T·Vth_T) = ×${tiHighFreqLimit.toFixed(2)} at current pair
 Note: virion fc ~0.6-0.75 MHz per Schwan model (σ_i-limited; model approximate for virions)`
 }

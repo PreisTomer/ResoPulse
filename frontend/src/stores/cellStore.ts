@@ -9,7 +9,7 @@ import { MEDIA } from '@/constants/media'
 import type { CellConfig, CellState } from '@/types/cell'
 import type { MediumKey } from '@/types/media'
 import { SLIDER_RANGES, type SliderRange } from '@/constants/sliderBounds'
-import { computeSchwan, computeSAR, computeFc, computeTau, computeResonantDisruption, computeNuclearVm, computePulseStepResponse, computeSkinDepthMm, computeDepCmReal, computeDepCrossoverKHz, computeDepSecondCrossoverKHz, computePopulationLysisFraction, safeRatio, tempCorrectedVth } from '@/utils/physics'
+import { computeSchwan, computeSAR, computeFc, computeTau, computeNuclearTau, computeResonantDisruption, computeNuclearVm, computePulseStepResponse, computeSkinDepthMm, computeDepCmReal, computeDepCrossoverKHz, computeDepSecondCrossoverKHz, computePopulationLysisFraction, safeRatio, tempCorrectedVth } from '@/utils/physics'
 import { CELL_CATEGORY, CELL_STATE, CHART_MODE, WAVEFORM, CELL_TYPE, FREQ_REGIME, DEFAULT_SESSION_NAME } from '@/constants/strings'
 import { DEFAULT_LYSIS_N_PULSES, DEFAULT_ORIENTATION_DEG } from '@/constants/experimentDefaults'
 import { MEDIUM_SPECIFIC_HEAT_J_KG_K } from '@/constants/cuvette'
@@ -369,6 +369,26 @@ export const useCellStore = defineStore('cell', {
       return computeNuclearVm(state.target, state.currentBroadcastFrequency, state.fieldIntensity, sigma_e, cosT)
     },
 
+    healthyNuclearFpeakKHz(): number {
+      const state   = this as unknown as CellStoreState
+      if (!state.healthy.nuclearRadius) return 0
+      const sigma_e = this.effectiveSigmaE
+      const tauOut  = computeTau(state.healthy, sigma_e)
+      const tauNe   = computeNuclearTau(state.healthy, sigma_e)
+      if (tauOut <= 0 || tauNe <= 0) return 0
+      return 1 / (TWO_PI * Math.sqrt(tauOut * tauNe) * 1e3)
+    },
+
+    targetNuclearFpeakKHz(): number {
+      const state   = this as unknown as CellStoreState
+      if (!state.target.nuclearRadius) return 0
+      const sigma_e = this.effectiveSigmaE
+      const tauOut  = computeTau(state.target, sigma_e)
+      const tauNe   = computeNuclearTau(state.target, sigma_e)
+      if (tauOut <= 0 || tauNe <= 0) return 0
+      return 1 / (TWO_PI * Math.sqrt(tauOut * tauNe) * 1e3)
+    },
+
     healthyNuclearDisruptionRatio(): number {
       const state     = this as unknown as CellStoreState
       const vth       = tempCorrectedVth(state.healthy.nuclearThresholdVoltage ?? THRESHOLDS.NUCLEAR_VM_DEFAULT, state.healthyTemp)
@@ -629,6 +649,19 @@ export const useCellStore = defineStore('cell', {
       const vthH = state.healthy.thresholdVoltage
       if (vthT <= 0) return 0
       return (state.target.radius * vthH) / (state.healthy.radius * vthT)
+    },
+
+    // High-frequency TI limit: (R_T·τ_H·Vth_H) / (R_H·τ_T·Vth_T). Sub-unity when target rolls
+    // off faster than healthy (larger R or higher Cm). Valid only in Schwan/IRE mode.
+    tiHighFreqLimit(): number {
+      const state = this as unknown as CellStoreState
+      const sigma_e = this.effectiveSigmaE
+      const tauT = computeTau(state.target,  sigma_e)
+      const tauH = computeTau(state.healthy, sigma_e)
+      const vthT = state.target.thresholdVoltage
+      const vthH = state.healthy.thresholdVoltage
+      if (tauT <= 0 || vthT <= 0) return 0
+      return (state.target.radius * tauH * vthH) / (state.healthy.radius * tauT * vthT)
     },
 
     sliderRanges(): SliderRange {

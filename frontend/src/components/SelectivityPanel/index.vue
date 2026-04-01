@@ -176,6 +176,10 @@ export default defineComponent({
         sel:               this.selectivity,
         vmSel:             this.vmSelectivityRatio,
         isResonanceTarget: this.isResonanceTarget,
+        tiDc:              this.cellStore.tiQuasiDc,
+        tiHighFreqLimit:   this.cellStore.tiHighFreqLimit,
+        targetLabel:       this.cellStore.target.label,
+        healthyLabel:      this.cellStore.healthy.label,
       })
     },
 

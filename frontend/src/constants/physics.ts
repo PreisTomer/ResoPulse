@@ -11,6 +11,10 @@ export const BODY_TEMP_C = 37
 // Newton surface cooling rate λ [1/s] (empirical, ~0.02 s⁻¹)
 export const NEWTON_COOLING_LAMBDA = 0.02
 
+// Blood density [kg/m³] — Pennes 1948
+export const BLOOD_DENSITY_KG_M3 = 1060
+// Blood specific heat [J/(kg·K)] — Pennes 1948
+export const BLOOD_SPECIFIC_HEAT_J_KGK = 3617
 // Pennes blood perfusion coefficient [J/(mL·°C)]: ρ_blood×c_blood/60000 = 1060×3617/60000 = 63.9
 export const PENNES_BLOOD_COEFF = 63.9
 
@@ -112,6 +116,11 @@ export const THRESHOLDS = {
   BMS_WEIGHT_SI:       0.55,
   BMS_WEIGHT_MTE:      0.25,
   BMS_WEIGHT_MA:       0.20,
+  // SI bell curve: SI = 4·r·(1−r), r = DR / NOURISHING; peak at r=0.5 → DR = NOURISHING/2 ≈ 22.5%
+  BIOSTIM_DR_OPT_LOW_PCT:  5,   // lower bound of the optimal SI stimulation window (% of lysis thr)
+  BIOSTIM_DR_OPT_HIGH_PCT: 40,  // upper bound of the optimal SI stimulation window (% of lysis thr)
+  // MTE coupling: 1/√(1+(f/fc)²) ≥ MTE_COUPLING_THRESHOLD requires f ≤ fc × factor
+  MTE_COUPLING_THRESHOLD_PCT: 70,  // minimum acceptable coupling efficiency (%)
 } as const
 
 export type ThresholdKey = keyof typeof THRESHOLDS

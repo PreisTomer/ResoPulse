@@ -208,7 +208,15 @@ export default defineComponent({
     },
 
     tipFreqLabel(): string       { return tipFreq(this.freqDisplay, this.targetFcDisplay, this.healthyFcDisplay) },
-    tipFcSubLabel(): string      { return tipFcSub() },
+    tipFcSubLabel(): string {
+      return tipFcSub({
+        targetLabel:      this.cellStore.target.label,
+        healthyLabel:     this.cellStore.healthy.label,
+        targetFcDisplay:  this.targetFcDisplay,
+        healthyFcDisplay: this.healthyFcDisplay,
+        targetCategory:   this.cellStore.targetCellCategory,
+      })
+    },
     tipOptimalBtnLabel(): string { return tipOptimalBtn(this.optimalBeyondRange) },
     tipSnapFcH(): string         { return this.$t('slider.tipSnapFcH', { fc: this.healthyFcDisplay }) },
     tipSnapFcT(): string         { return this.$t('slider.tipSnapFcT', { fc: this.targetFcDisplay }) },
