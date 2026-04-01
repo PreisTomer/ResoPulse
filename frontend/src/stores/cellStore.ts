@@ -613,6 +613,24 @@ export const useCellStore = defineStore('cell', {
       return !this.isResonanceMode && state.currentBroadcastFrequency < ELECTRODE_POLARIZATION_LIMIT_KHZ
     },
 
+    // True when σe is so low (e.g. distilled water, dense packing) that both cells' fc fall
+    // below the slider minimum. In this regime the slider always operates in the rolled-off
+    // 1/f zone, so the displayed TI underestimates the true quasi-DC selectivity.
+    fcBelowSliderMin(): boolean {
+      if (this.isResonanceMode) return false
+      if (this.targetCellCategory !== CELL_CATEGORY.MAMMALIAN) return false
+      return Math.min(this.healthyFc, this.targetFc) < this.sliderRanges.freqMin
+    },
+
+    // Quasi-DC TI ceiling: (R_T × Vth_H) / (R_H × Vth_T). PEF and H-FIRE cancel in the ratio.
+    tiQuasiDc(): number {
+      const state = this as unknown as CellStoreState
+      const vthT = state.target.thresholdVoltage
+      const vthH = state.healthy.thresholdVoltage
+      if (vthT <= 0) return 0
+      return (state.target.radius * vthH) / (state.healthy.radius * vthT)
+    },
+
     sliderRanges(): SliderRange {
       const cat = this.targetCellCategory
       if (this.isResonanceMode) {

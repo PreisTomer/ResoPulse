@@ -74,7 +74,11 @@ export default defineComponent({
 
     isBeyondSliderRange(): boolean {
       const { khz } = this.optimalFreqResult
-      return khz > this.cellStore.sliderRanges.freqMax || khz < this.cellStore.sliderRanges.freqMin
+      const { freqMin, freqMax } = this.cellStore.sliderRanges
+      // Also flag as beyond-range when both fc values are below slider min: optimal is at the
+      // scan floor (freqMin) but the true maximum lies below the accessible frequency range.
+      if (this.cellStore.fcBelowSliderMin) return true
+      return khz > freqMax || khz < freqMin
     },
 
     optimalNote(): string {
@@ -108,6 +112,12 @@ export default defineComponent({
           const res = t.resonantFreqGHz ? ` · Resonance mode (${t.resonantFreqGHz} GHz) available${ghzCaveat}` : ''
           return `${ICON.WARNING} E_lysis ≈ ${(tLysis / 1000).toFixed(1)} kV/cm, standard IRE impractical · Consider nsEP (pulse width slider)${res}`
         }
+      }
+      if (this.cellStore.fcBelowSliderMin) {
+        const fcT = this.cellStore.targetFc
+        const fcH = this.cellStore.healthyFc
+        const tiDc = this.cellStore.tiQuasiDc
+        return `${ICON.WARNING} fc(T) = ${formatFreqKHz(fcT)}, fc(H) = ${formatFreqKHz(fcH)} — both below slider minimum. Displayed TI is rolled-off and underestimates true quasi-DC selectivity (TI_DC = ${tiDc.toFixed(2)}×). Switch to saline or a higher-conductivity medium for accurate protocol calibration, then switch back to verify.`
       }
       if (ti > 0 && ti < 0.85) {
         return `${ICON.WARNING} TI = ${ti.toFixed(2)}×, healthy cell DR exceeds target at current settings · Adjust frequency or field to find a selective window`
