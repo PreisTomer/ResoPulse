@@ -159,7 +159,8 @@ export default defineComponent({
       { id: 'dmem',   sigma: MEDIA.dmem.conductivity.toFixed(3),   epsilonR: MEDIA.dmem.permittivity,   alphaT: (MEDIA.dmem.tempCoeff   * 100).toFixed(1), keyClass: 'datasets__primary-val' },
       { id: 'pbs',    sigma: MEDIA.pbs.conductivity.toFixed(3),    epsilonR: MEDIA.pbs.permittivity,    alphaT: (MEDIA.pbs.tempCoeff    * 100).toFixed(1), keyClass: 'datasets__primary-val' },
       { id: 'rpmi',   sigma: MEDIA.rpmi.conductivity.toFixed(3),   epsilonR: MEDIA.rpmi.permittivity,   alphaT: (MEDIA.rpmi.tempCoeff   * 100).toFixed(1), keyClass: '' },
-      { id: 'mhb',    sigma: MEDIA.mhb.conductivity.toFixed(3),    epsilonR: MEDIA.mhb.permittivity,    alphaT: (MEDIA.mhb.tempCoeff    * 100).toFixed(1), keyClass: '' },
+      { id: 'mhb',      sigma: MEDIA.mhb.conductivity.toFixed(3),      epsilonR: MEDIA.mhb.permittivity,      alphaT: (MEDIA.mhb.tempCoeff      * 100).toFixed(1), keyClass: '' },
+      { id: 'epbuffer', sigma: MEDIA.epbuffer.conductivity.toFixed(3), epsilonR: MEDIA.epbuffer.permittivity, alphaT: (MEDIA.epbuffer.tempCoeff * 100).toFixed(1), keyClass: 'datasets__dep-val' },
     ]
 
     return {

@@ -7,4 +7,4 @@ export interface MediaEntry {
   tempCoeff: number   // σ_e(T) = σ_e0 × (1 + tempCoeff × (T−37)) [1/°C]
 }
 
-export type MediumKey = 'saline' | 'blood' | 'tissue' | 'water' | 'dmem' | 'pbs' | 'rpmi' | 'mhb'
+export type MediumKey = 'saline' | 'blood' | 'tissue' | 'water' | 'dmem' | 'pbs' | 'rpmi' | 'mhb' | 'epbuffer'

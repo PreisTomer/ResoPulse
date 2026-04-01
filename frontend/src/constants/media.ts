@@ -9,13 +9,17 @@ import type { MediaEntry, MediumKey } from '@/types/media'
 // tempCoeff values [1/°C]: σ_e(T) = σ_e0 × (1 + tempCoeff × (T − 37))
 // Refs: Gabriel et al. (1996) for saline/blood/tissue/water; Foster & Schwan (1989)
 // Culture media (dmem, rpmi, mhb): dominated by NaCl/NaHCO₃ — approximated at 2%/°C
+// EP buffer: low-conductivity sucrose/glucose-based electroporation buffer.
+//   σ_e ≈ 0.14 S/m (Zimmermann 1982; Weaver & Chizmadzhev 1996 Table 1).
+//   Dramatically lengthens τ and lowers fc relative to saline — correct for in-vitro EP protocols.
 export const MEDIA: Record<MediumKey, MediaEntry> = {
-  saline: { name: 'Physiological Saline (0.9%)', conductivity: 1.5,   permittivity: 80, tempCoeff: 0.020 },
-  blood:  { name: 'Whole Blood',                  conductivity: 0.7,   permittivity: 64, tempCoeff: 0.017 },
-  tissue: { name: 'Soft Tissue',                   conductivity: 0.4,   permittivity: 70, tempCoeff: 0.015 },
-  water:  { name: 'Distilled Water',               conductivity: 0.001, permittivity: 80, tempCoeff: 0.028 },
-  dmem:   { name: 'DMEM',                          conductivity: 1.4,   permittivity: 79, tempCoeff: 0.020 },
-  pbs:    { name: 'PBS (pH 7.4)',                  conductivity: 1.54,  permittivity: 79, tempCoeff: 0.020 },
-  rpmi:   { name: 'RPMI 1640',                     conductivity: 1.3,   permittivity: 79, tempCoeff: 0.020 },
-  mhb:    { name: 'Mueller-Hinton Broth',          conductivity: 0.8,   permittivity: 78, tempCoeff: 0.019 },
+  saline:   { name: 'Physiological Saline (0.9%)', conductivity: 1.5,   permittivity: 80, tempCoeff: 0.020 },
+  blood:    { name: 'Whole Blood',                  conductivity: 0.7,   permittivity: 64, tempCoeff: 0.017 },
+  tissue:   { name: 'Soft Tissue',                   conductivity: 0.4,   permittivity: 70, tempCoeff: 0.015 },
+  water:    { name: 'Distilled Water',               conductivity: 0.001, permittivity: 80, tempCoeff: 0.028 },
+  dmem:     { name: 'DMEM',                          conductivity: 1.4,   permittivity: 79, tempCoeff: 0.020 },
+  pbs:      { name: 'PBS (pH 7.4)',                  conductivity: 1.54,  permittivity: 79, tempCoeff: 0.020 },
+  rpmi:     { name: 'RPMI 1640',                     conductivity: 1.3,   permittivity: 79, tempCoeff: 0.020 },
+  mhb:      { name: 'Mueller-Hinton Broth',          conductivity: 0.8,   permittivity: 78, tempCoeff: 0.019 },
+  epbuffer: { name: 'EP Buffer (low-conductivity)',  conductivity: 0.14,  permittivity: 78, tempCoeff: 0.020 },
 }

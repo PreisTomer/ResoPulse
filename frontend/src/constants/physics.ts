@@ -32,7 +32,10 @@ export const NEAR_ZERO_VM = 1e-12
 // SAR waveform factor for pulsed bipolar square wave: E²_rms = E²_peak
 export const WF_PULSED = 1.0
 
-// H-FIRE lysis threshold multiplier: bipolar charge cancellation raises threshold ~1.75×. Arena 2011; Sano 2015.
+// H-FIRE lysis threshold multiplier: bipolar burst charge cancellation reduces effective membrane charging,
+// raising the lysis threshold relative to unipolar IRE. Arena et al. (2011) BioMedical Engineering OnLine 10:102
+// report H-FIRE requiring ~1.5-2× higher voltage for equivalent ablation; Sano et al. (2015) Sci Rep 5:11168
+// report similar bipolar attenuation. 1.75 is the geometric midpoint of the experimental range (empirical).
 export const H_FIRE_THRESHOLD_MULTIPLIER = 1.75
 
 // Mild thermal activation peak temperature [°C] — bell peak in 37-42°C biomodulation window
@@ -51,6 +54,9 @@ export const LYSIS_FIELD_SENTINEL = 1e6
 export const MIN_PULSE_ENVELOPE = 1e-4
 
 // EP threshold temperature coefficient [1/°C]: Vth_eff = Vth×max(CLAMP_MIN, 1−coeff×(T−37)). ~−0.3%/°C.
+// Basis: Arrhenius pore-nucleation energy decreases as lipid bilayer fluidity increases with T.
+// Q₁₀ ≈ 1.3 for membrane pore formation (Weaver & Chizmadzhev 1996 Bioelectrochemistry 41:135) →
+// linearised first-order approximation of threshold shift in the 37-60°C physiological range.
 export const TEMP_EP_COEFF = 0.003
 
 // Lower clamp for Vth temperature correction — prevents unphysical zero/negative threshold.
@@ -116,6 +122,7 @@ export const THRESHOLDS = {
   BMS_WEIGHT_SI:       0.55,
   BMS_WEIGHT_MTE:      0.25,
   BMS_WEIGHT_MA:       0.20,
+  BMS_NOURISHING:      0.55,  // minimum biomod score for nourishing cell state
   // SI bell curve: SI = 4·r·(1−r), r = DR / NOURISHING; peak at r=0.5 → DR = NOURISHING/2 ≈ 22.5%
   BIOSTIM_DR_OPT_LOW_PCT:  5,   // lower bound of the optimal SI stimulation window (% of lysis thr)
   BIOSTIM_DR_OPT_HIGH_PCT: 40,  // upper bound of the optimal SI stimulation window (% of lysis thr)

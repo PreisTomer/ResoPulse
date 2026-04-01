@@ -83,10 +83,11 @@ export default defineComponent({
           let sel: number, tVmMv: string
 
           if (hasRes) {
-            // Resonance targets: acoustic mechanism, PEF does not apply.
+            // Resonance targets: acoustic capsid disruption — hfireMult does NOT apply.
+            // H-FIRE charge cancellation is an EP membrane-charging mechanism, not acoustic.
             // Active preset uses live targetTemp; others use BODY_TEMP_C (not live-simulated).
             const resTemp      = p.presetId === this.cellStore.target.id ? this.cellStore.targetTemp : BODY_TEMP_C
-            const effThreshold = tempCorrectedVth(pr.resonantThresholdVcm!, resTemp) * hfireMult
+            const effThreshold = tempCorrectedVth(pr.resonantThresholdVcm!, resTemp)
             const ratio = computeResonantDisruption(
               pr.resonantFreqGHz!,
               pr.capsidQ ?? DEFAULT_CAPSID_Q,

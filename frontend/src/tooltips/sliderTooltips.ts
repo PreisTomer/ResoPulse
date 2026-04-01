@@ -92,8 +92,10 @@ export function tipMediumKeys(): Record<string, string> {
     tissue: 'Soft tissue (low-perfusion region)',
     water:  'Distilled water: near-zero coupling',
     dmem:   'Dulbecco\'s Modified Eagle Medium, standard adherent cell culture · σ_e ≈ saline',
+    pbs:    'PBS (Dulbecco\'s PBS, pH 7.4) · wash buffer and short-term EP assays · σ_e ≈ saline',
     rpmi:   'RPMI 1640, suspension / haematological cell lines · slightly lower ionic strength',
-    mhb:    'Mueller-Hinton Broth: CLSI/EUCAST bacteriology standard · τ ~12% longer than saline',
+    mhb:      'Mueller-Hinton Broth: CLSI/EUCAST bacteriology standard · τ ~12% longer than saline',
+    epbuffer: 'Low-conductivity sucrose/glucose EP buffer · τ ~10× longer than saline · fc ~10× lower · standard for in-vitro electroporation cuvette protocols',
   }
   const out: Record<string, string> = {}
   for (const key of Object.keys(MEDIA)) {

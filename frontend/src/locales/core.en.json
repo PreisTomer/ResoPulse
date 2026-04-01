@@ -157,12 +157,14 @@
       "dmem": "DMEM",
       "pbs": "PBS (pH 7.4)",
       "rpmi": "RPMI 1640",
-      "mhb": "Mueller-Hinton Broth"
+      "mhb": "Mueller-Hinton Broth",
+      "epbuffer": "EP Buffer (low-conductivity)"
     },
     "mediumGroupPhysio": "Physiological",
     "mediumGroupCulture": "Cell Culture",
     "mediumGroupMicro": "Microbiology",
     "mediumGroupRef": "Reference",
+    "mediumGroupEp": "Electroporation",
     "doubleShell": "Shell Model",
     "doubleShellSingle": "Single-Shell",
     "doubleShellDouble": "+ Nuclear Envelope",

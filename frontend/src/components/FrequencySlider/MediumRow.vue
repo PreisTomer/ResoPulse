@@ -15,10 +15,14 @@
       </optgroup>
       <optgroup :label="$t('slider.mediumGroupCulture')">
         <option value="dmem">{{ $t('slider.mediums.dmem') }}</option>
+        <option value="pbs">{{ $t('slider.mediums.pbs') }}</option>
         <option value="rpmi">{{ $t('slider.mediums.rpmi') }}</option>
       </optgroup>
       <optgroup :label="$t('slider.mediumGroupMicro')">
         <option value="mhb">{{ $t('slider.mediums.mhb') }}</option>
+      </optgroup>
+      <optgroup :label="$t('slider.mediumGroupEp')">
+        <option value="epbuffer">{{ $t('slider.mediums.epbuffer') }}</option>
       </optgroup>
       <optgroup :label="$t('slider.mediumGroupRef')">
         <option value="water">{{ $t('slider.mediums.water') }}</option>

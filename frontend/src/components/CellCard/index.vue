@@ -61,7 +61,7 @@ import { mapStores } from 'pinia'
 import { useCellStore } from '@/stores/cellStore'
 import { CELL_PRESETS } from '@/constants/cellLibrary'
 import type { CellConfig, CellRecord } from '@/types/cell'
-import { membraneCm, computeTau } from '@/utils/physics'
+import { membraneCm, computeTau, tempCorrectedVth } from '@/utils/physics'
 import type { CellState } from '@/types/cell'
 import { EDITABLE_PARAMS, EDITABLE_PARAMS_ACOUSTIC, THRESHOLDS } from '@/constants/cellCard'
 import { CELL_STATE, CELL_TYPE, CELL_CATEGORY } from '@/constants/strings'
@@ -257,7 +257,7 @@ export default defineComponent({
       return tipVmFn({
         vmDisplay:        this.vmDisplay,
         disruptionRatio:  this.disruptionRatio,
-        thresholdVoltage: cell.thresholdVoltage,
+        thresholdVoltage: tempCorrectedVth(cell.thresholdVoltage, this.temperature),
         waveform:         this.cellStore.waveform,
       })
     },

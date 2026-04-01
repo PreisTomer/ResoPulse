@@ -551,7 +551,7 @@ export default defineComponent({
         const elState: CellState =
           impact >= THRESHOLDS.HEALTHY_CRITICAL      ? CELL_STATE.CRITICAL
           : impact >= THRESHOLDS.HEALTHY_APPROACHING ? CELL_STATE.APPROACHING
-          : impact > THRESHOLDS.VIBRATING_MIN        ? CELL_STATE.NOURISHING
+          : impact > THRESHOLDS.VIBRATING_MIN && this.biostimScore >= THRESHOLDS.BMS_NOURISHING ? CELL_STATE.NOURISHING
           : CELL_STATE.STABLE
         const ORDER: CellState[] = [CELL_STATE.STABLE, CELL_STATE.NOURISHING, CELL_STATE.APPROACHING, CELL_STATE.CRITICAL]
         const nextState = ORDER[Math.max(ORDER.indexOf(elState), ORDER.indexOf(thermalFloor))] as CellState

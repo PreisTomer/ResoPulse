@@ -622,6 +622,9 @@ export const useCellStore = defineStore('cell', {
     },
 
     healthyBiomodScore(): number {
+      // Biomodulation is only meaningful below the EP onset threshold (DR < 50%).
+      // Above that, membrane charging dominates and biomod sub-threshold effects are irrelevant.
+      if (this.healthyDisruptionRatio >= THRESHOLDS.HEALTHY_APPROACHING) return 0
       return (
         THRESHOLDS.BMS_WEIGHT_SI  * this.healthyStimIndex +
         THRESHOLDS.BMS_WEIGHT_MTE * this.healthyMechTransductionEff +
@@ -645,23 +648,25 @@ export const useCellStore = defineStore('cell', {
     },
 
     // Quasi-DC TI ceiling: (R_T × Vth_H) / (R_H × Vth_T). PEF and H-FIRE cancel in the ratio.
+    // Temperature correction applied: cells may be at different steady-state temperatures.
     tiQuasiDc(): number {
       const state = this as unknown as CellStoreState
-      const vthT = state.target.thresholdVoltage
-      const vthH = state.healthy.thresholdVoltage
+      const vthT = tempCorrectedVth(state.target.thresholdVoltage,  state.targetTemp)
+      const vthH = tempCorrectedVth(state.healthy.thresholdVoltage, state.healthyTemp)
       if (vthT <= 0) return 0
       return (state.target.radius * vthH) / (state.healthy.radius * vthT)
     },
 
     // High-frequency TI limit: (R_T·τ_H·Vth_H) / (R_H·τ_T·Vth_T). Sub-unity when target rolls
     // off faster than healthy (larger R or higher Cm). Valid only in Schwan/IRE mode.
+    // Temperature correction applied: cells may be at different steady-state temperatures.
     tiHighFreqLimit(): number {
       const state = this as unknown as CellStoreState
       const sigma_e = this.effectiveSigmaE
       const tauT = computeTau(state.target,  sigma_e)
       const tauH = computeTau(state.healthy, sigma_e)
-      const vthT = state.target.thresholdVoltage
-      const vthH = state.healthy.thresholdVoltage
+      const vthT = tempCorrectedVth(state.target.thresholdVoltage,  state.targetTemp)
+      const vthH = tempCorrectedVth(state.healthy.thresholdVoltage, state.healthyTemp)
       if (tauT <= 0 || vthT <= 0) return 0
       return (state.target.radius * tauH * vthH) / (state.healthy.radius * tauT * vthT)
     },
