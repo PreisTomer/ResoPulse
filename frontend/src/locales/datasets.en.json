@@ -100,10 +100,10 @@
       "fNote3": "Epithelial cells (σ_i ≈ 0.5 S/m): large shift · Virions (σ_i ≪ σ_e): negligible shift"
     },
     "window": {
-      "sectionTitle": "Therapeutic Window Reference",
+      "sectionTitle": "Selectivity Window Reference",
       "sectionTag": "Adenocarcinoma vs Hepatocyte · saline (σ<sub>e</sub> = 1.5 S/m)",
       "cancerTitle": "Target: Adenocarcinoma",
-      "windowTitle": "Therapeutic Window",
+      "windowTitle": "Selectivity Window",
       "healthyTitle": "Reference: Hepatocyte",
       "paramRadius": "Radius R",
       "paramFc": "f<sub>c</sub> (saline)",
@@ -123,7 +123,7 @@
       "ratioVmSel": "~1.5×",
       "labelVmSel": "Max V<sub>m</sub> selectivity at quasi-DC (&lt;100 kHz), driven by size ratio R<sub>T</sub>/R<sub>H</sub>",
       "ratioTI": "~2.36×",
-      "labelTI": "Therapeutic Index TI at quasi-DC, normalised by lysis thresholds (1.1 V / 0.70 V)",
+      "labelTI": "Selectivity Index (TI) at quasi-DC, normalised by lysis thresholds (1.1 V / 0.70 V)",
       "ratioFreqDown": "↓ freq",
       "labelFreqDown": "Selectivity decreases above f<sub>c</sub>(T), target rolls off before healthy cell",
       "windowNote": "Cancer lysis at ~311 V/cm · Healthy threshold at ~733 V/cm",
@@ -134,7 +134,7 @@
       "fNote1": "cosθ = 1 at field-aligned pole (maximum coupling)",
       "fLabel2": "Characteristic frequency",
       "fEq2": "f_c = 1 / (2π · τ)  ·  Kotnik & Miklavcic (2000)",
-      "fLabel3": "Therapeutic Index",
+      "fLabel3": "Selectivity Index (TI)",
       "fEq3": "TI = (V_thr,H · R_T) / (V_thr,T · R_H)",
       "fNote3": "= (DR_T / DR_H) at fixed E · adeno vs hepatocyte: TI = (1.1 × 15)/(0.70 × 10) = 2.36× at quasi-DC"
     },
@@ -205,7 +205,7 @@
     },
     "fieldGeo": {
       "sectionTitle": "Field Geometry Assumptions",
-      "geoParagraph": "The Schwan model assumes a <strong>uniform, quasi-static electric field</strong> applied to a suspension of non-interacting spherical cells at low volume fraction. In clinical TTField devices (Optune®), 4 electrode arrays generate a rotating field at 100-300 kHz with amplitudes of 1-3 V/cm at depth; the field map is non-uniform and computed via FEM models of head conductivity. The ResoPulse simulator applies the uniform-field Schwan equation and is appropriate for well-mixed in vitro geometries (parallel-plate or four-electrode chambers).",
+      "geoParagraph": "The Schwan model assumes a <strong>uniform, quasi-static electric field</strong> applied to a suspension of non-interacting spherical cells at low volume fraction. Multi-electrode array chambers, flow-through microfluidic devices, and non-parallel-plate cuvette configurations generate non-uniform field distributions that require FEM or analytical correction beyond this uniform-field assumption. The ResoPulse simulator applies the uniform-field Schwan equation and is appropriate for well-mixed in-vitro geometries (parallel-plate cuvette or four-electrode chambers).",
       "assumption1": "Single-shell (Schwan) or double-shell (nuclear envelope) cell model",
       "assumption2": "Uniform applied field (E constant in space)",
       "assumption3": "Dilute suspension: cell-cell interactions neglected",
@@ -256,10 +256,10 @@
       "tiColBadge": "Badge",
       "tiColMode": "Mode",
       "tiPoorBadge": "Poor",
-      "tiPoorMode": "No therapeutic window",
+      "tiPoorMode": "No selectivity window",
       "tiMarginalBadge": "Marginal Window",
       "tiMarginalMode": "Marginal selectivity: monitor healthy DR",
-      "tiStrongBadge": "Therapeutic Window",
+      "tiStrongBadge": "Selectivity Window",
       "tiStrongMode": "Strong selectivity; safe operating range",
       "tiAblativeBadge": "Ablative",
       "tiAblativeMode": "Healthy cells also in lysis zone",
@@ -316,7 +316,7 @@
       "note": "Apply these parameters interactively in the simulation"
     },
     "tip": {
-      "legendReference": "Healthy mammalian reference cells. These are not 'bystander' cells, they are the limiting constraint on every protocol. The lysis field E_lysis,H sets the upper bound of the therapeutic window; any field above this value causes collateral damage regardless of target selectivity.",
+      "legendReference": "Healthy mammalian reference cells. These are not 'bystander' cells, they are the limiting constraint on every protocol. The lysis field E_lysis,H sets the upper bound of the selectivity window; any field above this value causes collateral damage regardless of target selectivity.",
       "legendCancer": "Transformed mammalian cells. Membrane disordering (increased ε_r, reduced d) and elevated N/C ratio lower both V_m,thr and f_c. At quasi-DC the size ratio R_T/R_H drives Vm selectivity; the V_thr asymmetry compounds this into the Therapeutic Index. Both quantities degrade rapidly above f_c(T).",
       "legendBacteria": "Prokaryotes: gram-negative (E. coli) and gram-positive (MRSA). The Schwan single-shell model is an approximation here: the peptidoglycan wall is a mechanically stiff viscoelastic shell that is not represented as a dielectric layer. Q ≈ 3-4 (viscoelastic damping), not 10-15 as for protein capsid virions.",
       "legendVirus": "Enveloped / naked virions. R ≈ 60 nm means quasi-DC Vm = 1.5·E·R is very small, the Schwan model is valid but the driving amplitudes needed for lysis are impractically large. Acoustic resonance at ~10-12 GHz is currently inaccessible by RF hardware; those values are extrapolated from femtosecond-laser experiments (Tsen et al.).",

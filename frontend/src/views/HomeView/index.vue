@@ -123,27 +123,61 @@
             <span class="home__fc-desc">{{ $t(`home.${card.descKey}`) }}</span>
           </RouterLink>
 
-          <!-- Selectivity preview — replaces stats card; shows the platform's core value visually -->
-          <RouterLink to="/experiment" class="home__feature-card home__feature-card--sel" :style="{ '--card-i': featureCards.length }">
-            <p class="home__sel-title">{{ $t('home.selTitle') }}</p>
+          <!-- Selectivity preview — animated sweep shows the platform's core value visually -->
+          <RouterLink
+            to="/experiment"
+            class="home__feature-card home__feature-card--sel"
+            :class="{
+              'home__feature-card--sel-win': selInWindow,
+              'home__feature-card--sel-hot': selIsHot && !selInWindow,
+            }"
+            :style="{ '--card-i': featureCards.length }"
+          >
+            <div class="home__fc-header">
+              <span class="home__fc-icon-wrap">
+                <span class="home__fc-icon">{{ ICON.SELECTIVITY }}</span>
+              </span>
+              <span class="home__fc-title">{{ $t('home.selTitle') }}</span>
+            </div>
+
+            <!-- E-field sweep slider with window zone indicator -->
+            <div class="home__sel-slider">
+              <span class="home__sel-slider-label">{{ $t('home.selSliderLabel') }}</span>
+              <div class="home__sel-slider-track">
+                <div class="home__sel-window-zone"></div>
+                <div
+                  class="home__sel-slider-thumb"
+                  :class="{
+                    'home__sel-slider-thumb--win': selInWindow,
+                    'home__sel-slider-thumb--hot': selIsHot && !selInWindow,
+                  }"
+                  :style="{ left: selSliderPct + '%' }"
+                ></div>
+              </div>
+              <span
+                class="home__sel-slider-val"
+                :class="{ 'home__sel-slider-val--win': selInWindow, 'home__sel-slider-val--hot': selIsHot && !selInWindow }"
+              >{{ selStateLabel }}</span>
+            </div>
+
             <div class="home__sel-bars">
               <div class="home__sel-bar">
                 <span class="home__sel-bar-label">{{ $t('home.selTargetLabel') }}</span>
                 <div class="home__sel-bar-track">
-                  <div class="home__sel-bar-fill home__sel-bar-fill--target"></div>
+                  <div class="home__sel-bar-fill home__sel-bar-fill--target" :style="{ width: selTargetPct + '%' }"></div>
                 </div>
-                <span class="home__sel-bar-pct home__sel-bar-pct--target">{{ $t('home.selTargetPct') }}</span>
+                <span class="home__sel-bar-pct home__sel-bar-pct--target">{{ selTargetPct }}%</span>
               </div>
               <div class="home__sel-bar">
                 <span class="home__sel-bar-label">{{ $t('home.selHealthyLabel') }}</span>
                 <div class="home__sel-bar-track">
-                  <div class="home__sel-bar-fill home__sel-bar-fill--healthy"></div>
+                  <div class="home__sel-bar-fill home__sel-bar-fill--healthy" :style="{ width: selHealthyPct + '%' }"></div>
                 </div>
-                <span class="home__sel-bar-pct home__sel-bar-pct--healthy">{{ $t('home.selHealthyPct') }}</span>
+                <span class="home__sel-bar-pct home__sel-bar-pct--healthy">{{ selHealthyPct }}%</span>
               </div>
             </div>
             <div class="home__sel-footer">
-              <span class="home__sel-ti">{{ $t('home.selTiValue') }}</span>
+              <span class="home__sel-ti">{{ selTiDisplay }}</span>
               <span class="home__sel-cta">{{ $t('home.selCta') }} {{ ICON.ARROW_R }}</span>
             </div>
           </RouterLink>
@@ -180,6 +214,8 @@ import CellIllustrationSvg from './CellIllustrationSvg.vue'
 import BodePlotSvg from './BodePlotSvg.vue'
 import OscilloscopeSvg from './OscilloscopeSvg.vue'
 
+const SEL_CYCLE_MS = 9000
+
 export default defineComponent({
   name: 'HomeView',
 
@@ -188,26 +224,6 @@ export default defineComponent({
     CellIllustrationSvg,
     BodePlotSvg,
     OscilloscopeSvg,
-  },
-
-  mounted() {
-    const zones = this.$el.querySelectorAll('.home__zone--anim')
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('home__zone--visible')
-            observer.unobserve(entry.target)
-          }
-        })
-      },
-      { threshold: 0.12 },
-    )
-    zones.forEach((zone: Element) => observer.observe(zone))
-  },
-
-  computed: {
-    ICON() { return ICON },
   },
 
   data() {
@@ -228,7 +244,99 @@ export default defineComponent({
         { mod: 'virus',    key: 'tagVirus' },
         { mod: 'ref',      key: 'tagRef' },
       ],
+
+      selProgress: 0,
+      selAnimId: null as ReturnType<typeof requestAnimationFrame> | null,
     }
+  },
+
+  mounted() {
+    const zones = this.$el.querySelectorAll('.home__zone--anim')
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('home__zone--visible')
+            observer.unobserve(entry.target)
+          }
+        })
+      },
+      { threshold: 0.12 },
+    )
+    zones.forEach((zone: Element) => observer.observe(zone))
+    this.startSelAnimation()
+  },
+
+  beforeUnmount() {
+    if (this.selAnimId !== null) {
+      cancelAnimationFrame(this.selAnimId)
+    }
+  },
+
+  computed: {
+    ICON() { return ICON },
+
+    selSliderPct(): number {
+      return Math.round(this.selProgress * 100)
+    },
+
+    // Sigmoid curve: target lysis threshold centred at t=0.38 (sharper rise first)
+    selTargetPct(): number {
+      return Math.round((1 / (1 + Math.exp(-(this.selProgress - 0.38) * 14))) * 100)
+    },
+
+    // Sigmoid curve: healthy lysis threshold centred at t=0.65 (higher field required)
+    selHealthyPct(): number {
+      return Math.round((1 / (1 + Math.exp(-(this.selProgress - 0.65) * 14))) * 100)
+    },
+
+    // Window: target lysing, healthy still intact
+    selInWindow(): boolean {
+      return (this as { selTargetPct: number }).selTargetPct > 60
+        && (this as { selHealthyPct: number }).selHealthyPct < 40
+    },
+
+    // Hot: both populations being lysed — non-selective, over-threshold
+    selIsHot(): boolean {
+      return (this as { selHealthyPct: number }).selHealthyPct >= 40
+        && (this as { selTargetPct: number }).selTargetPct > 60
+    },
+
+    selStateLabel(): string {
+      if ((this as { selInWindow: boolean }).selInWindow) return this.$t('home.selStateWindow')
+      if ((this as { selIsHot: boolean }).selIsHot)       return this.$t('home.selStateOver')
+      return this.$t('home.selStateSweep')
+    },
+
+    selTiDisplay(): string {
+      const target  = (this as { selTargetPct: number }).selTargetPct
+      const healthy = (this as { selHealthyPct: number }).selHealthyPct
+      if (target < 5)  return this.$t('home.selTiNone')
+      if (healthy < 2) return this.$t('home.selTiHigh')
+      return `${this.$t('home.selTiPrefix')} ${(target / healthy).toFixed(1)}x`
+    },
+  },
+
+  methods: {
+    startSelAnimation(): void {
+      let startTs = 0
+      const tick = (ts: number) => {
+        if (startTs === 0) startTs = ts
+        const cycleT = ((ts - startTs) / SEL_CYCLE_MS) % 1
+        // Piecewise: ramp up → slow dwell through window → quick return
+        if (cycleT < 0.30) {
+          this.selProgress = (cycleT / 0.30) * 0.42
+        } else if (cycleT < 0.72) {
+          // Slow sweep from window entry (0.42) to just past healthy threshold (0.65)
+          this.selProgress = 0.42 + ((cycleT - 0.30) / 0.42) * 0.23
+        } else {
+          // Quick return to baseline
+          this.selProgress = 0.65 * (1 - (cycleT - 0.72) / 0.28)
+        }
+        this.selAnimId = requestAnimationFrame(tick)
+      }
+      this.selAnimId = requestAnimationFrame(tick)
+    },
   },
 })
 </script>

@@ -34,6 +34,12 @@
             · {{ $t('reports.sessionMultiple', { n: distinctSessionCount }) }}
           </template>
         </span>
+        <span v-if="sampleDescription" class="reports__session-sample">
+          {{ $t('reports.sampleDescLabel') }} {{ sampleDescription }}
+        </span>
+        <span v-if="sessionNotes" class="reports__session-notes">
+          {{ $t('reports.sessionNotesLabel') }} {{ sessionNotes }}
+        </span>
       </div>
 
       <!-- Stats row -->
@@ -161,6 +167,8 @@ export default defineComponent({
       lysisEvents,
       manualReadings,
       countLabel,
+      sampleDescription: computed(() => store.sampleDescription),
+      sessionNotes: computed(() => store.sessionNotes),
       statCards,
       selClass,
     }
@@ -261,6 +269,14 @@ export default defineComponent({
   &__session-meta {
     @include mono-upper(0.68rem, 0.06em);
     color: var(--color-primary);
+  }
+
+  &__session-sample,
+  &__session-notes {
+    font-size: var(--fs-xs);
+    font-family: var(--font-mono);
+    color: var(--color-text-muted);
+    opacity: var(--op-dim);
   }
 
   /* ── Stats ────────────────────────────────────────────────────────────────── */
