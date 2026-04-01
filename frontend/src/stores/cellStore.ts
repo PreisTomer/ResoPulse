@@ -373,14 +373,18 @@ export const useCellStore = defineStore('cell', {
       const state     = this as unknown as CellStoreState
       const vth       = tempCorrectedVth(state.healthy.nuclearThresholdVoltage ?? THRESHOLDS.NUCLEAR_VM_DEFAULT, state.healthyTemp)
       const hfireMult = state.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
-      return this.healthyNuclearVm / (vth * hfireMult)
+      // Nuclear membrane is gated by outer membrane charging: apply outer PEF so nuclear DR
+      // correctly approaches 0 for short pulses (t_p << τ_out), consistent with outer DR.
+      return (this.healthyNuclearVm * this.pulseEnvelopeFactorHealthy) / (vth * hfireMult)
     },
 
     targetNuclearDisruptionRatio(): number {
       const state     = this as unknown as CellStoreState
       const vth       = tempCorrectedVth(state.target.nuclearThresholdVoltage ?? THRESHOLDS.NUCLEAR_VM_DEFAULT, state.targetTemp)
       const hfireMult = state.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
-      return this.targetNuclearVm / (vth * hfireMult)
+      // Nuclear membrane is gated by outer membrane charging: apply outer PEF so nuclear DR
+      // correctly approaches 0 for short pulses (t_p << τ_out), consistent with outer DR.
+      return (this.targetNuclearVm * this.pulseEnvelopeFactorTarget) / (vth * hfireMult)
     },
 
     nuclearSelectivityRatio(): number {
