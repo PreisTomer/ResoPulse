@@ -111,12 +111,12 @@ export default defineComponent({
 
     targetUncPct(): number {
       const cat = this.cellStore.targetCellCategory
-      if (cat === CELL_CATEGORY.VIRUS)    return 45
-      if (cat === CELL_CATEGORY.BACTERIA) return 35
-      return 20
+      if (cat === CELL_CATEGORY.VIRUS)    return THRESHOLDS.UNCERTAINTY_VIRUS     * 100
+      if (cat === CELL_CATEGORY.BACTERIA) return THRESHOLDS.UNCERTAINTY_BACTERIA  * 100
+      return THRESHOLDS.UNCERTAINTY_MAMMALIAN * 100
     },
 
-    healthyUncPct(): number { return 20 },
+    healthyUncPct(): number { return THRESHOLDS.UNCERTAINTY_MAMMALIAN * 100 },
 
     targetStats(): PopStats  { return this._calcStats(this.targetDRs) },
     healthyStats(): PopStats { return this._calcStats(this.healthyDRs) },
@@ -128,15 +128,15 @@ export default defineComponent({
 
     windowScoreClass(): string {
       const s = this.windowScore
-      if (s >= 0.5) return 'pop-window-score--good'
-      if (s >= 0.2) return 'pop-window-score--marginal'
+      if (s >= THRESHOLDS.WINDOW_SCORE_GOOD)     return 'pop-window-score--good'
+      if (s >= THRESHOLDS.WINDOW_SCORE_MARGINAL) return 'pop-window-score--marginal'
       return 'pop-window-score--poor'
     },
 
     windowVerdict(): string {
       const s = this.windowScore
-      if (s >= 0.5) return this.$t('population.windowGood')
-      if (s >= 0.2) return this.$t('population.windowMarginal')
+      if (s >= THRESHOLDS.WINDOW_SCORE_GOOD)     return this.$t('population.windowGood')
+      if (s >= THRESHOLDS.WINDOW_SCORE_MARGINAL) return this.$t('population.windowMarginal')
       return this.$t('population.windowPoor')
     },
 

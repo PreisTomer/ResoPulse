@@ -94,7 +94,7 @@ Ref: Tsen et al. (2007); Dykeman &amp; Sankey (2008)
 <span class="tip-warn">${ICON.WARNING} Enveloped viruses (Influenza, SARS-CoV-2): lipid envelope, no rigid-shell resonance. Extrapolated values only.</span>`
   }
   const label  = formatFreqKHz(optKhz)
-  const cls    = optSel >= 1.5 ? 'tip-ok' : optSel >= 1.0 ? 'tip-val' : 'tip-warn'
+  const cls    = optSel >= THRESHOLDS.TI_STRONG ? 'tip-ok' : optSel >= THRESHOLDS.TI_MARGINAL ? 'tip-val' : 'tip-warn'
   const snapNote = beyondRange
     ? `<span class="tip-warn">${ICON.WARNING} Optimal lies outside the current slider range.\n  Snap sets frequency to the nearest reachable bound.</span>`
     : `<span class="tip-ok">Click to snap cursor to this frequency</span>`

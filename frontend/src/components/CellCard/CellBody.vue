@@ -31,7 +31,7 @@ import { mapStores } from 'pinia'
 import { useCellStore } from '@/stores/cellStore'
 import { CELL_STATE, CELL_TYPE } from '@/constants/strings'
 import { splitFreqKHz, formatLysisFieldVcm } from '@/utils/format'
-import { LYSIS_FIELD_SENTINEL } from '@/constants/physics'
+import { LYSIS_FIELD_SENTINEL, THRESHOLDS } from '@/constants/physics'
 
 export default defineComponent({
   props: {
@@ -59,7 +59,7 @@ export default defineComponent({
       if (lf >= LYSIS_FIELD_SENTINEL) return ''
       const ratio = this.cellStore.fieldIntensity / lf
       if (ratio >= 1.0)  return 'cell-body__metric-value--danger'
-      if (ratio >= 0.85) return 'cell-body__metric-value--warn'
+      if (ratio >= THRESHOLDS.DISRUPTION_WARN) return 'cell-body__metric-value--warn'
       return ''
     },
 
@@ -70,8 +70,8 @@ export default defineComponent({
 
     metricsTiClass(): string {
       const ti = this.cellStore.therapeuticIndex
-      if (ti >= 1.5) return 'cell-body__metric-value--good'
-      if (ti >= 1.0) return 'cell-body__metric-value--warn'
+      if (ti >= THRESHOLDS.TI_STRONG)   return 'cell-body__metric-value--good'
+      if (ti >= THRESHOLDS.TI_MARGINAL) return 'cell-body__metric-value--warn'
       return 'cell-body__metric-value--danger'
     },
 

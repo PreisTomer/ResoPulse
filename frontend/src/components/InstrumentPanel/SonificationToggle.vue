@@ -25,6 +25,7 @@ import { defineComponent } from 'vue'
 import { sonification } from '@/services/sonification'
 import { useImpedanceStore } from '@/stores/impedanceStore'
 import { useCellStore } from '@/stores/cellStore'
+import { THRESHOLDS } from '@/constants/physics'
 
 export default defineComponent({
   name: 'SonificationToggle',
@@ -66,9 +67,9 @@ export default defineComponent({
         const drift = impStore.impedanceDriftPct
         const dr    = cellStore.targetDisruptionRatio
         // Derive cell state from DR (mirrors CellCard logic without importing it)
-        const state = dr >= 1.0 ? 'lysis'
-                    : dr >= 0.85 ? 'vibrating'
-                    : dr >= 0.5  ? 'rev-ep'
+        const state = dr >= 1.0                          ? 'lysis'
+                    : dr >= THRESHOLDS.DISRUPTION_WARN   ? 'vibrating'
+                    : dr >= THRESHOLDS.HEALTHY_APPROACHING ? 'rev-ep'
                     : 'stable'
         sonification.update(drift, dr, state)
         this.pitchHz = sonification.currentPitchHz
