@@ -83,9 +83,9 @@ export function tipState(opts: {
       : '<span class="tip-warn">lysed, membrane permanently disrupted by electric field</span>',
   }
   const transitions = cellType === CELL_TYPE.HEALTHY
-    ? `\nElectrical: Vm >50% → approaching · Vm >85% → critical`
+    ? `\nElectrical: DR >50% → approaching · DR >85% → critical`
        + `\nThermal:   T ≥42°C → approaching · T ≥60°C → critical · T ≥100°C → lysis`
-    : `\nElectrical: 50-85% → rev-ep (reversible) · >85% → armed (${lysisTime}) → lysed`
+    : `\nElectrical: 50-85% DR → rev-ep (reversible) · >85% DR → armed (${lysisTime}) → lysed`
       + `\nThermal:   T ≥60°C → critical · T ≥100°C → instant thermal lysis`
   return `<strong>Cell State</strong>
 ${labels[cellState] ?? cellState}

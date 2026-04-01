@@ -84,8 +84,9 @@ export default defineComponent({
 
           if (hasRes) {
             // Resonance targets: acoustic mechanism, PEF does not apply.
-            // Preset cells are not live-simulated so use BODY_TEMP_C for threshold correction.
-            const effThreshold = tempCorrectedVth(pr.resonantThresholdVcm!, BODY_TEMP_C) * hfireMult
+            // Active preset uses live targetTemp; others use BODY_TEMP_C (not live-simulated).
+            const resTemp      = p.presetId === this.cellStore.target.id ? this.cellStore.targetTemp : BODY_TEMP_C
+            const effThreshold = tempCorrectedVth(pr.resonantThresholdVcm!, resTemp) * hfireMult
             const ratio = computeResonantDisruption(
               pr.resonantFreqGHz!,
               pr.capsidQ ?? DEFAULT_CAPSID_Q,
@@ -96,10 +97,11 @@ export default defineComponent({
             sel = safeRatio(ratio, hDr, THRESHOLDS.TI_DISPLAY_CAP, NEAR_ZERO_DR)
             tVmMv = `D:${(ratio * 100).toFixed(0)}%`
           } else {
-            // Preset cells are not live-simulated so use BODY_TEMP_C for threshold correction.
-            const pefT  = isPulsed ? Math.max(MIN_PULSE_ENVELOPE, computePulseStepResponse(computeTau(p, sigma_e), pwNs)) : 1.0
-            const tVm   = computeSchwan(p, freq, field, sigma_e, cosT)
-            const tVthE = tempCorrectedVth(p.thresholdVoltage, BODY_TEMP_C)
+            // Active preset uses live targetTemp; others use BODY_TEMP_C (not live-simulated).
+            const schTemp = p.presetId === this.cellStore.target.id ? this.cellStore.targetTemp : BODY_TEMP_C
+            const pefT    = isPulsed ? Math.max(MIN_PULSE_ENVELOPE, computePulseStepResponse(computeTau(p, sigma_e), pwNs)) : 1.0
+            const tVm     = computeSchwan(p, freq, field, sigma_e, cosT)
+            const tVthE   = tempCorrectedVth(p.thresholdVoltage, schTemp)
             const tDr   = (tVm * pefT) / (tVthE * hfireMult)
             sel = hDr > NEAR_ZERO_DR ? Math.min(THRESHOLDS.TI_DISPLAY_CAP, tDr / hDr) : 0
             tVmMv = (tVm * 1000).toFixed(1)

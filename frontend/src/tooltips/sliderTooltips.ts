@@ -19,6 +19,7 @@ interface ResonanceExtra {
   resonantThresholdVcm?: number
   label: string
   thresholdVoltage: number
+  effThresholdMv?: number  // temp+H-FIRE corrected threshold in mV, overrides thresholdVoltage if set
 }
 
 export function tipWaveform(currentField: number, maxSteadyTemp: number): string {
@@ -205,11 +206,12 @@ ${t('resonance.tipTargetBadgeFormula')}
 f_res = <span class="tip-val">${fStr}</span>  ·  Q = ${(target as { capsidQ?: number }).capsidQ ?? DEFAULT_CAPSID_Q}${warn}
 ${t('resonance.tipTargetBadgeNote')}`
   }
-  const tThr  = (target.thresholdVoltage * 1000).toFixed(0)
+  // effThresholdMv: temp+H-FIRE corrected threshold in mV, supplied by caller
+  const tThr  = (target.effThresholdMv ?? target.thresholdVoltage * 1000).toFixed(0)
   const warn  = targetDisruption > 0.85
     ? `\n<span class="tip-warn">⚡ >85%, lysis countdown active (${lysisStr})</span>` : ''
   return `<strong>Target membrane disruption: <span class="tip-val">${pct}%</span></strong>
-Ratio = Vm / lysis threshold voltage
+Ratio = (Vm × PEF) / threshold
 
 Vm = <span class="tip-val">${targetVmMv.toFixed(2)} ${UNIT.MV}</span>  ·  Threshold = ${tThr} ${UNIT.MV}${warn}
 >85% held for ${lysisStr} → irreversible membrane lysis`
@@ -221,22 +223,23 @@ export function tipHealthyBadge(opts: {
   healthyDisruption: number
   healthyVmMv: number
   thresholdVoltage: number
+  effThresholdMv?: number  // temp+H-FIRE corrected threshold in mV, overrides thresholdVoltage if set
   t: T
 }): string {
-  const { isResonanceMode, healthyDisruptPercent: pct, healthyDisruption, healthyVmMv, thresholdVoltage, t } = opts
+  const { isResonanceMode, healthyDisruptPercent: pct, healthyDisruption, healthyVmMv, thresholdVoltage, effThresholdMv, t } = opts
   if (isResonanceMode) {
     return `<strong>${t('resonance.tipHealthyBadgeTitle')}</strong>
 ${t('resonance.tipHealthyBadgeBody')}
 <span class="tip-ok">✓ ${t('resonance.tipHealthyBadgeSafe')}</span>`
   }
-  const hThr = (thresholdVoltage * 1000).toFixed(0)
+  const hThr = (effThresholdMv ?? thresholdVoltage * 1000).toFixed(0)
   const ok   = healthyDisruption < 0.5
     ? '\n<span class="tip-ok">✓ Healthy cells are safe</span>'
     : healthyDisruption > 0.85
       ? '\n<span class="tip-warn">⚠ Healthy cells approaching lysis threshold, reduce field</span>'
       : '\n<span class="tip-warn">⚠ Approaching rev-EP zone, monitor closely</span>'
   return `<strong>Healthy membrane disruption: <span class="tip-val">${pct}%</span></strong>
-Ratio = Vm / lysis threshold voltage
+Ratio = (Vm × PEF) / threshold
 
 Vm = <span class="tip-val">${healthyVmMv.toFixed(2)} ${UNIT.MV}</span>  ·  Threshold = ${hThr} ${UNIT.MV}${ok}
 Keep below 50% for a selective protocol window`

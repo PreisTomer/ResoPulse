@@ -750,9 +750,11 @@ export default defineComponent({
       const thrGroup = g.select<SVGGElement>('.thresholds')
       thrGroup.selectAll('*').remove()
 
+      // Threshold lines must use the same effective threshold as the live DR computation.
+      const thrHfireMult = this.cellStore.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
       const thrData = [
-        { label: this.$t('chart.thrH'), vm: this.cellStore.healthy.thresholdVoltage * 1000, color: C.primary },
-        { label: this.$t('chart.thrT'), vm: this.cellStore.target.thresholdVoltage * 1000,  color: C.danger  },
+        { label: this.$t('chart.thrH'), vm: tempCorrectedVth(this.cellStore.healthy.thresholdVoltage, this.cellStore.healthyTemp) * thrHfireMult * 1000, color: C.primary },
+        { label: this.$t('chart.thrT'), vm: tempCorrectedVth(this.cellStore.target.thresholdVoltage,  this.cellStore.targetTemp)  * thrHfireMult * 1000, color: C.danger  },
       ]
       thrData.forEach(({ label, vm, color }) => {
         // Lysis threshold line

@@ -182,9 +182,11 @@ import {
   LYSIS_DURATION_MS,
   FRAGMENT_INTERVAL_MS,
 } from '@/constants/cellCard'
+import { H_FIRE_THRESHOLD_MULTIPLIER } from '@/constants/physics'
+import { tempCorrectedVth } from '@/utils/physics'
 import { setupBlobAnimation, setupOscilloscope, spawnFragment } from './cellAnimation'
 import type { CellVisualProfile } from './cellAnimation'
-import { CELL_STATE, CELL_TYPE, CELL_CATEGORY } from '@/constants/strings'
+import { CELL_STATE, CELL_TYPE, CELL_CATEGORY, WAVEFORM } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'
 import { formatLysisTimeLocal, tipNuclearBar as tipNuclearBarFn, tipDep as tipDepFn, tipDisruption as tipDisruptionFn, tipVm as tipVmFn, tipAcousticVm as tipAcousticVmFn, tipTemp as tipTempFn, tipState as tipStateFn } from '@/tooltips/cellCardTooltips'
@@ -362,8 +364,11 @@ export default defineComponent({
           experimentalBasis: t.experimentalBasis,
         })
       }
-      const cell = this.type === CELL_TYPE.HEALTHY ? this.cellStore.healthy : this.cellStore.target
-      return tipVmFn({ vmDisplay: this.vmDisplay, disruptionRatio: this.disruptionRatio, thresholdVoltage: cell.thresholdVoltage, waveform: this.cellStore.waveform })
+      const cell      = this.type === CELL_TYPE.HEALTHY ? this.cellStore.healthy : this.cellStore.target
+      const cellTemp  = this.type === CELL_TYPE.HEALTHY ? this.cellStore.healthyTemp : this.cellStore.targetTemp
+      const hfireMult = this.cellStore.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
+      const effVth    = tempCorrectedVth(cell.thresholdVoltage, cellTemp) * hfireMult
+      return tipVmFn({ vmDisplay: this.vmDisplay, disruptionRatio: this.disruptionRatio, thresholdVoltage: effVth, waveform: this.cellStore.waveform })
     },
 
     tipTempLocal(): string {
@@ -398,13 +403,16 @@ export default defineComponent({
     },
 
     tipDisruption(): string {
-      const cell = this.type === CELL_TYPE.HEALTHY ? this.cellStore.healthy : this.cellStore.target
-      const pef  = this.type === CELL_TYPE.HEALTHY
+      const cell          = this.type === CELL_TYPE.HEALTHY ? this.cellStore.healthy : this.cellStore.target
+      const pef           = this.type === CELL_TYPE.HEALTHY
         ? this.cellStore.pulseEnvelopeFactorHealthy
         : this.cellStore.pulseEnvelopeFactorTarget
+      const cellTempForDr = this.type === CELL_TYPE.HEALTHY ? this.cellStore.healthyTemp : this.cellStore.targetTemp
+      const hfireMultDr   = this.cellStore.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
+      const effVthDr      = tempCorrectedVth(cell.thresholdVoltage, cellTempForDr) * hfireMultDr
       return tipDisruptionFn({
         disruptionRatio:     this.disruptionRatio,
-        thresholdVoltage:    cell.thresholdVoltage,
+        thresholdVoltage:    effVthDr,
         lysisNPulses:        this.cellStore.lysisNPulses,
         lysisDelayMs:        this.cellStore.lysisDelayMs,
         pulseEnvelopeFactor: pef,

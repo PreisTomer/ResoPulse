@@ -96,10 +96,10 @@
 import { defineComponent } from 'vue'
 import { mapStores } from 'pinia'
 import { useCellStore } from '@/stores/cellStore'
-import { THRESHOLDS, NEAR_ZERO_VM } from '@/constants/physics'
-import { CELL_CATEGORY, CHART_MODE } from '@/constants/strings'
+import { THRESHOLDS, NEAR_ZERO_VM, H_FIRE_THRESHOLD_MULTIPLIER } from '@/constants/physics'
+import { CELL_CATEGORY, CHART_MODE, WAVEFORM } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
-import { safeRatio } from '@/utils/physics'
+import { safeRatio, tempCorrectedVth } from '@/utils/physics'
 import { formatPct } from '@/utils/format'
 import { tipTiRange, tipSelectivity } from '@/tooltips/selectivityTooltips'
 import AccordionPanel from '@/components/AccordionPanel.vue'
@@ -200,11 +200,12 @@ export default defineComponent({
     windowScorePct(): string { return formatPct(this.windowScore) },
 
     cellSizeParams(): { rT: number; rH: number; vthT: number; vthH: number } {
+      const hfireMult = this.cellStore.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
       return {
         rT:   this.cellStore.target.radius,
         rH:   this.cellStore.healthy.radius,
-        vthT: this.cellStore.target.thresholdVoltage,
-        vthH: this.cellStore.healthy.thresholdVoltage,
+        vthT: tempCorrectedVth(this.cellStore.target.thresholdVoltage,  this.cellStore.targetTemp)  * hfireMult,
+        vthH: tempCorrectedVth(this.cellStore.healthy.thresholdVoltage, this.cellStore.healthyTemp) * hfireMult,
       }
     },
 
