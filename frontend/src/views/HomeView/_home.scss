@@ -456,7 +456,7 @@
     gap: 0.4rem;
     text-align: left;
     border-top: 2px solid color-mix(in srgb, var(--color-primary) 22%, transparent);
-    min-height: 7.25rem; // floor for both grid rows — keeps top & bottom rows equal height
+    min-height: 10.5rem; // matches sel card's natural height (~167 px) so all rows are equal
     // Entrance: paused until zone becomes visible, then plays with per-card delay
     animation: card-enter 0.45s ease both;
     animation-delay: calc(var(--card-i, 0) * 90ms);
@@ -464,11 +464,6 @@
     // Hover transitions run immediately — separate from entrance delay
     transition: border-color var(--tr-fast), border-top-color var(--tr-fast), box-shadow var(--tr-fast), transform var(--tr-fast);
     cursor: pointer;
-
-    // First row (cards 1–3 in the 3-column grid): slightly more padding for a larger feel
-    &:nth-child(-n+3) {
-      padding: 1.2rem 1.2rem;
-    }
 
     .home__zone--visible & {
       animation-play-state: running;
@@ -575,8 +570,9 @@
     &-desc {
       font-size: var(--fs-xs);
       color: var(--color-text-muted);
-      line-height: 1.55;
+      line-height: 1.75;
       padding-left: 2.5rem; // indent to align under title, past the icon bubble
+      margin-top: 5px;
     }
   }
 
@@ -587,8 +583,6 @@
     justify-content: space-between;
     text-decoration: none;
     position: relative;
-    gap: 0.28rem; // tighter than base 0.4rem — keeps card compact
-    padding: 0.85rem 1rem; // less than base so content breathes without growing the row
     transition: border-color var(--tr-fast), border-top-color var(--tr-normal),
                 box-shadow var(--tr-normal), transform var(--tr-fast);
 
