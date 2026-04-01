@@ -311,7 +311,7 @@ export default defineComponent({
     flex-shrink: 0;
 
     &-value {
-      font-size: 1rem;
+      font-size: var(--fs-2xl);
       font-weight: 700;
       font-family: var(--font-mono);
       color: var(--color-text-heading);

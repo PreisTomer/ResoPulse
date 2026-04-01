@@ -116,7 +116,7 @@ export default defineComponent({
     }
   }
 
-  &__icon { font-size: 1rem; }
+  &__icon { font-size: var(--fs-2xl); }
   &__label { font-weight: 500; }
 
   &__pitch {

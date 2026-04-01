@@ -207,6 +207,8 @@ function lysisFieldAtFreq(
   const pef   = (waveform === 'pulsed' || waveform === 'hfire') ? Math.max(MIN_PULSE_ENVELOPE, computePulseStepResponse(tau, pulseWidthNs)) : 1.0
   const omega = TWO_PI * freqKhz * 1e3
   // E_lysis = Vth × hfireMult × √(1 + (ωτ)²) / (1.5 × R × cosθ × pef). Solve Schwan for E.
+  // cosTheta = 0 (90° orientation) → field cannot couple to membrane; return sentinel.
+  if (cosTheta < 1e-6) return 100_000
   const E_vm  = thresholdV * hfireMult * Math.sqrt(1 + (omega * tau) ** 2) /
                 (SCHWAN_SPHERE_FACTOR * radiusUm * 1e-6 * cosTheta * pef)
   return Math.min(Math.max(E_vm / 100, 10), 100_000)   // V/m → V/cm, clamped

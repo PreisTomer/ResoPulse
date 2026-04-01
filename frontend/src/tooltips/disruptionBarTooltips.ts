@@ -48,7 +48,7 @@ E_threshold = ${resonantThresholdVcm} V/cm  ·  f_res = ${resonantFreqGHz} GHz${
   return `<strong>Target membrane disruption: <span class="tip-val">${pct}%</span></strong>
 Induced Vm = <span class="tip-val">${targetVmMv} mV</span>
 Lysis threshold = ${thresholdMv} mV
-Ratio = Vm / threshold${warn}
+Ratio = (Vm × PEF) / threshold${warn}
 >85% held for ${lysisTime} → irreversible lysis`
 }
 
@@ -73,5 +73,6 @@ Ref: Tsen et al. (2007)`
   return `<strong>Healthy membrane disruption: <span class="tip-val">${pct}%</span></strong>
 Induced Vm = <span class="tip-val">${healthyVmMv} mV</span>
 Lysis threshold = ${thresholdMv} mV
+Ratio = (Vm × PEF) / threshold
 Keep below 50% for therapeutic window${status}`
 }

@@ -98,7 +98,7 @@ export default defineComponent({
 
   &__label {
     font-weight: 600;
-    font-size: 1rem;
+    font-size: var(--fs-2xl);
     color: var(--color-text-heading);
     line-height: 1.25;
   }

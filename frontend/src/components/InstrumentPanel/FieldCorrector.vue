@@ -266,7 +266,7 @@ export default defineComponent({
   &__arrow {
     text-align: center;
     color: var(--color-text-muted);
-    font-size: 1rem;
+    font-size: var(--fs-2xl);
   }
 
   &__field-label {

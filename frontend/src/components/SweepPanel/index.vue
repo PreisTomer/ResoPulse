@@ -59,7 +59,7 @@ import {
 } from '@/utils/physics'
 import { WAVEFORM, CELL_CATEGORY } from '@/constants/strings'
 import {
-  THRESHOLDS, DEFAULT_CAPSID_Q,
+  THRESHOLDS, DEFAULT_CAPSID_Q, NEAR_ZERO_DR,
   NEWTON_COOLING_LAMBDA, PENNES_BLOOD_COEFF, WF_CW, WF_PULSED, BODY_TEMP_C,
   H_FIRE_THRESHOLD_MULTIPLIER,
 } from '@/constants/physics'
@@ -194,7 +194,7 @@ export default defineComponent({
           }
         }
 
-        const ti = drH < 1e-9 ? (drT > 0 ? SWEEP_TI_CAP : 0) : Math.min(SWEEP_TI_CAP, drT / drH)
+        const ti = drH < NEAR_ZERO_DR ? (drT > 0 ? SWEEP_TI_CAP : 0) : Math.min(SWEEP_TI_CAP, drT / drH)
         points.push({ x, drH, drT, ti, tH, tT })
       }
       return points

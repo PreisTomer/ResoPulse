@@ -160,8 +160,14 @@ export default defineComponent({
     tipTiRange(): string {
       const { low, high } = this.tiRange
       const { RADIUS_VIRUS_MAX: rv, RADIUS_BACTERIA_MAX: rb } = THRESHOLDS
-      const uncH = this.cellStore.healthy.radius < rb ? '35%' : '20%'
-      const uncT = this.cellStore.target.radius < rv ? '45%' : this.cellStore.target.radius < rb ? '35%' : '20%'
+      const uncH = this.cellStore.healthy.radius < rb
+        ? `${(THRESHOLDS.UNCERTAINTY_BACTERIA  * 100).toFixed(0)}%`
+        : `${(THRESHOLDS.UNCERTAINTY_MAMMALIAN * 100).toFixed(0)}%`
+      const uncT = this.cellStore.target.radius < rv
+        ? `${(THRESHOLDS.UNCERTAINTY_VIRUS    * 100).toFixed(0)}%`
+        : this.cellStore.target.radius < rb
+          ? `${(THRESHOLDS.UNCERTAINTY_BACTERIA  * 100).toFixed(0)}%`
+          : `${(THRESHOLDS.UNCERTAINTY_MAMMALIAN * 100).toFixed(0)}%`
       return tipTiRange({ low, high, uncH, uncT })
     },
 
@@ -211,8 +217,8 @@ export default defineComponent({
 
     windowScoreClass(): string {
       const s = this.windowScore
-      if (s >= 0.5) return 'sel-panel__ws-val--good'
-      if (s >= 0.2) return 'sel-panel__ws-val--marginal'
+      if (s >= THRESHOLDS.WINDOW_SCORE_GOOD)     return 'sel-panel__ws-val--good'
+      if (s >= THRESHOLDS.WINDOW_SCORE_MARGINAL) return 'sel-panel__ws-val--marginal'
       return 'sel-panel__ws-val--poor'
     },
 
@@ -288,7 +294,7 @@ export default defineComponent({
     font-family: var(--font-mono);
     letter-spacing: -0.04em;
     line-height: 1;
-    transition: color 0.4s;
+    transition: color 0.4s; // intentionally slower than --tr-slow for large TI number colour shift
     flex-shrink: 0;
 
     &--strong   { color: var(--color-lime); }

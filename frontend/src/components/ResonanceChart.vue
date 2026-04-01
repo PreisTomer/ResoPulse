@@ -446,7 +446,7 @@ export default defineComponent({
   }
 
   &__speculative-icon {
-    font-size: 1rem;
+    font-size: var(--fs-2xl);
     flex-shrink: 0;
     color: var(--color-danger);
   }

@@ -88,6 +88,7 @@
   --fs-md:   0.82rem;   /* readable data / body labels                        */
   --fs-lg:   0.875rem;  /* standard body text                                 */
   --fs-xl:   0.90rem;   /* significant labels, readout sub-text               */
+  --fs-2xl:  1.00rem;   /* large readout values: field/freq display numbers   */
 
   /* ── Opacity scale (--op-*) ──────────────────────────────────────────── */
   --op-ghost:   0.35;   /* near-invisible decorations, disabled states  */

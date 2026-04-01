@@ -252,7 +252,7 @@ export default defineComponent({
     &-label  { flex: 1; }
 
     &-chevron {
-      font-size: 1rem;
+      font-size: var(--fs-2xl);
       line-height: 1;
       display: inline-block;
       transform: rotate(0deg);

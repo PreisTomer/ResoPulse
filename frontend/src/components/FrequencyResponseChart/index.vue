@@ -80,6 +80,9 @@ export default defineComponent({
     'cellStore.chartMode':                 { handler() { this.updateChart() } },
     'cellStore.waveform':                  { handler() { this.updateChart() } },
     'cellStore.dutyCycle':                 { handler() { this.updateChart() } },
+    'cellStore.healthyTemp':              { handler() { this.updateChart() } },
+    'cellStore.targetTemp':               { handler() { this.updateChart() } },
+    'cellStore.pulseWidthNs':             { handler() { this.updateChart() } },
   },
 
   mounted() {

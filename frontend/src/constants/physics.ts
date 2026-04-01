@@ -89,6 +89,9 @@ export const THRESHOLDS = {
   // Selectivity Sel = Vm_T / Vm_H
   SEL_STRONG:          1.5,
   SEL_MARGINAL:        1.0,
+  // Window score = P_T × (1 − P_H); thresholds for colour coding
+  WINDOW_SCORE_GOOD:     0.5,
+  WINDOW_SCORE_MARGINAL: 0.2,
   // Lysis probability sigmoid P = 1/(1+exp(−(DR−center)/slope))
   LYSIS_PROB_CENTER:   1.0,   // DR at P(lysis)=50%
   LYSIS_PROB_SLOPE:    0.05,

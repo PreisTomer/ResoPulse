@@ -68,21 +68,26 @@ export default defineComponent({
 
       const hTau = computeTau(s.healthy, sigma)
       const pefH = isPulsed ? Math.max(MIN_PULSE_ENVELOPE, 1 - Math.exp(-pw_ns * 1e-9 / hTau)) : 1.0
-      // Lysis field: E_lysis = Vth_eff / (1.5 × R × cosθ × pef). Apply temp correction so axis scale matches live sim.
+      // Lysis field: E_lysis = Vth_eff / (1.5 × R × cosθ × pef). cosT=0 (90° orientation) means
+      // field cannot couple — fall back to a wide axis so the chart still renders.
       const hVthEff = tempCorrectedVth(s.healthy.thresholdVoltage, s.healthyTemp) * hfireMult
-      const healthyLysis = hVthEff / (1.5 * s.healthy.radius * 1e-4 * cosT * pefH)
+      const healthyLysis = cosT < 1e-6
+        ? 1000
+        : hVthEff / (1.5 * s.healthy.radius * 1e-4 * cosT * pefH)
 
       let targetLysis: number
       if (s.isResonanceMode) {
         const tr = s.target as { resonantThresholdVcm?: number }
         // Resonance threshold is already in V/cm and independent of cosTheta orientation
-        const tResVth = tr.resonantThresholdVcm ?? (s.target.thresholdVoltage / (1.5 * s.target.radius * 1e-4 * cosT))
+        const tResVth = tr.resonantThresholdVcm ?? (s.target.thresholdVoltage / (1.5 * s.target.radius * 1e-4 * Math.max(cosT, 1e-6)))
         targetLysis = tempCorrectedVth(tResVth, s.targetTemp) * hfireMult
       } else {
         const tTau = computeTau(s.target, sigma)
         const pefT = isPulsed ? Math.max(MIN_PULSE_ENVELOPE, 1 - Math.exp(-pw_ns * 1e-9 / tTau)) : 1.0
         const tVthEff = tempCorrectedVth(s.target.thresholdVoltage, s.targetTemp) * hfireMult
-        targetLysis = tVthEff / (1.5 * s.target.radius * 1e-4 * cosT * pefT)
+        targetLysis = cosT < 1e-6
+          ? 1000
+          : tVthEff / (1.5 * s.target.radius * 1e-4 * cosT * pefT)
       }
       return Math.max(healthyLysis, targetLysis) * 2.0
     },
@@ -102,6 +107,7 @@ export default defineComponent({
         s.medium, s.waveform, s.dutyCycle, s.pulseWidthNs, s.chartMode,
         s.cellPackingFraction, s.perfusionRate,
         s.orientationDeg,
+        s.healthyTemp, s.targetTemp,
         s.resetCounter,
       ].join('|')
     },

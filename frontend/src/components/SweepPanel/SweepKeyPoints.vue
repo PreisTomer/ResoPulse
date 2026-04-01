@@ -100,7 +100,7 @@ export default defineComponent({
   tr:last-child td { border-bottom: none; }
 
   &__td-label  { color: var(--color-text-muted); font-family: inherit; font-size: var(--fs-sm); }
-  &__td--ok    { color: rgb(34, 197, 94); }
+  &__td--ok    { color: var(--color-lime); }
   &__td--warn  { color: var(--color-amber); }
   &__td--danger { color: var(--color-danger); }
 }
