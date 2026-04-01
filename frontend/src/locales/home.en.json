@@ -9,7 +9,7 @@
     "btnPrimary": "Open Experiment Lab",
     "btnGhost": "Read the Science",
     "capVm":          "Schwan Vm Model",
-    "capSelectivity": "Therapeutic Index",
+    "capSelectivity": "Selectivity Index (TI)",
     "capPulse":       "Pulsed IRE / nsEP",
     "capSweep":       "Frequency Sweep",
     "capPop":         "Size Distribution",

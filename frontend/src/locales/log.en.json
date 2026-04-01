@@ -29,7 +29,7 @@
     "tipThField": "<strong>Field: Applied Electric Field</strong>\nField intensity at time of reading.\nVm scales linearly with E (Schwan eq.).",
     "tipThTargetVm": "<strong>T-Vm: Target Transmembrane Potential</strong>\nPeak voltage across target cell membrane\nvia Schwan equation. Higher → more disruption.",
     "tipThHealthyVm": "<strong>H-Vm: Healthy Transmembrane Potential</strong>\nPeak voltage across healthy reference membrane.\nKeep below 50% of threshold for safe operation.",
-    "tipThSel": "<strong>Sel×, Vm Selectivity Ratio</strong>\nT-Vm / H-Vm, raw membrane potential ratio.\n<span class=\"tip-ok\">≥ {strong}×</span> Strong therapeutic window\n<span class=\"tip-val\">{marginal} - {strong}×</span> Marginal window\n<span class=\"tip-warn\">&lt; {marginal}×</span> Non-selective",
+    "tipThSel": "<strong>Sel×, Vm Selectivity Ratio</strong>\nT-Vm / H-Vm, raw membrane potential ratio.\n<span class=\"tip-ok\">≥ {strong}×</span> Strong selectivity window\n<span class=\"tip-val\">{marginal} - {strong}×</span> Marginal window\n<span class=\"tip-warn\">&lt; {marginal}×</span> Non-selective",
     "tipThEvent": "<strong>Event Type</strong>\nmanual, snapshot triggered by user\nlysis, membrane disrupted (auto-logged)",
     "logThTargetDR": "T-DR%",
     "logThHealthyDR": "H-DR%",

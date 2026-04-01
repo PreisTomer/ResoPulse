@@ -174,7 +174,7 @@ ${t('resonance.tipFieldDisruptNote')}${warn}`
     ? `\n<span class="tip-warn">⚠ Virion IRE threshold ≈ ${tStr}, impractical at any safe field.\nSwitch to Resonance mode for virion disruption.</span>`
     : targetCellCategory === CELL_CATEGORY.BACTERIA
       ? `\n<span class="tip-warn">⚠ Bacterial IRE threshold ≈ ${tStr}.\nUse nsEP: short pulse width (≪ τ) lowers effective E_lysis by reducing charge time.</span>`
-      : `\nTherapeutic window at current frequency:\n  Target lysis ≥ <span class="tip-val">${tStr}</span>  ·  Healthy lysis ≥ <span class="tip-val">${hStr}</span>`
+      : `\nSelectivity window at current frequency:\n  Target lysis ≥ <span class="tip-val">${tStr}</span>  ·  Healthy lysis ≥ <span class="tip-val">${hStr}</span>`
   return `<strong>Applied Electric Field Intensity</strong>
 Current: <span class="tip-val">${fieldDisplay}</span>
 Vm scales linearly:  Vm = 1.5 × E × R × cos θ / √(1+(ωτ)²)

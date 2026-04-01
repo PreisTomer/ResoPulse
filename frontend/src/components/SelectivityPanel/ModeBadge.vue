@@ -119,7 +119,10 @@ export default defineComponent({
         const tiDc = this.cellStore.tiQuasiDc
         return `${ICON.WARNING} fc(T) = ${formatFreqKHz(fcT)}, fc(H) = ${formatFreqKHz(fcH)} — both below slider minimum. Displayed TI is rolled-off and underestimates true quasi-DC selectivity (TI_DC = ${tiDc.toFixed(2)}×). Switch to saline or a higher-conductivity medium for accurate protocol calibration, then switch back to verify.`
       }
-      if (ti > 0 && ti < 0.85) {
+      if ((this.cellStore.healthy as { id?: string }).id === 'rbc') {
+        return `${ICON.WARNING} RBC modelled as sphere (R = 4 µm equatorial). Biconcave disk geometry overestimates Vm by ~43%, so displayed TI underestimates true selectivity. Use spheroid Schwan correction for quantitative lysis-field calibration.`
+      }
+      if (ti > 0 && ti < 1.0) {
         return `${ICON.WARNING} TI = ${ti.toFixed(2)}×, healthy cell DR exceeds target at current settings · Adjust frequency or field to find a selective window`
       }
       return null

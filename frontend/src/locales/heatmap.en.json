@@ -1,12 +1,12 @@
 {
   "heatmap": {
-    "title":    "Therapeutic Window Planner",
+    "title":    "Selectivity Window Planner",
     "eyebrow":  "2D Frequency × Field Decision Map",
     "subtitle": "Pre-hardware decision map, click any point to navigate there",
 
     "zoneSub":         "Sub-threshold",
     "zoneApproaching": "Approaching Window",
-    "zoneTherapeutic": "Therapeutic Window",
+    "zoneTherapeutic": "Selectivity Window",
     "zoneMarginal":    "Marginal: Healthy Stressed",
     "zoneAblative":    "Ablative: Non-selective",
     "zoneThermal":     "Thermal Danger",
@@ -22,7 +22,7 @@
     "statPLysis":  "P(lysis)",
     "statSel":     "Selectivity",
 
-    "tipCanvas":   "<strong>Therapeutic Window Planner</strong>\nX = RF Frequency (log) · Y = Field Intensity\n\n<span class='tip-ok'>■ Green</span> Selective target lysis, healthy safe\n<span class='tip-val'>■ Amber</span> Marginal, healthy stressed\n<span class='tip-warn'>■ Red</span> Ablative, non-selective (avoid)\n<span class='tip-warn'>■ Orange</span> Thermal ≥ 42°C\n■ Cyan Approaching window · ■ Dark Sub-threshold\n\nLines: yellow dashed = optimal freq · cyan dotted = fc corners\n<em>Click to set operating point.</em>",
+    "tipCanvas":   "<strong>Selectivity Window Planner</strong>\nX = RF Frequency (log) · Y = Field Intensity\n\n<span class='tip-ok'>■ Green</span> Selective target lysis, healthy safe\n<span class='tip-val'>■ Amber</span> Marginal, healthy stressed\n<span class='tip-warn'>■ Red</span> Ablative, non-selective (avoid)\n<span class='tip-warn'>■ Orange</span> Thermal ≥ 42°C\n■ Cyan Approaching window · ■ Dark Sub-threshold\n\nLines: yellow dashed = optimal freq · cyan dotted = fc corners\n<em>Click to set operating point.</em>",
 
     "tipStats":    "<strong>Operating Point Statistics</strong>\nAll values are computed at the current frequency and field using the Schwan single-shell model (or resonance Lorentzian in resonance mode).\n\nT-DR: disruption ratio of target cell  = Vm_T × PEF / Vm_thr_T\nH-DR: disruption ratio of healthy cell = Vm_H × PEF / Vm_thr_H\nH-Temp: healthy cell steady-state temperature = 37 + SAR·dc / (λ·cp)\nP(lysis): fraction of randomly-oriented target cells that exceed lysis threshold\n  P = max(0, 1 − 1/DR) , from 3D isotropic cosθ distribution\nSelectivity: TI = DR_T / DR_H (capped at 99.9)\n\nAll values update live as you drag the sliders.",
 

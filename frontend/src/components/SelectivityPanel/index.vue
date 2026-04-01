@@ -18,7 +18,7 @@
         </span>
         <div class="sel-panel__ratio-labels">
           <span class="sel-panel__ratio-label">{{ $t('selectivity.ratioLabel') }}</span>
-          <span class="sel-panel__ti-label">Vm {{ ICON.TIMES }}<span>{{ vmSelectivityRatio >= 99 ? ICON.INFINITY : vmSelectivityRatio.toFixed(2) }}</span></span>
+          <span class="sel-panel__ti-label">{{ $t('selectivity.vmSelLabel') }} {{ ICON.TIMES }}<span>{{ vmSelectivityRatio >= 99 ? ICON.INFINITY : vmSelectivityRatio.toFixed(2) }}</span></span>
         </div>
       </div>
 
@@ -101,7 +101,7 @@ import { CELL_CATEGORY, CHART_MODE, WAVEFORM } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
 import { safeRatio, tempCorrectedVth } from '@/utils/physics'
 import { formatPct } from '@/utils/format'
-import { tipTiRange, tipSelectivity } from '@/tooltips/selectivityTooltips'
+import { tipTiRange, tipSelectivity, tipSmallCellNote } from '@/tooltips/selectivityTooltips'
 import AccordionPanel from '@/components/AccordionPanel.vue'
 import DisruptionBars from './DisruptionBars.vue'
 import ComparisonTable from './ComparisonTable.vue'
@@ -246,16 +246,7 @@ export default defineComponent({
     },
 
     smallCellNoteTip(): string {
-      const { rT, rH, vthT, vthH } = this.cellSizeParams
-      const tiDc = (rT * vthH) / (rH * vthT)
-      return `<strong>Size Disadvantage: Target R &lt; Healthy R</strong>\n` +
-        `At quasi-DC, Vm = 1.5·E·R·cosθ (geometric only).\n` +
-        `TI limit = (R_T/R_H) × (Vth_H/Vth_T) = ${tiDc.toFixed(2)}\n` +
-        `A smaller target cannot be selectively lysed by field strength alone\n` +
-        `if TI_limit &lt; 1.0. Frequency tuning (f ≈ fc_T) recovers partial selectivity\n` +
-        `via τ differences, but the upper bound is (R_T·τ_H)/(R_H·τ_T).\n` +
-        `Consider: different healthy reference, H-FIRE (threshold gap), or\n` +
-        `a frequency between fc_H and fc_T if τ values differ sufficiently.`
+      return tipSmallCellNote(this.cellSizeParams)
     },
 
     tipWindowScore(): string {

@@ -122,14 +122,17 @@ export default defineComponent({
     },
 
     cmpTip(row: { preset: typeof CELL_PRESETS[0]; sel: number; tVmMv: string; hasRes: boolean }): string {
-      const selStr = row.sel >= 99 ? ICON.INFINITY : row.sel.toFixed(2)
-      const disr  = this.$t('selectivity.cmpTipDisruption')
-      const selLbl = this.$t('selectivity.cmpTipSelectivity')
-      const hint  = this.$t('selectivity.cmpTipClickHint')
+      const selStr    = row.sel >= 99 ? ICON.INFINITY : row.sel.toFixed(2)
+      const disr      = this.$t('selectivity.cmpTipDisruption')
+      const selLbl    = this.$t('selectivity.cmpTipSelectivity')
+      const hint      = this.$t('selectivity.cmpTipClickHint')
+      const counterNote = row.sel > 0 && row.sel < 1.0
+        ? `<span class='tip-warn'>${this.$t('selectivity.cmpTipCounterSelective')}</span>`
+        : ''
       if (row.hasRes) {
-        return `<strong>${row.preset.label}</strong>\n${row.preset.notes}\n${disr} = <span class='tip-val'>${row.tVmMv}</span>  ·  ${selLbl} = <span class='tip-val'>×${selStr}</span>${hint}`
+        return `<strong>${row.preset.label}</strong>\n${row.preset.notes}\n${disr} = <span class='tip-val'>${row.tVmMv}</span>  ·  ${selLbl} = <span class='tip-val'>×${selStr}</span>${counterNote}${hint}`
       }
-      return `<strong>${row.preset.label}</strong>\n${row.preset.notes}\nVm = <span class='tip-val'>${row.tVmMv} ${UNIT.MV}</span>  ·  ${selLbl} = <span class='tip-val'>×${selStr}</span>${hint}`
+      return `<strong>${row.preset.label}</strong>\n${row.preset.notes}\nVm = <span class='tip-val'>${row.tVmMv} ${UNIT.MV}</span>  ·  ${selLbl} = <span class='tip-val'>×${selStr}</span>${counterNote}${hint}`
     },
   },
 })

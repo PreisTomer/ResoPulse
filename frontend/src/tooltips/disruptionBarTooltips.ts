@@ -74,5 +74,5 @@ Ref: Tsen et al. (2007)`
 Induced Vm = <span class="tip-val">${healthyVmMv} mV</span>
 Lysis threshold = ${thresholdMv} mV
 Ratio = (Vm × PEF) / threshold
-Keep below 50% for therapeutic window${status}`
+Keep below 50% for selectivity window${status}`
 }

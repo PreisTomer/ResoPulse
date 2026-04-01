@@ -64,6 +64,9 @@
           {{ ICON.TIMES }}{{ cellStore.nuclearSelectivityRatio >= 99 ? ICON.INFINITY : cellStore.nuclearSelectivityRatio.toFixed(2) }}
         </span>
       </div>
+      <div v-if="!cellStore.healthy.nuclearRadius" class="sel-panel__nuc-anucleate-note">
+        {{ $t('selectivity.anucleateHealthyNote') }}
+      </div>
     </div>
   </template>
 </template>
@@ -278,5 +281,14 @@ export default defineComponent({
   &__nuc-sel--good { color: var(--color-lime); }
   &__nuc-sel--ok   { color: var(--color-amber); }
   &__nuc-sel--low  { color: var(--color-danger); }
+
+  &__nuc-anucleate-note {
+    font-size: var(--fs-xxs);
+    font-family: var(--font-mono);
+    color: var(--color-text-muted);
+    opacity: var(--op-dim);
+    line-height: 1.45;
+    margin-top: 0.2rem;
+  }
 }
 </style>

@@ -14,7 +14,7 @@ export function tipSnapBar(opts: {
   const unit       = isField ? UNIT.V_PER_CM : UNIT.KHZ
   const paramLabel = isField ? 'field intensity' : 'RF frequency'
   const center     = Math.round((lo + hi) / 2)
-  return `<strong>⭐ Therapeutic Window</strong>
+  return `<strong>⭐ Selectivity Window</strong>
 The sweep analysis has found a parameter range where:
   DR_target ≥ 85%, target membrane is at lysis threshold
   DR_healthy &lt; 50%, healthy cells remain below Rev-EP onset

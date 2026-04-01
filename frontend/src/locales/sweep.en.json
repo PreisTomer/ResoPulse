@@ -8,9 +8,9 @@
     "sweepFreqPill": "Frequency (kHz)",
     "fieldUnit": "V/cm",
     "freqUnit": "kHz",
-    "windowLabel": "Therapeutic window:",
+    "windowLabel": "Selectivity window:",
     "windowSub": "DR<sub>T</sub> &gt; 85% · DR<sub>H</sub> &lt; 50%",
-    "windowNone": "No therapeutic window found.",
+    "windowNone": "No selectivity window found.",
     "windowNoneRange": "Window exists above sweep range. Expand to ~{max} {unit} to find it.",
     "windowNoneImpossible": "No window possible at current settings (max TI: {ti}x). Try lower frequency or wider pulses.",
     "windowExpandBtn": "Expand range",
@@ -33,13 +33,13 @@
     "legendTI": "TI (right)",
 
     "tipSweepLabel": "<strong>Sweep Parameter</strong>\nChoose the physical quantity to vary on the x-axis.",
-    "tipFieldPill": "<strong>E-field Sweep</strong>\nVaries field 0 → max at fixed RF frequency.\nReveals minimum lysis field and therapeutic window.",
+    "tipFieldPill": "<strong>E-field Sweep</strong>\nVaries field 0 → max at fixed RF frequency.\nReveals minimum lysis field and selectivity window.",
     "tipFreqPill": "<strong>Frequency Sweep</strong>\nVaries RF frequency 0 → max at fixed field.\nShows Schwan roll-off and fc-dependent selectivity.\nNote: SAR is frequency-independent in this model.",
     "tipMaxLabel": "<strong>Sweep Maximum ({unit})</strong>\nUpper limit of the sweep axis.\nIncrease to reveal higher operating points.",
     "tipExport": "<strong>↓ Export CSV</strong>\nDownload all sweep data points.\nColumns: x · DR_H · DR_T · TI · T_H · T_T · in_window",
-    "tipChart": "<strong>Field Sweep Chart</strong>\n<span class=\"tip-val\">Red</span> = Target DR · <span class=\"tip-val\">Cyan</span> = Healthy DR\n<span class=\"tip-val\">Amber dashed</span> = TI (right axis)\n<span class=\"tip-val\">Green fill</span> = Therapeutic window\nWhite cursor = current active value",
+    "tipChart": "<strong>Field Sweep Chart</strong>\n<span class=\"tip-val\">Red</span> = Target DR · <span class=\"tip-val\">Cyan</span> = Healthy DR\n<span class=\"tip-val\">Amber dashed</span> = TI (right axis)\n<span class=\"tip-val\">Green fill</span> = Selectivity window\nWhite cursor = current active value",
 
     "tipThDrT": "<strong>DR_T, Target Disruption Ratio</strong>\nTarget DR at this operating point.\nDR = Vm × f_pulse / V_threshold\n1.0 = lysis threshold crossed",
-    "tipThDrH": "<strong>DR_H, Healthy Disruption Ratio</strong>\nHealthy DR at the same operating point.\nKeep below 0.50 for a safe therapeutic window."
+    "tipThDrH": "<strong>DR_H, Healthy Disruption Ratio</strong>\nHealthy DR at the same operating point.\nKeep below 0.50 for a safe selectivity window."
   }
 }

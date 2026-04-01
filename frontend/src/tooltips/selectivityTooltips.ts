@@ -33,13 +33,13 @@ export function tipSelectivity(params: {
   const { sel, vmSel, isResonanceTarget } = params
   const { SEL_STRONG: ss, SEL_MARGINAL: sm } = THRESHOLDS
   const quality = sel >= ss
-    ? '<span class="tip-ok">Strong therapeutic window</span>'
+    ? '<span class="tip-ok">Strong selectivity window</span>'
     : sel >= sm
       ? '<span class="tip-warn">Marginal window, adjust field or preset</span>'
       : '<span class="tip-warn">Non-selective, healthy cells equally at risk</span>'
   const selStr = sel >= 99 ? ICON.INFINITY : sel.toFixed(2)
   if (isResonanceTarget) {
-    return `<strong>TI (Therapeutic Index) = Target / Healthy disruption ratio</strong>
+    return `<strong>Selectivity Index (TI) = Target / Healthy disruption ratio</strong>
 Current: <span class="tip-val">×${selStr}</span>
 
 ${quality}
@@ -54,7 +54,7 @@ Ref: Tsen et al. (2007); Dykeman &amp; Sankey (2008)
 <span class="tip-warn">${ICON.WARNING} Enveloped viruses (Influenza, SARS-CoV-2): lipid envelope has no rigid-shell resonance (Q≈1). f_res/Q/E_thr values are theoretical extrapolations, not experimentally validated.</span>`
   }
   const vmStr = vmSel >= 99 ? ICON.INFINITY : vmSel.toFixed(2)
-  return `<strong>TI (Therapeutic Index) = (Vm_T/Vth_T) / (Vm_H/Vth_H)</strong>
+  return `<strong>Selectivity Index (TI) = (Vm_T/Vth_T) / (Vm_H/Vth_H)</strong>
 Current: <span class="tip-val">×${selStr}</span>
 
 ${quality}
@@ -68,6 +68,24 @@ For adeno/hepatocyte at DC: TI = (15µm×1.1V)/(10µm×0.70V) = <span class="tip
 <strong>Raw Vm selectivity</strong> = Vm_T / Vm_H = R_T/R_H at quasi-DC
 Current: <span class="tip-val">×${vmStr}</span>  (cancer/normal DC limit: 1.5×)
 TI incorporates lysis thresholds, more predictive for protocol selectivity than Vm ratio alone.`
+}
+
+export function tipSmallCellNote(params: {
+  rT: number
+  rH: number
+  vthT: number
+  vthH: number
+}): string {
+  const { rT, rH, vthT, vthH } = params
+  const tiDc = (rT * vthH) / (rH * vthT)
+  return `<strong>Size Disadvantage: Target R &lt; Healthy R</strong>
+At quasi-DC, Vm = 1.5·E·R·cosθ (geometric only).
+TI limit = (R_T/R_H) × (Vth_H/Vth_T) = ${tiDc.toFixed(2)}
+A smaller target cannot be selectively lysed by field strength alone
+if TI_limit &lt; 1.0. Frequency tuning (f ≈ fc_T) recovers partial selectivity
+via τ differences, but the upper bound is (R_T·τ_H)/(R_H·τ_T).
+Consider: different healthy reference, H-FIRE (threshold gap), or
+a frequency between fc_H and fc_T if τ values differ sufficiently.`
 }
 
 export function tipOptimal(params: {

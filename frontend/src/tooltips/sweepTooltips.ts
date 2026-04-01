@@ -11,18 +11,18 @@ export function tipWindow(params: {
   unit: string
 }): string {
   const { loStr, hiStr, center, unit } = params
-  return `<strong>Therapeutic Window</strong>
+  return `<strong>Selectivity Window</strong>
 Range where DR_target ≥ 85% AND DR_healthy &lt; 50% simultaneously.
 
   Lo: ${loStr} ${unit}  ·  Hi: ${hiStr} ${unit}
   Center: <span class="tip-val">${center} ${unit}</span>
 
-Operating within this window maximises therapeutic selectivity.
+Operating within this window maximises selectivity.
 Use the <span class="tip-val">⭐ Set to Window Center</span> button in the snap bar to apply ${center} ${unit} to the active parameter.`
 }
 
 export function tipNoWindow(isField: boolean): string {
-  return `<strong>No Therapeutic Window</strong>
+  return `<strong>No Selectivity Window</strong>
 No ${isField ? 'field intensity' : 'frequency'} range found where:
   DR_target ≥ 85%  AND  DR_healthy &lt; 50%
 
@@ -40,9 +40,9 @@ Key ${isField ? 'field' : 'frequency'} value where target DR crosses a biophysic
 
 export function tipThTI(): string {
   const { TI_STRONG: s, TI_MARGINAL: m } = THRESHOLDS
-  return `<strong>TI: Therapeutic Index</strong>
+  return `<strong>TI: Selectivity Index</strong>
 TI = DR_T / DR_H, selectivity ratio at this operating point.
-<span class="tip-ok">≥ ${s}×</span>, strong therapeutic window
+<span class="tip-ok">≥ ${s}×</span>, strong selectivity window
 <span class="tip-val">${m} - ${s}×</span>, marginal window
 <span class="tip-warn">&lt; ${m}×</span>, poor selectivity`
 }

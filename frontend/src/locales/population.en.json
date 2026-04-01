@@ -10,7 +10,7 @@
     "warnIcon": "⚠",
     "okIcon": "✓",
     "warnCollateral": "{pct}% of healthy cells cross the lysis threshold, reduce field or tune frequency.",
-    "okWindow": "{pct}% of target cells lysed · 0% healthy collateral. Therapeutic window is effective.",
+    "okWindow": "{pct}% of target cells lysed · 0% healthy collateral. Selectivity window is effective.",
     "badgeLysed": "Lysed {pct}%",
     "badgeRevEp": "Rev-EP {pct}%",
     "badgeNour": "Nourishing {pct}%",

@@ -1,8 +1,8 @@
 {
   "selectivity": {
     "title": "Selectivity Analysis",
-    "ratioLabel": "Therapeutic Index",
-    "vmSelLabel": "Vm sel.",
+    "ratioLabel": "Selectivity Index (TI)",
+    "vmSelLabel": "Vm",
     "targetBar": "T",
     "healthyBar": "H",
     "tDisr": "T-Disr",
@@ -22,13 +22,13 @@
     "tipVmSarSchwan": "<strong>Transmembrane Potential &amp; Time-Averaged SAR</strong>\nVm = 1.5·E·R / √(1+(ωτ)²)\n  τ = R·Cm·(2σ_e+σ_i)/(2σ_e·σ_i)\nSAR_avg = σ_i·α²·E²·wf·dc / ρ\n  α = 3σ_e/(2σ_e+σ_i), internal field factor\n  wf = 0.5 (CW) or 1.0 (pulsed) · dc = duty cycle\nTime-averaged SAR drives steady-state heating; T_ss shown in duty cycle control.",
 
     "tipTargetLysisField": "<strong>Target Lysis Field</strong>\nMinimum E to reach lysis threshold at current frequency.\nE_lysis = Vm_thr · √(1+(ωτ)²) / (1.5·R)",
-    "tipHealthyLysisField": "<strong>Healthy Lysis Field</strong>\nMinimum E to reach lysis threshold at current frequency.\nKeep operating field below this for selective therapy.",
+    "tipHealthyLysisField": "<strong>Healthy Lysis Field</strong>\nMinimum E to reach lysis threshold at current frequency.\nKeep operating field below this for selective protocol.",
 
     "tipSkinDepth": "<strong>EM Penetration Depth δ</strong>\nExact lossy-dielectric formula (valid for any loss tangent):\nδ = 1/α,  α = ω√(με/2) × √(√(1+(σ/ωε)²) − 1)\nReduces to √(1/(π·f·μ₀·σ)) only when σ ≫ ωε (&lt;300 MHz in saline).\nSaline (σ_e = 1.5 S/m, ε_r = 80, static model):\n  100 MHz → 48 mm · 1 GHz → 32 mm · 10 GHz → ~32 mm\nNote: ε_r decreases above 1 GHz (Cole-Cole dispersion); actual δ shorter in practice.\n≥20 mm: full cuvette penetration · 5-20 mm: partial · &lt;5 mm: near-surface only\nRef: Gabriel et al. (1996) Phys. Med. Biol. 41:2271",
     "tipFresRange": "<strong>f_res Uncertainty Range</strong>\nf_res = v_sound / (2R), uncertainty from v_sound range.\nBacteria: v_wall ≈ 800-1200 m/s → ±25-30%\nEnveloped viruses: v_eff poorly defined → ±40%\nTune frequency experimentally within this range.",
     "tipQFactor": "<strong>Q-Factor Uncertainty</strong>\nQ sets the resonance linewidth.\nLower Q → broader resonance, weaker peak amplitude.\nDykeman &amp; Sankey (2010) validated Q on rigid icosahedral\ncapsids only. Bacterial peptidoglycan and viral lipid\nenvelopes have substantially lower Q.",
     "tipBasis": "<strong>Experimental Basis</strong>\nLASER-VALIDATED: confirmed by pulsed laser (Tsen 2007-2012)\nRF-EXTRAPOLATED: acoustic mechanism plausible;\n  GHz RF delivery not yet validated experimentally\nSPECULATIVE: no experimental validation by any method\nRef: Tsen et al. (2007); Dykeman &amp; Sankey (2010)",
-    "tipModeBadge": "<strong>Therapeutic Mode</strong>\n<span class=\"tip-ok\">Therapeutic</span>  DR_T >85%, DR_H <50%\n  Target at lysis threshold · healthy safely below 50%\n<span class=\"tip-val\">Marginal</span>  DR_T >85%, DR_H 50-84%\n  Healthy cells stressed, adjust field or frequency\n<span class=\"tip-val\">Approaching</span>  DR_T 50-85%\n  Increase field to reach therapeutic window\nSub-threshold  DR_T <50%, field too low\n<span class=\"tip-warn\">Ablative</span>  DR_H >85%\n  Non-selective, both cell types at lysis",
+    "tipModeBadge": "<strong>Protocol Mode</strong>\n<span class=\"tip-ok\">Selectivity Window</span>  DR_T >85%, DR_H <50%\n  Target at lysis threshold · healthy safely below 50%\n<span class=\"tip-val\">Marginal Window</span>  DR_T >85%, DR_H 50-84%\n  Healthy cells stressed, adjust field or frequency\n<span class=\"tip-val\">Approaching</span>  DR_T 50-85%\n  Increase field to reach selectivity window\nSub-threshold  DR_T <50%, field too low\n<span class=\"tip-warn\">Ablative</span>  DR_H >85%\n  Non-selective, both cell types at lysis",
 
     "basisLaserValidated": "LASER-VALIDATED",
     "basisRfExtrapolated": "RF-EXTRAPOLATED",
@@ -37,21 +37,14 @@
 
     "cmpTipDisruption": "Disruption",
     "cmpTipSelectivity": "Selectivity",
+    "cmpTipCounterSelective": "\nCounter-selective at current settings: healthy reference DR exceeds this target. Adjust frequency or field.",
     "cmpTipClickHint": "\nClick a preset pill below to switch to this cell.",
-    "presetTipRadius": "R",
-    "presetTipMembrane": "membrane",
-    "presetTipVmThr": "Vm threshold",
 
-    "targetLibTitle": "Target Cell Library",
-    "targetLibTip": "Select a pathogen or cancer cell as the target.\nEach preset uses biologically realistic parameters\nfrom bioelectromagnetics literature.",
-    "healthyLibTitle": "Healthy Baseline",
-    "healthyLibTip": "Reference cell for the selectivity ratio.\nSwitch between types to model different tissue contexts.",
-    "presetCompTitle": "Selectivity vs All Presets",
     "presetCompTip": "Selectivity ratio for every target preset against\nthe current healthy baseline, at current field & medium.\nResonance presets show disruption ratio.\nSorted highest → lowest. Active preset highlighted.",
 
     "modeSubThreshold": "Sub-threshold",
     "modeApproaching": "Approaching Window",
-    "modeTherapeutic": "Therapeutic Window",
+    "modeTherapeutic": "Selectivity Window",
     "modeAblative": "Ablative",
     "modeMarginal": "Marginal Window",
 
@@ -60,6 +53,7 @@
     "compAltViruses": "Alternative Viruses",
 
     "neSelectivity": "NE Selectivity",
+    "anucleateHealthyNote": "Healthy reference is enucleate (no nuclear membrane). NE selectivity is not meaningful as a differential metric.",
     "resonanceParamsTitle": "RESONANCE PARAMETERS",
     "skinDepthLabel": "δ penetration",
     "fresRangeLabel": "f_res range",
@@ -69,7 +63,7 @@
 
     "windowScoreLabel": "Pop. Window Score",
     "wsFormula": "= P(T)\u00d7(1-P(H))",
-    "tipWindowScore": "<strong>Population Window Score</strong>\nWS = P(target lysis) × (1 - P(healthy lysis))\n  WS = {score}%  (P_T = {pT}%, P_H = {pH}%)\n\nWS = 100%: all target destroyed, zero healthy collateral (ideal)\nWS = 0%: no target lysis, or complete healthy destruction (unusable)\n≥50%: effective protocol window\n20-50%: marginal window\n<20%: poor selectivity at current settings\n\nBased on random-orientation suspension probability model.",
+    "tipWindowScore": "<strong>Population Window Score</strong>\nWS = P(target lysis) × (1 - P(healthy lysis))\n  WS = {score}  (P_T = {pT}, P_H = {pH})\n\nWS = 100%: all target destroyed, zero healthy collateral (ideal)\nWS = 0%: no target lysis, or complete healthy destruction (unusable)\n≥50%: effective protocol window\n20-50%: marginal window\n<20%: poor selectivity at current settings\n\nBased on random-orientation suspension probability model.",
     "orientFracLabel": "P(lysis) orient.",
     "popDistLabel": "P(lysis) + size dist.",
     "tipPopDist": "<strong>Population Lysis Fraction with Size Distribution</strong>\\nIntegrates random orientation (cosθ) AND log-normal cell size distribution.\\nCV = σ_R/R_mean: mammalian ~25%, bacteria ~22%, virus ~8%.\\nFor each sub-population of radius r: DR(r) = DR_nom × (r/R),\\nthen P(lysis&#124;r) = max(0, 1 − 1/DR(r)).\\nP_pop = ∫ P(lysis&#124;r) × f_lognormal(r) dr  (60-pt numerical integration)\\nRef: Tzur et al. (2009) Science 325:167.\\nMore realistic than orientation-only for heterogeneous cell suspensions.",
@@ -80,22 +74,9 @@
     "depNdep": "nDEP",
     "depPdepDir": "→ high-field",
     "depNdepDir": "→ low-field",
-    "depKLabel": "Re[K]",
     "depCrossLabel": "f_cross",
     "depForceLabel": "time-avg. scale",
-    "depCrossNone": ", ",
-    "tipDep": "<strong>Dielectrophoresis (DEP)</strong>\nClausius-Mossotti factor K(ω), single-shell sphere model.\n  K(ω) = (ε*_eff − ε*_m) / (ε*_eff + 2ε*_m)\n  ε*(ω) = ε_r·ε₀ − jσ/ω\n\n<span class=\"tip-ok\">pDEP</span>  Re[K] &gt; 0, cell attracted to field maxima\n<span class=\"tip-warn\">nDEP</span>  Re[K] &lt; 0, cell repelled from field maxima\n  f_cross, crossover frequency where Re[K] = 0\n\nEffective time-averaged force scales:\n  CW sinusoidal: × 0.50\n  Pulsed H-FIRE: × duty cycle\n\nRef: Gascoyne &amp; Vykoukal (2002) Electrophoresis 23:1973.\nNote: model invalid at GHz acoustic resonance frequencies.",
-
-    "depForceRatioLabel": "|K_T/K_H|",
-    "depForceRatioTip": "<strong>DEP Force Ratio |Re[K_T] / Re[K_H]|</strong>\nRatio of Clausius-Mossotti magnitudes at current frequency.\n&gt;1: target experiences stronger DEP force than healthy cell.\n= 1: equal DEP forces (no DEP selectivity).\n→ max: healthy cell near crossover (K_H → 0), ideal for separation.\n\nNote: ratio only indicates relative force magnitude, not direction.\nFor directional separation see the pDEP/nDEP badges above.",
-
-    "depSepWindow": "DEP SEPARATION WINDOW",
-    "depSepWindowTip": "<strong>DEP Separation Window</strong>\nTarget and healthy cells are in opposite DEP regimes at this frequency:\n  Target: {tdep} (Re[K_T] = {tk})\n  Healthy: {hdep} (Re[K_H] = {hk})\n\nCells migrate in opposite directions under non-uniform fields.\nThis is the optimal DEP condition for cell sorting and isolation.\nIn a DEP chip or microfluidic channel, the two populations will\nmigrate to opposite electrodes simultaneously.\n\nRef: Gascoyne &amp; Vykoukal (2002) Electrophoresis 23:1973.",
-
-    "depMedSensTitle": "f_cross vs buffer",
-    "depMedSensTip": "<strong>DEP Crossover Frequency vs Buffer Conductivity</strong>\nf_cross is the frequency where Re[K(ω)] = 0 and DEP force reverses.\nIt is exquisitely sensitive to medium conductivity σ_e:\n  Low σ_e: f_cross shifts to lower frequency\n  High σ_e: f_cross shifts to higher frequency\n\nChoosing a buffer where f_cross(T) and f_cross(H) differ maximally\nallows selective targeting of one population by frequency tuning.\nHighlighted row: currently selected buffer.\n\nBisection computed over 1 kHz to 10 GHz log range.\nRef: Gascoyne &amp; Vykoukal (2002); Markx &amp; Davey (1999).",
-    "depMedSensNoXover": ", ",
-    "depMedSensH": "H",
-    "depMedSensT": "T"
+    "depCrossNone": "—",
+    "tipDep": "<strong>Dielectrophoresis (DEP)</strong>\nClausius-Mossotti factor K(ω), single-shell sphere model.\n  K(ω) = (ε*_eff − ε*_m) / (ε*_eff + 2ε*_m)\n  ε*(ω) = ε_r·ε₀ − jσ/ω\n\n<span class=\"tip-ok\">pDEP</span>  Re[K] &gt; 0, cell attracted to field maxima\n<span class=\"tip-warn\">nDEP</span>  Re[K] &lt; 0, cell repelled from field maxima\n  f_cross, crossover frequency where Re[K] = 0\n\nEffective time-averaged force scales:\n  CW sinusoidal: × 0.50\n  Pulsed H-FIRE: × duty cycle\n\nRef: Gascoyne &amp; Vykoukal (2002) Electrophoresis 23:1973.\nNote: model invalid at GHz acoustic resonance frequencies."
   }
 }
