@@ -56,8 +56,8 @@ export const HMAP_MARGIN = {
 export const HMAP_LYSIS_DR     = 0.85  // target DR ≥ this → lysis threshold
 export const HMAP_APPROACH_DR  = 0.50  // target DR ≥ this → approaching Rev-EP
 export const HMAP_WARN_DR      = 0.50  // healthy DR ≥ this → stress onset
-export const HMAP_THERM_WARN_C = 40.0  // hyperthermic warning [°C]
-export const HMAP_THERM_CRIT_C = 42.0  // protein denaturing danger [°C]
+export const HMAP_THERM_WARN_C = 42.0  // hyperthermic safety limit — amber badge above this [°C]
+export const HMAP_THERM_CRIT_C = 60.0  // protein denaturation onset — THERMAL zone above this [°C]; matches THRESHOLDS.TEMP_DENATURING
 
 // ── Zone identifiers (priority: THERMAL > ABLATIVE > MARGINAL > THERAPEUTIC > APPROACHING > SUB) ──
 export const HMAP_ZONE = {

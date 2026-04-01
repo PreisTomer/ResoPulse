@@ -36,7 +36,7 @@
     "tipFieldPill": "<strong>E-field Sweep</strong>\nVaries field 0 → max at fixed RF frequency.\nReveals minimum lysis field and selectivity window.",
     "tipFreqPill": "<strong>Frequency Sweep</strong>\nVaries RF frequency 0 → max at fixed field.\nShows Schwan roll-off and fc-dependent selectivity.\nNote: SAR is frequency-independent in this model.",
     "tipMaxLabel": "<strong>Sweep Maximum ({unit})</strong>\nUpper limit of the sweep axis.\nIncrease to reveal higher operating points.",
-    "tipExport": "<strong>↓ Export CSV</strong>\nDownload all sweep data points.\nColumns: x · DR_H · DR_T · TI · T_H · T_T · selective_window\nselective_window=1 only when DR_T≥85% AND DR_H<50% AND T_target<60°C.",
+    "tipExport": "<strong>↓ Export CSV</strong>\nDownload all sweep data points.\nColumns: x · DR_H · DR_T · TI · T_H · T_T · selective_window\nselective_window=1 only when DR_T≥85% AND DR_H<50% AND T_target<60°C AND T_healthy<60°C.\nBoth temperatures checked: healthy mammalian cells heat faster than bacteria at the same field intensity.",
     "tipChart": "<strong>Field Sweep Chart</strong>\n<span class=\"tip-val\">Red</span> = Target DR · <span class=\"tip-val\">Cyan</span> = Healthy DR\n<span class=\"tip-val\">Amber dashed</span> = TI (right axis)\n<span class=\"tip-val\">Green fill</span> = Selectivity window\nWhite cursor = current active value",
 
     "tipThDrT": "<strong>DR_T, Target Disruption Ratio</strong>\nTarget DR at this operating point.\nDR = Vm × f_pulse / V_threshold\n1.0 = lysis threshold crossed",

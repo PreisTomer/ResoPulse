@@ -2,9 +2,7 @@
 
 // Biophysics utilities - Schwan single-shell model, SAR, nsEP, acoustic resonance, EM skin depth
 import type { CellConfig } from '@/types/cell'
-import { SCHWAN_SPHERE_FACTOR, WF_CW, EPSILON_R_CYTOPLASM, SIGMA_MEMBRANE_SI, TWO_PI, POP_LYSIS_GAUSS_N, POP_LYSIS_GAUSS_Z_MAX, BODY_TEMP_C, TEMP_EP_COEFF, TEMP_EP_CLAMP_MIN } from '@/constants/physics'
-
-export const EPSILON_0 = 8.854187817e-12 // F/m
+import { SCHWAN_SPHERE_FACTOR, WF_CW, EPSILON_R_CYTOPLASM, SIGMA_MEMBRANE_SI, TWO_PI, POP_LYSIS_GAUSS_N, POP_LYSIS_GAUSS_Z_MAX, BODY_TEMP_C, TEMP_EP_COEFF, TEMP_EP_CLAMP_MIN, EPSILON_0 } from '@/constants/physics'
 
 // numerator/denominator capped at cap; returns 0 or cap when denominator < epsilon.
 export function safeRatio(numerator: number, denominator: number, cap: number, epsilon = 1e-9): number {
@@ -248,7 +246,7 @@ export function tempCorrectedVth(nominalVth: number, tempC: number): number {
 
 // ── Population lysis fraction (log-normal size distribution) ─────────────────
 
-// Lysis fraction over log-normal size distribution (cv). Rectangle rule, 61 z-points.
+// Lysis fraction over log-normal size distribution (cv). Rectangle rule, N z-points.
 export function computePopulationLysisFraction(dr: number, cv: number): number {
   if (dr <= 0) return 0
   if (cv <= 0) return Math.max(0, Math.min(1, 1 - 1 / dr))
@@ -256,9 +254,9 @@ export function computePopulationLysisFraction(dr: number, cv: number): number {
   const muLn    = -0.5 * sigmaLn * sigmaLn  // ensures E[X] = 1 (mean-normalised)
   const zMin    = -POP_LYSIS_GAUSS_Z_MAX
   const zMax    =  POP_LYSIS_GAUSS_Z_MAX
-  const dz      = (zMax - zMin) / POP_LYSIS_GAUSS_N
+  const dz      = (zMax - zMin) / POP_LYSIS_GAUSS_N  // N intervals, N evaluations
   let sum = 0
-  for (let i = 0; i <= POP_LYSIS_GAUSS_N; i++) {
+  for (let i = 0; i < POP_LYSIS_GAUSS_N; i++) {
     const z      = zMin + i * dz
     const x      = Math.exp(sigmaLn * z + muLn)
     const pLysis = Math.max(0, 1 - 1 / (dr * x))  // cosθ orientation model at this radius

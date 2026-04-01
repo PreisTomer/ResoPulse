@@ -6,8 +6,7 @@
 import { MEDIA } from '@/constants/media'
 import { UNIT } from '@/constants/units'
 import { CELL_LABEL, CHART_MODE } from '@/constants/strings'
-import { EPSILON_0 } from '@/utils/physics'
-import { TWO_PI, THRESHOLDS, NEWTON_COOLING_LAMBDA, PENNES_BLOOD_COEFF, EPSILON_R_CYTOPLASM, SIGMA_MEMBRANE_SI, TEMP_EP_COEFF } from '@/constants/physics'
+import { TWO_PI, THRESHOLDS, NEWTON_COOLING_LAMBDA, PENNES_BLOOD_COEFF, EPSILON_R_CYTOPLASM, SIGMA_MEMBRANE_SI, TEMP_EP_COEFF, EPSILON_0 } from '@/constants/physics'
 import type { MediumKey } from '@/types/media'
 import type { CellParamSnapshot, LogEntry } from '@/types/experiment'
 

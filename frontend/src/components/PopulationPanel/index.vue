@@ -266,7 +266,8 @@ export default defineComponent({
           const threshNominal = vThUncFrac > 0
             ? sampleGaussian(t.resonantThresholdVcm!, t.resonantThresholdVcm! * vThUncFrac, t.resonantThresholdVcm! * 0.5, t.resonantThresholdVcm! * 2.0)
             : t.resonantThresholdVcm!
-          const threshEff = tempCorrectedVth(threshNominal, cellTemp) * hfireMult
+          // Acoustic resonance threshold: temperature correction only — hfireMult does not apply
+          const threshEff = tempCorrectedVth(threshNominal, cellTemp)
           return computeResonantDisruption(fResScaled, Q, threshEff, freqKHz * 1e3, E)
         }
 

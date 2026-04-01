@@ -203,11 +203,14 @@ export default defineComponent({
     windowRange(): { lo: number; hi: number } | null {
       let lo = -1, hi = -1
       for (const p of this.sweepData) {
-        // Require target above lysis threshold, healthy sub-threshold, AND no thermal denaturing.
+        // Require target above lysis threshold, healthy sub-threshold, AND neither cell thermally denaturing.
+        // Both temperatures must be checked: healthy (mammalian) heats more than bacteria at the same field,
+        // so checking only the target temperature would allow dangerously hot healthy cells.
         if (
           p.drT >= THRESHOLDS.DISRUPTION_WARN &&
           p.drH < THRESHOLDS.HEALTHY_APPROACHING &&
-          p.tT  < THRESHOLDS.TEMP_DENATURING
+          p.tT  < THRESHOLDS.TEMP_DENATURING &&
+          p.tH  < THRESHOLDS.TEMP_DENATURING
         ) {
           if (lo < 0) lo = p.x
           hi = p.x
@@ -287,7 +290,8 @@ export default defineComponent({
         const inWindow = (
           p.drT >= THRESHOLDS.DISRUPTION_WARN &&
           p.drH  < THRESHOLDS.HEALTHY_APPROACHING &&
-          p.tT   < THRESHOLDS.TEMP_DENATURING
+          p.tT   < THRESHOLDS.TEMP_DENATURING &&
+          p.tH   < THRESHOLDS.TEMP_DENATURING
         ) ? 1 : 0
         return `${p.x.toFixed(2)},${p.drH.toFixed(4)},${p.drT.toFixed(4)},${p.ti.toFixed(4)},${p.tH.toFixed(2)},${p.tT.toFixed(2)},${inWindow}`
       })

@@ -255,8 +255,9 @@ export const useCellStore = defineStore('cell', {
         (cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) &&
         t.resonantFreqGHz && t.resonantThresholdVcm
       ) {
-        // Apply same temperature correction + H-FIRE threshold scaling as the Schwan path
-        const effThreshold = tempCorrectedVth(t.resonantThresholdVcm, state.targetTemp) * hfireMult
+        // H-FIRE bipolar charge cancellation is an EP membrane-charging mechanism only.
+        // Acoustic resonance disruption is mechanical — hfireMult does NOT apply here.
+        const effThreshold = tempCorrectedVth(t.resonantThresholdVcm, state.targetTemp)
         return computeResonantDisruption(
           t.resonantFreqGHz,
           t.capsidQ ?? DEFAULT_CAPSID_Q,
@@ -312,8 +313,8 @@ export const useCellStore = defineStore('cell', {
           t.resonantFreqGHz && t.resonantThresholdVcm &&
           t.capsidQMin !== undefined && t.capsidQMax !== undefined
         ) {
-          const hfireMult = state.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
-          const effThr    = tempCorrectedVth(t.resonantThresholdVcm, state.targetTemp) * hfireMult
+          // Acoustic resonance threshold: temperature correction only — hfireMult does not apply
+          const effThr    = tempCorrectedVth(t.resonantThresholdVcm, state.targetTemp)
           const hDr    = this.healthyDisruptionRatio
           const freqHz = state.currentBroadcastFrequency * KHZ_TO_HZ
           // Q_min → smaller Lorentzian peak → lower DR_T → lower TI (worst case)
@@ -561,8 +562,8 @@ export const useCellStore = defineStore('cell', {
       ) {
         // Compute actual TI at f_res instead of returning an arbitrary sentinel value
         const freqKhz = target.resonantFreqGHz * 1e6  // GHz → kHz
-        const hfireMult = state.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
-        const effThr    = tempCorrectedVth(target.resonantThresholdVcm, state.targetTemp) * hfireMult
+        // Acoustic resonance threshold: temperature correction only — hfireMult does not apply
+        const effThr    = tempCorrectedVth(target.resonantThresholdVcm, state.targetTemp)
         const drT = computeResonantDisruption(
           target.resonantFreqGHz,
           target.capsidQ ?? DEFAULT_CAPSID_Q,
@@ -571,6 +572,7 @@ export const useCellStore = defineStore('cell', {
           state.fieldIntensity,
         )
         const sigma_e = this.effectiveSigmaE
+        const hfireMult = state.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
         const hVm = computeSchwan(state.healthy, freqKhz, state.fieldIntensity, sigma_e, this.cosThetaFactor)
         const vthH = tempCorrectedVth(state.healthy.thresholdVoltage, state.healthyTemp)
         const drH  = (hVm * this.pulseEnvelopeFactorHealthy) / (vthH * hfireMult)
