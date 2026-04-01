@@ -38,7 +38,7 @@
       </div>
 
       <!-- ── Small-cell selectivity disadvantage note ───────────── -->
-      <div v-if="smallCellNote" class="sel-panel__size-note" v-tip="smallCellNoteTip">
+      <div v-if="smallCellNote" class="sel-panel__size-note" :class="{ 'sel-panel__size-note--inverted': selectionInverted }" v-tip="smallCellNoteTip">
         <span class="sel-panel__size-note-icon">{{ ICON.WARNING }}</span>
         <span class="sel-panel__size-note-label">{{ $t('selectivity.smallCellNoteLabel') }}</span>
         <span class="sel-panel__size-note-val">R_T/R_H = {{ smallCellRadiusRatio }}</span>
@@ -230,6 +230,11 @@ export default defineComponent({
       return tiDc < THRESHOLDS.TI_STRONG
     },
 
+    selectionInverted(): boolean {
+      const { rT, rH, vthT, vthH } = this.cellSizeParams
+      return (rT * vthH) / (rH * vthT) < 1.0
+    },
+
     smallCellRadiusRatio(): string {
       const { rT, rH } = this.cellSizeParams
       return (rT / rH).toFixed(2)
@@ -335,6 +340,14 @@ export default defineComponent({
     border: 1px solid color-mix(in srgb, var(--color-amber) 30%, transparent);
     margin-top: -0.1rem;
     cursor: help;
+
+    &--inverted {
+      background: color-mix(in srgb, var(--color-danger) 10%, transparent);
+      border-color: color-mix(in srgb, var(--color-danger) 40%, transparent);
+
+      .sel-panel__size-note-label { color: var(--color-danger); }
+      .sel-panel__size-note-val   { color: var(--color-danger); }
+    }
   }
 
   &__size-note-icon {
