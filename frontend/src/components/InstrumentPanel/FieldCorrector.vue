@@ -10,16 +10,16 @@
     <div
       class="field-corrector__status"
       :class="{
-        'field-corrector__status--ok':     correctionPct < 2,
-        'field-corrector__status--minor':  correctionPct >= 2 && correctionPct < 8,
-        'field-corrector__status--needed': correctionPct >= 8,
+        'field-corrector__status--ok':     correctionPct < CORRECTION_PCT_OK,
+        'field-corrector__status--minor':  correctionPct >= CORRECTION_PCT_OK && correctionPct < CORRECTION_PCT_NEEDED,
+        'field-corrector__status--needed': correctionPct >= CORRECTION_PCT_NEEDED,
       }"
     >
       <span class="field-corrector__status-dot"></span>
       <span class="field-corrector__status-label">
-        {{ correctionPct < 2
+        {{ correctionPct < CORRECTION_PCT_OK
           ? $t('instrument.corrector.statusOk')
-          : correctionPct < 8
+          : correctionPct < CORRECTION_PCT_NEEDED
             ? $t('instrument.corrector.statusMinor')
             : $t('instrument.corrector.statusNeeded') }}
       </span>
@@ -57,7 +57,7 @@
       <span class="field-corrector__factor-label">{{ $t('instrument.corrector.factor') }}</span>
       <span
         class="field-corrector__factor-value"
-        :class="{ 'field-corrector__factor-value--warn': correctionPct > 5 }"
+        :class="{ 'field-corrector__factor-value--warn': correctionPct > CORRECTION_PCT_WARN }"
       >
         {{ ICON.TIMES }}{{ factorDisplay }}
       </span>
@@ -74,9 +74,9 @@
         <span
           class="field-corrector__rf-value"
           :class="{
-            'field-corrector__rf-value--ok':   vswrNum <= 2,
-            'field-corrector__rf-value--warn':  vswrNum > 2 && vswrNum <= 5,
-            'field-corrector__rf-value--danger': vswrNum > 5,
+            'field-corrector__rf-value--ok':     vswrNum <= VSWR_OK,
+            'field-corrector__rf-value--warn':   vswrNum > VSWR_OK && vswrNum <= VSWR_WARN,
+            'field-corrector__rf-value--danger': vswrNum > VSWR_WARN,
           }"
         >{{ vswrDisplay }}</span>
       </div>
@@ -85,9 +85,9 @@
         <span
           class="field-corrector__rf-value"
           :class="{
-            'field-corrector__rf-value--ok':     powerEfficiency >= 0.90,
-            'field-corrector__rf-value--warn':   powerEfficiency >= 0.75 && powerEfficiency < 0.90,
-            'field-corrector__rf-value--danger': powerEfficiency < 0.75,
+            'field-corrector__rf-value--ok':     powerEfficiency >= POWER_EFFICIENCY_OK,
+            'field-corrector__rf-value--warn':   powerEfficiency >= POWER_EFFICIENCY_WARN && powerEfficiency < POWER_EFFICIENCY_OK,
+            'field-corrector__rf-value--danger': powerEfficiency < POWER_EFFICIENCY_WARN,
           }"
         >{{ powerEfficiencyDisplay }}</span>
       </div>
@@ -129,12 +129,22 @@ import { useImpedanceStore } from '@/stores/impedanceStore'
 import { useCellStore } from '@/stores/cellStore'
 import { UNIT } from '@/constants/units'
 import { ICON } from '@/constants/icons'
+import {
+  CORRECTION_PCT_OK, CORRECTION_PCT_WARN, CORRECTION_PCT_NEEDED,
+  VSWR_OK, VSWR_WARN,
+  POWER_EFFICIENCY_OK, POWER_EFFICIENCY_WARN,
+} from '@/constants/physics'
 
 export default defineComponent({
   name: 'FieldCorrector',
 
   data() {
-    return { UNIT, ICON }
+    return {
+      UNIT, ICON,
+      CORRECTION_PCT_OK, CORRECTION_PCT_WARN, CORRECTION_PCT_NEEDED,
+      VSWR_OK, VSWR_WARN,
+      POWER_EFFICIENCY_OK, POWER_EFFICIENCY_WARN,
+    }
   },
 
   computed: {

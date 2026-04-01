@@ -22,25 +22,19 @@
     "statPLysis":  "P(lysis)",
     "statSel":     "Selectivity",
 
-    "tipCanvas":   "<strong>Selectivity Window Planner</strong>\nX = RF Frequency (log) · Y = Field Intensity\n\n<span class='tip-ok'>■ Green</span> Selective target lysis, healthy safe\n<span class='tip-val'>■ Amber</span> Marginal, healthy stressed\n<span class='tip-warn'>■ Red</span> Ablative, non-selective (avoid)\n<span class='tip-warn'>■ Orange</span> Thermal ≥ 42°C\n■ Cyan Approaching window · ■ Dark Sub-threshold\n\nLines: yellow dashed = optimal freq · cyan dotted = fc corners\n<em>Click to set operating point.</em>",
-
-    "tipStats":    "<strong>Operating Point Statistics</strong>\nAll values are computed at the current frequency and field using the Schwan single-shell model (or resonance Lorentzian in resonance mode).\n\nT-DR: disruption ratio of target cell  = Vm_T × PEF / Vm_thr_T\nH-DR: disruption ratio of healthy cell = Vm_H × PEF / Vm_thr_H\nH-Temp: healthy cell steady-state temperature = 37 + SAR·dc / (λ·cp)\nP(lysis): fraction of randomly-oriented target cells that exceed lysis threshold\n  P = max(0, 1 − 1/DR) , from 3D isotropic cosθ distribution\nSelectivity: TI = DR_T / DR_H (capped at 99.9)\n\nAll values update live as you drag the sliders.",
-
-    "tipOptLine":  "<strong>Optimal Selectivity Frequency</strong>\nVertical yellow dashed line shows the frequency that maximises TI = DR_T/DR_H.\nFor mammalian cells: found by a 300-point log scan (10 kHz-500 MHz).\nFor bacteria/virus in resonance mode: f_res of the capsid/cell-wall.\n\nClick ⭐ Snap to optimal to navigate to this frequency.",
-
-    "tipFcLines":  "<strong>Corner Frequency Markers (fc)</strong>\nVertical cyan dotted lines show the Schwan characteristic frequencies:\n  fc = 1/(2πτ),  τ = R·Cm·(2σ_e+σ_i)/(2σ_e·σ_i)\n\nBelow fc: Vm ≈ Vm_max (quasi-DC maximum, highest disruption ratio).\nAbove fc: Vm ∝ 1/f, exponential roll-off, DR falls.\n\nFor maximum selectivity, operate below both fc markers.",
-
-    "tipFresLine": "<strong>Resonant Frequency Marker (f_res)</strong>\nVertical white dashed line shows the acoustic capsid/cell-wall resonant frequency.\n  f_res ≈ v_shell / (2R)   (Tsen et al. 2007; Dykeman &amp; Sankey 2010)\n\nThe resonance peak width is set by the Q-factor (peptidoglycan/capsid damping).\nLower Q → broader but weaker peak. Higher Q → narrow spike, high selectivity.",
-
-    "tipPLysis":   "<strong>P(lysis), Random Orientation Fraction</strong>\nIn a real experiment, cells are randomly oriented in 3D.\nThe Schwan Vm has a cosθ factor: Vm(θ) = Vm_max · &#124;cosθ&#124;.\n\nFor a 3D isotropic distribution:\n  P = max(0, 1 − 1/DR)\n\nAt DR=1.0: only the perfectly-aligned pole lyses → P = 0%\nAt DR=2.0: 50% of cells lyse\nAt DR=5.0: 80% of cells lyse\n\n<em>Resonance mode</em>: acoustic pressure is omnidirectional, cosθ does not apply.",
-
     "clickToSet":   "↵ click to set",
     "hoverToInspect": "hover to inspect",
 
-    "tipHoverZone": "<strong>Hovered Point</strong>\nPhysics computed with current protocol settings (medium, waveform, dc, pulse width).\nClick to navigate to this operating point.",
-
-    "tipRegime":   "<strong>Frequency Regime at Operating Point</strong>\nDetermines the hardware required for field delivery.\n  Electrolytic (&lt;300 MHz): direct-contact cuvette + pulse generator\n  Near-field RF (300 MHz-1 GHz): 50 Ω coaxial probe + RF amplifier\n  Microwave (&gt;1 GHz): rectangular waveguide or resonant cavity",
-
-    "tipSkinDepth": "<strong>EM Penetration Depth at Operating Point</strong>\nExact lossy-dielectric formula: δ = 1/α,  α = ω√(με/2)×√(√(1+(σ/ωε)²)−1)\n(Gabriel et al. 1996; good-conductor approx. only valid below ~300 MHz in saline)\nSaline: 100 MHz→48 mm · 1 GHz→32 mm · ε_r decreases above 1 GHz (Cole-Cole)\nSets the usable sample depth:\n  ≥20 mm: full cuvette penetration\n  5-20 mm: cm-depth; outer layer accessible\n  &lt;5 mm: near-surface only; waveguide or cavity coupling required"
+    "outcomeTargetLysis":   "Target lysis",
+    "outcomeHealthyStressed": "Healthy stressed",
+    "outcomeHealthySafe":   "Healthy safe",
+    "outcomeHealthyLysis":  "Healthy lysis",
+    "outcomeThermalDamage": "Thermal damage (≥{critC} {unit})",
+    "outcomeApproaching":   "Approaching window",
+    "outcomeTDrProgress":   "T-DR {pct}%, lysis at {lysisAt}%",
+    "outcomeSubThreshold":  "Sub-threshold",
+    "outcomeHTempElevated": "H-Temp {temp} {unit}, elevated",
+    "axisFreq":  "RF Frequency (log)",
+    "axisField": "Field Intensity"
   }
 }

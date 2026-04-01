@@ -3,6 +3,7 @@
 // Selectivity-panel tooltip builders. Pure — no store access.
 import { ICON } from '@/constants/icons'
 import { THRESHOLDS, DEFAULT_CAPSID_Q } from '@/constants/physics'
+import { CELL_CATEGORY } from '@/constants/strings'
 import { formatFreqKHz } from '@/utils/format'
 
 export function tipTiRange(params: {
@@ -80,6 +81,30 @@ Current: <span class="tip-val">×${vmStr}</span>
 TI incorporates lysis thresholds, more predictive for protocol selectivity than Vm ratio alone.`
 }
 
+export function tipCmpTitle(title: string, body: string): string {
+  return `<strong>${title}</strong>\n${body}`
+}
+
+export function tipCmpRow(params: {
+  label: string
+  notes: string
+  tVmMv: string
+  sel: number
+  hasRes: boolean
+  disrLabel: string
+  selLabel: string
+  clickHint: string
+  counterSelectiveNote: string
+  unit: string
+}): string {
+  const { label, notes, tVmMv, sel, hasRes, disrLabel, selLabel, clickHint, counterSelectiveNote, unit } = params
+  const selStr = sel >= 99 ? ICON.INFINITY : sel.toFixed(2)
+  const vmPart = hasRes
+    ? `${disrLabel} = <span class='tip-val'>${tVmMv}</span>`
+    : `Vm = <span class='tip-val'>${tVmMv} ${unit}</span>`
+  return `<strong>${label}</strong>\n${notes}\n${vmPart}  ·  ${selLabel} = <span class='tip-val'>×${selStr}</span>${counterSelectiveNote}${clickHint}`
+}
+
 export function tipSmallCellNote(params: {
   rT: number
   rH: number
@@ -109,8 +134,10 @@ export function tipOptimal(params: {
   tiHighFreqLimit: number
   healthyRadius: number
   healthyLabel: string
+  targetCategory: string
+  targetFcDisplay: string
 }): string {
-  const { isResonanceTarget, resonantFreqGHz, resonantThresholdVcm, capsidQ, optKhz, optSel, beyondRange, tiHighFreqLimit, healthyRadius, healthyLabel } = params
+  const { isResonanceTarget, resonantFreqGHz, resonantThresholdVcm, capsidQ, optKhz, optSel, beyondRange, tiHighFreqLimit, healthyRadius, healthyLabel, targetCategory, targetFcDisplay } = params
   if (isResonanceTarget) {
     const label = formatFreqKHz((resonantFreqGHz ?? 0) * 1e6)
     const rStr  = healthyRadius >= 1 ? `${healthyRadius.toFixed(1)} µm` : `${(healthyRadius * 1000).toFixed(0)} nm`
@@ -140,6 +167,5 @@ ${snapNote}
 Physics:
   f ≪ fc_T and fc_H : sel = (R_T·Vth_H)/(R_H·Vth_T)  (quasi-DC ceiling)
   When τ_T > τ_H (target larger/higher Cm): sel decreases above fc(T), target rolls off first
-  f ≫ fc_H : sel → (R_T·τ_H·Vth_H)/(R_H·τ_T·Vth_T) = ×${tiHighFreqLimit.toFixed(2)} at current pair
-Note: virion fc ~0.6-0.75 MHz per Schwan model (σ_i-limited; model approximate for virions)`
+  f ≫ fc_H : sel → (R_T·τ_H·Vth_H)/(R_H·τ_T·Vth_T) = ×${tiHighFreqLimit.toFixed(2)} at current pair${targetCategory === CELL_CATEGORY.VIRUS ? `\n<span class="tip-note">Virion fc(T) = ${targetFcDisplay} (σ_i-limited). Schwan model is an approximation for virions; fc may be inaccessible in practice.</span>` : ''}`
 }

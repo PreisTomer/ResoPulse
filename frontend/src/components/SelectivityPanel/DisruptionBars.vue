@@ -117,7 +117,16 @@ export default defineComponent({
 
     tipTargetPlysis(): string { return tipTargetPlysis(this.lysisTimeDisplay) },
     tipHealthyPlysis(): string { return tipHealthyPlysis() },
-    tipNuclearSection(): string { return tipNuclearSection() },
+    tipNuclearSection(): string {
+      return tipNuclearSection({
+        targetLabel:       this.cellStore.target.label,
+        healthyLabel:      this.cellStore.healthy.label,
+        targetFpeakKHz:    this.cellStore.targetNuclearFpeakKHz,
+        healthyFpeakKHz:   this.cellStore.healthyNuclearFpeakKHz,
+        hasTargetNucleus:  !!this.cellStore.target.nuclearRadius,
+        hasHealthyNucleus: !!this.cellStore.healthy.nuclearRadius,
+      })
+    },
 
     tipTargetBar(): string {
       const t = this.cellStore.target as { resonantFreqGHz?: number; resonantThresholdVcm?: number }

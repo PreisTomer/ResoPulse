@@ -33,7 +33,7 @@
       </div>
       <div
         class="load-monitor__stat"
-        :class="{ 'load-monitor__stat--warn': Math.abs(impedanceStore.conductivityDeltaAbs) > 0.001 }"
+        :class="{ 'load-monitor__stat--warn': Math.abs(impedanceStore.conductivityDeltaAbs) > CONDUCTIVITY_DELTA_WARN }"
         v-tip="$t('instrument.loadMonitor.tipDelta')"
       >
         <span class="load-monitor__stat-label">{{ $t('instrument.loadMonitor.statDelta') }}</span>
@@ -42,8 +42,8 @@
       <div
         class="load-monitor__stat"
         :class="{
-          'load-monitor__stat--warn':   Math.abs(impedanceStore.impedanceDriftPct) > 5,
-          'load-monitor__stat--danger': Math.abs(impedanceStore.impedanceDriftPct) > 15,
+          'load-monitor__stat--warn':   Math.abs(impedanceStore.impedanceDriftPct) > DRIFT_WARN_PCT,
+          'load-monitor__stat--danger': Math.abs(impedanceStore.impedanceDriftPct) > DRIFT_DANGER_PCT,
         }"
         v-tip="$t('instrument.loadMonitor.tipDrift')"
       >
@@ -87,12 +87,12 @@
 
         <!-- Drift zone fills behind chart -->
         <rect
-          v-if="Math.abs(impedanceStore.impedanceDriftPct) > 15"
+          v-if="Math.abs(impedanceStore.impedanceDriftPct) > DRIFT_DANGER_PCT"
           :x="0" :y="0" :width="SVG_W" :height="SVG_H"
           fill="url(#lm-danger-grad)"
         />
         <rect
-          v-else-if="Math.abs(impedanceStore.impedanceDriftPct) > 5"
+          v-else-if="Math.abs(impedanceStore.impedanceDriftPct) > DRIFT_WARN_PCT"
           :x="0" :y="0" :width="SVG_W" :height="SVG_H"
           fill="url(#lm-warn-grad)"
         />
@@ -182,7 +182,7 @@
         <span class="load-monitor__chain-value">{{ (impedanceStore.lysedFraction * 100).toFixed(0) }}%</span>
       </div>
       <span class="load-monitor__chain-arrow">{{ ICON.ARROW_SHORT }}</span>
-      <div class="load-monitor__chain-step" :class="{ 'load-monitor__chain-step--active': Math.abs(impedanceStore.conductivityDeltaAbs) > 0.001 }">
+      <div class="load-monitor__chain-step" :class="{ 'load-monitor__chain-step--active': Math.abs(impedanceStore.conductivityDeltaAbs) > CONDUCTIVITY_DELTA_WARN }">
         <span class="load-monitor__chain-label">{{ $t('instrument.loadMonitor.chainDeltaSigma') }}</span>
         <span class="load-monitor__chain-value">{{ deltaDisplay }}</span>
       </div>
@@ -190,8 +190,8 @@
       <div
         class="load-monitor__chain-step"
         :class="{
-          'load-monitor__chain-step--warn':   Math.abs(impedanceStore.impedanceDriftPct) > 5,
-          'load-monitor__chain-step--danger': Math.abs(impedanceStore.impedanceDriftPct) > 15,
+          'load-monitor__chain-step--warn':   Math.abs(impedanceStore.impedanceDriftPct) > DRIFT_WARN_PCT,
+          'load-monitor__chain-step--danger': Math.abs(impedanceStore.impedanceDriftPct) > DRIFT_DANGER_PCT,
         }"
       >
         <span class="load-monitor__chain-label">{{ $t('instrument.loadMonitor.chainZDrift') }}</span>
@@ -200,7 +200,7 @@
       <span class="load-monitor__chain-arrow">{{ ICON.ARROW_SHORT }}</span>
       <div
         class="load-monitor__chain-step"
-        :class="{ 'load-monitor__chain-step--warn': impedanceStore.voltageCorrectionFactor > 1.05 }"
+        :class="{ 'load-monitor__chain-step--warn': impedanceStore.voltageCorrectionFactor > 1 + CORRECTION_PCT_WARN / 100 }"
       >
         <span class="load-monitor__chain-label">{{ $t('instrument.loadMonitor.chainCorrection') }}</span>
         <span class="load-monitor__chain-value">{{ ICON.TIMES }}{{ impedanceStore.voltageCorrectionFactor.toFixed(3) }}</span>
@@ -219,6 +219,7 @@ import { useCellStore } from '@/stores/cellStore'
 import { UNIT } from '@/constants/units'
 import { ICON } from '@/constants/icons'
 import { CONDUCTIVITY_SAMPLE_INTERVAL_MS } from '@/constants/cuvette'
+import { DRIFT_WARN_PCT, DRIFT_DANGER_PCT, CONDUCTIVITY_DELTA_WARN_S_M, CORRECTION_PCT_WARN } from '@/constants/physics'
 
 const SVG_W = 400
 const SVG_H = 110
@@ -247,8 +248,12 @@ export default defineComponent({
   },
 
   computed: {
-    ICON() { return ICON },
-    UNIT() { return UNIT },
+    ICON()                    { return ICON },
+    UNIT()                    { return UNIT },
+    DRIFT_WARN_PCT()          { return DRIFT_WARN_PCT },
+    DRIFT_DANGER_PCT()        { return DRIFT_DANGER_PCT },
+    CONDUCTIVITY_DELTA_WARN() { return CONDUCTIVITY_DELTA_WARN_S_M },
+    CORRECTION_PCT_WARN()     { return CORRECTION_PCT_WARN },
     ...mapStores(useImpedanceStore, useCellStore),
 
     samples(): ConductivitySample[] {

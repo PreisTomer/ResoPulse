@@ -17,7 +17,7 @@
     "emptyHint": "No readings yet, click Log Reading to record",
 
     "tipLogReading": "<strong>Log Reading</strong>\nSnapshot current experiment state:\nRF frequency, field, Vm (target &amp; healthy),\nselectivity, temperature, disruption ratios.\nAuto-logged on lysis events.",
-    "tipExportCsv": "<strong>Export CSV</strong>\nDownload all log entries.\nColumns: #, time, freq (kHz), field (V/cm),\nT-Vm (mV), H-Vm (mV), selectivity, event type.",
+    "tipExportCsv": "<strong>Export CSV</strong>\nDownload all log entries as a 20-column table.\nColumns: # · Time · Session · Freq (kHz) · Field (V/cm) · Medium · Target · T-Vm (mV) · H-Vm (mV) · Selectivity · T-Ratio (%) · H-Ratio (%) · T-Temp (°C) · H-Temp (°C) · Orientation (°) · H-Re[K] · T-Re[K] · H-f_cross (kHz) · T-f_cross (kHz) · Event",
     "tipClearLog": "<strong>Clear Log</strong>\nRemove all readings from this session.\nThis action cannot be undone.",
     "tipExportMethods": "<strong>Export Methods Text</strong>\nDownload a publication-ready methods paragraph for the most recently logged reading.\nIncludes cell types, field parameters, calculated Vm, DR, and model citations.",
 
@@ -29,7 +29,7 @@
     "tipThField": "<strong>Field: Applied Electric Field</strong>\nField intensity at time of reading.\nVm scales linearly with E (Schwan eq.).",
     "tipThTargetVm": "<strong>T-Vm: Target Transmembrane Potential</strong>\nPeak voltage across target cell membrane\nvia Schwan equation. Higher → more disruption.",
     "tipThHealthyVm": "<strong>H-Vm: Healthy Transmembrane Potential</strong>\nPeak voltage across healthy reference membrane.\nKeep below 50% of threshold for safe operation.",
-    "tipThSel": "<strong>Sel×, Vm Selectivity Ratio</strong>\nT-Vm / H-Vm, raw membrane potential ratio.\n<span class=\"tip-ok\">≥ {strong}×</span> Strong selectivity window\n<span class=\"tip-val\">{marginal} - {strong}×</span> Marginal window\n<span class=\"tip-warn\">&lt; {marginal}×</span> Non-selective",
+    "tipThSel": "<strong>Sel×, Therapeutic Index (TI)</strong>\nDR_T / DR_H, disruption ratio of target divided by healthy cell.\nTI accounts for pulse envelope factor, temperature-corrected thresholds, and H-FIRE multiplier, so TI differs from the raw Vm ratio when those corrections are non-unity.\n<span class=\"tip-ok\">≥ {strong}×</span> Strong selectivity window\n<span class=\"tip-val\">{marginal} - {strong}×</span> Marginal window\n<span class=\"tip-warn\">&lt; {marginal}×</span> Non-selective",
     "tipThEvent": "<strong>Event Type</strong>\nmanual, snapshot triggered by user\nlysis, membrane disrupted (auto-logged)",
     "logThTargetDR": "T-DR%",
     "logThHealthyDR": "H-DR%",

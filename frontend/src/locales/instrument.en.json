@@ -47,7 +47,12 @@
       "tipGap": "<strong>Electrode Gap [mm]</strong>\nDetermines the electric field: E = V_applied / d.\nSmaller gap → higher field per volt, but lower cuvette impedance.\nTypical lab cuvettes: 1 mm, 2 mm, 4 mm.",
       "tipArea": "<strong>Electrode Cross-Section [cm²]</strong>\nWith gap, sets cuvette DC resistance: Z = d / (σ_e × A).\nBTX cuvettes ≈ 0.10 cm²; Bio-Rad ≈ 0.13 cm².",
       "tipSourceR": "<strong>Source Impedance R_s [Ω]</strong>\nGenerator output + cable impedance.\n50 Ω, standard RF / coaxial system\n&lt; 1 Ω, typical high-voltage pulsed power unit\nHigher R_s → larger voltage-divider correction needed.",
-      "tipDensity": "<strong>Cell Density [cells/mL]</strong>\nSets the volume fraction φ = N × (4/3)π R³.\nHigher density → more ions released per unit volume → larger σ_e rise on lysis.\nTypical: 10⁶ cells/mL mammalian, 10⁸ cells/mL bacteria."
+      "tipDensity": "<strong>Cell Density [cells/mL]</strong>\nSets the volume fraction φ = N × (4/3)π R³.\nHigher density → more ions released per unit volume → larger σ_e rise on lysis.\nTypical: 10⁶ cells/mL mammalian, 10⁸ cells/mL bacteria.",
+      "density1e5": "10\u2075 cells/mL",
+      "density1e6": "10\u2076 cells/mL",
+      "density1e7": "10\u2077 cells/mL",
+      "density1e8": "10\u2078 cells/mL",
+      "density1e9": "10\u2079 cells/mL"
     },
 
     "meter": {
@@ -122,6 +127,10 @@
       "statusDisconnected": "No data received",
       "statusFresh": "Live · fresh",
       "statusStale": "Stale: check instrument",
+      "ageNoReading": "No reading",
+      "ageMs":        "{ms} ms ago",
+      "ageSec":       "{sec}s ago",
+      "ageMin":       "{min} min ago",
       "socketEvent": "Socket Event",
       "schema": "Packet Schema",
       "schemaNote": "Send JSON to the socket event 'impedanceReading' from your instrument bridge. All numeric fields use SI units.",
@@ -238,6 +247,7 @@
     },
 
     "sonif": {
+      "ariaLabel": "Toggle auditory display",
       "on":   "Auditory Display: On",
       "off":  "Auditory Display: Off",
       "note": "The sounds are NOT the RF frequencies (kHz-MHz range), those are far above the audible range. This is a scientific data-monitoring technique (sonification).",

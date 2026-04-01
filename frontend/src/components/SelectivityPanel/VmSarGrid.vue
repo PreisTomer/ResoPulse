@@ -79,13 +79,8 @@ export default defineComponent({
         : this.$t('selectivity.tipVmSarSchwan')
     },
 
-    tipEthr(): string {
-      return `<strong>${this.$t('selectivity.tipEthr')}</strong>\n${this.$t('selectivity.tipEthrBody')}`
-    },
-
-    tipNoGhzRes(): string {
-      return `<strong>${this.$t('selectivity.tipNoGhzRes')}</strong>\n${this.$t('selectivity.tipNoGhzResBody')}`
-    },
+    tipEthr():      string { return this.$t('selectivity.tipEthrFull') },
+    tipNoGhzRes():  string { return this.$t('selectivity.tipNoGhzResFull') },
 
     energyDoseDisplay(): string {
       const e = this.cellStore.pulsedEnergyDensity_mJcm3

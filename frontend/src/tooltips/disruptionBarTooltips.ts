@@ -17,10 +17,23 @@ Sigmoid probability centered at 100% disruption threshold.
 Keep this value near 0% for a selective lysis protocol`
 }
 
-export function tipNuclearSection(): string {
+export function tipNuclearSection(params: {
+  targetLabel: string
+  healthyLabel: string
+  targetFpeakKHz: number
+  healthyFpeakKHz: number
+  hasTargetNucleus: boolean
+  hasHealthyNucleus: boolean
+}): string {
+  const { targetLabel, healthyLabel, targetFpeakKHz, healthyFpeakKHz, hasTargetNucleus, hasHealthyNucleus } = params
+  const fmtMhz = (khz: number) => khz >= 1000 ? `${(khz / 1000).toFixed(2)} MHz` : `${khz.toFixed(0)} kHz`
+  const peakT = hasTargetNucleus  ? `  fc(T, nuc) = <span class="tip-val">${fmtMhz(targetFpeakKHz)}</span>  (${targetLabel})` : `  ${targetLabel}: no nuclear params`
+  const peakH = hasHealthyNucleus ? `  fc(H, nuc) = <span class="tip-val">${fmtMhz(healthyFpeakKHz)}</span>  (${healthyLabel})` : `  ${healthyLabel}: no nuclear params`
   return `<strong>Nuclear Envelope Disruption (Double-Shell Model)</strong>
 Vm_nuc / V_threshold_nuc for each cell.
-Bandpass peak at f_peak = 1/(2π√(τ_pm·τ_ne)), typically 0.87-2.1 MHz.
+Bandpass peak at f_peak = 1/(2π√(τ_pm·τ_ne)):
+${peakT}
+${peakH}
 Cancer nuclei have thinner/leakier NE and lower thresholds → higher disruption ratio.
 Kotnik &amp; Miklavcic, Biophys. J. 90:480 (2006)`
 }

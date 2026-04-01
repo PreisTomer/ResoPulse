@@ -41,6 +41,8 @@ export const ICON = {
   STAR_EMPTY:  '☆',  // empty star for ratings
   MENU:        '☰',  // mobile TOC hamburger toggle
   CARET_DOWN:  '▼',  // collapsed accordion / dropdown indicator
+  NOTE_ON:     '♪',  // auditory display enabled
+  NOTE_OFF:    '♩',  // auditory display disabled
 } as const
 
 export type Icon = typeof ICON[keyof typeof ICON]

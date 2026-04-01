@@ -127,7 +127,7 @@ export default defineComponent({
         g.append('line')
           .attr('x1', 0).attr('y1', origY).attr('x2', iW).attr('y2', origY)
           .attr('stroke', color).attr('stroke-width', 0.8)
-          .attr('stroke-dasharray', dash).attr('opacity', 0.55)
+          .attr('stroke-dasharray', dash).attr('opacity', 0.55) // D3 attr — CSS vars not available here; 0.55 ≈ --op-muted
         g.append('text')
           .attr('x', iW - 4).attr('y', labelY + 3.5)
           .attr('font-size', 9).attr('text-anchor', 'end')

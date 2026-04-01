@@ -16,6 +16,9 @@
         {{ $t('sweep.windowExpandBtn') }}
       </button>
     </template>
+    <template v-else-if="bestTIPoint && bestTIPoint.ti < 1.0">
+      <span class="sweep-window__counter-sel">{{ $t('sweep.windowNoneCounterSelective', { ti: bestTIPoint.ti.toFixed(2) }) }}</span>
+    </template>
     <template v-else>
       <span>{{ $t('sweep.windowNoneImpossible', { ti: bestTIPoint ? bestTIPoint.ti.toFixed(2) : '—' }) }}</span>
     </template>
@@ -97,8 +100,14 @@ export default defineComponent({
   &__val {
     font-family: var(--font-mono);
     font-size: var(--fs-md);
-    color: rgb(34, 197, 94);
+    color: var(--color-lime);
     font-weight: 600;
+  }
+
+  &__counter-sel {
+    color: var(--color-danger);
+    font-style: normal;
+    font-size: var(--fs-sm);
   }
 
   &__sub { font-size: var(--fs-sm); color: var(--color-text-muted); }

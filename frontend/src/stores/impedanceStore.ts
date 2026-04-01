@@ -167,14 +167,6 @@ export const useImpedanceStore = defineStore('impedance', {
       return Date.now() - s.hardwareReadingTs
     },
 
-    hardwareReadingAgeLabel(): string {
-      const age = this.hardwareReadingAgeMs
-      if (!isFinite(age)) return 'No reading'
-      if (age < 1000)   return `${age} ms ago`
-      if (age < 60_000) return `${(age / 1000).toFixed(1)}s ago`
-      return `${Math.floor(age / 60_000)} min ago`
-    },
-
     conductivityDeltaAbs(): number {
       return this.sigmaEWithLysis - useCellStore().effectiveSigmaE
     },

@@ -68,7 +68,11 @@ import { THRESHOLDS, DEFAULT_CAPSID_Q, H_FIRE_THRESHOLD_MULTIPLIER } from '@/con
 import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'
 import type { CellConfig } from '@/types/cell'
-import { sampleGaussian, binomialSE, MARGIN, N_BINS } from './popPanelCompute'
+import {
+  sampleGaussian, binomialSE, MARGIN, N_BINS,
+  CHART_HEIGHT, POP_DEFAULT_N_CELLS, POP_DEFAULT_R_VARIANCE_PCT, POP_DEFAULT_VTH_VARIANCE_PCT,
+  POP_CHART_DR_X_MIN, POP_LEGEND_ITEM_WIDTH, POP_LIVE_RESAMPLE_INTERVAL_MS, POP_RESAMPLE_DEBOUNCE_MS,
+} from './popPanelCompute'
 import type { PopStats } from './popPanelCompute'
 import PopControls from './PopControls.vue'
 import PopStatCards from './PopStatCards.vue'
@@ -83,9 +87,9 @@ export default defineComponent({
   data() {
     return {
       open: false,
-      nCells: 300,
-      rVariancePct:   10,
-      vThVariancePct: 20,  // V_th CV as % (Weaver & Chizmadzhev 1996)
+      nCells: POP_DEFAULT_N_CELLS,
+      rVariancePct:   POP_DEFAULT_R_VARIANCE_PCT,
+      vThVariancePct: POP_DEFAULT_VTH_VARIANCE_PCT,
       normalizeChart: false,
       targetDRs:    [] as number[],
       healthyDRs:   [] as number[],
@@ -195,7 +199,7 @@ export default defineComponent({
 
     _startLiveTimer() {
       this._stopLiveTimer()
-      this._liveTimer = setInterval(() => { this.resample() }, 2000)
+      this._liveTimer = setInterval(() => { this.resample() }, POP_LIVE_RESAMPLE_INTERVAL_MS)
     },
 
     _stopLiveTimer() {
@@ -209,7 +213,7 @@ export default defineComponent({
       this._resampleTimer = setTimeout(() => {
         this._resampleTimer = null
         this.resample()
-      }, 150)
+      }, POP_RESAMPLE_DEBOUNCE_MS)
     },
 
     resample() {
@@ -316,7 +320,7 @@ export default defineComponent({
       if (!wrap || !svgEl || this.targetDRs.length === 0) return
 
       const W  = wrap.clientWidth
-      const H  = 196
+      const H  = CHART_HEIGHT
       const iW = W - MARGIN.left - MARGIN.right
       const iH = H - MARGIN.top - MARGIN.bottom
 
@@ -325,7 +329,7 @@ export default defineComponent({
       const g = svg.append('g').attr('transform', `translate(${MARGIN.left},${MARGIN.top})`)
 
       const allDRs  = [...this.targetDRs, ...this.healthyDRs]
-      const xMax    = Math.max(1.6, d3.max(allDRs) ?? 1.6)
+      const xMax    = Math.max(POP_CHART_DR_X_MIN, d3.max(allDRs) ?? POP_CHART_DR_X_MIN)
       const xScale  = d3.scaleLinear().domain([0, xMax]).range([0, iW])
       const histGen = d3.histogram<number, number>()
         .value(d => d)
@@ -421,7 +425,7 @@ export default defineComponent({
         { color: CSS_PRIMARY, label: `${this.$t('population.chartLegendHealthy')} (${this.cellStore.healthy.label})` },
       ]
       legend.forEach(({ color, label }, i) => {
-        const lx = i * 160
+        const lx = i * POP_LEGEND_ITEM_WIDTH
         const lg = g.append('g').attr('transform', `translate(${lx},${iH + 32})`)
         lg.append('rect').attr('width', 12).attr('height', 8).attr('y', -8).attr('fill', color).attr('opacity', 0.6)
         lg.append('text')

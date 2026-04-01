@@ -28,6 +28,21 @@ export const MEDIUM_RELATIVE_PERMITTIVITY = 74
 export const MEDIUM_DENSITY_KG_M3         = 1000  // [kg/m³], for Joule heating estimate
 export const MEDIUM_SPECIFIC_HEAT_J_KG_K  = 4182  // [J/(kg·K)], for Joule heating estimate
 
+// ── Cuvette geometry input bounds ────────────────────────────────────────────
+
+export const CUVETTE_GAP_MIN_MM    = 0.5
+export const CUVETTE_GAP_MAX_MM    = 10
+export const CUVETTE_GAP_STEP_MM   = 0.5
+
+export const CUVETTE_AREA_MIN_CM2  = 0.01
+export const CUVETTE_AREA_MAX_CM2  = 2
+export const CUVETTE_AREA_STEP_CM2 = 0.01
+
+export const SOURCE_IMPEDANCE_MIN_OHM = 0
+export const SOURCE_IMPEDANCE_MAX_OHM = 200
+
+// ── Hardware reading timing ───────────────────────────────────────────────────
+
 // Age threshold after which a hardware impedance reading triggers a "stale" UI warning [ms]
 export const HARDWARE_READING_STALE_MS         = 5_000
 export const IMPEDANCE_HISTORY_MAX             = 120   // max entries kept for trend sparkline

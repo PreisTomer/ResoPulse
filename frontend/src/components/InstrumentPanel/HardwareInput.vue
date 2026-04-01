@@ -46,7 +46,7 @@
               ? $t('instrument.hardware.statusStale')
               : $t('instrument.hardware.statusFresh')
         }}</span>
-        <span v-if="hasReading" class="hw-input__status-age">{{ impedanceStore.hardwareReadingAgeLabel }}</span>
+        <span v-if="hasReading" class="hw-input__status-age">{{ readingAgeLabel }}</span>
       </div>
 
       <!-- Reading data -->
@@ -121,16 +121,23 @@ export default defineComponent({
     hasReading(): boolean {
       return this.impedanceStore.hardwareZReal !== null
     },
+    readingAgeLabel(): string {
+      const age = this.impedanceStore.hardwareReadingAgeMs
+      if (!isFinite(age)) return this.$t('instrument.hardware.ageNoReading')
+      if (age < 1000)     return this.$t('instrument.hardware.ageMs',  { ms: age })
+      if (age < 60_000)   return this.$t('instrument.hardware.ageSec', { sec: (age / 1000).toFixed(1) })
+      return this.$t('instrument.hardware.ageMin', { min: Math.floor(age / 60_000) })
+    },
     freqDisplay(): string {
       const hz = this.impedanceStore.hardwareFreqHz
-      if (hz === null) return ', '
+      if (hz === null) return '\u2014'
       if (hz >= 1e6) return `${(hz / 1e6).toFixed(2)} ${UNIT.MHZ}`
       if (hz >= 1e3) return `${(hz / 1e3).toFixed(1)} ${UNIT.KHZ}`
       return `${hz} ${UNIT.HZ}`
     },
     derivedSigma(): string {
       const z = this.impedanceStore.hardwareZReal
-      if (z === null) return ', '
+      if (z === null) return '\u2014'
       return computeSigmaEFromImpedance(this.impedanceStore.cuvetteGapMm, this.impedanceStore.cuvetteCrossSectionCm2, z).toFixed(4)
     },
   },

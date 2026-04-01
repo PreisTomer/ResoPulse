@@ -12,8 +12,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
-
-const GOOD_TARGET_LYSIS_THRESHOLD = 50
+import { THRESHOLDS } from '@/constants/physics'
 
 export default defineComponent({
   props: {
@@ -27,7 +26,7 @@ export default defineComponent({
     },
 
     hasSuccessWindow(): boolean {
-      return this.targetPctLysed > GOOD_TARGET_LYSIS_THRESHOLD
+      return this.targetPctLysed > THRESHOLDS.POP_NOTE_TARGET_LYSIS_MIN
     },
   },
 })

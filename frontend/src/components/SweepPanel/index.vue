@@ -284,7 +284,11 @@ export default defineComponent({
         ? 'E_field_Vcm,DR_healthy,DR_target,TI,T_healthy_C,T_target_C,selective_window'
         : 'freq_kHz,DR_healthy,DR_target,TI,T_healthy_C,T_target_C,selective_window'
       const rows = this.sweepData.map(p => {
-        const inWindow = p.drT >= THRESHOLDS.DISRUPTION_WARN && p.drH < THRESHOLDS.HEALTHY_APPROACHING ? 1 : 0
+        const inWindow = (
+          p.drT >= THRESHOLDS.DISRUPTION_WARN &&
+          p.drH  < THRESHOLDS.HEALTHY_APPROACHING &&
+          p.tT   < THRESHOLDS.TEMP_DENATURING
+        ) ? 1 : 0
         return `${p.x.toFixed(2)},${p.drH.toFixed(4)},${p.drT.toFixed(4)},${p.ti.toFixed(4)},${p.tH.toFixed(2)},${p.tT.toFixed(2)},${inWindow}`
       })
       const blob = new Blob([meta + '\n' + header + '\n' + rows.join('\n')], { type: 'text/csv' })

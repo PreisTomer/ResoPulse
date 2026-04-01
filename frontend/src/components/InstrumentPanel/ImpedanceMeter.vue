@@ -62,8 +62,8 @@
         <span
           class="imp-meter__drift-value"
           :class="{
-            'imp-meter__drift-value--warn':  driftPct < -5,
-            'imp-meter__drift-value--danger': driftPct < -15,
+            'imp-meter__drift-value--warn':  driftPct < -DRIFT_WARN_PCT,
+            'imp-meter__drift-value--danger': driftPct < -DRIFT_DANGER_PCT,
           }"
         >{{ driftSign }}{{ Math.abs(driftPct).toFixed(1) }}{{ UNIT.PERCENT }}</span>
       </div>
@@ -71,10 +71,10 @@
         <div
           class="imp-meter__drift-fill"
           :class="{
-            'imp-meter__drift-fill--warn':   Math.abs(driftPct) > 5,
-            'imp-meter__drift-fill--danger': Math.abs(driftPct) > 15,
+            'imp-meter__drift-fill--warn':   Math.abs(driftPct) > DRIFT_WARN_PCT,
+            'imp-meter__drift-fill--danger': Math.abs(driftPct) > DRIFT_DANGER_PCT,
           }"
-          :style="{ width: `${Math.min(100, Math.abs(driftPct) * 3)}%` }"
+          :style="{ width: `${Math.min(100, Math.abs(driftPct) * DRIFT_BAR_SCALE)}%` }"
         ></div>
       </div>
     </div>
@@ -105,12 +105,13 @@ import { useImpedanceStore } from '@/stores/impedanceStore'
 import { useCellStore } from '@/stores/cellStore'
 import { UNIT } from '@/constants/units'
 import { ICON } from '@/constants/icons'
+import { DRIFT_WARN_PCT, DRIFT_DANGER_PCT, DRIFT_BAR_SCALE } from '@/constants/physics'
 
 export default defineComponent({
   name: 'ImpedanceMeter',
 
   data() {
-    return { UNIT, ICON }
+    return { UNIT, ICON, DRIFT_WARN_PCT, DRIFT_DANGER_PCT, DRIFT_BAR_SCALE }
   },
 
   computed: {

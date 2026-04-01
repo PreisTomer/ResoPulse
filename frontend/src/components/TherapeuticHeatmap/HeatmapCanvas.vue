@@ -1,6 +1,6 @@
 <!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
 <template>
-  <div class="hmap__canvas-wrap" ref="wrap" v-tip="$t('heatmap.tipCanvas')">
+  <div class="hmap__canvas-wrap" ref="wrap" v-tip="tipCanvasStr">
     <canvas
       ref="canvas"
       class="hmap__canvas"
@@ -22,6 +22,8 @@ import {
   HMAP_FREQ_STEPS, HMAP_FIELD_STEPS, HMAP_CANVAS_W, HMAP_CANVAS_H, HMAP_MARGIN,
   HMAP_LYSIS_DR, HMAP_APPROACH_DR, HMAP_WARN_DR, HMAP_THERM_WARN_C, HMAP_THERM_CRIT_C,
   HMAP_ZONE, HMAP_ZONE_COLOR, HMAP_ZONE_CSS, HMAP_ZONE_KEY, type HmapZone,
+  HMAP_FREQ_MIN_KHZ, HMAP_DR_DISPLAY_CAP, HMAP_YAXIS_HEADROOM, HMAP_RECOMPUTE_DEBOUNCE_MS,
+  HMAP_CANVAS_FONT_AXIS, HMAP_CANVAS_FONT_TINY, HMAP_LABEL_OPT, HMAP_LABEL_FRES,
 } from '@/constants/heatmap'
 import {
   computeSchwan, computeTau, computeSAR, computeResonantDisruption, tempCorrectedVth,
@@ -32,6 +34,8 @@ import {
 } from '@/constants/physics'
 import { formatFreqKHz } from '@/utils/format'
 import { C } from '@/theme/colors'
+import { tipCanvas, tipHoverDynamic } from '@/tooltips/heatmapTooltips'
+import { ICON } from '@/constants/icons'
 import type { HoverInfo, OutcomeItem } from '@/types/heatmap'
 
 export default defineComponent({
@@ -55,7 +59,9 @@ export default defineComponent({
   computed: {
     ...mapStores(useCellStore),
 
-    xMin(): number { return 10 },
+    tipCanvasStr(): string { return tipCanvas() },
+
+    xMin(): number { return HMAP_FREQ_MIN_KHZ },
     xMax(): number { return this.cellStore.hmapFreqMaxKHz },
 
     yMax(): number {
@@ -89,7 +95,7 @@ export default defineComponent({
           ? 1000
           : tVthEff / (1.5 * s.target.radius * 1e-4 * cosT * pefT)
       }
-      return Math.max(healthyLysis, targetLysis) * 2.0
+      return Math.max(healthyLysis, targetLysis) * HMAP_YAXIS_HEADROOM
     },
 
     plotW(): number { return this.displayW - HMAP_MARGIN.LEFT - HMAP_MARGIN.RIGHT },
@@ -179,7 +185,7 @@ export default defineComponent({
 
     _scheduleRecompute() {
       if (this.redrawTimer) clearTimeout(this.redrawTimer)
-      this.redrawTimer = setTimeout(() => this._recompute(), 250)
+      this.redrawTimer = setTimeout(() => this._recompute(), HMAP_RECOMPUTE_DEBOUNCE_MS)
     },
 
     _recompute() {
@@ -360,9 +366,9 @@ export default defineComponent({
         ctx.restore()
         ctx.save()
         ctx.fillStyle = C.amber
-        ctx.font = '9px monospace'
+        ctx.font = HMAP_CANVAS_FONT_AXIS
         ctx.textAlign = 'center'
-        ctx.fillText('opt', ox, mt + 9)
+        ctx.fillText(HMAP_LABEL_OPT, ox, mt + 9)
         ctx.restore()
       }
 
@@ -381,9 +387,9 @@ export default defineComponent({
             ctx.restore()
             ctx.save()
             ctx.fillStyle = C.w70
-            ctx.font = '9px monospace'
+            ctx.font = HMAP_CANVAS_FONT_AXIS
             ctx.textAlign = 'center'
-            ctx.fillText('f_res', rx, mt + 9)
+            ctx.fillText(HMAP_LABEL_FRES, rx, mt + 9)
             ctx.restore()
           }
         }
@@ -402,7 +408,7 @@ export default defineComponent({
           ctx.restore()
           ctx.save()
           ctx.fillStyle = C.primaryFill60
-          ctx.font = '8px monospace'
+          ctx.font = HMAP_CANVAS_FONT_TINY
           ctx.textAlign = 'center'
           ctx.fillText(label, fx, mt + ph + 14)
           ctx.restore()
@@ -478,7 +484,7 @@ export default defineComponent({
       ctx.font         = '9px monospace'
       ctx.textAlign    = 'center'
       ctx.textBaseline = 'bottom'
-      ctx.fillText('RF Frequency (log)', ml + pw / 2, this.displayH)
+      ctx.fillText(this.$t('heatmap.axisFreq') as string, ml + pw / 2, this.displayH)
 
       // Y-axis ticks
       ctx.fillStyle    = C.w65
@@ -498,7 +504,7 @@ export default defineComponent({
       ctx.font         = '9px monospace'
       ctx.textAlign    = 'center'
       ctx.textBaseline = 'middle'
-      ctx.fillText(`Field Intensity [${UNIT.V_PER_CM}]`, 0, 0)
+      ctx.fillText(`${this.$t('heatmap.axisField') as string} [${UNIT.V_PER_CM}]`, 0, 0)
       ctx.restore()
 
       ctx.restore()
@@ -639,25 +645,25 @@ export default defineComponent({
       // Outcome badges
       const outcomes: OutcomeItem[] = []
       if (tDR >= HMAP_LYSIS_DR && hDR < HMAP_LYSIS_DR && hTss < HMAP_THERM_CRIT_C) {
-        outcomes.push({ text: '\u2713 Target lysis', level: 'ok' })
+        outcomes.push({ text: `${ICON.CHECK} ${this.$t('heatmap.outcomeTargetLysis')}`, level: 'ok' })
         if (hDR >= HMAP_WARN_DR || hTss >= HMAP_THERM_WARN_C) {
-          outcomes.push({ text: '\u26a0 Healthy stressed', level: 'warn' })
+          outcomes.push({ text: `${ICON.WARNING} ${this.$t('heatmap.outcomeHealthyStressed')}`, level: 'warn' })
         } else {
-          outcomes.push({ text: '\u2713 Healthy safe', level: 'ok' })
+          outcomes.push({ text: `${ICON.CHECK} ${this.$t('heatmap.outcomeHealthySafe')}`, level: 'ok' })
         }
       } else if (hDR >= HMAP_LYSIS_DR) {
-        outcomes.push({ text: '\u26d4 Healthy lysis', level: 'danger' })
-        if (tDR >= HMAP_LYSIS_DR) outcomes.push({ text: '\u26d4 Target lysis', level: 'danger' })
+        outcomes.push({ text: `\u26d4 ${this.$t('heatmap.outcomeHealthyLysis')}`, level: 'danger' })
+        if (tDR >= HMAP_LYSIS_DR) outcomes.push({ text: `\u26d4 ${this.$t('heatmap.outcomeTargetLysis')}`, level: 'danger' })
       } else if (hTss >= HMAP_THERM_CRIT_C) {
-        outcomes.push({ text: `\u26d4 Thermal damage (\u2265${HMAP_THERM_CRIT_C} ${UNIT.DEG_C})`, level: 'danger' })
+        outcomes.push({ text: `\u26d4 ${this.$t('heatmap.outcomeThermalDamage', { critC: HMAP_THERM_CRIT_C, unit: UNIT.DEG_C })}`, level: 'danger' })
       } else if (tDR >= HMAP_APPROACH_DR) {
-        outcomes.push({ text: '\u2192 Approaching window', level: 'info' })
-        outcomes.push({ text: `T-DR ${(tDR * 100).toFixed(0)}%, lysis at ${(HMAP_LYSIS_DR * 100).toFixed(0)}%`, level: 'info' })
+        outcomes.push({ text: `\u2192 ${this.$t('heatmap.outcomeApproaching')}`, level: 'info' })
+        outcomes.push({ text: `${this.$t('heatmap.outcomeTDrProgress', { pct: (tDR * 100).toFixed(0), lysisAt: (HMAP_LYSIS_DR * 100).toFixed(0) })}`, level: 'info' })
       } else {
-        outcomes.push({ text: 'Sub-threshold', level: 'info' })
+        outcomes.push({ text: `${this.$t('heatmap.outcomeSubThreshold')}`, level: 'info' })
       }
       if (hTss >= HMAP_THERM_WARN_C && hTss < HMAP_THERM_CRIT_C) {
-        outcomes.push({ text: `\u26a0 H-Temp ${hTss.toFixed(1)} ${UNIT.DEG_C}, elevated`, level: 'warn' })
+        outcomes.push({ text: `${ICON.WARNING} ${this.$t('heatmap.outcomeHTempElevated', { temp: hTss.toFixed(1), unit: UNIT.DEG_C })}`, level: 'warn' })
       }
 
       const freqLabel  = formatFreqKHz(freqKHz, 2)
@@ -667,8 +673,8 @@ export default defineComponent({
       const info: HoverInfo = {
         freqLabel, fieldLabel, zoneLabel,
         zoneColor: HMAP_ZONE_CSS[zone],
-        tDr:       `${(Math.min(tDR, 9.99) * 100).toFixed(1)}%`,
-        hDr:       `${(Math.min(hDR, 9.99) * 100).toFixed(1)}%`,
+        tDr:       `${(Math.min(tDR, HMAP_DR_DISPLAY_CAP) * 100).toFixed(1)}%`,
+        hDr:       `${(Math.min(hDR, HMAP_DR_DISPLAY_CAP) * 100).toFixed(1)}%`,
         temp:      `${hTss.toFixed(1)} ${UNIT.DEG_C}`,
         pLysis,
         outcomes,
@@ -680,10 +686,16 @@ export default defineComponent({
         : zone === HMAP_ZONE.MARGINAL    ? 'tip-val'
         : (zone === HMAP_ZONE.ABLATIVE || zone === HMAP_ZONE.THERMAL) ? 'tip-warn' : ''
       const outcomeLines = outcomes.map(o => o.text).join('\n')
-      const dynamicTip = `<strong>${freqLabel} \u00b7 ${fieldLabel}</strong>\n`
-        + `<span class='${zoneClass}'>${zoneLabel}</span>\n`
-        + `T ${(Math.min(tDR, 9.99) * 100).toFixed(1)}% \u00b7 H ${(Math.min(hDR, 9.99) * 100).toFixed(1)}% \u00b7 ${hTss.toFixed(1)} ${UNIT.DEG_C}\n`
-        + outcomeLines
+      const dynamicTip = tipHoverDynamic({
+        freqLabel,
+        fieldLabel,
+        zoneLabel,
+        zoneClass,
+        tDrPct:      `${(Math.min(tDR, HMAP_DR_DISPLAY_CAP) * 100).toFixed(1)}%`,
+        hDrPct:      `${(Math.min(hDR, HMAP_DR_DISPLAY_CAP) * 100).toFixed(1)}%`,
+        tempStr:     `${hTss.toFixed(1)} ${UNIT.DEG_C}`,
+        outcomeLines,
+      })
       const wrapEl = this.$refs.wrap as HTMLElement & { _tipContent?: string }
       wrapEl._tipContent = dynamicTip
       const brTip = document.getElementById('br-tip')
@@ -698,7 +710,7 @@ export default defineComponent({
     _resetCanvasTip() {
       const wrapEl = this.$refs.wrap as HTMLElement & { _tipContent?: string }
       if (wrapEl && wrapEl._tipContent !== undefined) {
-        wrapEl._tipContent = this.$t('heatmap.tipCanvas') as string
+        wrapEl._tipContent = tipCanvas()
       }
     },
   },

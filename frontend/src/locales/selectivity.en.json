@@ -11,10 +11,8 @@
     "sigmaIRange": "σ_i range:",
     "smallCellNoteLabel": "Size disadvantage",
 
-    "tipEthr": "Target disruption threshold",
-    "tipEthrBody": "Resonant field at which capsid/cell-wall disruption triggers.\nDisruption ratio = (E / E_thr) × L(f, f_res, Q) ≥ 1.0 → disruption",
-    "tipNoGhzRes": "Healthy cell: no GHz resonance",
-    "tipNoGhzResBody": "Mammalian cells lack rigid-shell resonance, Schwan Vm → 0\nat GHz (ωτ ≫ 1). Healthy tissue is unperturbed.",
+    "tipEthrFull": "<strong>Target disruption threshold</strong>\nResonant field at which capsid/cell-wall disruption triggers.\nDisruption ratio = (E / E_thr) × L(f, f_res, Q) ≥ 1.0 → disruption",
+    "tipNoGhzResFull": "<strong>Healthy cell: no GHz resonance</strong>\nMammalian cells lack rigid-shell resonance, Schwan Vm → 0\nat GHz (ωτ ≫ 1). Healthy tissue is unperturbed.",
 
     "tipVmSarResonance": "<strong>Disruption &amp; Thermal, Resonance Mode</strong>\nT-Disr: capsid disruption % = (E/E_thr) × L(f,f_res,Q)\nH-Safe: healthy Vm → 0 at GHz, unperturbed\nSAR_avg = σ_i·α²·E²·wf·dc / ρ (time-averaged, valid in all modes)\nUse duty cycle to limit thermal load.",
     "energyDoseLabel": "E-Dose",

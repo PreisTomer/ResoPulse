@@ -1,6 +1,6 @@
 <!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
 <template>
-  <div class="hmap__legend" v-tip="$t('heatmap.tipCanvas')">
+  <div class="hmap__legend" v-tip="tipCanvas">
     <div v-for="(color, zone) in ZONE_COLORS" :key="zone" class="hmap__legend-item">
       <span class="hmap__legend-dot" :style="{ background: color }"></span>
       <span class="hmap__legend-label">{{ $t(`heatmap.zone${ZONE_KEY[zone]}`) }}</span>
@@ -11,6 +11,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { HMAP_ZONE_COLOR, HMAP_ZONE_KEY } from '@/constants/heatmap'
+import { tipCanvas } from '@/tooltips/heatmapTooltips'
 
 const ZONE_COLORS = HMAP_ZONE_COLOR as Record<number, string>
 const ZONE_KEY    = HMAP_ZONE_KEY    as Record<number, string>
@@ -18,6 +19,10 @@ const ZONE_KEY    = HMAP_ZONE_KEY    as Record<number, string>
 export default defineComponent({
   data() {
     return { ZONE_COLORS, ZONE_KEY }
+  },
+
+  computed: {
+    tipCanvas(): string { return tipCanvas() },
   },
 })
 </script>

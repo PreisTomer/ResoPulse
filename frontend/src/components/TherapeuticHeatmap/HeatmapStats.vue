@@ -1,6 +1,6 @@
 <!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
 <template>
-  <div class="hmap__stats" v-tip="$t('heatmap.tipStats')" :style="{ '--op-zone-color': opZoneColor }">
+  <div class="hmap__stats" v-tip="tipStats" :style="{ '--op-zone-color': opZoneColor }">
     <span class="hmap__stats-label">{{ $t('heatmap.statsLabel') }}</span>
 
     <span class="hmap__stat">
@@ -18,7 +18,7 @@
       <span class="hmap__stat-v" :class="tempClass">{{ healthyTssStr }}</span>
     </span>
 
-    <span class="hmap__stat" v-tip="$t('heatmap.tipPLysis')">
+    <span class="hmap__stat" v-tip="tipPLysis">
       <span class="hmap__stat-k">{{ $t('heatmap.statPLysis') }}</span>
       <span class="hmap__stat-v">{{ pLysisStr }}</span>
     </span>
@@ -28,23 +28,23 @@
       <span class="hmap__stat-v hmap__stat-v--zone">&times;{{ selStr }}</span>
     </span>
 
-    <span class="hmap__stat" v-tip="$t('heatmap.tipRegime')">
+    <span class="hmap__stat" v-tip="tipRegime">
       <span
         class="hmap__stat-badge hmap__stat-badge--regime"
         :class="`hmap__stat-badge--${cellStore.freqRegime}`"
       >{{ $t(`slider.regime.${cellStore.freqRegime}`) }}</span>
     </span>
 
-    <span class="hmap__stat" v-if="showSkinDepth" v-tip="$t('heatmap.tipSkinDepth')">
+    <span class="hmap__stat" v-if="showSkinDepth" v-tip="tipSkinDepth">
       <span class="hmap__stat-k">&delta;</span>
       <span class="hmap__stat-v" :class="skinDepthClass">{{ skinDepthStr }}</span>
     </span>
 
-    <button class="hmap__snap-btn" @click="snapToOptimal" v-tip="$t('heatmap.tipOptLine')">
+    <button class="hmap__snap-btn" @click="snapToOptimal" v-tip="tipOptLine">
       {{ $t('heatmap.snapBtn') }}
     </button>
 
-    <span class="hmap__info-btn" v-tip="$t('heatmap.tipCanvas')">{{ ICON.INFO }}</span>
+    <span class="hmap__info-btn" v-tip="tipCanvas">{{ ICON.INFO }}</span>
   </div>
 </template>
 
@@ -56,7 +56,8 @@ import { broadcastStateSync } from '@/services/socket'
 import { CELL_CATEGORY, FREQ_REGIME } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'
-import { HMAP_LYSIS_DR, HMAP_WARN_DR, HMAP_THERM_WARN_C, HMAP_THERM_CRIT_C } from '@/constants/heatmap'
+import { HMAP_LYSIS_DR, HMAP_WARN_DR, HMAP_THERM_WARN_C, HMAP_THERM_CRIT_C, HMAP_DR_DISPLAY_CAP, HMAP_SEL_INFINITY_CAP, HMAP_SKIN_DEPTH_OK_MM, HMAP_SKIN_DEPTH_WARN_MM } from '@/constants/heatmap'
+import { tipCanvas, tipStats, tipOptLine, tipPLysis, tipRegime, tipSkinDepth } from '@/tooltips/heatmapTooltips'
 
 export default defineComponent({
   props: {
@@ -70,11 +71,11 @@ export default defineComponent({
   computed: {
     ...mapStores(useCellStore),
     tDrPct(): string {
-      return (Math.min(this.cellStore.targetDisruptionRatio,  9.99) * 100).toFixed(1)
+      return (Math.min(this.cellStore.targetDisruptionRatio,  HMAP_DR_DISPLAY_CAP) * 100).toFixed(1)
     },
 
     hDrPct(): string {
-      return (Math.min(this.cellStore.healthyDisruptionRatio, 9.99) * 100).toFixed(1)
+      return (Math.min(this.cellStore.healthyDisruptionRatio, HMAP_DR_DISPLAY_CAP) * 100).toFixed(1)
     },
 
     healthyTssStr(): string {
@@ -90,7 +91,7 @@ export default defineComponent({
 
     selStr(): string {
       const sel = this.cellStore.selectivityRatio
-      return sel >= 99 ? '\u221e' : sel.toFixed(2)
+      return sel >= HMAP_SEL_INFINITY_CAP ? ICON.INFINITY : sel.toFixed(2)
     },
 
     healthyDrClass(): string {
@@ -119,10 +120,17 @@ export default defineComponent({
 
     skinDepthClass(): string {
       const d = this.cellStore.skinDepthMm
-      if (d >= 20) return 'hmap__stat-v--ok'
-      if (d >= 5)  return 'hmap__stat-v--warn'
+      if (d >= HMAP_SKIN_DEPTH_OK_MM)   return 'hmap__stat-v--ok'
+      if (d >= HMAP_SKIN_DEPTH_WARN_MM) return 'hmap__stat-v--warn'
       return 'hmap__stat-v--danger'
     },
+
+    tipCanvas():    string { return tipCanvas() },
+    tipStats():     string { return tipStats() },
+    tipOptLine():   string { return tipOptLine() },
+    tipPLysis():    string { return tipPLysis() },
+    tipRegime():    string { return tipRegime() },
+    tipSkinDepth(): string { return tipSkinDepth() },
   },
 
   methods: {

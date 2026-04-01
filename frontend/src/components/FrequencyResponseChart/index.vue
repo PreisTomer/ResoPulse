@@ -727,26 +727,28 @@ export default defineComponent({
       nucGroup.selectAll('path').remove()
 
       if (this.cellStore.doubleShellEnabled) {
-        const hNucCurve = computeNuclearVmCurve(this.cellStore.healthy, this.cellStore.fieldIntensity, sigma_e, cosTheta)
-        const tNucCurve = computeNuclearVmCurve(this.cellStore.target,  this.cellStore.fieldIntensity, sigma_e, cosTheta)
-
-        nucGroup.append('path')
-          .datum(hNucCurve)
-          .attr('fill', 'none')
-          .attr('stroke', C.primary)
-          .attr('stroke-width', 1.5)
-          .attr('stroke-opacity', 0.45)
-          .attr('stroke-dasharray', '5,4')
-          .attr('d', lineGen)
-
-        nucGroup.append('path')
-          .datum(tNucCurve)
-          .attr('fill', 'none')
-          .attr('stroke', C.danger)
-          .attr('stroke-width', 1.5)
-          .attr('stroke-opacity', 0.45)
-          .attr('stroke-dasharray', '5,4')
-          .attr('d', lineGen)
+        if (this.cellStore.healthy.nuclearRadius) {
+          const hNucCurve = computeNuclearVmCurve(this.cellStore.healthy, this.cellStore.fieldIntensity, sigma_e, cosTheta)
+          nucGroup.append('path')
+            .datum(hNucCurve)
+            .attr('fill', 'none')
+            .attr('stroke', C.primary)
+            .attr('stroke-width', 1.5)
+            .attr('stroke-opacity', 0.45)
+            .attr('stroke-dasharray', '5,4')
+            .attr('d', lineGen)
+        }
+        if (this.cellStore.target.nuclearRadius) {
+          const tNucCurve = computeNuclearVmCurve(this.cellStore.target, this.cellStore.fieldIntensity, sigma_e, cosTheta)
+          nucGroup.append('path')
+            .datum(tNucCurve)
+            .attr('fill', 'none')
+            .attr('stroke', C.danger)
+            .attr('stroke-width', 1.5)
+            .attr('stroke-opacity', 0.45)
+            .attr('stroke-dasharray', '5,4')
+            .attr('d', lineGen)
+        }
       }
 
       // ── Threshold lines: lysis + reversible EP (50%) ───────────────────

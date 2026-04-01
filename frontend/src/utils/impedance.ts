@@ -4,8 +4,7 @@
 // VSWR/RF matching, Joule heating, and corrected-field voltage-divider compensation.
 
 import { MEDIUM_RELATIVE_PERMITTIVITY, MEDIUM_DENSITY_KG_M3, MEDIUM_SPECIFIC_HEAT_J_KG_K } from '@/constants/cuvette'
-
-const EPSILON_0 = 8.854187817e-12  // F/m, vacuum permittivity
+import { EPSILON_0 } from '@/constants/physics'
 
 // ── Lysis fraction ─────────────────────────────────────────────────────────────
 

@@ -150,6 +150,8 @@ export default defineComponent({
         tiHighFreqLimit:      this.cellStore.tiHighFreqLimit,
         healthyRadius:        this.cellStore.healthy.radius,
         healthyLabel:         this.cellStore.healthy.label,
+        targetCategory:       this.cellStore.targetCellCategory,
+        targetFcDisplay:      formatFreqKHz(this.cellStore.targetFc),
       })
     },
   },

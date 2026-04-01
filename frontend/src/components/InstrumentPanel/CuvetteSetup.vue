@@ -31,9 +31,9 @@
         <input
           class="cuvette-setup__number"
           type="number"
-          min="0.5"
-          max="10"
-          step="0.5"
+          :min="CUVETTE_GAP_MIN_MM"
+          :max="CUVETTE_GAP_MAX_MM"
+          :step="CUVETTE_GAP_STEP_MM"
           :value="impedanceStore.cuvetteGapMm"
           @change="impedanceStore.setCuvetteGapMm(Number(($event.target as HTMLInputElement).value))"
         />
@@ -51,9 +51,9 @@
         <input
           class="cuvette-setup__number"
           type="number"
-          min="0.01"
-          max="2"
-          step="0.01"
+          :min="CUVETTE_AREA_MIN_CM2"
+          :max="CUVETTE_AREA_MAX_CM2"
+          :step="CUVETTE_AREA_STEP_CM2"
           :value="impedanceStore.cuvetteCrossSectionCm2"
           @change="impedanceStore.setCuvetteCrossSectionCm2(Number(($event.target as HTMLInputElement).value))"
         />
@@ -71,8 +71,8 @@
         <input
           class="cuvette-setup__slider"
           type="range"
-          min="0"
-          max="200"
+          :min="SOURCE_IMPEDANCE_MIN_OHM"
+          :max="SOURCE_IMPEDANCE_MAX_OHM"
           step="1"
           :value="impedanceStore.sourceImpedanceOhm"
           @input="impedanceStore.setSourceImpedanceOhm(Number(($event.target as HTMLInputElement).value))"
@@ -93,11 +93,11 @@
           :value="String(impedanceStore.cellDensityPerMl)"
           @change="impedanceStore.setCellDensityPerMl(Number(($event.target as HTMLSelectElement).value))"
         >
-          <option value="1e5">10⁵ cells/mL</option>
-          <option value="1e6">10⁶ cells/mL</option>
-          <option value="1e7">10⁷ cells/mL</option>
-          <option value="1e8">10⁸ cells/mL</option>
-          <option value="1e9">10⁹ cells/mL</option>
+          <option value="1e5">{{ $t('instrument.setup.density1e5') }}</option>
+          <option value="1e6">{{ $t('instrument.setup.density1e6') }}</option>
+          <option value="1e7">{{ $t('instrument.setup.density1e7') }}</option>
+          <option value="1e8">{{ $t('instrument.setup.density1e8') }}</option>
+          <option value="1e9">{{ $t('instrument.setup.density1e9') }}</option>
         </select>
       </div>
     </div>
@@ -108,7 +108,12 @@
 import { defineComponent } from 'vue'
 import { mapStores } from 'pinia'
 import { useImpedanceStore } from '@/stores/impedanceStore'
-import { CUVETTE_PRESETS } from '@/constants/cuvette'
+import {
+  CUVETTE_PRESETS,
+  CUVETTE_GAP_MIN_MM, CUVETTE_GAP_MAX_MM, CUVETTE_GAP_STEP_MM,
+  CUVETTE_AREA_MIN_CM2, CUVETTE_AREA_MAX_CM2, CUVETTE_AREA_STEP_CM2,
+  SOURCE_IMPEDANCE_MIN_OHM, SOURCE_IMPEDANCE_MAX_OHM,
+} from '@/constants/cuvette'
 import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'
 
@@ -116,7 +121,12 @@ export default defineComponent({
   name: 'CuvetteSetup',
 
   data() {
-    return { CUVETTE_PRESETS, ICON, UNIT }
+    return {
+      CUVETTE_PRESETS, ICON, UNIT,
+      CUVETTE_GAP_MIN_MM, CUVETTE_GAP_MAX_MM, CUVETTE_GAP_STEP_MM,
+      CUVETTE_AREA_MIN_CM2, CUVETTE_AREA_MAX_CM2, CUVETTE_AREA_STEP_CM2,
+      SOURCE_IMPEDANCE_MIN_OHM, SOURCE_IMPEDANCE_MAX_OHM,
+    }
   },
 
   computed: {

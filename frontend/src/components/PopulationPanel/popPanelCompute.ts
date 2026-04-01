@@ -5,6 +5,15 @@
 export const MARGIN = { top: 14, right: 16, bottom: 40, left: 50 }
 export const N_BINS = 20
 
+export const CHART_HEIGHT               = 196   // SVG chart height [px] — matches CSS min-height
+export const POP_DEFAULT_N_CELLS        = 300   // default Monte-Carlo sample count
+export const POP_DEFAULT_R_VARIANCE_PCT = 10    // default radius CV [%] (Tzur et al. 2009)
+export const POP_DEFAULT_VTH_VARIANCE_PCT = 20  // default V_th CV [%] (Weaver & Chizmadzhev 1996)
+export const POP_CHART_DR_X_MIN         = 1.6   // minimum chart X extent [DR units]
+export const POP_LEGEND_ITEM_WIDTH      = 160   // horizontal spacing between legend items [px]
+export const POP_LIVE_RESAMPLE_INTERVAL_MS = 2000  // live-update interval when panel is open [ms]
+export const POP_RESAMPLE_DEBOUNCE_MS   = 150   // debounce delay for watcher-triggered resample [ms]
+
 export interface PopStats {
   pctLysed:  number
   pctRevEp:  number

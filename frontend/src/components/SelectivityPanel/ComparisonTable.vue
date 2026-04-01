@@ -34,9 +34,9 @@ import { useCellStore } from '@/stores/cellStore'
 import { CELL_PRESETS, GROUP_COLORS } from '@/constants/cellLibrary'
 import { DEFAULT_CAPSID_Q, THRESHOLDS, NEAR_ZERO_DR, H_FIRE_THRESHOLD_MULTIPLIER, BODY_TEMP_C, MIN_PULSE_ENVELOPE } from '@/constants/physics'
 import { CELL_CATEGORY, CELL_GROUP, WAVEFORM } from '@/constants/strings'
-import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'
 import { computeSchwan, computeResonantDisruption, safeRatio, computeTau, computePulseStepResponse, tempCorrectedVth } from '@/utils/physics'
+import { tipCmpTitle, tipCmpRow } from '@/tooltips/selectivityTooltips'
 
 export default defineComponent({
   computed: {
@@ -46,7 +46,7 @@ export default defineComponent({
     UNIT()          { return UNIT },
 
     cmpTitleTip(): string {
-      return `<strong>${this.presetCompTitleDynamic}</strong>\n${this.$t('selectivity.presetCompTip')}`
+      return tipCmpTitle(this.presetCompTitleDynamic, this.$t('selectivity.presetCompTip'))
     },
 
     presetCompTitleDynamic(): string {
@@ -122,17 +122,20 @@ export default defineComponent({
     },
 
     cmpTip(row: { preset: typeof CELL_PRESETS[0]; sel: number; tVmMv: string; hasRes: boolean }): string {
-      const selStr    = row.sel >= 99 ? ICON.INFINITY : row.sel.toFixed(2)
-      const disr      = this.$t('selectivity.cmpTipDisruption')
-      const selLbl    = this.$t('selectivity.cmpTipSelectivity')
-      const hint      = this.$t('selectivity.cmpTipClickHint')
-      const counterNote = row.sel > 0 && row.sel < 1.0
-        ? `<span class='tip-warn'>${this.$t('selectivity.cmpTipCounterSelective')}</span>`
-        : ''
-      if (row.hasRes) {
-        return `<strong>${row.preset.label}</strong>\n${row.preset.notes}\n${disr} = <span class='tip-val'>${row.tVmMv}</span>  ·  ${selLbl} = <span class='tip-val'>×${selStr}</span>${counterNote}${hint}`
-      }
-      return `<strong>${row.preset.label}</strong>\n${row.preset.notes}\nVm = <span class='tip-val'>${row.tVmMv} ${UNIT.MV}</span>  ·  ${selLbl} = <span class='tip-val'>×${selStr}</span>${counterNote}${hint}`
+      return tipCmpRow({
+        label:                row.preset.label,
+        notes:                row.preset.notes,
+        tVmMv:                row.tVmMv,
+        sel:                  row.sel,
+        hasRes:               row.hasRes,
+        disrLabel:            this.$t('selectivity.cmpTipDisruption'),
+        selLabel:             this.$t('selectivity.cmpTipSelectivity'),
+        clickHint:            this.$t('selectivity.cmpTipClickHint'),
+        counterSelectiveNote: row.sel > 0 && row.sel < 1.0
+          ? `<span class='tip-warn'>${this.$t('selectivity.cmpTipCounterSelective')}</span>`
+          : '',
+        unit:                 UNIT.MV,
+      })
     },
   },
 })

@@ -58,7 +58,7 @@ export default defineComponent({
     font-family: var(--font-mono);
     font-weight: 600;
 
-    .pop-window-score--good &     { color: rgb(34,197,94); }
+    .pop-window-score--good &     { color: var(--color-lime); }
     .pop-window-score--marginal & { color: var(--color-amber); }
     .pop-window-score--poor &     { color: var(--color-danger); }
   }

@@ -7,9 +7,9 @@
       @click="toggle"
       type="button"
       :aria-pressed="enabled"
-      aria-label="Toggle auditory display"
+      :aria-label="$t('instrument.sonif.ariaLabel')"
     >
-      <span class="sonif-toggle__icon">{{ enabled ? '♪' : '♩' }}</span>
+      <span class="sonif-toggle__icon">{{ enabled ? ICON.NOTE_ON : ICON.NOTE_OFF }}</span>
       <span class="sonif-toggle__label">{{ enabled ? $t('instrument.sonif.on') : $t('instrument.sonif.off') }}</span>
       <span v-if="enabled" class="sonif-toggle__pitch">{{ pitchDisplay }}</span>
     </button>
@@ -25,7 +25,9 @@ import { defineComponent } from 'vue'
 import { sonification } from '@/services/sonification'
 import { useImpedanceStore } from '@/stores/impedanceStore'
 import { useCellStore } from '@/stores/cellStore'
-import { THRESHOLDS } from '@/constants/physics'
+import { THRESHOLDS, SONIF_PITCH_MIN_HZ, SONIF_PITCH_RANGE_HZ } from '@/constants/physics'
+import { ICON } from '@/constants/icons'
+import { UNIT } from '@/constants/units'
 
 export default defineComponent({
   name: 'SonificationToggle',
@@ -33,16 +35,16 @@ export default defineComponent({
     return {
       enabled: false,
       pitchHz: 0,
+      ICON, UNIT,
       _tickHandle: null as ReturnType<typeof setInterval> | null,
     }
   },
   computed: {
     pitchDisplay(): string {
-      return `${this.pitchHz.toFixed(0)} Hz`
+      return `${this.pitchHz.toFixed(0)} ${UNIT.HZ}`
     },
     barPct(): number {
-      // Map 220-1760 Hz range to 0-100%
-      return Math.min(100, Math.max(0, ((this.pitchHz - 220) / 1540) * 100))
+      return Math.min(100, Math.max(0, ((this.pitchHz - SONIF_PITCH_MIN_HZ) / SONIF_PITCH_RANGE_HZ) * 100))
     },
     tipText(): string {
       return this.$t('instrument.sonif.tip')

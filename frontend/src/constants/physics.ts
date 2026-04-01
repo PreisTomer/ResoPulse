@@ -121,6 +121,8 @@ export const THRESHOLDS = {
   BIOSTIM_DR_OPT_HIGH_PCT: 40,  // upper bound of the optimal SI stimulation window (% of lysis thr)
   // MTE coupling: 1/√(1+(f/fc)²) ≥ MTE_COUPLING_THRESHOLD requires f ≤ fc × factor
   MTE_COUPLING_THRESHOLD_PCT: 70,  // minimum acceptable coupling efficiency (%)
+  // Population panel success note: minimum target lysis fraction [%] to show the "success window" note
+  POP_NOTE_TARGET_LYSIS_MIN: 50,
 } as const
 
 export type ThresholdKey = keyof typeof THRESHOLDS
@@ -149,6 +151,9 @@ export const DEFAULT_CAPSID_Q = 2
 
 // ── Electromagnetic constants ─────────────────────────────────────────────────
 
+// Vacuum permittivity [F/m]. CODATA 2018.
+export const EPSILON_0 = 8.854187817e-12
+
 // Vacuum permeability [H/m] — used in EM skin depth δ = √(1/(π·f·μ₀·σ)). CODATA 2018.
 export const MU_0 = 4 * Math.PI * 1e-7
 
@@ -165,6 +170,36 @@ export const NS_TO_S        = 1e-9  // ns → s
 export const NS_TO_MS       = 1e-6  // ns → ms
 export const MS_TO_S        = 1e-3  // ms → s
 export const J_M3_TO_MJ_CM3 = 1e-3  // J/m³ → mJ/cm³
+
+// ── Impedance feedback display thresholds ────────────────────────────────────
+
+// Impedance drift severity [%] — negative drift = σ_e rose from ion release
+export const DRIFT_WARN_PCT   = 5    // warn at ≥5% drift
+export const DRIFT_DANGER_PCT = 15   // danger at ≥15% drift
+// Scale factor for the drift bar: bar width% = |drift%| × DRIFT_BAR_SCALE (caps at 100%)
+export const DRIFT_BAR_SCALE = 3
+
+// Field corrector: voltage-divider correction severity [%]
+export const CORRECTION_PCT_OK     = 2   // negligible correction below 2%
+export const CORRECTION_PCT_WARN   = 5   // factor row highlight above 5%
+export const CORRECTION_PCT_NEEDED = 8   // correction actively needed above 8%
+
+// VSWR thresholds for RF power delivery (standard coaxial matching criteria)
+export const VSWR_OK   = 2   // VSWR ≤ 2:1 acceptable
+export const VSWR_WARN = 5   // VSWR ≤ 5:1 marginal
+
+// Power delivery efficiency thresholds (η = 1 − |Γ|²)
+export const POWER_EFFICIENCY_OK   = 0.90  // ≥90% good
+export const POWER_EFFICIENCY_WARN = 0.75  // ≥75% marginal; below → danger
+
+// Conductivity delta threshold: |Δσ_e| above which lysis-induced rise is visible [S/m]
+export const CONDUCTIVITY_DELTA_WARN_S_M = 0.001
+
+// ── Sonification (auditory display) pitch mapping ────────────────────────────
+
+// Auditory display pitch range [Hz]: impedance drift maps linearly to [MIN, MIN+RANGE]
+export const SONIF_PITCH_MIN_HZ   = 220   // A3 — minimum pitch
+export const SONIF_PITCH_RANGE_HZ = 1540  // spans A3 (220 Hz) to A6 (1760 Hz)
 
 // ── Medium and lysis timing constants ────────────────────────────────────────
 

@@ -11,10 +11,38 @@ import { C } from '@/theme/colors'
 export const HMAP_FREQ_STEPS  = 220  // 220 cols × 110 rows = 24 200 physics evaluations per sweep
 export const HMAP_FIELD_STEPS = 110
 
+// ── Frequency axis bounds ─────────────────────────────────────────────────────
+
+export const HMAP_FREQ_MIN_KHZ = 10  // minimum X-axis frequency [kHz]
+
 // ── Canvas geometry ────────────────────────────────────────────────────────────
 
 export const HMAP_CANVAS_W = 640
 export const HMAP_CANVAS_H = 340
+
+// Y-axis headroom: extends axis to this multiple of the highest lysis field
+export const HMAP_YAXIS_HEADROOM = 2.0
+
+// DR display cap: values beyond this are clamped before percentage formatting
+export const HMAP_DR_DISPLAY_CAP = 9.99
+
+// Selectivity display cap: values at or above this show ∞ instead of a number
+export const HMAP_SEL_INFINITY_CAP = 99
+
+// Skin-depth quality thresholds [mm] for RF/microwave regime colour coding
+export const HMAP_SKIN_DEPTH_OK_MM   = 20
+export const HMAP_SKIN_DEPTH_WARN_MM = 5
+
+// Debounce delay for physics grid recompute after slider changes [ms]
+export const HMAP_RECOMPUTE_DEBOUNCE_MS = 250
+
+// Canvas font strings (CSS variables are not evaluated in canvas contexts)
+export const HMAP_CANVAS_FONT_AXIS = '9px monospace'  // axis ticks, line labels
+export const HMAP_CANVAS_FONT_TINY = '8px monospace'  // fc corner-freq labels
+
+// Canvas line label text constants (locale-neutral abbreviations)
+export const HMAP_LABEL_OPT  = 'opt'    // optimal-frequency marker label
+export const HMAP_LABEL_FRES = 'f_res'  // resonant-frequency marker label
 
 export const HMAP_MARGIN = {
   LEFT:   68,   // field-axis labels + ticks
@@ -67,5 +95,5 @@ export const HMAP_ZONE_CSS: Record<HmapZone, string> = {  // CSS text colour per
   [HMAP_ZONE.THERAPEUTIC]: 'var(--color-lime)',
   [HMAP_ZONE.MARGINAL]:    'var(--color-amber)',
   [HMAP_ZONE.ABLATIVE]:    'var(--color-danger)',
-  [HMAP_ZONE.THERMAL]:     '#ff8c00',
+  [HMAP_ZONE.THERMAL]:     'var(--color-vibrating)',
 }

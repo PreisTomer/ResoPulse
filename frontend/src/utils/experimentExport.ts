@@ -581,9 +581,9 @@ export function buildCsvText(
   const headers = [
     '#', 'Time', 'Session',
     `Freq (${UNIT.KHZ})`, `Field (${UNIT.V_PER_CM})`, 'Medium', 'Target',
-    `${H}-Vm (${UNIT.MV})`, `${T}-Vm (${UNIT.MV})`, 'Selectivity',
-    `${H}-Ratio (%)`, `${T}-Ratio (%)`,
-    `${H}-Temp (${UNIT.DEG_C})`, `${T}-Temp (${UNIT.DEG_C})`,
+    `${T}-Vm (${UNIT.MV})`, `${H}-Vm (${UNIT.MV})`, 'Selectivity',
+    `${T}-Ratio (%)`, `${H}-Ratio (%)`,
+    `${T}-Temp (${UNIT.DEG_C})`, `${H}-Temp (${UNIT.DEG_C})`,
     `Orientation (${UNIT.DEG})`,
     `${H}-Re[K]`, `${T}-Re[K]`,
     `${H}-f_cross (${UNIT.KHZ})`, `${T}-f_cross (${UNIT.KHZ})`,
@@ -591,10 +591,10 @@ export function buildCsvText(
   ]
   const rows = entries.map((e) => [
     e.id, e.timestamp, e.sessionName ?? sessionName, e.freqKHz, e.fieldVcm, e.medium, e.targetPreset,
-    e.healthyVm, e.targetVm, e.selectivity,
-    (e.healthyRatio * 100).toFixed(1),
+    e.targetVm, e.healthyVm, e.selectivity,
     (e.targetRatio  * 100).toFixed(1),
-    e.healthyTemp, e.targetTemp,
+    (e.healthyRatio * 100).toFixed(1),
+    e.targetTemp, e.healthyTemp,
     e.orientationDeg ?? 0,
     e.depHealthyK ?? ', ', e.depTargetK ?? ', ',
     e.depHealthyCrossoverKHz ?? ', ', e.depTargetCrossoverKHz ?? ', ',
