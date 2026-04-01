@@ -3,7 +3,7 @@
 // Tooltip builders for FrequencySlider. Pure — no Vue dependency.
 
 import { MEDIA } from '@/constants/media'
-import { DEFAULT_CAPSID_Q, LYSIS_FIELD_SENTINEL } from '@/constants/physics'
+import { DEFAULT_CAPSID_Q, LYSIS_FIELD_SENTINEL, THRESHOLDS } from '@/constants/physics'
 import { CELL_CATEGORY, THERMAL_LEVEL } from '@/constants/strings'
 import { UNIT } from '@/constants/units'
 import { formatLysisTime } from '@/utils/format'
@@ -23,7 +23,7 @@ interface ResonanceExtra {
 }
 
 export function tipWaveform(currentField: number, maxSteadyTemp: number): string {
-  const cwWarn = maxSteadyTemp > 42
+  const cwWarn = maxSteadyTemp > THRESHOLDS.TEMP_WARN
     ? `\n\n<span class="tip-warn">⚠ At current field (${currentField} ${UNIT.V_PER_CM}), CW would heat cells to T_ss ≈ ${Math.min(maxSteadyTemp, 150).toFixed(0)}${UNIT.DEG_C}, reduce field before switching to CW.</span>`
     : ''
   return `<strong>Waveform Type</strong>
@@ -233,9 +233,9 @@ ${t('resonance.tipHealthyBadgeBody')}
 <span class="tip-ok">✓ ${t('resonance.tipHealthyBadgeSafe')}</span>`
   }
   const hThr = (effThresholdMv ?? thresholdVoltage * 1000).toFixed(0)
-  const ok   = healthyDisruption < 0.5
+  const ok   = healthyDisruption < THRESHOLDS.HEALTHY_APPROACHING
     ? '\n<span class="tip-ok">✓ Healthy cells are safe</span>'
-    : healthyDisruption > 0.85
+    : healthyDisruption > THRESHOLDS.DISRUPTION_WARN
       ? '\n<span class="tip-warn">⚠ Healthy cells approaching lysis threshold, reduce field</span>'
       : '\n<span class="tip-warn">⚠ Approaching rev-EP zone, monitor closely</span>'
   return `<strong>Healthy membrane disruption: <span class="tip-val">${pct}%</span></strong>

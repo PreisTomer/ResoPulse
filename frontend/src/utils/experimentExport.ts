@@ -238,12 +238,13 @@ export function buildRefs(isRes: boolean, isDbl: boolean, cat: string, isHFire =
 
 // ── Per-entry computation helpers (pure - no store/Vue imports) ───────────
 
-// SAR = σ_i·α²·E²/ρ, α = 3σ_e/(2σ_e+σ_i)
-function computeSAR(sigmaI: number, sigmaE: number, fieldVcm: number): number {
+// SAR = σ_i·α²·E²·wf/ρ, α = 3σ_e/(2σ_e+σ_i)
+// wf: 0.5 for CW (E²_rms = E²_peak/2), 1.0 for pulsed/H-FIRE
+function computeSAR(sigmaI: number, sigmaE: number, fieldVcm: number, wf: number): number {
   const alpha  = (3 * sigmaE) / (2 * sigmaE + sigmaI)
   const E_vm   = fieldVcm * 100           // V/cm → V/m
   const rho    = 1000                     // kg/m³ (water approximation)
-  return sigmaI * alpha * alpha * E_vm * E_vm / rho
+  return sigmaI * alpha * alpha * E_vm * E_vm * wf / rho
 }
 
 // PEF = 1−exp(−t_p/τ), τ = 1/(2π·fc)
@@ -359,7 +360,8 @@ export function buildEntryMethodsText(entry: LogEntry, sessionName: string): { t
   const isPulsedSch = isPulsedOrHFire && !isRes   // PEF only applies in Schwan/IRE mode
 
   // Healthy cell block
-  const hSAR     = computeSAR(h.conductivity, sigmaE, entry.fieldVcm)
+  const wf       = (entry.waveform === 'pulsed' || entry.waveform === 'hfire') ? 1.0 : 0.5
+  const hSAR     = computeSAR(h.conductivity, sigmaE, entry.fieldVcm, wf)
   const hSARAvg  = hSAR * (entry.dutyCycle ?? 1)
   const hPEF     = isPulsedSch && entry.pulseWidthNs && h.fc > 0
     ? computePEF(entry.pulseWidthNs, h.fc)
@@ -382,7 +384,7 @@ export function buildEntryMethodsText(entry: LogEntry, sessionName: string): { t
   ]
 
   // Target cell block
-  const tSAR    = computeSAR(t.conductivity, sigmaE, entry.fieldVcm)
+  const tSAR    = computeSAR(t.conductivity, sigmaE, entry.fieldVcm, wf)
   const tSARAvg = tSAR * (entry.dutyCycle ?? 1)
   const tPEF    = isPulsedSch && entry.pulseWidthNs && t.fc > 0
     ? computePEF(entry.pulseWidthNs, t.fc)
@@ -514,7 +516,7 @@ export function buildCsvText(
     '#', 'Time', 'Session',
     `Freq (${UNIT.KHZ})`, `Field (${UNIT.V_PER_CM})`, 'Medium', 'Target',
     `${H}-Vm (${UNIT.MV})`, `${T}-Vm (${UNIT.MV})`, 'Selectivity',
-    `${H}-Ratio`, `${T}-Ratio`,
+    `${H}-Ratio (%)`, `${T}-Ratio (%)`,
     `${H}-Temp (${UNIT.DEG_C})`, `${T}-Temp (${UNIT.DEG_C})`,
     `Orientation (${UNIT.DEG})`,
     `${H}-Re[K]`, `${T}-Re[K]`,
@@ -524,8 +526,8 @@ export function buildCsvText(
   const rows = entries.map((e) => [
     e.id, e.timestamp, e.sessionName ?? sessionName, e.freqKHz, e.fieldVcm, e.medium, e.targetPreset,
     e.healthyVm, e.targetVm, e.selectivity,
-    (e.healthyRatio * 100).toFixed(1) + UNIT.PERCENT,
-    (e.targetRatio  * 100).toFixed(1) + UNIT.PERCENT,
+    (e.healthyRatio * 100).toFixed(1),
+    (e.targetRatio  * 100).toFixed(1),
     e.healthyTemp, e.targetTemp,
     e.orientationDeg ?? 0,
     e.depHealthyK ?? ', ', e.depTargetK ?? ', ',

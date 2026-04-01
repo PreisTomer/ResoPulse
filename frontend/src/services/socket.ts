@@ -11,7 +11,7 @@ import type { LogEntry } from '@/stores/experimentStore'
 import { useImpedanceStore } from '@/stores/impedanceStore'
 import type { HardwareImpedancePacket } from '@/stores/impedanceStore'
 import { computeTau, computeSchwan, computePulseStepResponse, computeResonantDisruption, tempCorrectedVth } from '@/utils/physics'
-import { SCHWAN_SPHERE_FACTOR, TWO_PI, MIN_PULSE_ENVELOPE, H_FIRE_THRESHOLD_MULTIPLIER, DEFAULT_CAPSID_Q } from '@/constants/physics'
+import { SCHWAN_SPHERE_FACTOR, TWO_PI, MIN_PULSE_ENVELOPE, H_FIRE_THRESHOLD_MULTIPLIER, DEFAULT_CAPSID_Q, THRESHOLDS } from '@/constants/physics'
 import { useAiStore } from '@/stores/aiStore'
 
 // URL priority: ?backend=<url> → VITE_BACKEND_URL → localhost:3001
@@ -263,7 +263,7 @@ export function requestAiOptimization(requestId: string, onResult: AiResultCallb
 
   const vmHealthy = computeSchwan(store.healthy, optFreqKhz, suggestedFieldVcm, sigmaE, cosT) * pefHealthy
   const predDrH   = vmHealthy / (tempCorrectedVth(store.healthy.thresholdVoltage, store.healthyTemp) * hfireMult)
-  const predTi    = predDrH > 1e-6 ? predDrT / predDrH : predDrT
+  const predTi    = predDrH > 1e-6 ? Math.min(THRESHOLDS.TI_DISPLAY_CAP, predDrT / predDrH) : THRESHOLDS.TI_DISPLAY_CAP
 
   const sessionState: StatePacket = {
     freqKHz:             store.currentBroadcastFrequency,
