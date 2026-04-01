@@ -1,6 +1,7 @@
 // Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 
-import { computeSchwan, computeResonantDisruption } from '@/utils/physics'
+import { computeSchwan, computeResonantDisruption, tempCorrectedVth } from '@/utils/physics'
+import { DEFAULT_CAPSID_Q } from '@/constants/physics'
 import type { CellConfig } from '@/types/cell'
 import { UNIT } from '@/constants/units'
 
@@ -54,6 +55,7 @@ export function formatHz(hz: number): string {
 // ── DR computation ──────────────────────────────────────────────────────────
 
 // Disruption ratio for one cell at one frequency. Pure — no store access.
+// vthEff: effective threshold voltage, pre-corrected for temperature and H-FIRE multiplier.
 export function computeDR(
   cell: CellConfig,
   hz: number,
@@ -63,27 +65,24 @@ export function computeDR(
   pef: number,
   isResonanceMode: boolean,
   isResonanceTarget: boolean,
+  vthEff: number,
 ): number {
   const isAcoustic = isResonanceMode
     && isResonanceTarget
     && (cell as CellConfig & { resonantFreqGHz?: number }).resonantFreqGHz != null
 
   if (isAcoustic) {
-    const t = cell as CellConfig & { resonantFreqGHz: number; capsidQ?: number; resonantThresholdVcm?: number }
-    return computeResonantDisruption(
-      t.resonantFreqGHz,
-      t.capsidQ ?? 10,
-      t.resonantThresholdVcm ?? cell.thresholdVoltage * 1000,
-      hz,
-      field,
-    ) * pef
+    const t = cell as CellConfig & { resonantFreqGHz: number; capsidQ?: number }
+    // vthEff carries resonantThresholdVcm corrected for temperature and H-FIRE multiplier
+    return computeResonantDisruption(t.resonantFreqGHz, t.capsidQ ?? DEFAULT_CAPSID_Q, vthEff, hz, field) * pef
   }
 
   const vm = computeSchwan(cell, hz / 1000, field, sigma_e, cosTheta)
-  return (vm / cell.thresholdVoltage) * pef
+  return (vm / vthEff) * pef
 }
 
-// DR curve [%] for both cells over F_POINTS_HZ
+// DR curve [%] for both cells over F_POINTS_HZ.
+// vthH / vthT: effective thresholds (tempCorrectedVth × hfireMult) supplied by the caller.
 export function computeCurves(
   healthy: CellConfig,
   target: CellConfig,
@@ -94,10 +93,17 @@ export function computeCurves(
   pefT: number,
   isResonanceMode: boolean,
   isResonanceTarget: boolean,
+  vthH: number,
+  vthT: number,
 ): CurvePoint[] {
   return F_POINTS_HZ.map((hz) => ({
     hz,
-    hDR: computeDR(healthy, hz, field, sigma_e, cosTheta, pefH, isResonanceMode, isResonanceTarget) * 100,
-    tDR: computeDR(target,  hz, field, sigma_e, cosTheta, pefT, isResonanceMode, isResonanceTarget) * 100,
+    hDR: computeDR(healthy, hz, field, sigma_e, cosTheta, pefH, isResonanceMode, isResonanceTarget, vthH) * 100,
+    tDR: computeDR(target,  hz, field, sigma_e, cosTheta, pefT, isResonanceMode, isResonanceTarget, vthT) * 100,
   }))
+}
+
+// Compute temp + H-FIRE corrected threshold voltage for a cell. Used by callers of computeCurves.
+export function effectiveVth(nominalVth: number, tempC: number, hfireMult: number): number {
+  return tempCorrectedVth(nominalVth, tempC) * hfireMult
 }

@@ -23,10 +23,10 @@ import { defineComponent } from 'vue'
 import * as d3 from 'd3'
 import { mapStores } from 'pinia'
 import { useCellStore } from '@/stores/cellStore'
-import { computeSchwan, computeFc, computeResonantLineshape, computeResonantDisruption, computeTau, computeDepCmReal } from '@/utils/physics'
+import { computeSchwan, computeFc, computeResonantLineshape, computeResonantDisruption, computeTau, computeDepCmReal, tempCorrectedVth } from '@/utils/physics'
 import { CELL_PRESETS, GROUP_COLORS } from '@/constants/cellLibrary'
-import { DEFAULT_CAPSID_Q, THRESHOLDS } from '@/constants/physics'
-import { CELL_CATEGORY } from '@/constants/strings'
+import { DEFAULT_CAPSID_Q, THRESHOLDS, H_FIRE_THRESHOLD_MULTIPLIER } from '@/constants/physics'
+import { CELL_CATEGORY, WAVEFORM } from '@/constants/strings'
 import { MEDIA } from '@/constants/media'
 import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'
@@ -657,7 +657,7 @@ export default defineComponent({
         .y((d) => this._yScale!(d.vm))
         .curve(d3.curveBasis)
 
-      // Library preset curves (faint background - no cosTheta, use default 1.0)
+      // Library preset curves (faint background)
       const libGroup = g.select<SVGGElement>('.curves-library')
       libGroup.selectAll<SVGPathElement, typeof CELL_PRESETS[0]>('path.lib-curve')
         .data(CELL_PRESETS, (d) => d.presetId)
@@ -667,7 +667,7 @@ export default defineComponent({
         .attr('stroke', (d) => GROUP_COLORS[d.group])
         .attr('stroke-width', 1)
         .attr('stroke-opacity', 0.18)
-        .attr('d', (d) => lineGen(computeVmCurve(d, this.cellStore.fieldIntensity, sigma_e)) || '')
+        .attr('d', (d) => lineGen(computeVmCurve(d, this.cellStore.fieldIntensity, sigma_e, cosTheta)) || '')
 
       // Active curves
       const activeGroup = g.select<SVGGElement>('.curves-active')
@@ -956,10 +956,12 @@ export default defineComponent({
         (cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) &&
         t.resonantFreqGHz && t.resonantThresholdVcm
       ) {
+        const hfireMult = this.cellStore.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
+        const effThreshold = tempCorrectedVth(t.resonantThresholdVcm, this.cellStore.targetTemp) * hfireMult
         const dr = computeResonantDisruption(
           t.resonantFreqGHz,
           t.capsidQ ?? DEFAULT_CAPSID_Q,
-          t.resonantThresholdVcm,
+          effThreshold,
           hz,
           this.cellStore.fieldIntensity,
         )
@@ -971,10 +973,13 @@ export default defineComponent({
         return
       }
 
+      const hfireMult = this.cellStore.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
       const hVm = computeSchwan(this.cellStore.healthy, khz, this.cellStore.fieldIntensity, sigma_e, cosTheta) * 1000
       const tVm = computeSchwan(this.cellStore.target,  khz, this.cellStore.fieldIntensity, sigma_e, cosTheta) * 1000
-      const hDRPct  = (hVm / (this.cellStore.healthy.thresholdVoltage * 1000)) * 100
-      const tDRPct  = (tVm / (this.cellStore.target.thresholdVoltage  * 1000)) * 100
+      const hVthEffMv = tempCorrectedVth(this.cellStore.healthy.thresholdVoltage, this.cellStore.healthyTemp) * hfireMult * 1000
+      const tVthEffMv = tempCorrectedVth(this.cellStore.target.thresholdVoltage,  this.cellStore.targetTemp)  * hfireMult * 1000
+      const hDRPct  = (hVm * this.cellStore.pulseEnvelopeFactorHealthy / hVthEffMv) * 100
+      const tDRPct  = (tVm * this.cellStore.pulseEnvelopeFactorTarget  / tVthEffMv) * 100
       const selRatio = hVm > 0.01 ? tVm / hVm : 0
       const inWindow = tDRPct >= THRESHOLDS.DISRUPTION_WARN * 100 && hDRPct < THRESHOLDS.HEALTHY_APPROACHING * 100
       const flipLeft = mx > (this._chartW ?? 0) * 0.55

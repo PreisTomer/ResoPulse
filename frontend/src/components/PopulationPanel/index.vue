@@ -62,7 +62,7 @@ import { C } from '@/theme/colors'
 import { mapStores } from 'pinia'
 import { useCellStore } from '@/stores/cellStore'
 import AccordionPanel from '@/components/AccordionPanel.vue'
-import { computeSchwan, computeTau, computePulseStepResponse, computeResonantDisruption } from '@/utils/physics'
+import { computeSchwan, computeTau, computePulseStepResponse, computeResonantDisruption, tempCorrectedVth } from '@/utils/physics'
 import { WAVEFORM, CELL_CATEGORY } from '@/constants/strings'
 import { THRESHOLDS, DEFAULT_CAPSID_Q, H_FIRE_THRESHOLD_MULTIPLIER } from '@/constants/physics'
 import { ICON } from '@/constants/icons'
@@ -235,15 +235,19 @@ export default defineComponent({
       const uncT       = this.targetUncPct     / 100
       const rVar       = this.rVariancePct     / 100
       const vThUncFrac = this.vThVariancePct   / 100
+      const isPulsed   = waveform === WAVEFORM.PULSED || waveform === WAVEFORM.H_FIRE
+      const hfireMult  = waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
 
       const sampleDR = (base: CellConfig, sigmaUnc: number, isTarget: boolean): number => {
         // ── Sample biophysical parameters independently (Box-Muller) ────────
         const R    = sampleGaussian(base.radius,       base.radius       * rVar,      base.radius       * 0.4, base.radius       * 2.0)
         const sigI = sampleGaussian(base.conductivity, base.conductivity * sigmaUnc,  base.conductivity * 0.2, base.conductivity * 3.0)
         // V_th CV ~20-35% in isogenic mammalian populations (Weaver & Chizmadzhev 1996)
-        const vTh  = vThUncFrac > 0
+        // Sample the nominal threshold first, then apply temperature correction — variability is in the nominal value.
+        const vThNominal = vThUncFrac > 0
           ? sampleGaussian(base.thresholdVoltage, base.thresholdVoltage * vThUncFrac, base.thresholdVoltage * 0.5, base.thresholdVoltage * 2.0)
           : base.thresholdVoltage
+        const cellTemp = isTarget ? cellStore.targetTemp : cellStore.healthyTemp
         const cell = { ...base, radius: R, conductivity: sigI }
 
         // ── Resonance mode (bacteria / virus) ────────────────────────────────
@@ -255,19 +259,19 @@ export default defineComponent({
           const qMin       = t.capsidQMin ?? qNominal
           const qMax       = t.capsidQMax ?? qNominal
           const Q = qMin === qMax ? qNominal : sampleGaussian((qMin + qMax) / 2, (qMax - qMin) / 4, qMin, qMax)
-          const threshVcm = vThUncFrac > 0
+          const threshNominal = vThUncFrac > 0
             ? sampleGaussian(t.resonantThresholdVcm!, t.resonantThresholdVcm! * vThUncFrac, t.resonantThresholdVcm! * 0.5, t.resonantThresholdVcm! * 2.0)
             : t.resonantThresholdVcm!
-          return computeResonantDisruption(fResScaled, Q, threshVcm, freqKHz * 1e3, E)
+          const threshEff = tempCorrectedVth(threshNominal, cellTemp) * hfireMult
+          return computeResonantDisruption(fResScaled, Q, threshEff, freqKHz * 1e3, E)
         }
 
         // ── Schwan mode (all mammalian; bacteria / virus in IRE / CW mode) ──
-        const tau        = computeTau(cell, sigma_e)
-        const isPulsed   = waveform === WAVEFORM.PULSED || waveform === WAVEFORM.H_FIRE
-        const pef        = isPulsed ? computePulseStepResponse(tau, pwNs) : 1.0
-        const hfireMult  = waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
-        const vm         = computeSchwan(cell, freqKHz, E, sigma_e, cosTheta)
-        return (vm * pef) / (vTh * hfireMult)
+        const tau   = computeTau(cell, sigma_e)
+        const pef   = isPulsed ? computePulseStepResponse(tau, pwNs) : 1.0
+        const vm    = computeSchwan(cell, freqKHz, E, sigma_e, cosTheta)
+        const vThEff = tempCorrectedVth(vThNominal, cellTemp) * hfireMult
+        return (vm * pef) / vThEff
       }
 
       this.targetDRs  = Array.from({ length: this.nCells }, () => sampleDR(target,  uncT, true))

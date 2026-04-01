@@ -68,18 +68,21 @@ export default defineComponent({
 
       const hTau = computeTau(s.healthy, sigma)
       const pefH = isPulsed ? Math.max(MIN_PULSE_ENVELOPE, 1 - Math.exp(-pw_ns * 1e-9 / hTau)) : 1.0
-      // Lysis field: E_lysis = Vth / (1.5 × R × cosθ × pef). cosT must match live sim.
-      const healthyLysis = (s.healthy.thresholdVoltage * hfireMult) / (1.5 * s.healthy.radius * 1e-4 * cosT * pefH)
+      // Lysis field: E_lysis = Vth_eff / (1.5 × R × cosθ × pef). Apply temp correction so axis scale matches live sim.
+      const hVthEff = tempCorrectedVth(s.healthy.thresholdVoltage, s.healthyTemp) * hfireMult
+      const healthyLysis = hVthEff / (1.5 * s.healthy.radius * 1e-4 * cosT * pefH)
 
       let targetLysis: number
       if (s.isResonanceMode) {
         const tr = s.target as { resonantThresholdVcm?: number }
         // Resonance threshold is already in V/cm and independent of cosTheta orientation
-        targetLysis = tr.resonantThresholdVcm ?? (s.target.thresholdVoltage / (1.5 * s.target.radius * 1e-4 * cosT))
+        const tResVth = tr.resonantThresholdVcm ?? (s.target.thresholdVoltage / (1.5 * s.target.radius * 1e-4 * cosT))
+        targetLysis = tempCorrectedVth(tResVth, s.targetTemp) * hfireMult
       } else {
         const tTau = computeTau(s.target, sigma)
         const pefT = isPulsed ? Math.max(MIN_PULSE_ENVELOPE, 1 - Math.exp(-pw_ns * 1e-9 / tTau)) : 1.0
-        targetLysis = (s.target.thresholdVoltage * hfireMult) / (1.5 * s.target.radius * 1e-4 * cosT * pefT)
+        const tVthEff = tempCorrectedVth(s.target.thresholdVoltage, s.targetTemp) * hfireMult
+        targetLysis = tVthEff / (1.5 * s.target.radius * 1e-4 * cosT * pefT)
       }
       return Math.max(healthyLysis, targetLysis) * 2.0
     },

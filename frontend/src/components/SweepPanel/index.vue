@@ -55,7 +55,7 @@ import SweepWindowInfo from './SweepWindowInfo.vue'
 import SweepKeyPoints from './SweepKeyPoints.vue'
 import {
   computeSchwan, computeSAR, computeTau, computePulseStepResponse,
-  computeResonantDisruption,
+  computeResonantDisruption, tempCorrectedVth,
 } from '@/utils/physics'
 import { WAVEFORM, CELL_CATEGORY } from '@/constants/strings'
 import {
@@ -165,21 +165,33 @@ export default defineComponent({
         let drH: number, drT: number, tH: number, tT: number
 
         if (this.sweepParam === 'field') {
-          const vmH = computeSchwan(healthy, freqKHz, x, sigma_e, cosTheta)
-          drH = (vmH * pefH) / (healthy.thresholdVoltage * hfireMult)
-          drT = this.isResonanceTarget
-            ? computeResonantDisruption(t.resonantFreqGHz!, t.capsidQ ?? DEFAULT_CAPSID_Q, t.resonantThresholdVcm!, freqKHz * 1e3, x)
-            : (computeSchwan(target, freqKHz, x, sigma_e, cosTheta) * pefT) / (target.thresholdVoltage * hfireMult)
+          // Compute per-point temperatures first so threshold correction uses the local steady-state temp
           tH = computeTemp(healthy, x, sigma_e, wf, dc, perfRate)
           tT = computeTemp(target,  x, sigma_e, wf, dc, perfRate)
+          const vmH    = computeSchwan(healthy, freqKHz, x, sigma_e, cosTheta)
+          const hVthEff = tempCorrectedVth(healthy.thresholdVoltage, tH) * hfireMult
+          drH = (vmH * pefH) / hVthEff
+          if (this.isResonanceTarget) {
+            const resVthEff = tempCorrectedVth(t.resonantThresholdVcm!, tT) * hfireMult
+            drT = computeResonantDisruption(t.resonantFreqGHz!, t.capsidQ ?? DEFAULT_CAPSID_Q, resVthEff, freqKHz * 1e3, x)
+          } else {
+            const tVthEff = tempCorrectedVth(target.thresholdVoltage, tT) * hfireMult
+            drT = (computeSchwan(target, freqKHz, x, sigma_e, cosTheta) * pefT) / tVthEff
+          }
         } else {
-          const vmH = computeSchwan(healthy, x, E, sigma_e, cosTheta)
-          drH = (vmH * pefH) / (healthy.thresholdVoltage * hfireMult)
-          drT = this.isResonanceTarget
-            ? computeResonantDisruption(t.resonantFreqGHz!, t.capsidQ ?? DEFAULT_CAPSID_Q, t.resonantThresholdVcm!, x * 1e3, E)
-            : (computeSchwan(target, x, E, sigma_e, cosTheta) * pefT) / (target.thresholdVoltage * hfireMult)
+          // Compute per-point temperatures first so threshold correction uses the local steady-state temp
           tH = computeTemp(healthy, E, sigma_e, wf, dc, perfRate)
           tT = computeTemp(target,  E, sigma_e, wf, dc, perfRate)
+          const vmH    = computeSchwan(healthy, x, E, sigma_e, cosTheta)
+          const hVthEff = tempCorrectedVth(healthy.thresholdVoltage, tH) * hfireMult
+          drH = (vmH * pefH) / hVthEff
+          if (this.isResonanceTarget) {
+            const resVthEff = tempCorrectedVth(t.resonantThresholdVcm!, tT) * hfireMult
+            drT = computeResonantDisruption(t.resonantFreqGHz!, t.capsidQ ?? DEFAULT_CAPSID_Q, resVthEff, x * 1e3, E)
+          } else {
+            const tVthEff = tempCorrectedVth(target.thresholdVoltage, tT) * hfireMult
+            drT = (computeSchwan(target, x, E, sigma_e, cosTheta) * pefT) / tVthEff
+          }
         }
 
         const ti = drH < 1e-9 ? (drT > 0 ? SWEEP_TI_CAP : 0) : Math.min(SWEEP_TI_CAP, drT / drH)

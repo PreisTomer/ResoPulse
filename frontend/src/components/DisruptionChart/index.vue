@@ -29,7 +29,8 @@ import * as d3 from 'd3'
 import { mapStores } from 'pinia'
 import { useCellStore } from '@/stores/cellStore'
 import { broadcastStateSync } from '@/services/socket'
-import { CELL_CATEGORY } from '@/constants/strings'
+import { CELL_CATEGORY, WAVEFORM } from '@/constants/strings'
+import { H_FIRE_THRESHOLD_MULTIPLIER } from '@/constants/physics'
 import { ICON } from '@/constants/icons'
 import { C } from '@/theme/colors'
 import DrChartLegend from './DrChartLegend.vue'
@@ -38,7 +39,7 @@ import type { HoverInfo } from './DrChartTooltip.vue'
 import {
   F_MIN_HZ, F_MAX_HZ, Y_MIN_MAX, Y_ZOOM_MIN, DR_HEADROOM, DR_DISCLAIMER_PCT,
   MARGIN, X_TICK_VALUES, DR_REV_EP, DR_LYSIS,
-  type CurvePoint, formatHz, computeCurves,
+  type CurvePoint, formatHz, computeCurves, effectiveVth,
 } from './drChartCompute'
 
 export default defineComponent({
@@ -78,6 +79,9 @@ export default defineComponent({
     'cellStore.cosThetaFactor':            { handler() { this.updateChart() } },
     'cellStore.pulseEnvelopeFactorHealthy':{ handler() { this.updateChart() } },
     'cellStore.pulseEnvelopeFactorTarget': { handler() { this.updateChart() } },
+    'cellStore.healthyTemp':               { handler() { this.updateChart() } },
+    'cellStore.targetTemp':                { handler() { this.updateChart() } },
+    'cellStore.waveform':                  { handler() { this.updateChart() } },
     'cellStore.chartMode':                 { handler() { this.updateChart() } },
     'cellStore.currentBroadcastFrequency': { handler() { this.updateCursor() } },
   },
@@ -220,12 +224,20 @@ export default defineComponent({
       const isAcousticTarget = this.cellStore.targetCellCategory === CELL_CATEGORY.BACTERIA
         || this.cellStore.targetCellCategory === CELL_CATEGORY.VIRUS
 
+      const hfireMult = this.cellStore.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
+      // Resonance targets store their threshold in V/cm (resonantThresholdVcm); Schwan targets in V.
+      const tRes = this.cellStore.target as { resonantThresholdVcm?: number }
+      const tNominalVth = isAcousticTarget && tRes.resonantThresholdVcm
+        ? tRes.resonantThresholdVcm
+        : this.cellStore.target.thresholdVoltage
       const data = computeCurves(
         this.cellStore.healthy, this.cellStore.target,
         this.cellStore.fieldIntensity, this.cellStore.effectiveSigmaE, this.cellStore.cosThetaFactor,
         this.cellStore.pulseEnvelopeFactorHealthy, this.cellStore.pulseEnvelopeFactorTarget,
         this.cellStore.isResonanceMode,
         isAcousticTarget,
+        effectiveVth(this.cellStore.healthy.thresholdVoltage, this.cellStore.healthyTemp, hfireMult),
+        effectiveVth(tNominalVth, this.cellStore.targetTemp, hfireMult),
       )
       this._curveData = data
       const peakDR = data.reduce((m, d) => Math.max(m, d.hDR, d.tDR), 0)

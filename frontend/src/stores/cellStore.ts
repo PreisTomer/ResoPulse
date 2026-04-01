@@ -552,14 +552,18 @@ export const useCellStore = defineStore('cell', {
         const drH  = (hVm * this.pulseEnvelopeFactorHealthy) / (vthH * hfireMult)
         return { khz: freqKhz, sel: safeRatio(drT, drH, THRESHOLDS.TI_DISPLAY_CAP, NEAR_ZERO_DR) }
       }
-      const sigma_e = this.effectiveSigmaE
-      const hThr    = state.healthy.thresholdVoltage
-      const tThr    = state.target.thresholdVoltage
+      const sigma_e   = this.effectiveSigmaE
+      const hfireMult = state.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
+      // Apply same threshold corrections as the live DR getters so returned `sel` matches TI display.
+      const hThr    = tempCorrectedVth(state.healthy.thresholdVoltage, state.healthyTemp) * hfireMult
+      const tThr    = tempCorrectedVth(state.target.thresholdVoltage,  state.targetTemp)  * hfireMult
       // PEF is frequency-independent (depends on τ, not f), so it scales the DR for each cell
       // uniformly across the scan - it doesn't shift the argmax but DOES change the TI magnitude.
       // Include PEF so the returned `sel` matches what the disruption ratio getters compute.
       const pefH    = this.pulseEnvelopeFactorHealthy
       const pefT    = this.pulseEnvelopeFactorTarget
+      // cosTheta cancels in tDr/hDr (both Vm scale identically), so omitting it here is correct
+      // for finding argmax and for the returned sel ratio.
       // Field largely cancels in tDr/hDr for cell pairs with similar τ (both Vm ∝ E).
       // Using unit field avoids a reactive dependency on fieldIntensity that would cause
       // 300 unnecessary Schwan evaluations on every slider move. Minor inaccuracy when the

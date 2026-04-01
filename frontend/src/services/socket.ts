@@ -10,8 +10,8 @@ import { useExperimentStore } from '@/stores/experimentStore'
 import type { LogEntry } from '@/stores/experimentStore'
 import { useImpedanceStore } from '@/stores/impedanceStore'
 import type { HardwareImpedancePacket } from '@/stores/impedanceStore'
-import { computeTau, computeSchwan, computePulseStepResponse } from '@/utils/physics'
-import { SCHWAN_SPHERE_FACTOR, TWO_PI, MIN_PULSE_ENVELOPE } from '@/constants/physics'
+import { computeTau, computeSchwan, computePulseStepResponse, computeResonantDisruption, tempCorrectedVth } from '@/utils/physics'
+import { SCHWAN_SPHERE_FACTOR, TWO_PI, MIN_PULSE_ENVELOPE, H_FIRE_THRESHOLD_MULTIPLIER, DEFAULT_CAPSID_Q } from '@/constants/physics'
 import { useAiStore } from '@/stores/aiStore'
 
 // URL priority: ?backend=<url> → VITE_BACKEND_URL → localhost:3001
@@ -192,12 +192,13 @@ type AiResultCallback = (result: AiOptimizeResult) => void
 
 // ── Physics baseline helpers (pure, no store dependency) ─────────────────────
 
-// Lysis-threshold field [V/cm] at a given frequency, accounting for pulse width.
+// Lysis-threshold field [V/cm] at a given frequency, accounting for pulse width and orientation.
 function lysisFieldAtFreq(
   radiusUm: number, memThicknessNm: number, dielectricConst: number,
   conductivitySi: number, thresholdV: number,
   freqKhz: number, sigmaE: number,
   waveform: string, pulseWidthNs: number,
+  cosTheta: number, hfireMult: number,
 ): number {
   const tau   = computeTau(
     { radius: radiusUm, membraneThickness: memThicknessNm, dielectricConstant: dielectricConst, conductivity: conductivitySi } as Parameters<typeof computeTau>[0],
@@ -205,8 +206,9 @@ function lysisFieldAtFreq(
   )
   const pef   = (waveform === 'pulsed' || waveform === 'hfire') ? Math.max(MIN_PULSE_ENVELOPE, computePulseStepResponse(tau, pulseWidthNs)) : 1.0
   const omega = TWO_PI * freqKhz * 1e3
-  const E_vm  = thresholdV * Math.sqrt(1 + (omega * tau) ** 2) /
-                (SCHWAN_SPHERE_FACTOR * radiusUm * 1e-6 * pef)
+  // E_lysis = Vth × hfireMult × √(1 + (ωτ)²) / (1.5 × R × cosθ × pef). Solve Schwan for E.
+  const E_vm  = thresholdV * hfireMult * Math.sqrt(1 + (omega * tau) ** 2) /
+                (SCHWAN_SPHERE_FACTOR * radiusUm * 1e-6 * cosTheta * pef)
   return Math.min(Math.max(E_vm / 100, 10), 100_000)   // V/m → V/cm, clamped
 }
 
@@ -216,34 +218,49 @@ export function requestAiOptimization(requestId: string, onResult: AiResultCallb
   const store    = useCellStore()
   const expStore = useExperimentStore()
 
-  const sigmaE      = store.effectiveSigmaE
-  const waveform    = store.waveform
+  const sigmaE       = store.effectiveSigmaE
+  const cosT         = store.cosThetaFactor
+  const waveform     = store.waveform
   const pulseWidthNs = store.pulseWidthNs
+  const hfireMult    = waveform === 'hfire' ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
   const { khz: optFreqKhz, sel: selectivityAtOptimal } = store.optimalFreqResult
 
   const tauTargetS  = computeTau(store.target,  sigmaE)
   const tauHealthyS = computeTau(store.healthy, sigmaE)
 
-  // Physics baseline: suggest field that brings DR_T to ~0.90 at optimal frequency
-  const suggestedFieldVcm = lysisFieldAtFreq(
-    store.target.radius, store.target.membraneThickness, store.target.dielectricConstant,
-    store.target.conductivity, store.target.thresholdVoltage,
-    optFreqKhz, sigmaE, waveform, pulseWidthNs,
-  )
-
-  // Predict DRs at the suggested parameters
-  const isPulsedWaveform = waveform === 'pulsed' || waveform === 'hfire'
-  const pefTarget  = isPulsedWaveform
-    ? Math.max(MIN_PULSE_ENVELOPE, computePulseStepResponse(tauTargetS, pulseWidthNs))
-    : 1.0
-  const pefHealthy = isPulsedWaveform
+  const isPulsedWaveform   = waveform === 'pulsed' || waveform === 'hfire'
+  const pefHealthy         = isPulsedWaveform
     ? Math.max(MIN_PULSE_ENVELOPE, computePulseStepResponse(tauHealthyS, pulseWidthNs))
     : 1.0
+  const isResonanceTarget  = store.isResonanceMode &&
+    !!(store.target as { resonantFreqGHz?: number }).resonantFreqGHz
 
-  const vmTarget  = computeSchwan(store.target,  optFreqKhz, suggestedFieldVcm, sigmaE) * pefTarget
-  const vmHealthy = computeSchwan(store.healthy, optFreqKhz, suggestedFieldVcm, sigmaE) * pefHealthy
-  const predDrT   = vmTarget  / store.target.thresholdVoltage
-  const predDrH   = vmHealthy / store.healthy.thresholdVoltage
+  // Physics baseline: suggest field that brings DR_T ≈ 0.9 at the optimal frequency.
+  let suggestedFieldVcm: number
+  let predDrT: number
+
+  if (isResonanceTarget) {
+    const tr      = store.target as { resonantFreqGHz: number; capsidQ?: number; resonantThresholdVcm: number }
+    const tVthEff = tempCorrectedVth(tr.resonantThresholdVcm, store.targetTemp) * hfireMult
+    // At exact resonance the Lorentzian lineshape = 1, so DR = E / tVthEff.
+    suggestedFieldVcm = 0.9 * tVthEff
+    predDrT = computeResonantDisruption(tr.resonantFreqGHz, tr.capsidQ ?? DEFAULT_CAPSID_Q, tVthEff, optFreqKhz * 1e3, suggestedFieldVcm)
+  } else {
+    // Schwan path: invert the equation to find the lysis field, then predict DR.
+    suggestedFieldVcm = lysisFieldAtFreq(
+      store.target.radius, store.target.membraneThickness, store.target.dielectricConstant,
+      store.target.conductivity, store.target.thresholdVoltage,
+      optFreqKhz, sigmaE, waveform, pulseWidthNs, cosT, hfireMult,
+    )
+    const pefTarget = isPulsedWaveform
+      ? Math.max(MIN_PULSE_ENVELOPE, computePulseStepResponse(tauTargetS, pulseWidthNs))
+      : 1.0
+    const vmTarget = computeSchwan(store.target, optFreqKhz, suggestedFieldVcm, sigmaE, cosT) * pefTarget
+    predDrT = vmTarget / (tempCorrectedVth(store.target.thresholdVoltage, store.targetTemp) * hfireMult)
+  }
+
+  const vmHealthy = computeSchwan(store.healthy, optFreqKhz, suggestedFieldVcm, sigmaE, cosT) * pefHealthy
+  const predDrH   = vmHealthy / (tempCorrectedVth(store.healthy.thresholdVoltage, store.healthyTemp) * hfireMult)
   const predTi    = predDrH > 1e-6 ? predDrT / predDrH : predDrT
 
   const sessionState: StatePacket = {

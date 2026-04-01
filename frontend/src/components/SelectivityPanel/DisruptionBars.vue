@@ -72,11 +72,11 @@
 import { defineComponent } from 'vue'
 import { mapStores } from 'pinia'
 import { useCellStore } from '@/stores/cellStore'
-import { THRESHOLDS } from '@/constants/physics'
-import { CELL_CATEGORY, CELL_LABEL } from '@/constants/strings'
+import { THRESHOLDS, H_FIRE_THRESHOLD_MULTIPLIER } from '@/constants/physics'
+import { CELL_CATEGORY, CELL_LABEL, WAVEFORM } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
 import { formatLysisTime } from '@/tooltips/sliderTooltips'
-import { computeLysisProbability } from '@/utils/physics'
+import { computeLysisProbability, tempCorrectedVth } from '@/utils/physics'
 import {
   tipTargetPlysis,
   tipHealthyPlysis,
@@ -118,24 +118,28 @@ export default defineComponent({
 
     tipTargetBar(): string {
       const t = this.cellStore.target as { resonantFreqGHz?: number; resonantThresholdVcm?: number }
+      const hfireMult = this.cellStore.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
+      const tVthEff = tempCorrectedVth(this.cellStore.target.thresholdVoltage, this.cellStore.targetTemp) * hfireMult
       return tipTargetBar({
         pct:                  this.targetRatioPct.toFixed(0),
         isResonanceTarget:    this.isResonanceTarget,
         resonantFreqGHz:      t.resonantFreqGHz,
         resonantThresholdVcm: t.resonantThresholdVcm,
         targetVmMv:           (this.cellStore.targetVm * 1000).toFixed(2),
-        thresholdMv:          (this.cellStore.target.thresholdVoltage * 1000).toFixed(0),
+        thresholdMv:          (tVthEff * 1000).toFixed(0),
         lysisTime:            this.lysisTimeDisplay,
         targetRatio:          this.targetRatio,
       })
     },
 
     tipHealthyBar(): string {
+      const hfireMult = this.cellStore.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
+      const hVthEff = tempCorrectedVth(this.cellStore.healthy.thresholdVoltage, this.cellStore.healthyTemp) * hfireMult
       return tipHealthyBar({
         pct:               this.healthyRatioPct.toFixed(0),
         isResonanceTarget: this.isResonanceTarget,
         healthyVmMv:       (this.cellStore.healthyVm * 1000).toFixed(2),
-        thresholdMv:       (this.cellStore.healthy.thresholdVoltage * 1000).toFixed(0),
+        thresholdMv:       (hVthEff * 1000).toFixed(0),
         healthyRatio:      this.healthyRatio,
       })
     },

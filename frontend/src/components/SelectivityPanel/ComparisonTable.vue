@@ -32,12 +32,11 @@ import { defineComponent } from 'vue'
 import { mapStores } from 'pinia'
 import { useCellStore } from '@/stores/cellStore'
 import { CELL_PRESETS, GROUP_COLORS } from '@/constants/cellLibrary'
-import { DEFAULT_CAPSID_Q, THRESHOLDS, NEAR_ZERO_DR } from '@/constants/physics'
-import { CELL_CATEGORY, CELL_GROUP } from '@/constants/strings'
+import { DEFAULT_CAPSID_Q, THRESHOLDS, NEAR_ZERO_DR, H_FIRE_THRESHOLD_MULTIPLIER, BODY_TEMP_C, MIN_PULSE_ENVELOPE } from '@/constants/physics'
+import { CELL_CATEGORY, CELL_GROUP, WAVEFORM } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'
-import { computeSchwan, computeResonantDisruption, safeRatio, computeTau, computePulseStepResponse } from '@/utils/physics'
-import { WAVEFORM } from '@/constants/strings'
+import { computeSchwan, computeResonantDisruption, safeRatio, computeTau, computePulseStepResponse, tempCorrectedVth } from '@/utils/physics'
 
 export default defineComponent({
   computed: {
@@ -58,19 +57,23 @@ export default defineComponent({
     },
 
     presetComparison() {
-      const sigma_e  = this.cellStore.effectiveSigmaE
-      const freq     = this.cellStore.currentBroadcastFrequency
-      const field    = this.cellStore.fieldIntensity
-      const pwNs     = this.cellStore.pulseWidthNs
-      const isPulsed = this.cellStore.waveform === WAVEFORM.PULSED || this.cellStore.waveform === WAVEFORM.H_FIRE
+      const sigma_e   = this.cellStore.effectiveSigmaE
+      const cosT      = this.cellStore.cosThetaFactor
+      const freq      = this.cellStore.currentBroadcastFrequency
+      const field     = this.cellStore.fieldIntensity
+      const pwNs      = this.cellStore.pulseWidthNs
+      const isPulsed  = this.cellStore.waveform === WAVEFORM.PULSED || this.cellStore.waveform === WAVEFORM.H_FIRE
+      const hfireMult = this.cellStore.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
 
       const cat = this.cellStore.targetCellCategory
       const relevantGroup = cat === CELL_CATEGORY.MAMMALIAN ? CELL_GROUP.CANCER : cat
 
-      // PEF for the healthy reference cell (frequency-independent, computed once)
-      const pefH = isPulsed ? computePulseStepResponse(computeTau(this.cellStore.healthy, sigma_e), pwNs) : 1.0
-      const hVm  = computeSchwan(this.cellStore.healthy, freq, field, sigma_e)
-      const hDr  = (hVm * pefH) / this.cellStore.healthy.thresholdVoltage
+      // PEF for the healthy reference cell (frequency-independent, computed once).
+      // Use healthyTemp for threshold correction — healthy cell is the live simulated reference.
+      const pefH  = isPulsed ? Math.max(MIN_PULSE_ENVELOPE, computePulseStepResponse(computeTau(this.cellStore.healthy, sigma_e), pwNs)) : 1.0
+      const hVm   = computeSchwan(this.cellStore.healthy, freq, field, sigma_e, cosT)
+      const hVthE = tempCorrectedVth(this.cellStore.healthy.thresholdVoltage, this.cellStore.healthyTemp)
+      const hDr   = (hVm * pefH) / (hVthE * hfireMult)
 
       return CELL_PRESETS
         .filter((p) => p.group === relevantGroup)
@@ -80,20 +83,24 @@ export default defineComponent({
           let sel: number, tVmMv: string
 
           if (hasRes) {
-            // Resonance targets: acoustic mechanism, PEF does not apply
+            // Resonance targets: acoustic mechanism, PEF does not apply.
+            // Preset cells are not live-simulated so use BODY_TEMP_C for threshold correction.
+            const effThreshold = tempCorrectedVth(pr.resonantThresholdVcm!, BODY_TEMP_C) * hfireMult
             const ratio = computeResonantDisruption(
               pr.resonantFreqGHz!,
               pr.capsidQ ?? DEFAULT_CAPSID_Q,
-              pr.resonantThresholdVcm!,
+              effThreshold,
               freq * 1e3,
               field,
             )
             sel = safeRatio(ratio, hDr, THRESHOLDS.TI_DISPLAY_CAP, NEAR_ZERO_DR)
             tVmMv = `D:${(ratio * 100).toFixed(0)}%`
           } else {
-            const pefT = isPulsed ? computePulseStepResponse(computeTau(p, sigma_e), pwNs) : 1.0
-            const tVm  = computeSchwan(p, freq, field, sigma_e)
-            const tDr  = (tVm * pefT) / p.thresholdVoltage
+            // Preset cells are not live-simulated so use BODY_TEMP_C for threshold correction.
+            const pefT  = isPulsed ? Math.max(MIN_PULSE_ENVELOPE, computePulseStepResponse(computeTau(p, sigma_e), pwNs)) : 1.0
+            const tVm   = computeSchwan(p, freq, field, sigma_e, cosT)
+            const tVthE = tempCorrectedVth(p.thresholdVoltage, BODY_TEMP_C)
+            const tDr   = (tVm * pefT) / (tVthE * hfireMult)
             sel = hDr > NEAR_ZERO_DR ? Math.min(THRESHOLDS.TI_DISPLAY_CAP, tDr / hDr) : 0
             tVmMv = (tVm * 1000).toFixed(1)
           }
