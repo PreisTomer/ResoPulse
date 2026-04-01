@@ -117,8 +117,10 @@
               <span class="home__fc-icon-wrap">
                 <span class="home__fc-icon">{{ card.icon }}</span>
               </span>
-              <span class="home__fc-title">{{ $t(`home.${card.titleKey}`) }}</span>
-              <span class="home__fc-tag">{{ $t(`home.${card.tagKey}`) }}</span>
+              <div class="home__fc-header-right">
+                <span class="home__fc-title">{{ $t(`home.${card.titleKey}`) }}</span>
+                <span class="home__fc-tag">{{ $t(`home.${card.tagKey}`) }}</span>
+              </div>
             </div>
             <span class="home__fc-desc">{{ $t(`home.${card.descKey}`) }}</span>
           </RouterLink>
@@ -231,11 +233,13 @@ export default defineComponent({
       workflowSteps: ['wf1', 'wf2', 'wf3'],
 
       featureCards: [
+        // Row 1 — core science workflow
         { to: '/experiment', icon: ICON.FLASK,   titleKey: 'card1Title', descKey: 'card1Desc', tagKey: 'card1Tag', primary: true },
-        { to: '/instrument', icon: ICON.PLUG,    titleKey: 'card2Title', descKey: 'card2Desc', tagKey: 'card2Tag', primary: false },
-        { to: '/reports',    icon: ICON.CELL,    titleKey: 'card3Title', descKey: 'card3Desc', tagKey: 'card3Tag', primary: false },
         { to: '/datasets',   icon: ICON.GRID,    titleKey: 'card4Title', descKey: 'card4Desc', tagKey: 'card4Tag', primary: false },
         { to: '/protocol',   icon: ICON.SECTION, titleKey: 'card5Title', descKey: 'card5Desc', tagKey: 'card5Tag', primary: false },
+        // Row 2 — tooling & output
+        { to: '/instrument', icon: ICON.PLUG,    titleKey: 'card2Title', descKey: 'card2Desc', tagKey: 'card2Tag', primary: false },
+        { to: '/reports',    icon: ICON.CELL,    titleKey: 'card3Title', descKey: 'card3Desc', tagKey: 'card3Tag', primary: false },
       ],
 
       scopeTags: [

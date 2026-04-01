@@ -502,6 +502,16 @@
   &__fc {
     &-header {
       @include flex-row(0.5rem);
+      align-items: flex-start; // icon top-aligns with the title+tag column
+    }
+
+    // Right-side column: title on top, tag pill below — prevents title wrapping
+    &-header-right {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.22rem;
     }
 
     &-icon-wrap {
@@ -512,6 +522,7 @@
       background: color-mix(in srgb, var(--color-primary) 10%, transparent);
       border: 1px solid color-mix(in srgb, var(--color-primary) 20%, transparent);
       flex-shrink: 0;
+      margin-top: 0.12rem; // nudge icon down to optically align with title text cap-height
       transition: background var(--tr-fast), border-color var(--tr-fast), box-shadow var(--tr-fast);
 
       .home__feature-card:hover & {
@@ -523,18 +534,25 @@
 
     &-icon {
       font-size: 0.95rem;
+      display: block;   // collapses the line box so flex centering acts on the glyph itself
+      line-height: 1;   // removes descender/ascender space that shifts Unicode symbols off-center
       transition: filter var(--tr-fast);
 
       .home__feature-card:hover & {
         filter: drop-shadow(0 0 4px color-mix(in srgb, var(--color-primary) 80%, transparent));
       }
+
+      // Per-glyph optical nudges — these Unicode symbols sit low in their em box
+      .home__feature-card:nth-child(2) & { transform: translateY(-2px); }
+      .home__feature-card--sel &         { transform: translateY(-1px); }
     }
 
     &-title {
-      flex: 1;
+      flex: 1; // fills row space when used directly in header (sel card); harmless in column context
       font-size: var(--fs-md);
       font-weight: 600;
       color: var(--color-text-heading);
+      line-height: 1.2;
     }
 
     &-tag {
@@ -544,7 +562,7 @@
       border: 1px solid color-mix(in srgb, var(--color-primary) 18%, transparent);
       border-radius: 3px;
       background: color-mix(in srgb, var(--color-primary) 5%, transparent);
-      flex-shrink: 0;
+      align-self: flex-start; // don't stretch to parent column width
       transition: color var(--tr-fast), border-color var(--tr-fast), background var(--tr-fast);
 
       .home__feature-card:hover & {
@@ -767,7 +785,7 @@
       font-size: var(--fs-xxs);
       letter-spacing: 0.04em;
       color: color-mix(in srgb, var(--color-primary) 45%, transparent);
-      opacity: var(--op-ghost);
+      opacity: var(--op-muted);
       transition: opacity var(--tr-fast), color var(--tr-fast);
 
       .home__feature-card--sel:hover & {
