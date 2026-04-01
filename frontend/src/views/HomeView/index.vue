@@ -87,7 +87,7 @@
       </div>
 
       <!-- ── Zone 3: Features — scroll-reveal workflow and cards ── -->
-      <div class="home__zone home__zone--features home__zone--anim">
+      <div class="home__zone home__zone--features home__zone--anim" ref="featuresZone">
 
         <!-- Oscilloscope background: two waveforms scroll edge to edge, medium+ screens -->
         <OscilloscopeSvg />
@@ -106,11 +106,12 @@
         <div class="home__feature-cards">
 
           <RouterLink
-            v-for="card in featureCards"
+            v-for="(card, i) in featureCards"
             :key="card.to"
             :to="card.to"
             class="home__feature-card"
             :class="{ 'home__feature-card--primary': card.primary }"
+            :style="{ '--card-i': i }"
           >
             <div class="home__fc-header">
               <span class="home__fc-icon">{{ card.icon }}</span>
@@ -119,10 +120,10 @@
             <span class="home__fc-desc">{{ $t(`home.${card.descKey}`) }}</span>
           </RouterLink>
 
-          <div class="home__feature-card home__feature-card--stats">
+          <div class="home__feature-card home__feature-card--stats" :style="{ '--card-i': featureCards.length }">
             <div class="home__stats-grid">
-              <div v-for="s in homeStats" :key="s" class="home__stat">
-                <span class="home__stat-val">{{ $t(`home.${s}Val`) }}</span>
+              <div v-for="(s, i) in homeStats" :key="s" class="home__stat">
+                <span class="home__stat-val">{{ statDisplayValues[i] }}</span>
                 <span class="home__stat-label">{{ $t(`home.${s}Label`) }}</span>
               </div>
             </div>
@@ -172,12 +173,14 @@ export default defineComponent({
 
   mounted() {
     const zones = this.$el.querySelectorAll('.home__zone--anim')
+    const featuresZone = this.$refs.featuresZone as Element | null
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             entry.target.classList.add('home__zone--visible')
             observer.unobserve(entry.target)
+            if (entry.target === featuresZone) this.runStatCountup()
           }
         })
       },
@@ -188,6 +191,28 @@ export default defineComponent({
 
   computed: {
     ICON() { return ICON },
+    statDisplayValues(): string[] {
+      const suffixes = ['', '', ' GHz', '']
+      return this.statCounters.map((v, i) => `${v}${suffixes[i]}`)
+    },
+  },
+
+  methods: {
+    runStatCountup(): void {
+      if (this.statsAnimDone) return
+      this.statsAnimDone = true
+      const targets = [16, 9, 10, 28]
+      const duration = 1400
+      const start = performance.now()
+      const tick = (now: number): void => {
+        const t    = Math.min(1, (now - start) / duration)
+        const ease = 1 - Math.pow(1 - t, 3)
+        this.statCounters = targets.map(n => Math.round(n * ease))
+        if (t < 1) requestAnimationFrame(tick)
+        else this.statCounters = [...targets]
+      }
+      requestAnimationFrame(tick)
+    },
   },
 
   data() {
@@ -210,6 +235,9 @@ export default defineComponent({
         { mod: 'virus',    key: 'tagVirus' },
         { mod: 'ref',      key: 'tagRef' },
       ],
+
+      statCounters: [0, 0, 0, 0] as number[],
+      statsAnimDone: false,
     }
   },
 })

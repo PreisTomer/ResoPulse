@@ -9,7 +9,10 @@ export interface CellParamSnapshot {
   radius: number             // µm
   membraneThickness: number  // nm
   dielectricConstant: number
-  conductivity: number       // S/m
+  conductivity: number       // S/m  (cytoplasm)
+  membraneConductivity: number  // S/m (lipid bilayer leakage; default 1e-7)
+  density: number            // kg/m³
+  specificHeatCapacity: number // J/(kg·K)
   thresholdVoltage: number   // V
   fc: number                 // kHz, corner frequency at log-time medium
   // Resonance fields (virus / bacteria in resonance mode)
@@ -52,6 +55,12 @@ export interface LogEntry {
   orientationDeg?: number
   doubleShellEnabled?: boolean
   sigmaE?: number                // effective σe at log time [S/m]
+  mediumBaseS?: number           // base σe,0 at reference T [S/m]
+  mediumTempCoeff?: number       // temperature coefficient [1/°C]
+  mediumPermittivity?: number    // ε_r of medium (for DEP)
+  perfusionRate?: number         // ω_b [mL/(g·min)]; 0 = in vitro
+  cellPackingFraction?: number   // φ Maxwell-Garnett correction
+  sampleDescription?: string     // user-provided sample context
   healthyNuclearVm?: number      // mV
   targetNuclearVm?: number       // mV
   depHealthyK?: number           // Re[K] at log-time frequency

@@ -3,7 +3,10 @@
 import { defineStore } from 'pinia'
 import { useCellStore } from '@/stores/cellStore'
 import { CHART_MODE, DEFAULT_SESSION_NAME } from '@/constants/strings'
+import { MEDIA } from '@/constants/media'
+import { SIGMA_MEMBRANE_SI } from '@/constants/physics'
 import { downloadText, buildEntryMethodsText, buildCsvText } from '@/utils/experimentExport'
+import type { MediumKey } from '@/types/media'
 
 // Re-export types so existing importers (e.g. socket.ts) don't need to change
 export type { CellParamSnapshot, LogEntry } from '@/types/experiment'
@@ -35,6 +38,8 @@ interface CellSnapshot {
   orientationDeg: number
   doubleShellEnabled: boolean
   effectiveSigmaE: number
+  perfusionRate: number
+  cellPackingFraction: number
   healthyFc: number
   targetFc: number
   targetCellCategory: 'mammalian' | 'bacteria' | 'virus'
@@ -54,12 +59,14 @@ interface CellSnapshot {
   healthy: {
     label: string; radius: number; membraneThickness: number
     dielectricConstant: number; conductivity: number; thresholdVoltage: number
+    density: number; specificHeatCapacity: number; membraneConductivity?: number
     nuclearRadius?: number; nuclearMembraneThickness?: number
     nuclearMembraneEps?: number; nucleoplasmConductivity?: number
   }
   target: {
     id: string; label: string; radius: number; membraneThickness: number
     dielectricConstant: number; conductivity: number; thresholdVoltage: number
+    density: number; specificHeatCapacity: number; membraneConductivity?: number
     nuclearRadius?: number; nuclearMembraneThickness?: number
     nuclearMembraneEps?: number; nucleoplasmConductivity?: number
     resonantFreqGHz?: number; capsidQ?: number; capsidQMin?: number
@@ -137,9 +144,14 @@ export const useExperimentStore = defineStore('experiment', {
         lysisNPulses:       snap.lysisNPulses,
         orientationDeg:     snap.orientationDeg,
         doubleShellEnabled: snap.doubleShellEnabled,
-        sigmaE:             round(snap.effectiveSigmaE, 4),
-        healthyNuclearVm:   round(snap.healthyNuclearVm * 1000, 3),
-        targetNuclearVm:    round(snap.targetNuclearVm  * 1000, 3),
+        sigmaE:              round(snap.effectiveSigmaE, 4),
+        mediumBaseS:         MEDIA[snap.medium as MediumKey]?.conductivity,
+        mediumTempCoeff:     MEDIA[snap.medium as MediumKey]?.tempCoeff,
+        mediumPermittivity:  MEDIA[snap.medium as MediumKey]?.permittivity,
+        perfusionRate:       snap.perfusionRate,
+        cellPackingFraction: snap.cellPackingFraction,
+        healthyNuclearVm:    round(snap.healthyNuclearVm * 1000, 3),
+        targetNuclearVm:     round(snap.targetNuclearVm  * 1000, 3),
         depHealthyK:            snap.chartMode !== CHART_MODE.RESONANCE ? round(snap.depHealthyCmReal, 4) : undefined,
         depTargetK:             snap.chartMode !== CHART_MODE.RESONANCE ? round(snap.depTargetCmReal,  4) : undefined,
         depHealthyCrossoverKHz: snap.chartMode !== CHART_MODE.RESONANCE ? round(snap.depHealthyCrossoverKHz, 1) : undefined,
@@ -148,6 +160,8 @@ export const useExperimentStore = defineStore('experiment', {
           label: h.label, category: 'mammalian',
           radius: h.radius, membraneThickness: h.membraneThickness,
           dielectricConstant: h.dielectricConstant, conductivity: h.conductivity,
+          membraneConductivity: h.membraneConductivity ?? SIGMA_MEMBRANE_SI,
+          density: h.density, specificHeatCapacity: h.specificHeatCapacity,
           thresholdVoltage: h.thresholdVoltage, fc: snap.healthyFc,
           nuclearRadius: h.nuclearRadius, nuclearMembraneThickness: h.nuclearMembraneThickness,
           nuclearMembraneEps: h.nuclearMembraneEps, nucleoplasmConductivity: h.nucleoplasmConductivity,
@@ -156,6 +170,8 @@ export const useExperimentStore = defineStore('experiment', {
           label: t.label, category: snap.targetCellCategory,
           radius: t.radius, membraneThickness: t.membraneThickness,
           dielectricConstant: t.dielectricConstant, conductivity: t.conductivity,
+          membraneConductivity: t.membraneConductivity ?? SIGMA_MEMBRANE_SI,
+          density: t.density, specificHeatCapacity: t.specificHeatCapacity,
           thresholdVoltage: t.thresholdVoltage, fc: snap.targetFc,
           nuclearRadius: t.nuclearRadius, nuclearMembraneThickness: t.nuclearMembraneThickness,
           nuclearMembraneEps: t.nuclearMembraneEps, nucleoplasmConductivity: t.nucleoplasmConductivity,
@@ -199,7 +215,7 @@ export const useExperimentStore = defineStore('experiment', {
     },
 
     exportEntryMethods(entry: LogEntry) {
-      const { text, filename } = buildEntryMethodsText(entry, this.sessionName)
+      const { text, filename } = buildEntryMethodsText(entry, this.sessionName, this.sampleDescription)
       downloadText(text, filename)
     },
 

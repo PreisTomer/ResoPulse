@@ -455,12 +455,22 @@
     flex-direction: column;
     gap: 0.4rem;
     text-align: left;
-    transition: border-color 0.18s, box-shadow 0.18s;
+    // Entrance: paused until zone becomes visible, then plays with per-card delay
+    animation: card-enter 0.45s ease both;
+    animation-delay: calc(var(--card-i, 0) * 90ms);
+    animation-play-state: paused;
+    // Hover transitions run immediately — separate from entrance delay
+    transition: border-color var(--tr-fast), box-shadow var(--tr-fast), transform var(--tr-fast);
     cursor: pointer;
 
+    .home__zone--visible & {
+      animation-play-state: running;
+    }
+
     &:hover {
-      border-color: color-mix(in srgb, var(--color-primary) 40%, transparent);
-      box-shadow: var(--glow-subtle);
+      transform: translateY(-3px);
+      border-color: color-mix(in srgb, var(--color-primary) 55%, transparent);
+      box-shadow: 0 6px 28px color-mix(in srgb, var(--color-primary) 18%, transparent);
       text-decoration: none;
     }
 
@@ -473,6 +483,7 @@
       background: var(--color-surface);
 
       &:hover {
+        transform: none;
         border-color: color-mix(in srgb, var(--color-primary) 22%, transparent);
         box-shadow: none;
       }
@@ -481,9 +492,22 @@
 
   &__fc {
     &-header { display: flex; align-items: center; gap: 0.45rem; }
-    &-icon   { font-size: 1rem; opacity: var(--op-dim); flex-shrink: 0; }
+    &-icon {
+      font-size: 1.3rem;
+      opacity: var(--op-dim);
+      flex-shrink: 0;
+      transition: opacity var(--tr-fast), filter var(--tr-fast);
+    }
     &-title  { font-size: var(--fs-md); font-weight: 600; color: var(--color-text-heading); }
-    &-desc   { font-size: var(--fs-xs); color: var(--color-text-muted); line-height: 1.6; }
+    &-desc   { font-size: var(--fs-xs); color: var(--color-text-muted); line-height: 1.55; }
+
+    // Icon brightens on card hover
+    .home__feature-card:hover & {
+      &-icon {
+        opacity: 1;
+        filter: drop-shadow(0 0 6px color-mix(in srgb, var(--color-primary) 55%, transparent));
+      }
+    }
   }
 
   /* ── Stats card ──────────────────────────────────────────────── */
@@ -684,5 +708,10 @@
 @keyframes pulse-glow {
   0%, 100% { text-shadow: 0 0 22px color-mix(in srgb, var(--color-primary) 20%, transparent); }
   50%       { text-shadow: 0 0 50px color-mix(in srgb, var(--color-primary) 65%, transparent); }
+}
+
+@keyframes card-enter {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 

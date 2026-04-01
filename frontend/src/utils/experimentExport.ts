@@ -7,7 +7,7 @@ import { MEDIA } from '@/constants/media'
 import { UNIT } from '@/constants/units'
 import { CELL_LABEL, CHART_MODE } from '@/constants/strings'
 import { EPSILON_0 } from '@/utils/physics'
-import { TWO_PI, THRESHOLDS } from '@/constants/physics'
+import { TWO_PI, THRESHOLDS, NEWTON_COOLING_LAMBDA, PENNES_BLOOD_COEFF, EPSILON_R_CYTOPLASM, SIGMA_MEMBRANE_SI, TEMP_EP_COEFF } from '@/constants/physics'
 import type { MediumKey } from '@/types/media'
 import type { CellParamSnapshot, LogEntry } from '@/types/experiment'
 
@@ -31,18 +31,22 @@ export function downloadText(txt: string, filename: string, mimeType = 'text/pla
 // ── Section builders ───────────────────────────────────────────────────────
 
 export function buildHealthySection(h: CellParamSnapshot, isDbl: boolean, mediumName: string): string[] {
-  const cm   = (h.dielectricConstant * EPSILON_0 / (h.membraneThickness * 1e-9) * 1e3).toFixed(2)
-  const tau  = h.fc > 0 ? (1e6 / (TWO_PI * h.fc)).toFixed(0) : ', '
+  const cm      = (h.dielectricConstant * EPSILON_0 / (h.membraneThickness * 1e-9) * 1e3).toFixed(2)
+  const tau     = h.fc > 0 ? (1e6 / (TWO_PI * h.fc)).toFixed(0) : ', '
+  const sigmaMem = h.membraneConductivity ?? SIGMA_MEMBRANE_SI
   const lines: string[] = [
     `Reference (Healthy): ${h.label}`,
-    fld('Radius R',               `${h.radius} ${UNIT.UM}`),
-    fld('Membrane thickness d',   `${h.membraneThickness} ${UNIT.NM}`),
-    fld('Permittivity εr',        `${h.dielectricConstant}`),
-    fld('Conductivity σi',        `${h.conductivity} ${UNIT.S_PER_M}`),
-    fld('Membrane capacitance Cm', `${cm} ${UNIT.MF_PER_M2}  [εr·ε0/d]`),
-    fld('Lysis threshold Vm,thr', `${h.thresholdVoltage} ${UNIT.V}`),
-    fld('Time constant τ',        `${tau} ${UNIT.NS}  [medium: ${mediumName}]`),
-    fld('Corner frequency fc',    `${h.fc.toFixed(0)} ${UNIT.KHZ}  [1/(2πτ)]`),
+    fld('Radius R',                `${h.radius} ${UNIT.UM}`),
+    fld('Membrane thickness d',    `${h.membraneThickness} ${UNIT.NM}`),
+    fld('Membrane permittivity εr', `${h.dielectricConstant}`),
+    fld('Membrane conductivity σm', `${sigmaMem.toExponential(1)} ${UNIT.S_PER_M}  [lipid bilayer leakage, Gascoyne 2002]`),
+    fld('Cytoplasm conductivity σi', `${h.conductivity} ${UNIT.S_PER_M}`),
+    fld('Membrane capacitance Cm',  `${cm} ${UNIT.MF_PER_M2}  [εr·ε0/d]`),
+    fld('Cell density ρ',           `${h.density} kg/m³`),
+    fld('Specific heat cp',         `${h.specificHeatCapacity} J/(kg·K)`),
+    fld('Lysis threshold Vm,thr',   `${h.thresholdVoltage} ${UNIT.V}  [base, at 37°C]`),
+    fld('Time constant τ',          `${tau} ${UNIT.NS}  [medium: ${mediumName}]`),
+    fld('Corner frequency fc',      `${h.fc.toFixed(0)} ${UNIT.KHZ}  [1/(2πτ)]`),
   ]
   if (isDbl && h.nuclearRadius) {
     lines.push(
@@ -56,14 +60,18 @@ export function buildHealthySection(h: CellParamSnapshot, isDbl: boolean, medium
 }
 
 export function buildTargetSection(t: CellParamSnapshot, isRes: boolean, isDbl: boolean, mediumName: string): string[] {
-  const cm   = (t.dielectricConstant * EPSILON_0 / (t.membraneThickness * 1e-9) * 1e3).toFixed(2)
+  const cm       = (t.dielectricConstant * EPSILON_0 / (t.membraneThickness * 1e-9) * 1e3).toFixed(2)
+  const sigmaMem = t.membraneConductivity ?? SIGMA_MEMBRANE_SI
   const lines: string[] = [
     `Target Cell: ${t.label}  [category: ${t.category}]`,
-    fld('Radius R',               `${t.radius} ${UNIT.UM}`),
-    fld('Membrane thickness d',   `${t.membraneThickness} ${UNIT.NM}`),
-    fld('Permittivity εr',        `${t.dielectricConstant}`),
-    fld('Conductivity σi',        `${t.conductivity} ${UNIT.S_PER_M}`),
-    fld('Membrane capacitance Cm', `${cm} ${UNIT.MF_PER_M2}  [εr·ε0/d]`),
+    fld('Radius R',                 `${t.radius} ${UNIT.UM}`),
+    fld('Membrane thickness d',     `${t.membraneThickness} ${UNIT.NM}`),
+    fld('Membrane permittivity εr', `${t.dielectricConstant}`),
+    fld('Membrane conductivity σm', `${sigmaMem.toExponential(1)} ${UNIT.S_PER_M}  [lipid bilayer leakage, Gascoyne 2002]`),
+    fld('Cytoplasm conductivity σi', `${t.conductivity} ${UNIT.S_PER_M}`),
+    fld('Membrane capacitance Cm',  `${cm} ${UNIT.MF_PER_M2}  [εr·ε0/d]`),
+    fld('Cell density ρ',           `${t.density} kg/m³`),
+    fld('Specific heat cp',         `${t.specificHeatCapacity} J/(kg·K)`),
   ]
   if (isRes && t.resonantFreqGHz) {
     const fResGHz  = t.resonantFreqGHz.toFixed(3)
@@ -81,7 +89,7 @@ export function buildTargetSection(t: CellParamSnapshot, isRes: boolean, isDbl: 
   } else {
     const tau = t.fc > 0 ? (1e6 / (TWO_PI * t.fc)).toFixed(0) : ', '
     lines.push(
-      fld('Lysis threshold Vm,thr', `${t.thresholdVoltage} ${UNIT.V}`),
+      fld('Lysis threshold Vm,thr', `${t.thresholdVoltage} ${UNIT.V}  [base, at 37°C]`),
       fld('Time constant τ',        `${tau} ${UNIT.NS}  [medium: ${mediumName}]`),
       fld('Corner frequency fc',    `${t.fc.toFixed(0)} ${UNIT.KHZ}  [1/(2πτ)]`),
     )
@@ -137,11 +145,17 @@ export function buildModelSection(isRes: boolean, isPulsed: boolean, isDbl: bool
   }
   lines.push(
     '',
-    'Specific absorption rate (SAR) and thermal model:',
-    '  SAR = σi · α² · E² · wf / ρ',
-    '  α = 3σe / (2σe + σi)   [internal field correction, Kotnik 2000]',
-    '  T_ss = 37 + SAR · dc / (λ · cp)',
-    '  λ = 0.02 s⁻¹ (Newton cooling constant)',
+    'Specific absorption rate (SAR) and thermal model (Pennes 1948; Newton cooling):',
+    '  SAR = σi · α² · E² · wf / ρ        [W/kg]',
+    '  α = 3σe / (2σe + σi)               [internal field coupling, Schwan 1957]',
+    '  wf: 0.5 for CW (E²_rms = E²_peak/2); 1.0 for pulsed/H-FIRE',
+    '  SAR_eff = SAR × dc',
+    '  T_ss = 37 + SAR_eff / ((λ_Newton + λ_perf) × cp)',
+    `  λ_Newton = ${NEWTON_COOLING_LAMBDA} s⁻¹ (surface/diffusion cooling, Newton approximation)`,
+    `  λ_perf   = ω_b × ${PENNES_BLOOD_COEFF} / cp    [Pennes blood perfusion; ω_b = 0 for in-vitro]`,
+    '  cp: cell-specific heat capacity [J/(kg·K)] — see CELL MODELS section',
+    '  ρ: cell-specific density [kg/m³] — see CELL MODELS section',
+    '  NOTE: model assumes uniform field, negligible conduction, in-vitro (ω_b = 0)',
   )
   if ((isPulsed || isHFire) && !isRes) {
     lines.push(
@@ -159,8 +173,11 @@ export function buildModelSection(isRes: boolean, isPulsed: boolean, isDbl: bool
       'H-FIRE waveform: bipolar burst delivery (Arena et al. 2011; Sano et al. 2015):',
       '  Carrier frequency > 1 kHz → below neuromuscular activation threshold.',
       '  Polarity reversals partially discharge membrane capacitance between half-cycles.',
-      '  Effective lysis threshold = Vm,threshold × 1.75  (×1.5–2× range, midpoint used).',
-      '  Disruption Ratio in this entry = Vm × PEF / (Vm,threshold × 1.75).',
+      '  Effective lysis threshold = Vm,threshold × 1.75',
+      '  NOTE: 1.75 is a simulation parameter (empirical range 1.5-2×, midpoint used,',
+      '  Arena 2011). It is not a measured physical constant — treat DR values in',
+      '  H-FIRE mode as approximate. Validate experimentally for each cell type.',
+      '  Disruption Ratio = Vm × PEF / (Vm,threshold × 1.75).',
     )
   }
   if (isDbl) {
@@ -183,10 +200,16 @@ export function buildModelSection(isRes: boolean, isPulsed: boolean, isDbl: bool
       '    γ = ((R−d)/R)³',
       '    ε*_eff = ε*_mem · [γ(ε*_c + 2ε*_mem) + 2(ε*_c − ε*_mem)]',
       '                     / [γ(ε*_c + 2ε*_mem) − (ε*_c − ε*_mem)]',
+      '  Fixed DEP model constants (per Gascoyne 2002; Pethig 2010):',
+      `    ε_r,cyto = ${EPSILON_R_CYTOPLASM}          (cytoplasm; macromolecular crowding, Pethig 2010)`,
+      `    σ_mem    = ${SIGMA_MEMBRANE_SI.toExponential(1)} S/m  (intact lipid bilayer leakage; cell-specific override where available)`,
+      '  Medium parameters used (see EXPOSURE PROTOCOL):',
+      '    ε_r,medium = as reported; σ_e = as reported',
       '  Re[K] > 0 → positive DEP (attracted to field maxima)',
       '  Re[K] < 0 → negative DEP (repelled from field maxima)',
       '  Waveform force scale: CW ×0.5 ; pulsed H-FIRE ×duty-cycle',
-      '  NOTE: model invalid at GHz acoustic resonance frequencies.',
+      '  NOTE: DEP model invalid at GHz acoustic resonance frequencies.',
+      '  NOTE: crossover frequency f_cross reported only when found within 1 kHz-100 MHz range.',
     )
   }
   return lines
@@ -196,10 +219,16 @@ export function buildRefs(isRes: boolean, isDbl: boolean, cat: string, isHFire =
   const refs: string[] = []
   let i = 1
   refs.push(
+    `[${i++}] Schwan, H.P. (1957). Electrical properties of tissue and cell suspensions.`,
+    '    Adv. Biol. Med. Phys. 5, 147-209.',
+    '    [Sphere factor 1.5, internal field coupling α, single-shell model origin]',
     `[${i++}] Kotnik, T. & Miklavcic, D. (2000). Analytical description of transmembrane voltage`,
     '    induced by electric fields on spheroidal cells. Biophys. J. 79(2), 670-679.',
     `[${i++}] Weaver, J.C. & Chizmadzhev, Y.A. (1996). Theory of electroporation: a review.`,
     '    Bioelectrochem. Bioenerg. 41(2), 135-160.',
+    `[${i++}] Pennes, H.H. (1948). Analysis of tissue and arterial blood temperatures in the`,
+    '    resting human forearm. J. Appl. Physiol. 1(2), 93-122.',
+    '    [Bioheat equation; thermal model basis]',
   )
   if (isDbl) refs.push(
     `[${i++}] Kotnik, T. & Miklavcic, D. (2006). Theoretical evaluation of voltage inducement`,
@@ -210,6 +239,9 @@ export function buildRefs(isRes: boolean, isDbl: boolean, cat: string, isHFire =
     refs.push(
       `[${i++}] Gascoyne, P.R.C. & Vykoukal, J. (2002). Particle separation by dielectrophoresis.`,
       '    Electrophoresis 23(13), 1973-1983.',
+      `[${i++}] Pethig, R. (2010). Dielectrophoresis: Status of the theory, technology and applications.`,
+      '    Biomicrofluidics 4(2), 022811.',
+      '    [ε_r,cyto = 60, cytoplasm effective permittivity with macromolecular crowding]',
     )
   }
   if (isRes) {
@@ -238,13 +270,12 @@ export function buildRefs(isRes: boolean, isDbl: boolean, cat: string, isHFire =
 
 // ── Per-entry computation helpers (pure - no store/Vue imports) ───────────
 
-// SAR = σ_i·α²·E²·wf/ρ, α = 3σ_e/(2σ_e+σ_i)
+// SAR = σ_i·α²·E²·wf/ρ, α = 3σ_e/(2σ_e+σ_i)  (Schwan 1957)
 // wf: 0.5 for CW (E²_rms = E²_peak/2), 1.0 for pulsed/H-FIRE
-function computeSAR(sigmaI: number, sigmaE: number, fieldVcm: number, wf: number): number {
-  const alpha  = (3 * sigmaE) / (2 * sigmaE + sigmaI)
-  const E_vm   = fieldVcm * 100           // V/cm → V/m
-  const rho    = 1000                     // kg/m³ (water approximation)
-  return sigmaI * alpha * alpha * E_vm * E_vm * wf / rho
+function computeSAR(sigmaI: number, sigmaE: number, fieldVcm: number, wf: number, density: number): number {
+  const alpha = (3 * sigmaE) / (2 * sigmaE + sigmaI)
+  const E_vm  = fieldVcm * 100    // V/cm → V/m
+  return sigmaI * alpha * alpha * E_vm * E_vm * wf / density
 }
 
 // PEF = 1−exp(−t_p/τ), τ = 1/(2π·fc)
@@ -263,8 +294,8 @@ function classifyDR(ratio: number): string {
 }
 
 function classifySelectivity(sel: number): string {
-  if (sel >= THRESHOLDS.SEL_STRONG)   return 'Strong therapeutic window'
-  if (sel >= THRESHOLDS.SEL_MARGINAL) return 'Marginal window'
+  if (sel >= THRESHOLDS.SEL_STRONG)   return 'Strong selectivity window'
+  if (sel >= THRESHOLDS.SEL_MARGINAL) return 'Marginal selectivity window'
   return 'Non-selective'
 }
 
@@ -280,7 +311,7 @@ function computeLysisDelayMs(entry: LogEntry): number {
 
 // ── Full document assemblers ───────────────────────────────────────────────
 
-export function buildEntryMethodsText(entry: LogEntry, sessionName: string): { text: string; filename: string } {
+export function buildEntryMethodsText(entry: LogEntry, sessionName: string, sampleDescription = ''): { text: string; filename: string } {
   const entrySession = entry.sessionName ?? sessionName
   const filename = `${entrySession.replace(/\s+/g, '_')}_entry${entry.id}_methods.txt`
 
@@ -340,92 +371,126 @@ export function buildEntryMethodsText(entry: LogEntry, sessionName: string): { t
     ? `${(entry.fieldVcm / 1000).toFixed(1)} ${UNIT.KV_PER_CM}`
     : `${entry.fieldVcm} ${UNIT.V_PER_CM}`
 
+  const medEntry   = medKey in MEDIA ? MEDIA[medKey] : null
+  const baseS      = entry.mediumBaseS   ?? medEntry?.conductivity
+  const tempCoeff  = entry.mediumTempCoeff  ?? medEntry?.tempCoeff
+  const medEpsR    = entry.mediumPermittivity ?? medEntry?.permittivity
+  const perfRate   = entry.perfusionRate  ?? 0
+  const phi        = entry.cellPackingFraction ?? 0
+
+  const formatDutyCycle = (dc: number): string => {
+    const pct = dc * 100
+    return pct >= 0.1 ? `${pct.toFixed(pct < 1 ? 2 : 1)}%` : `${dc.toExponential(2)} (fraction)`
+  }
+
+  const sigmaCorr = baseS !== undefined && tempCoeff !== undefined
+    ? `σe,0 = ${baseS.toFixed(3)} ${UNIT.S_PER_M}  |  tempCoeff = ${tempCoeff.toFixed(3)} /°C  |  σe(T) = σe,0 × (1 + tempCoeff × (T − 37))`
+    : 'see medium reference'
+
   const protocolLines: string[] = [
-    fld('Medium',              medName),
-    fld('Conductivity σe',     `${sigE.toFixed(3)} ${UNIT.S_PER_M}  [T-corrected at 37°C]`),
-    fld('RF Frequency',        freqDisplay),
-    fld('Electric Field E',    fieldDisplay),
-    fld('Waveform',            `${(entry.waveform ?? 'cw').toUpperCase()}${isHFire ? '  [H-FIRE bipolar burst, Vth × 1.75]' : ''}`),
+    fld('Medium',               medName),
+    fld('Conductivity σe (eff)', `${sigE.toFixed(4)} ${UNIT.S_PER_M}  [T-corrected]`),
+    fld('σe correction',         sigmaCorr),
+    fld('Medium permittivity εr', `${medEpsR ?? 'n/a'}  [used in DEP Clausius-Mossotti]`),
+    ...(phi > 0 ? [fld('Cell packing fraction φ', `${phi.toFixed(3)}  [Maxwell-Garnett σe correction applied]`)] : []),
+    fld('RF Frequency',          freqDisplay),
+    fld('Electric Field E',      fieldDisplay),
+    fld('Waveform',              `${(entry.waveform ?? 'cw').toUpperCase()}${isHFire ? '  [H-FIRE bipolar burst, Vth × 1.75 — model parameter, see PHYSICAL MODEL]' : ''}`),
     ...(isPulsedOrHFire ? [
-      fld('Duty cycle dc',     `${((entry.dutyCycle ?? 0) * 100).toExponential(2)}%`),
-      fld('Pulse width t_p',   `${entry.pulseWidthNs ?? ', '} ${UNIT.NS}`),
-      fld('N-pulses (lysis)',  `${entry.lysisNPulses ?? ', '}`),
+      fld('Duty cycle dc',       formatDutyCycle(entry.dutyCycle ?? 0)),
+      fld('Pulse width t_p',     `${entry.pulseWidthNs ?? ', '} ${UNIT.NS}`),
+      fld('N-pulses (lysis)',    `${entry.lysisNPulses ?? ', '}`),
     ] : []),
-    fld('Cell orientation θ',  `${entry.orientationDeg ?? 0}°  (cos θ = ${cosTheta.toFixed(3)})`),
+    fld('Cell orientation θ',    `${entry.orientationDeg ?? 0}°  (cos θ = ${cosTheta.toFixed(3)})`),
+    ...(perfRate > 0 ? [fld('Perfusion rate ω_b', `${perfRate.toFixed(2)} mL/(g·min)  [Pennes perfusion term active]`)] : [
+      fld('Perfusion rate ω_b',  `0  [in-vitro, no perfusion cooling]`),
+    ]),
   ]
 
   // ── Per-cell biophysical results ───────────────────────────────────────────
 
-  const sigmaE      = entry.sigmaE ?? 0
+  const sigmaE_val  = entry.sigmaE ?? 0
   const isPulsedSch = isPulsedOrHFire && !isRes   // PEF only applies in Schwan/IRE mode
+
+  const formatDC = (dc: number): string => `(×dc = ${dc >= 0.001 ? (dc * 100).toFixed(1) + '%' : dc.toExponential(2)})`
 
   // Healthy cell block
   const wf       = (entry.waveform === 'pulsed' || entry.waveform === 'hfire') ? 1.0 : 0.5
-  const hSAR     = computeSAR(h.conductivity, sigmaE, entry.fieldVcm, wf)
+  const hSAR     = computeSAR(h.conductivity, sigmaE_val, entry.fieldVcm, wf, h.density)
   const hSARAvg  = hSAR * (entry.dutyCycle ?? 1)
   const hPEF     = isPulsedSch && entry.pulseWidthNs && h.fc > 0
     ? computePEF(entry.pulseWidthNs, h.fc)
     : null
   const hDRState = classifyDR(entry.healthyRatio)
+  const hVthEff  = h.thresholdVoltage * Math.max(0.70, 1 - TEMP_EP_COEFF * Math.max(0, entry.healthyTemp - 37))
 
   const healthyLines: string[] = [
     `Reference (Healthy): ${h.label}`,
-    fld('Vm (Schwan)',           `${entry.healthyVm} ${UNIT.MV}`),
-    fld('Disruption ratio DR',  `${(entry.healthyRatio * 100).toFixed(2)}% - ${hDRState}`),
-    ...(hPEF !== null ? [fld('Pulse env. factor PEF', `${hPEF.toFixed(4)}  (1−exp(−t_p/τ)  t_p=${entry.pulseWidthNs}ns  τ=${(1e9 / (TWO_PI * h.fc * 1000)).toFixed(0)}ns)`)] : []),
-    fld('SAR (instantaneous)',  `${hSAR.toFixed(2)} ${UNIT.W_PER_KG}`),
-    fld('SAR (time-averaged)',  `${hSARAvg.toFixed(4)} ${UNIT.W_PER_KG}  (×dc = ${(entry.dutyCycle ?? 1).toExponential(2)})`),
-    fld('Steady-state T_ss',   `${entry.healthyTemp} ${UNIT.DEG_C}`),
-    ...(isDbl && entry.healthyNuclearVm !== undefined ? [fld('Nuclear Vm',  `${entry.healthyNuclearVm} ${UNIT.MV}`)] : []),
+    fld('Vm (Schwan)',            `${entry.healthyVm} ${UNIT.MV}`),
+    fld('Lysis Vth (effective)',  `${(hVthEff * 1000).toFixed(1)} ${UNIT.MV}  [base ${(h.thresholdVoltage * 1000).toFixed(0)} mV corrected at ${entry.healthyTemp}°C  ×max(0.70, 1−0.003×(T−37))]`),
+    fld('Disruption ratio DR',   `${(entry.healthyRatio * 100).toFixed(2)}%  [single-cell nominal radius]  ${hDRState}`),
+    ...(hPEF !== null ? [fld('Pulse env. factor PEF', `${hPEF.toFixed(4)}  [1−exp(−t_p/τ)  t_p=${entry.pulseWidthNs}ns  τ=${(1e9 / (TWO_PI * h.fc * 1000)).toFixed(0)}ns]`)] : []),
+    fld('SAR (instantaneous)',   `${hSAR.toFixed(3)} ${UNIT.W_PER_KG}  [σi·α²·E²·wf/ρ  ρ=${h.density} kg/m³]`),
+    fld('SAR (time-averaged)',   `${hSARAvg.toFixed(4)} ${UNIT.W_PER_KG}  ${formatDC(entry.dutyCycle ?? 1)}`),
+    fld('Steady-state T_ss',    `${entry.healthyTemp} ${UNIT.DEG_C}  [37 + SAR_eff/((λ_N+λ_p)×cp)  cp=${h.specificHeatCapacity} J/(kg·K)]`),
+    ...(isDbl && entry.healthyNuclearVm !== undefined ? [fld('Nuclear Vm',   `${entry.healthyNuclearVm} ${UNIT.MV}`)] : []),
     ...(!isRes && entry.depHealthyK !== undefined ? (() => {
       const xover = entry.depHealthyCrossoverKHz
-      return [fld('Re[K] (DEP)',  `${entry.depHealthyK.toFixed(4)}  [${entry.depHealthyK > 0 ? 'pDEP ↑ attracted to field max' : 'nDEP ↓ repelled from field max'}]  ${xover ? `f_cross = ${xover.toFixed(1)} ${UNIT.KHZ}` : 'no crossover in range'}`)]
+      return [fld('Re[K] (DEP)',  `${entry.depHealthyK.toFixed(4)}  [${entry.depHealthyK > 0 ? 'pDEP: attracted to field maxima' : 'nDEP: repelled from field maxima'}]  f_cross = ${xover ? xover.toFixed(1) + ' ' + UNIT.KHZ : 'none in range'}`)]
     })() : []),
   ]
 
   // Target cell block
-  const tSAR    = computeSAR(t.conductivity, sigmaE, entry.fieldVcm, wf)
+  const tSAR    = computeSAR(t.conductivity, sigmaE_val, entry.fieldVcm, wf, t.density)
   const tSARAvg = tSAR * (entry.dutyCycle ?? 1)
   const tPEF    = isPulsedSch && entry.pulseWidthNs && t.fc > 0
     ? computePEF(entry.pulseWidthNs, t.fc)
     : null
   const tDRState = classifyDR(entry.targetRatio)
+  const tVthEff  = t.thresholdVoltage * Math.max(0.70, 1 - TEMP_EP_COEFF * Math.max(0, entry.targetTemp - 37))
 
   const targetLines: string[] = [
     `Target Cell: ${t.label}  [category: ${t.category}]`,
     ...(isRes
-      ? [fld('Vm (Schwan)',  `≈0 mV at resonance frequency, use DR below`)]
+      ? [fld('Vm (Schwan)', `< 0.01 ${UNIT.MV}  [Vm → 0 at f_res; ωτ >> 1; disruption governed by Lorentzian DR below]`)]
       : [fld('Vm (Schwan)', `${entry.targetVm} ${UNIT.MV}`)]),
-    fld('Disruption ratio DR',  `${(entry.targetRatio * 100).toFixed(2)}% - ${tDRState}`),
-    ...(tPEF !== null ? [fld('Pulse env. factor PEF', `${tPEF.toFixed(4)}  (1−exp(−t_p/τ)  t_p=${entry.pulseWidthNs}ns  τ=${(1e9 / (TWO_PI * t.fc * 1000)).toFixed(0)}ns)`)] : []),
-    fld('SAR (instantaneous)',  `${tSAR.toFixed(2)} ${UNIT.W_PER_KG}`),
-    fld('SAR (time-averaged)',  `${tSARAvg.toFixed(4)} ${UNIT.W_PER_KG}  (×dc = ${(entry.dutyCycle ?? 1).toExponential(2)})`),
-    fld('Steady-state T_ss',   `${entry.targetTemp} ${UNIT.DEG_C}`),
-    ...(isDbl && entry.targetNuclearVm !== undefined ? [fld('Nuclear Vm',  `${entry.targetNuclearVm} ${UNIT.MV}`)] : []),
+    fld('Lysis Vth (effective)',  `${(tVthEff * 1000).toFixed(1)} ${UNIT.MV}  [base ${(t.thresholdVoltage * 1000).toFixed(0)} mV corrected at ${entry.targetTemp}°C  ×max(0.70, 1−0.003×(T−37))]`),
+    fld('Disruption ratio DR',   `${(entry.targetRatio * 100).toFixed(2)}%  [single-cell nominal radius]  ${tDRState}`),
+    ...(tPEF !== null ? [fld('Pulse env. factor PEF', `${tPEF.toFixed(4)}  [1−exp(−t_p/τ)  t_p=${entry.pulseWidthNs}ns  τ=${(1e9 / (TWO_PI * t.fc * 1000)).toFixed(0)}ns]`)] : []),
+    fld('SAR (instantaneous)',   `${tSAR.toFixed(3)} ${UNIT.W_PER_KG}  [σi·α²·E²·wf/ρ  ρ=${t.density} kg/m³]`),
+    fld('SAR (time-averaged)',   `${tSARAvg.toFixed(4)} ${UNIT.W_PER_KG}  ${formatDC(entry.dutyCycle ?? 1)}`),
+    fld('Steady-state T_ss',    `${entry.targetTemp} ${UNIT.DEG_C}  [37 + SAR_eff/((λ_N+λ_p)×cp)  cp=${t.specificHeatCapacity} J/(kg·K)]`),
+    ...(isDbl && entry.targetNuclearVm !== undefined ? [fld('Nuclear Vm',   `${entry.targetNuclearVm} ${UNIT.MV}`)] : []),
     ...(!isRes && entry.depTargetK !== undefined ? (() => {
       const xover = entry.depTargetCrossoverKHz
-      return [fld('Re[K] (DEP)',  `${entry.depTargetK.toFixed(4)}  [${entry.depTargetK > 0 ? 'pDEP ↑ attracted to field max' : 'nDEP ↓ repelled from field max'}]  ${xover ? `f_cross = ${xover.toFixed(1)} ${UNIT.KHZ}` : 'no crossover in range'}`)]
+      return [fld('Re[K] (DEP)',  `${entry.depTargetK.toFixed(4)}  [${entry.depTargetK > 0 ? 'pDEP: attracted to field maxima' : 'nDEP: repelled from field maxima'}]  f_cross = ${xover ? xover.toFixed(1) + ' ' + UNIT.KHZ : 'none in range'}`)]
     })() : []),
   ]
 
-  // ── Therapeutic assessment block ──────────────────────────────────────────
+  // ── Protocol assessment block ──────────────────────────────────────────────
   const inWindow      = entry.targetRatio >= THRESHOLDS.DISRUPTION_WARN && entry.healthyRatio < THRESHOLDS.HEALTHY_APPROACHING
   const selClass      = classifySelectivity(entry.selectivity)
   const vmSelRatio    = entry.healthyVm > 0 ? entry.targetVm / entry.healthyVm : 0
   const lysisDelayMs  = computeLysisDelayMs(entry)
 
   const assessmentLines: string[] = [
-    fld('Selectivity (TI)',      `${entry.selectivity.toFixed(3)}× - ${selClass}`),
-    fld('Vm selectivity',        `${vmSelRatio.toFixed(3)}×  (Vm_T / Vm_H, orientation-independent)`),
-    fld('Therapeutic window',    inWindow
-      ? `YES: target DR ${(entry.targetRatio * 100).toFixed(1)}% >= 85%  ·  healthy DR ${(entry.healthyRatio * 100).toFixed(1)}% < 50%`
-      : `NO: target DR ${(entry.targetRatio * 100).toFixed(1)}%  ·  healthy DR ${(entry.healthyRatio * 100).toFixed(1)}%`),
+    fld('Selectivity ratio (SR)', `${entry.selectivity.toFixed(3)}×  ${selClass}`),
+    fld('Vm selectivity',         `${vmSelRatio.toFixed(3)}×  (Vm_T / Vm_H, orientation-independent)`),
+    fld('Protocol window',        inWindow
+      ? `YES: target DR ${(entry.targetRatio * 100).toFixed(1)}% >= 85%  |  healthy DR ${(entry.healthyRatio * 100).toFixed(1)}% < 50%`
+      : `NO: target DR ${(entry.targetRatio * 100).toFixed(1)}%  |  healthy DR ${(entry.healthyRatio * 100).toFixed(1)}%`),
     ...(entry.event === 'lysis'
-      ? [fld('Lysis delay (protocol)', `${lysisDelayMs.toFixed(0)} ms  (N=${entry.lysisNPulses ?? 1} × t_p/dc${isPulsedOrHFire ? ` = ${entry.lysisNPulses ?? 1} × ${entry.pulseWidthNs}ns / ${(entry.dutyCycle ?? 1).toExponential(2)}` : '  [CW default]'})`)]
+      ? [fld('Lysis delay (modelled)', `${lysisDelayMs.toFixed(0)} ms  [max(200ms, min(30s, N×t_p/dc))${isPulsedOrHFire ? `  N=${entry.lysisNPulses ?? 1} × ${entry.pulseWidthNs}ns / ${(entry.dutyCycle ?? 1).toExponential(2)}` : '  CW default 2500ms'}]`)]
       : []),
-    fld('Event',                 entry.event),
+    fld('Event',                  entry.event),
+    '',
+    'POPULATION NOTE: DR values above represent the single-cell (modal/nominal radius)',
+    'calculation. Population-level lysis fraction (log-normal radius distribution,',
+    'CV ≈ 25% mammalian / 22% bacteria / 8% virus) is not included in this entry.',
   ]
 
+
+  const resolvedSample = sampleDescription || entry.sampleDescription || ''
 
   const text = [
     'MATERIALS AND METHODS: ResoPulse Electroporation Simulation',
@@ -435,6 +500,7 @@ export function buildEntryMethodsText(entry: LogEntry, sessionName: string): { t
     `Generated: ${new Date().toISOString()}`,
     `Model    : ${isRes ? 'Acoustic/Mechanical Resonance (Lorentzian)' : 'Transmembrane Voltage (Schwan/IRE)'}`,
     `Target   : ${cat.toUpperCase()}, ${t.label}`,
+    ...(resolvedSample ? [`Sample   : ${resolvedSample}`] : []),
     '',
     'CELL MODELS',
     sep(),
@@ -452,7 +518,7 @@ export function buildEntryMethodsText(entry: LogEntry, sessionName: string): { t
     '',
     ...targetLines,
     '',
-    'THERAPEUTIC ASSESSMENT',
+    'PROTOCOL ASSESSMENT',
     sep(),
     ...assessmentLines,
     '',
@@ -465,7 +531,7 @@ export function buildEntryMethodsText(entry: LogEntry, sessionName: string): { t
     ...buildRefs(isRes, isDbl, cat, isHFire),
     '',
     sep('═'),
-    'Generated by ResoPulse: virtual biophysics engine',
+    'ResoPulse: virtual in-vitro biophysics engine',
     'Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.',
   ].join('\n')
 
