@@ -100,7 +100,7 @@ class SonificationService {
     this.osc.frequency.linearRampToValueAtTime(targetFreq, now + RAMP_TIME_S)
 
     // ── Gain: scales with disruption ratio ───────────────────────────────────
-    // Silent at DR=0, ramps to 0.25 at DR=0.5, full 0.4 at DR≥0.85
+    // Silent at DR=0, ramps to ~0.24 at DR=0.5, full 0.4 at DR≥0.85
     const drGain = Math.min(0.4, disruptionRatio * 0.47)
 
     // ── Tremolo: active only in rev-ep state ─────────────────────────────────

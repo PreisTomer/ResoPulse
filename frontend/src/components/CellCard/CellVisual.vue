@@ -173,6 +173,7 @@ import { useCellStore } from '@/stores/cellStore'
 import { useExperimentStore } from '@/stores/experimentStore'
 import { useImpedanceStore } from '@/stores/impedanceStore'
 import { broadcastLogEntry } from '@/services/socket'
+import { sonification } from '@/services/sonification'
 import { CELL_PRESETS } from '@/constants/cellLibrary'
 import type { CellConfig, CellRecord } from '@/types/cell'
 import type { CellState } from '@/types/cell'
@@ -553,7 +554,11 @@ export default defineComponent({
           : impact > THRESHOLDS.VIBRATING_MIN        ? CELL_STATE.NOURISHING
           : CELL_STATE.STABLE
         const ORDER: CellState[] = [CELL_STATE.STABLE, CELL_STATE.NOURISHING, CELL_STATE.APPROACHING, CELL_STATE.CRITICAL]
-        this.cellState = ORDER[Math.max(ORDER.indexOf(elState), ORDER.indexOf(thermalFloor))] as CellState
+        const nextState = ORDER[Math.max(ORDER.indexOf(elState), ORDER.indexOf(thermalFloor))] as CellState
+        if (nextState === CELL_STATE.CRITICAL && this.cellState !== CELL_STATE.CRITICAL) {
+          sonification.triggerHealthyWarningPulse()
+        }
+        this.cellState = nextState
       }
       if (this.type === CELL_TYPE.HEALTHY) this.cellStore.setHealthyCellState(this.cellState)
       else this.cellStore.setTargetCellState(this.cellState)
@@ -612,6 +617,7 @@ export default defineComponent({
 
     triggerLysis() {
       if (this.compact) return
+      sonification.triggerLysisBurst()
       this.cellState = CELL_STATE.LYSING
       if (this.type === CELL_TYPE.HEALTHY) this.cellStore.setHealthyCellState(CELL_STATE.LYSING)
       else this.cellStore.setTargetCellState(CELL_STATE.LYSING)
