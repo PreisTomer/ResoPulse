@@ -87,7 +87,7 @@
       </div>
 
       <!-- ── Zone 3: Features — scroll-reveal workflow and cards ── -->
-      <div class="home__zone home__zone--features home__zone--anim" ref="featuresZone">
+      <div class="home__zone home__zone--features home__zone--anim">
 
         <!-- Oscilloscope background: two waveforms scroll edge to edge, medium+ screens -->
         <OscilloscopeSvg />
@@ -114,20 +114,39 @@
             :style="{ '--card-i': i }"
           >
             <div class="home__fc-header">
-              <span class="home__fc-icon">{{ card.icon }}</span>
+              <span class="home__fc-icon-wrap">
+                <span class="home__fc-icon">{{ card.icon }}</span>
+              </span>
               <span class="home__fc-title">{{ $t(`home.${card.titleKey}`) }}</span>
+              <span class="home__fc-tag">{{ $t(`home.${card.tagKey}`) }}</span>
             </div>
             <span class="home__fc-desc">{{ $t(`home.${card.descKey}`) }}</span>
           </RouterLink>
 
-          <div class="home__feature-card home__feature-card--stats" :style="{ '--card-i': featureCards.length }">
-            <div class="home__stats-grid">
-              <div v-for="(s, i) in homeStats" :key="s" class="home__stat">
-                <span class="home__stat-val">{{ statDisplayValues[i] }}</span>
-                <span class="home__stat-label">{{ $t(`home.${s}Label`) }}</span>
+          <!-- Selectivity preview — replaces stats card; shows the platform's core value visually -->
+          <RouterLink to="/experiment" class="home__feature-card home__feature-card--sel" :style="{ '--card-i': featureCards.length }">
+            <p class="home__sel-title">{{ $t('home.selTitle') }}</p>
+            <div class="home__sel-bars">
+              <div class="home__sel-bar">
+                <span class="home__sel-bar-label">{{ $t('home.selTargetLabel') }}</span>
+                <div class="home__sel-bar-track">
+                  <div class="home__sel-bar-fill home__sel-bar-fill--target"></div>
+                </div>
+                <span class="home__sel-bar-pct home__sel-bar-pct--target">{{ $t('home.selTargetPct') }}</span>
+              </div>
+              <div class="home__sel-bar">
+                <span class="home__sel-bar-label">{{ $t('home.selHealthyLabel') }}</span>
+                <div class="home__sel-bar-track">
+                  <div class="home__sel-bar-fill home__sel-bar-fill--healthy"></div>
+                </div>
+                <span class="home__sel-bar-pct home__sel-bar-pct--healthy">{{ $t('home.selHealthyPct') }}</span>
               </div>
             </div>
-          </div>
+            <div class="home__sel-footer">
+              <span class="home__sel-ti">{{ $t('home.selTiValue') }}</span>
+              <span class="home__sel-cta">{{ $t('home.selCta') }} {{ ICON.ARROW_R }}</span>
+            </div>
+          </RouterLink>
 
         </div>
 
@@ -173,14 +192,12 @@ export default defineComponent({
 
   mounted() {
     const zones = this.$el.querySelectorAll('.home__zone--anim')
-    const featuresZone = this.$refs.featuresZone as Element | null
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             entry.target.classList.add('home__zone--visible')
             observer.unobserve(entry.target)
-            if (entry.target === featuresZone) this.runStatCountup()
           }
         })
       },
@@ -191,28 +208,6 @@ export default defineComponent({
 
   computed: {
     ICON() { return ICON },
-    statDisplayValues(): string[] {
-      const suffixes = ['', '', ' GHz', '']
-      return this.statCounters.map((v, i) => `${v}${suffixes[i]}`)
-    },
-  },
-
-  methods: {
-    runStatCountup(): void {
-      if (this.statsAnimDone) return
-      this.statsAnimDone = true
-      const targets = [16, 9, 10, 28]
-      const duration = 1400
-      const start = performance.now()
-      const tick = (now: number): void => {
-        const t    = Math.min(1, (now - start) / duration)
-        const ease = 1 - Math.pow(1 - t, 3)
-        this.statCounters = targets.map(n => Math.round(n * ease))
-        if (t < 1) requestAnimationFrame(tick)
-        else this.statCounters = [...targets]
-      }
-      requestAnimationFrame(tick)
-    },
   },
 
   data() {
@@ -220,14 +215,12 @@ export default defineComponent({
       workflowSteps: ['wf1', 'wf2', 'wf3'],
 
       featureCards: [
-        { to: '/experiment', icon: ICON.FLASK,   titleKey: 'card1Title', descKey: 'card1Desc', primary: true },
-        { to: '/instrument', icon: ICON.PLUG,    titleKey: 'card2Title', descKey: 'card2Desc', primary: false },
-        { to: '/reports',    icon: ICON.CELL,    titleKey: 'card3Title', descKey: 'card3Desc', primary: false },
-        { to: '/datasets',   icon: ICON.GRID,    titleKey: 'card4Title', descKey: 'card4Desc', primary: false },
-        { to: '/protocol',   icon: ICON.SECTION, titleKey: 'card5Title', descKey: 'card5Desc', primary: false },
+        { to: '/experiment', icon: ICON.FLASK,   titleKey: 'card1Title', descKey: 'card1Desc', tagKey: 'card1Tag', primary: true },
+        { to: '/instrument', icon: ICON.PLUG,    titleKey: 'card2Title', descKey: 'card2Desc', tagKey: 'card2Tag', primary: false },
+        { to: '/reports',    icon: ICON.CELL,    titleKey: 'card3Title', descKey: 'card3Desc', tagKey: 'card3Tag', primary: false },
+        { to: '/datasets',   icon: ICON.GRID,    titleKey: 'card4Title', descKey: 'card4Desc', tagKey: 'card4Tag', primary: false },
+        { to: '/protocol',   icon: ICON.SECTION, titleKey: 'card5Title', descKey: 'card5Desc', tagKey: 'card5Tag', primary: false },
       ],
-
-      homeStats: ['stat1', 'stat2', 'stat3', 'stat4'],
 
       scopeTags: [
         { mod: 'cancer',   key: 'tagCancer' },
@@ -235,9 +228,6 @@ export default defineComponent({
         { mod: 'virus',    key: 'tagVirus' },
         { mod: 'ref',      key: 'tagRef' },
       ],
-
-      statCounters: [0, 0, 0, 0] as number[],
-      statsAnimDone: false,
     }
   },
 })
