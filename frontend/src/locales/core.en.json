@@ -257,7 +257,8 @@
     "zDriftTip": "<strong>⚗ Impedance Drift Detected</strong>\nMedium conductivity has shifted from baseline by more than 5%.\nThis typically indicates ion release from lysing target cells.\n\nClick to open the Instrument Panel for real-time impedance tracking and corrected field voltage.",
     "stickyCollapse": "Collapse live cell panel",
     "stickyExpand": "Expand live cell panel",
-    "stickyScrollTip": "Click to scroll back to the cell cards"
+    "stickyScrollTip": "Click to scroll back to the cell cards",
+    "stickyLive": "LIVE"
   },
   "resonance": {
     "speculativeBannerTitle": "SPECULATIVE MODEL: No experimental RF validation",

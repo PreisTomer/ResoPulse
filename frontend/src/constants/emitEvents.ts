@@ -54,6 +54,9 @@ export const EMIT = {
   REDRAW:     'redraw',
   EXPORT_CSV: 'export-csv',
 
+  // ── Bridge setup modal ────────────────────────────────────────────────────
+  COPY: 'copy',
+
   // ── Population panel v-model ───────────────────────────────────────────────
   UPDATE_N_CELLS:          'update:nCells',
   UPDATE_R_VARIANCE_PCT:   'update:rVariancePct',

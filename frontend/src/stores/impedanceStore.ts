@@ -105,7 +105,7 @@ export const useImpedanceStore = defineStore('impedance', {
     },
 
     cellVolumeFraction(): number {
-      const s = this as unknown as ImpedanceStoreState
+      const s = this as ImpedanceStoreState
       return computeCellVolumeFraction(s.cellDensityPerMl, useCellStore().target.radius)
     },
 
@@ -118,7 +118,7 @@ export const useImpedanceStore = defineStore('impedance', {
     },
 
     sigmaEForImpedance(): number {
-      const s = this as unknown as ImpedanceStoreState
+      const s = this as ImpedanceStoreState
       if (s.hardwareModeEnabled && s.hardwareZReal !== null) {
         return computeSigmaEFromImpedance(s.cuvetteGapMm, s.cuvetteCrossSectionCm2, s.hardwareZReal)
       }
@@ -126,12 +126,12 @@ export const useImpedanceStore = defineStore('impedance', {
     },
 
     nominalImpedanceOhm(): number {
-      const s = this as unknown as ImpedanceStoreState
+      const s = this as ImpedanceStoreState
       return computeCuvetteDCImpedance(s.cuvetteGapMm, s.cuvetteCrossSectionCm2, useCellStore().effectiveSigmaE)
     },
 
     currentImpedanceOhm(): number {
-      const s = this as unknown as ImpedanceStoreState
+      const s = this as ImpedanceStoreState
       if (s.hardwareModeEnabled && s.hardwareZReal !== null) return s.hardwareZReal
       return computeCuvetteDCImpedance(s.cuvetteGapMm, s.cuvetteCrossSectionCm2, this.sigmaEWithLysis)
     },
@@ -144,25 +144,25 @@ export const useImpedanceStore = defineStore('impedance', {
 
     // V_gen/V_cuvette — values >1 mean the generator must output more to compensate mismatch
     voltageCorrectionFactor(): number {
-      const s = this as unknown as ImpedanceStoreState
+      const s = this as ImpedanceStoreState
       const Z = this.currentImpedanceOhm
       if (Z <= 0) return 1
       return 1 + s.sourceImpedanceOhm / Z
     },
 
     correctedFieldVcm(): number {
-      const s = this as unknown as ImpedanceStoreState
+      const s = this as ImpedanceStoreState
       return computeCorrectedFieldVcm(useCellStore().fieldIntensity, this.currentImpedanceOhm, s.sourceImpedanceOhm)
     },
 
     hardwareReadingIsStale(): boolean {
-      const s = this as unknown as ImpedanceStoreState
+      const s = this as ImpedanceStoreState
       if (!s.hardwareModeEnabled || s.hardwareZReal === null) return false
       return Date.now() - s.hardwareReadingTs > HARDWARE_READING_STALE_MS
     },
 
     hardwareReadingAgeMs(): number {
-      const s = this as unknown as ImpedanceStoreState
+      const s = this as ImpedanceStoreState
       if (s.hardwareReadingTs === 0) return Infinity
       return Date.now() - s.hardwareReadingTs
     },
@@ -179,7 +179,7 @@ export const useImpedanceStore = defineStore('impedance', {
     },
 
     currentImpedanceMagAtFreqOhm(): number {
-      const s = this as unknown as ImpedanceStoreState
+      const s = this as ImpedanceStoreState
       if (s.hardwareModeEnabled && s.hardwareZReal !== null) {
         // Hardware mode: use |Z| from instrument (real + imag components)
         const zImag = s.hardwareZImag ?? 0
@@ -199,22 +199,22 @@ export const useImpedanceStore = defineStore('impedance', {
     },
 
     reflectionCoeff(): number {
-      const s = this as unknown as ImpedanceStoreState
+      const s = this as ImpedanceStoreState
       return computeReflectionCoeff(this.currentImpedanceMagAtFreqOhm, s.sourceImpedanceOhm)
     },
 
     vswr(): number {
-      const s = this as unknown as ImpedanceStoreState
+      const s = this as ImpedanceStoreState
       return computeVSWR(this.currentImpedanceMagAtFreqOhm, s.sourceImpedanceOhm)
     },
 
     powerDeliveryEfficiency(): number {
-      const s = this as unknown as ImpedanceStoreState
+      const s = this as ImpedanceStoreState
       return computePowerDeliveryEfficiency(this.currentImpedanceMagAtFreqOhm, s.sourceImpedanceOhm)
     },
 
     mediumJouleHeatingMilliWatts(): number {
-      const s       = this as unknown as ImpedanceStoreState
+      const s       = this as ImpedanceStoreState
       const cellStore = useCellStore()
       return computeMediumJouleHeatingWatts(
         cellStore.fieldIntensity,
@@ -232,7 +232,7 @@ export const useImpedanceStore = defineStore('impedance', {
     },
 
     isLowImpedanceSource(): boolean {
-      const s = this as unknown as ImpedanceStoreState
+      const s = this as ImpedanceStoreState
       return s.sourceImpedanceOhm < 5
     },
 

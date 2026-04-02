@@ -64,12 +64,9 @@ export default defineComponent({
     opZoneColor: { type: String, default: 'var(--color-text)' },
   },
 
-  data() {
-    return { ICON }
-  },
-
   computed: {
     ...mapStores(useCellStore),
+    ICON() { return ICON },
     tDrPct(): string {
       return (Math.min(this.cellStore.targetDisruptionRatio,  HMAP_DR_DISPLAY_CAP) * 100).toFixed(1)
     },

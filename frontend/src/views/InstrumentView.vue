@@ -110,10 +110,6 @@ import { ICON } from '@/constants/icons'
 export default defineComponent({
   name: 'InstrumentView',
   components: { InstrumentPanel, PageHeader },
-  data() {
-    return { UNIT, ICON }
-  },
-
   mounted() {
     const targetId = this.uiStore.pendingHighlight
     if (targetId) {
@@ -124,6 +120,8 @@ export default defineComponent({
 
   computed: {
     ...mapStores(useCellStore, useImpedanceStore, useUiStore),
+    UNIT() { return UNIT },
+    ICON() { return ICON },
     cellStore() { return useCellStore() },
     impStore() { return useImpedanceStore() },
     uiStore() { return useUiStore() },

@@ -98,7 +98,7 @@ import { useImpedanceStore } from '@/stores/impedanceStore'
 import { computeSigmaEFromImpedance } from '@/utils/impedance'
 import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'
-import BridgeSetupModal from '@/components/BridgeSetupModal.vue'
+import BridgeSetupModal from '@/components/BridgeSetupModal/index.vue'
 
 const SCHEMA_EXAMPLE = `{
   "zReal":       245.3,
@@ -112,11 +112,14 @@ export default defineComponent({
   name: 'HardwareInput',
   components: { BridgeSetupModal },
   data() {
-    return { ICON, UNIT, schemaExample: SCHEMA_EXAMPLE, showSetupModal: false }
+    return { showSetupModal: false }
   },
 
   computed: {
     ...mapStores(useImpedanceStore),
+    ICON() { return ICON },
+    UNIT() { return UNIT },
+    schemaExample() { return SCHEMA_EXAMPLE },
 
     hasReading(): boolean {
       return this.impedanceStore.hardwareZReal !== null

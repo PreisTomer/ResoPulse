@@ -61,7 +61,7 @@ export default defineComponent({
       if (!wrap || this._resizeObs) return
       const obs = new ResizeObserver(() => { if (this.open) this._drawChart() })
       obs.observe(wrap)
-      this._resizeObs = obs as unknown as ResizeObserverInstance
+      this._resizeObs = obs as ResizeObserverInstance
     },
 
     _drawChart() {

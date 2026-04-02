@@ -12,7 +12,7 @@
       :collapse-tip="$t('exp.stickyCollapse')"
     >
       <template #tab-icon>
-        <span class="experiment__sticky-tab-dot">⬤</span>
+        <span class="experiment__sticky-tab-dot">{{ ICON.LIVE_DOT }}</span>
       </template>
 
       <template #panel>
@@ -21,7 +21,7 @@
           @click.stop="scrollToCells"
           :title="$t('exp.stickyScrollTip')"
         >
-          <div class="experiment__sticky-cells-label">⬤ LIVE</div>
+          <div class="experiment__sticky-cells-label">{{ ICON.LIVE_DOT }} {{ $t('exp.stickyLive') }}</div>
           <div class="experiment__sticky-cells-grid">
             <CellCard
               v-for="cell in cells"
@@ -48,6 +48,7 @@ import SideTabPanel from '@/components/ExperimentLab/SideTabPanel.vue'
 import CellCard from '@/components/CellCard/index.vue'
 import type { CellRecord } from '@/types/cell'
 import { EMIT } from '@/constants/emitEvents'
+import { ICON } from '@/constants/icons'
 
 export interface CellCardRow {
   id: string
@@ -72,6 +73,7 @@ export default defineComponent({
 
   computed: {
     EMIT() { return EMIT },
+    ICON() { return ICON },
   },
 
   methods: {
@@ -95,10 +97,6 @@ export default defineComponent({
   padding: 0.75rem 0.75rem 0.5rem;
   cursor: pointer;
   transition: border-color var(--tr-fast);
-
-  &:hover {
-    // border handled by SideTabPanel
-  }
 
   &-label {
     font-family: var(--font-mono);

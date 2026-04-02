@@ -289,7 +289,7 @@ $_cell-states: (
 @mixin section-title() {
   @include mono-upper($fs-xxs, 0.12em);
   color: var(--color-text-muted);
-  opacity: 0.7;
+  opacity: var(--op-dim);
   margin-bottom: 0.05rem;
 }
 

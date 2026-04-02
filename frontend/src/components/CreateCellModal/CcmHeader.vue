@@ -19,8 +19,9 @@ export default defineComponent({
 
   emits: [EMIT.CANCEL],
 
-  data() {
-    return { ICON, EMIT }
+  computed: {
+    ICON() { return ICON },
+    EMIT() { return EMIT },
   },
 })
 </script>
@@ -32,7 +33,7 @@ export default defineComponent({
   &__row {
     @include flex-between();
     padding:       1rem 1.25rem 0.5rem;
-    border-bottom: 1px solid var(--color-border, rgba(255,255,255,0.1));
+    border-bottom: 1px solid var(--color-border);
   }
 
   &__title {

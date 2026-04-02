@@ -124,7 +124,7 @@ export default defineComponent({
 
   &__input {
     background:    var(--color-bg);
-    border:        1px solid var(--color-border, rgba(255,255,255,0.12));
+    border:        1px solid var(--color-border);
     border-radius: 5px;
     color:         var(--color-text);
     font-size:     0.88rem;
@@ -168,7 +168,7 @@ export default defineComponent({
     flex:          1;
     padding:       0.4rem 0.6rem;
     border-radius: 5px;
-    border:        1px solid var(--color-border, rgba(255,255,255,0.12));
+    border:        1px solid var(--color-border);
     background:    transparent;
     color:         var(--color-text-muted);
     font-size:     var(--fs-sm);

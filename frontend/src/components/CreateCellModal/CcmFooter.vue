@@ -53,7 +53,7 @@ export default defineComponent({
   flex-direction: column;
   gap:            0.5rem;
   padding:        0.85rem 1.25rem;
-  border-top:     1px solid var(--color-border, rgba(255,255,255,0.1));
+  border-top:     1px solid var(--color-border);
 
   &__errors {
     display:        flex;

@@ -58,8 +58,14 @@ export default defineComponent({
 
   emits: [EMIT.DOWNLOAD, EMIT.DISMISS],
 
-  data() {
-    return { ICON, EMIT, formatFreqKHz, formatFieldVcm }
+  computed: {
+    ICON() { return ICON },
+    EMIT() { return EMIT },
+  },
+
+  methods: {
+    formatFreqKHz(khz: number, decimals?: number) { return formatFreqKHz(khz, decimals) },
+    formatFieldVcm(vcm: number) { return formatFieldVcm(vcm) },
   },
 })
 </script>

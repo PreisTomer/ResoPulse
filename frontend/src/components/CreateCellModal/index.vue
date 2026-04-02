@@ -264,7 +264,7 @@ export default defineComponent({
 
 .ccm {
   background:     var(--color-surface);
-  border:         1px solid var(--color-border, rgba(255,255,255,0.1));
+  border:         1px solid var(--color-border);
   border-radius:  10px;
   width:          min(640px, 100%);
   max-height:     90vh;

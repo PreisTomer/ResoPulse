@@ -150,12 +150,12 @@ const X_LABELS  = ['1k', '10k', '100k', '1M', '10M', '100M', '1G', '10G']
 export default defineComponent({
   name: 'ImpedanceBodePlot',
 
-  data() {
-    return { UNIT, SVG_W, SVG_H, MARGIN }
-  },
-
   computed: {
     ...mapStores(useImpedanceStore, useCellStore),
+    UNIT()   { return UNIT },
+    SVG_W()  { return SVG_W },
+    SVG_H()  { return SVG_H },
+    MARGIN() { return MARGIN },
 
     sigmaE(): number    { return this.impedanceStore.sigmaEWithLysis },
     gapMm(): number     { return this.impedanceStore.cuvetteGapMm },

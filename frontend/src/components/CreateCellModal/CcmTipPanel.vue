@@ -42,11 +42,10 @@ export default defineComponent({
 
   emits: [EMIT.CLOSE],
 
-  data() {
-    return { ICON, EMIT }
-  },
-
   computed: {
+    ICON() { return ICON },
+    EMIT() { return EMIT },
+
     activeTipHtml(): string {
       if (!this.activeTip) return ''
       const key = TIP_I18N_MAP[this.activeTip]
@@ -75,7 +74,7 @@ export default defineComponent({
 
 .ccm-tip-box {
   background:    var(--color-surface);
-  border:        1px solid var(--color-border, rgba(255,255,255,0.1));
+  border:        1px solid var(--color-border);
   border-radius: var(--radius);
   padding:       1rem 1.25rem;
   max-width:     520px;

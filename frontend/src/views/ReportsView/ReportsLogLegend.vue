@@ -38,8 +38,9 @@ import { ICON } from '@/constants/icons'
 export default defineComponent({
   name: 'ReportsLogLegend',
 
-  data() {
-    return { ICON, THRESHOLDS }
+  computed: {
+    ICON() { return ICON },
+    THRESHOLDS() { return THRESHOLDS },
   },
 })
 </script>

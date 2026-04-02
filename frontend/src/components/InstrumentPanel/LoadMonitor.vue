@@ -454,7 +454,7 @@ export default defineComponent({
     display: flex;
     flex-direction: column;
     gap: 0.2rem;
-    background: var(--color-surface-2, rgba(255,255,255,0.03));
+    background: var(--color-surface-2);
     border: 1px solid var(--color-border);
     border-radius: var(--radius);
     padding: 0.5rem 0.65rem;
@@ -584,7 +584,7 @@ export default defineComponent({
     display: flex;
     align-items: center;
     gap: 0.4rem;
-    background: var(--color-surface-2, rgba(255,255,255,0.02));
+    background: var(--color-surface-2);
     border: 1px solid var(--color-border);
     border-radius: var(--radius);
     padding: 0.6rem 0.9rem;

@@ -100,12 +100,11 @@ const RECENT_N = 8
 export default defineComponent({
   name: 'ImpedanceTrend',
 
-  data() {
-    return { UNIT, SVG_W, SVG_H }
-  },
-
   computed: {
     ...mapStores(useImpedanceStore),
+    UNIT()  { return UNIT },
+    SVG_W() { return SVG_W },
+    SVG_H() { return SVG_H },
 
     points(): ImpedanceHistoryPoint[] {
       return this.impedanceStore.impedanceHistory

@@ -191,7 +191,7 @@ export default defineComponent({
       const paramSet = this.isAcousticTarget ? EDITABLE_PARAMS_ACOUSTIC : EDITABLE_PARAMS
       return paramSet.map((p) => ({
         ...p,
-        displayValue: (cell as unknown as Record<string, number>)[p.key] ?? 0,
+        displayValue: (cell as object as Record<string, number>)[p.key] ?? 0,
       }))
     },
 

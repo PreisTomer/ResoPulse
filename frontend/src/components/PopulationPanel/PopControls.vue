@@ -93,8 +93,9 @@ export default defineComponent({
     EMIT.REDRAW,
   ],
 
-  data() {
-    return { N_PILL_OPTIONS, EMIT }
+  computed: {
+    N_PILL_OPTIONS() { return N_PILL_OPTIONS },
+    EMIT() { return EMIT },
   },
 
   methods: {

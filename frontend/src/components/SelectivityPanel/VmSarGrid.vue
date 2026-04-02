@@ -47,12 +47,9 @@ import { UNIT } from '@/constants/units'
 import { formatFieldVcm, formatLysisFieldVcm } from '@/utils/format'
 
 export default defineComponent({
-  data() {
-    return { UNIT }
-  },
-
   computed: {
     ...mapStores(useCellStore),
+    UNIT() { return UNIT },
     isResonanceTarget(): boolean {
       const cat = this.cellStore.targetCellCategory
       const t = this.cellStore.target as { resonantFreqGHz?: number; resonantThresholdVcm?: number }

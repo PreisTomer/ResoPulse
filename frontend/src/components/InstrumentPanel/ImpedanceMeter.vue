@@ -110,12 +110,13 @@ import { DRIFT_WARN_PCT, DRIFT_DANGER_PCT, DRIFT_BAR_SCALE } from '@/constants/p
 export default defineComponent({
   name: 'ImpedanceMeter',
 
-  data() {
-    return { UNIT, ICON, DRIFT_WARN_PCT, DRIFT_DANGER_PCT, DRIFT_BAR_SCALE }
-  },
-
   computed: {
     ...mapStores(useImpedanceStore, useCellStore),
+    UNIT()            { return UNIT },
+    ICON()            { return ICON },
+    DRIFT_WARN_PCT()  { return DRIFT_WARN_PCT },
+    DRIFT_DANGER_PCT() { return DRIFT_DANGER_PCT },
+    DRIFT_BAR_SCALE() { return DRIFT_BAR_SCALE },
 
     lysedPct(): number {
       return this.impedanceStore.lysedFraction * 100

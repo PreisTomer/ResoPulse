@@ -316,8 +316,6 @@ import { ICON } from '@/constants/icons'
 export default defineComponent({
   name: 'ProtocolSectionPhysics',
 
-  data() { return { ICON } },
-
   props: {
     schwanParams: {
       type: Array as PropType<SchwanParamRow[]>,
@@ -343,6 +341,10 @@ export default defineComponent({
       type: Array as PropType<SonificationRow[]>,
       required: true,
     },
+  },
+
+  computed: {
+    ICON() { return ICON },
   },
 })
 </script>

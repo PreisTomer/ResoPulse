@@ -151,7 +151,10 @@ export default defineComponent({
 
   emits: [EMIT.FIELD_CHANGE, EMIT.SHOW_TIP],
 
-  data() { return { UNIT, EMIT } },
+  computed: {
+    UNIT() { return UNIT },
+    EMIT() { return EMIT },
+  },
 
   methods: {
     onNumericInput(key: string, event: Event) {
@@ -192,7 +195,7 @@ export default defineComponent({
 
   &__input {
     background:    var(--color-bg);
-    border:        1px solid var(--color-border, rgba(255,255,255,0.12));
+    border:        1px solid var(--color-border);
     border-radius: 5px;
     color:         var(--color-text);
     font-size:     0.88rem;
