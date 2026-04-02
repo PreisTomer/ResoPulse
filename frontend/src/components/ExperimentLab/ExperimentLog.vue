@@ -71,6 +71,7 @@
             <th v-if="isResonanceMode" v-tip="$t('log.tipThHealthyDR')">{{ $t('log.logThHealthyDR') }}</th>
             <th v-if="!isResonanceMode" v-tip="$t('log.tipThDepH')">{{ $t('log.logThDepH') }}</th>
             <th v-if="!isResonanceMode" v-tip="$t('log.tipThDepT')">{{ $t('log.logThDepT') }}</th>
+            <th v-if="!isResonanceMode" v-tip="$t('log.tipThBms')">{{ $t('log.logThBms') }}</th>
             <th v-tip="$t('log.tipThEvent')">{{ $t('exp.logThEvent') }}</th>
             <th v-if="experimentStore.aiConsentGiven" class="exp-log__th-rating">{{ $t('ai.rateSubmitBtn').slice(0, 4) }}</th>
           </tr>
@@ -92,6 +93,7 @@
             <td v-if="!isResonanceMode" class="exp-log__td-sel" v-tip="tipCellSel(e)">{{ e.selectivity.toFixed(2) }}</td>
             <td v-if="!isResonanceMode" class="exp-log__td-dep" :class="depKClass(e.depHealthyK)" v-tip="tipCellDepH(e)">{{ depKDisplay(e.depHealthyK) }}</td>
             <td v-if="!isResonanceMode" class="exp-log__td-dep" :class="depKClass(e.depTargetK)" v-tip="tipCellDepT(e)">{{ depKDisplay(e.depTargetK) }}</td>
+            <td v-if="!isResonanceMode" class="exp-log__td-bms" v-tip="$t('log.tipThBms')">{{ e.healthyBiomodScore != null ? e.healthyBiomodScore.toFixed(2) : NULL_DISPLAY }}</td>
             <!-- Resonance mode columns: disruption ratio replaces Vm (Schwan Vm ≈ 0 at GHz) -->
             <td v-if="isResonanceMode" class="exp-log__td-target" v-tip="$t('log.tipCellTRatio', { ratio: ((e.targetRatio ?? 0) * 100).toFixed(1) })">{{ e.targetRatio != null ? (e.targetRatio * 100).toFixed(1) + '%' : NULL_DISPLAY }}</td>
             <td v-if="isResonanceMode" class="exp-log__td-healthy-dr" v-tip="$t('log.tipCellHRatio', { ratio: ((e.healthyRatio ?? 0) * 100).toFixed(1) })">{{ e.healthyRatio != null ? (e.healthyRatio * 100).toFixed(1) + '%' : NULL_DISPLAY }}</td>
@@ -411,6 +413,7 @@ export default defineComponent({
   &__td-healthy-dr { color: var(--color-primary); opacity: var(--op-dim); }
   &__td-sel        { color: var(--color-text-heading); font-weight: 600; }
   &__td-dep        { opacity: 0.85; }
+  &__td-bms        { color: var(--color-primary); opacity: var(--op-dim); font-size: var(--fs-xs); }
   &__td-pdep       { color: var(--color-lime); }
   &__td-ndep       { color: var(--color-amber); }
   &__td-event      { }

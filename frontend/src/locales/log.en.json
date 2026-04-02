@@ -35,6 +35,8 @@
     "logThHealthyDR": "H-DR%",
     "tipThTargetDR": "<strong>T-DR%: Target Disruption Ratio</strong>\nLorentzian disruption ratio at resonant frequency.\nDR = (E / E_thr) × L(f, f_res, Q).\n≥ 85%: capsid disruption threshold reached.\n50-84%: subthreshold acoustic stress.",
     "tipThHealthyDR": "<strong>H-DR%: Healthy Cell Disruption Ratio</strong>\nMammalian cells have no rigid-shell acoustic resonance.\nSchwan Vm → 0 at GHz (ωτ ≫ 1). Value is near zero,\nconfirming healthy tissue is unperturbed in resonance mode.",
+    "logThBms": "H-BMS",
+    "tipThBms": "<strong>H-BMS: Healthy Cell Biomodulation Score</strong>\nComposite sub-threshold biomodulation score for the healthy cell (0-1).\nCombines Stimulation Index (SI), Mechano-Transduction Efficiency (MTE), and Mild Thermal Activation (MA).\nOnly active when DR_H &lt; 50%; returns 0 above EP onset.\n&ge; 0.55 indicates the healthy cell is in the nourishing membrane-stress window.",
     "logThDepH": "Re[K] H",
     "logThDepT": "Re[K] T",
     "tipThDepH": "<strong>Re[K] H, Clausius-Mossotti Factor (Healthy)</strong>\nReal part of the CM factor for the healthy cell.\n  Re[K] &gt; 0 → pDEP (attracted to field maxima)\n  Re[K] &lt; 0 → nDEP (repelled from field maxima)\n  Re[K] = 0 → crossover frequency f_cross\nSingle-shell sphere model (Gascoyne &amp; Vykoukal 2002).",

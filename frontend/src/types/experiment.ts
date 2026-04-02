@@ -69,6 +69,8 @@ export interface LogEntry {
   depTargetCrossoverKHz?: number
   healthySnap?: CellParamSnapshot
   targetSnap?: CellParamSnapshot
+  // ── Biomodulation score (healthy cell; only meaningful when DR_H < 50%) ──
+  healthyBiomodScore?: number    // 0–1 weighted SI/MTE/MA composite
   // ── AI training fields (populated via Log Outcome action) ────────────────
   outcomeRating?: number         // 1=failed 2=poor 3=acceptable 4=good 5=excellent
   aiSuggestionApplied?: boolean  // true when this protocol was AI-suggested before the run

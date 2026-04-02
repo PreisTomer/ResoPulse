@@ -56,6 +56,7 @@ interface CellSnapshot {
   depTargetCmReal: number
   depHealthyCrossoverKHz: number
   depTargetCrossoverKHz: number
+  healthyBiomodScore: number
   healthy: {
     label: string; radius: number; membraneThickness: number
     dielectricConstant: number; conductivity: number; thresholdVoltage: number
@@ -156,6 +157,7 @@ export const useExperimentStore = defineStore('experiment', {
         depTargetK:             snap.chartMode !== CHART_MODE.RESONANCE ? round(snap.depTargetCmReal,  4) : undefined,
         depHealthyCrossoverKHz: snap.chartMode !== CHART_MODE.RESONANCE ? round(snap.depHealthyCrossoverKHz, 1) : undefined,
         depTargetCrossoverKHz:  snap.chartMode !== CHART_MODE.RESONANCE ? round(snap.depTargetCrossoverKHz,  1) : undefined,
+        healthyBiomodScore:     snap.chartMode !== CHART_MODE.RESONANCE ? round(snap.healthyBiomodScore, 3) : undefined,
         healthySnap: {
           label: h.label, category: 'mammalian',
           radius: h.radius, membraneThickness: h.membraneThickness,

@@ -586,6 +586,7 @@ export function buildCsvText(
     `Orientation (${UNIT.DEG})`,
     `${H}-Re[K]`, `${T}-Re[K]`,
     `${H}-f_cross (${UNIT.KHZ})`, `${T}-f_cross (${UNIT.KHZ})`,
+    `${H}-BMS`,
     'Event',
   ]
   const rows = entries.map((e) => [
@@ -595,8 +596,9 @@ export function buildCsvText(
     (e.healthyRatio * 100).toFixed(1),
     e.targetTemp, e.healthyTemp,
     e.orientationDeg ?? 0,
-    e.depHealthyK ?? ', ', e.depTargetK ?? ', ',
-    e.depHealthyCrossoverKHz ?? ', ', e.depTargetCrossoverKHz ?? ', ',
+    e.depHealthyK ?? '', e.depTargetK ?? '',
+    e.depHealthyCrossoverKHz ?? '', e.depTargetCrossoverKHz ?? '',
+    e.healthyBiomodScore ?? '',
     e.event,
   ])
 
