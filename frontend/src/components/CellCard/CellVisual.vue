@@ -14,7 +14,7 @@
 
     <!-- Nuclear envelope disruption bar (double-shell model) -->
     <div
-      v-if="!compact && cellStore.doubleShellEnabled && hasNuclearParams"
+      v-if="isNuclearBarVisible"
       class="cell-visual__nuclear-bar-row"
       v-tip="tipNuclearBarLocal"
     >
@@ -56,7 +56,7 @@
 
     <!-- DEP strip (non-resonance, |K| ≥ 0.02) -->
     <div
-      v-if="!compact && showDepStrip"
+      v-if="isDepStripVisible"
       class="cell-visual__dep-strip"
       :class="depStripModifier"
       v-tip="tipDep"
@@ -68,7 +68,7 @@
 
     <!-- Nourishing strip (healthy, DR 8–45%) -->
     <div
-      v-if="!compact && type === CELL_TYPE.HEALTHY && cellState === CELL_STATE.NOURISHING"
+      v-if="isNourishingStripVisible"
       class="cell-visual__nourishing-strip"
       v-tip="tipStateLocal"
     >
@@ -79,7 +79,7 @@
 
     <!-- Biomodulation panel (healthy cell only, sub-threshold) -->
     <BiostimPanel
-      v-if="!compact && showBiostim"
+      v-if="isBiostimPanelVisible"
       :stim-index="cellStore.healthyStimIndex"
       :mech-transd-eff="cellStore.healthyMechTransductionEff"
       :mild-thermal="cellStore.healthyMildThermalActivation"
@@ -93,7 +93,7 @@
 
     <!-- Reversible EP strip (target, 50–85%, Weaver & Chizmadzhev 1996) -->
     <div
-      v-if="type === CELL_TYPE.TARGET && cellState === CELL_STATE.REV_EP"
+      v-if="isRevEpStripVisible"
       class="cell-visual__rev-ep-strip"
       v-tip="tipDisruption"
     >
@@ -105,7 +105,7 @@
 
     <!-- Lysis armed strip (target >85%, IRE protocol imminent) -->
     <div
-      v-if="type === CELL_TYPE.TARGET && cellState === CELL_STATE.VIBRATING"
+      v-if="isLysisArmedVisible"
       class="cell-visual__lysis-strip"
       v-tip="tipDisruption"
     >
@@ -125,7 +125,7 @@
 
     <!-- Healthy EP risk strip (approaching / critical states) -->
     <div
-      v-if="!compact && type === CELL_TYPE.HEALTHY && (cellState === CELL_STATE.APPROACHING || cellState === CELL_STATE.CRITICAL) && !tempWarning"
+      v-if="isHealthyEpRiskVisible"
       class="cell-visual__healthy-warn"
       :class="{ 'cell-visual__healthy-warn--critical': cellState === CELL_STATE.CRITICAL }"
       v-tip="tipStateLocal"
@@ -139,7 +139,7 @@
 
     <!-- Thermal warning strip (both cell types) -->
     <div
-      v-if="tempWarning && cellState !== CELL_STATE.LYSED && cellState !== CELL_STATE.LYSING"
+      v-if="isThermalWarnVisible"
       class="cell-visual__thermal-warn"
       :class="{ 'cell-visual__thermal-warn--denaturing': tempDenaturing }"
       v-tip="tipTempLocal"
@@ -307,6 +307,20 @@ export default defineComponent({
         && this.cellState !== CELL_STATE.LYSED
         && this.cellState !== CELL_STATE.LYSING
     },
+
+    isNuclearBarVisible(): boolean   { return !this.compact && this.cellStore.doubleShellEnabled && this.hasNuclearParams },
+    isDepStripVisible(): boolean     { return !this.compact && this.showDepStrip },
+    isNourishingStripVisible(): boolean { return !this.compact && this.type === CELL_TYPE.HEALTHY && this.cellState === CELL_STATE.NOURISHING },
+    isBiostimPanelVisible(): boolean { return !this.compact && this.showBiostim },
+    isRevEpStripVisible(): boolean   { return this.type === CELL_TYPE.TARGET && this.cellState === CELL_STATE.REV_EP },
+    isLysisArmedVisible(): boolean   { return this.type === CELL_TYPE.TARGET && this.cellState === CELL_STATE.VIBRATING },
+    isHealthyEpRiskVisible(): boolean {
+      return !this.compact
+        && this.type === CELL_TYPE.HEALTHY
+        && (this.cellState === CELL_STATE.APPROACHING || this.cellState === CELL_STATE.CRITICAL)
+        && !this.tempWarning
+    },
+    isThermalWarnVisible(): boolean  { return this.tempWarning && this.cellState !== CELL_STATE.LYSED && this.cellState !== CELL_STATE.LYSING },
 
     lysisProtocolStr(): string {
       const n = this.cellStore.lysisNPulses

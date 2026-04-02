@@ -5,7 +5,7 @@
 
     <!-- Target-only: key protocol metrics row (hidden when lysed) -->
     <div
-      v-if="type === CELL_TYPE.TARGET && cellState !== CELL_STATE.LYSED"
+      v-if="isMetricsVisible"
       class="cell-body__metrics"
     >
       <div class="cell-body__metric" v-tip="$t('cells.targetMetrics.tipElysis')">
@@ -79,6 +79,8 @@ export default defineComponent({
       const parts = splitFreqKHz(this.cellStore.targetFc, 2)
       return `${parts.value} ${parts.unit}`
     },
+
+    isMetricsVisible(): boolean { return this.type === CELL_TYPE.TARGET && this.cellState !== CELL_STATE.LYSED },
   },
 })
 </script>

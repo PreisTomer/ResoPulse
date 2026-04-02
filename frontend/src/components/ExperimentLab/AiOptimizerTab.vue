@@ -147,7 +147,7 @@
           </div>
 
           <!-- Result card -->
-          <div v-if="aiStore.hasResult && aiStore.result" class="ai-tab__result">
+          <div v-if="isAiResultReady" class="ai-tab__result">
 
             <!-- Source + confidence badges -->
             <div class="ai-tab__badge-row">
@@ -171,19 +171,19 @@
             </div>
 
             <!-- Suggested params -->
-            <div v-if="aiStore.result.suggestion" class="ai-tab__suggestion">
+            <div v-if="aiResult.suggestion" class="ai-tab__suggestion">
               <div class="ai-tab__section-label">{{ $t('ai.suggestedParamsLabel') }}</div>
               <div class="ai-tab__params-grid">
                 <span class="ai-tab__param-key">{{ $t('slider.freq') }}</span>
-                <span class="ai-tab__param-val">{{ formatFreqKHz(aiStore.result.suggestion.freqKHz) }}</span>
+                <span class="ai-tab__param-val">{{ formatFreqKHz(aiResult.suggestion.freqKHz) }}</span>
                 <span class="ai-tab__param-key">{{ $t('slider.field') }}</span>
-                <span class="ai-tab__param-val">{{ aiStore.result.suggestion.fieldVcm }} {{ UNIT.V_PER_CM }}</span>
+                <span class="ai-tab__param-val">{{ aiResult.suggestion.fieldVcm }} {{ UNIT.V_PER_CM }}</span>
                 <span class="ai-tab__param-key">{{ $t('slider.dutyCycle') }}</span>
-                <span class="ai-tab__param-val">{{ formatDutyCycle(aiStore.result.suggestion.dutyCycle) }}</span>
+                <span class="ai-tab__param-val">{{ formatDutyCycle(aiResult.suggestion.dutyCycle) }}</span>
                 <span class="ai-tab__param-key">{{ $t('slider.pulseWidth') }}</span>
-                <span class="ai-tab__param-val">{{ aiStore.result.suggestion.pulseWidthNs }} {{ UNIT.NS }}</span>
+                <span class="ai-tab__param-val">{{ aiResult.suggestion.pulseWidthNs }} {{ UNIT.NS }}</span>
                 <span class="ai-tab__param-key">{{ $t('slider.waveform') }}</span>
-                <span class="ai-tab__param-val ai-tab__param-val--upper">{{ aiStore.result.suggestion.waveform }}</span>
+                <span class="ai-tab__param-val ai-tab__param-val--upper">{{ aiResult.suggestion.waveform }}</span>
               </div>
             </div>
 
@@ -194,19 +194,19 @@
                 <span class="ai-tab__outcome-item">
                   <span class="ai-tab__outcome-key">{{ $t('ai.predictedTargetDr') }}</span>
                   <span class="ai-tab__outcome-val ai-tab__outcome-val--target">
-                    {{ (aiStore.result.predictedTargetDr * 100).toFixed(0) }}%
+                    {{ (aiResult.predictedTargetDr * 100).toFixed(0) }}%
                   </span>
                 </span>
                 <span class="ai-tab__outcome-item">
                   <span class="ai-tab__outcome-key">{{ $t('ai.predictedHealthyDr') }}</span>
                   <span class="ai-tab__outcome-val ai-tab__outcome-val--healthy">
-                    {{ (aiStore.result.predictedHealthyDr * 100).toFixed(0) }}%
+                    {{ (aiResult.predictedHealthyDr * 100).toFixed(0) }}%
                   </span>
                 </span>
                 <span class="ai-tab__outcome-item">
                   <span class="ai-tab__outcome-key">{{ $t('ai.predictedTi') }}</span>
                   <span class="ai-tab__outcome-val" :class="tiClass">
-                    x{{ aiStore.result.predictedTi.toFixed(2) }}
+                    x{{ aiResult.predictedTi.toFixed(2) }}
                   </span>
                 </span>
               </div>
@@ -226,9 +226,9 @@
             </div>
 
             <!-- Explanation -->
-            <div v-if="aiStore.result.explanation" class="ai-tab__explanation">
+            <div v-if="aiResult.explanation" class="ai-tab__explanation">
               <span class="ai-tab__explanation-label">{{ $t('ai.explanationLabel') }}:</span>
-              <span class="ai-tab__explanation-text">{{ aiStore.result.explanation }}</span>
+              <span class="ai-tab__explanation-text">{{ aiResult.explanation }}</span>
             </div>
 
             <!-- Feature importance (collapsible) -->
@@ -259,7 +259,7 @@
           </div><!-- /result -->
 
           <!-- No-data note -->
-          <div v-if="aiStore.isPhysicsBaseline && !aiStore.isLoading && !aiStore.hasResult" class="ai-tab__no-data">
+          <div v-if="isPhysicsBaselineIdle" class="ai-tab__no-data">
             {{ $t('ai.noDataNote') }}
           </div>
 
@@ -345,6 +345,10 @@ export default defineComponent({
       if (!fi) return []
       return Object.entries(fi).sort(([, a], [, b]) => b - a).slice(0, 8)
     },
+
+    isAiResultReady(): boolean       { return this.aiStore.hasResult && !!this.aiStore.result },
+    isPhysicsBaselineIdle(): boolean { return this.aiStore.isPhysicsBaseline && !this.aiStore.isLoading && !this.aiStore.hasResult },
+    aiResult()                       { return this.aiStore.result! },
 
     statusBadgeLabel(): string {
       if (this.modelTrainingSamples === 0)  return this.$t('ai.serviceOfflineBadge')

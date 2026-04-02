@@ -36,7 +36,7 @@
 
     <!-- Row 5: Duty Cycle (pulsed / H-FIRE only) -->
     <div
-      v-if="currentWaveform === WAVEFORM.PULSED || currentWaveform === WAVEFORM.H_FIRE"
+      v-if="isTimedWaveform"
       class="field-panel__row field-panel__row--compact-readout"
       :class="thermalDangerLevel !== THERMAL_LEVEL.SAFE ? `field-panel__row--${thermalDangerLevel}` : ''"
     >
@@ -66,7 +66,7 @@
     </div>
 
     <!-- Row 6: Pulse Width (pulsed / H-FIRE only) -->
-    <div v-if="currentWaveform === WAVEFORM.PULSED || currentWaveform === WAVEFORM.H_FIRE" class="field-panel__row field-panel__row--compact-readout field-panel__row--pw">
+    <div v-if="isTimedWaveform" class="field-panel__row field-panel__row--compact-readout field-panel__row--pw">
       <div class="field-panel__row-header">
         <span class="field-panel__row-label" v-tip="tipPulseWidth">{{ $t('slider.pulseWidth') }}</span>
         <div class="field-panel__readout">
@@ -133,6 +133,8 @@ export default defineComponent({
     ...mapStores(useCellStore),
 
     currentWaveform(): 'cw' | 'pulsed' | 'hfire' { return this.cellStore.waveform },
+
+    isTimedWaveform(): boolean { return this.currentWaveform === WAVEFORM.PULSED || this.currentWaveform === WAVEFORM.H_FIRE },
 
     waveformMetaLabel(): string {
       if (this.currentWaveform === WAVEFORM.CW)     return `wf×${CW_WAVEFORM_FACTOR}`

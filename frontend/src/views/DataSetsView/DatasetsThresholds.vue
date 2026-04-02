@@ -264,7 +264,7 @@ export default defineComponent({
 
 <style lang="scss" scoped>
 
-@use './shared' as ds;
+@use './datasets' as ds;
 
 @include ds.datasets-card();
 @include ds.datasets-table();

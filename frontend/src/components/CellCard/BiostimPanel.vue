@@ -14,7 +14,7 @@
         <div class="cell-card__biostim-track">
           <div
             class="cell-card__biostim-fill cell-card__biostim-fill--si"
-            :style="{ width: (stimIndex * 100) + '%' }"
+            :style="siFillStyle"
           ></div>
         </div>
         <span class="cell-card__biostim-val">{{ (stimIndex * 100).toFixed(0) }}{{ UNIT.PERCENT }}</span>
@@ -24,7 +24,7 @@
         <div class="cell-card__biostim-track">
           <div
             class="cell-card__biostim-fill cell-card__biostim-fill--mte"
-            :style="{ width: (mechTransdEff * 100) + '%' }"
+            :style="mteFillStyle"
           ></div>
         </div>
         <span class="cell-card__biostim-val">{{ (mechTransdEff * 100).toFixed(0) }}{{ UNIT.PERCENT }}</span>
@@ -34,7 +34,7 @@
         <div class="cell-card__biostim-track">
           <div
             class="cell-card__biostim-fill cell-card__biostim-fill--ma"
-            :style="{ width: (mildThermal * 100) + '%' }"
+            :style="maFillStyle"
           ></div>
         </div>
         <span class="cell-card__biostim-val">{{ (mildThermal * 100).toFixed(0) }}{{ UNIT.PERCENT }}</span>
@@ -117,6 +117,10 @@ export default defineComponent({
         T:  this.steadyStateTemp.toFixed(1),
       })
     },
+
+    siFillStyle():  Record<string, string> { return { '--bar-fill': `${(this.stimIndex     * 100).toFixed(1)}%` } },
+    mteFillStyle(): Record<string, string> { return { '--bar-fill': `${(this.mechTransdEff * 100).toFixed(1)}%` } },
+    maFillStyle():  Record<string, string> { return { '--bar-fill': `${(this.mildThermal   * 100).toFixed(1)}%` } },
   },
 })
 </script>
@@ -201,6 +205,7 @@ export default defineComponent({
 
   &__biostim-fill {
     height: 100%;
+    width: var(--bar-fill, 0%);
     border-radius: 2px;
     transition: width 0.25s ease;
 

@@ -36,7 +36,7 @@
   </div>
 
   <!-- Nuclear envelope disruption bars (double-shell model) -->
-  <template v-if="cellStore.doubleShellEnabled && cellStore.targetCellCategory === CELL_CATEGORY.MAMMALIAN">
+  <template v-if="isNuclearSectionVisible">
     <div class="sel-panel__nuc-section" v-tip="tipNuclearSection">
       <div class="sel-panel__nuc-bar-row">
         <span class="sel-panel__nuc-bar-label">{{ $t('labels.neTarget') }}</span>
@@ -108,6 +108,10 @@ export default defineComponent({
     },
 
     lysisTimeDisplay(): string { return formatLysisTime(this.cellStore.lysisDelayMs) },
+
+    isNuclearSectionVisible(): boolean {
+      return this.cellStore.doubleShellEnabled && this.cellStore.targetCellCategory === CELL_CATEGORY.MAMMALIAN
+    },
 
     isResonanceTarget(): boolean {
       const cat = this.cellStore.targetCellCategory

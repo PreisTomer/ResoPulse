@@ -20,14 +20,14 @@
         <div class="chart-tooltip__sel">
           {{ $t('chart.tooltipSel') }} {{ data.selRatio.toFixed(2) }}×
         </div>
-        <div v-if="data.depHealthyK !== undefined && data.depTargetK !== undefined" class="chart-tooltip__dep">
+        <div v-if="depData" class="chart-tooltip__dep">
           <span class="chart-tooltip__dep-row chart-tooltip__dep-row--h">
-            {{ $t('chart.tooltipDepH') }} <span :class="depKClass(data.depHealthyK)">{{ depKLabel(data.depHealthyK) }} {{ data.depHealthyK.toFixed(3) }}</span>
+            {{ $t('chart.tooltipDepH') }} <span :class="depKClass(depData.healthyK)">{{ depKLabel(depData.healthyK) }} {{ depData.healthyK.toFixed(3) }}</span>
           </span>
           <span class="chart-tooltip__dep-row chart-tooltip__dep-row--t">
-            {{ $t('chart.tooltipDepT') }} <span :class="depKClass(data.depTargetK)">{{ depKLabel(data.depTargetK) }} {{ data.depTargetK.toFixed(3) }}</span>
+            {{ $t('chart.tooltipDepT') }} <span :class="depKClass(depData.targetK)">{{ depKLabel(depData.targetK) }} {{ depData.targetK.toFixed(3) }}</span>
           </span>
-          <span v-if="isDepSeparation(data.depHealthyK, data.depTargetK)" class="chart-tooltip__dep-sep">
+          <span v-if="isDepSeparation(depData.healthyK, depData.targetK)" class="chart-tooltip__dep-sep">
             {{ $t('chart.tooltipDepSep') }}
           </span>
         </div>
@@ -63,6 +63,13 @@ export default defineComponent({
     CELL_LABEL() { return CELL_LABEL },
     UNIT()       { return UNIT },
     formatTooltipFreq(): typeof formatTooltipFreq { return formatTooltipFreq },
+
+    depData(): { healthyK: number; targetK: number } | null {
+      if (this.data?.depHealthyK !== undefined && this.data?.depTargetK !== undefined) {
+        return { healthyK: this.data.depHealthyK, targetK: this.data.depTargetK }
+      }
+      return null
+    },
   },
 
   methods: {

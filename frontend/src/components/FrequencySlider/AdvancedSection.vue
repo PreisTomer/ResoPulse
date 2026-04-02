@@ -29,7 +29,7 @@
     </div>
 
     <!-- Row 8: Pulses to Lysis N (pulsed/H-FIRE only) - target cell lysis timing only -->
-    <div v-if="cellStore.waveform === WAVEFORM.PULSED || cellStore.waveform === WAVEFORM.H_FIRE" class="field-panel__row field-panel__row--compact-readout">
+    <div v-if="isTimedWaveform" class="field-panel__row field-panel__row--compact-readout">
       <div class="field-panel__row-header">
         <span class="field-panel__row-label" v-tip="tipLysisNFull">{{ $t('slider.pulsesN') }} <span class="field-panel__scope-tag field-panel__scope-tag--target">{{ CELL_LABEL.TARGET }}</span></span>
         <div class="field-panel__readout" v-tip="tipLysisN">
@@ -51,7 +51,7 @@
 
     <!-- Row 9: Double-Shell Model toggle (mammalian nucleated cells only) -->
     <div
-      v-if="cellStore.targetCellCategory === CELL_CATEGORY.MAMMALIAN && cellStore.hasNuclearParams"
+      v-if="isDoubleShellEligible"
       class="field-panel__row field-panel__row--medium"
     >
       <div class="field-panel__row-header">
@@ -218,6 +218,9 @@ export default defineComponent({
       const sigma_eff = this.cellStore.effectiveSigmaE
       return tipCellPacking(this.cellStore.cellPackingFraction, sigma_e0, sigma_eff)
     },
+
+    isTimedWaveform(): boolean     { return this.cellStore.waveform === WAVEFORM.PULSED || this.cellStore.waveform === WAVEFORM.H_FIRE },
+    isDoubleShellEligible(): boolean { return this.cellStore.targetCellCategory === CELL_CATEGORY.MAMMALIAN && this.cellStore.hasNuclearParams },
   },
 
   methods: {

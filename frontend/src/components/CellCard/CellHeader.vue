@@ -20,7 +20,7 @@
         <span class="cell-card__meta-sep">·</span>
         <span class="cell-card__meta-state" :class="metaStateClass" v-tip="tipState">{{ cellState }}</span>
       </div>
-      <div v-if="doubleShellEnabled && hasNuclearParams" class="cell-card__nuclear-meta">
+      <div v-if="isNuclearMetaVisible" class="cell-card__nuclear-meta">
         <span class="cell-card__nuclear-label">{{ ICON.NUCLEUS }} {{ $t('cellHeader.nucleusVm') }}</span>
         <span class="cell-card__nuclear-value">{{ nuclearVmMv.toFixed(3) }} {{ UNIT.MV }}</span>
         <span
@@ -65,6 +65,8 @@ export default defineComponent({
     ICON()       { return ICON },
     UNIT()       { return UNIT },
     THRESHOLDS() { return THRESHOLDS },
+
+    isNuclearMetaVisible(): boolean { return this.doubleShellEnabled && this.hasNuclearParams },
   },
 })
 </script>

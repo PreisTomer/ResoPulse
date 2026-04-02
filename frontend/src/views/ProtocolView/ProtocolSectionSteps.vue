@@ -52,7 +52,7 @@ export default defineComponent({
 
 <style lang="scss" scoped>
 
-@use './shared' as proto;
+@use './protocol' as proto;
 
 @include proto.protocol-section();
 

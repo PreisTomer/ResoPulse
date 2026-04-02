@@ -4,8 +4,8 @@
     <TitleRow />
 
     <ThermalBanner
-      v-if="!isResonanceMode && thermalDangerLevel !== THERMAL_LEVEL.SAFE"
-      :thermal-danger-level="thermalDangerLevel"
+      v-if="isThermalBannerVisible"
+      :thermal-danger-level="activeThermalLevel"
       :max-steady-temp="maxSteadyTemp"
     />
 
@@ -75,6 +75,10 @@ export default defineComponent({
       return THERMAL_LEVEL.SAFE
     },
 
+    isThermalBannerVisible(): boolean { return !this.isResonanceMode && this.thermalDangerLevel !== THERMAL_LEVEL.SAFE },
+    activeThermalLevel(): 'hyperthermic' | 'denaturing' | 'vaporizing' {
+      return this.thermalDangerLevel as 'hyperthermic' | 'denaturing' | 'vaporizing'
+    },
   },
 })
 </script>

@@ -78,7 +78,7 @@
       <VmSarGrid />
 
       <!-- ── Resonance physics (resonance mode + resonance target) ─ -->
-      <ResonanceInfo v-if="isResonanceTarget && cellStore.isResonanceMode" />
+      <ResonanceInfo v-if="isResonanceSectionVisible" />
 
       <!-- ── Mode badge + optimal snap + physics warning ────────── -->
       <ModeBadge />
@@ -120,6 +120,8 @@ export default defineComponent({
   computed: {
     ...mapStores(useCellStore),
     selectivity(): number { return this.cellStore.selectivityRatio },
+
+    isResonanceSectionVisible(): boolean { return this.isResonanceTarget && this.cellStore.isResonanceMode },
 
     isResonanceTarget(): boolean {
       const cat = this.cellStore.targetCellCategory
