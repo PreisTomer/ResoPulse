@@ -10,7 +10,7 @@ import { insertOutcome } from './db'
 // Domain constants
 const MEDIUM = {
   SALINE: 'saline', BLOOD: 'blood', TISSUE: 'tissue', WATER: 'water',
-  DMEM: 'dmem', PBS: 'pbs', RPMI: 'rpmi', MHB: 'mhb',
+  DMEM: 'dmem', PBS: 'pbs', RPMI: 'rpmi', MHB: 'mhb', EPBUFFER: 'epbuffer',
 } as const
 
 const WAVEFORM = {
