@@ -28,6 +28,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { ICON } from '@/constants/icons'
+import { EMIT } from '@/constants/emitEvents'
 
 export default defineComponent({
   name: 'AccordionPanel',
@@ -41,7 +42,7 @@ export default defineComponent({
     borderOnToggle: { type: Boolean, default: false },
   },
 
-  emits: ['open-change'],
+  emits: [EMIT.OPEN_CHANGE],
 
   data() {
     return {
@@ -51,12 +52,13 @@ export default defineComponent({
 
   computed: {
     ICON() { return ICON },
+    EMIT() { return EMIT },
   },
 
   methods: {
     toggle() {
       this.isOpen = !this.isOpen
-      this.$emit('open-change', this.isOpen)
+      this.$emit(EMIT.OPEN_CHANGE, this.isOpen)
     },
   },
 })

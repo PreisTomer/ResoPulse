@@ -1,6 +1,6 @@
 <!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
 <template>
-  <div class="pfm-overlay" @click.self="$emit('close')">
+  <div class="pfm-overlay" @click.self="$emit(EMIT.CLOSE)">
     <div class="pfm" role="dialog" aria-modal="true" aria-labelledby="pfm-title">
 
       <div class="pfm__header">
@@ -8,7 +8,7 @@
           <span class="pfm__icon">{{ ICON.WARNING }}</span>
           <span id="pfm-title" class="pfm__title">{{ $t('protocol.feedback.title') }}</span>
         </div>
-        <button class="pfm__close" @click="$emit('close')" :aria-label="$t('protocol.feedback.close')">{{ ICON.CLOSE }}</button>
+        <button class="pfm__close" @click="$emit(EMIT.CLOSE)" :aria-label="$t('protocol.feedback.close')">{{ ICON.CLOSE }}</button>
       </div>
 
       <p class="pfm__subtitle">{{ $t('protocol.feedback.subtitle') }}</p>
@@ -83,6 +83,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { ICON } from '@/constants/icons'
+import { EMIT } from '@/constants/emitEvents'
 
 const SECTIONS = [
   { value: '§2.1 Schwan Transmembrane Voltage',   label: '§2.1 Schwan Transmembrane Voltage' },
@@ -108,10 +109,11 @@ const RECIPIENT = 'preis.tomer@gmail.com'
 export default defineComponent({
   name: 'ProtocolFeedbackModal',
 
-  emits: ['close'],
+  emits: [EMIT.CLOSE],
 
   computed: {
     ICON() { return ICON },
+    EMIT() { return EMIT },
   },
 
   data() {
@@ -142,7 +144,7 @@ export default defineComponent({
       ].filter(Boolean)
       const body = encodeURIComponent(lines.join('\n'))
       window.location.href = `mailto:${RECIPIENT}?subject=${subject}&body=${body}`
-      this.$emit('close')
+      this.$emit(EMIT.CLOSE)
     },
   },
 })

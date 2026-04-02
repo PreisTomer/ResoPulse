@@ -11,12 +11,12 @@
         'protocol__toc-indent':       item.indent,
         'protocol__toc-link--active': isActive(item),
       }"
-      @click="$emit('close')"
+      @click="$emit(EMIT.CLOSE)"
       v-html="$t(`protocol.toc.${item.key}`)"
     ></a>
 
     <div class="protocol__toc-divider"></div>
-    <button class="protocol__toc-feedback" @click="$emit('feedback')">
+    <button class="protocol__toc-feedback" @click="$emit(EMIT.FEEDBACK)">
       <span class="protocol__toc-feedback-main">{{ $t('protocol.feedback.trigger') }}</span>
       <span class="protocol__toc-feedback-sub">{{ $t('protocol.feedback.triggerSub') }}</span>
     </button>
@@ -26,6 +26,7 @@
 <script lang="ts">
 import { defineComponent, type PropType } from 'vue'
 import type { TocItem } from './types'
+import { EMIT } from '@/constants/emitEvents'
 
 export default defineComponent({
   name: 'ProtocolToc',
@@ -45,7 +46,11 @@ export default defineComponent({
     },
   },
 
-  emits: ['close', 'feedback'],
+  emits: [EMIT.CLOSE, EMIT.FEEDBACK],
+
+  computed: {
+    EMIT() { return EMIT },
+  },
 
   methods: {
     isActive(item: TocItem): boolean {

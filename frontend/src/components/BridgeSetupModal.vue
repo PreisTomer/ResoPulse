@@ -2,7 +2,7 @@
 <template>
   <teleport to="body">
     <transition name="bsm-fade">
-      <div v-if="visible" class="bsm-backdrop" @mousedown.self="$emit('close')" role="dialog" aria-modal="true">
+      <div v-if="visible" class="bsm-backdrop" @mousedown.self="$emit(EMIT.CLOSE)" role="dialog" aria-modal="true">
         <div class="bsm">
 
           <!-- Header -->
@@ -11,7 +11,7 @@
               <div class="bsm__title">{{ $t('instrument.bridgeModal.title') }}</div>
               <div class="bsm__subtitle">{{ $t('instrument.bridgeModal.subtitle') }}</div>
             </div>
-            <button class="bsm__close" @click="$emit('close')" type="button" :title="$t('instrument.bridgeModal.close')">
+            <button class="bsm__close" @click="$emit(EMIT.CLOSE)" type="button" :title="$t('instrument.bridgeModal.close')">
               {{ ICON.CLOSE }}
             </button>
           </div>
@@ -292,6 +292,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { ICON } from '@/constants/icons'
+import { EMIT } from '@/constants/emitEvents'
 
 type TabKey = 'quick' | 'btx' | 'visa' | 'serial'
 
@@ -329,7 +330,7 @@ export default defineComponent({
     visible: { type: Boolean, default: false },
   },
 
-  emits: ['close'],
+  emits: [EMIT.CLOSE],
 
   data() {
     return {
@@ -341,6 +342,7 @@ export default defineComponent({
 
   computed: {
     ICON: () => ICON,
+    EMIT: () => EMIT,
     CMD:  () => CMD,
     TABS: () => TABS,
   },

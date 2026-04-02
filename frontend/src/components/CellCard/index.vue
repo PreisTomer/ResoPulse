@@ -74,6 +74,7 @@ import {
   tipState as tipStateFn,
 } from '@/tooltips/cellCardTooltips'
 
+import { EMIT } from '@/constants/emitEvents'
 import CellHeader     from './CellHeader.vue'
 import CellParamsPanel from './CellParamsPanel.vue'
 import CellVisual     from './CellVisual.vue'
@@ -82,7 +83,7 @@ import CellBody       from './CellBody.vue'
 export default defineComponent({
   components: { CellHeader, CellParamsPanel, CellVisual, CellBody },
 
-  emits: ['stable-reset', 'full-reset'],
+  emits: [EMIT.STABLE_RESET, EMIT.FULL_RESET],
 
   props: {
     type: {
@@ -287,11 +288,11 @@ export default defineComponent({
     },
 
     onStableReset(cellType: string) {
-      this.$emit('stable-reset', cellType)
+      this.$emit(EMIT.STABLE_RESET, cellType)
     },
 
     onFullReset(cellType: string) {
-      this.$emit('full-reset', cellType)
+      this.$emit(EMIT.FULL_RESET, cellType)
     },
 
     resetToPreset() {

@@ -12,13 +12,13 @@
     </div>
 
     <div class="ccm-footer__actions">
-      <button class="ccm-footer__btn ccm-footer__btn--cancel" @click="$emit('cancel')">
+      <button class="ccm-footer__btn ccm-footer__btn--cancel" @click="$emit(EMIT.CANCEL)">
         {{ $t('userPresets.cancelBtn') }}
       </button>
       <button
         class="ccm-footer__btn ccm-footer__btn--save"
         :disabled="!canSave"
-        @click="$emit('save')"
+        @click="$emit(EMIT.SAVE)"
       >
         {{ $t('userPresets.saveBtn') }}
       </button>
@@ -29,6 +29,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+import { EMIT } from '@/constants/emitEvents'
 
 export default defineComponent({
   name: 'CcmFooter',
@@ -38,7 +39,11 @@ export default defineComponent({
     validationErrors: { type: Array as () => string[], default: () => [] },
   },
 
-  emits: ['save', 'cancel'],
+  emits: [EMIT.SAVE, EMIT.CANCEL],
+
+  computed: {
+    EMIT() { return EMIT },
+  },
 })
 </script>
 

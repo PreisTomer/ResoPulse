@@ -15,7 +15,7 @@
         :class="{ 'experiment__notes-toggle--active': notesOpen }"
         type="button"
         :title="$t('exp.notesToggleTip')"
-        @click.stop="$emit('notes-toggle')"
+        @click.stop="$emit(EMIT.NOTES_TOGGLE)"
       >{{ $t('exp.notesToggle') }}</button>
     </div>
 
@@ -172,6 +172,7 @@ import { CELL_PRESETS, GROUP_COLORS, GROUP_LABELS } from '@/constants/cellLibrar
 import type { CellPreset, CellGroup } from '@/constants/cellLibrary'
 import { CELL_GROUP } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
+import { EMIT } from '@/constants/emitEvents'
 import { formatFreqKHz } from '@/utils/format'
 import { tipCellBadgeHealthy, tipCellBadgeTarget } from '@/tooltips/experimentTooltips'
 import CreateCellModal from '@/components/CreateCellModal/index.vue'
@@ -185,7 +186,7 @@ export default defineComponent({
     notesOpen: { type: Boolean, default: false },
   },
 
-  emits: ['notes-toggle', 'load-healthy-preset', 'load-target-preset'],
+  emits: [EMIT.NOTES_TOGGLE, EMIT.LOAD_HEALTHY_PRESET, EMIT.LOAD_TARGET_PRESET],
 
   data() {
     return {
@@ -201,6 +202,7 @@ export default defineComponent({
 
   computed: {
     ICON() { return ICON },
+    EMIT() { return EMIT },
     ...mapStores(useCellStore, useImpedanceStore, useUserPresetsStore),
 
     showZDriftBadge(): boolean {
@@ -263,14 +265,14 @@ export default defineComponent({
       this.cellStore.loadPreset('healthy', preset)
       this.healthyPickerOpen = false
       broadcastStateSync()
-      this.$emit('load-healthy-preset', preset)
+      this.$emit(EMIT.LOAD_HEALTHY_PRESET, preset)
     },
 
     loadTargetPreset(preset: CellPreset) {
       this.cellStore.loadPreset('target', preset)
       this.targetPickerOpen = false
       // applyTargetDefaults fires via watcher on currentTargetId in ExperimentView
-      this.$emit('load-target-preset', preset)
+      this.$emit(EMIT.LOAD_TARGET_PRESET, preset)
     },
 
     loadUserPreset(preset: UserCellPreset) {

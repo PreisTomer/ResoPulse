@@ -65,6 +65,7 @@ import {
 } from '@/constants/physics'
 import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'
+import { EMIT } from '@/constants/emitEvents'
 import type { CellConfig } from '@/types/cell'
 import { formatFreqKHz } from '@/utils/format'
 import { SWEEP_TI_CAP } from '@/constants/experimentDefaults'
@@ -97,7 +98,7 @@ function computeTemp(cell: CellConfig, E: number, sigma_e: number, wf: number, d
 
 export default defineComponent({
   components: { AccordionPanel, SweepControls, SweepChart, SweepWindowInfo, SweepKeyPoints },
-  emits: ['windowChange', 'openChange'],
+  emits: [EMIT.WINDOW_CHANGE, EMIT.OPEN_CHANGE],
 
   data() {
     return {
@@ -257,12 +258,12 @@ export default defineComponent({
   },
 
   watch: {
-    open(v: boolean) { this.$emit('openChange', v) },
+    open(v: boolean) { this.$emit(EMIT.OPEN_CHANGE, v) },
     windowRange(val: { lo: number; hi: number } | null) {
-      this.$emit('windowChange', val ? { ...val, param: this.sweepParam } : null)
+      this.$emit(EMIT.WINDOW_CHANGE, val ? { ...val, param: this.sweepParam } : null)
     },
     sweepParam() {
-      this.$emit('windowChange', this.windowRange ? { ...this.windowRange, param: this.sweepParam } : null)
+      this.$emit(EMIT.WINDOW_CHANGE, this.windowRange ? { ...this.windowRange, param: this.sweepParam } : null)
     },
   },
 

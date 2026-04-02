@@ -193,10 +193,11 @@ import { UNIT } from '@/constants/units'
 import { formatLysisTimeLocal, tipNuclearBar as tipNuclearBarFn, tipDep as tipDepFn, tipDisruption as tipDisruptionFn, tipVm as tipVmFn, tipAcousticVm as tipAcousticVmFn, tipTemp as tipTempFn, tipState as tipStateFn } from '@/tooltips/cellCardTooltips'
 import { hideTip } from '@/directives/vTooltip'
 import BiostimPanel from './BiostimPanel.vue'
+import { EMIT } from '@/constants/emitEvents'
 
 export default defineComponent({
   components: { BiostimPanel },
-  emits: ['stable-reset', 'full-reset', 'thermal-lysis'],
+  emits: [EMIT.STABLE_RESET, EMIT.FULL_RESET, EMIT.THERMAL_LYSIS],
 
   props: {
     type:     { type: String as PropType<'healthy' | 'target'>, required: true },
@@ -461,7 +462,7 @@ export default defineComponent({
       this.lysisProgressElapsed = 0
       if (this.thermalLysis) {
         this.thermalLysis = false
-        this.$emit('thermal-lysis', false)
+        this.$emit(EMIT.THERMAL_LYSIS, false)
       }
       this.cellState     = CELL_STATE.STABLE
       this.liveAmplitude = this.cellData?.amplitude ?? 0.8
@@ -521,7 +522,7 @@ export default defineComponent({
 
       if (temp >= THRESHOLDS.TEMP_VAPORIZING) {
         this.thermalLysis = true
-        this.$emit('thermal-lysis', true)
+        this.$emit(EMIT.THERMAL_LYSIS, true)
         this.triggerLysis()
         return
       }
@@ -657,7 +658,7 @@ export default defineComponent({
       const preset = CELL_PRESETS.find(p => p.presetId === cell.id)
       if (preset) this.cellStore.loadPreset(this.type, preset)
       else this.cellStore.resetCell(this.type)
-      this.$emit('stable-reset', this.type)
+      this.$emit(EMIT.STABLE_RESET, this.type)
     },
 
     resetToSafeDefaults() {
@@ -666,7 +667,7 @@ export default defineComponent({
       const preset = CELL_PRESETS.find(p => p.presetId === cell.id)
       if (preset) this.cellStore.loadPreset(this.type, preset)
       else this.cellStore.resetCell(this.type)
-      this.$emit('full-reset', this.type)
+      this.$emit(EMIT.FULL_RESET, this.type)
     },
   },
 })

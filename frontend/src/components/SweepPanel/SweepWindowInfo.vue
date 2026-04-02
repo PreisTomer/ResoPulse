@@ -12,7 +12,7 @@
   <div v-else class="sweep-window sweep-window--none" v-tip="tipNoWindow">
     <template v-if="recommendedMax !== null">
       <span>{{ $t('sweep.windowNoneRange', { max: recommendedMax, unit: sweepParam === 'field' ? $t('sweep.fieldUnit') : $t('sweep.freqUnit') }) }}</span>
-      <button class="sweep-window__expand" @click="$emit('expand', recommendedMax)">
+      <button class="sweep-window__expand" @click="$emit(EMIT.EXPAND, recommendedMax)">
         {{ $t('sweep.windowExpandBtn') }}
       </button>
     </template>
@@ -37,6 +37,7 @@
 import { defineComponent, type PropType } from 'vue'
 import { UNIT } from '@/constants/units'
 import { tipWindow, tipNoWindow } from '@/tooltips/sweepTooltips'
+import { EMIT } from '@/constants/emitEvents'
 
 interface SweepPoint {
   x: number; drH: number; drT: number; ti: number; tH: number; tT: number
@@ -49,9 +50,11 @@ export default defineComponent({
     recommendedMax: { type: Number as PropType<number | null>, default: null },
     bestTIPoint:    { type: Object as PropType<SweepPoint | null>, default: null },
   },
-  emits: ['expand'],
+  emits: [EMIT.EXPAND],
 
   computed: {
+    EMIT() { return EMIT },
+
     tipWindow(): string {
       const wr = this.windowRange
       if (!wr) return ''

@@ -48,13 +48,14 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+import { EMIT } from '@/constants/emitEvents'
 
 const STORAGE_KEY = 'rp_terms_v1'
 
 export default defineComponent({
   name: 'TermsGate',
 
-  emits: ['accepted'],
+  emits: [EMIT.ACCEPTED],
 
   data() {
     return {
@@ -66,7 +67,7 @@ export default defineComponent({
     accept() {
       if (!this.agreed) return
       localStorage.setItem(STORAGE_KEY, '1')
-      this.$emit('accepted')
+      this.$emit(EMIT.ACCEPTED)
     },
   },
 

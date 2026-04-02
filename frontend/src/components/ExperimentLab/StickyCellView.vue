@@ -33,7 +33,7 @@
               :description="cell.description"
               :cell-data="cell.cellData"
               :compact="true"
-              @full-reset="$emit('full-reset', $event)"
+              @full-reset="$emit(EMIT.FULL_RESET, $event)"
             />
           </div>
         </div>
@@ -47,6 +47,7 @@ import { defineComponent, type PropType } from 'vue'
 import SideTabPanel from '@/components/ExperimentLab/SideTabPanel.vue'
 import CellCard from '@/components/CellCard/index.vue'
 import type { CellRecord } from '@/types/cell'
+import { EMIT } from '@/constants/emitEvents'
 
 export interface CellCardRow {
   id: string
@@ -63,15 +64,19 @@ export default defineComponent({
 
   components: { SideTabPanel, CellCard },
 
-  emits: ['scroll-to-cells', 'full-reset'],
+  emits: [EMIT.SCROLL_TO_CELLS, EMIT.FULL_RESET],
 
   props: {
     cells: { type: Array as PropType<CellCardRow[]>, required: true },
   },
 
+  computed: {
+    EMIT() { return EMIT },
+  },
+
   methods: {
     scrollToCells() {
-      this.$emit('scroll-to-cells')
+      this.$emit(EMIT.SCROLL_TO_CELLS)
     },
   },
 })

@@ -10,7 +10,7 @@
           class="pop-controls__pill"
           :class="{ 'pop-controls__pill--active': nCells === n }"
           v-tip="tipNPill(n)"
-          @click="$emit('update:nCells', n); $emit('resample')"
+          @click="$emit(EMIT.UPDATE_N_CELLS, n); $emit(EMIT.RESAMPLE)"
         >N={{ n }}</button>
       </div>
     </div>
@@ -23,7 +23,7 @@
         :value="rVariancePct"
         min="1" max="30" step="1"
         v-tip="$t('population.tipRVariance')"
-        @input="$emit('update:rVariancePct', +($event.target as HTMLInputElement).value)"
+        @input="$emit(EMIT.UPDATE_R_VARIANCE_PCT, +($event.target as HTMLInputElement).value)"
       />
       <span class="pop-controls__ctrl-unit">{{ $t('population.varianceUnit') }}</span>
     </div>
@@ -36,7 +36,7 @@
         :value="vThVariancePct"
         min="0" max="35" step="1"
         v-tip="$t('population.tipVThVariance')"
-        @input="$emit('update:vThVariancePct', +($event.target as HTMLInputElement).value)"
+        @input="$emit(EMIT.UPDATE_VTH_VARIANCE_PCT, +($event.target as HTMLInputElement).value)"
       />
       <span class="pop-controls__ctrl-unit">{{ $t('population.varianceUnit') }}</span>
     </div>
@@ -44,7 +44,7 @@
     <button
       class="pop-controls__resample-btn"
       v-tip="$t('population.tipResample')"
-      @click="$emit('resample')"
+      @click="$emit(EMIT.RESAMPLE)"
     >{{ $t('population.resampleBtn') }}</button>
 
     <!-- Histogram Y-axis mode toggle -->
@@ -52,25 +52,26 @@
       <button
         class="pop-controls__norm-btn"
         :class="{ 'pop-controls__norm-btn--active': !normalizeChart }"
-        @click="$emit('update:normalizeChart', false); $emit('redraw')"
+        @click="$emit(EMIT.UPDATE_NORMALIZE_CHART, false); $emit(EMIT.REDRAW)"
       >{{ $t('population.normCount') }}</button>
       <button
         class="pop-controls__norm-btn"
         :class="{ 'pop-controls__norm-btn--active': normalizeChart }"
-        @click="$emit('update:normalizeChart', true); $emit('redraw')"
+        @click="$emit(EMIT.UPDATE_NORMALIZE_CHART, true); $emit(EMIT.REDRAW)"
       >{{ $t('population.normFraction') }}</button>
     </div>
 
     <button
       class="pop-controls__export-btn"
       v-tip="$t('population.tipExport')"
-      @click="$emit('export-csv')"
+      @click="$emit(EMIT.EXPORT_CSV)"
     >{{ $t('population.exportBtn') }}</button>
   </div>
 </template>
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+import { EMIT } from '@/constants/emitEvents'
 
 const N_PILL_OPTIONS = [100, 300, 1000] as const
 
@@ -83,17 +84,17 @@ export default defineComponent({
   },
 
   emits: [
-    'update:nCells',
-    'update:rVariancePct',
-    'update:vThVariancePct',
-    'update:normalizeChart',
-    'resample',
-    'export-csv',
-    'redraw',
+    EMIT.UPDATE_N_CELLS,
+    EMIT.UPDATE_R_VARIANCE_PCT,
+    EMIT.UPDATE_VTH_VARIANCE_PCT,
+    EMIT.UPDATE_NORMALIZE_CHART,
+    EMIT.RESAMPLE,
+    EMIT.EXPORT_CSV,
+    EMIT.REDRAW,
   ],
 
   data() {
-    return { N_PILL_OPTIONS }
+    return { N_PILL_OPTIONS, EMIT }
   },
 
   methods: {

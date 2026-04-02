@@ -13,7 +13,7 @@
         <label class="ccm-resonance__label">
           {{ $t('userPresets.fieldResFreq') }}
           <span class="ccm-resonance__unit">{{ UNIT.GHZ }}</span>
-          <button class="ccm-resonance__tip-btn" @click="$emit('show-tip', 'resFreq')">?</button>
+          <button class="ccm-resonance__tip-btn" @click="$emit(EMIT.SHOW_TIP, 'resFreq')">?</button>
         </label>
         <input
           :value="form.resonantFreqGHz"
@@ -31,7 +31,7 @@
       <div class="ccm-resonance__field">
         <label class="ccm-resonance__label">
           {{ $t('userPresets.fieldCapsidQ') }}
-          <button class="ccm-resonance__tip-btn" @click="$emit('show-tip', 'capsidQ')">?</button>
+          <button class="ccm-resonance__tip-btn" @click="$emit(EMIT.SHOW_TIP, 'capsidQ')">?</button>
         </label>
         <input
           :value="form.capsidQ"
@@ -50,7 +50,7 @@
         <label class="ccm-resonance__label">
           {{ $t('userPresets.fieldResThr') }}
           <span class="ccm-resonance__unit">{{ UNIT.V_PER_CM }}</span>
-          <button class="ccm-resonance__tip-btn" @click="$emit('show-tip', 'resThr')">?</button>
+          <button class="ccm-resonance__tip-btn" @click="$emit(EMIT.SHOW_TIP, 'resThr')">?</button>
         </label>
         <input
           :value="form.resonantThresholdVcm"
@@ -71,6 +71,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { UNIT } from '@/constants/units'
+import { EMIT } from '@/constants/emitEvents'
 
 export default defineComponent({
   name: 'CcmResonanceSection',
@@ -79,14 +80,14 @@ export default defineComponent({
     form: { type: Object as () => Record<string, unknown>, required: true },
   },
 
-  emits: ['field-change', 'show-tip'],
+  emits: [EMIT.FIELD_CHANGE, EMIT.SHOW_TIP],
 
-  data() { return { UNIT } },
+  data() { return { UNIT, EMIT } },
 
   methods: {
     onNumericInput(key: string, event: Event) {
       const value = parseFloat((event.target as HTMLInputElement).value)
-      this.$emit('field-change', { key, value })
+      this.$emit(EMIT.FIELD_CHANGE, { key, value })
     },
   },
 })

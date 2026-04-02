@@ -32,7 +32,7 @@
     <div class="ccm-identity__field">
       <label class="ccm-identity__label">
         {{ $t('userPresets.cellTypeLabel') }}
-        <button class="ccm-identity__tip-btn" @click="$emit('show-tip', 'cellType')">?</button>
+        <button class="ccm-identity__tip-btn" @click="$emit(EMIT.SHOW_TIP, 'cellType')">?</button>
       </label>
       <div class="ccm-identity__type-pills">
         <button
@@ -41,7 +41,7 @@
           type="button"
           class="ccm-identity__type-pill"
           :class="{ 'ccm-identity__type-pill--active': form.cellType === ct }"
-          @click="$emit('cell-type-change', ct)"
+          @click="$emit(EMIT.CELL_TYPE_CHANGE, ct)"
         >{{ $t(`userPresets.cellType${capitalize(ct)}`) }}</button>
       </div>
     </div>
@@ -64,6 +64,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+import { EMIT } from '@/constants/emitEvents'
 
 type CellFormType = 'mammalian' | 'bacteria' | 'virus'
 
@@ -74,10 +75,11 @@ export default defineComponent({
     form: { type: Object as () => Record<string, unknown>, required: true },
   },
 
-  emits: ['field-change', 'show-tip', 'cell-type-change'],
+  emits: [EMIT.FIELD_CHANGE, EMIT.SHOW_TIP, EMIT.CELL_TYPE_CHANGE],
 
   data() {
     return {
+      EMIT,
       cellTypes: ['mammalian', 'bacteria', 'virus'] as CellFormType[],
     }
   },
@@ -88,7 +90,7 @@ export default defineComponent({
     },
 
     onInput(key: string, value: string) {
-      this.$emit('field-change', { key, value })
+      this.$emit(EMIT.FIELD_CHANGE, { key, value })
     },
   },
 })

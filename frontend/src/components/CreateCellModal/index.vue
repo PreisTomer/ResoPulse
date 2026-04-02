@@ -60,6 +60,7 @@ import { useCellStore } from '@/stores/cellStore'
 import { EPSILON_0 } from '@/constants/physics'
 import { computeTau, computeFc } from '@/utils/physics'
 import { UNIT } from '@/constants/units'
+import { EMIT } from '@/constants/emitEvents'
 import CcmHeader from './CcmHeader.vue'
 import CcmTipPanel from './CcmTipPanel.vue'
 import CcmIdentitySection from './CcmIdentitySection.vue'
@@ -114,7 +115,7 @@ export default defineComponent({
     visible: { type: Boolean, default: false },
   },
 
-  emits: ['close', 'saved'],
+  emits: [EMIT.CLOSE, EMIT.SAVED],
 
   data() {
     return {
@@ -233,12 +234,12 @@ export default defineComponent({
         ...(this.form.cellType !== 'mammalian' && this.form.resonantThresholdVcm != null && { resonantThresholdVcm: this.form.resonantThresholdVcm }),
       }
       this.presetsStore.add(preset)
-      this.$emit('saved', preset)
-      this.$emit('close')
+      this.$emit(EMIT.SAVED, preset)
+      this.$emit(EMIT.CLOSE)
     },
 
     onCancel() {
-      this.$emit('close')
+      this.$emit(EMIT.CLOSE)
     },
   },
 })

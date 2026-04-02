@@ -15,7 +15,7 @@
     <div class="ccm-derived__item ccm-derived__item--fc">
       <span class="ccm-derived__label">
         {{ $t('userPresets.derivedFc') }}
-        <button class="ccm-derived__tip-btn" @click="$emit('show-tip', 'derivedFc')">?</button>
+        <button class="ccm-derived__tip-btn" @click="$emit(EMIT.SHOW_TIP, 'derivedFc')">?</button>
       </span>
       <span class="ccm-derived__val ccm-derived__val--highlight">{{ derivedFc }}</span>
     </div>
@@ -25,6 +25,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+import { EMIT } from '@/constants/emitEvents'
 
 export default defineComponent({
   name: 'CcmDerivedPreview',
@@ -35,7 +36,11 @@ export default defineComponent({
     derivedFc:  { type: String, required: true },
   },
 
-  emits: ['show-tip'],
+  emits: [EMIT.SHOW_TIP],
+
+  computed: {
+    EMIT() { return EMIT },
+  },
 })
 </script>
 

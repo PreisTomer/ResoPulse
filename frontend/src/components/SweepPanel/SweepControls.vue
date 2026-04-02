@@ -9,13 +9,13 @@
           class="sweep-ctrl__pill"
           :class="{ 'sweep-ctrl__pill--active': sweepParam === 'field' }"
           v-tip="$t('sweep.tipFieldPill')"
-          @click="$emit('param-change', { param: 'field', max: 1000 })"
+          @click="$emit(EMIT.PARAM_CHANGE, { param: 'field', max: 1000 })"
         >{{ $t('sweep.sweepFieldPill') }}</button>
         <button
           class="sweep-ctrl__pill"
           :class="{ 'sweep-ctrl__pill--active': sweepParam === 'freq' }"
           v-tip="$t('sweep.tipFreqPill')"
-          @click="$emit('param-change', { param: 'freq', max: defaultFreqMax })"
+          @click="$emit(EMIT.PARAM_CHANGE, { param: 'freq', max: defaultFreqMax })"
         >{{ $t('sweep.sweepFreqPill') }}</button>
       </div>
     </div>
@@ -34,7 +34,7 @@
       <span class="sweep-ctrl__unit">{{ sweepParam === 'field' ? $t('sweep.fieldUnit') : $t('sweep.freqUnit') }}</span>
     </div>
 
-    <button class="sweep-ctrl__export" v-tip="$t('sweep.tipExport')" @click="$emit('export')">
+    <button class="sweep-ctrl__export" v-tip="$t('sweep.tipExport')" @click="$emit(EMIT.EXPORT)">
       {{ $t('sweep.exportBtn') }}
     </button>
 
@@ -44,6 +44,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { UNIT } from '@/constants/units'
+import { EMIT } from '@/constants/emitEvents'
 
 export default defineComponent({
   props: {
@@ -51,9 +52,10 @@ export default defineComponent({
     sweepMax:       { type: Number, required: true },
     defaultFreqMax: { type: Number, required: true },
   },
-  emits: ['param-change', 'max-change', 'export'],
+  emits: [EMIT.PARAM_CHANGE, EMIT.MAX_CHANGE, EMIT.EXPORT],
 
   computed: {
+    EMIT() { return EMIT },
     tipMaxLabel(): string {
       const unit = this.sweepParam === 'field' ? UNIT.V_PER_CM : UNIT.KHZ
       return this.$t('sweep.tipMaxLabel', { unit })
@@ -63,7 +65,7 @@ export default defineComponent({
   methods: {
     onMaxInput(e: Event) {
       const v = +(e.target as HTMLInputElement).value
-      if (v > 0) this.$emit('max-change', v)
+      if (v > 0) this.$emit(EMIT.MAX_CHANGE, v)
     },
   },
 })

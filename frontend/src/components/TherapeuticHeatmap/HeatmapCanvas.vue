@@ -36,6 +36,7 @@ import { formatFreqKHz } from '@/utils/format'
 import { C } from '@/theme/colors'
 import { tipCanvas, tipHoverDynamic } from '@/tooltips/heatmapTooltips'
 import { ICON } from '@/constants/icons'
+import { EMIT } from '@/constants/emitEvents'
 import type { HoverInfo, OutcomeItem } from '@/types/heatmap'
 
 export default defineComponent({
@@ -43,7 +44,7 @@ export default defineComponent({
     open: { type: Boolean, required: true },
   },
 
-  emits: ['hover-info-change', 'op-zone-change'],
+  emits: [EMIT.HOVER_INFO_CHANGE, EMIT.OP_ZONE_CHANGE],
 
   data() {
     return {
@@ -453,7 +454,7 @@ export default defineComponent({
 
       // Emit current zone color so parent can pass it to HeatmapStats
       const opZone = this._zoneAt(s.currentBroadcastFrequency, s.fieldIntensity)
-      this.$emit('op-zone-change', HMAP_ZONE_CSS[opZone])
+      this.$emit(EMIT.OP_ZONE_CHANGE, HMAP_ZONE_CSS[opZone])
     },
 
     _drawAxes(ctx: CanvasRenderingContext2D, ml: number, mt: number, pw: number, ph: number) {
@@ -591,7 +592,7 @@ export default defineComponent({
 
       if (cx < HMAP_MARGIN.LEFT || cx > rW - HMAP_MARGIN.RIGHT ||
           cy < HMAP_MARGIN.TOP  || cy > rH - HMAP_MARGIN.BOTTOM) {
-        this.$emit('hover-info-change', null)
+        this.$emit(EMIT.HOVER_INFO_CHANGE, null)
         this._resetCanvasTip()
         return
       }
@@ -680,7 +681,7 @@ export default defineComponent({
         pLysis,
         outcomes,
       }
-      this.$emit('hover-info-change', info)
+      this.$emit(EMIT.HOVER_INFO_CHANGE, info)
 
       // Update the v-tip content dynamically while hovering
       const zoneClass = zone === HMAP_ZONE.THERAPEUTIC ? 'tip-ok'
@@ -704,7 +705,7 @@ export default defineComponent({
     },
 
     onCanvasLeave() {
-      this.$emit('hover-info-change', null)
+      this.$emit(EMIT.HOVER_INFO_CHANGE, null)
       this._resetCanvasTip()
     },
 

@@ -1,11 +1,11 @@
 <!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
 <template>
   <transition name="tip-fade">
-    <div v-if="activeTip" class="ccm-tip-overlay" @click="$emit('close')">
+    <div v-if="activeTip" class="ccm-tip-overlay" @click="$emit(EMIT.CLOSE)">
       <div class="ccm-tip-box" @click.stop>
         <!-- eslint-disable-next-line vue/no-v-html -->
         <span v-html="activeTipHtml" />
-        <button class="ccm-tip-box__close" @click="$emit('close')">{{ ICON.CLOSE }}</button>
+        <button class="ccm-tip-box__close" @click="$emit(EMIT.CLOSE)">{{ ICON.CLOSE }}</button>
       </div>
     </div>
   </transition>
@@ -14,6 +14,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { ICON } from '@/constants/icons'
+import { EMIT } from '@/constants/emitEvents'
 
 type TipKey = 'radius' | 'memThick' | 'epsR' | 'sigmaI' | 'vmThr' | 'density' | 'cp' | 'derivedFc' | 'cellType' | 'resFreq' | 'capsidQ' | 'resThr'
 
@@ -39,10 +40,10 @@ export default defineComponent({
     activeTip: { type: String as () => TipKey | null, default: null },
   },
 
-  emits: ['close'],
+  emits: [EMIT.CLOSE],
 
   data() {
-    return { ICON }
+    return { ICON, EMIT }
   },
 
   computed: {

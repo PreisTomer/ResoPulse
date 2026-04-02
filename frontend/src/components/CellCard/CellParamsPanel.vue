@@ -53,7 +53,7 @@
           <button
             class="cell-card__params-btn"
             v-tip="$t('cells.resetBtnTip')"
-            @click="$emit('reset-to-preset')"
+            @click="$emit(EMIT.RESET_TO_PRESET)"
           >{{ $t('cells.resetBtn') }}</button>
         </div>
       </div>
@@ -66,6 +66,7 @@ import { defineComponent } from 'vue'
 import type { PropType } from 'vue'
 import type { CellRecord } from '@/types/cell'
 import { ICON } from '@/constants/icons'
+import { EMIT } from '@/constants/emitEvents'
 
 type EditableRow = {
   key: string
@@ -99,8 +100,8 @@ export default defineComponent({
   },
 
   emits: {
-    'param-change':    (_key: string, _value: number) => true,
-    'reset-to-preset': () => true,
+    [EMIT.PARAM_CHANGE]:    (_key: string, _value: number) => true,
+    [EMIT.RESET_TO_PRESET]: () => true,
   },
 
   data() {
@@ -113,6 +114,7 @@ export default defineComponent({
 
   computed: {
     ICON() { return ICON },
+    EMIT() { return EMIT },
   },
 
   beforeUnmount() {
@@ -139,7 +141,7 @@ export default defineComponent({
       const raw      = p.displayValue + p.step * dir
       const decimals = (p.step.toString().split('.')[1] ?? '').length
       const value    = parseFloat(Math.min(p.max, Math.max(p.min, raw)).toFixed(decimals))
-      this.$emit('param-change', p.key, value)
+      this.$emit(EMIT.PARAM_CHANGE, p.key, value)
     },
 
     onInputChange(p: EditableRow, e: Event) {
@@ -149,7 +151,7 @@ export default defineComponent({
       if (isNaN(value)) return
       const decimals = (p.step.toString().split('.')[1] ?? '').length
       const clamped  = parseFloat(Math.min(p.max, Math.max(p.min, value)).toFixed(decimals))
-      this.$emit('param-change', p.key, clamped)
+      this.$emit(EMIT.PARAM_CHANGE, p.key, clamped)
     },
   },
 })

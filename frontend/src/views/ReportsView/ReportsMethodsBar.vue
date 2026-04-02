@@ -26,12 +26,12 @@
           <button
             v-else
             class="reports-methods-bar__btn"
-            @click.stop="$emit('download')"
+            @click.stop="$emit(EMIT.DOWNLOAD)"
           >{{ $t('reports.actionBarDownload') }}</button>
           <button
             class="reports-methods-bar__dismiss"
             :title="$t('reports.actionBarDismiss')"
-            @click.stop="$emit('dismiss')"
+            @click.stop="$emit(EMIT.DISMISS)"
           >{{ ICON.CLOSE }}</button>
         </div>
       </div>
@@ -44,6 +44,7 @@ import { defineComponent, type PropType } from 'vue'
 import type { LogEntry } from '@/stores/experimentStore'
 import { formatFreqKHz, formatFieldVcm } from '@/utils/format'
 import { ICON } from '@/constants/icons'
+import { EMIT } from '@/constants/emitEvents'
 
 export default defineComponent({
   name: 'ReportsMethodsBar',
@@ -55,10 +56,10 @@ export default defineComponent({
     },
   },
 
-  emits: ['download', 'dismiss'],
+  emits: [EMIT.DOWNLOAD, EMIT.DISMISS],
 
   data() {
-    return { ICON, formatFreqKHz, formatFieldVcm }
+    return { ICON, EMIT, formatFreqKHz, formatFieldVcm }
   },
 })
 </script>

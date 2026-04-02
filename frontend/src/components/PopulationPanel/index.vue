@@ -67,6 +67,7 @@ import { WAVEFORM, CELL_CATEGORY } from '@/constants/strings'
 import { THRESHOLDS, DEFAULT_CAPSID_Q, H_FIRE_THRESHOLD_MULTIPLIER } from '@/constants/physics'
 import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'
+import { EMIT } from '@/constants/emitEvents'
 import type { CellConfig } from '@/types/cell'
 import {
   sampleGaussian, binomialSE, MARGIN, N_BINS,
@@ -83,7 +84,7 @@ type ResizeObserverInstance = InstanceType<typeof ResizeObserver>
 
 export default defineComponent({
   components: { AccordionPanel, PopControls, PopStatCards, PopWindowScore, PopNote },
-  emits: ['openChange'],
+  emits: [EMIT.OPEN_CHANGE],
   data() {
     return {
       open: false,
@@ -161,7 +162,7 @@ export default defineComponent({
 
   watch: {
     open(v: boolean) {
-      this.$emit('openChange', v)
+      this.$emit(EMIT.OPEN_CHANGE, v)
       if (v) {
         if (this.targetDRs.length === 0) this.resample()
         this.$nextTick(() => { this._initChart(); this._drawChart() })

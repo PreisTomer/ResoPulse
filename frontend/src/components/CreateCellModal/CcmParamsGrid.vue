@@ -7,7 +7,7 @@
       <label class="ccm-params-grid__label">
         {{ $t('userPresets.fieldRadius') }}
         <span class="ccm-params-grid__unit">{{ UNIT.UM }}</span>
-        <button class="ccm-params-grid__tip-btn" @click="$emit('show-tip', 'radius')">?</button>
+        <button class="ccm-params-grid__tip-btn" @click="$emit(EMIT.SHOW_TIP, 'radius')">?</button>
       </label>
       <input
         :value="form.radius"
@@ -26,7 +26,7 @@
       <label class="ccm-params-grid__label">
         {{ $t('userPresets.fieldMemThick') }}
         <span class="ccm-params-grid__unit">{{ UNIT.NM }}</span>
-        <button class="ccm-params-grid__tip-btn" @click="$emit('show-tip', 'memThick')">?</button>
+        <button class="ccm-params-grid__tip-btn" @click="$emit(EMIT.SHOW_TIP, 'memThick')">?</button>
       </label>
       <input
         :value="form.membraneThickness"
@@ -44,7 +44,7 @@
     <div class="ccm-params-grid__field">
       <label class="ccm-params-grid__label">
         {{ $t('userPresets.fieldEpsR') }}
-        <button class="ccm-params-grid__tip-btn" @click="$emit('show-tip', 'epsR')">?</button>
+        <button class="ccm-params-grid__tip-btn" @click="$emit(EMIT.SHOW_TIP, 'epsR')">?</button>
       </label>
       <input
         :value="form.dielectricConstant"
@@ -63,7 +63,7 @@
       <label class="ccm-params-grid__label">
         {{ $t('userPresets.fieldSigmaI') }}
         <span class="ccm-params-grid__unit">{{ UNIT.S_PER_M }}</span>
-        <button class="ccm-params-grid__tip-btn" @click="$emit('show-tip', 'sigmaI')">?</button>
+        <button class="ccm-params-grid__tip-btn" @click="$emit(EMIT.SHOW_TIP, 'sigmaI')">?</button>
       </label>
       <input
         :value="form.conductivity"
@@ -82,7 +82,7 @@
       <label class="ccm-params-grid__label">
         {{ $t('userPresets.fieldVmThr') }}
         <span class="ccm-params-grid__unit">{{ UNIT.V }}</span>
-        <button class="ccm-params-grid__tip-btn" @click="$emit('show-tip', 'vmThr')">?</button>
+        <button class="ccm-params-grid__tip-btn" @click="$emit(EMIT.SHOW_TIP, 'vmThr')">?</button>
       </label>
       <input
         :value="form.thresholdVoltage"
@@ -101,7 +101,7 @@
       <label class="ccm-params-grid__label">
         {{ $t('userPresets.fieldDensity') }}
         <span class="ccm-params-grid__unit">{{ UNIT.KG_PER_M3 }}</span>
-        <button class="ccm-params-grid__tip-btn" @click="$emit('show-tip', 'density')">?</button>
+        <button class="ccm-params-grid__tip-btn" @click="$emit(EMIT.SHOW_TIP, 'density')">?</button>
       </label>
       <input
         :value="form.density"
@@ -120,7 +120,7 @@
       <label class="ccm-params-grid__label">
         {{ $t('userPresets.fieldCp') }}
         <span class="ccm-params-grid__unit">{{ UNIT.J_PER_KG_K }}</span>
-        <button class="ccm-params-grid__tip-btn" @click="$emit('show-tip', 'cp')">?</button>
+        <button class="ccm-params-grid__tip-btn" @click="$emit(EMIT.SHOW_TIP, 'cp')">?</button>
       </label>
       <input
         :value="form.specificHeatCapacity"
@@ -140,6 +140,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { UNIT } from '@/constants/units'
+import { EMIT } from '@/constants/emitEvents'
 
 export default defineComponent({
   name: 'CcmParamsGrid',
@@ -148,14 +149,14 @@ export default defineComponent({
     form: { type: Object as () => Record<string, unknown>, required: true },
   },
 
-  emits: ['field-change', 'show-tip'],
+  emits: [EMIT.FIELD_CHANGE, EMIT.SHOW_TIP],
 
-  data() { return { UNIT } },
+  data() { return { UNIT, EMIT } },
 
   methods: {
     onNumericInput(key: string, event: Event) {
       const value = parseFloat((event.target as HTMLInputElement).value)
-      this.$emit('field-change', { key, value })
+      this.$emit(EMIT.FIELD_CHANGE, { key, value })
     },
   },
 })

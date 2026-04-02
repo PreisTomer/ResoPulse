@@ -28,7 +28,7 @@
             'reports-log-table__row--lysis':    e.event === LOG_EVENT.LYSIS,
             'reports-log-table__row--selected': selectedEntry?.id === e.id,
           }"
-          @click="$emit('select', e)"
+          @click="$emit(EMIT.SELECT, e)"
         >
           <td class="reports-log-table__td-select">
             <span
@@ -84,6 +84,7 @@ import { LOG_EVENT, NULL_DISPLAY } from '@/constants/strings'
 import { THRESHOLDS } from '@/constants/physics'
 import { ICON } from '@/constants/icons'
 import StatusBadge from '@/components/StatusBadge.vue'
+import { EMIT } from '@/constants/emitEvents'
 
 const TABLE_COLS_DEFS: Array<{ key: string; labelKey: string; tipKey?: string }> = [
   { key: 'session',  labelKey: 'reports.colSession',     tipKey: 'reports.colSessionTitle' },
@@ -121,7 +122,7 @@ export default defineComponent({
     },
   },
 
-  emits: ['select'],
+  emits: [EMIT.SELECT],
 
   setup() {
     const { t } = useI18n()
@@ -138,6 +139,7 @@ export default defineComponent({
       NULL_DISPLAY,
       THRESHOLDS,
       ICON,
+      EMIT,
       formatFreqKHz,
       formatFieldVcm,
       depKDisplay,
