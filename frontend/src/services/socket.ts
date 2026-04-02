@@ -243,7 +243,8 @@ export function requestAiOptimization(requestId: string, onResult: AiResultCallb
 
   if (isResonanceTarget) {
     const tr      = store.target as { resonantFreqGHz: number; capsidQ?: number; resonantThresholdVcm: number }
-    const tVthEff = tempCorrectedVth(tr.resonantThresholdVcm, store.targetTemp) * hfireMult
+    // hfireMult does NOT apply to acoustic resonance — mechanical disruption, not EP membrane charging.
+    const tVthEff = tempCorrectedVth(tr.resonantThresholdVcm, store.targetTemp)
     // At exact resonance the Lorentzian lineshape = 1, so DR = E / tVthEff.
     suggestedFieldVcm = 0.9 * tVthEff
     predDrT = computeResonantDisruption(tr.resonantFreqGHz, tr.capsidQ ?? DEFAULT_CAPSID_Q, tVthEff, optFreqKhz * 1e3, suggestedFieldVcm)

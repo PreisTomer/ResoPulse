@@ -227,9 +227,9 @@ export default defineComponent({
       if (s.isResonanceMode) {
         const tr = s.target as { resonantFreqGHz?: number; capsidQ?: number; resonantThresholdVcm?: number }
         if (tr.resonantFreqGHz && tr.capsidQ && tr.resonantThresholdVcm) {
-          // Mirror cellStore.targetDisruptionRatio: apply temperature correction + H-FIRE multiplier
-          // so zone colours stay in sync with the disruption ratio display.
-          const effThreshold = tempCorrectedVth(tr.resonantThresholdVcm, s.targetTemp) * hfireMult
+          // Mirror cellStore.targetDisruptionRatio: temperature correction only — hfireMult does NOT apply
+          // to acoustic resonance disruption (mechanical mechanism, not EP membrane charging).
+          const effThreshold = tempCorrectedVth(tr.resonantThresholdVcm, s.targetTemp)
           tDR = computeResonantDisruption(tr.resonantFreqGHz, tr.capsidQ, effThreshold, freqKHz * 1000, fieldVcm)
         }
       } else {
@@ -277,8 +277,9 @@ export default defineComponent({
       const tr     = s.target as { resonantFreqGHz?: number; capsidQ?: number; resonantThresholdVcm?: number }
       const hasRes = isRes && !!tr.resonantFreqGHz && !!tr.capsidQ && !!tr.resonantThresholdVcm
       // Pre-compute temperature-corrected resonant threshold so zone colours match the DR display.
+      // hfireMult does NOT apply here — acoustic resonance is mechanical, not EP membrane charging.
       const resEffThreshold = hasRes
-        ? tempCorrectedVth(tr.resonantThresholdVcm!, s.targetTemp) * hfireMult
+        ? tempCorrectedVth(tr.resonantThresholdVcm!, s.targetTemp)
         : 0
 
       const result = new Array<number>(HMAP_FREQ_STEPS * HMAP_FIELD_STEPS)

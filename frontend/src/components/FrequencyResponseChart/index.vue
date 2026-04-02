@@ -963,8 +963,8 @@ export default defineComponent({
         (cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) &&
         t.resonantFreqGHz && t.resonantThresholdVcm
       ) {
-        const hfireMult = this.cellStore.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
-        const effThreshold = tempCorrectedVth(t.resonantThresholdVcm, this.cellStore.targetTemp) * hfireMult
+        // hfireMult does NOT apply to acoustic resonance — mechanical disruption, not EP membrane charging.
+        const effThreshold = tempCorrectedVth(t.resonantThresholdVcm, this.cellStore.targetTemp)
         const dr = computeResonantDisruption(
           t.resonantFreqGHz,
           t.capsidQ ?? DEFAULT_CAPSID_Q,

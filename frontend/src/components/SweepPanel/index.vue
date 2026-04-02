@@ -172,7 +172,8 @@ export default defineComponent({
           const hVthEff = tempCorrectedVth(healthy.thresholdVoltage, tH) * hfireMult
           drH = (vmH * pefH) / hVthEff
           if (this.isResonanceTarget) {
-            const resVthEff = tempCorrectedVth(t.resonantThresholdVcm!, tT) * hfireMult
+            // hfireMult does NOT apply to acoustic resonance — mechanical disruption, not EP membrane charging.
+            const resVthEff = tempCorrectedVth(t.resonantThresholdVcm!, tT)
             drT = computeResonantDisruption(t.resonantFreqGHz!, t.capsidQ ?? DEFAULT_CAPSID_Q, resVthEff, freqKHz * 1e3, x)
           } else {
             const tVthEff = tempCorrectedVth(target.thresholdVoltage, tT) * hfireMult
@@ -186,7 +187,8 @@ export default defineComponent({
           const hVthEff = tempCorrectedVth(healthy.thresholdVoltage, tH) * hfireMult
           drH = (vmH * pefH) / hVthEff
           if (this.isResonanceTarget) {
-            const resVthEff = tempCorrectedVth(t.resonantThresholdVcm!, tT) * hfireMult
+            // hfireMult does NOT apply to acoustic resonance — mechanical disruption, not EP membrane charging.
+            const resVthEff = tempCorrectedVth(t.resonantThresholdVcm!, tT)
             drT = computeResonantDisruption(t.resonantFreqGHz!, t.capsidQ ?? DEFAULT_CAPSID_Q, resVthEff, x * 1e3, E)
           } else {
             const tVthEff = tempCorrectedVth(target.thresholdVoltage, tT) * hfireMult
