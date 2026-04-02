@@ -138,7 +138,7 @@ export type ThresholdKey = keyof typeof THRESHOLDS
 // Ref: Tzur et al. (2009) Science 325:167; Altschuler & Wu (2010) Cell 141:559
 
 export const POP_CV_MAMMALIAN = 0.25  // radius CV ~20-30%; nominal 25%
-export const POP_CV_BACTERIA  = 0.22  // radius CV ~20-25%; nominal 22%
+export const POP_CV_BACTERIA  = 0.12  // radius CV ~10-12% for log-phase cultures; nominal 12% (Tzur et al. 2009)
 export const POP_CV_VIRUS     = 0.08  // capsid radius CV ~5-10%; icosahedral; nominal 8%
 
 // ── Reversible EP membrane resealing model ───────────────────────────────────

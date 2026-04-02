@@ -25,7 +25,7 @@
 
       <DatasetsCellTable :presets="presets" />
       <DatasetsMediaTable :media-rows="mediaRows" />
-      <DatasetsWindowCard />
+      <DatasetsWindowCard :data="windowCardData" />
       <DatasetsNucShellTable :nuclear-presets="nuclearPresets" />
       <DatasetsAcousticRes />
       <DatasetsFieldGeo />
@@ -49,6 +49,7 @@ import { MEDIA } from '@/constants/media'
 import { CELL_GROUP, NULL_DISPLAY } from '@/constants/strings'
 import { UNIT } from '@/constants/units'
 import { membraneCm, computeFc, computeTau, computeNuclearTau, computeDepCrossoverKHz, computeDepSecondCrossoverKHz } from '@/utils/physics'
+import { SCHWAN_SPHERE_FACTOR } from '@/constants/physics'
 import PageHeader from '@/components/PageHeader.vue'
 import DatasetsCellTable from './DatasetsCellTable.vue'
 import DatasetsMediaTable from './DatasetsMediaTable.vue'
@@ -179,6 +180,51 @@ export default defineComponent({
     },
     groupLabels(): typeof GROUP_LABELS {
       return GROUP_LABELS
+    },
+
+    // Therapeutic window reference values — derived from cell library at runtime so they
+    // stay in sync if hepatocyte or adenocarcinoma preset parameters are ever updated.
+    windowCardData(): {
+      cancerR: string; cancerFc: string; cancerVmThr: string; cancerCm: string; cancerLysis: string
+      healthyR: string; healthyFc: string; healthyVmThr: string; healthyCm: string; healthyLysis: string
+      ratioVmSel: string; ratioTI: string; windowRangeVal: string
+    } {
+      const cancer  = CELL_PRESETS.find(p => p.id === 'adenocarcinoma')!
+      const healthy = CELL_PRESETS.find(p => p.id === 'hepatocyte')!
+
+      const lysisVcm = (cell: typeof cancer) =>
+        Math.round(cell.thresholdVoltage / (SCHWAN_SPHERE_FACTOR * cell.radius * 1e-6) / 100)
+
+      const fcFmt = (cell: typeof cancer) => {
+        const fc = computeFc(cell, SIGMA_SALINE)
+        return fc >= 1000
+          ? `~${(fc / 1000).toFixed(2)} ${UNIT.MHZ}`
+          : `~${fc.toFixed(0)} ${UNIT.KHZ}`
+      }
+
+      const cmFmt = (cell: typeof cancer) =>
+        `~${(membraneCm(cell) * 1e3).toFixed(1)} ${UNIT.MF_PER_M2}`
+
+      const cancerLysis  = lysisVcm(cancer)
+      const healthyLysis = lysisVcm(healthy)
+      const vmSel = cancer.radius / healthy.radius
+      const tiDC  = (cancer.radius * healthy.thresholdVoltage) / (healthy.radius * cancer.thresholdVoltage)
+
+      return {
+        cancerR:        `${cancer.radius} ${UNIT.UM}`,
+        cancerFc:       fcFmt(cancer),
+        cancerVmThr:    `${cancer.thresholdVoltage.toFixed(2)} ${UNIT.V}`,
+        cancerCm:       cmFmt(cancer),
+        cancerLysis:    `~${cancerLysis} ${UNIT.V_PER_CM}`,
+        healthyR:       `${healthy.radius} ${UNIT.UM}`,
+        healthyFc:      fcFmt(healthy),
+        healthyVmThr:   `${healthy.thresholdVoltage.toFixed(2)} ${UNIT.V}`,
+        healthyCm:      cmFmt(healthy),
+        healthyLysis:   `~${healthyLysis} ${UNIT.V_PER_CM}`,
+        ratioVmSel:     `~${vmSel.toFixed(1)}×`,
+        ratioTI:        `~${tiDC.toFixed(2)}×`,
+        windowRangeVal: `${Math.min(cancerLysis, healthyLysis)}-${Math.max(cancerLysis, healthyLysis)} ${UNIT.V_PER_CM}`,
+      }
     },
   },
 
