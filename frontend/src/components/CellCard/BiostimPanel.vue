@@ -45,10 +45,11 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+
 import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'
-import { tipBiomodScore, tipBiomodSI, tipBiomodMTE, tipBiomodMA } from '@/tooltips/biostimTooltips'
 
+import { tipBiomodScore, tipBiomodSI, tipBiomodMTE, tipBiomodMA } from '@/tooltips/biostimTooltips'
 export default defineComponent({
   props: {
     stimIndex:       { type: Number, required: true },

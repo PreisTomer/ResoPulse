@@ -2,6 +2,7 @@
 // Unauthorized copying or distribution is prohibited.
 
 import { createI18n } from 'vue-i18n'
+
 import core from '../locales/core.en.json'
 import protocol from '../locales/protocol.en.json'
 import datasets from '../locales/datasets.en.json'
@@ -15,7 +16,6 @@ import instrument from '../locales/instrument.en.json'
 import home from '../locales/home.en.json'
 import heatmap from '../locales/heatmap.en.json'
 import userPresets from '../locales/userPresets.en.json'
-
 export const i18n = createI18n({
   legacy: false,
   locale: 'en',

@@ -30,13 +30,16 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { mapStores } from 'pinia'
+
 import { useCellStore } from '@/stores/cellStore'
+
+import { computeSchwan, computeResonantDisruption, safeRatio, computeTau, computePulseStepResponse, tempCorrectedVth } from '@/utils/physics'
+import { tipCmpTitle, tipCmpRow } from '@/tooltips/selectivityTooltips'
+
 import { CELL_PRESETS, GROUP_COLORS } from '@/constants/cellLibrary'
 import { DEFAULT_CAPSID_Q, THRESHOLDS, NEAR_ZERO_DR, H_FIRE_THRESHOLD_MULTIPLIER, BODY_TEMP_C, MIN_PULSE_ENVELOPE } from '@/constants/physics'
 import { CELL_CATEGORY, CELL_GROUP, WAVEFORM } from '@/constants/strings'
 import { UNIT } from '@/constants/units'
-import { computeSchwan, computeResonantDisruption, safeRatio, computeTau, computePulseStepResponse, tempCorrectedVth } from '@/utils/physics'
-import { tipCmpTitle, tipCmpRow } from '@/tooltips/selectivityTooltips'
 
 export default defineComponent({
   computed: {

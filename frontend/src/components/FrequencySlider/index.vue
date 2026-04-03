@@ -40,10 +40,13 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { mapStores } from 'pinia'
+
 import { useCellStore } from '@/stores/cellStore'
+
 import { THERMAL_LEVEL } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
 import type { SliderRange } from '@/constants/sliderBounds'
+
 import TitleRow from './TitleRow.vue'
 import ThermalBanner from './ThermalBanner.vue'
 import MediumRow from './MediumRow.vue'
@@ -51,7 +54,6 @@ import FreqRow from './FreqRow.vue'
 import FieldRow from './FieldRow.vue'
 import ProtocolSection from './ProtocolSection.vue'
 import AdvancedSection from './AdvancedSection.vue'
-
 export default defineComponent({
   components: { TitleRow, ThermalBanner, MediumRow, FreqRow, FieldRow, ProtocolSection, AdvancedSection },
 

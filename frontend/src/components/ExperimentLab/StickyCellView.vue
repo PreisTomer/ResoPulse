@@ -44,11 +44,14 @@
 
 <script lang="ts">
 import { defineComponent, type PropType } from 'vue'
+
 import SideTabPanel from '@/components/ExperimentLab/SideTabPanel.vue'
 import CellCard from '@/components/CellCard/index.vue'
-import type { CellRecord } from '@/types/cell'
+
 import { EMIT } from '@/constants/emitEvents'
 import { ICON } from '@/constants/icons'
+
+import type { CellRecord } from '@/types/cell'
 
 export interface CellCardRow {
   id: string

@@ -90,13 +90,18 @@
 <script lang="ts">
 import { defineComponent, computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+
 import type { LogEntry } from '@/stores/experimentStore'
 import { useExperimentStore } from '@/stores/experimentStore'
-import { formatFreqKHz, formatFieldVcm, formatRange } from '@/utils/format'
-import { LOG_EVENT, NULL_DISPLAY } from '@/constants/strings'
-import { THRESHOLDS } from '@/constants/physics'
+
 import StatCard from '@/components/StatCard.vue'
 import PageHeader from '@/components/PageHeader.vue'
+
+import { formatFreqKHz, formatFieldVcm, formatRange } from '@/utils/format'
+
+import { LOG_EVENT, NULL_DISPLAY } from '@/constants/strings'
+import { THRESHOLDS } from '@/constants/physics'
+
 import ReportsLogEmpty from './ReportsLogEmpty.vue'
 import ReportsMethodsBar from './ReportsMethodsBar.vue'
 import ReportsLogTable from './ReportsLogTable.vue'

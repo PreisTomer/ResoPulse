@@ -24,8 +24,8 @@
 
 <script lang="ts">
 import { defineComponent, type PropType } from 'vue'
-import type { SafetyRow } from './types'
 
+import type { SafetyRow } from './types'
 export default defineComponent({
   name: 'ProtocolSectionSafety',
 

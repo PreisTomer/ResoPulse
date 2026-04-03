@@ -1,8 +1,10 @@
 // Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 
-import type { CellConfig } from '@/types/cell'
 import { computeSchwan, computeNuclearVm, computeDepCmReal } from '@/utils/physics'
+
 import { UNIT } from '@/constants/units'
+
+import type { CellConfig } from '@/types/cell'
 
 // ── Chart geometry constants ──────────────────────────────────────────────────
 

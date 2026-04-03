@@ -16,9 +16,10 @@
 
 <script lang="ts">
 import { defineComponent, type PropType } from 'vue'
-import { useUiStore } from '@/stores/uiStore'
-import { scrollAndHighlight } from '@/utils/highlight'
 
+import { useUiStore } from '@/stores/uiStore'
+
+import { scrollAndHighlight } from '@/utils/highlight'
 export default defineComponent({
   name: 'ProtocolSectionSteps',
 

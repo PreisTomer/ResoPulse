@@ -1,8 +1,10 @@
 // Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 import { defineStore } from 'pinia'
-import type { CellConfig } from '@/types/cell'
+
 import { CELL_TYPE } from '@/constants/strings'
 import type { CellType } from '@/constants/strings'
+
+import type { CellConfig } from '@/types/cell'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 

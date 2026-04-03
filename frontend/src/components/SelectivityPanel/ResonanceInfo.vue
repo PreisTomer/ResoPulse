@@ -25,9 +25,12 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { mapStores } from 'pinia'
+
 import { useCellStore } from '@/stores/cellStore'
-import { EXPERIMENTAL_BASIS } from '@/constants/strings'
+
 import { formatFreqKHz } from '@/utils/format'
+
+import { EXPERIMENTAL_BASIS } from '@/constants/strings'
 
 export default defineComponent({
   computed: {

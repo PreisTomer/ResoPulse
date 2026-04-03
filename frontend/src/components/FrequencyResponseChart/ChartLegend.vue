@@ -48,10 +48,11 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { mapStores } from 'pinia'
+
 import { useCellStore } from '@/stores/cellStore'
+
 import { GROUP_COLORS } from '@/constants/cellLibrary'
 import type { CellGroup } from '@/constants/cellLibrary'
-
 const GROUP_TIP_KEYS: Record<CellGroup, string> = {
   reference: 'chart.tipReference',
   cancer:    'chart.tipCancer',

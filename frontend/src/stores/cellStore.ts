@@ -2,14 +2,15 @@
 // Unauthorized copying or distribution is prohibited.
 
 import { defineStore } from 'pinia'
+
 import { cloneDeep } from 'lodash'
+
+import { computeSchwan, computeSAR, computeFc, computeTau, computeNuclearTau, computeResonantDisruption, computeNuclearVm, computePulseStepResponse, computeSkinDepthMm, computeDepCmReal, computeDepCrossoverKHz, computeDepSecondCrossoverKHz, computePopulationLysisFraction, safeRatio, tempCorrectedVth } from '@/utils/physics'
+
 import { cellConfigs } from '@/constants/defaultCells'
 import { CELL_PRESETS } from '@/constants/cellLibrary'
 import { MEDIA } from '@/constants/media'
-import type { CellConfig, CellState } from '@/types/cell'
-import type { MediumKey } from '@/types/media'
 import { SLIDER_RANGES, type SliderRange } from '@/constants/sliderBounds'
-import { computeSchwan, computeSAR, computeFc, computeTau, computeNuclearTau, computeResonantDisruption, computeNuclearVm, computePulseStepResponse, computeSkinDepthMm, computeDepCmReal, computeDepCrossoverKHz, computeDepSecondCrossoverKHz, computePopulationLysisFraction, safeRatio, tempCorrectedVth } from '@/utils/physics'
 import { CELL_CATEGORY, CELL_STATE, CHART_MODE, WAVEFORM, CELL_TYPE, FREQ_REGIME, DEFAULT_SESSION_NAME } from '@/constants/strings'
 import { DEFAULT_LYSIS_N_PULSES, DEFAULT_ORIENTATION_DEG } from '@/constants/experimentDefaults'
 import { MEDIUM_SPECIFIC_HEAT_J_KG_K } from '@/constants/cuvette'
@@ -54,6 +55,9 @@ import {
   ELECTRODE_POLARIZATION_LIMIT_KHZ,
   GHZ_FIELD_WARNING_V_CM,
 } from '@/constants/physics'
+
+import type { CellConfig, CellState } from '@/types/cell'
+import type { MediumKey } from '@/types/media'
 
 // ── Module-level computation helpers (pure functions - no store context needed) ──
 

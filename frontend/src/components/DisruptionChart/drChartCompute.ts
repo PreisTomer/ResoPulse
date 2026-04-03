@@ -1,9 +1,11 @@
 // Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 
 import { computeSchwan, computeResonantDisruption, tempCorrectedVth } from '@/utils/physics'
+
 import { DEFAULT_CAPSID_Q } from '@/constants/physics'
-import type { CellConfig } from '@/types/cell'
 import { UNIT } from '@/constants/units'
+
+import type { CellConfig } from '@/types/cell'
 
 // ── Chart domain constants ──────────────────────────────────────────────────
 

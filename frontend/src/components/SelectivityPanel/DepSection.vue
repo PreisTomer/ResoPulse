@@ -27,9 +27,10 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { mapStores } from 'pinia'
-import { useCellStore } from '@/stores/cellStore'
-import { formatFreqKHz } from '@/utils/format'
 
+import { useCellStore } from '@/stores/cellStore'
+
+import { formatFreqKHz } from '@/utils/format'
 export default defineComponent({
   computed: {
     ...mapStores(useCellStore),

@@ -213,14 +213,15 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { mapStores } from 'pinia'
+
 import { useImpedanceStore } from '@/stores/impedanceStore'
 import type { ConductivitySample } from '@/stores/impedanceStore'
 import { useCellStore } from '@/stores/cellStore'
+
 import { UNIT } from '@/constants/units'
 import { ICON } from '@/constants/icons'
 import { CONDUCTIVITY_SAMPLE_INTERVAL_MS } from '@/constants/cuvette'
 import { DRIFT_WARN_PCT, DRIFT_DANGER_PCT, CONDUCTIVITY_DELTA_WARN_S_M, CORRECTION_PCT_WARN } from '@/constants/physics'
-
 const SVG_W = 400
 const SVG_H = 110
 const Y_PAD = 4

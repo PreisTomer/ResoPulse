@@ -70,9 +70,9 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+
 import { UNIT } from '@/constants/units'
 import { EMIT } from '@/constants/emitEvents'
-
 export default defineComponent({
   name: 'CcmResonanceSection',
 

@@ -163,19 +163,24 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { mapStores } from 'pinia'
+
 import { useCellStore } from '@/stores/cellStore'
 import { useImpedanceStore } from '@/stores/impedanceStore'
 import { useUserPresetsStore } from '@/stores/userPresetsStore'
 import type { UserCellPreset } from '@/stores/userPresetsStore'
+
 import { broadcastStateSync, socketConnected } from '@/services/socket'
+
+import CreateCellModal from '@/components/CreateCellModal/index.vue'
+
+import { formatFreqKHz } from '@/utils/format'
+import { tipCellBadgeHealthy, tipCellBadgeTarget } from '@/tooltips/experimentTooltips'
+
 import { CELL_PRESETS, GROUP_COLORS, GROUP_LABELS } from '@/constants/cellLibrary'
 import type { CellPreset, CellGroup } from '@/constants/cellLibrary'
 import { CELL_GROUP } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
 import { EMIT } from '@/constants/emitEvents'
-import { formatFreqKHz } from '@/utils/format'
-import { tipCellBadgeHealthy, tipCellBadgeTarget } from '@/tooltips/experimentTooltips'
-import CreateCellModal from '@/components/CreateCellModal/index.vue'
 
 export default defineComponent({
   name: 'ExperimentHeader',

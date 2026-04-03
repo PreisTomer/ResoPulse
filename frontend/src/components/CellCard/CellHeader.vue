@@ -35,10 +35,12 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import type { PropType } from 'vue'
-import type { CellState } from '@/types/cell'
+
 import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'
 import { THRESHOLDS } from '@/constants/cellCard'
+
+import type { CellState } from '@/types/cell'
 
 export default defineComponent({
   props: {

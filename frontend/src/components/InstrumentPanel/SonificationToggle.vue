@@ -22,9 +22,12 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
-import { sonification } from '@/services/sonification'
+
 import { useImpedanceStore } from '@/stores/impedanceStore'
 import { useCellStore } from '@/stores/cellStore'
+
+import { sonification } from '@/services/sonification'
+
 import { THRESHOLDS, SONIF_PITCH_MIN_HZ, SONIF_PITCH_RANGE_HZ } from '@/constants/physics'
 import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'

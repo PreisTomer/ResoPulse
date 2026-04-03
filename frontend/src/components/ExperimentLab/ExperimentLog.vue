@@ -134,13 +134,16 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { mapStores } from 'pinia'
-import AccordionPanel from '@/components/AccordionPanel.vue'
-import StatusBadge from '@/components/StatusBadge.vue'
+
 import { useExperimentStore } from '@/stores/experimentStore'
 import { useCellStore } from '@/stores/cellStore'
 import { useAiStore } from '@/stores/aiStore'
+
 import { broadcastLogEntry, broadcastLogOutcome } from '@/services/socket'
-import { LOG_EVENT, NULL_DISPLAY } from '@/constants/strings'
+
+import AccordionPanel from '@/components/AccordionPanel.vue'
+import StatusBadge from '@/components/StatusBadge.vue'
+
 import { eventVariant as sharedEventVariant, depKDisplay, depKDisplayFull } from '@/utils/experimentUtils'
 import {
   tipCellSession as sharedTipCellSession,
@@ -152,9 +155,11 @@ import {
   tipCellDepH as sharedTipCellDepH,
   tipCellDepT as sharedTipCellDepT,
 } from '@/tooltips/logTooltips'
+import { formatFreqKHz } from '@/utils/format'
+
+import { LOG_EVENT, NULL_DISPLAY } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
 import { THRESHOLDS } from '@/constants/physics'
-import { formatFreqKHz } from '@/utils/format'
 import { UNIT } from '@/constants/units'
 
 export default defineComponent({

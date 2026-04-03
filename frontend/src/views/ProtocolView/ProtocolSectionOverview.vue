@@ -13,8 +13,8 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
-import { ICON } from '@/constants/icons'
 
+import { ICON } from '@/constants/icons'
 export default defineComponent({
   name: 'ProtocolSectionOverview',
 

@@ -95,15 +95,20 @@
 import { defineComponent } from 'vue'
 import { mapStores } from 'pinia'
 import type { PropType } from 'vue'
+
 import { useCellStore } from '@/stores/cellStore'
+
 import { broadcastStateSync } from '@/services/socket'
+
+import { tipWaveform, tipDutyCycle, tipPulseWidth, formatLysisTime } from '@/tooltips/sliderTooltips'
+
 import { WAVEFORM, THERMAL_LEVEL, CELL_LABEL, type WaveformMode } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'
-import { tipWaveform, tipDutyCycle, tipPulseWidth, formatLysisTime } from '@/tooltips/sliderTooltips'
 import { CW_WAVEFORM_FACTOR, PULSED_WAVEFORM_FACTOR } from '@/constants/experimentDefaults'
 import { H_FIRE_THRESHOLD_MULTIPLIER } from '@/constants/physics'
 import { SLIDER_DC } from '@/constants/sliderBounds'
+
 import ProtocolSnapBar from './ProtocolSnapBar.vue'
 
 export default defineComponent({

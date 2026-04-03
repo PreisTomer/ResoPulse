@@ -125,8 +125,10 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { mapStores } from 'pinia'
+
 import { useImpedanceStore } from '@/stores/impedanceStore'
 import { useCellStore } from '@/stores/cellStore'
+
 import { UNIT } from '@/constants/units'
 import { ICON } from '@/constants/icons'
 import {
@@ -134,7 +136,6 @@ import {
   VSWR_OK, VSWR_WARN,
   POWER_EFFICIENCY_OK, POWER_EFFICIENCY_WARN,
 } from '@/constants/physics'
-
 export default defineComponent({
   name: 'FieldCorrector',
 

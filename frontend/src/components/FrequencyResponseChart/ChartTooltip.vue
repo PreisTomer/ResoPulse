@@ -46,11 +46,12 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import type { PropType } from 'vue'
+
 import { formatTooltipFreq } from './chartCompute'
 import type { TooltipData } from './chartCompute'
+
 import { CELL_LABEL } from '@/constants/strings'
 import { UNIT } from '@/constants/units'
-
 export default defineComponent({
   props: {
     data: {

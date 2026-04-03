@@ -1,10 +1,11 @@
 // Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 
 // Selectivity-panel tooltip builders. Pure — no store access.
+import { formatFreqKHz } from '@/utils/format'
+
 import { ICON } from '@/constants/icons'
 import { THRESHOLDS, DEFAULT_CAPSID_Q } from '@/constants/physics'
 import { CELL_CATEGORY } from '@/constants/strings'
-import { formatFreqKHz } from '@/utils/format'
 
 export function tipTiRange(params: {
   low: number

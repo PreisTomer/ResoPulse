@@ -67,7 +67,11 @@
 <script lang="ts">
 import { defineComponent, type PropType } from 'vue'
 import { useI18n } from 'vue-i18n'
+
 import type { LogEntry } from '@/stores/experimentStore'
+
+import StatusBadge from '@/components/StatusBadge.vue'
+
 import { eventVariant as sharedEventVariant, depKDisplay } from '@/utils/experimentUtils'
 import {
   tipCellSession as sharedTipCellSession,
@@ -80,10 +84,10 @@ import {
   tipCellDepT as sharedTipCellDepT,
 } from '@/tooltips/logTooltips'
 import { formatFreqKHz, formatFieldVcm } from '@/utils/format'
+
 import { LOG_EVENT, NULL_DISPLAY } from '@/constants/strings'
 import { THRESHOLDS } from '@/constants/physics'
 import { ICON } from '@/constants/icons'
-import StatusBadge from '@/components/StatusBadge.vue'
 import { EMIT } from '@/constants/emitEvents'
 
 const TABLE_COLS_DEFS: Array<{ key: string; labelKey: string; tipKey?: string }> = [

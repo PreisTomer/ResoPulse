@@ -51,6 +51,15 @@
 
     "tipMeanDr": "<strong>Mean DR ± σ</strong>\nDR = Vm(R, σ_i, f, E) × f_pulse / V_th\nMean: <span class='tip-val'>{mean}</span>  ·  σ (population spread): <span class='tip-val'>{std}</span>\nσ_i uncertainty ±{uncPct}% modelled in each sample.\nNote: σ here is the population standard deviation of DR, not the SE of the mean.",
 
+    "csvTitle":       "ResoPulse: Population Monte Carlo Export",
+    "csvExported":    "Exported: {timestamp}",
+    "csvHealthy":     "Healthy: {label} · R={radius} {um} · N={n} · σ_i ±{uncPct}% · R ±{rPct}% · V_th ±{vthPct}%",
+    "csvTarget":      "Target:  {label} · R={radius} {um} · N={n} · σ_i ±{uncPct}% · R ±{rPct}% · V_th ±{vthPct}%",
+    "csvMedium":      "Medium: {medium} · σ_e={sigmaE} {sm}",
+    "csvField":       "Field: {freq} {khz} · {field} {vcm} · {waveform} · dc={dc} · pw={pw} {ns}",
+    "csvWindowScore": "Window Score: {score} ({verdict}), WS = (pctLysedTarget/100) x (1 - pctLysedHealthy/100)",
+    "csvModel":       "Model: Schwan + Box-Muller Gaussian sampling (Kotnik & Miklavcic 2000; V_th: Weaver & Chizmadzhev 1996)",
+
     "chartAxisDr": "Disruption Ratio",
     "chartAxisCount": "Cell count",
     "chartAxisFraction": "Cell fraction",

@@ -310,9 +310,10 @@
 
 <script lang="ts">
 import { defineComponent, type PropType } from 'vue'
-import type { SchwanParamRow, ResonanceRow, DoubleshellRow, DepRow, UncertaintyRow, SonificationRow } from './types'
-import { ICON } from '@/constants/icons'
 
+import type { SchwanParamRow, ResonanceRow, DoubleshellRow, DepRow, UncertaintyRow, SonificationRow } from './types'
+
+import { ICON } from '@/constants/icons'
 export default defineComponent({
   name: 'ProtocolSectionPhysics',
 

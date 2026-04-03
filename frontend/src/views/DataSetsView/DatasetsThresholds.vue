@@ -239,8 +239,8 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
-import { THRESHOLDS } from '@/constants/physics'
 
+import { THRESHOLDS } from '@/constants/physics'
 export default defineComponent({
   name: 'DatasetsThresholds',
 

@@ -26,17 +26,24 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { mapStores } from 'pinia'
+
 import * as d3 from 'd3'
+
 import { useCellStore } from '@/stores/cellStore'
+
+import { broadcastStateSync } from '@/services/socket'
+
 import { computeResonantDisruption } from '@/utils/physics'
+
+import { C } from '@/theme/colors'
+
 import { DEFAULT_CAPSID_Q } from '@/constants/physics'
 import { CELL_PRESETS, GROUP_COLORS } from '@/constants/cellLibrary'
 import type { CellGroup } from '@/constants/cellLibrary'
-import type { CellConfig } from '@/types/cell'
-import { broadcastStateSync } from '@/services/socket'
-import { C } from '@/theme/colors'
 import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'
+
+import type { CellConfig } from '@/types/cell'
 
 // Frequency range: 10 MHz-50 GHz
 const F_MIN_HZ = 10_000_000

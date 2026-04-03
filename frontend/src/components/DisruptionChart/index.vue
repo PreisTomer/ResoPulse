@@ -25,14 +25,20 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
-import * as d3 from 'd3'
 import { mapStores } from 'pinia'
+
+import * as d3 from 'd3'
+
 import { useCellStore } from '@/stores/cellStore'
+
 import { broadcastStateSync } from '@/services/socket'
+
+import { C } from '@/theme/colors'
+
 import { CELL_CATEGORY, WAVEFORM } from '@/constants/strings'
 import { H_FIRE_THRESHOLD_MULTIPLIER } from '@/constants/physics'
 import { ICON } from '@/constants/icons'
-import { C } from '@/theme/colors'
+
 import DrChartLegend from './DrChartLegend.vue'
 import DrChartTooltip from './DrChartTooltip.vue'
 import type { HoverInfo } from './DrChartTooltip.vue'

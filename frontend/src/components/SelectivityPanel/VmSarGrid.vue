@@ -41,10 +41,13 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { mapStores } from 'pinia'
+
 import { useCellStore } from '@/stores/cellStore'
+
+import { formatFieldVcm, formatLysisFieldVcm } from '@/utils/format'
+
 import { CELL_CATEGORY } from '@/constants/strings'
 import { UNIT } from '@/constants/units'
-import { formatFieldVcm, formatLysisFieldVcm } from '@/utils/format'
 
 export default defineComponent({
   computed: {

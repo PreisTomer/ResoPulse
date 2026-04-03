@@ -107,7 +107,9 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { mapStores } from 'pinia'
+
 import { useImpedanceStore } from '@/stores/impedanceStore'
+
 import {
   CUVETTE_PRESETS,
   CUVETTE_GAP_MIN_MM, CUVETTE_GAP_MAX_MM, CUVETTE_GAP_STEP_MM,
@@ -116,7 +118,6 @@ import {
 } from '@/constants/cuvette'
 import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'
-
 export default defineComponent({
   name: 'CuvetteSetup',
 

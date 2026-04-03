@@ -118,11 +118,13 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { mapStores } from 'pinia'
+
 import { useImpedanceStore } from '@/stores/impedanceStore'
 import { useCellStore }      from '@/stores/cellStore'
-import { computeCuvetteComplexImpedanceMag } from '@/utils/impedance'
-import { UNIT } from '@/constants/units'
 
+import { computeCuvetteComplexImpedanceMag } from '@/utils/impedance'
+
+import { UNIT } from '@/constants/units'
 const SVG_W  = 560
 const SVG_H  = 176
 const MARGIN = { left: 38, right: 12, bottom: 38 }

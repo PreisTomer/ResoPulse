@@ -1,7 +1,8 @@
 // Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 
-import { NULL_DISPLAY } from '@/constants/strings'
 import { depKDisplayFull } from '@/utils/experimentUtils'
+
+import { NULL_DISPLAY } from '@/constants/strings'
 
 type TFn = (key: string, params?: Record<string, unknown>) => string
 

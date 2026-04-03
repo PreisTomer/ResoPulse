@@ -54,13 +54,17 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { mapStores } from 'pinia'
+
 import { useUserPresetsStore } from '@/stores/userPresetsStore'
 import type { UserCellPreset } from '@/stores/userPresetsStore'
 import { useCellStore } from '@/stores/cellStore'
-import { EPSILON_0 } from '@/constants/physics'
+
 import { computeTau, computeFc } from '@/utils/physics'
+
+import { EPSILON_0 } from '@/constants/physics'
 import { UNIT } from '@/constants/units'
 import { EMIT } from '@/constants/emitEvents'
+
 import CcmHeader from './CcmHeader.vue'
 import CcmTipPanel from './CcmTipPanel.vue'
 import CcmIdentitySection from './CcmIdentitySection.vue'

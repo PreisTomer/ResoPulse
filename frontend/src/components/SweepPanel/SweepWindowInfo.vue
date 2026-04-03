@@ -35,8 +35,10 @@
 
 <script lang="ts">
 import { defineComponent, type PropType } from 'vue'
-import { UNIT } from '@/constants/units'
+
 import { tipWindow, tipNoWindow } from '@/tooltips/sweepTooltips'
+
+import { UNIT } from '@/constants/units'
 import { EMIT } from '@/constants/emitEvents'
 
 interface SweepPoint {

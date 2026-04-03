@@ -94,11 +94,15 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { mapStores } from 'pinia'
+
 import { useImpedanceStore } from '@/stores/impedanceStore'
+
+import BridgeSetupModal from '@/components/BridgeSetupModal/index.vue'
+
 import { computeSigmaEFromImpedance } from '@/utils/impedance'
+
 import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'
-import BridgeSetupModal from '@/components/BridgeSetupModal/index.vue'
 
 const SCHEMA_EXAMPLE = `{
   "zReal":       245.3,

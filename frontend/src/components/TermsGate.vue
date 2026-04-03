@@ -48,8 +48,8 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
-import { EMIT } from '@/constants/emitEvents'
 
+import { EMIT } from '@/constants/emitEvents'
 const STORAGE_KEY = 'rp_terms_v1'
 
 export default defineComponent({

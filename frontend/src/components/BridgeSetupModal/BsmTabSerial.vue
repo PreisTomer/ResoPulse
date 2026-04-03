@@ -58,10 +58,11 @@
 
 <script lang="ts">
 import { defineComponent, type PropType } from 'vue'
+
 import { CMD } from './bsmCommands'
+
 import { ICON } from '@/constants/icons'
 import { EMIT } from '@/constants/emitEvents'
-
 export default defineComponent({
   name: 'BsmTabSerial',
 

@@ -3,12 +3,7 @@
 // Unit tests: Schwan Vm/τ, H-FIRE threshold, PEF, lysis field, DR field independence, slider bounds
 
 import { describe, it, expect } from 'vitest'
-import {
-  computeSchwan,
-  computeTau,
-  computePulseStepResponse,
-  computeSAR,
-} from './physics'
+
 import { SLIDER_RANGES } from '@/constants/sliderBounds'
 import {
   H_FIRE_THRESHOLD_MULTIPLIER,
@@ -16,7 +11,15 @@ import {
   TWO_PI,
   MIN_PULSE_ENVELOPE,
 } from '@/constants/physics'
+
 import type { CellConfig } from '@/types/cell'
+
+import {
+  computeSchwan,
+  computeTau,
+  computePulseStepResponse,
+  computeSAR,
+} from './physics'
 import { TARGET_CELL, HEALTHY_CELL, SIGMA_E, FIELD } from './testFixtures'
 
 // ── computeTau ───────────────────────────────────────────────────────────────

@@ -89,10 +89,11 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { mapStores } from 'pinia'
+
 import { useImpedanceStore } from '@/stores/impedanceStore'
 import type { ImpedanceHistoryPoint } from '@/stores/impedanceStore'
-import { UNIT } from '@/constants/units'
 
+import { UNIT } from '@/constants/units'
 const SVG_W = 400
 const SVG_H = 80
 const RECENT_N = 8

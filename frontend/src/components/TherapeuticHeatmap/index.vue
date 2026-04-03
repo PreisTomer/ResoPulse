@@ -31,11 +31,16 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { mapStores } from 'pinia'
+
 import { useCellStore } from '@/stores/cellStore'
+
+import AccordionPanel  from '@/components/AccordionPanel.vue'
+
 import { CELL_CATEGORY } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
+
 import type { HoverInfo } from '@/types/heatmap'
-import AccordionPanel  from '@/components/AccordionPanel.vue'
+
 import HeatmapCanvas   from './HeatmapCanvas.vue'
 import HeatmapReadout  from './HeatmapReadout.vue'
 import HeatmapLegend   from './HeatmapLegend.vue'

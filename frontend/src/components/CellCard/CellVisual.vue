@@ -167,16 +167,22 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import type { PropType } from 'vue'
-import * as d3 from 'd3'
 import { mapStores } from 'pinia'
+
+import * as d3 from 'd3'
+
 import { useCellStore } from '@/stores/cellStore'
 import { useExperimentStore } from '@/stores/experimentStore'
 import { useImpedanceStore } from '@/stores/impedanceStore'
+
 import { broadcastLogEntry } from '@/services/socket'
 import { sonification } from '@/services/sonification'
+
+import { tempCorrectedVth } from '@/utils/physics'
+import { formatLysisTimeLocal, tipNuclearBar as tipNuclearBarFn, tipDep as tipDepFn, tipDisruption as tipDisruptionFn, tipVm as tipVmFn, tipAcousticVm as tipAcousticVmFn, tipTemp as tipTempFn, tipState as tipStateFn } from '@/tooltips/cellCardTooltips'
+import { hideTip } from '@/directives/vTooltip'
+
 import { CELL_PRESETS } from '@/constants/cellLibrary'
-import type { CellConfig, CellRecord } from '@/types/cell'
-import type { CellState } from '@/types/cell'
 import {
   CELL_COLORS,
   THRESHOLDS,
@@ -184,16 +190,17 @@ import {
   FRAGMENT_INTERVAL_MS,
 } from '@/constants/cellCard'
 import { H_FIRE_THRESHOLD_MULTIPLIER } from '@/constants/physics'
-import { tempCorrectedVth } from '@/utils/physics'
-import { setupBlobAnimation, setupOscilloscope, spawnFragment } from './cellAnimation'
-import type { CellVisualProfile } from './cellAnimation'
 import { CELL_STATE, CELL_TYPE, CELL_CATEGORY, WAVEFORM } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'
-import { formatLysisTimeLocal, tipNuclearBar as tipNuclearBarFn, tipDep as tipDepFn, tipDisruption as tipDisruptionFn, tipVm as tipVmFn, tipAcousticVm as tipAcousticVmFn, tipTemp as tipTempFn, tipState as tipStateFn } from '@/tooltips/cellCardTooltips'
-import { hideTip } from '@/directives/vTooltip'
-import BiostimPanel from './BiostimPanel.vue'
 import { EMIT } from '@/constants/emitEvents'
+
+import type { CellConfig, CellRecord } from '@/types/cell'
+import type { CellState } from '@/types/cell'
+
+import { setupBlobAnimation, setupOscilloscope, spawnFragment } from './cellAnimation'
+import type { CellVisualProfile } from './cellAnimation'
+import BiostimPanel from './BiostimPanel.vue'
 
 export default defineComponent({
   components: { BiostimPanel },

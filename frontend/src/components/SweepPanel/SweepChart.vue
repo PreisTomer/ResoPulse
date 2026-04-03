@@ -7,10 +7,14 @@
 
 <script lang="ts">
 import { defineComponent, type PropType } from 'vue'
-import * as d3 from 'd3'
 import { mapStores } from 'pinia'
+
+import * as d3 from 'd3'
+
 import { useCellStore } from '@/stores/cellStore'
+
 import { C } from '@/theme/colors'
+
 import { THRESHOLDS } from '@/constants/physics'
 import { UNIT } from '@/constants/units'
 

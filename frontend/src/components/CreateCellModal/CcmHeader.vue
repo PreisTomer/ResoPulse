@@ -11,9 +11,9 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+
 import { ICON } from '@/constants/icons'
 import { EMIT } from '@/constants/emitEvents'
-
 export default defineComponent({
   name: 'CcmHeader',
 

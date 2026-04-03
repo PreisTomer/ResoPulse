@@ -3,6 +3,9 @@
 // Advanced physics tests: nuclear Vm, acoustic resonance, skin depth, population lysis, DEP CM
 
 import { describe, it, expect } from 'vitest'
+
+import type { CellConfig } from '@/types/cell'
+
 import {
   computeNuclearVm,
   computeNuclearTau,
@@ -15,7 +18,6 @@ import {
   computeDepCmReal,
 } from './physics'
 import { TARGET_CELL, HEALTHY_CELL, SIGMA_E, FIELD } from './testFixtures'
-import type { CellConfig } from '@/types/cell'
 
 // ── Nuclear Vm (double-shell model) ─────────────────────────────────────────
 

@@ -66,10 +66,11 @@
 
 <script lang="ts">
 import { defineComponent, type PropType } from 'vue'
+
 import { CELL_GROUP } from '@/constants/strings'
 import { THRESHOLDS } from '@/constants/physics'
-import type { AugmentedPreset } from './types'
 
+import type { AugmentedPreset } from './types'
 export default defineComponent({
   name: 'DatasetsNucShellTable',
 

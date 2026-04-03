@@ -35,11 +35,16 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { mapStores } from 'pinia'
+
 import { useCellStore } from '@/stores/cellStore'
+
 import { broadcastStateSync } from '@/services/socket'
-import { MEDIA } from '@/constants/media'
-import type { MediumKey } from '@/types/media'
+
 import { tipMedium, tipMediumKeys, tipSigmaE } from '@/tooltips/sliderTooltips'
+
+import { MEDIA } from '@/constants/media'
+
+import type { MediumKey } from '@/types/media'
 
 export default defineComponent({
   data() {

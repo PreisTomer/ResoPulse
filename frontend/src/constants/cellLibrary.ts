@@ -2,8 +2,9 @@
 // Unauthorized copying or distribution is prohibited.
 
 // Biologically realistic cell/pathogen presets. All Schwan parameters from bioelectromagnetics literature.
-import type { CellConfig } from '@/types/cell'
+import { GROUP_COLORS as _GROUP_COLORS } from '@/theme/colors'
 
+import type { CellConfig } from '@/types/cell'
 export type CellGroup = 'reference' | 'cancer' | 'bacteria' | 'virus'
 
 export interface CellPreset extends CellConfig {
@@ -15,7 +16,6 @@ export interface CellPreset extends CellConfig {
 }
 
 // GROUP_COLORS defined in theme/colors.ts - re-exported here for back-compat
-import { GROUP_COLORS as _GROUP_COLORS } from '@/theme/colors'
 export const GROUP_COLORS: Record<CellGroup, string> = _GROUP_COLORS
 
 export const GROUP_LABELS: Record<CellGroup, string> = {

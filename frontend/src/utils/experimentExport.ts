@@ -7,11 +7,9 @@ import { MEDIA } from '@/constants/media'
 import { UNIT } from '@/constants/units'
 import { CELL_LABEL, CHART_MODE } from '@/constants/strings'
 import { TWO_PI, THRESHOLDS, NEWTON_COOLING_LAMBDA, PENNES_BLOOD_COEFF, EPSILON_R_CYTOPLASM, SIGMA_MEMBRANE_SI, TEMP_EP_COEFF, EPSILON_0 } from '@/constants/physics'
+
 import type { MediumKey } from '@/types/media'
 import type { CellParamSnapshot, LogEntry } from '@/types/experiment'
-
-// ── Low-level text helpers ─────────────────────────────────────────────────
-
 export const sep = (ch = '─', n = 54): string => ch.repeat(n)  // horizontal rule
 
 export const fld = (label: string, value: string, width = 26): string =>  // left-padded key=value line

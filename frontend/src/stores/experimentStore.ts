@@ -1,11 +1,15 @@
 // Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 
 import { defineStore } from 'pinia'
+
 import { useCellStore } from '@/stores/cellStore'
+
+import { downloadText, buildEntryMethodsText, buildCsvText } from '@/utils/experimentExport'
+
 import { CHART_MODE, DEFAULT_SESSION_NAME } from '@/constants/strings'
 import { MEDIA } from '@/constants/media'
 import { SIGMA_MEMBRANE_SI } from '@/constants/physics'
-import { downloadText, buildEntryMethodsText, buildCsvText } from '@/utils/experimentExport'
+
 import type { MediumKey } from '@/types/media'
 
 // Re-export types so existing importers (e.g. socket.ts) don't need to change

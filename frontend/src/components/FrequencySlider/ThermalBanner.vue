@@ -20,11 +20,12 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import type { PropType } from 'vue'
+
 import { THERMAL_LEVEL } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'
-import { tipThermalBanner } from '@/tooltips/sliderTooltips'
 
+import { tipThermalBanner } from '@/tooltips/sliderTooltips'
 export default defineComponent({
   props: {
     thermalDangerLevel: {

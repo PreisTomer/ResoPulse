@@ -101,12 +101,13 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { mapStores } from 'pinia'
+
 import { useImpedanceStore } from '@/stores/impedanceStore'
 import { useCellStore } from '@/stores/cellStore'
+
 import { UNIT } from '@/constants/units'
 import { ICON } from '@/constants/icons'
 import { DRIFT_WARN_PCT, DRIFT_DANGER_PCT, DRIFT_BAR_SCALE } from '@/constants/physics'
-
 export default defineComponent({
   name: 'ImpedanceMeter',
 

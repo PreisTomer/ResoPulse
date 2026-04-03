@@ -2,11 +2,13 @@
 
 // Tooltip builders for FrequencySlider. Pure — no Vue dependency.
 
+import { formatLysisTime } from '@/utils/format'
+
 import { MEDIA } from '@/constants/media'
 import { DEFAULT_CAPSID_Q, LYSIS_FIELD_SENTINEL, THRESHOLDS, NEWTON_COOLING_LAMBDA, PENNES_BLOOD_COEFF, BLOOD_DENSITY_KG_M3, BLOOD_SPECIFIC_HEAT_J_KGK } from '@/constants/physics'
 import { CELL_CATEGORY, THERMAL_LEVEL } from '@/constants/strings'
 import { UNIT } from '@/constants/units'
-import { formatLysisTime } from '@/utils/format'
+
 import type { MediumKey } from '@/types/media'
 
 export { formatLysisTime }

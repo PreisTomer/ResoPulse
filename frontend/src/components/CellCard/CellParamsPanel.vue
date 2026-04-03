@@ -64,9 +64,11 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import type { PropType } from 'vue'
-import type { CellRecord } from '@/types/cell'
+
 import { ICON } from '@/constants/icons'
 import { EMIT } from '@/constants/emitEvents'
+
+import type { CellRecord } from '@/types/cell'
 
 type EditableRow = {
   key: string

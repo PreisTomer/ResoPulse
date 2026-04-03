@@ -82,9 +82,9 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+
 import { ICON } from '@/constants/icons'
 import { EMIT } from '@/constants/emitEvents'
-
 const SECTIONS = [
   { value: '§2.1 Schwan Transmembrane Voltage',   label: '§2.1 Schwan Transmembrane Voltage' },
   { value: '§2.2 SAR and Thermal Model',           label: '§2.2 SAR and Thermal Model' },

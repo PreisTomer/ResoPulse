@@ -31,13 +31,17 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { mapStores } from 'pinia'
+
 import { useCellStore } from '@/stores/cellStore'
+
+import { broadcastStateSync } from '@/services/socket'
+
+import { formatFreqKHz } from '@/utils/format'
+import { tipOptimal } from '@/tooltips/selectivityTooltips'
+
 import { THRESHOLDS } from '@/constants/physics'
 import { CELL_CATEGORY, CHART_MODE } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
-import { formatFreqKHz } from '@/utils/format'
-import { broadcastStateSync } from '@/services/socket'
-import { tipOptimal } from '@/tooltips/selectivityTooltips'
 
 export default defineComponent({
   computed: {

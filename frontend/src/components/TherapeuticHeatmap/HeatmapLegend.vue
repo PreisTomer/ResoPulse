@@ -10,9 +10,10 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
-import { HMAP_ZONE_COLOR, HMAP_ZONE_KEY } from '@/constants/heatmap'
-import { tipCanvas } from '@/tooltips/heatmapTooltips'
 
+import { HMAP_ZONE_COLOR, HMAP_ZONE_KEY } from '@/constants/heatmap'
+
+import { tipCanvas } from '@/tooltips/heatmapTooltips'
 const ZONE_COLORS = HMAP_ZONE_COLOR as Record<number, string>
 const ZONE_KEY    = HMAP_ZONE_KEY    as Record<number, string>
 

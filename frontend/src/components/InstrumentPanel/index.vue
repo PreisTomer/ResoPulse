@@ -37,6 +37,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+
 import CuvetteSetup        from './CuvetteSetup.vue'
 import ImpedanceMeter      from './ImpedanceMeter.vue'
 import ImpedanceBodePlot   from './ImpedanceBodePlot.vue'
@@ -45,7 +46,6 @@ import HardwareInput       from './HardwareInput.vue'
 import ImpedanceTrend      from './ImpedanceTrend.vue'
 import LoadMonitor         from './LoadMonitor.vue'
 import SonificationToggle  from './SonificationToggle.vue'
-
 export default defineComponent({
   name: 'InstrumentPanel',
   components: { CuvetteSetup, ImpedanceMeter, ImpedanceBodePlot, FieldCorrector, HardwareInput, ImpedanceTrend, LoadMonitor, SonificationToggle },

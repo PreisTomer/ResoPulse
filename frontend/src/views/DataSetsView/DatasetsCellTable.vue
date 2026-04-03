@@ -87,9 +87,10 @@
 
 <script lang="ts">
 import { defineComponent, type PropType } from 'vue'
-import { CELL_GROUP, NULL_DISPLAY } from '@/constants/strings'
-import type { AugmentedPreset } from './types'
 
+import { CELL_GROUP, NULL_DISPLAY } from '@/constants/strings'
+
+import type { AugmentedPreset } from './types'
 export default defineComponent({
   name: 'DatasetsCellTable',
 

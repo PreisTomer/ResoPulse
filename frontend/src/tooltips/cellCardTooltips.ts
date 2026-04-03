@@ -2,13 +2,15 @@
 
 // Tooltip builders for CellCard. Pure — no Vue dependency.
 
+import { computeTau } from '@/utils/physics'
+import { formatLysisTime as formatLysisTimeLocal } from '@/utils/format'
+
 import { MEDIA } from '@/constants/media'
 import { CELL_STATE, CELL_TYPE, WAVEFORM, EXPERIMENTAL_BASIS } from '@/constants/strings'
 import { UNIT } from '@/constants/units'
-import { computeTau } from '@/utils/physics'
-import type { CellConfig } from '@/types/cell'
 import { THRESHOLDS } from '@/constants/physics'
-import { formatLysisTime as formatLysisTimeLocal } from '@/utils/format'
+
+import type { CellConfig } from '@/types/cell'
 export { formatLysisTimeLocal }
 
 export function tipVm(opts: {

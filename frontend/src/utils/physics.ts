@@ -1,8 +1,9 @@
 // Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 
 // Biophysics utilities - Schwan single-shell model, SAR, nsEP, acoustic resonance, EM skin depth
-import type { CellConfig } from '@/types/cell'
 import { SCHWAN_SPHERE_FACTOR, WF_CW, EPSILON_R_CYTOPLASM, SIGMA_MEMBRANE_SI, TWO_PI, POP_LYSIS_GAUSS_N, POP_LYSIS_GAUSS_Z_MAX, BODY_TEMP_C, TEMP_EP_COEFF, TEMP_EP_CLAMP_MIN, EPSILON_0 } from '@/constants/physics'
+
+import type { CellConfig } from '@/types/cell'
 
 // numerator/denominator capped at cap; returns 0 or cap when denominator < epsilon.
 export function safeRatio(numerator: number, denominator: number, cap: number, epsilon = 1e-9): number {

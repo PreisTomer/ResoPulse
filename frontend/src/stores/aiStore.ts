@@ -1,11 +1,10 @@
 // Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 
 import { defineStore } from 'pinia'
+
 import { useCellStore } from '@/stores/cellStore'
+
 import type { AiOptimizeResult, AiParamSuggestion } from '@/services/socket'
-
-// ── State type ────────────────────────────────────────────────────────────────
-
 interface AiState {
   isLoading: boolean
   pendingRequestId: string | null  // in-flight requestId for response matching

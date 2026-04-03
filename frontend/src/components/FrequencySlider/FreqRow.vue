@@ -101,13 +101,17 @@
 import { defineComponent } from 'vue'
 import type { PropType } from 'vue'
 import { mapStores } from 'pinia'
+
 import { useCellStore } from '@/stores/cellStore'
+
 import { broadcastStateSync } from '@/services/socket'
+
+import { formatFreqKHz } from '@/utils/format'
+import { tipFreq, tipFcSub, tipOptimalBtn } from '@/tooltips/sliderTooltips'
+
 import { CELL_CATEGORY, FREQ_REGIME } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
 import type { SliderRange } from '@/constants/sliderBounds'
-import { formatFreqKHz } from '@/utils/format'
-import { tipFreq, tipFcSub, tipOptimalBtn } from '@/tooltips/sliderTooltips'
 
 // 150 px horizontal drag = one decade of frequency change
 const SCRUB_PX_PER_DECADE = 150

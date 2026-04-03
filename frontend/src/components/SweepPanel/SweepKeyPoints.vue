@@ -36,12 +36,13 @@
 
 <script lang="ts">
 import { defineComponent, type PropType } from 'vue'
+
 import { THRESHOLDS } from '@/constants/physics'
+
 import {
   tipThThreshold, tipThTI, tipThTemp,
   tipKpLabel, tipKpDrT, tipKpDrH, tipKpTI, tipKpTemp,
 } from '@/tooltips/sweepTooltips'
-
 interface KeyPoint {
   label: string; x: number; drH: number; drT: number; ti: number; tH: number; tT: number
 }

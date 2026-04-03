@@ -100,10 +100,13 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { mapStores } from 'pinia'
+
 import { useCellStore } from '@/stores/cellStore'
 import { useExperimentStore } from '@/stores/experimentStore'
 import { useUiStore } from '@/stores/uiStore'
+
 import { connectSocket, broadcastStateSync } from '@/services/socket'
+
 import AccordionPanel from '@/components/AccordionPanel.vue'
 import CellCard from '@/components/CellCard/index.vue'
 import FrequencySlider from '@/components/FrequencySlider/index.vue'
@@ -116,18 +119,21 @@ import SweepPanel from '@/components/SweepPanel/index.vue'
 import PopulationPanel from '@/components/PopulationPanel/index.vue'
 import ExperimentLog from '@/components/ExperimentLab/ExperimentLog.vue'
 import ExperimentHeader from '@/components/ExperimentLab/ExperimentHeader.vue'
-type ExperimentHeaderInstance = InstanceType<typeof ExperimentHeader>
 import ExperimentNotes from '@/components/ExperimentLab/ExperimentNotes.vue'
 import SnapBar from '@/components/ExperimentLab/SnapBar.vue'
 import StickyCellView, { type CellCardRow } from '@/components/ExperimentLab/StickyCellView.vue'
 import AiOptimizerTab from '@/components/ExperimentLab/AiOptimizerTab.vue'
-import { CELL_PRESETS } from '@/constants/cellLibrary'
+
 import { computeSAR } from '@/utils/physics'
 import { scrollAndHighlight } from '@/utils/highlight'
+
+import { CELL_PRESETS } from '@/constants/cellLibrary'
 import { CATEGORY_DEFAULTS, INITIAL_RESONANT_FIELD_FRACTION, DEFAULT_LYSIS_N_PULSES, DEFAULT_ORIENTATION_DEG } from '@/constants/experimentDefaults'
 import { WF_CW, WF_PULSED } from '@/constants/physics'
 import { CELL_CATEGORY, CELL_TYPE, CHART_MODE, WAVEFORM } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
+
+type ExperimentHeaderInstance = InstanceType<typeof ExperimentHeader>
 
 export default defineComponent({
   components: {

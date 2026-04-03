@@ -272,11 +272,16 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { mapStores } from 'pinia'
-import SideTabPanel from '@/components/ExperimentLab/SideTabPanel.vue'
+
 import { useAiStore } from '@/stores/aiStore'
 import { useExperimentStore } from '@/stores/experimentStore'
+
 import { requestAiOptimization, broadcastStateSync } from '@/services/socket'
+
+import SideTabPanel from '@/components/ExperimentLab/SideTabPanel.vue'
+
 import { formatFreqKHz } from '@/utils/format'
+
 import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'
 import { THRESHOLDS } from '@/constants/physics'

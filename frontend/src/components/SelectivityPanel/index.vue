@@ -95,14 +95,19 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { mapStores } from 'pinia'
+
 import { useCellStore } from '@/stores/cellStore'
-import { THRESHOLDS, NEAR_ZERO_VM, H_FIRE_THRESHOLD_MULTIPLIER } from '@/constants/physics'
-import { CELL_CATEGORY, CHART_MODE, WAVEFORM } from '@/constants/strings'
-import { ICON } from '@/constants/icons'
+
+import AccordionPanel from '@/components/AccordionPanel.vue'
+
 import { safeRatio, tempCorrectedVth } from '@/utils/physics'
 import { formatPct } from '@/utils/format'
 import { tipTiRange, tipSelectivity, tipSmallCellNote } from '@/tooltips/selectivityTooltips'
-import AccordionPanel from '@/components/AccordionPanel.vue'
+
+import { THRESHOLDS, NEAR_ZERO_VM, H_FIRE_THRESHOLD_MULTIPLIER } from '@/constants/physics'
+import { CELL_CATEGORY, CHART_MODE, WAVEFORM } from '@/constants/strings'
+import { ICON } from '@/constants/icons'
+
 import DisruptionBars from './DisruptionBars.vue'
 import ComparisonTable from './ComparisonTable.vue'
 import DepSection from './DepSection.vue'

@@ -25,9 +25,10 @@
 
 <script lang="ts">
 import { defineComponent, type PropType } from 'vue'
-import type { TocItem } from './types'
-import { EMIT } from '@/constants/emitEvents'
 
+import type { TocItem } from './types'
+
+import { EMIT } from '@/constants/emitEvents'
 export default defineComponent({
   name: 'ProtocolToc',
 

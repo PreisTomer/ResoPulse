@@ -7,14 +7,17 @@
 // sarscov2=16 spikes+lipid envelope+nucleocapsid+RNA+rays.
 // Field rays: color=frequency (cyan→violet, log 10kHz–30GHz); opacity=field intensity.
 import * as d3 from 'd3'
-import type { BlobPoint, BlobFrame, OscFrame, CellState } from '@/types/cell'
+
+import { C } from '@/theme/colors'
+
 import {
   CANVAS_W, CANVAS_H, BASE_R, BLOB_POINTS,
   LYSIS_DURATION_MS,
   OSC_W, OSC_H,
 } from '@/constants/cellCard'
 import { CELL_STATE, CELL_CATEGORY, CELL_TYPE, PRESET_ID, MORPHOLOGY_TAG } from '@/constants/strings'
-import { C } from '@/theme/colors'
+
+import type { BlobPoint, BlobFrame, OscFrame, CellState } from '@/types/cell'
 
 // ── Type aliases ──────────────────────────────────────────────────────────────
 type D3Sel<E extends Element> = d3.Selection<E, unknown, null, undefined>

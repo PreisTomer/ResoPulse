@@ -12,8 +12,8 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
-import { tipScopeNote } from '@/tooltips/sliderTooltips'
 
+import { tipScopeNote } from '@/tooltips/sliderTooltips'
 export default defineComponent({
   computed: {
     tipScopeNote(): string { return tipScopeNote() },

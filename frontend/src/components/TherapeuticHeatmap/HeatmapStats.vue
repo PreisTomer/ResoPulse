@@ -51,14 +51,17 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { mapStores } from 'pinia'
+
 import { useCellStore } from '@/stores/cellStore'
+
 import { broadcastStateSync } from '@/services/socket'
+
 import { CELL_CATEGORY, FREQ_REGIME } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'
 import { HMAP_LYSIS_DR, HMAP_WARN_DR, HMAP_THERM_WARN_C, HMAP_THERM_CRIT_C, HMAP_DR_DISPLAY_CAP, HMAP_SEL_INFINITY_CAP, HMAP_SKIN_DEPTH_OK_MM, HMAP_SKIN_DEPTH_WARN_MM } from '@/constants/heatmap'
-import { tipCanvas, tipStats, tipOptLine, tipPLysis, tipRegime, tipSkinDepth } from '@/tooltips/heatmapTooltips'
 
+import { tipCanvas, tipStats, tipOptLine, tipPLysis, tipRegime, tipSkinDepth } from '@/tooltips/heatmapTooltips'
 export default defineComponent({
   props: {
     opZoneColor: { type: String, default: 'var(--color-text)' },

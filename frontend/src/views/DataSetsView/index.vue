@@ -44,13 +44,17 @@
 
 <script lang="ts">
 import { defineComponent, computed } from 'vue'
+
+import PageHeader from '@/components/PageHeader.vue'
+
+import { membraneCm, computeFc, computeTau, computeNuclearTau, computeDepCrossoverKHz, computeDepSecondCrossoverKHz } from '@/utils/physics'
+
 import { CELL_PRESETS, GROUP_COLORS, GROUP_LABELS, type CellGroup } from '@/constants/cellLibrary'
 import { MEDIA } from '@/constants/media'
 import { CELL_GROUP, NULL_DISPLAY } from '@/constants/strings'
 import { UNIT } from '@/constants/units'
-import { membraneCm, computeFc, computeTau, computeNuclearTau, computeDepCrossoverKHz, computeDepSecondCrossoverKHz } from '@/utils/physics'
 import { SCHWAN_SPHERE_FACTOR } from '@/constants/physics'
-import PageHeader from '@/components/PageHeader.vue'
+
 import DatasetsCellTable from './DatasetsCellTable.vue'
 import DatasetsMediaTable from './DatasetsMediaTable.vue'
 import DatasetsWindowCard from './DatasetsWindowCard.vue'

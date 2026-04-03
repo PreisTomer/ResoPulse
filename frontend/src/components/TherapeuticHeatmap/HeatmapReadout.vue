@@ -24,8 +24,8 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import type { PropType } from 'vue'
-import type { HoverInfo } from '@/types/heatmap'
 
+import type { HoverInfo } from '@/types/heatmap'
 export default defineComponent({
   props: {
     hoverInfo: { type: Object as PropType<HoverInfo | null>, default: null },

@@ -64,8 +64,11 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
-import { ICON } from '@/constants/icons'
+
 import PageHeader from '@/components/PageHeader.vue'
+
+import { ICON } from '@/constants/icons'
+
 import ProtocolToc from './ProtocolToc.vue'
 import ProtocolSectionOverview from './ProtocolSectionOverview.vue'
 import ProtocolSectionPhysics from './ProtocolSectionPhysics.vue'

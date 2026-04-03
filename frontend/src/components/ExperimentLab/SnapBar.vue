@@ -34,12 +34,15 @@
 <script lang="ts">
 import { defineComponent, type PropType } from 'vue'
 import { mapStores } from 'pinia'
+
 import { useCellStore } from '@/stores/cellStore'
+
 import { broadcastStateSync } from '@/services/socket'
+
 import { tipSnapBar as tipSnapBarFn } from '@/tooltips/experimentTooltips'
 import { formatLysisTime } from '@/tooltips/sliderTooltips'
-import { SNAP_CONFIRM_MS } from '@/constants/experimentDefaults'
 
+import { SNAP_CONFIRM_MS } from '@/constants/experimentDefaults'
 type SweepWindow = { lo: number; hi: number; param: 'field' | 'freq' }
 
 export default defineComponent({

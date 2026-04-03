@@ -41,11 +41,13 @@
 
 <script lang="ts">
 import { defineComponent, type PropType } from 'vue'
+
 import type { LogEntry } from '@/stores/experimentStore'
+
 import { formatFreqKHz, formatFieldVcm } from '@/utils/format'
+
 import { ICON } from '@/constants/icons'
 import { EMIT } from '@/constants/emitEvents'
-
 export default defineComponent({
   name: 'ReportsMethodsBar',
 

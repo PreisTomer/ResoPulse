@@ -58,14 +58,10 @@
 import { defineComponent } from 'vue'
 import type { PropType } from 'vue'
 import { mapStores } from 'pinia'
+
 import { useCellStore } from '@/stores/cellStore'
-import { CELL_PRESETS } from '@/constants/cellLibrary'
-import type { CellConfig, CellRecord } from '@/types/cell'
+
 import { membraneCm, computeTau, tempCorrectedVth } from '@/utils/physics'
-import type { CellState } from '@/types/cell'
-import { EDITABLE_PARAMS, EDITABLE_PARAMS_ACOUSTIC, THRESHOLDS } from '@/constants/cellCard'
-import { CELL_STATE, CELL_TYPE, CELL_CATEGORY } from '@/constants/strings'
-import { UNIT } from '@/constants/units'
 import { splitFreqKHz } from '@/utils/format'
 import {
   tipVm as tipVmFn,
@@ -74,7 +70,15 @@ import {
   tipState as tipStateFn,
 } from '@/tooltips/cellCardTooltips'
 
+import { CELL_PRESETS } from '@/constants/cellLibrary'
+import { EDITABLE_PARAMS, EDITABLE_PARAMS_ACOUSTIC, THRESHOLDS } from '@/constants/cellCard'
+import { CELL_STATE, CELL_TYPE, CELL_CATEGORY } from '@/constants/strings'
+import { UNIT } from '@/constants/units'
 import { EMIT } from '@/constants/emitEvents'
+
+import type { CellConfig, CellRecord } from '@/types/cell'
+import type { CellState } from '@/types/cell'
+
 import CellHeader     from './CellHeader.vue'
 import CellParamsPanel from './CellParamsPanel.vue'
 import CellVisual     from './CellVisual.vue'

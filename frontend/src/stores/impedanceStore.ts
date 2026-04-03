@@ -3,19 +3,9 @@
 // Tracks cuvette geometry, simulates σ_e drift from lysis, accepts live instrument readings.
 
 import { defineStore } from 'pinia'
+
 import { useCellStore } from '@/stores/cellStore'
-import { LOAD_STATE, FIELD_DISTORTION, PULSE_BW_STATUS } from '@/constants/strings'
-import type { LoadState, FieldDistortion, PulseBwStatus } from '@/constants/strings'
-import {
-  CUVETTE_PRESETS,
-  CUSTOM_CUVETTE_ID,
-  DEFAULT_CUVETTE_ID,
-  DEFAULT_SOURCE_IMPEDANCE_OHM,
-  DEFAULT_CELL_DENSITY_PER_ML,
-  HARDWARE_READING_STALE_MS,
-  IMPEDANCE_HISTORY_MAX,
-  CONDUCTIVITY_SAMPLE_MAX,
-} from '@/constants/cuvette'
+
 import {
   lysedFractionFromDR,
   computeCellVolumeFraction,
@@ -33,6 +23,19 @@ import {
   computeCorrectedFieldVcm,
   computeSigmaEFromImpedance,
 } from '@/utils/impedance'
+
+import { LOAD_STATE, FIELD_DISTORTION, PULSE_BW_STATUS } from '@/constants/strings'
+import type { LoadState, FieldDistortion, PulseBwStatus } from '@/constants/strings'
+import {
+  CUVETTE_PRESETS,
+  CUSTOM_CUVETTE_ID,
+  DEFAULT_CUVETTE_ID,
+  DEFAULT_SOURCE_IMPEDANCE_OHM,
+  DEFAULT_CELL_DENSITY_PER_ML,
+  HARDWARE_READING_STALE_MS,
+  IMPEDANCE_HISTORY_MAX,
+  CONDUCTIVITY_SAMPLE_MAX,
+} from '@/constants/cuvette'
 
 // ── Public types ───────────────────────────────────────────────────────────────
 

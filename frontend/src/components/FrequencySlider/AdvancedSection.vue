@@ -125,12 +125,16 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { mapStores } from 'pinia'
+
 import { useCellStore } from '@/stores/cellStore'
+
 import { broadcastStateSync } from '@/services/socket'
+
+import { tipOrientation, tipLysisN, tipLysisNNote, tipShellModel, tipSingleShell, tipDoubleShell, tipPerfusion, tipCellPacking, formatLysisTime } from '@/tooltips/sliderTooltips'
+
 import { WAVEFORM, CELL_CATEGORY, CELL_LABEL } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
 import { SLIDER_ADV } from '@/constants/sliderBounds'
-import { tipOrientation, tipLysisN, tipLysisNNote, tipShellModel, tipSingleShell, tipDoubleShell, tipPerfusion, tipCellPacking, formatLysisTime } from '@/tooltips/sliderTooltips'
 import { UNIT } from '@/constants/units'
 import { NEWTON_COOLING_LAMBDA, PENNES_BLOOD_COEFF } from '@/constants/physics'
 

@@ -13,9 +13,9 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+
 import { ICON } from '@/constants/icons'
 import { EMIT } from '@/constants/emitEvents'
-
 type TipKey = 'radius' | 'memThick' | 'epsR' | 'sigmaI' | 'vmThr' | 'density' | 'cp' | 'derivedFc' | 'cellType' | 'resFreq' | 'capsidQ' | 'resThr'
 
 const TIP_I18N_MAP: Record<TipKey, string> = {

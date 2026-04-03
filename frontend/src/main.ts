@@ -3,7 +3,9 @@
 
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
+
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
+
 import './style.css'
 import './styles/_keyframes.scss'
 import './styles/_responsive.scss'
@@ -12,7 +14,6 @@ import { i18n } from './plugins/i18n'
 import router from './router'
 import { vTip } from './directives/vTooltip'
 import { useExperimentStore } from './stores/experimentStore'
-
 const pinia = createPinia()
 pinia.use(piniaPluginPersistedstate)
 const app = createApp(App)

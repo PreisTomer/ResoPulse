@@ -71,8 +71,8 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
-import { EMIT } from '@/constants/emitEvents'
 
+import { EMIT } from '@/constants/emitEvents'
 const N_PILL_OPTIONS = [100, 300, 1000] as const
 
 export default defineComponent({

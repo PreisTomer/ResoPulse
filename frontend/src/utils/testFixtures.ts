@@ -1,8 +1,9 @@
 // Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 // Shared fixtures for physics/store unit tests. Representative IRE EP buffer assay values.
 
-import type { CellConfig } from '@/types/cell'
 import { CELL_TYPE } from '@/constants/strings'
+
+import type { CellConfig } from '@/types/cell'
 
 // Typical mammalian cancer cell (HeLa-like): radius 10 µm, σ_i 0.4 S/m
 export const TARGET_CELL: CellConfig = {

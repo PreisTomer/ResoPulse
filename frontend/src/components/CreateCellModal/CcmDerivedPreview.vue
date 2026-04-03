@@ -25,8 +25,8 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
-import { EMIT } from '@/constants/emitEvents'
 
+import { EMIT } from '@/constants/emitEvents'
 export default defineComponent({
   name: 'CcmDerivedPreview',
 

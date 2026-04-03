@@ -15,11 +15,13 @@
 import { defineComponent } from 'vue'
 import type { PropType } from 'vue'
 import { mapStores } from 'pinia'
+
 import { useCellStore } from '@/stores/cellStore'
+
 import { broadcastStateSync } from '@/services/socket'
+
 import { WAVEFORM } from '@/constants/strings'
 import type { SliderRange } from '@/constants/sliderBounds'
-
 const QUASI_DC_FIELD_FRACTION  = 0.50    // 50% of target lysis field → DR ~50% (rev-EP zone)
 const SELECTIVE_FIELD_FRACTION = 0.85    // 85% of target lysis field → target at lysis threshold
 const NSEP_FIELD_FRACTION      = 2.00    // 200% of target lysis field (supralytic for nsEP)

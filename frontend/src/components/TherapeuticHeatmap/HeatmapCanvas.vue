@@ -14,8 +14,19 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { mapStores } from 'pinia'
+
 import { useCellStore } from '@/stores/cellStore'
+
 import { broadcastStateSync } from '@/services/socket'
+
+import {
+  computeSchwan, computeTau, computeSAR, computeResonantDisruption, tempCorrectedVth,
+} from '@/utils/physics'
+import { formatFreqKHz } from '@/utils/format'
+import { tipCanvas, tipHoverDynamic } from '@/tooltips/heatmapTooltips'
+
+import { C } from '@/theme/colors'
+
 import { WAVEFORM, CELL_CATEGORY } from '@/constants/strings'
 import { UNIT } from '@/constants/units'
 import {
@@ -26,17 +37,12 @@ import {
   HMAP_CANVAS_FONT_AXIS, HMAP_CANVAS_FONT_TINY, HMAP_LABEL_OPT, HMAP_LABEL_FRES,
 } from '@/constants/heatmap'
 import {
-  computeSchwan, computeTau, computeSAR, computeResonantDisruption, tempCorrectedVth,
-} from '@/utils/physics'
-import {
   BODY_TEMP_C, NEWTON_COOLING_LAMBDA, PENNES_BLOOD_COEFF, WF_CW, WF_PULSED, MIN_PULSE_ENVELOPE,
   H_FIRE_THRESHOLD_MULTIPLIER,
 } from '@/constants/physics'
-import { formatFreqKHz } from '@/utils/format'
-import { C } from '@/theme/colors'
-import { tipCanvas, tipHoverDynamic } from '@/tooltips/heatmapTooltips'
 import { ICON } from '@/constants/icons'
 import { EMIT } from '@/constants/emitEvents'
+
 import type { HoverInfo, OutcomeItem } from '@/types/heatmap'
 
 export default defineComponent({

@@ -57,18 +57,26 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
-import * as d3 from 'd3'
-import { C } from '@/theme/colors'
 import { mapStores } from 'pinia'
+
+import * as d3 from 'd3'
+
 import { useCellStore } from '@/stores/cellStore'
+
 import AccordionPanel from '@/components/AccordionPanel.vue'
+
 import { computeSchwan, computeTau, computePulseStepResponse, computeResonantDisruption, tempCorrectedVth } from '@/utils/physics'
+
+import { C } from '@/theme/colors'
+
 import { WAVEFORM, CELL_CATEGORY } from '@/constants/strings'
 import { THRESHOLDS, DEFAULT_CAPSID_Q, H_FIRE_THRESHOLD_MULTIPLIER } from '@/constants/physics'
 import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'
 import { EMIT } from '@/constants/emitEvents'
+
 import type { CellConfig } from '@/types/cell'
+
 import {
   sampleGaussian, binomialSE, MARGIN, N_BINS,
   CHART_HEIGHT, POP_DEFAULT_N_CELLS, POP_DEFAULT_R_VARIANCE_PCT, POP_DEFAULT_VTH_VARIANCE_PCT,
@@ -438,14 +446,14 @@ export default defineComponent({
     exportCSV() {
       const { cellStore } = this
       const meta = [
-        `# ResoPulse: Population Monte Carlo Export`,
-        `# Exported: ${new Date().toISOString()}`,
-        `# Healthy: ${cellStore.healthy.label} · R=${cellStore.healthy.radius} ${UNIT.UM} · N=${this.nCells} · σ_i ±${this.healthyUncPct}% · R ±${this.rVariancePct}% · V_th ±${this.vThVariancePct}%`,
-        `# Target:  ${cellStore.target.label} · R=${cellStore.target.radius} ${UNIT.UM} · N=${this.nCells} · σ_i ±${this.targetUncPct}% · R ±${this.rVariancePct}% · V_th ±${this.vThVariancePct}%`,
-        `# Medium: ${cellStore.medium} · σ_e=${cellStore.effectiveSigmaE.toFixed(3)} ${UNIT.S_PER_M}`,
-        `# Field: ${cellStore.currentBroadcastFrequency} ${UNIT.KHZ} · ${cellStore.fieldIntensity} ${UNIT.V_PER_CM} · ${cellStore.waveform} · dc=${cellStore.dutyCycle.toExponential(2)} · pw=${cellStore.pulseWidthNs} ${UNIT.NS}`,
-        `# Window Score: ${this.windowScore.toFixed(3)} (${this.windowVerdict}) — WS = (pctLysedTarget/100) × (1 − pctLysedHealthy/100)`,
-        `# Model: Schwan + Box-Muller Gaussian sampling (Kotnik & Miklavcic 2000; V_th: Weaver & Chizmadzhev 1996)`,
+        `# ${this.$t('population.csvTitle')}`,
+        `# ${this.$t('population.csvExported',    { timestamp: new Date().toISOString() })}`,
+        `# ${this.$t('population.csvHealthy',     { label: cellStore.healthy.label, radius: cellStore.healthy.radius, um: UNIT.UM, n: this.nCells, uncPct: this.healthyUncPct, rPct: this.rVariancePct, vthPct: this.vThVariancePct })}`,
+        `# ${this.$t('population.csvTarget',      { label: cellStore.target.label,  radius: cellStore.target.radius,  um: UNIT.UM, n: this.nCells, uncPct: this.targetUncPct,  rPct: this.rVariancePct, vthPct: this.vThVariancePct })}`,
+        `# ${this.$t('population.csvMedium',      { medium: cellStore.medium, sigmaE: cellStore.effectiveSigmaE.toFixed(3), sm: UNIT.S_PER_M })}`,
+        `# ${this.$t('population.csvField',       { freq: cellStore.currentBroadcastFrequency, khz: UNIT.KHZ, field: cellStore.fieldIntensity, vcm: UNIT.V_PER_CM, waveform: cellStore.waveform, dc: cellStore.dutyCycle.toExponential(2), pw: cellStore.pulseWidthNs, ns: UNIT.NS })}`,
+        `# ${this.$t('population.csvWindowScore', { score: this.windowScore.toFixed(3), verdict: this.windowVerdict })}`,
+        `# ${this.$t('population.csvModel')}`,
         `cell_type,sample_index,DR`,
       ].join('\n')
       const targetRows  = this.targetDRs.map((d, i)  => `target,${i},${d.toFixed(4)}`)

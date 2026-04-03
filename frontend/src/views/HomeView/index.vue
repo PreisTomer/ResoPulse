@@ -210,12 +210,13 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+
 import { ICON } from '@/constants/icons'
+
 import HeroRingsSvg from './HeroRingsSvg.vue'
 import CellIllustrationSvg from './CellIllustrationSvg.vue'
 import BodePlotSvg from './BodePlotSvg.vue'
 import OscilloscopeSvg from './OscilloscopeSvg.vue'
-
 const SEL_CYCLE_MS = 9000
 
 export default defineComponent({

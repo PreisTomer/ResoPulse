@@ -54,13 +54,14 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+
 import { ICON } from '@/constants/icons'
 import { EMIT } from '@/constants/emitEvents'
+
 import BsmTabQuick  from './BsmTabQuick.vue'
 import BsmTabBtx    from './BsmTabBtx.vue'
 import BsmTabVisa   from './BsmTabVisa.vue'
 import BsmTabSerial from './BsmTabSerial.vue'
-
 type TabKey = 'quick' | 'btx' | 'visa' | 'serial'
 
 interface Tab {

@@ -2,17 +2,21 @@
 
 // Socket service — connects to ResoPulse backend. Falls back to local store state when unreachable.
 import { ref } from 'vue'
+
 import { io } from 'socket.io-client'
 import type { Socket } from 'socket.io-client'
+
 import { useCellStore } from '@/stores/cellStore'
 import type { StatePacket } from '@/stores/cellStore'
 import { useExperimentStore } from '@/stores/experimentStore'
 import type { LogEntry } from '@/stores/experimentStore'
 import { useImpedanceStore } from '@/stores/impedanceStore'
 import type { HardwareImpedancePacket } from '@/stores/impedanceStore'
-import { computeTau, computeSchwan, computePulseStepResponse, computeResonantDisruption, tempCorrectedVth } from '@/utils/physics'
-import { SCHWAN_SPHERE_FACTOR, TWO_PI, MIN_PULSE_ENVELOPE, H_FIRE_THRESHOLD_MULTIPLIER, DEFAULT_CAPSID_Q, THRESHOLDS } from '@/constants/physics'
 import { useAiStore } from '@/stores/aiStore'
+
+import { computeTau, computeSchwan, computePulseStepResponse, computeResonantDisruption, tempCorrectedVth } from '@/utils/physics'
+
+import { SCHWAN_SPHERE_FACTOR, TWO_PI, MIN_PULSE_ENVELOPE, H_FIRE_THRESHOLD_MULTIPLIER, DEFAULT_CAPSID_Q, THRESHOLDS } from '@/constants/physics'
 
 // URL priority: ?backend=<url> → VITE_BACKEND_URL → localhost:3001
 function resolveBackendUrl(): string {

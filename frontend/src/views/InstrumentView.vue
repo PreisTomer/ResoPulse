@@ -98,15 +98,18 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { mapStores } from 'pinia'
+
 import { useCellStore } from '@/stores/cellStore'
 import { useImpedanceStore } from '@/stores/impedanceStore'
 import { useUiStore } from '@/stores/uiStore'
+
 import InstrumentPanel from '@/components/InstrumentPanel/index.vue'
 import PageHeader from '@/components/PageHeader.vue'
+
 import { scrollAndHighlight } from '@/utils/highlight'
+
 import { UNIT } from '@/constants/units'
 import { ICON } from '@/constants/icons'
-
 export default defineComponent({
   name: 'InstrumentView',
   components: { InstrumentPanel, PageHeader },

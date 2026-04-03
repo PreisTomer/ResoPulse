@@ -3,12 +3,15 @@
 
 // Store getter integration tests. Wiring of physics/constants/state only; equations covered in physics.test.ts.
 
-import { describe, it, expect } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
-import { useCellStore }    from './cellStore'
+
+import { describe, it, expect } from 'vitest'
+
 import { H_FIRE_THRESHOLD_MULTIPLIER } from '@/constants/physics'
 import { SLIDER_RANGES }    from '@/constants/sliderBounds'
 import { CELL_CATEGORY, WAVEFORM, CHART_MODE } from '@/constants/strings'
+
+import { useCellStore }    from './cellStore'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 

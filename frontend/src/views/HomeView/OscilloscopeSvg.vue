@@ -17,8 +17,8 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
-import { OSC_PATH } from '@/constants/svgPaths'
 
+import { OSC_PATH } from '@/constants/svgPaths'
 export default defineComponent({
   name: 'OscilloscopeSvg',
 

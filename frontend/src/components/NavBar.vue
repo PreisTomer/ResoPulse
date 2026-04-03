@@ -59,9 +59,9 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { mapStores } from 'pinia'
+
 import { useCellStore } from '@/stores/cellStore'
 import { useThemeStore } from '@/stores/themeStore'
-
 const NAV_LINKS = [
   { to: '/',           labelKey: 'nav.home',       exact: true },
   { to: '/experiment', labelKey: 'nav.experiment',  exact: false },

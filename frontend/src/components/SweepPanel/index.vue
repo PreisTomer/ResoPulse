@@ -47,16 +47,17 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { mapStores } from 'pinia'
+
 import { useCellStore } from '@/stores/cellStore'
+
 import AccordionPanel from '@/components/AccordionPanel.vue'
-import SweepControls  from './SweepControls.vue'
-import SweepChart     from './SweepChart.vue'
-import SweepWindowInfo from './SweepWindowInfo.vue'
-import SweepKeyPoints from './SweepKeyPoints.vue'
+
 import {
   computeSchwan, computeSAR, computeTau, computePulseStepResponse,
   computeResonantDisruption, tempCorrectedVth,
 } from '@/utils/physics'
+import { formatFreqKHz } from '@/utils/format'
+
 import { WAVEFORM, CELL_CATEGORY } from '@/constants/strings'
 import {
   THRESHOLDS, DEFAULT_CAPSID_Q, NEAR_ZERO_DR,
@@ -66,9 +67,14 @@ import {
 import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'
 import { EMIT } from '@/constants/emitEvents'
-import type { CellConfig } from '@/types/cell'
-import { formatFreqKHz } from '@/utils/format'
 import { SWEEP_TI_CAP } from '@/constants/experimentDefaults'
+
+import type { CellConfig } from '@/types/cell'
+
+import SweepControls  from './SweepControls.vue'
+import SweepChart     from './SweepChart.vue'
+import SweepWindowInfo from './SweepWindowInfo.vue'
+import SweepKeyPoints from './SweepKeyPoints.vue'
 
 const N_POINTS = 400  // 400 pts over sweep range → detects windows as narrow as ~0.25% of range
 

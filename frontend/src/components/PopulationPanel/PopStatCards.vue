@@ -44,8 +44,8 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import type { PropType } from 'vue'
-import type { PopStats } from './popPanelCompute'
 
+import type { PopStats } from './popPanelCompute'
 export default defineComponent({
   props: {
     targetStats:  { type: Object as PropType<PopStats>, required: true },

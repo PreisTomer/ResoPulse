@@ -32,9 +32,9 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+
 import { THRESHOLDS } from '@/constants/physics'
 import { ICON } from '@/constants/icons'
-
 export default defineComponent({
   name: 'ReportsLogLegend',
 

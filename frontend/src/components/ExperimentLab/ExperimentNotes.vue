@@ -30,8 +30,8 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { mapStores } from 'pinia'
-import { useExperimentStore } from '@/stores/experimentStore'
 
+import { useExperimentStore } from '@/stores/experimentStore'
 export default defineComponent({
   name: 'ExperimentNotes',
 

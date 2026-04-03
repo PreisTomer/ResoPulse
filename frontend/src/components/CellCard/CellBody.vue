@@ -28,9 +28,12 @@
 import { defineComponent } from 'vue'
 import type { PropType } from 'vue'
 import { mapStores } from 'pinia'
+
 import { useCellStore } from '@/stores/cellStore'
-import { CELL_STATE, CELL_TYPE } from '@/constants/strings'
+
 import { splitFreqKHz, formatLysisFieldVcm } from '@/utils/format'
+
+import { CELL_STATE, CELL_TYPE } from '@/constants/strings'
 import { LYSIS_FIELD_SENTINEL, THRESHOLDS } from '@/constants/physics'
 
 export default defineComponent({

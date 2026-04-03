@@ -70,14 +70,18 @@
 import { defineComponent } from 'vue'
 import type { PropType } from 'vue'
 import { mapStores } from 'pinia'
+
 import { useCellStore } from '@/stores/cellStore'
+
 import { broadcastStateSync } from '@/services/socket'
-import { CELL_LABEL, THERMAL_LEVEL, WAVEFORM } from '@/constants/strings'
-import { THRESHOLDS, H_FIRE_THRESHOLD_MULTIPLIER } from '@/constants/physics'
-import type { SliderRange } from '@/constants/sliderBounds'
+
 import { formatFieldVcm, FIELD_KV_THRESHOLD } from '@/utils/format'
 import { tempCorrectedVth } from '@/utils/physics'
 import { tipField, tipTargetBadge, tipHealthyBadge } from '@/tooltips/sliderTooltips'
+
+import { CELL_LABEL, THERMAL_LEVEL, WAVEFORM } from '@/constants/strings'
+import { THRESHOLDS, H_FIRE_THRESHOLD_MULTIPLIER } from '@/constants/physics'
+import type { SliderRange } from '@/constants/sliderBounds'
 
 // 400 px horizontal drag = full slider range
 const SCRUB_PX_FULL_RANGE = 400

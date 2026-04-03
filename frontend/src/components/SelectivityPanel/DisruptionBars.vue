@@ -74,10 +74,9 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { mapStores } from 'pinia'
+
 import { useCellStore } from '@/stores/cellStore'
-import { THRESHOLDS, H_FIRE_THRESHOLD_MULTIPLIER } from '@/constants/physics'
-import { CELL_CATEGORY, CELL_LABEL, WAVEFORM } from '@/constants/strings'
-import { ICON } from '@/constants/icons'
+
 import { formatLysisTime } from '@/tooltips/sliderTooltips'
 import { computeLysisProbability, tempCorrectedVth } from '@/utils/physics'
 import {
@@ -87,6 +86,10 @@ import {
   tipTargetBar,
   tipHealthyBar,
 } from '@/tooltips/disruptionBarTooltips'
+
+import { THRESHOLDS, H_FIRE_THRESHOLD_MULTIPLIER } from '@/constants/physics'
+import { CELL_CATEGORY, CELL_LABEL, WAVEFORM } from '@/constants/strings'
+import { ICON } from '@/constants/icons'
 
 export default defineComponent({
   data() {
