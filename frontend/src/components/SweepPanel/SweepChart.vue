@@ -22,8 +22,6 @@ const MARGIN      = { top: 18, right: 76, bottom: 38, left: 54 }
 const MIN_LABEL_GAP = 13
 const LEGEND_STEP   = 86
 
-type ResizeObserverInstance = InstanceType<typeof ResizeObserver>
-
 export default defineComponent({
   props: {
     sweepData:  { type: Array as PropType<SweepPoint[]>, required: true },
@@ -33,7 +31,7 @@ export default defineComponent({
   },
 
   data() {
-    return { _resizeObs: null as ResizeObserverInstance | null }
+    return { _resizeObs: null as ResizeObserver | null }
   },
 
   computed: {
@@ -61,7 +59,7 @@ export default defineComponent({
       if (!wrap || this._resizeObs) return
       const obs = new ResizeObserver(() => { if (this.open) this._drawChart() })
       obs.observe(wrap)
-      this._resizeObs = obs as ResizeObserverInstance
+      this._resizeObs = obs
     },
 
     _drawChart() {

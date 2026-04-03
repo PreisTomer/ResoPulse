@@ -80,8 +80,6 @@ import PopStatCards from './PopStatCards.vue'
 import PopWindowScore from './PopWindowScore.vue'
 import PopNote from './PopNote.vue'
 
-type ResizeObserverInstance = InstanceType<typeof ResizeObserver>
-
 export default defineComponent({
   components: { AccordionPanel, PopControls, PopStatCards, PopWindowScore, PopNote },
   emits: [EMIT.OPEN_CHANGE],
@@ -94,7 +92,7 @@ export default defineComponent({
       normalizeChart: false,
       targetDRs:    [] as number[],
       healthyDRs:   [] as number[],
-      _resizeObs:     null as ResizeObserverInstance | null,
+      _resizeObs:     null as ResizeObserver | null,
       _resampleTimer: null as ReturnType<typeof setTimeout> | null,
       _liveTimer:     null as ReturnType<typeof setInterval> | null,  // resamples every 2s when open
     }
@@ -188,7 +186,7 @@ export default defineComponent({
   },
 
   beforeUnmount() {
-    (this._resizeObs as ResizeObserverInstance | null)?.disconnect()
+    (this._resizeObs as ResizeObserver | null)?.disconnect()
     if (this._resampleTimer) clearTimeout(this._resampleTimer)
     this._stopLiveTimer()
   },
@@ -310,10 +308,10 @@ export default defineComponent({
 
     _initChart() {
       const wrap = this.$refs.chartWrap as HTMLElement
-      if (!wrap || (this._resizeObs as ResizeObserverInstance | null)) return
+      if (!wrap || (this._resizeObs as ResizeObserver | null)) return
       const obs = new ResizeObserver(() => { if (this.open) this._drawChart() })
       obs.observe(wrap)
-      this._resizeObs = obs as ResizeObserverInstance
+      this._resizeObs = obs
     },
 
     _drawChart() {
