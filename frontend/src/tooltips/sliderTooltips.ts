@@ -9,6 +9,14 @@ import { DEFAULT_CAPSID_Q, LYSIS_FIELD_SENTINEL, THRESHOLDS, NEWTON_COOLING_LAMB
 import { CELL_CATEGORY, THERMAL_LEVEL } from '@/constants/strings'
 import { UNIT } from '@/constants/units'
 
+import {
+  buildThermalWarningLine,
+  formatTooltipFrequency,
+  formatVmThresholdLine,
+  getDisruptionWarningState,
+  resolveThermalWarningLevel,
+} from './sharedTooltip'
+
 import type { MediumKey } from '@/types/media'
 
 export { formatLysisTime }
@@ -58,13 +66,20 @@ export function tipDutyCycle(opts: {
   const { effectiveDutyCycle, targetSAR, healthySAR, maxSteadyTemp, thermalDangerLevel, dutyCycleDisplay } = opts
   const effT = (targetSAR  * effectiveDutyCycle).toFixed(2)
   const effH = (healthySAR * effectiveDutyCycle).toFixed(2)
-  const warnText = thermalDangerLevel === THERMAL_LEVEL.VAPORIZING
-    ? '\n<span class="tip-warn">⚡ VAPORIZING, cells instantly destroyed at T_ss ≥ 100°C</span>'
-    : thermalDangerLevel === THERMAL_LEVEL.DENATURING
-      ? '\n<span class="tip-warn">⚠ DENATURING, protein coagulation at T_ss ≥ 60°C (collagen ~60°C, albumin ~68°C)</span>'
-      : thermalDangerLevel === THERMAL_LEVEL.HYPERTHERMIC
-        ? '\n<span class="tip-warn">⚠ HYPERTHERMIC, thermal damage onset at T_ss ≥ 42°C (IAHT threshold)</span>'
-        : ''
+  const warnText = buildThermalWarningLine(
+    thermalDangerLevel === THERMAL_LEVEL.VAPORIZING
+      ? 'vaporizing'
+      : thermalDangerLevel === THERMAL_LEVEL.DENATURING
+        ? 'denaturing'
+        : thermalDangerLevel === THERMAL_LEVEL.HYPERTHERMIC
+          ? 'hyperthermic'
+          : null,
+    {
+      vaporizing: '⚡ VAPORIZING, cells instantly destroyed at T_ss ≥ 100°C',
+      denaturing: '⚠ DENATURING, protein coagulation at T_ss ≥ 60°C (collagen ~60°C, albumin ~68°C)',
+      hyperthermic: '⚠ HYPERTHERMIC, thermal damage onset at T_ss ≥ 42°C (IAHT threshold)',
+    },
+  )
   return `<strong>Pulse Duty Cycle  (t_on / period)</strong>
 Current: <span class="tip-val">${dutyCycleDisplay}</span>
 
@@ -206,11 +221,12 @@ export function tipTargetBadge(opts: {
   const lysisStr = formatLysisTime(lysisDelayMs)
   if (isResonanceMode) {
     const fStr = target.resonantFreqGHz
-      ? (target.resonantFreqGHz >= 1 ? `${target.resonantFreqGHz.toFixed(1)} ${UNIT.GHZ}` : `${(target.resonantFreqGHz * 1000).toFixed(0)} ${UNIT.MHZ}`)
+      ? formatTooltipFrequency(target.resonantFreqGHz * 1e6, target.resonantFreqGHz >= 1 ? 1 : 0)
       : ', '
-    const warn = targetDisruption >= 1.0
+    const warnState = getDisruptionWarningState(targetDisruption)
+    const warn = warnState === 'crossed'
       ? '\n<span class="tip-warn">⚡ Disruption threshold exceeded, capsid/cell-wall rupture imminent</span>'
-      : targetDisruption > 0.85
+      : warnState === 'armed'
         ? `\n<span class="tip-warn">⚠ >85%, approaching disruption threshold (${lysisStr} countdown)</span>`
         : ''
     return `<strong>${t('resonance.tipTargetBadgeTitle', { pct })}</strong>
@@ -220,12 +236,12 @@ ${t('resonance.tipTargetBadgeNote')}`
   }
   // effThresholdMv: temp+H-FIRE corrected threshold in mV, supplied by caller
   const tThr  = (target.effThresholdMv ?? target.thresholdVoltage * 1000).toFixed(0)
-  const warn  = targetDisruption > 0.85
+  const warn  = getDisruptionWarningState(targetDisruption) !== 'none'
     ? `\n<span class="tip-warn">⚡ >85%, lysis countdown active (${lysisStr})</span>` : ''
   return `<strong>Target membrane disruption: <span class="tip-val">${pct}%</span></strong>
 Ratio = (Vm × PEF) / threshold
 
-Vm = <span class="tip-val">${targetVmMv.toFixed(2)} ${UNIT.MV}</span>  ·  Threshold = ${tThr} ${UNIT.MV}${warn}
+${formatVmThresholdLine(`${targetVmMv.toFixed(2)} ${UNIT.MV}`, `${tThr} ${UNIT.MV}`, warn)}
 >85% held for ${lysisStr} → irreversible membrane lysis`
 }
 
@@ -253,7 +269,7 @@ ${t('resonance.tipHealthyBadgeBody')}
   return `<strong>Healthy membrane disruption: <span class="tip-val">${pct}%</span></strong>
 Ratio = (Vm × PEF) / threshold
 
-Vm = <span class="tip-val">${healthyVmMv.toFixed(2)} ${UNIT.MV}</span>  ·  Threshold = ${hThr} ${UNIT.MV}${ok}
+${formatVmThresholdLine(`${healthyVmMv.toFixed(2)} ${UNIT.MV}`, `${hThr} ${UNIT.MV}`, ok)}
 Keep below 50% for a selective protocol window`
 }
 
@@ -370,12 +386,11 @@ export function tipDoubleShell(params: {
 }): string {
   const { targetLabel, healthyLabel, targetVmNucMv, healthyVmNucMv, targetFpeakKHz, healthyFpeakKHz,
           freqDisplay, fieldDisplay, hasTargetNucleus, hasHealthyNucleus } = params
-  const fmtMhz = (khz: number) => khz >= 1000 ? `${(khz / 1000).toFixed(2)} MHz` : `${khz.toFixed(0)} kHz`
   const targetRow = hasTargetNucleus
-    ? `  ${targetLabel}:  Vm_nuc = <span class="tip-val">${targetVmNucMv.toFixed(0)} mV</span>  (f_peak = ${fmtMhz(targetFpeakKHz)})`
+    ? `  ${targetLabel}:  Vm_nuc = <span class="tip-val">${targetVmNucMv.toFixed(0)} mV</span>  (f_peak = ${formatTooltipFrequency(targetFpeakKHz)})`
     : `  ${targetLabel}:  <span class="tip-note">no nuclear params</span>`
   const healthyRow = hasHealthyNucleus
-    ? `  ${healthyLabel}:  Vm_nuc = <span class="tip-val">${healthyVmNucMv.toFixed(0)} mV</span>  (f_peak = ${fmtMhz(healthyFpeakKHz)})`
+    ? `  ${healthyLabel}:  Vm_nuc = <span class="tip-val">${healthyVmNucMv.toFixed(0)} mV</span>  (f_peak = ${formatTooltipFrequency(healthyFpeakKHz)})`
     : `  ${healthyLabel}:  <span class="tip-note">no nuclear params</span>`
   return `<strong>+ Nuclear Envelope (Double-Shell)</strong>
 Adds nuclear membrane Vm as a two-pole bandpass function.

@@ -93,8 +93,6 @@ export const C = {
   w06: 'rgba(255,255,255,0.06)',  // ghost grid lines
 } as const
 
-export type SystemColor = keyof typeof C
-
 // ── Cell group colors (used in D3 charts and library preset dots) ─────────────
 export const GROUP_COLORS = {
   reference: C.primary,

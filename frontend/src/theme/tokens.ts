@@ -24,8 +24,6 @@ export const FS = {
   xl:  '0.90rem',   // significant labels, readout sub-text
 } as const
 
-export type FontSizeToken = keyof typeof FS
-
 // ── Opacity scale ─────────────────────────────────────────────────────────────
 export const OPACITY = {
   ghost:   0.35,   // near-invisible decorations, disabled states
@@ -35,8 +33,6 @@ export const OPACITY = {
   strong:  0.90,   // near-opaque elements, strong overlays
 } as const
 
-export type OpacityToken = keyof typeof OPACITY
-
 // ── Letter-spacing scale ──────────────────────────────────────────────────────
 export const LETTER_SPACING = {
   tight:  '0.02em',   // compact mono readouts, tightly-set values
@@ -45,13 +41,9 @@ export const LETTER_SPACING = {
   wider:  '0.12em',   // chart axis labels, decorative caps
 } as const
 
-export type LetterSpacingToken = keyof typeof LETTER_SPACING
-
 // ── Transition scale ──────────────────────────────────────────────────────────
 export const TRANSITION = {
   fast:   '0.15s ease',   // micro-interactions: thumb glow, icon swap
   normal: '0.20s ease',   // hover states, badge colour shifts
   slow:   '0.30s ease',   // panel open/close, accordion expand
 } as const
-
-export type TransitionToken = keyof typeof TRANSITION

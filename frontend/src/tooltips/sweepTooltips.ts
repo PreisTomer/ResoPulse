@@ -4,6 +4,8 @@
 import { ICON } from '@/constants/icons'
 import { THRESHOLDS } from '@/constants/physics'
 
+import { getDisruptionWarningState, getSelectivityCssClass } from './sharedTooltip'
+
 export function tipWindow(params: {
   loStr: string
   hiStr: string
@@ -58,9 +60,10 @@ export function tipKpLabel(label: string): string {
 }
 
 export function tipKpDrT(drT: number, lysisTime?: string): string {
-  const status = drT >= 1.0
+  const state = getDisruptionWarningState(drT)
+  const status = state === 'crossed'
     ? `<span class="tip-warn">${ICON.LIGHTNING} Lysis threshold crossed</span>`
-    : drT >= THRESHOLDS.DISRUPTION_WARN
+    : state === 'armed'
       ? `<span class="tip-warn">${ICON.WARNING} Lysis armed (&gt;85%)${lysisTime ? ' · ' + lysisTime : ''}</span>`
       : 'Sub-lysis operating point.'
   return `<strong>Target DR = ${drT.toFixed(3)}</strong>
@@ -78,7 +81,7 @@ ${status}`
 
 export function tipKpTI(ti: number): string {
   const { TI_STRONG: s, TI_MARGINAL: m } = THRESHOLDS
-  const cls    = ti >= s ? 'tip-ok' : ti >= m ? '' : 'tip-warn'
+  const cls    = getSelectivityCssClass(ti)
   const label  = ti >= s ? '✓ Strong selectivity' : ti >= m ? 'Marginal selectivity' : `${ICON.WARNING} Poor selectivity`
   return `<strong>TI = ${ti.toFixed(3)}×</strong>
 <span class="${cls}">${label}</span>

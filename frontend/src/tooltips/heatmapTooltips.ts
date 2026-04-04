@@ -40,26 +40,6 @@ For bacteria/virus in resonance mode: f_res of the capsid/cell-wall.
 Click ⭐ Snap to optimal to navigate to this frequency.`
 }
 
-export function tipFcLines(): string {
-  return `<strong>Corner Frequency Markers (fc)</strong>
-Vertical cyan dotted lines show the Schwan characteristic frequencies:
-  fc = 1/(2πτ),  τ = R·Cm·(2σ_e+σ_i)/(2σ_e·σ_i)
-
-Below fc: Vm ≈ Vm_max (quasi-DC maximum, highest disruption ratio).
-Above fc: Vm ∝ 1/f, exponential roll-off, DR falls.
-
-For maximum selectivity, operate below both fc markers.`
-}
-
-export function tipFresLine(): string {
-  return `<strong>Resonant Frequency Marker (f_res)</strong>
-Vertical white dashed line shows the acoustic capsid/cell-wall resonant frequency.
-  f_res ≈ v_shell / (2R)   (Tsen et al. 2007; Dykeman &amp; Sankey 2010)
-
-The resonance peak width is set by the Q-factor (peptidoglycan/capsid damping).
-Lower Q → broader but weaker peak. Higher Q → narrow spike, high selectivity.`
-}
-
 export function tipPLysis(): string {
   return `<strong>P(lysis), Random Orientation Fraction</strong>
 In a real experiment, cells are randomly oriented in 3D.
@@ -73,12 +53,6 @@ At DR=2.0: 50% of cells lyse
 At DR=5.0: 80% of cells lyse
 
 <em>Resonance mode</em>: acoustic pressure is omnidirectional, cosθ does not apply.`
-}
-
-export function tipHoverZone(): string {
-  return `<strong>Hovered Point</strong>
-Physics computed with current protocol settings (medium, waveform, dc, pulse width).
-Click to navigate to this operating point.`
 }
 
 export function tipRegime(): string {

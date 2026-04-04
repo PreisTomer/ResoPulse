@@ -7,6 +7,8 @@ import { ICON } from '@/constants/icons'
 import { THRESHOLDS, DEFAULT_CAPSID_Q } from '@/constants/physics'
 import { CELL_CATEGORY } from '@/constants/strings'
 
+import { getSelectivityCssClass } from './sharedTooltip'
+
 export function tipTiRange(params: {
   low: number
   high: number
@@ -154,7 +156,7 @@ Ref: Tsen et al. (2007); Dykeman &amp; Sankey (2008)
 <span class="tip-warn">${ICON.WARNING} Enveloped viruses (Influenza, SARS-CoV-2): lipid envelope, no rigid-shell resonance. Extrapolated values only.</span>`
   }
   const label  = formatFreqKHz(optKhz)
-  const cls    = optSel >= THRESHOLDS.TI_STRONG ? 'tip-ok' : optSel >= THRESHOLDS.TI_MARGINAL ? 'tip-val' : 'tip-warn'
+  const cls    = getSelectivityCssClass(optSel)
   const snapNote = beyondRange
     ? `<span class="tip-warn">${ICON.WARNING} Optimal lies outside the current slider range.\n  Snap sets frequency to the nearest reachable bound.</span>`
     : `<span class="tip-ok">Click to snap cursor to this frequency</span>`

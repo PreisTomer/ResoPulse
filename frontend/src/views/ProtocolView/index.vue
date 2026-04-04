@@ -65,7 +65,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 
-import PageHeader from '@/components/PageHeader.vue'
+import { PageHeader } from '@/components/ui'
 
 import { ICON } from '@/constants/icons'
 

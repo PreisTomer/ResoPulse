@@ -70,7 +70,7 @@ import { useI18n } from 'vue-i18n'
 
 import type { LogEntry } from '@/stores/experimentStore'
 
-import StatusBadge from '@/components/StatusBadge.vue'
+import { StatusBadge } from '@/components/ui'
 
 import { eventVariant as sharedEventVariant, depKDisplay } from '@/utils/experimentUtils'
 import {

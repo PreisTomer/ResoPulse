@@ -51,3 +51,9 @@ export function formatLysisTime(ms: number): string {
 export function formatPct(value: number, decimals = 0): string {
   return `${(value * 100).toFixed(decimals)}%`
 }
+
+// Format duty cycle fraction for export/report contexts
+export function formatDutyCycle(dc: number): string {
+  const pct = dc * 100
+  return pct >= 0.1 ? `${pct.toFixed(pct < 1 ? 2 : 1)}%` : `${dc.toExponential(2)} (fraction)`
+}

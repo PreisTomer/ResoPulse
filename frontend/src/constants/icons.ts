@@ -45,5 +45,3 @@ export const ICON = {
   NOTE_ON:     '♪',  // auditory display enabled
   NOTE_OFF:    '♩',  // auditory display disabled
 } as const
-
-export type Icon = typeof ICON[keyof typeof ICON]

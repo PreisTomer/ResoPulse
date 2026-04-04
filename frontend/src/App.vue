@@ -16,8 +16,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 
-import NavBar from './components/NavBar.vue'
-import TermsGate from './components/TermsGate.vue'
+import { NavBar, TermsGate } from './components/app'
 import { useThemeStore } from './stores/themeStore'
 const TERMS_KEY = 'rp_terms_v1'
 

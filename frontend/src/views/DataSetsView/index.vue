@@ -45,7 +45,7 @@
 <script lang="ts">
 import { defineComponent, computed } from 'vue'
 
-import PageHeader from '@/components/PageHeader.vue'
+import { PageHeader } from '@/components/ui'
 
 import { membraneCm, computeFc, computeTau, computeNuclearTau, computeDepCrossoverKHz, computeDepSecondCrossoverKHz } from '@/utils/physics'
 

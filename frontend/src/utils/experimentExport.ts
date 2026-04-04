@@ -6,7 +6,11 @@
 import { MEDIA } from '@/constants/media'
 import { UNIT } from '@/constants/units'
 import { CELL_LABEL, CHART_MODE } from '@/constants/strings'
-import { TWO_PI, THRESHOLDS, NEWTON_COOLING_LAMBDA, PENNES_BLOOD_COEFF, EPSILON_R_CYTOPLASM, SIGMA_MEMBRANE_SI, TEMP_EP_COEFF, EPSILON_0 } from '@/constants/physics'
+import { TWO_PI, THRESHOLDS, NEWTON_COOLING_LAMBDA, PENNES_BLOOD_COEFF, EPSILON_R_CYTOPLASM, SIGMA_MEMBRANE_SI, TEMP_EP_COEFF } from '@/constants/physics'
+
+import { formatDutyCycle, formatFieldVcm, formatFreqKHz } from '@/utils/format'
+import { depKDisplayFull } from '@/utils/experimentUtils'
+import { computePulseStepResponse, computeSAR, computeTau, membraneCm } from '@/utils/physics'
 
 import type { MediumKey } from '@/types/media'
 import type { CellParamSnapshot, LogEntry } from '@/types/experiment'
@@ -28,7 +32,7 @@ export function downloadText(txt: string, filename: string, mimeType = 'text/pla
 // ── Section builders ───────────────────────────────────────────────────────
 
 export function buildHealthySection(h: CellParamSnapshot, isDbl: boolean, mediumName: string): string[] {
-  const cm      = (h.dielectricConstant * EPSILON_0 / (h.membraneThickness * 1e-9) * 1e3).toFixed(2)
+  const cm      = (membraneCm(h) * 1e3).toFixed(2)
   const tau     = h.fc > 0 ? (1e6 / (TWO_PI * h.fc)).toFixed(0) : ', '
   const sigmaMem = h.membraneConductivity ?? SIGMA_MEMBRANE_SI
   const lines: string[] = [
@@ -57,7 +61,7 @@ export function buildHealthySection(h: CellParamSnapshot, isDbl: boolean, medium
 }
 
 export function buildTargetSection(t: CellParamSnapshot, isRes: boolean, isDbl: boolean, mediumName: string): string[] {
-  const cm       = (t.dielectricConstant * EPSILON_0 / (t.membraneThickness * 1e-9) * 1e3).toFixed(2)
+  const cm       = (membraneCm(t) * 1e3).toFixed(2)
   const sigmaMem = t.membraneConductivity ?? SIGMA_MEMBRANE_SI
   const lines: string[] = [
     `Target Cell: ${t.label}  [category: ${t.category}]`,
@@ -267,21 +271,6 @@ export function buildRefs(isRes: boolean, isDbl: boolean, cat: string, isHFire =
 
 // ── Per-entry computation helpers (pure - no store/Vue imports) ───────────
 
-// SAR = σ_i·α²·E²·wf/ρ, α = 3σ_e/(2σ_e+σ_i)  (Schwan 1957)
-// wf: 0.5 for CW (E²_rms = E²_peak/2), 1.0 for pulsed/H-FIRE
-function computeSAR(sigmaI: number, sigmaE: number, fieldVcm: number, wf: number, density: number): number {
-  const alpha = (3 * sigmaE) / (2 * sigmaE + sigmaI)
-  const E_vm  = fieldVcm * 100    // V/cm → V/m
-  return sigmaI * alpha * alpha * E_vm * E_vm * wf / density
-}
-
-// PEF = 1−exp(−t_p/τ), τ = 1/(2π·fc)
-function computePEF(pulseWidthNs: number, fcKHz: number): number {
-  const tauS = 1 / (TWO_PI * fcKHz * 1000)   // τ [s]
-  const tpS  = pulseWidthNs / 1e9             // t_p [s]
-  return 1 - Math.exp(-tpS / tauS)
-}
-
 function classifyDR(ratio: number): string {
   if (ratio >= THRESHOLDS.DISRUPTION_WARN)     return 'LYSIS-ARMED, irreversible EP zone (sustained → lysis)'
   if (ratio >= THRESHOLDS.HEALTHY_APPROACHING) return 'Reversible EP, membrane transiently permeabilised, recoverable'
@@ -359,14 +348,8 @@ export function buildEntryMethodsText(entry: LogEntry, sessionName: string, samp
   const cosTheta  = Math.cos((entry.orientationDeg ?? 0) * Math.PI / 180)
   const modelLabel = isRes ? 'Lorentzian resonance model' : 'Schwan model'
 
-  const freqDisplay = entry.freqKHz >= 1e6
-    ? `${(entry.freqKHz / 1e6).toFixed(3)} ${UNIT.GHZ}`
-    : entry.freqKHz >= 1000
-      ? `${(entry.freqKHz / 1000).toFixed(3)} ${UNIT.MHZ}`
-      : `${entry.freqKHz} ${UNIT.KHZ}`
-  const fieldDisplay = entry.fieldVcm >= 10000
-    ? `${(entry.fieldVcm / 1000).toFixed(1)} ${UNIT.KV_PER_CM}`
-    : `${entry.fieldVcm} ${UNIT.V_PER_CM}`
+  const freqDisplay = formatFreqKHz(entry.freqKHz, 3)
+  const fieldDisplay = formatFieldVcm(entry.fieldVcm)
 
   const medEntry   = medKey in MEDIA ? MEDIA[medKey] : null
   const baseS      = entry.mediumBaseS   ?? medEntry?.conductivity
@@ -374,11 +357,6 @@ export function buildEntryMethodsText(entry: LogEntry, sessionName: string, samp
   const medEpsR    = entry.mediumPermittivity ?? medEntry?.permittivity
   const perfRate   = entry.perfusionRate  ?? 0
   const phi        = entry.cellPackingFraction ?? 0
-
-  const formatDutyCycle = (dc: number): string => {
-    const pct = dc * 100
-    return pct >= 0.1 ? `${pct.toFixed(pct < 1 ? 2 : 1)}%` : `${dc.toExponential(2)} (fraction)`
-  }
 
   const sigmaCorr = baseS !== undefined && tempCoeff !== undefined
     ? `σe,0 = ${baseS.toFixed(3)} ${UNIT.S_PER_M}  |  tempCoeff = ${tempCoeff.toFixed(3)} /°C  |  σe(T) = σe,0 × (1 + tempCoeff × (T − 37))`
@@ -413,10 +391,10 @@ export function buildEntryMethodsText(entry: LogEntry, sessionName: string, samp
 
   // Healthy cell block
   const wf       = (entry.waveform === 'pulsed' || entry.waveform === 'hfire') ? 1.0 : 0.5
-  const hSAR     = computeSAR(h.conductivity, sigmaE_val, entry.fieldVcm, wf, h.density)
+  const hSAR     = computeSAR(h, entry.fieldVcm, sigmaE_val, wf)
   const hSARAvg  = hSAR * (entry.dutyCycle ?? 1)
   const hPEF     = isPulsedSch && entry.pulseWidthNs && h.fc > 0
-    ? computePEF(entry.pulseWidthNs, h.fc)
+    ? computePulseStepResponse(computeTau(h, sigmaE_val), entry.pulseWidthNs)
     : null
   const hDRState = classifyDR(entry.healthyRatio)
   const hVthEff  = h.thresholdVoltage * Math.max(0.70, 1 - TEMP_EP_COEFF * Math.max(0, entry.healthyTemp - 37))
@@ -433,15 +411,15 @@ export function buildEntryMethodsText(entry: LogEntry, sessionName: string, samp
     ...(isDbl && entry.healthyNuclearVm !== undefined ? [fld('Nuclear Vm',   `${entry.healthyNuclearVm} ${UNIT.MV}`)] : []),
     ...(!isRes && entry.depHealthyK !== undefined ? (() => {
       const xover = entry.depHealthyCrossoverKHz
-      return [fld('Re[K] (DEP)',  `${entry.depHealthyK.toFixed(4)}  [${entry.depHealthyK > 0 ? 'pDEP: attracted to field maxima' : 'nDEP: repelled from field maxima'}]  f_cross = ${xover ? xover.toFixed(1) + ' ' + UNIT.KHZ : 'none in range'}`)]
+      return [fld('Re[K] (DEP)',  `${depKDisplayFull(entry.depHealthyK)}  [${entry.depHealthyK > 0 ? 'pDEP: attracted to field maxima' : 'nDEP: repelled from field maxima'}]  f_cross = ${xover ? xover.toFixed(1) + ' ' + UNIT.KHZ : 'none in range'}`)]
     })() : []),
   ]
 
   // Target cell block
-  const tSAR    = computeSAR(t.conductivity, sigmaE_val, entry.fieldVcm, wf, t.density)
+  const tSAR    = computeSAR(t, entry.fieldVcm, sigmaE_val, wf)
   const tSARAvg = tSAR * (entry.dutyCycle ?? 1)
   const tPEF    = isPulsedSch && entry.pulseWidthNs && t.fc > 0
-    ? computePEF(entry.pulseWidthNs, t.fc)
+    ? computePulseStepResponse(computeTau(t, sigmaE_val), entry.pulseWidthNs)
     : null
   const tDRState = classifyDR(entry.targetRatio)
   const tVthEff  = t.thresholdVoltage * Math.max(0.70, 1 - TEMP_EP_COEFF * Math.max(0, entry.targetTemp - 37))
@@ -460,7 +438,7 @@ export function buildEntryMethodsText(entry: LogEntry, sessionName: string, samp
     ...(isDbl && entry.targetNuclearVm !== undefined ? [fld('Nuclear Vm',   `${entry.targetNuclearVm} ${UNIT.MV}`)] : []),
     ...(!isRes && entry.depTargetK !== undefined ? (() => {
       const xover = entry.depTargetCrossoverKHz
-      return [fld('Re[K] (DEP)',  `${entry.depTargetK.toFixed(4)}  [${entry.depTargetK > 0 ? 'pDEP: attracted to field maxima' : 'nDEP: repelled from field maxima'}]  f_cross = ${xover ? xover.toFixed(1) + ' ' + UNIT.KHZ : 'none in range'}`)]
+      return [fld('Re[K] (DEP)',  `${depKDisplayFull(entry.depTargetK)}  [${entry.depTargetK > 0 ? 'pDEP: attracted to field maxima' : 'nDEP: repelled from field maxima'}]  f_cross = ${xover ? xover.toFixed(1) + ' ' + UNIT.KHZ : 'none in range'}`)]
     })() : []),
   ]
 

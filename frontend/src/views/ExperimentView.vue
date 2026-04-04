@@ -107,22 +107,25 @@ import { useUiStore } from '@/stores/uiStore'
 
 import { connectSocket, broadcastStateSync } from '@/services/socket'
 
-import AccordionPanel from '@/components/AccordionPanel.vue'
-import CellCard from '@/components/CellCard/index.vue'
-import FrequencySlider from '@/components/FrequencySlider/index.vue'
-import FrequencyResponseChart from '@/components/FrequencyResponseChart/index.vue'
-import ResonanceChart from '@/components/ResonanceChart.vue'
-import DisruptionChart from '@/components/DisruptionChart/index.vue'
-import SelectivityPanel from '@/components/SelectivityPanel/index.vue'
-import TherapeuticHeatmap from '@/components/TherapeuticHeatmap/index.vue'
-import SweepPanel from '@/components/SweepPanel/index.vue'
-import PopulationPanel from '@/components/PopulationPanel/index.vue'
-import ExperimentLog from '@/components/ExperimentLab/ExperimentLog.vue'
-import ExperimentHeader from '@/components/ExperimentLab/ExperimentHeader.vue'
-import ExperimentNotes from '@/components/ExperimentLab/ExperimentNotes.vue'
-import SnapBar from '@/components/ExperimentLab/SnapBar.vue'
-import StickyCellView, { type CellCardRow } from '@/components/ExperimentLab/StickyCellView.vue'
-import AiOptimizerTab from '@/components/ExperimentLab/AiOptimizerTab.vue'
+import { AccordionPanel } from '@/components/ui'
+import {
+  AiOptimizerTab,
+  CellCard,
+  DisruptionChart,
+  ExperimentHeader,
+  ExperimentLog,
+  ExperimentNotes,
+  FrequencyResponseChart,
+  FrequencySlider,
+  PopulationPanel,
+  ResonanceChart,
+  SelectivityPanel,
+  SnapBar,
+  StickyCellView,
+  SweepPanel,
+  TherapeuticHeatmap,
+  type CellCardRow,
+} from '@/components/features'
 
 import { computeSAR } from '@/utils/physics'
 import { scrollAndHighlight } from '@/utils/highlight'

@@ -10,6 +10,8 @@ import { CELL_STATE, CELL_TYPE, WAVEFORM, EXPERIMENTAL_BASIS } from '@/constants
 import { UNIT } from '@/constants/units'
 import { THRESHOLDS } from '@/constants/physics'
 
+import { buildThermalWarningLine, resolveThermalWarningLevel } from './sharedTooltip'
+
 import type { CellConfig } from '@/types/cell'
 export { formatLysisTimeLocal }
 
@@ -43,14 +45,14 @@ export function tipTemp(opts: {
   tempWarning: boolean
 }): string {
   const { tempDisplay, tempVaporizing, tempDenaturing, tempWarning } = opts
-  let warnLine = ''
-  if (tempVaporizing) {
-    warnLine = '\n<span class="tip-warn">⚡ ≥100°C, THERMAL LYSIS: water boiling / steam pressure</span>'
-  } else if (tempDenaturing) {
-    warnLine = '\n<span class="tip-warn">⚠ ≥60°C, protein denaturation (collagen ~60°C, albumin ~68°C), reduce duty cycle / field</span>'
-  } else if (tempWarning) {
-    warnLine = '\n<span class="tip-warn">⚠ ≥42°C, hyperthermic damage onset (IAHT threshold), monitor closely</span>'
-  }
+  const warnLine = buildThermalWarningLine(
+    resolveThermalWarningLevel({ tempVaporizing, tempDenaturing, tempWarning }),
+    {
+      vaporizing: '⚡ ≥100°C, THERMAL LYSIS: water boiling / steam pressure',
+      denaturing: '⚠ ≥60°C, protein denaturation (collagen ~60°C, albumin ~68°C), reduce duty cycle / field',
+      hyperthermic: '⚠ ≥42°C, hyperthermic damage onset (IAHT threshold), monitor closely',
+    },
+  )
   return `<strong>Cell Temperature</strong>
 Current: <span class="tip-val">${tempDisplay}</span>
 

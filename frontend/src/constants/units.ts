@@ -35,5 +35,3 @@ export const UNIT = {
   KG_PER_M3:   'kg/m³',
   J_PER_KG_K:  'J/(kg·K)',
 } as const
-
-export type Unit = typeof UNIT[keyof typeof UNIT]

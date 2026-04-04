@@ -27,7 +27,7 @@ export { CELL_COLORS } from '@/theme/colors'
 import { UNIT } from '@/constants/units'
 
 // ── Editable biophysical parameter definitions ────────────────────────────────
-export interface EditableParamDef {
+interface EditableParamDef {
   labelKey: string  // i18n key — pass to $t() for display label
   tipKey: string    // i18n key — pass to $t() for tooltip
   key: string

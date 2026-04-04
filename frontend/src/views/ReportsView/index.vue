@@ -94,8 +94,7 @@ import { useI18n } from 'vue-i18n'
 import type { LogEntry } from '@/stores/experimentStore'
 import { useExperimentStore } from '@/stores/experimentStore'
 
-import StatCard from '@/components/StatCard.vue'
-import PageHeader from '@/components/PageHeader.vue'
+import { PageHeader, StatCard } from '@/components/ui'
 
 import { formatFreqKHz, formatFieldVcm, formatRange } from '@/utils/format'
 

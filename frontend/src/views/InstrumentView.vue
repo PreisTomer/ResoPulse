@@ -103,8 +103,8 @@ import { useCellStore } from '@/stores/cellStore'
 import { useImpedanceStore } from '@/stores/impedanceStore'
 import { useUiStore } from '@/stores/uiStore'
 
-import InstrumentPanel from '@/components/InstrumentPanel/index.vue'
-import PageHeader from '@/components/PageHeader.vue'
+import { InstrumentPanel } from '@/components/features'
+import { PageHeader } from '@/components/ui'
 
 import { scrollAndHighlight } from '@/utils/highlight'
 

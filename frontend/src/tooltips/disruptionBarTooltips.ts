@@ -4,6 +4,8 @@
 import { ICON } from '@/constants/icons'
 import { THRESHOLDS } from '@/constants/physics'
 
+import { formatTooltipFrequency, formatVmThresholdLine, getDisruptionWarningState } from './sharedTooltip'
+
 export function tipTargetPlysis(lysisTime: string): string {
   return `<strong>P(electroporation)</strong>
 Sigmoid probability centered at 100% disruption threshold.
@@ -26,9 +28,8 @@ export function tipNuclearSection(params: {
   hasHealthyNucleus: boolean
 }): string {
   const { targetLabel, healthyLabel, targetFpeakKHz, healthyFpeakKHz, hasTargetNucleus, hasHealthyNucleus } = params
-  const fmtMhz = (khz: number) => khz >= 1000 ? `${(khz / 1000).toFixed(2)} MHz` : `${khz.toFixed(0)} kHz`
-  const peakT = hasTargetNucleus  ? `  fc(T, nuc) = <span class="tip-val">${fmtMhz(targetFpeakKHz)}</span>  (${targetLabel})` : `  ${targetLabel}: no nuclear params`
-  const peakH = hasHealthyNucleus ? `  fc(H, nuc) = <span class="tip-val">${fmtMhz(healthyFpeakKHz)}</span>  (${healthyLabel})` : `  ${healthyLabel}: no nuclear params`
+  const peakT = hasTargetNucleus  ? `  fc(T, nuc) = <span class="tip-val">${formatTooltipFrequency(targetFpeakKHz)}</span>  (${targetLabel})` : `  ${targetLabel}: no nuclear params`
+  const peakH = hasHealthyNucleus ? `  fc(H, nuc) = <span class="tip-val">${formatTooltipFrequency(healthyFpeakKHz)}</span>  (${healthyLabel})` : `  ${healthyLabel}: no nuclear params`
   return `<strong>Nuclear Envelope Disruption (Double-Shell Model)</strong>
 Vm_nuc / V_threshold_nuc for each cell.
 Bandpass peak at f_peak = 1/(2π√(τ_pm·τ_ne)):
@@ -49,7 +50,7 @@ export function tipTargetBar(params: {
   targetRatio: number
 }): string {
   const { pct, isResonanceTarget, resonantThresholdVcm, resonantFreqGHz, targetVmMv, thresholdMv, lysisTime, targetRatio } = params
-  const warn = targetRatio >= THRESHOLDS.DISRUPTION_WARN
+  const warn = getDisruptionWarningState(targetRatio) !== 'none'
     ? `\n<span class="tip-warn">${ICON.LIGHTNING} >85%, disruption countdown active (${lysisTime})</span>`
     : ''
   if (isResonanceTarget) {
@@ -84,8 +85,7 @@ Ref: Tsen et al. (2007)`
     ? `\n<span class="tip-ok">${ICON.CHECK} Healthy cells are safe</span>`
     : `\n<span class="tip-warn">${ICON.WARNING} Approaching threshold, reduce field</span>`
   return `<strong>Healthy membrane disruption: <span class="tip-val">${pct}%</span></strong>
-Induced Vm = <span class="tip-val">${healthyVmMv} mV</span>
-Lysis threshold = ${thresholdMv} mV
+${formatVmThresholdLine(`${healthyVmMv} mV`, `${thresholdMv} mV`).replace('Vm =', 'Induced Vm =').replace('Threshold =', 'Lysis threshold =')}
 Ratio = (Vm × PEF) / threshold
 Keep below 50% for selectivity window${status}`
 }
