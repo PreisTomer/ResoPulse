@@ -97,7 +97,7 @@ export function tipMediumKeys(): Record<string, string> {
     pbs:    'PBS (Dulbecco\'s PBS, pH 7.4) · wash buffer and short-term EP assays · σ_e ≈ saline',
     rpmi:   'RPMI 1640, suspension / haematological cell lines · slightly lower ionic strength',
     mhb:      'Mueller-Hinton Broth: CLSI/EUCAST bacteriology standard · τ ~12% longer than saline',
-    epbuffer: 'Low-conductivity sucrose/glucose EP buffer · τ ~10× longer than saline · fc ~10× lower · standard for in-vitro electroporation cuvette protocols',
+    epbuffer: 'Low-conductivity EP buffer (σ_e = 0.14 S/m) · τ ~2.5× longer than saline · fc ~2.5× lower · Joule heating ~11× lower · standard for in-vitro electroporation cuvette protocols',
   }
   const out: Record<string, string> = {}
   for (const key of Object.keys(MEDIA)) {

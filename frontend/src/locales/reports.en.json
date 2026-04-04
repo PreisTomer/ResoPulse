@@ -62,7 +62,7 @@
     "colHRatio": "H-Ratio %",
     "colHRatioTitle": "Healthy cell disruption ratio, always Schwan-based (≈0 at GHz for Resonance mode)",
     "colTTemp": "T-Temp (°C)",
-    "colTTempTitle": "Steady-state target cell temperature, Newton cooling: T_ss = 37 + SAR·dc / (λ·c_p); SAR = σ_i·α²·E²·dc/ρ, λ = 0.02 s⁻¹",
+    "colTTempTitle": "Steady-state target cell temperature, Newton cooling: T_ss = 37 + SAR·dc / (λ·c_p); SAR = σ_i·α²·E²·wf/ρ (wf = 0.5 CW, 1.0 pulsed), λ = 0.02 s⁻¹",
     "colHTemp": "H-Temp (°C)",
     "colHTempTitle": "Steady-state healthy reference cell temperature, same Newton cooling model applied to reference cell parameters",
     "colEvent": "Event",
