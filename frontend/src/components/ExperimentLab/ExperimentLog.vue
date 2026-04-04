@@ -187,9 +187,9 @@ export default defineComponent({
       return names.size > 1
     },
     emptyColspan(): number {
-      // Schwan: #, time, freq, field, T-Vm, H-Vm, sel, DEP-H, DEP-T, event = 10
+      // Schwan: #, time, freq, field, T-Vm, H-Vm, sel, DEP-H, DEP-T, BMS, event = 11
       // Resonance: #, time, freq, field, T-DR%, H-DR%, event = 7
-      const base = this.isResonanceMode ? 7 : 10
+      const base = this.isResonanceMode ? 7 : 11
       return this.showSessionCol ? base + 1 : base
     },
 

@@ -639,7 +639,13 @@ export default defineComponent({
         if (tr.resonantFreqGHz && tr.capsidQ && tr.resonantThresholdVcm) {
           // H-FIRE bipolar charge cancellation is an EP membrane-charging mechanism only.
           // Acoustic resonance disruption is mechanical — hoverHfireMult must NOT apply here.
-          const effThreshold = tempCorrectedVth(tr.resonantThresholdVcm, s.targetTemp)
+          // Compute temperature at the hover field (not the active operating point) for consistency
+          // with the grid path and the Schwan hover path below.
+          const tCp_h   = s.target.specificHeatCapacity
+          const tLP_h   = s.perfusionRate * PENNES_BLOOD_COEFF / tCp_h
+          const tSAR_h  = computeSAR(s.target, fieldVcm, sigma_e, wf)
+          const tTss_h  = BODY_TEMP_C + tSAR_h * dc / ((NEWTON_COOLING_LAMBDA + tLP_h) * tCp_h)
+          const effThreshold = tempCorrectedVth(tr.resonantThresholdVcm, tTss_h)
           tDR = computeResonantDisruption(tr.resonantFreqGHz, tr.capsidQ, effThreshold, freqKHz * 1000, fieldVcm)
         }
       } else {

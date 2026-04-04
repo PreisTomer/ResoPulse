@@ -49,7 +49,7 @@ TI = DR_T / DR_H, selectivity ratio at this operating point.
 
 export function tipThTemp(): string {
   return `<strong>T<sub>target</sub>, Target Steady-State Temperature</strong>
-T_ss = 37 + SAR_eff / (λ × cp)
+T_ss = 37 + SAR × dc / ((λ_Newton + λ_perf) × cp)
 Coloured: amber ≥ ${THRESHOLDS.TEMP_WARN}°C · red ≥ ${THRESHOLDS.TEMP_DENATURING}°C (denaturation onset)`
 }
 

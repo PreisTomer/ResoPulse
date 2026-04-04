@@ -438,9 +438,10 @@ Maxwell-Garnett effective medium (DC insulating-sphere limit):
 
   σ_e₀ = ${sigma_e0.toFixed(3)} S/m  →  σ_e_eff = ${sigma_eff.toFixed(3)} S/m (−${reduction}%)
 
-Effect: reduces τ (faster fc rolloff) and internal field α.
-At high packing fractions, cells shadow each other, the
-effective field delivering Vm to each cell is lower.
+Effect: increases τ (shifts fc lower, broadens quasi-DC window) and
+reduces internal field factor α = 3σ_e/(2σ_e+σ_i) (lower SAR).
+At quasi-DC (f ≪ fc), Vm = 1.5·E·R is independent of σ_e; packing
+shifts the corner frequency but does not reduce peak Vm.
 
 <span class="tip-note">Valid for f ≪ fc. At f > fc the membrane polarises less and
 the MG correction approaches the bare-medium limit.

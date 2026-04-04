@@ -56,7 +56,7 @@ Mammalian cells lack rigid-shell resonance, Schwan Vm → 0 at GHz (ωτ ≫ 1).
 At f_res(target), healthy disruption ≈ 0 → TI → ∞
 
 <span class="tip-ok">Frequency-selective, healthy tissue unperturbed at GHz fields</span>
-Ref: Tsen et al. (2007); Dykeman &amp; Sankey (2008)
+Ref: Tsen et al. (2007); Dykeman &amp; Sankey (2010)
 <span class="tip-warn">${ICON.WARNING} Enveloped viruses (Influenza, SARS-CoV-2): lipid envelope has no rigid-shell resonance (Q≈1). f_res/Q/E_thr values are theoretical extrapolations, not experimentally validated.</span>`
   }
   const vmStr    = vmSel >= 99 ? ICON.INFINITY : vmSel.toFixed(2)
@@ -150,7 +150,7 @@ E_threshold = ${resonantThresholdVcm} V/cm  ·  Q = ${capsidQ ?? DEFAULT_CAPSID_
 ${healthyLabel} (R = ${rStr}) has no GHz resonance → selectivity → ${ICON.INFINITY}
 
 <span class="tip-ok">Click to snap cursor to f_res</span>
-Ref: Tsen et al. (2007); Dykeman &amp; Sankey (2008)
+Ref: Tsen et al. (2007); Dykeman &amp; Sankey (2010)
 <span class="tip-warn">${ICON.WARNING} Enveloped viruses (Influenza, SARS-CoV-2): lipid envelope, no rigid-shell resonance. Extrapolated values only.</span>`
   }
   const label  = formatFreqKHz(optKhz)

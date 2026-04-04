@@ -245,8 +245,8 @@ export function buildRefs(isRes: boolean, isDbl: boolean, cat: string, isHFire =
     refs.push(
       `[${i++}] Tsen, S.W.D. et al. (2007). Non-thermal effects in the inactivation of viruses.`,
       '    J. Phys. D: Appl. Phys. 40(15), 4571-4577.',
-      `[${i++}] Dykeman, E.C. & Sankey, O.F. (2008). Low-frequency mechanical modes of viral capsids.`,
-      '    Phys. Rev. Lett. 100(2), 028101.',
+      `[${i++}] Dykeman, E.C. & Sankey, O.F. (2010). Atomistic modeling of the low-frequency mechanical modes`,
+      '    and Raman spectra of icosahedral virus capsids. Phys. Rev. E 81, 021918.',
     )
     if (cat === 'virus') refs.push(
       `[${i++}] Sankey, O.F. et al. (2009). Simulations of the mechanical modes of viral capsids.`,
