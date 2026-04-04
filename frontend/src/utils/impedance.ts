@@ -72,6 +72,29 @@ export function computeCuvetteComplexImpedanceMag(
   return (d_m / A_m2) / Math.sqrt(sigmaEffective ** 2 + (omega * eps) ** 2)
 }
 
+// Z_real and Z_imag of the parallel-RC cuvette model [Ω].
+// Useful for computing the exact complex reflection coefficient (see computeReflectionCoeffComplex).
+// Z_real = (d/A)·σ/(σ²+(ωε)²),  Z_imag = −(d/A)·ωε/(σ²+(ωε)²)
+export function computeCuvetteZComponents(
+  gapMm:          number,
+  areaCm2:        number,
+  sigmaEffective: number,
+  freqHz:         number,
+  epsilonR:       number = MEDIUM_RELATIVE_PERMITTIVITY,
+): { real: number; imag: number } {
+  if (sigmaEffective <= 0) return { real: Infinity, imag: 0 }
+  const d_m   = gapMm  * 1e-3
+  const A_m2  = areaCm2 * 1e-4
+  const geo   = d_m / A_m2
+  const omega = 2 * Math.PI * freqHz
+  const eps   = epsilonR * EPSILON_0
+  const denom = sigmaEffective ** 2 + (omega * eps) ** 2
+  return {
+    real: geo * sigmaEffective / denom,
+    imag: -geo * omega * eps / denom,
+  }
+}
+
 // f_relax = σ_e/(2π ε_r ε₀) [Hz]; DC impedance model inaccurate above this
 export function computeRelaxationFreqHz(
   sigmaEffective: number,
@@ -82,10 +105,26 @@ export function computeRelaxationFreqHz(
 
 // ── VSWR / RF reflection ───────────────────────────────────────────────────────
 
-// Γ = |Z_L−Z₀|/|Z_L+Z₀| [0-1]; 0=matched, 1=total reflection
+// Γ = |Z_L−Z₀|/|Z_L+Z₀| [0-1] for purely resistive loads. 0=matched, 1=total reflection.
 export function computeReflectionCoeff(zLoadOhm: number, z0Ohm: number): number {
   if (zLoadOhm <= 0 || z0Ohm <= 0) return 1
   return Math.abs((zLoadOhm - z0Ohm) / (zLoadOhm + z0Ohm))
+}
+
+// |Γ| = √((R−Z₀)²+X²) / √((R+Z₀)²+X²) — correct formula for complex load Z_L = R+jX.
+// Required for accurate VSWR when hardware reports reactive impedance component (non-zero Z_imag).
+// At EP frequencies (<1 MHz) Z_imag is small vs Z_real so error from the scalar version is <5%;
+// at RF/GHz frequencies or in hardware mode with capacitive cuvettes this is the correct formula.
+export function computeReflectionCoeffComplex(
+  zRealOhm: number,
+  zImagOhm: number,
+  z0Ohm:    number,
+): number {
+  if (z0Ohm <= 0) return 1
+  const num = Math.sqrt((zRealOhm - z0Ohm) ** 2 + zImagOhm ** 2)
+  const den = Math.sqrt((zRealOhm + z0Ohm) ** 2 + zImagOhm ** 2)
+  if (den < 1e-15) return 1
+  return Math.min(1, num / den)
 }
 
 // VSWR = (1+Γ)/(1−Γ) [≥1]
@@ -157,7 +196,9 @@ export function computeCorrectedFieldVcm(
 
 // ── Hardware back-derivation ──────────────────────────────────────────────────
 
-// σ = d/(Z_real·A) [S/m]
+// σ = d/(Z_real·A) [S/m] — DC approximation, valid when |Z_imag| ≪ |Z_real|.
+// Error < 5% at typical EP frequencies (<1 MHz); use computeSigmaEFromComplexImpedance when
+// hardware reports a significant imaginary component (RF/GHz range).
 export function computeSigmaEFromImpedance(
   gapMm:     number,
   areaCm2:   number,
@@ -167,4 +208,20 @@ export function computeSigmaEFromImpedance(
   const d_m  = gapMm  * 1e-3
   const A_m2 = areaCm2 * 1e-4
   return d_m / (zRealOhm * A_m2)
+}
+
+// σ = Z_real·d/(A·|Z|²) [S/m] — exact formula from Re[Y] = G = σA/d.
+// Use when hardware impedance bridge provides both real and imaginary parts (RF mode).
+// Derivation: Y = G + jB = 1/Z → G = Z_real/|Z|² → σ = G·d/A.
+export function computeSigmaEFromComplexImpedance(
+  gapMm:     number,
+  areaCm2:   number,
+  zRealOhm:  number,
+  zImagOhm:  number,
+): number {
+  const absZSq = zRealOhm ** 2 + zImagOhm ** 2
+  if (absZSq < 1e-15 || zRealOhm <= 0) return 0
+  const d_m  = gapMm  * 1e-3
+  const A_m2 = areaCm2 * 1e-4
+  return zRealOhm * d_m / (A_m2 * absZSq)
 }

@@ -79,7 +79,7 @@ function lysisField(
   const omega = TWO_PI * freqKHz * 1e3
   const tau   = computeTau(cell, sigma_e)
   return (cell.thresholdVoltage * hfireMult * Math.sqrt(1 + (omega * tau) ** 2)) /
-    (SCHWAN_SPHERE_FACTOR * cell.radius * 1e-6 * cosTheta * 100 * Math.max(MIN_PULSE_ENVELOPE, pef))
+    (SCHWAN_SPHERE_FACTOR * cell.radius * 1e-6 * cosTheta * V_CM_TO_V_M * Math.max(MIN_PULSE_ENVELOPE, pef))
 }
 
 // σ_i uncertainty: virus 45%, bacteria 35%, mammalian 20%

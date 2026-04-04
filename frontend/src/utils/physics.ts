@@ -247,7 +247,8 @@ export function tempCorrectedVth(nominalVth: number, tempC: number): number {
 
 // ── Population lysis fraction (log-normal size distribution) ─────────────────
 
-// Lysis fraction over log-normal size distribution (cv). Rectangle rule, N z-points.
+// Lysis fraction over log-normal size distribution (cv). Midpoint rectangle rule, N z-points.
+// Midpoint rule halves the quadrature error vs left-endpoint at the same N. See Abramowitz §25.4.
 export function computePopulationLysisFraction(dr: number, cv: number): number {
   if (dr <= 0) return 0
   if (cv <= 0) return Math.max(0, Math.min(1, 1 - 1 / dr))
@@ -255,10 +256,10 @@ export function computePopulationLysisFraction(dr: number, cv: number): number {
   const muLn    = -0.5 * sigmaLn * sigmaLn  // ensures E[X] = 1 (mean-normalised)
   const zMin    = -POP_LYSIS_GAUSS_Z_MAX
   const zMax    =  POP_LYSIS_GAUSS_Z_MAX
-  const dz      = (zMax - zMin) / POP_LYSIS_GAUSS_N  // N intervals, N evaluations
+  const dz      = (zMax - zMin) / POP_LYSIS_GAUSS_N  // N intervals, midpoint per interval
   let sum = 0
   for (let i = 0; i < POP_LYSIS_GAUSS_N; i++) {
-    const z      = zMin + i * dz
+    const z      = zMin + (i + 0.5) * dz               // midpoint of i-th interval
     const x      = Math.exp(sigmaLn * z + muLn)
     const pLysis = Math.max(0, 1 - 1 / (dr * x))  // cosθ orientation model at this radius
     const gauss  = Math.exp(-0.5 * z * z)

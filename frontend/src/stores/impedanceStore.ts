@@ -12,17 +12,19 @@ import {
   computeLysedSigmaE,
   computeCuvetteDCImpedance,
   computeCuvetteComplexImpedanceMag,
+  computeCuvetteZComponents,
   computeRelaxationFreqHz,
-  computeReflectionCoeff,
+  computeReflectionCoeffComplex,
   computeVSWR,
-  computePowerDeliveryEfficiency,
   computeMediumJouleHeatingWatts,
   computeMediumTempRiseRatePerSec,
   computeFieldDistortionFactor,
   computeCuvetteRCTimeConstantNs,
   computeCorrectedFieldVcm,
-  computeSigmaEFromImpedance,
+  computeSigmaEFromComplexImpedance,
 } from '@/utils/impedance'
+
+import { MEDIA } from '@/constants/media'
 
 import { LOAD_STATE, FIELD_DISTORTION, PULSE_BW_STATUS } from '@/constants/strings'
 import type { LoadState, FieldDistortion, PulseBwStatus } from '@/constants/strings'
@@ -123,7 +125,11 @@ export const useImpedanceStore = defineStore('impedance', {
     sigmaEForImpedance(): number {
       const s = this as ImpedanceStoreState
       if (s.hardwareModeEnabled && s.hardwareZReal !== null) {
-        return computeSigmaEFromImpedance(s.cuvetteGapMm, s.cuvetteCrossSectionCm2, s.hardwareZReal)
+        // Use the exact complex formula when hardware reports both real and imaginary parts.
+        // Falls back to DC approximation (Z_imag=0) when only real part is available.
+        return computeSigmaEFromComplexImpedance(
+          s.cuvetteGapMm, s.cuvetteCrossSectionCm2, s.hardwareZReal, s.hardwareZImag ?? 0,
+        )
       }
       return this.sigmaEWithLysis
     },
@@ -201,9 +207,31 @@ export const useImpedanceStore = defineStore('impedance', {
       return computeRelaxationFreqHz(this.sigmaEWithLysis) / 1e6
     },
 
+    // ── RF matching metrics (complex impedance path) ──────────────────────────
+    // When hardware reports Z_real + Z_imag, use the exact complex |Γ| formula.
+    // In simulation mode derive real/imag components from the parallel-RC cuvette model.
+
+    cuvetteZComponents(): { real: number; imag: number } {
+      const s = this as ImpedanceStoreState
+      if (s.hardwareModeEnabled && s.hardwareZReal !== null) {
+        return { real: s.hardwareZReal, imag: s.hardwareZImag ?? 0 }
+      }
+      const cellStore = useCellStore()
+      const freqHz = cellStore.currentBroadcastFrequency * 1e3
+      const eps_r  = MEDIA[cellStore.medium].permittivity
+      return computeCuvetteZComponents(
+        s.cuvetteGapMm,
+        s.cuvetteCrossSectionCm2,
+        this.sigmaEWithLysis,
+        freqHz,
+        eps_r,
+      )
+    },
+
     reflectionCoeff(): number {
       const s = this as ImpedanceStoreState
-      return computeReflectionCoeff(this.currentImpedanceMagAtFreqOhm, s.sourceImpedanceOhm)
+      const { real, imag } = this.cuvetteZComponents
+      return computeReflectionCoeffComplex(real, imag, s.sourceImpedanceOhm)
     },
 
     vswr(): number {
@@ -212,8 +240,8 @@ export const useImpedanceStore = defineStore('impedance', {
     },
 
     powerDeliveryEfficiency(): number {
-      const s = this as ImpedanceStoreState
-      return computePowerDeliveryEfficiency(this.currentImpedanceMagAtFreqOhm, s.sourceImpedanceOhm)
+      const gamma = this.reflectionCoeff
+      return 1 - gamma ** 2
     },
 
     mediumJouleHeatingMilliWatts(): number {
@@ -312,7 +340,9 @@ export const useImpedanceStore = defineStore('impedance', {
       const point: ImpedanceHistoryPoint = {
         ts:     packet.timestamp,
         zOhm:  packet.zReal,
-        sigmaE: computeSigmaEFromImpedance(this.cuvetteGapMm, this.cuvetteCrossSectionCm2, packet.zReal),
+        sigmaE: computeSigmaEFromComplexImpedance(
+          this.cuvetteGapMm, this.cuvetteCrossSectionCm2, packet.zReal, packet.zImag,
+        ),
       }
       this.impedanceHistory.push(point)
       if (this.impedanceHistory.length > IMPEDANCE_HISTORY_MAX) {
