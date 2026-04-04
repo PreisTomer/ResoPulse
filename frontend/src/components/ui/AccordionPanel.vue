@@ -17,7 +17,11 @@
         <span class="accordion-panel__title">{{ title }}</span>
         <span v-if="subtitle" class="accordion-panel__sub">{{ subtitle }}</span>
       </span>
-      <span class="accordion-panel__chevron" :class="{ 'accordion-panel__chevron--open': isOpen }">{{ ICON.CHEVRON }}</span>
+      <span
+        class="accordion-panel__chevron"
+        :class="{ 'accordion-panel__chevron--open': isOpen }"
+        >{{ ICON.CHEVRON }}</span
+      >
     </button>
     <div v-show="isOpen" class="accordion-panel__body">
       <slot />
@@ -26,19 +30,19 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue'
+import { defineComponent } from "vue";
 
-import { ICON } from '@/constants/icons'
-import { EMIT } from '@/constants/emitEvents'
+import { ICON } from "@/constants/icons";
+import { EMIT } from "@/constants/emitEvents";
 export default defineComponent({
-  name: 'AccordionPanel',
+  name: "AccordionPanel",
 
   props: {
-    icon:          { type: String,  required: true },
-    title:         { type: String,  required: true },
-    subtitle:      { type: String,  default: '' },
-    initialOpen:   { type: Boolean, default: false },
-    compact:       { type: Boolean, default: false },
+    icon: { type: String, required: true },
+    title: { type: String, required: true },
+    subtitle: { type: String, default: "" },
+    initialOpen: { type: Boolean, default: false },
+    compact: { type: Boolean, default: false },
     borderOnToggle: { type: Boolean, default: false },
   },
 
@@ -47,26 +51,28 @@ export default defineComponent({
   data() {
     return {
       isOpen: this.initialOpen,
-    }
+    };
   },
 
   computed: {
-    ICON() { return ICON },
-    EMIT() { return EMIT },
+    ICON() {
+      return ICON;
+    },
+    EMIT() {
+      return EMIT;
+    },
   },
 
   methods: {
     toggle() {
-      this.isOpen = !this.isOpen
-      this.$emit(EMIT.OPEN_CHANGE, this.isOpen)
+      this.isOpen = !this.isOpen;
+      this.$emit(EMIT.OPEN_CHANGE, this.isOpen);
     },
   },
-})
+});
 </script>
 
 <style lang="scss" scoped>
-
-
 .accordion-panel {
   /* ── Toggle button ──────────────────────────────────────────── */
   &__toggle {
@@ -79,7 +85,9 @@ export default defineComponent({
     gap: 0.5rem;
     transition: background var(--tr-fast);
 
-    &:hover { background: color-mix(in srgb, white 4%, transparent); }
+    &:hover {
+      background: color-mix(in srgb, white 4%, transparent);
+    }
   }
 
   &__toggle:hover &__title {
@@ -122,13 +130,17 @@ export default defineComponent({
     color: var(--color-text-muted);
     flex-shrink: 0;
     transition: transform var(--tr-normal);
-    &--open { transform: rotate(90deg); }
+    &--open {
+      transform: rotate(90deg);
+    }
   }
 
   /* ── compact variant - SelectivityPanel style ───────────────── */
   &--compact &__toggle {
     padding: 0.5rem 0;
-    &:hover { background: transparent; }
+    &:hover {
+      background: transparent;
+    }
   }
 
   &--compact &__toggle--open {
@@ -143,7 +155,9 @@ export default defineComponent({
   &--border-toggle &__toggle {
     border-bottom: 1px solid var(--color-border);
     padding: 0.6rem 1rem;
-    &:hover { background: transparent; }
+    &:hover {
+      background: transparent;
+    }
   }
 }
 </style>

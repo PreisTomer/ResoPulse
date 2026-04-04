@@ -2,16 +2,18 @@
 <template>
   <div class="stat-card" v-tip="tooltip || undefined">
     <span class="stat-card__label">{{ label }}</span>
-    <span class="stat-card__value" :class="`stat-card__value--${variant}`">{{ value }}</span>
+    <span class="stat-card__value" :class="`stat-card__value--${variant}`">{{
+      value
+    }}</span>
     <span v-if="sub" class="stat-card__sub">{{ sub }}</span>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue'
+import { defineComponent } from "vue";
 
 export default defineComponent({
-  name: 'StatCard',
+  name: "StatCard",
 
   props: {
     label: {
@@ -24,23 +26,21 @@ export default defineComponent({
     },
     sub: {
       type: String,
-      default: '',
+      default: "",
     },
     variant: {
       type: String,
-      default: 'default',
+      default: "default",
     },
     tooltip: {
       type: String,
-      default: '',
+      default: "",
     },
   },
-})
+});
 </script>
 
 <style lang="scss" scoped>
-
-
 .stat-card {
   @include surface-card(var(--radius), 1rem 1.1rem);
   display: flex;
@@ -62,14 +62,26 @@ export default defineComponent({
     color: var(--color-text-heading);
     line-height: 1;
 
-    &--default  { color: var(--color-text-heading); }
-    &--ok       { color: var(--color-ok); }
+    &--default {
+      color: var(--color-text-heading);
+    }
+    &--ok {
+      color: var(--color-ok);
+    }
     &--warn,
-    &--amber    { color: var(--color-amber); }
-    &--danger   { color: var(--color-danger); }
+    &--amber {
+      color: var(--color-amber);
+    }
+    &--danger {
+      color: var(--color-danger);
+    }
     &--info,
-    &--primary  { color: var(--color-primary); }
-    &--muted    { color: var(--color-text-muted); }
+    &--primary {
+      color: var(--color-primary);
+    }
+    &--muted {
+      color: var(--color-text-muted);
+    }
   }
 
   &__sub {

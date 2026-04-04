@@ -7,48 +7,50 @@
     </main>
     <TermsGate v-if="showTermsGate" @accepted="onTermsAccepted" />
     <footer class="app-footer">
-      <span class="app-footer__copy">© 2026 Tomer Preis. All rights reserved.</span>
+      <span class="app-footer__copy"
+        >© 2026 Tomer Preis. All rights reserved.</span
+      >
       <RouterLink to="/terms" class="app-footer__link">Terms of Use</RouterLink>
     </footer>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue'
+import { defineComponent } from "vue";
 
-import { NavBar, TermsGate } from './components/app'
-import { useThemeStore } from './stores/themeStore'
-const TERMS_KEY = 'rp_terms_v1'
+import { NavBar, TermsGate } from "./components/app";
+import { useThemeStore } from "./stores/themeStore";
+const TERMS_KEY = "rp_terms_v1";
 
 export default defineComponent({
   components: { NavBar, TermsGate },
 
   setup() {
-    return { themeStore: useThemeStore() }
+    return { themeStore: useThemeStore() };
   },
 
   data() {
     return {
-      termsAccepted: localStorage.getItem(TERMS_KEY) === '1',
-    }
+      termsAccepted: localStorage.getItem(TERMS_KEY) === "1",
+    };
   },
 
   computed: {
     showTermsGate(): boolean {
-      return !this.termsAccepted && this.$route.path === '/experiment'
+      return !this.termsAccepted && this.$route.path === "/experiment";
     },
   },
 
   mounted() {
-    this.themeStore.init()
+    this.themeStore.init();
   },
 
   methods: {
     onTermsAccepted() {
-      this.termsAccepted = true
+      this.termsAccepted = true;
     },
   },
-})
+});
 </script>
 
 <style lang="scss" scoped>
@@ -93,7 +95,9 @@ main {
     opacity: var(--op-dim);
     transition: opacity var(--tr-fast);
 
-    &:hover { opacity: 1; }
+    &:hover {
+      opacity: 1;
+    }
   }
 }
 </style>

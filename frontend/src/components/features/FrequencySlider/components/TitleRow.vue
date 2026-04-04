@@ -1,29 +1,34 @@
 <!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
 <template>
   <div class="field-panel__title-row">
-    <span class="field-panel__title">{{ $t('slider.title') }}</span>
-    <div class="field-panel__scope-note" v-tip="STATIC_SLIDER_TOOLTIPS.scopeNote">
-      <span class="field-panel__scope-chip field-panel__scope-chip--both">{{ $t('labels.scopeBoth') }}</span>
+    <span class="field-panel__title">{{ $t("slider.title") }}</span>
+    <div
+      class="field-panel__scope-note"
+      v-tip="STATIC_SLIDER_TOOLTIPS.scopeNote"
+    >
+      <span class="field-panel__scope-chip field-panel__scope-chip--both">{{
+        $t("labels.scopeBoth")
+      }}</span>
       <span class="field-panel__scope-sep">·</span>
-      <span class="field-panel__scope-chip field-panel__scope-chip--card">{{ $t('slider.cardParams') }}</span>
+      <span class="field-panel__scope-chip field-panel__scope-chip--card">{{
+        $t("slider.cardParams")
+      }}</span>
     </div>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue'
+import { defineComponent } from "vue";
 
-import { STATIC_SLIDER_TOOLTIPS } from '../lib'
+import { STATIC_SLIDER_TOOLTIPS } from "../lib";
 export default defineComponent({
   data() {
-    return { STATIC_SLIDER_TOOLTIPS }
+    return { STATIC_SLIDER_TOOLTIPS };
   },
-})
+});
 </script>
 
 <style lang="scss" scoped>
-
-
 .field-panel {
   &__title-row {
     display: flex;
@@ -56,7 +61,8 @@ export default defineComponent({
     &--both {
       background: color-mix(in srgb, var(--color-primary) 10%, transparent);
       color: var(--color-accent);
-      border: 1px solid color-mix(in srgb, var(--color-primary) 20%, transparent);
+      border: 1px solid
+        color-mix(in srgb, var(--color-primary) 20%, transparent);
     }
 
     &--card {

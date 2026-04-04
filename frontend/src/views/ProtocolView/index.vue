@@ -2,11 +2,16 @@
 <template>
   <div class="protocol">
     <div class="protocol__inner">
-
       <!-- Page header -->
       <div class="protocol__header">
-        <PageHeader :eyebrow="$t('protocol.header.eyebrow')" :title="$t('protocol.header.title')">
-          <p class="protocol__subtitle" v-html="$t('protocol.header.subtitle')"></p>
+        <PageHeader
+          :eyebrow="$t('protocol.header.eyebrow')"
+          :title="$t('protocol.header.title')"
+        >
+          <p
+            class="protocol__subtitle"
+            v-html="$t('protocol.header.subtitle')"
+          ></p>
         </PageHeader>
       </div>
 
@@ -17,13 +22,18 @@
         @click="tocMobileOpen = !tocMobileOpen"
       >
         <span class="protocol__toc-mobile-icon">{{ ICON.MENU }}</span>
-        <span class="protocol__toc-mobile-label">{{ tocMobileOpen ? $t('protocol.toc.close') : $t('protocol.toc.contents') }}</span>
-        <span class="protocol__toc-mobile-caret" :class="{ 'protocol__toc-mobile-caret--open': tocMobileOpen }">{{ ICON.CARET_DOWN }}</span>
+        <span class="protocol__toc-mobile-label">{{
+          tocMobileOpen ? $t("protocol.toc.close") : $t("protocol.toc.contents")
+        }}</span>
+        <span
+          class="protocol__toc-mobile-caret"
+          :class="{ 'protocol__toc-mobile-caret--open': tocMobileOpen }"
+          >{{ ICON.CARET_DOWN }}</span
+        >
       </button>
 
       <!-- Two-column layout: TOC + content -->
       <div class="protocol__layout">
-
         <!-- Sidebar TOC -->
         <ProtocolToc
           :items="tocItems"
@@ -63,19 +73,19 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue'
+import { defineComponent } from "vue";
 
-import { PageHeader } from '@/components/ui'
+import { PageHeader } from "@/components/ui";
 
-import { ICON } from '@/constants/icons'
+import { ICON } from "@/constants/icons";
 
-import ProtocolToc from './ProtocolToc.vue'
-import ProtocolSectionOverview from './ProtocolSectionOverview.vue'
-import ProtocolSectionPhysics from './ProtocolSectionPhysics.vue'
-import ProtocolSectionSteps from './ProtocolSectionSteps.vue'
-import ProtocolSectionSafety from './ProtocolSectionSafety.vue'
-import ProtocolSectionRefs from './ProtocolSectionRefs.vue'
-import ProtocolFeedbackModal from './ProtocolFeedbackModal.vue'
+import ProtocolToc from "./ProtocolToc.vue";
+import ProtocolSectionOverview from "./ProtocolSectionOverview.vue";
+import ProtocolSectionPhysics from "./ProtocolSectionPhysics.vue";
+import ProtocolSectionSteps from "./ProtocolSectionSteps.vue";
+import ProtocolSectionSafety from "./ProtocolSectionSafety.vue";
+import ProtocolSectionRefs from "./ProtocolSectionRefs.vue";
+import ProtocolFeedbackModal from "./ProtocolFeedbackModal.vue";
 import type {
   TocItem,
   SchwanParamRow,
@@ -87,40 +97,66 @@ import type {
   RawRefItem,
   RefItem,
   SonificationRow,
-} from './types'
+} from "./types";
 
 const TOC_ITEMS: TocItem[] = [
-  { id: 'overview',       key: 'overview',      indent: false },
-  { id: 'physics',        key: 'physics',       indent: false, physicsParent: true },
-  { id: 'schwan',         key: 'schwan',        indent: true },
-  { id: 'thermal',        key: 'thermal',       indent: true },
-  { id: 'maxwell',        key: 'maxwell',       indent: true },
-  { id: 'disruption',     key: 'disruption',    indent: true },
-  { id: 'resonance',      key: 'resonance',     indent: true },
-  { id: 'nsep',           key: 'nsep',          indent: true },
-  { id: 'doubleshell',    key: 'doubleshell',   indent: true },
-  { id: 'dep',            key: 'dep',           indent: true },
-  { id: 'uncertainty',    key: 'uncertainty',   indent: true },
-  { id: 'biomodulation',  key: 'biomodulation', indent: true },
-  { id: 'impedance',      key: 'impedance',     indent: true },
-  { id: 'sonification',   key: 'sonification',  indent: true },
-  { id: 'protocol-steps', key: 'protocol',      indent: false },
-  { id: 'safety',         key: 'safety',        indent: false },
-  { id: 'refs',           key: 'refs',          indent: false },
-]
+  { id: "overview", key: "overview", indent: false },
+  { id: "physics", key: "physics", indent: false, physicsParent: true },
+  { id: "schwan", key: "schwan", indent: true },
+  { id: "thermal", key: "thermal", indent: true },
+  { id: "maxwell", key: "maxwell", indent: true },
+  { id: "disruption", key: "disruption", indent: true },
+  { id: "resonance", key: "resonance", indent: true },
+  { id: "nsep", key: "nsep", indent: true },
+  { id: "doubleshell", key: "doubleshell", indent: true },
+  { id: "dep", key: "dep", indent: true },
+  { id: "uncertainty", key: "uncertainty", indent: true },
+  { id: "biomodulation", key: "biomodulation", indent: true },
+  { id: "impedance", key: "impedance", indent: true },
+  { id: "sonification", key: "sonification", indent: true },
+  { id: "protocol-steps", key: "protocol", indent: false },
+  { id: "safety", key: "safety", indent: false },
+  { id: "refs", key: "refs", indent: false },
+];
 
 const ALL_SECTION_IDS = [
-  'overview',
-  'physics', 'schwan', 'thermal', 'maxwell', 'disruption',
-  'resonance', 'nsep', 'doubleshell', 'dep', 'uncertainty', 'biomodulation',
-  'impedance', 'sonification',
-  'protocol-steps', 'safety', 'refs',
-] as const
+  "overview",
+  "physics",
+  "schwan",
+  "thermal",
+  "maxwell",
+  "disruption",
+  "resonance",
+  "nsep",
+  "doubleshell",
+  "dep",
+  "uncertainty",
+  "biomodulation",
+  "impedance",
+  "sonification",
+  "protocol-steps",
+  "safety",
+  "refs",
+] as const;
 
-const PHYSICS_IDS = new Set(['physics', 'schwan', 'thermal', 'maxwell', 'disruption', 'resonance', 'nsep', 'doubleshell', 'dep', 'uncertainty', 'biomodulation', 'impedance', 'sonification'])
+const PHYSICS_IDS = new Set([
+  "physics",
+  "schwan",
+  "thermal",
+  "maxwell",
+  "disruption",
+  "resonance",
+  "nsep",
+  "doubleshell",
+  "dep",
+  "uncertainty",
+  "biomodulation",
+  "impedance",
+  "sonification",
+]);
 
 export default defineComponent({
-  name: 'ProtocolView',
+  name: "ProtocolView",
 
   components: {
     PageHeader,
@@ -135,101 +171,131 @@ export default defineComponent({
 
   data() {
     return {
-      activeSection:     'overview' as string,
-      tocMobileOpen:     false,
+      activeSection: "overview" as string,
+      tocMobileOpen: false,
       showFeedbackModal: false,
-      _scrollHandler:    null as EventListener | null,
-    }
+      _scrollHandler: null as EventListener | null,
+    };
   },
 
   computed: {
-    ICON() { return ICON },
+    ICON() {
+      return ICON;
+    },
     tocItems(): TocItem[] {
-      return TOC_ITEMS
+      return TOC_ITEMS;
     },
 
     isPhysicsActive(): boolean {
-      return PHYSICS_IDS.has(this.activeSection)
+      return PHYSICS_IDS.has(this.activeSection);
     },
 
     protocolStepKeys(): string[] {
-      return ['s01', 's02', 's03', 's04', 's05', 's06', 's07', 's08', 's09', 's10', 's11', 's12']
+      return [
+        "s01",
+        "s02",
+        "s03",
+        "s04",
+        "s05",
+        "s06",
+        "s07",
+        "s08",
+        "s09",
+        "s10",
+        "s11",
+        "s12",
+      ];
     },
 
     schwanParams(): SchwanParamRow[] {
-      return (this.$tm as Function)('protocol.physics.schwan.params') as SchwanParamRow[]
+      return (this.$tm as Function)(
+        "protocol.physics.schwan.params",
+      ) as SchwanParamRow[];
     },
 
     resonanceRows(): ResonanceRow[] {
-      return (this.$tm as Function)('protocol.physics.resonance.rows') as ResonanceRow[]
+      return (this.$tm as Function)(
+        "protocol.physics.resonance.rows",
+      ) as ResonanceRow[];
     },
 
     doubleshellRows(): DoubleshellRow[] {
-      return (this.$tm as Function)('protocol.physics.doubleshell.rows') as DoubleshellRow[]
+      return (this.$tm as Function)(
+        "protocol.physics.doubleshell.rows",
+      ) as DoubleshellRow[];
     },
 
     depRows(): DepRow[] {
-      return (this.$tm as Function)('protocol.physics.dep.params') as DepRow[]
+      return (this.$tm as Function)("protocol.physics.dep.params") as DepRow[];
     },
 
     uncertaintyRows(): UncertaintyRow[] {
-      return (this.$tm as Function)('protocol.physics.uncertainty.rows') as UncertaintyRow[]
+      return (this.$tm as Function)(
+        "protocol.physics.uncertainty.rows",
+      ) as UncertaintyRow[];
     },
 
     safetyRows(): SafetyRow[] {
-      return (this.$tm as Function)('protocol.safety.rows') as SafetyRow[]
+      return (this.$tm as Function)("protocol.safety.rows") as SafetyRow[];
     },
 
     sonificationMappings(): SonificationRow[] {
-      return (this.$tm as Function)('protocol.physics.sonification.mappings') as SonificationRow[]
+      return (this.$tm as Function)(
+        "protocol.physics.sonification.mappings",
+      ) as SonificationRow[];
     },
 
     refList(): RefItem[] {
-      const raw = (this.$tm as Function)('protocol.refs.list') as RawRefItem[]
+      const raw = (this.$tm as Function)("protocol.refs.list") as RawRefItem[];
       return raw.map((item) => ({
         body: item.body,
         note: item.note,
-        url: item.doi  ? `https://doi.org/${item.doi}`
-           : item.pmid ? `https://pubmed.ncbi.nlm.nih.gov/${item.pmid}/`
-           : undefined,
-        urlLabel: item.doi  ? `doi:${item.doi}`
-               : item.pmid ? `PubMed:${item.pmid}`
-               : undefined,
-      }))
+        url: item.doi
+          ? `https://doi.org/${item.doi}`
+          : item.pmid
+            ? `https://pubmed.ncbi.nlm.nih.gov/${item.pmid}/`
+            : undefined,
+        urlLabel: item.doi
+          ? `doi:${item.doi}`
+          : item.pmid
+            ? `PubMed:${item.pmid}`
+            : undefined,
+      }));
     },
   },
 
   mounted() {
     const handler = () => {
-      let current: string = ALL_SECTION_IDS[0]
+      let current: string = ALL_SECTION_IDS[0];
       for (const id of ALL_SECTION_IDS) {
-        const el = document.getElementById(id)
+        const el = document.getElementById(id);
         if (el && el.getBoundingClientRect().top <= 80) {
-          current = id
+          current = id;
         }
       }
-      this.activeSection = current
-    }
-    window.addEventListener('scroll', handler, { passive: true })
-    handler()
-    this._scrollHandler = handler
+      this.activeSection = current;
+    };
+    window.addEventListener("scroll", handler, { passive: true });
+    handler();
+    this._scrollHandler = handler;
   },
 
   beforeUnmount() {
-    if (this._scrollHandler) window.removeEventListener('scroll', this._scrollHandler)
+    if (this._scrollHandler)
+      window.removeEventListener("scroll", this._scrollHandler);
   },
 
   methods: {
     isTocActive(item: TocItem): boolean {
-      return item.physicsParent ? this.isPhysicsActive : this.activeSection === item.id
+      return item.physicsParent
+        ? this.isPhysicsActive
+        : this.activeSection === item.id;
     },
   },
-})
+});
 </script>
 
 <style lang="scss" scoped>
-
-
 .protocol {
   flex: 1;
   background-color: var(--color-bg);
@@ -259,7 +325,9 @@ export default defineComponent({
   }
 
   /* ── Document ──────────────────────────────────────────── */
-  &__doc { @include flex-col(2.5rem); }
+  &__doc {
+    @include flex-col(2.5rem);
+  }
 
   // ── Mobile TOC toggle button (hidden on desktop) ────────────────────────────
   &__toc-mobile-btn {
@@ -272,7 +340,9 @@ export default defineComponent({
     transition: transform var(--tr-normal);
     margin-left: auto;
 
-    &--open { transform: rotate(180deg); }
+    &--open {
+      transform: rotate(180deg);
+    }
   }
 }
 
@@ -285,7 +355,8 @@ export default defineComponent({
     width: 100%;
     padding: 0.8rem 1.1rem;
     background: var(--color-surface);
-    border: 1.5px solid color-mix(in srgb, var(--color-primary) 35%, transparent);
+    border: 1.5px solid
+      color-mix(in srgb, var(--color-primary) 35%, transparent);
     border-radius: var(--radius);
     color: var(--color-primary);
     font-size: var(--fs-lg);
@@ -294,13 +365,19 @@ export default defineComponent({
     letter-spacing: 0.04em;
     cursor: pointer;
     margin-bottom: 0.75rem;
-    transition: border-color var(--tr-fast), background var(--tr-fast), box-shadow var(--tr-fast);
-    box-shadow: 0 0 12px color-mix(in srgb, var(--color-primary) 8%, transparent);
+    transition:
+      border-color var(--tr-fast),
+      background var(--tr-fast),
+      box-shadow var(--tr-fast);
+    box-shadow: 0 0 12px
+      color-mix(in srgb, var(--color-primary) 8%, transparent);
 
-    &:hover, &--open {
+    &:hover,
+    &--open {
       border-color: var(--color-primary);
       background: color-mix(in srgb, var(--color-primary) 6%, transparent);
-      box-shadow: 0 0 18px color-mix(in srgb, var(--color-primary) 18%, transparent);
+      box-shadow: 0 0 18px
+        color-mix(in srgb, var(--color-primary) 18%, transparent);
     }
   }
 

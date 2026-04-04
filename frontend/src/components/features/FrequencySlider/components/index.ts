@@ -1,8 +1,8 @@
-export { default as AdvancedSection } from './AdvancedSection.vue'
-export { default as FieldRow } from './FieldRow.vue'
-export { default as FreqRow } from './FreqRow.vue'
-export { default as MediumRow } from './MediumRow.vue'
-export { default as ProtocolSection } from './ProtocolSection.vue'
-export { default as ProtocolSnapBar } from './ProtocolSnapBar.vue'
-export { default as ThermalBanner } from './ThermalBanner.vue'
-export { default as TitleRow } from './TitleRow.vue'
+export { default as AdvancedSection } from "./AdvancedSection.vue";
+export { default as FieldRow } from "./FieldRow.vue";
+export { default as FreqRow } from "./FreqRow.vue";
+export { default as MediumRow } from "./MediumRow.vue";
+export { default as ProtocolSection } from "./ProtocolSection.vue";
+export { default as ProtocolSnapBar } from "./ProtocolSnapBar.vue";
+export { default as ThermalBanner } from "./ThermalBanner.vue";
+export { default as TitleRow } from "./TitleRow.vue";

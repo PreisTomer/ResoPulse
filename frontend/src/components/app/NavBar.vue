@@ -2,14 +2,17 @@
 <template>
   <header class="nav-bar">
     <div class="nav-bar__inner">
-
       <RouterLink to="/" class="nav-bar__brand" @click="mobileOpen = false">
         <div class="nav-bar__brand-logo">
           <img src="/logo.png" :alt="$t('nav.logoAlt')" />
         </div>
         <div class="nav-bar__brand-text">
-          <span class="nav-bar__brand-name">Reso<span class="nav-bar__brand-pulse">Pulse</span></span>
-          <span class="nav-bar__brand-tag">{{ $t('nav.researchPlatform') }}</span>
+          <span class="nav-bar__brand-name"
+            >Reso<span class="nav-bar__brand-pulse">Pulse</span></span
+          >
+          <span class="nav-bar__brand-tag">{{
+            $t("nav.researchPlatform")
+          }}</span>
         </div>
       </RouterLink>
 
@@ -22,7 +25,8 @@
           :exact-active-class="link.exact ? 'active' : undefined"
           :active-class="!link.exact ? 'active' : undefined"
           @click="mobileOpen = false"
-        >{{ $t(link.labelKey) }}</RouterLink>
+          >{{ $t(link.labelKey) }}</RouterLink
+        >
       </nav>
 
       <div class="nav-bar__right">
@@ -30,16 +34,28 @@
           class="nav-bar__theme-toggle"
           :class="{ 'nav-bar__theme-toggle--oled': isOled }"
           type="button"
-          :title="isOled ? $t('nav.themeSwitchDark') : $t('nav.themeSwitchOled')"
+          :title="
+            isOled ? $t('nav.themeSwitchDark') : $t('nav.themeSwitchOled')
+          "
           @click="themeStore.toggle()"
-        >{{ isOled ? $t('nav.themeOled') : $t('nav.themeDark') }}</button>
+        >
+          {{ isOled ? $t("nav.themeOled") : $t("nav.themeDark") }}
+        </button>
         <div
           class="nav-bar__status"
-          v-tip="systemReady ? $t('nav.tipSystemReady') : $t('nav.tipSystemWarning')"
+          v-tip="
+            systemReady ? $t('nav.tipSystemReady') : $t('nav.tipSystemWarning')
+          "
         >
-          <span class="nav-bar__status-dot" :class="{ 'nav-bar__status-dot--warning': !systemReady }"></span>
-          <span class="nav-bar__status-label" :class="{ 'nav-bar__status-label--warning': !systemReady }">
-            {{ systemReady ? $t('nav.systemReady') : $t('nav.systemWarning') }}
+          <span
+            class="nav-bar__status-dot"
+            :class="{ 'nav-bar__status-dot--warning': !systemReady }"
+          ></span>
+          <span
+            class="nav-bar__status-label"
+            :class="{ 'nav-bar__status-label--warning': !systemReady }"
+          >
+            {{ systemReady ? $t("nav.systemReady") : $t("nav.systemWarning") }}
           </span>
         </div>
         <button
@@ -51,46 +67,49 @@
           <span></span><span></span><span></span>
         </button>
       </div>
-
     </div>
   </header>
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue'
-import { mapStores } from 'pinia'
+import { defineComponent } from "vue";
+import { mapStores } from "pinia";
 
-import { useCellStore } from '@/stores/cellStore'
-import { useThemeStore } from '@/stores/themeStore'
+import { useCellStore } from "@/stores/cellStore";
+import { useThemeStore } from "@/stores/themeStore";
 const NAV_LINKS = [
-  { to: '/',           labelKey: 'nav.home',       exact: true },
-  { to: '/experiment', labelKey: 'nav.experiment',  exact: false },
-  { to: '/datasets',   labelKey: 'nav.dataSets',    exact: false },
-  { to: '/instrument', labelKey: 'nav.instrument',  exact: false },
-  { to: '/reports',    labelKey: 'nav.reports',     exact: false },
-  { to: '/protocol',   labelKey: 'nav.protocol',    exact: false },
-]
+  { to: "/", labelKey: "nav.home", exact: true },
+  { to: "/experiment", labelKey: "nav.experiment", exact: false },
+  { to: "/datasets", labelKey: "nav.dataSets", exact: false },
+  { to: "/instrument", labelKey: "nav.instrument", exact: false },
+  { to: "/reports", labelKey: "nav.reports", exact: false },
+  { to: "/protocol", labelKey: "nav.protocol", exact: false },
+];
 
 export default defineComponent({
-  name: 'NavBar',
+  name: "NavBar",
 
   data() {
-    return { mobileOpen: false, navLinks: NAV_LINKS }
+    return { mobileOpen: false, navLinks: NAV_LINKS };
   },
 
   computed: {
     ...mapStores(useCellStore),
-    themeStore() { return useThemeStore() },
+    themeStore() {
+      return useThemeStore();
+    },
 
-    systemReady(): boolean { return this.cellStore.systemReady },
-    isOled(): boolean { return this.themeStore.theme === 'oled' },
+    systemReady(): boolean {
+      return this.cellStore.systemReady;
+    },
+    isOled(): boolean {
+      return this.themeStore.theme === "oled";
+    },
   },
-})
+});
 </script>
 
 <style lang="scss" scoped>
-
-
 .nav-bar {
   background-color: var(--color-surface);
   border-bottom: 1px solid var(--color-border);
@@ -123,10 +142,18 @@ export default defineComponent({
       outline: 1.5px solid var(--color-border);
       background-color: var(--color-bg);
 
-      img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.7); display: block; }
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transform: scale(1.7);
+        display: block;
+      }
     }
 
-    &-text { @include flex-col(2px); }
+    &-text {
+      @include flex-col(2px);
+    }
 
     &-name {
       font-size: 1.1rem;
@@ -143,7 +170,10 @@ export default defineComponent({
       animation: brand-pulse 2.5s ease-in-out infinite;
     }
 
-    &-tag { @include mono-upper(0.6rem, 0.02em); color: var(--color-text-muted); }
+    &-tag {
+      @include mono-upper(0.6rem, 0.02em);
+      color: var(--color-text-muted);
+    }
   }
 
   /* ── Nav ────────────────────────────────────────────────────────── */
@@ -157,11 +187,19 @@ export default defineComponent({
     border-radius: var(--radius);
     font-size: var(--fs-lg);
     color: var(--color-text-muted);
-    transition: color var(--tr-fast), background-color var(--tr-fast);
+    transition:
+      color var(--tr-fast),
+      background-color var(--tr-fast);
     text-decoration: none;
 
-    &:hover { color: var(--color-text); background-color: var(--color-surface-2); }
-    &.active { color: var(--color-primary); background-color: var(--color-primary-dim); }
+    &:hover {
+      color: var(--color-text);
+      background-color: var(--color-surface-2);
+    }
+    &.active {
+      color: var(--color-primary);
+      background-color: var(--color-primary-dim);
+    }
   }
 
   /* ── Right side ─────────────────────────────────────────────────── */
@@ -180,16 +218,23 @@ export default defineComponent({
       background-color: var(--color-accent);
       box-shadow: 0 0 6px var(--color-accent);
       animation: nav-pulse 2s ease-in-out infinite;
-      transition: background-color 0.4s, box-shadow 0.4s;
+      transition:
+        background-color 0.4s,
+        box-shadow 0.4s;
 
-      &--warning { background-color: var(--color-amber-warm); box-shadow: 0 0 6px var(--color-amber-warm); }
+      &--warning {
+        background-color: var(--color-amber-warm);
+        box-shadow: 0 0 6px var(--color-amber-warm);
+      }
     }
 
     &-label {
       @include mono-upper(var(--fs-sm));
       color: var(--color-text-muted);
 
-      &--warning { color: var(--color-amber-warm); }
+      &--warning {
+        color: var(--color-amber-warm);
+      }
     }
   }
 
@@ -202,10 +247,16 @@ export default defineComponent({
     border-radius: 4px;
     color: var(--color-text-muted);
     cursor: pointer;
-    transition: color var(--tr-fast), border-color var(--tr-fast), background var(--tr-fast);
+    transition:
+      color var(--tr-fast),
+      border-color var(--tr-fast),
+      background var(--tr-fast);
     white-space: nowrap;
 
-    &:hover { color: var(--color-text); border-color: var(--color-text-muted); }
+    &:hover {
+      color: var(--color-text);
+      border-color: var(--color-text-muted);
+    }
 
     &--oled {
       color: var(--color-primary);
@@ -231,7 +282,9 @@ export default defineComponent({
     flex-shrink: 0;
     transition: border-color var(--tr-fast);
 
-    &:hover { border-color: var(--color-primary); }
+    &:hover {
+      border-color: var(--color-primary);
+    }
 
     span {
       display: block;
@@ -239,21 +292,50 @@ export default defineComponent({
       height: 2px;
       background: var(--color-text-muted);
       border-radius: 2px;
-      transition: transform 0.22s ease, opacity 0.22s ease, background-color var(--tr-fast);
+      transition:
+        transform 0.22s ease,
+        opacity 0.22s ease,
+        background-color var(--tr-fast);
     }
 
     &--open {
       border-color: var(--color-primary);
-      span { background: var(--color-primary); }
-      span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
-      span:nth-child(2) { opacity: 0; transform: scaleX(0); }
-      span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+      span {
+        background: var(--color-primary);
+      }
+      span:nth-child(1) {
+        transform: translateY(7px) rotate(45deg);
+      }
+      span:nth-child(2) {
+        opacity: 0;
+        transform: scaleX(0);
+      }
+      span:nth-child(3) {
+        transform: translateY(-7px) rotate(-45deg);
+      }
     }
   }
 }
 
-@keyframes nav-pulse   { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-@keyframes brand-pulse { 0%, 100% { text-shadow: 0 0 8px var(--color-primary-dim); } 50% { text-shadow: 0 0 18px color-mix(in srgb, var(--color-primary) 50%, transparent); } }
+@keyframes nav-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+@keyframes brand-pulse {
+  0%,
+  100% {
+    text-shadow: 0 0 8px var(--color-primary-dim);
+  }
+  50% {
+    text-shadow: 0 0 18px
+      color-mix(in srgb, var(--color-primary) 50%, transparent);
+  }
+}
 
 /* ── Mobile / tablet (hamburger at ≤ 960px) ─────────────────────────────── */
 @media (max-width: 960px) {
@@ -267,7 +349,9 @@ export default defineComponent({
     display: none;
     position: fixed;
     top: 60px;
-    left: 0; right: 0; bottom: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     flex-direction: column;
     align-items: stretch;
     gap: 0;
@@ -279,7 +363,9 @@ export default defineComponent({
     z-index: 99;
     overflow-y: auto;
 
-    &--open { display: flex; }
+    &--open {
+      display: flex;
+    }
   }
 
   .nav-bar__link {
@@ -289,11 +375,21 @@ export default defineComponent({
     border-bottom: 1px solid var(--color-border);
     color: var(--color-text-muted);
 
-    &:last-child { border-bottom: none; }
-    &:hover, &.active { color: var(--color-primary); background: var(--color-primary-surface); }
+    &:last-child {
+      border-bottom: none;
+    }
+    &:hover,
+    &.active {
+      color: var(--color-primary);
+      background: var(--color-primary-surface);
+    }
   }
 
-  .nav-bar__hamburger { display: flex; }
-  .nav-bar__status-label { display: none; }
+  .nav-bar__hamburger {
+    display: flex;
+  }
+  .nav-bar__status-label {
+    display: none;
+  }
 }
 </style>

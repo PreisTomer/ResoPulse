@@ -11,19 +11,17 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue'
+import { defineComponent } from "vue";
 
 export default defineComponent({
   props: {
     eyebrow: { type: String, required: true },
     title: { type: String, required: true },
   },
-})
+});
 </script>
 
 <style lang="scss" scoped>
-
-
 .page-header {
   display: flex;
   flex-direction: column;

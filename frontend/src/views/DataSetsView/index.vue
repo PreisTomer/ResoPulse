@@ -2,11 +2,13 @@
 <template>
   <div class="datasets">
     <div class="datasets__inner">
-
-      <PageHeader :eyebrow="$t('datasets.eyebrow')" :title="$t('datasets.title')">
+      <PageHeader
+        :eyebrow="$t('datasets.eyebrow')"
+        :title="$t('datasets.title')"
+      >
         <p class="datasets__subtitle">
           <span v-html="$t('datasets.subtitle')"></span>
-          <br><span v-html="$t('datasets.subtitleNote')"></span>
+          <br /><span v-html="$t('datasets.subtitleNote')"></span>
         </p>
       </PageHeader>
 
@@ -33,49 +35,62 @@
 
       <div class="datasets__open-lab">
         <RouterLink to="/experiment" class="datasets__btn-lab">
-          {{ $t('datasets.cta.btnLab') }}
+          {{ $t("datasets.cta.btnLab") }}
         </RouterLink>
-        <span class="datasets__open-lab-note">{{ $t('datasets.cta.note') }}</span>
+        <span class="datasets__open-lab-note">{{
+          $t("datasets.cta.note")
+        }}</span>
       </div>
-
     </div>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, computed } from 'vue'
+import { defineComponent, computed } from "vue";
 
-import { PageHeader } from '@/components/ui'
+import { PageHeader } from "@/components/ui";
 
-import { membraneCm, computeFc, computeTau, computeNuclearTau, computeDepCrossoverKHz, computeDepSecondCrossoverKHz } from '@/utils/physics'
+import {
+  membraneCm,
+  computeFc,
+  computeTau,
+  computeNuclearTau,
+  computeDepCrossoverKHz,
+  computeDepSecondCrossoverKHz,
+} from "@/utils/physics";
 
-import { CELL_PRESETS, GROUP_COLORS, GROUP_LABELS, type CellGroup } from '@/constants/cellLibrary'
-import { MEDIA } from '@/constants/media'
-import { CELL_GROUP, NULL_DISPLAY } from '@/constants/strings'
-import { UNIT } from '@/constants/units'
-import { SCHWAN_SPHERE_FACTOR } from '@/constants/physics'
+import {
+  CELL_PRESETS,
+  GROUP_COLORS,
+  GROUP_LABELS,
+  type CellGroup,
+} from "@/constants/cellLibrary";
+import { MEDIA } from "@/constants/media";
+import { CELL_GROUP, NULL_DISPLAY } from "@/constants/strings";
+import { UNIT } from "@/constants/units";
+import { SCHWAN_SPHERE_FACTOR } from "@/constants/physics";
 
-import DatasetsCellTable from './DatasetsCellTable.vue'
-import DatasetsMediaTable from './DatasetsMediaTable.vue'
-import DatasetsWindowCard from './DatasetsWindowCard.vue'
-import DatasetsNucShellTable from './DatasetsNucShellTable.vue'
-import DatasetsAcousticRes from './DatasetsAcousticRes.vue'
-import DatasetsFieldGeo from './DatasetsFieldGeo.vue'
-import DatasetsThresholds from './DatasetsThresholds.vue'
-import type { AugmentedPreset } from './types'
+import DatasetsCellTable from "./DatasetsCellTable.vue";
+import DatasetsMediaTable from "./DatasetsMediaTable.vue";
+import DatasetsWindowCard from "./DatasetsWindowCard.vue";
+import DatasetsNucShellTable from "./DatasetsNucShellTable.vue";
+import DatasetsAcousticRes from "./DatasetsAcousticRes.vue";
+import DatasetsFieldGeo from "./DatasetsFieldGeo.vue";
+import DatasetsThresholds from "./DatasetsThresholds.vue";
+import type { AugmentedPreset } from "./types";
 
-const SIGMA_SALINE = MEDIA.saline.conductivity
-const EPS_R_SALINE = MEDIA.saline.permittivity
+const SIGMA_SALINE = MEDIA.saline.conductivity;
+const EPS_R_SALINE = MEDIA.saline.permittivity;
 
 const ALL_GROUPS: CellGroup[] = [
   CELL_GROUP.REFERENCE,
   CELL_GROUP.CANCER,
   CELL_GROUP.BACTERIA,
   CELL_GROUP.VIRUS,
-] as CellGroup[]
+] as CellGroup[];
 
 export default defineComponent({
-  name: 'DataSetsView',
+  name: "DataSetsView",
 
   components: {
     PageHeader,
@@ -91,47 +106,55 @@ export default defineComponent({
   setup() {
     const presets = computed((): AugmentedPreset[] =>
       CELL_PRESETS.map((p) => {
-        const pr = p as AugmentedPreset
-        const cm = membraneCm(p) * 1e3
-        const fc = computeFc(p, SIGMA_SALINE)
+        const pr = p as AugmentedPreset;
+        const cm = membraneCm(p) * 1e3;
+        const fc = computeFc(p, SIGMA_SALINE);
         const fcDisplay =
           fc >= 1000
             ? `${(fc / 1000).toFixed(2)} ${UNIT.MHZ}`
-            : `${fc.toFixed(1)} ${UNIT.KHZ}`
+            : `${fc.toFixed(1)} ${UNIT.KHZ}`;
 
         const resFreqDisplay = pr.resonantFreqGHz
           ? `${pr.resonantFreqGHz} ${UNIT.GHZ}`
-          : NULL_DISPLAY
-        const resQDisplay = pr.capsidQ ? `${pr.capsidQ}` : NULL_DISPLAY
+          : NULL_DISPLAY;
+        const resQDisplay = pr.capsidQ ? `${pr.capsidQ}` : NULL_DISPLAY;
         const resEthrDisplay = pr.resonantThresholdVcm
           ? `${pr.resonantThresholdVcm}`
-          : NULL_DISPLAY
+          : NULL_DISPLAY;
 
-        const fcross = computeDepCrossoverKHz(p, SIGMA_SALINE, EPS_R_SALINE)
-        const fcrossDisplay = fcross > 0
-          ? (fcross >= 1000
+        const fcross = computeDepCrossoverKHz(p, SIGMA_SALINE, EPS_R_SALINE);
+        const fcrossDisplay =
+          fcross > 0
+            ? fcross >= 1000
               ? `${(fcross / 1000).toFixed(2)} ${UNIT.MHZ}`
-              : `${fcross.toFixed(1)} ${UNIT.KHZ}`)
-          : NULL_DISPLAY
+              : `${fcross.toFixed(1)} ${UNIT.KHZ}`
+            : NULL_DISPLAY;
 
-        const fcross2 = computeDepSecondCrossoverKHz(p, SIGMA_SALINE, EPS_R_SALINE)
-        const fcross2Display = fcross2 > 0
-          ? (fcross2 >= 1000
+        const fcross2 = computeDepSecondCrossoverKHz(
+          p,
+          SIGMA_SALINE,
+          EPS_R_SALINE,
+        );
+        const fcross2Display =
+          fcross2 > 0
+            ? fcross2 >= 1000
               ? `${(fcross2 / 1000).toFixed(2)} ${UNIT.MHZ}`
-              : `${fcross2.toFixed(1)} ${UNIT.KHZ}`)
-          : NULL_DISPLAY
+              : `${fcross2.toFixed(1)} ${UNIT.KHZ}`
+            : NULL_DISPLAY;
 
-        const hasNuclear = !!pr.nuclearRadius
-        const nucRDisplay = pr.nuclearRadius ? `${pr.nuclearRadius}` : NULL_DISPLAY
+        const hasNuclear = !!pr.nuclearRadius;
+        const nucRDisplay = pr.nuclearRadius
+          ? `${pr.nuclearRadius}`
+          : NULL_DISPLAY;
 
-        let nucFpeakDisplay = NULL_DISPLAY
+        let nucFpeakDisplay = NULL_DISPLAY;
         if (hasNuclear) {
-          const tau_out = computeTau(p, SIGMA_SALINE)
-          const tau_ne  = computeNuclearTau(p, SIGMA_SALINE)
+          const tau_out = computeTau(p, SIGMA_SALINE);
+          const tau_ne = computeNuclearTau(p, SIGMA_SALINE);
           if (tau_out > 0 && tau_ne > 0) {
-            const fpeak_Hz  = 1 / (2 * Math.PI * Math.sqrt(tau_out * tau_ne))
-            const fpeak_MHz = fpeak_Hz / 1e6
-            nucFpeakDisplay = `${fpeak_MHz.toFixed(2)} ${UNIT.MHZ}`
+            const fpeak_Hz = 1 / (2 * Math.PI * Math.sqrt(tau_out * tau_ne));
+            const fpeak_MHz = fpeak_Hz / 1e6;
+            nucFpeakDisplay = `${fpeak_MHz.toFixed(2)} ${UNIT.MHZ}`;
           }
         }
 
@@ -150,99 +173,169 @@ export default defineComponent({
           nucFpeakDisplay,
           color: GROUP_COLORS[p.group],
           groupLabel: GROUP_LABELS[p.group],
-        }
-      })
-    )
+        };
+      }),
+    );
 
-    const nuclearPresets = computed(() => presets.value.filter(p => p.hasNuclear))
+    const nuclearPresets = computed(() =>
+      presets.value.filter((p) => p.hasNuclear),
+    );
 
     const mediaRows = [
-      { id: 'saline', sigma: MEDIA.saline.conductivity.toFixed(3), epsilonR: MEDIA.saline.permittivity, alphaT: (MEDIA.saline.tempCoeff * 100).toFixed(1), keyClass: 'datasets__primary-val' },
-      { id: 'blood',  sigma: MEDIA.blood.conductivity.toFixed(3),  epsilonR: MEDIA.blood.permittivity,  alphaT: (MEDIA.blood.tempCoeff  * 100).toFixed(1), keyClass: '' },
-      { id: 'tissue', sigma: MEDIA.tissue.conductivity.toFixed(3), epsilonR: MEDIA.tissue.permittivity, alphaT: (MEDIA.tissue.tempCoeff * 100).toFixed(1), keyClass: '' },
-      { id: 'water',  sigma: MEDIA.water.conductivity.toFixed(3),  epsilonR: MEDIA.water.permittivity,  alphaT: (MEDIA.water.tempCoeff  * 100).toFixed(1), keyClass: 'datasets__warn-val' },
-      { id: 'dmem',   sigma: MEDIA.dmem.conductivity.toFixed(3),   epsilonR: MEDIA.dmem.permittivity,   alphaT: (MEDIA.dmem.tempCoeff   * 100).toFixed(1), keyClass: 'datasets__primary-val' },
-      { id: 'pbs',    sigma: MEDIA.pbs.conductivity.toFixed(3),    epsilonR: MEDIA.pbs.permittivity,    alphaT: (MEDIA.pbs.tempCoeff    * 100).toFixed(1), keyClass: 'datasets__primary-val' },
-      { id: 'rpmi',   sigma: MEDIA.rpmi.conductivity.toFixed(3),   epsilonR: MEDIA.rpmi.permittivity,   alphaT: (MEDIA.rpmi.tempCoeff   * 100).toFixed(1), keyClass: '' },
-      { id: 'mhb',      sigma: MEDIA.mhb.conductivity.toFixed(3),      epsilonR: MEDIA.mhb.permittivity,      alphaT: (MEDIA.mhb.tempCoeff      * 100).toFixed(1), keyClass: '' },
-      { id: 'epbuffer', sigma: MEDIA.epbuffer.conductivity.toFixed(3), epsilonR: MEDIA.epbuffer.permittivity, alphaT: (MEDIA.epbuffer.tempCoeff * 100).toFixed(1), keyClass: 'datasets__dep-val' },
-    ]
+      {
+        id: "saline",
+        sigma: MEDIA.saline.conductivity.toFixed(3),
+        epsilonR: MEDIA.saline.permittivity,
+        alphaT: (MEDIA.saline.tempCoeff * 100).toFixed(1),
+        keyClass: "datasets__primary-val",
+      },
+      {
+        id: "blood",
+        sigma: MEDIA.blood.conductivity.toFixed(3),
+        epsilonR: MEDIA.blood.permittivity,
+        alphaT: (MEDIA.blood.tempCoeff * 100).toFixed(1),
+        keyClass: "",
+      },
+      {
+        id: "tissue",
+        sigma: MEDIA.tissue.conductivity.toFixed(3),
+        epsilonR: MEDIA.tissue.permittivity,
+        alphaT: (MEDIA.tissue.tempCoeff * 100).toFixed(1),
+        keyClass: "",
+      },
+      {
+        id: "water",
+        sigma: MEDIA.water.conductivity.toFixed(3),
+        epsilonR: MEDIA.water.permittivity,
+        alphaT: (MEDIA.water.tempCoeff * 100).toFixed(1),
+        keyClass: "datasets__warn-val",
+      },
+      {
+        id: "dmem",
+        sigma: MEDIA.dmem.conductivity.toFixed(3),
+        epsilonR: MEDIA.dmem.permittivity,
+        alphaT: (MEDIA.dmem.tempCoeff * 100).toFixed(1),
+        keyClass: "datasets__primary-val",
+      },
+      {
+        id: "pbs",
+        sigma: MEDIA.pbs.conductivity.toFixed(3),
+        epsilonR: MEDIA.pbs.permittivity,
+        alphaT: (MEDIA.pbs.tempCoeff * 100).toFixed(1),
+        keyClass: "datasets__primary-val",
+      },
+      {
+        id: "rpmi",
+        sigma: MEDIA.rpmi.conductivity.toFixed(3),
+        epsilonR: MEDIA.rpmi.permittivity,
+        alphaT: (MEDIA.rpmi.tempCoeff * 100).toFixed(1),
+        keyClass: "",
+      },
+      {
+        id: "mhb",
+        sigma: MEDIA.mhb.conductivity.toFixed(3),
+        epsilonR: MEDIA.mhb.permittivity,
+        alphaT: (MEDIA.mhb.tempCoeff * 100).toFixed(1),
+        keyClass: "",
+      },
+      {
+        id: "epbuffer",
+        sigma: MEDIA.epbuffer.conductivity.toFixed(3),
+        epsilonR: MEDIA.epbuffer.permittivity,
+        alphaT: (MEDIA.epbuffer.tempCoeff * 100).toFixed(1),
+        keyClass: "datasets__dep-val",
+      },
+    ];
 
     return {
       presets,
       nuclearPresets,
       mediaRows,
-    }
+    };
   },
 
   computed: {
     groups(): CellGroup[] {
-      return ALL_GROUPS
+      return ALL_GROUPS;
     },
     groupColors(): typeof GROUP_COLORS {
-      return GROUP_COLORS
+      return GROUP_COLORS;
     },
     groupLabels(): typeof GROUP_LABELS {
-      return GROUP_LABELS
+      return GROUP_LABELS;
     },
 
     // Therapeutic window reference values — derived from cell library at runtime so they
     // stay in sync if hepatocyte or adenocarcinoma preset parameters are ever updated.
     windowCardData(): {
-      cancerR: string; cancerFc: string; cancerVmThr: string; cancerCm: string; cancerLysis: string
-      healthyR: string; healthyFc: string; healthyVmThr: string; healthyCm: string; healthyLysis: string
-      ratioVmSel: string; ratioTI: string; windowRangeVal: string
+      cancerR: string;
+      cancerFc: string;
+      cancerVmThr: string;
+      cancerCm: string;
+      cancerLysis: string;
+      healthyR: string;
+      healthyFc: string;
+      healthyVmThr: string;
+      healthyCm: string;
+      healthyLysis: string;
+      ratioVmSel: string;
+      ratioTI: string;
+      windowRangeVal: string;
     } {
-      const cancer  = CELL_PRESETS.find(p => p.id === 'adenocarcinoma')!
-      const healthy = CELL_PRESETS.find(p => p.id === 'hepatocyte')!
+      const cancer = CELL_PRESETS.find((p) => p.id === "adenocarcinoma")!;
+      const healthy = CELL_PRESETS.find((p) => p.id === "hepatocyte")!;
 
       const lysisVcm = (cell: typeof cancer) =>
-        Math.round(cell.thresholdVoltage / (SCHWAN_SPHERE_FACTOR * cell.radius * 1e-6) / 100)
+        Math.round(
+          cell.thresholdVoltage /
+            (SCHWAN_SPHERE_FACTOR * cell.radius * 1e-6) /
+            100,
+        );
 
       const fcFmt = (cell: typeof cancer) => {
-        const fc = computeFc(cell, SIGMA_SALINE)
+        const fc = computeFc(cell, SIGMA_SALINE);
         return fc >= 1000
           ? `~${(fc / 1000).toFixed(2)} ${UNIT.MHZ}`
-          : `~${fc.toFixed(0)} ${UNIT.KHZ}`
-      }
+          : `~${fc.toFixed(0)} ${UNIT.KHZ}`;
+      };
 
       const cmFmt = (cell: typeof cancer) =>
-        `~${(membraneCm(cell) * 1e3).toFixed(1)} ${UNIT.MF_PER_M2}`
+        `~${(membraneCm(cell) * 1e3).toFixed(1)} ${UNIT.MF_PER_M2}`;
 
-      const cancerLysis  = lysisVcm(cancer)
-      const healthyLysis = lysisVcm(healthy)
-      const vmSel = cancer.radius / healthy.radius
-      const tiDC  = (cancer.radius * healthy.thresholdVoltage) / (healthy.radius * cancer.thresholdVoltage)
+      const cancerLysis = lysisVcm(cancer);
+      const healthyLysis = lysisVcm(healthy);
+      const vmSel = cancer.radius / healthy.radius;
+      const tiDC =
+        (cancer.radius * healthy.thresholdVoltage) /
+        (healthy.radius * cancer.thresholdVoltage);
 
       return {
-        cancerR:        `${cancer.radius} ${UNIT.UM}`,
-        cancerFc:       fcFmt(cancer),
-        cancerVmThr:    `${cancer.thresholdVoltage.toFixed(2)} ${UNIT.V}`,
-        cancerCm:       cmFmt(cancer),
-        cancerLysis:    `~${cancerLysis} ${UNIT.V_PER_CM}`,
-        healthyR:       `${healthy.radius} ${UNIT.UM}`,
-        healthyFc:      fcFmt(healthy),
-        healthyVmThr:   `${healthy.thresholdVoltage.toFixed(2)} ${UNIT.V}`,
-        healthyCm:      cmFmt(healthy),
-        healthyLysis:   `~${healthyLysis} ${UNIT.V_PER_CM}`,
-        ratioVmSel:     `~${vmSel.toFixed(1)}×`,
-        ratioTI:        `~${tiDC.toFixed(2)}×`,
+        cancerR: `${cancer.radius} ${UNIT.UM}`,
+        cancerFc: fcFmt(cancer),
+        cancerVmThr: `${cancer.thresholdVoltage.toFixed(2)} ${UNIT.V}`,
+        cancerCm: cmFmt(cancer),
+        cancerLysis: `~${cancerLysis} ${UNIT.V_PER_CM}`,
+        healthyR: `${healthy.radius} ${UNIT.UM}`,
+        healthyFc: fcFmt(healthy),
+        healthyVmThr: `${healthy.thresholdVoltage.toFixed(2)} ${UNIT.V}`,
+        healthyCm: cmFmt(healthy),
+        healthyLysis: `~${healthyLysis} ${UNIT.V_PER_CM}`,
+        ratioVmSel: `~${vmSel.toFixed(1)}×`,
+        ratioTI: `~${tiDC.toFixed(2)}×`,
         windowRangeVal: `${Math.min(cancerLysis, healthyLysis)}-${Math.max(cancerLysis, healthyLysis)} ${UNIT.V_PER_CM}`,
-      }
+      };
     },
   },
 
   methods: {
     capitalise(str: string): string {
-      return str.charAt(0).toUpperCase() + str.slice(1)
+      return str.charAt(0).toUpperCase() + str.slice(1);
     },
   },
-})
+});
 </script>
 
 <style lang="scss" scoped>
-
-
 .datasets {
   flex: 1;
   overflow-y: auto;

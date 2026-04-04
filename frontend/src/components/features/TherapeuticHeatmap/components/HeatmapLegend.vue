@@ -1,27 +1,33 @@
 <!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
 <template>
   <div class="hmap__legend" v-tip="STATIC_HEATMAP_TOOLTIPS.canvas">
-    <div v-for="(color, zone) in ZONE_COLORS" :key="zone" class="hmap__legend-item">
+    <div
+      v-for="(color, zone) in ZONE_COLORS"
+      :key="zone"
+      class="hmap__legend-item"
+    >
       <span class="hmap__legend-dot" :style="{ background: color }"></span>
-      <span class="hmap__legend-label">{{ $t(`heatmap.zone${ZONE_KEY[zone]}`) }}</span>
+      <span class="hmap__legend-label">{{
+        $t(`heatmap.zone${ZONE_KEY[zone]}`)
+      }}</span>
     </div>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue'
+import { defineComponent } from "vue";
 
-import { HMAP_ZONE_COLOR, HMAP_ZONE_KEY } from '@/constants/heatmap'
+import { HMAP_ZONE_COLOR, HMAP_ZONE_KEY } from "@/constants/heatmap";
 
-import { STATIC_HEATMAP_TOOLTIPS } from '../lib'
-const ZONE_COLORS = HMAP_ZONE_COLOR as Record<number, string>
-const ZONE_KEY    = HMAP_ZONE_KEY    as Record<number, string>
+import { STATIC_HEATMAP_TOOLTIPS } from "../lib";
+const ZONE_COLORS = HMAP_ZONE_COLOR as Record<number, string>;
+const ZONE_KEY = HMAP_ZONE_KEY as Record<number, string>;
 
 export default defineComponent({
   data() {
-    return { STATIC_HEATMAP_TOOLTIPS, ZONE_COLORS, ZONE_KEY }
+    return { STATIC_HEATMAP_TOOLTIPS, ZONE_COLORS, ZONE_KEY };
   },
-})
+});
 </script>
 
 <style lang="scss" scoped>

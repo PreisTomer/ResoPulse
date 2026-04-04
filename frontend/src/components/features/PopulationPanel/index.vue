@@ -1,88 +1,87 @@
 <!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
 <template>
   <div class="pop-panel">
-
     <AccordionPanel
       :icon="ICON.GRID"
       :title="$t('population.title')"
       :subtitle="subtitle"
       @open-change="onAccordionChange"
     >
-    <div class="pop-panel__body">
+      <div class="pop-panel__body">
+        <PopControls
+          :nCells="nCells"
+          :rVariancePct="rVariancePct"
+          :vThVariancePct="vThVariancePct"
+          :normalizeChart="normalizeChart"
+          @update:nCells="nCells = $event"
+          @update:rVariancePct="rVariancePct = $event"
+          @update:vThVariancePct="vThVariancePct = $event"
+          @update:normalizeChart="normalizeChart = $event"
+          @resample="resample"
+          @export-csv="exportCSV"
+          @redraw="_drawChart"
+        />
 
-      <PopControls
-        :nCells="nCells"
-        :rVariancePct="rVariancePct"
-        :vThVariancePct="vThVariancePct"
-        :normalizeChart="normalizeChart"
-        @update:nCells="nCells = $event"
-        @update:rVariancePct="rVariancePct = $event"
-        @update:vThVariancePct="vThVariancePct = $event"
-        @update:normalizeChart="normalizeChart = $event"
-        @resample="resample"
-        @export-csv="exportCSV"
-        @redraw="_drawChart"
-      />
+        <PopStatCards
+          :targetStats="targetStats"
+          :healthyStats="healthyStats"
+          :targetUncPct="targetUncPct"
+          :healthyUncPct="healthyUncPct"
+          :targetLabel="cellStore.target.label"
+          :healthyLabel="cellStore.healthy.label"
+        />
 
-      <PopStatCards
-        :targetStats="targetStats"
-        :healthyStats="healthyStats"
-        :targetUncPct="targetUncPct"
-        :healthyUncPct="healthyUncPct"
-        :targetLabel="cellStore.target.label"
-        :healthyLabel="cellStore.healthy.label"
-      />
+        <PopWindowScore
+          :score="windowScore"
+          :scoreClass="windowScoreClass"
+          :verdict="windowVerdict"
+          :tipText="tipWindowScore"
+        />
 
-      <PopWindowScore
-        :score="windowScore"
-        :scoreClass="windowScoreClass"
-        :verdict="windowVerdict"
-        :tipText="tipWindowScore"
-      />
+        <!-- D3 histogram -->
+        <div
+          ref="chartWrap"
+          class="pop-panel__chart-wrap"
+          v-tip="$t('population.tipChart')"
+        >
+          <svg ref="svgEl" class="pop-panel__svg"></svg>
+        </div>
 
-      <!-- D3 histogram -->
-      <div ref="chartWrap" class="pop-panel__chart-wrap" v-tip="$t('population.tipChart')">
-        <svg ref="svgEl" class="pop-panel__svg"></svg>
+        <PopNote
+          :healthyPctLysed="healthyStats.pctLysed"
+          :targetPctLysed="targetStats.pctLysed"
+        />
       </div>
-
-      <PopNote
-        :healthyPctLysed="healthyStats.pctLysed"
-        :targetPctLysed="targetStats.pctLysed"
-      />
-
-    </div>
     </AccordionPanel>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue'
-import { mapStores } from 'pinia'
+import { defineComponent } from "vue";
+import { mapStores } from "pinia";
 
-import * as d3 from 'd3'
+import * as d3 from "d3";
 
-import { useCellStore } from '@/stores/cellStore'
+import { useCellStore } from "@/stores/cellStore";
 
-import { AccordionPanel } from '@/components/ui'
+import { AccordionPanel } from "@/components/ui";
 
-import { tempCorrectedVth } from '@/utils/physics'
-import {
-  isActiveResonanceTarget,
-} from '@/utils/cellModel'
-import { computeConfiguredDisruptionRatio } from '@/utils/disruptionModel'
-import { downloadText } from '@/utils/experimentExport'
-import { getChartThemeColors } from '@/utils/chartUtils'
-import { computeWindowScore, getWindowScoreTier } from '@/utils/windowScore'
+import { tempCorrectedVth } from "@/utils/physics";
+import { isActiveResonanceTarget } from "@/utils/cellModel";
+import { computeConfiguredDisruptionRatio } from "@/utils/disruptionModel";
+import { downloadText } from "@/utils/experimentExport";
+import { getChartThemeColors } from "@/utils/chartUtils";
+import { computeWindowScore, getWindowScoreTier } from "@/utils/windowScore";
 
-import { C } from '@/theme/colors'
+import { C } from "@/theme/colors";
 
-import { WAVEFORM, CELL_CATEGORY } from '@/constants/strings'
-import { THRESHOLDS, DEFAULT_CAPSID_Q } from '@/constants/physics'
-import { ICON } from '@/constants/icons'
-import { UNIT } from '@/constants/units'
-import { EMIT } from '@/constants/emitEvents'
+import { WAVEFORM, CELL_CATEGORY } from "@/constants/strings";
+import { THRESHOLDS, DEFAULT_CAPSID_Q } from "@/constants/physics";
+import { ICON } from "@/constants/icons";
+import { UNIT } from "@/constants/units";
+import { EMIT } from "@/constants/emitEvents";
 
-import type { CellConfig } from '@/types/cell'
+import type { CellConfig } from "@/types/cell";
 
 import {
   binomialSE,
@@ -98,185 +97,286 @@ import {
   POP_RESAMPLE_DEBOUNCE_MS,
   sampleGaussian,
   type PopStats,
-} from './lib'
-import { PopControls, PopNote, PopStatCards, PopWindowScore } from './components'
+} from "./lib";
+import {
+  PopControls,
+  PopNote,
+  PopStatCards,
+  PopWindowScore,
+} from "./components";
 
 export default defineComponent({
-  components: { AccordionPanel, PopControls, PopStatCards, PopWindowScore, PopNote },
+  components: {
+    AccordionPanel,
+    PopControls,
+    PopStatCards,
+    PopWindowScore,
+    PopNote,
+  },
   emits: [EMIT.OPEN_CHANGE],
   data() {
     return {
       open: false,
       nCells: POP_DEFAULT_N_CELLS,
-      rVariancePct:   POP_DEFAULT_R_VARIANCE_PCT,
+      rVariancePct: POP_DEFAULT_R_VARIANCE_PCT,
       vThVariancePct: POP_DEFAULT_VTH_VARIANCE_PCT,
       normalizeChart: false,
-      targetDRs:    [] as number[],
-      healthyDRs:   [] as number[],
-      _resizeObs:     null as ResizeObserver | null,
+      targetDRs: [] as number[],
+      healthyDRs: [] as number[],
+      _resizeObs: null as ResizeObserver | null,
       _resampleTimer: null as ReturnType<typeof setTimeout> | null,
-      _liveTimer:     null as ReturnType<typeof setInterval> | null,  // resamples every 2s when open
-    }
+      _liveTimer: null as ReturnType<typeof setInterval> | null, // resamples every 2s when open
+    };
   },
 
   computed: {
     ...mapStores(useCellStore),
-    THRESHOLDS() { return THRESHOLDS },
-    ICON()       { return ICON },
-    UNIT()       { return UNIT },
+    THRESHOLDS() {
+      return THRESHOLDS;
+    },
+    ICON() {
+      return ICON;
+    },
+    UNIT() {
+      return UNIT;
+    },
 
     isResonanceTarget(): boolean {
-      return isActiveResonanceTarget(this.cellStore.target, this.cellStore.targetCellCategory, this.cellStore.isResonanceMode)
+      return isActiveResonanceTarget(
+        this.cellStore.target,
+        this.cellStore.targetCellCategory,
+        this.cellStore.isResonanceMode,
+      );
     },
 
     targetUncPct(): number {
-      const cat = this.cellStore.targetCellCategory
-      if (cat === CELL_CATEGORY.VIRUS)    return THRESHOLDS.UNCERTAINTY_VIRUS     * 100
-      if (cat === CELL_CATEGORY.BACTERIA) return THRESHOLDS.UNCERTAINTY_BACTERIA  * 100
-      return THRESHOLDS.UNCERTAINTY_MAMMALIAN * 100
+      const cat = this.cellStore.targetCellCategory;
+      if (cat === CELL_CATEGORY.VIRUS)
+        return THRESHOLDS.UNCERTAINTY_VIRUS * 100;
+      if (cat === CELL_CATEGORY.BACTERIA)
+        return THRESHOLDS.UNCERTAINTY_BACTERIA * 100;
+      return THRESHOLDS.UNCERTAINTY_MAMMALIAN * 100;
     },
 
-    healthyUncPct(): number { return THRESHOLDS.UNCERTAINTY_MAMMALIAN * 100 },
+    healthyUncPct(): number {
+      return THRESHOLDS.UNCERTAINTY_MAMMALIAN * 100;
+    },
 
-    targetStats(): PopStats  { return this._calcStats(this.targetDRs) },
-    healthyStats(): PopStats { return this._calcStats(this.healthyDRs) },
+    targetStats(): PopStats {
+      return this._calcStats(this.targetDRs);
+    },
+    healthyStats(): PopStats {
+      return this._calcStats(this.healthyDRs);
+    },
 
     // WS = (% target lysed / 100) × (1 − % healthy lysed / 100). 1.0=ideal, 0.0=unusable.
     windowScore(): number {
-      return computeWindowScore(this.targetStats.pctLysed / 100, this.healthyStats.pctLysed / 100)
+      return computeWindowScore(
+        this.targetStats.pctLysed / 100,
+        this.healthyStats.pctLysed / 100,
+      );
     },
 
     windowScoreClass(): string {
-      return `pop-window-score--${getWindowScoreTier(this.windowScore)}`
+      return `pop-window-score--${getWindowScoreTier(this.windowScore)}`;
     },
 
     windowVerdict(): string {
-      const tier = getWindowScoreTier(this.windowScore)
-      if (tier === 'good') return this.$t('population.windowGood')
-      if (tier === 'marginal') return this.$t('population.windowMarginal')
-      return this.$t('population.windowPoor')
+      const tier = getWindowScoreTier(this.windowScore);
+      if (tier === "good") return this.$t("population.windowGood");
+      if (tier === "marginal") return this.$t("population.windowMarginal");
+      return this.$t("population.windowPoor");
     },
 
     subtitle(): string {
-      const { nCells } = this
-      return `N=${nCells} · ${this.cellStore.fieldIntensity} ${UNIT.V_PER_CM} · ${this.cellStore.currentBroadcastFrequency} ${UNIT.KHZ}`
+      const { nCells } = this;
+      return `N=${nCells} · ${this.cellStore.fieldIntensity} ${UNIT.V_PER_CM} · ${this.cellStore.currentBroadcastFrequency} ${UNIT.KHZ}`;
     },
 
     tipWindowScore(): string {
-      return this.$t('population.tipWindowScore', {
-        score:   this.windowScore.toFixed(2),
+      return this.$t("population.tipWindowScore", {
+        score: this.windowScore.toFixed(2),
         verdict: this.windowVerdict,
-        pctT:    this.targetStats.pctLysed,
-        pctH:    this.healthyStats.pctLysed,
-      })
+        pctT: this.targetStats.pctLysed,
+        pctH: this.healthyStats.pctLysed,
+      });
     },
   },
 
   watch: {
     open(v: boolean) {
-      this.$emit(EMIT.OPEN_CHANGE, v)
+      this.$emit(EMIT.OPEN_CHANGE, v);
       if (v) {
-        if (this.targetDRs.length === 0) this.resample()
-        this.$nextTick(() => { this._initChart(); this._drawChart() })
-        this._startLiveTimer()
+        if (this.targetDRs.length === 0) this.resample();
+        this.$nextTick(() => {
+          this._initChart();
+          this._drawChart();
+        });
+        this._startLiveTimer();
       } else {
-        this._stopLiveTimer()
+        this._stopLiveTimer();
       }
     },
-    targetDRs() { if (this.open) this._drawChart() },
+    targetDRs() {
+      if (this.open) this._drawChart();
+    },
     // All parameter changes are funnelled through _scheduleResample (150 ms debounce).
     // This prevents a burst of redraws when a single user action (e.g. snap-to-window)
     // triggers multiple store mutations in one tick.
     // Note: no open guard here — _drawChart() is gated on open via the targetDRs watcher.
-    'cellStore.fieldIntensity'()            { this._scheduleResample() },
-    'cellStore.currentBroadcastFrequency'() { this._scheduleResample() },
-    'cellStore.waveform'()                  { this._scheduleResample() },
-    'cellStore.pulseWidthNs'()              { this._scheduleResample() },
-    'cellStore.dutyCycle'()                 { this._scheduleResample() },
-    'cellStore.healthy.id'()                { this._scheduleResample() },
-    'cellStore.target.id'()                 { this._scheduleResample() },
-    rVariancePct()                      { this._scheduleResample() },
-    vThVariancePct()                    { this._scheduleResample() },
+    "cellStore.fieldIntensity"() {
+      this._scheduleResample();
+    },
+    "cellStore.currentBroadcastFrequency"() {
+      this._scheduleResample();
+    },
+    "cellStore.waveform"() {
+      this._scheduleResample();
+    },
+    "cellStore.pulseWidthNs"() {
+      this._scheduleResample();
+    },
+    "cellStore.dutyCycle"() {
+      this._scheduleResample();
+    },
+    "cellStore.healthy.id"() {
+      this._scheduleResample();
+    },
+    "cellStore.target.id"() {
+      this._scheduleResample();
+    },
+    rVariancePct() {
+      this._scheduleResample();
+    },
+    vThVariancePct() {
+      this._scheduleResample();
+    },
   },
 
   beforeUnmount() {
-    (this._resizeObs as ResizeObserver | null)?.disconnect()
-    if (this._resampleTimer) clearTimeout(this._resampleTimer)
-    this._stopLiveTimer()
+    (this._resizeObs as ResizeObserver | null)?.disconnect();
+    if (this._resampleTimer) clearTimeout(this._resampleTimer);
+    this._stopLiveTimer();
   },
 
   methods: {
     onAccordionChange(v: boolean) {
-      this.open = v
+      this.open = v;
     },
 
     _startLiveTimer() {
-      this._stopLiveTimer()
-      this._liveTimer = setInterval(() => { this.resample() }, POP_LIVE_RESAMPLE_INTERVAL_MS)
+      this._stopLiveTimer();
+      this._liveTimer = setInterval(() => {
+        this.resample();
+      }, POP_LIVE_RESAMPLE_INTERVAL_MS);
     },
 
     _stopLiveTimer() {
-      if (this._liveTimer) { clearInterval(this._liveTimer); this._liveTimer = null }
+      if (this._liveTimer) {
+        clearInterval(this._liveTimer);
+        this._liveTimer = null;
+      }
     },
 
     // Debounced resample: collapses simultaneous watcher firings into one call 150 ms later.
     // Non-cancelling so the temperature interval cannot prevent resample from ever running.
     _scheduleResample() {
-      if (this._resampleTimer) return
+      if (this._resampleTimer) return;
       this._resampleTimer = setTimeout(() => {
-        this._resampleTimer = null
-        this.resample()
-      }, POP_RESAMPLE_DEBOUNCE_MS)
+        this._resampleTimer = null;
+        this.resample();
+      }, POP_RESAMPLE_DEBOUNCE_MS);
     },
 
     resample() {
-      const { cellStore } = this
-      const sigma_e  = cellStore.effectiveSigmaE
-      const cosTheta = cellStore.cosThetaFactor
-      const waveform = cellStore.waveform
-      const pwNs     = cellStore.pulseWidthNs
-      const freqKHz  = cellStore.currentBroadcastFrequency
-      const E        = cellStore.fieldIntensity
+      const { cellStore } = this;
+      const sigma_e = cellStore.effectiveSigmaE;
+      const cosTheta = cellStore.cosThetaFactor;
+      const waveform = cellStore.waveform;
+      const pwNs = cellStore.pulseWidthNs;
+      const freqKHz = cellStore.currentBroadcastFrequency;
+      const E = cellStore.fieldIntensity;
 
-      const healthy = cellStore.healthy
-      const target  = cellStore.target
+      const healthy = cellStore.healthy;
+      const target = cellStore.target;
       const t = target as CellConfig & {
-        resonantFreqGHz?: number
-        capsidQ?: number
-        capsidQMin?: number
-        capsidQMax?: number
-        resonantThresholdVcm?: number
-      }
+        resonantFreqGHz?: number;
+        capsidQ?: number;
+        capsidQMin?: number;
+        capsidQMax?: number;
+        resonantThresholdVcm?: number;
+      };
 
-      const uncH       = this.healthyUncPct    / 100
-      const uncT       = this.targetUncPct     / 100
-      const rVar       = this.rVariancePct     / 100
-      const vThUncFrac = this.vThVariancePct   / 100
+      const uncH = this.healthyUncPct / 100;
+      const uncT = this.targetUncPct / 100;
+      const rVar = this.rVariancePct / 100;
+      const vThUncFrac = this.vThVariancePct / 100;
 
-      const sampleDR = (base: CellConfig, sigmaUnc: number, isTarget: boolean): number => {
+      const sampleDR = (
+        base: CellConfig,
+        sigmaUnc: number,
+        isTarget: boolean,
+      ): number => {
         // ── Sample biophysical parameters independently (Box-Muller) ────────
-        const R    = sampleGaussian(base.radius,       base.radius       * rVar,      base.radius       * 0.4, base.radius       * 2.0)
-        const sigI = sampleGaussian(base.conductivity, base.conductivity * sigmaUnc,  base.conductivity * 0.2, base.conductivity * 3.0)
+        const R = sampleGaussian(
+          base.radius,
+          base.radius * rVar,
+          base.radius * 0.4,
+          base.radius * 2.0,
+        );
+        const sigI = sampleGaussian(
+          base.conductivity,
+          base.conductivity * sigmaUnc,
+          base.conductivity * 0.2,
+          base.conductivity * 3.0,
+        );
         // V_th CV ~20-35% in isogenic mammalian populations (Weaver & Chizmadzhev 1996)
         // Sample the nominal threshold first, then apply temperature correction — variability is in the nominal value.
-        const vThNominal = vThUncFrac > 0
-          ? sampleGaussian(base.thresholdVoltage, base.thresholdVoltage * vThUncFrac, base.thresholdVoltage * 0.5, base.thresholdVoltage * 2.0)
-          : base.thresholdVoltage
-        const cellTemp = isTarget ? cellStore.targetTemp : cellStore.healthyTemp
-        const cell = { ...base, radius: R, conductivity: sigI, thresholdVoltage: vThNominal }
+        const vThNominal =
+          vThUncFrac > 0
+            ? sampleGaussian(
+                base.thresholdVoltage,
+                base.thresholdVoltage * vThUncFrac,
+                base.thresholdVoltage * 0.5,
+                base.thresholdVoltage * 2.0,
+              )
+            : base.thresholdVoltage;
+        const cellTemp = isTarget
+          ? cellStore.targetTemp
+          : cellStore.healthyTemp;
+        const cell = {
+          ...base,
+          radius: R,
+          conductivity: sigI,
+          thresholdVoltage: vThNominal,
+        };
 
         // ── Resonance mode (bacteria / virus) ────────────────────────────────
         if (isTarget && this.isResonanceTarget) {
           // Spherical breathing mode: f_res ∝ 1/R.
           // Note: rod geometry (E. coli) requires f ∝ 1/√(R·L) — spherical approximation here.
-          const fResScaled = t.resonantFreqGHz! * (base.radius / R)
-          const qNominal   = t.capsidQ    ?? DEFAULT_CAPSID_Q
-          const qMin       = t.capsidQMin ?? qNominal
-          const qMax       = t.capsidQMax ?? qNominal
-          const Q = qMin === qMax ? qNominal : sampleGaussian((qMin + qMax) / 2, (qMax - qMin) / 4, qMin, qMax)
-          const threshNominal = vThUncFrac > 0
-            ? sampleGaussian(t.resonantThresholdVcm!, t.resonantThresholdVcm! * vThUncFrac, t.resonantThresholdVcm! * 0.5, t.resonantThresholdVcm! * 2.0)
-            : t.resonantThresholdVcm!
+          const fResScaled = t.resonantFreqGHz! * (base.radius / R);
+          const qNominal = t.capsidQ ?? DEFAULT_CAPSID_Q;
+          const qMin = t.capsidQMin ?? qNominal;
+          const qMax = t.capsidQMax ?? qNominal;
+          const Q =
+            qMin === qMax
+              ? qNominal
+              : sampleGaussian(
+                  (qMin + qMax) / 2,
+                  (qMax - qMin) / 4,
+                  qMin,
+                  qMax,
+                );
+          const threshNominal =
+            vThUncFrac > 0
+              ? sampleGaussian(
+                  t.resonantThresholdVcm!,
+                  t.resonantThresholdVcm! * vThUncFrac,
+                  t.resonantThresholdVcm! * 0.5,
+                  t.resonantThresholdVcm! * 2.0,
+                )
+              : t.resonantThresholdVcm!;
           return computeConfiguredDisruptionRatio({
             cell,
             sigmaE: sigma_e,
@@ -291,7 +391,7 @@ export default defineComponent({
               capsidQ: Q,
               resonantThresholdVcm: threshNominal,
             },
-          })
+          });
         }
 
         // ── Schwan mode (all mammalian; bacteria / virus in IRE / CW mode) ──
@@ -304,188 +404,295 @@ export default defineComponent({
           freqKHz,
           fieldVcm: E,
           cellTempC: cellTemp,
-        })
-      }
+        });
+      };
 
-      this.targetDRs  = Array.from({ length: this.nCells }, () => sampleDR(target,  uncT, true))
-      this.healthyDRs = Array.from({ length: this.nCells }, () => sampleDR(healthy, uncH, false))
+      this.targetDRs = Array.from({ length: this.nCells }, () =>
+        sampleDR(target, uncT, true),
+      );
+      this.healthyDRs = Array.from({ length: this.nCells }, () =>
+        sampleDR(healthy, uncH, false),
+      );
     },
 
     _calcStats(drs: number[]): PopStats {
       if (drs.length === 0) {
-        return { pctLysed: 0, pctRevEp: 0, pctNour: 0, pctStable: 0, meanDr: 0, stdDr: 0, seLysed: 0, seRevEp: 0, seNour: 0 }
+        return {
+          pctLysed: 0,
+          pctRevEp: 0,
+          pctNour: 0,
+          pctStable: 0,
+          meanDr: 0,
+          stdDr: 0,
+          seLysed: 0,
+          seRevEp: 0,
+          seNour: 0,
+        };
       }
-      const n       = drs.length
-      const nLysed  = drs.filter(d => d >= THRESHOLDS.DISRUPTION_WARN).length
-      const nRevEp  = drs.filter(d => d >= THRESHOLDS.HEALTHY_APPROACHING && d < THRESHOLDS.DISRUPTION_WARN).length
-      const nNour   = drs.filter(d => d >= THRESHOLDS.VIBRATING_MIN && d < THRESHOLDS.HEALTHY_APPROACHING).length
-      const nStable = drs.filter(d => d < THRESHOLDS.VIBRATING_MIN).length
-      const mean    = drs.reduce((s, d) => s + d, 0) / n
-      const std     = Math.sqrt(drs.reduce((s, d) => s + (d - mean) ** 2, 0) / n)
+      const n = drs.length;
+      const nLysed = drs.filter((d) => d >= THRESHOLDS.DISRUPTION_WARN).length;
+      const nRevEp = drs.filter(
+        (d) =>
+          d >= THRESHOLDS.HEALTHY_APPROACHING && d < THRESHOLDS.DISRUPTION_WARN,
+      ).length;
+      const nNour = drs.filter(
+        (d) =>
+          d >= THRESHOLDS.VIBRATING_MIN && d < THRESHOLDS.HEALTHY_APPROACHING,
+      ).length;
+      const nStable = drs.filter((d) => d < THRESHOLDS.VIBRATING_MIN).length;
+      const mean = drs.reduce((s, d) => s + d, 0) / n;
+      const std = Math.sqrt(drs.reduce((s, d) => s + (d - mean) ** 2, 0) / n);
       return {
-        pctLysed:  +((nLysed  / n) * 100).toFixed(0),
-        pctRevEp:  +((nRevEp  / n) * 100).toFixed(0),
-        pctNour:   +((nNour   / n) * 100).toFixed(0),
+        pctLysed: +((nLysed / n) * 100).toFixed(0),
+        pctRevEp: +((nRevEp / n) * 100).toFixed(0),
+        pctNour: +((nNour / n) * 100).toFixed(0),
         pctStable: +((nStable / n) * 100).toFixed(0),
         meanDr: mean,
-        stdDr:  std,
+        stdDr: std,
         seLysed: binomialSE(nLysed, n),
         seRevEp: binomialSE(nRevEp, n),
-        seNour:  binomialSE(nNour,  n),
-      }
+        seNour: binomialSE(nNour, n),
+      };
     },
 
     _initChart() {
-      const wrap = this.$refs.chartWrap as HTMLElement
-      if (!wrap || (this._resizeObs as ResizeObserver | null)) return
-      const obs = new ResizeObserver(() => { if (this.open) this._drawChart() })
-      obs.observe(wrap)
-      this._resizeObs = obs
+      const wrap = this.$refs.chartWrap as HTMLElement;
+      if (!wrap || (this._resizeObs as ResizeObserver | null)) return;
+      const obs = new ResizeObserver(() => {
+        if (this.open) this._drawChart();
+      });
+      obs.observe(wrap);
+      this._resizeObs = obs;
     },
 
     _drawChart() {
-      const wrap  = this.$refs.chartWrap as HTMLElement
-      const svgEl = this.$refs.svgEl    as SVGSVGElement
-      if (!wrap || !svgEl || this.targetDRs.length === 0) return
+      const wrap = this.$refs.chartWrap as HTMLElement;
+      const svgEl = this.$refs.svgEl as SVGSVGElement;
+      if (!wrap || !svgEl || this.targetDRs.length === 0) return;
 
-      const W  = wrap.clientWidth
-      const H  = CHART_HEIGHT
-      const iW = W - MARGIN.left - MARGIN.right
-      const iH = H - MARGIN.top - MARGIN.bottom
+      const W = wrap.clientWidth;
+      const H = CHART_HEIGHT;
+      const iW = W - MARGIN.left - MARGIN.right;
+      const iH = H - MARGIN.top - MARGIN.bottom;
 
-      const svg = d3.select(svgEl).attr('width', W).attr('height', H)
-      svg.selectAll('*').remove()
-      const g = svg.append('g').attr('transform', `translate(${MARGIN.left},${MARGIN.top})`)
+      const svg = d3.select(svgEl).attr("width", W).attr("height", H);
+      svg.selectAll("*").remove();
+      const g = svg
+        .append("g")
+        .attr("transform", `translate(${MARGIN.left},${MARGIN.top})`);
 
-      const allDRs  = [...this.targetDRs, ...this.healthyDRs]
-      const xMax    = Math.max(POP_CHART_DR_X_MIN, d3.max(allDRs) ?? POP_CHART_DR_X_MIN)
-      const xScale  = d3.scaleLinear().domain([0, xMax]).range([0, iW])
-      const histGen = d3.histogram<number, number>()
-        .value(d => d)
+      const allDRs = [...this.targetDRs, ...this.healthyDRs];
+      const xMax = Math.max(
+        POP_CHART_DR_X_MIN,
+        d3.max(allDRs) ?? POP_CHART_DR_X_MIN,
+      );
+      const xScale = d3.scaleLinear().domain([0, xMax]).range([0, iW]);
+      const histGen = d3
+        .histogram<number, number>()
+        .value((d) => d)
         .domain([0, xMax])
-        .thresholds(d3.range(0, xMax + xMax / N_BINS, xMax / N_BINS))
+        .thresholds(d3.range(0, xMax + xMax / N_BINS, xMax / N_BINS));
 
-      const targetBins  = histGen(this.targetDRs)
-      const healthyBins = histGen(this.healthyDRs)
-      const nT          = this.targetDRs.length
-      const nH          = this.healthyDRs.length
-      const normalize   = this.normalizeChart
+      const targetBins = histGen(this.targetDRs);
+      const healthyBins = histGen(this.healthyDRs);
+      const nT = this.targetDRs.length;
+      const nH = this.healthyDRs.length;
+      const normalize = this.normalizeChart;
 
       const binValue = (b: d3.Bin<number, number>, total: number) =>
-        normalize ? b.length / total : b.length
+        normalize ? b.length / total : b.length;
 
       const yMax = Math.max(
-        d3.max(targetBins,  b => binValue(b, nT)) ?? 0,
-        d3.max(healthyBins, b => binValue(b, nH)) ?? 0,
-      )
-      const yScale = d3.scaleLinear().domain([0, yMax * 1.1]).range([iH, 0])
+        d3.max(targetBins, (b) => binValue(b, nT)) ?? 0,
+        d3.max(healthyBins, (b) => binValue(b, nH)) ?? 0,
+      );
+      const yScale = d3
+        .scaleLinear()
+        .domain([0, yMax * 1.1])
+        .range([iH, 0]);
 
-      const { primary: CSS_PRIMARY, danger: CSS_DANGER, border: CSS_BORDER } = getChartThemeColors()
+      const {
+        primary: CSS_PRIMARY,
+        danger: CSS_DANGER,
+        border: CSS_BORDER,
+      } = getChartThemeColors();
 
-      const drawBins = (bins: d3.Bin<number, number>[], color: string, opacity: number, total: number) => {
+      const drawBins = (
+        bins: d3.Bin<number, number>[],
+        color: string,
+        opacity: number,
+        total: number,
+      ) => {
         g.selectAll(null)
           .data(bins)
-          .join('rect')
-          .attr('x',      b => xScale(b.x0 ?? 0) + 0.5)
-          .attr('width',  b => Math.max(0, xScale(b.x1 ?? 0) - xScale(b.x0 ?? 0) - 1))
-          .attr('y',      b => yScale(binValue(b, total)))
-          .attr('height', b => iH - yScale(binValue(b, total)))
-          .attr('fill', color)
-          .attr('opacity', opacity)
-      }
+          .join("rect")
+          .attr("x", (b) => xScale(b.x0 ?? 0) + 0.5)
+          .attr("width", (b) =>
+            Math.max(0, xScale(b.x1 ?? 0) - xScale(b.x0 ?? 0) - 1),
+          )
+          .attr("y", (b) => yScale(binValue(b, total)))
+          .attr("height", (b) => iH - yScale(binValue(b, total)))
+          .attr("fill", color)
+          .attr("opacity", opacity);
+      };
 
-      drawBins(healthyBins, CSS_PRIMARY, 0.35, nH)
-      drawBins(targetBins,  CSS_DANGER,  0.35, nT)
+      drawBins(healthyBins, CSS_PRIMARY, 0.35, nH);
+      drawBins(targetBins, CSS_DANGER, 0.35, nT);
 
       // ── Threshold reference lines ────────────────────────────────────────────
       const lines = [
-        { x: THRESHOLDS.HEALTHY_APPROACHING, label: this.$t('chart.revEp'),    color: C.amberChart,          dash: '3,2' },
-        { x: THRESHOLDS.DISRUPTION_WARN,     label: this.$t('chart.thresh85'), color: CSS_DANGER,             dash: '3,2' },
-        { x: 1.00,                           label: this.$t('chart.lysis'),    color: CSS_DANGER,             dash: '2,2' },
-      ]
+        {
+          x: THRESHOLDS.HEALTHY_APPROACHING,
+          label: this.$t("chart.revEp"),
+          color: C.amberChart,
+          dash: "3,2",
+        },
+        {
+          x: THRESHOLDS.DISRUPTION_WARN,
+          label: this.$t("chart.thresh85"),
+          color: CSS_DANGER,
+          dash: "3,2",
+        },
+        {
+          x: 1.0,
+          label: this.$t("chart.lysis"),
+          color: CSS_DANGER,
+          dash: "2,2",
+        },
+      ];
       for (const { x, label, color, dash } of lines) {
-        if (x > xMax) continue
-        const px = xScale(x)
-        g.append('line')
-          .attr('x1', px).attr('y1', 0).attr('x2', px).attr('y2', iH)
-          .attr('stroke', color).attr('stroke-width', 1).attr('stroke-dasharray', dash)
-        g.append('text')
-          .attr('x', px + 2).attr('y', 10)
-          .attr('font-size', 8).attr('fill', color)
-          .text(label)
+        if (x > xMax) continue;
+        const px = xScale(x);
+        g.append("line")
+          .attr("x1", px)
+          .attr("y1", 0)
+          .attr("x2", px)
+          .attr("y2", iH)
+          .attr("stroke", color)
+          .attr("stroke-width", 1)
+          .attr("stroke-dasharray", dash);
+        g.append("text")
+          .attr("x", px + 2)
+          .attr("y", 10)
+          .attr("font-size", 8)
+          .attr("fill", color)
+          .text(label);
       }
 
       // ── Axes ─────────────────────────────────────────────────────────────────
-      g.append('g')
-        .attr('transform', `translate(0,${iH})`)
-        .call(d3.axisBottom(xScale).ticks(8).tickSize(3).tickFormat(d => `${(+d * 100).toFixed(0)}%`))
-        .call(ax => ax.select('.domain').attr('stroke', CSS_BORDER))
-        .call(ax => ax.selectAll('text').attr('fill', C.w50).attr('font-size', 9))
-        .call(ax => ax.selectAll('.tick line').attr('stroke', CSS_BORDER))
+      g.append("g")
+        .attr("transform", `translate(0,${iH})`)
+        .call(
+          d3
+            .axisBottom(xScale)
+            .ticks(8)
+            .tickSize(3)
+            .tickFormat((d) => `${(+d * 100).toFixed(0)}%`),
+        )
+        .call((ax) => ax.select(".domain").attr("stroke", CSS_BORDER))
+        .call((ax) =>
+          ax.selectAll("text").attr("fill", C.w50).attr("font-size", 9),
+        )
+        .call((ax) => ax.selectAll(".tick line").attr("stroke", CSS_BORDER));
 
       const yAxis = normalize
-        ? d3.axisLeft(yScale).ticks(5).tickSize(3).tickFormat(d => `${(+d * 100).toFixed(0)}%`)
-        : d3.axisLeft(yScale).ticks(4).tickSize(3)
-      g.append('g')
+        ? d3
+            .axisLeft(yScale)
+            .ticks(5)
+            .tickSize(3)
+            .tickFormat((d) => `${(+d * 100).toFixed(0)}%`)
+        : d3.axisLeft(yScale).ticks(4).tickSize(3);
+      g.append("g")
         .call(yAxis)
-        .call(ax => ax.select('.domain').attr('stroke', CSS_BORDER))
-        .call(ax => ax.selectAll('text').attr('fill', C.w50).attr('font-size', 9))
-        .call(ax => ax.selectAll('.tick line').attr('stroke', CSS_BORDER))
+        .call((ax) => ax.select(".domain").attr("stroke", CSS_BORDER))
+        .call((ax) =>
+          ax.selectAll("text").attr("fill", C.w50).attr("font-size", 9),
+        )
+        .call((ax) => ax.selectAll(".tick line").attr("stroke", CSS_BORDER));
 
       // ── Axis labels ──────────────────────────────────────────────────────────
-      g.append('text')
-        .attr('x', iW / 2).attr('y', iH + 32)
-        .attr('text-anchor', 'middle')
-        .attr('font-size', 10).attr('fill', C.w40)
-        .text(this.$t('population.chartAxisDr'))
+      g.append("text")
+        .attr("x", iW / 2)
+        .attr("y", iH + 32)
+        .attr("text-anchor", "middle")
+        .attr("font-size", 10)
+        .attr("fill", C.w40)
+        .text(this.$t("population.chartAxisDr"));
 
-      g.append('text')
-        .attr('transform', 'rotate(-90)')
-        .attr('x', -iH / 2).attr('y', -36)
-        .attr('text-anchor', 'middle')
-        .attr('font-size', 10).attr('fill', C.w40)
-        .text(normalize ? this.$t('population.chartAxisFraction') : this.$t('population.chartAxisCount'))
+      g.append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("x", -iH / 2)
+        .attr("y", -36)
+        .attr("text-anchor", "middle")
+        .attr("font-size", 10)
+        .attr("fill", C.w40)
+        .text(
+          normalize
+            ? this.$t("population.chartAxisFraction")
+            : this.$t("population.chartAxisCount"),
+        );
 
       // ── Legend ───────────────────────────────────────────────────────────────
       const legend = [
-        { color: CSS_DANGER,  label: `${this.$t('population.chartLegendTarget')} (${this.cellStore.target.label})` },
-        { color: CSS_PRIMARY, label: `${this.$t('population.chartLegendHealthy')} (${this.cellStore.healthy.label})` },
-      ]
+        {
+          color: CSS_DANGER,
+          label: `${this.$t("population.chartLegendTarget")} (${this.cellStore.target.label})`,
+        },
+        {
+          color: CSS_PRIMARY,
+          label: `${this.$t("population.chartLegendHealthy")} (${this.cellStore.healthy.label})`,
+        },
+      ];
       legend.forEach(({ color, label }, i) => {
-        const lx = i * POP_LEGEND_ITEM_WIDTH
-        const lg = g.append('g').attr('transform', `translate(${lx},${iH + 32})`)
-        lg.append('rect').attr('width', 12).attr('height', 8).attr('y', -8).attr('fill', color).attr('opacity', 0.6)
-        lg.append('text')
-          .attr('x', 16).attr('y', -1)
-          .attr('font-size', 9).attr('fill', C.w50)
-          .text(label)
-      })
+        const lx = i * POP_LEGEND_ITEM_WIDTH;
+        const lg = g
+          .append("g")
+          .attr("transform", `translate(${lx},${iH + 32})`);
+        lg.append("rect")
+          .attr("width", 12)
+          .attr("height", 8)
+          .attr("y", -8)
+          .attr("fill", color)
+          .attr("opacity", 0.6);
+        lg.append("text")
+          .attr("x", 16)
+          .attr("y", -1)
+          .attr("font-size", 9)
+          .attr("fill", C.w50)
+          .text(label);
+      });
     },
 
     exportCSV() {
-      const { cellStore } = this
+      const { cellStore } = this;
       const meta = [
-        `# ${this.$t('population.csvTitle')}`,
-        `# ${this.$t('population.csvExported',    { timestamp: new Date().toISOString() })}`,
-        `# ${this.$t('population.csvHealthy',     { label: cellStore.healthy.label, radius: cellStore.healthy.radius, um: UNIT.UM, n: this.nCells, uncPct: this.healthyUncPct, rPct: this.rVariancePct, vthPct: this.vThVariancePct })}`,
-        `# ${this.$t('population.csvTarget',      { label: cellStore.target.label,  radius: cellStore.target.radius,  um: UNIT.UM, n: this.nCells, uncPct: this.targetUncPct,  rPct: this.rVariancePct, vthPct: this.vThVariancePct })}`,
-        `# ${this.$t('population.csvMedium',      { medium: cellStore.medium, sigmaE: cellStore.effectiveSigmaE.toFixed(3), sm: UNIT.S_PER_M })}`,
-        `# ${this.$t('population.csvField',       { freq: cellStore.currentBroadcastFrequency, khz: UNIT.KHZ, field: cellStore.fieldIntensity, vcm: UNIT.V_PER_CM, waveform: cellStore.waveform, dc: cellStore.dutyCycle.toExponential(2), pw: cellStore.pulseWidthNs, ns: UNIT.NS })}`,
-        `# ${this.$t('population.csvWindowScore', { score: this.windowScore.toFixed(3), verdict: this.windowVerdict })}`,
-        `# ${this.$t('population.csvModel')}`,
+        `# ${this.$t("population.csvTitle")}`,
+        `# ${this.$t("population.csvExported", { timestamp: new Date().toISOString() })}`,
+        `# ${this.$t("population.csvHealthy", { label: cellStore.healthy.label, radius: cellStore.healthy.radius, um: UNIT.UM, n: this.nCells, uncPct: this.healthyUncPct, rPct: this.rVariancePct, vthPct: this.vThVariancePct })}`,
+        `# ${this.$t("population.csvTarget", { label: cellStore.target.label, radius: cellStore.target.radius, um: UNIT.UM, n: this.nCells, uncPct: this.targetUncPct, rPct: this.rVariancePct, vthPct: this.vThVariancePct })}`,
+        `# ${this.$t("population.csvMedium", { medium: cellStore.medium, sigmaE: cellStore.effectiveSigmaE.toFixed(3), sm: UNIT.S_PER_M })}`,
+        `# ${this.$t("population.csvField", { freq: cellStore.currentBroadcastFrequency, khz: UNIT.KHZ, field: cellStore.fieldIntensity, vcm: UNIT.V_PER_CM, waveform: cellStore.waveform, dc: cellStore.dutyCycle.toExponential(2), pw: cellStore.pulseWidthNs, ns: UNIT.NS })}`,
+        `# ${this.$t("population.csvWindowScore", { score: this.windowScore.toFixed(3), verdict: this.windowVerdict })}`,
+        `# ${this.$t("population.csvModel")}`,
         `cell_type,sample_index,DR`,
-      ].join('\n')
-      const targetRows  = this.targetDRs.map((d, i)  => `target,${i},${d.toFixed(4)}`)
-      const healthyRows = this.healthyDRs.map((d, i) => `healthy,${i},${d.toFixed(4)}`)
-      downloadText(meta + '\n' + [...targetRows, ...healthyRows].join('\n'), `population_model_${Date.now()}.csv`, 'text/csv')
+      ].join("\n");
+      const targetRows = this.targetDRs.map(
+        (d, i) => `target,${i},${d.toFixed(4)}`,
+      );
+      const healthyRows = this.healthyDRs.map(
+        (d, i) => `healthy,${i},${d.toFixed(4)}`,
+      );
+      downloadText(
+        meta + "\n" + [...targetRows, ...healthyRows].join("\n"),
+        `population_model_${Date.now()}.csv`,
+        "text/csv",
+      );
     },
   },
-})
+});
 </script>
 
 <style lang="scss" scoped>
-
-
 .pop-panel {
   @include surface-card(var(--radius-lg));
   overflow: hidden;
@@ -504,6 +711,9 @@ export default defineComponent({
     cursor: help;
   }
 
-  &__svg { display: block; width: 100%; }
+  &__svg {
+    display: block;
+    width: 100%;
+  }
 }
 </style>

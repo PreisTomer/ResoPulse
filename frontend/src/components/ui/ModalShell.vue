@@ -2,7 +2,12 @@
 <template>
   <teleport to="body">
     <transition name="modal-shell-fade">
-      <div v-if="visible" class="modal-shell__backdrop" :style="fadeStyle" @mousedown.self="onBackdropMouseDown">
+      <div
+        v-if="visible"
+        class="modal-shell__backdrop"
+        :style="fadeStyle"
+        @mousedown.self="onBackdropMouseDown"
+      >
         <div
           class="modal-shell__panel"
           :class="panelClass"
@@ -18,27 +23,35 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, type PropType } from 'vue'
+import { defineComponent, type PropType } from "vue";
 
 export default defineComponent({
-  name: 'ModalShell',
+  name: "ModalShell",
 
   props: {
     visible: { type: Boolean, default: false },
     closeOnBackdrop: { type: Boolean, default: true },
-    fadeDuration: { type: String, default: '0.18s' },
-    panelWidth: { type: String, default: 'min(640px, 100%)' },
-    panelMaxHeight: { type: String, default: '90vh' },
-    panelOverflowY: { type: String as PropType<'auto' | 'hidden' | 'visible'>, default: 'auto' },
-    panelClass: { type: [String, Array, Object] as PropType<string | string[] | Record<string, boolean>>, default: '' },
-    panelRadius: { type: String, default: '10px' },
+    fadeDuration: { type: String, default: "0.18s" },
+    panelWidth: { type: String, default: "min(640px, 100%)" },
+    panelMaxHeight: { type: String, default: "90vh" },
+    panelOverflowY: {
+      type: String as PropType<"auto" | "hidden" | "visible">,
+      default: "auto",
+    },
+    panelClass: {
+      type: [String, Array, Object] as PropType<
+        string | string[] | Record<string, boolean>
+      >,
+      default: "",
+    },
+    panelRadius: { type: String, default: "10px" },
   },
 
-  emits: ['close'],
+  emits: ["close"],
 
   computed: {
     fadeStyle(): Record<string, string> {
-      return { '--modal-shell-fade-duration': this.fadeDuration }
+      return { "--modal-shell-fade-duration": this.fadeDuration };
     },
 
     panelStyle(): Record<string, string> {
@@ -47,16 +60,16 @@ export default defineComponent({
         maxHeight: this.panelMaxHeight,
         overflowY: this.panelOverflowY,
         borderRadius: this.panelRadius,
-      }
+      };
     },
   },
 
   methods: {
     onBackdropMouseDown(): void {
-      if (this.closeOnBackdrop) this.$emit('close')
+      if (this.closeOnBackdrop) this.$emit("close");
     },
   },
-})
+});
 </script>
 
 <style lang="scss" scoped>
@@ -71,20 +84,20 @@ export default defineComponent({
 }
 
 .modal-shell__backdrop {
-  position:        fixed;
-  inset:           0;
-  z-index:         9000;
-  background:      color-mix(in srgb, black 72%, transparent);
-  display:         flex;
-  align-items:     center;
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  background: color-mix(in srgb, black 72%, transparent);
+  display: flex;
+  align-items: center;
   justify-content: center;
-  padding:         1rem;
+  padding: 1rem;
 }
 
 .modal-shell__panel {
-  background:     var(--color-surface);
-  border:         1px solid var(--color-border);
-  display:        flex;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  display: flex;
   flex-direction: column;
 }
 </style>

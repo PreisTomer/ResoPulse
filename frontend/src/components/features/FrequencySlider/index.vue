@@ -21,7 +21,8 @@
     <div v-if="isResonanceMode" class="field-panel__resonance-note">
       <span class="field-panel__resonance-note-icon">{{ ICON.INFO }}</span>
       <span class="field-panel__resonance-note-text">
-        <strong>{{ $t('resonance.noteTitle') }}</strong>, {{ $t('resonance.noteBody') }}
+        <strong>{{ $t("resonance.noteTitle") }}</strong
+        >, {{ $t("resonance.noteBody") }}
       </span>
     </div>
 
@@ -38,14 +39,14 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue'
-import { mapStores } from 'pinia'
+import { defineComponent } from "vue";
+import { mapStores } from "pinia";
 
-import { useCellStore } from '@/stores/cellStore'
+import { useCellStore } from "@/stores/cellStore";
 
-import { THERMAL_LEVEL } from '@/constants/strings'
-import { ICON } from '@/constants/icons'
-import type { SliderRange } from '@/constants/sliderBounds'
+import { THERMAL_LEVEL } from "@/constants/strings";
+import { ICON } from "@/constants/icons";
+import type { SliderRange } from "@/constants/sliderBounds";
 
 import {
   AdvancedSection,
@@ -55,36 +56,66 @@ import {
   ProtocolSection,
   ThermalBanner,
   TitleRow,
-} from './components'
+} from "./components";
 export default defineComponent({
-  components: { TitleRow, ThermalBanner, MediumRow, FreqRow, FieldRow, ProtocolSection, AdvancedSection },
+  components: {
+    TitleRow,
+    ThermalBanner,
+    MediumRow,
+    FreqRow,
+    FieldRow,
+    ProtocolSection,
+    AdvancedSection,
+  },
 
   computed: {
     ...mapStores(useCellStore),
-    ICON()         { return ICON },
-    THERMAL_LEVEL() { return THERMAL_LEVEL },
+    ICON() {
+      return ICON;
+    },
+    THERMAL_LEVEL() {
+      return THERMAL_LEVEL;
+    },
 
-    isResonanceMode(): boolean { return this.cellStore.isResonanceMode },
+    isResonanceMode(): boolean {
+      return this.cellStore.isResonanceMode;
+    },
 
-    sliderRanges(): SliderRange { return this.cellStore.sliderRanges },
+    sliderRanges(): SliderRange {
+      return this.cellStore.sliderRanges;
+    },
 
     maxSteadyTemp(): number {
-      return Math.max(this.cellStore.healthySteadyStateTemp, this.cellStore.targetSteadyStateTemp)
+      return Math.max(
+        this.cellStore.healthySteadyStateTemp,
+        this.cellStore.targetSteadyStateTemp,
+      );
     },
 
-    thermalDangerLevel(): 'safe' | 'hyperthermic' | 'denaturing' | 'vaporizing' {
-      if (this.maxSteadyTemp >= 100) return THERMAL_LEVEL.VAPORIZING
-      if (this.maxSteadyTemp >= 60)  return THERMAL_LEVEL.DENATURING
-      if (this.maxSteadyTemp >= 42)  return THERMAL_LEVEL.HYPERTHERMIC
-      return THERMAL_LEVEL.SAFE
+    thermalDangerLevel():
+      | "safe"
+      | "hyperthermic"
+      | "denaturing"
+      | "vaporizing" {
+      if (this.maxSteadyTemp >= 100) return THERMAL_LEVEL.VAPORIZING;
+      if (this.maxSteadyTemp >= 60) return THERMAL_LEVEL.DENATURING;
+      if (this.maxSteadyTemp >= 42) return THERMAL_LEVEL.HYPERTHERMIC;
+      return THERMAL_LEVEL.SAFE;
     },
 
-    isThermalBannerVisible(): boolean { return !this.isResonanceMode && this.thermalDangerLevel !== THERMAL_LEVEL.SAFE },
-    activeThermalLevel(): 'hyperthermic' | 'denaturing' | 'vaporizing' {
-      return this.thermalDangerLevel as 'hyperthermic' | 'denaturing' | 'vaporizing'
+    isThermalBannerVisible(): boolean {
+      return (
+        !this.isResonanceMode && this.thermalDangerLevel !== THERMAL_LEVEL.SAFE
+      );
+    },
+    activeThermalLevel(): "hyperthermic" | "denaturing" | "vaporizing" {
+      return this.thermalDangerLevel as
+        | "hyperthermic"
+        | "denaturing"
+        | "vaporizing";
     },
   },
-})
+});
 </script>
 
 <style lang="scss" scoped>
@@ -123,8 +154,14 @@ export default defineComponent({
     font-size: var(--fs-xxs);
     line-height: 1.5;
 
-    &-icon { flex-shrink: 0; margin-top: 0.05rem; opacity: var(--op-partial); }
-    &-text strong { color: var(--color-purple-light); }
+    &-icon {
+      flex-shrink: 0;
+      margin-top: 0.05rem;
+      opacity: var(--op-partial);
+    }
+    &-text strong {
+      color: var(--color-purple-light);
+    }
   }
 }
 </style>

@@ -24,24 +24,88 @@
         aria-hidden="true"
       >
         <!-- Input layer -->
-        <circle cx="3"  cy="5"  r="1.5" fill="currentColor" />
-        <circle cx="3"  cy="10" r="1.5" fill="currentColor" />
-        <circle cx="3"  cy="15" r="1.5" fill="currentColor" />
+        <circle cx="3" cy="5" r="1.5" fill="currentColor" />
+        <circle cx="3" cy="10" r="1.5" fill="currentColor" />
+        <circle cx="3" cy="15" r="1.5" fill="currentColor" />
         <!-- Hidden layer -->
-        <circle cx="10" cy="7"  r="1.8" fill="currentColor" opacity="0.85" />
+        <circle cx="10" cy="7" r="1.8" fill="currentColor" opacity="0.85" />
         <circle cx="10" cy="13" r="1.8" fill="currentColor" opacity="0.85" />
         <!-- Output node -->
         <circle cx="17" cy="10" r="2.2" fill="currentColor" />
         <!-- Connections: input → hidden -->
-        <line x1="4.5" y1="5"  x2="8.2" y2="7"  stroke="currentColor" stroke-width="0.6" opacity="0.5" />
-        <line x1="4.5" y1="10" x2="8.2" y2="7"  stroke="currentColor" stroke-width="0.6" opacity="0.5" />
-        <line x1="4.5" y1="15" x2="8.2" y2="7"  stroke="currentColor" stroke-width="0.6" opacity="0.5" />
-        <line x1="4.5" y1="5"  x2="8.2" y2="13" stroke="currentColor" stroke-width="0.6" opacity="0.5" />
-        <line x1="4.5" y1="10" x2="8.2" y2="13" stroke="currentColor" stroke-width="0.6" opacity="0.5" />
-        <line x1="4.5" y1="15" x2="8.2" y2="13" stroke="currentColor" stroke-width="0.6" opacity="0.5" />
+        <line
+          x1="4.5"
+          y1="5"
+          x2="8.2"
+          y2="7"
+          stroke="currentColor"
+          stroke-width="0.6"
+          opacity="0.5"
+        />
+        <line
+          x1="4.5"
+          y1="10"
+          x2="8.2"
+          y2="7"
+          stroke="currentColor"
+          stroke-width="0.6"
+          opacity="0.5"
+        />
+        <line
+          x1="4.5"
+          y1="15"
+          x2="8.2"
+          y2="7"
+          stroke="currentColor"
+          stroke-width="0.6"
+          opacity="0.5"
+        />
+        <line
+          x1="4.5"
+          y1="5"
+          x2="8.2"
+          y2="13"
+          stroke="currentColor"
+          stroke-width="0.6"
+          opacity="0.5"
+        />
+        <line
+          x1="4.5"
+          y1="10"
+          x2="8.2"
+          y2="13"
+          stroke="currentColor"
+          stroke-width="0.6"
+          opacity="0.5"
+        />
+        <line
+          x1="4.5"
+          y1="15"
+          x2="8.2"
+          y2="13"
+          stroke="currentColor"
+          stroke-width="0.6"
+          opacity="0.5"
+        />
         <!-- Connections: hidden → output -->
-        <line x1="11.8" y1="7"  x2="14.8" y2="10" stroke="currentColor" stroke-width="0.6" opacity="0.5" />
-        <line x1="11.8" y1="13" x2="14.8" y2="10" stroke="currentColor" stroke-width="0.6" opacity="0.5" />
+        <line
+          x1="11.8"
+          y1="7"
+          x2="14.8"
+          y2="10"
+          stroke="currentColor"
+          stroke-width="0.6"
+          opacity="0.5"
+        />
+        <line
+          x1="11.8"
+          y1="13"
+          x2="14.8"
+          y2="10"
+          stroke="currentColor"
+          stroke-width="0.6"
+          opacity="0.5"
+        />
       </svg>
       <span class="ai-tab__label">AI</span>
     </template>
@@ -49,30 +113,34 @@
     <!-- ── Panel content ─────────────────────────────────────────── -->
     <template #panel>
       <div class="ai-tab__panel">
-
         <!-- Panel header -->
         <div class="ai-tab__header">
-          <span class="ai-tab__title">{{ $t('ai.panelTitle') }}</span>
+          <span class="ai-tab__title">{{ $t("ai.panelTitle") }}</span>
           <span class="ai-tab__subtitle">{{ panelSubtitle }}</span>
         </div>
 
         <!-- Consent gate -->
         <div v-if="!experimentStore.aiConsentGiven" class="ai-tab__consent">
-          <div class="ai-tab__consent-title">{{ $t('ai.consentGateTitle') }}</div>
-          <p class="ai-tab__consent-body">{{ $t('ai.consentGateBody') }}</p>
+          <div class="ai-tab__consent-title">
+            {{ $t("ai.consentGateTitle") }}
+          </div>
+          <p class="ai-tab__consent-body">{{ $t("ai.consentGateBody") }}</p>
           <label class="ai-tab__consent-toggle">
             <input
               type="checkbox"
               :checked="experimentStore.aiConsentGiven"
-              @change="experimentStore.setAiConsent(($event.target as HTMLInputElement).checked)"
+              @change="
+                experimentStore.setAiConsent(
+                  ($event.target as HTMLInputElement).checked,
+                )
+              "
             />
-            <span>{{ $t('ai.consentToggleLabel') }}</span>
+            <span>{{ $t("ai.consentToggleLabel") }}</span>
           </label>
         </div>
 
         <!-- Main panel — consent granted -->
         <template v-else>
-
           <!-- Model status bar -->
           <div class="ai-tab__status-bar">
             <div class="ai-tab__status-left">
@@ -80,11 +148,13 @@
                 class="ai-tab__status-badge"
                 :class="statusBadgeClass"
                 v-tip="$t('ai.tipTrainingSamples')"
-              >{{ statusBadgeLabel }}</span>
+                >{{ statusBadgeLabel }}</span
+              >
               <span
                 class="ai-tab__samples"
                 v-tip="$t('ai.tipTrainingSamples')"
-              >{{ trainingSamplesDisplay }}</span>
+                >{{ trainingSamplesDisplay }}</span
+              >
             </div>
             <button
               class="ai-tab__retrain-btn"
@@ -93,23 +163,30 @@
               v-tip="$t('ai.tipRetrainBtn')"
               @click="triggerRetrain"
             >
-              {{ isRetraining ? $t('ai.retrainBtnRunning') : $t('ai.retrainBtn') }}
+              {{
+                isRetraining ? $t("ai.retrainBtnRunning") : $t("ai.retrainBtn")
+              }}
             </button>
           </div>
 
           <!-- Retrain feedback -->
-          <div v-if="retrainMessage" class="ai-tab__retrain-msg" :class="retrainMsgClass">
+          <div
+            v-if="retrainMessage"
+            class="ai-tab__retrain-msg"
+            :class="retrainMsgClass"
+          >
             {{ retrainMessage }}
           </div>
 
           <!-- Offline note -->
           <div v-if="showOfflineNote" class="ai-tab__error-note">
-            {{ ICON.WARNING }} {{ $t('ai.errorNote') }}
+            {{ ICON.WARNING }} {{ $t("ai.errorNote") }}
           </div>
 
           <!-- Low-confidence warning -->
           <div v-if="showLowConfidenceWarning" class="ai-tab__warn-note">
-            {{ ICON.WARNING }} {{ $t('ai.lowConfidenceWarning', { conf: confidencePct }) }}
+            {{ ICON.WARNING }}
+            {{ $t("ai.lowConfidenceWarning", { conf: confidencePct }) }}
           </div>
 
           <!-- Optimize button -->
@@ -121,90 +198,219 @@
               v-tip="$t('ai.tipOptimizeBtn')"
               @click="runOptimize"
             >
-              <svg class="ai-tab__btn-icon" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                <circle cx="3"  cy="5"  r="1.3" fill="currentColor" />
-                <circle cx="3"  cy="10" r="1.3" fill="currentColor" />
-                <circle cx="3"  cy="15" r="1.3" fill="currentColor" />
-                <circle cx="10" cy="7"  r="1.5" fill="currentColor" opacity="0.85" />
-                <circle cx="10" cy="13" r="1.5" fill="currentColor" opacity="0.85" />
+              <svg
+                class="ai-tab__btn-icon"
+                viewBox="0 0 20 20"
+                fill="none"
+                aria-hidden="true"
+              >
+                <circle cx="3" cy="5" r="1.3" fill="currentColor" />
+                <circle cx="3" cy="10" r="1.3" fill="currentColor" />
+                <circle cx="3" cy="15" r="1.3" fill="currentColor" />
+                <circle
+                  cx="10"
+                  cy="7"
+                  r="1.5"
+                  fill="currentColor"
+                  opacity="0.85"
+                />
+                <circle
+                  cx="10"
+                  cy="13"
+                  r="1.5"
+                  fill="currentColor"
+                  opacity="0.85"
+                />
                 <circle cx="17" cy="10" r="1.8" fill="currentColor" />
-                <line x1="4.3" y1="5"  x2="8.5" y2="7"  stroke="currentColor" stroke-width="0.55" opacity="0.5" />
-                <line x1="4.3" y1="10" x2="8.5" y2="7"  stroke="currentColor" stroke-width="0.55" opacity="0.5" />
-                <line x1="4.3" y1="15" x2="8.5" y2="7"  stroke="currentColor" stroke-width="0.55" opacity="0.5" />
-                <line x1="4.3" y1="5"  x2="8.5" y2="13" stroke="currentColor" stroke-width="0.55" opacity="0.5" />
-                <line x1="4.3" y1="10" x2="8.5" y2="13" stroke="currentColor" stroke-width="0.55" opacity="0.5" />
-                <line x1="4.3" y1="15" x2="8.5" y2="13" stroke="currentColor" stroke-width="0.55" opacity="0.5" />
-                <line x1="11.5" y1="7"  x2="15.2" y2="10" stroke="currentColor" stroke-width="0.55" opacity="0.5" />
-                <line x1="11.5" y1="13" x2="15.2" y2="10" stroke="currentColor" stroke-width="0.55" opacity="0.5" />
+                <line
+                  x1="4.3"
+                  y1="5"
+                  x2="8.5"
+                  y2="7"
+                  stroke="currentColor"
+                  stroke-width="0.55"
+                  opacity="0.5"
+                />
+                <line
+                  x1="4.3"
+                  y1="10"
+                  x2="8.5"
+                  y2="7"
+                  stroke="currentColor"
+                  stroke-width="0.55"
+                  opacity="0.5"
+                />
+                <line
+                  x1="4.3"
+                  y1="15"
+                  x2="8.5"
+                  y2="7"
+                  stroke="currentColor"
+                  stroke-width="0.55"
+                  opacity="0.5"
+                />
+                <line
+                  x1="4.3"
+                  y1="5"
+                  x2="8.5"
+                  y2="13"
+                  stroke="currentColor"
+                  stroke-width="0.55"
+                  opacity="0.5"
+                />
+                <line
+                  x1="4.3"
+                  y1="10"
+                  x2="8.5"
+                  y2="13"
+                  stroke="currentColor"
+                  stroke-width="0.55"
+                  opacity="0.5"
+                />
+                <line
+                  x1="4.3"
+                  y1="15"
+                  x2="8.5"
+                  y2="13"
+                  stroke="currentColor"
+                  stroke-width="0.55"
+                  opacity="0.5"
+                />
+                <line
+                  x1="11.5"
+                  y1="7"
+                  x2="15.2"
+                  y2="10"
+                  stroke="currentColor"
+                  stroke-width="0.55"
+                  opacity="0.5"
+                />
+                <line
+                  x1="11.5"
+                  y1="13"
+                  x2="15.2"
+                  y2="10"
+                  stroke="currentColor"
+                  stroke-width="0.55"
+                  opacity="0.5"
+                />
               </svg>
-              <span>{{ aiStore.isLoading ? $t('ai.panelSubtitleLoading') : $t('ai.optimizeBtn') }}</span>
+              <span>{{
+                aiStore.isLoading
+                  ? $t("ai.panelSubtitleLoading")
+                  : $t("ai.optimizeBtn")
+              }}</span>
             </button>
             <button
               v-if="aiStore.hasResult"
               class="ai-tab__clear-btn"
               @click="aiStore.clearResult()"
-            >{{ $t('ai.clearBtn') }}</button>
+            >
+              {{ $t("ai.clearBtn") }}
+            </button>
           </div>
 
           <!-- Result card -->
           <div v-if="isAiResultReady" class="ai-tab__result">
-
             <!-- Source + confidence badges -->
             <div class="ai-tab__badge-row">
               <span
                 class="ai-tab__source-badge"
-                :class="aiStore.isPhysicsBaseline ? 'ai-tab__source-badge--physics' : 'ai-tab__source-badge--ml'"
-                v-tip="aiStore.isPhysicsBaseline ? $t('ai.tipPhysicsBaseline') : $t('ai.tipConfidence')"
+                :class="
+                  aiStore.isPhysicsBaseline
+                    ? 'ai-tab__source-badge--physics'
+                    : 'ai-tab__source-badge--ml'
+                "
+                v-tip="
+                  aiStore.isPhysicsBaseline
+                    ? $t('ai.tipPhysicsBaseline')
+                    : $t('ai.tipConfidence')
+                "
               >
-                {{ aiStore.isPhysicsBaseline ? $t('ai.physicsBaselineBadge') : $t('ai.mlBadge') }}
+                {{
+                  aiStore.isPhysicsBaseline
+                    ? $t("ai.physicsBaselineBadge")
+                    : $t("ai.mlBadge")
+                }}
               </span>
               <span
                 class="ai-tab__confidence"
                 :class="confidenceClass"
                 v-tip="$t('ai.tipConfidence')"
               >
-                {{ $t('ai.confidenceLabel', { conf: confidencePct }) }}
+                {{ $t("ai.confidenceLabel", { conf: confidencePct }) }}
               </span>
-              <span v-if="aiStore.suggestionApplied" class="ai-tab__applied-badge">
-                {{ ICON.CHECK }} {{ $t('ai.appliedBadge') }}
+              <span
+                v-if="aiStore.suggestionApplied"
+                class="ai-tab__applied-badge"
+              >
+                {{ ICON.CHECK }} {{ $t("ai.appliedBadge") }}
               </span>
             </div>
 
             <!-- Suggested params -->
             <div v-if="aiResult.suggestion" class="ai-tab__suggestion">
-              <div class="ai-tab__section-label">{{ $t('ai.suggestedParamsLabel') }}</div>
+              <div class="ai-tab__section-label">
+                {{ $t("ai.suggestedParamsLabel") }}
+              </div>
               <div class="ai-tab__params-grid">
-                <span class="ai-tab__param-key">{{ $t('slider.freq') }}</span>
-                <span class="ai-tab__param-val">{{ formatFreqKHz(aiResult.suggestion.freqKHz) }}</span>
-                <span class="ai-tab__param-key">{{ $t('slider.field') }}</span>
-                <span class="ai-tab__param-val">{{ aiResult.suggestion.fieldVcm }} {{ UNIT.V_PER_CM }}</span>
-                <span class="ai-tab__param-key">{{ $t('slider.dutyCycle') }}</span>
-                <span class="ai-tab__param-val">{{ formatDutyCycle(aiResult.suggestion.dutyCycle) }}</span>
-                <span class="ai-tab__param-key">{{ $t('slider.pulseWidth') }}</span>
-                <span class="ai-tab__param-val">{{ aiResult.suggestion.pulseWidthNs }} {{ UNIT.NS }}</span>
-                <span class="ai-tab__param-key">{{ $t('slider.waveform') }}</span>
-                <span class="ai-tab__param-val ai-tab__param-val--upper">{{ aiResult.suggestion.waveform }}</span>
+                <span class="ai-tab__param-key">{{ $t("slider.freq") }}</span>
+                <span class="ai-tab__param-val">{{
+                  formatFreqKHz(aiResult.suggestion.freqKHz)
+                }}</span>
+                <span class="ai-tab__param-key">{{ $t("slider.field") }}</span>
+                <span class="ai-tab__param-val"
+                  >{{ aiResult.suggestion.fieldVcm }} {{ UNIT.V_PER_CM }}</span
+                >
+                <span class="ai-tab__param-key">{{
+                  $t("slider.dutyCycle")
+                }}</span>
+                <span class="ai-tab__param-val">{{
+                  formatDutyCycle(aiResult.suggestion.dutyCycle)
+                }}</span>
+                <span class="ai-tab__param-key">{{
+                  $t("slider.pulseWidth")
+                }}</span>
+                <span class="ai-tab__param-val"
+                  >{{ aiResult.suggestion.pulseWidthNs }} {{ UNIT.NS }}</span
+                >
+                <span class="ai-tab__param-key">{{
+                  $t("slider.waveform")
+                }}</span>
+                <span class="ai-tab__param-val ai-tab__param-val--upper">{{
+                  aiResult.suggestion.waveform
+                }}</span>
               </div>
             </div>
 
             <!-- Predicted outcomes -->
             <div class="ai-tab__prediction">
-              <div class="ai-tab__section-label">{{ $t('ai.predictedOutcomeLabel') }}</div>
+              <div class="ai-tab__section-label">
+                {{ $t("ai.predictedOutcomeLabel") }}
+              </div>
               <div class="ai-tab__outcome-row">
                 <span class="ai-tab__outcome-item">
-                  <span class="ai-tab__outcome-key">{{ $t('ai.predictedTargetDr') }}</span>
+                  <span class="ai-tab__outcome-key">{{
+                    $t("ai.predictedTargetDr")
+                  }}</span>
                   <span class="ai-tab__outcome-val ai-tab__outcome-val--target">
                     {{ (aiResult.predictedTargetDr * 100).toFixed(0) }}%
                   </span>
                 </span>
                 <span class="ai-tab__outcome-item">
-                  <span class="ai-tab__outcome-key">{{ $t('ai.predictedHealthyDr') }}</span>
-                  <span class="ai-tab__outcome-val ai-tab__outcome-val--healthy">
+                  <span class="ai-tab__outcome-key">{{
+                    $t("ai.predictedHealthyDr")
+                  }}</span>
+                  <span
+                    class="ai-tab__outcome-val ai-tab__outcome-val--healthy"
+                  >
                     {{ (aiResult.predictedHealthyDr * 100).toFixed(0) }}%
                   </span>
                 </span>
                 <span class="ai-tab__outcome-item">
-                  <span class="ai-tab__outcome-key">{{ $t('ai.predictedTi') }}</span>
+                  <span class="ai-tab__outcome-key">{{
+                    $t("ai.predictedTi")
+                  }}</span>
                   <span class="ai-tab__outcome-val" :class="tiClass">
                     x{{ aiResult.predictedTi.toFixed(2) }}
                   </span>
@@ -216,71 +422,104 @@
             <div class="ai-tab__apply-row">
               <button
                 class="ai-tab__apply-btn"
-                :class="{ 'ai-tab__apply-btn--applied': aiStore.suggestionApplied }"
+                :class="{
+                  'ai-tab__apply-btn--applied': aiStore.suggestionApplied,
+                }"
                 :disabled="aiStore.suggestionApplied"
                 v-tip="$t('ai.tipApplyBtn')"
                 @click="applyAndBroadcast"
               >
-                {{ aiStore.suggestionApplied ? ($t('ai.appliedBadge') + ' ' + ICON.CHECK) : $t('ai.applyBtn') }}
+                {{
+                  aiStore.suggestionApplied
+                    ? $t("ai.appliedBadge") + " " + ICON.CHECK
+                    : $t("ai.applyBtn")
+                }}
               </button>
             </div>
 
             <!-- Explanation -->
             <div v-if="aiResult.explanation" class="ai-tab__explanation">
-              <span class="ai-tab__explanation-label">{{ $t('ai.explanationLabel') }}:</span>
-              <span class="ai-tab__explanation-text">{{ aiResult.explanation }}</span>
+              <span class="ai-tab__explanation-label"
+                >{{ $t("ai.explanationLabel") }}:</span
+              >
+              <span class="ai-tab__explanation-text">{{
+                aiResult.explanation
+              }}</span>
             </div>
 
             <!-- Feature importance (collapsible) -->
             <div v-if="hasFeatureImportance" class="ai-tab__importance">
-              <button class="ai-tab__importance-toggle" @click="aiStore.toggleImportance()">
-                {{ aiStore.importanceExpanded ? $t('ai.whyBtnCollapse') : $t('ai.whyBtn') }}
+              <button
+                class="ai-tab__importance-toggle"
+                @click="aiStore.toggleImportance()"
+              >
+                {{
+                  aiStore.importanceExpanded
+                    ? $t("ai.whyBtnCollapse")
+                    : $t("ai.whyBtn")
+                }}
                 <span
                   class="ai-tab__importance-chevron"
-                  :class="{ 'ai-tab__importance-chevron--open': aiStore.importanceExpanded }"
-                >{{ ICON.CHEVRON }}</span>
+                  :class="{
+                    'ai-tab__importance-chevron--open':
+                      aiStore.importanceExpanded,
+                  }"
+                  >{{ ICON.CHEVRON }}</span
+                >
               </button>
-              <div v-if="aiStore.importanceExpanded" class="ai-tab__importance-body">
-                <div class="ai-tab__importance-title">{{ $t('ai.featureImportanceTitle') }}</div>
+              <div
+                v-if="aiStore.importanceExpanded"
+                class="ai-tab__importance-body"
+              >
+                <div class="ai-tab__importance-title">
+                  {{ $t("ai.featureImportanceTitle") }}
+                </div>
                 <div
                   v-for="[key, val] in sortedImportance"
                   :key="key"
                   class="ai-tab__importance-row"
                 >
-                  <span class="ai-tab__importance-key">{{ formatFeatureKey(key) }}</span>
+                  <span class="ai-tab__importance-key">{{
+                    formatFeatureKey(key)
+                  }}</span>
                   <div class="ai-tab__importance-bar-wrap">
-                    <div class="ai-tab__importance-bar" :style="{ width: (val * 100).toFixed(1) + '%' }" />
+                    <div
+                      class="ai-tab__importance-bar"
+                      :style="{ width: (val * 100).toFixed(1) + '%' }"
+                    />
                   </div>
-                  <span class="ai-tab__importance-pct">{{ (val * 100).toFixed(1) }}%</span>
+                  <span class="ai-tab__importance-pct"
+                    >{{ (val * 100).toFixed(1) }}%</span
+                  >
                 </div>
               </div>
             </div>
-
-          </div><!-- /result -->
+          </div>
+          <!-- /result -->
 
           <!-- No-data note -->
           <div v-if="isPhysicsBaselineIdle" class="ai-tab__no-data">
-            {{ $t('ai.noDataNote') }}
-          </div>
-
-        </template><!-- /consent granted -->
-      </div><!-- /panel -->
+            {{ $t("ai.noDataNote") }}
+          </div> </template
+        ><!-- /consent granted -->
+      </div>
+      <!-- /panel -->
     </template>
   </SideTabPanel>
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue'
-import { mapStores } from 'pinia'
+import { defineComponent } from "vue";
+import { mapStores } from "pinia";
 
-import { useAiStore } from '@/stores/aiStore'
-import { useExperimentStore } from '@/stores/experimentStore'
+import { useAiStore } from "@/stores/aiStore";
+import { useExperimentStore } from "@/stores/experimentStore";
 
-import { requestAiOptimization, broadcastStateSync } from '@/services/socket'
+import { requestAiOptimization, broadcastStateSync } from "@/services/socket";
 
-import SideTabPanel from './SideTabPanel.vue'
+import SideTabPanel from "./SideTabPanel.vue";
 
-import { formatFreqKHz } from '@/utils/format'
+import { formatFreqKHz } from "@/utils/format";
 import {
   buildAiPanelSubtitle,
   buildAiStatusBadge,
@@ -290,159 +529,201 @@ import {
   formatAiFeatureKey,
   getAiConfidenceClass,
   getAiTiClass,
-} from '../lib'
+} from "../lib";
 
-import { ICON } from '@/constants/icons'
-import { UNIT } from '@/constants/units'
-import { THRESHOLDS } from '@/constants/physics'
+import { ICON } from "@/constants/icons";
+import { UNIT } from "@/constants/units";
+import { THRESHOLDS } from "@/constants/physics";
 
 export default defineComponent({
-  name: 'AiOptimizerTab',
+  name: "AiOptimizerTab",
 
   components: { SideTabPanel },
 
   data() {
     return {
-      showOfflineNote:      false,
+      showOfflineNote: false,
       modelTrainingSamples: 0,
-      isRetraining:         false,
-      retrainMessage:       '' as string,
-      retrainMsgClass:      '' as string,
-      _healthPollTimer:     null as ReturnType<typeof setInterval> | null,
-    }
+      isRetraining: false,
+      retrainMessage: "" as string,
+      retrainMsgClass: "" as string,
+      _healthPollTimer: null as ReturnType<typeof setInterval> | null,
+    };
   },
 
   mounted() {
-    this.fetchAiHealth()
-    this._healthPollTimer = setInterval(this.fetchAiHealth, 30_000)
+    this.fetchAiHealth();
+    this._healthPollTimer = setInterval(this.fetchAiHealth, 30_000);
   },
 
   beforeUnmount() {
-    if (this._healthPollTimer) clearInterval(this._healthPollTimer)
+    if (this._healthPollTimer) clearInterval(this._healthPollTimer);
   },
 
   computed: {
-    ICON() { return ICON },
-    UNIT() { return UNIT },
+    ICON() {
+      return ICON;
+    },
+    UNIT() {
+      return UNIT;
+    },
     ...mapStores(useAiStore, useExperimentStore),
 
     panelSubtitle(): string {
-      return buildAiPanelSubtitle(this.$t.bind(this), this.aiStore.isLoading, this.aiStore.hasResult, this.aiStore.confidence)
+      return buildAiPanelSubtitle(
+        this.$t.bind(this),
+        this.aiStore.isLoading,
+        this.aiStore.hasResult,
+        this.aiStore.confidence,
+      );
     },
 
     confidencePct(): string {
-      return formatAiConfidencePct(this.aiStore.confidence)
+      return formatAiConfidencePct(this.aiStore.confidence);
     },
 
     confidenceClass(): string {
-      return getAiConfidenceClass(this.aiStore.confidence)
+      return getAiConfidenceClass(this.aiStore.confidence);
     },
 
     tiClass(): string {
-      return getAiTiClass(this.aiStore.result?.predictedTi ?? 0)
+      return getAiTiClass(this.aiStore.result?.predictedTi ?? 0);
     },
 
     hasFeatureImportance(): boolean {
-      const fi = this.aiStore.result?.featureImportance
-      return !!fi && Object.keys(fi).length > 0
+      const fi = this.aiStore.result?.featureImportance;
+      return !!fi && Object.keys(fi).length > 0;
     },
 
     sortedImportance(): [string, number][] {
-      const fi = this.aiStore.result?.featureImportance
-      if (!fi) return []
-      return Object.entries(fi).sort(([, a], [, b]) => b - a).slice(0, 8)
+      const fi = this.aiStore.result?.featureImportance;
+      if (!fi) return [];
+      return Object.entries(fi)
+        .sort(([, a], [, b]) => b - a)
+        .slice(0, 8);
     },
 
-    isAiResultReady(): boolean       { return this.aiStore.hasResult && !!this.aiStore.result },
-    isPhysicsBaselineIdle(): boolean { return this.aiStore.isPhysicsBaseline && !this.aiStore.isLoading && !this.aiStore.hasResult },
-    aiResult()                       { return this.aiStore.result! },
+    isAiResultReady(): boolean {
+      return this.aiStore.hasResult && !!this.aiStore.result;
+    },
+    isPhysicsBaselineIdle(): boolean {
+      return (
+        this.aiStore.isPhysicsBaseline &&
+        !this.aiStore.isLoading &&
+        !this.aiStore.hasResult
+      );
+    },
+    aiResult() {
+      return this.aiStore.result!;
+    },
 
     statusBadgeLabel(): string {
-      return buildAiStatusBadge(this.$t.bind(this), this.modelTrainingSamples).label
+      return buildAiStatusBadge(this.$t.bind(this), this.modelTrainingSamples)
+        .label;
     },
 
     statusBadgeClass(): string {
-      return buildAiStatusBadge(this.$t.bind(this), this.modelTrainingSamples).className
+      return buildAiStatusBadge(this.$t.bind(this), this.modelTrainingSamples)
+        .className;
     },
 
     trainingSamplesDisplay(): string {
-      return buildTrainingSamplesDisplay(this.$t.bind(this), this.modelTrainingSamples)
+      return buildTrainingSamplesDisplay(
+        this.$t.bind(this),
+        this.modelTrainingSamples,
+      );
     },
 
     showLowConfidenceWarning(): boolean {
-      return this.aiStore.hasResult && this.aiStore.confidence < 0.55
+      return this.aiStore.hasResult && this.aiStore.confidence < 0.55;
     },
   },
 
   methods: {
     runOptimize() {
-      this.showOfflineNote = false
-      const requestId = this.aiStore.startRequest()
+      this.showOfflineNote = false;
+      const requestId = this.aiStore.startRequest();
       requestAiOptimization(requestId, (result) => {
-        this.aiStore.receiveResult(result)
-      })
+        this.aiStore.receiveResult(result);
+      });
       setTimeout(() => {
-        if (this.aiStore.isLoading && this.aiStore.pendingRequestId === requestId) {
-          this.aiStore.cancelRequest()
-          this.showOfflineNote = true
+        if (
+          this.aiStore.isLoading &&
+          this.aiStore.pendingRequestId === requestId
+        ) {
+          this.aiStore.cancelRequest();
+          this.showOfflineNote = true;
         }
-      }, 9000)
+      }, 9000);
     },
 
     applyAndBroadcast() {
-      this.aiStore.applySuggestion()
-      broadcastStateSync()
+      this.aiStore.applySuggestion();
+      broadcastStateSync();
     },
 
     formatFreqKHz,
 
     formatDutyCycle(dc: number): string {
-      return formatAiDutyCycle(dc)
+      return formatAiDutyCycle(dc);
     },
 
     async fetchAiHealth() {
       try {
-        const backendUrl = (import.meta.env.VITE_BACKEND_URL ?? 'http://localhost:3001').replace(/\/$/, '')
-        const res  = await fetch(`${backendUrl}/ai/health`, { signal: AbortSignal.timeout(5_000) })
-        const data = await res.json() as { trainingSamples?: number }
-        this.modelTrainingSamples = data.trainingSamples ?? 0
+        const backendUrl = (
+          import.meta.env.VITE_BACKEND_URL ?? "http://localhost:3001"
+        ).replace(/\/$/, "");
+        const res = await fetch(`${backendUrl}/ai/health`, {
+          signal: AbortSignal.timeout(5_000),
+        });
+        const data = (await res.json()) as { trainingSamples?: number };
+        this.modelTrainingSamples = data.trainingSamples ?? 0;
       } catch {
         // service offline — keep existing count
       }
     },
 
     async triggerRetrain() {
-      this.isRetraining   = true
-      this.retrainMessage = ''
+      this.isRetraining = true;
+      this.retrainMessage = "";
       try {
-        const backendUrl = (import.meta.env.VITE_BACKEND_URL ?? 'http://localhost:3001').replace(/\/$/, '')
-        const res  = await fetch(`${backendUrl}/ai/retrain`, {
-          method: 'POST',
+        const backendUrl = (
+          import.meta.env.VITE_BACKEND_URL ?? "http://localhost:3001"
+        ).replace(/\/$/, "");
+        const res = await fetch(`${backendUrl}/ai/retrain`, {
+          method: "POST",
           signal: AbortSignal.timeout(15_000),
-        })
-        const data = await res.json() as { samplesUsed?: number; status?: string }
+        });
+        const data = (await res.json()) as {
+          samplesUsed?: number;
+          status?: string;
+        };
         if (data.samplesUsed && data.samplesUsed > 0) {
-          this.retrainMessage       = this.$t('ai.retrainSuccess', { n: data.samplesUsed })
-          this.retrainMsgClass      = 'ai-tab__retrain-msg--ok'
-          this.modelTrainingSamples = data.samplesUsed
+          this.retrainMessage = this.$t("ai.retrainSuccess", {
+            n: data.samplesUsed,
+          });
+          this.retrainMsgClass = "ai-tab__retrain-msg--ok";
+          this.modelTrainingSamples = data.samplesUsed;
         } else {
-          this.retrainMessage  = this.$t('ai.retrainNoData')
-          this.retrainMsgClass = 'ai-tab__retrain-msg--warn'
+          this.retrainMessage = this.$t("ai.retrainNoData");
+          this.retrainMsgClass = "ai-tab__retrain-msg--warn";
         }
       } catch {
-        this.retrainMessage  = this.$t('ai.errorNote')
-        this.retrainMsgClass = 'ai-tab__retrain-msg--error'
+        this.retrainMessage = this.$t("ai.errorNote");
+        this.retrainMsgClass = "ai-tab__retrain-msg--error";
       } finally {
-        this.isRetraining = false
-        setTimeout(() => { this.retrainMessage = '' }, 5_000)
+        this.isRetraining = false;
+        setTimeout(() => {
+          this.retrainMessage = "";
+        }, 5_000);
       }
     },
 
     formatFeatureKey(key: string): string {
-      return formatAiFeatureKey(key)
+      return formatAiFeatureKey(key);
     },
   },
-})
+});
 </script>
 
 <style lang="scss" scoped>
@@ -453,7 +734,9 @@ export default defineComponent({
     height: 18px;
     color: var(--color-primary);
     opacity: var(--op-dim);
-    transition: opacity var(--tr-fast), color var(--tr-fast);
+    transition:
+      opacity var(--tr-fast),
+      color var(--tr-fast);
     flex-shrink: 0;
 
     &--active {
@@ -525,7 +808,9 @@ export default defineComponent({
     color: var(--color-text);
     cursor: pointer;
 
-    input[type="checkbox"] { cursor: pointer; }
+    input[type="checkbox"] {
+      cursor: pointer;
+    }
   }
 
   // ── Status bar ─────────────────────────────────────────────────
@@ -544,9 +829,21 @@ export default defineComponent({
     @include badge-pill(0.12rem 0.45rem, 3px);
     font-size: var(--fs-xxs);
 
-    &--ready   { color: var(--color-lime);    border-color: color-mix(in srgb, var(--color-lime)    30%, transparent); background: color-mix(in srgb, var(--color-lime)    8%, transparent); }
-    &--pending { color: var(--color-amber);   border-color: color-mix(in srgb, var(--color-amber)   30%, transparent); background: color-mix(in srgb, var(--color-amber)   8%, transparent); }
-    &--offline { color: var(--color-text-muted); border-color: var(--color-border); background: transparent; }
+    &--ready {
+      color: var(--color-lime);
+      border-color: color-mix(in srgb, var(--color-lime) 30%, transparent);
+      background: color-mix(in srgb, var(--color-lime) 8%, transparent);
+    }
+    &--pending {
+      color: var(--color-amber);
+      border-color: color-mix(in srgb, var(--color-amber) 30%, transparent);
+      background: color-mix(in srgb, var(--color-amber) 8%, transparent);
+    }
+    &--offline {
+      color: var(--color-text-muted);
+      border-color: var(--color-border);
+      background: transparent;
+    }
   }
 
   &__samples {
@@ -565,15 +862,22 @@ export default defineComponent({
     font-size: var(--fs-xxs);
     font-family: var(--font-mono);
     cursor: pointer;
-    transition: border-color var(--tr-fast), color var(--tr-fast);
+    transition:
+      border-color var(--tr-fast),
+      color var(--tr-fast);
 
     &:hover:not(:disabled) {
       border-color: var(--color-primary);
       color: var(--color-primary);
     }
 
-    &:disabled { opacity: var(--op-ghost); cursor: not-allowed; }
-    &--running { animation: ai-pulse 1.4s ease-in-out infinite; }
+    &:disabled {
+      opacity: var(--op-ghost);
+      cursor: not-allowed;
+    }
+    &--running {
+      animation: ai-pulse 1.4s ease-in-out infinite;
+    }
   }
 
   // ── Feedback messages ──────────────────────────────────────────
@@ -583,9 +887,21 @@ export default defineComponent({
     border-radius: var(--radius);
     border: 1px solid;
 
-    &--ok    { color: var(--color-lime);    border-color: color-mix(in srgb, var(--color-lime)    30%, transparent); background: color-mix(in srgb, var(--color-lime)    7%, transparent); }
-    &--warn  { color: var(--color-amber);   border-color: color-mix(in srgb, var(--color-amber)   30%, transparent); background: color-mix(in srgb, var(--color-amber)   7%, transparent); }
-    &--error { color: var(--color-danger);  border-color: color-mix(in srgb, var(--color-danger)  30%, transparent); background: color-mix(in srgb, var(--color-danger)  7%, transparent); }
+    &--ok {
+      color: var(--color-lime);
+      border-color: color-mix(in srgb, var(--color-lime) 30%, transparent);
+      background: color-mix(in srgb, var(--color-lime) 7%, transparent);
+    }
+    &--warn {
+      color: var(--color-amber);
+      border-color: color-mix(in srgb, var(--color-amber) 30%, transparent);
+      background: color-mix(in srgb, var(--color-amber) 7%, transparent);
+    }
+    &--error {
+      color: var(--color-danger);
+      border-color: color-mix(in srgb, var(--color-danger) 30%, transparent);
+      background: color-mix(in srgb, var(--color-danger) 7%, transparent);
+    }
   }
 
   &__error-note {
@@ -608,7 +924,10 @@ export default defineComponent({
   }
 
   // ── Actions row ────────────────────────────────────────────────
-  &__actions { @include flex-row(0.6rem); flex-wrap: wrap; }
+  &__actions {
+    @include flex-row(0.6rem);
+    flex-wrap: wrap;
+  }
 
   &__optimize-btn {
     @include flex-row(0.45rem);
@@ -622,11 +941,20 @@ export default defineComponent({
     cursor: pointer;
     flex: 1;
     justify-content: center;
-    transition: background var(--tr-fast), border-color var(--tr-fast);
+    transition:
+      background var(--tr-fast),
+      border-color var(--tr-fast);
 
-    &:hover:not(:disabled) { background: color-mix(in srgb, var(--color-primary) 20%, transparent); }
-    &:disabled { opacity: var(--op-muted); cursor: not-allowed; }
-    &--loading { animation: ai-pulse 1.4s ease-in-out infinite; }
+    &:hover:not(:disabled) {
+      background: color-mix(in srgb, var(--color-primary) 20%, transparent);
+    }
+    &:disabled {
+      opacity: var(--op-muted);
+      cursor: not-allowed;
+    }
+    &--loading {
+      animation: ai-pulse 1.4s ease-in-out infinite;
+    }
   }
 
   &__btn-icon {
@@ -644,9 +972,14 @@ export default defineComponent({
     font-size: var(--fs-xs);
     font-family: var(--font-mono);
     cursor: pointer;
-    transition: border-color var(--tr-fast), color var(--tr-fast);
+    transition:
+      border-color var(--tr-fast),
+      color var(--tr-fast);
 
-    &:hover { border-color: var(--color-danger); color: var(--color-danger); }
+    &:hover {
+      border-color: var(--color-danger);
+      color: var(--color-danger);
+    }
   }
 
   // ── Result card ────────────────────────────────────────────────
@@ -658,7 +991,10 @@ export default defineComponent({
     border-radius: var(--radius);
   }
 
-  &__badge-row { @include flex-row(0.45rem); flex-wrap: wrap; }
+  &__badge-row {
+    @include flex-row(0.45rem);
+    flex-wrap: wrap;
+  }
 
   &__source-badge {
     @include badge-pill(0.15rem 0.5rem, 3px);
@@ -679,9 +1015,16 @@ export default defineComponent({
   &__confidence {
     @include mono-upper(var(--fs-xxs));
 
-    &--high   { color: var(--color-lime); }
-    &--medium { color: var(--color-amber); }
-    &--low    { color: var(--color-danger); opacity: var(--op-dim); }
+    &--high {
+      color: var(--color-lime);
+    }
+    &--medium {
+      color: var(--color-amber);
+    }
+    &--low {
+      color: var(--color-danger);
+      opacity: var(--op-dim);
+    }
   }
 
   &__applied-badge {
@@ -722,7 +1065,9 @@ export default defineComponent({
     font-weight: 600;
     align-self: center;
 
-    &--upper { text-transform: uppercase; }
+    &--upper {
+      text-transform: uppercase;
+    }
   }
 
   // ── Outcomes ───────────────────────────────────────────────────
@@ -753,15 +1098,27 @@ export default defineComponent({
     font-weight: 700;
     color: var(--color-text);
 
-    &--target     { color: var(--color-danger); }
-    &--healthy    { color: var(--color-lime); }
-    &--ti-strong  { color: var(--color-lime); }
-    &--ti-marginal{ color: var(--color-amber); }
-    &--ti-weak    { color: var(--color-text-muted); }
+    &--target {
+      color: var(--color-danger);
+    }
+    &--healthy {
+      color: var(--color-lime);
+    }
+    &--ti-strong {
+      color: var(--color-lime);
+    }
+    &--ti-marginal {
+      color: var(--color-amber);
+    }
+    &--ti-weak {
+      color: var(--color-text-muted);
+    }
   }
 
   // ── Apply button ───────────────────────────────────────────────
-  &__apply-row { display: flex; }
+  &__apply-row {
+    display: flex;
+  }
 
   &__apply-btn {
     flex: 1;
@@ -774,10 +1131,17 @@ export default defineComponent({
     font-family: var(--font-mono);
     font-weight: 600;
     cursor: pointer;
-    transition: background var(--tr-fast), border-color var(--tr-fast);
+    transition:
+      background var(--tr-fast),
+      border-color var(--tr-fast);
 
-    &:hover:not(:disabled) { background: color-mix(in srgb, var(--color-lime) 22%, transparent); }
-    &:disabled { opacity: var(--op-muted); cursor: not-allowed; }
+    &:hover:not(:disabled) {
+      background: color-mix(in srgb, var(--color-lime) 22%, transparent);
+    }
+    &:disabled {
+      opacity: var(--op-muted);
+      cursor: not-allowed;
+    }
 
     &--applied {
       background: color-mix(in srgb, var(--color-lime) 8%, transparent);
@@ -803,7 +1167,9 @@ export default defineComponent({
   }
 
   // ── Feature importance ─────────────────────────────────────────
-  &__importance { @include flex-col(0); }
+  &__importance {
+    @include flex-col(0);
+  }
 
   &__importance-toggle {
     @include flex-row(0.35rem);
@@ -817,7 +1183,9 @@ export default defineComponent({
     opacity: var(--op-partial);
     transition: opacity var(--tr-fast);
 
-    &:hover { opacity: 1; }
+    &:hover {
+      opacity: 1;
+    }
   }
 
   &__importance-chevron {
@@ -825,10 +1193,15 @@ export default defineComponent({
     transition: transform var(--tr-fast);
     display: inline-block;
 
-    &--open { transform: rotate(90deg); }
+    &--open {
+      transform: rotate(90deg);
+    }
   }
 
-  &__importance-body { @include flex-col(0.4rem); padding-top: 0.5rem; }
+  &__importance-body {
+    @include flex-col(0.4rem);
+    padding-top: 0.5rem;
+  }
 
   &__importance-title {
     @include mono-upper(var(--fs-xxs));
@@ -886,7 +1259,12 @@ export default defineComponent({
 }
 
 @keyframes ai-pulse {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.5; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 </style>

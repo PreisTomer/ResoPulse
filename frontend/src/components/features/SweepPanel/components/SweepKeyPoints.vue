@@ -3,68 +3,107 @@
   <table class="sweep-kp">
     <thead>
       <tr>
-        <th v-tip="keyPointTooltips.thresholdHeader">{{ $t('sweep.tableThreshold') }}</th>
+        <th v-tip="keyPointTooltips.thresholdHeader">
+          {{ $t("sweep.tableThreshold") }}
+        </th>
         <th v-tip="$t('sweep.tipThDrT')" v-html="$t('sweep.tableDrT')"></th>
         <th v-tip="$t('sweep.tipThDrH')" v-html="$t('sweep.tableDrH')"></th>
-        <th v-tip="keyPointTooltips.tiHeader">{{ $t('sweep.tableTI') }}</th>
-        <th v-tip="keyPointTooltips.tempHeader" v-html="$t('sweep.tableTemp')"></th>
+        <th v-tip="keyPointTooltips.tiHeader">{{ $t("sweep.tableTI") }}</th>
+        <th
+          v-tip="keyPointTooltips.tempHeader"
+          v-html="$t('sweep.tableTemp')"
+        ></th>
       </tr>
     </thead>
     <tbody>
       <tr v-for="kp in keyPoints" :key="kp.label">
-        <td class="sweep-kp__td-label" v-tip="keyPointTooltips.label(kp)">{{ kp.label }}</td>
+        <td class="sweep-kp__td-label" v-tip="keyPointTooltips.label(kp)">
+          {{ kp.label }}
+        </td>
         <td
-          :class="kp.drT >= 1 ? 'sweep-kp__td--danger' : kp.drT >= THRESHOLDS.DISRUPTION_WARN ? 'sweep-kp__td--warn' : ''"
+          :class="
+            kp.drT >= 1
+              ? 'sweep-kp__td--danger'
+              : kp.drT >= THRESHOLDS.DISRUPTION_WARN
+                ? 'sweep-kp__td--warn'
+                : ''
+          "
           v-tip="keyPointTooltips.drTarget(kp)"
-        >{{ kp.drT.toFixed(2) }}</td>
+        >
+          {{ kp.drT.toFixed(2) }}
+        </td>
         <td
-          :class="kp.drH >= THRESHOLDS.HEALTHY_APPROACHING ? 'sweep-kp__td--warn' : ''"
+          :class="
+            kp.drH >= THRESHOLDS.HEALTHY_APPROACHING ? 'sweep-kp__td--warn' : ''
+          "
           v-tip="keyPointTooltips.drHealthy(kp)"
-        >{{ kp.drH.toFixed(2) }}</td>
+        >
+          {{ kp.drH.toFixed(2) }}
+        </td>
         <td
-          :class="kp.ti >= THRESHOLDS.TI_STRONG ? 'sweep-kp__td--ok' : kp.ti >= THRESHOLDS.TI_MARGINAL ? 'sweep-kp__td--warn' : 'sweep-kp__td--danger'"
+          :class="
+            kp.ti >= THRESHOLDS.TI_STRONG
+              ? 'sweep-kp__td--ok'
+              : kp.ti >= THRESHOLDS.TI_MARGINAL
+                ? 'sweep-kp__td--warn'
+                : 'sweep-kp__td--danger'
+          "
           v-tip="keyPointTooltips.ti(kp)"
-        >{{ kp.ti.toFixed(2) }}×</td>
+        >
+          {{ kp.ti.toFixed(2) }}×
+        </td>
         <td
-          :class="kp.tT >= THRESHOLDS.TEMP_DENATURING ? 'sweep-kp__td--danger' : kp.tT >= THRESHOLDS.TEMP_WARN ? 'sweep-kp__td--warn' : ''"
+          :class="
+            kp.tT >= THRESHOLDS.TEMP_DENATURING
+              ? 'sweep-kp__td--danger'
+              : kp.tT >= THRESHOLDS.TEMP_WARN
+                ? 'sweep-kp__td--warn'
+                : ''
+          "
           v-tip="keyPointTooltips.temp(kp)"
-        >{{ kp.tT.toFixed(1) }}°C</td>
+        >
+          {{ kp.tT.toFixed(1) }}°C
+        </td>
       </tr>
     </tbody>
   </table>
 </template>
 
 <script lang="ts">
-import { defineComponent, type PropType } from 'vue'
+import { defineComponent, type PropType } from "vue";
 
-import { THRESHOLDS } from '@/constants/physics'
+import { THRESHOLDS } from "@/constants/physics";
 
-import { createSweepKeyPointTooltips } from '../lib'
+import { createSweepKeyPointTooltips } from "../lib";
 interface KeyPoint {
-  label: string; x: number; drH: number; drT: number; ti: number; tH: number; tT: number
+  label: string;
+  x: number;
+  drH: number;
+  drT: number;
+  ti: number;
+  tH: number;
+  tT: number;
 }
 
 export default defineComponent({
   props: {
-    keyPoints:  { type: Array as PropType<KeyPoint[]>, required: true },
-    sweepParam: { type: String as () => 'field' | 'freq', required: true },
+    keyPoints: { type: Array as PropType<KeyPoint[]>, required: true },
+    sweepParam: { type: String as () => "field" | "freq", required: true },
   },
 
   data() {
-    return { THRESHOLDS }
+    return { THRESHOLDS };
   },
 
   computed: {
     keyPointTooltips() {
-      return createSweepKeyPointTooltips(this.sweepParam)
+      return createSweepKeyPointTooltips(this.sweepParam);
     },
   },
-})
+});
 </script>
 
 <style lang="scss" scoped>
-
-
 .sweep-kp {
   width: 100%;
   border-collapse: collapse;
@@ -87,11 +126,23 @@ export default defineComponent({
     cursor: help;
   }
 
-  tr:last-child td { border-bottom: none; }
+  tr:last-child td {
+    border-bottom: none;
+  }
 
-  &__td-label  { color: var(--color-text-muted); font-family: inherit; font-size: var(--fs-sm); }
-  &__td--ok    { color: var(--color-lime); }
-  &__td--warn  { color: var(--color-amber); }
-  &__td--danger { color: var(--color-danger); }
+  &__td-label {
+    color: var(--color-text-muted);
+    font-family: inherit;
+    font-size: var(--fs-sm);
+  }
+  &__td--ok {
+    color: var(--color-lime);
+  }
+  &__td--warn {
+    color: var(--color-amber);
+  }
+  &__td--danger {
+    color: var(--color-danger);
+  }
 }
 </style>

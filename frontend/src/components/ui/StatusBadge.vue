@@ -4,14 +4,15 @@
     class="status-badge"
     :class="`status-badge--${variant}`"
     v-tip="tooltip || undefined"
-  >{{ label }}</span>
+    >{{ label }}</span
+  >
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue'
+import { defineComponent } from "vue";
 
 export default defineComponent({
-  name: 'StatusBadge',
+  name: "StatusBadge",
 
   props: {
     label: {
@@ -20,14 +21,14 @@ export default defineComponent({
     },
     variant: {
       type: String,
-      default: 'default',
+      default: "default",
     },
     tooltip: {
       type: String,
-      default: '',
+      default: "",
     },
   },
-})
+});
 </script>
 
 <style lang="scss" scoped>

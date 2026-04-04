@@ -10,14 +10,20 @@
     fadeDuration="var(--tr-slow)"
     @close="$emit(EMIT.CLOSE)"
   >
-
     <!-- Header -->
     <div class="bsm__header">
       <div class="bsm__header-text">
-        <div class="bsm__title">{{ $t('instrument.bridgeModal.title') }}</div>
-        <div class="bsm__subtitle">{{ $t('instrument.bridgeModal.subtitle') }}</div>
+        <div class="bsm__title">{{ $t("instrument.bridgeModal.title") }}</div>
+        <div class="bsm__subtitle">
+          {{ $t("instrument.bridgeModal.subtitle") }}
+        </div>
       </div>
-      <button class="bsm__close" @click="$emit(EMIT.CLOSE)" type="button" :title="$t('instrument.bridgeModal.close')">
+      <button
+        class="bsm__close"
+        @click="$emit(EMIT.CLOSE)"
+        type="button"
+        :title="$t('instrument.bridgeModal.close')"
+      >
         {{ ICON.CLOSE }}
       </button>
     </div>
@@ -41,42 +47,49 @@
 
     <!-- Tab body -->
     <div class="bsm__body">
-      <BsmTabPane :pane="activePane" :copiedKey="copiedKey" @copy="copyCommand" />
+      <BsmTabPane
+        :pane="activePane"
+        :copiedKey="copiedKey"
+        @copy="copyCommand"
+      />
     </div>
 
     <!-- Footer -->
     <div class="bsm__footer">
-      {{ ICON.INFO }} {{ $t('instrument.bridgeModal.footer') }}
+      {{ ICON.INFO }} {{ $t("instrument.bridgeModal.footer") }}
     </div>
-
   </ModalShell>
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue'
+import { defineComponent } from "vue";
 
-import { ModalShell } from '@/components/ui'
+import { ModalShell } from "@/components/ui";
 
-import { ICON } from '@/constants/icons'
-import { EMIT } from '@/constants/emitEvents'
+import { ICON } from "@/constants/icons";
+import { EMIT } from "@/constants/emitEvents";
 
-import BsmTabPane from './components/BsmTabPane.vue'
-import { BSM_TAB_PANES, type BsmPaneConfig, type BsmTabKey } from './lib/bsmTabConfigs'
+import BsmTabPane from "./components/BsmTabPane.vue";
+import {
+  BSM_TAB_PANES,
+  type BsmPaneConfig,
+  type BsmTabKey,
+} from "./lib/bsmTabConfigs";
 
 interface Tab {
-  key:  BsmTabKey
-  icon: string
+  key: BsmTabKey;
+  icon: string;
 }
 
 const TABS: Tab[] = [
-  { key: 'quick',  icon: ICON.LIGHTNING },
-  { key: 'btx',    icon: ICON.PLUG },
-  { key: 'visa',   icon: ICON.PLUG },
-  { key: 'serial', icon: ICON.PLUG },
-]
+  { key: "quick", icon: ICON.LIGHTNING },
+  { key: "btx", icon: ICON.PLUG },
+  { key: "visa", icon: ICON.PLUG },
+  { key: "serial", icon: ICON.PLUG },
+];
 
 export default defineComponent({
-  name: 'BridgeSetupModal',
+  name: "BridgeSetupModal",
 
   components: { ModalShell, BsmTabPane },
 
@@ -88,10 +101,10 @@ export default defineComponent({
 
   data() {
     return {
-      activeTab: 'quick' as BsmTabKey,
+      activeTab: "quick" as BsmTabKey,
       copiedKey: null as string | null,
       copyTimer: null as ReturnType<typeof setTimeout> | null,
-    }
+    };
   },
 
   computed: {
@@ -99,15 +112,15 @@ export default defineComponent({
     EMIT: () => EMIT,
     TABS: () => TABS,
     activePane(): BsmPaneConfig {
-      return BSM_TAB_PANES[this.activeTab]
+      return BSM_TAB_PANES[this.activeTab];
     },
   },
 
   watch: {
     visible(isNowVisible: boolean) {
       if (isNowVisible) {
-        this.activeTab = 'quick'
-        this.copiedKey = null
+        this.activeTab = "quick";
+        this.copiedKey = null;
       }
     },
   },
@@ -115,15 +128,15 @@ export default defineComponent({
   methods: {
     copyCommand(text: string): void {
       navigator.clipboard.writeText(text).then(() => {
-        if (this.copyTimer) clearTimeout(this.copyTimer)
-        this.copiedKey = text
+        if (this.copyTimer) clearTimeout(this.copyTimer);
+        this.copiedKey = text;
         this.copyTimer = setTimeout(() => {
-          this.copiedKey = null
-        }, 1500)
-      })
+          this.copiedKey = null;
+        }, 1500);
+      });
     },
   },
-})
+});
 </script>
 
 <style lang="scss" scoped>
@@ -132,10 +145,10 @@ export default defineComponent({
 
   &__header {
     @include flex-between();
-    padding:       1.1rem 1.4rem 1rem;
+    padding: 1.1rem 1.4rem 1rem;
     border-bottom: 1px solid var(--color-border);
-    gap:           0.75rem;
-    flex-shrink:   0;
+    gap: 0.75rem;
+    flex-shrink: 0;
   }
 
   &__header-text {
@@ -144,29 +157,34 @@ export default defineComponent({
   }
 
   &__title {
-    font-size:   var(--fs-xl);
+    font-size: var(--fs-xl);
     font-weight: 600;
-    color:       var(--color-text);
+    color: var(--color-text);
   }
 
   &__subtitle {
-    font-size:   var(--fs-sm);
-    color:       var(--color-text-muted);
+    font-size: var(--fs-sm);
+    color: var(--color-text-muted);
     line-height: 1.4;
   }
 
   &__close {
-    background:    transparent;
-    border:        none;
-    color:         var(--color-text-muted);
-    font-size:     1rem;
-    cursor:        pointer;
-    padding:       0.25rem 0.4rem;
+    background: transparent;
+    border: none;
+    color: var(--color-text-muted);
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 0.25rem 0.4rem;
     border-radius: var(--radius);
-    flex-shrink:   0;
-    transition:    color var(--tr-fast), background var(--tr-fast);
+    flex-shrink: 0;
+    transition:
+      color var(--tr-fast),
+      background var(--tr-fast);
 
-    &:hover { color: var(--color-text); background: var(--color-surface-2); }
+    &:hover {
+      color: var(--color-text);
+      background: var(--color-surface-2);
+    }
   }
 
   // ── Tab bar ───────────────────────────────────────────────────────────────
@@ -174,53 +192,57 @@ export default defineComponent({
   &__tabs {
     @include flex-row(0);
     border-bottom: 1px solid var(--color-border);
-    padding:       0 1.4rem;
-    flex-shrink:   0;
-    overflow-x:    auto;
+    padding: 0 1.4rem;
+    flex-shrink: 0;
+    overflow-x: auto;
   }
 
   &__tab-btn {
     @include flex-row(0.3rem);
-    background:    transparent;
-    border:        none;
+    background: transparent;
+    border: none;
     border-bottom: 2px solid transparent;
-    color:         var(--color-text-muted);
-    font-size:     var(--fs-sm);
-    padding:       0.55rem 0.85rem;
-    cursor:        pointer;
-    white-space:   nowrap;
-    transition:    color var(--tr-fast), border-color var(--tr-fast);
+    color: var(--color-text-muted);
+    font-size: var(--fs-sm);
+    padding: 0.55rem 0.85rem;
+    cursor: pointer;
+    white-space: nowrap;
+    transition:
+      color var(--tr-fast),
+      border-color var(--tr-fast);
     margin-bottom: -1px;
 
-    &:hover { color: var(--color-text); }
+    &:hover {
+      color: var(--color-text);
+    }
 
     &--active {
-      color:        var(--color-primary);
+      color: var(--color-primary);
       border-color: var(--color-primary);
     }
   }
 
   &__tab-icon {
     font-size: var(--fs-xs);
-    opacity:   var(--op-dim);
+    opacity: var(--op-dim);
   }
 
   // ── Scrollable body ───────────────────────────────────────────────────────
 
   &__body {
     overflow-y: auto;
-    flex:       1;
-    padding:    1.25rem 1.4rem;
+    flex: 1;
+    padding: 1.25rem 1.4rem;
   }
 
   // ── Footer ────────────────────────────────────────────────────────────────
 
   &__footer {
     @include flex-row(0.4rem);
-    border-top:  1px solid var(--color-border);
-    padding:     0.7rem 1.4rem;
-    font-size:   var(--fs-xs);
-    color:       var(--color-text-muted);
+    border-top: 1px solid var(--color-border);
+    padding: 0.7rem 1.4rem;
+    font-size: var(--fs-xs);
+    color: var(--color-text-muted);
     font-family: var(--font-mono);
     flex-shrink: 0;
   }
@@ -228,10 +250,18 @@ export default defineComponent({
   // ── Responsive ────────────────────────────────────────────────────────────
 
   @media (max-width: 768px) {
-    &__header { padding: 0.9rem 1rem 0.8rem; }
-    &__tabs   { padding: 0 1rem; }
-    &__body   { padding: 1rem; }
-    &__footer { padding: 0.6rem 1rem; }
+    &__header {
+      padding: 0.9rem 1rem 0.8rem;
+    }
+    &__tabs {
+      padding: 0 1rem;
+    }
+    &__body {
+      padding: 1rem;
+    }
+    &__footer {
+      padding: 0.6rem 1rem;
+    }
   }
 }
 </style>

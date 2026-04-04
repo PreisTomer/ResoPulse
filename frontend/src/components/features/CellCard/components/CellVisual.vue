@@ -1,14 +1,27 @@
 <!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
 <template>
-  <div v-if="cellData" :class="['cell-visual', { 'cell-visual--lysed': cellState === CELL_STATE.LYSED }]">
-
+  <div
+    v-if="cellData"
+    :class="[
+      'cell-visual',
+      { 'cell-visual--lysed': cellState === CELL_STATE.LYSED },
+    ]"
+  >
     <div ref="cellCanvas" class="cell-visual__canvas"></div>
 
     <!-- Oscilloscope readout divider (Vm / disruption %) -->
     <div v-if="!compact" class="cell-visual__osc-divider">
-      <span class="cell-visual__osc-label" v-tip="tipVmLocal">OSC · {{ vmDisplay }}</span>
-      <span v-if="disruptionRatio > 0.05" class="cell-visual__osc-impact" :class="`cell-visual__osc-impact--${type}`" v-tip="tipDisruption">
-        {{ ICON.LIGHTNING }} {{ (disruptionRatio * 100).toFixed(0) }}% disruption
+      <span class="cell-visual__osc-label" v-tip="tipVmLocal"
+        >OSC · {{ vmDisplay }}</span
+      >
+      <span
+        v-if="disruptionRatio > 0.05"
+        class="cell-visual__osc-impact"
+        :class="`cell-visual__osc-impact--${type}`"
+        v-tip="tipDisruption"
+      >
+        {{ ICON.LIGHTNING }} {{ (disruptionRatio * 100).toFixed(0) }}%
+        disruption
       </span>
     </div>
 
@@ -24,12 +37,17 @@
           class="cell-visual__nuclear-bar-fill"
           :style="{ width: Math.min(100, nuclearDisruptionRatio * 100) + '%' }"
           :class="{
-            'cell-visual__nuclear-bar-fill--caution': nuclearDisruptionRatio >= THRESHOLDS.HEALTHY_APPROACHING && nuclearDisruptionRatio < THRESHOLDS.DISRUPTION_WARN,
-            'cell-visual__nuclear-bar-fill--warn':    nuclearDisruptionRatio >= THRESHOLDS.DISRUPTION_WARN,
+            'cell-visual__nuclear-bar-fill--caution':
+              nuclearDisruptionRatio >= THRESHOLDS.HEALTHY_APPROACHING &&
+              nuclearDisruptionRatio < THRESHOLDS.DISRUPTION_WARN,
+            'cell-visual__nuclear-bar-fill--warn':
+              nuclearDisruptionRatio >= THRESHOLDS.DISRUPTION_WARN,
           }"
         ></div>
       </div>
-      <span class="cell-visual__nuclear-bar-pct">{{ (nuclearDisruptionRatio * 100).toFixed(0) }}%</span>
+      <span class="cell-visual__nuclear-bar-pct"
+        >{{ (nuclearDisruptionRatio * 100).toFixed(0) }}%</span
+      >
     </div>
 
     <div ref="oscCanvas" class="cell-visual__osc-canvas"></div>
@@ -37,18 +55,41 @@
     <!-- Compact sticky strip (replaces verbose data strips in live-view mode) -->
     <div v-if="compact" class="cell-visual__compact-strip">
       <div class="cell-visual__compact-top">
-        <span :class="['cell-visual__compact-badge', `cell-visual__compact-badge--${type}`]">
-          {{ type === CELL_TYPE.HEALTHY ? 'H' : 'T' }}
+        <span
+          :class="[
+            'cell-visual__compact-badge',
+            `cell-visual__compact-badge--${type}`,
+          ]"
+        >
+          {{ type === CELL_TYPE.HEALTHY ? "H" : "T" }}
         </span>
-        <span :class="['cell-visual__compact-dr', `cell-visual__compact-dr--${cellState}`]">
+        <span
+          :class="[
+            'cell-visual__compact-dr',
+            `cell-visual__compact-dr--${cellState}`,
+          ]"
+        >
           DR&nbsp;{{ (disruptionRatio * 100).toFixed(0) }}%
         </span>
         <span class="cell-visual__compact-sep">·</span>
-        <span class="cell-visual__compact-temp">{{ temperature.toFixed(1) }}{{ UNIT.DEG_C }}</span>
+        <span class="cell-visual__compact-temp"
+          >{{ temperature.toFixed(1) }}{{ UNIT.DEG_C }}</span
+        >
       </div>
       <div class="cell-visual__compact-bottom">
-        <span :class="['cell-visual__compact-dot', `cell-visual__compact-dot--${cellState}`]">{{ ICON.DOT }}</span>
-        <span :class="['cell-visual__compact-state', `cell-visual__compact-state--${cellState}`]">
+        <span
+          :class="[
+            'cell-visual__compact-dot',
+            `cell-visual__compact-dot--${cellState}`,
+          ]"
+          >{{ ICON.DOT }}</span
+        >
+        <span
+          :class="[
+            'cell-visual__compact-state',
+            `cell-visual__compact-state--${cellState}`,
+          ]"
+        >
           {{ compactStateLabel }}
         </span>
       </div>
@@ -73,8 +114,12 @@
       v-tip="tipStateLocal"
     >
       <span class="cell-visual__warn-icon">{{ ICON.NOURISH }}</span>
-      <span class="cell-visual__warn-text">{{ $t('cells.states.nourishing', { bms: (biostimScore * 100).toFixed(0) }) }}</span>
-      <span class="cell-visual__warn-pct">{{ (disruptionRatio * 100).toFixed(0) }}%</span>
+      <span class="cell-visual__warn-text">{{
+        $t("cells.states.nourishing", { bms: (biostimScore * 100).toFixed(0) })
+      }}</span>
+      <span class="cell-visual__warn-pct"
+        >{{ (disruptionRatio * 100).toFixed(0) }}%</span
+      >
     </div>
 
     <!-- Biomodulation panel (healthy cell only, sub-threshold) -->
@@ -88,7 +133,9 @@
       :freq-k-hz="cellStore.currentBroadcastFrequency"
       :fc-k-hz="cellStore.healthyFc"
       :steady-state-temp="cellStore.healthySteadyStateTemp"
-      :class="{ 'cell-visual__biostim--nourishing': cellState === CELL_STATE.NOURISHING }"
+      :class="{
+        'cell-visual__biostim--nourishing': cellState === CELL_STATE.NOURISHING,
+      }"
     />
 
     <!-- Reversible EP strip (target, 50–85%, Weaver & Chizmadzhev 1996) -->
@@ -98,9 +145,13 @@
       v-tip="tipDisruption"
     >
       <span class="cell-visual__warn-icon">{{ ICON.LIGHTNING }}</span>
-      <span class="cell-visual__warn-text">{{ $t('cells.states.revEp') }}</span>
-      <span class="cell-visual__warn-pct">{{ (disruptionRatio * 100).toFixed(0) }}%</span>
-      <span class="cell-visual__reseal-time">{{ $t('cells.states.resealTime', { s: resealingTimeDisplay }) }}</span>
+      <span class="cell-visual__warn-text">{{ $t("cells.states.revEp") }}</span>
+      <span class="cell-visual__warn-pct"
+        >{{ (disruptionRatio * 100).toFixed(0) }}%</span
+      >
+      <span class="cell-visual__reseal-time">{{
+        $t("cells.states.resealTime", { s: resealingTimeDisplay })
+      }}</span>
     </div>
 
     <!-- Lysis armed strip (target >85%, IRE protocol imminent) -->
@@ -110,31 +161,56 @@
       v-tip="tipDisruption"
     >
       <span class="cell-visual__warn-icon">{{ ICON.LYSIS_BOLT }}</span>
-      <span class="cell-visual__warn-text">{{ $t('cells.states.lysisArmed', { protocol: lysisProtocolStr }) }}</span>
-      <span class="cell-visual__warn-pct">{{ (disruptionRatio * 100).toFixed(0) }}%</span>
+      <span class="cell-visual__warn-text">{{
+        $t("cells.states.lysisArmed", { protocol: lysisProtocolStr })
+      }}</span>
+      <span class="cell-visual__warn-pct"
+        >{{ (disruptionRatio * 100).toFixed(0) }}%</span
+      >
     </div>
 
     <!-- Structural integrity countdown (drains 100→0% as lysis timer runs) -->
-    <div v-if="lysisIntegrityPct !== null" class="cell-visual__integrity-bar-row">
-      <span class="cell-visual__integrity-label">{{ $t('cells.integrityLabel') }}</span>
+    <div
+      v-if="lysisIntegrityPct !== null"
+      class="cell-visual__integrity-bar-row"
+    >
+      <span class="cell-visual__integrity-label">{{
+        $t("cells.integrityLabel")
+      }}</span>
       <div class="cell-visual__integrity-track">
-        <div class="cell-visual__integrity-fill" :style="{ width: lysisIntegrityPct + '%' }"></div>
+        <div
+          class="cell-visual__integrity-fill"
+          :style="{ width: lysisIntegrityPct + '%' }"
+        ></div>
       </div>
-      <span class="cell-visual__integrity-pct">{{ lysisIntegrityPct.toFixed(0) }}%</span>
+      <span class="cell-visual__integrity-pct"
+        >{{ lysisIntegrityPct.toFixed(0) }}%</span
+      >
     </div>
 
     <!-- Healthy EP risk strip (approaching / critical states) -->
     <div
       v-if="isHealthyEpRiskVisible"
       class="cell-visual__healthy-warn"
-      :class="{ 'cell-visual__healthy-warn--critical': cellState === CELL_STATE.CRITICAL }"
+      :class="{
+        'cell-visual__healthy-warn--critical':
+          cellState === CELL_STATE.CRITICAL,
+      }"
       v-tip="tipStateLocal"
     >
-      <span class="cell-visual__warn-icon">{{ cellState === CELL_STATE.CRITICAL ? ICON.LIGHTNING : ICON.WARNING }}</span>
+      <span class="cell-visual__warn-icon">{{
+        cellState === CELL_STATE.CRITICAL ? ICON.LIGHTNING : ICON.WARNING
+      }}</span>
       <span class="cell-visual__warn-text">
-        {{ cellState === CELL_STATE.CRITICAL ? $t('cells.states.critical') : $t('cells.states.approaching') }}
+        {{
+          cellState === CELL_STATE.CRITICAL
+            ? $t("cells.states.critical")
+            : $t("cells.states.approaching")
+        }}
       </span>
-      <span class="cell-visual__warn-pct">{{ (disruptionRatio * 100).toFixed(0) }}%</span>
+      <span class="cell-visual__warn-pct"
+        >{{ (disruptionRatio * 100).toFixed(0) }}%</span
+      >
     </div>
 
     <!-- Thermal warning strip (both cell types) -->
@@ -144,61 +220,91 @@
       :class="{ 'cell-visual__thermal-warn--denaturing': tempDenaturing }"
       v-tip="tipTempLocal"
     >
-      <span class="cell-visual__warn-icon">{{ tempDenaturing ? ICON.LIGHTNING : ICON.WARNING }}</span>
+      <span class="cell-visual__warn-icon">{{
+        tempDenaturing ? ICON.LIGHTNING : ICON.WARNING
+      }}</span>
       <span class="cell-visual__warn-text">
-        {{ tempDenaturing ? $t('cells.states.thermalCritical') : $t('cells.states.thermalWarning') }}
+        {{
+          tempDenaturing
+            ? $t("cells.states.thermalCritical")
+            : $t("cells.states.thermalWarning")
+        }}
       </span>
-      <span class="cell-visual__warn-pct">{{ temperature.toFixed(0) }}{{ UNIT.DEG_C }}</span>
+      <span class="cell-visual__warn-pct"
+        >{{ temperature.toFixed(0) }}{{ UNIT.DEG_C }}</span
+      >
     </div>
 
     <!-- Lysis overlay (absolute, no card height shift) -->
     <div v-if="cellState === CELL_STATE.LYSED" class="cell-visual__destroyed">
-      <span class="cell-visual__destroyed-text">{{ thermalLysis ? $t('cells.states.thermalLysis') : $t('cells.states.membraneLysed') }}</span>
-      <span v-if="thermalLysis" class="cell-visual__destroyed-sub">{{ $t('cells.states.vaporized') }}</span>
+      <span class="cell-visual__destroyed-text">{{
+        thermalLysis
+          ? $t("cells.states.thermalLysis")
+          : $t("cells.states.membraneLysed")
+      }}</span>
+      <span v-if="thermalLysis" class="cell-visual__destroyed-sub">{{
+        $t("cells.states.vaporized")
+      }}</span>
       <div class="cell-visual__reset-row">
-        <button class="cell-visual__lysis-btn" v-tip="$t('cells.states.tipResetCell')" @click.stop="resetToStable">{{ $t('cells.states.resetCell') }}</button>
-        <button class="cell-visual__lysis-btn cell-visual__lysis-btn--full" v-tip="$t('cells.states.tipResetCellFull')" @click.stop="resetToSafeDefaults">{{ $t('cells.states.resetCellFull') }}</button>
+        <button
+          class="cell-visual__lysis-btn"
+          v-tip="$t('cells.states.tipResetCell')"
+          @click.stop="resetToStable"
+        >
+          {{ $t("cells.states.resetCell") }}
+        </button>
+        <button
+          class="cell-visual__lysis-btn cell-visual__lysis-btn--full"
+          v-tip="$t('cells.states.tipResetCellFull')"
+          @click.stop="resetToSafeDefaults"
+        >
+          {{ $t("cells.states.resetCellFull") }}
+        </button>
       </div>
     </div>
-
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue'
-import type { PropType } from 'vue'
-import { mapStores } from 'pinia'
+import { defineComponent } from "vue";
+import type { PropType } from "vue";
+import { mapStores } from "pinia";
 
-import * as d3 from 'd3'
+import * as d3 from "d3";
 
-import { useCellStore } from '@/stores/cellStore'
-import { useExperimentStore } from '@/stores/experimentStore'
-import { useImpedanceStore } from '@/stores/impedanceStore'
+import { useCellStore } from "@/stores/cellStore";
+import { useExperimentStore } from "@/stores/experimentStore";
+import { useImpedanceStore } from "@/stores/impedanceStore";
 
-import { broadcastLogEntry } from '@/services/socket'
-import { sonification } from '@/services/sonification'
+import { broadcastLogEntry } from "@/services/socket";
+import { sonification } from "@/services/sonification";
 
-import { formatLysisTimeLocal, tipNuclearBar as tipNuclearBarFn, tipDep as tipDepFn, tipDisruption as tipDisruptionFn } from '@/tooltips/cellCardTooltips'
-import { hideTip } from '@/directives/vTooltip'
+import {
+  formatLysisTimeLocal,
+  tipNuclearBar as tipNuclearBarFn,
+  tipDep as tipDepFn,
+  tipDisruption as tipDisruptionFn,
+} from "@/tooltips/cellCardTooltips";
+import { hideTip } from "@/directives/vTooltip";
 
-import { CELL_PRESETS } from '@/constants/cellLibrary'
+import { CELL_PRESETS } from "@/constants/cellLibrary";
 import {
   CELL_COLORS,
   THRESHOLDS,
   LYSIS_DURATION_MS,
   FRAGMENT_INTERVAL_MS,
-} from '@/constants/cellCard'
-import { CELL_STATE, CELL_TYPE, CELL_CATEGORY } from '@/constants/strings'
-import { ICON } from '@/constants/icons'
-import { UNIT } from '@/constants/units'
-import { EMIT } from '@/constants/emitEvents'
+} from "@/constants/cellCard";
+import { CELL_STATE, CELL_TYPE, CELL_CATEGORY } from "@/constants/strings";
+import { ICON } from "@/constants/icons";
+import { UNIT } from "@/constants/units";
+import { EMIT } from "@/constants/emitEvents";
 
-import type { CellConfig, CellRecord } from '@/types/cell'
-import type { CellState } from '@/types/cell'
+import type { CellConfig, CellRecord } from "@/types/cell";
+import type { CellState } from "@/types/cell";
 
-import { setupBlobAnimation, setupOscilloscope, spawnFragment } from '../lib'
-import type { CellVisualProfile } from '../lib'
-import BiostimPanel from './BiostimPanel.vue'
+import { setupBlobAnimation, setupOscilloscope, spawnFragment } from "../lib";
+import type { CellVisualProfile } from "../lib";
+import BiostimPanel from "./BiostimPanel.vue";
 import {
   buildStateTooltip,
   buildTempDisplay,
@@ -210,64 +316,90 @@ import {
   getTempFlags,
   isAcousticTargetCell,
   pulseEnvelopeFactorByCellType,
-} from '../lib'
+} from "../lib";
 
 export default defineComponent({
   components: { BiostimPanel },
   emits: [EMIT.STABLE_RESET, EMIT.FULL_RESET, EMIT.THERMAL_LYSIS],
 
   props: {
-    type:     { type: String as PropType<'healthy' | 'target'>, required: true },
-    compact:  { type: Boolean, default: false },
+    type: { type: String as PropType<"healthy" | "target">, required: true },
+    compact: { type: Boolean, default: false },
     cellData: { type: Object as PropType<CellRecord | null>, default: null },
   },
 
   data() {
     return {
-      liveAmplitude:        this.cellData?.amplitude ?? 0.8,
-      cellState:            CELL_STATE.STABLE as CellState,
-      shatterPending:       false,
-      thermalLysis:         false,
+      liveAmplitude: this.cellData?.amplitude ?? 0.8,
+      cellState: CELL_STATE.STABLE as CellState,
+      shatterPending: false,
+      thermalLysis: false,
       lysisProgressElapsed: 0,
-      helixTimer:           null as d3.Timer | null,
-      oscTimer:             null as d3.Timer | null,
-      particleInterval:     null as ReturnType<typeof setInterval> | null,
-      shatterTimeout:       null as ReturnType<typeof setTimeout> | null,
-      shatterDelayTimeout:  null as ReturnType<typeof setTimeout> | null,
-      progressInterval:     null as ReturnType<typeof setInterval> | null,
-    }
+      helixTimer: null as d3.Timer | null,
+      oscTimer: null as d3.Timer | null,
+      particleInterval: null as ReturnType<typeof setInterval> | null,
+      shatterTimeout: null as ReturnType<typeof setTimeout> | null,
+      shatterDelayTimeout: null as ReturnType<typeof setTimeout> | null,
+      progressInterval: null as ReturnType<typeof setInterval> | null,
+    };
   },
 
   computed: {
     ...mapStores(useCellStore, useExperimentStore, useImpedanceStore),
-    CELL_STATE() { return CELL_STATE },
-    CELL_TYPE()  { return CELL_TYPE },
-    ICON()       { return ICON },
-    UNIT()       { return UNIT },
-    THRESHOLDS() { return THRESHOLDS },
-
-    isAcousticTarget(): boolean {
-      return isAcousticTargetCell(this.type, this.cellStore.targetCellCategory, this.cellStore.target)
+    CELL_STATE() {
+      return CELL_STATE;
+    },
+    CELL_TYPE() {
+      return CELL_TYPE;
+    },
+    ICON() {
+      return ICON;
+    },
+    UNIT() {
+      return UNIT;
+    },
+    THRESHOLDS() {
+      return THRESHOLDS;
     },
 
-    accentColor(): string { return CELL_COLORS[this.type].accent },
+    isAcousticTarget(): boolean {
+      return isAcousticTargetCell(
+        this.type,
+        this.cellStore.targetCellCategory,
+        this.cellStore.target,
+      );
+    },
+
+    accentColor(): string {
+      return CELL_COLORS[this.type].accent;
+    },
 
     disruptionRatio(): number {
       return this.type === CELL_TYPE.HEALTHY
         ? this.cellStore.healthyDisruptionRatio
-        : this.cellStore.targetDisruptionRatio
+        : this.cellStore.targetDisruptionRatio;
     },
 
     temperature(): number {
-      return this.type === CELL_TYPE.HEALTHY ? this.cellStore.healthyTemp : this.cellStore.targetTemp
+      return this.type === CELL_TYPE.HEALTHY
+        ? this.cellStore.healthyTemp
+        : this.cellStore.targetTemp;
     },
 
     vm(): number {
-      return (this.type === CELL_TYPE.HEALTHY ? this.cellStore.healthyVm : this.cellStore.targetVm) * 1000
+      return (
+        (this.type === CELL_TYPE.HEALTHY
+          ? this.cellStore.healthyVm
+          : this.cellStore.targetVm) * 1000
+      );
     },
 
     currentCell(): CellConfig {
-      return cellByType(this.type, this.cellStore.healthy, this.cellStore.target)
+      return cellByType(
+        this.type,
+        this.cellStore.healthy,
+        this.cellStore.target,
+      );
     },
 
     effectiveThresholdVoltage(): number {
@@ -278,7 +410,7 @@ export default defineComponent({
         this.cellStore.healthyTemp,
         this.cellStore.targetTemp,
         this.cellStore.waveform,
-      )
+      );
     },
 
     pulseEnvelopeFactor(): number {
@@ -286,121 +418,178 @@ export default defineComponent({
         this.type,
         this.cellStore.pulseEnvelopeFactorHealthy,
         this.cellStore.pulseEnvelopeFactorTarget,
-      )
+      );
     },
 
     vmDisplay(): string {
-      return buildVmDisplay(this.isAcousticTarget, this.disruptionRatio, this.vm)
+      return buildVmDisplay(
+        this.isAcousticTarget,
+        this.disruptionRatio,
+        this.vm,
+      );
     },
 
-    tempDisplay(): string { return buildTempDisplay(this.temperature) },
-    tempFlags() { return getTempFlags(this.temperature) },
-    tempWarning():   boolean { return this.tempFlags.tempWarning },
-    tempDenaturing(): boolean { return this.tempFlags.tempDenaturing },
-    tempVaporizing(): boolean { return this.tempFlags.tempVaporizing },
+    tempDisplay(): string {
+      return buildTempDisplay(this.temperature);
+    },
+    tempFlags() {
+      return getTempFlags(this.temperature);
+    },
+    tempWarning(): boolean {
+      return this.tempFlags.tempWarning;
+    },
+    tempDenaturing(): boolean {
+      return this.tempFlags.tempDenaturing;
+    },
+    tempVaporizing(): boolean {
+      return this.tempFlags.tempVaporizing;
+    },
 
     hasNuclearParams(): boolean {
-      return !!this.currentCell.nuclearRadius
+      return !!this.currentCell.nuclearRadius;
     },
 
     nuclearDisruptionRatio(): number {
       return this.type === CELL_TYPE.HEALTHY
         ? this.cellStore.healthyNuclearDisruptionRatio
-        : this.cellStore.targetNuclearDisruptionRatio
+        : this.cellStore.targetNuclearDisruptionRatio;
     },
 
     lysisIntegrityPct(): number | null {
-      if (this.type !== CELL_TYPE.TARGET || !this.shatterPending) return null
-      const delay = this.cellStore.lysisDelayMs
-      if (delay <= 0) return 0
-      return Math.max(0, 100 - (this.lysisProgressElapsed / delay) * 100)
+      if (this.type !== CELL_TYPE.TARGET || !this.shatterPending) return null;
+      const delay = this.cellStore.lysisDelayMs;
+      if (delay <= 0) return 0;
+      return Math.max(0, 100 - (this.lysisProgressElapsed / delay) * 100);
     },
 
     compactStateLabel(): string {
       const keyMap: Record<string, string> = {
-        [CELL_STATE.STABLE]:      'stable',
-        [CELL_STATE.NOURISHING]:  'nourishing',
-        [CELL_STATE.APPROACHING]: 'approaching',
-        [CELL_STATE.REV_EP]:      'revEp',
-        [CELL_STATE.CRITICAL]:    'critical',
-        [CELL_STATE.VIBRATING]:   'vibrating',
-        [CELL_STATE.LYSING]:      'lysing',
-        [CELL_STATE.LYSED]:       'lysed',
-      }
-      const key = keyMap[this.cellState]
-      return key ? (this.$t(`cells.compactStates.${key}`) as string) : ''
+        [CELL_STATE.STABLE]: "stable",
+        [CELL_STATE.NOURISHING]: "nourishing",
+        [CELL_STATE.APPROACHING]: "approaching",
+        [CELL_STATE.REV_EP]: "revEp",
+        [CELL_STATE.CRITICAL]: "critical",
+        [CELL_STATE.VIBRATING]: "vibrating",
+        [CELL_STATE.LYSING]: "lysing",
+        [CELL_STATE.LYSED]: "lysed",
+      };
+      const key = keyMap[this.cellState];
+      return key ? (this.$t(`cells.compactStates.${key}`) as string) : "";
     },
 
     cellColor(): string {
-      const { interpFrom, interpTo } = CELL_COLORS[this.type]
-      return d3.interpolateRgb(interpFrom, interpTo)(Math.min(1, this.disruptionRatio))
+      const { interpFrom, interpTo } = CELL_COLORS[this.type];
+      return d3.interpolateRgb(
+        interpFrom,
+        interpTo,
+      )(Math.min(1, this.disruptionRatio));
     },
 
-    biostimScore(): number { return this.cellStore.healthyBiomodScore },
+    biostimScore(): number {
+      return this.cellStore.healthyBiomodScore;
+    },
 
     showBiostim(): boolean {
-      return this.type === CELL_TYPE.HEALTHY
-        && this.disruptionRatio < THRESHOLDS.NOURISHING
-        && this.cellState !== CELL_STATE.LYSED
-        && this.cellState !== CELL_STATE.LYSING
+      return (
+        this.type === CELL_TYPE.HEALTHY &&
+        this.disruptionRatio < THRESHOLDS.NOURISHING &&
+        this.cellState !== CELL_STATE.LYSED &&
+        this.cellState !== CELL_STATE.LYSING
+      );
     },
 
-    isNuclearBarVisible(): boolean   { return !this.compact && this.cellStore.doubleShellEnabled && this.hasNuclearParams },
-    isDepStripVisible(): boolean     { return !this.compact && this.showDepStrip },
-    isNourishingStripVisible(): boolean { return !this.compact && this.type === CELL_TYPE.HEALTHY && this.cellState === CELL_STATE.NOURISHING },
-    isBiostimPanelVisible(): boolean { return !this.compact && this.showBiostim },
-    isRevEpStripVisible(): boolean   { return this.type === CELL_TYPE.TARGET && this.cellState === CELL_STATE.REV_EP },
-    isLysisArmedVisible(): boolean   { return this.type === CELL_TYPE.TARGET && this.cellState === CELL_STATE.VIBRATING },
-    isHealthyEpRiskVisible(): boolean {
-      return !this.compact
-        && this.type === CELL_TYPE.HEALTHY
-        && (this.cellState === CELL_STATE.APPROACHING || this.cellState === CELL_STATE.CRITICAL)
-        && !this.tempWarning
+    isNuclearBarVisible(): boolean {
+      return (
+        !this.compact &&
+        this.cellStore.doubleShellEnabled &&
+        this.hasNuclearParams
+      );
     },
-    isThermalWarnVisible(): boolean  { return this.tempWarning && this.cellState !== CELL_STATE.LYSED && this.cellState !== CELL_STATE.LYSING },
+    isDepStripVisible(): boolean {
+      return !this.compact && this.showDepStrip;
+    },
+    isNourishingStripVisible(): boolean {
+      return (
+        !this.compact &&
+        this.type === CELL_TYPE.HEALTHY &&
+        this.cellState === CELL_STATE.NOURISHING
+      );
+    },
+    isBiostimPanelVisible(): boolean {
+      return !this.compact && this.showBiostim;
+    },
+    isRevEpStripVisible(): boolean {
+      return (
+        this.type === CELL_TYPE.TARGET && this.cellState === CELL_STATE.REV_EP
+      );
+    },
+    isLysisArmedVisible(): boolean {
+      return (
+        this.type === CELL_TYPE.TARGET &&
+        this.cellState === CELL_STATE.VIBRATING
+      );
+    },
+    isHealthyEpRiskVisible(): boolean {
+      return (
+        !this.compact &&
+        this.type === CELL_TYPE.HEALTHY &&
+        (this.cellState === CELL_STATE.APPROACHING ||
+          this.cellState === CELL_STATE.CRITICAL) &&
+        !this.tempWarning
+      );
+    },
+    isThermalWarnVisible(): boolean {
+      return (
+        this.tempWarning &&
+        this.cellState !== CELL_STATE.LYSED &&
+        this.cellState !== CELL_STATE.LYSING
+      );
+    },
 
     lysisProtocolStr(): string {
-      const n = this.cellStore.lysisNPulses
-      const t = formatLysisTimeLocal(this.cellStore.lysisDelayMs)
-      return `${n} pulse${n === 1 ? '' : 's'}, est. ${t}`
+      const n = this.cellStore.lysisNPulses;
+      const t = formatLysisTimeLocal(this.cellStore.lysisDelayMs);
+      return `${n} pulse${n === 1 ? "" : "s"}, est. ${t}`;
     },
 
     resealingTimeDisplay(): string {
-      const s = this.cellStore.targetResealingTimeS
-      return s >= 10 ? s.toFixed(0) : s.toFixed(1)
+      const s = this.cellStore.targetResealingTimeS;
+      return s >= 10 ? s.toFixed(0) : s.toFixed(1);
     },
 
     // ── DEP strip ──────────────────────────────────────────────────────
     depCmRealValue(): number {
       return this.type === CELL_TYPE.HEALTHY
         ? this.cellStore.depHealthyCmReal
-        : this.cellStore.depTargetCmReal
+        : this.cellStore.depTargetCmReal;
     },
     depCrossoverKHz(): number {
       return this.type === CELL_TYPE.HEALTHY
         ? this.cellStore.depHealthyCrossoverKHz
-        : this.cellStore.depTargetCrossoverKHz
+        : this.cellStore.depTargetCrossoverKHz;
     },
     showDepStrip(): boolean {
-      return !this.cellStore.isResonanceMode
-        && Math.abs(this.depCmRealValue) >= 0.02
-        && this.cellStore.fieldIntensity >= 5
-        && this.cellState !== CELL_STATE.LYSED
-        && this.cellState !== CELL_STATE.LYSING
+      return (
+        !this.cellStore.isResonanceMode &&
+        Math.abs(this.depCmRealValue) >= 0.02 &&
+        this.cellStore.fieldIntensity >= 5 &&
+        this.cellState !== CELL_STATE.LYSED &&
+        this.cellState !== CELL_STATE.LYSING
+      );
     },
     depStripLabel(): string {
       return this.depCmRealValue > 0
-        ? this.$t('cells.states.depAttraction')
-        : this.$t('cells.states.depRepulsion')
+        ? this.$t("cells.states.depAttraction")
+        : this.$t("cells.states.depRepulsion");
     },
     depStripValue(): string {
-      const sign = this.depCmRealValue >= 0 ? '+' : '−'
-      return `${sign}${Math.abs(this.depCmRealValue).toFixed(3)}`
+      const sign = this.depCmRealValue >= 0 ? "+" : "−";
+      return `${sign}${Math.abs(this.depCmRealValue).toFixed(3)}`;
     },
     depStripModifier(): string {
       return this.depCmRealValue > 0
-        ? 'cell-visual__dep-strip--pdep'
-        : 'cell-visual__dep-strip--ndep'
+        ? "cell-visual__dep-strip--pdep"
+        : "cell-visual__dep-strip--ndep";
     },
 
     // ── Local tooltips (for strips only; index.vue owns the CellHeader copies) ──
@@ -414,289 +603,377 @@ export default defineComponent({
         vmDisplay: this.vmDisplay,
         thresholdVoltage: this.effectiveThresholdVoltage,
         waveform: this.cellStore.waveform,
-      })
+      });
     },
 
     tipTempLocal(): string {
-      return buildTempTooltip(this.tempDisplay, this.tempFlags)
+      return buildTempTooltip(this.tempDisplay, this.tempFlags);
     },
 
     tipStateLocal(): string {
-      return buildStateTooltip(this.cellState, this.thermalLysis, this.type, this.cellStore.lysisDelayMs)
+      return buildStateTooltip(
+        this.cellState,
+        this.thermalLysis,
+        this.type,
+        this.cellStore.lysisDelayMs,
+      );
     },
 
-    tipNuclearBarLocal(): string { return tipNuclearBarFn() },
+    tipNuclearBarLocal(): string {
+      return tipNuclearBarFn();
+    },
 
     tipDep(): string {
       return tipDepFn({
-        isPdep:       this.depCmRealValue > 0,
-        kVal:         this.depCmRealValue,
+        isPdep: this.depCmRealValue > 0,
+        kVal: this.depCmRealValue,
         crossoverKHz: this.depCrossoverKHz,
-        sigmaI:       this.currentCell.conductivity,
-        sigmaE:       this.cellStore.effectiveSigmaE,
-      })
+        sigmaI: this.currentCell.conductivity,
+        sigmaE: this.cellStore.effectiveSigmaE,
+      });
     },
 
     tipDisruption(): string {
       return tipDisruptionFn({
-        disruptionRatio:     this.disruptionRatio,
-        thresholdVoltage:    this.effectiveThresholdVoltage,
-        lysisNPulses:        this.cellStore.lysisNPulses,
-        lysisDelayMs:        this.cellStore.lysisDelayMs,
+        disruptionRatio: this.disruptionRatio,
+        thresholdVoltage: this.effectiveThresholdVoltage,
+        lysisNPulses: this.cellStore.lysisNPulses,
+        lysisDelayMs: this.cellStore.lysisDelayMs,
         pulseEnvelopeFactor: this.pulseEnvelopeFactor,
-        waveform:            this.cellStore.waveform,
-        isResonanceMode:     this.cellStore.isResonanceMode,
-        pulseWidthNs:        this.cellStore.pulseWidthNs,
-        effectiveSigmaE:     this.cellStore.effectiveSigmaE,
-        vmDisplay:           this.vmDisplay,
-        cellType:            this.type,
-        cell:                this.currentCell,
-      })
+        waveform: this.cellStore.waveform,
+        isResonanceMode: this.cellStore.isResonanceMode,
+        pulseWidthNs: this.cellStore.pulseWidthNs,
+        effectiveSigmaE: this.cellStore.effectiveSigmaE,
+        vmDisplay: this.vmDisplay,
+        cellType: this.type,
+        cell: this.currentCell,
+      });
     },
   },
 
   watch: {
-    'cellData.amplitude'(v: number) { this.liveAmplitude = v },
-
-    'cellStore.target.id'() {
-      if (this.type !== CELL_TYPE.TARGET) return
-      this.helixTimer?.stop()
-      this.$nextTick(() => this.drawCell())
+    "cellData.amplitude"(v: number) {
+      this.liveAmplitude = v;
     },
 
-    'cellStore.resetCounter'() {
-      clearTimeout(this.shatterTimeout ?? undefined)
-      clearTimeout(this.shatterDelayTimeout ?? undefined)
-      clearInterval(this.particleInterval ?? undefined)
-      clearInterval(this.progressInterval ?? undefined)
-      this.shatterTimeout = this.shatterDelayTimeout = this.particleInterval = this.progressInterval = null
-      this.shatterPending = false
-      this.lysisProgressElapsed = 0
+    "cellStore.target.id"() {
+      if (this.type !== CELL_TYPE.TARGET) return;
+      this.helixTimer?.stop();
+      this.$nextTick(() => this.drawCell());
+    },
+
+    "cellStore.resetCounter"() {
+      clearTimeout(this.shatterTimeout ?? undefined);
+      clearTimeout(this.shatterDelayTimeout ?? undefined);
+      clearInterval(this.particleInterval ?? undefined);
+      clearInterval(this.progressInterval ?? undefined);
+      this.shatterTimeout =
+        this.shatterDelayTimeout =
+        this.particleInterval =
+        this.progressInterval =
+          null;
+      this.shatterPending = false;
+      this.lysisProgressElapsed = 0;
       if (this.thermalLysis) {
-        this.thermalLysis = false
-        this.$emit(EMIT.THERMAL_LYSIS, false)
+        this.thermalLysis = false;
+        this.$emit(EMIT.THERMAL_LYSIS, false);
       }
-      this.cellState     = CELL_STATE.STABLE
-      this.liveAmplitude = this.cellData?.amplitude ?? 0.8
-      this.helixTimer?.stop()
-      this.$nextTick(() => { this.drawCell(); this.drawOscilloscope() })
+      this.cellState = CELL_STATE.STABLE;
+      this.liveAmplitude = this.cellData?.amplitude ?? 0.8;
+      this.helixTimer?.stop();
+      this.$nextTick(() => {
+        this.drawCell();
+        this.drawOscilloscope();
+      });
     },
 
-    disruptionRatio() { if (!this.compact) this.updateCellState() },
-    temperature()     { if (!this.compact) this.updateCellState() },
-
-    'cellStore.healthyCellState'(s: CellState) {
-      if (this.compact && this.type === CELL_TYPE.HEALTHY) this.cellState = s
+    disruptionRatio() {
+      if (!this.compact) this.updateCellState();
     },
-    'cellStore.targetCellState'(s: CellState) {
-      if (this.compact && this.type === CELL_TYPE.TARGET) this.cellState = s
+    temperature() {
+      if (!this.compact) this.updateCellState();
     },
 
-    'cellStore.lysisDelayMs'() {
-      if (this.type !== CELL_TYPE.TARGET || !this.shatterPending) return
-      clearTimeout(this.shatterDelayTimeout ?? undefined)
-      clearInterval(this.progressInterval ?? undefined)
-      this.lysisProgressElapsed = 0
-      this.progressInterval = setInterval(() => { this.lysisProgressElapsed += 50 }, 50)
+    "cellStore.healthyCellState"(s: CellState) {
+      if (this.compact && this.type === CELL_TYPE.HEALTHY) this.cellState = s;
+    },
+    "cellStore.targetCellState"(s: CellState) {
+      if (this.compact && this.type === CELL_TYPE.TARGET) this.cellState = s;
+    },
+
+    "cellStore.lysisDelayMs"() {
+      if (this.type !== CELL_TYPE.TARGET || !this.shatterPending) return;
+      clearTimeout(this.shatterDelayTimeout ?? undefined);
+      clearInterval(this.progressInterval ?? undefined);
+      this.lysisProgressElapsed = 0;
+      this.progressInterval = setInterval(() => {
+        this.lysisProgressElapsed += 50;
+      }, 50);
       this.shatterDelayTimeout = setTimeout(() => {
-        clearInterval(this.progressInterval ?? undefined)
-        this.progressInterval = null
-        this.shatterPending = false
-        if (this.disruptionRatio > THRESHOLDS.DISRUPTION_WARN) this.triggerLysis()
-      }, this.cellStore.lysisDelayMs)
+        clearInterval(this.progressInterval ?? undefined);
+        this.progressInterval = null;
+        this.shatterPending = false;
+        if (this.disruptionRatio > THRESHOLDS.DISRUPTION_WARN)
+          this.triggerLysis();
+      }, this.cellStore.lysisDelayMs);
     },
   },
 
   mounted() {
     if (this.compact) {
-      this.cellState = this.type === CELL_TYPE.HEALTHY
-        ? this.cellStore.healthyCellState
-        : this.cellStore.targetCellState
+      this.cellState =
+        this.type === CELL_TYPE.HEALTHY
+          ? this.cellStore.healthyCellState
+          : this.cellStore.targetCellState;
     }
-    if (this.cellData) { this.drawCell(); this.drawOscilloscope() }
+    if (this.cellData) {
+      this.drawCell();
+      this.drawOscilloscope();
+    }
   },
 
   beforeUnmount() {
-    this.helixTimer?.stop()
-    this.oscTimer?.stop()
-    clearInterval(this.particleInterval ?? undefined)
-    clearInterval(this.progressInterval ?? undefined)
-    clearTimeout(this.shatterTimeout ?? undefined)
-    clearTimeout(this.shatterDelayTimeout ?? undefined)
+    this.helixTimer?.stop();
+    this.oscTimer?.stop();
+    clearInterval(this.particleInterval ?? undefined);
+    clearInterval(this.progressInterval ?? undefined);
+    clearTimeout(this.shatterTimeout ?? undefined);
+    clearTimeout(this.shatterDelayTimeout ?? undefined);
   },
 
   methods: {
     updateCellState() {
-      if (this.cellState === CELL_STATE.LYSED || this.cellState === CELL_STATE.LYSING) return
+      if (
+        this.cellState === CELL_STATE.LYSED ||
+        this.cellState === CELL_STATE.LYSING
+      )
+        return;
 
-      const impact = this.disruptionRatio
-      const temp   = this.temperature
+      const impact = this.disruptionRatio;
+      const temp = this.temperature;
 
       if (temp >= THRESHOLDS.TEMP_VAPORIZING) {
-        this.thermalLysis = true
-        this.$emit(EMIT.THERMAL_LYSIS, true)
-        this.triggerLysis()
-        return
+        this.thermalLysis = true;
+        this.$emit(EMIT.THERMAL_LYSIS, true);
+        this.triggerLysis();
+        return;
       }
 
       const thermalFloor: CellState =
-        temp >= THRESHOLDS.TEMP_DENATURING ? CELL_STATE.CRITICAL
-        : temp >= THRESHOLDS.TEMP_WARN     ? CELL_STATE.APPROACHING
-        : CELL_STATE.STABLE
+        temp >= THRESHOLDS.TEMP_DENATURING
+          ? CELL_STATE.CRITICAL
+          : temp >= THRESHOLDS.TEMP_WARN
+            ? CELL_STATE.APPROACHING
+            : CELL_STATE.STABLE;
 
       if (this.type === CELL_TYPE.TARGET) {
         if (impact > THRESHOLDS.DISRUPTION_WARN) {
-          this.cellState = CELL_STATE.VIBRATING
-          this.cellStore.setTargetCellState(CELL_STATE.VIBRATING)
+          this.cellState = CELL_STATE.VIBRATING;
+          this.cellStore.setTargetCellState(CELL_STATE.VIBRATING);
           if (!this.shatterPending) {
-            this.shatterPending = true
-            this.lysisProgressElapsed = 0
-            this.progressInterval = setInterval(() => { this.lysisProgressElapsed += 50 }, 50)
+            this.shatterPending = true;
+            this.lysisProgressElapsed = 0;
+            this.progressInterval = setInterval(() => {
+              this.lysisProgressElapsed += 50;
+            }, 50);
             this.shatterDelayTimeout = setTimeout(() => {
-              clearInterval(this.progressInterval ?? undefined)
-              this.progressInterval = null
-              this.shatterPending   = false
-              if (this.disruptionRatio > THRESHOLDS.DISRUPTION_WARN) this.triggerLysis()
-            }, this.cellStore.lysisDelayMs)
+              clearInterval(this.progressInterval ?? undefined);
+              this.progressInterval = null;
+              this.shatterPending = false;
+              if (this.disruptionRatio > THRESHOLDS.DISRUPTION_WARN)
+                this.triggerLysis();
+            }, this.cellStore.lysisDelayMs);
           }
-          return
+          return;
         }
         if (this.shatterPending) {
-          clearTimeout(this.shatterDelayTimeout ?? undefined)
-          clearInterval(this.progressInterval ?? undefined)
-          this.progressInterval = null
-          this.shatterPending = false
-          this.lysisProgressElapsed = 0
+          clearTimeout(this.shatterDelayTimeout ?? undefined);
+          clearInterval(this.progressInterval ?? undefined);
+          this.progressInterval = null;
+          this.shatterPending = false;
+          this.lysisProgressElapsed = 0;
         }
         const elState: CellState =
-          impact >= THRESHOLDS.HEALTHY_APPROACHING ? CELL_STATE.REV_EP
-          : impact > THRESHOLDS.VIBRATING_MIN      ? CELL_STATE.APPROACHING
-          : CELL_STATE.STABLE
-        const ORDER: CellState[] = [CELL_STATE.STABLE, CELL_STATE.APPROACHING, CELL_STATE.REV_EP, CELL_STATE.CRITICAL]
-        this.cellState = ORDER[Math.max(ORDER.indexOf(elState), ORDER.indexOf(thermalFloor))] as CellState
+          impact >= THRESHOLDS.HEALTHY_APPROACHING
+            ? CELL_STATE.REV_EP
+            : impact > THRESHOLDS.VIBRATING_MIN
+              ? CELL_STATE.APPROACHING
+              : CELL_STATE.STABLE;
+        const ORDER: CellState[] = [
+          CELL_STATE.STABLE,
+          CELL_STATE.APPROACHING,
+          CELL_STATE.REV_EP,
+          CELL_STATE.CRITICAL,
+        ];
+        this.cellState = ORDER[
+          Math.max(ORDER.indexOf(elState), ORDER.indexOf(thermalFloor))
+        ] as CellState;
       } else {
         const elState: CellState =
-          impact >= THRESHOLDS.HEALTHY_CRITICAL      ? CELL_STATE.CRITICAL
-          : impact >= THRESHOLDS.HEALTHY_APPROACHING ? CELL_STATE.APPROACHING
-          : impact > THRESHOLDS.VIBRATING_MIN && this.biostimScore >= THRESHOLDS.BMS_NOURISHING ? CELL_STATE.NOURISHING
-          : CELL_STATE.STABLE
-        const ORDER: CellState[] = [CELL_STATE.STABLE, CELL_STATE.NOURISHING, CELL_STATE.APPROACHING, CELL_STATE.CRITICAL]
-        const nextState = ORDER[Math.max(ORDER.indexOf(elState), ORDER.indexOf(thermalFloor))] as CellState
-        if (nextState === CELL_STATE.CRITICAL && this.cellState !== CELL_STATE.CRITICAL) {
-          sonification.triggerHealthyWarningPulse()
+          impact >= THRESHOLDS.HEALTHY_CRITICAL
+            ? CELL_STATE.CRITICAL
+            : impact >= THRESHOLDS.HEALTHY_APPROACHING
+              ? CELL_STATE.APPROACHING
+              : impact > THRESHOLDS.VIBRATING_MIN &&
+                  this.biostimScore >= THRESHOLDS.BMS_NOURISHING
+                ? CELL_STATE.NOURISHING
+                : CELL_STATE.STABLE;
+        const ORDER: CellState[] = [
+          CELL_STATE.STABLE,
+          CELL_STATE.NOURISHING,
+          CELL_STATE.APPROACHING,
+          CELL_STATE.CRITICAL,
+        ];
+        const nextState = ORDER[
+          Math.max(ORDER.indexOf(elState), ORDER.indexOf(thermalFloor))
+        ] as CellState;
+        if (
+          nextState === CELL_STATE.CRITICAL &&
+          this.cellState !== CELL_STATE.CRITICAL
+        ) {
+          sonification.triggerHealthyWarningPulse();
         }
-        this.cellState = nextState
+        this.cellState = nextState;
       }
-      if (this.type === CELL_TYPE.HEALTHY) this.cellStore.setHealthyCellState(this.cellState)
-      else this.cellStore.setTargetCellState(this.cellState)
+      if (this.type === CELL_TYPE.HEALTHY)
+        this.cellStore.setHealthyCellState(this.cellState);
+      else this.cellStore.setTargetCellState(this.cellState);
     },
 
     drawCell() {
-      if (!this.cellData) return
-      const el = this.$refs.cellCanvas as HTMLElement
-      if (!el) return
-      this.helixTimer?.stop()
-      const cellCategory = this.type === CELL_TYPE.HEALTHY ? CELL_CATEGORY.MAMMALIAN : this.cellStore.targetCellCategory
+      if (!this.cellData) return;
+      const el = this.$refs.cellCanvas as HTMLElement;
+      if (!el) return;
+      this.helixTimer?.stop();
+      const cellCategory =
+        this.type === CELL_TYPE.HEALTHY
+          ? CELL_CATEGORY.MAMMALIAN
+          : this.cellStore.targetCellCategory;
       const profile: CellVisualProfile = {
-        presetId:         this.currentCell.id,
-        morphologyTag:    this.currentCell.morphologyTag,
+        presetId: this.currentCell.id,
+        morphologyTag: this.currentCell.morphologyTag,
         thresholdVoltage: this.currentCell.thresholdVoltage,
-        conductivity:     this.currentCell.conductivity,
-        resonantFreqGHz:  this.currentCell.resonantFreqGHz,
-        capsidQ:          this.currentCell.capsidQ,
-      }
+        conductivity: this.currentCell.conductivity,
+        resonantFreqGHz: this.currentCell.resonantFreqGHz,
+        capsidQ: this.currentCell.capsidQ,
+      };
       this.helixTimer = setupBlobAnimation(
-        el, this.type, this.accentColor, cellCategory, profile,
+        el,
+        this.type,
+        this.accentColor,
+        cellCategory,
+        profile,
         () => ({
-          impact:                 this.disruptionRatio,
-          state:                  this.cellState,
-          color:                  this.cellColor,
-          temperature:            this.temperature,
-          fieldVcm:               this.cellStore.fieldIntensity,
-          freqKHz:                this.cellStore.currentBroadcastFrequency,
-          nuclearDisruptionRatio: this.cellStore.doubleShellEnabled ? this.nuclearDisruptionRatio : 0,
-          depCmReal:              this.type === CELL_TYPE.HEALTHY ? this.cellStore.depHealthyCmReal : this.cellStore.depTargetCmReal,
-          waveform:               this.cellStore.waveform,
-          isAcousticMode:         this.isAcousticTarget,
+          impact: this.disruptionRatio,
+          state: this.cellState,
+          color: this.cellColor,
+          temperature: this.temperature,
+          fieldVcm: this.cellStore.fieldIntensity,
+          freqKHz: this.cellStore.currentBroadcastFrequency,
+          nuclearDisruptionRatio: this.cellStore.doubleShellEnabled
+            ? this.nuclearDisruptionRatio
+            : 0,
+          depCmReal:
+            this.type === CELL_TYPE.HEALTHY
+              ? this.cellStore.depHealthyCmReal
+              : this.cellStore.depTargetCmReal,
+          waveform: this.cellStore.waveform,
+          isAcousticMode: this.isAcousticTarget,
         }),
-      )
+      );
     },
 
     drawOscilloscope() {
-      if (!this.cellData) return
-      const el = this.$refs.oscCanvas as HTMLElement
-      if (!el) return
-      this.oscTimer?.stop()
-      this.oscTimer = setupOscilloscope(
-        el, this.accentColor,
-        () => ({
-          state:           this.cellState,
-          impact:          this.disruptionRatio,
-          liveAmplitude:   this.liveAmplitude,
-          cellColor:       this.cellColor,
-          naturalFrequency: this.isAcousticTarget
-            ? this.cellStore.currentBroadcastFrequency
-            : (this.cellData?.naturalFrequency ?? 400),
-        }),
-      )
+      if (!this.cellData) return;
+      const el = this.$refs.oscCanvas as HTMLElement;
+      if (!el) return;
+      this.oscTimer?.stop();
+      this.oscTimer = setupOscilloscope(el, this.accentColor, () => ({
+        state: this.cellState,
+        impact: this.disruptionRatio,
+        liveAmplitude: this.liveAmplitude,
+        cellColor: this.cellColor,
+        naturalFrequency: this.isAcousticTarget
+          ? this.cellStore.currentBroadcastFrequency
+          : (this.cellData?.naturalFrequency ?? 400),
+      }));
     },
 
     triggerLysis() {
-      if (this.compact) return
-      sonification.triggerLysisBurst()
-      this.cellState = CELL_STATE.LYSING
-      if (this.type === CELL_TYPE.HEALTHY) this.cellStore.setHealthyCellState(CELL_STATE.LYSING)
-      else this.cellStore.setTargetCellState(CELL_STATE.LYSING)
-      const expStore = useExperimentStore()
-      expStore.logReading(useCellStore(), 'lysis')
-      const last = expStore.entries[expStore.entries.length - 1]
-      if (last) broadcastLogEntry(last)
-      if (this.type === CELL_TYPE.TARGET) useImpedanceStore().snapshotSimulatedReading()
-      const el = this.$refs.cellCanvas as HTMLElement
-      this.particleInterval = setInterval(() => { if (el) spawnFragment(el) }, FRAGMENT_INTERVAL_MS)
+      if (this.compact) return;
+      sonification.triggerLysisBurst();
+      this.cellState = CELL_STATE.LYSING;
+      if (this.type === CELL_TYPE.HEALTHY)
+        this.cellStore.setHealthyCellState(CELL_STATE.LYSING);
+      else this.cellStore.setTargetCellState(CELL_STATE.LYSING);
+      const expStore = useExperimentStore();
+      expStore.logReading(useCellStore(), "lysis");
+      const last = expStore.entries[expStore.entries.length - 1];
+      if (last) broadcastLogEntry(last);
+      if (this.type === CELL_TYPE.TARGET)
+        useImpedanceStore().snapshotSimulatedReading();
+      const el = this.$refs.cellCanvas as HTMLElement;
+      this.particleInterval = setInterval(() => {
+        if (el) spawnFragment(el);
+      }, FRAGMENT_INTERVAL_MS);
       this.shatterTimeout = setTimeout(() => {
-        clearInterval(this.particleInterval ?? undefined)
-        this.helixTimer?.stop()
-        this.oscTimer?.stop()
-        this.cellState = CELL_STATE.LYSED
-        if (this.type === CELL_TYPE.HEALTHY) this.cellStore.setHealthyCellState(CELL_STATE.LYSED)
-        else this.cellStore.setTargetCellState(CELL_STATE.LYSED)
-      }, LYSIS_DURATION_MS)
+        clearInterval(this.particleInterval ?? undefined);
+        this.helixTimer?.stop();
+        this.oscTimer?.stop();
+        this.cellState = CELL_STATE.LYSED;
+        if (this.type === CELL_TYPE.HEALTHY)
+          this.cellStore.setHealthyCellState(CELL_STATE.LYSED);
+        else this.cellStore.setTargetCellState(CELL_STATE.LYSED);
+      }, LYSIS_DURATION_MS);
     },
 
     resetToStable() {
-      const preset = CELL_PRESETS.find(p => p.presetId === this.currentCell.id)
-      if (preset) this.cellStore.loadPreset(this.type, preset)
-      else this.cellStore.resetCell(this.type)
-      this.$emit(EMIT.STABLE_RESET, this.type)
+      const preset = CELL_PRESETS.find(
+        (p) => p.presetId === this.currentCell.id,
+      );
+      if (preset) this.cellStore.loadPreset(this.type, preset);
+      else this.cellStore.resetCell(this.type);
+      this.$emit(EMIT.STABLE_RESET, this.type);
     },
 
     resetToSafeDefaults() {
-      hideTip()
-      const preset = CELL_PRESETS.find(p => p.presetId === this.currentCell.id)
-      if (preset) this.cellStore.loadPreset(this.type, preset)
-      else this.cellStore.resetCell(this.type)
-      this.$emit(EMIT.FULL_RESET, this.type)
+      hideTip();
+      const preset = CELL_PRESETS.find(
+        (p) => p.presetId === this.currentCell.id,
+      );
+      if (preset) this.cellStore.loadPreset(this.type, preset);
+      else this.cellStore.resetCell(this.type);
+      this.$emit(EMIT.FULL_RESET, this.type);
     },
   },
-})
+});
 </script>
 
 <style lang="scss" scoped>
-
-
-
 /* ── Per-component keyframes ───────────────────────────────────────── */
 @keyframes flicker {
-  0%, 100% { opacity: 1; }
-  45%  { opacity: 0.6; }
-  50%  { opacity: 0.2; }
-  55%  { opacity: 0.8; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  45% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 0.2;
+  }
+  55% {
+    opacity: 0.8;
+  }
 }
 
 @keyframes lysis-overlay-appear {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 // CSS Option A — gentle Y-axis perspective tilt (±8°, 14 s period).
@@ -704,14 +981,25 @@ export default defineComponent({
 // the canvas frame tilts in 3D space while the cell body itself compresses,
 // together creating the illusion of a sphere tumbling on a microscopy stage.
 @keyframes cell-canvas-tilt {
-  0%   { transform: rotateY(-8deg); }
-  50%  { transform: rotateY(8deg); }
-  100% { transform: rotateY(-8deg); }
+  0% {
+    transform: rotateY(-8deg);
+  }
+  50% {
+    transform: rotateY(8deg);
+  }
+  100% {
+    transform: rotateY(-8deg);
+  }
 }
 
 @keyframes warn-fade {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.72; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.72;
+  }
 }
 
 /* ── Root container ─────────────────────────────────────────────────── */
@@ -745,7 +1033,9 @@ export default defineComponent({
   }
 
   /* ── Lysed state: pause canvas animation to prevent compositor jitter ─ */
-  &--lysed &__canvas svg { animation-play-state: paused; }
+  &--lysed &__canvas svg {
+    animation-play-state: paused;
+  }
 
   /* ── Oscilloscope divider ──────────────────────────────────────────── */
   &__osc-divider {
@@ -763,8 +1053,12 @@ export default defineComponent({
 
   &__osc-impact {
     @include mono-upper(0.62rem);
-    &--healthy { color: var(--color-accent); }
-    &--target  { color: var(--color-danger); }
+    &--healthy {
+      color: var(--color-accent);
+    }
+    &--target {
+      color: var(--color-danger);
+    }
   }
 
   /* ── Oscilloscope waveform canvas ──────────────────────────────────── */
@@ -773,11 +1067,18 @@ export default defineComponent({
     width: 100%;
     line-height: 0;
 
-    svg { display: block; width: 100%; height: auto; }
+    svg {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
   }
 
   /* ── Nuclear envelope disruption bar ───────────────────────────────── */
-  &__nuclear-bar-row { @include flex-row(0.4rem); padding: 0.2rem 0.6rem; }
+  &__nuclear-bar-row {
+    @include flex-row(0.4rem);
+    padding: 0.2rem 0.6rem;
+  }
 
   &__nuclear-bar-label {
     font-family: var(--font-mono);
@@ -803,8 +1104,12 @@ export default defineComponent({
     border-radius: 2px;
     transition: width var(--tr-slow);
 
-    &--caution { background: var(--color-amber); }
-    &--warn    { background: var(--color-danger); }
+    &--caution {
+      background: var(--color-amber);
+    }
+    &--warn {
+      background: var(--color-danger);
+    }
   }
 
   &__nuclear-bar-pct {
@@ -825,19 +1130,31 @@ export default defineComponent({
     font-size: 1.05rem;
   }
 
-  &__compact-top  { @include flex-row(0.45rem); white-space: nowrap; }
-  &__compact-bottom { @include flex-row(0.35rem); padding-left: 0.1rem; }
+  &__compact-top {
+    @include flex-row(0.45rem);
+    white-space: nowrap;
+  }
+  &__compact-bottom {
+    @include flex-row(0.35rem);
+    padding-left: 0.1rem;
+  }
 
   &__compact-badge {
-    font-size: 1.0rem;
+    font-size: 1rem;
     font-weight: 700;
     letter-spacing: 0.04em;
     padding: 0.1rem 0.4rem;
     border-radius: 3px;
     line-height: 1.4;
 
-    &--healthy { background: color-mix(in srgb, var(--color-primary) 15%, transparent); color: var(--color-primary); }
-    &--target  { background: color-mix(in srgb, var(--color-danger) 15%, transparent); color: var(--color-danger); }
+    &--healthy {
+      background: color-mix(in srgb, var(--color-primary) 15%, transparent);
+      color: var(--color-primary);
+    }
+    &--target {
+      background: color-mix(in srgb, var(--color-danger) 15%, transparent);
+      color: var(--color-danger);
+    }
   }
 
   &__compact-dr {
@@ -845,29 +1162,67 @@ export default defineComponent({
     font-weight: 600;
     color: var(--color-text-muted);
 
-    &--nourishing  { color: var(--color-primary); }
-    &--approaching { color: var(--color-amber); }
-    &--rev-ep      { color: var(--color-amber); }
-    &--critical    { color: var(--color-danger); }
-    &--vibrating   { color: var(--color-danger); }
-    &--lysing      { color: var(--color-danger); }
-    &--lysed       { color: color-mix(in srgb, var(--color-danger) 60%, transparent); }
+    &--nourishing {
+      color: var(--color-primary);
+    }
+    &--approaching {
+      color: var(--color-amber);
+    }
+    &--rev-ep {
+      color: var(--color-amber);
+    }
+    &--critical {
+      color: var(--color-danger);
+    }
+    &--vibrating {
+      color: var(--color-danger);
+    }
+    &--lysing {
+      color: var(--color-danger);
+    }
+    &--lysed {
+      color: color-mix(in srgb, var(--color-danger) 60%, transparent);
+    }
   }
 
-  &__compact-sep   { color: var(--color-text-muted); opacity: 0.45; font-size: var(--fs-xl); }
-  &__compact-temp  { font-size: 1.0rem; color: var(--color-text-muted); opacity: var(--op-partial); }
+  &__compact-sep {
+    color: var(--color-text-muted);
+    opacity: 0.45;
+    font-size: var(--fs-xl);
+  }
+  &__compact-temp {
+    font-size: 1rem;
+    color: var(--color-text-muted);
+    opacity: var(--op-partial);
+  }
 
   &__compact-dot {
     font-size: var(--fs-sm);
     color: var(--color-text-muted);
 
-    &--nourishing  { color: var(--color-primary); }
-    &--approaching { color: var(--color-amber); }
-    &--rev-ep      { color: var(--color-amber); }
-    &--critical    { color: var(--color-danger); }
-    &--vibrating   { color: var(--color-danger); animation: warn-fade 0.8s ease-in-out infinite; }
-    &--lysing      { color: var(--color-danger); animation: warn-fade 0.5s ease-in-out infinite; }
-    &--lysed       { color: color-mix(in srgb, var(--color-danger) 50%, transparent); }
+    &--nourishing {
+      color: var(--color-primary);
+    }
+    &--approaching {
+      color: var(--color-amber);
+    }
+    &--rev-ep {
+      color: var(--color-amber);
+    }
+    &--critical {
+      color: var(--color-danger);
+    }
+    &--vibrating {
+      color: var(--color-danger);
+      animation: warn-fade 0.8s ease-in-out infinite;
+    }
+    &--lysing {
+      color: var(--color-danger);
+      animation: warn-fade 0.5s ease-in-out infinite;
+    }
+    &--lysed {
+      color: color-mix(in srgb, var(--color-danger) 50%, transparent);
+    }
   }
 
   &__compact-state {
@@ -875,51 +1230,113 @@ export default defineComponent({
     letter-spacing: 0.1em;
     color: var(--color-text-muted);
 
-    &--nourishing  { color: var(--color-primary); }
-    &--approaching { color: var(--color-amber); }
-    &--rev-ep      { color: var(--color-amber); }
-    &--critical    { color: var(--color-danger); }
-    &--vibrating   { color: var(--color-danger); font-weight: 600; }
-    &--lysing      { color: var(--color-danger); font-weight: 600; }
-    &--lysed       { color: color-mix(in srgb, var(--color-danger) 60%, transparent); }
+    &--nourishing {
+      color: var(--color-primary);
+    }
+    &--approaching {
+      color: var(--color-amber);
+    }
+    &--rev-ep {
+      color: var(--color-amber);
+    }
+    &--critical {
+      color: var(--color-danger);
+    }
+    &--vibrating {
+      color: var(--color-danger);
+      font-weight: 600;
+    }
+    &--lysing {
+      color: var(--color-danger);
+      font-weight: 600;
+    }
+    &--lysed {
+      color: color-mix(in srgb, var(--color-danger) 60%, transparent);
+    }
   }
 
   /* ── Shared warn strip elements ─────────────────────────────────────── */
-  &__warn-icon   { flex-shrink: 0; }
-  &__warn-text   { flex: 1; }
-  &__warn-pct    { flex-shrink: 0; font-weight: 700; }
-  &__reseal-time { flex-shrink: 0; opacity: var(--op-muted); font-style: italic; }
+  &__warn-icon {
+    flex-shrink: 0;
+  }
+  &__warn-text {
+    flex: 1;
+  }
+  &__warn-pct {
+    flex-shrink: 0;
+    font-weight: 700;
+  }
+  &__reseal-time {
+    flex-shrink: 0;
+    opacity: var(--op-muted);
+    font-style: italic;
+  }
 
   /* ── DEP strip (non-resonance, |K| ≥ 0.02) ────────────────────────── */
   &__dep-strip {
-    @include status-strip(var(--color-lime), color-mix(in srgb, var(--color-lime) 5%, transparent), color-mix(in srgb, var(--color-lime) 18%, transparent));
+    @include status-strip(
+      var(--color-lime),
+      color-mix(in srgb, var(--color-lime) 5%, transparent),
+      color-mix(in srgb, var(--color-lime) 18%, transparent)
+    );
     cursor: help;
 
     &--ndep {
-      @include status-strip(var(--color-dep), color-mix(in srgb, var(--color-dep) 5%, transparent), color-mix(in srgb, var(--color-dep) 18%, transparent));
+      @include status-strip(
+        var(--color-dep),
+        color-mix(in srgb, var(--color-dep) 5%, transparent),
+        color-mix(in srgb, var(--color-dep) 18%, transparent)
+      );
     }
   }
 
   /* ── Nourishing strip (healthy, DR 8-45%) ──────────────────────────── */
   &__nourishing-strip {
-    @include status-strip(var(--color-accent), color-mix(in srgb, var(--color-primary) 6%, transparent), color-mix(in srgb, var(--color-primary) 22%, transparent), nourish-strip-pulse, 2.8s);
-    border-bottom: 1px solid color-mix(in srgb, var(--color-primary) 12%, transparent);
+    @include status-strip(
+      var(--color-accent),
+      color-mix(in srgb, var(--color-primary) 6%, transparent),
+      color-mix(in srgb, var(--color-primary) 22%, transparent),
+      nourish-strip-pulse,
+      2.8s
+    );
+    border-bottom: 1px solid
+      color-mix(in srgb, var(--color-primary) 12%, transparent);
   }
 
   /* ── Biomodulation panel nourishing modifier (applied to BiostimPanel root) */
   &__biostim--nourishing {
-    background: color-mix(in srgb, var(--color-primary) 8%, transparent) !important;
-    border-color: color-mix(in srgb, var(--color-primary) 30%, transparent) !important;
+    background: color-mix(
+      in srgb,
+      var(--color-primary) 8%,
+      transparent
+    ) !important;
+    border-color: color-mix(
+      in srgb,
+      var(--color-primary) 30%,
+      transparent
+    ) !important;
   }
 
   /* ── Reversible EP strip (target, 50-85%) ──────────────────────────── */
   &__rev-ep-strip {
-    @include status-strip(var(--color-amber), color-mix(in srgb, var(--color-amber) 8%, transparent), color-mix(in srgb, var(--color-amber) 30%, transparent), warn-fade, 1.8s);
+    @include status-strip(
+      var(--color-amber),
+      color-mix(in srgb, var(--color-amber) 8%, transparent),
+      color-mix(in srgb, var(--color-amber) 30%, transparent),
+      warn-fade,
+      1.8s
+    );
   }
 
   /* ── Lysis armed strip (target, >85%) ──────────────────────────────── */
   &__lysis-strip {
-    @include status-strip(var(--color-danger), color-mix(in srgb, var(--color-danger) 8%, transparent), color-mix(in srgb, var(--color-danger) 30%, transparent), warn-fade, 1.1s);
+    @include status-strip(
+      var(--color-danger),
+      color-mix(in srgb, var(--color-danger) 8%, transparent),
+      color-mix(in srgb, var(--color-danger) 30%, transparent),
+      warn-fade,
+      1.1s
+    );
   }
 
   /* ── Structural integrity countdown ────────────────────────────────── */
@@ -927,7 +1344,8 @@ export default defineComponent({
     @include flex-row(0.45rem);
     padding: 0.3rem 0.75rem 0.35rem;
     background: color-mix(in srgb, var(--color-danger) 5%, transparent);
-    border-top: 1px solid color-mix(in srgb, var(--color-danger) 15%, transparent);
+    border-top: 1px solid
+      color-mix(in srgb, var(--color-danger) 15%, transparent);
   }
 
   &__integrity-label {
@@ -947,7 +1365,11 @@ export default defineComponent({
 
   &__integrity-fill {
     height: 100%;
-    background: linear-gradient(90deg, var(--color-danger) 0%, var(--color-orange) 100%);
+    background: linear-gradient(
+      90deg,
+      var(--color-danger) 0%,
+      var(--color-orange) 100%
+    );
     border-radius: 3px;
     transition: width 0.1s linear;
   }
@@ -964,24 +1386,44 @@ export default defineComponent({
 
   /* ── Healthy EP risk strip ──────────────────────────────────────────── */
   &__healthy-warn {
-    @include status-strip(var(--color-amber), color-mix(in srgb, var(--color-amber) 8%, transparent), color-mix(in srgb, var(--color-amber) 30%, transparent), warn-fade, 2s);
+    @include status-strip(
+      var(--color-amber),
+      color-mix(in srgb, var(--color-amber) 8%, transparent),
+      color-mix(in srgb, var(--color-amber) 30%, transparent),
+      warn-fade,
+      2s
+    );
 
     &--critical {
       color: var(--color-orange);
       background: color-mix(in srgb, var(--color-orange) 12%, transparent);
-      border-top-color: color-mix(in srgb, var(--color-orange) 45%, transparent);
+      border-top-color: color-mix(
+        in srgb,
+        var(--color-orange) 45%,
+        transparent
+      );
       animation-duration: 0.85s;
     }
   }
 
   /* ── Thermal warning strip ──────────────────────────────────────────── */
   &__thermal-warn {
-    @include status-strip(var(--color-amber), color-mix(in srgb, var(--color-amber) 8%, transparent), color-mix(in srgb, var(--color-amber) 30%, transparent), warn-fade, 2s);
+    @include status-strip(
+      var(--color-amber),
+      color-mix(in srgb, var(--color-amber) 8%, transparent),
+      color-mix(in srgb, var(--color-amber) 30%, transparent),
+      warn-fade,
+      2s
+    );
 
     &--denaturing {
       color: var(--color-orange);
       background: color-mix(in srgb, var(--color-orange) 12%, transparent);
-      border-top-color: color-mix(in srgb, var(--color-orange) 45%, transparent);
+      border-top-color: color-mix(
+        in srgb,
+        var(--color-orange) 45%,
+        transparent
+      );
       animation-duration: 0.85s;
     }
   }
@@ -1036,13 +1478,30 @@ export default defineComponent({
     cursor: pointer;
     transition: all var(--tr-fast);
 
-    &:hover:not(:disabled) { background-color: color-mix(in srgb, var(--color-danger) 12%, transparent); }
-    &:disabled { opacity: var(--op-ghost); cursor: not-allowed; border-color: var(--color-muted-border); color: var(--color-text-muted); }
+    &:hover:not(:disabled) {
+      background-color: color-mix(
+        in srgb,
+        var(--color-danger) 12%,
+        transparent
+      );
+    }
+    &:disabled {
+      opacity: var(--op-ghost);
+      cursor: not-allowed;
+      border-color: var(--color-muted-border);
+      color: var(--color-text-muted);
+    }
 
     &--full {
       border-color: var(--color-primary);
       color: var(--color-primary);
-      &:hover:not(:disabled) { background-color: color-mix(in srgb, var(--color-primary) 12%, transparent); }
+      &:hover:not(:disabled) {
+        background-color: color-mix(
+          in srgb,
+          var(--color-primary) 12%,
+          transparent
+        );
+      }
     }
   }
 }

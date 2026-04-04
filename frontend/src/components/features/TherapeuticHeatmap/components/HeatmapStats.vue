@@ -1,30 +1,34 @@
 <!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
 <template>
-  <div class="hmap__stats" v-tip="STATIC_HEATMAP_TOOLTIPS.stats" :style="{ '--op-zone-color': opZoneColor }">
-    <span class="hmap__stats-label">{{ $t('heatmap.statsLabel') }}</span>
+  <div
+    class="hmap__stats"
+    v-tip="STATIC_HEATMAP_TOOLTIPS.stats"
+    :style="{ '--op-zone-color': opZoneColor }"
+  >
+    <span class="hmap__stats-label">{{ $t("heatmap.statsLabel") }}</span>
 
     <span class="hmap__stat">
-      <span class="hmap__stat-k">{{ $t('heatmap.statTDr') }}</span>
+      <span class="hmap__stat-k">{{ $t("heatmap.statTDr") }}</span>
       <span class="hmap__stat-v hmap__stat-v--zone">{{ tDrPct }}%</span>
     </span>
 
     <span class="hmap__stat">
-      <span class="hmap__stat-k">{{ $t('heatmap.statHDr') }}</span>
+      <span class="hmap__stat-k">{{ $t("heatmap.statHDr") }}</span>
       <span class="hmap__stat-v" :class="healthyDrClass">{{ hDrPct }}%</span>
     </span>
 
     <span class="hmap__stat">
-      <span class="hmap__stat-k">{{ $t('heatmap.statTemp') }}</span>
+      <span class="hmap__stat-k">{{ $t("heatmap.statTemp") }}</span>
       <span class="hmap__stat-v" :class="tempClass">{{ healthyTssStr }}</span>
     </span>
 
     <span class="hmap__stat" v-tip="STATIC_HEATMAP_TOOLTIPS.pLysis">
-      <span class="hmap__stat-k">{{ $t('heatmap.statPLysis') }}</span>
+      <span class="hmap__stat-k">{{ $t("heatmap.statPLysis") }}</span>
       <span class="hmap__stat-v">{{ pLysisStr }}</span>
     </span>
 
     <span class="hmap__stat">
-      <span class="hmap__stat-k">{{ $t('heatmap.statSel') }}</span>
+      <span class="hmap__stat-k">{{ $t("heatmap.statSel") }}</span>
       <span class="hmap__stat-v hmap__stat-v--zone">&times;{{ selStr }}</span>
     </span>
 
@@ -32,113 +36,154 @@
       <span
         class="hmap__stat-badge hmap__stat-badge--regime"
         :class="`hmap__stat-badge--${cellStore.freqRegime}`"
-      >{{ $t(`slider.regime.${cellStore.freqRegime}`) }}</span>
+        >{{ $t(`slider.regime.${cellStore.freqRegime}`) }}</span
+      >
     </span>
 
-    <span class="hmap__stat" v-if="showSkinDepth" v-tip="STATIC_HEATMAP_TOOLTIPS.skinDepth">
+    <span
+      class="hmap__stat"
+      v-if="showSkinDepth"
+      v-tip="STATIC_HEATMAP_TOOLTIPS.skinDepth"
+    >
       <span class="hmap__stat-k">&delta;</span>
-      <span class="hmap__stat-v" :class="skinDepthClass">{{ skinDepthStr }}</span>
+      <span class="hmap__stat-v" :class="skinDepthClass">{{
+        skinDepthStr
+      }}</span>
     </span>
 
-    <button class="hmap__snap-btn" @click="snapToOptimal" v-tip="STATIC_HEATMAP_TOOLTIPS.optLine">
-      {{ $t('heatmap.snapBtn') }}
+    <button
+      class="hmap__snap-btn"
+      @click="snapToOptimal"
+      v-tip="STATIC_HEATMAP_TOOLTIPS.optLine"
+    >
+      {{ $t("heatmap.snapBtn") }}
     </button>
 
-    <span class="hmap__info-btn" v-tip="STATIC_HEATMAP_TOOLTIPS.canvas">{{ ICON.INFO }}</span>
+    <span class="hmap__info-btn" v-tip="STATIC_HEATMAP_TOOLTIPS.canvas">{{
+      ICON.INFO
+    }}</span>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue'
-import { mapStores } from 'pinia'
+import { defineComponent } from "vue";
+import { mapStores } from "pinia";
 
-import { useCellStore } from '@/stores/cellStore'
+import { useCellStore } from "@/stores/cellStore";
 
-import { broadcastStateSync } from '@/services/socket'
+import { broadcastStateSync } from "@/services/socket";
 
-import { CELL_CATEGORY, FREQ_REGIME } from '@/constants/strings'
-import { ICON } from '@/constants/icons'
-import { UNIT } from '@/constants/units'
-import { HMAP_LYSIS_DR, HMAP_WARN_DR, HMAP_THERM_WARN_C, HMAP_THERM_CRIT_C, HMAP_DR_DISPLAY_CAP, HMAP_SEL_INFINITY_CAP, HMAP_SKIN_DEPTH_OK_MM, HMAP_SKIN_DEPTH_WARN_MM } from '@/constants/heatmap'
+import { CELL_CATEGORY, FREQ_REGIME } from "@/constants/strings";
+import { ICON } from "@/constants/icons";
+import { UNIT } from "@/constants/units";
+import {
+  HMAP_LYSIS_DR,
+  HMAP_WARN_DR,
+  HMAP_THERM_WARN_C,
+  HMAP_THERM_CRIT_C,
+  HMAP_DR_DISPLAY_CAP,
+  HMAP_SEL_INFINITY_CAP,
+  HMAP_SKIN_DEPTH_OK_MM,
+  HMAP_SKIN_DEPTH_WARN_MM,
+} from "@/constants/heatmap";
 
-import { STATIC_HEATMAP_TOOLTIPS } from '../lib'
+import { STATIC_HEATMAP_TOOLTIPS } from "../lib";
 export default defineComponent({
   props: {
-    opZoneColor: { type: String, default: 'var(--color-text)' },
+    opZoneColor: { type: String, default: "var(--color-text)" },
   },
 
   data() {
-    return { STATIC_HEATMAP_TOOLTIPS }
+    return { STATIC_HEATMAP_TOOLTIPS };
   },
 
   computed: {
     ...mapStores(useCellStore),
-    ICON() { return ICON },
+    ICON() {
+      return ICON;
+    },
     tDrPct(): string {
-      return (Math.min(this.cellStore.targetDisruptionRatio,  HMAP_DR_DISPLAY_CAP) * 100).toFixed(1)
+      return (
+        Math.min(this.cellStore.targetDisruptionRatio, HMAP_DR_DISPLAY_CAP) *
+        100
+      ).toFixed(1);
     },
 
     hDrPct(): string {
-      return (Math.min(this.cellStore.healthyDisruptionRatio, HMAP_DR_DISPLAY_CAP) * 100).toFixed(1)
+      return (
+        Math.min(this.cellStore.healthyDisruptionRatio, HMAP_DR_DISPLAY_CAP) *
+        100
+      ).toFixed(1);
     },
 
     healthyTssStr(): string {
-      return `${this.cellStore.healthySteadyStateTemp.toFixed(1)} ${UNIT.DEG_C}`
+      return `${this.cellStore.healthySteadyStateTemp.toFixed(1)} ${UNIT.DEG_C}`;
     },
 
     pLysisStr(): string {
       if (this.cellStore.isResonanceMode) {
-        if (this.cellStore.targetCellCategory !== CELL_CATEGORY.MAMMALIAN) return '\u2014'
+        if (this.cellStore.targetCellCategory !== CELL_CATEGORY.MAMMALIAN)
+          return "\u2014";
       }
-      return `${(this.cellStore.targetLysisProbabilityRandom * 100).toFixed(0)}%`
+      return `${(this.cellStore.targetLysisProbabilityRandom * 100).toFixed(0)}%`;
     },
 
     selStr(): string {
-      const sel = this.cellStore.selectivityRatio
-      return sel >= HMAP_SEL_INFINITY_CAP ? ICON.INFINITY : sel.toFixed(2)
+      const sel = this.cellStore.selectivityRatio;
+      return sel >= HMAP_SEL_INFINITY_CAP ? ICON.INFINITY : sel.toFixed(2);
     },
 
     healthyDrClass(): string {
-      const dr = this.cellStore.healthyDisruptionRatio
-      if (dr >= HMAP_LYSIS_DR) return 'hmap__stat-v--danger'
-      if (dr >= HMAP_WARN_DR)  return 'hmap__stat-v--warn'
-      return ''
+      const dr = this.cellStore.healthyDisruptionRatio;
+      if (dr >= HMAP_LYSIS_DR) return "hmap__stat-v--danger";
+      if (dr >= HMAP_WARN_DR) return "hmap__stat-v--warn";
+      return "";
     },
 
     tempClass(): string {
-      const T = this.cellStore.healthySteadyStateTemp
-      if (T >= HMAP_THERM_CRIT_C) return 'hmap__stat-v--danger'
-      if (T >= HMAP_THERM_WARN_C) return 'hmap__stat-v--warn'
-      return ''
+      const T = this.cellStore.healthySteadyStateTemp;
+      if (T >= HMAP_THERM_CRIT_C) return "hmap__stat-v--danger";
+      if (T >= HMAP_THERM_WARN_C) return "hmap__stat-v--warn";
+      return "";
     },
 
     showSkinDepth(): boolean {
-      return this.cellStore.freqRegime === FREQ_REGIME.NEARFIELD_RF || this.cellStore.freqRegime === FREQ_REGIME.MICROWAVE
+      return (
+        this.cellStore.freqRegime === FREQ_REGIME.NEARFIELD_RF ||
+        this.cellStore.freqRegime === FREQ_REGIME.MICROWAVE
+      );
     },
 
     skinDepthStr(): string {
-      const d = this.cellStore.skinDepthMm
-      if (!isFinite(d)) return '\u221e'
-      return d >= 10 ? `${d.toFixed(0)} ${UNIT.MM}` : `${d.toFixed(1)} ${UNIT.MM}`
+      const d = this.cellStore.skinDepthMm;
+      if (!isFinite(d)) return "\u221e";
+      return d >= 10
+        ? `${d.toFixed(0)} ${UNIT.MM}`
+        : `${d.toFixed(1)} ${UNIT.MM}`;
     },
 
     skinDepthClass(): string {
-      const d = this.cellStore.skinDepthMm
-      if (d >= HMAP_SKIN_DEPTH_OK_MM)   return 'hmap__stat-v--ok'
-      if (d >= HMAP_SKIN_DEPTH_WARN_MM) return 'hmap__stat-v--warn'
-      return 'hmap__stat-v--danger'
+      const d = this.cellStore.skinDepthMm;
+      if (d >= HMAP_SKIN_DEPTH_OK_MM) return "hmap__stat-v--ok";
+      if (d >= HMAP_SKIN_DEPTH_WARN_MM) return "hmap__stat-v--warn";
+      return "hmap__stat-v--danger";
     },
   },
 
   methods: {
     snapToOptimal() {
-      const { freqMin, freqMax } = this.cellStore.sliderRanges
-      const clamped = Math.round(Math.max(freqMin, Math.min(freqMax, this.cellStore.optimalFreqResult.khz)))
-      this.cellStore.setBroadcastFreqKHz(clamped)
-      broadcastStateSync()
+      const { freqMin, freqMax } = this.cellStore.sliderRanges;
+      const clamped = Math.round(
+        Math.max(
+          freqMin,
+          Math.min(freqMax, this.cellStore.optimalFreqResult.khz),
+        ),
+      );
+      this.cellStore.setBroadcastFreqKHz(clamped);
+      broadcastStateSync();
     },
   },
-})
+});
 </script>
 
 <style lang="scss" scoped>
@@ -185,10 +230,18 @@ export default defineComponent({
   color: var(--color-text);
   transition: color var(--tr-slow);
 
-  &--warn   { color: var(--color-amber); }
-  &--danger { color: var(--color-danger); }
-  &--ok     { color: var(--color-lime); }
-  &--zone   { color: var(--op-zone-color, var(--color-text)); }
+  &--warn {
+    color: var(--color-amber);
+  }
+  &--danger {
+    color: var(--color-danger);
+  }
+  &--ok {
+    color: var(--color-lime);
+  }
+  &--zone {
+    color: var(--op-zone-color, var(--color-text));
+  }
 }
 
 .hmap__stat-badge {
@@ -201,9 +254,21 @@ export default defineComponent({
   border: 1px solid;
 
   &--regime {
-    &--electrolytic { color: var(--color-primary); border-color: color-mix(in srgb, var(--color-primary) 35%, transparent); background: color-mix(in srgb, var(--color-primary) 7%, transparent); }
-    &--nearfield_rf { color: var(--color-amber);   border-color: color-mix(in srgb, var(--color-amber) 35%, transparent); background: color-mix(in srgb, var(--color-amber) 7%, transparent); }
-    &--microwave    { color: var(--color-danger);  border-color: color-mix(in srgb, var(--color-danger) 35%, transparent); background: color-mix(in srgb, var(--color-danger) 7%, transparent); }
+    &--electrolytic {
+      color: var(--color-primary);
+      border-color: color-mix(in srgb, var(--color-primary) 35%, transparent);
+      background: color-mix(in srgb, var(--color-primary) 7%, transparent);
+    }
+    &--nearfield_rf {
+      color: var(--color-amber);
+      border-color: color-mix(in srgb, var(--color-amber) 35%, transparent);
+      background: color-mix(in srgb, var(--color-amber) 7%, transparent);
+    }
+    &--microwave {
+      color: var(--color-danger);
+      border-color: color-mix(in srgb, var(--color-danger) 35%, transparent);
+      background: color-mix(in srgb, var(--color-danger) 7%, transparent);
+    }
   }
 }
 
@@ -215,7 +280,9 @@ export default defineComponent({
   flex-shrink: 0;
   transition: opacity var(--tr-fast);
 
-  &:hover { opacity: 1; }
+  &:hover {
+    opacity: 1;
+  }
 }
 
 .hmap__snap-btn {
@@ -229,7 +296,9 @@ export default defineComponent({
   letter-spacing: 0.06em;
   padding: 0.18rem 0.55rem;
   cursor: pointer;
-  transition: background var(--tr-fast), border-color var(--tr-fast);
+  transition:
+    background var(--tr-fast),
+    border-color var(--tr-fast);
   white-space: nowrap;
 
   &:hover {

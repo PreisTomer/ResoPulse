@@ -1,71 +1,107 @@
 <!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
 <template>
   <div v-if="windowRange" class="sweep-window" v-tip="tipWindow">
-    <span class="sweep-window__label">{{ $t('sweep.windowLabel') }}</span>
+    <span class="sweep-window__label">{{ $t("sweep.windowLabel") }}</span>
     <span class="sweep-window__val">
       {{ windowRange.lo.toFixed(0) }} - {{ windowRange.hi.toFixed(0) }}
-      {{ sweepParam === 'field' ? $t('sweep.fieldUnit') : $t('sweep.freqUnit') }}
+      {{
+        sweepParam === "field" ? $t("sweep.fieldUnit") : $t("sweep.freqUnit")
+      }}
     </span>
     <span class="sweep-window__sub" v-html="$t('sweep.windowSub')"></span>
   </div>
 
   <div v-else class="sweep-window sweep-window--none" v-tip="tipNoWindow">
     <template v-if="recommendedMax !== null">
-      <span>{{ $t('sweep.windowNoneRange', { max: recommendedMax, unit: sweepParam === 'field' ? $t('sweep.fieldUnit') : $t('sweep.freqUnit') }) }}</span>
-      <button class="sweep-window__expand" @click="$emit(EMIT.EXPAND, recommendedMax)">
-        {{ $t('sweep.windowExpandBtn') }}
+      <span>{{
+        $t("sweep.windowNoneRange", {
+          max: recommendedMax,
+          unit:
+            sweepParam === "field"
+              ? $t("sweep.fieldUnit")
+              : $t("sweep.freqUnit"),
+        })
+      }}</span>
+      <button
+        class="sweep-window__expand"
+        @click="$emit(EMIT.EXPAND, recommendedMax)"
+      >
+        {{ $t("sweep.windowExpandBtn") }}
       </button>
     </template>
     <template v-else-if="bestTIPoint && bestTIPoint.ti < 1.0">
-      <span class="sweep-window__counter-sel">{{ $t('sweep.windowNoneCounterSelective', { ti: bestTIPoint.ti.toFixed(2) }) }}</span>
+      <span class="sweep-window__counter-sel">{{
+        $t("sweep.windowNoneCounterSelective", {
+          ti: bestTIPoint.ti.toFixed(2),
+        })
+      }}</span>
     </template>
     <template v-else>
-      <span>{{ $t('sweep.windowNoneImpossible', { ti: bestTIPoint ? bestTIPoint.ti.toFixed(2) : '—' }) }}</span>
+      <span>{{
+        $t("sweep.windowNoneImpossible", {
+          ti: bestTIPoint ? bestTIPoint.ti.toFixed(2) : "—",
+        })
+      }}</span>
     </template>
     <span v-if="bestTIPoint" class="sweep-window__best-ti">
-      {{ $t('sweep.windowBestTI', {
-        ti:   bestTIPoint.ti.toFixed(2),
-        x:    bestTIPoint.x.toFixed(0),
-        drT:  (bestTIPoint.drT * 100).toFixed(0),
-        unit: sweepParam === 'field' ? $t('sweep.fieldUnit') : $t('sweep.freqUnit'),
-      }) }}
+      {{
+        $t("sweep.windowBestTI", {
+          ti: bestTIPoint.ti.toFixed(2),
+          x: bestTIPoint.x.toFixed(0),
+          drT: (bestTIPoint.drT * 100).toFixed(0),
+          unit:
+            sweepParam === "field"
+              ? $t("sweep.fieldUnit")
+              : $t("sweep.freqUnit"),
+        })
+      }}
     </span>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, type PropType } from 'vue'
+import { defineComponent, type PropType } from "vue";
 
-import { EMIT } from '@/constants/emitEvents'
-import { buildNoSweepWindowTooltip, buildSweepWindowTooltip } from '../lib'
+import { EMIT } from "@/constants/emitEvents";
+import { buildNoSweepWindowTooltip, buildSweepWindowTooltip } from "../lib";
 
 interface SweepPoint {
-  x: number; drH: number; drT: number; ti: number; tH: number; tT: number
+  x: number;
+  drH: number;
+  drT: number;
+  ti: number;
+  tH: number;
+  tT: number;
 }
 
 export default defineComponent({
   props: {
-    windowRange:    { type: Object as PropType<{ lo: number; hi: number } | null>, default: null },
-    sweepParam:     { type: String as () => 'field' | 'freq', required: true },
+    windowRange: {
+      type: Object as PropType<{ lo: number; hi: number } | null>,
+      default: null,
+    },
+    sweepParam: { type: String as () => "field" | "freq", required: true },
     recommendedMax: { type: Number as PropType<number | null>, default: null },
-    bestTIPoint:    { type: Object as PropType<SweepPoint | null>, default: null },
+    bestTIPoint: { type: Object as PropType<SweepPoint | null>, default: null },
   },
   emits: [EMIT.EXPAND],
 
   computed: {
-    EMIT() { return EMIT },
+    EMIT() {
+      return EMIT;
+    },
 
     tipWindow(): string {
-      return buildSweepWindowTooltip(this.windowRange, this.sweepParam)
+      return buildSweepWindowTooltip(this.windowRange, this.sweepParam);
     },
-    tipNoWindow(): string { return buildNoSweepWindowTooltip(this.sweepParam) },
+    tipNoWindow(): string {
+      return buildNoSweepWindowTooltip(this.sweepParam);
+    },
   },
-})
+});
 </script>
 
 <style lang="scss" scoped>
-
-
 .sweep-window {
   @include flex-row(0.6rem);
   align-items: center;
@@ -106,7 +142,10 @@ export default defineComponent({
     font-size: var(--fs-sm);
   }
 
-  &__sub { font-size: var(--fs-sm); color: var(--color-text-muted); }
+  &__sub {
+    font-size: var(--fs-sm);
+    color: var(--color-text-muted);
+  }
 
   &__expand {
     padding: 0.18rem 0.6rem;
@@ -118,7 +157,9 @@ export default defineComponent({
     font-size: var(--fs-xs);
     font-style: normal;
     cursor: pointer;
-    transition: background var(--tr-fast), border-color var(--tr-fast);
+    transition:
+      background var(--tr-fast),
+      border-color var(--tr-fast);
 
     &:hover {
       background: color-mix(in srgb, var(--color-primary) 20%, transparent);

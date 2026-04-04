@@ -1,2 +1,2 @@
-export * from './cellAnimation'
-export * from './cellCardModel'
+export * from "./cellAnimation";
+export * from "./cellCardModel";

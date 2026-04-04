@@ -2,80 +2,155 @@
 <template>
   <div class="instrument">
     <div class="instrument__inner">
-
       <!-- Page header -->
       <div class="instrument__header">
-        <PageHeader :eyebrow="$t('instrument.eyebrow')" :title="$t('instrument.title')">
-          <p class="instrument__subtitle">{{ $t('instrument.subtitle') }}</p>
+        <PageHeader
+          :eyebrow="$t('instrument.eyebrow')"
+          :title="$t('instrument.title')"
+        >
+          <p class="instrument__subtitle">{{ $t("instrument.subtitle") }}</p>
         </PageHeader>
       </div>
 
       <!-- Physics callout: why impedance matters -->
       <div class="instrument__callout">
         <div class="instrument__callout-col">
-          <div class="instrument__callout-label">{{ $t('instrument.view.calloutIonTitle') }}</div>
-          <div class="instrument__callout-formula" v-html="$t('instrument.view.calloutIonFormula')"></div>
-          <div class="instrument__callout-note" v-html="$t('instrument.view.calloutIonNote')"></div>
+          <div class="instrument__callout-label">
+            {{ $t("instrument.view.calloutIonTitle") }}
+          </div>
+          <div
+            class="instrument__callout-formula"
+            v-html="$t('instrument.view.calloutIonFormula')"
+          ></div>
+          <div
+            class="instrument__callout-note"
+            v-html="$t('instrument.view.calloutIonNote')"
+          ></div>
         </div>
-        <div class="instrument__callout-sep" aria-hidden="true">{{ ICON.ARROW_SHORT }}</div>
-        <div class="instrument__callout-col">
-          <div class="instrument__callout-label">{{ $t('instrument.view.calloutZTitle') }}</div>
-          <div class="instrument__callout-formula">{{ $t('instrument.view.calloutZFormula') }}</div>
-          <div class="instrument__callout-note">{{ $t('instrument.view.calloutZNote') }}</div>
+        <div class="instrument__callout-sep" aria-hidden="true">
+          {{ ICON.ARROW_SHORT }}
         </div>
-        <div class="instrument__callout-sep" aria-hidden="true">{{ ICON.ARROW_SHORT }}</div>
         <div class="instrument__callout-col">
-          <div class="instrument__callout-label">{{ $t('instrument.view.calloutCorrTitle') }}</div>
-          <div class="instrument__callout-formula" v-html="$t('instrument.view.calloutCorrFormula')"></div>
-          <div class="instrument__callout-note">{{ $t('instrument.view.calloutCorrNote') }}</div>
+          <div class="instrument__callout-label">
+            {{ $t("instrument.view.calloutZTitle") }}
+          </div>
+          <div class="instrument__callout-formula">
+            {{ $t("instrument.view.calloutZFormula") }}
+          </div>
+          <div class="instrument__callout-note">
+            {{ $t("instrument.view.calloutZNote") }}
+          </div>
+        </div>
+        <div class="instrument__callout-sep" aria-hidden="true">
+          {{ ICON.ARROW_SHORT }}
+        </div>
+        <div class="instrument__callout-col">
+          <div class="instrument__callout-label">
+            {{ $t("instrument.view.calloutCorrTitle") }}
+          </div>
+          <div
+            class="instrument__callout-formula"
+            v-html="$t('instrument.view.calloutCorrFormula')"
+          ></div>
+          <div class="instrument__callout-note">
+            {{ $t("instrument.view.calloutCorrNote") }}
+          </div>
         </div>
       </div>
 
       <!-- Live experiment context strip -->
       <div class="instrument__context-strip">
-        <div class="instrument__context-item" v-tip="$t('instrument.view.tipContextTarget')">
-          <span class="instrument__context-label">{{ $t('instrument.view.contextTarget') }}</span>
-          <span class="instrument__context-value">{{ cellStore.target.label }}</span>
+        <div
+          class="instrument__context-item"
+          v-tip="$t('instrument.view.tipContextTarget')"
+        >
+          <span class="instrument__context-label">{{
+            $t("instrument.view.contextTarget")
+          }}</span>
+          <span class="instrument__context-value">{{
+            cellStore.target.label
+          }}</span>
         </div>
         <div class="instrument__context-item">
-          <span class="instrument__context-label">{{ $t('instrument.view.contextMedium') }}</span>
-          <span class="instrument__context-value">{{ $t(`slider.mediums.${cellStore.medium}`) }}</span>
+          <span class="instrument__context-label">{{
+            $t("instrument.view.contextMedium")
+          }}</span>
+          <span class="instrument__context-value">{{
+            $t(`slider.mediums.${cellStore.medium}`)
+          }}</span>
         </div>
         <div class="instrument__context-item">
-          <span class="instrument__context-label">{{ $t('instrument.view.contextSigmaBase') }}</span>
-          <span class="instrument__context-value">{{ cellStore.effectiveSigmaE.toFixed(3) }} {{ UNIT.S_PER_M }}</span>
+          <span class="instrument__context-label">{{
+            $t("instrument.view.contextSigmaBase")
+          }}</span>
+          <span class="instrument__context-value"
+            >{{ cellStore.effectiveSigmaE.toFixed(3) }} {{ UNIT.S_PER_M }}</span
+          >
         </div>
         <div class="instrument__context-item">
-          <span class="instrument__context-label">{{ $t('instrument.view.contextField') }}</span>
-          <span class="instrument__context-value">{{ cellStore.fieldIntensity }} {{ UNIT.V_PER_CM }}</span>
+          <span class="instrument__context-label">{{
+            $t("instrument.view.contextField")
+          }}</span>
+          <span class="instrument__context-value"
+            >{{ cellStore.fieldIntensity }} {{ UNIT.V_PER_CM }}</span
+          >
         </div>
-        <div class="instrument__context-item" v-tip="$t('instrument.view.tipContextDR')">
-          <span class="instrument__context-label">{{ $t('instrument.view.contextDR') }}</span>
+        <div
+          class="instrument__context-item"
+          v-tip="$t('instrument.view.tipContextDR')"
+        >
+          <span class="instrument__context-label">{{
+            $t("instrument.view.contextDR")
+          }}</span>
           <span
             class="instrument__context-value"
             :class="{
-              'instrument__context-value--warn':   targetDR > 0.5,
+              'instrument__context-value--warn': targetDR > 0.5,
               'instrument__context-value--danger': targetDR > 0.85,
             }"
-          >{{ (targetDR * 100).toFixed(0) }}%</span>
+            >{{ (targetDR * 100).toFixed(0) }}%</span
+          >
         </div>
         <div class="instrument__context-item">
-          <span class="instrument__context-label">{{ $t('instrument.view.contextZNominal') }}</span>
-          <span class="instrument__context-value">{{ impStore.nominalImpedanceOhm.toFixed(1) }} {{ UNIT.OHM }}</span>
+          <span class="instrument__context-label">{{
+            $t("instrument.view.contextZNominal")
+          }}</span>
+          <span class="instrument__context-value"
+            >{{ impStore.nominalImpedanceOhm.toFixed(1) }} {{ UNIT.OHM }}</span
+          >
         </div>
-        <div class="instrument__context-item" v-tip="$t('instrument.view.tipContextCorrection')">
-          <span class="instrument__context-label">{{ $t('instrument.view.contextCorrection') }}</span>
+        <div
+          class="instrument__context-item"
+          v-tip="$t('instrument.view.tipContextCorrection')"
+        >
+          <span class="instrument__context-label">{{
+            $t("instrument.view.contextCorrection")
+          }}</span>
           <span
             class="instrument__context-value"
-            :class="{ 'instrument__context-value--warn': impStore.voltageCorrectionFactor > 1.05 }"
-          >{{ ICON.TIMES }}{{ impStore.voltageCorrectionFactor.toFixed(3) }}</span>
+            :class="{
+              'instrument__context-value--warn':
+                impStore.voltageCorrectionFactor > 1.05,
+            }"
+            >{{ ICON.TIMES
+            }}{{ impStore.voltageCorrectionFactor.toFixed(3) }}</span
+          >
         </div>
-        <div class="instrument__context-item" v-tip="$t('instrument.view.tipContextJoule')">
-          <span class="instrument__context-label">{{ $t('instrument.view.contextJoule') }}</span>
+        <div
+          class="instrument__context-item"
+          v-tip="$t('instrument.view.tipContextJoule')"
+        >
+          <span class="instrument__context-label">{{
+            $t("instrument.view.contextJoule")
+          }}</span>
           <span
             class="instrument__context-value"
-            :class="{ 'instrument__context-value--warn': impStore.mediumTempRiseRatePerSec > 1 }"
-          >{{ jouleDisplay }}</span>
+            :class="{
+              'instrument__context-value--warn':
+                impStore.mediumTempRiseRatePerSec > 1,
+            }"
+            >{{ jouleDisplay }}</span
+          >
         </div>
       </div>
 
@@ -86,65 +161,73 @@
       <div class="instrument__poc-note">
         <span class="instrument__poc-icon">{{ ICON.INFO }}</span>
         <div>
-          <strong>{{ $t('instrument.view.pocTitle') }}</strong><br>
+          <strong>{{ $t("instrument.view.pocTitle") }}</strong
+          ><br />
           <span v-html="$t('instrument.view.pocBody')"></span>
         </div>
       </div>
-
     </div>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue'
-import { mapStores } from 'pinia'
+import { defineComponent } from "vue";
+import { mapStores } from "pinia";
 
-import { useCellStore } from '@/stores/cellStore'
-import { useImpedanceStore } from '@/stores/impedanceStore'
-import { useUiStore } from '@/stores/uiStore'
+import { useCellStore } from "@/stores/cellStore";
+import { useImpedanceStore } from "@/stores/impedanceStore";
+import { useUiStore } from "@/stores/uiStore";
 
-import { InstrumentPanel } from '@/components/features'
-import { PageHeader } from '@/components/ui'
+import { InstrumentPanel } from "@/components/features";
+import { PageHeader } from "@/components/ui";
 
-import { scrollAndHighlight } from '@/utils/highlight'
+import { scrollAndHighlight } from "@/utils/highlight";
 
-import { UNIT } from '@/constants/units'
-import { ICON } from '@/constants/icons'
+import { UNIT } from "@/constants/units";
+import { ICON } from "@/constants/icons";
 export default defineComponent({
-  name: 'InstrumentView',
+  name: "InstrumentView",
   components: { InstrumentPanel, PageHeader },
   mounted() {
-    const targetId = this.uiStore.pendingHighlight
+    const targetId = this.uiStore.pendingHighlight;
     if (targetId) {
-      this.uiStore.clearPendingHighlight()
-      scrollAndHighlight(targetId, 300)
+      this.uiStore.clearPendingHighlight();
+      scrollAndHighlight(targetId, 300);
     }
   },
 
   computed: {
     ...mapStores(useCellStore, useImpedanceStore, useUiStore),
-    UNIT() { return UNIT },
-    ICON() { return ICON },
-    cellStore() { return useCellStore() },
-    impStore() { return useImpedanceStore() },
-    uiStore() { return useUiStore() },
+    UNIT() {
+      return UNIT;
+    },
+    ICON() {
+      return ICON;
+    },
+    cellStore() {
+      return useCellStore();
+    },
+    impStore() {
+      return useImpedanceStore();
+    },
+    uiStore() {
+      return useUiStore();
+    },
 
     targetDR(): number {
-      return this.cellStore.targetDisruptionRatio
+      return this.cellStore.targetDisruptionRatio;
     },
     jouleDisplay(): string {
-      const mW = this.impStore.mediumJouleHeatingMilliWatts
-      if (mW >= 1000) return `${(mW / 1000).toFixed(2)} ${this.UNIT.W}`
-      if (mW >= 1)    return `${mW.toFixed(1)} ${this.UNIT.MW}`
-      return `${mW.toFixed(3)} ${this.UNIT.MW}`
+      const mW = this.impStore.mediumJouleHeatingMilliWatts;
+      if (mW >= 1000) return `${(mW / 1000).toFixed(2)} ${this.UNIT.W}`;
+      if (mW >= 1) return `${mW.toFixed(1)} ${this.UNIT.MW}`;
+      return `${mW.toFixed(3)} ${this.UNIT.MW}`;
     },
   },
-})
+});
 </script>
 
 <style lang="scss" scoped>
-
-
 .instrument {
   min-height: 100vh;
   background: var(--color-bg);
@@ -239,7 +322,9 @@ export default defineComponent({
     flex: 1;
     min-width: 100px;
 
-    &:last-child { border-right: none; }
+    &:last-child {
+      border-right: none;
+    }
   }
 
   &__context-label {
@@ -255,8 +340,12 @@ export default defineComponent({
     font-weight: 600;
     color: var(--color-text);
 
-    &--warn   { color: var(--color-amber-warm); }
-    &--danger { color: var(--color-danger); }
+    &--warn {
+      color: var(--color-amber-warm);
+    }
+    &--danger {
+      color: var(--color-danger);
+    }
   }
 
   // ── PoC note ──────────────────────────────────────────────────────────────────
@@ -273,9 +362,14 @@ export default defineComponent({
     color: var(--color-text-muted);
     line-height: 1.6;
 
-    strong { color: var(--color-text); }
-    em     { color: var(--color-primary); font-style: normal; }
-    code   {
+    strong {
+      color: var(--color-text);
+    }
+    em {
+      color: var(--color-primary);
+      font-style: normal;
+    }
+    code {
       font-family: var(--font-mono);
       font-size: var(--fs-sm);
       background: color-mix(in srgb, var(--color-primary) 10%, transparent);
@@ -302,12 +396,25 @@ export default defineComponent({
   .instrument {
     padding: 1rem 0 3rem;
 
-    &__inner { padding: 0 1rem; gap: 1.5rem; }
-    &__title { font-size: 1.5rem; }
+    &__inner {
+      padding: 0 1rem;
+      gap: 1.5rem;
+    }
+    &__title {
+      font-size: 1.5rem;
+    }
     &__callout {
       grid-template-columns: 1fr;
-      &-col { padding: 0.75rem 1rem; border-bottom: 1px solid var(--color-border); &:last-child { border-bottom: none; } }
-      &-sep { display: none; }
+      &-col {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid var(--color-border);
+        &:last-child {
+          border-bottom: none;
+        }
+      }
+      &-sep {
+        display: none;
+      }
     }
   }
 }

@@ -1,6 +1,10 @@
 <!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
 <template>
-  <div id="hl-heatmap" class="hmap" v-if="cellStore.targetCellCategory === CELL_CATEGORY.MAMMALIAN">
+  <div
+    id="hl-heatmap"
+    class="hmap"
+    v-if="cellStore.targetCellCategory === CELL_CATEGORY.MAMMALIAN"
+  >
     <AccordionPanel
       :icon="ICON.WAVE"
       :title="$t('heatmap.title')"
@@ -10,7 +14,6 @@
       @open-change="onAccordionChange"
     >
       <div class="hmap__body">
-
         <HeatmapCanvas
           :open="open"
           @hover-info-change="hoverInfo = $event"
@@ -22,54 +25,68 @@
         <HeatmapLegend />
 
         <HeatmapStats :op-zone-color="opZoneColor" />
-
       </div>
     </AccordionPanel>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue'
-import { mapStores } from 'pinia'
+import { defineComponent } from "vue";
+import { mapStores } from "pinia";
 
-import { useCellStore } from '@/stores/cellStore'
+import { useCellStore } from "@/stores/cellStore";
 
-import { AccordionPanel } from '@/components/ui'
+import { AccordionPanel } from "@/components/ui";
 
-import { CELL_CATEGORY } from '@/constants/strings'
-import { ICON } from '@/constants/icons'
+import { CELL_CATEGORY } from "@/constants/strings";
+import { ICON } from "@/constants/icons";
 
-import type { HoverInfo } from '@/types/heatmap'
+import type { HoverInfo } from "@/types/heatmap";
 
-import { HeatmapCanvas, HeatmapLegend, HeatmapReadout, HeatmapStats } from './components'
+import {
+  HeatmapCanvas,
+  HeatmapLegend,
+  HeatmapReadout,
+  HeatmapStats,
+} from "./components";
 
 export default defineComponent({
-  name: 'TherapeuticHeatmap',
-  components: { AccordionPanel, HeatmapCanvas, HeatmapReadout, HeatmapLegend, HeatmapStats },
+  name: "TherapeuticHeatmap",
+  components: {
+    AccordionPanel,
+    HeatmapCanvas,
+    HeatmapReadout,
+    HeatmapLegend,
+    HeatmapStats,
+  },
 
   computed: {
-    ICON() { return ICON },
-    CELL_CATEGORY() { return CELL_CATEGORY },
+    ICON() {
+      return ICON;
+    },
+    CELL_CATEGORY() {
+      return CELL_CATEGORY;
+    },
     ...mapStores(useCellStore),
   },
 
   data() {
     return {
-      open:        false,
-      hoverInfo:   null as HoverInfo | null,
-      opZoneColor: 'var(--color-text)',
-    }
+      open: false,
+      hoverInfo: null as HoverInfo | null,
+      opZoneColor: "var(--color-text)",
+    };
   },
 
   methods: {
-    onAccordionChange(v: boolean) { this.open = v },
+    onAccordionChange(v: boolean) {
+      this.open = v;
+    },
   },
-})
+});
 </script>
 
 <style lang="scss" scoped>
-
-
 .hmap {
   @include surface-card(var(--radius));
   overflow: hidden;

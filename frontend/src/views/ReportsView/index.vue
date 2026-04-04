@@ -2,25 +2,24 @@
 <template>
   <div class="reports">
     <div class="reports__inner">
-
       <!-- Page header -->
       <PageHeader :eyebrow="$t('reports.eyebrow')" :title="$t('reports.title')">
         <div class="reports__header-row">
-          <p class="reports__subtitle">{{ $t('reports.subtitle') }}</p>
+          <p class="reports__subtitle">{{ $t("reports.subtitle") }}</p>
           <div class="reports__header-actions">
             <button
               class="reports__btn reports__btn--export"
               :disabled="totalReadings === 0"
               @click="store.exportCSV()"
             >
-              {{ $t('reports.exportCsv') }}
+              {{ $t("reports.exportCsv") }}
             </button>
             <button
               class="reports__btn reports__btn--clear"
               :disabled="totalReadings === 0"
               @click="store.clearLog()"
             >
-              {{ $t('reports.clearLog') }}
+              {{ $t("reports.clearLog") }}
             </button>
           </div>
         </div>
@@ -31,14 +30,14 @@
         <span class="reports__session-meta">
           {{ totalReadings }} {{ countLabel }}
           <template v-if="distinctSessionCount > 1">
-            · {{ $t('reports.sessionMultiple', { n: distinctSessionCount }) }}
+            · {{ $t("reports.sessionMultiple", { n: distinctSessionCount }) }}
           </template>
         </span>
         <span v-if="sampleDescription" class="reports__session-sample">
-          {{ $t('reports.sampleDescLabel') }} {{ sampleDescription }}
+          {{ $t("reports.sampleDescLabel") }} {{ sampleDescription }}
         </span>
         <span v-if="sessionNotes" class="reports__session-notes">
-          {{ $t('reports.sessionNotesLabel') }} {{ sessionNotes }}
+          {{ $t("reports.sessionNotesLabel") }} {{ sessionNotes }}
         </span>
       </div>
 
@@ -58,7 +57,7 @@
       <!-- Log card -->
       <div class="reports__log-card">
         <div class="reports__log-card-hdr">
-          <span class="reports__log-title">{{ $t('reports.logTitle') }}</span>
+          <span class="reports__log-title">{{ $t("reports.logTitle") }}</span>
           <span class="reports__log-count">
             {{ totalReadings }} {{ countLabel }}
           </span>
@@ -82,84 +81,163 @@
 
         <ReportsLogLegend v-if="totalReadings > 0" />
       </div>
-
     </div>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, computed, ref } from 'vue'
-import { useI18n } from 'vue-i18n'
+import { defineComponent, computed, ref } from "vue";
+import { useI18n } from "vue-i18n";
 
-import type { LogEntry } from '@/stores/experimentStore'
-import { useExperimentStore } from '@/stores/experimentStore'
+import type { LogEntry } from "@/stores/experimentStore";
+import { useExperimentStore } from "@/stores/experimentStore";
 
-import { PageHeader, StatCard } from '@/components/ui'
+import { PageHeader, StatCard } from "@/components/ui";
 
-import { formatFreqKHz, formatFieldVcm, formatRange } from '@/utils/format'
+import { formatFreqKHz, formatFieldVcm, formatRange } from "@/utils/format";
 
-import { LOG_EVENT, NULL_DISPLAY } from '@/constants/strings'
-import { THRESHOLDS } from '@/constants/physics'
+import { LOG_EVENT, NULL_DISPLAY } from "@/constants/strings";
+import { THRESHOLDS } from "@/constants/physics";
 
-import ReportsLogEmpty from './ReportsLogEmpty.vue'
-import ReportsMethodsBar from './ReportsMethodsBar.vue'
-import ReportsLogTable from './ReportsLogTable.vue'
-import ReportsLogLegend from './ReportsLogLegend.vue'
+import ReportsLogEmpty from "./ReportsLogEmpty.vue";
+import ReportsMethodsBar from "./ReportsMethodsBar.vue";
+import ReportsLogTable from "./ReportsLogTable.vue";
+import ReportsLogLegend from "./ReportsLogLegend.vue";
 
 export default defineComponent({
-  name: 'ReportsView',
+  name: "ReportsView",
 
-  components: { StatCard, PageHeader, ReportsLogEmpty, ReportsMethodsBar, ReportsLogTable, ReportsLogLegend },
+  components: {
+    StatCard,
+    PageHeader,
+    ReportsLogEmpty,
+    ReportsMethodsBar,
+    ReportsLogTable,
+    ReportsLogLegend,
+  },
 
   setup() {
-    const store = useExperimentStore()
-    const { t } = useI18n()
-    const selectedEntry = ref<LogEntry | null>(null)
+    const store = useExperimentStore();
+    const { t } = useI18n();
+    const selectedEntry = ref<LogEntry | null>(null);
 
     // ── Helper: returns fn() result or null when there are no entries ──────────
     function withEntries<T>(fn: () => T): T | null {
-      return store.entries.length ? fn() : null
+      return store.entries.length ? fn() : null;
     }
 
-    const totalReadings        = computed(() => store.entries.length)
-    const reversedEntries      = computed(() => [...store.entries].reverse())
-    const distinctSessionCount = computed(() => new Set(store.entries.map((e) => e.sessionName ?? store.sessionName)).size)
-    const lysisEvents          = computed(() => store.entries.filter((e) => e.event === LOG_EVENT.LYSIS).length)
-    const manualReadings       = computed(() => store.entries.filter((e) => e.event === LOG_EVENT.MANUAL).length)
-    const countLabel           = computed(() => totalReadings.value === 1 ? t('reports.countSingular') : t('reports.countPlural'))
+    const totalReadings = computed(() => store.entries.length);
+    const reversedEntries = computed(() => [...store.entries].reverse());
+    const distinctSessionCount = computed(
+      () =>
+        new Set(store.entries.map((e) => e.sessionName ?? store.sessionName))
+          .size,
+    );
+    const lysisEvents = computed(
+      () => store.entries.filter((e) => e.event === LOG_EVENT.LYSIS).length,
+    );
+    const manualReadings = computed(
+      () => store.entries.filter((e) => e.event === LOG_EVENT.MANUAL).length,
+    );
+    const countLabel = computed(() =>
+      totalReadings.value === 1
+        ? t("reports.countSingular")
+        : t("reports.countPlural"),
+    );
 
-    const avgSelectivity  = computed(() => withEntries(() => {
-      const sum = store.entries.reduce((acc, e) => acc + e.selectivity, 0)
-      return (sum / store.entries.length).toFixed(3)
-    }))
-    const peakSelectivity = computed(() => withEntries(() =>
-      Math.max(...store.entries.map((e) => e.selectivity)).toFixed(3)
-    ))
-    const freqRange       = computed(() => withEntries(() =>
-      formatRange(store.entries.map((e) => e.freqKHz), formatFreqKHz)
-    ))
-    const fieldRange      = computed(() => withEntries(() =>
-      formatRange(store.entries.map((e) => e.fieldVcm), formatFieldVcm)
-    ))
-    const peakTargetRatio = computed(() => withEntries(() =>
-      (Math.max(...store.entries.map((e) => e.targetRatio)) * 100).toFixed(1) + '%'
-    ))
+    const avgSelectivity = computed(() =>
+      withEntries(() => {
+        const sum = store.entries.reduce((acc, e) => acc + e.selectivity, 0);
+        return (sum / store.entries.length).toFixed(3);
+      }),
+    );
+    const peakSelectivity = computed(() =>
+      withEntries(() =>
+        Math.max(...store.entries.map((e) => e.selectivity)).toFixed(3),
+      ),
+    );
+    const freqRange = computed(() =>
+      withEntries(() =>
+        formatRange(
+          store.entries.map((e) => e.freqKHz),
+          formatFreqKHz,
+        ),
+      ),
+    );
+    const fieldRange = computed(() =>
+      withEntries(() =>
+        formatRange(
+          store.entries.map((e) => e.fieldVcm),
+          formatFieldVcm,
+        ),
+      ),
+    );
+    const peakTargetRatio = computed(() =>
+      withEntries(
+        () =>
+          (Math.max(...store.entries.map((e) => e.targetRatio)) * 100).toFixed(
+            1,
+          ) + "%",
+      ),
+    );
 
     const statCards = computed(() => [
-      { label: t('reports.totalReadings'),   value: String(totalReadings.value),        variant: totalReadings.value === 0 ? 'muted' : 'default', tooltip: t('reports.totalReadingsTitle') },
-      { label: t('reports.lysisEvents'),     value: String(lysisEvents.value),          variant: 'danger',  tooltip: t('reports.lysisEventsTitle') },
-      { label: t('reports.manualReadings'),  value: String(manualReadings.value),       variant: undefined, tooltip: t('reports.manualReadingsTitle') },
-      { label: t('reports.avgSelectivity'),  value: avgSelectivity.value  ?? NULL_DISPLAY, variant: 'primary', tooltip: t('reports.avgSelectivityTitle') },
-      { label: t('reports.peakSelectivity'), value: peakSelectivity.value ?? NULL_DISPLAY, variant: 'ok',      tooltip: t('reports.peakSelectivityTitle') },
-      { label: t('reports.peakTargetRatio'), value: peakTargetRatio.value ?? NULL_DISPLAY, variant: 'danger',  tooltip: t('reports.peakTargetRatioTitle') },
-      { label: t('reports.freqRange'),       value: freqRange.value  ?? NULL_DISPLAY,   variant: undefined, tooltip: t('reports.freqRangeTitle'),  wide: true },
-      { label: t('reports.fieldRange'),      value: fieldRange.value ?? NULL_DISPLAY,   variant: undefined, tooltip: t('reports.fieldRangeTitle'), wide: true },
-    ])
+      {
+        label: t("reports.totalReadings"),
+        value: String(totalReadings.value),
+        variant: totalReadings.value === 0 ? "muted" : "default",
+        tooltip: t("reports.totalReadingsTitle"),
+      },
+      {
+        label: t("reports.lysisEvents"),
+        value: String(lysisEvents.value),
+        variant: "danger",
+        tooltip: t("reports.lysisEventsTitle"),
+      },
+      {
+        label: t("reports.manualReadings"),
+        value: String(manualReadings.value),
+        variant: undefined,
+        tooltip: t("reports.manualReadingsTitle"),
+      },
+      {
+        label: t("reports.avgSelectivity"),
+        value: avgSelectivity.value ?? NULL_DISPLAY,
+        variant: "primary",
+        tooltip: t("reports.avgSelectivityTitle"),
+      },
+      {
+        label: t("reports.peakSelectivity"),
+        value: peakSelectivity.value ?? NULL_DISPLAY,
+        variant: "ok",
+        tooltip: t("reports.peakSelectivityTitle"),
+      },
+      {
+        label: t("reports.peakTargetRatio"),
+        value: peakTargetRatio.value ?? NULL_DISPLAY,
+        variant: "danger",
+        tooltip: t("reports.peakTargetRatioTitle"),
+      },
+      {
+        label: t("reports.freqRange"),
+        value: freqRange.value ?? NULL_DISPLAY,
+        variant: undefined,
+        tooltip: t("reports.freqRangeTitle"),
+        wide: true,
+      },
+      {
+        label: t("reports.fieldRange"),
+        value: fieldRange.value ?? NULL_DISPLAY,
+        variant: undefined,
+        tooltip: t("reports.fieldRangeTitle"),
+        wide: true,
+      },
+    ]);
 
     function selClass(sel: number): string {
-      if (sel >= THRESHOLDS.SEL_STRONG)   return 'reports__green-val'
-      if (sel >= THRESHOLDS.SEL_MARGINAL) return 'reports__warn-val'
-      return 'reports__cancer-val'
+      if (sel >= THRESHOLDS.SEL_STRONG) return "reports__green-val";
+      if (sel >= THRESHOLDS.SEL_MARGINAL) return "reports__warn-val";
+      return "reports__cancer-val";
     }
 
     return {
@@ -175,26 +253,24 @@ export default defineComponent({
       sessionNotes: computed(() => store.sessionNotes),
       statCards,
       selClass,
-    }
+    };
   },
 
   methods: {
     selectEntry(e: LogEntry) {
-      this.selectedEntry = this.selectedEntry?.id === e.id ? null : e
+      this.selectedEntry = this.selectedEntry?.id === e.id ? null : e;
     },
     dismissSelection() {
-      this.selectedEntry = null
+      this.selectedEntry = null;
     },
     downloadSelectedMethods() {
-      if (this.selectedEntry) this.store.exportEntryMethods(this.selectedEntry)
+      if (this.selectedEntry) this.store.exportEntryMethods(this.selectedEntry);
     },
   },
-})
+});
 </script>
 
 <style lang="scss" scoped>
-
-
 /* ── Page shell ───────────────────────────────────────────────────────────── */
 .reports {
   flex: 1;
@@ -240,7 +316,10 @@ export default defineComponent({
     transition: all var(--tr-fast);
     background: transparent;
 
-    &:disabled { opacity: 0.3; cursor: not-allowed; }
+    &:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
 
     &--export {
       color: var(--color-primary);
@@ -289,17 +368,30 @@ export default defineComponent({
     grid-template-columns: repeat(6, 1fr);
     gap: 0.75rem;
 
-    @media (max-width: 1100px) { grid-template-columns: repeat(3, 1fr); }
-    @media (max-width: 700px)  { grid-template-columns: repeat(2, 1fr); }
+    @media (max-width: 1100px) {
+      grid-template-columns: repeat(3, 1fr);
+    }
+    @media (max-width: 700px) {
+      grid-template-columns: repeat(2, 1fr);
+    }
   }
 
-  &__stat-card--wide { grid-column: span 1; }
+  &__stat-card--wide {
+    grid-column: span 1;
+  }
 
   /* ── Mobile layout ────────────────────────────────────────────────────────── */
   @media (max-width: 700px) {
-    &__inner      { padding: 1rem 0.85rem 3rem; }
-    &__header-row { flex-direction: column; align-items: flex-start; }
-    &__session-summary { flex-wrap: wrap; }
+    &__inner {
+      padding: 1rem 0.85rem 3rem;
+    }
+    &__header-row {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    &__session-summary {
+      flex-wrap: wrap;
+    }
   }
 
   /* ── Log card ─────────────────────────────────────────────────────────────── */

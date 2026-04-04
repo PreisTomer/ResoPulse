@@ -36,25 +36,32 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue'
+import { defineComponent } from "vue";
 
-import CuvetteSetup        from './components/CuvetteSetup.vue'
-import ImpedanceMeter      from './components/ImpedanceMeter.vue'
-import ImpedanceBodePlot   from './components/ImpedanceBodePlot.vue'
-import FieldCorrector      from './components/FieldCorrector.vue'
-import HardwareInput       from './components/HardwareInput.vue'
-import ImpedanceTrend      from './components/ImpedanceTrend.vue'
-import LoadMonitor         from './components/LoadMonitor.vue'
-import SonificationToggle  from './components/SonificationToggle.vue'
+import CuvetteSetup from "./components/CuvetteSetup.vue";
+import ImpedanceMeter from "./components/ImpedanceMeter.vue";
+import ImpedanceBodePlot from "./components/ImpedanceBodePlot.vue";
+import FieldCorrector from "./components/FieldCorrector.vue";
+import HardwareInput from "./components/HardwareInput.vue";
+import ImpedanceTrend from "./components/ImpedanceTrend.vue";
+import LoadMonitor from "./components/LoadMonitor.vue";
+import SonificationToggle from "./components/SonificationToggle.vue";
 export default defineComponent({
-  name: 'InstrumentPanel',
-  components: { CuvetteSetup, ImpedanceMeter, ImpedanceBodePlot, FieldCorrector, HardwareInput, ImpedanceTrend, LoadMonitor, SonificationToggle },
-})
+  name: "InstrumentPanel",
+  components: {
+    CuvetteSetup,
+    ImpedanceMeter,
+    ImpedanceBodePlot,
+    FieldCorrector,
+    HardwareInput,
+    ImpedanceTrend,
+    LoadMonitor,
+    SonificationToggle,
+  },
+});
 </script>
 
 <style lang="scss" scoped>
-
-
 .inst-panel {
   display: flex;
   flex-direction: column;

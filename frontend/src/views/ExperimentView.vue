@@ -1,7 +1,9 @@
 <!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
 <template>
-  <div class="experiment" @click.self="($refs.header as ExperimentHeaderInstance)?.closeAllPickers()">
-
+  <div
+    class="experiment"
+    @click.self="($refs.header as ExperimentHeaderInstance)?.closeAllPickers()"
+  >
     <!-- ── Combined header bar ───────────────────────────────────── -->
     <ExperimentHeader
       ref="header"
@@ -14,7 +16,6 @@
 
     <!-- ── Main content ──────────────────────────────────────────── -->
     <div class="experiment__main">
-
       <!-- Row 1: Cell cards side-by-side + field controls -->
       <div class="experiment__top">
         <!-- Sentinel: observed by IntersectionObserver to detect when cells scroll out of view -->
@@ -71,16 +72,22 @@
       <TherapeuticHeatmap />
 
       <!-- Row 5 & 6: Research analysis tools - sweep + population (collapsible, full width) -->
-      <SweepPanel id="hl-sweep-panel" @window-change="onSweepWindowChange" @open-change="sweepPanelOpen = $event" />
+      <SweepPanel
+        id="hl-sweep-panel"
+        @window-change="onSweepWindowChange"
+        @open-change="sweepPanelOpen = $event"
+      />
 
       <!-- Therapeutic window snap bar - appears below sweep results, where the user already is -->
       <SnapBar v-if="sweepWindow" :sweep-window="sweepWindow" />
 
-      <PopulationPanel id="hl-population-panel" @open-change="populationPanelOpen = $event" />
+      <PopulationPanel
+        id="hl-population-panel"
+        @open-change="populationPanelOpen = $event"
+      />
 
       <!-- Row 7: Log (full width) -->
       <ExperimentLog id="hl-experiment-log" />
-
     </div>
   </div>
 
@@ -94,20 +101,19 @@
 
   <!-- AI Protocol Optimizer side tab - always visible, starts collapsed -->
   <AiOptimizerTab />
-
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue'
-import { mapStores } from 'pinia'
+import { defineComponent } from "vue";
+import { mapStores } from "pinia";
 
-import { useCellStore } from '@/stores/cellStore'
-import { useExperimentStore } from '@/stores/experimentStore'
-import { useUiStore } from '@/stores/uiStore'
+import { useCellStore } from "@/stores/cellStore";
+import { useExperimentStore } from "@/stores/experimentStore";
+import { useUiStore } from "@/stores/uiStore";
 
-import { connectSocket, broadcastStateSync } from '@/services/socket'
+import { connectSocket, broadcastStateSync } from "@/services/socket";
 
-import { AccordionPanel } from '@/components/ui'
+import { AccordionPanel } from "@/components/ui";
 import {
   AiOptimizerTab,
   CellCard,
@@ -125,18 +131,28 @@ import {
   SweepPanel,
   TherapeuticHeatmap,
   type CellCardRow,
-} from '@/components/features'
+} from "@/components/features";
 
-import { computeSAR } from '@/utils/physics'
-import { scrollAndHighlight } from '@/utils/highlight'
+import { computeSAR } from "@/utils/physics";
+import { scrollAndHighlight } from "@/utils/highlight";
 
-import { CELL_PRESETS } from '@/constants/cellLibrary'
-import { CATEGORY_DEFAULTS, INITIAL_RESONANT_FIELD_FRACTION, DEFAULT_LYSIS_N_PULSES, DEFAULT_ORIENTATION_DEG } from '@/constants/experimentDefaults'
-import { WF_CW, WF_PULSED } from '@/constants/physics'
-import { CELL_CATEGORY, CELL_TYPE, CHART_MODE, WAVEFORM } from '@/constants/strings'
-import { ICON } from '@/constants/icons'
+import { CELL_PRESETS } from "@/constants/cellLibrary";
+import {
+  CATEGORY_DEFAULTS,
+  INITIAL_RESONANT_FIELD_FRACTION,
+  DEFAULT_LYSIS_N_PULSES,
+  DEFAULT_ORIENTATION_DEG,
+} from "@/constants/experimentDefaults";
+import { WF_CW, WF_PULSED } from "@/constants/physics";
+import {
+  CELL_CATEGORY,
+  CELL_TYPE,
+  CHART_MODE,
+  WAVEFORM,
+} from "@/constants/strings";
+import { ICON } from "@/constants/icons";
 
-type ExperimentHeaderInstance = InstanceType<typeof ExperimentHeader>
+type ExperimentHeaderInstance = InstanceType<typeof ExperimentHeader>;
 
 export default defineComponent({
   components: {
@@ -159,226 +175,262 @@ export default defineComponent({
   },
 
   created() {
-    connectSocket()
-    this.cellStore.startSession()
-    this.doseLastMs = Date.now()
+    connectSocket();
+    this.cellStore.startSession();
+    this.doseLastMs = Date.now();
     this.doseTimer = setInterval(() => {
-      const now     = Date.now()
-      const dtMs    = now - this.doseLastMs
-      this.doseLastMs = now
+      const now = Date.now();
+      const dtMs = now - this.doseLastMs;
+      this.doseLastMs = now;
       const sar = computeSAR(
         this.cellStore.target,
         this.cellStore.fieldIntensity,
         this.cellStore.effectiveSigmaE,
         this.cellStore.waveform === WAVEFORM.CW ? WF_CW : WF_PULSED,
-      )
-      this.experimentStore.addDoseSample(sar, this.cellStore.dutyCycle, dtMs)
-    }, 1000)
+      );
+      this.experimentStore.addDoseSample(sar, this.cellStore.dutyCycle, dtMs);
+    }, 1000);
   },
 
   data() {
     return {
-      sweepWindow: null as { lo: number; hi: number; param: 'field' | 'freq' } | null,
+      sweepWindow: null as {
+        lo: number;
+        hi: number;
+        param: "field" | "freq";
+      } | null,
       sweepPanelOpen: false,
       populationPanelOpen: false,
-      _sweepNullTimer:  null as ReturnType<typeof setTimeout> | null,
+      _sweepNullTimer: null as ReturnType<typeof setTimeout> | null,
       notesOpen: false,
       doseTimer: null as ReturnType<typeof setInterval> | null,
       doseLastMs: 0,
       showStickySimView: false,
       cellsObserver: null as IntersectionObserver | null,
-    }
+    };
   },
 
   watch: {
     currentTargetId(newId: string, oldId: string) {
       if (newId !== oldId) {
-        this.applyTargetDefaults()
+        this.applyTargetDefaults();
       }
     },
 
     currentHealthyId(newId: string, oldId: string) {
       if (newId !== oldId) {
-        this.applyTargetDefaults()
+        this.applyTargetDefaults();
       }
     },
     // Resonance mode has no physical meaning for mammalian cells; revert if category changes via param editing.
-    'cellStore.targetCellCategory'(cat: string) {
+    "cellStore.targetCellCategory"(cat: string) {
       if (cat === CELL_CATEGORY.MAMMALIAN && this.cellStore.isResonanceMode) {
-        this.cellStore.setChartMode(CHART_MODE.SCHWAN)
+        this.cellStore.setChartMode(CHART_MODE.SCHWAN);
       }
     },
   },
 
   computed: {
-    ICON() { return ICON },
-    CHART_MODE() { return CHART_MODE },
+    ICON() {
+      return ICON;
+    },
+    CHART_MODE() {
+      return CHART_MODE;
+    },
     ...mapStores(useCellStore, useExperimentStore, useUiStore),
 
     currentTargetId(): string {
-      return this.cellStore.target.id
+      return this.cellStore.target.id;
     },
 
     currentHealthyId(): string {
-      return this.cellStore.healthy.id
+      return this.cellStore.healthy.id;
     },
 
     chartModeLabel(): string {
       return !this.cellStore.isResonanceMode
-        ? this.$t('exp.chartModeSchwan')
-        : this.$t('exp.chartModeResonance')
+        ? this.$t("exp.chartModeSchwan")
+        : this.$t("exp.chartModeResonance");
     },
 
     cells(): CellCardRow[] {
       // Resolve label + sublabel from the live store cell (changes when preset loads)
-      const cellLabel = (type: 'healthy' | 'target') => {
-        return type === CELL_TYPE.HEALTHY ? this.cellStore.healthy.label : this.cellStore.target.label
-      }
-      const cellSublabel = (type: 'healthy' | 'target') => {
-        const cell = type === CELL_TYPE.HEALTHY ? this.cellStore.healthy : this.cellStore.target
-        const preset = CELL_PRESETS.find((p) => p.presetId === cell.id)
-        return preset ? preset.notes : this.$t(`cells.${type}.sublabel`)
-      }
-      const cellSublabelTip = (type: 'healthy' | 'target') => {
-        const cell = type === CELL_TYPE.HEALTHY ? this.cellStore.healthy : this.cellStore.target
-        const preset = CELL_PRESETS.find((p) => p.presetId === cell.id)
-        return preset?.techNotes ?? ''
-      }
+      const cellLabel = (type: "healthy" | "target") => {
+        return type === CELL_TYPE.HEALTHY
+          ? this.cellStore.healthy.label
+          : this.cellStore.target.label;
+      };
+      const cellSublabel = (type: "healthy" | "target") => {
+        const cell =
+          type === CELL_TYPE.HEALTHY
+            ? this.cellStore.healthy
+            : this.cellStore.target;
+        const preset = CELL_PRESETS.find((p) => p.presetId === cell.id);
+        return preset ? preset.notes : this.$t(`cells.${type}.sublabel`);
+      };
+      const cellSublabelTip = (type: "healthy" | "target") => {
+        const cell =
+          type === CELL_TYPE.HEALTHY
+            ? this.cellStore.healthy
+            : this.cellStore.target;
+        const preset = CELL_PRESETS.find((p) => p.presetId === cell.id);
+        return preset?.techNotes ?? "";
+      };
       return [
         {
-          id: 'healthy',
-          type: 'healthy' as const,
-          label: cellLabel('healthy'),
-          sublabel: cellSublabel('healthy'),
-          sublabelTip: cellSublabelTip('healthy'),
-          description: this.cellStore.healthy.description ?? this.$t('cells.healthy.description'),
+          id: "healthy",
+          type: "healthy" as const,
+          label: cellLabel("healthy"),
+          sublabel: cellSublabel("healthy"),
+          sublabelTip: cellSublabelTip("healthy"),
+          description:
+            this.cellStore.healthy.description ??
+            this.$t("cells.healthy.description"),
           cellData: this.cellStore.healthy,
         },
         {
-          id: 'target',
-          type: 'target' as const,
-          label: cellLabel('target'),
-          sublabel: cellSublabel('target'),
-          sublabelTip: cellSublabelTip('target'),
-          description: this.cellStore.target.description ?? this.$t('cells.target.description'),
+          id: "target",
+          type: "target" as const,
+          label: cellLabel("target"),
+          sublabel: cellSublabel("target"),
+          sublabelTip: cellSublabelTip("target"),
+          description:
+            this.cellStore.target.description ??
+            this.$t("cells.target.description"),
           cellData: this.cellStore.target,
         },
-      ]
+      ];
     },
   },
 
   methods: {
     scrollToCells() {
-      window.scrollTo({ top: 0, behavior: 'smooth' })
+      window.scrollTo({ top: 0, behavior: "smooth" });
     },
 
-    onSweepWindowChange(w: { lo: number; hi: number; param: 'field' | 'freq' } | null) {
+    onSweepWindowChange(
+      w: { lo: number; hi: number; param: "field" | "freq" } | null,
+    ) {
       if (w !== null) {
         // Non-null window: apply immediately and cancel any pending null-out.
         // This prevents the snap bar from flashing away during a mid-sweep recalculation.
         if (this._sweepNullTimer) {
-          clearTimeout(this._sweepNullTimer)
-          this._sweepNullTimer = null
+          clearTimeout(this._sweepNullTimer);
+          this._sweepNullTimer = null;
         }
-        this.sweepWindow = w
+        this.sweepWindow = w;
       } else {
         // Null window: hold 450 ms before hiding the snap bar.
         // If the sweep produces a window again within that window (e.g. after snap settles),
         // the null is discarded and the bar stays visible without any flash.
-        if (this._sweepNullTimer) clearTimeout(this._sweepNullTimer)
+        if (this._sweepNullTimer) clearTimeout(this._sweepNullTimer);
         this._sweepNullTimer = setTimeout(() => {
-          this._sweepNullTimer = null
-          this.sweepWindow = null
-        }, 450)
+          this._sweepNullTimer = null;
+          this.sweepWindow = null;
+        }, 450);
       }
     },
 
     // Sets category-appropriate starting params at mount; does NOT broadcast (peers not ready yet).
     // Sanitizes time-domain params to prevent cross-session physics bugs.
     sanitizeCategoryParams() {
-      const cat = this.cellStore.targetCellCategory
-      const d   = CATEGORY_DEFAULTS[cat]
-      const t   = this.cellStore.target as { resonantFreqGHz?: number; resonantThresholdVcm?: number }
+      const cat = this.cellStore.targetCellCategory;
+      const d = CATEGORY_DEFAULTS[cat];
+      const t = this.cellStore.target as {
+        resonantFreqGHz?: number;
+        resonantThresholdVcm?: number;
+      };
 
-      const isResonant = cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA
-      const freqKHz  = isResonant && t.resonantFreqGHz
-        ? t.resonantFreqGHz * 1e6
-        : d.freqKHz
-      const fieldVcm = isResonant && t.resonantThresholdVcm
-        ? t.resonantThresholdVcm * INITIAL_RESONANT_FIELD_FRACTION
-        : d.fieldVcm
+      const isResonant =
+        cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA;
+      const freqKHz =
+        isResonant && t.resonantFreqGHz ? t.resonantFreqGHz * 1e6 : d.freqKHz;
+      const fieldVcm =
+        isResonant && t.resonantThresholdVcm
+          ? t.resonantThresholdVcm * INITIAL_RESONANT_FIELD_FRACTION
+          : d.fieldVcm;
 
-      this.cellStore.setFieldIntensity(fieldVcm)
-      this.cellStore.setBroadcastFreqKHz(freqKHz)
-      this.cellStore.setWaveform(d.waveform)
-      this.cellStore.setDutyCycle(d.dutyCycle)
-      this.cellStore.setPulseWidthNs(d.pulseWidthNs)
-      this.cellStore.setMedium(d.medium)
-      this.cellStore.setOrientationDeg(DEFAULT_ORIENTATION_DEG)
-      this.cellStore.setLysisNPulses(DEFAULT_LYSIS_N_PULSES)
-      this.cellStore.resetTemps()
+      this.cellStore.setFieldIntensity(fieldVcm);
+      this.cellStore.setBroadcastFreqKHz(freqKHz);
+      this.cellStore.setWaveform(d.waveform);
+      this.cellStore.setDutyCycle(d.dutyCycle);
+      this.cellStore.setPulseWidthNs(d.pulseWidthNs);
+      this.cellStore.setMedium(d.medium);
+      this.cellStore.setOrientationDeg(DEFAULT_ORIENTATION_DEG);
+      this.cellStore.setLysisNPulses(DEFAULT_LYSIS_N_PULSES);
+      this.cellStore.resetTemps();
       // Resonance mode is not valid for mammalian cells; revert if persisted incorrectly.
       if (cat === CELL_CATEGORY.MAMMALIAN && this.cellStore.isResonanceMode) {
-        this.cellStore.setChartMode(CHART_MODE.SCHWAN)
+        this.cellStore.setChartMode(CHART_MODE.SCHWAN);
       }
     },
 
     applyTargetDefaults() {
-      const cat = this.cellStore.targetCellCategory
-      const d   = CATEGORY_DEFAULTS[cat]
-      const t = this.cellStore.target as { resonantFreqGHz?: number; resonantThresholdVcm?: number }
-      const isResonant = cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA
-      const freqKHz = isResonant && t.resonantFreqGHz ? t.resonantFreqGHz * 1e6 : d.freqKHz
-      const fieldVcm = isResonant && t.resonantThresholdVcm
-        ? t.resonantThresholdVcm * INITIAL_RESONANT_FIELD_FRACTION
-        : d.fieldVcm
-      this.cellStore.setFieldIntensity(fieldVcm)
-      this.cellStore.setBroadcastFreqKHz(freqKHz)
-      this.cellStore.setWaveform(d.waveform)
-      this.cellStore.setDutyCycle(d.dutyCycle)
-      this.cellStore.setPulseWidthNs(d.pulseWidthNs)
-      this.cellStore.setMedium(d.medium)
-      this.cellStore.setOrientationDeg(DEFAULT_ORIENTATION_DEG)
-      this.cellStore.setLysisNPulses(DEFAULT_LYSIS_N_PULSES)
-      this.cellStore.resetTemps()
-      this.cellStore.setChartMode((cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) ? CHART_MODE.RESONANCE : CHART_MODE.SCHWAN)
-      broadcastStateSync()
+      const cat = this.cellStore.targetCellCategory;
+      const d = CATEGORY_DEFAULTS[cat];
+      const t = this.cellStore.target as {
+        resonantFreqGHz?: number;
+        resonantThresholdVcm?: number;
+      };
+      const isResonant =
+        cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA;
+      const freqKHz =
+        isResonant && t.resonantFreqGHz ? t.resonantFreqGHz * 1e6 : d.freqKHz;
+      const fieldVcm =
+        isResonant && t.resonantThresholdVcm
+          ? t.resonantThresholdVcm * INITIAL_RESONANT_FIELD_FRACTION
+          : d.fieldVcm;
+      this.cellStore.setFieldIntensity(fieldVcm);
+      this.cellStore.setBroadcastFreqKHz(freqKHz);
+      this.cellStore.setWaveform(d.waveform);
+      this.cellStore.setDutyCycle(d.dutyCycle);
+      this.cellStore.setPulseWidthNs(d.pulseWidthNs);
+      this.cellStore.setMedium(d.medium);
+      this.cellStore.setOrientationDeg(DEFAULT_ORIENTATION_DEG);
+      this.cellStore.setLysisNPulses(DEFAULT_LYSIS_N_PULSES);
+      this.cellStore.resetTemps();
+      this.cellStore.setChartMode(
+        cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA
+          ? CHART_MODE.RESONANCE
+          : CHART_MODE.SCHWAN,
+      );
+      broadcastStateSync();
     },
   },
 
   mounted() {
     // Sanitize time-domain params for the current category without resetting
     // the user's persisted field intensity and frequency (applyTargetDefaults would do too much).
-    this.sanitizeCategoryParams()
+    this.sanitizeCategoryParams();
 
-    const sentinel = this.$refs.cellsAnchor as HTMLElement
+    const sentinel = this.$refs.cellsAnchor as HTMLElement;
     if (sentinel) {
       this.cellsObserver = new IntersectionObserver(
-        (entries) => { if (entries[0]) this.showStickySimView = !entries[0].isIntersecting },
-        { threshold: 0, rootMargin: '200px 0px 0px 0px' },
-      )
-      this.cellsObserver.observe(sentinel)
+        (entries) => {
+          if (entries[0]) this.showStickySimView = !entries[0].isIntersecting;
+        },
+        { threshold: 0, rootMargin: "200px 0px 0px 0px" },
+      );
+      this.cellsObserver.observe(sentinel);
     }
 
     // Apply any pending lab-link highlight navigated from the Protocol view.
     // Delay lets child components finish rendering before the scroll fires.
-    const targetId = this.uiStore.pendingHighlight
+    const targetId = this.uiStore.pendingHighlight;
     if (targetId) {
-      this.uiStore.clearPendingHighlight()
-      scrollAndHighlight(targetId, 300)
+      this.uiStore.clearPendingHighlight();
+      scrollAndHighlight(targetId, 300);
     }
   },
 
   beforeUnmount() {
-    if (this.doseTimer !== null) clearInterval(this.doseTimer)
-    this.cellsObserver?.disconnect()
+    if (this.doseTimer !== null) clearInterval(this.doseTimer);
+    this.cellsObserver?.disconnect();
   },
-})
+});
 </script>
 
 <style lang="scss" scoped>
-
-
 .experiment {
   display: flex;
   flex-direction: column;
@@ -438,7 +490,9 @@ export default defineComponent({
 
 // ── Mobile / Responsive ───────────────────────────────────────────────────────
 @media (max-width: 1200px) {
-  .experiment__main { padding: 1rem 1.5rem; }
+  .experiment__main {
+    padding: 1rem 1.5rem;
+  }
   .experiment__top {
     grid-template-columns: minmax(0, 1fr) minmax(380px, 460px);
     gap: 1rem;
@@ -447,14 +501,24 @@ export default defineComponent({
 
 // Tablet - collapse top row into single column
 @media (max-width: 900px) {
-  .experiment__main { padding: 0.85rem; gap: 0.85rem; }
-  .experiment__top  { grid-template-columns: 1fr; }
-  .experiment__cells { grid-template-columns: 1fr 1fr; }
+  .experiment__main {
+    padding: 0.85rem;
+    gap: 0.85rem;
+  }
+  .experiment__top {
+    grid-template-columns: 1fr;
+  }
+  .experiment__cells {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
 // Large phone
 @media (max-width: 768px) {
-  .experiment__main { padding: 0.65rem; gap: 0.7rem; }
+  .experiment__main {
+    padding: 0.65rem;
+    gap: 0.7rem;
+  }
 }
 
 // Phone - single-column cells, full cards
@@ -463,6 +527,8 @@ export default defineComponent({
     grid-template-columns: 1fr;
     gap: 0.7rem;
   }
-  .experiment__cells > * { min-height: 260px; }
+  .experiment__cells > * {
+    min-height: 260px;
+  }
 }
 </style>

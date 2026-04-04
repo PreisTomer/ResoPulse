@@ -2,12 +2,20 @@
 
 // Tooltip builders for FrequencySlider. Pure — no Vue dependency.
 
-import { formatLysisTime } from '@/utils/format'
+import { formatLysisTime } from "@/utils/format";
 
-import { MEDIA } from '@/constants/media'
-import { DEFAULT_CAPSID_Q, LYSIS_FIELD_SENTINEL, THRESHOLDS, NEWTON_COOLING_LAMBDA, PENNES_BLOOD_COEFF, BLOOD_DENSITY_KG_M3, BLOOD_SPECIFIC_HEAT_J_KGK } from '@/constants/physics'
-import { CELL_CATEGORY, THERMAL_LEVEL } from '@/constants/strings'
-import { UNIT } from '@/constants/units'
+import { MEDIA } from "@/constants/media";
+import {
+  DEFAULT_CAPSID_Q,
+  LYSIS_FIELD_SENTINEL,
+  THRESHOLDS,
+  NEWTON_COOLING_LAMBDA,
+  PENNES_BLOOD_COEFF,
+  BLOOD_DENSITY_KG_M3,
+  BLOOD_SPECIFIC_HEAT_J_KGK,
+} from "@/constants/physics";
+import { CELL_CATEGORY, THERMAL_LEVEL } from "@/constants/strings";
+import { UNIT } from "@/constants/units";
 
 import {
   buildThermalWarningLine,
@@ -15,27 +23,31 @@ import {
   formatVmThresholdLine,
   getDisruptionWarningState,
   resolveThermalWarningLevel,
-} from './sharedTooltip'
+} from "./sharedTooltip";
 
-import type { MediumKey } from '@/types/media'
+import type { MediumKey } from "@/types/media";
 
-export { formatLysisTime }
+export { formatLysisTime };
 
-type T = (key: string, params?: Record<string, unknown>) => string
+type T = (key: string, params?: Record<string, unknown>) => string;
 
 interface ResonanceExtra {
-  resonantFreqGHz?: number
-  capsidQ?: number
-  resonantThresholdVcm?: number
-  label: string
-  thresholdVoltage: number
-  effThresholdMv?: number  // temp+H-FIRE corrected threshold in mV, overrides thresholdVoltage if set
+  resonantFreqGHz?: number;
+  capsidQ?: number;
+  resonantThresholdVcm?: number;
+  label: string;
+  thresholdVoltage: number;
+  effThresholdMv?: number; // temp+H-FIRE corrected threshold in mV, overrides thresholdVoltage if set
 }
 
-export function tipWaveform(currentField: number, maxSteadyTemp: number): string {
-  const cwWarn = maxSteadyTemp > THRESHOLDS.TEMP_WARN
-    ? `\n\n<span class="tip-warn">⚠ At current field (${currentField} ${UNIT.V_PER_CM}), CW would heat cells to T_ss ≈ ${Math.min(maxSteadyTemp, 150).toFixed(0)}${UNIT.DEG_C}, reduce field before switching to CW.</span>`
-    : ''
+export function tipWaveform(
+  currentField: number,
+  maxSteadyTemp: number,
+): string {
+  const cwWarn =
+    maxSteadyTemp > THRESHOLDS.TEMP_WARN
+      ? `\n\n<span class="tip-warn">⚠ At current field (${currentField} ${UNIT.V_PER_CM}), CW would heat cells to T_ss ≈ ${Math.min(maxSteadyTemp, 150).toFixed(0)}${UNIT.DEG_C}, reduce field before switching to CW.</span>`
+      : "";
   return `<strong>Waveform Type</strong>
 <span class="tip-val">CW (sinusoidal)</span> , continuous wave, always on
   SAR = σ_i·α²·E²/(2ρ)  [waveformFactor = 0.5, RMS halving]
@@ -52,34 +64,43 @@ export function tipWaveform(currentField: number, maxSteadyTemp: number): string
   SAR = σ_i·α²·E²/ρ  [same waveformFactor = 1.0 as monopolar; bipolar E²_rms = E²_peak during on-time]
   Polarity reversals partially discharge membrane capacitance between half-cycles
   Effective lysis threshold raised ×1.75 vs. monopolar (Sano et al. 2015; Arena et al. 2011)
-  Benefit: carrier freq &gt;1 kHz is below neuromuscular activation threshold${cwWarn}`
+  Benefit: carrier freq &gt;1 kHz is below neuromuscular activation threshold${cwWarn}`;
 }
 
 export function tipDutyCycle(opts: {
-  effectiveDutyCycle: number
-  targetSAR: number
-  healthySAR: number
-  maxSteadyTemp: number
-  thermalDangerLevel: string
-  dutyCycleDisplay: string
+  effectiveDutyCycle: number;
+  targetSAR: number;
+  healthySAR: number;
+  maxSteadyTemp: number;
+  thermalDangerLevel: string;
+  dutyCycleDisplay: string;
 }): string {
-  const { effectiveDutyCycle, targetSAR, healthySAR, maxSteadyTemp, thermalDangerLevel, dutyCycleDisplay } = opts
-  const effT = (targetSAR  * effectiveDutyCycle).toFixed(2)
-  const effH = (healthySAR * effectiveDutyCycle).toFixed(2)
+  const {
+    effectiveDutyCycle,
+    targetSAR,
+    healthySAR,
+    maxSteadyTemp,
+    thermalDangerLevel,
+    dutyCycleDisplay,
+  } = opts;
+  const effT = (targetSAR * effectiveDutyCycle).toFixed(2);
+  const effH = (healthySAR * effectiveDutyCycle).toFixed(2);
   const warnText = buildThermalWarningLine(
     thermalDangerLevel === THERMAL_LEVEL.VAPORIZING
-      ? 'vaporizing'
+      ? "vaporizing"
       : thermalDangerLevel === THERMAL_LEVEL.DENATURING
-        ? 'denaturing'
+        ? "denaturing"
         : thermalDangerLevel === THERMAL_LEVEL.HYPERTHERMIC
-          ? 'hyperthermic'
+          ? "hyperthermic"
           : null,
     {
-      vaporizing: '⚡ VAPORIZING, cells instantly destroyed at T_ss ≥ 100°C',
-      denaturing: '⚠ DENATURING, protein coagulation at T_ss ≥ 60°C (collagen ~60°C, albumin ~68°C)',
-      hyperthermic: '⚠ HYPERTHERMIC, thermal damage onset at T_ss ≥ 42°C (IAHT threshold)',
+      vaporizing: "⚡ VAPORIZING, cells instantly destroyed at T_ss ≥ 100°C",
+      denaturing:
+        "⚠ DENATURING, protein coagulation at T_ss ≥ 60°C (collagen ~60°C, albumin ~68°C)",
+      hyperthermic:
+        "⚠ HYPERTHERMIC, thermal damage onset at T_ss ≥ 42°C (IAHT threshold)",
     },
-  )
+  );
   return `<strong>Pulse Duty Cycle  (t_on / period)</strong>
 Current: <span class="tip-val">${dutyCycleDisplay}</span>
 
@@ -90,41 +111,46 @@ Scales effective SAR → thermal load:
 <span class="tip-val">T: ${effT} ${UNIT.W_PER_KG}</span>  ·  <span class="tip-val">H: ${effH} ${UNIT.W_PER_KG}</span>
 
 Projected T_ss = <span class="tip-val">${maxSteadyTemp.toFixed(0)}${UNIT.DEG_C}</span>  (T_ss = 37 + SAR_eff/(λ·cp))
-Typical pulsed electroporation: 0.001%-1%${warnText}`
+Typical pulsed electroporation: 0.001%-1%${warnText}`;
 }
 
 export function tipMedium(medium: MediumKey): string {
-  const m = MEDIA[medium]
+  const m = MEDIA[medium];
   return `<strong>Propagation Medium</strong>
 Sets external conductivity <span class="tip-val">σ_e = ${m.conductivity} ${UNIT.S_PER_M}</span>
 Used in Schwan time constant:
   τ = R·Cm·(2σ_e+σ_i) / (2σ_e·σ_i)
-Higher σ_e → lower τ → higher fc → broader quasi-DC regime`
+Higher σ_e → lower τ → higher fc → broader quasi-DC regime`;
 }
 
 export function tipMediumKeys(): Record<string, string> {
   const descs: Record<string, string> = {
-    saline: 'Matches physiological interstitial fluid',
-    blood:  'Whole blood: moderate coupling',
-    tissue: 'Soft tissue (low-perfusion region)',
-    water:  'Distilled water: near-zero coupling',
-    dmem:   'Dulbecco\'s Modified Eagle Medium, standard adherent cell culture · σ_e ≈ saline',
-    pbs:    'PBS (Dulbecco\'s PBS, pH 7.4) · wash buffer and short-term EP assays · σ_e ≈ saline',
-    rpmi:   'RPMI 1640, suspension / haematological cell lines · slightly lower ionic strength',
-    mhb:      'Mueller-Hinton Broth: CLSI/EUCAST bacteriology standard · τ ~12% longer than saline',
-    epbuffer: 'Low-conductivity sucrose/glucose EP buffer · τ ~10× longer than saline · fc ~10× lower · standard for in-vitro electroporation cuvette protocols',
-  }
-  const out: Record<string, string> = {}
+    saline: "Matches physiological interstitial fluid",
+    blood: "Whole blood: moderate coupling",
+    tissue: "Soft tissue (low-perfusion region)",
+    water: "Distilled water: near-zero coupling",
+    dmem: "Dulbecco's Modified Eagle Medium, standard adherent cell culture · σ_e ≈ saline",
+    pbs: "PBS (Dulbecco's PBS, pH 7.4) · wash buffer and short-term EP assays · σ_e ≈ saline",
+    rpmi: "RPMI 1640, suspension / haematological cell lines · slightly lower ionic strength",
+    mhb: "Mueller-Hinton Broth: CLSI/EUCAST bacteriology standard · τ ~12% longer than saline",
+    epbuffer:
+      "Low-conductivity sucrose/glucose EP buffer · τ ~10× longer than saline · fc ~10× lower · standard for in-vitro electroporation cuvette protocols",
+  };
+  const out: Record<string, string> = {};
   for (const key of Object.keys(MEDIA)) {
-    const m = MEDIA[key as MediumKey]
+    const m = MEDIA[key as MediumKey];
     out[key] = `<strong>${m.name}</strong>
 σ_e = <span class="tip-val">${m.conductivity} ${UNIT.S_PER_M}</span>
-${descs[key] ?? ''}`
+${descs[key] ?? ""}`;
   }
-  return out
+  return out;
 }
 
-export function tipFreq(freqDisplay: string, targetFcDisplay: string, healthyFcDisplay: string): string {
+export function tipFreq(
+  freqDisplay: string,
+  targetFcDisplay: string,
+  healthyFcDisplay: string,
+): string {
   return `<strong>RF Broadcast Frequency</strong>
 Current: <span class="tip-val">${freqDisplay}</span>
 Schwan denominator: √(1 + (2πf·τ)²)
@@ -133,20 +159,27 @@ Schwan denominator: √(1 + (2πf·τ)²)
 <span class="tip-val">fc(H) = ${healthyFcDisplay}</span>, healthy roll-off frequency
 
 Below fc → quasi-DC regime, Vm at maximum
-Above fc → Vm rolls off toward zero`
+Above fc → Vm rolls off toward zero`;
 }
 
 export function tipFcSub(params: {
-  targetLabel: string
-  healthyLabel: string
-  targetFcDisplay: string
-  healthyFcDisplay: string
-  targetCategory: string
+  targetLabel: string;
+  healthyLabel: string;
+  targetFcDisplay: string;
+  healthyFcDisplay: string;
+  targetCategory: string;
 }): string {
-  const { targetLabel, healthyLabel, targetFcDisplay, healthyFcDisplay, targetCategory } = params
-  const virionNote = targetCategory === CELL_CATEGORY.VIRUS
-    ? `\n<span class="tip-note">Virion fc is σ_i-limited; Schwan model is an approximation for virions.</span>`
-    : ''
+  const {
+    targetLabel,
+    healthyLabel,
+    targetFcDisplay,
+    healthyFcDisplay,
+    targetCategory,
+  } = params;
+  const virionNote =
+    targetCategory === CELL_CATEGORY.VIRUS
+      ? `\n<span class="tip-note">Virion fc is σ_i-limited; Schwan model is an approximation for virions.</span>`
+      : "";
   return `<strong>Characteristic Frequency  fc = 1 / (2πτ)</strong>
 At f = fc,  Vm = 0.707 × Vm_DC  (−3 dB point)
 τ = R·Cm·(2σ_e+σ_i)/(2σ_e·σ_i)  [Kotnik &amp; Miklavcic 2000]
@@ -156,125 +189,175 @@ Current pair:
   fc(H) = <span class="tip-val">${healthyFcDisplay}</span>  (${healthyLabel})
 ${virionNote}
 Note: for pairs where τ_T > τ_H (target larger/higher Cm),
-  maximum selectivity is at quasi-DC. Above fc(T) selectivity decreases.`
+  maximum selectivity is at quasi-DC. Above fc(T) selectivity decreases.`;
 }
 
 export function tipField(opts: {
-  isResonanceMode: boolean
-  target: ResonanceExtra
-  fieldDisplay: string
-  targetDisruption: number
-  targetCellCategory: string
-  targetLysisField: number
-  healthyLysisField: number
-  t: T
+  isResonanceMode: boolean;
+  target: ResonanceExtra;
+  fieldDisplay: string;
+  targetDisruption: number;
+  targetCellCategory: string;
+  targetLysisField: number;
+  healthyLysisField: number;
+  t: T;
 }): string {
-  const { isResonanceMode, target, fieldDisplay, targetDisruption, targetCellCategory, targetLysisField, healthyLysisField, t } = opts
+  const {
+    isResonanceMode,
+    target,
+    fieldDisplay,
+    targetDisruption,
+    targetCellCategory,
+    targetLysisField,
+    healthyLysisField,
+    t,
+  } = opts;
   if (isResonanceMode) {
     if (target.resonantFreqGHz && target.resonantThresholdVcm) {
-      const fStr = target.resonantFreqGHz >= 1
-        ? `${target.resonantFreqGHz.toFixed(1)} ${UNIT.GHZ}`
-        : `${(target.resonantFreqGHz * 1000).toFixed(0)} ${UNIT.MHZ}`
-      const thrStr = `${target.resonantThresholdVcm} ${UNIT.V_PER_CM}`
-      const pct = (targetDisruption * 100).toFixed(0) + '%'
-      const warn = targetDisruption >= 1.0
-        ? '\n<span class="tip-warn">⚡ Disruption threshold exceeded, capsid/cell-wall rupture</span>'
-        : targetDisruption > 0.85
-          ? '\n<span class="tip-warn">⚠ Approaching disruption threshold</span>'
-          : ''
-      return `<strong>${t('resonance.tipFieldTitle')}</strong>
-${t('slider.fieldIntensity')}: <span class="tip-val">${fieldDisplay}</span>
+      const fStr =
+        target.resonantFreqGHz >= 1
+          ? `${target.resonantFreqGHz.toFixed(1)} ${UNIT.GHZ}`
+          : `${(target.resonantFreqGHz * 1000).toFixed(0)} ${UNIT.MHZ}`;
+      const thrStr = `${target.resonantThresholdVcm} ${UNIT.V_PER_CM}`;
+      const pct = (targetDisruption * 100).toFixed(0) + "%";
+      const warn =
+        targetDisruption >= 1.0
+          ? '\n<span class="tip-warn">⚡ Disruption threshold exceeded, capsid/cell-wall rupture</span>'
+          : targetDisruption > 0.85
+            ? '\n<span class="tip-warn">⚠ Approaching disruption threshold</span>'
+            : "";
+      return `<strong>${t("resonance.tipFieldTitle")}</strong>
+${t("slider.fieldIntensity")}: <span class="tip-val">${fieldDisplay}</span>
 
-${t('resonance.tipFieldFormula')}
+${t("resonance.tipFieldFormula")}
 f_res(T) = <span class="tip-val">${fStr}</span>  ·  E_threshold = <span class="tip-val">${thrStr}</span>  ·  Q = ${target.capsidQ ?? DEFAULT_CAPSID_Q}
 
-${t('resonance.tipFieldRatio')}: <span class="tip-val">${pct}</span>
-${t('resonance.tipFieldDisruptNote')}${warn}`
+${t("resonance.tipFieldRatio")}: <span class="tip-val">${pct}</span>
+${t("resonance.tipFieldDisruptNote")}${warn}`;
     }
-    return `<strong>${t('slider.fieldIntensity')}</strong>\n${t('resonance.noResonance')}`
+    return `<strong>${t("slider.fieldIntensity")}</strong>\n${t("resonance.noResonance")}`;
   }
-  const tLysis = targetLysisField
-  const hLysis = healthyLysisField
-  const tStr   = tLysis >= LYSIS_FIELD_SENTINEL ? 'N/A (perpendicular)' : tLysis >= 1000 ? `${(tLysis / 1000).toFixed(1)} ${UNIT.KV_PER_CM}` : `${tLysis.toFixed(0)} ${UNIT.V_PER_CM}`
-  const hStr   = hLysis >= LYSIS_FIELD_SENTINEL ? 'N/A (perpendicular)' : hLysis >= 1000 ? `${(hLysis / 1000).toFixed(1)} ${UNIT.KV_PER_CM}` : `${hLysis.toFixed(0)} ${UNIT.V_PER_CM}`
-  const contextNote = targetCellCategory === CELL_CATEGORY.VIRUS
-    ? `\n<span class="tip-warn">⚠ Virion IRE threshold ≈ ${tStr}, impractical at any safe field.\nSwitch to Resonance mode for virion disruption.</span>`
-    : targetCellCategory === CELL_CATEGORY.BACTERIA
-      ? `\n<span class="tip-warn">⚠ Bacterial IRE threshold ≈ ${tStr}.\nUse nsEP: short pulse width (≪ τ) lowers effective E_lysis by reducing charge time.</span>`
-      : `\nSelectivity window at current frequency:\n  Target lysis ≥ <span class="tip-val">${tStr}</span>  ·  Healthy lysis ≥ <span class="tip-val">${hStr}</span>`
+  const tLysis = targetLysisField;
+  const hLysis = healthyLysisField;
+  const tStr =
+    tLysis >= LYSIS_FIELD_SENTINEL
+      ? "N/A (perpendicular)"
+      : tLysis >= 1000
+        ? `${(tLysis / 1000).toFixed(1)} ${UNIT.KV_PER_CM}`
+        : `${tLysis.toFixed(0)} ${UNIT.V_PER_CM}`;
+  const hStr =
+    hLysis >= LYSIS_FIELD_SENTINEL
+      ? "N/A (perpendicular)"
+      : hLysis >= 1000
+        ? `${(hLysis / 1000).toFixed(1)} ${UNIT.KV_PER_CM}`
+        : `${hLysis.toFixed(0)} ${UNIT.V_PER_CM}`;
+  const contextNote =
+    targetCellCategory === CELL_CATEGORY.VIRUS
+      ? `\n<span class="tip-warn">⚠ Virion IRE threshold ≈ ${tStr}, impractical at any safe field.\nSwitch to Resonance mode for virion disruption.</span>`
+      : targetCellCategory === CELL_CATEGORY.BACTERIA
+        ? `\n<span class="tip-warn">⚠ Bacterial IRE threshold ≈ ${tStr}.\nUse nsEP: short pulse width (≪ τ) lowers effective E_lysis by reducing charge time.</span>`
+        : `\nSelectivity window at current frequency:\n  Target lysis ≥ <span class="tip-val">${tStr}</span>  ·  Healthy lysis ≥ <span class="tip-val">${hStr}</span>`;
   return `<strong>Applied Electric Field Intensity</strong>
 Current: <span class="tip-val">${fieldDisplay}</span>
 Vm scales linearly:  Vm = 1.5 × E × R × cos θ / √(1+(ωτ)²)
-${contextNote}`
+${contextNote}`;
 }
 
 export function tipTargetBadge(opts: {
-  isResonanceMode: boolean
-  target: ResonanceExtra
-  targetDisruptPercent: string
-  targetDisruption: number
-  targetVmMv: number
-  lysisDelayMs: number
-  t: T
+  isResonanceMode: boolean;
+  target: ResonanceExtra;
+  targetDisruptPercent: string;
+  targetDisruption: number;
+  targetVmMv: number;
+  lysisDelayMs: number;
+  t: T;
 }): string {
-  const { isResonanceMode, target, targetDisruptPercent: pct, targetDisruption, targetVmMv, lysisDelayMs, t } = opts
-  const lysisStr = formatLysisTime(lysisDelayMs)
+  const {
+    isResonanceMode,
+    target,
+    targetDisruptPercent: pct,
+    targetDisruption,
+    targetVmMv,
+    lysisDelayMs,
+    t,
+  } = opts;
+  const lysisStr = formatLysisTime(lysisDelayMs);
   if (isResonanceMode) {
     const fStr = target.resonantFreqGHz
-      ? formatTooltipFrequency(target.resonantFreqGHz * 1e6, target.resonantFreqGHz >= 1 ? 1 : 0)
-      : ', '
-    const warnState = getDisruptionWarningState(targetDisruption)
-    const warn = warnState === 'crossed'
-      ? '\n<span class="tip-warn">⚡ Disruption threshold exceeded, capsid/cell-wall rupture imminent</span>'
-      : warnState === 'armed'
-        ? `\n<span class="tip-warn">⚠ >85%, approaching disruption threshold (${lysisStr} countdown)</span>`
-        : ''
-    return `<strong>${t('resonance.tipTargetBadgeTitle', { pct })}</strong>
-${t('resonance.tipTargetBadgeFormula')}
+      ? formatTooltipFrequency(
+          target.resonantFreqGHz * 1e6,
+          target.resonantFreqGHz >= 1 ? 1 : 0,
+        )
+      : ", ";
+    const warnState = getDisruptionWarningState(targetDisruption);
+    const warn =
+      warnState === "crossed"
+        ? '\n<span class="tip-warn">⚡ Disruption threshold exceeded, capsid/cell-wall rupture imminent</span>'
+        : warnState === "armed"
+          ? `\n<span class="tip-warn">⚠ >85%, approaching disruption threshold (${lysisStr} countdown)</span>`
+          : "";
+    return `<strong>${t("resonance.tipTargetBadgeTitle", { pct })}</strong>
+${t("resonance.tipTargetBadgeFormula")}
 f_res = <span class="tip-val">${fStr}</span>  ·  Q = ${(target as { capsidQ?: number }).capsidQ ?? DEFAULT_CAPSID_Q}${warn}
-${t('resonance.tipTargetBadgeNote')}`
+${t("resonance.tipTargetBadgeNote")}`;
   }
   // effThresholdMv: temp+H-FIRE corrected threshold in mV, supplied by caller
-  const tThr  = (target.effThresholdMv ?? target.thresholdVoltage * 1000).toFixed(0)
-  const warn  = getDisruptionWarningState(targetDisruption) !== 'none'
-    ? `\n<span class="tip-warn">⚡ >85%, lysis countdown active (${lysisStr})</span>` : ''
+  const tThr = (
+    target.effThresholdMv ?? target.thresholdVoltage * 1000
+  ).toFixed(0);
+  const warn =
+    getDisruptionWarningState(targetDisruption) !== "none"
+      ? `\n<span class="tip-warn">⚡ >85%, lysis countdown active (${lysisStr})</span>`
+      : "";
   return `<strong>Target membrane disruption: <span class="tip-val">${pct}%</span></strong>
 Ratio = (Vm × PEF) / threshold
 
 ${formatVmThresholdLine(`${targetVmMv.toFixed(2)} ${UNIT.MV}`, `${tThr} ${UNIT.MV}`, warn)}
->85% held for ${lysisStr} → irreversible membrane lysis`
+>85% held for ${lysisStr} → irreversible membrane lysis`;
 }
 
 export function tipHealthyBadge(opts: {
-  isResonanceMode: boolean
-  healthyDisruptPercent: string
-  healthyDisruption: number
-  healthyVmMv: number
-  thresholdVoltage: number
-  effThresholdMv?: number  // temp+H-FIRE corrected threshold in mV, overrides thresholdVoltage if set
-  t: T
+  isResonanceMode: boolean;
+  healthyDisruptPercent: string;
+  healthyDisruption: number;
+  healthyVmMv: number;
+  thresholdVoltage: number;
+  effThresholdMv?: number; // temp+H-FIRE corrected threshold in mV, overrides thresholdVoltage if set
+  t: T;
 }): string {
-  const { isResonanceMode, healthyDisruptPercent: pct, healthyDisruption, healthyVmMv, thresholdVoltage, effThresholdMv, t } = opts
+  const {
+    isResonanceMode,
+    healthyDisruptPercent: pct,
+    healthyDisruption,
+    healthyVmMv,
+    thresholdVoltage,
+    effThresholdMv,
+    t,
+  } = opts;
   if (isResonanceMode) {
-    return `<strong>${t('resonance.tipHealthyBadgeTitle')}</strong>
-${t('resonance.tipHealthyBadgeBody')}
-<span class="tip-ok">✓ ${t('resonance.tipHealthyBadgeSafe')}</span>`
+    return `<strong>${t("resonance.tipHealthyBadgeTitle")}</strong>
+${t("resonance.tipHealthyBadgeBody")}
+<span class="tip-ok">✓ ${t("resonance.tipHealthyBadgeSafe")}</span>`;
   }
-  const hThr = (effThresholdMv ?? thresholdVoltage * 1000).toFixed(0)
-  const ok   = healthyDisruption < THRESHOLDS.HEALTHY_APPROACHING
-    ? '\n<span class="tip-ok">✓ Healthy cells are safe</span>'
-    : healthyDisruption > THRESHOLDS.DISRUPTION_WARN
-      ? '\n<span class="tip-warn">⚠ Healthy cells approaching lysis threshold, reduce field</span>'
-      : '\n<span class="tip-warn">⚠ Approaching rev-EP zone, monitor closely</span>'
+  const hThr = (effThresholdMv ?? thresholdVoltage * 1000).toFixed(0);
+  const ok =
+    healthyDisruption < THRESHOLDS.HEALTHY_APPROACHING
+      ? '\n<span class="tip-ok">✓ Healthy cells are safe</span>'
+      : healthyDisruption > THRESHOLDS.DISRUPTION_WARN
+        ? '\n<span class="tip-warn">⚠ Healthy cells approaching lysis threshold, reduce field</span>'
+        : '\n<span class="tip-warn">⚠ Approaching rev-EP zone, monitor closely</span>';
   return `<strong>Healthy membrane disruption: <span class="tip-val">${pct}%</span></strong>
 Ratio = (Vm × PEF) / threshold
 
 ${formatVmThresholdLine(`${healthyVmMv.toFixed(2)} ${UNIT.MV}`, `${hThr} ${UNIT.MV}`, ok)}
-Keep below 50% for a selective protocol window`
+Keep below 50% for a selective protocol window`;
 }
 
-export function tipOrientation(orientationDeg: number, cosThetaFactor: number): string {
-  const cosT = (cosThetaFactor * 100).toFixed(0)
+export function tipOrientation(
+  orientationDeg: number,
+  cosThetaFactor: number,
+): string {
+  const cosT = (cosThetaFactor * 100).toFixed(0);
   return `<strong>Cell Orientation  θ = ${orientationDeg}${UNIT.DEG}</strong>
 |cos(θ)| = <span class="tip-val">${cosT}${UNIT.PERCENT}</span> of maximum Vm coupling
 
@@ -285,20 +368,23 @@ Schwan equation:  Vm = 1.5·E·R·<span class="tip-val">cos(θ)</span> / √(1+(
 <span class="tip-val">θ = 90°</span> (perpendicular) → Vm → 0, field cannot charge the membrane
 
 cos(θ) cancels in the Vm_T/Vm_H selectivity ratio, orientation does
-not change the relative advantage between target and healthy cells.`
+not change the relative advantage between target and healthy cells.`;
 }
 
 export function tipLysisN(opts: {
-  lysisNPulses: number
-  lysisDelayMs: number
-  dutyCycle: number
-  pulseWidthNs: number
+  lysisNPulses: number;
+  lysisDelayMs: number;
+  dutyCycle: number;
+  pulseWidthNs: number;
 }): string {
-  const { lysisNPulses: n, lysisDelayMs, dutyCycle, pulseWidthNs } = opts
-  const periodMs  = dutyCycle > 0 ? (pulseWidthNs * 1e-6) / dutyCycle : 0
-  const periodStr = periodMs > 0
-    ? (periodMs < 1 ? `${(periodMs * 1000).toFixed(1)} ${UNIT.US}` : `${periodMs.toFixed(3)} ${UNIT.MS}`)
-    : ', '
+  const { lysisNPulses: n, lysisDelayMs, dutyCycle, pulseWidthNs } = opts;
+  const periodMs = dutyCycle > 0 ? (pulseWidthNs * 1e-6) / dutyCycle : 0;
+  const periodStr =
+    periodMs > 0
+      ? periodMs < 1
+        ? `${(periodMs * 1000).toFixed(1)} ${UNIT.US}`
+        : `${periodMs.toFixed(3)} ${UNIT.MS}`
+      : ", ";
   return `<strong>Pulses to Lysis  N = ${n}</strong>
 Estimated protocol time: <span class="tip-val">${formatLysisTime(lysisDelayMs)}</span>
 
@@ -309,16 +395,16 @@ Protocol time = N × t_period = N × (t_p / dc)
   t_period = <span class="tip-val">${periodStr}</span>  ·  N = <span class="tip-val">${n}</span>
 
 Lysis countdown in the cell card resets immediately when N changes.
-At CW waveform a fixed 2.5 s delay is used instead.`
+At CW waveform a fixed 2.5 s delay is used instead.`;
 }
 
 export function tipOptimalBtn(beyondRange: boolean): string {
   const beyondNote = beyondRange
     ? '\n<span class="tip-warn">Optimal lies outside current slider range, slider clamped to nearest bound.</span>'
-    : '\nClick to set frequency to optimal.'
+    : "\nClick to set frequency to optimal.";
   return `<strong>⭐ Snap to Optimal Frequency</strong>
 Frequency that maximises selectivity ratio TI = T-DR / H-DR.
-300-point log scan 10 kHz-500 MHz at current field &amp; medium.${beyondNote}`
+300-point log scan 10 kHz-500 MHz at current field &amp; medium.${beyondNote}`;
 }
 
 export function tipScopeNote(): string {
@@ -330,38 +416,40 @@ Different Vm responses arise purely from each cell's biophysical parameters (R, 
 <strong>Cell-specific parameters</strong> (Radius, ε_r, σ_i, Threshold Vm) are edited individually
 on each cell card and determine how each cell responds to the shared applied field.
 
-<strong>Pulses to Lysis N</strong> controls target-cell lysis timing only, it has no effect on the healthy cell.`
+<strong>Pulses to Lysis N</strong> controls target-cell lysis timing only, it has no effect on the healthy cell.`;
 }
 
-export function tipThermalBanner(level: 'vaporizing' | 'denaturing' | 'hyperthermic'): string {
-  if (level === 'vaporizing') {
+export function tipThermalBanner(
+  level: "vaporizing" | "denaturing" | "hyperthermic",
+): string {
+  if (level === "vaporizing") {
     return `<strong>Vaporizing Regime: T ≥ 100°C</strong>
 Water boiling · rapid steam-pressure lysis
-Reduce duty cycle or field intensity immediately`
+Reduce duty cycle or field intensity immediately`;
   }
-  if (level === 'denaturing') {
+  if (level === "denaturing") {
     return `<strong>Protein Denaturation: T ≥ 60°C</strong>
 Irreversible protein damage onset
 (collagen ~60°C · albumin ~68°C)
-Reduce duty cycle or field intensity`
+Reduce duty cycle or field intensity`;
   }
   return `<strong>Hyperthermic Regime: T ≥ 42°C</strong>
 IAHT thermal damage onset
-Monitor and reduce duty cycle if sustained`
+Monitor and reduce duty cycle if sustained`;
 }
 
 export function tipSigmaE(conductivity: number): string {
   return `<strong>External conductivity σ_e = ${conductivity} S/m</strong>
 Used in Schwan time constant:
 τ = R·Cm·(2·<span class="tip-val">σ_e</span>+σ_i)/(2·<span class="tip-val">σ_e</span>·σ_i)
-Change medium to shift the coupling strength`
+Change medium to shift the coupling strength`;
 }
 
 export function tipShellModel(): string {
   return `<strong>Shell Model</strong>
 Choose the membrane model used to compute transmembrane potential.
 Single-Shell: standard Schwan (plasma membrane only).
-+ Nuclear Envelope: adds nuclear Vm bandpass, Kotnik &amp; Miklavcic (2006).`
++ Nuclear Envelope: adds nuclear Vm bandpass, Kotnik &amp; Miklavcic (2006).`;
 }
 
 export function tipSingleShell(): string {
@@ -369,29 +457,39 @@ export function tipSingleShell(): string {
 Standard single-shell model, only plasma membrane Vm is computed.
 τ = R·Cm·(2σ_e+σ_i)/(2σ_e·σ_i)  ·  Vm = 1.5·E·R·cos θ / √(1+(ωτ)²)
 Default mode. Applicable to all cell types.
-Ref: Kotnik &amp; Miklavcic, Biophys. J. 79:670 (2000)`
+Ref: Kotnik &amp; Miklavcic, Biophys. J. 79:670 (2000)`;
 }
 
 export function tipDoubleShell(params: {
-  targetLabel: string
-  healthyLabel: string
-  targetVmNucMv: number
-  healthyVmNucMv: number
-  targetFpeakKHz: number
-  healthyFpeakKHz: number
-  freqDisplay: string
-  fieldDisplay: string
-  hasTargetNucleus: boolean
-  hasHealthyNucleus: boolean
+  targetLabel: string;
+  healthyLabel: string;
+  targetVmNucMv: number;
+  healthyVmNucMv: number;
+  targetFpeakKHz: number;
+  healthyFpeakKHz: number;
+  freqDisplay: string;
+  fieldDisplay: string;
+  hasTargetNucleus: boolean;
+  hasHealthyNucleus: boolean;
 }): string {
-  const { targetLabel, healthyLabel, targetVmNucMv, healthyVmNucMv, targetFpeakKHz, healthyFpeakKHz,
-          freqDisplay, fieldDisplay, hasTargetNucleus, hasHealthyNucleus } = params
+  const {
+    targetLabel,
+    healthyLabel,
+    targetVmNucMv,
+    healthyVmNucMv,
+    targetFpeakKHz,
+    healthyFpeakKHz,
+    freqDisplay,
+    fieldDisplay,
+    hasTargetNucleus,
+    hasHealthyNucleus,
+  } = params;
   const targetRow = hasTargetNucleus
     ? `  ${targetLabel}:  Vm_nuc = <span class="tip-val">${targetVmNucMv.toFixed(0)} mV</span>  (f_peak = ${formatTooltipFrequency(targetFpeakKHz)})`
-    : `  ${targetLabel}:  <span class="tip-note">no nuclear params</span>`
+    : `  ${targetLabel}:  <span class="tip-note">no nuclear params</span>`;
   const healthyRow = hasHealthyNucleus
     ? `  ${healthyLabel}:  Vm_nuc = <span class="tip-val">${healthyVmNucMv.toFixed(0)} mV</span>  (f_peak = ${formatTooltipFrequency(healthyFpeakKHz)})`
-    : `  ${healthyLabel}:  <span class="tip-note">no nuclear params</span>`
+    : `  ${healthyLabel}:  <span class="tip-note">no nuclear params</span>`;
   return `<strong>+ Nuclear Envelope (Double-Shell)</strong>
 Adds nuclear membrane Vm as a two-pole bandpass function.
 Vm_nuc peaks at f_peak = 1/(2π√(τ_out·τ_ne))
@@ -402,22 +500,29 @@ At ${freqDisplay} / ${fieldDisplay}:
 ${targetRow}
 ${healthyRow}
 
-Ref: Kotnik &amp; Miklavcic, Biophys. J. 90:480 (2006)`
+Ref: Kotnik &amp; Miklavcic, Biophys. J. 90:480 (2006)`;
 }
 
 export function tipLysisNNote(): string {
-  return `\n<span class="tip-note">Affects target cell lysis countdown only.\nHas no effect on the healthy cell disruption model.</span>`
+  return `\n<span class="tip-note">Affects target cell lysis countdown only.\nHas no effect on the healthy cell disruption model.</span>`;
 }
 
-export function tipPerfusion(perfusionRate: number, effLambdaH: number): string {
-  const label = perfusionRate === 0
-    ? 'in vitro (no perfusion)'
-    : perfusionRate < 0.5 ? 'low perfusion (fat/cartilage)'
-    : perfusionRate < 1.5 ? 'moderate perfusion (muscle/liver)'
-    : perfusionRate < 3   ? 'high perfusion (brain/heart)'
-    : 'very high perfusion (kidney)'
-  const lambdaPerf = effLambdaH - NEWTON_COOLING_LAMBDA
-  const pct = (lambdaPerf / NEWTON_COOLING_LAMBDA * 100).toFixed(0)
+export function tipPerfusion(
+  perfusionRate: number,
+  effLambdaH: number,
+): string {
+  const label =
+    perfusionRate === 0
+      ? "in vitro (no perfusion)"
+      : perfusionRate < 0.5
+        ? "low perfusion (fat/cartilage)"
+        : perfusionRate < 1.5
+          ? "moderate perfusion (muscle/liver)"
+          : perfusionRate < 3
+            ? "high perfusion (brain/heart)"
+            : "very high perfusion (kidney)";
+  const lambdaPerf = effLambdaH - NEWTON_COOLING_LAMBDA;
+  const pct = ((lambdaPerf / NEWTON_COOLING_LAMBDA) * 100).toFixed(0);
   return `<strong>Blood Perfusion Rate ω_b</strong>
 Current: <span class="tip-val">${perfusionRate.toFixed(2)} mL/(g·min)</span>, ${label}
 
@@ -434,16 +539,25 @@ T_ss = 37 + SAR_eff / (λ_eff × cp)
 
 <span class="tip-note">0 = in vitro default (no blood supply)
 Typical values: muscle 0.5 · brain 1.0 · kidney 5.0 mL/(g·min)
-Higher ω_b → stronger cooling → lower T_ss → higher safe duty cycle</span>`
+Higher ω_b → stronger cooling → lower T_ss → higher safe duty cycle</span>`;
 }
 
-export function tipCellPacking(phi: number, sigma_e0: number, sigma_eff: number): string {
-  const reduction = ((1 - sigma_eff / sigma_e0) * 100).toFixed(1)
-  const context = phi === 0 ? 'isolated cell (no correction)'
-    : phi < 0.3 ? 'sparse suspension'
-    : phi < 0.5 ? 'moderate suspension (pellet density)'
-    : phi < 0.7 ? 'dense suspension (aggregate / spheroid)'
-    : 'very dense / compact cell mass'
+export function tipCellPacking(
+  phi: number,
+  sigma_e0: number,
+  sigma_eff: number,
+): string {
+  const reduction = ((1 - sigma_eff / sigma_e0) * 100).toFixed(1);
+  const context =
+    phi === 0
+      ? "isolated cell (no correction)"
+      : phi < 0.3
+        ? "sparse suspension"
+        : phi < 0.5
+          ? "moderate suspension (pellet density)"
+          : phi < 0.7
+            ? "dense suspension (aggregate / spheroid)"
+            : "very dense / compact cell mass";
   return `<strong>Cell Packing Fraction φ</strong>
 Current: <span class="tip-val">φ = ${(phi * 100).toFixed(0)}%</span>, ${context}
 
@@ -459,23 +573,31 @@ effective field delivering Vm to each cell is lower.
 
 <span class="tip-note">Valid for f ≪ fc. At f > fc the membrane polarises less and
 the MG correction approaches the bare-medium limit.
-φ = 0 (default) = isolated-cell in-vitro conditions.</span>`
+φ = 0 (default) = isolated-cell in-vitro conditions.</span>`;
 }
 
 export function tipPulseWidth(opts: {
-  targetFc: number
-  healthyFc: number
-  pulseWidthDisplay: string
-  lysisDelayMs: number
-  lysisNPulses: number
-  dutyCycle: number
+  targetFc: number;
+  healthyFc: number;
+  pulseWidthDisplay: string;
+  lysisDelayMs: number;
+  lysisNPulses: number;
+  dutyCycle: number;
 }): string {
-  const { targetFc, healthyFc, pulseWidthDisplay, lysisDelayMs, lysisNPulses, dutyCycle } = opts
-  const tTau_ns = targetFc  > 0 ? (1 / (2 * Math.PI * targetFc  * 1e3) * 1e9) : 0
-  const hTau_ns = healthyFc > 0 ? (1 / (2 * Math.PI * healthyFc * 1e3) * 1e9) : 0
-  const tTauStr = tTau_ns > 0 ? tTau_ns.toFixed(0) + ' ' + UNIT.NS : ', '
-  const hTauStr = hTau_ns > 0 ? hTau_ns.toFixed(0) + ' ' + UNIT.NS : ', '
-  const dcPct   = (dutyCycle * 100).toFixed(4)
+  const {
+    targetFc,
+    healthyFc,
+    pulseWidthDisplay,
+    lysisDelayMs,
+    lysisNPulses,
+    dutyCycle,
+  } = opts;
+  const tTau_ns = targetFc > 0 ? (1 / (2 * Math.PI * targetFc * 1e3)) * 1e9 : 0;
+  const hTau_ns =
+    healthyFc > 0 ? (1 / (2 * Math.PI * healthyFc * 1e3)) * 1e9 : 0;
+  const tTauStr = tTau_ns > 0 ? tTau_ns.toFixed(0) + " " + UNIT.NS : ", ";
+  const hTauStr = hTau_ns > 0 ? hTau_ns.toFixed(0) + " " + UNIT.NS : ", ";
+  const dcPct = (dutyCycle * 100).toFixed(4);
   return `<strong>Pulse Width  t_p</strong>
 Current: <span class="tip-val">${pulseWidthDisplay}</span>
 
@@ -498,5 +620,5 @@ Reference time constants (Schwan model):
   τ(healthy) = <span class="tip-val">${hTauStr}</span>
 
 For true nsEP (t_p ≪ τ, DC pulse model), see §2.5 of the Protocol page.
-Ref: Beebe et al. 2003; Batista Napotnik et al. 2016`
+Ref: Beebe et al. 2003; Batista Napotnik et al. 2016`;
 }

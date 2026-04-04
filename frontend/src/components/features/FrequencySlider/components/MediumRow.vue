@@ -1,77 +1,89 @@
 <!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
 <template>
   <div id="hl-medium-row" class="field-panel__row field-panel__row--medium">
-    <span class="field-panel__row-label" v-tip="tipMediumLabel">{{ $t('slider.medium') }}</span>
+    <span class="field-panel__row-label" v-tip="tipMediumLabel">{{
+      $t("slider.medium")
+    }}</span>
     <select
       class="field-panel__medium-select"
       :value="currentMedium"
       v-tip="STATIC_SLIDER_TOOLTIPS.mediumKeys[currentMedium]"
-      @change="onMediumChange(($event.target as HTMLSelectElement).value as typeof currentMedium)"
+      @change="
+        onMediumChange(
+          ($event.target as HTMLSelectElement).value as typeof currentMedium,
+        )
+      "
     >
       <optgroup :label="$t('slider.mediumGroupPhysio')">
-        <option value="saline">{{ $t('slider.mediums.saline') }}</option>
-        <option value="blood">{{ $t('slider.mediums.blood') }}</option>
-        <option value="tissue">{{ $t('slider.mediums.tissue') }}</option>
+        <option value="saline">{{ $t("slider.mediums.saline") }}</option>
+        <option value="blood">{{ $t("slider.mediums.blood") }}</option>
+        <option value="tissue">{{ $t("slider.mediums.tissue") }}</option>
       </optgroup>
       <optgroup :label="$t('slider.mediumGroupCulture')">
-        <option value="dmem">{{ $t('slider.mediums.dmem') }}</option>
-        <option value="pbs">{{ $t('slider.mediums.pbs') }}</option>
-        <option value="rpmi">{{ $t('slider.mediums.rpmi') }}</option>
+        <option value="dmem">{{ $t("slider.mediums.dmem") }}</option>
+        <option value="pbs">{{ $t("slider.mediums.pbs") }}</option>
+        <option value="rpmi">{{ $t("slider.mediums.rpmi") }}</option>
       </optgroup>
       <optgroup :label="$t('slider.mediumGroupMicro')">
-        <option value="mhb">{{ $t('slider.mediums.mhb') }}</option>
+        <option value="mhb">{{ $t("slider.mediums.mhb") }}</option>
       </optgroup>
       <optgroup :label="$t('slider.mediumGroupEp')">
-        <option value="epbuffer">{{ $t('slider.mediums.epbuffer') }}</option>
+        <option value="epbuffer">{{ $t("slider.mediums.epbuffer") }}</option>
       </optgroup>
       <optgroup :label="$t('slider.mediumGroupRef')">
-        <option value="water">{{ $t('slider.mediums.water') }}</option>
+        <option value="water">{{ $t("slider.mediums.water") }}</option>
       </optgroup>
     </select>
-    <span class="field-panel__row-meta" v-tip="tipSigmaELabel">σ_e {{ MEDIA[currentMedium].conductivity }} S/m</span>
+    <span class="field-panel__row-meta" v-tip="tipSigmaELabel"
+      >σ_e {{ MEDIA[currentMedium].conductivity }} S/m</span
+    >
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue'
-import { mapStores } from 'pinia'
+import { defineComponent } from "vue";
+import { mapStores } from "pinia";
 
-import { useCellStore } from '@/stores/cellStore'
+import { useCellStore } from "@/stores/cellStore";
 
-import { broadcastStateSync } from '@/services/socket'
+import { broadcastStateSync } from "@/services/socket";
 
-import { tipMedium, tipSigmaE } from '@/tooltips/sliderTooltips'
-import { STATIC_SLIDER_TOOLTIPS } from '../lib'
+import { tipMedium, tipSigmaE } from "@/tooltips/sliderTooltips";
+import { STATIC_SLIDER_TOOLTIPS } from "../lib";
 
-import { MEDIA } from '@/constants/media'
+import { MEDIA } from "@/constants/media";
 
-import type { MediumKey } from '@/types/media'
+import type { MediumKey } from "@/types/media";
 
 export default defineComponent({
   data() {
-    return { MEDIA, STATIC_SLIDER_TOOLTIPS }
+    return { MEDIA, STATIC_SLIDER_TOOLTIPS };
   },
 
   computed: {
     ...mapStores(useCellStore),
 
-    currentMedium(): MediumKey                   { return this.cellStore.medium },
-    tipMediumLabel(): string                     { return tipMedium(this.currentMedium) },
-    tipSigmaELabel(): string                     { return tipSigmaE(this.MEDIA[this.currentMedium].conductivity) },
+    currentMedium(): MediumKey {
+      return this.cellStore.medium;
+    },
+    tipMediumLabel(): string {
+      return tipMedium(this.currentMedium);
+    },
+    tipSigmaELabel(): string {
+      return tipSigmaE(this.MEDIA[this.currentMedium].conductivity);
+    },
   },
 
   methods: {
     onMediumChange(key: MediumKey) {
-      this.cellStore.setMedium(key)
-      broadcastStateSync()
+      this.cellStore.setMedium(key);
+      broadcastStateSync();
     },
   },
-})
+});
 </script>
 
 <style lang="scss" scoped>
-
-
 .field-panel {
   &__row {
     display: grid;
@@ -80,7 +92,9 @@ export default defineComponent({
     gap: 0.85rem;
   }
 
-  &__row-label { @include row-label(); }
+  &__row-label {
+    @include row-label();
+  }
 
   &__row-meta {
     font-size: var(--fs-xs);
@@ -112,10 +126,20 @@ export default defineComponent({
     padding-right: 1.6rem;
     transition: border-color var(--tr-fast);
 
-    &:focus, &:hover { border-color: var(--color-primary); }
+    &:focus,
+    &:hover {
+      border-color: var(--color-primary);
+    }
 
-    option, optgroup { background: var(--color-surface-2); color: var(--color-text); }
-    optgroup { color: var(--color-text-muted); font-style: normal; }
+    option,
+    optgroup {
+      background: var(--color-surface-2);
+      color: var(--color-text);
+    }
+    optgroup {
+      color: var(--color-text-muted);
+      font-style: normal;
+    }
   }
 }
 </style>

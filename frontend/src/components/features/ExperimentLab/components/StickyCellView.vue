@@ -21,7 +21,9 @@
           @click.stop="scrollToCells"
           :title="$t('exp.stickyScrollTip')"
         >
-          <div class="experiment__sticky-cells-label">{{ ICON.LIVE_DOT }} {{ $t('exp.stickyLive') }}</div>
+          <div class="experiment__sticky-cells-label">
+            {{ ICON.LIVE_DOT }} {{ $t("exp.stickyLive") }}
+          </div>
           <div class="experiment__sticky-cells-grid">
             <CellCard
               v-for="cell in cells"
@@ -43,28 +45,28 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, type PropType } from 'vue'
+import { defineComponent, type PropType } from "vue";
 
-import { CellCard } from '@/components/features'
-import SideTabPanel from './SideTabPanel.vue'
+import { CellCard } from "@/components/features";
+import SideTabPanel from "./SideTabPanel.vue";
 
-import { EMIT } from '@/constants/emitEvents'
-import { ICON } from '@/constants/icons'
+import { EMIT } from "@/constants/emitEvents";
+import { ICON } from "@/constants/icons";
 
-import type { CellRecord } from '@/types/cell'
+import type { CellRecord } from "@/types/cell";
 
 export interface CellCardRow {
-  id: string
-  type: 'healthy' | 'target'
-  label: string
-  sublabel: string
-  sublabelTip: string
-  description: string
-  cellData: CellRecord
+  id: string;
+  type: "healthy" | "target";
+  label: string;
+  sublabel: string;
+  sublabelTip: string;
+  description: string;
+  cellData: CellRecord;
 }
 
 export default defineComponent({
-  name: 'StickyCellView',
+  name: "StickyCellView",
 
   components: { SideTabPanel, CellCard },
 
@@ -75,16 +77,20 @@ export default defineComponent({
   },
 
   computed: {
-    EMIT() { return EMIT },
-    ICON() { return ICON },
+    EMIT() {
+      return EMIT;
+    },
+    ICON() {
+      return ICON;
+    },
   },
 
   methods: {
     scrollToCells() {
-      this.$emit(EMIT.SCROLL_TO_CELLS)
+      this.$emit(EMIT.SCROLL_TO_CELLS);
     },
   },
-})
+});
 </script>
 
 <style lang="scss" scoped>
@@ -119,8 +125,16 @@ export default defineComponent({
 }
 
 // ── Fade entrance/exit ──────────────────────────────────────────────────────
-.sticky-cells-enter-active { transition: opacity 0.28s ease; }
-.sticky-cells-leave-active { transition: opacity var(--tr-normal); }
-.sticky-cells-enter-from   { opacity: 0; }
-.sticky-cells-leave-to     { opacity: 0; }
+.sticky-cells-enter-active {
+  transition: opacity 0.28s ease;
+}
+.sticky-cells-leave-active {
+  transition: opacity var(--tr-normal);
+}
+.sticky-cells-enter-from {
+  opacity: 0;
+}
+.sticky-cells-leave-to {
+  opacity: 0;
+}
 </style>
