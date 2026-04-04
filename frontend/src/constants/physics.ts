@@ -35,7 +35,7 @@ export const WF_PULSED = 1.0
 // H-FIRE lysis threshold multiplier: bipolar burst charge cancellation reduces effective membrane charging,
 // raising the lysis threshold relative to unipolar IRE. Arena et al. (2011) BioMedical Engineering OnLine 10:102
 // report H-FIRE requiring ~1.5-2× higher voltage for equivalent ablation; Sano et al. (2015) Sci Rep 5:11168
-// report similar bipolar attenuation. 1.75 is the geometric midpoint of the experimental range (empirical).
+// report similar bipolar attenuation. 1.75 is the arithmetic midpoint of the experimental range (empirical).
 export const H_FIRE_THRESHOLD_MULTIPLIER = 1.75
 
 // Mild thermal activation peak temperature [°C] — bell peak in 37-42°C biomodulation window

@@ -82,7 +82,7 @@ export default defineComponent({
         .filter((p) => p.group === relevantGroup)
         .map((p) => {
           const pr = p as typeof p & { resonantFreqGHz?: number; capsidQ?: number; resonantThresholdVcm?: number }
-          const hasRes = (p.group === CELL_GROUP.BACTERIA || p.group === CELL_GROUP.VIRUS) && !!pr.resonantFreqGHz && !!pr.resonantThresholdVcm
+          const hasRes = (p.group === CELL_GROUP.BACTERIA || p.group === CELL_GROUP.VIRUS) && !!pr.resonantFreqGHz && !!pr.resonantThresholdVcm && this.cellStore.isResonanceMode
           let sel: number, tVmMv: string
 
           if (hasRes) {

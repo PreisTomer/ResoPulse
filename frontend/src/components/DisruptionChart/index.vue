@@ -233,9 +233,17 @@ export default defineComponent({
       const hfireMult = this.cellStore.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
       // Resonance targets store their threshold in V/cm (resonantThresholdVcm); Schwan targets in V.
       const tRes = this.cellStore.target as { resonantThresholdVcm?: number }
-      const tNominalVth = isAcousticTarget && tRes.resonantThresholdVcm
-        ? tRes.resonantThresholdVcm
+      // isAcousticRes: true only when the chart is in resonance mode AND the preset has a resonant threshold.
+      // Mirrors the exact gate in cellStore.targetDisruptionRatio (isResonanceMode && resonantThresholdVcm).
+      // In Schwan mode with a bacteria preset, resonantThresholdVcm is a V/cm field strength, NOT a voltage —
+      // using it as a Schwan threshold would give wrong units and wildly wrong DR.
+      const isAcousticRes = isAcousticTarget && !!tRes.resonantThresholdVcm && this.cellStore.isResonanceMode
+      const tNominalVth = isAcousticRes
+        ? tRes.resonantThresholdVcm!
         : this.cellStore.target.thresholdVoltage
+      // H-FIRE bipolar charge cancellation is an EP membrane-charging mechanism only.
+      // Acoustic resonance disruption is mechanical — hfireMult must NOT apply to the resonant threshold.
+      const tHfireMult = isAcousticRes ? 1.0 : hfireMult
       const data = computeCurves(
         this.cellStore.healthy, this.cellStore.target,
         this.cellStore.fieldIntensity, this.cellStore.effectiveSigmaE, this.cellStore.cosThetaFactor,
@@ -243,7 +251,7 @@ export default defineComponent({
         this.cellStore.isResonanceMode,
         isAcousticTarget,
         effectiveVth(this.cellStore.healthy.thresholdVoltage, this.cellStore.healthyTemp, hfireMult),
-        effectiveVth(tNominalVth, this.cellStore.targetTemp, hfireMult),
+        effectiveVth(tNominalVth, this.cellStore.targetTemp, tHfireMult),
       )
       this._curveData = data
       const peakDR = data.reduce((m, d) => Math.max(m, d.hDR, d.tDR), 0)

@@ -52,7 +52,7 @@ export default defineComponent({
     isResonanceTarget(): boolean {
       const cat = this.cellStore.targetCellCategory
       const t = this.cellStore.target as { resonantFreqGHz?: number; resonantThresholdVcm?: number }
-      return (cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) && !!t.resonantFreqGHz && !!t.resonantThresholdVcm
+      return (cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) && !!t.resonantFreqGHz && !!t.resonantThresholdVcm && this.cellStore.isResonanceMode
     },
 
     badge(): { label: string } {

@@ -24,11 +24,11 @@ const simulationData = {
       type: 'target' as const,
       label: 'Adenocarcinoma Cell',
       radius: 15,
-      membraneThickness: 5,
+      membraneThickness: 7,
       naturalFrequency: 380,
-      thresholdVoltage: 0.7,
-      dielectricConstant: 8.5,
-      conductivity: 0.9,
+      thresholdVoltage: 0.70,
+      dielectricConstant: 12.0,  // scaled to preserve Cm = 15.2 mF/m² at d=7 nm (see cellLibrary.ts)
+      conductivity: 0.70,
     },
   ],
 }

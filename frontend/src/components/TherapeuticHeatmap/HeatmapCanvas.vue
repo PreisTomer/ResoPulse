@@ -91,9 +91,10 @@ export default defineComponent({
       let targetLysis: number
       if (s.isResonanceMode) {
         const tr = s.target as { resonantThresholdVcm?: number }
-        // Resonance threshold is already in V/cm and independent of cosTheta orientation
+        // Resonance threshold is already in V/cm and independent of cosTheta orientation.
+        // H-FIRE multiplier does NOT apply — acoustic resonance is mechanical, not EP membrane charging.
         const tResVth = tr.resonantThresholdVcm ?? (s.target.thresholdVoltage / (1.5 * s.target.radius * 1e-4 * Math.max(cosT, 1e-6)))
-        targetLysis = tempCorrectedVth(tResVth, s.targetTemp) * hfireMult
+        targetLysis = tempCorrectedVth(tResVth, s.targetTemp)
       } else {
         const tTau = computeTau(s.target, sigma)
         const pefT = isPulsed ? Math.max(MIN_PULSE_ENVELOPE, 1 - Math.exp(-pw_ns * 1e-9 / tTau)) : 1.0
@@ -234,9 +235,13 @@ export default defineComponent({
       if (s.isResonanceMode) {
         const tr = s.target as { resonantFreqGHz?: number; capsidQ?: number; resonantThresholdVcm?: number }
         if (tr.resonantFreqGHz && tr.capsidQ && tr.resonantThresholdVcm) {
-          // Mirror cellStore.targetDisruptionRatio: temperature correction only — hfireMult does NOT apply
-          // to acoustic resonance disruption (mechanical mechanism, not EP membrane charging).
-          const effThreshold = tempCorrectedVth(tr.resonantThresholdVcm, s.targetTemp)
+          // Compute temperature at this specific field so threshold correction is field-dependent,
+          // matching the Schwan path. hfireMult does NOT apply — acoustic disruption is mechanical.
+          const tCp_z  = s.target.specificHeatCapacity
+          const tLP_z  = s.perfusionRate * PENNES_BLOOD_COEFF / tCp_z
+          const tSAR_z = computeSAR(s.target, fieldVcm, sigma_e, wf)
+          const tTss_z = BODY_TEMP_C + tSAR_z * dc / ((NEWTON_COOLING_LAMBDA + tLP_z) * tCp_z)
+          const effThreshold = tempCorrectedVth(tr.resonantThresholdVcm, tTss_z)
           tDR = computeResonantDisruption(tr.resonantFreqGHz, tr.capsidQ, effThreshold, freqKHz * 1000, fieldVcm)
         }
       } else {
@@ -283,11 +288,6 @@ export default defineComponent({
 
       const tr     = s.target as { resonantFreqGHz?: number; capsidQ?: number; resonantThresholdVcm?: number }
       const hasRes = isRes && !!tr.resonantFreqGHz && !!tr.capsidQ && !!tr.resonantThresholdVcm
-      // Pre-compute temperature-corrected resonant threshold so zone colours match the DR display.
-      // hfireMult does NOT apply here — acoustic resonance is mechanical, not EP membrane charging.
-      const resEffThreshold = hasRes
-        ? tempCorrectedVth(tr.resonantThresholdVcm!, s.targetTemp)
-        : 0
 
       const result = new Array<number>(HMAP_FREQ_STEPS * HMAP_FIELD_STEPS)
 
@@ -305,7 +305,13 @@ export default defineComponent({
 
           let tDR = 0
           if (hasRes) {
-            tDR = computeResonantDisruption(tr.resonantFreqGHz!, tr.capsidQ!, resEffThreshold, freqHz, fieldVcm)
+            // Compute temperature at this field step so the threshold correction matches
+            // the Schwan path (which also uses per-cell-per-field temperature).
+            // hfireMult does NOT apply — acoustic resonance is mechanical, not EP membrane charging.
+            const tSAR_res = computeSAR(s.target, fieldVcm, sigma_e, wf)
+            const tTss_res = BODY_TEMP_C + tSAR_res * dc / ((NEWTON_COOLING_LAMBDA + tLambdaPerf) * tCp)
+            const resThreshold = tempCorrectedVth(tr.resonantThresholdVcm!, tTss_res)
+            tDR = computeResonantDisruption(tr.resonantFreqGHz!, tr.capsidQ!, resThreshold, freqHz, fieldVcm)
           } else {
             const tSAR = computeSAR(s.target, fieldVcm, sigma_e, wf)
             const tTss = BODY_TEMP_C + tSAR * dc / ((NEWTON_COOLING_LAMBDA + tLambdaPerf) * tCp)
@@ -631,8 +637,9 @@ export default defineComponent({
       if (s.isResonanceMode) {
         const tr = s.target as { resonantFreqGHz?: number; capsidQ?: number; resonantThresholdVcm?: number }
         if (tr.resonantFreqGHz && tr.capsidQ && tr.resonantThresholdVcm) {
-          // Mirror cellStore.targetDisruptionRatio: apply temperature correction + H-FIRE multiplier
-          const effThreshold = tempCorrectedVth(tr.resonantThresholdVcm, s.targetTemp) * hoverHfireMult
+          // H-FIRE bipolar charge cancellation is an EP membrane-charging mechanism only.
+          // Acoustic resonance disruption is mechanical — hoverHfireMult must NOT apply here.
+          const effThreshold = tempCorrectedVth(tr.resonantThresholdVcm, s.targetTemp)
           tDR = computeResonantDisruption(tr.resonantFreqGHz, tr.capsidQ, effThreshold, freqKHz * 1000, fieldVcm)
         }
       } else {

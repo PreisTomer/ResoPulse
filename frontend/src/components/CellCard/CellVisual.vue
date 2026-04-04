@@ -238,6 +238,7 @@ export default defineComponent({
 
     isAcousticTarget(): boolean {
       if (this.type !== CELL_TYPE.TARGET) return false
+      if (!this.cellStore.isResonanceMode) return false
       const cat = this.cellStore.targetCellCategory
       if (cat !== CELL_CATEGORY.BACTERIA && cat !== CELL_CATEGORY.VIRUS) return false
       const t = this.cellStore.target as CellConfig & { resonantFreqGHz?: number }

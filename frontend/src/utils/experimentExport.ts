@@ -483,7 +483,7 @@ export function buildEntryMethodsText(entry: LogEntry, sessionName: string, samp
     '',
     'POPULATION NOTE: DR values above represent the single-cell (modal/nominal radius)',
     'calculation. Population-level lysis fraction (log-normal radius distribution,',
-    'CV ≈ 25% mammalian / 22% bacteria / 8% virus) is not included in this entry.',
+    'CV ≈ 25% mammalian / 12% bacteria / 8% virus) is not included in this entry.',
   ]
 
 
