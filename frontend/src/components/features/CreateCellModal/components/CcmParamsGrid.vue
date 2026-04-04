@@ -20,35 +20,35 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue'
+import { defineComponent } from "vue";
 
-import CcmNumericField from './CcmNumericField.vue'
+import CcmNumericField from "./CcmNumericField.vue";
 
-import { UNIT } from '@/constants/units'
-import { EMIT } from '@/constants/emitEvents'
+import { UNIT } from "@/constants/units";
+import { EMIT } from "@/constants/emitEvents";
 
 type FieldKey =
-  | 'radius'
-  | 'membraneThickness'
-  | 'dielectricConstant'
-  | 'conductivity'
-  | 'thresholdVoltage'
-  | 'density'
-  | 'specificHeatCapacity'
+  | "radius"
+  | "membraneThickness"
+  | "dielectricConstant"
+  | "conductivity"
+  | "thresholdVoltage"
+  | "density"
+  | "specificHeatCapacity";
 
 interface FieldConfig {
-  key: FieldKey
-  labelKey: string
-  subHintKey: string
-  tipKey: string
-  unit?: string
-  step: number
-  min: number
-  max: number
+  key: FieldKey;
+  labelKey: string;
+  subHintKey: string;
+  tipKey: string;
+  unit?: string;
+  step: number;
+  min: number;
+  max: number;
 }
 
 export default defineComponent({
-  name: 'CcmParamsGrid',
+  name: "CcmParamsGrid",
 
   components: { CcmNumericField },
 
@@ -59,34 +59,102 @@ export default defineComponent({
   emits: [EMIT.FIELD_CHANGE, EMIT.SHOW_TIP],
 
   computed: {
-    UNIT() { return UNIT },
-    EMIT() { return EMIT },
+    UNIT() {
+      return UNIT;
+    },
+    EMIT() {
+      return EMIT;
+    },
     fields(): FieldConfig[] {
       return [
-        { key: 'radius', labelKey: 'userPresets.fieldRadius', subHintKey: 'userPresets.fieldRadiusSub', tipKey: 'radius', unit: UNIT.UM, step: 0.001, min: 0.001, max: 100 },
-        { key: 'membraneThickness', labelKey: 'userPresets.fieldMemThick', subHintKey: 'userPresets.fieldMemThickSub', tipKey: 'memThick', unit: UNIT.NM, step: 0.1, min: 1, max: 200 },
-        { key: 'dielectricConstant', labelKey: 'userPresets.fieldEpsR', subHintKey: 'userPresets.fieldEpsRSub', tipKey: 'epsR', step: 0.5, min: 1, max: 80 },
-        { key: 'conductivity', labelKey: 'userPresets.fieldSigmaI', subHintKey: 'userPresets.fieldSigmaISub', tipKey: 'sigmaI', unit: UNIT.S_PER_M, step: 0.01, min: 0.001, max: 10 },
-        { key: 'thresholdVoltage', labelKey: 'userPresets.fieldVmThr', subHintKey: 'userPresets.fieldVmThrSub', tipKey: 'vmThr', unit: UNIT.V, step: 0.05, min: 0.05, max: 10 },
-        { key: 'density', labelKey: 'userPresets.fieldDensity', subHintKey: 'userPresets.fieldDensitySub', tipKey: 'density', unit: UNIT.KG_PER_M3, step: 10, min: 500, max: 2000 },
-        { key: 'specificHeatCapacity', labelKey: 'userPresets.fieldCp', subHintKey: 'userPresets.fieldCpSub', tipKey: 'cp', unit: UNIT.J_PER_KG_K, step: 50, min: 500, max: 5000 },
-      ]
+        {
+          key: "radius",
+          labelKey: "userPresets.fieldRadius",
+          subHintKey: "userPresets.fieldRadiusSub",
+          tipKey: "radius",
+          unit: UNIT.UM,
+          step: 0.001,
+          min: 0.001,
+          max: 100,
+        },
+        {
+          key: "membraneThickness",
+          labelKey: "userPresets.fieldMemThick",
+          subHintKey: "userPresets.fieldMemThickSub",
+          tipKey: "memThick",
+          unit: UNIT.NM,
+          step: 0.1,
+          min: 1,
+          max: 200,
+        },
+        {
+          key: "dielectricConstant",
+          labelKey: "userPresets.fieldEpsR",
+          subHintKey: "userPresets.fieldEpsRSub",
+          tipKey: "epsR",
+          step: 0.5,
+          min: 1,
+          max: 80,
+        },
+        {
+          key: "conductivity",
+          labelKey: "userPresets.fieldSigmaI",
+          subHintKey: "userPresets.fieldSigmaISub",
+          tipKey: "sigmaI",
+          unit: UNIT.S_PER_M,
+          step: 0.01,
+          min: 0.001,
+          max: 10,
+        },
+        {
+          key: "thresholdVoltage",
+          labelKey: "userPresets.fieldVmThr",
+          subHintKey: "userPresets.fieldVmThrSub",
+          tipKey: "vmThr",
+          unit: UNIT.V,
+          step: 0.05,
+          min: 0.05,
+          max: 10,
+        },
+        {
+          key: "density",
+          labelKey: "userPresets.fieldDensity",
+          subHintKey: "userPresets.fieldDensitySub",
+          tipKey: "density",
+          unit: UNIT.KG_PER_M3,
+          step: 10,
+          min: 500,
+          max: 2000,
+        },
+        {
+          key: "specificHeatCapacity",
+          labelKey: "userPresets.fieldCp",
+          subHintKey: "userPresets.fieldCpSub",
+          tipKey: "cp",
+          unit: UNIT.J_PER_KG_K,
+          step: 50,
+          min: 500,
+          max: 5000,
+        },
+      ];
     },
   },
 
   methods: {
     fieldValue(key: FieldKey): string | number {
-      const value = this.form[key]
-      return typeof value === 'number' || typeof value === 'string' ? value : ''
+      const value = this.form[key];
+      return typeof value === "number" || typeof value === "string"
+        ? value
+        : "";
     },
   },
-})
+});
 </script>
 
 <style lang="scss" scoped>
 .ccm-params-grid {
-  display:               grid;
+  display: grid;
   grid-template-columns: 1fr 1fr;
-  gap:                   0.75rem 1rem;
+  gap: 0.75rem 1rem;
 }
 </style>
