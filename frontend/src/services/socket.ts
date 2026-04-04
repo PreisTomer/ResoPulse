@@ -256,7 +256,7 @@ export function requestAiOptimization(requestId: string, onResult: AiResultCallb
     // Schwan path: invert the equation to find the lysis field, then predict DR.
     suggestedFieldVcm = lysisFieldAtFreq(
       store.target.radius, store.target.membraneThickness, store.target.dielectricConstant,
-      store.target.conductivity, store.target.thresholdVoltage,
+      store.target.conductivity, tempCorrectedVth(store.target.thresholdVoltage, store.targetTemp),
       optFreqKhz, sigmaE, waveform, pulseWidthNs, cosT, hfireMult,
     )
     const pefTarget = isPulsedWaveform
