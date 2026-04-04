@@ -66,7 +66,8 @@ function pulseEnvelope(cell: CellConfig, pulseWidthNs: number, sigma_e: number):
   return computePulseStepResponse(computeTau(cell, sigma_e), pulseWidthNs)
 }
 
-// Lysis field [V/cm]: Vth·hfireMult·√(1+(ωτ)²)/(1.5·R·cosθ·100·pef). Returns SENTINEL near θ=90°.
+// Lysis field [V/cm]: Vth_eff·hfireMult·√(1+(ωτ)²)/(1.5·R·cosθ·100·pef). Returns SENTINEL near θ=90°.
+// tempC applies the same threshold reduction as disruptionRatio, keeping E_lys consistent with DR=1.
 function lysisField(
   cell: CellConfig,
   freqKHz: number,
@@ -74,11 +75,13 @@ function lysisField(
   cosTheta: number,
   pef: number,
   hfireMult: number,
+  tempC: number,
 ): number {
   if (cosTheta < MIN_COS_THETA) return LYSIS_FIELD_SENTINEL
-  const omega = TWO_PI * freqKHz * 1e3
-  const tau   = computeTau(cell, sigma_e)
-  return (cell.thresholdVoltage * hfireMult * Math.sqrt(1 + (omega * tau) ** 2)) /
+  const omega   = TWO_PI * freqKHz * 1e3
+  const tau     = computeTau(cell, sigma_e)
+  const vthEff  = tempCorrectedVth(cell.thresholdVoltage, tempC)
+  return (vthEff * hfireMult * Math.sqrt(1 + (omega * tau) ** 2)) /
     (SCHWAN_SPHERE_FACTOR * cell.radius * 1e-6 * cosTheta * V_CM_TO_V_M * Math.max(MIN_PULSE_ENVELOPE, pef))
 }
 
@@ -419,13 +422,13 @@ export const useCellStore = defineStore('cell', {
     targetLysisField(): number {
       const state    = this as CellStoreState
       const hfireMult = state.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
-      return lysisField(state.target, state.currentBroadcastFrequency, this.effectiveSigmaE, this.cosThetaFactor, this.pulseEnvelopeFactorTarget, hfireMult)
+      return lysisField(state.target, state.currentBroadcastFrequency, this.effectiveSigmaE, this.cosThetaFactor, this.pulseEnvelopeFactorTarget, hfireMult, state.targetTemp)
     },
 
     healthyLysisField(): number {
       const state    = this as CellStoreState
       const hfireMult = state.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
-      return lysisField(state.healthy, state.currentBroadcastFrequency, this.effectiveSigmaE, this.cosThetaFactor, this.pulseEnvelopeFactorHealthy, hfireMult)
+      return lysisField(state.healthy, state.currentBroadcastFrequency, this.effectiveSigmaE, this.cosThetaFactor, this.pulseEnvelopeFactorHealthy, hfireMult, state.healthyTemp)
     },
 
     healthySteadyStateTemp(): number {
