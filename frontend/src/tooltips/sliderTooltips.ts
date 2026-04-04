@@ -22,7 +22,6 @@ import {
   formatTooltipFrequency,
   formatVmThresholdLine,
   getDisruptionWarningState,
-  resolveThermalWarningLevel,
 } from "./sharedTooltip";
 
 import type { MediumKey } from "@/types/media";

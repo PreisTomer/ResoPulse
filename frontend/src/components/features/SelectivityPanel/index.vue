@@ -157,7 +157,7 @@ import {
 } from "@/tooltips/selectivityTooltips";
 
 import { THRESHOLDS, NEAR_ZERO_VM } from "@/constants/physics";
-import { CHART_MODE, WAVEFORM } from "@/constants/strings";
+import { CHART_MODE } from "@/constants/strings";
 import { ICON } from "@/constants/icons";
 
 import DisruptionBars from "./components/DisruptionBars.vue";

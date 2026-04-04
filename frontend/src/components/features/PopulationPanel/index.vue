@@ -66,7 +66,6 @@ import { useCellStore } from "@/stores/cellStore";
 
 import { AccordionPanel } from "@/components/ui";
 
-import { tempCorrectedVth } from "@/utils/physics";
 import { isActiveResonanceTarget } from "@/utils/cellModel";
 import { computeConfiguredDisruptionRatio } from "@/utils/disruptionModel";
 import { downloadText } from "@/utils/experimentExport";
@@ -75,7 +74,7 @@ import { computeWindowScore, getWindowScoreTier } from "@/utils/windowScore";
 
 import { C } from "@/theme/colors";
 
-import { WAVEFORM, CELL_CATEGORY } from "@/constants/strings";
+import { CELL_CATEGORY } from "@/constants/strings";
 import { THRESHOLDS, DEFAULT_CAPSID_Q } from "@/constants/physics";
 import { ICON } from "@/constants/icons";
 import { UNIT } from "@/constants/units";

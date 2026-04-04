@@ -8,7 +8,7 @@
       :labelKey="field.labelKey"
       :subHintKey="field.subHintKey"
       :tipKey="field.tipKey"
-      :value="form[field.key]"
+      :value="fieldValue(field.key)"
       :step="field.step"
       :min="field.min"
       :max="field.max"
@@ -27,8 +27,17 @@ import CcmNumericField from './CcmNumericField.vue'
 import { UNIT } from '@/constants/units'
 import { EMIT } from '@/constants/emitEvents'
 
+type FieldKey =
+  | 'radius'
+  | 'membraneThickness'
+  | 'dielectricConstant'
+  | 'conductivity'
+  | 'thresholdVoltage'
+  | 'density'
+  | 'specificHeatCapacity'
+
 interface FieldConfig {
-  key: string
+  key: FieldKey
   labelKey: string
   subHintKey: string
   tipKey: string
@@ -62,6 +71,13 @@ export default defineComponent({
         { key: 'density', labelKey: 'userPresets.fieldDensity', subHintKey: 'userPresets.fieldDensitySub', tipKey: 'density', unit: UNIT.KG_PER_M3, step: 10, min: 500, max: 2000 },
         { key: 'specificHeatCapacity', labelKey: 'userPresets.fieldCp', subHintKey: 'userPresets.fieldCpSub', tipKey: 'cp', unit: UNIT.J_PER_KG_K, step: 50, min: 500, max: 5000 },
       ]
+    },
+  },
+
+  methods: {
+    fieldValue(key: FieldKey): string | number {
+      const value = this.form[key]
+      return typeof value === 'number' || typeof value === 'string' ? value : ''
     },
   },
 })

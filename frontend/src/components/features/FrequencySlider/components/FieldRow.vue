@@ -118,7 +118,7 @@ import {
   buildTargetBadgeTooltipParams,
 } from "../lib";
 
-import { CELL_LABEL, THERMAL_LEVEL, WAVEFORM } from "@/constants/strings";
+import { CELL_LABEL, THERMAL_LEVEL } from "@/constants/strings";
 import { THRESHOLDS } from "@/constants/physics";
 import type { SliderRange } from "@/constants/sliderBounds";
 

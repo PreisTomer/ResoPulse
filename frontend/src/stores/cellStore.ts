@@ -20,13 +20,11 @@ import {
   computeDepSecondCrossoverKHz,
   computePopulationLysisFraction,
   safeRatio,
-  tempCorrectedVth,
 } from "@/utils/physics";
 import {
   effectiveElectroporationThreshold,
   effectiveResonanceThreshold,
   getHfireThresholdMultiplier,
-  hasResonanceConfig,
   isActiveResonanceTarget,
 } from "@/utils/cellModel";
 

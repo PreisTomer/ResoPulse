@@ -50,7 +50,7 @@ import { isActiveResonanceTarget } from "@/utils/cellModel";
 import { formatFreqKHz } from "@/utils/format";
 import { downloadText } from "@/utils/experimentExport";
 
-import { WAVEFORM, CELL_CATEGORY } from "@/constants/strings";
+import { CELL_CATEGORY } from "@/constants/strings";
 import { THRESHOLDS } from "@/constants/physics";
 import { ICON } from "@/constants/icons";
 import { UNIT } from "@/constants/units";

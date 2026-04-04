@@ -70,7 +70,7 @@ import {
   EDITABLE_PARAMS,
   EDITABLE_PARAMS_ACOUSTIC,
 } from "@/constants/cellCard";
-import { CELL_STATE, CELL_TYPE, CELL_CATEGORY } from "@/constants/strings";
+import { CELL_STATE, CELL_TYPE } from "@/constants/strings";
 import { UNIT } from "@/constants/units";
 import { EMIT } from "@/constants/emitEvents";
 

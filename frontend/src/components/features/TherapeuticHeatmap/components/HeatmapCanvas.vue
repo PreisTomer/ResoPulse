@@ -48,7 +48,6 @@ import {
   HMAP_ZONE_KEY,
   type HmapZone,
   HMAP_FREQ_MIN_KHZ,
-  HMAP_DR_DISPLAY_CAP,
   HMAP_YAXIS_HEADROOM,
   HMAP_RECOMPUTE_DEBOUNCE_MS,
   HMAP_CANVAS_FONT_AXIS,
@@ -68,7 +67,7 @@ import {
 import { ICON } from "@/constants/icons";
 import { EMIT } from "@/constants/emitEvents";
 
-import type { HoverInfo, OutcomeItem } from "@/types/heatmap";
+import type { OutcomeItem } from "@/types/heatmap";
 import { buildHeatmapHoverPresentation, STATIC_HEATMAP_TOOLTIPS } from "../lib";
 
 export default defineComponent({

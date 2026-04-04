@@ -14,7 +14,7 @@
         :labelKey="field.labelKey"
         :subHintKey="field.subHintKey"
         :tipKey="field.tipKey"
-        :value="form[field.key]"
+        :value="fieldValue(field.key)"
         :step="field.step"
         :min="field.min"
         :max="field.max"
@@ -34,8 +34,10 @@ import CcmNumericField from './CcmNumericField.vue'
 import { UNIT } from '@/constants/units'
 import { EMIT } from '@/constants/emitEvents'
 
+type FieldKey = 'resonantFreqGHz' | 'capsidQ' | 'resonantThresholdVcm'
+
 interface FieldConfig {
-  key: string
+  key: FieldKey
   labelKey: string
   subHintKey: string
   tipKey: string
@@ -65,6 +67,13 @@ export default defineComponent({
         { key: 'capsidQ', labelKey: 'userPresets.fieldCapsidQ', subHintKey: 'userPresets.fieldCapsidQSub', tipKey: 'capsidQ', step: 1, min: 1, max: 100 },
         { key: 'resonantThresholdVcm', labelKey: 'userPresets.fieldResThr', subHintKey: 'userPresets.fieldResThrSub', tipKey: 'resThr', unit: UNIT.V_PER_CM, step: 100, min: 10, max: 100000 },
       ]
+    },
+  },
+
+  methods: {
+    fieldValue(key: FieldKey): string | number {
+      const value = this.form[key]
+      return typeof value === 'number' || typeof value === 'string' ? value : ''
     },
   },
 })

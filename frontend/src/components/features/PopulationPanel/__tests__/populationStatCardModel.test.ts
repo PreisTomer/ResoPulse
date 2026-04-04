@@ -3,6 +3,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { createPopulationStatCardTooltips } from '../lib/populationStatCardModel'
+import type { PopStats } from '../lib/popPanelCompute'
 
 describe('populationStatCardModel', () => {
   const t = (key: string, params?: Record<string, unknown>) => `${key}:${JSON.stringify(params ?? {})}`
@@ -15,7 +16,7 @@ describe('populationStatCardModel', () => {
     seNour: 5,
     meanDr: 0.4567,
     stdDr: 0.1234,
-  } as import('./popPanelCompute').PopStats
+  } as PopStats
 
   it('builds side-aware card and outcome tooltips', () => {
     const tooltips = createPopulationStatCardTooltips(t)

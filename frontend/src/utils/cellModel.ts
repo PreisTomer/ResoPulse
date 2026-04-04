@@ -34,7 +34,10 @@ export function hasResonanceConfig(
 export function isConfiguredResonanceTarget(
   cell: ResonanceCell,
   category: CellCategoryValue,
-): boolean {
+): cell is ResonanceCell & {
+  resonantFreqGHz: number;
+  resonantThresholdVcm: number;
+} {
   return isResonanceCapableCategory(category) && hasResonanceConfig(cell);
 }
 
@@ -42,7 +45,10 @@ export function isActiveResonanceTarget(
   cell: ResonanceCell,
   category: CellCategoryValue,
   isResonanceMode: boolean,
-): boolean {
+): cell is ResonanceCell & {
+  resonantFreqGHz: number;
+  resonantThresholdVcm: number;
+} {
   return isResonanceMode && isConfiguredResonanceTarget(cell, category);
 }
 

@@ -533,7 +533,6 @@ import {
 
 import { ICON } from "@/constants/icons";
 import { UNIT } from "@/constants/units";
-import { THRESHOLDS } from "@/constants/physics";
 
 export default defineComponent({
   name: "AiOptimizerTab",

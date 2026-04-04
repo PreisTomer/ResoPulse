@@ -285,7 +285,6 @@ import {
 import { LOG_EVENT, NULL_DISPLAY } from "@/constants/strings";
 import { ICON } from "@/constants/icons";
 import { THRESHOLDS } from "@/constants/physics";
-import { UNIT } from "@/constants/units";
 
 export default defineComponent({
   components: { AccordionPanel, StatusBadge },

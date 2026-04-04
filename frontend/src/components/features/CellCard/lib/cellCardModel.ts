@@ -12,12 +12,12 @@ import { CELL_CATEGORY, CELL_TYPE } from '@/constants/strings'
 import { UNIT } from '@/constants/units'
 
 import type { CellConfig } from '@/types/cell'
+import type { CellCategory } from '@/constants/strings'
 
 import { effectiveElectroporationThreshold } from '@/utils/cellModel'
 
 type CellSide = 'healthy' | 'target'
 type WaveformValue = 'cw' | 'pulsed' | 'hfire'
-type CellCategoryValue = 'healthy' | 'cancer' | 'bacteria' | 'virus' | 'reference'
 type AcousticCellConfig = CellConfig & { resonantFreqGHz?: number; capsidQ?: number; experimentalBasis?: string }
 
 function valueByCellType<T>(type: CellSide, healthyValue: T, targetValue: T): T {
@@ -51,7 +51,7 @@ export function effectiveThresholdByCellType(
 
 export function isAcousticTargetCell(
   type: CellSide,
-  targetCellCategory: CellCategoryValue,
+  targetCellCategory: CellCategory,
   targetCell: AcousticCellConfig,
 ): boolean {
   if (type !== CELL_TYPE.TARGET) return false

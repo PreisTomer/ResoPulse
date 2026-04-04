@@ -6,9 +6,10 @@ import { tipHoverDynamic } from '@/tooltips/heatmapTooltips'
 import { UNIT } from '@/constants/units'
 import { HMAP_DR_DISPLAY_CAP, HMAP_ZONE, HMAP_ZONE_CSS } from '@/constants/heatmap'
 
+import type { HmapZone } from '@/constants/heatmap'
 import type { HoverInfo, OutcomeItem } from '@/types/heatmap'
 
-function hoverZoneClass(zone: number): string {
+function hoverZoneClass(zone: HmapZone): string {
   if (zone === HMAP_ZONE.THERAPEUTIC) return 'tip-ok'
   if (zone === HMAP_ZONE.MARGINAL) return 'tip-val'
   if (zone === HMAP_ZONE.ABLATIVE || zone === HMAP_ZONE.THERMAL) return 'tip-warn'
@@ -32,7 +33,7 @@ function formatTemp(tempC: number): string {
 export function buildHeatmapHoverPresentation(input: {
   freqKHz: number
   fieldVcm: number
-  zone: number
+  zone: HmapZone
   zoneLabel: string
   tDr: number
   hDr: number

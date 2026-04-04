@@ -5,6 +5,10 @@ import { SCHWAN_SPHERE_FACTOR, WF_CW, EPSILON_R_CYTOPLASM, SIGMA_MEMBRANE_SI, TW
 
 import type { CellConfig } from '@/types/cell'
 
+type MembraneCellLike = Pick<CellConfig, 'dielectricConstant' | 'membraneThickness'>
+type TauCellLike = MembraneCellLike & Pick<CellConfig, 'radius' | 'conductivity'>
+type SarCellLike = Pick<CellConfig, 'conductivity' | 'density'>
+
 // numerator/denominator capped at cap; returns 0 or cap when denominator < epsilon.
 export function safeRatio(numerator: number, denominator: number, cap: number, epsilon = 1e-9): number {
   if (denominator < epsilon) return numerator > 0 ? cap : 0
@@ -19,7 +23,7 @@ const VCM_TO_VM = 100   // V/cm → V/m
 const NS_TO_S   = 1e-9  // ns → s
 
 // Cm = ε_r·ε₀/d  [F/m²]
-export function membraneCm(cell: CellConfig): number {
+export function membraneCm(cell: MembraneCellLike): number {
   return (cell.dielectricConstant * EPSILON_0) / (cell.membraneThickness * NM_TO_M)
 }
 
@@ -29,7 +33,7 @@ function tauRC(R: number, Cm: number, sigmaOut: number, sigmaIn: number): number
 }
 
 // τ = R·Cm·(2σ_e+σ_i)/(2σ_e·σ_i) [s] - Kotnik & Miklavcic 2000
-export function computeTau(cell: CellConfig, sigma_e: number): number {
+export function computeTau(cell: TauCellLike, sigma_e: number): number {
   return tauRC(cell.radius * UM_TO_M, membraneCm(cell), sigma_e, cell.conductivity)
 }
 
@@ -49,7 +53,7 @@ export function computeSchwan(
 
 // SAR = σ_i·α²·E²·wf/ρ [W/kg], α = 3σ_e/(2σ_e+σ_i). wf: 0.5=CW, 1.0=pulsed. Schwan 1957.
 export function computeSAR(
-  cell: CellConfig,
+  cell: SarCellLike,
   fieldVcm: number,
   sigma_e: number,
   waveformFactor = WF_CW,

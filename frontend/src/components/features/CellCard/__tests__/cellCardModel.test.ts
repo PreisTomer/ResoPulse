@@ -47,7 +47,7 @@ describe('cellCardModel helpers', () => {
 
   it('detects acoustic targets only for resonant bacteria or virus presets', () => {
     expect(isAcousticTargetCell('healthy', 'bacteria', { resonantFreqGHz: 1 } as typeof targetCell)).toBe(false)
-    expect(isAcousticTargetCell('target', 'cancer', { resonantFreqGHz: 1 } as typeof targetCell)).toBe(false)
+    expect(isAcousticTargetCell('target', 'mammalian', { resonantFreqGHz: 1 } as typeof targetCell)).toBe(false)
     expect(isAcousticTargetCell('target', 'virus', { resonantFreqGHz: 1 } as typeof targetCell)).toBe(true)
   })
 
