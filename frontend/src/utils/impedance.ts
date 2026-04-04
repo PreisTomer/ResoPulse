@@ -142,16 +142,18 @@ export function computePowerDeliveryEfficiency(zLoadOhm: number, z0Ohm: number):
 
 // ── Medium Joule heating ───────────────────────────────────────────────────────
 
-// P = E²·σ_e·V [W], total Joule heating in cuvette medium
+// P_avg = wf·E²_peak·σ_e·V [W], time-averaged Joule heating in cuvette medium
+// wf = 0.5 for CW sinusoidal (E²_rms = E²_peak/2), 1.0 for pulsed square wave
 export function computeMediumJouleHeatingWatts(
   fieldVcm: number,
   sigmaE:   number,
   gapMm:    number,
   areaCm2:  number,
+  wf = 0.5,
 ): number {
   const E_SI    = fieldVcm * 100               // V/cm → V/m
   const V_m3    = gapMm * 1e-3 * areaCm2 * 1e-4  // m³
-  return E_SI ** 2 * sigmaE * V_m3
+  return E_SI ** 2 * sigmaE * V_m3 * wf
 }
 
 // dT/dt = E²·σ_e/(ρ·c_p) [°C/s], adiabatic worst-case

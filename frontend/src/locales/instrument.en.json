@@ -27,7 +27,7 @@
       "tipContextTarget":    "<strong>Target Cell</strong>\nCurrently selected target cell type. The impedance model uses its radius and intracellular conductivity to compute ion release on lysis.",
       "tipContextDR":        "<strong>Disruption Ratio (target)</strong>\nDR = (V_m · PEF) / V_threshold. Values above 85% indicate the lysis window has been reached.",
       "tipContextCorrection": "<strong>Voltage Correction Factor</strong>\n= 1 + R_s / Z_cuvette\nValues above 1 mean the generator must output proportionally more voltage to compensate for impedance drift.",
-      "tipContextJoule":     "<strong>Medium Joule Heating Power [mW]</strong>\nP = &#124;E&#124;² × σ_e × V_cuvette\nTotal power dissipated as heat in the medium between the electrodes.\nHigher σ_e (post-lysis) and higher field → more heating.\nCorresponding adiabatic temperature rise rate: dT/dt = &#124;E&#124;² × σ_e / (ρ × c_p)\nThis is an upper bound, actual rise is lower due to heat loss to cuvette walls."
+      "tipContextJoule":     "<strong>Medium Joule Heating Power [mW]</strong>\nP_avg = wf × &#124;E&#124;²_peak × σ_e × V_cuvette\n  wf = 0.5 (CW sinusoidal, E²_rms = E²_peak/2) · wf = 1.0 (pulsed square wave)\nTime-averaged power dissipated as heat in the medium between the electrodes.\nHigher σ_e (post-lysis) and higher field → more heating.\nCorresponding adiabatic temperature rise rate (peak, worst-case): dT/dt = &#124;E&#124;²_peak × σ_e / (ρ × c_p)\nActual steady-state rise is lower due to heat loss to cuvette walls and duty-cycle averaging."
     },
 
     "setup": {

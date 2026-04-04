@@ -26,8 +26,9 @@ import {
 
 import { MEDIA } from '@/constants/media'
 
-import { LOAD_STATE, FIELD_DISTORTION, PULSE_BW_STATUS } from '@/constants/strings'
+import { LOAD_STATE, FIELD_DISTORTION, PULSE_BW_STATUS, WAVEFORM } from '@/constants/strings'
 import type { LoadState, FieldDistortion, PulseBwStatus } from '@/constants/strings'
+import { WF_CW, WF_PULSED } from '@/constants/physics'
 import {
   CUVETTE_PRESETS,
   CUSTOM_CUVETTE_ID,
@@ -245,13 +246,15 @@ export const useImpedanceStore = defineStore('impedance', {
     },
 
     mediumJouleHeatingMilliWatts(): number {
-      const s       = this as ImpedanceStoreState
+      const s         = this as ImpedanceStoreState
       const cellStore = useCellStore()
+      const wf        = cellStore.waveform === WAVEFORM.CW ? WF_CW : WF_PULSED
       return computeMediumJouleHeatingWatts(
         cellStore.fieldIntensity,
         this.sigmaEWithLysis,
         s.cuvetteGapMm,
         s.cuvetteCrossSectionCm2,
+        wf,
       ) * 1000  // W → mW
     },
 
