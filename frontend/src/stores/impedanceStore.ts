@@ -15,7 +15,6 @@ import {
   computeCuvetteZComponents,
   computeRelaxationFreqHz,
   computeReflectionCoeffComplex,
-  computeVSWR,
   computeMediumJouleHeatingWatts,
   computeMediumTempRiseRatePerSec,
   computeFieldDistortionFactor,
@@ -77,6 +76,7 @@ interface ImpedanceStoreState {
   hardwareZReal:         number | null  // last measured Z_real [Ω]
   hardwareZImag:         number | null  // last measured Z_imag [Ω]
   hardwareFreqHz:        number | null  // measurement frequency [Hz]
+  hardwareConductivity:  number | null  // σ_e [S/m] if instrument reports it directly
   hardwareReadingTs:     number         // Unix ms of last reading (0 = never)
   // History ring buffer for the trend sparkline
   impedanceHistory:      ImpedanceHistoryPoint[]
@@ -99,6 +99,7 @@ export const useImpedanceStore = defineStore('impedance', {
       hardwareZReal:          null,
       hardwareZImag:          null,
       hardwareFreqHz:         null,
+      hardwareConductivity:   null,
       hardwareReadingTs:      0,
       impedanceHistory:       [],
       conductivitySamples:    [],
@@ -125,12 +126,17 @@ export const useImpedanceStore = defineStore('impedance', {
 
     sigmaEForImpedance(): number {
       const s = this as ImpedanceStoreState
-      if (s.hardwareModeEnabled && s.hardwareZReal !== null) {
-        // Use the exact complex formula when hardware reports both real and imaginary parts.
-        // Falls back to DC approximation (Z_imag=0) when only real part is available.
-        return computeSigmaEFromComplexImpedance(
-          s.cuvetteGapMm, s.cuvetteCrossSectionCm2, s.hardwareZReal, s.hardwareZImag ?? 0,
-        )
+      if (s.hardwareModeEnabled) {
+        // Direct conductivity from instrument (e.g. conductivity probe, LCR meter) is the
+        // most accurate source — no geometry assumptions required. Use it when available.
+        if (s.hardwareConductivity !== null) return s.hardwareConductivity
+        // Back-calculate from impedance: use complex formula (Re[Y]·d/A) when Z_imag
+        // is available, DC approximation (Z_imag=0) as fallback.
+        if (s.hardwareZReal !== null) {
+          return computeSigmaEFromComplexImpedance(
+            s.cuvetteGapMm, s.cuvetteCrossSectionCm2, s.hardwareZReal, s.hardwareZImag ?? 0,
+          )
+        }
       }
       return this.sigmaEWithLysis
     },
@@ -236,8 +242,12 @@ export const useImpedanceStore = defineStore('impedance', {
     },
 
     vswr(): number {
-      const s = this as ImpedanceStoreState
-      return computeVSWR(this.currentImpedanceMagAtFreqOhm, s.sourceImpedanceOhm)
+      // Use the same complex Γ as powerDeliveryEfficiency for consistency.
+      // computeVSWR (scalar |Z|) and reflectionCoeff (complex Z_real + Z_imag) diverge
+      // at high frequencies or when Z_imag is significant — always use complex path here.
+      const gamma = this.reflectionCoeff
+      if (gamma >= 1) return Infinity
+      return (1 + gamma) / (1 - gamma)
     },
 
     powerDeliveryEfficiency(): number {
@@ -335,10 +345,11 @@ export const useImpedanceStore = defineStore('impedance', {
     },
 
     handleHardwareImpedancePacket(packet: HardwareImpedancePacket) {
-      this.hardwareZReal     = packet.zReal
-      this.hardwareZImag     = packet.zImag
-      this.hardwareFreqHz    = packet.freqHz
-      this.hardwareReadingTs = packet.timestamp
+      this.hardwareZReal        = packet.zReal
+      this.hardwareZImag        = packet.zImag
+      this.hardwareFreqHz       = packet.freqHz
+      this.hardwareConductivity = packet.conductivity ?? null
+      this.hardwareReadingTs    = packet.timestamp
 
       const point: ImpedanceHistoryPoint = {
         ts:     packet.timestamp,

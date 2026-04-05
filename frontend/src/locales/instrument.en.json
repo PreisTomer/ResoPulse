@@ -123,6 +123,7 @@
       "zImag": "Z_imag",
       "freqHz": "Meas. Freq",
       "sigmaDerived": "σ_e (derived)",
+      "sigmaDirect": "σ_e (instrument)",
       "status": "Sensor Status",
       "statusDisconnected": "No data received",
       "statusFresh": "Live · fresh",

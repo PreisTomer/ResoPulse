@@ -64,7 +64,11 @@
           <span class="hw-input__reading-value">{{ freqDisplay }}</span>
         </div>
         <div class="hw-input__reading-row">
-          <span class="hw-input__reading-label">{{ $t('instrument.hardware.sigmaDerived') }}</span>
+          <span class="hw-input__reading-label">
+            {{ impedanceStore.hardwareConductivity !== null
+              ? $t('instrument.hardware.sigmaDirect')
+              : $t('instrument.hardware.sigmaDerived') }}
+          </span>
           <span class="hw-input__reading-value">{{ derivedSigma }} {{ UNIT.S_PER_M }}</span>
         </div>
       </div>
@@ -99,7 +103,7 @@ import { useImpedanceStore } from '@/stores/impedanceStore'
 
 import BridgeSetupModal from '@/components/BridgeSetupModal/index.vue'
 
-import { computeSigmaEFromImpedance } from '@/utils/impedance'
+import { computeSigmaEFromComplexImpedance } from '@/utils/impedance'
 
 import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'
@@ -143,9 +147,18 @@ export default defineComponent({
       return `${hz} ${UNIT.HZ}`
     },
     derivedSigma(): string {
-      const z = this.impedanceStore.hardwareZReal
-      if (z === null) return '\u2014'
-      return computeSigmaEFromImpedance(this.impedanceStore.cuvetteGapMm, this.impedanceStore.cuvetteCrossSectionCm2, z).toFixed(4)
+      // Prefer direct conductivity from instrument — no geometry assumptions.
+      const direct = this.impedanceStore.hardwareConductivity
+      if (direct !== null) return direct.toFixed(4)
+      const zReal = this.impedanceStore.hardwareZReal
+      if (zReal === null) return '\u2014'
+      // Use complex formula (Re[Y]·d/A) consistent with sigmaEForImpedance.
+      return computeSigmaEFromComplexImpedance(
+        this.impedanceStore.cuvetteGapMm,
+        this.impedanceStore.cuvetteCrossSectionCm2,
+        zReal,
+        this.impedanceStore.hardwareZImag ?? 0,
+      ).toFixed(4)
     },
   },
 })
