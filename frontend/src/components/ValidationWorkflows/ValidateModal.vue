@@ -161,8 +161,10 @@ export default defineComponent({
     border-bottom: 1px solid color-mix(in srgb, var(--color-primary) 12%, transparent);
     display: flex;
     flex-direction: column;
+    align-items: center;
     gap: 0.35rem;
     flex-shrink: 0;
+    text-align: center;
   }
 
   &__category-badge {
@@ -234,6 +236,7 @@ export default defineComponent({
     @include mono-upper(var(--fs-xxs));
     color: var(--color-primary);
     opacity: var(--op-dim);
+    text-align: center;
   }
 
   &__result-sentence {

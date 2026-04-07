@@ -43,13 +43,15 @@
         <p class="replay-overlay__agreement">{{ agreementText }}</p>
 
         <div class="replay-overlay__result-actions">
-          <button class="replay-overlay__action-btn replay-overlay__action-btn--ghost" @click="onTryAnother">
-            {{ $t('validate.resultCtaAnother') }}
-          </button>
-          <button class="replay-overlay__action-btn replay-overlay__action-btn--examine" @click="onExamineParams">
-            {{ $t('validate.resultCtaExamine') }}
-          </button>
-          <RouterLink to="/experiment" class="replay-overlay__action-btn replay-overlay__action-btn--primary" @click="onExperiment">
+          <div class="replay-overlay__result-actions-row">
+            <button class="replay-overlay__action-btn replay-overlay__action-btn--ghost" @click="onTryAnother">
+              {{ $t('validate.resultCtaAnother') }}
+            </button>
+            <button class="replay-overlay__action-btn replay-overlay__action-btn--examine" @click="onExamineParams">
+              {{ $t('validate.resultCtaExamine') }}
+            </button>
+          </div>
+          <RouterLink to="/experiment" class="replay-overlay__action-btn replay-overlay__action-btn--primary replay-overlay__action-btn--full" @click="onExperiment">
             {{ $t('validate.resultCtaExperiment') }}
             <span class="replay-overlay__btn-arrow">{{ ICON.ARROW_R }}</span>
           </RouterLink>
@@ -287,9 +289,19 @@ export default defineComponent({
   }
 
   &__result-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  &__result-actions-row {
     @include flex-row(0.75rem);
-    justify-content: flex-end;
-    flex-wrap: wrap;
+    justify-content: center;
+
+    .replay-overlay__action-btn {
+      flex: 1;
+      justify-content: center;
+    }
   }
 
   &__action-btn {
@@ -301,13 +313,20 @@ export default defineComponent({
     text-decoration: none;
     transition: background var(--tr-fast), border-color var(--tr-fast), color var(--tr-fast);
 
-    &--ghost {
-      background: transparent;
-      color: var(--color-text);
-      border-color: color-mix(in srgb, var(--color-text) 20%, transparent);
-      opacity: var(--op-muted);
+    &--full {
+      width: 100%;
+      justify-content: center;
+    }
 
-      &:hover { opacity: 1; }
+    &--ghost {
+      background: color-mix(in srgb, var(--color-text) 6%, transparent);
+      color: var(--color-text);
+      border-color: color-mix(in srgb, var(--color-text) 30%, transparent);
+
+      &:hover {
+        background: color-mix(in srgb, var(--color-text) 12%, transparent);
+        border-color: color-mix(in srgb, var(--color-text) 50%, transparent);
+      }
     }
 
     &--primary {
@@ -322,13 +341,15 @@ export default defineComponent({
     }
 
     &--examine {
-      background: transparent;
+      background: color-mix(in srgb, var(--color-text) 6%, transparent);
       color: var(--color-text);
-      border-color: color-mix(in srgb, var(--color-text) 20%, transparent);
-      opacity: var(--op-dim);
+      border-color: color-mix(in srgb, var(--color-text) 30%, transparent);
       cursor: pointer;
 
-      &:hover { opacity: 1; border-color: color-mix(in srgb, var(--color-text) 40%, transparent); }
+      &:hover {
+        background: color-mix(in srgb, var(--color-text) 12%, transparent);
+        border-color: color-mix(in srgb, var(--color-text) 50%, transparent);
+      }
     }
   }
 
