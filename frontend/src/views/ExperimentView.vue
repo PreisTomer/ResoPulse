@@ -3,17 +3,39 @@
   <div class="experiment" @click.self="($refs.header as ExperimentHeaderInstance)?.closeAllPickers()">
 
     <!-- ── Combined header bar ───────────────────────────────────── -->
-    <ExperimentHeader
-      ref="header"
-      :notes-open="notesOpen"
-      @notes-toggle="notesOpen = !notesOpen"
-    />
-
-    <!-- ── Session metadata panel (expands below header) ─────────── -->
-    <ExperimentNotes :open="notesOpen" />
+    <ExperimentHeader ref="header" />
 
     <!-- ── Main content ──────────────────────────────────────────── -->
     <div class="experiment__main">
+
+      <!-- Notes bar — floats in the top padding above the healthy cell card -->
+      <div class="experiment__notes-bar">
+        <button
+          class="experiment__notes-btn"
+          :class="{ 'experiment__notes-btn--active': notesOpen }"
+          type="button"
+          :title="$t('exp.notesToggleTip')"
+          @click="notesOpen = !notesOpen"
+        >{{ $t('exp.notesToggle') }}</button>
+        <template v-if="notesOpen">
+          <input
+            class="experiment__notes-input"
+            type="text"
+            :placeholder="$t('exp.notesSamplePlaceholder')"
+            :value="experimentStore.sampleDescription"
+            @input="experimentStore.setSampleDescription(($event.target as HTMLInputElement).value)"
+            spellcheck="false"
+          />
+          <textarea
+            class="experiment__notes-textarea"
+            :placeholder="$t('exp.notesNotesPlaceholder')"
+            :value="experimentStore.sessionNotes"
+            @input="experimentStore.setSessionNotes(($event.target as HTMLTextAreaElement).value)"
+            rows="1"
+            spellcheck="false"
+          ></textarea>
+        </template>
+      </div>
 
       <!-- Row 1: Cell cards side-by-side + field controls -->
       <div class="experiment__top">
@@ -123,7 +145,6 @@ import SweepPanel from '@/components/SweepPanel/index.vue'
 import PopulationPanel from '@/components/PopulationPanel/index.vue'
 import ExperimentLog from '@/components/ExperimentLab/ExperimentLog.vue'
 import ExperimentHeader from '@/components/ExperimentLab/ExperimentHeader.vue'
-import ExperimentNotes from '@/components/ExperimentLab/ExperimentNotes.vue'
 import SnapBar from '@/components/ExperimentLab/SnapBar.vue'
 import StickyCellView, { type CellCardRow } from '@/components/ExperimentLab/StickyCellView.vue'
 import AiOptimizerTab from '@/components/ExperimentLab/AiOptimizerTab.vue'
@@ -154,7 +175,6 @@ export default defineComponent({
     PopulationPanel,
     ExperimentLog,
     ExperimentHeader,
-    ExperimentNotes,
     SnapBar,
     StickyCellView,
     AiOptimizerTab,
@@ -412,10 +432,11 @@ export default defineComponent({
 
   /* ── Main content ────────────────────────────────────────────── */
   &__main {
+    position: relative;
     display: flex;
     flex-direction: column;
     gap: 1.25rem;
-    padding: 1.25rem 2rem;
+    padding: 1.2rem 2rem 2rem;
     max-width: 1600px;
     width: 100%;
     margin: 0 auto;
@@ -430,6 +451,65 @@ export default defineComponent({
     gap: 1.25rem;
     align-items: stretch;
   }
+
+  &__notes-bar {
+    position: absolute;
+    top: 1.3rem;
+    transform: translateY(-50%);
+    left: 2rem;
+    right: 2rem;
+    @include flex-row(0.6rem);
+
+    @media (max-width: 1200px) { left: 1.5rem; right: 1.5rem; }
+    @media (max-width: 900px)  { left: 0.85rem; right: 0.85rem; }
+    @media (max-width: 768px)  { left: 0.65rem; right: 0.65rem; }
+  }
+
+  &__notes-btn {
+    font-size: var(--fs-xs);
+    font-family: var(--font-mono);
+    letter-spacing: 0.06em;
+    padding: 0.28rem 0.85rem;
+    background: color-mix(in srgb, var(--color-text) 6%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-text) 28%, transparent);
+    border-radius: var(--radius);
+    color: var(--color-text);
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: color var(--tr-fast), border-color var(--tr-fast), background var(--tr-fast);
+    white-space: nowrap;
+
+    &:hover {
+      background: color-mix(in srgb, var(--color-text) 12%, transparent);
+      border-color: color-mix(in srgb, var(--color-text) 50%, transparent);
+    }
+
+    &--active {
+      color: var(--color-primary);
+      border-color: color-mix(in srgb, var(--color-primary) 50%, transparent);
+      background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+    }
+  }
+
+  &__notes-input,
+  &__notes-textarea {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    font-size: var(--fs-sm);
+    padding: 0.25rem 0.6rem;
+    outline: none;
+    resize: none;
+    transition: border-color var(--tr-fast);
+
+    &::placeholder { color: var(--color-text-muted); opacity: var(--op-muted); }
+    &:focus { border-color: var(--color-primary); }
+  }
+
+  &__notes-input    { flex: 0 0 200px; }
+  &__notes-textarea { flex: 1; line-height: 1.4; }
 
   &__cells {
     display: grid;
@@ -462,7 +542,7 @@ export default defineComponent({
 
 // ── Mobile / Responsive ───────────────────────────────────────────────────────
 @media (max-width: 1200px) {
-  .experiment__main { padding: 1rem 1.5rem; }
+  .experiment__main { padding: 2rem 1.5rem 2rem; }
   .experiment__top {
     grid-template-columns: minmax(0, 1fr) minmax(380px, 460px);
     gap: 1rem;
@@ -471,7 +551,7 @@ export default defineComponent({
 
 // Tablet - collapse top row into single column
 @media (max-width: 900px) {
-  .experiment__main { padding: 0.85rem; gap: 0.85rem; }
+  .experiment__main { padding: 1.5rem 0.85rem 0.85rem; gap: 0.85rem; }
   .experiment__top  { grid-template-columns: 1fr; }
   .experiment__cells { grid-template-columns: 1fr 1fr; }
 }

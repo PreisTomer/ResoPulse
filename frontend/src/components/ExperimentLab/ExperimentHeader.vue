@@ -2,7 +2,7 @@
 <template>
   <div id="hl-setup-bar" class="experiment__header">
 
-    <!-- Far left: session name + notes toggle -->
+    <!-- Far left: session name -->
     <div class="experiment__header-left">
       <input
         v-model="cellStore.sessionName"
@@ -10,13 +10,6 @@
         spellcheck="false"
         :title="$t('exp.renameSession')"
       />
-      <button
-        class="experiment__notes-toggle"
-        :class="{ 'experiment__notes-toggle--active': notesOpen }"
-        type="button"
-        :title="$t('exp.notesToggleTip')"
-        @click.stop="$emit(EMIT.NOTES_TOGGLE)"
-      >{{ $t('exp.notesToggle') }}</button>
     </div>
 
     <!-- Center: cell selectors -->
@@ -187,11 +180,7 @@ export default defineComponent({
 
   components: { CreateCellModal },
 
-  props: {
-    notesOpen: { type: Boolean, default: false },
-  },
-
-  emits: [EMIT.NOTES_TOGGLE, EMIT.LOAD_HEALTHY_PRESET, EMIT.LOAD_TARGET_PRESET],
+  emits: [EMIT.LOAD_HEALTHY_PRESET, EMIT.LOAD_TARGET_PRESET],
 
   data() {
     return {
@@ -307,7 +296,9 @@ export default defineComponent({
 
   // ── Header bar ───────────────────────────────────────────────────────────────
   &__header {
-    @include flex-between(1.5rem);
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
     padding: 0.5rem 1.75rem;
     border-bottom: 1px solid var(--color-border);
     background: var(--color-surface);
@@ -316,6 +307,7 @@ export default defineComponent({
     @media (max-width: 768px) { padding: 0.5rem 0.65rem; }
 
     @media (max-width: 540px) {
+      display: flex;
       flex-wrap: wrap;
       gap: 0.4rem 0;
       padding: 0.45rem 0.6rem;
@@ -324,7 +316,6 @@ export default defineComponent({
 
     &-left {
       @include flex-row(0.6rem);
-      flex-shrink: 0;
       align-items: center;
 
       @media (max-width: 540px) { flex: 1; order: 1; }
@@ -332,7 +323,7 @@ export default defineComponent({
 
     &-right {
       @include flex-row(0.85rem);
-      flex-shrink: 0;
+      justify-self: end;
 
       @media (max-width: 540px) { flex-shrink: 0; order: 2; }
     }
@@ -354,31 +345,6 @@ export default defineComponent({
     transition: border-color var(--tr-fast);
 
     &:focus { border-bottom-color: var(--color-primary); }
-  }
-
-  &__notes-toggle {
-    font-size: var(--fs-xxs);
-    font-family: var(--font-mono);
-    letter-spacing: 0.06em;
-    padding: 0.14rem 0.5rem;
-    background: transparent;
-    border: 1px solid var(--color-border);
-    border-radius: 4px;
-    color: var(--color-text-muted);
-    cursor: pointer;
-    transition: color var(--tr-fast), border-color var(--tr-fast), background var(--tr-fast);
-    white-space: nowrap;
-
-    &:hover {
-      color: var(--color-text);
-      border-color: var(--color-text-muted);
-    }
-
-    &--active {
-      color: var(--color-primary);
-      border-color: color-mix(in srgb, var(--color-primary) 40%, transparent);
-      background: color-mix(in srgb, var(--color-primary) 6%, transparent);
-    }
   }
 
   // ── Connection status chip ────────────────────────────────────────────────────

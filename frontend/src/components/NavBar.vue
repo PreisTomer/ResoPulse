@@ -123,9 +123,7 @@ export default defineComponent({
   z-index: 100;
 
   &__inner {
-    max-width: 1600px;
-    margin: 0 auto;
-    padding: 0 2rem;
+    padding: 0 1.75rem;
     height: 60px;
     display: grid;
     grid-template-columns: 1fr auto 1fr;

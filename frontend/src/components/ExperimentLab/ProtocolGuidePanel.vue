@@ -2,7 +2,7 @@
 <template>
   <SideTabPanel
     ref="sidePanel"
-    top="68px"
+    top="160px"
     side="right"
     :panel-width="300"
     :tab-height="88"
