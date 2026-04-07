@@ -54,3 +54,13 @@
   63%  { outline-color: #00d4ff;     box-shadow: 0 0 0 2px rgba(0, 212, 255, 0.50), 0 0 12px rgba(0, 212, 255, 0.28); }
   100% { outline-color: transparent; box-shadow: none; }
 }
+
+// Used by CellParamsPanel rows during replay: briefly tints the row background when a
+// parameter value changes. Shows the scientist which field was just loaded from the paper.
+// rgba(0,212,255) = --color-primary; raw value required inside @keyframes.
+@keyframes param-flash {
+  0%   { background: transparent; }
+  15%  { background: rgba(0, 212, 255, 0.18); }
+  50%  { background: rgba(0, 212, 255, 0.10); }
+  100% { background: transparent; }
+}

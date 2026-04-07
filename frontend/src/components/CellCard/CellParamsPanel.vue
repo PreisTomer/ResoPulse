@@ -11,7 +11,13 @@
     </div>
     <Transition name="params">
       <div v-if="paramsExpanded" class="cell-card__params-panel">
-        <div v-for="p in editableParams" :key="p.key" class="cell-card__param-row">
+        <div
+          v-for="p in editableParams"
+          :key="p.key"
+          :id="`hl-${cellType}-${p.key}`"
+          class="cell-card__param-row"
+          :class="{ 'cell-card__param-row--flash': flashedKey === p.key }"
+        >
           <label class="cell-card__param-label" v-tip="$t(p.tipKey)">{{ $t(p.labelKey) }}</label>
           <div class="cell-card__param-control">
             <button
@@ -86,7 +92,9 @@ const STEP_REPEAT_MS = 80        // interval between repeated steps while held
 
 export default defineComponent({
   props: {
-    cellData: { type: Object as PropType<CellRecord | null>, default: null },
+    cellData:     { type: Object as PropType<CellRecord | null>, default: null },
+    cellType:     { type: String as PropType<'healthy' | 'target'>, required: true },
+    forceExpanded:{ type: Boolean, default: false },
     editableParams: {
       type: Array as PropType<EditableRow[]>,
       required: true,
@@ -109,9 +117,32 @@ export default defineComponent({
   data() {
     return {
       paramsExpanded: false,
+      flashedKey:    null as string | null,
+      _flashTimer:   null as ReturnType<typeof setTimeout> | null,
       _stepTimeout:  null as ReturnType<typeof setTimeout>  | null,
       _stepInterval: null as ReturnType<typeof setInterval> | null,
     }
+  },
+
+  watch: {
+    forceExpanded: {
+      immediate: true,
+      handler(val: boolean) {
+        if (val) this.paramsExpanded = true
+      },
+    },
+
+    // Flash the row whose value just changed (detected by editableParams displayValue diff).
+    editableParams: {
+      deep: true,
+      handler(newParams: EditableRow[], oldParams: EditableRow[]) {
+        const changed = newParams.find((p, i) => p.displayValue !== oldParams[i]?.displayValue)
+        if (!changed) return
+        clearTimeout(this._flashTimer ?? undefined)
+        this.flashedKey = changed.key
+        this._flashTimer = setTimeout(() => { this.flashedKey = null }, 700)
+      },
+    },
   },
 
   computed: {
@@ -201,8 +232,14 @@ export default defineComponent({
     grid-template-columns: 1fr auto auto;
     align-items: center;
     gap: 0.5rem;
+    border-radius: 3px;
+    transition: background var(--tr-fast);
 
     &--derived { opacity: var(--op-partial); pointer-events: none; }
+
+    &--flash {
+      animation: param-flash 0.7s ease-out forwards;
+    }
   }
 
   &__param-label {

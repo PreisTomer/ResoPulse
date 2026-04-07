@@ -140,6 +140,7 @@ export type MorphologyTag = typeof MORPHOLOGY_TAG[keyof typeof MORPHOLOGY_TAG]
 // Cell preset IDs (aligns with CellPreset.id field in cellLibrary.ts)
 export const PRESET_ID = {
   HEPATOCYTE:     'hepatocyte',
+  MCF10A:         'mcf10a',
   RBC:            'rbc',
   ADENOCARCINOMA: 'adenocarcinoma',
   GBM:            'gbm',

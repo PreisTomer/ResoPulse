@@ -35,11 +35,24 @@
         >{{ isOled ? $t('nav.themeOled') : $t('nav.themeDark') }}</button>
         <div
           class="nav-bar__status"
-          v-tip="systemReady ? $t('nav.tipSystemReady') : $t('nav.tipSystemWarning')"
+          :class="{ 'nav-bar__status--acoustic': isResonanceMode }"
+          v-tip="statusTip"
         >
-          <span class="nav-bar__status-dot" :class="{ 'nav-bar__status-dot--warning': !systemReady }"></span>
-          <span class="nav-bar__status-label" :class="{ 'nav-bar__status-label--warning': !systemReady }">
-            {{ systemReady ? $t('nav.systemReady') : $t('nav.systemWarning') }}
+          <span
+            class="nav-bar__status-dot"
+            :class="{
+              'nav-bar__status-dot--warning':  !isResonanceMode && !systemReady,
+              'nav-bar__status-dot--acoustic': isResonanceMode,
+            }"
+          ></span>
+          <span
+            class="nav-bar__status-label"
+            :class="{
+              'nav-bar__status-label--warning':  !isResonanceMode && !systemReady,
+              'nav-bar__status-label--acoustic': isResonanceMode,
+            }"
+          >
+            {{ statusLabel }}
           </span>
         </div>
         <button
@@ -82,8 +95,19 @@ export default defineComponent({
     ...mapStores(useCellStore),
     themeStore() { return useThemeStore() },
 
-    systemReady(): boolean { return this.cellStore.systemReady },
-    isOled(): boolean { return this.themeStore.theme === 'oled' },
+    systemReady(): boolean    { return this.cellStore.systemReady },
+    isResonanceMode(): boolean { return this.cellStore.isResonanceMode },
+    isOled(): boolean          { return this.themeStore.theme === 'oled' },
+
+    statusLabel(): string {
+      if (this.isResonanceMode) return this.$t('nav.modeAcoustic')
+      return this.systemReady ? this.$t('nav.systemReady') : this.$t('nav.systemWarning')
+    },
+
+    statusTip(): string {
+      if (this.isResonanceMode) return this.$t('nav.tipModeAcoustic')
+      return this.systemReady ? this.$t('nav.tipSystemReady') : this.$t('nav.tipSystemWarning')
+    },
   },
 })
 </script>
@@ -182,14 +206,17 @@ export default defineComponent({
       animation: nav-pulse 2s ease-in-out infinite;
       transition: background-color 0.4s, box-shadow 0.4s;
 
-      &--warning { background-color: var(--color-amber-warm); box-shadow: 0 0 6px var(--color-amber-warm); }
+      &--warning  { background-color: var(--color-amber-warm); box-shadow: 0 0 6px var(--color-amber-warm); }
+      &--acoustic { background-color: var(--color-amber); box-shadow: 0 0 8px var(--color-amber); animation: nav-pulse-acoustic 1.8s ease-in-out infinite; }
     }
 
     &-label {
       @include mono-upper(var(--fs-sm));
       color: var(--color-text-muted);
+      transition: color 0.4s;
 
-      &--warning { color: var(--color-amber-warm); }
+      &--warning  { color: var(--color-amber-warm); }
+      &--acoustic { color: var(--color-amber); }
     }
   }
 
@@ -252,8 +279,9 @@ export default defineComponent({
   }
 }
 
-@keyframes nav-pulse   { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-@keyframes brand-pulse { 0%, 100% { text-shadow: 0 0 8px var(--color-primary-dim); } 50% { text-shadow: 0 0 18px color-mix(in srgb, var(--color-primary) 50%, transparent); } }
+@keyframes nav-pulse         { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+@keyframes nav-pulse-acoustic { 0%, 100% { opacity: 1; box-shadow: 0 0 8px var(--color-amber); } 50% { opacity: 0.5; box-shadow: 0 0 16px var(--color-amber); } }
+@keyframes brand-pulse       { 0%, 100% { text-shadow: 0 0 8px var(--color-primary-dim); } 50% { text-shadow: 0 0 18px color-mix(in srgb, var(--color-primary) 50%, transparent); } }
 
 /* ── Mobile / tablet (hamburger at ≤ 960px) ─────────────────────────────── */
 @media (max-width: 960px) {

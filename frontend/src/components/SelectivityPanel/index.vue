@@ -12,7 +12,7 @@
     <div class="sel-panel__body">
 
       <!-- ── Selectivity ratio + Vm selectivity ──────────────────── -->
-      <div class="sel-panel__ratio-wrap" v-tip="tipSelectivity">
+      <div id="hl-ti-ratio" class="sel-panel__ratio-wrap" v-tip="tipSelectivity">
         <span class="sel-panel__ratio" :class="selectivityClass">
           {{ ICON.TIMES }}{{ selectivity.toFixed(2) }}
         </span>

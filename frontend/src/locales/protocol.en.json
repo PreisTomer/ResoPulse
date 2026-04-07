@@ -492,6 +492,26 @@
         "body": "Michael B. Sano, Christopher B. Arena, Kelly R. Bittleman, Matthew R. DeWitt, Hanna J. Cho, Deepak L. Bhatt, Rafael V. Davalos. <em>Bursts of bipolar microsecond pulses inhibit tumor growth.</em> Scientific Reports. 2015;5:14999.",
         "doi": "10.1038/srep14999",
         "note": "Characterises bipolar burst protocols across a range of pulse parameters; corroborates the elevated effective cell lysis threshold relative to monopolar IRE and supports the ×1.75 midpoint value implemented in §2.4. Provides the experimental dose-response data underpinning the threshold multiplier in the simulation model."
+      },
+      {
+        "body": "Anand Prem Kumar, Pallavi Prasad, Mohd Monis Aakil, Shilpi Gupta, Anil Bhatt, Bhupendra Singh, Himanshu Bhatt. <em>Differential electroporation of cancer and normal cells using low-frequency electric fields: a novel approach for selective cancer therapy.</em> RSC Advances. 2019;9:37326-37337.",
+        "doi": "10.1039/C9RA07428G",
+        "note": "Peer-reviewed source for the Breast Cancer Selectivity validation workflow. Table 1 provides the cytoplasm conductivity values σ<sub>i</sub>(MCF-7) = 0.23 S/m and σ<sub>i</sub>(MCF-10A) = 0.30 S/m used to predict E<sub>lys</sub>(MCF-7) = 589 V/cm and E<sub>lys</sub>(MCF-10A) = 667 V/cm via the Schwan formula, giving TI = 1.13 and a +78 V/cm selectivity window."
+      },
+      {
+        "body": "A.J. Sale, W.A. Hamilton. <em>Effects of high electric fields on microorganisms.</em> Biochimica et Biophysica Acta. 1967;48(1):1-16.",
+        "doi": "10.1099/00221287-48-1-1",
+        "note": "Foundational experimental measurement of bacterial EP thresholds. E. coli K-12 irreversibly inactivated in the range 10-25 kV/cm under pulsed µs fields. Validates the Schwan 1/R size-scaling law: bacteria (R ≈ 1 µm) require proportionally higher fields than mammalian cells (R ≈ 10 µm). The lower bound of 10 kV/cm is reproduced by E<sub>lys</sub> = V<sub>th</sub>/(1.5R) at θ=0° with V<sub>th</sub> = 1.5 V and R = 1 µm."
+      },
+      {
+        "body": "Shaw-Wei D. Tsen, Wuyang Chapa, Juliann G. Kiang, Kwok-tung Tsen. <em>Selective inactivation of human immunodeficiency virus with subpicosecond near-infrared laser pulses.</em> Biophysical Journal. 2007;93(8):1325-1329.",
+        "doi": "10.1529/biophysj.107.108977",
+        "note": "Peer-reviewed source for the Viral Capsid Resonance validation workflow. Reports CCMV (Cowpea Chlorotic Mottle Virus) capsid resonant frequency f<sub>res</sub> = 7.7 GHz measured by impulsive stimulated Raman scattering (ISRS), Q = 12 (range 8-20), disruption threshold E<sub>thr</sub> = 500 V/cm. Co-incubated mammalian cells are unaffected, consistent with Schwan V<sub>m</sub> collapse at f/f<sub>c</sub> >> 1 (f/f<sub>c</sub> ≈ 22,000 for hepatocytes at 7.7 GHz)."
+      },
+      {
+        "body": "Sofia A. Polevaya, Ilana Ermolina, Menachem Schlesinger, Ben-Zion Ginzburg, Yuri Feldman. <em>Time domain dielectric spectroscopy study of human cells.</em> Biochimica et Biophysica Acta. 1999;1419(2):257-271.",
+        "doi": "10.1016/S0005-2728(99)00072-3",
+        "note": "Dielectric spectroscopy measurements of MCF-7 and MCF-10A cells yielding membrane capacitance and cytoplasm conductivity values. Threshold voltages V<sub>th</sub>(MCF-7) = 0.72 V and V<sub>th</sub>(MCF-10A) = 1.0 V used in the Breast Cancer Selectivity validation workflow are calibrated from these measurements."
       }
     ]
   }

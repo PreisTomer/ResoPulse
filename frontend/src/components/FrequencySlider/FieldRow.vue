@@ -123,8 +123,17 @@ export default defineComponent({
     fieldMarkers(): Array<{ id: string; pct: number; color: string }> {
       const { fieldMin, fieldMax } = this.sliderRanges
       const span = fieldMax - fieldMin
-
       const linPct = (vcm: number): number => (vcm - fieldMin) / span * 100
+
+      if (this.cellStore.isResonanceMode) {
+        // In resonance mode, show the acoustic disruption threshold (resonantThresholdVcm)
+        // for the target capsid. No healthy marker: mammalian cells have no acoustic threshold.
+        const t = this.cellStore.target as { resonantThresholdVcm?: number }
+        if (!t.resonantThresholdVcm) return []
+        return [
+          { id: 'res-thr', pct: linPct(t.resonantThresholdVcm), color: 'danger' },
+        ].filter(m => m.pct >= 1 && m.pct <= 99)
+      }
 
       return [
         { id: 'lysis-t', pct: linPct(this.cellStore.targetLysisField),  color: 'danger'  },

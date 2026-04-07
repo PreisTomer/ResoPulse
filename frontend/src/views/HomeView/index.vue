@@ -3,6 +3,28 @@
   <div class="home">
     <div class="home__bg-grid" aria-hidden="true"></div>
 
+    <!-- ── Fixed validation tab — visible on wide screens only ── -->
+    <button class="home__validate-tab" @click="isValidateDrawerOpen = true" :aria-expanded="isValidateDrawerOpen">
+      <span class="home__validate-tab-top">
+        <span class="home__validate-tab-check">{{ ICON.CHECK }}</span>
+        <span class="home__validate-tab-title">{{ $t('home.validateTabLine1') }}</span>
+      </span>
+      <span class="home__validate-tab-sub">{{ $t('home.validateTabLine2') }}</span>
+    </button>
+
+    <!-- ── Validation drawer overlay ── -->
+    <Transition name="home-validate">
+      <div v-if="isValidateDrawerOpen" class="home__validate-overlay">
+        <div class="home__validate-overlay-bg" @click="isValidateDrawerOpen = false"></div>
+        <div class="home__validate-panel">
+          <button class="home__validate-panel-close" @click="isValidateDrawerOpen = false">
+            {{ ICON.CLOSE }}
+          </button>
+          <ValidateSection />
+        </div>
+      </div>
+    </Transition>
+
 
     <div class="home__inner">
 
@@ -188,7 +210,12 @@
 
       </div>
 
-      <!-- ── Zone 4: Bottom — static, no animation ── -->
+      <!-- ── Zone 4: Validate — inline on mobile only; desktop uses the fixed side tab ── -->
+      <div class="home__zone home__zone--validate home__zone--validate--mobile home__zone--anim">
+        <ValidateSection />
+      </div>
+
+      <!-- ── Zone 5: Bottom — static, no animation ── -->
       <div class="home__zone home__zone--bottom">
 
         <div class="home__scope-tags">
@@ -211,12 +238,18 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 
+import { mapStores } from 'pinia'
+
+import { useUiStore } from '@/stores/uiStore'
+
 import { ICON } from '@/constants/icons'
 
 import HeroRingsSvg from './HeroRingsSvg.vue'
 import CellIllustrationSvg from './CellIllustrationSvg.vue'
 import BodePlotSvg from './BodePlotSvg.vue'
 import OscilloscopeSvg from './OscilloscopeSvg.vue'
+
+import ValidateSection from '@/components/ValidationWorkflows/index.vue'
 const SEL_CYCLE_MS = 9000
 
 export default defineComponent({
@@ -227,10 +260,13 @@ export default defineComponent({
     CellIllustrationSvg,
     BodePlotSvg,
     OscilloscopeSvg,
+    ValidateSection,
   },
 
   data() {
     return {
+      isValidateDrawerOpen: false,
+
       workflowSteps: ['wf1', 'wf2', 'wf3'],
 
       featureCards: [
@@ -270,6 +306,11 @@ export default defineComponent({
     )
     zones.forEach((zone: Element) => observer.observe(zone))
     this.startSelAnimation()
+
+    if (this.uiStore.pendingValidateDrawer) {
+      this.uiStore.consumeValidateDrawer()
+      this.isValidateDrawerOpen = true
+    }
   },
 
   beforeUnmount() {
@@ -280,6 +321,7 @@ export default defineComponent({
 
   computed: {
     ICON() { return ICON },
+    ...mapStores(useUiStore),
 
     selSliderPct(): number {
       return Math.round(this.selProgress * 100)

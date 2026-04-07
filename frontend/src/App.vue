@@ -2,6 +2,7 @@
 <template>
   <div id="layout">
     <NavBar />
+    <ModeBanner />
     <main>
       <RouterView />
     </main>
@@ -17,12 +18,13 @@
 import { defineComponent } from 'vue'
 
 import NavBar from './components/NavBar.vue'
+import ModeBanner from './components/ModeBanner.vue'
 import TermsGate from './components/TermsGate.vue'
 import { useThemeStore } from './stores/themeStore'
 const TERMS_KEY = 'rp_terms_v1'
 
 export default defineComponent({
-  components: { NavBar, TermsGate },
+  components: { NavBar, ModeBanner, TermsGate },
 
   setup() {
     return { themeStore: useThemeStore() }

@@ -102,7 +102,7 @@ export default defineComponent({
       // browser never animates from the default `none` to the initial scale value.
       if (!this.transitionReady) style.transition = 'none'
       if (isLeft) {
-        style.left  = '1rem'
+        style.left  = '0'
         style.right = 'auto'
       }
       return style

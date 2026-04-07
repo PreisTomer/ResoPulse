@@ -8,8 +8,14 @@
 
   <div v-show="open" class="field-panel__accordion-body">
     <ProtocolSnapBar :slider-ranges="sliderRanges" />
-    <!-- Row 4: Waveform selector -->
-    <div class="field-panel__row field-panel__row--medium" v-tip="tipWaveform">
+
+    <!-- Resonance mode note: replaces waveform/duty-cycle/pulse-width controls -->
+    <div v-if="isResonanceMode" class="field-panel__row field-panel__row--acoustic-note">
+      <span class="field-panel__acoustic-label">{{ $t('slider.acousticModeNote') }}</span>
+    </div>
+
+    <!-- Row 4: Waveform selector — EP only -->
+    <div v-if="!isResonanceMode" id="hl-waveform-row" class="field-panel__row field-panel__row--medium" v-tip="tipWaveform">
       <div class="field-panel__row-header">
         <span class="field-panel__row-label">{{ $t('slider.waveform') }}</span>
         <div class="field-panel__pills">
@@ -34,9 +40,9 @@
       </div>
     </div>
 
-    <!-- Row 5: Duty Cycle (pulsed / H-FIRE only) -->
+    <!-- Row 5: Duty Cycle — EP + pulsed/H-FIRE only -->
     <div
-      v-if="isTimedWaveform"
+      v-if="!isResonanceMode && isTimedWaveform"
       class="field-panel__row field-panel__row--compact-readout"
       :class="thermalDangerLevel !== THERMAL_LEVEL.SAFE ? `field-panel__row--${thermalDangerLevel}` : ''"
     >
@@ -65,8 +71,8 @@
       </div>
     </div>
 
-    <!-- Row 6: Pulse Width (pulsed / H-FIRE only) -->
-    <div v-if="isTimedWaveform" class="field-panel__row field-panel__row--compact-readout field-panel__row--pw">
+    <!-- Row 6: Pulse Width — EP + pulsed/H-FIRE only -->
+    <div v-if="!isResonanceMode && isTimedWaveform" class="field-panel__row field-panel__row--compact-readout field-panel__row--pw">
       <div class="field-panel__row-header">
         <span class="field-panel__row-label" v-tip="tipPulseWidth">{{ $t('slider.pulseWidth') }}</span>
         <div class="field-panel__readout">
@@ -97,6 +103,7 @@ import { mapStores } from 'pinia'
 import type { PropType } from 'vue'
 
 import { useCellStore } from '@/stores/cellStore'
+import { useUiStore } from '@/stores/uiStore'
 
 import { broadcastStateSync } from '@/services/socket'
 
@@ -135,7 +142,9 @@ export default defineComponent({
   },
 
   computed: {
-    ...mapStores(useCellStore),
+    ...mapStores(useCellStore, useUiStore),
+
+    isResonanceMode(): boolean { return this.cellStore.isResonanceMode },
 
     currentWaveform(): 'cw' | 'pulsed' | 'hfire' { return this.cellStore.waveform },
 
@@ -212,6 +221,12 @@ export default defineComponent({
     },
 
     tipMinPulse(): string { return this.$t('slider.tipMinPulse') },
+  },
+
+  watch: {
+    'uiStore.replayProtocolOpen'(val: boolean) {
+      if (val) this.open = true
+    },
   },
 
   methods: {
@@ -300,6 +315,19 @@ export default defineComponent({
     }
 
     &--pw { margin-bottom: 10px; }
+
+    &--acoustic-note {
+      padding: 0.6rem 1.25rem;
+      display: block;
+    }
+  }
+
+  &__acoustic-label {
+    @include mono-upper(var(--fs-xxs));
+    color: var(--color-amber);
+    opacity: var(--op-dim);
+    line-height: 1.5;
+    display: block;
   }
 
   &__row-header { @include field-row-header(); }

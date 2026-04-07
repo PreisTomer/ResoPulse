@@ -2,16 +2,17 @@
 <template>
   <div class="vm-sar" v-tip="tipVmSar">
     <template v-if="isResonanceTarget">
+      <!-- Resonance mode: SAR and energy dose suppressed — RF heating formula does not apply to acoustic excitation -->
       <div class="vm-sar__cell">
         <span class="vm-sar__type vm-sar__type--t">{{ $t('selectivity.tDisr') }}</span>
         <span class="vm-sar__vm vm-sar__vm--t">{{ targetRatioPct.toFixed(1) }}%</span>
-        <span class="vm-sar__sar">{{ targetSarVal }} {{ UNIT.W_PER_KG }}</span>
+        <span class="vm-sar__sar vm-sar__sar--na">SAR N/A</span>
         <span class="vm-sar__elysis" v-tip="tipEthr">E<sub>thr</sub> {{ targetResonanceEthr }}</span>
       </div>
       <div class="vm-sar__cell">
         <span class="vm-sar__type vm-sar__type--h">{{ $t('selectivity.hSafe') }}</span>
         <span class="vm-sar__vm vm-sar__vm--res">≈0%</span>
-        <span class="vm-sar__sar">{{ healthySarVal }} {{ UNIT.W_PER_KG }}</span>
+        <span class="vm-sar__sar vm-sar__sar--na">SAR N/A</span>
         <span class="vm-sar__elysis vm-sar__elysis--safe" v-tip="tipNoGhzRes">{{ $t('selectivity.noGhzRes') }}</span>
       </div>
     </template>
@@ -29,8 +30,8 @@
         <span class="vm-sar__elysis" v-tip="$t('selectivity.tipHealthyLysisField')">E<sub>lys</sub> {{ healthyLysisField }}</span>
       </div>
     </template>
-    <!-- Pulse energy dose row (always shown) -->
-    <div class="vm-sar__dose-row" v-tip="$t('selectivity.tipEnergyDose')">
+    <!-- Pulse energy dose row: EP only. RF energy formula does not apply to acoustic resonance. -->
+    <div v-if="!isResonanceTarget" class="vm-sar__dose-row" v-tip="$t('selectivity.tipEnergyDose')">
       <span class="vm-sar__dose-label">{{ $t('selectivity.energyDoseLabel') }}</span>
       <span class="vm-sar__dose-val">{{ energyDoseDisplay }}</span>
       <span class="vm-sar__dose-unit">{{ UNIT.MJ_PER_CM3 }}</span>
@@ -134,6 +135,12 @@ export default defineComponent({
     color: var(--color-text-muted);
     opacity: 0.85; // intentional between-tier value
     white-space: nowrap;
+
+    &--na {
+      color: var(--color-amber);
+      opacity: var(--op-ghost);
+      font-style: italic;
+    }
   }
 
   &__elysis {

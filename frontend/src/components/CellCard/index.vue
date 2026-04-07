@@ -1,6 +1,6 @@
 <!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
 <template>
-  <div :class="['cell-card', `cell-card--${type}`, `cell-card--${cellState}`, { 'cell-card--compact': compact }]">
+  <div :id="`hl-${type}-card`" :class="['cell-card', `cell-card--${type}`, `cell-card--${cellState}`, { 'cell-card--compact': compact }]">
 
     <CellHeader
       v-if="!compact"
@@ -26,6 +26,8 @@
     <CellParamsPanel
       v-if="!compact"
       :cell-data="cellData"
+      :cell-type="type"
+      :force-expanded="uiStore.replayExpandedCellParams.includes(type)"
       :editable-params="editableParams"
       :derived-params="derivedParams"
       :can-reset-to-preset="canResetToPreset"
@@ -60,6 +62,7 @@ import type { PropType } from 'vue'
 import { mapStores } from 'pinia'
 
 import { useCellStore } from '@/stores/cellStore'
+import { useUiStore } from '@/stores/uiStore'
 
 import { membraneCm, computeTau, tempCorrectedVth } from '@/utils/physics'
 import { splitFreqKHz } from '@/utils/format'
@@ -113,7 +116,7 @@ export default defineComponent({
   },
 
   computed: {
-    ...mapStores(useCellStore),
+    ...mapStores(useCellStore, useUiStore),
     CELL_STATE() { return CELL_STATE },
     CELL_TYPE()  { return CELL_TYPE },
 

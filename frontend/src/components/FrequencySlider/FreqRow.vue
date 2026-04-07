@@ -18,7 +18,7 @@
   </div>
 
   <!-- RF Frequency row -->
-  <div class="field-panel__row field-panel__row--interactive">
+  <div id="hl-freq-row" class="field-panel__row field-panel__row--interactive">
     <div class="field-panel__row-header">
       <span class="field-panel__row-label" v-tip="tipFreqLabel">{{ $t('slider.rfFrequency') }}</span>
       <div class="field-panel__readout">

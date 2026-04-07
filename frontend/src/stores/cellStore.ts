@@ -278,12 +278,16 @@ export const useCellStore = defineStore('cell', {
     },
 
     healthySAR(): number {
+      // Acoustic resonance uses a different energy-deposition mechanism (mechanical, not RF).
+      // The Joule-heating SAR formula (σ_i·α²·E²/ρ) does not apply in resonance mode.
+      if (this.isResonanceMode) return 0
       const state = this as CellStoreState
       const wf = state.waveform === WAVEFORM.CW ? WF_CW : WF_PULSED
       return computeSAR(state.healthy, state.fieldIntensity, this.effectiveSigmaE, wf)
     },
 
     targetSAR(): number {
+      if (this.isResonanceMode) return 0
       const state = this as CellStoreState
       const wf = state.waveform === WAVEFORM.CW ? WF_CW : WF_PULSED
       return computeSAR(state.target, state.fieldIntensity, this.effectiveSigmaE, wf)
@@ -471,6 +475,7 @@ export const useCellStore = defineStore('cell', {
     },
 
     mediumJouleHeatingSAR(): number {
+      if (this.isResonanceMode) return 0
       const state = this as CellStoreState
       const wf   = state.waveform === WAVEFORM.CW ? WF_CW : WF_PULSED
       const E_si = state.fieldIntensity * V_CM_TO_V_M

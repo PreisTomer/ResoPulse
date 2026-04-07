@@ -16,6 +16,8 @@ import instrument from '../locales/instrument.en.json'
 import home from '../locales/home.en.json'
 import heatmap from '../locales/heatmap.en.json'
 import userPresets from '../locales/userPresets.en.json'
+import validate from '../locales/validate.en.json'
+
 export const i18n = createI18n({
   legacy: false,
   locale: 'en',
@@ -36,6 +38,7 @@ export const i18n = createI18n({
       ...home,
       ...heatmap,
       ...userPresets,
+      ...validate,
     },
   },
 })

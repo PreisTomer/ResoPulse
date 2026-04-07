@@ -95,6 +95,9 @@
   <!-- AI Protocol Optimizer side tab - always visible, starts collapsed -->
   <AiOptimizerTab />
 
+  <!-- Validation replay overlay - shown during and after a workflow animation -->
+  <ReplayOverlay />
+
 </template>
 
 <script lang="ts">
@@ -104,6 +107,7 @@ import { mapStores } from 'pinia'
 import { useCellStore } from '@/stores/cellStore'
 import { useExperimentStore } from '@/stores/experimentStore'
 import { useUiStore } from '@/stores/uiStore'
+import { useReplayStore } from '@/stores/replayStore'
 
 import { connectSocket, broadcastStateSync } from '@/services/socket'
 
@@ -123,6 +127,7 @@ import ExperimentNotes from '@/components/ExperimentLab/ExperimentNotes.vue'
 import SnapBar from '@/components/ExperimentLab/SnapBar.vue'
 import StickyCellView, { type CellCardRow } from '@/components/ExperimentLab/StickyCellView.vue'
 import AiOptimizerTab from '@/components/ExperimentLab/AiOptimizerTab.vue'
+import ReplayOverlay from '@/components/ValidationWorkflows/ReplayOverlay.vue'
 
 import { computeSAR } from '@/utils/physics'
 import { scrollAndHighlight } from '@/utils/highlight'
@@ -153,6 +158,7 @@ export default defineComponent({
     SnapBar,
     StickyCellView,
     AiOptimizerTab,
+    ReplayOverlay,
   },
 
   created() {
@@ -210,7 +216,7 @@ export default defineComponent({
   computed: {
     ICON() { return ICON },
     CHART_MODE() { return CHART_MODE },
-    ...mapStores(useCellStore, useExperimentStore, useUiStore),
+    ...mapStores(useCellStore, useExperimentStore, useUiStore, useReplayStore),
 
     currentTargetId(): string {
       return this.cellStore.target.id
@@ -318,6 +324,11 @@ export default defineComponent({
       if (cat === CELL_CATEGORY.MAMMALIAN && this.cellStore.isResonanceMode) {
         this.cellStore.setChartMode(CHART_MODE.SCHWAN)
       }
+      // Resonance mode must be active for virus/bacteria with acoustic params; restore if lost across navigation.
+      const hasResonantParams = !!(t.resonantFreqGHz)
+      if ((cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) && hasResonantParams && !this.cellStore.isResonanceMode) {
+        this.cellStore.setChartMode(CHART_MODE.RESONANCE)
+      }
     },
 
     applyTargetDefaults() {
@@ -338,7 +349,13 @@ export default defineComponent({
       this.cellStore.setOrientationDeg(DEFAULT_ORIENTATION_DEG)
       this.cellStore.setLysisNPulses(DEFAULT_LYSIS_N_PULSES)
       this.cellStore.resetTemps()
-      this.cellStore.setChartMode((cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) ? CHART_MODE.RESONANCE : CHART_MODE.SCHWAN)
+      // Only switch to resonance when the target cell has acoustic resonance parameters.
+      // Bacteria without resonantFreqGHz (e.g. EP threshold studies) use the Schwan path.
+      const hasResonantParams = !!(t.resonantFreqGHz)
+      const targetMode = (cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) && hasResonantParams
+        ? CHART_MODE.RESONANCE
+        : CHART_MODE.SCHWAN
+      this.cellStore.setChartMode(targetMode)
       broadcastStateSync()
     },
   },
@@ -363,6 +380,12 @@ export default defineComponent({
     if (targetId) {
       this.uiStore.clearPendingHighlight()
       scrollAndHighlight(targetId, 300)
+    }
+
+    // Start a validation replay if one was queued from the home-page ValidateSection.
+    // Delay 600 ms so all child components are mounted and DOM ids are resolvable.
+    if (this.replayStore.hasPendingScript) {
+      setTimeout(() => { this.replayStore.startReplay() }, 600)
     }
   },
 

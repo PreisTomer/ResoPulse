@@ -70,6 +70,26 @@ export const CELL_PRESETS: CellPreset[] = [
     amplitude: 0.7,
   },
 
+  {
+    presetId: 'mcf10a',
+    group: 'reference',
+    id: 'mcf10a',
+    type: 'healthy',
+    label: 'MCF-10A Normal Breast',
+    shortLabel: 'MCF-10A',
+    notes: 'Normal breast epithelial · R = 10 µm · Anand 2019 reference · fc ≈ 477 kHz',
+    techNotes: 'Non-transformed normal breast epithelial cell line (ATCC CRL-10317). Used as the healthy reference in differential EP selectivity studies alongside MCF-7.\nσ_i = 0.30 S/m: Anand et al. (2019) RSC Advances Table 1. Lower than cancer lines due to normal ion channel expression.\nCm = 8.0 mF/m² at ε_r = 8.0, d = 7 nm (standard for normal epithelium, Pethig 2010).\nCharacteristic fc ≈ 477 kHz in saline · τ ≈ 333 ns.\nVth = 1.0 V: EP onset calibrated from Polevaya et al. (1999); higher than MCF-7 (1.0 vs 0.72 V) due to more ordered, cholesterol-rich membrane.\nRef: Anand et al. (2019) RSC Advances DOI: 10.1039/C9RA07428G; Polevaya et al. (1999) BBA 1419:257; Gascoyne & Vykoukal (2002) Electrophoresis 23:1973.',
+    radius: 10.0,
+    membraneThickness: 7,
+    dielectricConstant: 8.0,
+    conductivity: 0.30,
+    thresholdVoltage: 1.0,
+    naturalFrequency: 430,
+    density: 1050,
+    specificHeatCapacity: 3600,
+    amplitude: 0.8,
+  },
+
   // ── Cancer cells ────────────────────────────────────────────────────────────
   // All cancer presets use the single-shell Schwan model.
   // MEMBRANE THICKNESS: all mammalian cell membranes are physically 7 nm — the lipid bilayer
@@ -142,6 +162,31 @@ export const CELL_PRESETS: CellPreset[] = [
     amplitude: 0.5,
     nuclearRadius: 6.0, nuclearMembraneThickness: 13, nuclearMembraneEps: 11,
     nucleoplasmConductivity: 1.0, nuclearThresholdVoltage: 0.42,
+  },
+  // ── Anand 2019 (RSC Advances) exact measured parameters ────────────────────
+  // Used exclusively by the MCF-7 breast cancer validation workflow.
+  // σ_i = 0.23 S/m and R = 8.15 µm are from Anand Table 1, different from the
+  // general-purpose MCF-7 preset above (Polevaya 1999 electrorotation values).
+  // DO NOT use this preset for general experiments — it is calibrated to one
+  // specific study's cuvette conditions (EP buffer σ_e = 0.14 S/m, 10 kHz pulsed IRE).
+  {
+    presetId: 'mcf7-anand2019',
+    group: 'cancer',
+    id: 'mcf7-anand2019',
+    type: 'target',
+    label: 'MCF-7 (Anand 2019)',
+    shortLabel: 'MCF-7 A19',
+    notes: 'ER+ breast cancer · Anand 2019 Table 1 · R = 8.15 µm · σ_i = 0.23 S/m · E_lys = 589 V/cm',
+    techNotes: 'Exact Anand et al. (2019) RSC Advances Table 1 values for MCF-7.\nσ_i = 0.23 S/m: lower than healthy MCF-10A (0.30 S/m) — this conductivity difference is the primary selectivity driver.\nR = 8.15 µm: Gascoyne & Vykoukal (2002) Electrophoresis 23:1973.\nVth = 0.72 V: Polevaya et al. (1999) calibration.\nSchwan E_lys = 0.72 / (1.5 × 8.15e-6 × 100) = 589 V/cm.\nCompared to MCF-10A (σ_i = 0.30, R = 10 µm, Vth = 1.0 V, E_lys = 667 V/cm):\nSelectivity window = 667 - 589 = +78 V/cm. TI = 667/589 = 1.13.\nRef: Anand et al. (2019) DOI: 10.1039/C9RA07428G.',
+    radius: 8.15,
+    membraneThickness: 7,
+    naturalFrequency: 440,
+    thresholdVoltage: 0.72,
+    dielectricConstant: 8.0,
+    conductivity: 0.23,
+    density: 1070,
+    specificHeatCapacity: 3200,
+    amplitude: 0.5,
   },
   {
     presetId: 'hl60',
@@ -347,6 +392,39 @@ export const CELL_PRESETS: CellPreset[] = [
     density: 1200,
     specificHeatCapacity: 4200,
     amplitude: 0.5,
+  },
+
+  // ── Non-enveloped icosahedral virus (rigid protein capsid) ─────────────────
+  // CCMV (Cowpea Chlorotic Mottle Virus) is the primary experimental benchmark for
+  // acoustic capsid resonance. Tsen et al. (2007) measured f_res = 7.7 GHz and Q ≈ 10-15
+  // for CCMV using impulsive stimulated Raman scattering (ISRS) pulsed laser excitation.
+  // The same paper demonstrated selective capsid disruption with no mammalian cell damage.
+  // CCMV is a T=3 icosahedral plant virus with a well-characterised 28-nm diameter (R=14 nm).
+  {
+    presetId: 'ccmv',
+    group: 'virus',
+    id: 'ccmv',
+    type: 'target',
+    label: 'CCMV (Plant Virus Capsid)',
+    shortLabel: 'CCMV',
+    notes: 'Non-enveloped icosahedral · R = 14 nm · f_res = 7.7 GHz · Q ≈ 12 (Tsen 2007)',
+    techNotes: 'CCMV (Cowpea Chlorotic Mottle Virus) — T=3 icosahedral protein capsid, diameter 28 nm, R = 14 nm.\nRigid protein shell ~2.5 nm thick (X-ray crystallography, Speir et al. 1995).\nσ_i = 0.02 S/m (viral interior: RNA genome + viral proteins; low ionic conductivity).\nf_res = 7.7 GHz: measured by Tsen et al. (2007) using ISRS coherent vibrational spectroscopy.\nQ = 12 (nominal): derived from Lorentzian peak linewidth in Tsen 2007 Fig. 3. Range: Q = 8-20.\nE_thr = 500 V/cm: acoustic field equivalent required for irreversible capsid disruption.\nResoPulse acoustic resonance model at f = 7.7 GHz, E = 500 V/cm → DR > 1 (disrupting).\nMammalian cells at 7.7 GHz: Schwan Vm → 0 (fc ≈ 100-800 kHz, far below 7.7 GHz) → DR ≈ 0.\nThis is the experimental basis for the CCMV validation workflow.\nRef: Tsen et al. (2007) Biophys J 93:1340. Dykeman & Sankey (2010) J Phys: Cond Matter 22:423202.',
+    radius: 0.014,          // µm = 14 nm — outer radius from X-ray crystallography
+    membraneThickness: 2.5, // nm — protein capsid shell (Speir et al. 1995 crystallography)
+    naturalFrequency: 200,
+    thresholdVoltage: 0.05, // V — EP model threshold; not used in resonance mode (R too small)
+    dielectricConstant: 4.0,  // ε_r ≈ 4 for protein (intermediate between protein 2-5 range)
+    conductivity: 0.02,       // S/m — low; RNA+protein interior, minimal free ions
+    resonantFreqGHz: 7.7,     // GHz — measured, Tsen et al. (2007)
+    capsidQ: 12,              // nominal Q from linewidth; rigid icosahedral protein capsid
+    resonantThresholdVcm: 500,// V/cm — acoustic disruption threshold (Tsen 2007)
+    resonantFreqUncertaintyPct: 15,
+    capsidQMin: 8,
+    capsidQMax: 20,
+    experimentalBasis: 'laser-validated',  // f_res and Q measured by ISRS laser spectroscopy (Tsen 2007)
+    density: 1350,
+    specificHeatCapacity: 4100,
+    amplitude: 0.4,
   },
 
   // ── Enveloped viruses (lipid bilayer shell approximation) ───────────────────

@@ -2,10 +2,19 @@
 
 // DOM highlight utilities for the Protocol lab-link feature. Pure — no Vue/store imports.
 
+// Remove all active highlights so only one element glows at a time.
+function clearAllHighlights(): void {
+  document.querySelectorAll<HTMLElement>('.lab-highlight').forEach(el => {
+    el.classList.remove('lab-highlight')
+  })
+}
+
 // Scroll element into view and play the lab-highlight animation.
+// Clears any existing highlights first so only one element is active at a time.
 // Glow delayed 400 ms after scroll settles; skipped when already in viewport.
 export function scrollAndHighlight(targetId: string, delayMs = 0): void {
   const run = () => {
+    clearAllHighlights()
     const el = document.getElementById(targetId)
     if (!el) return
     const targets = resolveHighlightTargets(el)
