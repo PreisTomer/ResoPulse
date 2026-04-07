@@ -54,6 +54,7 @@ export default defineComponent({
     scale:            { type: Number,  default: 1 },
     zIndex:           { type: Number,  default: 150 },
     defaultCollapsed: { type: Boolean, default: true },
+    forceOpen:        { type: Boolean, default: false },
     introAnimation:   { type: Boolean, default: false },
     tabAlign:         { type: String,  default: 'flex-start' },
     expandTip:        { type: String,  default: '' },
@@ -69,10 +70,20 @@ export default defineComponent({
     }
   },
 
+  emits: ['toggle'],
+
+  watch: {
+    forceOpen(val: boolean) {
+      this.isCollapsed = !val
+      this.$emit('toggle', val)
+    },
+  },
+
   mounted() {
     // Defer enabling the CSS transition by one tick so the initial transform
     // (applied via inline :style) is never animated — only collapse/expand
     // interactions after first paint should trigger the transition.
+    if (this.forceOpen) this.isCollapsed = false
     this.$nextTick(() => { this.transitionReady = true })
     if (this.introAnimation) {
       setTimeout(() => {
@@ -104,6 +115,9 @@ export default defineComponent({
       if (isLeft) {
         style.left  = '0'
         style.right = 'auto'
+      } else {
+        style.right = '0'
+        style.left  = 'auto'
       }
       return style
     },
@@ -120,6 +134,7 @@ export default defineComponent({
   methods: {
     toggle() {
       this.isCollapsed = !this.isCollapsed
+      this.$emit('toggle', !this.isCollapsed)
     },
   },
 })
@@ -129,7 +144,7 @@ export default defineComponent({
 // ── Base container ──────────────────────────────────────────────────────────
 .side-tab-panel {
   position: fixed;
-  right: 1rem;
+  right: 0;
   transform-origin: top right;
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   pointer-events: none;

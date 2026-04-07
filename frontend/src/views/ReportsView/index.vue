@@ -5,7 +5,7 @@
 
       <!-- Page header -->
       <PageHeader :eyebrow="$t('reports.eyebrow')" :title="$t('reports.title')">
-        <div class="reports__header-row">
+        <div id="hl-reports-export" class="reports__header-row">
           <p class="reports__subtitle">{{ $t('reports.subtitle') }}</p>
           <div class="reports__header-actions">
             <button

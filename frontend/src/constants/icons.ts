@@ -42,6 +42,8 @@ export const ICON = {
   STAR_EMPTY:  '☆',  // empty star for ratings
   MENU:        '☰',  // mobile TOC hamburger toggle
   CARET_DOWN:  '▼',  // collapsed accordion / dropdown indicator
+  CARET_UP:    '▲',  // expanded accordion / dropdown indicator
+  CHECKLIST:   '☑',  // protocol guide panel tab
   NOTE_ON:     '♪',  // auditory display enabled
   NOTE_OFF:    '♩',  // auditory display disabled
 } as const

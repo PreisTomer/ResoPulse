@@ -1,6 +1,6 @@
 <!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
 <template>
-  <div class="cuvette-setup">
+  <div id="hl-cuvette-setup" class="cuvette-setup">
     <div class="cuvette-setup__header">
       <span class="cuvette-setup__icon">{{ ICON.FLASK }}</span>
       <div>

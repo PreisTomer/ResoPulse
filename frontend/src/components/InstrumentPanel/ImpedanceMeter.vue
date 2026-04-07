@@ -1,6 +1,6 @@
 <!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
 <template>
-  <div class="imp-meter">
+  <div id="hl-impedance-meter" class="imp-meter">
     <div class="imp-meter__header">
       <div class="imp-meter__title-group">
         <div class="imp-meter__title">{{ $t('instrument.meter.title') }}</div>

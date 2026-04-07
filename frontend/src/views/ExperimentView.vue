@@ -84,9 +84,9 @@
     </div>
   </div>
 
-  <!-- Sticky live cell view - appears when cells scroll out of viewport -->
+  <!-- Sticky live cell view - suppressed when protocol guide is open (right side conflict) -->
   <StickyCellView
-    v-if="showStickySimView"
+    v-if="showStickySimView && !guideOpen"
     :cells="cells"
     @scroll-to-cells="scrollToCells"
     @full-reset="applyTargetDefaults"
@@ -217,6 +217,10 @@ export default defineComponent({
     ICON() { return ICON },
     CHART_MODE() { return CHART_MODE },
     ...mapStores(useCellStore, useExperimentStore, useUiStore, useReplayStore),
+
+    guideOpen(): boolean {
+      return this.uiStore.protocolGuideOpen
+    },
 
     currentTargetId(): string {
       return this.cellStore.target.id

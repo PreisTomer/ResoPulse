@@ -391,5 +391,15 @@
     "termsLink": "Terms of Use",
     "cancelBtn": "← Go back",
     "enterBtn": "Enter Experiment Lab"
+  },
+  "guide": {
+    "tabLabel": "Guide",
+    "tabExpandTip": "Open protocol step guide",
+    "tabCollapseTip": "Collapse protocol step guide",
+    "title": "Protocol Steps",
+    "close": "Close guide",
+    "check": "Mark step complete",
+    "uncheck": "Mark step incomplete",
+    "resetChecks": "Reset all steps"
   }
 }

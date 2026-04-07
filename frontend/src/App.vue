@@ -6,6 +6,7 @@
     <main>
       <RouterView />
     </main>
+    <ProtocolGuidePanel v-if="showGuidePanel" />
     <TermsGate v-if="showTermsGate" @accepted="onTermsAccepted" />
     <footer class="app-footer">
       <span class="app-footer__copy">© 2026 Tomer Preis. All rights reserved.</span>
@@ -20,11 +21,12 @@ import { defineComponent } from 'vue'
 import NavBar from './components/NavBar.vue'
 import ModeBanner from './components/ModeBanner.vue'
 import TermsGate from './components/TermsGate.vue'
+import ProtocolGuidePanel from './components/ExperimentLab/ProtocolGuidePanel.vue'
 import { useThemeStore } from './stores/themeStore'
 const TERMS_KEY = 'rp_terms_v1'
 
 export default defineComponent({
-  components: { NavBar, ModeBanner, TermsGate },
+  components: { NavBar, ModeBanner, TermsGate, ProtocolGuidePanel },
 
   setup() {
     return { themeStore: useThemeStore() }
@@ -39,6 +41,10 @@ export default defineComponent({
   computed: {
     showTermsGate(): boolean {
       return !this.termsAccepted && this.$route.path === '/experiment'
+    },
+
+    showGuidePanel(): boolean {
+      return ['/experiment', '/instrument', '/reports'].includes(this.$route.path)
     },
   },
 

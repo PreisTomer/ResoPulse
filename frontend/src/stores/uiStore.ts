@@ -9,6 +9,8 @@ interface UiState {
   pendingValidateDrawer: boolean      // open the validate drawer when HomeView mounts
   replayExpandedCellParams: string[]  // 'healthy' | 'target' panels forced open during replay
   replayProtocolOpen: boolean         // ProtocolSection accordion forced open during replay
+  protocolGuideOpen: boolean          // protocol step guide panel visible in experiment lab
+  protocolGuideChecked: boolean[]     // per-step checkbox state (12 steps)
 }
 
 export const useUiStore = defineStore('ui', {
@@ -17,6 +19,8 @@ export const useUiStore = defineStore('ui', {
     pendingValidateDrawer: false,
     replayExpandedCellParams: [],
     replayProtocolOpen: false,
+    protocolGuideOpen: false,
+    protocolGuideChecked: Array(12).fill(false),
   }),
 
   actions: {
@@ -41,6 +45,10 @@ export const useUiStore = defineStore('ui', {
     clearReplayExpandedPanels() {
       this.replayExpandedCellParams = []
       this.replayProtocolOpen = false
+    },
+
+    toggleProtocolGuideStep(index: number) {
+      this.protocolGuideChecked[index] = !this.protocolGuideChecked[index]
     },
 
     requestValidateDrawer() {

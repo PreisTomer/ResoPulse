@@ -7,9 +7,14 @@ import { CELL_STATE } from '@/constants/strings'
 
 // ── Pitch mapping constants ────────────────────────────────────────────────────
 
-const BASE_FREQ_HZ     = 220    // A3, baseline tone at zero drift
-const MAX_FREQ_HZ      = 1760   // A6, max pitch at ≥30% impedance drift
-const DRIFT_SCALE_PCT  = 30     // drift % that maps to MAX_FREQ_HZ
+// Pitch tracks disruption ratio: DR=0 → A3 (220 Hz), DR=1 → A5 (880 Hz), DR>1 → A6 (1760 Hz).
+// Two octaves over the [0,1] DR range gives musically clear, non-fatiguing feedback.
+// Impedance drift adds a ±semitone vibrato on top so hardware users still get drift cues.
+const BASE_FREQ_HZ     = 220    // A3, baseline tone at DR = 0
+const MID_FREQ_HZ      = 880    // A5, tone at DR = 1.0 (lysis threshold)
+const MAX_FREQ_HZ      = 1760   // A6, tone at DR > 1 (full lysis)
+const DRIFT_VIBRATO_HZ = 40     // max pitch shift (Hz) from impedance drift — subtle vibrato
+const DRIFT_SCALE_PCT  = 30     // drift % that maps to full DRIFT_VIBRATO_HZ shift
 const LYSIS_FREQ_HZ    = 880    // A5, lysis event burst tone
 const WARN_FREQ_HZ     = 110    // A2, healthy cell threshold warning
 const LYSIS_BURST_S    = 0.4    // seconds, lysis burst duration
@@ -94,14 +99,20 @@ class SonificationService {
     const now = this.ctx.currentTime
     const absDrift = Math.abs(impedanceDriftPct)
 
-    // ── Pitch: maps absolute drift to frequency ──────────────────────────────
+    // ── Pitch: primary driver is DR, drift adds a subtle vibrato ────────────
+    // DR in [0, 1]: interpolate A3→A5 (one octave per doubling gives perceptual linearity)
+    // DR > 1: interpolate A5→A6 (capped, already in lysis)
+    const dr = Math.max(0, disruptionRatio)
+    const drBase = dr <= 1
+      ? BASE_FREQ_HZ + (MID_FREQ_HZ - BASE_FREQ_HZ) * dr
+      : MID_FREQ_HZ  + (MAX_FREQ_HZ - MID_FREQ_HZ)  * Math.min(1, dr - 1)
     const driftFrac  = Math.min(1, absDrift / DRIFT_SCALE_PCT)
-    const targetFreq = BASE_FREQ_HZ + driftFrac * (MAX_FREQ_HZ - BASE_FREQ_HZ)
+    const targetFreq = drBase + driftFrac * DRIFT_VIBRATO_HZ
     this.osc.frequency.linearRampToValueAtTime(targetFreq, now + RAMP_TIME_S)
 
-    // ── Gain: scales with disruption ratio ───────────────────────────────────
-    // Silent at DR=0, ramps to ~0.24 at DR=0.5, full 0.4 at DR≥0.85
-    const drGain = Math.min(0.4, disruptionRatio * 0.47)
+    // ── Gain: audible from first detectable DR, full volume at lysis ─────────
+    // Starts at 0.05 so there is always a faint tone when DR > 0 (not silent until threshold)
+    const drGain = dr > 0 ? Math.min(0.4, 0.05 + dr * 0.38) : 0
 
     // ── Tremolo: active only in rev-ep state ─────────────────────────────────
     if (this.tremoloGain) {
