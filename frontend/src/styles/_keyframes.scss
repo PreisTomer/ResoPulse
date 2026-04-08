@@ -55,6 +55,12 @@
   100% { outline-color: transparent; box-shadow: none; }
 }
 
+// Used by CellVisual warn strips and CompactStrip state dots (approaching, vibrating, lysing).
+@keyframes warn-fade {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.72; }
+}
+
 // Used by CellParamsPanel rows during replay: briefly tints the row background when a
 // parameter value changes. Shows the scientist which field was just loaded from the paper.
 // rgba(0,212,255) = --color-primary; raw value required inside @keyframes.

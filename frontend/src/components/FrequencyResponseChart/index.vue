@@ -28,26 +28,33 @@ import { useCellStore } from '@/stores/cellStore'
 
 import { broadcastStateSync } from '@/services/socket'
 
-import { computeSchwan, computeFc, computeResonantLineshape, computeResonantDisruption, computeTau, computeDepCmReal, tempCorrectedVth } from '@/utils/physics'
+import { computeFc, computeTau, tempCorrectedVth } from '@/utils/physics'
 
 import { C } from '@/theme/colors'
 
 import { CELL_PRESETS, GROUP_COLORS } from '@/constants/cellLibrary'
-import { DEFAULT_CAPSID_Q, THRESHOLDS, H_FIRE_THRESHOLD_MULTIPLIER } from '@/constants/physics'
+import { H_FIRE_THRESHOLD_MULTIPLIER } from '@/constants/physics'
 import { CELL_CATEGORY, WAVEFORM } from '@/constants/strings'
 import { MEDIA } from '@/constants/media'
-import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'
 
 import ChartLegend from './ChartLegend.vue'
 import ChartTooltip from './ChartTooltip.vue'
 import {
   F_MIN_HZ, F_MAX_HZ, F_CURSOR_MAX_KHZ, MARGIN,
-  logspace, formatHz,
+  formatHz,
   computeVmCurve, computeNuclearVmCurve, computeDepCurve, computeSelCurve,
-  computeOptimalFreqHz, computeUncBand, sigmaUncPct,
+  computeUncBand, sigmaUncPct,
 } from './chartCompute'
 import type { TooltipData } from './chartCompute'
+import { drawThresholds } from './chartDrawThresholds'
+import { drawFcMarkers } from './chartDrawFcMarkers'
+import { drawSelCurve } from './chartDrawSelCurve'
+import { drawDepOverlay } from './chartDrawDep'
+import { drawDepCrossovers } from './chartDrawDepCrossovers'
+import { drawOptimalMarker } from './chartDrawOptimal'
+import { drawResonanceChart } from './chartDrawResonance'
+import { buildHoverTooltip } from './chartHover'
 
 export default defineComponent({
   components: { ChartLegend, ChartTooltip },
@@ -87,9 +94,9 @@ export default defineComponent({
     'cellStore.chartMode':                 { handler() { this.updateChart() } },
     'cellStore.waveform':                  { handler() { this.updateChart() } },
     'cellStore.dutyCycle':                 { handler() { this.updateChart() } },
-    'cellStore.healthyTemp':              { handler() { this.updateChart() } },
-    'cellStore.targetTemp':               { handler() { this.updateChart() } },
-    'cellStore.pulseWidthNs':             { handler() { this.updateChart() } },
+    'cellStore.healthyTemp':               { handler() { this.updateChart() } },
+    'cellStore.targetTemp':                { handler() { this.updateChart() } },
+    'cellStore.pulseWidthNs':              { handler() { this.updateChart() } },
   },
 
   mounted() {
@@ -106,7 +113,7 @@ export default defineComponent({
   },
 
   methods: {
-    // ── Full chart init (called on mount + resize) ───────────────────────
+    // ── Chart init (called on mount + resize) ───────────────────────────
     initChart() {
       const container = this.$refs.chartEl as HTMLElement
       if (!container) return
@@ -130,23 +137,23 @@ export default defineComponent({
         .attr('transform', `translate(${MARGIN.left},${MARGIN.top})`)
         .attr('class', 'chart-g')
 
-      // Scales
       this._xScale      = markRaw(d3.scaleLog().domain([F_MIN_HZ, F_MAX_HZ]).range([0, this._chartW]))
       this._yScale      = markRaw(d3.scaleLinear().domain([0, 100]).range([this._chartH, 0]))
       this._yRightScale = markRaw(d3.scaleLinear().domain([0, 2]).range([this._chartH, 0]))
       this._yDepScale   = markRaw(d3.scaleLinear().domain([-0.5, 0.5]).range([this._chartH, 0]))
 
-      // Grid lines (horizontal)
-      g.append('g').attr('class', 'grid-h')
+      this.appendChartStructure(g)
+      this.attachDragBehavior(g)
+    },
 
-      // Axes
+    // ── Append static SVG structure (groups, axes, labels, cursor) ──────
+    appendChartStructure(g: d3.Selection<SVGGElement, unknown, null, undefined>) {
+      g.append('g').attr('class', 'grid-h')
       g.append('g').attr('class', 'x-axis').attr('transform', `translate(0,${this._chartH})`)
       g.append('g').attr('class', 'y-axis')
       g.append('g').attr('class', 'y-right-axis').attr('transform', `translate(${this._chartW},0)`)
-      // DEP Re[K] axis - further right, only shown in Schwan mode
       g.append('g').attr('class', 'y-dep-axis').attr('transform', `translate(${this._chartW + 90},0)`)
 
-      // Axis labels
       g.append('text')
         .attr('class', 'axis-label-x')
         .attr('text-anchor', 'middle')
@@ -170,7 +177,6 @@ export default defineComponent({
         .attr('letter-spacing', '0.1em')
         .text(`${this.$t('chart.axisVm')} (${UNIT.MV})`)
 
-      // DEP Re[K] axis label
       g.append('text')
         .attr('class', 'axis-label-dep')
         .attr('text-anchor', 'middle')
@@ -183,32 +189,16 @@ export default defineComponent({
         .attr('letter-spacing', '0.1em')
         .text('Re[K], DEP')
 
-      // Curve groups (library first so they're below)
       g.append('g').attr('class', 'curves-library')
       g.append('g').attr('class', 'curves-active')
-
-      // Threshold lines + rev-EP lines
       g.append('g').attr('class', 'thresholds')
-
-      // Nuclear envelope Vm curves (double-shell model - below active curves)
       g.append('g').attr('class', 'curves-nuclear')
-
-      // Selectivity ratio curve (above thresholds)
       g.append('g').attr('class', 'sel-curve')
-
-      // DEP Clausius-Mossotti Re[K] curves - drawn above thresholds, Schwan mode only
       g.append('g').attr('class', 'dep-curves')
-
-      // DEP crossover frequency markers (f_cross where Re[K]=0) - Schwan mode only
       g.append('g').attr('class', 'dep-crossover')
-
-      // fc markers
       g.append('g').attr('class', 'fc-markers')
-
-      // Optimal frequency marker
       g.append('g').attr('class', 'opt-marker')
 
-      // Cursor
       g.append('line')
         .attr('class', 'cursor-line')
         .attr('y1', 0).attr('y2', this._chartH)
@@ -229,7 +219,6 @@ export default defineComponent({
         .attr('font-size', '0.7rem')
         .attr('font-family', 'var(--font-mono)')
 
-      // Drag-discoverability hint - appears above the cursor line
       g.append('text')
         .attr('class', 'cursor-drag-hint')
         .attr('y', -4)
@@ -240,8 +229,10 @@ export default defineComponent({
         .attr('letter-spacing', '0.08em')
         .attr('pointer-events', 'none')
         .text(this.$t('chart.dragHint'))
+    },
 
-      // Hover + drag overlay (covers full chart area)
+    // ── Attach drag + hover overlay ──────────────────────────────────────
+    attachDragBehavior(g: d3.Selection<SVGGElement, unknown, null, undefined>) {
       const dragBehavior = d3.drag<SVGRectElement, unknown>()
         .on('start', () => { this._isDragging = true })
         .on('drag', (event) => {
@@ -265,234 +256,97 @@ export default defineComponent({
         .call(dragBehavior)
     },
 
-    // ── Resonance mode: Lorentzian disruption chart ──────────────────────
-    updateChartResonance() {
-      if (!this._svg || !this._xScale || !this._yScale) return
-      const t = this.cellStore.target
-      if (!t.resonantFreqGHz || !t.resonantThresholdVcm) return
-
-      const g = this._svg.select<SVGGElement>('.chart-g')
-      const f0_hz = t.resonantFreqGHz * 1e9
-      const Q    = t.capsidQ ?? DEFAULT_CAPSID_Q
-      const Qmin = t.capsidQMin ?? Q
-      const Qmax = t.capsidQMax ?? Q
-      const E    = this.cellStore.fieldIntensity
-      const Ethr = t.resonantThresholdVcm
-
-      // Frequency range: 2 decades below and above f_res
-      const fMin = f0_hz * 0.01
-      const fMax = f0_hz * 100
-      const freqPoints = logspace(fMin, fMax, 200)
-      this._xScale!.domain([fMin, fMax])
-
-      // Lorentzian disruption curves
-      const lorCurve = freqPoints.map((hz) => ({
-        hz, dr: computeResonantLineshape(t.resonantFreqGHz!, Q, hz) * (E / Ethr),
-      }))
-      const lorQmin = freqPoints.map((hz) => ({
-        hz, dr: computeResonantLineshape(t.resonantFreqGHz!, Qmin, hz) * (E / Ethr),
-      }))
-      const lorQmax = freqPoints.map((hz) => ({
-        hz, dr: computeResonantLineshape(t.resonantFreqGHz!, Qmax, hz) * (E / Ethr),
-      }))
-
-      // Y scale: disruption ratio
-      const maxDr = Math.max(...lorQmin.map((d) => d.dr), 1.2)
-      this._yScale!.domain([0, Math.ceil(maxDr * 10) / 10])
-
-      // Tick values: integer powers of 10 plus f_res
-      const logMin = Math.floor(Math.log10(fMin))
-      const logMax = Math.ceil(Math.log10(fMax))
-      const tickVals: number[] = []
-      for (let exp = logMin; exp <= logMax; exp++) {
-        const p = Math.pow(10, exp)
-        if (p >= fMin && p <= fMax) tickVals.push(p)
-      }
-      if (!tickVals.some((v) => Math.abs(v - f0_hz) / f0_hz < 0.05)) tickVals.push(f0_hz)
-      tickVals.sort((a, b) => a - b)
-
-      const formatResHz = (hz: number): string => {
-        if (hz >= 1e9) return `${(hz / 1e9).toFixed(hz >= 10e9 ? 0 : 1)}G`
-        if (hz >= 1e6) return `${(hz / 1e6).toFixed(hz >= 100e6 ? 0 : 1)}M`
-        return `${(hz / 1e3).toFixed(0)}k`
-      }
-
-      g.select<SVGGElement>('.x-axis')
-        .call(d3.axisBottom<number>(this._xScale!).tickValues(tickVals).tickFormat(formatResHz).tickSize(4))
-        .call((a) => a.select('.domain').attr('stroke', C.w15))
-        .call((a) => a.selectAll('text').attr('fill', 'var(--color-text)').attr('font-size', '0.64rem').attr('font-family', 'var(--font-mono)'))
-        .call((a) => a.selectAll('line').attr('stroke', C.w20))
-
-      g.select<SVGGElement>('.y-axis')
-        .call(d3.axisLeft<number>(this._yScale!).ticks(5).tickSize(4))
-        .call((a) => a.select('.domain').attr('stroke', C.w15))
-        .call((a) => a.selectAll('text').attr('fill', 'var(--color-text)').attr('font-size', '0.64rem').attr('font-family', 'var(--font-mono)'))
-        .call((a) => a.selectAll('line').attr('stroke', C.w20))
-
-      g.select<SVGGElement>('.grid-h')
-        .call(d3.axisLeft<number>(this._yScale!).ticks(5).tickSize(-this._chartW).tickFormat(() => ''))
-        .call((a) => a.select('.domain').remove())
-        .call((a) => a.selectAll('line').attr('stroke', C.w06))
-
-      // Hide selectivity curve and right axis (TI → ∞ in resonance, not useful to plot)
-      g.select<SVGGElement>('.sel-curve').selectAll('*').remove()
-      g.select<SVGGElement>('.y-right-axis').selectAll('*').remove()
-      g.select<SVGGElement>('.curves-library').selectAll('*').remove()
-      g.select<SVGGElement>('.curves-nuclear').selectAll('*').remove()
-      // DEP single-shell model invalid at GHz resonance frequencies - clear overlays
-      g.select<SVGGElement>('.dep-curves').selectAll('*').remove()
-      g.select<SVGGElement>('.dep-crossover').selectAll('*').remove()
-      g.select<SVGGElement>('.y-dep-axis').selectAll('*').remove()
-      g.select('.axis-label-dep').attr('opacity', 0)
-
-      // Lorentzian line generator
-      const drLineGen = d3.line<{ hz: number; dr: number }>()
-        .x((d) => this._xScale!(d.hz))
-        .y((d) => this._yScale!(d.dr))
-        .curve(d3.curveBasis)
-
-      const activeGroup = g.select<SVGGElement>('.curves-active')
-      activeGroup.selectAll('*').remove()
-
-      // Q uncertainty band (filled area + dashed bounds)
-      if (Qmin !== Qmax) {
-        const areaGen = d3.area<{ hz: number; drLow: number; drHigh: number }>()
-          .x((d) => this._xScale!(d.hz))
-          .y0((d) => this._yScale!(d.drLow))
-          .y1((d) => this._yScale!(d.drHigh))
-          .curve(d3.curveBasis)
-
-        const bandData = freqPoints.map((hz, i) => ({
-          hz,
-          drLow:  lorQmax[i]!.dr,  // higher Q → narrower → smaller off-resonance values
-          drHigh: lorQmin[i]!.dr,  // lower Q  → broader  → larger off-resonance values
-        }))
-
-        activeGroup.append('path')
-          .datum(bandData)
-          .attr('fill', C.danger)
-          .attr('fill-opacity', 0.08)
-          .attr('d', areaGen)
-
-        activeGroup.append('path')
-          .datum(lorQmax)
-          .attr('fill', 'none').attr('stroke', C.danger)
-          .attr('stroke-width', 1).attr('stroke-opacity', 0.35)
-          .attr('stroke-dasharray', '3,4').attr('d', drLineGen)
-
-        activeGroup.append('path')
-          .datum(lorQmin)
-          .attr('fill', 'none').attr('stroke', C.danger)
-          .attr('stroke-width', 1).attr('stroke-opacity', 0.35)
-          .attr('stroke-dasharray', '3,4').attr('d', drLineGen)
-      }
-
-      // Main Lorentzian (nominal Q) - solid red
-      activeGroup.append('path')
-        .datum(lorCurve)
-        .attr('fill', 'none')
-        .attr('stroke', C.danger).attr('stroke-width', 2.5).attr('stroke-opacity', 1)
-        .attr('filter', `drop-shadow(0 0 4px ${C.danger}88)`)
-        .attr('d', drLineGen)
-
-      // DR = 1.0 threshold line
-      const thrGroup = g.select<SVGGElement>('.thresholds')
-      thrGroup.selectAll('*').remove()
-      const y1 = this._yScale!(1)
-      if (y1 >= 0 && y1 <= this._chartH) {
-        thrGroup.append('line')
-          .attr('x1', 0).attr('x2', this._chartW)
-          .attr('y1', y1).attr('y2', y1)
-          .attr('stroke', C.danger).attr('stroke-width', 0.75)
-          .attr('stroke-dasharray', '4,3').attr('stroke-opacity', 0.5)
-        thrGroup.append('text')
-          .attr('x', this._chartW + 4).attr('y', y1 + 4)
-          .attr('fill', C.danger).attr('font-size', '0.52rem')
-          .attr('font-family', 'var(--font-mono)').text(this.$t('chart.drOne'))
-      }
-
-      // f_res vertical marker + label
-      const fcGroup = g.select<SVGGElement>('.fc-markers')
-      fcGroup.selectAll('*').remove()
-      const xRes = this._xScale!(f0_hz)
-      const fResLabel = t.resonantFreqGHz >= 1
-        ? `f_res ${t.resonantFreqGHz.toFixed(1)} ${UNIT.GHZ}`
-        : `f_res ${(t.resonantFreqGHz * 1000).toFixed(0)} ${UNIT.MHZ}`
-      fcGroup.append('line')
-        .attr('x1', xRes).attr('x2', xRes).attr('y1', 0).attr('y2', this._chartH)
-        .attr('stroke', C.danger).attr('stroke-width', 1)
-        .attr('stroke-dasharray', '4,3').attr('stroke-opacity', 0.4)
-      fcGroup.append('text').attr('x', xRes).attr('y', this._chartH + 20)
-        .attr('text-anchor', 'middle').attr('fill', C.danger)
-        .attr('font-size', '0.62rem').attr('font-family', 'var(--font-mono)').text(ICON.TRIANGLE_UP)
-      fcGroup.append('text').attr('x', xRes).attr('y', this._chartH + 34)
-        .attr('text-anchor', 'middle').attr('fill', C.danger)
-        .attr('font-size', '0.6rem').attr('font-family', 'var(--font-mono)').text(fResLabel)
-
-      // f_res ± uncertainty range markers (amber dashed)
-      const pct = t.resonantFreqUncertaintyPct
-      if (pct) {
-        for (const f of [f0_hz * (1 - pct / 100), f0_hz * (1 + pct / 100)]) {
-          if (f >= fMin && f <= fMax) {
-            fcGroup.append('line')
-              .attr('x1', this._xScale!(f)).attr('x2', this._xScale!(f))
-              .attr('y1', 0).attr('y2', this._chartH)
-              .attr('stroke', C.amber).attr('stroke-width', 0.75)
-              .attr('stroke-dasharray', '2,4').attr('stroke-opacity', 0.35)
-          }
-        }
-      }
-
-      // Clear optimal marker (not applicable in resonance mode)
-      g.select<SVGGElement>('.opt-marker').selectAll('*').remove()
-
-      this.updateCursor()
-    },
-
-    // ── Full chart update (curves + axes + thresholds) ───────────────────
+    // ── Full chart update (Schwan mode) ──────────────────────────────────
     updateChart() {
       if (!this._svg || !this._xScale || !this._yScale) return
 
       const g = this._svg.select<SVGGElement>('.chart-g')
-
-      // Branch: resonance mode shows Lorentzian disruption chart
       const cat = this.cellStore.targetCellCategory
       const t = this.cellStore.target
+
+      // Branch: resonance mode
       if (
         this.cellStore.isResonanceMode &&
         (cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) &&
         t.resonantFreqGHz && t.resonantThresholdVcm
       ) {
         g.select('.axis-label-y').text(this.$t('chart.axisDisruptionRatio'))
-        this.updateChartResonance()
+        drawResonanceChart({
+          g, xScale: this._xScale!, yScale: this._yScale!,
+          chartW: this._chartW, chartH: this._chartH,
+          target: t, fieldIntensity: this.cellStore.fieldIntensity,
+          drOneLabel: this.$t('chart.drOne'),
+          t18n: (key) => this.$t(key),
+        })
+        this.updateCursor()
         return
       }
 
-      // Schwan mode: reset x domain and y-axis label
+      // Schwan mode: reset x domain and axis label
       this._xScale!.domain([F_MIN_HZ, F_MAX_HZ])
       g.select('.axis-label-y').text(`${this.$t('chart.axisVm')} (${UNIT.MV})`)
 
       const sigma_e  = this.cellStore.effectiveSigmaE
       const cosTheta = this.cellStore.cosThetaFactor
 
-      // Compute active-cell curves (include orientation factor)
-      const healthyCurve = computeVmCurve(this.cellStore.healthy, this.cellStore.fieldIntensity, sigma_e, cosTheta)
-      const targetCurve  = computeVmCurve(this.cellStore.target,  this.cellStore.fieldIntensity, sigma_e, cosTheta)
+      this.updateSchanAxes(g)
+      this.updateVmCurves(g, sigma_e, cosTheta)
+      this.updateNuclearCurves(g, sigma_e, cosTheta)
+      this.updateThresholdLines(g)
+      this.updateFcMarkers(g, sigma_e)
 
-      // Auto-scale y
-      const allVm = [...healthyCurve.map((d) => d.vm), ...targetCurve.map((d) => d.vm)]
-      const maxVm = Math.ceil(Math.max(...allVm, 50) / 50) * 50
-      this._yScale!.domain([0, maxVm])
+      const eps_r = MEDIA[this.cellStore.medium].permittivity
+      const depHCurve = computeDepCurve(this.cellStore.healthy, sigma_e, eps_r)
+      const depTCurve = computeDepCurve(this.cellStore.target,  sigma_e, eps_r)
 
-      // Update axes
+      drawDepOverlay(
+        g.select<SVGGElement>('.dep-curves'),
+        g.select<SVGGElement>('.y-dep-axis'),
+        g.select<SVGTextElement>('.axis-label-dep'),
+        this._xScale!, this._yDepScale!,
+        this._chartH, depHCurve, depTCurve,
+      )
+
+      drawDepCrossovers(
+        g.select<SVGGElement>('.dep-crossover'),
+        this._xScale!, this._chartH,
+        [
+          { fKhz: this.cellStore.depHealthyCrossoverKHz,       color: C.primary, tag: this.$t('chart.depCrossH')  },
+          { fKhz: this.cellStore.depHealthySecondCrossoverKHz, color: C.primary, tag: this.$t('chart.depCrossH2') },
+          { fKhz: this.cellStore.depTargetCrossoverKHz,        color: C.danger,  tag: this.$t('chart.depCrossT')  },
+          { fKhz: this.cellStore.depTargetSecondCrossoverKHz,  color: C.danger,  tag: this.$t('chart.depCrossT2') },
+        ],
+      )
+
+      drawSelCurve(
+        g.select<SVGGElement>('.sel-curve'),
+        g.select<SVGGElement>('.y-right-axis'),
+        this._xScale!, this._yRightScale!,
+        this._chartW, this._chartH,
+        computeSelCurve(this.cellStore.healthy, this.cellStore.target, this.cellStore.fieldIntensity, sigma_e),
+      )
+
+      drawOptimalMarker(
+        g.select<SVGGElement>('.opt-marker'),
+        this._xScale!, this._chartW, this._chartH,
+        this.cellStore.healthy, this.cellStore.target,
+        this.cellStore.fieldIntensity, sigma_e,
+        (optHz, sel) => optHz >= 1e6
+          ? `${(optHz / 1e6).toFixed(2)}M Vm×${sel.toFixed(1)}`
+          : `${(optHz / 1e3).toFixed(0)}k Vm×${sel.toFixed(1)}`,
+      )
+
+      this.updateCursor()
+    },
+
+    // ── Schwan: axes + grid ───────────────────────────────────────────────
+    updateSchanAxes(g: d3.Selection<SVGGElement, unknown, null, undefined>) {
       const xAxis = d3.axisBottom<number>(this._xScale!)
         .tickValues([1e4, 1e5, 1e6, 1e7, 1e8, 5e8])
         .tickFormat((d) => formatHz(+d))
         .tickSize(4)
 
-      const yAxis = d3.axisLeft<number>(this._yScale!)
-        .ticks(5)
-        .tickSize(4)
+      const yAxis = d3.axisLeft<number>(this._yScale!).ticks(5).tickSize(4)
 
       g.select<SVGGElement>('.x-axis')
         .call(xAxis)
@@ -506,170 +360,33 @@ export default defineComponent({
         .call((a) => a.selectAll('text').attr('fill', 'var(--color-text)').attr('font-size', '0.64rem').attr('font-family', 'var(--font-mono)'))
         .call((a) => a.selectAll('line').attr('stroke', C.w20))
 
-      // Grid
       g.select<SVGGElement>('.grid-h')
-        .call(
-          d3.axisLeft<number>(this._yScale!).ticks(5).tickSize(-this._chartW).tickFormat(() => ''),
-        )
+        .call(d3.axisLeft<number>(this._yScale!).ticks(5).tickSize(-this._chartW).tickFormat(() => ''))
         .call((a) => a.select('.domain').remove())
         .call((a) => a.selectAll('line').attr('stroke', C.w06))
+    },
 
-      // ── Selectivity ratio curve + right Y-axis ──────────────────────────
-      const selData   = computeSelCurve(this.cellStore.healthy, this.cellStore.target, this.cellStore.fieldIntensity, sigma_e)
-      const maxRatio  = Math.max(...selData.map((d) => d.ratio), 2.0)
-      const rightDomainMax = Math.ceil(maxRatio * 10) / 10
-      this._yRightScale!.domain([0, rightDomainMax])
+    // ── Schwan: Vm curves (active cells + library + uncertainty bands) ────
+    updateVmCurves(
+      g: d3.Selection<SVGGElement, unknown, null, undefined>,
+      sigma_e: number,
+      cosTheta: number,
+    ) {
+      const healthyCurve = computeVmCurve(this.cellStore.healthy, this.cellStore.fieldIntensity, sigma_e, cosTheta)
+      const targetCurve  = computeVmCurve(this.cellStore.target,  this.cellStore.fieldIntensity, sigma_e, cosTheta)
 
-      const yRightAxis = d3.axisRight<number>(this._yRightScale!)
-        .ticks(4)
-        .tickSize(3)
-        .tickFormat((d) => `×${(+d).toFixed(1)}`)
+      const allVm = [...healthyCurve.map((d) => d.vm), ...targetCurve.map((d) => d.vm)]
+      const maxVm = Math.ceil(Math.max(...allVm, 50) / 50) * 50
+      this._yScale!.domain([0, maxVm])
 
-      g.select<SVGGElement>('.y-right-axis')
-        .call(yRightAxis)
-        .call((a) => a.select('.domain').attr('stroke', C.amber + '55'))
-        .call((a) => a.selectAll('text').attr('fill', C.amber).attr('font-size', '0.7rem').attr('font-family', 'var(--font-mono)'))
-        .call((a) => a.selectAll('line').attr('stroke', C.amber + '55'))
-
-      const selLineGen = d3.line<{ hz: number; ratio: number }>()
-        .x((d) => this._xScale!(d.hz))
-        .y((d) => this._yRightScale!(d.ratio))
-        .curve(d3.curveBasis)
-
-      const selGroup = g.select<SVGGElement>('.sel-curve')
-      selGroup.selectAll('*').remove()
-
-      // Ratio=1 reference line (faint dotted)
-      const y1 = this._yRightScale!(1)
-      if (y1 >= 0 && y1 <= this._chartH) {
-        selGroup.append('line')
-          .attr('x1', 0).attr('x2', this._chartW)
-          .attr('y1', y1).attr('y2', y1)
-          .attr('stroke', C.w12)
-          .attr('stroke-width', 1)
-          .attr('stroke-dasharray', '2,4')
-      }
-
-      // Selectivity ratio curve (amber dashed)
-      selGroup.append('path')
-        .datum(selData)
-        .attr('fill', 'none')
-        .attr('stroke', C.amber)
-        .attr('stroke-width', 1.5)
-        .attr('stroke-opacity', 0.75)
-        .attr('stroke-dasharray', '6,3')
-        .attr('d', selLineGen)
-
-      // ── DEP Re[K(f)] overlay - Clausius-Mossotti single-shell model ─────
-      // Valid for kHz-500 MHz (Schwan mode only). Not shown in resonance mode.
-      // Bacteria use sphere approximation. Waveform: CW = 0.5×, pulsed = dc×.
-      // Medium permittivity is per-medium (Gabriel et al. 1996).
-      const depGroup = g.select<SVGGElement>('.dep-curves')
-      depGroup.selectAll('*').remove()
-      g.select('.axis-label-dep').attr('opacity', 1)
-
-      const eps_r    = MEDIA[this.cellStore.medium].permittivity
-      const depHCurve = computeDepCurve(this.cellStore.healthy, sigma_e, eps_r)
-      const depTCurve = computeDepCurve(this.cellStore.target,  sigma_e, eps_r)
-
-      // K=0 reference line (pDEP above, nDEP below)
-      const yK0 = this._yDepScale!(0)
-      if (yK0 >= 0 && yK0 <= this._chartH) {
-        depGroup.append('line')
-          .attr('x1', 0).attr('x2', this._chartW)
-          .attr('y1', yK0).attr('y2', yK0)
-          .attr('stroke', C.w10)
-          .attr('stroke-width', 1)
-          .attr('stroke-dasharray', '2,4')
-      }
-
-      // Re[K] curves - raw CM factor (material property, waveform-independent).
-      // Time-averaged force = Re[K] × waveform scale (CW: ×0.5, pulsed: ×dc) - shown in SelectivityPanel.
-      const depLineGen = d3.line<{ hz: number; k: number }>()
-        .x((d) => this._xScale!(d.hz))
-        .y((d) => this._yDepScale!(d.k))
-        .curve(d3.curveBasis)
-
-      depGroup.append('path')
-        .datum(depHCurve)
-        .attr('fill', 'none')
-        .attr('stroke', C.primary)
-        .attr('stroke-width', 1.2)
-        .attr('stroke-opacity', 0.50)
-        .attr('stroke-dasharray', '2,4')
-        .attr('d', depLineGen)
-
-      depGroup.append('path')
-        .datum(depTCurve)
-        .attr('fill', 'none')
-        .attr('stroke', C.danger)
-        .attr('stroke-width', 1.2)
-        .attr('stroke-opacity', 0.50)
-        .attr('stroke-dasharray', '2,4')
-        .attr('d', depLineGen)
-
-      // DEP axis: fixed Re[K] range [-0.5, +0.5]
-      this._yDepScale!.domain([-0.5, 0.5])
-      const yDepAxis = d3.axisRight<number>(this._yDepScale!)
-        .tickValues([-0.5, 0, 0.5])
-        .tickSize(3)
-        .tickFormat((d) => {
-          const v = +d
-          if (Math.abs(v) < 1e-6) return 'K=0'
-          return v > 0 ? `+${v.toFixed(1)}` : v.toFixed(1)
-        })
-
-      g.select<SVGGElement>('.y-dep-axis')
-        .call(yDepAxis)
-        .call((a) => a.select('.domain').attr('stroke', C.w12))
-        .call((a) => a.selectAll('text').attr('fill', C.w38).attr('font-size', '0.50rem').attr('font-family', 'var(--font-mono)'))
-        .call((a) => a.selectAll('line').attr('stroke', C.w15))
-      // ── End DEP overlay ──────────────────────────────────────────────────
-
-      // ── DEP crossover frequency markers (f_cross where Re[K] = 0) ────────
-      // Vertical hairlines inside the chart area at each crossover frequency.
-      // Distinct from fc markers: grey-blue diamond label, drawn inside chart, no below-axis text.
-      const crossGroup = g.select<SVGGElement>('.dep-crossover')
-      crossGroup.selectAll('*').remove()
-
-      const crossMarkers = [
-        { fKhz: this.cellStore.depHealthyCrossoverKHz,       color: C.primary, tag: this.$t('chart.depCrossH')  },
-        { fKhz: this.cellStore.depHealthySecondCrossoverKHz, color: C.primary, tag: this.$t('chart.depCrossH2') },
-        { fKhz: this.cellStore.depTargetCrossoverKHz,        color: C.danger,  tag: this.$t('chart.depCrossT')  },
-        { fKhz: this.cellStore.depTargetSecondCrossoverKHz,  color: C.danger,  tag: this.$t('chart.depCrossT2') },
-      ]
-
-      crossMarkers.forEach(({ fKhz, color, tag }) => {
-        if (!fKhz || fKhz <= 0) return
-        const fHz = fKhz * 1000
-        if (fHz < F_MIN_HZ || fHz > F_MAX_HZ) return
-        const cx = this._xScale!(fHz)
-        crossGroup.append('line')
-          .attr('x1', cx).attr('x2', cx)
-          .attr('y1', 0).attr('y2', this._chartH)
-          .attr('stroke', color)
-          .attr('stroke-width', 0.75)
-          .attr('stroke-dasharray', '1,4')
-          .attr('stroke-opacity', 0.45)
-        crossGroup.append('text')
-          .attr('x', cx + 3).attr('y', 10)
-          .attr('fill', color)
-          .attr('font-size', '0.48rem')
-          .attr('font-family', 'var(--font-mono)')
-          .attr('opacity', 0.65)
-          .text(tag)
-      })
-      // ── End crossover markers ─────────────────────────────────────────────
-
-      // Line generator (for Vm curves)
       const lineGen = d3.line<{ hz: number; vm: number }>()
         .x((d) => this._xScale!(d.hz))
         .y((d) => this._yScale!(d.vm))
         .curve(d3.curveBasis)
 
       // Library preset curves (faint background)
-      const libGroup = g.select<SVGGElement>('.curves-library')
-      libGroup.selectAll<SVGPathElement, typeof CELL_PRESETS[0]>('path.lib-curve')
+      g.select<SVGGElement>('.curves-library')
+        .selectAll<SVGPathElement, typeof CELL_PRESETS[0]>('path.lib-curve')
         .data(CELL_PRESETS, (d) => d.presetId)
         .join('path')
         .attr('class', 'lib-curve')
@@ -679,14 +396,6 @@ export default defineComponent({
         .attr('stroke-opacity', 0.18)
         .attr('d', (d) => lineGen(computeVmCurve(d, this.cellStore.fieldIntensity, sigma_e, cosTheta)) || '')
 
-      // Active curves
-      const activeGroup = g.select<SVGGElement>('.curves-active')
-      activeGroup.selectAll('path').remove()
-
-      // ── σ_i uncertainty bands ──────────────────────────────────────────────
-      // ±pct% variation in internal conductivity σ_i propagates through τ → fc,
-      // producing a shaded region representing literature parameter uncertainty.
-      // Uncertainty scales with cell category: mammalian 20%, bacteria 35%, virus 45%.
       const areaGen = d3.area<{ hz: number; vmLow: number; vmHigh: number }>()
         .x((d) => this._xScale!(d.hz))
         .y0((d) => this._yScale!(Math.max(0, d.vmLow)))
@@ -696,213 +405,110 @@ export default defineComponent({
       const hPct = sigmaUncPct(this.cellStore.healthy.radius)
       const tPct = sigmaUncPct(this.cellStore.target.radius)
 
+      const activeGroup = g.select<SVGGElement>('.curves-active')
+      activeGroup.selectAll('path').remove()
+
+      // σ_i uncertainty bands
       activeGroup.append('path')
         .datum(computeUncBand(this.cellStore.healthy, this.cellStore.fieldIntensity, sigma_e, cosTheta, hPct))
-        .attr('fill', C.primary)
-        .attr('fill-opacity', 0.10)
-        .attr('stroke', 'none')
+        .attr('fill', C.primary).attr('fill-opacity', 0.10).attr('stroke', 'none')
         .attr('d', areaGen)
 
       activeGroup.append('path')
         .datum(computeUncBand(this.cellStore.target, this.cellStore.fieldIntensity, sigma_e, cosTheta, tPct))
-        .attr('fill', C.danger)
-        .attr('fill-opacity', 0.10)
-        .attr('stroke', 'none')
+        .attr('fill', C.danger).attr('fill-opacity', 0.10).attr('stroke', 'none')
         .attr('d', areaGen)
-      // ── End uncertainty bands ─────────────────────────────────────────────
 
+      // Active cell curves
       activeGroup.append('path')
         .datum(healthyCurve)
-        .attr('fill', 'none')
-        .attr('stroke', C.primary)
-        .attr('stroke-width', 2.5)
-        .attr('stroke-opacity', 1)
+        .attr('fill', 'none').attr('stroke', C.primary)
+        .attr('stroke-width', 2.5).attr('stroke-opacity', 1)
         .attr('filter', `drop-shadow(0 0 4px ${C.primary}88)`)
         .attr('d', lineGen)
 
       activeGroup.append('path')
         .datum(targetCurve)
-        .attr('fill', 'none')
-        .attr('stroke', C.danger)
-        .attr('stroke-width', 2.5)
-        .attr('stroke-opacity', 1)
+        .attr('fill', 'none').attr('stroke', C.danger)
+        .attr('stroke-width', 2.5).attr('stroke-opacity', 1)
         .attr('filter', `drop-shadow(0 0 4px ${C.danger}88)`)
         .attr('d', lineGen)
+    },
 
-      // ── Nuclear Vm curves (Kotnik & Miklavcic 2006 double-shell) ────────
+    // ── Schwan: nuclear envelope Vm curves ───────────────────────────────
+    updateNuclearCurves(
+      g: d3.Selection<SVGGElement, unknown, null, undefined>,
+      sigma_e: number,
+      cosTheta: number,
+    ) {
+      const lineGen = d3.line<{ hz: number; vm: number }>()
+        .x((d) => this._xScale!(d.hz))
+        .y((d) => this._yScale!(d.vm))
+        .curve(d3.curveBasis)
+
       const nucGroup = g.select<SVGGElement>('.curves-nuclear')
       nucGroup.selectAll('path').remove()
 
-      if (this.cellStore.doubleShellEnabled) {
-        if (this.cellStore.healthy.nuclearRadius) {
-          const hNucCurve = computeNuclearVmCurve(this.cellStore.healthy, this.cellStore.fieldIntensity, sigma_e, cosTheta)
-          nucGroup.append('path')
-            .datum(hNucCurve)
-            .attr('fill', 'none')
-            .attr('stroke', C.primary)
-            .attr('stroke-width', 1.5)
-            .attr('stroke-opacity', 0.45)
-            .attr('stroke-dasharray', '5,4')
-            .attr('d', lineGen)
-        }
-        if (this.cellStore.target.nuclearRadius) {
-          const tNucCurve = computeNuclearVmCurve(this.cellStore.target, this.cellStore.fieldIntensity, sigma_e, cosTheta)
-          nucGroup.append('path')
-            .datum(tNucCurve)
-            .attr('fill', 'none')
-            .attr('stroke', C.danger)
-            .attr('stroke-width', 1.5)
-            .attr('stroke-opacity', 0.45)
-            .attr('stroke-dasharray', '5,4')
-            .attr('d', lineGen)
-        }
+      if (!this.cellStore.doubleShellEnabled) return
+
+      if (this.cellStore.healthy.nuclearRadius) {
+        nucGroup.append('path')
+          .datum(computeNuclearVmCurve(this.cellStore.healthy, this.cellStore.fieldIntensity, sigma_e, cosTheta))
+          .attr('fill', 'none').attr('stroke', C.primary)
+          .attr('stroke-width', 1.5).attr('stroke-opacity', 0.45)
+          .attr('stroke-dasharray', '5,4').attr('d', lineGen)
       }
+      if (this.cellStore.target.nuclearRadius) {
+        nucGroup.append('path')
+          .datum(computeNuclearVmCurve(this.cellStore.target, this.cellStore.fieldIntensity, sigma_e, cosTheta))
+          .attr('fill', 'none').attr('stroke', C.danger)
+          .attr('stroke-width', 1.5).attr('stroke-opacity', 0.45)
+          .attr('stroke-dasharray', '5,4').attr('d', lineGen)
+      }
+    },
 
-      // ── Threshold lines: lysis + reversible EP (50%) ───────────────────
-      const thrGroup = g.select<SVGGElement>('.thresholds')
-      thrGroup.selectAll('*').remove()
-
-      // Threshold lines must use the same effective threshold as the live DR computation.
-      const thrHfireMult = this.cellStore.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
-      const thrData = [
-        { label: this.$t('chart.thrH'), vm: tempCorrectedVth(this.cellStore.healthy.thresholdVoltage, this.cellStore.healthyTemp) * thrHfireMult * 1000, color: C.primary },
-        { label: this.$t('chart.thrT'), vm: tempCorrectedVth(this.cellStore.target.thresholdVoltage,  this.cellStore.targetTemp)  * thrHfireMult * 1000, color: C.danger  },
+    // ── Schwan: threshold + rev-EP lines ─────────────────────────────────
+    updateThresholdLines(g: d3.Selection<SVGGElement, unknown, null, undefined>) {
+      const allVm = [
+        ...(this._yScale!.domain()),
       ]
-      thrData.forEach(({ label, vm, color }) => {
-        // Lysis threshold line
-        if (vm <= maxVm) {
-          const y = this._yScale!(vm)
-          thrGroup.append('line')
-            .attr('x1', 0).attr('x2', this._chartW)
-            .attr('y1', y).attr('y2', y)
-            .attr('stroke', color).attr('stroke-width', 0.75)
-            .attr('stroke-dasharray', '4,3').attr('stroke-opacity', 0.5)
-          thrGroup.append('text')
-            .attr('x', this._chartW + 4).attr('y', y + 4)
-            .attr('fill', color).attr('font-size', '0.52rem')
-            .attr('font-family', 'var(--font-mono)')
-            .text(label)
-        }
+      const maxVm = allVm[1] ?? 100
+      const thrHfireMult = this.cellStore.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
 
-        // Reversible EP threshold at 50% of lysis threshold
-        const vmRev = vm * 0.5
-        if (vmRev <= maxVm) {
-          const yRev = this._yScale!(vmRev)
-          thrGroup.append('line')
-            .attr('x1', 0).attr('x2', this._chartW)
-            .attr('y1', yRev).attr('y2', yRev)
-            .attr('stroke', color).attr('stroke-width', 0.6)
-            .attr('stroke-dasharray', '3,4').attr('stroke-opacity', 0.28)
-          thrGroup.append('text')
-            .attr('x', this._chartW + 4).attr('y', yRev + 4)
-            .attr('fill', color).attr('font-size', '0.48rem')
-            .attr('font-family', 'var(--font-mono)')
-            .attr('opacity', 0.6)
-            .text(this.$t('chart.revEp'))
-        }
-      })
+      drawThresholds(
+        g.select<SVGGElement>('.thresholds'),
+        this._yScale!, this._chartW, maxVm,
+        [
+          { label: this.$t('chart.thrH'), vm: tempCorrectedVth(this.cellStore.healthy.thresholdVoltage, this.cellStore.healthyTemp) * thrHfireMult * 1000, color: C.primary },
+          { label: this.$t('chart.thrT'), vm: tempCorrectedVth(this.cellStore.target.thresholdVoltage,  this.cellStore.targetTemp)  * thrHfireMult * 1000, color: C.danger  },
+        ],
+        this.$t('chart.revEp'),
+      )
+    },
 
-      // fc markers
-      const fcGroup = g.select<SVGGElement>('.fc-markers')
-      fcGroup.selectAll('*').remove()
+    // ── Schwan: fc markers ────────────────────────────────────────────────
+    updateFcMarkers(g: d3.Selection<SVGGElement, unknown, null, undefined>, sigma_e: number) {
       const tauHNs = computeTau(this.cellStore.healthy, sigma_e) * 1e9
       const tauTNs = computeTau(this.cellStore.target,  sigma_e) * 1e9
-      const fcData = [
-        { fc: computeFc(this.cellStore.healthy, sigma_e), color: C.primary, label: this.$t('chart.fcH'), tauNs: tauHNs },
-        { fc: computeFc(this.cellStore.target,  sigma_e), color: C.danger,  label: this.$t('chart.fcT'), tauNs: tauTNs },
-      ]
-      // Build visible fc markers (within chart x domain)
-      const visibleFc = fcData
-        .map(({ fc, color, label, tauNs }) => {
-          const hz = fc * 1000
-          if (hz < F_MIN_HZ || hz > F_MAX_HZ) return null
-          const fcDisplay = fc >= 1000 ? `${(fc / 1000).toFixed(1)}M` : `${fc.toFixed(0)}k`
-          const tauDisplay = tauNs >= 1000
-            ? `τ=${(tauNs / 1000).toFixed(0)}${UNIT.US}`
-            : `τ=${tauNs.toFixed(0)}${UNIT.NS}`
-          return { x: this._xScale!(hz), color, label, fcDisplay, tauDisplay }
-        })
-        .filter(Boolean) as { x: number; color: string; label: string; fcDisplay: string; tauDisplay: string }[]
 
-      // When the two markers are within 52 px, flip text-anchor outward to avoid overlap
-      const MIN_GAP_PX = 52
-      const anchors: ('middle' | 'end' | 'start')[] = visibleFc.map(() => 'middle' as const)
-      if (visibleFc.length === 2) {
-        const v0 = visibleFc[0]!
-        const v1 = visibleFc[1]!
-        if (Math.abs(v0.x - v1.x) < MIN_GAP_PX) {
-          const [li, ri] = v0.x <= v1.x ? [0, 1] : [1, 0]
-          anchors[li] = 'end'
-          anchors[ri] = 'start'
-        }
-      }
-
-      visibleFc.forEach(({ x, color, label, fcDisplay, tauDisplay }, i) => {
-        const anchor: 'middle' | 'end' | 'start' = anchors[i] ?? 'middle'
-        fcGroup.append('text')
-          .attr('x', x).attr('y', this._chartH + 20)
-          .attr('text-anchor', 'middle')
-          .attr('fill', color).attr('font-size', '0.62rem')
-          .attr('font-family', 'var(--font-mono)')
-          .text(ICON.TRIANGLE_UP)
-        fcGroup.append('text')
-          .attr('x', x).attr('y', this._chartH + 34)
-          .attr('text-anchor', anchor)
-          .attr('fill', color).attr('font-size', '0.6rem')
-          .attr('font-family', 'var(--font-mono)')
-          .attr('letter-spacing', '0.03em')
-          .text(`${label} ${fcDisplay}`)
-        fcGroup.append('text')
-          .attr('x', x).attr('y', this._chartH + 46)
-          .attr('text-anchor', anchor)
-          .attr('fill', color).attr('font-size', '0.55rem')
-          .attr('font-family', 'var(--font-mono)')
-          .attr('opacity', 0.65)
-          .text(tauDisplay)
-      })
-
-      // Optimal frequency marker (golden dashed line + star label)
-      const optGroup = g.select<SVGGElement>('.opt-marker')
-      optGroup.selectAll('*').remove()
-      const optHz = computeOptimalFreqHz(this.cellStore.healthy, this.cellStore.target, this.cellStore.fieldIntensity, sigma_e)
-      if (optHz >= F_MIN_HZ && optHz <= F_MAX_HZ) {
-        const ox     = this._xScale!(optHz)
-        const optKhz = optHz / 1000
-        const hVmOpt = computeSchwan(this.cellStore.healthy, optKhz, this.cellStore.fieldIntensity, sigma_e)
-        const tVmOpt = computeSchwan(this.cellStore.target,  optKhz, this.cellStore.fieldIntensity, sigma_e)
-        const optSel = hVmOpt > 0 ? tVmOpt / hVmOpt : 0
-        const optLabel = optHz >= 1e6
-          ? `${ICON.STAR} ${(optHz / 1e6).toFixed(2)}M Vm×${optSel.toFixed(1)}`
-          : `${ICON.STAR} ${(optHz / 1e3).toFixed(0)}k Vm×${optSel.toFixed(1)}`
-        optGroup.append('line')
-          .attr('x1', ox).attr('x2', ox)
-          .attr('y1', 0).attr('y2', this._chartH)
-          .attr('stroke', C.amber).attr('stroke-width', 1)
-          .attr('stroke-dasharray', '3,4').attr('stroke-opacity', 0.45)
-        const optAnchor = ox < 60 ? 'start' : ox > this._chartW - 60 ? 'end' : 'middle'
-        const optTextX  = ox < 60 ? Math.max(4, ox) : ox > this._chartW - 60 ? Math.min(this._chartW - 4, ox) : ox
-        optGroup.append('text')
-          .attr('x', optTextX).attr('y', -5)
-          .attr('text-anchor', optAnchor)
-          .attr('fill', C.amber).attr('font-size', '0.7rem')
-          .attr('font-family', 'var(--font-mono)')
-          .attr('letter-spacing', '0.04em')
-          .text(optLabel)
-      }
-
-      this.updateCursor()
+      drawFcMarkers(
+        g.select<SVGGElement>('.fc-markers'),
+        this._xScale!, this._chartH,
+        [
+          { fc: computeFc(this.cellStore.healthy, sigma_e), color: C.primary, label: this.$t('chart.fcH'), tauNs: tauHNs },
+          { fc: computeFc(this.cellStore.target,  sigma_e), color: C.danger,  label: this.$t('chart.fcT'), tauNs: tauTNs },
+        ],
+      )
     },
 
     // ── Drag helpers ─────────────────────────────────────────────────────
 
-    // Convert a raw chart-space x coordinate to a clamped frequency [kHz]
     clampEventToKhz(eventX: number): number {
       const xClamped = Math.max(0, Math.min(this._chartW, eventX))
       const hz = this._xScale!.invert(xClamped)
       return Math.max(10, Math.min(F_CURSOR_MAX_KHZ, hz / 1000))
     },
 
-    // Throttle store + socket updates to one animation frame to avoid re-render storms
     scheduleDragUpdate(khz: number): void {
       this._pendingDragKhz = khz
       if (this._dragRafPending) return
@@ -913,7 +519,6 @@ export default defineComponent({
       })
     },
 
-    // Commit the latest pending frequency to the store and broadcast
     flushDragUpdate(): void {
       if (this._pendingDragKhz === null) return
       this.cellStore.setBroadcastFreqKHz(this._pendingDragKhz)
@@ -921,13 +526,12 @@ export default defineComponent({
       this._pendingDragKhz = null
     },
 
-    // ── Cursor-only update (cheap) ───────────────────────────────────────
+    // ── Cursor-only update (cheap — no curve recompute) ──────────────────
     updateCursor(overrideKhz?: number) {
       if (!this._svg || !this._xScale) return
       const g = this._svg.select<SVGGElement>('.chart-g')
       const freqKHz = overrideKhz ?? this.cellStore.currentBroadcastFrequency
       const hz = freqKHz * 1000
-      // Use dynamic domain (changes in resonance mode)
       const [domMin, domMax] = this._xScale.domain() as [number, number]
       const x = this._xScale(Math.max(domMin, Math.min(domMax, hz)))
 
@@ -952,68 +556,34 @@ export default defineComponent({
       if (!this._xScale || !this._yScale) return
       const [mx] = d3.pointer(event)
 
-      // Near the cursor line: show drag affordance, suppress tooltip
       const nearCursor = Math.abs(mx - this._cursorX) < 20
       const overlay = this._svg?.select<SVGRectElement>('.hover-overlay')
       overlay?.style('cursor', nearCursor ? 'ew-resize' : 'crosshair')
       if (nearCursor) { this._tooltipData = null; return }
+
       const hz = this._xScale.invert(mx)
-      const khz = hz / 1000
-      const sigma_e  = this.cellStore.effectiveSigmaE
-      const cosTheta = this.cellStore.cosThetaFactor
-      const cat = this.cellStore.targetCellCategory
-      const t = this.cellStore.target as { resonantFreqGHz?: number; capsidQ?: number; resonantThresholdVcm?: number }
-
-      // In resonance mode show DR (disruption ratio), not Vm - axes are incompatible
-      if (
-        this.cellStore.isResonanceMode &&
-        (cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) &&
-        t.resonantFreqGHz && t.resonantThresholdVcm
-      ) {
-        // hfireMult does NOT apply to acoustic resonance — mechanical disruption, not EP membrane charging.
-        const effThreshold = tempCorrectedVth(t.resonantThresholdVcm, this.cellStore.targetTemp)
-        const dr = computeResonantDisruption(
-          t.resonantFreqGHz,
-          t.capsidQ ?? DEFAULT_CAPSID_Q,
-          effThreshold,
-          hz,
-          this.cellStore.fieldIntensity,
-        )
-        const flipLeft = mx > (this._chartW ?? 0) * 0.55
-        this._tooltipData = {
-          x: mx, freqHz: hz, mode: 'resonance', healthyVm: 0, targetVm: 0, targetDR: dr,
-          healthyDRPct: 0, targetDRPct: dr * 100, selRatio: 0, inWindow: false, flipLeft,
-        }
-        return
-      }
-
-      const hfireMult = this.cellStore.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
-      const hVm = computeSchwan(this.cellStore.healthy, khz, this.cellStore.fieldIntensity, sigma_e, cosTheta) * 1000
-      const tVm = computeSchwan(this.cellStore.target,  khz, this.cellStore.fieldIntensity, sigma_e, cosTheta) * 1000
-      const hVthEffMv = tempCorrectedVth(this.cellStore.healthy.thresholdVoltage, this.cellStore.healthyTemp) * hfireMult * 1000
-      const tVthEffMv = tempCorrectedVth(this.cellStore.target.thresholdVoltage,  this.cellStore.targetTemp)  * hfireMult * 1000
-      const hDRPct  = (hVm * this.cellStore.pulseEnvelopeFactorHealthy / hVthEffMv) * 100
-      const tDRPct  = (tVm * this.cellStore.pulseEnvelopeFactorTarget  / tVthEffMv) * 100
-      const selRatio = hVm > 0.01 ? tVm / hVm : 0
-      const inWindow = tDRPct >= THRESHOLDS.DISRUPTION_WARN * 100 && hDRPct < THRESHOLDS.HEALTHY_APPROACHING * 100
-      const flipLeft = mx > (this._chartW ?? 0) * 0.55
-      const eps_r = MEDIA[this.cellStore.medium].permittivity
-      const depHealthyK = computeDepCmReal(this.cellStore.healthy, khz, sigma_e, eps_r)
-      const depTargetK  = computeDepCmReal(this.cellStore.target,  khz, sigma_e, eps_r)
-      this._tooltipData = {
-        x: mx, freqHz: hz, mode: 'schwan',
-        healthyVm: hVm, targetVm: tVm, targetDR: 0,
-        healthyDRPct: hDRPct, targetDRPct: tDRPct,
-        selRatio, inWindow, flipLeft,
-        depHealthyK, depTargetK,
-      }
+      this._tooltipData = buildHoverTooltip({
+        mx, chartW: this._chartW, hz,
+        healthy: this.cellStore.healthy,
+        target: this.cellStore.target,
+        fieldIntensity: this.cellStore.fieldIntensity,
+        effectiveSigmaE: this.cellStore.effectiveSigmaE,
+        cosThetaFactor: this.cellStore.cosThetaFactor,
+        medium: this.cellStore.medium,
+        waveform: this.cellStore.waveform,
+        healthyTemp: this.cellStore.healthyTemp,
+        targetTemp: this.cellStore.targetTemp,
+        pulseEnvelopeFactorHealthy: this.cellStore.pulseEnvelopeFactorHealthy,
+        pulseEnvelopeFactorTarget: this.cellStore.pulseEnvelopeFactorTarget,
+        targetCellCategory: this.cellStore.targetCellCategory,
+        isResonanceMode: this.cellStore.isResonanceMode,
+      })
     },
   },
 })
 </script>
 
 <style lang="scss" scoped>
-
 
 /* Expose group colors as CSS vars for the legend dots */
 .freq-chart {
