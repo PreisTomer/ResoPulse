@@ -67,6 +67,7 @@ import { mapStores } from 'pinia'
 import { useReplayStore } from '@/stores/replayStore'
 
 import { ICON } from '@/constants/icons'
+import { ROUTE } from '@/constants/routes'
 
 import type { WorkflowMeta } from './scripts/index'
 
@@ -90,6 +91,7 @@ export default defineComponent({
 
   computed: {
     ICON() { return ICON },
+    ROUTE() { return ROUTE },
     ...mapStores(useReplayStore),
 
     doi(): string {
@@ -126,7 +128,7 @@ export default defineComponent({
       const script = this.workflow.factory()
       this.replayStore.setPendingScript(script)
       this.$emit('close')
-      this.$router.push('/experiment')
+      this.$router.push(ROUTE.EXPERIMENT)
     },
   },
 })

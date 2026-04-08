@@ -47,8 +47,10 @@
 
         <div class="home__hero-pitch">
           <div class="home__eyebrow">
-            <span class="home__eyebrow-dot"></span>
-            {{ $t('home.eyebrow') }}
+            <template v-for="(item, i) in eyebrowItems" :key="item">
+              <span class="home__eyebrow-item">{{ item }}</span>
+              <span v-if="i < eyebrowItems.length - 1" class="home__eyebrow-sep" aria-hidden="true">•</span>
+            </template>
           </div>
           <div class="home__tagline-group">
             <p class="home__tagline">{{ $t('home.tagline1a') }}<strong class="home__tagline-highlight">{{ $t('home.tagline1Highlight') }}</strong>{{ $t('home.tagline1b') }}</p>
@@ -58,10 +60,10 @@
 
         <div class="home__hero-cta">
           <div class="home__actions">
-            <RouterLink to="/experiment" class="home__btn home__btn--primary">
+            <RouterLink :to="ROUTE.EXPERIMENT" class="home__btn home__btn--primary">
               {{ $t('home.btnPrimary') }} <span class="home__btn-arrow">{{ ICON.ARROW_R }}</span>
             </RouterLink>
-            <RouterLink to="/protocol" class="home__btn home__btn--ghost">
+            <RouterLink :to="ROUTE.PROTOCOL" class="home__btn home__btn--ghost">
               {{ $t('home.btnGhost') }} <span class="home__btn-arrow">{{ ICON.ARROW_R }}</span>
             </RouterLink>
           </div>
@@ -76,7 +78,7 @@
         <!-- Physics illustration strip (hidden on small screens) -->
         <div class="home__science-strip">
 
-          <RouterLink to="/experiment" class="home__sci-panel" v-tip="$t('home.tipSciCell')">
+          <RouterLink :to="ROUTE.EXPERIMENT" class="home__sci-panel" v-tip="$t('home.tipSciCell')">
             <div class="home__sci-meta">
               <span class="home__sci-meta-id">{{ $t('home.sciCellMetaId') }}</span>
               <span class="home__sci-meta-status">{{ $t('home.sciCellMetaStatus') }}</span>
@@ -91,7 +93,7 @@
 
           <div class="home__sci-divider" aria-hidden="true"></div>
 
-          <RouterLink to="/experiment" class="home__sci-panel" v-tip="$t('home.tipSciChart')">
+          <RouterLink :to="ROUTE.EXPERIMENT" class="home__sci-panel" v-tip="$t('home.tipSciChart')">
             <div class="home__sci-meta">
               <span class="home__sci-meta-id">{{ $t('home.sciChartMetaId') }}</span>
               <span class="home__sci-meta-status">{{ $t('home.sciChartMetaStatus') }}</span>
@@ -149,7 +151,7 @@
 
           <!-- Selectivity preview — animated sweep shows the platform's core value visually -->
           <RouterLink
-            to="/experiment"
+            :to="ROUTE.EXPERIMENT"
             class="home__feature-card home__feature-card--sel"
             :class="{
               'home__feature-card--sel-win': selInWindow,
@@ -243,6 +245,7 @@ import { mapStores } from 'pinia'
 import { useUiStore } from '@/stores/uiStore'
 
 import { ICON } from '@/constants/icons'
+import { ROUTE } from '@/constants/routes'
 
 import HeroRingsSvg from './HeroRingsSvg.vue'
 import CellIllustrationSvg from './CellIllustrationSvg.vue'
@@ -271,12 +274,12 @@ export default defineComponent({
 
       featureCards: [
         // Row 1 — core science workflow
-        { to: '/experiment', icon: ICON.FLASK,   titleKey: 'card1Title', descKey: 'card1Desc', tagKey: 'card1Tag', primary: true },
-        { to: '/datasets',   icon: ICON.GRID,    titleKey: 'card4Title', descKey: 'card4Desc', tagKey: 'card4Tag', primary: false },
-        { to: '/protocol',   icon: ICON.SECTION, titleKey: 'card5Title', descKey: 'card5Desc', tagKey: 'card5Tag', primary: false },
+        { to: ROUTE.EXPERIMENT, icon: ICON.FLASK,   titleKey: 'card1Title', descKey: 'card1Desc', tagKey: 'card1Tag', primary: true },
+        { to: ROUTE.DATASETS,   icon: ICON.GRID,    titleKey: 'card4Title', descKey: 'card4Desc', tagKey: 'card4Tag', primary: false },
+        { to: ROUTE.PROTOCOL,   icon: ICON.SECTION, titleKey: 'card5Title', descKey: 'card5Desc', tagKey: 'card5Tag', primary: false },
         // Row 2 — tooling & output
-        { to: '/instrument', icon: ICON.PLUG,    titleKey: 'card2Title', descKey: 'card2Desc', tagKey: 'card2Tag', primary: false },
-        { to: '/reports',    icon: ICON.CELL,    titleKey: 'card3Title', descKey: 'card3Desc', tagKey: 'card3Tag', primary: false },
+        { to: ROUTE.INSTRUMENT, icon: ICON.PLUG,    titleKey: 'card2Title', descKey: 'card2Desc', tagKey: 'card2Tag', primary: false },
+        { to: ROUTE.REPORTS,    icon: ICON.CELL,    titleKey: 'card3Title', descKey: 'card3Desc', tagKey: 'card3Tag', primary: false },
       ],
 
       scopeTags: [
@@ -321,7 +324,12 @@ export default defineComponent({
 
   computed: {
     ICON() { return ICON },
+    ROUTE() { return ROUTE },
     ...mapStores(useUiStore),
+
+    eyebrowItems(): string[] {
+      return (this.$tm as Function)('home.eyebrowItems') as string[]
+    },
 
     selSliderPct(): number {
       return Math.round(this.selProgress * 100)

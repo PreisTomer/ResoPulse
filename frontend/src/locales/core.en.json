@@ -392,6 +392,16 @@
     "cancelBtn": "← Go back",
     "enterBtn": "Enter Experiment Lab"
   },
+  "litStrip": {
+    "prefix": "Physics grounded in:",
+    "schwan":     "Schwan 1957",
+    "weaver":     "Weaver & Chizmadzhev 1996",
+    "kotnik":     "Kotnik & Miklavcic 2000",
+    "pennes":     "Pennes 1948",
+    "dykeman":    "Dykeman & Sankey 2010",
+    "viewAll":    "All references",
+    "ariaLabel":  "Literature grounding strip"
+  },
   "guide": {
     "tabLabel": "Guide",
     "tabExpandTip": "Open protocol step guide",

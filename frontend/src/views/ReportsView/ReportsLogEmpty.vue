@@ -6,7 +6,7 @@
     <p class="reports-log-empty__sub">
       {{ $t('reports.emptySub') }}
     </p>
-    <RouterLink to="/experiment" class="reports-log-empty__btn">
+    <RouterLink :to="ROUTE.EXPERIMENT" class="reports-log-empty__btn">
       {{ $t('reports.emptyBtn') }}
     </RouterLink>
   </div>
@@ -15,8 +15,14 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 
+import { ROUTE } from '@/constants/routes'
+
 export default defineComponent({
   name: 'ReportsLogEmpty',
+
+  computed: {
+    ROUTE() { return ROUTE },
+  },
 })
 </script>
 

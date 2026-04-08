@@ -20,6 +20,7 @@ import { defineComponent, type PropType } from 'vue'
 import { useUiStore } from '@/stores/uiStore'
 
 import { scrollAndHighlight } from '@/utils/highlight'
+import { ROUTE } from '@/constants/routes'
 export default defineComponent({
   name: 'ProtocolSectionSteps',
 
@@ -38,7 +39,7 @@ export default defineComponent({
       e.preventDefault()
 
       const targetId = link.dataset.target ?? ''
-      const route    = link.dataset.route  ?? '/experiment'
+      const route    = link.dataset.route  ?? ROUTE.EXPERIMENT
 
       if (this.$route.path === route) {
         scrollAndHighlight(targetId)

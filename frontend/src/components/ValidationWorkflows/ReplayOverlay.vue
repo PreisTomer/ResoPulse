@@ -51,7 +51,7 @@
               {{ $t('validate.resultCtaExamine') }}
             </button>
           </div>
-          <RouterLink to="/experiment" class="replay-overlay__action-btn replay-overlay__action-btn--primary replay-overlay__action-btn--full" @click="onExperiment">
+          <RouterLink :to="ROUTE.EXPERIMENT" class="replay-overlay__action-btn replay-overlay__action-btn--primary replay-overlay__action-btn--full" @click="onExperiment">
             {{ $t('validate.resultCtaExperiment') }}
             <span class="replay-overlay__btn-arrow">{{ ICON.ARROW_R }}</span>
           </RouterLink>
@@ -72,6 +72,7 @@ import { useCellStore } from '@/stores/cellStore'
 import { useUiStore } from '@/stores/uiStore'
 
 import { ICON } from '@/constants/icons'
+import { ROUTE } from '@/constants/routes'
 
 import { cellConfigs } from '@/constants/defaultCells'
 
@@ -82,6 +83,7 @@ export default defineComponent({
 
   computed: {
     ICON() { return ICON },
+    ROUTE() { return ROUTE },
     ...mapStores(useReplayStore, useCellStore, useUiStore),
 
     isVisible(): boolean {

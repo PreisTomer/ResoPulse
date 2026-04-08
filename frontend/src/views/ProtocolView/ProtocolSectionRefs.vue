@@ -3,7 +3,7 @@
   <section id="refs" class="protocol__section">
     <h2 class="protocol__section-title" v-html="$t('protocol.refs.title')"></h2>
     <ol class="protocol__refs-list">
-      <li v-for="(ref, i) in refList" :key="i" class="protocol__ref-item">
+      <li v-for="(ref, i) in refList" :key="i" :id="'ref-' + (i + 1)" class="protocol__ref-item">
         <span class="protocol__ref-num">[{{ i + 1 }}]</span>
         <span class="protocol__ref-body">
           <span v-html="ref.body"></span>

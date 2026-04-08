@@ -27,12 +27,12 @@
           />
           <span class="terms-gate__check-label">
             {{ $t('termsGate.checkLabel') }}
-            <RouterLink to="/terms" class="terms-gate__link" target="_blank">{{ $t('termsGate.termsLink') }}</RouterLink>
+            <RouterLink :to="ROUTE.TERMS" class="terms-gate__link" target="_blank">{{ $t('termsGate.termsLink') }}</RouterLink>
           </span>
         </label>
 
         <div class="terms-gate__actions">
-          <RouterLink to="/" class="terms-gate__cancel">{{ $t('termsGate.cancelBtn') }}</RouterLink>
+          <RouterLink :to="ROUTE.HOME" class="terms-gate__cancel">{{ $t('termsGate.cancelBtn') }}</RouterLink>
           <button
             class="terms-gate__btn"
             :class="{ 'terms-gate__btn--ready': agreed }"
@@ -50,12 +50,17 @@
 import { defineComponent } from 'vue'
 
 import { EMIT } from '@/constants/emitEvents'
+import { ROUTE } from '@/constants/routes'
 const STORAGE_KEY = 'rp_terms_v1'
 
 export default defineComponent({
   name: 'TermsGate',
 
   emits: [EMIT.ACCEPTED],
+
+  computed: {
+    ROUTE() { return ROUTE },
+  },
 
   data() {
     return {

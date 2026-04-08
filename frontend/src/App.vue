@@ -3,6 +3,7 @@
   <div id="layout">
     <NavBar />
     <ModeBanner />
+    <LiteratureStrip v-if="$route.path === ROUTE.HOME" />
     <main>
       <RouterView />
     </main>
@@ -10,7 +11,7 @@
     <TermsGate v-if="showTermsGate" @accepted="onTermsAccepted" />
     <footer class="app-footer">
       <span class="app-footer__copy">© 2026 Tomer Preis. All rights reserved.</span>
-      <RouterLink to="/terms" class="app-footer__link">Terms of Use</RouterLink>
+      <RouterLink :to="ROUTE.TERMS" class="app-footer__link">Terms of Use</RouterLink>
     </footer>
   </div>
 </template>
@@ -20,13 +21,17 @@ import { defineComponent } from 'vue'
 
 import NavBar from './components/NavBar.vue'
 import ModeBanner from './components/ModeBanner.vue'
+import LiteratureStrip from './components/LiteratureStrip.vue'
 import TermsGate from './components/TermsGate.vue'
 import ProtocolGuidePanel from './components/ExperimentLab/ProtocolGuidePanel.vue'
 import { useThemeStore } from './stores/themeStore'
+
+import { ROUTE } from './constants/routes'
+
 const TERMS_KEY = 'rp_terms_v1'
 
 export default defineComponent({
-  components: { NavBar, ModeBanner, TermsGate, ProtocolGuidePanel },
+  components: { NavBar, ModeBanner, LiteratureStrip, TermsGate, ProtocolGuidePanel },
 
   setup() {
     return { themeStore: useThemeStore() }
@@ -39,12 +44,14 @@ export default defineComponent({
   },
 
   computed: {
+    ROUTE() { return ROUTE },
+
     showTermsGate(): boolean {
-      return !this.termsAccepted && this.$route.path === '/experiment'
+      return !this.termsAccepted && this.$route.path === ROUTE.EXPERIMENT
     },
 
     showGuidePanel(): boolean {
-      return ['/experiment', '/instrument', '/reports'].includes(this.$route.path)
+      return ([ROUTE.EXPERIMENT, ROUTE.INSTRUMENT, ROUTE.REPORTS] as string[]).includes(this.$route.path)
     },
   },
 

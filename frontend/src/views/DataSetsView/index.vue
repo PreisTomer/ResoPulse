@@ -32,7 +32,7 @@
       <DatasetsThresholds />
 
       <div class="datasets__open-lab">
-        <RouterLink to="/experiment" class="datasets__btn-lab">
+        <RouterLink :to="ROUTE.EXPERIMENT" class="datasets__btn-lab">
           {{ $t('datasets.cta.btnLab') }}
         </RouterLink>
         <span class="datasets__open-lab-note">{{ $t('datasets.cta.note') }}</span>
@@ -52,6 +52,7 @@ import { membraneCm, computeFc, computeTau, computeNuclearTau, computeDepCrossov
 import { CELL_PRESETS, GROUP_COLORS, GROUP_LABELS, type CellGroup } from '@/constants/cellLibrary'
 import { MEDIA } from '@/constants/media'
 import { CELL_GROUP, NULL_DISPLAY } from '@/constants/strings'
+import { ROUTE } from '@/constants/routes'
 import { UNIT } from '@/constants/units'
 import { SCHWAN_SPHERE_FACTOR } from '@/constants/physics'
 
@@ -176,6 +177,8 @@ export default defineComponent({
   },
 
   computed: {
+    ROUTE() { return ROUTE },
+
     groups(): CellGroup[] {
       return ALL_GROUPS
     },

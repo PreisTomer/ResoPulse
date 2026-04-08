@@ -21,7 +21,7 @@
       {{ $t('reports.footnote') }}
     </span>
     <RouterLink
-      to="/instrument"
+      :to="ROUTE.INSTRUMENT"
       class="reports-log-legend__item reports-log-legend__instrument-link"
       :title="$t('reports.instrumentLinkTitle')"
     >
@@ -35,11 +35,13 @@ import { defineComponent } from 'vue'
 
 import { THRESHOLDS } from '@/constants/physics'
 import { ICON } from '@/constants/icons'
+import { ROUTE } from '@/constants/routes'
 export default defineComponent({
   name: 'ReportsLogLegend',
 
   computed: {
     ICON() { return ICON },
+    ROUTE() { return ROUTE },
     THRESHOLDS() { return THRESHOLDS },
   },
 })

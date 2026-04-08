@@ -1,8 +1,8 @@
 {
   "home": {
-    "eyebrow": "Bioelectric Field Research · Electroporation · Resonance Modeling",
+    "eyebrowItems": ["Schwan Equation", "IRE / nsEP", "Acoustic Resonance", "DEP Crossover", "SAR Bioheat"],
     "subtitle": "Virtual Biophysics Engine",
-    "tagline1a": "The only real-time workspace where transmembrane voltage, disruption ratio, SAR, and DEP force update live as you tune. Instantly identify the ",
+    "tagline1a": "Design electroporation and acoustic resonance protocols with live Schwan-equation physics. Instantly identify the ",
     "tagline1Highlight": "Window of Selectivity",
     "tagline1b": ": the\u00a0exact frequency where target cells lyse while healthy cells survive.",
     "tagline2": "Nine peer-reviewed physics models, an AI optimizer, and live hardware impedance feedback, all in one workspace. Design your protocol in silico, then export a complete Materials and Methods section ready for publication.",

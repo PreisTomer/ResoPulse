@@ -3,7 +3,7 @@
   <header class="nav-bar">
     <div class="nav-bar__inner">
 
-      <RouterLink to="/" class="nav-bar__brand" @click="mobileOpen = false">
+      <RouterLink :to="ROUTE.HOME" class="nav-bar__brand" @click="mobileOpen = false">
         <div class="nav-bar__brand-logo">
           <img src="/logo.png" :alt="$t('nav.logoAlt')" />
         </div>
@@ -75,13 +75,16 @@ import { mapStores } from 'pinia'
 
 import { useCellStore } from '@/stores/cellStore'
 import { useThemeStore } from '@/stores/themeStore'
+
+import { ROUTE } from '@/constants/routes'
+
 const NAV_LINKS = [
-  { to: '/',           labelKey: 'nav.home',       exact: true },
-  { to: '/experiment', labelKey: 'nav.experiment',  exact: false },
-  { to: '/datasets',   labelKey: 'nav.dataSets',    exact: false },
-  { to: '/instrument', labelKey: 'nav.instrument',  exact: false },
-  { to: '/reports',    labelKey: 'nav.reports',     exact: false },
-  { to: '/protocol',   labelKey: 'nav.protocol',    exact: false },
+  { to: ROUTE.HOME,       labelKey: 'nav.home',      exact: true },
+  { to: ROUTE.EXPERIMENT, labelKey: 'nav.experiment', exact: false },
+  { to: ROUTE.DATASETS,   labelKey: 'nav.dataSets',   exact: false },
+  { to: ROUTE.INSTRUMENT, labelKey: 'nav.instrument', exact: false },
+  { to: ROUTE.REPORTS,    labelKey: 'nav.reports',    exact: false },
+  { to: ROUTE.PROTOCOL,   labelKey: 'nav.protocol',   exact: false },
 ]
 
 export default defineComponent({
@@ -92,6 +95,7 @@ export default defineComponent({
   },
 
   computed: {
+    ROUTE() { return ROUTE },
     ...mapStores(useCellStore),
     themeStore() { return useThemeStore() },
 

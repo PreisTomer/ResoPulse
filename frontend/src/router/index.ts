@@ -3,37 +3,18 @@
 
 import { createRouter, createWebHistory } from 'vue-router'
 
+import { ROUTE } from '@/constants/routes'
+
 export default createRouter({
   history: createWebHistory(),
   scrollBehavior: () => ({ top: 0 }),
   routes: [
-    {
-      path: '/',
-      component: () => import('../views/HomeView/index.vue'),
-    },
-    {
-      path: '/experiment',
-      component: () => import('../views/ExperimentView.vue'),
-    },
-    {
-      path: '/datasets',
-      component: () => import('../views/DataSetsView/index.vue'),
-    },
-    {
-      path: '/reports',
-      component: () => import('../views/ReportsView/index.vue'),
-    },
-    {
-      path: '/protocol',
-      component: () => import('../views/ProtocolView/index.vue'),
-    },
-    {
-      path: '/instrument',
-      component: () => import('../views/InstrumentView.vue'),
-    },
-    {
-      path: '/terms',
-      component: () => import('../views/TermsView.vue'),
-    },
+    { path: ROUTE.HOME,       component: () => import('../views/HomeView/index.vue') },
+    { path: ROUTE.EXPERIMENT, component: () => import('../views/ExperimentView.vue') },
+    { path: ROUTE.DATASETS,   component: () => import('../views/DataSetsView/index.vue') },
+    { path: ROUTE.REPORTS,    component: () => import('../views/ReportsView/index.vue') },
+    { path: ROUTE.PROTOCOL,   component: () => import('../views/ProtocolView/index.vue') },
+    { path: ROUTE.INSTRUMENT, component: () => import('../views/InstrumentView.vue') },
+    { path: ROUTE.TERMS,      component: () => import('../views/TermsView.vue') },
   ],
 })

@@ -134,17 +134,16 @@
   /* ── Typography ──────────────────────────────────────────────── */
   &__eyebrow {
     @include flex-row(0.5rem);
-    @include mono-upper(var(--fs-sm), 0.14em);
+    @include mono-upper(var(--fs-md), 0.12em);
     color: var(--color-primary);
     flex-wrap: wrap;
     justify-content: center;
 
-    &-dot {
-      width: 6px; height: 6px;
-      border-radius: 50%;
-      background-color: var(--color-primary);
-      box-shadow: var(--glow-sm);
-      animation: blink 2s ease-in-out infinite;
+    &-item { white-space: nowrap; }
+
+    &-sep {
+      font-size: 1em;
+      opacity: var(--op-dim);
       flex-shrink: 0;
     }
   }

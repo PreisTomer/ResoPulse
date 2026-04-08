@@ -126,7 +126,7 @@
     <div class="experiment__header-right">
       <RouterLink
         v-if="showZDriftBadge"
-        to="/instrument"
+        :to="ROUTE.INSTRUMENT"
         class="experiment__z-drift-badge"
         v-tip="$t('exp.zDriftTip')"
       >
@@ -174,6 +174,7 @@ import type { CellPreset, CellGroup } from '@/constants/cellLibrary'
 import { CELL_GROUP } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
 import { EMIT } from '@/constants/emitEvents'
+import { ROUTE } from '@/constants/routes'
 
 export default defineComponent({
   name: 'ExperimentHeader',
@@ -197,6 +198,7 @@ export default defineComponent({
   computed: {
     ICON() { return ICON },
     EMIT() { return EMIT },
+    ROUTE() { return ROUTE },
     ...mapStores(useCellStore, useImpedanceStore, useUserPresetsStore),
 
     showZDriftBadge(): boolean {

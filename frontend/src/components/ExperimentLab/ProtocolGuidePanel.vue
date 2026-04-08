@@ -76,6 +76,7 @@ import { useUiStore } from '@/stores/uiStore'
 import { scrollAndHighlight } from '@/utils/highlight'
 
 import { ICON } from '@/constants/icons'
+import { ROUTE } from '@/constants/routes'
 
 import SideTabPanel from './SideTabPanel.vue'
 
@@ -121,7 +122,7 @@ export default defineComponent({
       if (!link) return
       e.preventDefault()
       const targetId = link.dataset.target ?? ''
-      const route    = link.dataset.route  ?? '/experiment'
+      const route    = link.dataset.route  ?? ROUTE.EXPERIMENT
       if (this.$route.path === route) {
         if (targetId) scrollAndHighlight(targetId)
       } else {

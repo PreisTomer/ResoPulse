@@ -57,7 +57,7 @@
       </section>
 
       <div class="terms__footer">
-        <RouterLink to="/" class="terms__back">← Back to ResoPulse</RouterLink>
+        <RouterLink :to="ROUTE.HOME" class="terms__back">← Back to ResoPulse</RouterLink>
         <span class="terms__copy">© 2026 Tomer Preis. All rights reserved.</span>
       </div>
 
@@ -68,8 +68,14 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 
+import { ROUTE } from '@/constants/routes'
+
 export default defineComponent({
   name: 'TermsView',
+
+  computed: {
+    ROUTE() { return ROUTE },
+  },
 })
 </script>
 

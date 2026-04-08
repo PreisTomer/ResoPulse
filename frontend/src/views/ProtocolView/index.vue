@@ -69,6 +69,8 @@ import PageHeader from '@/components/PageHeader.vue'
 
 import { ICON } from '@/constants/icons'
 
+import { scrollAndHighlight } from '@/utils/highlight'
+
 import ProtocolToc from './ProtocolToc.vue'
 import ProtocolSectionOverview from './ProtocolSectionOverview.vue'
 import ProtocolSectionPhysics from './ProtocolSectionPhysics.vue'
@@ -199,6 +201,12 @@ export default defineComponent({
     },
   },
 
+  watch: {
+    '$route.hash'(hash: string) {
+      this.scrollToRefHash(hash)
+    },
+  },
+
   mounted() {
     const handler = () => {
       let current: string = ALL_SECTION_IDS[0]
@@ -213,6 +221,9 @@ export default defineComponent({
     window.addEventListener('scroll', handler, { passive: true })
     handler()
     this._scrollHandler = handler
+
+    // Deep-link from LiteratureStrip: scroll to and highlight the specific reference item.
+    this.scrollToRefHash(this.$route.hash)
   },
 
   beforeUnmount() {
@@ -222,6 +233,19 @@ export default defineComponent({
   methods: {
     isTocActive(item: TocItem): boolean {
       return item.physicsParent ? this.isPhysicsActive : this.activeSection === item.id
+    },
+
+    scrollToRefHash(hash: string): void {
+      if (!hash.startsWith('#ref')) return
+      const id = hash.slice(1)
+      if (id === 'refs') {
+        // Section-level link — scroll only, no highlight animation.
+        setTimeout(() => {
+          document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }, 400)
+      } else {
+        scrollAndHighlight(id, 400)
+      }
     },
   },
 })
