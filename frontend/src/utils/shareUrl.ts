@@ -34,7 +34,9 @@ export function buildShareUrl(): string {
     healthyPresetId:     store.healthy.id,
     sessionName:         expStore.sessionName,
   }
-  const encoded = btoa(JSON.stringify(packet))
+  // encodeURIComponent converts non-ASCII (emoji, accented chars) to percent-encoded
+  // ASCII before btoa, preventing the btoa "not latin1" exception on unusual session names.
+  const encoded = btoa(encodeURIComponent(JSON.stringify(packet)))
   const url     = new URL(ROUTE.EXPERIMENT, window.location.origin)
   url.searchParams.set(SHARE_PARAM, encoded)
   return url.toString()
@@ -48,7 +50,7 @@ export function parseShareParam(search: string): StatePacket | null {
   const param = new URLSearchParams(search).get(SHARE_PARAM)
   if (!param) return null
   try {
-    return JSON.parse(atob(param)) as StatePacket
+    return JSON.parse(decodeURIComponent(atob(param))) as StatePacket
   } catch {
     return null
   }

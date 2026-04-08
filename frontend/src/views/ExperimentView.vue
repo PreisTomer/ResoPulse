@@ -391,7 +391,7 @@ export default defineComponent({
     const sharedPacket = parseShareParam(window.location.search)
     if (sharedPacket) {
       this.cellStore.handleStatePacket(sharedPacket)
-      this.$router.replace(this.$route.path)
+      this.$router.replace({ path: this.$route.path, hash: this.$route.hash })
     }
 
     // Sanitize time-domain params for the current category without resetting
@@ -424,6 +424,7 @@ export default defineComponent({
 
   beforeUnmount() {
     if (this.doseTimer !== null) clearInterval(this.doseTimer)
+    if (this._sweepNullTimer !== null) clearTimeout(this._sweepNullTimer)
     this.cellsObserver?.disconnect()
   },
 })

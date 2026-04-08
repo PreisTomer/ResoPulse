@@ -141,6 +141,7 @@ export default defineComponent({
       tocMobileOpen:     false,
       showFeedbackModal: false,
       _scrollHandler:    null as EventListener | null,
+      _refScrollTimer:   null as ReturnType<typeof setTimeout> | null,
     }
   },
 
@@ -228,6 +229,7 @@ export default defineComponent({
 
   beforeUnmount() {
     if (this._scrollHandler) window.removeEventListener('scroll', this._scrollHandler)
+    if (this._refScrollTimer) clearTimeout(this._refScrollTimer)
   },
 
   methods: {
@@ -240,7 +242,8 @@ export default defineComponent({
       const id = hash.slice(1)
       if (id === 'refs') {
         // Section-level link — scroll only, no highlight animation.
-        setTimeout(() => {
+        this._refScrollTimer = setTimeout(() => {
+          this._refScrollTimer = null
           document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
         }, 400)
       } else {

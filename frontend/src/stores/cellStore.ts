@@ -5,13 +5,15 @@ import { defineStore } from 'pinia'
 
 import { cloneDeep } from 'lodash'
 
+import { useExperimentStore } from '@/stores/experimentStore'
+
 import { computeSchwan, computeSAR, computeFc, computeTau, computeNuclearTau, computeResonantDisruption, computeNuclearVm, computePulseStepResponse, computeSkinDepthMm, computeDepCmReal, computeDepCrossoverKHz, computeDepSecondCrossoverKHz, computePopulationLysisFraction, safeRatio, tempCorrectedVth } from '@/utils/physics'
 
 import { cellConfigs } from '@/constants/defaultCells'
 import { CELL_PRESETS } from '@/constants/cellLibrary'
 import { MEDIA } from '@/constants/media'
 import { SLIDER_RANGES, type SliderRange } from '@/constants/sliderBounds'
-import { CELL_CATEGORY, CELL_STATE, CHART_MODE, WAVEFORM, CELL_TYPE, FREQ_REGIME, DEFAULT_SESSION_NAME } from '@/constants/strings'
+import { CELL_CATEGORY, CELL_STATE, CHART_MODE, WAVEFORM, CELL_TYPE, FREQ_REGIME } from '@/constants/strings'
 import { DEFAULT_LYSIS_N_PULSES, DEFAULT_ORIENTATION_DEG } from '@/constants/experimentDefaults'
 import { MEDIUM_SPECIFIC_HEAT_J_KG_K } from '@/constants/cuvette'
 import {
@@ -137,7 +139,6 @@ interface CellStoreState {
   doubleShellEnabled: boolean     // two-shell nuclear envelope model (Kotnik 2006)
   perfusionRate: number           // ω_b [mL/(g·min)]; 0 = in vitro
   cellPackingFraction: number     // φ [0-0.9]; Maxwell-Garnett σ_e correction
-  sessionName: string             // user-editable experiment session label
   tempTimer: ReturnType<typeof setInterval> | null
   resetCounter: number
   healthyCellState: CellState
@@ -162,7 +163,6 @@ export const useCellStore = defineStore('cell', {
     doubleShellEnabled: false,     // double-shell model off by default
     perfusionRate: 0,              // mL/(g·min); 0 = isolated cell / in-vitro default
     cellPackingFraction: 0,        // φ = 0 (isolated cell); set >0 for dense tissue context
-    sessionName: DEFAULT_SESSION_NAME,
     tempTimer: null,
     resetCounter: 0,
     healthyCellState: 'stable' as CellState,
@@ -767,7 +767,7 @@ export const useCellStore = defineStore('cell', {
       this.cellPackingFraction = packet.cellPackingFraction
       this.loadPresetIfNeeded('target',  packet.targetPresetId)
       this.loadPresetIfNeeded('healthy', packet.healthyPresetId)
-      if (packet.sessionName) this.sessionName = packet.sessionName
+      if (packet.sessionName) useExperimentStore().setSessionName(packet.sessionName)
     },
 
     loadPresetIfNeeded(cellType: 'healthy' | 'target', presetId: string) {

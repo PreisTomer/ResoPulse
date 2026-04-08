@@ -5,7 +5,7 @@
     <!-- Far left: session name -->
     <div class="experiment__header-left">
       <input
-        v-model="cellStore.sessionName"
+        v-model="experimentStore.sessionName"
         class="experiment__session-name"
         spellcheck="false"
         :title="$t('exp.renameSession')"
@@ -168,6 +168,7 @@ import { defineComponent } from 'vue'
 import { mapStores } from 'pinia'
 
 import { useCellStore } from '@/stores/cellStore'
+import { useExperimentStore } from '@/stores/experimentStore'
 import { useImpedanceStore } from '@/stores/impedanceStore'
 import { useUserPresetsStore } from '@/stores/userPresetsStore'
 import type { UserCellPreset } from '@/stores/userPresetsStore'
@@ -212,7 +213,7 @@ export default defineComponent({
     ICON() { return ICON },
     EMIT() { return EMIT },
     ROUTE() { return ROUTE },
-    ...mapStores(useCellStore, useImpedanceStore, useUserPresetsStore),
+    ...mapStores(useCellStore, useExperimentStore, useImpedanceStore, useUserPresetsStore),
 
     showZDriftBadge(): boolean {
       return Math.abs(this.impedanceStore.impedanceDriftPct) > 5

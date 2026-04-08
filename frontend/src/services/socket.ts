@@ -72,14 +72,10 @@ export async function connectSocket(): Promise<void> {
     socketConnected.value = false
   })
 
-  // Another client changed experiment state - apply to local stores
+  // Another client changed experiment state — handleStatePacket applies all fields
+  // including sessionName (delegated internally to experimentStore)
   socket.on(SOCKET_EVENTS.STATE_UPDATE, (packet: StatePacket) => {
-    const store    = useCellStore()
-    const expStore = useExperimentStore()
-    store.handleStatePacket(packet)
-    if (packet.sessionName && expStore.sessionName !== packet.sessionName) {
-      expStore.setSessionName(packet.sessionName)
-    }
+    useCellStore().handleStatePacket(packet)
   })
 
   // Another client logged an entry - append locally without re-broadcasting
