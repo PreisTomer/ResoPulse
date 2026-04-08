@@ -24,7 +24,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue'
+import { defineComponent, markRaw } from 'vue'
 import { mapStores } from 'pinia'
 
 import * as d3 from 'd3'
@@ -95,10 +95,10 @@ export default defineComponent({
   },
 
   mounted() {
-    this._resizeObserver = new ResizeObserver(() => {
+    this._resizeObserver = markRaw(new ResizeObserver(() => {
       this.initChart()
       this.updateChart()
-    })
+    }))
     const el = this.$refs.chartEl as HTMLElement
     if (el) this._resizeObserver.observe(el)
   },
@@ -147,19 +147,19 @@ export default defineComponent({
         .attr('width', totalW)
         .attr('height', totalH)
 
-      this._svg = svgEl
+      this._svg = markRaw(svgEl)
 
       const g = svgEl.append('g')
         .attr('transform', `translate(${MARGIN.left},${MARGIN.top})`)
         .attr('class', 'chart-g')
 
       // Scales
-      this._xScale = d3.scaleLog()
+      this._xScale = markRaw(d3.scaleLog()
         .domain([F_MIN_HZ, F_MAX_HZ])
-        .range([0, this._chartW])
-      this._yScale = d3.scaleLinear()
+        .range([0, this._chartW]))
+      this._yScale = markRaw(d3.scaleLinear()
         .domain([0, Y_MAX])
-        .range([this._chartH, 0])
+        .range([this._chartH, 0]))
 
       // Disruption zone shading (above threshold = 1.0)
       const yThresh = this._yScale(1.0)

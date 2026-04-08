@@ -24,7 +24,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue'
+import { defineComponent, markRaw } from 'vue'
 import { mapStores } from 'pinia'
 
 import * as d3 from 'd3'
@@ -93,10 +93,10 @@ export default defineComponent({
   },
 
   mounted() {
-    this._resizeObserver = new ResizeObserver(() => {
+    this._resizeObserver = markRaw(new ResizeObserver(() => {
       this.initChart()
       this.updateChart()
-    })
+    }))
     const el = this.$refs.chartEl as HTMLElement
     if (el) this._resizeObserver.observe(el)
   },
@@ -129,9 +129,9 @@ export default defineComponent({
         .attr('height', totalH)
         .style('overflow', 'hidden')
 
-      this._svg    = svgEl
-      this._xScale = d3.scaleLog().domain([F_MIN_HZ, F_MAX_HZ]).range([0, this._chartW])
-      this._yScale = d3.scaleLinear().domain([0, Y_MIN_MAX]).range([this._chartH, 0])
+      this._svg    = markRaw(svgEl)
+      this._xScale = markRaw(d3.scaleLog().domain([F_MIN_HZ, F_MAX_HZ]).range([0, this._chartW]))
+      this._yScale = markRaw(d3.scaleLinear().domain([0, Y_MIN_MAX]).range([this._chartH, 0]))
 
       const clipId = `dr-clip-${this._chartW}`
       svgEl.append('defs').append('clipPath')

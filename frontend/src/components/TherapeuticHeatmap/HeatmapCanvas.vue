@@ -12,7 +12,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue'
+import { defineComponent, markRaw } from 'vue'
 import { mapStores } from 'pinia'
 
 import { useCellStore } from '@/stores/cellStore'
@@ -164,14 +164,14 @@ export default defineComponent({
     _initObserver() {
       const wrap = this.$refs.wrap as HTMLElement | null
       if (!wrap || this.resizeObserver) return
-      this.resizeObserver = new ResizeObserver((entries) => {
+      this.resizeObserver = markRaw(new ResizeObserver((entries) => {
         const entry = entries[0]
         if (!entry) return
         const w = Math.round(entry.contentRect.width)
         if (w <= 0) return
         this._setupCanvas(w)
         this._renderCanvas()
-      })
+      }))
       this.resizeObserver.observe(wrap)
       const initialW = wrap.clientWidth > 0 ? wrap.clientWidth : HMAP_CANVAS_W
       this._setupCanvas(initialW)
@@ -187,7 +187,7 @@ export default defineComponent({
       this.displayH = Math.round(w * aspect)
       canvas.width  = w * dpr
       canvas.height = this.displayH * dpr
-      this.ctx      = canvas.getContext('2d')!
+      this.ctx      = markRaw(canvas.getContext('2d')!)
       this.ctx.scale(dpr, dpr)
     },
 

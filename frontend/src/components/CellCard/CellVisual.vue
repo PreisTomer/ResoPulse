@@ -165,7 +165,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue'
+import { defineComponent, markRaw } from 'vue'
 import type { PropType } from 'vue'
 import { mapStores } from 'pinia'
 
@@ -602,7 +602,7 @@ export default defineComponent({
         resonantFreqGHz:  cell.resonantFreqGHz,
         capsidQ:          cell.capsidQ,
       }
-      this.helixTimer = setupBlobAnimation(
+      this.helixTimer = markRaw(setupBlobAnimation(
         el, this.type, this.accentColor, cellCategory, profile,
         () => ({
           impact:                 this.disruptionRatio,
@@ -616,7 +616,7 @@ export default defineComponent({
           waveform:               this.cellStore.waveform,
           isAcousticMode:         this.isAcousticTarget,
         }),
-      )
+      ))
     },
 
     drawOscilloscope() {
@@ -624,7 +624,7 @@ export default defineComponent({
       const el = this.$refs.oscCanvas as HTMLElement
       if (!el) return
       this.oscTimer?.stop()
-      this.oscTimer = setupOscilloscope(
+      this.oscTimer = markRaw(setupOscilloscope(
         el, this.accentColor,
         () => ({
           state:           this.cellState,
@@ -635,7 +635,7 @@ export default defineComponent({
             ? this.cellStore.currentBroadcastFrequency
             : (this.cellData?.naturalFrequency ?? 400),
         }),
-      )
+      ))
     },
 
     triggerLysis() {
