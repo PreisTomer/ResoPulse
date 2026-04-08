@@ -135,6 +135,51 @@
     margin-bottom: 0.25rem;
   }
 
+  .protocol__cap-grid {
+    @include flex-col(0.6rem);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .protocol__cap-grid-title {
+    @include mono-upper(var(--fs-xxs), 0.08em);
+    color: var(--color-primary);
+    padding: 0.5rem 0.85rem;
+    background: color-mix(in srgb, var(--color-primary) 5%, transparent);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .protocol__cap-grid-rows {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .protocol__cap-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    padding: 0.45rem 0.85rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--color-border) 50%, transparent);
+    align-items: baseline;
+
+    &:last-child { border-bottom: none; }
+    &:nth-child(even) { background: color-mix(in srgb, var(--color-text) 2%, transparent); }
+  }
+
+  .protocol__cap-area {
+    font-size: var(--fs-md);
+    color: var(--color-text);
+    line-height: 1.4;
+  }
+
+  .protocol__cap-feature {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    color: var(--color-primary);
+    opacity: var(--op-strong);
+  }
+
   .protocol__info-box {
     display: flex;
     gap: 0.65rem;

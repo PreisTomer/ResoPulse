@@ -122,7 +122,7 @@
 
     </div><!-- /experiment__cell-badges -->
 
-    <!-- Far right: mode toggle + connection status -->
+    <!-- Far right: share + mode toggle + connection status -->
     <div class="experiment__header-right">
       <RouterLink
         v-if="showZDriftBadge"
@@ -133,6 +133,16 @@
         <span class="experiment__z-drift-icon">{{ ICON.FLASK }}</span>
         {{ $t('exp.zDriftLabel') }} {{ impedanceStore.impedanceDriftPct.toFixed(1) }}%
       </RouterLink>
+      <button
+        id="hl-share-btn"
+        class="experiment__share-btn"
+        :class="{ 'experiment__share-btn--copied': shareCopied }"
+        v-tip="$t('exp.copyLinkTip')"
+        @click="copyShareUrl"
+      >
+        <span>{{ ICON.LINK }}</span>
+        {{ shareCopied ? $t('exp.copyLinkDone') : $t('exp.copyLink') }}
+      </button>
       <span
         class="experiment__chip"
         :class="socketConnected ? 'experiment__chip--connected' : 'experiment__chip--local'"
@@ -167,6 +177,7 @@ import { broadcastStateSync, socketConnected } from '@/services/socket'
 import CreateCellModal from '@/components/CreateCellModal/index.vue'
 
 import { formatFreqKHz } from '@/utils/format'
+import { buildShareUrl } from '@/utils/shareUrl'
 import { tipCellBadgeHealthy, tipCellBadgeTarget } from '@/tooltips/experimentTooltips'
 
 import { CELL_PRESETS, GROUP_COLORS, GROUP_LABELS } from '@/constants/cellLibrary'
@@ -192,6 +203,8 @@ export default defineComponent({
       targetPickerOpen: false,
       targetPickerCategory: CELL_GROUP.CANCER as CellGroup | 'custom',
       showCreateModal: false,
+      shareCopied: false,
+      shareCopiedTimer: null as ReturnType<typeof setTimeout> | null,
     }
   },
 
@@ -286,6 +299,14 @@ export default defineComponent({
     closeAllPickers() {
       this.healthyPickerOpen = false
       this.targetPickerOpen = false
+    },
+
+    async copyShareUrl(): Promise<void> {
+      const url = buildShareUrl()
+      await navigator.clipboard.writeText(url)
+      this.shareCopied = true
+      if (this.shareCopiedTimer !== null) clearTimeout(this.shareCopiedTimer)
+      this.shareCopiedTimer = setTimeout(() => { this.shareCopied = false }, 2000)
     },
   },
 })
@@ -397,6 +418,38 @@ export default defineComponent({
   }
 
   &__z-drift-icon { font-size: var(--fs-xs); }
+
+  // ── Share / copy-link button ──────────────────────────────────────────────────
+  &__share-btn {
+    @include flex-row(0.3rem);
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    letter-spacing: 0.08em;
+    padding: 0.18rem 0.55rem;
+    border-radius: 3px;
+    border: 1px solid color-mix(in srgb, var(--color-primary) 30%, transparent);
+    color: var(--color-primary);
+    background: transparent;
+    cursor: pointer;
+    white-space: nowrap;
+    opacity: var(--op-partial);
+    transition: opacity var(--tr-fast), border-color var(--tr-fast), background var(--tr-fast), color var(--tr-fast);
+
+    &:hover {
+      opacity: 1;
+      border-color: color-mix(in srgb, var(--color-primary) 60%, transparent);
+      background: color-mix(in srgb, var(--color-primary) 6%, transparent);
+    }
+
+    &--copied {
+      opacity: 1;
+      border-color: color-mix(in srgb, var(--color-lime) 50%, transparent);
+      color: var(--color-lime);
+      background: color-mix(in srgb, var(--color-lime) 6%, transparent);
+    }
+
+    @media (max-width: 540px) { display: none; }
+  }
 
   // ── Cell selector area ────────────────────────────────────────────────────────
   &__cell-badges {

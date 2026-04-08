@@ -221,12 +221,15 @@
       <div class="home__zone home__zone--bottom">
 
         <div class="home__scope-tags">
-          <span
+          <div
             v-for="tag in scopeTags"
             :key="tag.mod"
             class="home__scope-tag"
             :class="`home__scope-tag--${tag.mod}`"
-          >{{ $t(`home.${tag.key}`) }}</span>
+          >
+            <span class="home__scope-tag-name">{{ $t(`home.${tag.key}`) }}</span>
+            <span class="home__scope-tag-sub">{{ $t(`home.${tag.subKey}`) }}</span>
+          </div>
         </div>
 
         <p class="home__disclaimer">{{ $t('home.disclaimer') }}</p>
@@ -283,10 +286,10 @@ export default defineComponent({
       ],
 
       scopeTags: [
-        { mod: 'cancer',   key: 'tagCancer' },
-        { mod: 'bacteria', key: 'tagBacteria' },
-        { mod: 'virus',    key: 'tagVirus' },
-        { mod: 'ref',      key: 'tagRef' },
+        { mod: 'cancer',   key: 'tagCancer',   subKey: 'tagCancerSub' },
+        { mod: 'bacteria', key: 'tagBacteria', subKey: 'tagBacteriaSub' },
+        { mod: 'virus',    key: 'tagVirus',    subKey: 'tagVirusSub' },
+        { mod: 'ref',      key: 'tagRef',      subKey: 'tagRefSub' },
       ],
 
       selProgress: 0,

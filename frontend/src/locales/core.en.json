@@ -265,7 +265,10 @@
     "stickyCollapse": "Collapse live cell panel",
     "stickyExpand": "Expand live cell panel",
     "stickyScrollTip": "Click to scroll back to the cell cards",
-    "stickyLive": "LIVE"
+    "stickyLive": "LIVE",
+    "copyLink": "Copy Experiment URL",
+    "copyLinkDone": "Copied",
+    "copyLinkTip": "<strong>Share Experiment Setup</strong>\nCopies a URL that restores this exact configuration: cell pair, frequency, field, waveform, and all other parameters.\nPaste it into a browser to open the same setup instantly."
   },
   "resonance": {
     "speculativeBannerTitle": "SPECULATIVE MODEL: No experimental RF validation",

@@ -799,13 +799,31 @@
   }
 
   &__scope-tag {
-    @include badge-pill(0.15rem 0.55rem);
-    border-color: transparent;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.15rem;
+    padding: 0.3rem 0.7rem;
+    border-radius: var(--radius);
+    border: 1px solid transparent;
 
     &--cancer   { color: var(--color-danger);  border-color: color-mix(in srgb, var(--color-danger) 35%, transparent);  background: color-mix(in srgb, var(--color-danger) 7%, transparent); }
-    &--bacteria { color: var(--color-amber);   border-color: color-mix(in srgb, var(--color-amber) 35%, transparent);  background: color-mix(in srgb, var(--color-amber) 7%, transparent); }
+    &--bacteria { color: var(--color-amber);   border-color: color-mix(in srgb, var(--color-amber) 35%, transparent);   background: color-mix(in srgb, var(--color-amber) 7%, transparent); }
     &--virus    { color: var(--color-purple);  border-color: var(--color-purple-border); background: color-mix(in srgb, var(--color-purple) 7%, transparent); }
     &--ref      { color: var(--color-primary); border-color: color-mix(in srgb, var(--color-primary) 35%, transparent); background: color-mix(in srgb, var(--color-primary) 7%, transparent); }
+
+    &-name {
+      @include mono-upper(var(--fs-xxs), 0.08em);
+      font-weight: 700;
+    }
+
+    &-sub {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.04em;
+      opacity: var(--op-dim);
+      white-space: nowrap;
+    }
   }
 
   &__disclaimer {

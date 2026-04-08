@@ -152,6 +152,7 @@ import ReplayOverlay from '@/components/ValidationWorkflows/ReplayOverlay.vue'
 
 import { computeSAR } from '@/utils/physics'
 import { scrollAndHighlight } from '@/utils/highlight'
+import { parseShareParam } from '@/utils/shareUrl'
 
 import { CELL_PRESETS } from '@/constants/cellLibrary'
 import { CATEGORY_DEFAULTS, INITIAL_RESONANT_FIELD_FRACTION, DEFAULT_LYSIS_N_PULSES, DEFAULT_ORIENTATION_DEG } from '@/constants/experimentDefaults'
@@ -385,6 +386,14 @@ export default defineComponent({
   },
 
   mounted() {
+    // Restore experiment state from a shared URL (?s=<base64 StatePacket>).
+    // Must run before sanitizeCategoryParams so the decoded cell pair is in place first.
+    const sharedPacket = parseShareParam(window.location.search)
+    if (sharedPacket) {
+      this.cellStore.handleStatePacket(sharedPacket)
+      this.$router.replace(this.$route.path)
+    }
+
     // Sanitize time-domain params for the current category without resetting
     // the user's persisted field intensity and frequency (applyTargetDefaults would do too much).
     this.sanitizeCategoryParams()

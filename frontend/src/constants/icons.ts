@@ -46,6 +46,7 @@ export const ICON = {
   CHECKLIST:   '☑',  // protocol guide panel tab
   NOTE_ON:     '♪',  // auditory display enabled
   NOTE_OFF:    '♩',  // auditory display disabled
+  LINK:        '⧉',  // copy link / share URL
 } as const
 
 export type Icon = typeof ICON[keyof typeof ICON]
