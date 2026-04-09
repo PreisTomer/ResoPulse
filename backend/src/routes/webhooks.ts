@@ -25,9 +25,11 @@ router.post('/', async (req: Request, res: Response) => {
     return
   }
 
-  // req.body is a Buffer from express.raw() — pass it directly to svix without
-  // converting to string. Svix verifies the exact byte sequence that was signed.
   const payload = req.body as Buffer
+
+  console.info('[Webhook] secret prefix:', WEBHOOK_SECRET.slice(0, 12))
+  console.info('[Webhook] body is Buffer:', Buffer.isBuffer(payload), '| length:', payload?.length ?? 0)
+  console.info('[Webhook] svix-id:', req.headers['svix-id'])
 
   if (!Buffer.isBuffer(payload) || payload.length === 0) {
     res.status(400).json({ error: 'Empty or non-raw request body.' })
@@ -36,11 +38,10 @@ router.post('/', async (req: Request, res: Response) => {
 
   let event: ClerkWebhookEvent
   try {
-    // Pass req.headers directly — svix handles header name casing automatically.
     const wh = new Webhook(WEBHOOK_SECRET)
     event    = wh.verify(payload, req.headers as Record<string, string>) as ClerkWebhookEvent
   } catch (err) {
-    console.error('[Webhook] Signature verification failed:', err)
+    console.error('[Webhook] Verification failed:', err)
     res.status(400).json({ error: 'Invalid webhook signature.' })
     return
   }
