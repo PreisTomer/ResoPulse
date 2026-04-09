@@ -1,8 +1,7 @@
 // Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["driverAdapters"]
+  provider = "prisma-client-js"
 }
 
 datasource db {

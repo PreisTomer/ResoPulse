@@ -154,9 +154,11 @@ function buildDisplayName(data: ClerkUserData): string {
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
+type ClerkEventData = ClerkUserData | ClerkOrgData | ClerkMembershipData | { id: string }
+
 interface ClerkWebhookEvent {
   type: string
-  data: Record<string, unknown>
+  data: ClerkEventData
 }
 
 interface ClerkUserData {
