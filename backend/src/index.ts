@@ -26,10 +26,7 @@ app.use('/webhooks/clerk', express.raw({ type: 'application/json' }), webhookRou
 
 app.use(express.json({ limit: '16kb' }))
 
-// ── Clerk session middleware — populates req.auth on all routes ───────────────
-app.use(clerk)
-
-// ── Health (public) ───────────────────────────────────────────────────────────
+// ── Health (public — registered before Clerk middleware so no auth required) ──
 app.get('/health', (_req, res) => {
   const outcomeCount = countOutcomes()
   res.json({
@@ -39,6 +36,9 @@ app.get('/health', (_req, res) => {
     dbPersistent: outcomeCount >= 0,
   })
 })
+
+// ── Clerk session middleware — populates req.auth on all routes below ─────────
+app.use(clerk)
 
 // ── AI training data (protected: requires auth + optional secret) ─────────────
 app.get('/ai/training-data', requireAuth, (req, res) => {

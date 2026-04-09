@@ -1,25 +1,34 @@
 // Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 
 // Prisma 7 client singleton using the @prisma/adapter-pg driver adapter.
-// Prisma 7 removed the binary query engine; a driver adapter is required.
+// Instantiation is lazy — the pool is only created on first access so a missing
+// DATABASE_URL does not crash the server on startup.
 
 import { PrismaClient } from '@prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
 import pg from 'pg'
 
-const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient }
+let _prisma: PrismaClient | null = null
 
-function createPrismaClient(): PrismaClient {
+export function getPrisma(): PrismaClient {
+  if (_prisma) return _prisma
+
+  if (!process.env.DATABASE_URL) {
+    throw new Error('[Prisma] DATABASE_URL is not set. Add it to your environment variables.')
+  }
+
   const pool    = new pg.Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } })
   const adapter = new PrismaPg(pool)
-  return new PrismaClient({
+  _prisma = new PrismaClient({
     adapter,
     log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
   })
+  return _prisma
 }
 
-export const prisma: PrismaClient = globalForPrisma.prisma ?? createPrismaClient()
-
-if (process.env.NODE_ENV !== 'production') {
-  globalForPrisma.prisma = prisma
-}
+// Convenience re-export — use `prisma.user.findMany()` as before.
+export const prisma = new Proxy({} as PrismaClient, {
+  get(_target, prop) {
+    return (getPrisma() as unknown as Record<string | symbol, unknown>)[prop]
+  },
+})
