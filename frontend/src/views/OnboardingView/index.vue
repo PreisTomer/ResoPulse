@@ -4,6 +4,7 @@
 
     <div class="onboarding__bg" aria-hidden="true">
       <div class="onboarding__bg-grid"></div>
+      <canvas ref="waveCanvas" class="onboarding__bg-canvas"></canvas>
     </div>
 
     <div class="onboarding__layout">
@@ -95,7 +96,7 @@
           </svg>
         </div>
         <h1 class="onboarding__card-title onboarding__card-title--success">Lab workspace ready</h1>
-        <p class="onboarding__card-desc">Redirecting you to the experiment lab...</p>
+        <p class="onboarding__card-desc">Redirecting you to the app...</p>
         <div class="onboarding__redirect-bar">
           <div class="onboarding__redirect-bar-fill"></div>
         </div>
@@ -107,7 +108,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue'
+import { defineComponent, ref, markRaw } from 'vue'
 import { useClerk } from '@clerk/vue'
 
 import { ROUTE } from '@/constants/routes'
@@ -115,18 +116,39 @@ import { useAuthStore } from '@/stores/authStore'
 
 const REDIRECT_DELAY_MS = 2200
 
+// Sine wave config — cyan/primary dominant, subtle (card sits in foreground)
+interface WaveState {
+  freq:      number
+  amp:       number
+  yRatio:    number
+  speed:     number
+  opacity:   number
+  isPrimary: boolean
+  phase:     number
+}
+
+const WAVE_INIT: Omit<WaveState, 'phase'>[] = [
+  { freq: 0.007, amp: 40, yRatio: 0.18, speed: 0.007, opacity: 0.09, isPrimary: true  },
+  { freq: 0.012, amp: 25, yRatio: 0.45, speed: 0.011, opacity: 0.07, isPrimary: false },
+  { freq: 0.009, amp: 35, yRatio: 0.72, speed: 0.008, opacity: 0.08, isPrimary: true  },
+  { freq: 0.015, amp: 18, yRatio: 0.90, speed: 0.014, opacity: 0.06, isPrimary: false },
+]
+
 export default defineComponent({
   name: 'OnboardingView',
 
   setup() {
-    const clerk     = useClerk()
-    const authStore = useAuthStore()
-    return { clerk, authStore }
+    const clerk      = useClerk()
+    const authStore  = useAuthStore()
+    const waveCanvas = ref<HTMLCanvasElement | null>(null)
+    return { clerk, authStore, waveCanvas }
   },
 
   data() {
     return {
       step:          2 as 1 | 2 | 3,
+      animFrameId:   null as ReturnType<typeof requestAnimationFrame> | null,
+      waves:         markRaw(WAVE_INIT.map(w => ({ ...w, phase: Math.random() * Math.PI * 2 }))),
       orgName:       '',
       orgSlug:       '',
       nameError:     '',
@@ -165,14 +187,18 @@ export default defineComponent({
 
       try {
         if (!this.clerk) throw new Error('Clerk is not initialised.')
-        await this.clerk.createOrganization({
+        const org = await this.clerk.createOrganization({
           name: this.orgName.trim(),
           slug: this.orgSlug || undefined,
         })
+        // Activate the new org so the session JWT is refreshed before we navigate.
+        await this.clerk.setActive?.({ organization: org.id })
         this.authStore.completeOnboarding()
         this.isCreatingOrg = false
         this.step          = 3
-        setTimeout(() => { this.$router.push(ROUTE.EXPERIMENT) }, REDIRECT_DELAY_MS)
+        // By the time the timer fires, App.vue's useAuth() watcher will have
+        // updated authStore.hasOrg = true, so the guard lets the navigation through.
+        setTimeout(() => { this.$router.push(ROUTE.HOME) }, REDIRECT_DELAY_MS)
       } catch (err) {
         const msg = (err as { errors?: { message: string }[] })?.errors?.[0]?.message
         this.submitError = msg ?? 'Could not create workspace. Please try again.'
@@ -180,6 +206,51 @@ export default defineComponent({
         this.isSubmitting = false
       }
     },
+
+    startWaveLoop(): void {
+      const canvas = this.waveCanvas
+      if (!canvas) return
+      const ctx = canvas.getContext('2d')
+      if (!ctx) return
+
+      const tick = () => {
+        const w = canvas.offsetWidth
+        const h = canvas.offsetHeight
+        if (canvas.width !== w || canvas.height !== h) {
+          canvas.width  = w
+          canvas.height = h
+        }
+        ctx.clearRect(0, 0, w, h)
+        this.drawWaves(ctx, w, h)
+        this.animFrameId = requestAnimationFrame(tick)
+      }
+
+      this.animFrameId = requestAnimationFrame(tick)
+    },
+
+    drawWaves(ctx: CanvasRenderingContext2D, w: number, h: number): void {
+      for (const wave of this.waves) {
+        ctx.beginPath()
+        for (let x = 0; x <= w; x += 2) {
+          const y = wave.yRatio * h + Math.sin(x * wave.freq + wave.phase) * wave.amp
+          x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y)
+        }
+        // C.primary = #00d4ff → rgb(0,212,255) | C.accent = #00ff9d → rgb(0,255,157)
+        const rgb = wave.isPrimary ? '0, 212, 255' : '0, 255, 157'
+        ctx.strokeStyle = `rgba(${rgb}, ${wave.opacity})`
+        ctx.lineWidth   = 1.5
+        ctx.stroke()
+        wave.phase += wave.speed
+      }
+    },
+  },
+
+  mounted() {
+    this.startWaveLoop()
+  },
+
+  beforeUnmount() {
+    if (this.animFrameId !== null) cancelAnimationFrame(this.animFrameId)
   },
 })
 </script>
@@ -208,6 +279,15 @@ export default defineComponent({
         linear-gradient(90deg, color-mix(in srgb, var(--color-primary) 4%, transparent) 1px, transparent 1px);
       background-size: 52px 52px;
       mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, black 30%, transparent 100%);
+    }
+
+    &-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0.6;
+      mask-image: linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%);
     }
   }
 

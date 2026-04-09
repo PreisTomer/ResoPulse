@@ -56,6 +56,14 @@
         <span class="experiment__chip-dot" :class="socketConnected ? '' : 'experiment__chip-dot--warn'"></span>
         {{ socketConnected ? $t('exp.connected').toUpperCase() : $t('exp.local').toUpperCase() }}
       </span>
+      <span
+        class="experiment__chip"
+        :class="systemStatusChipClass"
+        v-tip="systemStatusTip"
+      >
+        <span class="experiment__chip-dot" :class="systemStatusDotClass"></span>
+        {{ systemStatusLabel }}
+      </span>
     </div>
 
   </div>
@@ -107,6 +115,29 @@ export default defineComponent({
 
     showZDriftBadge(): boolean {
       return Math.abs(this.impedanceStore.impedanceDriftPct) > 5
+    },
+
+    systemReady(): boolean     { return this.cellStore.systemReady },
+    isResonanceMode(): boolean { return this.cellStore.isResonanceMode },
+
+    systemStatusChipClass(): string {
+      if (this.isResonanceMode) return 'experiment__chip--acoustic'
+      return this.systemReady ? 'experiment__chip--ready' : 'experiment__chip--warning'
+    },
+
+    systemStatusDotClass(): string {
+      if (this.isResonanceMode) return 'experiment__chip-dot--acoustic'
+      return this.systemReady ? '' : 'experiment__chip-dot--warn'
+    },
+
+    systemStatusLabel(): string {
+      if (this.isResonanceMode) return this.$t('nav.modeAcoustic').toUpperCase()
+      return (this.systemReady ? this.$t('nav.systemReady') : this.$t('nav.systemWarning')).toUpperCase()
+    },
+
+    systemStatusTip(): string {
+      if (this.isResonanceMode) return this.$t('nav.tipModeAcoustic')
+      return this.systemReady ? this.$t('nav.tipSystemReady') : this.$t('nav.tipSystemWarning')
     },
   },
 
@@ -232,8 +263,11 @@ export default defineComponent({
     color: var(--color-text-muted);
     white-space: nowrap;
 
-    &--local     { border-color: color-mix(in srgb, var(--color-amber) 30%, transparent); color: var(--color-amber); }
-    &--connected { border-color: color-mix(in srgb, var(--color-lime) 35%, transparent);  color: var(--color-lime); }
+    &--local    { border-color: color-mix(in srgb, var(--color-amber) 30%, transparent); color: var(--color-amber); }
+    &--connected { border-color: color-mix(in srgb, var(--color-lime) 35%, transparent); color: var(--color-lime); }
+    &--ready    { border-color: color-mix(in srgb, var(--color-accent) 30%, transparent); color: var(--color-accent); }
+    &--warning  { border-color: color-mix(in srgb, var(--color-amber) 30%, transparent); color: var(--color-amber); }
+    &--acoustic { border-color: color-mix(in srgb, var(--color-amber) 30%, transparent); color: var(--color-amber); }
 
     &-dot {
       width: 5px;
@@ -243,7 +277,8 @@ export default defineComponent({
       flex-shrink: 0;
       animation: pulse-dot 2s ease-in-out infinite;
 
-      &--warn { background: var(--color-amber); animation: none; }
+      &--warn    { background: var(--color-amber); animation: none; }
+      &--acoustic { background: var(--color-amber); animation: pulse-dot 1.8s ease-in-out infinite; }
     }
   }
 

@@ -23,7 +23,10 @@
     "themeSwitchOled": "Switch to OLED Black, maximum contrast, pure black backgrounds",
     "themeSwitchDark": "Switch to Dark, navy blue tinted dark theme",
     "openMenu": "Open menu",
-    "closeMenu": "Close menu"
+    "closeMenu": "Close menu",
+    "manageAccount": "Manage Account",
+    "switchWorkspace": "Switch Workspace",
+    "signOut": "Sign Out"
   },
   "cells": {
     "sectionTitle": "Cell Signature Profiles",

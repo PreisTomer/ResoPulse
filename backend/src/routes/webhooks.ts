@@ -27,10 +27,6 @@ router.post('/', async (req: Request, res: Response) => {
 
   const payload = req.body as Buffer
 
-  console.info('[Webhook] secret prefix:', WEBHOOK_SECRET.slice(0, 12))
-  console.info('[Webhook] body is Buffer:', Buffer.isBuffer(payload), '| length:', payload?.length ?? 0)
-  console.info('[Webhook] svix-id:', req.headers['svix-id'])
-
   if (!Buffer.isBuffer(payload) || payload.length === 0) {
     res.status(400).json({ error: 'Empty or non-raw request body.' })
     return

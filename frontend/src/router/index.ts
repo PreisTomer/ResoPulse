@@ -1,8 +1,10 @@
 // Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 
+import { watch } from 'vue'
 import { createRouter, createWebHistory } from 'vue-router'
 
 import { ROUTE, PROTECTED_ROUTES } from '@/constants/routes'
+import { useAuthStore } from '@/stores/authStore'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -33,36 +35,51 @@ const router = createRouter({
 })
 
 // ── Navigation guard ───────────────────────────────────────────────────────
-// Uses window.Clerk (set by @clerk/vue's clerkPlugin) for auth state.
-// Clerk loads asynchronously; we wait until it is ready before gating routes.
+// Auth state is sourced from authStore, which App.vue keeps in sync with
+// Clerk's reactive useAuth() composable. This avoids reading window.Clerk
+// directly (which is null during async initialisation and session refreshes).
+
+/**
+ * Blocks until App.vue's useAuth() watcher has fired with isLoaded=true.
+ * Uses Vue's watch on the Pinia store so no polling is needed.
+ */
+function waitForClerkLoaded(): Promise<void> {
+  const store = useAuthStore()
+  if (!store.isClerkLoading) return Promise.resolve()
+
+  return new Promise<void>(resolve => {
+    const stop = watch(
+      () => store.isClerkLoading,
+      (loading) => { if (!loading) { stop(); resolve() } },
+    )
+  })
+}
 
 router.beforeEach(async (to) => {
-  // Wait for Clerk to initialise before making any auth decision.
-  if (typeof window !== 'undefined' && window.Clerk) {
-    await window.Clerk.load()
-  }
+  await waitForClerkLoaded()
 
-  const isSignedIn = Boolean(window.Clerk?.user)
+  const { isSignedIn, hasOrg } = useAuthStore()
 
-  // Signed-in user landing on a guest-only page → go to experiment lab.
+  // Signed-in user landing on a guest-only page → go to home.
   if (to.meta.guestOnly && isSignedIn) {
-    return { path: ROUTE.EXPERIMENT }
+    return { path: ROUTE.HOME }
   }
 
-  // Unauthenticated user hitting any protected route (including /) → sign-in,
+  // Unauthenticated user hitting any protected route → sign-in,
   // preserving the intended destination so we can redirect back after login.
   if (to.meta.requiresAuth && !isSignedIn) {
-    // Do not add a redirect query param for the home route — sign-in is the natural next step.
     const redirectQuery = to.path === ROUTE.HOME ? {} : { redirect: to.fullPath }
     return { path: ROUTE.SIGN_IN, query: redirectQuery }
   }
 
-  // Signed-in user without an org hitting any protected route → onboarding.
-  if (isSignedIn && PROTECTED_ROUTES.includes(to.path)) {
-    const hasOrg = (window.Clerk?.user?.organizationMemberships?.length ?? 0) > 0
-    if (!hasOrg && to.path !== ROUTE.ONBOARDING) {
-      return { path: ROUTE.ONBOARDING }
-    }
+  // Signed-in user without an active org hitting a protected route → onboarding.
+  if (isSignedIn && !hasOrg && PROTECTED_ROUTES.includes(to.path)) {
+    return { path: ROUTE.ONBOARDING }
+  }
+
+  // Signed-in user with an org trying to access onboarding again → home.
+  if (to.path === ROUTE.ONBOARDING && isSignedIn && hasOrg) {
+    return { path: ROUTE.HOME }
   }
 })
 

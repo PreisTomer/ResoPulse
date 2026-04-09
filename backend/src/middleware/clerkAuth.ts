@@ -9,8 +9,12 @@ import type { Request, Response, NextFunction } from 'express'
 /**
  * Global Clerk middleware — must be applied before any route handlers.
  * Verifies the session JWT from the Authorization header and populates req.auth.
+ * Both CLERK_SECRET_KEY and CLERK_PUBLISHABLE_KEY must be set in the environment.
  */
-export const clerk = clerkMiddleware()
+export const clerk = clerkMiddleware({
+  secretKey:      process.env.CLERK_SECRET_KEY,
+  publishableKey: process.env.CLERK_PUBLISHABLE_KEY,
+})
 
 /**
  * Route guard: rejects requests with no valid session.

@@ -57,10 +57,16 @@ async function wakeBackend(): Promise<void> {
 export async function connectSocket(): Promise<void> {
   await wakeBackend()
 
+  // Auth callback is invoked on every (re)connection attempt — Clerk token is always fresh.
   socket = io(BACKEND_URL, {
-    transports: ['websocket'],
-    timeout: 5000,
+    transports:           ['websocket'],
+    timeout:              5000,
     reconnectionAttempts: 5,
+    auth: (cb: (data: { token: string }) => void) => {
+      window.Clerk?.session?.getToken()
+        .then(token  => cb({ token: token ?? '' }))
+        .catch(()    => cb({ token: '' }))
+    },
   })
 
   socket.on(SOCKET_EVENTS.CONNECT, () => {

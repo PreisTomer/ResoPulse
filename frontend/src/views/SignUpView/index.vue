@@ -4,30 +4,22 @@
 
     <div class="auth-page__bg" aria-hidden="true">
       <div class="auth-page__bg-grid"></div>
+      <canvas ref="particleCanvas" class="auth-page__bg-particles"></canvas>
+      <canvas ref="waveCanvas" class="auth-page__bg-canvas"></canvas>
     </div>
 
     <div class="auth-page__layout">
 
       <!-- LEFT PANEL -->
       <aside class="auth-page__brand">
-        <div class="auth-page__rings" aria-hidden="true">
-          <svg class="auth-page__rings-svg" viewBox="0 0 600 600" fill="none">
-            <circle class="auth-page__ring auth-page__ring--1" cx="300" cy="300" r="90"  stroke-width="1.2" fill="none"/>
-            <circle class="auth-page__ring auth-page__ring--2" cx="300" cy="300" r="150" stroke-width="1"   fill="none"/>
-            <circle class="auth-page__ring auth-page__ring--3" cx="300" cy="300" r="215" stroke-width="0.9" fill="none"/>
-            <circle class="auth-page__ring auth-page__ring--4" cx="300" cy="300" r="282" stroke-width="0.7" fill="none"/>
-            <circle class="auth-page__cell-outer"   cx="300" cy="300" r="52" stroke-width="1.5" fill="none"/>
-            <circle class="auth-page__cell-inner"   cx="300" cy="300" r="28" stroke-width="1"   fill="none"/>
-            <circle class="auth-page__cell-nucleus" cx="300" cy="300" r="10" stroke-width="0.8" fill="none"/>
-          </svg>
-        </div>
-
         <div class="auth-page__brand-identity">
           <RouterLink to="/" class="auth-page__logo-link">
-            <img src="/logo.png" alt="ResoPulse" class="auth-page__logo-img" />
+            <div class="auth-page__logo-img">
+              <img src="/logo.png" alt="ResoPulse" />
+            </div>
             <div class="auth-page__logo-text">
               <span class="auth-page__logo-name">Reso<span class="auth-page__logo-pulse">Pulse</span></span>
-              <span class="auth-page__logo-tag">Virtual Cell Lab</span>
+              <span class="auth-page__logo-tag">{{ $t('nav.researchPlatform') }}</span>
             </div>
           </RouterLink>
           <h1 class="auth-page__brand-headline">
@@ -82,20 +74,58 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue'
+import { defineComponent, ref, markRaw } from 'vue'
 import { SignUp } from '@clerk/vue'
 import { dark } from '@clerk/themes'
 
 import { ROUTE } from '@/constants/routes'
 
+const PARTICLE_COUNT   = 55
+const PARTICLE_SPEED   = 0.18
+const PARTICLE_RADIUS  = 1.4
+const PARTICLE_OPACITY = 0.22
+const CONNECTION_DIST  = 110
+
+interface Particle { x: number; y: number; vx: number; vy: number }
+
+// Sine wave config — cyan/primary dominant for the sign-up page
+// isPrimary: true → --color-primary (cyan), false → --color-primary-deep (deep cyan)
+interface WaveState {
+  freq:      number
+  amp:       number
+  yRatio:    number
+  speed:     number
+  opacity:   number
+  isPrimary: boolean
+  phase:     number
+}
+
+const WAVE_INIT: Omit<WaveState, 'phase'>[] = [
+  { freq: 0.006, amp: 55, yRatio: 0.12, speed: 0.008, opacity: 0.13, isPrimary: true  },
+  { freq: 0.011, amp: 32, yRatio: 0.30, speed: 0.013, opacity: 0.10, isPrimary: false },
+  { freq: 0.008, amp: 45, yRatio: 0.50, speed: 0.007, opacity: 0.12, isPrimary: true  },
+  { freq: 0.014, amp: 24, yRatio: 0.70, speed: 0.016, opacity: 0.09, isPrimary: false },
+  { freq: 0.007, amp: 50, yRatio: 0.88, speed: 0.011, opacity: 0.08, isPrimary: true  },
+]
+
 export default defineComponent({
   name: 'SignUpView',
   components: { SignUp },
 
+  setup() {
+    const waveCanvas     = ref<HTMLCanvasElement | null>(null)
+    const particleCanvas = ref<HTMLCanvasElement | null>(null)
+    return { waveCanvas, particleCanvas }
+  },
+
   data() {
     return {
+      animFrameId:         null as ReturnType<typeof requestAnimationFrame> | null,
+      particleAnimFrameId: null as ReturnType<typeof requestAnimationFrame> | null,
+      particles:           [] as Particle[],
+      waves: markRaw(WAVE_INIT.map(w => ({ ...w, phase: Math.random() * Math.PI * 2 }))),
       onboardingSteps: [
-        'Create your account with email, Google, or ORCID',
+        'Create your account with email or Google',
         'Set up your first Lab Workspace',
         'Invite team members with role-based access',
         'Start designing electroporation protocols',
@@ -126,8 +156,9 @@ export default defineComponent({
           fontSize:             '0.875rem',
         },
         elements: {
-          rootBox:                 { width: '100%' },
-          card:                    { background: 'transparent', boxShadow: 'none', border: 'none', padding: '0', gap: '1.1rem' },
+          rootBox:                 { width: '100%', maxWidth: '100%', minWidth: '0' },
+          cardBox:                 { width: '100%', maxWidth: '100%' },
+          card:                    { background: 'transparent', boxShadow: 'none', border: 'none', padding: '0', gap: '1.1rem', width: '100%' },
           headerTitle:             { display: 'none' },
           headerSubtitle:          { display: 'none' },
           header:                  { display: 'none' },
@@ -136,10 +167,125 @@ export default defineComponent({
           dividerText:             { color: '#3a5a7a', fontSize: '0.72rem', letterSpacing: '0.06em', textTransform: 'uppercase' },
           formFieldLabel:          { color: '#5a7a9a', fontSize: '0.72rem', letterSpacing: '0.06em', textTransform: 'uppercase', fontFamily: "'JetBrains Mono', monospace" },
           formFieldInput:          { background: '#0a1520', border: '1px solid #1e3a5f', color: '#c8d8e8', borderRadius: '8px' },
-          formButtonPrimary:       { background: '#00d4ff', color: '#060e1a', fontFamily: "'JetBrains Mono', monospace", letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: '700', borderRadius: '8px' },
+          formButtonPrimary:       { background: 'rgba(0,212,255,0.08)', color: '#00d4ff', border: '1px solid rgba(0,212,255,0.3)', fontFamily: "'JetBrains Mono', monospace", letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: '600', borderRadius: '8px', boxShadow: 'none' },
+          buttonArrowIcon:         { display: 'none' },
           footerActionLink:        { color: '#00d4ff' },
           footerAction:            { display: 'none' },
         },
+      }
+    },
+  },
+
+  mounted() {
+    this.initParticles()
+    this.startParticleLoop()
+    this.startWaveLoop()
+  },
+
+  beforeUnmount() {
+    if (this.animFrameId         !== null) cancelAnimationFrame(this.animFrameId)
+    if (this.particleAnimFrameId !== null) cancelAnimationFrame(this.particleAnimFrameId)
+  },
+
+  methods: {
+    initParticles(): void {
+      const canvas = this.particleCanvas
+      if (!canvas) return
+      const w = canvas.width  = canvas.offsetWidth
+      const h = canvas.height = canvas.offsetHeight
+      this.particles = Array.from({ length: PARTICLE_COUNT }, () => ({
+        x:  Math.random() * w,
+        y:  Math.random() * h,
+        vx: (Math.random() - 0.5) * PARTICLE_SPEED * 2,
+        vy: (Math.random() - 0.5) * PARTICLE_SPEED * 2,
+      }))
+    },
+
+    startParticleLoop(): void {
+      const canvas = this.particleCanvas
+      if (!canvas) return
+      const ctx = canvas.getContext('2d')
+      if (!ctx) return
+
+      const tick = () => {
+        const w = canvas.offsetWidth
+        const h = canvas.offsetHeight
+        if (canvas.width !== w || canvas.height !== h) {
+          canvas.width  = w
+          canvas.height = h
+          this.initParticles()
+        }
+        ctx.clearRect(0, 0, w, h)
+        for (const p of this.particles) {
+          p.x += p.vx
+          p.y += p.vy
+          if (p.x < 0 || p.x > w) p.vx *= -1
+          if (p.y < 0 || p.y > h) p.vy *= -1
+        }
+        for (let i = 0; i < this.particles.length; i++) {
+          for (let j = i + 1; j < this.particles.length; j++) {
+            const a = this.particles[i]
+            const b = this.particles[j]
+            if (!a || !b) continue
+            const dx = a.x - b.x
+            const dy = a.y - b.y
+            const dist = Math.sqrt(dx * dx + dy * dy)
+            if (dist < CONNECTION_DIST) {
+              ctx.beginPath()
+              ctx.moveTo(a.x, a.y)
+              ctx.lineTo(b.x, b.y)
+              ctx.strokeStyle = `rgba(0, 212, 255, ${(1 - dist / CONNECTION_DIST) * 0.10})`
+              ctx.lineWidth   = 0.6
+              ctx.stroke()
+            }
+          }
+        }
+        for (const p of this.particles) {
+          ctx.beginPath()
+          ctx.arc(p.x, p.y, PARTICLE_RADIUS, 0, Math.PI * 2)
+          ctx.fillStyle = `rgba(0, 212, 255, ${PARTICLE_OPACITY})`
+          ctx.fill()
+        }
+        this.particleAnimFrameId = requestAnimationFrame(tick)
+      }
+
+      this.particleAnimFrameId = requestAnimationFrame(tick)
+    },
+
+    startWaveLoop(): void {
+      const canvas = this.waveCanvas
+      if (!canvas) return
+      const ctx = canvas.getContext('2d')
+      if (!ctx) return
+
+      const tick = () => {
+        const w = canvas.offsetWidth
+        const h = canvas.offsetHeight
+        if (canvas.width !== w || canvas.height !== h) {
+          canvas.width  = w
+          canvas.height = h
+        }
+        ctx.clearRect(0, 0, w, h)
+        this.drawWaves(ctx, w, h)
+        this.animFrameId = requestAnimationFrame(tick)
+      }
+
+      this.animFrameId = requestAnimationFrame(tick)
+    },
+
+    drawWaves(ctx: CanvasRenderingContext2D, w: number, h: number): void {
+      for (const wave of this.waves) {
+        ctx.beginPath()
+        for (let x = 0; x <= w; x += 2) {
+          const y = wave.yRatio * h + Math.sin(x * wave.freq + wave.phase) * wave.amp
+          x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y)
+        }
+        // Both wave variants use primary cyan — varying opacity gives depth
+        const rgb = wave.isPrimary ? '0, 212, 255' : '0, 180, 220'
+        ctx.strokeStyle = `rgba(${rgb}, ${wave.opacity})`
+        ctx.lineWidth   = 1.5
+        ctx.stroke()
+        wave.phase += wave.speed
       }
     },
   },
@@ -165,10 +311,27 @@ export default defineComponent({
       position: absolute;
       inset: 0;
       background-image:
-        linear-gradient(color-mix(in srgb, var(--color-accent) 4%, transparent) 1px, transparent 1px),
-        linear-gradient(90deg, color-mix(in srgb, var(--color-accent) 4%, transparent) 1px, transparent 1px);
+        linear-gradient(color-mix(in srgb, var(--color-primary) 4%, transparent) 1px, transparent 1px),
+        linear-gradient(90deg, color-mix(in srgb, var(--color-primary) 4%, transparent) 1px, transparent 1px);
       background-size: 52px 52px;
       mask-image: radial-gradient(ellipse 80% 60% at 50% 50%, black 30%, transparent 100%);
+    }
+
+    &-particles {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0.6;
+    }
+
+    &-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0.7;
+      mask-image: linear-gradient(to right, transparent 0%, black 12%, black 88%, transparent 100%);
     }
   }
 
@@ -201,35 +364,6 @@ export default defineComponent({
     @media (max-width: 900px) { gap: 1.5rem; }
   }
 
-  &__rings {
-    position: absolute;
-    inset: -80px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    pointer-events: none;
-    z-index: 0;
-    opacity: var(--op-ghost);
-    @media (max-width: 900px) { display: none; }
-
-    &-svg { width: 100%; height: auto; max-width: 520px; }
-  }
-
-  &__ring {
-    transform-box: fill-box;
-    transform-origin: center;
-    animation: auth-ring-pulse 4s ease-in-out infinite;
-
-    &--1 { stroke: var(--color-accent);                                         animation-delay: 0s; }
-    &--2 { stroke: color-mix(in srgb, var(--color-accent) 75%, transparent);   animation-delay: 0.7s; }
-    &--3 { stroke: color-mix(in srgb, var(--color-accent) 50%, transparent);   animation-delay: 1.4s; }
-    &--4 { stroke: color-mix(in srgb, var(--color-accent) 28%, transparent);   animation-delay: 2.1s; }
-  }
-
-  &__cell-outer  { stroke: color-mix(in srgb, var(--color-accent) 55%, transparent);   animation: auth-ring-pulse 3.5s ease-in-out infinite; }
-  &__cell-inner  { stroke: color-mix(in srgb, var(--color-accent) 35%, transparent);   animation: auth-ring-pulse 3.5s ease-in-out infinite 0.5s; }
-  &__cell-nucleus { stroke: color-mix(in srgb, var(--color-primary) 55%, transparent); animation: auth-ring-pulse 3s ease-in-out infinite 0.25s; }
-
   &__brand-identity {
     position: relative;
     z-index: 1;
@@ -250,11 +384,13 @@ export default defineComponent({
     width: 38px;
     height: 38px;
     border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
     border: 1.5px solid var(--color-border);
     background: var(--color-bg);
-    object-fit: cover;
-    transform: scale(1.7);
     box-shadow: var(--glow-sm);
+
+    img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.7); display: block; }
   }
 
   &__logo-text  { display: flex; flex-direction: column; gap: 2px; }
@@ -275,9 +411,9 @@ export default defineComponent({
 
   &__logo-tag {
     font-family: var(--font-mono);
-    font-size: var(--fs-xxs);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
+    font-size: 0.6rem;
+    letter-spacing: 0.02em;
+    text-transform: capitalize;
     color: var(--color-text-muted);
     opacity: var(--op-muted);
   }
@@ -291,8 +427,8 @@ export default defineComponent({
   }
 
   &__brand-highlight {
-    color: var(--color-accent);
-    text-shadow: 0 0 8px color-mix(in srgb, var(--color-accent) 40%, transparent);
+    color: var(--color-primary);
+    text-shadow: 0 0 8px color-mix(in srgb, var(--color-primary) 40%, transparent);
   }
 
   &__brand-sub {
@@ -326,9 +462,9 @@ export default defineComponent({
       font-family: var(--font-mono);
       font-size: var(--fs-xxs);
       font-weight: 700;
-      color: var(--color-accent);
-      background: color-mix(in srgb, var(--color-accent) 10%, transparent);
-      border: 1px solid color-mix(in srgb, var(--color-accent) 25%, transparent);
+      color: var(--color-primary);
+      background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+      border: 1px solid color-mix(in srgb, var(--color-primary) 25%, transparent);
       border-radius: 50%;
       width: 22px;
       height: 22px;
@@ -376,7 +512,7 @@ export default defineComponent({
   &__card {
     padding: 2rem;
     border-radius: var(--radius-lg);
-    border: 1px solid color-mix(in srgb, var(--color-accent) 30%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-primary) 30%, transparent);
     background: color-mix(in srgb, var(--color-surface) 88%, transparent);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
@@ -386,6 +522,8 @@ export default defineComponent({
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
+    overflow: hidden;
+    min-width: 0;
 
     &-header {
       display: flex;
@@ -398,7 +536,7 @@ export default defineComponent({
       font-size: var(--fs-xxs);
       text-transform: uppercase;
       letter-spacing: 0.1em;
-      color: var(--color-accent);
+      color: var(--color-primary);
       opacity: var(--op-dim);
     }
 

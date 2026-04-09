@@ -38,10 +38,12 @@
         <!-- Brand identity -->
         <div class="auth-page__brand-identity">
           <RouterLink to="/" class="auth-page__logo-link">
-            <img src="/logo.png" alt="ResoPulse" class="auth-page__logo-img" />
+            <div class="auth-page__logo-img">
+              <img src="/logo.png" alt="ResoPulse" />
+            </div>
             <div class="auth-page__logo-text">
               <span class="auth-page__logo-name">Reso<span class="auth-page__logo-pulse">Pulse</span></span>
-              <span class="auth-page__logo-tag">Virtual Cell Lab</span>
+              <span class="auth-page__logo-tag">{{ $t('nav.researchPlatform') }}</span>
             </div>
           </RouterLink>
           <h1 class="auth-page__brand-headline">
@@ -54,11 +56,14 @@
           </p>
         </div>
 
-        <!-- Feature pills -->
+        <!-- Feature strips -->
         <ul class="auth-page__features" aria-label="Platform features">
-          <li v-for="feat in features" :key="feat.label" class="auth-page__feature">
+          <li v-for="(feat, i) in features" :key="feat.label" class="auth-page__feature">
             <span class="auth-page__feature-icon">{{ feat.icon }}</span>
             <span class="auth-page__feature-label">{{ feat.label }}</span>
+            <span class="auth-page__feature-metric">
+              {{ displayMetrics[i] }}<span v-if="feat.unit" class="auth-page__feature-unit"> {{ feat.unit }}</span>
+            </span>
           </li>
         </ul>
 
@@ -110,6 +115,8 @@ import { dark } from '@clerk/themes'
 
 import { ROUTE } from '@/constants/routes'
 
+import { ICON } from '@/constants/icons'
+
 // Particle system constants
 const PARTICLE_COUNT   = 55
 const PARTICLE_SPEED   = 0.18
@@ -138,12 +145,13 @@ export default defineComponent({
       animFrameId: null as ReturnType<typeof requestAnimationFrame> | null,
       particles:   [] as Particle[],
 
+      displayMetrics: [] as string[],
       features: [
-        { icon: '⚡', label: 'Schwan EP model — membrane voltage across all frequencies' },
-        { icon: '🔬', label: 'Acoustic resonance for bacteria and viruses' },
-        { icon: '🤖', label: 'XGBoost AI protocol optimizer' },
-        { icon: '📊', label: 'Selectivity ratio, SAR thermal model, DEP crossover' },
-        { icon: '🏢', label: 'Multi-lab workspaces with role-based access' },
+        { icon: ICON.WAVE,        label: 'Schwan EP model',      metric: '1.5',  suffix: ' V',   unit: 'Vm peak'  },
+        { icon: ICON.FLASK,       label: 'Acoustic resonance',   metric: '2.4',  suffix: ' MHz', unit: 'fc'       },
+        { icon: ICON.AI,          label: 'AI optimizer',         metric: 'XGB',  suffix: '',     unit: 'XGBoost'  },
+        { icon: ICON.SELECTIVITY, label: 'Selectivity & DEP',    metric: '3.2',  suffix: '×',    unit: 'TI ratio' },
+        { icon: ICON.PLUG,        label: 'Multi-lab workspaces', metric: 'LIVE', suffix: '',     unit: ''         },
       ],
     }
   },
@@ -153,7 +161,7 @@ export default defineComponent({
 
     afterSignInUrl(): string {
       const redirect = this.$route.query.redirect as string | undefined
-      return redirect ?? ROUTE.EXPERIMENT
+      return redirect ?? ROUTE.HOME
     },
 
     clerkAppearance() {
@@ -178,8 +186,10 @@ export default defineComponent({
           spacingUnit:          '0.9rem',
         },
         elements: {
-          rootBox:                 { width: '100%' },
-          card:                    { background: 'transparent', boxShadow: 'none', border: 'none', padding: '0', gap: '1.1rem' },
+          rootBox:                 { width: '100%', maxWidth: '100%', minWidth: '0' },
+          cardBox:                 { width: '100%', maxWidth: '100%' },
+          card:                    { background: 'transparent', boxShadow: 'none', border: 'none', padding: '0', gap: '1.1rem', width: '100%' },
+          main:                    { padding: '0 2px' },
           headerTitle:             { display: 'none' },
           headerSubtitle:          { display: 'none' },
           header:                  { display: 'none' },
@@ -195,7 +205,8 @@ export default defineComponent({
           dividerText:             { color: '#3a5a7a', fontSize: '0.72rem', letterSpacing: '0.06em', textTransform: 'uppercase' },
           formFieldLabel:          { color: '#5a7a9a', fontSize: '0.72rem', letterSpacing: '0.06em', textTransform: 'uppercase', fontFamily: "'JetBrains Mono', monospace" },
           formFieldInput:          { background: '#0a1520', border: '1px solid #1e3a5f', color: '#c8d8e8', borderRadius: '8px' },
-          formButtonPrimary:       { background: '#00d4ff', color: '#060e1a', fontFamily: "'JetBrains Mono', monospace", letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: '700', borderRadius: '8px' },
+          formButtonPrimary:       { background: 'rgba(0,212,255,0.08)', color: '#00d4ff', border: '1px solid rgba(0,212,255,0.3)', fontFamily: "'JetBrains Mono', monospace", letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: '600', borderRadius: '8px', boxShadow: 'none' },
+          buttonArrowIcon:         { display: 'none' },
           footerActionLink:        { color: '#00d4ff' },
           footerAction:            { display: 'none' },
           identityPreviewText:     { color: '#c8d8e8' },
@@ -208,8 +219,10 @@ export default defineComponent({
   },
 
   mounted() {
+    this.displayMetrics = this.features.map(() => '0')
     this.initParticles()
     this.startParticleLoop()
+    this.animateCounters()
   },
 
   beforeUnmount() {
@@ -217,6 +230,32 @@ export default defineComponent({
   },
 
   methods: {
+
+    animateCounters(): void {
+      this.features.forEach((feat, i) => {
+        const target = parseFloat(feat.metric)
+        if (isNaN(target)) {
+          // Non-numeric (e.g. 'LIVE') — flash in after entry delay
+          const delay = (0.3 + (i + 1) * 0.15 + 0.3) * 1000
+          setTimeout(() => { this.displayMetrics[i] = feat.metric }, delay)
+          return
+        }
+        const delay    = (0.3 + (i + 1) * 0.15 + 0.25) * 1000
+        const duration = 1400
+        const decimals = feat.metric.includes('.') ? 1 : 0
+        setTimeout(() => {
+          const start = performance.now()
+          const tick = (now: number) => {
+            const t       = Math.min((now - start) / duration, 1)
+            const eased   = 1 - Math.pow(1 - t, 3)
+            this.displayMetrics[i] = (eased * target).toFixed(decimals) + feat.suffix
+            if (t < 1) requestAnimationFrame(tick)
+          }
+          requestAnimationFrame(tick)
+        }, delay)
+      })
+    },
+
     initParticles(): void {
       const canvas = this.particleCanvas
       if (!canvas) return
@@ -432,11 +471,13 @@ export default defineComponent({
     width: 38px;
     height: 38px;
     border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
     border: 1.5px solid var(--color-border);
     background: var(--color-bg);
-    object-fit: cover;
-    transform: scale(1.7);
     box-shadow: var(--glow-sm);
+
+    img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.7); display: block; }
   }
 
   &__logo-text {
@@ -461,9 +502,9 @@ export default defineComponent({
 
   &__logo-tag {
     font-family: var(--font-mono);
-    font-size: var(--fs-xxs);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
+    font-size: 0.6rem;
+    letter-spacing: 0.02em;
+    text-transform: capitalize;
     color: var(--color-text-muted);
     opacity: var(--op-muted);
   }
@@ -488,50 +529,109 @@ export default defineComponent({
     max-width: 40ch;
   }
 
-  /* ── Feature list ────────────────────────────────────────────────── */
+  /* ── Feature strips ─────────────────────────────────────────────── */
   &__features {
     position: relative;
     z-index: 1;
     list-style: none;
-    display: flex;
-    flex-direction: column;
-    gap: 0.6rem;
+    @include flex-col(0.4rem);
+    max-width: 380px;
 
     @media (max-width: 900px) {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 0.5rem;
+      gap: 0.4rem;
+      max-width: 100%;
     }
-    @media (max-width: 500px) {
-      grid-template-columns: 1fr;
-    }
+    @media (max-width: 500px) { grid-template-columns: 1fr; }
   }
 
   &__feature {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.65rem;
-    padding: 0.55rem 0.8rem;
+    position: relative;
+    @include flex-row(0.5rem);
+    padding: 0.45rem 0.7rem 0.45rem 0.8rem;
     border: 1px solid var(--color-border);
     border-radius: var(--radius);
-    background: color-mix(in srgb, var(--color-surface) 60%, transparent);
+    background: color-mix(in srgb, var(--color-surface) 55%, transparent);
     backdrop-filter: blur(4px);
-    animation: auth-fade-up 0.5s ease-out both;
+    overflow: hidden;
+    animation: feat-enter 0.75s cubic-bezier(0.16, 1, 0.3, 1) both;
+    transition: border-color var(--tr-fast), background var(--tr-fast), box-shadow var(--tr-fast);
 
     @for $i from 1 through 5 {
-      &:nth-child(#{$i}) { animation-delay: #{0.15 + $i * 0.07}s; }
+      &:nth-child(#{$i}) {
+        animation-delay: #{0.3 + $i * 0.15}s;
+        &::before { animation-delay: #{0.3 + $i * 0.15 + 0.1}s; }
+        &::after  { animation-delay: #{0.3 + $i * 0.15 + 0.2}s; }
+      }
+    }
+
+    // Left fill bar — charges from bottom to top on entry
+    &::before {
+      content: '';
+      position: absolute;
+      left: 0; bottom: 0;
+      width: 2px; height: 0;
+      background: var(--color-primary);
+      animation: feat-bar 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    // Scan line sweep
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0; left: -70%;
+      width: 55%; height: 100%;
+      background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--color-primary) 10%, transparent), transparent);
+      animation: feat-scan 1.1s ease-out both;
+      pointer-events: none;
+    }
+
+    &:hover {
+      border-color: color-mix(in srgb, var(--color-primary) 35%, transparent);
+      background: color-mix(in srgb, var(--color-primary) 5%, transparent);
+      box-shadow: inset 2px 0 10px color-mix(in srgb, var(--color-primary) 12%, transparent);
     }
 
     &-icon {
-      font-size: 0.9rem;
+      font-size: var(--fs-sm);
+      color: var(--color-primary);
+      opacity: var(--op-muted);
       flex-shrink: 0;
-      margin-top: 1px;
     }
 
     &-label {
       font-size: var(--fs-sm);
+      color: var(--color-text);
+      opacity: var(--op-strong);
+      flex: 1;
+      line-height: 1;
+    }
+
+    &-metric {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      flex-shrink: 0;
+      gap: 0.1rem;
+      font-family: var(--font-mono);
+      font-size: var(--fs-xs);
+      color: var(--color-primary);
+      opacity: var(--op-dim);
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+      transition: opacity var(--tr-fast);
+
+      .auth-page__feature:hover & { opacity: 1; }
+    }
+
+    &-unit {
+      font-size: 0.5rem;
       color: var(--color-text-muted);
-      line-height: 1.45;
+      opacity: var(--op-muted);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      line-height: 1;
     }
   }
 
@@ -551,10 +651,11 @@ export default defineComponent({
   /* ── Right: Auth card ────────────────────────────────────────────── */
   &__card-wrap {
     flex-shrink: 0;
-    width: 420px;
+    width: 422px;
     display: flex;
     flex-direction: column;
     gap: 1rem;
+    margin-top: 15px;
     animation: auth-card-enter 0.55s cubic-bezier(0.16, 1, 0.3, 1) both 0.1s;
 
     @media (max-width: 900px) {
@@ -578,6 +679,7 @@ export default defineComponent({
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
+    min-width: 0;
 
     &-header {
       display: flex;
@@ -647,6 +749,19 @@ export default defineComponent({
 @keyframes auth-fade-up {
   from { opacity: 0; transform: translateY(12px); }
   to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes feat-enter {
+  from { opacity: 0; transform: translateX(-14px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes feat-bar {
+  from { height: 0; }
+  to   { height: 100%; }
+}
+@keyframes feat-scan {
+  0%   { left: -70%; opacity: 0; }
+  15%  { opacity: 1; }
+  100% { left: 110%; opacity: 0; }
 }
 @keyframes auth-card-enter {
   from { opacity: 0; transform: translateY(20px) scale(0.98); }

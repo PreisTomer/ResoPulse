@@ -7,8 +7,13 @@ interface ClerkUserStub {
   organizationMemberships?: unknown[]
 }
 
+interface ClerkSession {
+  getToken(): Promise<string | null>
+}
+
 interface ClerkGlobal {
-  user?: ClerkUserStub | null
+  user?:    ClerkUserStub | null
+  session?: ClerkSession  | null
   load(): Promise<void>
   createOrganization(params: { name: string; slug?: string }): Promise<unknown>
 }

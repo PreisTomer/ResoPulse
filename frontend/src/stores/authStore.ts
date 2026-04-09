@@ -1,47 +1,53 @@
 // Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 
 // App-level auth state that complements Clerk's internal session management.
-// Tracks onboarding status and org context that Clerk does not own directly.
+// isSignedIn / hasOrg are kept in sync reactively from App.vue via useAuth().
+// Only hasCompletedOnboarding is persisted — the rest is always sourced from Clerk on load.
 
 import { defineStore } from 'pinia'
 
 export interface AuthState {
   /** Whether the user has completed the "create your first lab" onboarding step. */
   hasCompletedOnboarding: boolean
-  /** Clerk orgId of the currently active organization, null if none selected. */
-  activeOrgId: string | null
-  /** True while we are waiting for the Clerk SDK to finish loading. */
+  /** True while App.vue has not yet received the first useAuth() isLoaded=true event. */
   isClerkLoading: boolean
+  /** Mirrors useAuth().isSignedIn — updated reactively from App.vue. */
+  isSignedIn: boolean
+  /** True when the session has an active organisation (mirrors useAuth().orgId). */
+  hasOrg: boolean
 }
 
 export const useAuthStore = defineStore('auth', {
   state: (): AuthState => ({
     hasCompletedOnboarding: false,
-    activeOrgId:            null,
     isClerkLoading:         true,
+    isSignedIn:             false,
+    hasOrg:                 false,
   }),
 
-  getters: {
-    /** True once Clerk has resolved its initial session check. */
-    isReady: (state): boolean => !state.isClerkLoading,
-  },
-
   actions: {
-    /** Called once Clerk finishes loading its session. */
+    /** Called once the useAuth() isLoaded watcher fires true in App.vue. */
     setClerkLoaded(): void {
       this.isClerkLoading = false
     },
 
-    /** Marks onboarding as complete (persisted to localStorage via Clerk user metadata in production). */
+    /** Marks onboarding as complete. */
     completeOnboarding(): void {
       this.hasCompletedOnboarding = true
     },
 
-    /** Updates the active org reference when the user switches organizations. */
-    setActiveOrg(orgId: string | null): void {
-      this.activeOrgId = orgId
+    /**
+     * Syncs Clerk's reactive auth state into the store.
+     * Called by the App.vue watcher whenever useAuth() values change.
+     */
+    syncFromClerk(isSignedIn: boolean, hasOrg: boolean): void {
+      this.isSignedIn = isSignedIn
+      this.hasOrg     = hasOrg
     },
   },
 
-  persist: true,
+  // Only persist onboarding completion — auth state is always re-derived from Clerk on load.
+  persist: {
+    pick: ['hasCompletedOnboarding'],
+  },
 })

@@ -34,42 +34,33 @@
           @click="themeStore.toggle()"
         >{{ isOled ? $t('nav.themeOled') : $t('nav.themeDark') }}</button>
 
-        <!-- Org switcher — shown only when user is signed in and has an org -->
-        <div v-if="isSignedIn" class="nav-bar__org-switcher">
-          <OrganizationSwitcher
-            :appearance="clerkOrgSwitcherAppearance"
-            :afterCreateOrganizationUrl="ROUTE.EXPERIMENT"
-            :afterSelectOrganizationUrl="ROUTE.EXPERIMENT"
-          />
-        </div>
-
-        <!-- System status indicator -->
-        <div
-          class="nav-bar__status"
-          :class="{ 'nav-bar__status--acoustic': isResonanceMode }"
-          v-tip="statusTip"
-        >
-          <span
-            class="nav-bar__status-dot"
-            :class="{
-              'nav-bar__status-dot--warning':  !isResonanceMode && !systemReady,
-              'nav-bar__status-dot--acoustic': isResonanceMode,
-            }"
-          ></span>
-          <span
-            class="nav-bar__status-label"
-            :class="{
-              'nav-bar__status-label--warning':  !isResonanceMode && !systemReady,
-              'nav-bar__status-label--acoustic': isResonanceMode,
-            }"
-          >
-            {{ statusLabel }}
-          </span>
-        </div>
-
-        <!-- User button — shown when signed in; sign-in link when guest -->
-        <div v-if="isSignedIn" class="nav-bar__user-btn">
-          <UserButton :appearance="clerkUserButtonAppearance" />
+        <!-- Combined workspace + user pill with dropdown -->
+        <div v-if="isSignedIn" class="nav-bar__user-area" @click="toggleMenu">
+          <span v-if="orgName" class="nav-bar__workspace">{{ orgName }}</span>
+          <div class="nav-bar__user-btn">
+            <img
+              v-if="userImageUrl"
+              :src="userImageUrl"
+              :alt="userName"
+              class="nav-bar__user-avatar"
+            />
+            <span v-else class="nav-bar__user-initials">{{ userInitials }}</span>
+          </div>
+          <div v-if="menuOpen" class="nav-bar__user-menu" @click.stop>
+            <button class="nav-bar__user-menu-item" @click="openProfile">
+              <span class="nav-bar__user-menu-icon">{{ ICON.USER }}</span>
+              {{ $t('nav.manageAccount') }}
+            </button>
+            <button class="nav-bar__user-menu-item" @click="goToWorkspace">
+              <span class="nav-bar__user-menu-icon">{{ ICON.ORG }}</span>
+              {{ $t('nav.switchWorkspace') }}
+            </button>
+            <div class="nav-bar__user-menu-divider"></div>
+            <button class="nav-bar__user-menu-item nav-bar__user-menu-item--danger" @click="doSignOut">
+              <span class="nav-bar__user-menu-icon">{{ ICON.LOGOUT }}</span>
+              {{ $t('nav.signOut') }}
+            </button>
+          </div>
         </div>
         <RouterLink
           v-else
@@ -93,14 +84,12 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
-import { mapStores } from 'pinia'
-import { UserButton, OrganizationSwitcher, useUser } from '@clerk/vue'
-import { dark } from '@clerk/themes'
+import { useUser, useOrganization, useClerk } from '@clerk/vue'
 
-import { useCellStore } from '@/stores/cellStore'
 import { useThemeStore } from '@/stores/themeStore'
 
 import { ROUTE } from '@/constants/routes'
+import { ICON } from '@/constants/icons'
 
 const NAV_LINKS = [
   { to: ROUTE.HOME,       labelKey: 'nav.home',      exact: true },
@@ -113,60 +102,84 @@ const NAV_LINKS = [
 
 export default defineComponent({
   name: 'NavBar',
-  components: { UserButton, OrganizationSwitcher },
 
   setup() {
-    const { isSignedIn } = useUser()
-    return { isSignedIn }
+    const { isSignedIn, user } = useUser()
+    const { organization }     = useOrganization()
+    const clerk                = useClerk()
+    return { isSignedIn, user, organization, clerk }
   },
 
   data() {
-    return { mobileOpen: false, navLinks: NAV_LINKS }
+    return { mobileOpen: false, menuOpen: false, navLinks: NAV_LINKS }
   },
 
   computed: {
     ROUTE() { return ROUTE },
-    ...mapStores(useCellStore),
+    ICON()  { return ICON },
     themeStore() { return useThemeStore() },
 
-    clerkUserButtonAppearance() {
-      return {
-        baseTheme: dark,
-        variables: { colorBackground: '#0d1826', colorPrimary: '#00d4ff', borderRadius: '8px' },
-        elements: {
-          avatarBox:          { width: '30px', height: '30px', border: '1.5px solid #1e3a5f' },
-          userButtonPopoverCard: { background: '#0d1826', border: '1px solid #1e3a5f' },
-          userButtonPopoverActionButton: { color: '#c8d8e8' },
-          userButtonPopoverActionButtonText: { color: '#c8d8e8' },
-          userButtonPopoverFooter: { display: 'none' },
-        },
+    orgName(): string | null {
+      return (this.organization as { name?: string } | null)?.name ?? null
+    },
+
+    userImageUrl(): string | null {
+      return (this.user as { imageUrl?: string } | null)?.imageUrl ?? null
+    },
+
+    userName(): string {
+      const u = this.user as { firstName?: string; lastName?: string; fullName?: string } | null
+      return (u?.fullName ?? `${u?.firstName ?? ''} ${u?.lastName ?? ''}`.trim()) || 'User'
+    },
+
+    userInitials(): string {
+      const u = this.user as { firstName?: string; lastName?: string } | null
+      const first = u?.firstName?.[0] ?? ''
+      const last  = u?.lastName?.[0]  ?? ''
+      return (first + last).toUpperCase() || '?'
+    },
+
+    isOled(): boolean { return this.themeStore.theme === 'oled' },
+  },
+
+  mounted() {
+    document.addEventListener('click', this.handleOutsideClick)
+  },
+
+  beforeUnmount() {
+    document.removeEventListener('click', this.handleOutsideClick)
+  },
+
+  methods: {
+    toggleMenu() {
+      this.menuOpen = !this.menuOpen
+    },
+
+    closeMenu() {
+      this.menuOpen = false
+    },
+
+    handleOutsideClick(e: MouseEvent) {
+      const area = this.$el?.querySelector?.('.nav-bar__user-area')
+      if (area && !area.contains(e.target as Node)) {
+        this.menuOpen = false
       }
     },
 
-    clerkOrgSwitcherAppearance() {
-      return {
-        baseTheme: dark,
-        variables: { colorBackground: '#0d1826', colorPrimary: '#00d4ff', borderRadius: '8px' },
-        elements: {
-          organizationSwitcherTrigger:     { border: '1px solid #1e3a5f', background: '#132035', borderRadius: '6px', padding: '0.2rem 0.5rem', fontSize: '0.75rem' },
-          organizationSwitcherPopoverCard: { background: '#0d1826', border: '1px solid #1e3a5f' },
-          organizationPreviewTextContainer: { color: '#c8d8e8' },
-        },
-      }
+    openProfile() {
+      this.closeMenu()
+      ;(this.clerk as { openUserProfile?(): void })?.openUserProfile?.()
     },
 
-    systemReady(): boolean    { return this.cellStore.systemReady },
-    isResonanceMode(): boolean { return this.cellStore.isResonanceMode },
-    isOled(): boolean          { return this.themeStore.theme === 'oled' },
-
-    statusLabel(): string {
-      if (this.isResonanceMode) return this.$t('nav.modeAcoustic')
-      return this.systemReady ? this.$t('nav.systemReady') : this.$t('nav.systemWarning')
+    goToWorkspace() {
+      this.closeMenu()
+      // Workspace management page — to be implemented
     },
 
-    statusTip(): string {
-      if (this.isResonanceMode) return this.$t('nav.tipModeAcoustic')
-      return this.systemReady ? this.$t('nav.tipSystemReady') : this.$t('nav.tipSystemWarning')
+    doSignOut() {
+      this.closeMenu()
+      ;(this.clerk as { signOut?(opts?: { redirectUrl?: string }): Promise<void> })
+        ?.signOut?.({ redirectUrl: ROUTE.SIGN_IN })
     },
   },
 })
@@ -225,7 +238,7 @@ export default defineComponent({
       animation: brand-pulse 2.5s ease-in-out infinite;
     }
 
-    &-tag { @include mono-upper(0.6rem, 0.02em); color: var(--color-text-muted); }
+    &-tag { font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.02em; text-transform: capitalize; color: var(--color-text-muted); }
   }
 
   /* ── Nav ────────────────────────────────────────────────────────── */
@@ -252,38 +265,111 @@ export default defineComponent({
     justify-self: end;
   }
 
-  &__status {
-    @include flex-row(0.5rem);
+  /* ── User area + dropdown ───────────────────────────────────────── */
+  &__user-area {
+    @include flex-row(0);
+    position: relative;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    overflow: visible;
+    transition: border-color var(--tr-fast);
+    flex-shrink: 0;
+    cursor: pointer;
+    user-select: none;
 
-    &-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background-color: var(--color-accent);
-      box-shadow: 0 0 6px var(--color-accent);
-      animation: nav-pulse 2s ease-in-out infinite;
-      transition: background-color 0.4s, box-shadow 0.4s;
-
-      &--warning  { background-color: var(--color-amber-warm); box-shadow: 0 0 6px var(--color-amber-warm); }
-      &--acoustic { background-color: var(--color-amber); box-shadow: 0 0 8px var(--color-amber); animation: nav-pulse-acoustic 1.8s ease-in-out infinite; }
-    }
-
-    &-label {
-      @include mono-upper(var(--fs-sm));
-      color: var(--color-text-muted);
-      transition: color 0.4s;
-
-      &--warning  { color: var(--color-amber-warm); }
-      &--acoustic { color: var(--color-amber); }
-    }
+    &:hover { border-color: var(--color-primary-border); }
   }
 
-  /* ── Clerk controls ─────────────────────────────────────────────── */
-  &__user-btn,
-  &__org-switcher {
+  &__workspace {
+    @include mono-upper(var(--fs-xxs), 0.06em);
+    color: var(--color-text-muted);
+    opacity: var(--op-dim);
+    padding: 0 0.65rem;
+    border-right: 1px solid var(--color-border);
+    white-space: nowrap;
+    max-width: 24ch;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__user-btn {
     display: flex;
     align-items: center;
+    padding: 0.18rem 0.4rem;
     flex-shrink: 0;
+  }
+
+  &__user-avatar {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1.5px solid var(--color-border);
+    display: block;
+  }
+
+  &__user-initials {
+    @include inline-flex-center();
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: 1.5px solid var(--color-border);
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--color-primary);
+    background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  }
+
+  &__user-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    min-width: 185px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    z-index: 200;
+    padding: 0.3rem;
+    @include flex-col(0);
+    overflow: hidden;
+
+    &-item {
+      @include flex-row(0.5rem);
+      width: 100%;
+      padding: 0.5rem 0.7rem;
+      background: transparent;
+      border: none;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: var(--fs-xs);
+      letter-spacing: 0.04em;
+      color: var(--color-text-muted);
+      cursor: pointer;
+      text-align: left;
+      transition: background var(--tr-fast), color var(--tr-fast);
+
+      &:hover { background: var(--color-surface-2); color: var(--color-text); }
+
+      &--danger {
+        color: color-mix(in srgb, var(--color-danger, var(--color-amber)) 80%, transparent);
+        &:hover { background: color-mix(in srgb, var(--color-amber) 10%, transparent); color: var(--color-amber); }
+      }
+    }
+
+    &-icon {
+      font-size: var(--fs-sm);
+      opacity: var(--op-dim);
+      flex-shrink: 0;
+    }
+
+    &-divider {
+      height: 1px;
+      background: var(--color-border);
+      margin: 0.25rem 0.3rem;
+    }
   }
 
   &__sign-in-link {
@@ -362,8 +448,6 @@ export default defineComponent({
   }
 }
 
-@keyframes nav-pulse         { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-@keyframes nav-pulse-acoustic { 0%, 100% { opacity: 1; box-shadow: 0 0 8px var(--color-amber); } 50% { opacity: 0.5; box-shadow: 0 0 16px var(--color-amber); } }
 @keyframes brand-pulse       { 0%, 100% { text-shadow: 0 0 8px var(--color-primary-dim); } 50% { text-shadow: 0 0 18px color-mix(in srgb, var(--color-primary) 50%, transparent); } }
 
 /* ── Mobile / tablet (hamburger at ≤ 960px) ─────────────────────────────── */

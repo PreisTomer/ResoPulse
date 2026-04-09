@@ -1,6 +1,7 @@
 // Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 import { Server } from 'socket.io'
 import type { Server as HttpServer } from 'http'
+import { verifyToken } from '@clerk/express'
 import type {
   StatePacket, LogEntry, HardwareImpedancePacket,
   OutcomeEntry, AiOptimizeRequest, AiOptimizeResult,
@@ -324,6 +325,28 @@ export function setupSocketServer(httpServer: HttpServer): Server {
 
   const io = new Server(httpServer, {
     cors: { origin: ALLOWED_ORIGINS, methods: ['GET', 'POST'] },
+  })
+
+  // Reject unauthenticated connections before any event handler runs.
+  io.use(async (socket, next) => {
+    const token = typeof socket.handshake.auth?.token === 'string'
+      ? socket.handshake.auth.token
+      : null
+
+    if (!token) {
+      next(new Error('Unauthorized'))
+      return
+    }
+
+    try {
+      const payload = await verifyToken(token, {
+        secretKey: process.env.CLERK_SECRET_KEY ?? '',
+      })
+      socket.data.userId = payload.sub
+      next()
+    } catch {
+      next(new Error('Unauthorized'))
+    }
   })
 
   io.on('connection', (socket) => {

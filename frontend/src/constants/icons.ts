@@ -47,6 +47,9 @@ export const ICON = {
   NOTE_ON:     '♪',  // auditory display enabled
   NOTE_OFF:    '♩',  // auditory display disabled
   LINK:        '⧉',  // copy link / share URL
+  USER:        '◉',  // user account / profile
+  ORG:         '⋈',  // organization / workspace
+  LOGOUT:      '⇥',  // sign out / exit session
 } as const
 
 export type Icon = typeof ICON[keyof typeof ICON]
