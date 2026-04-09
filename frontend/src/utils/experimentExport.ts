@@ -570,7 +570,7 @@ export function buildCsvText(
     `# Healthy: ${cell.healthyLabel} · R=${cell.healthyRadius} ${UNIT.UM} · fc=${cell.healthyFc.toFixed(0)} ${UNIT.KHZ}`,
     `# Target:  ${cell.targetLabel} · R=${cell.targetRadius} ${UNIT.UM} · fc=${cell.targetFc.toFixed(0)} ${UNIT.KHZ}`,
     `# Medium: ${cell.medium} · σ_e=${cell.effectiveSigmaE.toFixed(3)} ${UNIT.S_PER_M}`,
-    `# Field: ${cell.currentBroadcastFrequency} ${UNIT.KHZ} · ${cell.fieldIntensity} ${UNIT.V_PER_CM} · ${cell.waveform} · dc=${cell.dutyCycle.toExponential(2)} · pw=${cell.pulseWidthNs} ${UNIT.NS}`,
+    `# Field (at export, per-row values in columns): ${cell.currentBroadcastFrequency} ${UNIT.KHZ} · ${cell.fieldIntensity} ${UNIT.V_PER_CM} · ${cell.waveform} · dc=${cell.dutyCycle.toExponential(2)} · pw=${cell.pulseWidthNs} ${UNIT.NS}`,
     `# Model: Schwan equation (Kotnik & Miklavcic 2000), ResoPulse`,
     `# Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.`,
   ].join('\n')

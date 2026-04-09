@@ -161,6 +161,7 @@ import * as d3 from 'd3'
 import { useCellStore } from '@/stores/cellStore'
 import { useExperimentStore } from '@/stores/experimentStore'
 import { useImpedanceStore } from '@/stores/impedanceStore'
+import { useReplayStore } from '@/stores/replayStore'
 
 import { broadcastLogEntry } from '@/services/socket'
 import { sonification } from '@/services/sonification'
@@ -606,9 +607,12 @@ export default defineComponent({
       if (this.type === CELL_TYPE.HEALTHY) this.cellStore.setHealthyCellState(CELL_STATE.LYSING)
       else this.cellStore.setTargetCellState(CELL_STATE.LYSING)
       const expStore = useExperimentStore()
-      expStore.logReading(useCellStore(), 'lysis')
-      const last = expStore.entries[expStore.entries.length - 1]
-      if (last) broadcastLogEntry(last)
+      // Do not log or broadcast during validation replay — replication is not a real experiment
+      if (!useReplayStore().isReplaying) {
+        expStore.logReading(useCellStore(), 'lysis')
+        const last = expStore.entries[expStore.entries.length - 1]
+        if (last) broadcastLogEntry(last)
+      }
       if (this.type === CELL_TYPE.TARGET) useImpedanceStore().snapshotSimulatedReading()
       const el = this.$refs.cellCanvas as HTMLElement
       this.particleInterval = setInterval(() => { if (el) spawnFragment(el) }, FRAGMENT_INTERVAL_MS)
