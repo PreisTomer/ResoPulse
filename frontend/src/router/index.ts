@@ -21,6 +21,7 @@ const router = createRouter({
     { path: '/sign-in/sso-callback',              component: () => import('../views/SignInView/index.vue') },
     { path: '/sign-in/factor-one',                component: () => import('../views/SignInView/index.vue') },
     { path: '/sign-in/factor-two',                component: () => import('../views/SignInView/index.vue') },
+    { path: '/sign-in/tasks/choose-organization', component: () => import('../views/SignInView/index.vue') },
     { path: ROUTE.SIGN_UP,                         component: () => import('../views/SignUpView/index.vue'),  meta: { guestOnly: true } },
     { path: '/sign-up/sso-callback',              component: () => import('../views/SignUpView/index.vue') },
     { path: '/sign-up/continue',                  component: () => import('../views/SignUpView/index.vue') },

@@ -38,7 +38,6 @@
         <div v-if="isSignedIn" class="nav-bar__org-switcher">
           <OrganizationSwitcher
             :appearance="clerkOrgSwitcherAppearance"
-            :hidePersonalWorkspace="true"
             :afterCreateOrganizationUrl="ROUTE.EXPERIMENT"
             :afterSelectOrganizationUrl="ROUTE.EXPERIMENT"
           />
@@ -70,10 +69,7 @@
 
         <!-- User button — shown when signed in; sign-in link when guest -->
         <div v-if="isSignedIn" class="nav-bar__user-btn">
-          <UserButton
-            :appearance="clerkUserButtonAppearance"
-            :afterSignOutUrl="ROUTE.SIGN_IN"
-          />
+          <UserButton :appearance="clerkUserButtonAppearance" />
         </div>
         <RouterLink
           v-else

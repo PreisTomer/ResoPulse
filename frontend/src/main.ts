@@ -30,7 +30,10 @@ app
   .use(pinia)
   .use(i18n)
   .use(router)
-  .use(clerkPlugin, { publishableKey: PUBLISHABLE_KEY })
+  .use(clerkPlugin, {
+    publishableKey:  PUBLISHABLE_KEY,
+    afterSignOutUrl: '/sign-in',
+  })
 
 app.directive('tip', vTip)
 
