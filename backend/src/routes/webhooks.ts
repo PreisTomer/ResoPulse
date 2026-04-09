@@ -18,7 +18,7 @@ const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET ?? ''
 
 // Raw body is required for svix signature verification — do NOT apply express.json() before this route.
 
-router.post('/webhooks/clerk', async (req: Request, res: Response) => {
+router.post('/', async (req: Request, res: Response) => {
   if (!WEBHOOK_SECRET) {
     console.error('[Webhook] CLERK_WEBHOOK_SECRET is not set — rejecting all webhook calls.')
     res.status(500).json({ error: 'Webhook secret not configured.' })
