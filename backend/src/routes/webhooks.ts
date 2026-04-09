@@ -25,23 +25,20 @@ router.post('/', async (req: Request, res: Response) => {
     return
   }
 
-  const svixId        = req.headers['svix-id']        as string | undefined
-  const svixTimestamp = req.headers['svix-timestamp']  as string | undefined
-  const svixSignature = req.headers['svix-signature']  as string | undefined
+  // req.body is a Buffer from express.raw() — pass it directly to svix without
+  // converting to string. Svix verifies the exact byte sequence that was signed.
+  const payload = req.body as Buffer
 
-  if (!svixId || !svixTimestamp || !svixSignature) {
-    res.status(400).json({ error: 'Missing svix headers.' })
+  if (!Buffer.isBuffer(payload) || payload.length === 0) {
+    res.status(400).json({ error: 'Empty or non-raw request body.' })
     return
   }
 
-  // req.body is a Buffer when express.raw() is used for this route.
-  const payload = req.body as Buffer
-  const body    = payload.toString('utf8')
-
   let event: ClerkWebhookEvent
   try {
+    // Pass req.headers directly — svix handles header name casing automatically.
     const wh = new Webhook(WEBHOOK_SECRET)
-    event    = wh.verify(body, { 'svix-id': svixId, 'svix-timestamp': svixTimestamp, 'svix-signature': svixSignature }) as ClerkWebhookEvent
+    event    = wh.verify(payload, req.headers as Record<string, string>) as ClerkWebhookEvent
   } catch (err) {
     console.error('[Webhook] Signature verification failed:', err)
     res.status(400).json({ error: 'Invalid webhook signature.' })
