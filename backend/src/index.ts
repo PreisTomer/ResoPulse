@@ -61,16 +61,14 @@ app.get('/ai/training-data', requireAuth, (req, res) => {
 })
 
 // ── AI proxy routes (protected) ───────────────────────────────────────────────
-app.get('/ai/health', async (_req, res) => {
-  try {
-    const upstream = await fetch(`${AI_SERVICE_URL}/health`, {
-      signal: AbortSignal.timeout(AI_PROXY_TIMEOUT_MS),
+app.get('/ai/health', (_req, res) => {
+  fetch(`${AI_SERVICE_URL}/health`, { signal: AbortSignal.timeout(AI_PROXY_TIMEOUT_MS) })
+    .then(r => r.json() as Promise<Record<string, unknown>>)
+    .then(body => res.json({ ...body, aiServiceReachable: true }))
+    .catch((err: unknown) => {
+      console.warn('[AI] health probe failed:', err)
+      res.json({ status: 'unavailable', aiServiceReachable: false, modelReady: false, trainingSamples: 0 })
     })
-    const body = await upstream.json() as Record<string, unknown>
-    res.json({ ...body, aiServiceReachable: true })
-  } catch {
-    res.json({ status: 'unavailable', aiServiceReachable: false, modelReady: false, trainingSamples: 0 })
-  }
 })
 
 app.post('/ai/retrain', requireAuth, async (_req, res) => {
