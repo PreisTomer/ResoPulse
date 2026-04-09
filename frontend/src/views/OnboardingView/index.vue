@@ -4,35 +4,119 @@
 
     <div class="onboarding__bg" aria-hidden="true">
       <div class="onboarding__bg-grid"></div>
-      <canvas ref="waveCanvas" class="onboarding__bg-canvas"></canvas>
+      <canvas ref="waveCanvas"    class="onboarding__bg-canvas"></canvas>
+      <canvas ref="particleCanvas" class="onboarding__bg-particles"></canvas>
     </div>
 
     <div class="onboarding__layout">
 
+      <!-- Brand mark -->
+      <RouterLink to="/" class="onboarding__brand">
+        <div class="onboarding__brand-img">
+          <img src="/logo.png" alt="ResoPulse" />
+        </div>
+        <div class="onboarding__brand-text">
+          <span class="onboarding__brand-name">Reso<span class="onboarding__brand-pulse">Pulse</span></span>
+          <span class="onboarding__brand-tag">{{ $t('nav.researchPlatform') }}</span>
+        </div>
+      </RouterLink>
+
       <!-- Progress indicator -->
       <div class="onboarding__progress">
-        <span class="onboarding__progress-step" :class="{ 'onboarding__progress-step--active': step >= 1 }">Account</span>
-        <span class="onboarding__progress-connector"></span>
-        <span class="onboarding__progress-step" :class="{ 'onboarding__progress-step--active': step >= 2 }">Lab Setup</span>
-        <span class="onboarding__progress-connector"></span>
-        <span class="onboarding__progress-step" :class="{ 'onboarding__progress-step--active': step >= 3 }">Ready</span>
+        <div class="onboarding__progress-step" :class="{ 'onboarding__progress-step--done': step >= 1, 'onboarding__progress-step--active': step === 1 }">
+          <span class="onboarding__progress-num">{{ ICON.CHECK }}</span>
+          <span class="onboarding__progress-label">{{ $t('onboarding.stepAccount') }}</span>
+        </div>
+        <div class="onboarding__progress-connector" :class="{ 'onboarding__progress-connector--done': step >= 2 }"></div>
+        <div class="onboarding__progress-step" :class="{ 'onboarding__progress-step--done': step >= 3, 'onboarding__progress-step--active': step === 2 }">
+          <span class="onboarding__progress-num">2</span>
+          <span class="onboarding__progress-label">{{ $t('onboarding.stepLabSetup') }}</span>
+        </div>
+        <div class="onboarding__progress-connector" :class="{ 'onboarding__progress-connector--done': step >= 3 }"></div>
+        <div class="onboarding__progress-step" :class="{ 'onboarding__progress-step--active': step === 3 }">
+          <span class="onboarding__progress-num">3</span>
+          <span class="onboarding__progress-label">{{ $t('onboarding.stepSystemReady') }}</span>
+        </div>
       </div>
 
       <!-- Step 2: Create organisation -->
       <div v-if="isCreatingOrg" class="onboarding__card">
-        <div class="onboarding__card-icon" aria-hidden="true">🧪</div>
+
+        <!-- Full-width EP pulse trace animation — Schwan Vm(f) frequency response sweep -->
+        <div class="onboarding__pulse-header" aria-hidden="true">
+          <svg viewBox="0 0 460 120" preserveAspectRatio="none" class="onboarding__pulse-svg">
+            <!-- Grid lines — horizontal; x-axis at y=85 (lower third) -->
+            <line x1="0" y1="85" x2="460" y2="85" stroke="rgba(0,212,255,0.09)" stroke-width="1"/>
+            <line x1="0" y1="55" x2="460" y2="55" stroke="rgba(0,212,255,0.04)" stroke-width="0.5"/>
+            <line x1="0" y1="25" x2="460" y2="25" stroke="rgba(0,212,255,0.04)" stroke-width="0.5"/>
+            <!-- Grid lines — vertical (frequency axis divisions) -->
+            <line x1="115" y1="0" x2="115" y2="120" stroke="rgba(0,212,255,0.04)" stroke-width="0.5"/>
+            <line x1="230" y1="0" x2="230" y2="120" stroke="rgba(0,212,255,0.04)" stroke-width="0.5"/>
+            <line x1="345" y1="0" x2="345" y2="120" stroke="rgba(0,212,255,0.04)" stroke-width="0.5"/>
+            <!--
+              Schwan Vm(f) — morphs between two parameter regimes over 8s:
+              Shape 1: high σ_e (saline) — narrow peak near fc ≈ 100 kHz range
+              Shape 2: low σ_e (EP buffer) — broader peak shifted right as τ changes
+              Both shapes: M + 7×C, identical path structure required for SMIL interpolation
+            -->
+            <path class="onboarding__pulse-trace onboarding__pulse-trace--vm"
+              d="M 0,85 C 20,85 40,85 60,85 C 80,85 86,83 92,79 C 104,66 114,40 134,28 C 154,20 166,22 180,30 C 198,40 210,52 226,62 C 246,70 270,77 300,82 C 334,84 390,85 460,85">
+              <animate
+                attributeName="d"
+                values="M 0,85 C 20,85 40,85 60,85 C 80,85 86,83 92,79 C 104,66 114,40 134,28 C 154,20 166,22 180,30 C 198,40 210,52 226,62 C 246,70 270,77 300,82 C 334,84 390,85 460,85;
+                        M 0,85 C 20,85 46,85 82,85 C 114,85 128,83 142,78 C 158,66 178,44 198,34 C 218,27 236,29 252,38 C 268,50 280,62 300,72 C 322,78 358,83 408,85 C 436,85 452,85 460,85;
+                        M 0,85 C 20,85 40,85 60,85 C 80,85 86,83 92,79 C 104,66 114,40 134,28 C 154,20 166,22 180,30 C 198,40 210,52 226,62 C 246,70 270,77 300,82 C 334,84 390,85 460,85"
+                dur="8s"
+                repeatCount="indefinite"
+                calcMode="spline"
+                keySplines="0.42 0 0.58 1; 0.42 0 0.58 1"
+              />
+            </path>
+            <!--
+              TI (selectivity ratio H/T) — peaks near target-cell fc; shifts with Vm(f):
+              Shape 1: peak at lower f (alongside Vm peak)
+              Shape 2: peak shifted right in step with the σ_e change
+            -->
+            <path class="onboarding__pulse-trace onboarding__pulse-trace--sel"
+              d="M 0,85 C 20,85 52,85 72,85 C 92,85 98,84 104,82 C 116,76 128,56 148,46 C 168,40 178,42 194,50 C 210,60 220,68 240,74 C 260,79 280,82 308,84 C 340,85 390,85 460,85">
+              <animate
+                attributeName="d"
+                values="M 0,85 C 20,85 52,85 72,85 C 92,85 98,84 104,82 C 116,76 128,56 148,46 C 168,40 178,42 194,50 C 210,60 220,68 240,74 C 260,79 280,82 308,84 C 340,85 390,85 460,85;
+                        M 0,85 C 20,85 56,85 90,85 C 122,85 136,84 150,80 C 166,73 186,54 206,44 C 226,38 244,40 260,48 C 276,58 288,68 308,76 C 330,81 366,84 414,85 C 440,85 454,85 460,85;
+                        M 0,85 C 20,85 52,85 72,85 C 92,85 98,84 104,82 C 116,76 128,56 148,46 C 168,40 178,42 194,50 C 210,60 220,68 240,74 C 260,79 280,82 308,84 C 340,85 390,85 460,85"
+                dur="8s"
+                repeatCount="indefinite"
+                calcMode="spline"
+                keySplines="0.42 0 0.58 1; 0.42 0 0.58 1"
+              />
+            </path>
+            <!-- Frequency cursor — tracks the Vm(f) peak as it shifts with parameter changes -->
+            <line class="onboarding__pulse-marker" x1="0" y1="0" x2="0" y2="120">
+              <animateTransform
+                attributeName="transform"
+                type="translate"
+                values="134,0; 198,0; 134,0"
+                dur="8s"
+                repeatCount="indefinite"
+                calcMode="spline"
+                keySplines="0.42 0 0.58 1; 0.42 0 0.58 1"
+              />
+            </line>
+            <!-- Axis labels -->
+            <text class="onboarding__pulse-label" x="8" y="18">Vm(f)</text>
+            <text class="onboarding__pulse-label onboarding__pulse-label--sel" x="8" y="30">TI</text>
+          </svg>
+        </div>
+
         <div class="onboarding__card-header">
-          <span class="onboarding__card-eyebrow">Step 2 of 2</span>
-          <h1 class="onboarding__card-title">Create your Lab Workspace</h1>
-          <p class="onboarding__card-desc">
-            A workspace groups your team and their experiment sessions.
-            You can invite colleagues after setup.
-          </p>
+          <span class="onboarding__card-eyebrow">{{ $t('onboarding.step2Label') }}</span>
+          <h1 class="onboarding__card-title">{{ $t('onboarding.cardTitle') }}</h1>
+          <p class="onboarding__card-desc">{{ $t('onboarding.cardDesc') }}</p>
         </div>
 
         <form class="onboarding__form" @submit.prevent="submitCreateOrg">
           <div class="onboarding__field">
-            <label class="onboarding__field-label" for="org-name">Lab / Team name</label>
+            <label class="onboarding__field-label" for="org-name">{{ $t('onboarding.fieldNameLabel') }}</label>
             <input
               id="org-name"
               v-model="orgName"
@@ -48,7 +132,7 @@
           </div>
 
           <div class="onboarding__field">
-            <label class="onboarding__field-label" for="org-slug">Workspace URL slug</label>
+            <label class="onboarding__field-label" for="org-slug">{{ $t('onboarding.fieldSlugLabel') }} <span class="onboarding__field-optional">{{ $t('onboarding.fieldOptional') }}</span></label>
             <div class="onboarding__slug-row">
               <span class="onboarding__slug-prefix">resopulse.app/</span>
               <input
@@ -66,23 +150,26 @@
             <span v-if="slugError" class="onboarding__field-error">{{ slugError }}</span>
           </div>
 
+          <!-- Role callout — integrated into the form flow -->
+          <div class="onboarding__role-callout">
+            <div class="onboarding__role-callout-left">
+              <span class="onboarding__role-badge">{{ ICON.USER }} {{ $t('onboarding.roleOwner') }}</span>
+            </div>
+            <p class="onboarding__role-callout-desc">{{ $t('onboarding.roleDesc') }}</p>
+          </div>
+
           <button
             type="submit"
             class="onboarding__btn onboarding__btn--primary"
             :disabled="isSubmitting"
           >
             <span v-if="isSubmitting" class="onboarding__btn-spinner" aria-hidden="true"></span>
-            {{ isSubmitting ? 'Creating workspace...' : 'Create Lab Workspace' }}
+            {{ isSubmitting ? $t('onboarding.btnCreating') : $t('onboarding.btnCreate') }}
           </button>
 
           <p v-if="submitError" class="onboarding__submit-error">{{ submitError }}</p>
         </form>
 
-        <div class="onboarding__role-info">
-          <span class="onboarding__role-info-title">Role assigned to you:</span>
-          <span class="onboarding__role-badge">Owner</span>
-          <span class="onboarding__role-info-desc">Full access. Invite team members after setup.</span>
-        </div>
       </div>
 
       <!-- Step 3: Done — brief success screen before redirect -->
@@ -92,11 +179,11 @@
             <circle class="onboarding__success-ring--1" cx="100" cy="100" r="40"  stroke-width="1.5" fill="none"/>
             <circle class="onboarding__success-ring--2" cx="100" cy="100" r="65"  stroke-width="1"   fill="none"/>
             <circle class="onboarding__success-ring--3" cx="100" cy="100" r="90"  stroke-width="0.8" fill="none"/>
-            <text x="100" y="107" text-anchor="middle" class="onboarding__success-icon">✓</text>
+            <text x="100" y="107" text-anchor="middle" class="onboarding__success-icon">{{ ICON.CHECK }}</text>
           </svg>
         </div>
-        <h1 class="onboarding__card-title onboarding__card-title--success">Lab workspace ready</h1>
-        <p class="onboarding__card-desc">Redirecting you to the app...</p>
+        <h1 class="onboarding__card-title onboarding__card-title--success">{{ $t('onboarding.successTitle') }}</h1>
+        <p class="onboarding__card-desc">{{ $t('onboarding.successRedirect') }}</p>
         <div class="onboarding__redirect-bar">
           <div class="onboarding__redirect-bar-fill"></div>
         </div>
@@ -114,9 +201,11 @@ import { useClerk } from '@clerk/vue'
 import { ROUTE } from '@/constants/routes'
 import { useAuthStore } from '@/stores/authStore'
 
+import { ICON } from '@/constants/icons'
+
 const REDIRECT_DELAY_MS = 2200
 
-// Sine wave config — cyan/primary dominant, subtle (card sits in foreground)
+// ── Wave config ────────────────────────────────────────────────────────────
 interface WaveState {
   freq:      number
   amp:       number
@@ -128,52 +217,71 @@ interface WaveState {
 }
 
 const WAVE_INIT: Omit<WaveState, 'phase'>[] = [
-  { freq: 0.007, amp: 40, yRatio: 0.18, speed: 0.007, opacity: 0.09, isPrimary: true  },
-  { freq: 0.012, amp: 25, yRatio: 0.45, speed: 0.011, opacity: 0.07, isPrimary: false },
-  { freq: 0.009, amp: 35, yRatio: 0.72, speed: 0.008, opacity: 0.08, isPrimary: true  },
-  { freq: 0.015, amp: 18, yRatio: 0.90, speed: 0.014, opacity: 0.06, isPrimary: false },
+  { freq: 0.007, amp: 45, yRatio: 0.18, speed: 0.007, opacity: 0.22, isPrimary: true  },
+  { freq: 0.012, amp: 30, yRatio: 0.40, speed: 0.011, opacity: 0.16, isPrimary: false },
+  { freq: 0.009, amp: 38, yRatio: 0.65, speed: 0.008, opacity: 0.20, isPrimary: true  },
+  { freq: 0.015, amp: 22, yRatio: 0.85, speed: 0.014, opacity: 0.14, isPrimary: false },
 ]
+
+// Purple: rgb(167, 139, 250) matches --color-purple: #a78bfa
+
+// ── Particle config ────────────────────────────────────────────────────────
+const PARTICLE_COUNT   = 50
+const PARTICLE_SPEED   = 0.18
+const PARTICLE_RADIUS  = 1.4
+const PARTICLE_OPACITY = 0.45
+const CONNECTION_DIST  = 120
+
+interface Particle {
+  x: number; y: number; vx: number; vy: number
+}
 
 export default defineComponent({
   name: 'OnboardingView',
 
   setup() {
-    const clerk      = useClerk()
-    const authStore  = useAuthStore()
-    const waveCanvas = ref<HTMLCanvasElement | null>(null)
-    return { clerk, authStore, waveCanvas }
+    const clerk          = useClerk()
+    const authStore      = useAuthStore()
+    const waveCanvas     = ref<HTMLCanvasElement | null>(null)
+    const particleCanvas = ref<HTMLCanvasElement | null>(null)
+    return { clerk, authStore, waveCanvas, particleCanvas }
   },
 
   data() {
     return {
-      step:          2 as 1 | 2 | 3,
-      animFrameId:   null as ReturnType<typeof requestAnimationFrame> | null,
-      waves:         markRaw(WAVE_INIT.map(w => ({ ...w, phase: Math.random() * Math.PI * 2 }))),
-      orgName:       '',
-      orgSlug:       '',
-      nameError:     '',
-      slugError:     '',
-      submitError:   '',
-      isSubmitting:  false,
-      isCreatingOrg: true,
+      step:             2 as 1 | 2 | 3,
+      waveFrameId:      null as ReturnType<typeof requestAnimationFrame> | null,
+      particleFrameId:  null as ReturnType<typeof requestAnimationFrame> | null,
+      waves:            markRaw(WAVE_INIT.map(w => ({ ...w, phase: Math.random() * Math.PI * 2 }))),
+      particles:        [] as Particle[],
+      orgName:          '',
+      orgSlug:          '',
+      nameError:        '',
+      slugError:        '',
+      submitError:      '',
+      isSubmitting:     false,
+      isCreatingOrg:    true,
     }
+  },
+
+  computed: {
+    ICON() { return ICON },
   },
 
   methods: {
     onSlugInput(): void {
       this.slugError = ''
-      // Auto-sanitise: lowercase, hyphens only
       this.orgSlug = this.orgSlug.toLowerCase().replace(/[^a-z0-9-]/g, '-')
     },
 
     validateForm(): boolean {
       let valid = true
       if (!this.orgName.trim()) {
-        this.nameError = 'Lab name is required.'
+        this.nameError = this.$t('onboarding.errorNameRequired')
         valid = false
       }
       if (this.orgSlug && !/^[a-z0-9][a-z0-9-]*[a-z0-9]$/.test(this.orgSlug)) {
-        this.slugError = 'Slug must be lowercase letters, numbers, and hyphens only.'
+        this.slugError = this.$t('onboarding.errorSlugFormat')
         valid = false
       }
       return valid
@@ -181,51 +289,42 @@ export default defineComponent({
 
     async submitCreateOrg(): Promise<void> {
       if (!this.validateForm()) return
-
       this.isSubmitting = true
       this.submitError  = ''
-
       try {
-        if (!this.clerk) throw new Error('Clerk is not initialised.')
+        if (!this.clerk) throw new Error(this.$t('onboarding.errorNoClerk'))
         const org = await this.clerk.createOrganization({
           name: this.orgName.trim(),
           slug: this.orgSlug || undefined,
         })
-        // Activate the new org so the session JWT is refreshed before we navigate.
         await this.clerk.setActive?.({ organization: org.id })
         this.authStore.completeOnboarding()
         this.isCreatingOrg = false
         this.step          = 3
-        // By the time the timer fires, App.vue's useAuth() watcher will have
-        // updated authStore.hasOrg = true, so the guard lets the navigation through.
         setTimeout(() => { this.$router.push(ROUTE.HOME) }, REDIRECT_DELAY_MS)
       } catch (err) {
         const msg = (err as { errors?: { message: string }[] })?.errors?.[0]?.message
-        this.submitError = msg ?? 'Could not create workspace. Please try again.'
+        this.submitError = msg ?? this.$t('onboarding.errorGeneric')
       } finally {
         this.isSubmitting = false
       }
     },
 
+    // ── Wave loop ────────────────────────────────────────────────────
     startWaveLoop(): void {
       const canvas = this.waveCanvas
       if (!canvas) return
       const ctx = canvas.getContext('2d')
       if (!ctx) return
-
       const tick = () => {
         const w = canvas.offsetWidth
         const h = canvas.offsetHeight
-        if (canvas.width !== w || canvas.height !== h) {
-          canvas.width  = w
-          canvas.height = h
-        }
+        if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h }
         ctx.clearRect(0, 0, w, h)
         this.drawWaves(ctx, w, h)
-        this.animFrameId = requestAnimationFrame(tick)
+        this.waveFrameId = requestAnimationFrame(tick)
       }
-
-      this.animFrameId = requestAnimationFrame(tick)
+      this.waveFrameId = requestAnimationFrame(tick)
     },
 
     drawWaves(ctx: CanvasRenderingContext2D, w: number, h: number): void {
@@ -235,22 +334,78 @@ export default defineComponent({
           const y = wave.yRatio * h + Math.sin(x * wave.freq + wave.phase) * wave.amp
           x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y)
         }
-        // C.primary = #00d4ff → rgb(0,212,255) | C.accent = #00ff9d → rgb(0,255,157)
-        const rgb = wave.isPrimary ? '0, 212, 255' : '0, 255, 157'
+        const rgb = wave.isPrimary ? '0, 212, 255' : '167, 139, 250'
         ctx.strokeStyle = `rgba(${rgb}, ${wave.opacity})`
         ctx.lineWidth   = 1.5
         ctx.stroke()
         wave.phase += wave.speed
       }
     },
+
+    // ── Particle loop ────────────────────────────────────────────────
+    initParticles(): void {
+      const canvas = this.particleCanvas
+      if (!canvas) return
+      const w = canvas.width  = canvas.offsetWidth
+      const h = canvas.height = canvas.offsetHeight
+      this.particles = Array.from({ length: PARTICLE_COUNT }, () => ({
+        x:  Math.random() * w,
+        y:  Math.random() * h,
+        vx: (Math.random() - 0.5) * PARTICLE_SPEED * 2,
+        vy: (Math.random() - 0.5) * PARTICLE_SPEED * 2,
+      }))
+    },
+
+    startParticleLoop(): void {
+      const canvas = this.particleCanvas
+      if (!canvas) return
+      const ctx = canvas.getContext('2d')
+      if (!ctx) return
+      const tick = () => {
+        const w = canvas.offsetWidth
+        const h = canvas.offsetHeight
+        if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; this.initParticles() }
+        ctx.clearRect(0, 0, w, h)
+        for (const p of this.particles) {
+          p.x += p.vx; p.y += p.vy
+          if (p.x < 0 || p.x > w) p.vx *= -1
+          if (p.y < 0 || p.y > h) p.vy *= -1
+        }
+        for (let i = 0; i < this.particles.length; i++) {
+          for (let j = i + 1; j < this.particles.length; j++) {
+            const a = this.particles[i]; const b = this.particles[j]
+            if (!a || !b) continue
+            const dx = a.x - b.x; const dy = a.y - b.y
+            const dist = Math.sqrt(dx * dx + dy * dy)
+            if (dist < CONNECTION_DIST) {
+              ctx.beginPath()
+              ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y)
+              ctx.strokeStyle = `rgba(0, 212, 255, ${(1 - dist / CONNECTION_DIST) * 0.22})`
+              ctx.lineWidth = 0.6; ctx.stroke()
+            }
+          }
+        }
+        for (const p of this.particles) {
+          ctx.beginPath()
+          ctx.arc(p.x, p.y, PARTICLE_RADIUS, 0, Math.PI * 2)
+          ctx.fillStyle = `rgba(0, 212, 255, ${PARTICLE_OPACITY})`
+          ctx.fill()
+        }
+        this.particleFrameId = requestAnimationFrame(tick)
+      }
+      this.particleFrameId = requestAnimationFrame(tick)
+    },
   },
 
   mounted() {
     this.startWaveLoop()
+    this.initParticles()
+    this.startParticleLoop()
   },
 
   beforeUnmount() {
-    if (this.animFrameId !== null) cancelAnimationFrame(this.animFrameId)
+    if (this.waveFrameId    !== null) cancelAnimationFrame(this.waveFrameId)
+    if (this.particleFrameId !== null) cancelAnimationFrame(this.particleFrameId)
   },
 })
 </script>
@@ -286,8 +441,15 @@ export default defineComponent({
       inset: 0;
       width: 100%;
       height: 100%;
-      opacity: 0.6;
+      opacity: 0.9;
       mask-image: linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%);
+    }
+
+    &-particles {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
     }
   }
 
@@ -301,36 +463,127 @@ export default defineComponent({
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 2rem;
+    gap: 1.75rem;
   }
 
-  /* ── Progress bar ────────────────────────────────────────────────── */
+  /* ── Brand mark ──────────────────────────────────────────────────── */
+  &__brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65rem;
+    text-decoration: none;
+    animation: onboard-fade-in 0.4s ease-out both;
+  }
+
+  &__brand-img {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+    border: 1.5px solid var(--color-border);
+    background: var(--color-bg);
+    box-shadow: var(--glow-sm);
+
+    img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.7); display: block; }
+  }
+
+  &__brand-text {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+
+  &__brand-name {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--color-text-heading);
+    letter-spacing: 0.03em;
+    line-height: 1;
+  }
+
+  &__brand-pulse {
+    color: var(--color-primary-deep);
+    -webkit-text-stroke: 0.8px var(--color-primary);
+    paint-order: stroke fill;
+  }
+
+  &__brand-tag {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.02em;
+    text-transform: capitalize;
+    color: var(--color-text-muted);
+    opacity: var(--op-muted);
+  }
+
+  /* ── Progress indicator ──────────────────────────────────────────── */
   &__progress {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    animation: onboard-fade-in 0.4s ease-out both;
+    animation: onboard-fade-in 0.4s ease-out both 0.05s;
   }
 
   &__progress-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+
+    &--active &-num {
+      background: color-mix(in srgb, var(--color-primary) 15%, transparent);
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+    }
+
+    &--active &-label { color: var(--color-primary); opacity: 1; }
+
+    &--done &-num {
+      background: color-mix(in srgb, var(--color-primary) 15%, transparent);
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+    }
+
+    &--done &-label { color: var(--color-text-muted); opacity: var(--op-dim); }
+  }
+
+  &__progress-num {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface-2);
+    color: var(--color-text-muted);
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background var(--tr-normal), border-color var(--tr-normal), color var(--tr-normal);
+  }
+
+  &__progress-label {
     font-family: var(--font-mono);
     font-size: var(--fs-xxs);
     text-transform: uppercase;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.07em;
     color: var(--color-text-muted);
-    opacity: var(--op-muted);
+    opacity: var(--op-ghost);
     transition: color var(--tr-normal), opacity var(--tr-normal);
-
-    &--active {
-      color: var(--color-primary);
-      opacity: 1;
-    }
   }
 
   &__progress-connector {
-    width: 32px;
+    width: 48px;
+    max-width: 48px;
+    flex-shrink: 0;
     height: 1px;
     background: var(--color-border);
+    margin-bottom: 20px;
+    transition: background var(--tr-slow);
+
+    &--done { background: color-mix(in srgb, var(--color-primary) 40%, transparent); }
   }
 
   /* ── Card ────────────────────────────────────────────────────────── */
@@ -345,18 +598,13 @@ export default defineComponent({
     box-shadow: 0 24px 48px color-mix(in srgb, #000 55%, transparent);
     display: flex;
     flex-direction: column;
-    gap: 1.75rem;
+    gap: 1.25rem;
     animation: onboard-card-enter 0.5s cubic-bezier(0.16, 1, 0.3, 1) both 0.05s;
 
     &--success {
       align-items: center;
       text-align: center;
       border-color: var(--color-ok-border);
-    }
-
-    &-icon {
-      font-size: 2rem;
-      line-height: 1;
     }
 
     &-header {
@@ -394,7 +642,7 @@ export default defineComponent({
   &__form {
     display: flex;
     flex-direction: column;
-    gap: 1.25rem;
+    gap: 1rem;
   }
 
   &__field {
@@ -408,6 +656,13 @@ export default defineComponent({
       text-transform: uppercase;
       letter-spacing: 0.08em;
       color: var(--color-text-muted);
+    }
+
+    &-optional {
+      text-transform: none;
+      letter-spacing: 0;
+      opacity: var(--op-ghost);
+      font-size: 0.65rem;
     }
 
     &-input {
@@ -425,7 +680,7 @@ export default defineComponent({
       &::placeholder { color: var(--color-text-muted); opacity: var(--op-muted); }
       &:focus { border-color: var(--color-primary-border); box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 8%, transparent); }
       &--error { border-color: var(--color-danger-border); }
-      &--slug  { flex: 1; border-left: none; border-radius: 0 var(--radius) var(--radius) 0; padding-left: 0.55rem; }
+      &--slug { flex: 1; border-left: none; border-radius: 0 var(--radius) var(--radius) 0; padding-left: 0.55rem; }
     }
 
     &-error {
@@ -456,6 +711,41 @@ export default defineComponent({
     align-items: center;
   }
 
+  /* ── Role callout ────────────────────────────────────────────────── */
+  &__role-callout {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.85rem;
+    padding: 0.85rem 1rem;
+    border-radius: var(--radius);
+    border: 1px solid color-mix(in srgb, var(--color-primary) 20%, transparent);
+    background: color-mix(in srgb, var(--color-primary) 5%, transparent);
+
+    &-left { flex-shrink: 0; padding-top: 1px; }
+
+    &-desc {
+      font-size: var(--fs-sm);
+      color: var(--color-text-muted);
+      line-height: 1.55;
+    }
+  }
+
+  &__role-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-family: var(--font-mono);
+    font-size: var(--fs-xxs);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+    border: 1px solid var(--color-primary-border);
+    color: var(--color-primary);
+    white-space: nowrap;
+  }
+
   /* ── Submit button ───────────────────────────────────────────────── */
   &__btn {
     display: flex;
@@ -464,20 +754,22 @@ export default defineComponent({
     gap: 0.5rem;
     padding: 0.75rem 1.5rem;
     border-radius: var(--radius);
-    font-family: var(--font-mono);
-    font-size: var(--fs-sm);
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
+    font-family: var(--font-sans);
+    font-size: var(--fs-md);
+    font-weight: 600;
     cursor: pointer;
     border: none;
     transition: opacity var(--tr-fast), box-shadow var(--tr-fast);
     margin-top: 0.25rem;
 
     &--primary {
-      background: var(--color-primary);
+      background: color-mix(in srgb, var(--color-primary) 88%, transparent);
       color: var(--color-btn-dark);
-      &:hover:not(:disabled) { box-shadow: var(--glow-md); }
+      border: 1px solid var(--color-primary);
+      &:hover:not(:disabled) {
+        background: var(--color-primary);
+        box-shadow: var(--glow-md);
+      }
       &:disabled { opacity: var(--op-ghost); cursor: not-allowed; }
     }
 
@@ -497,42 +789,57 @@ export default defineComponent({
     text-align: center;
   }
 
-  /* ── Role info strip ─────────────────────────────────────────────── */
-  &__role-info {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    padding: 0.7rem 0.9rem;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius);
-    background: var(--color-surface-2);
-    flex-wrap: wrap;
+  /* ── Pulse header ────────────────────────────────────────────────── */
+  &__pulse-header {
+    position: relative;
+    width: calc(100% + 4rem);
+    margin: -2.25rem -2rem -0.5rem;
+    height: 120px;
+    overflow: hidden;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    background: color-mix(in srgb, var(--color-primary) 3%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, var(--color-primary) 12%, transparent);
+  }
 
-    &-title {
-      font-size: var(--fs-xs);
-      color: var(--color-text-muted);
-      font-family: var(--font-mono);
+  &__pulse-svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  &__pulse-trace {
+    fill: none;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    animation: onboard-trace-draw 2s cubic-bezier(0.16, 1, 0.3, 1) both;
+
+    &--vm  {
+      stroke: var(--color-primary);
+      filter: drop-shadow(0 0 3px color-mix(in srgb, var(--color-primary) 60%, transparent));
     }
 
-    &-desc {
-      font-size: var(--fs-xs);
-      color: var(--color-text-muted);
-      opacity: var(--op-muted);
-      flex: 1;
-      min-width: 12ch;
+    &--sel {
+      stroke: var(--color-purple);
+      opacity: 0.6;
+      stroke-dasharray: 4 3;
+      animation-delay: 0.3s;
     }
   }
 
-  &__role-badge {
+  &__pulse-marker {
+    stroke: color-mix(in srgb, var(--color-primary) 60%, transparent);
+    stroke-width: 1.2;
+    stroke-dasharray: 3 3;
+    animation: onboard-marker-blink 2.5s ease-in-out infinite 2s;
+  }
+
+  &__pulse-label {
     font-family: var(--font-mono);
-    font-size: var(--fs-xxs);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    padding: 0.1rem 0.45rem;
-    border-radius: 4px;
-    background: color-mix(in srgb, var(--color-primary) 12%, transparent);
-    border: 1px solid var(--color-primary-border);
-    color: var(--color-primary);
+    font-size: 8px;
+    fill: color-mix(in srgb, var(--color-primary) 70%, transparent);
+    letter-spacing: 0.04em;
+
+    &--sel { fill: var(--color-purple); opacity: 0.7; }
   }
 
   /* ── Success state ───────────────────────────────────────────────── */
@@ -575,23 +882,5 @@ export default defineComponent({
   }
 }
 
-@keyframes onboard-fade-in {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-@keyframes onboard-card-enter {
-  from { opacity: 0; transform: translateY(16px) scale(0.99); }
-  to   { opacity: 1; transform: translateY(0)    scale(1); }
-}
-@keyframes onboard-spin {
-  to { transform: rotate(360deg); }
-}
-@keyframes success-ring {
-  0%, 100% { opacity: 0.25; }
-  50%       { opacity: 0.85; }
-}
-@keyframes redirect-fill {
-  from { width: 0%; }
-  to   { width: 100%; }
-}
+
 </style>

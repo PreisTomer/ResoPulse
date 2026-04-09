@@ -330,7 +330,7 @@ export default defineComponent({
         }
       }
 
-      this.grid = result
+      this.grid = markRaw(result)  // 24 200 elements read in tight inner loop — skip Proxy tracking
     },
 
     // ── Canvas rendering ───────────────────────────────────────────────────────

@@ -70,3 +70,118 @@
   50%  { background: rgba(0, 212, 255, 0.10); }
   100% { background: transparent; }
 }
+
+// ── NavBar ────────────────────────────────────────────────────────────────────
+
+// Brand "Pulse" text glow breathe — NavBar logo accent.
+@keyframes brand-pulse {
+  0%, 100% { text-shadow: 0 0 8px var(--color-primary-dim); }
+  50%       { text-shadow: 0 0 18px color-mix(in srgb, var(--color-primary) 50%, transparent); }
+}
+
+// ── Auth pages (SignIn / SignUp) ──────────────────────────────────────────────
+
+// SVG ring opacity breathe used by SignIn page concentric rings.
+@keyframes auth-ring-pulse {
+  0%, 100% { opacity: 0.2; }
+  50%       { opacity: 0.9; }
+}
+
+// E-field axis lines blinking on SignIn page.
+@keyframes auth-field-blink {
+  0%, 100% { opacity: 0.1; }
+  50%       { opacity: 0.4; }
+}
+
+// SVG origin dot pulse on SignIn page; raw r values required (SVG attribute, not CSS).
+@keyframes auth-origin-pulse {
+  0%, 100% { opacity: 0.3; r: 5; }
+  50%       { opacity: 0.9; r: 7; }
+}
+
+// Fade-up entrance used by auth page hero elements.
+@keyframes auth-fade-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+// SignIn feature strip — slide in from the left on mount.
+@keyframes feat-enter {
+  from { opacity: 0; transform: translateX(-14px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+// SignIn feature strip left accent bar — grows from zero height.
+@keyframes feat-bar {
+  from { height: 0; }
+  to   { height: 100%; }
+}
+
+// SignIn feature strip scan-line sweep loop.
+@keyframes feat-scan-loop {
+  0%        { left: -70%; opacity: 0; }
+  3%        { opacity: 1; }
+  16%       { left: 110%; opacity: 0; }
+  17%, 100% { left: -70%; opacity: 0; }
+}
+
+// Auth card entrance — slides up and scales in.
+@keyframes auth-card-enter {
+  from { opacity: 0; transform: translateY(20px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0)   scale(1); }
+}
+
+// SignUp onboarding steps and brand elements — fade up.
+@keyframes signup-fade-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+// SignUp card entrance.
+@keyframes signup-card-enter {
+  from { opacity: 0; transform: translateY(20px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+
+// ── Onboarding page ───────────────────────────────────────────────────────────
+
+// SVG Schwan trace draw-on animation (stroke-dasharray grow).
+@keyframes onboard-trace-draw {
+  from { stroke-dasharray: 0 1200; opacity: 0; }
+  to   { stroke-dasharray: 1200 0; opacity: 1; }
+}
+
+// Frequency cursor line blink on onboarding pulse header.
+@keyframes onboard-marker-blink {
+  0%, 100% { opacity: 0.2; }
+  50%       { opacity: 0.8; }
+}
+
+// Generic fade-in used by onboarding axis labels and success elements.
+@keyframes onboard-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+// Onboarding card entrance.
+@keyframes onboard-card-enter {
+  from { opacity: 0; transform: translateY(16px) scale(0.99); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+
+// Submit button spinner rotation.
+@keyframes onboard-spin {
+  to { transform: rotate(360deg); }
+}
+
+// Success screen ring pulse (step 3 rings).
+@keyframes success-ring {
+  0%, 100% { opacity: 0.25; }
+  50%       { opacity: 0.85; }
+}
+
+// Redirect progress bar fill.
+@keyframes redirect-fill {
+  from { width: 0%; }
+  to   { width: 100%; }
+}

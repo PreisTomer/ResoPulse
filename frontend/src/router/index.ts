@@ -28,7 +28,9 @@ const router = createRouter({
     { path: '/sign-up/sso-callback',              component: () => import('../views/SignUpView/index.vue') },
     { path: '/sign-up/continue',                  component: () => import('../views/SignUpView/index.vue') },
     { path: '/sign-up/verify-email-address',      component: () => import('../views/SignUpView/index.vue') },
+    { path: '/sign-up/tasks/choose-organization', component: () => import('../views/SignUpView/index.vue') },
     { path: ROUTE.ONBOARDING,  component: () => import('../views/OnboardingView/index.vue'),   meta: { requiresAuth: true } },
+    { path: ROUTE.ACCOUNT,     component: () => import('../views/AccountView/index.vue'),      meta: { requiresAuth: true } },
     // Clerk's hosted profile page is at /profile — we just redirect to User.profile in Clerk
     { path: ROUTE.PROFILE,     redirect: ROUTE.HOME },
   ],

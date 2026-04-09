@@ -8,44 +8,13 @@
       <canvas ref="particleCanvas" class="auth-page__bg-canvas"></canvas>
     </div>
 
-    <!-- ── Centered layout ── -->
+    <!-- ── Three-column layout ── -->
     <div class="auth-page__layout">
 
-      <!-- LEFT PANEL: branding + science copy -->
+      <!-- LEFT: headline + features + footnote -->
       <aside class="auth-page__brand">
 
-        <!-- Animated rings -->
-        <div class="auth-page__rings" aria-hidden="true">
-          <svg class="auth-page__rings-svg" viewBox="0 0 600 600" fill="none">
-            <circle class="auth-page__ring auth-page__ring--1" cx="300" cy="300" r="90"  stroke-width="1.2" fill="none"/>
-            <circle class="auth-page__ring auth-page__ring--2" cx="300" cy="300" r="150" stroke-width="1"   fill="none"/>
-            <circle class="auth-page__ring auth-page__ring--3" cx="300" cy="300" r="215" stroke-width="0.9" fill="none"/>
-            <circle class="auth-page__ring auth-page__ring--4" cx="300" cy="300" r="282" stroke-width="0.7" fill="none"/>
-            <!-- Cross-hair grid lines at pole angles -->
-            <line class="auth-page__field-line" x1="300" y1="40"  x2="300" y2="80"  stroke-width="0.8"/>
-            <line class="auth-page__field-line" x1="300" y1="520" x2="300" y2="560" stroke-width="0.8"/>
-            <line class="auth-page__field-line" x1="40"  y1="300" x2="80"  y2="300" stroke-width="0.8"/>
-            <line class="auth-page__field-line" x1="520" y1="300" x2="560" y2="300" stroke-width="0.8"/>
-            <!-- Origin dot -->
-            <circle class="auth-page__origin-dot" cx="300" cy="300" r="5" fill="none" stroke-width="1.5"/>
-            <!-- Inner cell representation -->
-            <circle class="auth-page__cell-outer" cx="300" cy="300" r="52" stroke-width="1.5" fill="none"/>
-            <circle class="auth-page__cell-inner" cx="300" cy="300" r="28" stroke-width="1"   fill="none"/>
-            <circle class="auth-page__cell-nucleus" cx="300" cy="300" r="10" stroke-width="0.8" fill="none"/>
-          </svg>
-        </div>
-
-        <!-- Brand identity -->
         <div class="auth-page__brand-identity">
-          <RouterLink to="/" class="auth-page__logo-link">
-            <div class="auth-page__logo-img">
-              <img src="/logo.png" alt="ResoPulse" />
-            </div>
-            <div class="auth-page__logo-text">
-              <span class="auth-page__logo-name">Reso<span class="auth-page__logo-pulse">Pulse</span></span>
-              <span class="auth-page__logo-tag">{{ $t('nav.researchPlatform') }}</span>
-            </div>
-          </RouterLink>
           <h1 class="auth-page__brand-headline">
             Precision biophysics,<br>
             <span class="auth-page__brand-highlight">in silico.</span>
@@ -56,9 +25,8 @@
           </p>
         </div>
 
-        <!-- Feature strips -->
         <ul class="auth-page__features" aria-label="Platform features">
-          <li v-for="(feat, i) in features" :key="feat.label" class="auth-page__feature">
+          <li v-for="(feat, i) in features" :key="feat.label" class="auth-page__feature" v-tip="$t(feat.tipKey)">
             <span class="auth-page__feature-icon">{{ feat.icon }}</span>
             <span class="auth-page__feature-label">{{ feat.label }}</span>
             <span class="auth-page__feature-metric">
@@ -67,25 +35,54 @@
           </li>
         </ul>
 
-        <!-- Science footnote -->
         <p class="auth-page__footnote">
           Kotnik &amp; Miklavcic 2000 · Weaver &amp; Chizmadzhev 1996 · Pennes 1948
         </p>
 
       </aside>
 
-      <!-- RIGHT PANEL: Clerk sign-in card -->
+      <!-- CENTER: brand identity with rings emanating from it -->
+      <div class="auth-page__center" aria-hidden="true">
+        <RouterLink to="/" class="auth-page__logo-link" aria-hidden="false">
+          <!-- Icon + rings anchored together -->
+          <div class="auth-page__logo-icon-wrap">
+            <div class="auth-page__rings">
+              <svg class="auth-page__rings-svg" viewBox="0 0 600 600" fill="none">
+                <circle class="auth-page__ring auth-page__ring--1" cx="300" cy="300" r="90"  stroke-width="1.2" fill="none"/>
+                <circle class="auth-page__ring auth-page__ring--2" cx="300" cy="300" r="150" stroke-width="1"   fill="none"/>
+                <circle class="auth-page__ring auth-page__ring--3" cx="300" cy="300" r="215" stroke-width="0.9" fill="none"/>
+                <circle class="auth-page__ring auth-page__ring--4" cx="300" cy="300" r="282" stroke-width="0.7" fill="none"/>
+                <line class="auth-page__field-line" x1="300" y1="40"  x2="300" y2="80"  stroke-width="0.8"/>
+                <line class="auth-page__field-line" x1="300" y1="520" x2="300" y2="560" stroke-width="0.8"/>
+                <line class="auth-page__field-line" x1="40"  y1="300" x2="80"  y2="300" stroke-width="0.8"/>
+                <line class="auth-page__field-line" x1="520" y1="300" x2="560" y2="300" stroke-width="0.8"/>
+                <circle class="auth-page__origin-dot" cx="300" cy="300" r="5" fill="none" stroke-width="1.5"/>
+                <circle class="auth-page__cell-outer" cx="300" cy="300" r="52" stroke-width="1.5" fill="none"/>
+                <circle class="auth-page__cell-inner" cx="300" cy="300" r="28" stroke-width="1"   fill="none"/>
+                <circle class="auth-page__cell-nucleus" cx="300" cy="300" r="10" stroke-width="0.8" fill="none"/>
+              </svg>
+            </div>
+            <div class="auth-page__logo-img">
+              <img src="/logo.png" alt="ResoPulse" />
+            </div>
+          </div>
+          <div class="auth-page__logo-text">
+            <span class="auth-page__logo-name">Reso<span class="auth-page__logo-pulse">Pulse</span></span>
+            <span class="auth-page__logo-tag">{{ $t('nav.researchPlatform') }}</span>
+          </div>
+        </RouterLink>
+      </div>
+
+      <!-- RIGHT: Clerk sign-in card -->
       <div class="auth-page__card-wrap">
 
         <div class="auth-page__card">
-          <!-- Custom header above Clerk form -->
           <div class="auth-page__card-header">
-            <span class="auth-page__card-eyebrow">Lab Access</span>
-            <h2 class="auth-page__card-title">Sign in to your lab</h2>
-            <p class="auth-page__card-desc">Continue your protocol design session</p>
+            <span class="auth-page__card-eyebrow">{{ $t('signIn.eyebrow') }}</span>
+            <h2 class="auth-page__card-title">{{ $t('signIn.cardTitle') }}</h2>
+            <p class="auth-page__card-desc">{{ $t('signIn.cardDesc') }}</p>
           </div>
 
-          <!-- Clerk SignIn component — fully themed to match ResoPulse UI -->
           <SignIn
             :routing="'path'"
             :path="ROUTE.SIGN_IN"
@@ -95,10 +92,9 @@
           />
         </div>
 
-        <!-- Footer links -->
         <div class="auth-page__card-footer">
-          <span class="auth-page__card-footer-text">New to ResoPulse?</span>
-          <RouterLink :to="ROUTE.SIGN_UP" class="auth-page__card-footer-link">Create an account</RouterLink>
+          <span class="auth-page__card-footer-text">{{ $t('signIn.newTo') }}</span>
+          <RouterLink :to="ROUTE.SIGN_UP" class="auth-page__card-footer-link">{{ $t('signIn.createAccount') }}</RouterLink>
         </div>
 
       </div>
@@ -109,7 +105,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from 'vue'
+import { defineComponent, ref, markRaw } from 'vue'
 import { SignIn } from '@clerk/vue'
 import { dark } from '@clerk/themes'
 
@@ -117,18 +113,74 @@ import { ROUTE } from '@/constants/routes'
 
 import { ICON } from '@/constants/icons'
 
-// Particle system constants
 const PARTICLE_COUNT   = 55
 const PARTICLE_SPEED   = 0.18
 const PARTICLE_RADIUS  = 1.4
-const PARTICLE_OPACITY = 0.22
-const CONNECTION_DIST  = 110
+const PARTICLE_OPACITY = 0.45
+const CONNECTION_DIST  = 130
 
-interface Particle {
-  x: number
-  y: number
-  vx: number
-  vy: number
+interface Particle { x: number; y: number; vx: number; vy: number }
+
+const FEATURES = [
+  { icon: ICON.WAVE,        label: 'Schwan EP model',      metric: '1.5',  suffix: ' V',   unit: 'Vm peak',  tipKey: 'signIn.tipSchwan'     },
+  { icon: ICON.FLASK,       label: 'Acoustic resonance',   metric: '2.4',  suffix: ' MHz', unit: 'fc',       tipKey: 'signIn.tipResonance'  },
+  { icon: ICON.AI,          label: 'AI optimizer',         metric: 'XGB',  suffix: '',     unit: 'XGBoost',  tipKey: 'signIn.tipAI'         },
+  { icon: ICON.SELECTIVITY, label: 'Selectivity & DEP',    metric: '3.2',  suffix: '×',    unit: 'TI ratio', tipKey: 'signIn.tipSelectivity' },
+  { icon: ICON.PLUG,        label: 'Multi-lab workspaces', metric: 'LIVE', suffix: '',     unit: '',         tipKey: 'signIn.tipWorkspaces' },
+]
+
+const CLERK_APPEARANCE = {
+  baseTheme: dark,
+  variables: {
+    colorBackground:      '#0d1826',
+    colorInputBackground: '#0a1520',
+    colorInputText:       '#c8d8e8',
+    colorText:            '#c8d8e8',
+    colorTextSecondary:   '#8ab8cc',
+    colorTextOnPrimaryBackground: '#060e1a',
+    colorPrimary:         '#00d4ff',
+    colorSuccess:         '#4ade80',
+    colorDanger:          '#ff4d6d',
+    colorNeutral:         '#1e3a5f',
+    colorShimmer:         'rgba(0,212,255,0.04)',
+    borderRadius:         '8px',
+    fontFamily:           "'Inter', system-ui, sans-serif",
+    fontFamilyButtons:    "'Inter', system-ui, sans-serif",
+    fontSize:             '0.875rem',
+    spacingUnit:          '0.9rem',
+  },
+  elements: {
+    rootBox:                 { width: '100%', maxWidth: '100%', minWidth: '0' },
+    cardBox:                 { width: '100%', maxWidth: '100%', padding: '0.5rem' },
+    card:                    { background: 'transparent', boxShadow: 'none', border: 'none', padding: '0', gap: '1.1rem', width: '100%' },
+    main:                    { padding: '0 2px' },
+    'signIn-start':          { padding: '0 0.25rem' },
+    headerTitle:             { display: 'none' },
+    headerSubtitle:          { display: 'none' },
+    header:                  { display: 'none' },
+    socialButtonsBlockButton: {
+      border:      '1px solid #1e3a5f',
+      background:  '#0a1520',
+      color:       '#c8d8e8',
+      borderRadius: '8px',
+      padding:     '0.65rem 1rem',
+      transition:  'border-color 0.15s, background 0.15s',
+    },
+    socialButtonsBlockButtonText: { fontWeight: '500' },
+    dividerLine:             { background: '#1e3a5f' },
+    dividerText:             { color: '#3a5a7a', fontSize: '0.72rem', letterSpacing: '0.06em', textTransform: 'uppercase' },
+    formFieldLabel:          { color: '#7a9ab8', fontSize: '0.75rem', letterSpacing: '0.03em', textTransform: 'capitalize', paddingLeft: '2px' },
+    formFieldInput:          { background: '#0a1520', border: '1px solid #1e3a5f', color: '#c8d8e8', borderRadius: '8px', caretColor: '#00d4ff' },
+    formFieldInputPlaceholder: { color: '#6a9ab8' },
+    formButtonPrimary:       { background: 'rgba(0,212,255,0.08)', color: '#00d4ff', border: '1px solid rgba(0,212,255,0.3)', fontFamily: "'Inter', system-ui, sans-serif", letterSpacing: '0.04em', textTransform: 'uppercase', fontWeight: '600', borderRadius: '8px', boxShadow: 'none' },
+    buttonArrowIcon:         { display: 'none' },
+    footerActionLink:        { color: '#00d4ff' },
+    footerAction:            { display: 'none' },
+    identityPreviewText:     { color: '#c8d8e8' },
+    identityPreviewEditButton: { color: '#00d4ff' },
+    alternativeMethodsBlockButton: { border: '1px solid #1e3a5f', background: '#0a1520', color: '#c8d8e8', borderRadius: '8px' },
+    otpCodeFieldInput:       { background: '#0a1520', border: '1px solid #1e3a5f', color: '#00d4ff', borderRadius: '8px' },
+  },
 }
 
 export default defineComponent({
@@ -142,79 +194,20 @@ export default defineComponent({
 
   data() {
     return {
-      animFrameId: null as ReturnType<typeof requestAnimationFrame> | null,
-      particles:   [] as Particle[],
-
+      animFrameId:    null as ReturnType<typeof requestAnimationFrame> | null,
+      particles:      [] as Particle[],
       displayMetrics: [] as string[],
-      features: [
-        { icon: ICON.WAVE,        label: 'Schwan EP model',      metric: '1.5',  suffix: ' V',   unit: 'Vm peak'  },
-        { icon: ICON.FLASK,       label: 'Acoustic resonance',   metric: '2.4',  suffix: ' MHz', unit: 'fc'       },
-        { icon: ICON.AI,          label: 'AI optimizer',         metric: 'XGB',  suffix: '',     unit: 'XGBoost'  },
-        { icon: ICON.SELECTIVITY, label: 'Selectivity & DEP',    metric: '3.2',  suffix: '×',    unit: 'TI ratio' },
-        { icon: ICON.PLUG,        label: 'Multi-lab workspaces', metric: 'LIVE', suffix: '',     unit: ''         },
-      ],
+      features:       markRaw(FEATURES),
     }
   },
 
   computed: {
     ROUTE() { return ROUTE },
+    clerkAppearance() { return CLERK_APPEARANCE },
 
     afterSignInUrl(): string {
       const redirect = this.$route.query.redirect as string | undefined
       return redirect ?? ROUTE.HOME
-    },
-
-    clerkAppearance() {
-      return {
-        baseTheme: dark,
-        variables: {
-          colorBackground:      '#0d1826',
-          colorInputBackground: '#0a1520',
-          colorInputText:       '#c8d8e8',
-          colorText:            '#c8d8e8',
-          colorTextSecondary:   '#5a7a9a',
-          colorTextOnPrimaryBackground: '#060e1a',
-          colorPrimary:         '#00d4ff',
-          colorSuccess:         '#4ade80',
-          colorDanger:          '#ff4d6d',
-          colorNeutral:         '#1e3a5f',
-          colorShimmer:         'rgba(0,212,255,0.04)',
-          borderRadius:         '8px',
-          fontFamily:           "'Inter', system-ui, sans-serif",
-          fontFamilyButtons:    "'JetBrains Mono', 'Fira Code', monospace",
-          fontSize:             '0.875rem',
-          spacingUnit:          '0.9rem',
-        },
-        elements: {
-          rootBox:                 { width: '100%', maxWidth: '100%', minWidth: '0' },
-          cardBox:                 { width: '100%', maxWidth: '100%' },
-          card:                    { background: 'transparent', boxShadow: 'none', border: 'none', padding: '0', gap: '1.1rem', width: '100%' },
-          main:                    { padding: '0 2px' },
-          headerTitle:             { display: 'none' },
-          headerSubtitle:          { display: 'none' },
-          header:                  { display: 'none' },
-          socialButtonsBlockButton: {
-            border:      '1px solid #1e3a5f',
-            background:  '#0a1520',
-            color:       '#c8d8e8',
-            borderRadius: '8px',
-            transition:  'border-color 0.15s, background 0.15s',
-          },
-          socialButtonsBlockButtonText: { fontWeight: '500' },
-          dividerLine:             { background: '#1e3a5f' },
-          dividerText:             { color: '#3a5a7a', fontSize: '0.72rem', letterSpacing: '0.06em', textTransform: 'uppercase' },
-          formFieldLabel:          { color: '#5a7a9a', fontSize: '0.72rem', letterSpacing: '0.06em', textTransform: 'uppercase', fontFamily: "'JetBrains Mono', monospace" },
-          formFieldInput:          { background: '#0a1520', border: '1px solid #1e3a5f', color: '#c8d8e8', borderRadius: '8px' },
-          formButtonPrimary:       { background: 'rgba(0,212,255,0.08)', color: '#00d4ff', border: '1px solid rgba(0,212,255,0.3)', fontFamily: "'JetBrains Mono', monospace", letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: '600', borderRadius: '8px', boxShadow: 'none' },
-          buttonArrowIcon:         { display: 'none' },
-          footerActionLink:        { color: '#00d4ff' },
-          footerAction:            { display: 'none' },
-          identityPreviewText:     { color: '#c8d8e8' },
-          identityPreviewEditButton: { color: '#00d4ff' },
-          alternativeMethodsBlockButton: { border: '1px solid #1e3a5f', background: '#0a1520', color: '#c8d8e8', borderRadius: '8px' },
-          otpCodeFieldInput:       { background: '#0a1520', border: '1px solid #1e3a5f', color: '#00d4ff', borderRadius: '8px' },
-        },
-      }
     },
   },
 
@@ -313,7 +306,7 @@ export default defineComponent({
           const dy   = a.y - b.y
           const dist = Math.sqrt(dx * dx + dy * dy)
           if (dist < CONNECTION_DIST) {
-            const alpha = (1 - dist / CONNECTION_DIST) * 0.12
+            const alpha = (1 - dist / CONNECTION_DIST) * 0.22
             ctx.beginPath()
             ctx.moveTo(a.x, a.y)
             ctx.lineTo(b.x, b.y)
@@ -342,7 +335,7 @@ export default defineComponent({
   position: relative;
   overflow: hidden;
   display: flex;
-  align-items: stretch;
+  align-items: center;
 
   /* ── Background ──────────────────────────────────────────────────── */
   &__bg {
@@ -370,19 +363,20 @@ export default defineComponent({
     }
   }
 
-  /* ── Layout ──────────────────────────────────────────────────────── */
+  /* ── Layout — three columns ─────────────────────────────────────── */
   &__layout {
     position: relative;
     z-index: 1;
     width: 100%;
-    max-width: 1180px;
+    max-width: 1280px;
     margin: 0 auto;
     padding: 3rem 2rem;
     display: flex;
-    align-items: center;
-    gap: 4rem;
+    align-items: stretch;
+    justify-content: center;
+    gap: 0;
 
-    @media (max-width: 900px) {
+    @media (max-width: 1000px) {
       flex-direction: column;
       gap: 2.5rem;
       padding: 2rem 1.25rem;
@@ -390,38 +384,71 @@ export default defineComponent({
     }
   }
 
-  /* ── Left: Brand panel ───────────────────────────────────────────── */
+  /* ── Left: headline + features ──────────────────────────────────── */
   &__brand {
-    flex: 1;
+    flex: none;
     display: flex;
     flex-direction: column;
     gap: 2.5rem;
     position: relative;
+    z-index: 1;
+    padding-right: 2rem;
 
-    @media (max-width: 900px) {
+    @media (max-width: 1000px) {
+      flex: 1;
       gap: 1.5rem;
+      padding-right: 0;
     }
   }
 
-  /* ── Animated rings ──────────────────────────────────────────────── */
-  &__rings {
-    position: absolute;
-    inset: -80px;
+  /* ── Center: brand identity + rings ─────────────────────────────── */
+  &__center {
+    flex-shrink: 0;
+    width: 340px;
     display: flex;
     align-items: center;
     justify-content: center;
-    pointer-events: none;
-    z-index: 0;
-    opacity: var(--op-ghost);
 
-    @media (max-width: 900px) {
+    @media (max-width: 1000px) {
       display: none;
     }
+  }
+
+  /* ── Logo link ───────────────────────────────────────────────────── */
+  &__logo-link {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.6rem;
+    text-decoration: none;
+  }
+
+  /* ── Icon wrap — rings are anchored to this ──────────────────────── */
+  &__logo-icon-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    // Size matches the icon so rings center on it exactly
+    width: 72px;
+    height: 72px;
+  }
+
+  /* ── Rings — absolute, centered on the icon ──────────────────────── */
+  &__rings {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 560px;
+    height: 560px;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.6;
 
     &-svg {
       width: 100%;
-      height: auto;
-      max-width: 520px;
+      height: 100%;
     }
   }
 
@@ -459,21 +486,15 @@ export default defineComponent({
     gap: 1.25rem;
   }
 
-  &__logo-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.7rem;
-    text-decoration: none;
-    width: fit-content;
-  }
-
   &__logo-img {
-    width: 38px;
-    height: 38px;
+    position: relative;
+    z-index: 1;
+    width: 72px;
+    height: 72px;
     border-radius: 50%;
     overflow: hidden;
     flex-shrink: 0;
-    border: 1.5px solid var(--color-border);
+    border: 1.5px solid var(--color-primary-border);
     background: var(--color-bg);
     box-shadow: var(--glow-sm);
 
@@ -483,15 +504,17 @@ export default defineComponent({
   &__logo-text {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    align-items: stretch;
+    gap: 4px;
   }
 
   &__logo-name {
-    font-size: 1.25rem;
+    font-size: 1.75rem;
     font-weight: 700;
     color: var(--color-text-heading);
-    letter-spacing: 0.03em;
+    letter-spacing: 0.18em;
     line-height: 1;
+    text-align: center;
   }
 
   &__logo-pulse {
@@ -507,6 +530,8 @@ export default defineComponent({
     text-transform: capitalize;
     color: var(--color-text-muted);
     opacity: var(--op-muted);
+    text-align: center;
+    white-space: nowrap;
   }
 
   &__brand-headline {
@@ -576,22 +601,18 @@ export default defineComponent({
       animation: feat-bar 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
     }
 
-    // Scan line sweep
+    // Scan line sweep — one-shot on entry, then loops every 7 s
     &::after {
       content: '';
       position: absolute;
       top: 0; left: -70%;
       width: 55%; height: 100%;
       background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--color-primary) 10%, transparent), transparent);
-      animation: feat-scan 1.1s ease-out both;
+      animation: feat-scan-loop 7s ease-out infinite backwards;
       pointer-events: none;
     }
 
-    &:hover {
-      border-color: color-mix(in srgb, var(--color-primary) 35%, transparent);
-      background: color-mix(in srgb, var(--color-primary) 5%, transparent);
-      box-shadow: inset 2px 0 10px color-mix(in srgb, var(--color-primary) 12%, transparent);
-    }
+    cursor: help;
 
     &-icon {
       font-size: var(--fs-sm);
@@ -621,8 +642,6 @@ export default defineComponent({
       letter-spacing: 0.04em;
       white-space: nowrap;
       transition: opacity var(--tr-fast);
-
-      .auth-page__feature:hover & { opacity: 1; }
     }
 
     &-unit {
@@ -644,6 +663,7 @@ export default defineComponent({
     letter-spacing: 0.05em;
     color: var(--color-text-muted);
     opacity: var(--op-ghost);
+    margin-top: auto;
 
     @media (max-width: 900px) { display: none; }
   }
@@ -655,8 +675,14 @@ export default defineComponent({
     display: flex;
     flex-direction: column;
     gap: 1rem;
-    margin-top: 15px;
+    position: relative;
+    z-index: 1;
+    padding-left: 2rem;
     animation: auth-card-enter 0.55s cubic-bezier(0.16, 1, 0.3, 1) both 0.1s;
+
+    @media (max-width: 1000px) {
+      padding-left: 0;
+    }
 
     @media (max-width: 900px) {
       width: 100%;
@@ -666,6 +692,7 @@ export default defineComponent({
   }
 
   &__card {
+    flex: 1;
     padding: 2rem;
     border-radius: var(--radius-lg);
     border: 1px solid var(--color-primary-border);
@@ -733,38 +760,8 @@ export default defineComponent({
   }
 }
 
-/* ── Keyframes ───────────────────────────────────────────────────────────── */
-@keyframes auth-ring-pulse {
-  0%, 100% { opacity: 0.12; }
-  50%       { opacity: 0.55; }
-}
-@keyframes auth-field-blink {
-  0%, 100% { opacity: 0.1; }
-  50%       { opacity: 0.4; }
-}
-@keyframes auth-origin-pulse {
-  0%, 100% { opacity: 0.3; r: 5; }
-  50%       { opacity: 0.9; r: 7; }
-}
-@keyframes auth-fade-up {
-  from { opacity: 0; transform: translateY(12px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-@keyframes feat-enter {
-  from { opacity: 0; transform: translateX(-14px); }
-  to   { opacity: 1; transform: translateX(0); }
-}
-@keyframes feat-bar {
-  from { height: 0; }
-  to   { height: 100%; }
-}
-@keyframes feat-scan {
-  0%   { left: -70%; opacity: 0; }
-  15%  { opacity: 1; }
-  100% { left: 110%; opacity: 0; }
-}
-@keyframes auth-card-enter {
-  from { opacity: 0; transform: translateY(20px) scale(0.98); }
-  to   { opacity: 1; transform: translateY(0)   scale(1); }
-}
+/* ── Clerk placeholder override — Clerk injects its own ::placeholder color ── */
+:deep(.cl-formFieldInput::placeholder) { color: #6a9ab8; opacity: 1; }
+
+
 </style>

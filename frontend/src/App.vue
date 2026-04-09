@@ -22,7 +22,7 @@
 import { defineComponent, watch } from 'vue'
 import { useAuth } from '@clerk/vue'
 
-import NavBar from './components/NavBar.vue'
+import NavBar from './components/NavBar/index.vue'
 import ModeBanner from './components/ModeBanner.vue'
 import LiteratureStrip from './components/LiteratureStrip.vue'
 import TermsGate from './components/TermsGate.vue'

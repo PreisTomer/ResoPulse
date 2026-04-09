@@ -2,6 +2,7 @@
 <template>
   <div class="home">
     <div class="home__bg-grid" aria-hidden="true"></div>
+    <canvas ref="particleCanvas" class="home__bg-particles" aria-hidden="true"></canvas>
 
     <!-- ── Fixed validation tab — visible on wide screens only ── -->
     <button class="home__validate-tab" @click="isValidateDrawerOpen = true" :aria-expanded="isValidateDrawerOpen">
@@ -241,7 +242,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue'
+import { defineComponent, markRaw } from 'vue'
 
 import { mapStores } from 'pinia'
 
@@ -256,7 +257,15 @@ import BodePlotSvg from './BodePlotSvg.vue'
 import OscilloscopeSvg from './OscilloscopeSvg.vue'
 
 import ValidateSection from '@/components/ValidationWorkflows/index.vue'
-const SEL_CYCLE_MS = 9000
+
+const SEL_CYCLE_MS      = 9000
+const PARTICLE_COUNT    = 45
+const PARTICLE_SPEED    = 0.16
+const PARTICLE_RADIUS   = 1.3
+const PARTICLE_OPACITY  = 0.38
+const CONNECTION_DIST   = 120
+
+interface Particle { x: number; y: number; vx: number; vy: number }
 
 export default defineComponent({
   name: 'HomeView',
@@ -292,8 +301,10 @@ export default defineComponent({
         { mod: 'ref',      key: 'tagRef',      subKey: 'tagRefSub' },
       ],
 
-      selProgress: 0,
-      selAnimId: null as ReturnType<typeof requestAnimationFrame> | null,
+      selProgress:     0,
+      selAnimId:       null as ReturnType<typeof requestAnimationFrame> | null,
+      particleFrameId: null as ReturnType<typeof requestAnimationFrame> | null,
+      particles:       [] as Particle[],
     }
   },
 
@@ -312,6 +323,8 @@ export default defineComponent({
     )
     zones.forEach((zone: Element) => observer.observe(zone))
     this.startSelAnimation()
+    this.initParticles()
+    this.startParticleLoop()
 
     if (this.uiStore.pendingValidateDrawer) {
       this.uiStore.consumeValidateDrawer()
@@ -320,9 +333,8 @@ export default defineComponent({
   },
 
   beforeUnmount() {
-    if (this.selAnimId !== null) {
-      cancelAnimationFrame(this.selAnimId)
-    }
+    if (this.selAnimId       !== null) cancelAnimationFrame(this.selAnimId)
+    if (this.particleFrameId !== null) cancelAnimationFrame(this.particleFrameId)
   },
 
   computed: {
@@ -376,6 +388,88 @@ export default defineComponent({
   },
 
   methods: {
+    initParticles(): void {
+      const canvas = this.$refs.particleCanvas as HTMLCanvasElement | null
+      if (!canvas) return
+      const w = canvas.width  = canvas.offsetWidth
+      const h = canvas.height = canvas.offsetHeight
+      this.particles = markRaw(Array.from({ length: PARTICLE_COUNT }, () => ({
+        x:  Math.random() * w,
+        y:  Math.random() * h,
+        vx: (Math.random() - 0.5) * PARTICLE_SPEED * 2,
+        vy: (Math.random() - 0.5) * PARTICLE_SPEED * 2,
+      })))
+    },
+
+    startParticleLoop(): void {
+      const canvas = this.$refs.particleCanvas as HTMLCanvasElement | null
+      if (!canvas) return
+      const ctx = canvas.getContext('2d')
+      if (!ctx) return
+
+      const tick = () => {
+        const w = canvas.offsetWidth
+        const h = canvas.offsetHeight
+        if (canvas.width !== w || canvas.height !== h) {
+          canvas.width  = w
+          canvas.height = h
+          this.initParticles()
+        }
+        ctx.clearRect(0, 0, w, h)
+        this.updateParticles(w, h)
+        this.drawParticles(ctx, w, h)
+        this.particleFrameId = requestAnimationFrame(tick)
+      }
+
+      this.particleFrameId = requestAnimationFrame(tick)
+    },
+
+    updateParticles(w: number, h: number): void {
+      for (const p of this.particles) {
+        p.x += p.vx
+        p.y += p.vy
+        if (p.x < 0 || p.x > w) p.vx *= -1
+        if (p.y < 0 || p.y > h) p.vy *= -1
+      }
+    },
+
+    drawParticles(ctx: CanvasRenderingContext2D, w: number, h: number): void {
+      // Fade edges so particles don't compete with hero text
+      const fadeX = w * 0.12
+      const fadeY = h * 0.12
+      for (let i = 0; i < this.particles.length; i++) {
+        for (let j = i + 1; j < this.particles.length; j++) {
+          const a    = this.particles[i]
+          const b    = this.particles[j]
+          if (!a || !b) continue
+          const dx   = a.x - b.x
+          const dy   = a.y - b.y
+          const dist = Math.sqrt(dx * dx + dy * dy)
+          if (dist < CONNECTION_DIST) {
+            const edgeFade = Math.min(
+              a.x / fadeX, (w - a.x) / fadeX,
+              a.y / fadeY, (h - a.y) / fadeY,
+              1,
+            )
+            const alpha = (1 - dist / CONNECTION_DIST) * 0.18 * edgeFade
+            ctx.beginPath()
+            ctx.moveTo(a.x, a.y)
+            ctx.lineTo(b.x, b.y)
+            ctx.strokeStyle = `rgba(0, 212, 255, ${alpha})`
+            ctx.lineWidth   = 0.6
+            ctx.stroke()
+          }
+        }
+      }
+      for (const p of this.particles) {
+        const edgeFade = Math.min(p.x / (w * 0.08), (w - p.x) / (w * 0.08), 1)
+        ctx.beginPath()
+        ctx.arc(p.x, p.y, PARTICLE_RADIUS, 0, Math.PI * 2)
+        ctx.fillStyle = `rgba(0, 212, 255, ${PARTICLE_OPACITY * edgeFade})`
+        ctx.fill()
+      }
+    },
+
     startSelAnimation(): void {
       let startTs = 0
       const tick = (ts: number) => {

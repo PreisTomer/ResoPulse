@@ -3,15 +3,25 @@
   <header class="nav-bar">
     <div class="nav-bar__inner">
 
-      <RouterLink :to="ROUTE.HOME" class="nav-bar__brand" @click="mobileOpen = false">
-        <div class="nav-bar__brand-logo">
-          <img src="/logo.png" :alt="$t('nav.logoAlt')" />
-        </div>
-        <div class="nav-bar__brand-text">
-          <span class="nav-bar__brand-name">Reso<span class="nav-bar__brand-pulse">Pulse</span></span>
-          <span class="nav-bar__brand-tag">{{ $t('nav.researchPlatform') }}</span>
-        </div>
-      </RouterLink>
+      <div class="nav-bar__left">
+        <RouterLink :to="ROUTE.HOME" class="nav-bar__brand" @click="mobileOpen = false">
+          <div class="nav-bar__brand-logo">
+            <img src="/logo.png" :alt="$t('nav.logoAlt')" />
+          </div>
+          <div class="nav-bar__brand-text">
+            <span class="nav-bar__brand-name">Reso<span class="nav-bar__brand-pulse">Pulse</span></span>
+            <span class="nav-bar__brand-tag">{{ $t('nav.researchPlatform') }}</span>
+          </div>
+        </RouterLink>
+
+        <button
+          class="nav-bar__theme-toggle"
+          :class="{ 'nav-bar__theme-toggle--oled': isOled }"
+          type="button"
+          :title="isOled ? $t('nav.themeSwitchDark') : $t('nav.themeSwitchOled')"
+          @click="themeStore.toggle()"
+        >{{ isOled ? $t('nav.themeOled') : $t('nav.themeDark') }}</button>
+      </div>
 
       <nav class="nav-bar__nav" :class="{ 'nav-bar__nav--open': mobileOpen }">
         <RouterLink
@@ -26,47 +36,12 @@
       </nav>
 
       <div class="nav-bar__right">
-        <button
-          class="nav-bar__theme-toggle"
-          :class="{ 'nav-bar__theme-toggle--oled': isOled }"
-          type="button"
-          :title="isOled ? $t('nav.themeSwitchDark') : $t('nav.themeSwitchOled')"
-          @click="themeStore.toggle()"
-        >{{ isOled ? $t('nav.themeOled') : $t('nav.themeDark') }}</button>
-
-        <!-- Combined workspace + user pill with dropdown -->
-        <div v-if="isSignedIn" class="nav-bar__user-area" @click="toggleMenu">
-          <span v-if="orgName" class="nav-bar__workspace">{{ orgName }}</span>
-          <div class="nav-bar__user-btn">
-            <img
-              v-if="userImageUrl"
-              :src="userImageUrl"
-              :alt="userName"
-              class="nav-bar__user-avatar"
-            />
-            <span v-else class="nav-bar__user-initials">{{ userInitials }}</span>
-          </div>
-          <div v-if="menuOpen" class="nav-bar__user-menu" @click.stop>
-            <button class="nav-bar__user-menu-item" @click="openProfile">
-              <span class="nav-bar__user-menu-icon">{{ ICON.USER }}</span>
-              {{ $t('nav.manageAccount') }}
-            </button>
-            <button class="nav-bar__user-menu-item" @click="goToWorkspace">
-              <span class="nav-bar__user-menu-icon">{{ ICON.ORG }}</span>
-              {{ $t('nav.switchWorkspace') }}
-            </button>
-            <div class="nav-bar__user-menu-divider"></div>
-            <button class="nav-bar__user-menu-item nav-bar__user-menu-item--danger" @click="doSignOut">
-              <span class="nav-bar__user-menu-icon">{{ ICON.LOGOUT }}</span>
-              {{ $t('nav.signOut') }}
-            </button>
-          </div>
-        </div>
+        <NavUserArea v-if="isSignedIn" />
         <RouterLink
           v-else
           :to="ROUTE.SIGN_IN"
           class="nav-bar__sign-in-link"
-        >Sign in</RouterLink>
+        >{{ $t('nav.signIn') }}</RouterLink>
 
         <button
           class="nav-bar__hamburger"
@@ -84,12 +59,13 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
-import { useUser, useOrganization, useClerk } from '@clerk/vue'
+import { useUser } from '@clerk/vue'
 
 import { useThemeStore } from '@/stores/themeStore'
 
 import { ROUTE } from '@/constants/routes'
-import { ICON } from '@/constants/icons'
+
+import NavUserArea from './NavUserArea.vue'
 
 const NAV_LINKS = [
   { to: ROUTE.HOME,       labelKey: 'nav.home',      exact: true },
@@ -102,92 +78,26 @@ const NAV_LINKS = [
 
 export default defineComponent({
   name: 'NavBar',
+  components: { NavUserArea },
 
   setup() {
-    const { isSignedIn, user } = useUser()
-    const { organization }     = useOrganization()
-    const clerk                = useClerk()
-    return { isSignedIn, user, organization, clerk }
+    const { isSignedIn } = useUser()
+    return { isSignedIn }
   },
 
   data() {
-    return { mobileOpen: false, menuOpen: false, navLinks: NAV_LINKS }
+    return { mobileOpen: false, navLinks: NAV_LINKS }
   },
 
   computed: {
     ROUTE() { return ROUTE },
-    ICON()  { return ICON },
     themeStore() { return useThemeStore() },
-
-    orgName(): string | null {
-      return (this.organization as { name?: string } | null)?.name ?? null
-    },
-
-    userImageUrl(): string | null {
-      return (this.user as { imageUrl?: string } | null)?.imageUrl ?? null
-    },
-
-    userName(): string {
-      const u = this.user as { firstName?: string; lastName?: string; fullName?: string } | null
-      return (u?.fullName ?? `${u?.firstName ?? ''} ${u?.lastName ?? ''}`.trim()) || 'User'
-    },
-
-    userInitials(): string {
-      const u = this.user as { firstName?: string; lastName?: string } | null
-      const first = u?.firstName?.[0] ?? ''
-      const last  = u?.lastName?.[0]  ?? ''
-      return (first + last).toUpperCase() || '?'
-    },
-
     isOled(): boolean { return this.themeStore.theme === 'oled' },
-  },
-
-  mounted() {
-    document.addEventListener('click', this.handleOutsideClick)
-  },
-
-  beforeUnmount() {
-    document.removeEventListener('click', this.handleOutsideClick)
-  },
-
-  methods: {
-    toggleMenu() {
-      this.menuOpen = !this.menuOpen
-    },
-
-    closeMenu() {
-      this.menuOpen = false
-    },
-
-    handleOutsideClick(e: MouseEvent) {
-      const area = this.$el?.querySelector?.('.nav-bar__user-area')
-      if (area && !area.contains(e.target as Node)) {
-        this.menuOpen = false
-      }
-    },
-
-    openProfile() {
-      this.closeMenu()
-      ;(this.clerk as { openUserProfile?(): void })?.openUserProfile?.()
-    },
-
-    goToWorkspace() {
-      this.closeMenu()
-      // Workspace management page — to be implemented
-    },
-
-    doSignOut() {
-      this.closeMenu()
-      ;(this.clerk as { signOut?(opts?: { redirectUrl?: string }): Promise<void> })
-        ?.signOut?.({ redirectUrl: ROUTE.SIGN_IN })
-    },
   },
 })
 </script>
 
 <style lang="scss" scoped>
-
-
 .nav-bar {
   background-color: var(--color-surface);
   border-bottom: 1px solid var(--color-border);
@@ -201,6 +111,11 @@ export default defineComponent({
     display: grid;
     grid-template-columns: 1fr auto 1fr;
     align-items: center;
+  }
+
+  /* ── Left group: brand + theme toggle ───────────────────────────── */
+  &__left {
+    @include flex-row(0.65rem);
   }
 
   /* ── Brand ──────────────────────────────────────────────────────── */
@@ -263,113 +178,6 @@ export default defineComponent({
   &__right {
     @include flex-row(0.75rem);
     justify-self: end;
-  }
-
-  /* ── User area + dropdown ───────────────────────────────────────── */
-  &__user-area {
-    @include flex-row(0);
-    position: relative;
-    border: 1px solid var(--color-border);
-    border-radius: 6px;
-    overflow: visible;
-    transition: border-color var(--tr-fast);
-    flex-shrink: 0;
-    cursor: pointer;
-    user-select: none;
-
-    &:hover { border-color: var(--color-primary-border); }
-  }
-
-  &__workspace {
-    @include mono-upper(var(--fs-xxs), 0.06em);
-    color: var(--color-text-muted);
-    opacity: var(--op-dim);
-    padding: 0 0.65rem;
-    border-right: 1px solid var(--color-border);
-    white-space: nowrap;
-    max-width: 24ch;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  &__user-btn {
-    display: flex;
-    align-items: center;
-    padding: 0.18rem 0.4rem;
-    flex-shrink: 0;
-  }
-
-  &__user-avatar {
-    width: 26px;
-    height: 26px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 1.5px solid var(--color-border);
-    display: block;
-  }
-
-  &__user-initials {
-    @include inline-flex-center();
-    width: 26px;
-    height: 26px;
-    border-radius: 50%;
-    border: 1.5px solid var(--color-border);
-    font-family: var(--font-mono);
-    font-size: 0.6rem;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    color: var(--color-primary);
-    background: color-mix(in srgb, var(--color-primary) 10%, transparent);
-  }
-
-  &__user-menu {
-    position: absolute;
-    top: calc(100% + 6px);
-    right: 0;
-    min-width: 185px;
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
-    z-index: 200;
-    padding: 0.3rem;
-    @include flex-col(0);
-    overflow: hidden;
-
-    &-item {
-      @include flex-row(0.5rem);
-      width: 100%;
-      padding: 0.5rem 0.7rem;
-      background: transparent;
-      border: none;
-      border-radius: 4px;
-      font-family: var(--font-mono);
-      font-size: var(--fs-xs);
-      letter-spacing: 0.04em;
-      color: var(--color-text-muted);
-      cursor: pointer;
-      text-align: left;
-      transition: background var(--tr-fast), color var(--tr-fast);
-
-      &:hover { background: var(--color-surface-2); color: var(--color-text); }
-
-      &--danger {
-        color: color-mix(in srgb, var(--color-danger, var(--color-amber)) 80%, transparent);
-        &:hover { background: color-mix(in srgb, var(--color-amber) 10%, transparent); color: var(--color-amber); }
-      }
-    }
-
-    &-icon {
-      font-size: var(--fs-sm);
-      opacity: var(--op-dim);
-      flex-shrink: 0;
-    }
-
-    &-divider {
-      height: 1px;
-      background: var(--color-border);
-      margin: 0.25rem 0.3rem;
-    }
   }
 
   &__sign-in-link {
@@ -447,8 +255,6 @@ export default defineComponent({
     }
   }
 }
-
-@keyframes brand-pulse       { 0%, 100% { text-shadow: 0 0 8px var(--color-primary-dim); } 50% { text-shadow: 0 0 18px color-mix(in srgb, var(--color-primary) 50%, transparent); } }
 
 /* ── Mobile / tablet (hamburger at ≤ 960px) ─────────────────────────────── */
 @media (max-width: 960px) {

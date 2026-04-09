@@ -17,7 +17,7 @@ export function getPrisma(): PrismaClient {
     throw new Error('[Prisma] DATABASE_URL is not set. Add it to your environment variables.')
   }
 
-  const pool    = new pg.Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } })
+  const pool    = new pg.Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: process.env.NODE_ENV === 'production' } })
   const adapter = new PrismaPg(pool)
   _prisma = new PrismaClient({
     adapter,

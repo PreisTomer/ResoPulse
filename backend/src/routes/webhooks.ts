@@ -89,6 +89,7 @@ async function routeWebhookEvent(event: ClerkWebhookEvent): Promise<void> {
 
 async function upsertUser(data: ClerkUserData): Promise<void> {
   const primaryEmail = data.email_addresses.find(e => e.id === data.primary_email_address_id)?.email_address ?? ''
+  if (!primaryEmail) console.warn('[webhook] upsertUser: no primary email found for user', data.id)
   await prisma.user.upsert({
     where:  { id: data.id },
     update: { email: primaryEmail, name: buildDisplayName(data) },
@@ -116,7 +117,9 @@ async function upsertOrganization(data: ClerkOrgData): Promise<void> {
 
 async function deleteOrganization(orgId: string): Promise<void> {
   await prisma.membership.deleteMany({ where: { orgId } })
-  await prisma.organization.delete({ where: { id: orgId } }).catch(() => {})
+  await prisma.organization.delete({ where: { id: orgId } }).catch((err) => {
+    console.warn('[webhook] deleteOrganization: org already gone or delete failed', orgId, err)
+  })
 }
 
 // ── Membership handlers ───────────────────────────────────────────────────────

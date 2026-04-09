@@ -65,7 +65,7 @@ export async function connectSocket(): Promise<void> {
     auth: (cb: (data: { token: string }) => void) => {
       window.Clerk?.session?.getToken()
         .then(token  => cb({ token: token ?? '' }))
-        .catch(()    => cb({ token: '' }))
+        .catch((err) => { console.error('[Socket] Failed to get Clerk token:', err); cb({ token: '' }) })
     },
   })
 

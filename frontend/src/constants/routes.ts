@@ -12,6 +12,7 @@ export const ROUTE = {
   SIGN_IN:     '/sign-in',
   SIGN_UP:     '/sign-up',
   ONBOARDING:  '/onboarding',
+  ACCOUNT:     '/account',
   PROFILE:     '/profile',
 } as const
 

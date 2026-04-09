@@ -183,8 +183,7 @@ import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'
 import { EMIT } from '@/constants/emitEvents'
 
-import type { CellConfig, CellRecord } from '@/types/cell'
-import type { CellState } from '@/types/cell'
+import type { CellConfig, CellRecord, CellState, BlobFrame, OscFrame } from '@/types/cell'
 
 import { setupBlobAnimation, setupOscilloscope, spawnFragment } from './cellAnimation'
 import type { CellVisualProfile } from './cellAnimation'
@@ -216,6 +215,9 @@ export default defineComponent({
       shatterTimeout:       null as ReturnType<typeof setTimeout> | null,
       shatterDelayTimeout:  null as ReturnType<typeof setTimeout> | null,
       progressInterval:     null as ReturnType<typeof setInterval> | null,
+      // Stable frame objects reused each animation tick — avoids 60 heap allocs/sec
+      _blobFrame: markRaw<BlobFrame>({ impact: 0, state: CELL_STATE.STABLE, color: '', temperature: 37, fieldVcm: 0, freqKHz: 400, nuclearDisruptionRatio: 0, depCmReal: 0, waveform: 'cw', isAcousticMode: false }),
+      _oscFrame:  markRaw<OscFrame>({ state: CELL_STATE.STABLE, impact: 0, liveAmplitude: 0.8, cellColor: '', naturalFrequency: 400 }),
     }
   },
 
@@ -564,18 +566,20 @@ export default defineComponent({
       }
       this.helixTimer = markRaw(setupBlobAnimation(
         el, this.type, this.accentColor, cellCategory, profile,
-        () => ({
-          impact:                 this.disruptionRatio,
-          state:                  this.cellState,
-          color:                  this.cellColor,
-          temperature:            this.temperature,
-          fieldVcm:               this.cellStore.fieldIntensity,
-          freqKHz:                this.cellStore.currentBroadcastFrequency,
-          nuclearDisruptionRatio: this.cellStore.doubleShellEnabled ? this.nuclearDisruptionRatio : 0,
-          depCmReal:              this.type === CELL_TYPE.HEALTHY ? this.cellStore.depHealthyCmReal : this.cellStore.depTargetCmReal,
-          waveform:               this.cellStore.waveform,
-          isAcousticMode:         this.isAcousticTarget,
-        }),
+        () => {
+          const f = this._blobFrame
+          f.impact                 = this.disruptionRatio
+          f.state                  = this.cellState
+          f.color                  = this.cellColor
+          f.temperature            = this.temperature
+          f.fieldVcm               = this.cellStore.fieldIntensity
+          f.freqKHz                = this.cellStore.currentBroadcastFrequency
+          f.nuclearDisruptionRatio = this.cellStore.doubleShellEnabled ? this.nuclearDisruptionRatio : 0
+          f.depCmReal              = this.type === CELL_TYPE.HEALTHY ? this.cellStore.depHealthyCmReal : this.cellStore.depTargetCmReal
+          f.waveform               = this.cellStore.waveform
+          f.isAcousticMode         = this.isAcousticTarget
+          return f
+        },
       ))
     },
 
@@ -587,15 +591,17 @@ export default defineComponent({
       this.oscTimer?.stop()
       this.oscTimer = markRaw(setupOscilloscope(
         el, this.accentColor,
-        () => ({
-          state:           this.cellState,
-          impact:          this.disruptionRatio,
-          liveAmplitude:   this.liveAmplitude,
-          cellColor:       this.cellColor,
-          naturalFrequency: this.isAcousticTarget
+        () => {
+          const f = this._oscFrame
+          f.state           = this.cellState
+          f.impact          = this.disruptionRatio
+          f.liveAmplitude   = this.liveAmplitude
+          f.cellColor       = this.cellColor
+          f.naturalFrequency = this.isAcousticTarget
             ? this.cellStore.currentBroadcastFrequency
-            : (this.cellData?.naturalFrequency ?? 400),
-        }),
+            : (this.cellData?.naturalFrequency ?? 400)
+          return f
+        },
       ))
     },
 

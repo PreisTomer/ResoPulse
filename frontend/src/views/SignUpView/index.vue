@@ -1,56 +1,56 @@
 <!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
 <template>
-  <div class="auth-page">
+  <div class="signup-page">
 
-    <div class="auth-page__bg" aria-hidden="true">
-      <div class="auth-page__bg-grid"></div>
-      <canvas ref="particleCanvas" class="auth-page__bg-particles"></canvas>
-      <canvas ref="waveCanvas" class="auth-page__bg-canvas"></canvas>
+    <div class="signup-page__bg" aria-hidden="true">
+      <div class="signup-page__bg-grid"></div>
+      <canvas ref="hexCanvas"      class="signup-page__bg-hex"></canvas>
+      <canvas ref="particleCanvas" class="signup-page__bg-particles"></canvas>
     </div>
 
-    <div class="auth-page__layout">
+    <div class="signup-page__layout">
 
       <!-- LEFT PANEL -->
-      <aside class="auth-page__brand">
-        <div class="auth-page__brand-identity">
-          <RouterLink to="/" class="auth-page__logo-link">
-            <div class="auth-page__logo-img">
+      <aside class="signup-page__brand">
+        <div class="signup-page__brand-identity">
+          <RouterLink to="/" class="signup-page__logo-link">
+            <div class="signup-page__logo-img">
               <img src="/logo.png" alt="ResoPulse" />
             </div>
-            <div class="auth-page__logo-text">
-              <span class="auth-page__logo-name">Reso<span class="auth-page__logo-pulse">Pulse</span></span>
-              <span class="auth-page__logo-tag">{{ $t('nav.researchPlatform') }}</span>
+            <div class="signup-page__logo-text">
+              <span class="signup-page__logo-name">Reso<span class="signup-page__logo-pulse">Pulse</span></span>
+              <span class="signup-page__logo-tag">{{ $t('nav.researchPlatform') }}</span>
             </div>
           </RouterLink>
-          <h1 class="auth-page__brand-headline">
+          <h1 class="signup-page__brand-headline">
             Start modelling<br>
-            <span class="auth-page__brand-highlight">your first protocol.</span>
+            <span class="signup-page__brand-highlight">your first protocol.</span>
           </h1>
-          <p class="auth-page__brand-sub">
+          <p class="signup-page__brand-sub">
             Free access to the full biophysics simulator.
             Invite your lab team and collaborate on protocol design.
           </p>
         </div>
 
-        <ul class="auth-page__steps" aria-label="Getting started steps">
-          <li v-for="(step, i) in onboardingSteps" :key="step" class="auth-page__step">
-            <span class="auth-page__step-num">{{ i + 1 }}</span>
-            <span class="auth-page__step-label">{{ step }}</span>
+        <ul class="signup-page__steps" aria-label="Getting started steps">
+          <li v-for="(step, i) in onboardingSteps" :key="step" class="signup-page__step">
+            <span class="signup-page__step-num">{{ i + 1 }}</span>
+            <span class="signup-page__step-label">{{ step }}</span>
           </li>
         </ul>
 
-        <p class="auth-page__footnote">
+        <p class="signup-page__footnote">
           Kotnik &amp; Miklavcic 2000 · Weaver &amp; Chizmadzhev 1996 · Pennes 1948
         </p>
       </aside>
 
       <!-- RIGHT PANEL -->
-      <div class="auth-page__card-wrap">
-        <div class="auth-page__card">
-          <div class="auth-page__card-header">
-            <span class="auth-page__card-eyebrow">New Account</span>
-            <h2 class="auth-page__card-title">Create your lab account</h2>
-            <p class="auth-page__card-desc">Set up in under a minute</p>
+      <div class="signup-page__card-wrap">
+        <div class="signup-page__card">
+          <div class="signup-page__card-header">
+            <span class="signup-page__card-eyebrow">{{ $t('signUp.eyebrow') }}</span>
+            <h2 class="signup-page__card-title">{{ $t('signUp.cardTitle') }}</h2>
+            <p class="signup-page__card-desc">{{ $t('signUp.cardDesc') }}</p>
           </div>
 
           <SignUp
@@ -62,9 +62,9 @@
           />
         </div>
 
-        <div class="auth-page__card-footer">
-          <span class="auth-page__card-footer-text">Already have an account?</span>
-          <RouterLink :to="ROUTE.SIGN_IN" class="auth-page__card-footer-link">Sign in</RouterLink>
+        <div class="signup-page__card-footer">
+          <span class="signup-page__card-footer-text">{{ $t('signUp.alreadyHave') }}</span>
+          <RouterLink :to="ROUTE.SIGN_IN" class="signup-page__card-footer-link">{{ $t('signUp.signInLink') }}</RouterLink>
         </div>
       </div>
 
@@ -80,114 +80,255 @@ import { dark } from '@clerk/themes'
 
 import { ROUTE } from '@/constants/routes'
 
-const PARTICLE_COUNT   = 55
-const PARTICLE_SPEED   = 0.18
-const PARTICLE_RADIUS  = 1.4
-const PARTICLE_OPACITY = 0.22
+// ── Particle config ────────────────────────────────────────────────────────
+const PARTICLE_COUNT   = 40
+const PARTICLE_SPEED   = 0.16
+const PARTICLE_RADIUS  = 1.3
+const PARTICLE_OPACITY = 0.30
 const CONNECTION_DIST  = 110
+
+// ── Hex grid config ────────────────────────────────────────────────────────
+const HEX_CIRCUMRADIUS = 22
+const HEX_INNER_RATIO  = 0.72
+const HEX_OPEN_SPEED   = 0.022
+const HEX_FADE_SPEED   = 0.008
+const HEX_IDLE_MIN     = 200
+const HEX_IDLE_MAX     = 1200
+const HEX_GLOW_DUR_MIN = 60
+const HEX_GLOW_DUR_MAX = 120
 
 interface Particle { x: number; y: number; vx: number; vy: number }
 
-// Sine wave config — cyan/primary dominant for the sign-up page
-// isPrimary: true → --color-primary (cyan), false → --color-primary-deep (deep cyan)
-interface WaveState {
-  freq:      number
-  amp:       number
-  yRatio:    number
-  speed:     number
-  opacity:   number
-  isPrimary: boolean
-  phase:     number
+interface HexCell {
+  x:     number
+  y:     number
+  glow:  number
+  state: 'idle' | 'opening' | 'fading'
+  timer: number
 }
 
-const WAVE_INIT: Omit<WaveState, 'phase'>[] = [
-  { freq: 0.006, amp: 55, yRatio: 0.12, speed: 0.008, opacity: 0.13, isPrimary: true  },
-  { freq: 0.011, amp: 32, yRatio: 0.30, speed: 0.013, opacity: 0.10, isPrimary: false },
-  { freq: 0.008, amp: 45, yRatio: 0.50, speed: 0.007, opacity: 0.12, isPrimary: true  },
-  { freq: 0.014, amp: 24, yRatio: 0.70, speed: 0.016, opacity: 0.09, isPrimary: false },
-  { freq: 0.007, amp: 50, yRatio: 0.88, speed: 0.011, opacity: 0.08, isPrimary: true  },
-]
+const CLERK_APPEARANCE = {
+  baseTheme: dark,
+  variables: {
+    colorBackground:              '#0d0e1f',
+    colorInputBackground:         '#0a0b1a',
+    colorInputText:               '#d4cef8',
+    colorText:                    '#d4cef8',
+    colorTextSecondary:           '#7a72b0',
+    colorTextOnPrimaryBackground: '#0d0e1f',
+    colorPrimary:                 '#a78bfa',
+    colorSuccess:                 '#4ade80',
+    colorDanger:                  '#ff4d6d',
+    colorNeutral:                 '#2a1f5f',
+    colorShimmer:                 'rgba(167,139,250,0.04)',
+    borderRadius:                 '8px',
+    fontFamily:                   "'Inter', system-ui, sans-serif",
+    fontFamilyButtons:            "'Inter', system-ui, sans-serif",
+    fontSize:                     '0.875rem',
+    spacingUnit:                  '0.9rem',
+  },
+  elements: {
+    rootBox:                      { width: '100%', maxWidth: '100%', minWidth: '0' },
+    cardBox:                      { width: '100%', maxWidth: '100%', padding: '0.5rem' },
+    card:                         { background: 'transparent', boxShadow: 'none', border: 'none', padding: '0', gap: '1.1rem', width: '100%' },
+    main:                         { padding: '0 2px' },
+    'signUp-start':               { padding: '0 0.25rem' },
+    headerTitle:                  { display: 'none' },
+    headerSubtitle:               { display: 'none' },
+    header:                       { display: 'none' },
+    socialButtonsBlockButton:     { border: '1px solid #2a1f5f', background: '#0a0b1a', color: '#d4cef8', borderRadius: '8px', padding: '0.65rem 1rem', transition: 'border-color 0.15s, background 0.15s' },
+    socialButtonsBlockButtonText: { fontWeight: '500' },
+    dividerLine:                  { background: '#2a1f5f' },
+    dividerText:                  { color: '#4a3a7a', fontSize: '0.72rem', letterSpacing: '0.06em', textTransform: 'uppercase' },
+    formFieldLabel:               { color: '#7a72b0', fontSize: '0.75rem', letterSpacing: '0.03em', textTransform: 'capitalize', paddingLeft: '2px' },
+    formFieldInput:               { background: '#0a0b1a', border: '1px solid #2a1f5f', color: '#d4cef8', borderRadius: '8px', caretColor: '#a78bfa' },
+    formFieldInputPlaceholder:    { color: '#7a6aaa' },
+    formButtonPrimary:            { background: 'rgba(167,139,250,0.10)', color: '#a78bfa', border: '1px solid rgba(167,139,250,0.35)', fontFamily: "'Inter', system-ui, sans-serif", letterSpacing: '0.04em', textTransform: 'uppercase', fontWeight: '600', borderRadius: '8px', boxShadow: 'none' },
+    buttonArrowIcon:              { display: 'none' },
+    footerActionLink:             { color: '#a78bfa' },
+    footerAction:                 { display: 'none' },
+    identityPreviewText:          { color: '#d4cef8' },
+    identityPreviewEditButton:    { color: '#a78bfa' },
+    alternativeMethodsBlockButton: { border: '1px solid #2a1f5f', background: '#0a0b1a', color: '#d4cef8', borderRadius: '8px' },
+    otpCodeFieldInput:            { background: '#0a0b1a', border: '1px solid #2a1f5f', color: '#a78bfa', borderRadius: '8px' },
+  },
+}
 
 export default defineComponent({
   name: 'SignUpView',
   components: { SignUp },
 
   setup() {
-    const waveCanvas     = ref<HTMLCanvasElement | null>(null)
+    const hexCanvas      = ref<HTMLCanvasElement | null>(null)
     const particleCanvas = ref<HTMLCanvasElement | null>(null)
-    return { waveCanvas, particleCanvas }
+    return { hexCanvas, particleCanvas }
   },
 
   data() {
     return {
-      animFrameId:         null as ReturnType<typeof requestAnimationFrame> | null,
-      particleAnimFrameId: null as ReturnType<typeof requestAnimationFrame> | null,
-      particles:           [] as Particle[],
-      waves: markRaw(WAVE_INIT.map(w => ({ ...w, phase: Math.random() * Math.PI * 2 }))),
-      onboardingSteps: [
-        'Create your account with email or Google',
-        'Set up your first Lab Workspace',
-        'Invite team members with role-based access',
-        'Start designing electroporation protocols',
-      ],
+      hexFrameId:      null as ReturnType<typeof requestAnimationFrame> | null,
+      particleFrameId: null as ReturnType<typeof requestAnimationFrame> | null,
+      hexCells:        [] as HexCell[],
+      particles:       [] as Particle[],
     }
   },
 
   computed: {
-    ROUTE() { return ROUTE },
-
-    clerkAppearance() {
-      return {
-        baseTheme: dark,
-        variables: {
-          colorBackground:      '#0d1826',
-          colorInputBackground: '#0a1520',
-          colorInputText:       '#c8d8e8',
-          colorText:            '#c8d8e8',
-          colorTextSecondary:   '#5a7a9a',
-          colorTextOnPrimaryBackground: '#060e1a',
-          colorPrimary:         '#00d4ff',
-          colorSuccess:         '#4ade80',
-          colorDanger:          '#ff4d6d',
-          colorNeutral:         '#1e3a5f',
-          borderRadius:         '8px',
-          fontFamily:           "'Inter', system-ui, sans-serif",
-          fontFamilyButtons:    "'JetBrains Mono', 'Fira Code', monospace",
-          fontSize:             '0.875rem',
-        },
-        elements: {
-          rootBox:                 { width: '100%', maxWidth: '100%', minWidth: '0' },
-          cardBox:                 { width: '100%', maxWidth: '100%' },
-          card:                    { background: 'transparent', boxShadow: 'none', border: 'none', padding: '0', gap: '1.1rem', width: '100%' },
-          headerTitle:             { display: 'none' },
-          headerSubtitle:          { display: 'none' },
-          header:                  { display: 'none' },
-          socialButtonsBlockButton: { border: '1px solid #1e3a5f', background: '#0a1520', color: '#c8d8e8', borderRadius: '8px' },
-          dividerLine:             { background: '#1e3a5f' },
-          dividerText:             { color: '#3a5a7a', fontSize: '0.72rem', letterSpacing: '0.06em', textTransform: 'uppercase' },
-          formFieldLabel:          { color: '#5a7a9a', fontSize: '0.72rem', letterSpacing: '0.06em', textTransform: 'uppercase', fontFamily: "'JetBrains Mono', monospace" },
-          formFieldInput:          { background: '#0a1520', border: '1px solid #1e3a5f', color: '#c8d8e8', borderRadius: '8px' },
-          formButtonPrimary:       { background: 'rgba(0,212,255,0.08)', color: '#00d4ff', border: '1px solid rgba(0,212,255,0.3)', fontFamily: "'JetBrains Mono', monospace", letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: '600', borderRadius: '8px', boxShadow: 'none' },
-          buttonArrowIcon:         { display: 'none' },
-          footerActionLink:        { color: '#00d4ff' },
-          footerAction:            { display: 'none' },
-        },
-      }
+    ROUTE()           { return ROUTE },
+    clerkAppearance() { return CLERK_APPEARANCE },
+    onboardingSteps(): string[] {
+      return [
+        this.$t('signUp.step1'),
+        this.$t('signUp.step2'),
+        this.$t('signUp.step3'),
+        this.$t('signUp.step4'),
+      ]
     },
   },
 
   mounted() {
+    this.buildHexGrid()
+    this.startHexLoop()
     this.initParticles()
     this.startParticleLoop()
-    this.startWaveLoop()
   },
 
   beforeUnmount() {
-    if (this.animFrameId         !== null) cancelAnimationFrame(this.animFrameId)
-    if (this.particleAnimFrameId !== null) cancelAnimationFrame(this.particleAnimFrameId)
+    if (this.hexFrameId      !== null) cancelAnimationFrame(this.hexFrameId)
+    if (this.particleFrameId !== null) cancelAnimationFrame(this.particleFrameId)
   },
 
   methods: {
+
+    // ── Hex grid ─────────────────────────────────────────────────────
+
+    buildHexGrid(): void {
+      const canvas = this.hexCanvas
+      if (!canvas) return
+      const w = canvas.width  = canvas.offsetWidth
+      const h = canvas.height = canvas.offsetHeight
+      const r    = HEX_CIRCUMRADIUS
+      const hexH = r * Math.sqrt(3)
+      const cols = Math.ceil(w / (r * 1.5)) + 2
+      const rows = Math.ceil(h / hexH) + 2
+
+      this.hexCells = markRaw(
+        Array.from({ length: cols * rows }, (_, idx) => {
+          const col = Math.floor(idx / rows)
+          const row = idx % rows
+          return {
+            x:     col * r * 1.5 - r,
+            y:     row * hexH + (col % 2 === 1 ? hexH / 2 : 0) - hexH / 2,
+            glow:  0,
+            state: 'idle' as const,
+            timer: Math.random() * HEX_IDLE_MAX,
+          }
+        })
+      )
+    },
+
+    startHexLoop(): void {
+      const canvas = this.hexCanvas
+      if (!canvas) return
+      const ctx = canvas.getContext('2d')
+      if (!ctx) return
+
+      const tick = () => {
+        const w = canvas.offsetWidth
+        const h = canvas.offsetHeight
+        if (canvas.width !== w || canvas.height !== h) {
+          canvas.width  = w
+          canvas.height = h
+          this.buildHexGrid()
+        }
+        ctx.clearRect(0, 0, w, h)
+        this.drawHexFrame(ctx)
+        this.hexFrameId = requestAnimationFrame(tick)
+      }
+
+      this.hexFrameId = requestAnimationFrame(tick)
+    },
+
+    drawHexFrame(ctx: CanvasRenderingContext2D): void {
+      for (const cell of this.hexCells) {
+        this.tickCell(cell)
+        this.drawCell(ctx, cell)
+      }
+    },
+
+    /** Advance a single cell's state machine by one frame. */
+    tickCell(cell: HexCell): void {
+      cell.timer--
+
+      if (cell.state === 'idle' && cell.timer <= 0) {
+        cell.state = 'opening'
+        cell.glow  = 0
+        cell.timer = HEX_GLOW_DUR_MIN + Math.random() * (HEX_GLOW_DUR_MAX - HEX_GLOW_DUR_MIN)
+        return
+      }
+      if (cell.state === 'opening') {
+        cell.glow = Math.min(cell.glow + HEX_OPEN_SPEED, 1)
+        if (cell.timer <= 0) cell.state = 'fading'
+        return
+      }
+      if (cell.state === 'fading') {
+        cell.glow = Math.max(cell.glow - HEX_FADE_SPEED, 0)
+        if (cell.glow <= 0) {
+          cell.state = 'idle'
+          cell.timer = HEX_IDLE_MIN + Math.random() * (HEX_IDLE_MAX - HEX_IDLE_MIN)
+        }
+      }
+    },
+
+    /** Draw one hexagonal cell — border always visible, glow only when active. */
+    drawCell(ctx: CanvasRenderingContext2D, cell: HexCell): void {
+      const r = HEX_CIRCUMRADIUS
+      const g = cell.glow
+
+      // Always-on border — very subtle so grid reads as texture not pattern
+      this.traceHex(ctx, cell.x, cell.y, r - 1)
+      ctx.strokeStyle = `rgba(167,139,250,${0.030 + g * 0.10})`
+      ctx.lineWidth   = 0.7
+      ctx.stroke()
+
+      if (g <= 0) return
+
+      // Inner fill
+      this.traceHex(ctx, cell.x, cell.y, r * HEX_INNER_RATIO)
+      ctx.fillStyle = `rgba(167,139,250,${g * 0.06})`
+      ctx.fill()
+
+      // Pore dot — the central electroporation event
+      ctx.beginPath()
+      ctx.arc(cell.x, cell.y, 2.2 * g, 0, Math.PI * 2)
+      ctx.fillStyle = `rgba(210,190,255,${g * 0.70})`
+      ctx.fill()
+
+      // Pore glow ring expanding outward
+      ctx.beginPath()
+      ctx.arc(cell.x, cell.y, r * 0.32 + g * 4, 0, Math.PI * 2)
+      ctx.strokeStyle = `rgba(167,139,250,${g * 0.18})`
+      ctx.lineWidth   = 0.8
+      ctx.stroke()
+    },
+
+    /**
+     * Traces a regular hexagon centred at (cx, cy) with circumradius r.
+     * Flat-top orientation (first vertex at -30 degrees).
+     */
+    traceHex(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number): void {
+      ctx.beginPath()
+      for (let i = 0; i < 6; i++) {
+        const a  = (Math.PI / 3) * i - Math.PI / 6
+        const px = cx + r * Math.cos(a)
+        const py = cy + r * Math.sin(a)
+        i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py)
+      }
+      ctx.closePath()
+    },
+
+    // ── Particles ────────────────────────────────────────────────────
+
     initParticles(): void {
       const canvas = this.particleCanvas
       if (!canvas) return
@@ -216,76 +357,47 @@ export default defineComponent({
           this.initParticles()
         }
         ctx.clearRect(0, 0, w, h)
-        for (const p of this.particles) {
-          p.x += p.vx
-          p.y += p.vy
-          if (p.x < 0 || p.x > w) p.vx *= -1
-          if (p.y < 0 || p.y > h) p.vy *= -1
-        }
-        for (let i = 0; i < this.particles.length; i++) {
-          for (let j = i + 1; j < this.particles.length; j++) {
-            const a = this.particles[i]
-            const b = this.particles[j]
-            if (!a || !b) continue
-            const dx = a.x - b.x
-            const dy = a.y - b.y
-            const dist = Math.sqrt(dx * dx + dy * dy)
-            if (dist < CONNECTION_DIST) {
-              ctx.beginPath()
-              ctx.moveTo(a.x, a.y)
-              ctx.lineTo(b.x, b.y)
-              ctx.strokeStyle = `rgba(0, 212, 255, ${(1 - dist / CONNECTION_DIST) * 0.10})`
-              ctx.lineWidth   = 0.6
-              ctx.stroke()
-            }
+        this.updateParticles(w, h)
+        this.drawParticles(ctx)
+        this.particleFrameId = requestAnimationFrame(tick)
+      }
+
+      this.particleFrameId = requestAnimationFrame(tick)
+    },
+
+    updateParticles(w: number, h: number): void {
+      for (const p of this.particles) {
+        p.x += p.vx
+        p.y += p.vy
+        if (p.x < 0 || p.x > w) p.vx *= -1
+        if (p.y < 0 || p.y > h) p.vy *= -1
+      }
+    },
+
+    drawParticles(ctx: CanvasRenderingContext2D): void {
+      for (let i = 0; i < this.particles.length; i++) {
+        for (let j = i + 1; j < this.particles.length; j++) {
+          const a = this.particles[i]
+          const b = this.particles[j]
+          if (!a || !b) continue
+          const dx   = a.x - b.x
+          const dy   = a.y - b.y
+          const dist = Math.sqrt(dx * dx + dy * dy)
+          if (dist < CONNECTION_DIST) {
+            ctx.beginPath()
+            ctx.moveTo(a.x, a.y)
+            ctx.lineTo(b.x, b.y)
+            ctx.strokeStyle = `rgba(167,139,250,${(1 - dist / CONNECTION_DIST) * 0.12})`
+            ctx.lineWidth   = 0.6
+            ctx.stroke()
           }
         }
-        for (const p of this.particles) {
-          ctx.beginPath()
-          ctx.arc(p.x, p.y, PARTICLE_RADIUS, 0, Math.PI * 2)
-          ctx.fillStyle = `rgba(0, 212, 255, ${PARTICLE_OPACITY})`
-          ctx.fill()
-        }
-        this.particleAnimFrameId = requestAnimationFrame(tick)
       }
-
-      this.particleAnimFrameId = requestAnimationFrame(tick)
-    },
-
-    startWaveLoop(): void {
-      const canvas = this.waveCanvas
-      if (!canvas) return
-      const ctx = canvas.getContext('2d')
-      if (!ctx) return
-
-      const tick = () => {
-        const w = canvas.offsetWidth
-        const h = canvas.offsetHeight
-        if (canvas.width !== w || canvas.height !== h) {
-          canvas.width  = w
-          canvas.height = h
-        }
-        ctx.clearRect(0, 0, w, h)
-        this.drawWaves(ctx, w, h)
-        this.animFrameId = requestAnimationFrame(tick)
-      }
-
-      this.animFrameId = requestAnimationFrame(tick)
-    },
-
-    drawWaves(ctx: CanvasRenderingContext2D, w: number, h: number): void {
-      for (const wave of this.waves) {
+      for (const p of this.particles) {
         ctx.beginPath()
-        for (let x = 0; x <= w; x += 2) {
-          const y = wave.yRatio * h + Math.sin(x * wave.freq + wave.phase) * wave.amp
-          x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y)
-        }
-        // Both wave variants use primary cyan — varying opacity gives depth
-        const rgb = wave.isPrimary ? '0, 212, 255' : '0, 180, 220'
-        ctx.strokeStyle = `rgba(${rgb}, ${wave.opacity})`
-        ctx.lineWidth   = 1.5
-        ctx.stroke()
-        wave.phase += wave.speed
+        ctx.arc(p.x, p.y, PARTICLE_RADIUS, 0, Math.PI * 2)
+        ctx.fillStyle = `rgba(167,139,250,${PARTICLE_OPACITY})`
+        ctx.fill()
       }
     },
   },
@@ -293,14 +405,14 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-/* ── Reuse the same auth-page layout styles as SignInView ── */
-.auth-page {
+.signup-page {
   min-height: 100vh;
   position: relative;
   overflow: hidden;
   display: flex;
-  align-items: stretch;
+  align-items: center;
 
+  /* ── Background ──────────────────────────────────────────────────── */
   &__bg {
     position: fixed;
     inset: 0;
@@ -311,10 +423,20 @@ export default defineComponent({
       position: absolute;
       inset: 0;
       background-image:
-        linear-gradient(color-mix(in srgb, var(--color-primary) 4%, transparent) 1px, transparent 1px),
-        linear-gradient(90deg, color-mix(in srgb, var(--color-primary) 4%, transparent) 1px, transparent 1px);
+        linear-gradient(color-mix(in srgb, var(--color-purple) 3%, transparent) 1px, transparent 1px),
+        linear-gradient(90deg, color-mix(in srgb, var(--color-purple) 3%, transparent) 1px, transparent 1px);
       background-size: 52px 52px;
       mask-image: radial-gradient(ellipse 80% 60% at 50% 50%, black 30%, transparent 100%);
+    }
+
+    &-hex {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0.65;
+      // Vignette so grid fades toward edges, keeping center legible
+      mask-image: radial-gradient(ellipse 75% 70% at 50% 50%, black 20%, transparent 100%);
     }
 
     &-particles {
@@ -322,51 +444,47 @@ export default defineComponent({
       inset: 0;
       width: 100%;
       height: 100%;
-      opacity: 0.6;
-    }
-
-    &-canvas {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
       opacity: 0.7;
-      mask-image: linear-gradient(to right, transparent 0%, black 12%, black 88%, transparent 100%);
     }
   }
 
+  /* ── Layout ──────────────────────────────────────────────────────── */
   &__layout {
     position: relative;
     z-index: 1;
     width: 100%;
-    max-width: 1180px;
-    margin: 0 auto;
-    padding: 3rem 2rem;
+    padding: 3rem 2rem 5rem;
     display: flex;
-    align-items: center;
-    gap: 4rem;
+    align-items: stretch;
+    justify-content: center;
+    gap: 9rem;
 
     @media (max-width: 900px) {
       flex-direction: column;
       gap: 2.5rem;
-      padding: 2rem 1.25rem;
+      padding: 2rem 1.25rem 4rem;
       align-items: stretch;
     }
   }
 
+  /* ── Left brand panel ────────────────────────────────────────────── */
   &__brand {
-    flex: 1;
+    flex: none;
     display: flex;
     flex-direction: column;
     gap: 2.5rem;
     position: relative;
+    padding: 2rem 2.25rem;
+    border-radius: var(--radius-lg);
+    border: 1px solid color-mix(in srgb, var(--color-purple) 10%, transparent);
+    background: color-mix(in srgb, var(--color-surface) 50%, transparent);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
 
-    @media (max-width: 900px) { gap: 1.5rem; }
+    @media (max-width: 900px) { gap: 1.5rem; padding: 1.5rem; }
   }
 
   &__brand-identity {
-    position: relative;
-    z-index: 1;
     display: flex;
     flex-direction: column;
     gap: 1.25rem;
@@ -386,9 +504,9 @@ export default defineComponent({
     border-radius: 50%;
     overflow: hidden;
     flex-shrink: 0;
-    border: 1.5px solid var(--color-border);
+    border: 1.5px solid color-mix(in srgb, var(--color-purple) 40%, transparent);
     background: var(--color-bg);
-    box-shadow: var(--glow-sm);
+    box-shadow: 0 0 12px color-mix(in srgb, var(--color-purple) 20%, transparent);
 
     img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.7); display: block; }
   }
@@ -404,8 +522,8 @@ export default defineComponent({
   }
 
   &__logo-pulse {
-    color: var(--color-primary-deep);
-    -webkit-text-stroke: 0.8px var(--color-primary);
+    color: color-mix(in srgb, var(--color-purple) 80%, var(--color-primary-deep));
+    -webkit-text-stroke: 0.8px var(--color-purple);
     paint-order: stroke fill;
   }
 
@@ -427,8 +545,8 @@ export default defineComponent({
   }
 
   &__brand-highlight {
-    color: var(--color-primary);
-    text-shadow: 0 0 8px color-mix(in srgb, var(--color-primary) 40%, transparent);
+    color: var(--color-purple);
+    text-shadow: 0 0 12px color-mix(in srgb, var(--color-purple) 40%, transparent);
   }
 
   &__brand-sub {
@@ -441,18 +559,37 @@ export default defineComponent({
   /* ── Onboarding steps ────────────────────────────────────────────── */
   &__steps {
     position: relative;
-    z-index: 1;
     list-style: none;
     display: flex;
     flex-direction: column;
-    gap: 0.55rem;
+    gap: 0;
+    padding-left: 0;
+
+    // Vertical connector line threading through all step circles
+    &::before {
+      content: '';
+      position: absolute;
+      left: 10px;
+      top: 26px;
+      bottom: 26px;
+      width: 1px;
+      background: linear-gradient(
+        to bottom,
+        color-mix(in srgb, var(--color-purple) 35%, transparent),
+        color-mix(in srgb, var(--color-purple) 10%, transparent)
+      );
+      z-index: 0;
+    }
   }
 
   &__step {
+    position: relative;
+    z-index: 1;
     display: flex;
     align-items: flex-start;
-    gap: 0.75rem;
-    animation: auth-fade-up 0.5s ease-out both;
+    gap: 0.85rem;
+    padding: 0.55rem 0;
+    animation: signup-fade-up 0.5s ease-out both;
 
     @for $i from 1 through 4 {
       &:nth-child(#{$i}) { animation-delay: #{0.1 + $i * 0.09}s; }
@@ -462,9 +599,9 @@ export default defineComponent({
       font-family: var(--font-mono);
       font-size: var(--fs-xxs);
       font-weight: 700;
-      color: var(--color-primary);
-      background: color-mix(in srgb, var(--color-primary) 10%, transparent);
-      border: 1px solid color-mix(in srgb, var(--color-primary) 25%, transparent);
+      color: var(--color-purple);
+      background: color-mix(in srgb, var(--color-purple) 12%, transparent);
+      border: 1px solid color-mix(in srgb, var(--color-purple) 30%, transparent);
       border-radius: 50%;
       width: 22px;
       height: 22px;
@@ -482,9 +619,8 @@ export default defineComponent({
     }
   }
 
+  /* ── Footnote ────────────────────────────────────────────────────── */
   &__footnote {
-    position: relative;
-    z-index: 1;
     font-family: var(--font-mono);
     font-size: var(--fs-xxs);
     letter-spacing: 0.05em;
@@ -497,10 +633,10 @@ export default defineComponent({
   &__card-wrap {
     flex-shrink: 0;
     width: 420px;
+    position: relative;
     display: flex;
     flex-direction: column;
-    gap: 1rem;
-    animation: auth-card-enter 0.55s cubic-bezier(0.16, 1, 0.3, 1) both 0.1s;
+    animation: signup-card-enter 0.55s cubic-bezier(0.16, 1, 0.3, 1) both 0.1s;
 
     @media (max-width: 900px) {
       width: 100%;
@@ -510,15 +646,17 @@ export default defineComponent({
   }
 
   &__card {
+    flex: 1;
     padding: 2rem;
     border-radius: var(--radius-lg);
-    border: 1px solid color-mix(in srgb, var(--color-primary) 30%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-purple) 30%, transparent);
     background: color-mix(in srgb, var(--color-surface) 88%, transparent);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     box-shadow:
       0 24px 48px color-mix(in srgb, #000 55%, transparent),
-      inset 0 1px 0 color-mix(in srgb, white 4%, transparent);
+      0 0 0 1px color-mix(in srgb, var(--color-purple) 6%, transparent),
+      inset 0 1px 0 color-mix(in srgb, var(--color-purple) 8%, transparent);
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
@@ -536,7 +674,7 @@ export default defineComponent({
       font-size: var(--fs-xxs);
       text-transform: uppercase;
       letter-spacing: 0.1em;
-      color: var(--color-primary);
+      color: var(--color-purple);
       opacity: var(--op-dim);
     }
 
@@ -553,6 +691,10 @@ export default defineComponent({
     }
 
     &-footer {
+      position: absolute;
+      bottom: -2.75rem;
+      left: 0;
+      right: 0;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -566,26 +708,18 @@ export default defineComponent({
 
       &-link {
         font-size: var(--fs-sm);
-        color: var(--color-primary);
+        color: var(--color-purple);
         text-decoration: none;
         font-weight: 600;
         transition: opacity var(--tr-fast);
-        &:hover { opacity: var(--op-partial); text-decoration: none; }
+        &:hover { opacity: var(--op-partial); }
       }
     }
   }
 }
 
-@keyframes auth-ring-pulse {
-  0%, 100% { opacity: 0.12; }
-  50%       { opacity: 0.55; }
-}
-@keyframes auth-fade-up {
-  from { opacity: 0; transform: translateY(12px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-@keyframes auth-card-enter {
-  from { opacity: 0; transform: translateY(20px) scale(0.98); }
-  to   { opacity: 1; transform: translateY(0)    scale(1); }
-}
+/* ── Clerk placeholder override — Clerk injects its own ::placeholder color ── */
+:deep(.cl-formFieldInput::placeholder) { color: #7a6aaa; opacity: 1; }
+
+
 </style>
