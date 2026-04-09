@@ -65,7 +65,7 @@
             :routing="'path'"
             :path="ROUTE.SIGN_UP"
             :sign-in-url="ROUTE.SIGN_IN"
-            :after-sign-up-url="ROUTE.ONBOARDING"
+            :fallback-redirect-url="ROUTE.ONBOARDING"
             :appearance="clerkAppearance"
           />
         </div>
