@@ -13,10 +13,20 @@ const AI_PROXY_TIMEOUT_MS = 10_000
 const app  = express()
 const PORT = process.env.PORT ?? 3001
 
-// In production set FRONTEND_URL to your Vercel domain; unset allows all origins.
-const ALLOWED_ORIGINS: string[] | true = process.env.FRONTEND_URL
-  ? [process.env.FRONTEND_URL, 'http://localhost:5173', 'http://127.0.0.1:5173']
-  : true
+// In production set FRONTEND_URL to your production domain; unset allows all origins.
+// Both www and non-www variants are always included to avoid redirect-vs-CORS mismatches.
+function buildAllowedOrigins(): string[] | true {
+  const base = process.env.FRONTEND_URL
+  if (!base) return true
+  const stripped = base.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')
+  return [
+    `https://www.${stripped}`,
+    `https://${stripped}`,
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+  ]
+}
+const ALLOWED_ORIGINS = buildAllowedOrigins()
 
 app.use(cors({ origin: ALLOWED_ORIGINS }))
 
