@@ -1,8 +1,8 @@
-// Copyright © 2026 Tomer Preis. All rights reserved.
-// Unauthorized copying or distribution is prohibited.
+// Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
+import { clerkPlugin } from '@clerk/vue'
 
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 
@@ -14,10 +14,24 @@ import { i18n } from './plugins/i18n'
 import router from './router'
 import { vTip } from './directives/vTooltip'
 import { useExperimentStore } from './stores/experimentStore'
+
+const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY as string
+
+if (!PUBLISHABLE_KEY) {
+  throw new Error('VITE_CLERK_PUBLISHABLE_KEY is not set. Add it to your .env file.')
+}
+
 const pinia = createPinia()
 pinia.use(piniaPluginPersistedstate)
+
 const app = createApp(App)
-app.use(pinia).use(i18n).use(router)
+
+app
+  .use(pinia)
+  .use(i18n)
+  .use(router)
+  .use(clerkPlugin, { publishableKey: PUBLISHABLE_KEY })
+
 app.directive('tip', vTip)
 
 // Persist experiment log to localStorage on every state change.

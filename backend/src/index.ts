@@ -4,6 +4,8 @@ import express from 'express'
 import cors from 'cors'
 import { setupSocketServer } from './socket'
 import { countOutcomes, fetchTrainingRows } from './db'
+import { clerk, requireAuth } from './middleware/clerkAuth'
+import webhookRouter from './routes/webhooks'
 
 const AI_SERVICE_URL      = (process.env.AI_SERVICE_URL ?? 'http://localhost:8000').replace(/\/$/, '')
 const AI_PROXY_TIMEOUT_MS = 10_000
@@ -17,21 +19,29 @@ const ALLOWED_ORIGINS: string[] | true = process.env.FRONTEND_URL
   : true
 
 app.use(cors({ origin: ALLOWED_ORIGINS }))
+
+// ── Webhook route must receive raw body for svix signature verification ──────
+// Must be registered BEFORE express.json() so the buffer is not consumed first.
+app.use('/webhooks/clerk', express.raw({ type: 'application/json' }), webhookRouter)
+
 app.use(express.json({ limit: '16kb' }))
 
+// ── Clerk session middleware — populates req.auth on all routes ───────────────
+app.use(clerk)
+
+// ── Health (public) ───────────────────────────────────────────────────────────
 app.get('/health', (_req, res) => {
   const outcomeCount = countOutcomes()
   res.json({
     status:       'ok',
     service:      'resopulse-api',
-    dbOutcomes:   outcomeCount,    // -1 = DB unavailable (ephemeral FS)
+    dbOutcomes:   outcomeCount,
     dbPersistent: outcomeCount >= 0,
   })
 })
 
-// Returns rated outcomes as JSON for the Python AI service to pull when retraining.
-// Set TRAINING_DATA_SECRET on both services to restrict access; omit for local dev.
-app.get('/ai/training-data', (req, res) => {
+// ── AI training data (protected: requires auth + optional secret) ─────────────
+app.get('/ai/training-data', requireAuth, (req, res) => {
   const secret = process.env.TRAINING_DATA_SECRET
   if (secret && req.headers['x-training-secret'] !== secret) {
     res.status(401).json({ error: 'Unauthorized' })
@@ -40,7 +50,7 @@ app.get('/ai/training-data', (req, res) => {
   res.json(fetchTrainingRows())
 })
 
-// Proxies to the Python AI service avoid CORS issues for frontend polling.
+// ── AI proxy routes (protected) ───────────────────────────────────────────────
 app.get('/ai/health', async (_req, res) => {
   try {
     const upstream = await fetch(`${AI_SERVICE_URL}/health`, {
@@ -53,7 +63,7 @@ app.get('/ai/health', async (_req, res) => {
   }
 })
 
-app.post('/ai/retrain', async (_req, res) => {
+app.post('/ai/retrain', requireAuth, async (_req, res) => {
   try {
     const upstream = await fetch(`${AI_SERVICE_URL}/ai/retrain`, {
       method: 'POST',

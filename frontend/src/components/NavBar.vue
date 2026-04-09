@@ -33,6 +33,18 @@
           :title="isOled ? $t('nav.themeSwitchDark') : $t('nav.themeSwitchOled')"
           @click="themeStore.toggle()"
         >{{ isOled ? $t('nav.themeOled') : $t('nav.themeDark') }}</button>
+
+        <!-- Org switcher — shown only when user is signed in and has an org -->
+        <div v-if="isSignedIn" class="nav-bar__org-switcher">
+          <OrganizationSwitcher
+            :appearance="clerkOrgSwitcherAppearance"
+            :hidePersonalWorkspace="true"
+            :afterCreateOrganizationUrl="ROUTE.EXPERIMENT"
+            :afterSelectOrganizationUrl="ROUTE.EXPERIMENT"
+          />
+        </div>
+
+        <!-- System status indicator -->
         <div
           class="nav-bar__status"
           :class="{ 'nav-bar__status--acoustic': isResonanceMode }"
@@ -55,6 +67,20 @@
             {{ statusLabel }}
           </span>
         </div>
+
+        <!-- User button — shown when signed in; sign-in link when guest -->
+        <div v-if="isSignedIn" class="nav-bar__user-btn">
+          <UserButton
+            :appearance="clerkUserButtonAppearance"
+            :afterSignOutUrl="ROUTE.SIGN_IN"
+          />
+        </div>
+        <RouterLink
+          v-else
+          :to="ROUTE.SIGN_IN"
+          class="nav-bar__sign-in-link"
+        >Sign in</RouterLink>
+
         <button
           class="nav-bar__hamburger"
           :class="{ 'nav-bar__hamburger--open': mobileOpen }"
@@ -72,6 +98,8 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { mapStores } from 'pinia'
+import { UserButton, OrganizationSwitcher, useUser } from '@clerk/vue'
+import { dark } from '@clerk/themes'
 
 import { useCellStore } from '@/stores/cellStore'
 import { useThemeStore } from '@/stores/themeStore'
@@ -89,6 +117,12 @@ const NAV_LINKS = [
 
 export default defineComponent({
   name: 'NavBar',
+  components: { UserButton, OrganizationSwitcher },
+
+  setup() {
+    const { isSignedIn } = useUser()
+    return { isSignedIn }
+  },
 
   data() {
     return { mobileOpen: false, navLinks: NAV_LINKS }
@@ -98,6 +132,32 @@ export default defineComponent({
     ROUTE() { return ROUTE },
     ...mapStores(useCellStore),
     themeStore() { return useThemeStore() },
+
+    clerkUserButtonAppearance() {
+      return {
+        baseTheme: dark,
+        variables: { colorBackground: '#0d1826', colorPrimary: '#00d4ff', borderRadius: '8px' },
+        elements: {
+          avatarBox:          { width: '30px', height: '30px', border: '1.5px solid #1e3a5f' },
+          userButtonPopoverCard: { background: '#0d1826', border: '1px solid #1e3a5f' },
+          userButtonPopoverActionButton: { color: '#c8d8e8' },
+          userButtonPopoverActionButtonText: { color: '#c8d8e8' },
+          userButtonPopoverFooter: { display: 'none' },
+        },
+      }
+    },
+
+    clerkOrgSwitcherAppearance() {
+      return {
+        baseTheme: dark,
+        variables: { colorBackground: '#0d1826', colorPrimary: '#00d4ff', borderRadius: '8px' },
+        elements: {
+          organizationSwitcherTrigger:     { border: '1px solid #1e3a5f', background: '#132035', borderRadius: '6px', padding: '0.2rem 0.5rem', fontSize: '0.75rem' },
+          organizationSwitcherPopoverCard: { background: '#0d1826', border: '1px solid #1e3a5f' },
+          organizationPreviewTextContainer: { color: '#c8d8e8' },
+        },
+      }
+    },
 
     systemReady(): boolean    { return this.cellStore.systemReady },
     isResonanceMode(): boolean { return this.cellStore.isResonanceMode },
@@ -220,6 +280,31 @@ export default defineComponent({
       &--warning  { color: var(--color-amber-warm); }
       &--acoustic { color: var(--color-amber); }
     }
+  }
+
+  /* ── Clerk controls ─────────────────────────────────────────────── */
+  &__user-btn,
+  &__org-switcher {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  &__sign-in-link {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xxs);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 0.22rem 0.75rem;
+    border: 1px solid var(--color-primary-border);
+    border-radius: 4px;
+    color: var(--color-primary);
+    background: var(--color-primary-surface);
+    text-decoration: none;
+    transition: background var(--tr-fast), box-shadow var(--tr-fast);
+    white-space: nowrap;
+
+    &:hover { background: var(--color-primary-dim); box-shadow: var(--glow-sm); text-decoration: none; }
   }
 
   /* ── Theme toggle ───────────────────────────────────────────────── */
