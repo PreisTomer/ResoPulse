@@ -36,7 +36,7 @@ app.use('/webhooks/clerk', express.raw({ type: 'application/json' }), webhookRou
 
 app.use(express.json({ limit: '16kb' }))
 
-// ── Health (public — registered before Clerk middleware so no auth required) ──
+// ── Public routes (registered before Clerk middleware — no auth required) ──────
 app.get('/health', (_req, res) => {
   const outcomeCount = countOutcomes()
   res.json({
@@ -45,6 +45,16 @@ app.get('/health', (_req, res) => {
     dbOutcomes:   outcomeCount,
     dbPersistent: outcomeCount >= 0,
   })
+})
+
+app.get('/ai/health', (_req, res) => {
+  fetch(`${AI_SERVICE_URL}/health`, { signal: AbortSignal.timeout(AI_PROXY_TIMEOUT_MS) })
+    .then(r => r.json() as Promise<Record<string, unknown>>)
+    .then(body => res.json({ ...body, aiServiceReachable: true }))
+    .catch((err: unknown) => {
+      console.warn('[AI] health probe failed:', err)
+      res.json({ status: 'unavailable', aiServiceReachable: false, modelReady: false, trainingSamples: 0 })
+    })
 })
 
 // ── Clerk session middleware — populates req.auth on all routes below ─────────
@@ -58,17 +68,6 @@ app.get('/ai/training-data', requireAuth, (req, res) => {
     return
   }
   res.json(fetchTrainingRows())
-})
-
-// ── AI proxy routes (protected) ───────────────────────────────────────────────
-app.get('/ai/health', (_req, res) => {
-  fetch(`${AI_SERVICE_URL}/health`, { signal: AbortSignal.timeout(AI_PROXY_TIMEOUT_MS) })
-    .then(r => r.json() as Promise<Record<string, unknown>>)
-    .then(body => res.json({ ...body, aiServiceReachable: true }))
-    .catch((err: unknown) => {
-      console.warn('[AI] health probe failed:', err)
-      res.json({ status: 'unavailable', aiServiceReachable: false, modelReady: false, trainingSamples: 0 })
-    })
 })
 
 app.post('/ai/retrain', requireAuth, async (_req, res) => {
