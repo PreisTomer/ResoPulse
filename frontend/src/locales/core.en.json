@@ -27,7 +27,18 @@
     "manageAccount": "Manage Account",
     "switchWorkspace": "Switch Workspace",
     "signOut": "Sign Out",
-    "signIn": "Sign in"
+    "signIn": "Sign in",
+    "contact":                "Contact",
+    "contactModalTitle":      "Contact the creator",
+    "contactModalSubtitle":   "Questions about the model, methods, or potential collaboration? Send a message directly.",
+    "contactLabelName":       "Your name (optional)",
+    "contactNamePlaceholder": "e.g. Dr. Jane Smith",
+    "contactLabelMessage":    "Message",
+    "contactMessagePlaceholder": "Your question or feedback...",
+    "contactNote":            "Opens your mail client",
+    "contactSend":            "Send message",
+    "contactClose":           "Close",
+    "contactWhatsApp":        "Chat on WhatsApp"
   },
   "cells": {
     "sectionTitle": "Cell Signature Profiles",

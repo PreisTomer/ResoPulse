@@ -50,6 +50,7 @@ export const ICON = {
   USER:        '◉',  // user account / profile
   ORG:         '⋈',  // organization / workspace
   LOGOUT:      '⇥',  // sign out / exit session
+  PHONE:       '☎',  // contact / phone / WhatsApp link
 } as const
 
 export type Icon = typeof ICON[keyof typeof ICON]

@@ -8,7 +8,7 @@
     "trigger":               "Spot a discrepancy?",
     "triggerSub":            "Flag a physics error, step, or wording",
     "title":                 "Discrepancy Report",
-    "subtitle":              "Something look off? Physics, protocol steps, wording, references, or lab behavior — tell us exactly where and what you expected. Every report is reviewed.",
+    "subtitle":              "Something look off? Physics, protocol steps, wording, references, or lab behavior: tell us exactly where and what you expected. Every report is reviewed.",
     "close":                 "Close",
     "labelSection":          "Section",
     "sectionPlaceholder":    "Select a physics section...",

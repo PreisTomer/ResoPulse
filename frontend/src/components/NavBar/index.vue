@@ -33,9 +33,14 @@
           :active-class="!link.exact ? 'active' : undefined"
           @click="mobileOpen = false"
         >{{ $t(link.labelKey) }}</RouterLink>
+        <button class="nav-bar__link nav-bar__contact-mobile" @click="openContact">{{ ICON.MAIL }} {{ $t('nav.contact') }}</button>
       </nav>
 
+      <ContactModal v-if="isContactOpen" @close="isContactOpen = false" />
+
       <div class="nav-bar__right">
+        <button class="nav-bar__contact-btn" @click="openContact">{{ ICON.MAIL }} {{ $t('nav.contact') }}</button>
+
         <NavUserArea v-if="isSignedIn" />
         <RouterLink
           v-else
@@ -64,8 +69,10 @@ import { useUser } from '@clerk/vue'
 import { useThemeStore } from '@/stores/themeStore'
 
 import { ROUTE } from '@/constants/routes'
+import { ICON } from '@/constants/icons'
 
 import NavUserArea from './NavUserArea.vue'
+import ContactModal from '@/components/ContactModal.vue'
 
 const NAV_LINKS = [
   { to: ROUTE.HOME,       labelKey: 'nav.home',      exact: true },
@@ -78,7 +85,7 @@ const NAV_LINKS = [
 
 export default defineComponent({
   name: 'NavBar',
-  components: { NavUserArea },
+  components: { NavUserArea, ContactModal },
 
   setup() {
     const { isSignedIn } = useUser()
@@ -86,13 +93,21 @@ export default defineComponent({
   },
 
   data() {
-    return { mobileOpen: false, navLinks: NAV_LINKS }
+    return { mobileOpen: false, navLinks: NAV_LINKS, isContactOpen: false }
   },
 
   computed: {
     ROUTE() { return ROUTE },
+    ICON()  { return ICON },
     themeStore() { return useThemeStore() },
     isOled(): boolean { return this.themeStore.theme === 'oled' },
+  },
+
+  methods: {
+    openContact(): void {
+      this.mobileOpen = false
+      this.isContactOpen = true
+    },
   },
 })
 </script>
@@ -116,6 +131,7 @@ export default defineComponent({
   /* ── Left group: brand + theme toggle ───────────────────────────── */
   &__left {
     @include flex-row(0.65rem);
+    align-items: flex-end;
   }
 
   /* ── Brand ──────────────────────────────────────────────────────── */
@@ -174,9 +190,39 @@ export default defineComponent({
     &.active { color: var(--color-primary); background-color: var(--color-primary-dim); }
   }
 
+  &__contact-mobile {
+    display: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    text-align: left;
+  }
+
+  &__contact-btn {
+    @include mono-upper(0.6rem, 0.08em);
+    @include flex-row(0.3rem);
+    margin-bottom: 2px;
+    padding: 0.22rem 0.6rem;
+    background: var(--color-primary-surface);
+    border: 1px solid var(--color-primary-border);
+    border-radius: 4px;
+    color: var(--color-primary);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background var(--tr-fast), box-shadow var(--tr-fast), border-color var(--tr-fast);
+
+    &:hover {
+      background: var(--color-primary-dim);
+      border-color: var(--color-primary);
+      box-shadow: var(--glow-sm);
+    }
+  }
+
   /* ── Right side ─────────────────────────────────────────────────── */
   &__right {
     @include flex-row(0.75rem);
+    align-items: flex-end;
     justify-self: end;
   }
 
@@ -200,6 +246,7 @@ export default defineComponent({
   /* ── Theme toggle ───────────────────────────────────────────────── */
   &__theme-toggle {
     @include mono-upper(0.6rem, 0.08em);
+    margin-bottom: 2px;
     padding: 0.22rem 0.6rem;
     background: transparent;
     border: 1px solid var(--color-border);
@@ -296,5 +343,7 @@ export default defineComponent({
 
   .nav-bar__hamburger { display: flex; }
   .nav-bar__status-label { display: none; }
+  .nav-bar__contact-btn { display: none; }
+  .nav-bar__contact-mobile { display: flex; }
 }
 </style>

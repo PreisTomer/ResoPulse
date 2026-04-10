@@ -17,7 +17,7 @@
 
         <div class="pfm__field">
           <label class="pfm__label" for="pfm-section">{{ $t('protocol.feedback.labelSection') }}</label>
-          <select id="pfm-section" class="pfm__select" v-model="form.section">
+          <select id="pfm-section" class="pfm__select" :class="{ 'pfm__select--placeholder': !form.section }" v-model="form.section">
             <option value="">{{ $t('protocol.feedback.sectionPlaceholder') }}</option>
             <option v-for="s in SECTIONS" :key="s.value" :value="s.value">{{ s.label }}</option>
           </select>
@@ -179,12 +179,12 @@ export default defineComponent({
     &-left { @include flex-row(0.5rem); }
   }
 
-  &__icon { font-size: 1rem; color: var(--color-amber); }
+  &__icon { font-size: 1.15rem; color: var(--color-amber); }
 
   &__title {
-    font-size: var(--fs-md);
+    font-size: var(--fs-lg);
     font-weight: 700;
-    color: var(--color-text-heading);
+    color: white;
     letter-spacing: 0.01em;
   }
 
@@ -192,7 +192,7 @@ export default defineComponent({
     background: none;
     border: none;
     cursor: pointer;
-    color: var(--color-text-muted);
+    color: white;
     font-size: 1rem;
     padding: 0.2rem;
     line-height: 1;
@@ -202,11 +202,10 @@ export default defineComponent({
   }
 
   &__subtitle {
-    font-size: var(--fs-sm);
-    color: var(--color-text-muted);
+    font-size: var(--fs-md);
+    color: white;
     line-height: 1.5;
     margin: 0;
-    opacity: var(--op-dim);
   }
 
   &__form { display: flex; flex-direction: column; gap: 0.85rem; }
@@ -222,8 +221,7 @@ export default defineComponent({
 
   &__label {
     @include mono-upper(var(--fs-xxs), 0.08em);
-    color: var(--color-text-muted);
-    opacity: var(--op-dim);
+    color: white;
   }
 
   &__select,
@@ -245,7 +243,7 @@ export default defineComponent({
       border-color: var(--color-primary);
     }
 
-    &::placeholder { color: var(--color-text-muted); opacity: var(--op-ghost); }
+    &::placeholder { color: var(--color-text-muted); }
   }
 
   &__textarea { resize: vertical; min-height: 100px; line-height: 1.55; }
@@ -254,6 +252,7 @@ export default defineComponent({
     -webkit-appearance: none;
     appearance: none;
     cursor: pointer;
+    &--placeholder { color: var(--color-text-muted); }
   }
 
   &__footer {
@@ -265,17 +264,16 @@ export default defineComponent({
 
   &__note {
     font-size: var(--fs-xxs);
-    color: var(--color-text-muted);
-    opacity: var(--op-muted);
+    color: white;
     font-family: var(--font-mono);
   }
 
   &__send {
     @include flex-row(0.4rem);
     background: color-mix(in srgb, var(--color-primary) 12%, transparent);
-    border: 1px solid var(--color-primary);
+    border: 1px solid color-mix(in srgb, var(--color-primary) 85%, white);
     border-radius: var(--radius);
-    color: var(--color-primary);
+    color: color-mix(in srgb, var(--color-primary) 85%, white);
     font-family: var(--font-mono);
     font-size: var(--fs-sm);
     font-weight: 600;

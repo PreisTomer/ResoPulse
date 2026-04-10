@@ -58,7 +58,7 @@ function waitForClerkLoaded(): Promise<void> {
   })
 }
 
-router.beforeEach(async (to) => {
+router.beforeEach(async (to, from) => {
   await waitForClerkLoaded()
 
   const { isSignedIn } = useAuthStore()
@@ -70,7 +70,11 @@ router.beforeEach(async (to) => {
 
   // Unauthenticated user hitting any protected route → sign-in,
   // preserving the intended destination so we can redirect back after login.
+  // Exception: if we are already on the sign-in flow (e.g. the user cancelled an
+  // OAuth provider and Clerk redirected to fallback-redirect-url), cancel the
+  // navigation to avoid a redirect loop that triggers Clerk's rate limit.
   if (to.meta.requiresAuth && !isSignedIn) {
+    if (from.path.startsWith(ROUTE.SIGN_IN) || from.path.startsWith(ROUTE.SIGN_UP)) return false
     const redirectQuery = to.path === ROUTE.HOME ? {} : { redirect: to.fullPath }
     return { path: ROUTE.SIGN_IN, query: redirectQuery }
   }

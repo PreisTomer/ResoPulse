@@ -1,6 +1,7 @@
 <!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
 <template>
   <div class="auth-page">
+    <ContactModal v-if="isContactOpen" @close="isContactOpen = false" />
 
     <!-- ── Background: grid + animated field lines ── -->
     <div class="auth-page__bg" aria-hidden="true">
@@ -97,6 +98,8 @@
           <RouterLink :to="ROUTE.SIGN_UP" class="auth-page__card-footer-link">{{ $t('signIn.createAccount') }}</RouterLink>
         </div>
 
+        <button class="auth-page__contact-btn" @click="isContactOpen = true">{{ $t('nav.contact') }}</button>
+
       </div>
 
     </div>
@@ -112,6 +115,8 @@ import { dark } from '@clerk/themes'
 import { ROUTE } from '@/constants/routes'
 
 import { ICON } from '@/constants/icons'
+
+import ContactModal from '@/components/ContactModal.vue'
 
 const PARTICLE_COUNT   = 55
 const PARTICLE_SPEED   = 0.18
@@ -185,7 +190,7 @@ const CLERK_APPEARANCE = {
 
 export default defineComponent({
   name: 'SignInView',
-  components: { SignIn },
+  components: { SignIn, ContactModal },
 
   setup() {
     const particleCanvas = ref<HTMLCanvasElement | null>(null)
@@ -198,6 +203,7 @@ export default defineComponent({
       particles:      [] as Particle[],
       displayMetrics: [] as string[],
       features:       markRaw(FEATURES),
+      isContactOpen:  false,
     }
   },
 
@@ -665,6 +671,29 @@ export default defineComponent({
     @media (max-width: 900px) { display: none; }
   }
 
+  &__contact-btn {
+    display: block;
+    align-self: center;
+    font-family: var(--font-mono);
+    font-size: var(--fs-xxs);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 600;
+    color: var(--color-primary);
+    background: var(--color-primary-surface);
+    border: 1px solid var(--color-primary-border);
+    border-radius: var(--radius);
+    padding: 0.45rem 1.25rem;
+    cursor: pointer;
+    transition: background var(--tr-fast), box-shadow var(--tr-fast), border-color var(--tr-fast);
+
+    &:hover {
+      background: var(--color-primary-dim);
+      border-color: var(--color-primary);
+      box-shadow: var(--glow-sm);
+    }
+  }
+
   /* ── Right: Auth card ────────────────────────────────────────────── */
   &__card-wrap {
     flex-shrink: 0;
@@ -739,13 +768,13 @@ export default defineComponent({
       gap: 0.5rem;
 
       &-text {
-        font-size: var(--fs-sm);
+        font-size: var(--fs-lg);
         color: var(--color-text-muted);
         opacity: var(--op-muted);
       }
 
       &-link {
-        font-size: var(--fs-sm);
+        font-size: var(--fs-lg);
         color: var(--color-primary);
         text-decoration: none;
         font-weight: 600;
