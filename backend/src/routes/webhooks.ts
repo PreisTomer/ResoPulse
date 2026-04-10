@@ -98,10 +98,11 @@ async function upsertUser(data: ClerkUserData): Promise<void> {
 }
 
 async function deleteUser(userId: string): Promise<void> {
-  // Soft approach: remove memberships first, then the user record.
   await prisma.membership.deleteMany({ where: { userId } })
-  await prisma.user.delete({ where: { id: userId } }).catch(() => {
-    // User may already be gone if a previous delete event was processed.
+  await prisma.user.delete({ where: { id: userId } }).catch((err: unknown) => {
+    // Idempotent: user may already be gone from a prior event. Log unexpected errors.
+    const code = (err as { code?: string }).code
+    if (code !== 'P2025') console.warn('[webhook] deleteUser: unexpected error for', userId, err)
   })
 }
 

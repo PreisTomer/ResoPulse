@@ -66,7 +66,6 @@ export default defineComponent({
 
 <style lang="scss" scoped>
 
-
 .accordion-panel {
   /* ── Toggle button ──────────────────────────────────────────── */
   &__toggle {

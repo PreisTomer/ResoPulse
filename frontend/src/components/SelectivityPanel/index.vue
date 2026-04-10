@@ -271,7 +271,6 @@ export default defineComponent({
 
 <style lang="scss" scoped>
 
-
 .sel-panel {
   @include surface-card(var(--radius));
   padding: 0 1.1rem;
@@ -287,7 +286,8 @@ export default defineComponent({
   &__sep {
     height: 1px;
     background: var(--color-border);
-    opacity: 0.5; // intentional between-tier value
+    opacity: 0.5;
+
     margin: 0.1rem 0;
     flex-shrink: 0;
   }
@@ -301,7 +301,8 @@ export default defineComponent({
     font-family: var(--font-mono);
     letter-spacing: -0.04em;
     line-height: 1;
-    transition: color 0.4s; // intentionally slower than --tr-slow for large TI number colour shift
+    transition: color 0.4s;
+
     flex-shrink: 0;
 
     &--strong   { color: var(--color-lime); }

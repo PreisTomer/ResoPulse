@@ -1,5 +1,4 @@
-// Shared SCSS mixins for DataSetsView sub-components.
-// No copyright header needed for SCSS partials.
+// Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 @use '../../styles/mixins' as *;
 
 @mixin datasets-card() {
@@ -112,7 +111,8 @@
   .datasets__formula-label {
     @include mono-upper(var(--fs-xs), 0.08em);
     color: var(--color-primary);
-    opacity: 0.75; // intentional between-tier value
+    opacity: 0.75;
+
 
     .datasets__formula-strip--nuc & { color: var(--color-purple); }
     .datasets__formula-strip--res & { color: var(--color-amber-warm); }
@@ -134,7 +134,6 @@
 }
 
 @mixin datasets-utils() {
-  // Flat class selectors — no parent & needed, safe to call at stylesheet root.
   .datasets__mono      { font-family: var(--font-mono); font-size: var(--fs-md); }
   .datasets__muted     { color: var(--color-text-muted); }
   .datasets__cancer-val { color: var(--color-danger); }

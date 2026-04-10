@@ -271,7 +271,6 @@ export default defineComponent({
 
 <style lang="scss" scoped>
 
-
 .exp-log {
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);

@@ -33,7 +33,6 @@
     opacity: 0.55;
   }
 
-
   &__inner {
     position: relative;
     z-index: 1;
@@ -125,7 +124,6 @@
     align-items: center;
     justify-content: center;
     align-self: flex-end;
-    // lift off the descender space so the logo bottom sits at the text baseline, then nudge down 5px
     margin: 0 0.12em 0.2em;
     transform: translateY(10px);
     border: 1px solid var(--color-primary);
@@ -229,8 +227,6 @@
     gap: 0.85rem;
     width: 100%;
     max-width: 520px;
-    // Backdrop blur clears the animated ring background from under button text.
-    // Negative margin compensates so the padded blur area doesn't shift the layout.
     padding: 0.6rem;
     margin: -0.6rem;
     border-radius: var(--radius-lg);
@@ -291,7 +287,8 @@
 
   /* ── Science illustration strip ──────────────────────────────── */
   &__science-strip {
-    display: none; // hidden on small screens — decorative only
+    display: none;
+
     @media (min-width: 768px) {
       display: flex;
       align-items: flex-start;
@@ -444,7 +441,6 @@
     margin-top: 1.5rem;
   }
 
-  // Lift workflow and cards above the oscilloscope background
   &__workflow,
   &__feature-cards { position: relative; z-index: 1; }
 
@@ -465,12 +461,11 @@
     gap: 0.4rem;
     text-align: left;
     border-top: 2px solid color-mix(in srgb, var(--color-primary) 22%, transparent);
-    min-height: 10.5rem; // matches sel card's natural height (~167 px) so all rows are equal
-    // Entrance: paused until zone becomes visible, then plays with per-card delay
+    min-height: 10.5rem;
+
     animation: card-enter 0.45s ease both;
     animation-delay: calc(var(--card-i, 0) * 90ms);
     animation-play-state: paused;
-    // Hover transitions run immediately — separate from entrance delay
     transition: border-color var(--tr-fast), border-top-color var(--tr-fast), box-shadow var(--tr-fast), transform var(--tr-fast);
     cursor: pointer;
 
@@ -489,10 +484,8 @@
 
     &--stats {
       cursor: crosshair;
-      // Dashed border signals non-interactive without dimming the card
       border-style: dashed;
       border-color: color-mix(in srgb, var(--color-primary) 22%, transparent);
-      // Use the opaque surface colour from the mixin — no wave bleed-through
       background: var(--color-surface);
 
       &:hover {
@@ -506,10 +499,10 @@
   &__fc {
     &-header {
       @include flex-row(0.5rem);
-      align-items: flex-start; // icon top-aligns with the title+tag column
+      align-items: flex-start;
+
     }
 
-    // Right-side column: title on top, tag pill below — prevents title wrapping
     &-header-right {
       flex: 1;
       min-width: 0;
@@ -526,7 +519,8 @@
       background: color-mix(in srgb, var(--color-primary) 10%, transparent);
       border: 1px solid color-mix(in srgb, var(--color-primary) 20%, transparent);
       flex-shrink: 0;
-      margin-top: 0.12rem; // nudge icon down to optically align with title text cap-height
+      margin-top: 0.12rem;
+
       transition: background var(--tr-fast), border-color var(--tr-fast), box-shadow var(--tr-fast);
 
       .home__feature-card:hover & {
@@ -538,21 +532,23 @@
 
     &-icon {
       font-size: 0.95rem;
-      display: block;   // collapses the line box so flex centering acts on the glyph itself
-      line-height: 1;   // removes descender/ascender space that shifts Unicode symbols off-center
+      display: block;
+
+      line-height: 1;
+
       transition: filter var(--tr-fast);
 
       .home__feature-card:hover & {
         filter: drop-shadow(0 0 4px color-mix(in srgb, var(--color-primary) 80%, transparent));
       }
 
-      // Per-glyph optical nudges — these Unicode symbols sit low in their em box
       .home__feature-card:nth-child(2) & { transform: translateY(-2px); }
       .home__feature-card--sel &         { transform: translateY(-1px); }
     }
 
     &-title {
-      flex: 1; // fills row space when used directly in header (sel card); harmless in column context
+      flex: 1;
+
       font-size: var(--fs-md);
       font-weight: 600;
       color: var(--color-text-heading);
@@ -566,7 +562,8 @@
       border: 1px solid color-mix(in srgb, var(--color-primary) 18%, transparent);
       border-radius: 3px;
       background: color-mix(in srgb, var(--color-primary) 5%, transparent);
-      align-self: flex-start; // don't stretch to parent column width
+      align-self: flex-start;
+
       transition: color var(--tr-fast), border-color var(--tr-fast), background var(--tr-fast);
 
       .home__feature-card:hover & {
@@ -580,7 +577,8 @@
       font-size: var(--fs-xs);
       color: var(--color-text-muted);
       line-height: 1.75;
-      padding-left: 2.5rem; // indent to align under title, past the icon bubble
+      padding-left: 2.5rem;
+
       margin-top: 5px;
     }
   }
@@ -595,8 +593,6 @@
     transition: border-color var(--tr-fast), border-top-color var(--tr-normal),
                 box-shadow var(--tr-normal), transform var(--tr-fast);
 
-    // Glow lives on ::before so it never touches the card's own `animation` property.
-    // (card-enter uses `animation` — overriding it would cause the card to vanish on class removal)
     &::before {
       content: '';
       position: absolute;
@@ -615,7 +611,6 @@
       box-shadow: 0 6px 28px color-mix(in srgb, var(--color-danger) 10%, transparent);
     }
 
-    // Window state: target lysing, healthy intact — green glow via ::before animation
     &-win {
       border-top-color: var(--color-primary) !important;
 
@@ -624,7 +619,6 @@
       }
     }
 
-    // Hot state: both populations lysing — amber top border, non-selective
     &-hot {
       border-top-color: color-mix(in srgb, var(--color-amber) 55%, transparent) !important;
     }
@@ -700,7 +694,6 @@
     }
 
     // ── Window zone highlight on the track ────────────────────
-    // Spans from ~42 % to ~62 % of the track (target > 60 % and healthy < 40 %)
     &-window-zone {
       position: absolute;
       top: -1px;
@@ -798,8 +791,6 @@
     }
   }
 
-  // Stats card removed — replaced by selectivity preview card
-
   /* ── Scope tags ──────────────────────────────────────────────── */
   &__scope-tags {
     display: flex;
@@ -853,8 +844,6 @@
     &__zone--features { padding: 3rem 1.5rem; }
     &__zone--bottom   { padding: 1rem 1.5rem 2.5rem; }
 
-
-
     &__tagline {
       font-size: var(--fs-xl);
     }
@@ -886,8 +875,6 @@
     &__zone--features { padding: 2.5rem 1rem; }
     &__zone--bottom   { padding: 0.75rem 1rem 2rem; }
 
-
-
     &__eyebrow {
       font-size: var(--fs-xxs);
     }
@@ -906,7 +893,6 @@
       font-size: var(--fs-xl);
     }
 
-    /* workflow: vertical stack */
     &__workflow {
       flex-direction: column;
       align-items: center;
@@ -1103,13 +1089,11 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
-// Pulses the ::before glow overlay — raw opacity required inside @keyframes
 @keyframes sel-win-glow {
   0%, 100% { opacity: 0.55; }
   50%       { opacity: 1; }
 }
 
-// Validate tab periodic glow — raw opacity/shadow required inside @keyframes
 @keyframes validate-tab-glow {
   0%, 70%, 100% {
     box-shadow: -3px 0 12px color-mix(in srgb, var(--color-primary) 18%, transparent);
@@ -1121,7 +1105,6 @@
   }
 }
 
-// Validate drawer transition — raw values required inside @keyframes
 .home-validate-enter-active,
 .home-validate-leave-active {
   transition: opacity 0.25s ease;
@@ -1140,4 +1123,4 @@
     opacity: 0;
   }
 }
-
+

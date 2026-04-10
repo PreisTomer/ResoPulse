@@ -47,14 +47,15 @@ app.get('/health', async (_req, res) => {
   })
 })
 
-app.get('/ai/health', (_req, res) => {
-  fetch(`${AI_SERVICE_URL}/health`, { signal: AbortSignal.timeout(AI_PROXY_TIMEOUT_MS) })
-    .then(r => r.json() as Promise<Record<string, unknown>>)
-    .then(body => res.json({ ...body, aiServiceReachable: true }))
-    .catch((err: unknown) => {
-      console.warn('[AI] health probe failed:', err)
-      res.json({ status: 'unavailable', aiServiceReachable: false, modelReady: false, trainingSamples: 0 })
-    })
+app.get('/ai/health', async (_req, res) => {
+  try {
+    const r    = await fetch(`${AI_SERVICE_URL}/health`, { signal: AbortSignal.timeout(AI_PROXY_TIMEOUT_MS) })
+    const body = await r.json() as Record<string, unknown>
+    res.json({ ...body, aiServiceReachable: true })
+  } catch (err) {
+    console.warn('[AI] health probe failed:', err)
+    res.json({ status: 'unavailable', aiServiceReachable: false, modelReady: false, trainingSamples: 0 })
+  }
 })
 
 // ── Clerk session middleware — populates req.auth on all routes below ─────────

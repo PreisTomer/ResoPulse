@@ -316,7 +316,6 @@ export default defineComponent({
 
 <style lang="scss" scoped>
 
-
 /* ── Keyframes (card-level only) ─────────────────────────────────────── */
 @keyframes card-shake {
   0%, 100% { transform: translateX(0); }
@@ -349,7 +348,6 @@ export default defineComponent({
   &--compact {
     padding: 0.5rem;
     border-radius: 6px;
-    // Thin state-colored top border — instant traffic-light feedback at a glance
     border-top: 3px solid var(--color-border);
 
     &.cell-card--nourishing  { border-top-color: var(--color-primary); }
@@ -378,7 +376,6 @@ export default defineComponent({
     border-left-color: var(--color-accent) !important;
   }
 
-  // Reversible EP window (target, 50-85%): amber glow — permeabilized but survivable
   &--rev-ep.cell-card--target {
     border-left-color: var(--color-amber) !important;
     box-shadow: 0 0 22px color-mix(in srgb, var(--color-amber) 28%, transparent);
@@ -394,12 +391,12 @@ export default defineComponent({
   }
 
   &--lysed {
-    opacity: 0.65; // intentional between-tier value
+    opacity: 0.65;
+
     border-color: var(--color-muted-border) !important;
     box-shadow: none;
   }
 
-  // Healthy cell electroporation risk states
   &--healthy.cell-card--approaching {
     border-left-color: var(--color-amber) !important;
     box-shadow: 0 0 22px color-mix(in srgb, var(--color-amber) 22%, transparent);
@@ -410,7 +407,6 @@ export default defineComponent({
     animation: card-warn-pulse 1.1s ease-in-out infinite;
   }
 
-  // Target thermal states
   &--approaching.cell-card--target {
     border-left-color: var(--color-amber) !important;
     box-shadow: 0 0 22px color-mix(in srgb, var(--color-amber) 18%, transparent);

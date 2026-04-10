@@ -413,7 +413,6 @@ export default defineComponent({
 
 <style lang="scss" scoped>
 
-
 .resonance-chart {
   @include surface-card(var(--radius), 0.75rem 0.5rem 0.5rem);
   @include flex-col(0.4rem);

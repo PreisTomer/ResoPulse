@@ -4,21 +4,18 @@
 @use 'tokens' as *;
 
 // ── Flex utilities ─────────────────────────────────────────────────────────────
-// Usage: @include flex-row(0.5rem);
 @mixin flex-row($gap: 0.5rem) {
   display: flex;
   align-items: center;
   gap: $gap;
 }
 
-// Usage: @include flex-col(1rem);
 @mixin flex-col($gap: 0.5rem) {
   display: flex;
   flex-direction: column;
   gap: $gap;
 }
 
-// Usage: @include flex-between(0.5rem);
 @mixin flex-between($gap: 0) {
   display: flex;
   align-items: center;
@@ -26,7 +23,6 @@
   @if $gap != 0 { gap: $gap; }
 }
 
-// Usage: @include inline-flex-center();
 @mixin inline-flex-center() {
   display: inline-flex;
   align-items: center;
@@ -34,8 +30,6 @@
 }
 
 // ── Surface card ────────────────────────────────────────────────────────────────
-// Shared bg + border + radius base for all panel cards.
-// Usage: @include surface-card();  or  @include surface-card(var(--radius-lg), 1.25rem);
 @mixin surface-card($radius: var(--radius), $padding: null) {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -44,9 +38,6 @@
 }
 
 // ── Monospace label ────────────────────────────────────────────────────────────
-// Combines font-mono + uppercase + letter-spacing - the most repeated 3-property
-// cluster in the codebase (127+ occurrences of --font-mono alone).
-// Usage: @include mono-upper(0.6rem);  or  @include mono-upper(0.6rem, 0.1em);
 @mixin mono-upper($size: $fs-xxs, $spacing: 0.08em) {
   font-family: var(--font-mono);
   font-size: $size;
@@ -55,9 +46,6 @@
 }
 
 // ── Status strip ───────────────────────────────────────────────────────────────
-// Shared base for all coloured alert strips inside cell cards:
-//   nourishing-strip · rev-ep-strip · lysis-strip · healthy-warn · thermal-warn
-// Usage: @include status-strip(#color, rgba-bg, rgba-border, anim-name, dur);
 @mixin status-strip($color, $bg, $border-color, $anim: null, $dur: 2s) {
   @include flex-row(0.45rem);
   @include mono-upper($fs-xxs);
@@ -72,9 +60,6 @@
 }
 
 // ── Cell state colour classes ──────────────────────────────────────────────────
-// Generates &__state--<name> rules from the canonical state colour map.
-// Usage: inside .cell-card { @include cell-state-classes(); }
-// Requires _keyframes.scss to be imported for state-blink.
 $_cell-states: (
   ('stable',      var(--color-lime),    null,        null),
   ('nourishing',  var(--color-primary), null,        null),
@@ -103,8 +88,6 @@ $_cell-states: (
 }
 
 // ── Accordion header ────────────────────────────────────────────────────────
-// Shared button for section collapse toggles (Protocol, Advanced).
-// Usage: &__accordion { @include accordion-header(); }
 @mixin accordion-header() {
   display: flex;
   align-items: center;
@@ -127,9 +110,6 @@ $_cell-states: (
 }
 
 // ── Field row grid ──────────────────────────────────────────────────────────
-// Stacked layout: header row (label | readout) above full-width slider track.
-// Params kept for call-site compatibility but are ignored.
-// Usage: @include field-row-grid();
 @mixin field-row-grid($label: null, $readout: null) {
   display: flex;
   flex-direction: column;
@@ -137,8 +117,6 @@ $_cell-states: (
 }
 
 // ── Field row header ─────────────────────────────────────────────────────────
-// Horizontal bar containing the label (left) and readout (right).
-// Usage: @include field-row-header();
 @mixin field-row-header() {
   display: flex;
   align-items: center;
@@ -147,8 +125,6 @@ $_cell-states: (
 }
 
 // ── Row label ───────────────────────────────────────────────────────────────
-// Mono uppercase label in the first grid column of every slider row.
-// Usage: @include row-label();
 @mixin row-label() {
   font-size: $fs-xxs;
   font-family: var(--font-mono);
@@ -160,8 +136,6 @@ $_cell-states: (
 }
 
 // ── Slider track ────────────────────────────────────────────────────────────
-// Base <input type="range"> appearance reset.
-// Usage: @include slider-track();
 @mixin slider-track() {
   -webkit-appearance: none;
   appearance: none;
@@ -173,8 +147,6 @@ $_cell-states: (
 }
 
 // ── Slider thumb ────────────────────────────────────────────────────────────
-// Standard webkit + moz thumb. Optional $bg and $shadow overrides.
-// Usage: @include slider-thumb();
 @mixin slider-thumb($bg: var(--color-text-heading), $shadow: color-mix(in srgb, white 20%, transparent)) {
   &::-webkit-slider-thumb {
     -webkit-appearance: none;
@@ -198,8 +170,6 @@ $_cell-states: (
 }
 
 // ── Readout step button ─────────────────────────────────────────────────────
-// The − / + increment buttons shown beneath the slider readout value.
-// Usage: @include readout-step-btn();
 @mixin readout-step-btn() {
   display: inline-flex;
   align-items: center;
@@ -224,16 +194,6 @@ $_cell-states: (
 }
 
 // ── Data table value classes ─────────────────────────────────────────────────
-// Generates the four common value-colour modifier classes used in every data
-// table (mono font, muted, danger, amber).  Call inside the component's BEM
-// root selector so `&` resolves to the block prefix.
-//
-// Usage (inside .reports { … }):
-//   @include data-value-classes();
-// Generates: &__mono, &__muted, &__cancer-val, &__warn-val
-//
-// Optional $mono-size param for font-size override (default: none — inherits).
-// Optional $muted-opacity for an extra opacity on muted text (e.g. 0.6 in protocol).
 @mixin data-value-classes($mono-size: null, $muted-opacity: null) {
   &__mono {
     font-family: var(--font-mono);
@@ -248,9 +208,6 @@ $_cell-states: (
 }
 
 // ── Badge / pill ─────────────────────────────────────────────────────────────
-// Mono-caps inline label with border and rounded corners.
-// Callers set color and background on the element; mixin provides shape + type.
-// Usage: @include badge-pill(); or @include badge-pill(0.1rem 0.6rem, 4px);
 @mixin badge-pill($padding: 0.15rem 0.5rem, $radius: 3px) {
   @include mono-upper($fs-xxs, 0.08em);
   display: inline-flex;
@@ -261,8 +218,6 @@ $_cell-states: (
 }
 
 // ── Table header cell ────────────────────────────────────────────────────────
-// Mono-caps text + muted overlay background used in all data tables.
-// Usage (inside table th selector): @include table-header-cell();
 @mixin table-header-cell($overlay: var(--color-overlay-sm)) {
   @include mono-upper($fs-xxs, 0.1em);
   background: $overlay;
@@ -273,8 +228,6 @@ $_cell-states: (
 }
 
 // ── Info panel ──────────────────────────────────────────────────────────────
-// Tinted bordered section panel used for resonance-info, dep-section, etc.
-// Usage: @include info-panel(rgba(0, 212, 255, 0.04), rgba(0, 212, 255, 0.15));
 @mixin info-panel($bg, $border-color) {
   @include flex-col(0.28rem);
   padding: 0.4rem 0.6rem;
@@ -284,8 +237,6 @@ $_cell-states: (
 }
 
 // ── Section title ────────────────────────────────────────────────────────────
-// Tiny mono-caps label for named data sections (dep, resonance, etc.)
-// Usage: @include section-title();
 @mixin section-title() {
   @include mono-upper($fs-xxs, 0.12em);
   color: var(--color-text-muted);
@@ -294,8 +245,6 @@ $_cell-states: (
 }
 
 // ── Readout inline input ────────────────────────────────────────────────────
-// Click-to-edit <input type="number"> that overlays the readout value.
-// Usage: @include readout-inline-input();
 @mixin readout-inline-input() {
   font-size: 1rem;
   font-weight: 700;

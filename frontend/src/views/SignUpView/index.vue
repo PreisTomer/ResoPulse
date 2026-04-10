@@ -435,7 +435,6 @@ export default defineComponent({
       width: 100%;
       height: 100%;
       opacity: 0.65;
-      // Vignette so grid fades toward edges, keeping center legible
       mask-image: radial-gradient(ellipse 75% 70% at 50% 50%, black 20%, transparent 100%);
     }
 
@@ -565,7 +564,6 @@ export default defineComponent({
     gap: 0;
     padding-left: 0;
 
-    // Vertical connector line threading through all step circles
     &::before {
       content: '';
       position: absolute;
@@ -720,6 +718,5 @@ export default defineComponent({
 
 /* ── Clerk placeholder override — Clerk injects its own ::placeholder color ── */
 :deep(.cl-formFieldInput::placeholder) { color: #7a6aaa; opacity: 1; }
-
 
 </style>

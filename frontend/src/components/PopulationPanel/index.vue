@@ -471,7 +471,6 @@ export default defineComponent({
 
 <style lang="scss" scoped>
 
-
 .pop-panel {
   @include surface-card(var(--radius-lg));
   overflow: hidden;

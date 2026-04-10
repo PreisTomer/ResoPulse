@@ -252,8 +252,6 @@ export default defineComponent({
 
 <style lang="scss" scoped>
 
-// thumb-danger-pulse and state-blink are defined globally in styles/_keyframes.scss
-
 .field-panel {
   &__section {
     border-bottom: 1px solid var(--color-border);
@@ -356,7 +354,6 @@ export default defineComponent({
     &--active  { border-color: var(--color-primary); color: var(--color-primary); background-color: var(--color-primary-dim); }
     &--sm      { font-size: var(--fs-xs); padding: 0.14rem 0.45rem; }
     &--hfire   {
-      // Inactive: subdued amber tint so it reads as a distinct option, not active
       border-color: color-mix(in srgb, var(--color-amber) 40%, var(--color-border)) !important;
       color: color-mix(in srgb, var(--color-amber) 55%, var(--color-text-muted)) !important;
       &.field-panel__pill--active {

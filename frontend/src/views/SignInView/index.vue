@@ -429,7 +429,6 @@ export default defineComponent({
     display: flex;
     align-items: center;
     justify-content: center;
-    // Size matches the icon so rings center on it exactly
     width: 72px;
     height: 72px;
   }
@@ -591,7 +590,6 @@ export default defineComponent({
       }
     }
 
-    // Left fill bar — charges from bottom to top on entry
     &::before {
       content: '';
       position: absolute;
@@ -601,7 +599,6 @@ export default defineComponent({
       animation: feat-bar 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
     }
 
-    // Scan line sweep — one-shot on entry, then loops every 7 s
     &::after {
       content: '';
       position: absolute;
@@ -762,6 +759,5 @@ export default defineComponent({
 
 /* ── Clerk placeholder override — Clerk injects its own ::placeholder color ── */
 :deep(.cl-formFieldInput::placeholder) { color: #6a9ab8; opacity: 1; }
-
 
 </style>

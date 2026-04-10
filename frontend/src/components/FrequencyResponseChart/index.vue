@@ -585,7 +585,6 @@ export default defineComponent({
 
 <style lang="scss" scoped>
 
-/* Expose group colors as CSS vars for the legend dots */
 .freq-chart {
   --group-reference: var(--color-group-reference);
   --group-cancer:    var(--color-group-cancer);

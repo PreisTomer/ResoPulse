@@ -350,7 +350,6 @@ export default defineComponent({
 
 <style lang="scss" scoped>
 
-
 .field-panel {
   &__optimal-row {
     display: flex;
@@ -436,8 +435,10 @@ export default defineComponent({
 
     &--danger  { background: var(--color-danger);  opacity: var(--op-muted); }
     &--primary { background: var(--color-primary); opacity: var(--op-muted); }
-    &--optimal { background: var(--color-purple);  opacity: 0.60; } // intentional between-tier value
-    &--purple  { background: var(--color-purple);  opacity: 0.60; } // intentional between-tier value
+    &--optimal { background: var(--color-purple);  opacity: 0.60; }
+
+    &--purple  { background: var(--color-purple);  opacity: 0.60; }
+
   }
 
   &__slider {
@@ -475,7 +476,8 @@ export default defineComponent({
       font-family: var(--font-mono);
       color: var(--color-text-muted);
       white-space: nowrap;
-      opacity: 0.82; // intentional between-tier value
+      opacity: 0.82;
+
     }
 
     &-edit {

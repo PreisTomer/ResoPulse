@@ -192,7 +192,6 @@ export default defineComponent({
 
 <style lang="scss" scoped>
 
-
 /* ── Vue Transition (name="params") ──────────────────────────────────── */
 .params-enter-active, .params-leave-active { transition: opacity var(--tr-normal), transform var(--tr-normal); }
 .params-enter-from,  .params-leave-to      { opacity: 0; transform: translateY(-6px); }
@@ -217,7 +216,8 @@ export default defineComponent({
     }
   }
 
-  &__params-toggle-arrow { font-size: var(--fs-xs); opacity: 0.75; } // intentional between-tier value
+  &__params-toggle-arrow { font-size: var(--fs-xs); opacity: 0.75; }
+
 
   &__params-panel {
     background-color: color-mix(in srgb, black 30%, transparent);
@@ -316,7 +316,8 @@ export default defineComponent({
     font-size: var(--fs-xxs);
     font-family: var(--font-mono);
     color: var(--color-text-muted);
-    opacity: 0.6; // intentional below-tier value
+    opacity: 0.6;
+
     width: 2.5rem;
     text-align: left;
   }
@@ -332,7 +333,8 @@ export default defineComponent({
   &__params-derived-label {
     @include mono-upper(0.52rem, 0.12em);
     color: var(--color-text-muted);
-    opacity: 0.65; // intentional between-tier value
+    opacity: 0.65;
+
   }
 
   &__param-derived-value {

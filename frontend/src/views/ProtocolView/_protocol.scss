@@ -67,7 +67,8 @@
   .protocol__eq-divider {
     height: 1px;
     background: var(--color-border);
-    opacity: 0.5; // intentional between-tier value
+    opacity: 0.5;
+
     margin: 0.2rem 0;
   }
 
@@ -84,7 +85,6 @@
 
 // ── Utility classes ──────────────────────────────────────────────────────────
 @mixin protocol-utils() {
-  // Explicit selectors replacing data-value-classes() mixin (which uses & parent selector)
   .protocol__mono       { font-family: var(--font-mono); font-size: var(--fs-md); }
   .protocol__muted      { color: var(--color-text-muted); opacity: 0.6; }
   .protocol__cancer-val { color: var(--color-danger); }
@@ -105,7 +105,8 @@
       position: absolute;
       left: 0;
       color: var(--color-primary);
-      opacity: 0.5; // intentional between-tier value
+      opacity: 0.5;
+
     }
 
     &--nourish, &--revep, &--lysis, &--hfire {

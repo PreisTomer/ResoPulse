@@ -1,18 +1,7 @@
 // Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 
-// NavBar, ProtocolView, and ExperimentView mobile CSS live in their own scoped
-// <style> blocks (scoped specificity requires co-location) - NOT duplicated here.
-//
-// Breakpoints
-//   $bp-phone : 480px  - small phones
-//   $bp-sm    : 640px  - large phones
-//   $bp-md    : 768px  - tablets portrait / hamburger threshold
-//   $bp-lg    : 1024px - small laptops
-//   $bp-xl    : 1200px - wide tablets / 13" laptops
-
 // ─── HomeView ─────────────────────────────────────────────────────────────────
 @media (max-width: 768px) {
-  // Switch from centered flexbox to top-aligned so tall content isn't clipped
   .home {
     align-items: flex-start;
     justify-content: flex-start;
@@ -49,13 +38,11 @@
     word-break: break-word;
   }
 
-  // CTA buttons: stack vertically, full width
   .home .home__actions {
     grid-template-columns: 1fr;
     max-width: 100%;
   }
 
-  // Feature cards: single column
   .home .home__feature-cards {
     grid-template-columns: 1fr;
     max-width: 100%;
@@ -73,7 +60,6 @@
   .home .home__ring--3,
   .home .home__ring--4     { display: none; }
 
-  // Eyebrow text: prevent overflow
   .home .home__eyebrow {
     font-size: var(--fs-xxs);
     text-align: center;
@@ -81,7 +67,6 @@
     justify-content: center;
   }
 
-  // Pill caps: 2 columns
   .home .home__caps {
     grid-template-columns: 1fr 1fr;
     justify-items: stretch;
@@ -95,7 +80,6 @@
 }
 
 // ─── ExperimentView - media queries live in ExperimentView.vue scoped <style>
-//     (scoped specificity requires rules to be co-located with the component)
 
 // ─── DataSetsView ─────────────────────────────────────────────────────────────
 @media (max-width: 900px) {

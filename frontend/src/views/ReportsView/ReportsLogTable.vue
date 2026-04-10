@@ -206,7 +206,6 @@ export default defineComponent({
 
 <style lang="scss" scoped>
 
-
 .reports-log-table {
   &__table-wrap {
     overflow-x: auto;
@@ -271,7 +270,6 @@ export default defineComponent({
     display: inline-block;
     vertical-align: middle;
 
-    // Outer ring pulses opacity; inner crosshairs stay steady
     circle:first-child {
       animation: reticle-pulse 2.8s ease-in-out infinite;
     }
@@ -320,7 +318,6 @@ export default defineComponent({
     white-space: nowrap;
   }
 
-  // Utility colours — mixin generates __muted, __cancer-val, __warn-val
   @include data-value-classes();
   &__ref-val   { color: var(--color-primary); }
   &__green-val { color: var(--color-lime); }

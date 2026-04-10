@@ -159,7 +159,6 @@ export default defineComponent({
       transform: translateY(-2px);
     }
 
-    // Per-category accent border (left edge)
     &--cancer {
       border-left: 3px solid color-mix(in srgb, var(--color-danger) 70%, transparent);
       &:hover { border-left-color: var(--color-danger); }
@@ -183,7 +182,6 @@ export default defineComponent({
     white-space: nowrap;
     flex-shrink: 0;
 
-    // Badge color follows card mod
     .validate-section__card--cancer & {
       color: var(--color-danger);
       border-color: color-mix(in srgb, var(--color-danger) 30%, transparent);

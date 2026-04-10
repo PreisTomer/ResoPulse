@@ -98,7 +98,6 @@ export default defineComponent({
   flex: 1;
 
   // ── Collapsible sections zone ──────────────────────────────────────────────
-  // Zero-gap flex column so protocol's border-bottom = advanced's border-top (one shared line).
   &__sections {
     display: flex;
     flex-direction: column;

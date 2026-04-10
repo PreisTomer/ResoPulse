@@ -109,7 +109,6 @@ export default defineComponent({
 
 <style lang="scss" scoped>
 
-
 .snap-bar {
   display: flex;
   align-items: center;
@@ -119,10 +118,12 @@ export default defineComponent({
   &__label {
     @include mono-upper();
     color: var(--color-text-muted);
-    opacity: 0.65; // intentional between-tier value
+    opacity: 0.65;
+
     white-space: nowrap;
     flex-shrink: 0;
-    min-width: 3.9rem; // match "WAVEFORM" row-label width so pills align
+    min-width: 3.9rem;
+
   }
 
   &__pills {

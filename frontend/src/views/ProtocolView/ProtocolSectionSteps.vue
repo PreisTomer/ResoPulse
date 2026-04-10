@@ -105,7 +105,6 @@ export default defineComponent({
   color: var(--color-text);
   margin: 0;
 
-  // Inline lab-link spans inside v-html rendered descriptions
   :deep(.proto-lab-link) {
     display: inline-flex;
     align-items: center;

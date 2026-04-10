@@ -317,7 +317,6 @@ export default defineComponent({
 
 <style lang="scss" scoped>
 
-
 .sweep-panel {
   @include surface-card(var(--radius-lg));
   overflow: hidden;

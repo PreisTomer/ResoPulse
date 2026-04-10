@@ -266,9 +266,6 @@ export default defineComponent({
 
 <style lang="scss" scoped>
 
-
-// thumb-danger-pulse and state-blink are defined globally in styles/_keyframes.scss
-
 .field-panel {
   &__row {
     @include field-row-grid();

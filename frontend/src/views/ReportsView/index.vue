@@ -195,7 +195,6 @@ export default defineComponent({
 
 <style lang="scss" scoped>
 
-
 /* ── Page shell ───────────────────────────────────────────────────────────── */
 .reports {
   flex: 1;

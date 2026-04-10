@@ -180,7 +180,6 @@ export default defineComponent({
       box-shadow: -4px 0 18px color-mix(in srgb, var(--color-primary) 18%, transparent);
     }
 
-    // Left-side variant: rounded right edge
     &--left {
       border-right: 1px solid color-mix(in srgb, white 14%, transparent);
       border-left: none;
@@ -211,7 +210,6 @@ export default defineComponent({
     overflow-y: auto;
     overflow-x: hidden;
 
-    // Left-side variant: rounded left edge
     .side-tab-panel--left & {
       border-left: 1px solid color-mix(in srgb, white 12%, transparent);
       border-right: none;

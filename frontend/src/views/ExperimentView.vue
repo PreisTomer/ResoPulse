@@ -432,7 +432,6 @@ export default defineComponent({
 
 <style lang="scss" scoped>
 
-
 .experiment {
   display: flex;
   flex-direction: column;
@@ -454,7 +453,6 @@ export default defineComponent({
     min-height: 0;
   }
 
-  /* Row 1: cards side-by-side + slider on the right */
   &__top {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(420px, 520px);
@@ -543,8 +541,6 @@ export default defineComponent({
 
 // ── Sticky cells sentinel ──────────────────────────────────────────────────────
 .experiment__cells-anchor {
-  // Zero-height sentinel - stays in normal flow so IntersectionObserver can track
-  // when the cell cards area exits the viewport.
   height: 0;
   grid-column: 1 / -1;
   pointer-events: none;
@@ -559,19 +555,16 @@ export default defineComponent({
   }
 }
 
-// Tablet - collapse top row into single column
 @media (max-width: 900px) {
   .experiment__main { padding: 1.5rem 0.85rem 0.85rem; gap: 0.85rem; }
   .experiment__top  { grid-template-columns: 1fr; }
   .experiment__cells { grid-template-columns: 1fr 1fr; }
 }
 
-// Large phone
 @media (max-width: 768px) {
   .experiment__main { padding: 0.65rem; gap: 0.7rem; }
 }
 
-// Phone - single-column cells, full cards
 @media (max-width: 540px) {
   .experiment__cells {
     grid-template-columns: 1fr;

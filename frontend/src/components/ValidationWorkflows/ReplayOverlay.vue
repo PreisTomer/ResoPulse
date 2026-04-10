@@ -156,7 +156,6 @@ export default defineComponent({
   gap: 0.75rem;
   pointer-events: none;
 
-  // Children receive pointer events individually
   > * { pointer-events: auto; }
 
   // ── Progress pill ──────────────────────────────────────────────────────────

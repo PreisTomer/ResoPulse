@@ -144,7 +144,6 @@ export default defineComponent({
 
 <style lang="scss" scoped>
 
-
 .instrument {
   min-height: 100vh;
   background: var(--color-bg);

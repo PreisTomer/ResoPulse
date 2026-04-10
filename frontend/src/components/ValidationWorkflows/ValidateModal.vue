@@ -18,8 +18,8 @@
           <div class="vmodal__result-block">
             <span class="vmodal__block-label">{{ $t('validate.modalKeyResult') }}</span>
             <p
-              v-for="(sentence, i) in resultSentences"
-              :key="i"
+              v-for="sentence in resultSentences"
+              :key="sentence"
               class="vmodal__result-sentence"
             >{{ sentence }}</p>
             <span class="vmodal__metric-badge">{{ $t(workflow.metricKey) }}</span>
@@ -35,7 +35,7 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="(row, i) in paramsRows" :key="i" class="vmodal__tr">
+                <tr v-for="row in paramsRows" :key="row.source" class="vmodal__tr">
                   <td class="vmodal__td vmodal__td--source">{{ row.source }}</td>
                   <td class="vmodal__td vmodal__td--value">{{ row.value }}</td>
                 </tr>

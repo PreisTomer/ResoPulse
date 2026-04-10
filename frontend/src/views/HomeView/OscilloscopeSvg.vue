@@ -36,19 +36,16 @@ export default defineComponent({
   position: absolute;
   top: 0;
   bottom: 0;
-  // Break out of the zone's constrained width to span the full viewport
   left: 50%;
   transform: translateX(-50%);
   width: 100vw;
   pointer-events: none;
   z-index: 0;
   overflow: hidden;
-  // Vertical mask: waves ghost in from the top and dissolve before the section ends
   -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 14%, black 76%, transparent 100%);
   mask-image: linear-gradient(to bottom, transparent 0%, black 14%, black 76%, transparent 100%);
   @media (min-width: 900px) { display: block; }
 
-  // Scanline texture: horizontal raster lines at 4px pitch — "monitor" aesthetic
   &::after {
     content: '';
     position: absolute;
@@ -69,13 +66,11 @@ export default defineComponent({
   width: 100%;
   height: 100%;
   display: block;
-  // Ghost opacity — 10% keeps the waves readable but firmly in the background
   opacity: 0.10;
   transform-origin: center center;
 }
 
 .home__feat-osc-track {
-  // double-width group; translateX(-50%) = -1200 units = seamless loop
   transform-box: fill-box;
   animation: osc-scroll 8s linear infinite;
 }
@@ -101,8 +96,6 @@ export default defineComponent({
   to   { transform: translateX(-50%); }
 }
 
-/* Scroll-driven wave reveal (progressive enhancement — Chrome 115+) */
-/* Falls back gracefully: unsupporting browsers see the static 10% opacity. */
 @supports (animation-timeline: view()) {
   .home__feat-osc-svg {
     animation: osc-scroll-reveal linear both;

@@ -1,50 +1,35 @@
 // Copyright © 2026 Tomer Preis. All rights reserved.
-// Unauthorized copying or distribution is prohibited.
-
-// Shared keyframes used by CellCard and FrequencySlider.
-// Import with: @use '../../styles/keyframes' as *;
-// Global keyframes (non-scoped) are accessible from all scoped style blocks without importing.
 
 @keyframes state-blink {
   0%, 100% { opacity: 1; }
   50%       { opacity: 0.35; }
 }
 
-// Used by FieldRow and ProtocolSection slider thumbs in denaturing / danger states.
 @keyframes thumb-danger-pulse {
   0%, 100% { box-shadow: 0 0 6px color-mix(in srgb, var(--color-danger) 60%, transparent); }
   50%       { box-shadow: 0 0 16px var(--color-danger); }
 }
 
-// Used by ExperimentHeader chip-dot (connected indicator) and z-drift badge.
 @keyframes pulse-dot {
   0%, 100% { opacity: 1; }
   50%       { opacity: 0.4; }
 }
 
-// Used by CellCard BiostimPanel active indicator (prominent biomodulation pulse).
 @keyframes nourish-text-pulse {
   0%, 100% { opacity: 1; }
   50%       { opacity: 0.65; }
 }
 
-// Used by CellCard CellVisual nourishing status strip (subtle background pulse).
 @keyframes nourish-strip-pulse {
   0%, 100% { opacity: 1; }
   50%       { opacity: 0.80; }
 }
 
-// Used by StickyCellView tab dot — slow breathe pulse on the live indicator.
 @keyframes sticky-pulse {
   0%, 100% { opacity: 0.5; }
   50%       { opacity: 1.0; }
 }
 
-// Protocol lab-link highlight: three slow glow pulses then fades to nothing.
-// Applied by scrollAndHighlight() after cross-route navigation from ProtocolView.
-// Raw opacity values required — CSS variables are not interpolated in @keyframes.
-// color-mix() cannot be reliably interpolated in @keyframes across all browsers,
-// so rgba() literals derived from --color-primary (#00d4ff = rgb(0,212,255)) are used.
 @keyframes lab-highlight-pulse {
   0%   { outline-color: transparent; box-shadow: none; }
   10%  { outline-color: #00d4ff;     box-shadow: 0 0 0 4px rgba(0, 212, 255, 0.85), 0 0 24px rgba(0, 212, 255, 0.55); }
@@ -55,15 +40,11 @@
   100% { outline-color: transparent; box-shadow: none; }
 }
 
-// Used by CellVisual warn strips and CompactStrip state dots (approaching, vibrating, lysing).
 @keyframes warn-fade {
   0%, 100% { opacity: 1; }
   50%       { opacity: 0.72; }
 }
 
-// Used by CellParamsPanel rows during replay: briefly tints the row background when a
-// parameter value changes. Shows the scientist which field was just loaded from the paper.
-// rgba(0,212,255) = --color-primary; raw value required inside @keyframes.
 @keyframes param-flash {
   0%   { background: transparent; }
   15%  { background: rgba(0, 212, 255, 0.18); }
@@ -73,7 +54,6 @@
 
 // ── NavBar ────────────────────────────────────────────────────────────────────
 
-// Brand "Pulse" text glow breathe — NavBar logo accent.
 @keyframes brand-pulse {
   0%, 100% { text-shadow: 0 0 8px var(--color-primary-dim); }
   50%       { text-shadow: 0 0 18px color-mix(in srgb, var(--color-primary) 50%, transparent); }
@@ -81,43 +61,36 @@
 
 // ── Auth pages (SignIn / SignUp) ──────────────────────────────────────────────
 
-// SVG ring opacity breathe used by SignIn page concentric rings.
 @keyframes auth-ring-pulse {
   0%, 100% { opacity: 0.2; }
   50%       { opacity: 0.9; }
 }
 
-// E-field axis lines blinking on SignIn page.
 @keyframes auth-field-blink {
   0%, 100% { opacity: 0.1; }
   50%       { opacity: 0.4; }
 }
 
-// SVG origin dot pulse on SignIn page; raw r values required (SVG attribute, not CSS).
 @keyframes auth-origin-pulse {
   0%, 100% { opacity: 0.3; r: 5; }
   50%       { opacity: 0.9; r: 7; }
 }
 
-// Fade-up entrance used by auth page hero elements.
 @keyframes auth-fade-up {
   from { opacity: 0; transform: translateY(12px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
-// SignIn feature strip — slide in from the left on mount.
 @keyframes feat-enter {
   from { opacity: 0; transform: translateX(-14px); }
   to   { opacity: 1; transform: translateX(0); }
 }
 
-// SignIn feature strip left accent bar — grows from zero height.
 @keyframes feat-bar {
   from { height: 0; }
   to   { height: 100%; }
 }
 
-// SignIn feature strip scan-line sweep loop.
 @keyframes feat-scan-loop {
   0%        { left: -70%; opacity: 0; }
   3%        { opacity: 1; }
@@ -125,19 +98,16 @@
   17%, 100% { left: -70%; opacity: 0; }
 }
 
-// Auth card entrance — slides up and scales in.
 @keyframes auth-card-enter {
   from { opacity: 0; transform: translateY(20px) scale(0.98); }
   to   { opacity: 1; transform: translateY(0)   scale(1); }
 }
 
-// SignUp onboarding steps and brand elements — fade up.
 @keyframes signup-fade-up {
   from { opacity: 0; transform: translateY(12px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
-// SignUp card entrance.
 @keyframes signup-card-enter {
   from { opacity: 0; transform: translateY(20px) scale(0.98); }
   to   { opacity: 1; transform: translateY(0)    scale(1); }
@@ -145,42 +115,35 @@
 
 // ── Onboarding page ───────────────────────────────────────────────────────────
 
-// SVG Schwan trace draw-on animation (stroke-dasharray grow).
 @keyframes onboard-trace-draw {
   from { stroke-dasharray: 0 1200; opacity: 0; }
   to   { stroke-dasharray: 1200 0; opacity: 1; }
 }
 
-// Frequency cursor line blink on onboarding pulse header.
 @keyframes onboard-marker-blink {
   0%, 100% { opacity: 0.2; }
   50%       { opacity: 0.8; }
 }
 
-// Generic fade-in used by onboarding axis labels and success elements.
 @keyframes onboard-fade-in {
   from { opacity: 0; }
   to   { opacity: 1; }
 }
 
-// Onboarding card entrance.
 @keyframes onboard-card-enter {
   from { opacity: 0; transform: translateY(16px) scale(0.99); }
   to   { opacity: 1; transform: translateY(0)    scale(1); }
 }
 
-// Submit button spinner rotation.
 @keyframes onboard-spin {
   to { transform: rotate(360deg); }
 }
 
-// Success screen ring pulse (step 3 rings).
 @keyframes success-ring {
   0%, 100% { opacity: 0.25; }
   50%       { opacity: 0.85; }
 }
 
-// Redirect progress bar fill.
 @keyframes redirect-fill {
   from { width: 0%; }
   to   { width: 100%; }

@@ -256,7 +256,6 @@ export default defineComponent({
 
 <style lang="scss" scoped>
 
-
 .protocol {
   flex: 1;
   background-color: var(--color-bg);
@@ -342,7 +341,6 @@ export default defineComponent({
     text-align: left;
   }
 
-  // Full-width single column layout
   .protocol__layout {
     grid-template-columns: 1fr;
   }
@@ -351,7 +349,6 @@ export default defineComponent({
     padding: 1rem 1rem 3rem;
   }
 
-  // Keep tables scrollable on mobile
   .protocol__param-table,
   .protocol__doubleshell-table,
   .protocol__safety-table {
@@ -360,7 +357,6 @@ export default defineComponent({
     overflow-x: auto;
   }
 
-  // Prevent doc from escaping its column
   .protocol__doc {
     min-width: 0;
     max-width: 100%;
@@ -368,7 +364,6 @@ export default defineComponent({
   }
 }
 
-// Extra-small phones (up to 400px) - tighten further
 @media (max-width: 400px) {
   .protocol__inner {
     padding: 0.75rem 0.75rem 3rem;

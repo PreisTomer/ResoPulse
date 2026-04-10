@@ -173,7 +173,6 @@ export default defineComponent({
 
 <style lang="scss" scoped>
 
-
 .mode-badge {
   @include flex-col(0.35rem);
 

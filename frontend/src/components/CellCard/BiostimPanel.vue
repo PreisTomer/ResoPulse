@@ -128,8 +128,6 @@ export default defineComponent({
 
 <style lang="scss" scoped>
 
-
-
 .cell-card {
   &__biostim {
     background: color-mix(in srgb, var(--color-primary) 4.5%, transparent);
@@ -220,7 +218,8 @@ export default defineComponent({
     font-family: var(--font-mono);
     color: var(--color-text-muted);
     text-align: right;
-    opacity: 0.75; // intentional between-tier value
+    opacity: 0.75;
+
   }
 }
 </style>

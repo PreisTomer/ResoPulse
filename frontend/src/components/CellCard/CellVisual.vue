@@ -656,7 +656,6 @@ export default defineComponent({
 <style lang="scss" scoped>
 
 /* ── Per-component keyframes ───────────────────────────────────────── */
-// warn-fade is global (_keyframes.scss) — no local definition needed
 
 @keyframes cell-canvas-tilt {
   0%   { transform: rotateY(-8deg); }
@@ -677,8 +676,6 @@ export default defineComponent({
     display: flex;
     justify-content: center;
     line-height: 0;
-    // perspective enables GPU 3D compositing for the CSS rotateY tilt on the SVG child.
-    // overflow:hidden omitted — .cell-visual already clips at the card boundary.
     perspective: 800px;
 
     svg {
@@ -730,7 +727,8 @@ export default defineComponent({
     font-family: var(--font-mono);
     font-size: var(--fs-xxs);
     color: var(--color-purple);
-    opacity: 0.75; // intentional between-tier value
+    opacity: 0.75;
+
     white-space: nowrap;
     width: 1.8rem;
     flex-shrink: 0;
@@ -758,7 +756,8 @@ export default defineComponent({
     font-family: var(--font-mono);
     font-size: var(--fs-xxs);
     color: var(--color-purple);
-    opacity: 0.75; // intentional between-tier value
+    opacity: 0.75;
+
     width: 2rem;
     text-align: right;
     flex-shrink: 0;

@@ -286,7 +286,6 @@ export default defineComponent({
     padding: 0 0.7rem 0.65rem 2.5rem;
     opacity: var(--op-dim);
 
-    // proto-lab-link spans rendered inside the guide — make them look + act like links
     :deep(.proto-lab-link) {
       color: var(--color-primary);
       text-decoration: underline;
