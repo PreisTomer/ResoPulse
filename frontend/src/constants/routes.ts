@@ -9,6 +9,7 @@ export const ROUTE = {
   PROTOCOL:    '/protocol',
   INSTRUMENT:  '/instrument',
   TERMS:       '/terms',
+  PRIVACY:     '/privacy',
   SIGN_IN:     '/sign-in',
   SIGN_UP:     '/sign-up',
   ONBOARDING:  '/onboarding',

@@ -28,6 +28,8 @@
           <span class="terms-gate__check-label">
             {{ $t('termsGate.checkLabel') }}
             <RouterLink :to="ROUTE.TERMS" class="terms-gate__link" target="_blank">{{ $t('termsGate.termsLink') }}</RouterLink>
+            {{ $t('termsGate.privacyAnd') }}
+            <RouterLink :to="ROUTE.PRIVACY" class="terms-gate__link" target="_blank">{{ $t('termsGate.privacyLink') }}</RouterLink>
           </span>
         </label>
 

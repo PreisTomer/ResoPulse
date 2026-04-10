@@ -388,11 +388,11 @@ export function setupSocketServer(httpServer: HttpServer): Server {
       socket.to(room).emit(SOCKET_EVENTS.NEW_LOG_ENTRY, entry)
     })
 
-    socket.on(SOCKET_EVENTS.LOG_OUTCOME, (raw: unknown) => {
+    socket.on(SOCKET_EVENTS.LOG_OUTCOME, async (raw: unknown) => {
       if (!raw || typeof raw !== 'object') return
       const entry = validateOutcomeEntry(raw as Record<string, unknown>)
       if (!entry) return
-      insertOutcome(entry)
+      await insertOutcome(entry)
       const room = socketToRoom.get(socket.id) ?? DEFAULT_ROOM
       socket.to(room).emit(SOCKET_EVENTS.NEW_OUTCOME, entry)
     })

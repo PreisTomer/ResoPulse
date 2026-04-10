@@ -3,7 +3,7 @@
 import { watch } from 'vue'
 import { createRouter, createWebHistory } from 'vue-router'
 
-import { ROUTE, PROTECTED_ROUTES } from '@/constants/routes'
+import { ROUTE } from '@/constants/routes'
 import { useAuthStore } from '@/stores/authStore'
 
 const router = createRouter({
@@ -17,6 +17,7 @@ const router = createRouter({
     { path: ROUTE.PROTOCOL,    component: () => import('../views/ProtocolView/index.vue') },
     { path: ROUTE.INSTRUMENT,  component: () => import('../views/InstrumentView.vue'),          meta: { requiresAuth: true } },
     { path: ROUTE.TERMS,       component: () => import('../views/TermsView.vue') },
+    { path: ROUTE.PRIVACY,     component: () => import('../views/PrivacyView.vue') },
     { path: ROUTE.SIGN_IN,                         component: () => import('../views/SignInView/index.vue'),  meta: { guestOnly: true } },
     // Sub-paths Clerk needs for OAuth callbacks, MFA, and email verification.
     // No guestOnly — the user may already be partially authenticated at these points.
@@ -60,7 +61,7 @@ function waitForClerkLoaded(): Promise<void> {
 router.beforeEach(async (to) => {
   await waitForClerkLoaded()
 
-  const { isSignedIn, hasOrg } = useAuthStore()
+  const { isSignedIn } = useAuthStore()
 
   // Signed-in user landing on a guest-only page → go to home.
   if (to.meta.guestOnly && isSignedIn) {
@@ -75,14 +76,14 @@ router.beforeEach(async (to) => {
   }
 
   // Signed-in user without an active org hitting a protected route → onboarding.
-  if (isSignedIn && !hasOrg && PROTECTED_ROUTES.includes(to.path)) {
-    return { path: ROUTE.ONBOARDING }
-  }
+  // if (isSignedIn && !hasOrg && PROTECTED_ROUTES.includes(to.path)) {
+  //   return { path: ROUTE.ONBOARDING }
+  // }
 
   // Signed-in user with an org trying to access onboarding again → home.
-  if (to.path === ROUTE.ONBOARDING && isSignedIn && hasOrg) {
-    return { path: ROUTE.HOME }
-  }
+  // if (to.path === ROUTE.ONBOARDING && isSignedIn && hasOrg) {
+  //   return { path: ROUTE.HOME }
+  // }
 })
 
 export default router

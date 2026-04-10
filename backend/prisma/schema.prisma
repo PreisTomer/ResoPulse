@@ -57,3 +57,41 @@ model Membership {
   @@unique([userId, orgId])
   @@map("memberships")
 }
+
+// ── Outcome ───────────────────────────────────────────────────────────────────
+// AI training data: one row per user-rated experiment outcome.
+// Migrated from SQLite (better-sqlite3) to Postgres for persistent storage.
+
+model Outcome {
+  id             Int      @id @default(autoincrement())
+  createdAt      DateTime @default(now())
+  sessionName    String?
+  timestamp      String?
+  freqKhz        Int
+  fieldVcm       Int
+  medium         String
+  targetPreset   String
+  waveform       String
+  dutyCycle      Float
+  pulseWidthNs   Int
+  orientationDeg Int
+  lysisNPulses   Int
+  targetRatio    Float
+  healthyRatio   Float
+  selectivity    Float
+  targetTemp     Float
+  healthyTemp    Float
+  rating         Int
+  aiSuggested    Boolean  @default(false)
+  targetTauNs    Float    @default(0)
+  healthyTauNs   Float    @default(0)
+  targetFcKhz    Float    @default(0)
+  healthyFcKhz   Float    @default(0)
+  targetRadiusUm Float    @default(0)
+  sigmaE         Float    @default(0)
+
+  @@index([targetPreset])
+  @@index([rating])
+  @@index([targetTauNs])
+  @@map("outcomes")
+}

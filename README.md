@@ -4,7 +4,7 @@
 
 **CONFIDENTIAL & PROPRIETARY** *This repository is for private research and evaluation only. All rights reserved.*
 
-> **Legal:** By viewing or evaluating this codebase you agree to the [ResoPulse Terms of Use](https://bio-resonance.vercel.app/terms).
+> **Legal:** By viewing or evaluating this codebase you agree to the [ResoPulse Terms of Use](https://www.resopulse-virtual-lab.com/terms).
 > Unauthorised copying, cloning, or use of the physics engine to build competing software is strictly prohibited.
 > © 2026 Tomer Preis. All rights reserved.
 

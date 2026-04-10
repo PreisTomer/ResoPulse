@@ -5,12 +5,12 @@
 
       <div class="terms__eyebrow">Legal</div>
       <h1 class="terms__title">Terms of Use</h1>
-      <p class="terms__meta">Last Updated: March 20, 2026 &nbsp;·&nbsp; ResoPulse &nbsp;·&nbsp;
-        <a href="https://bio-resonance.vercel.app/" class="terms__link" target="_blank" rel="noopener">bio-resonance.vercel.app</a>
+      <p class="terms__meta">Last Updated: April 10, 2026 &nbsp;·&nbsp; ResoPulse &nbsp;·&nbsp;
+        <a href="https://www.resopulse-virtual-lab.com/" class="terms__link" target="_blank" rel="noopener">resopulse-virtual-lab.com</a>
       </p>
 
       <p class="terms__intro">
-        By accessing or using <a href="https://bio-resonance.vercel.app/" class="terms__link" target="_blank" rel="noopener">https://bio-resonance.vercel.app/</a>
+        By accessing or using <a href="https://www.resopulse-virtual-lab.com/" class="terms__link" target="_blank" rel="noopener">https://www.resopulse-virtual-lab.com/</a>
         (the "Service"), you agree to be bound by these Terms of Use. If you do not agree, do not use the Service.
       </p>
 
@@ -49,15 +49,58 @@
       </section>
 
       <section class="terms__section">
-        <h2 class="terms__h2">4. Limitation of Liability</h2>
+        <h2 class="terms__h2">4. Simulation Data Ownership</h2>
+        <dl class="terms__dl">
+          <dt>Your outputs</dt>
+          <dd>Experiment results, CSV exports, and protocol configurations you generate using the Service are your own data. You retain ownership of those outputs.</dd>
+          <dt>The engine</dt>
+          <dd>The algorithms, biophysical models, and source code that produce those outputs remain the exclusive property of Tomer Preis. Ownership of outputs does not grant any license to the underlying logic.</dd>
+          <dt>Model training</dt>
+          <dd>Anonymised, aggregated outcome ratings you provide may be used to retrain the on-premise optimisation model. No personally identifiable information is used in this process.</dd>
+        </dl>
+      </section>
+
+      <section class="terms__section">
+        <h2 class="terms__h2">5. Limitation of Liability</h2>
         <p class="terms__p">
           Tomer Preis assumes no liability for experimental outcomes, laboratory decisions, or hardware damage resulting
           from the use of these simulations. The Service is provided <strong>"As-Is."</strong>
         </p>
       </section>
 
+      <section class="terms__section">
+        <h2 class="terms__h2">6. Model Versioning and Result Reproducibility</h2>
+        <p class="terms__p">
+          The biophysical models in ResoPulse may be updated between software versions to improve accuracy or incorporate
+          new literature findings. Simulation results obtained from different versions of the Service may not be directly
+          comparable. We recommend noting the software version when citing results in research documentation.
+        </p>
+      </section>
+
+      <section class="terms__section">
+        <h2 class="terms__h2">7. Academic Use and Attribution</h2>
+        <p class="terms__p">
+          If you use ResoPulse simulation outputs to inform published research, conference presentations, or technical
+          reports, we ask (but do not require) that you acknowledge the tool. A suggested attribution:
+        </p>
+        <blockquote class="terms__quote">
+          Simulation performed using ResoPulse Virtual Biophysics Engine (resopulse-virtual-lab.com, 2026). Biophysical
+          models based on Kotnik &amp; Miklavcic (2000), Weaver &amp; Chizmadzhev (1996), and Pennes (1948).
+        </blockquote>
+      </section>
+
+      <section class="terms__section">
+        <h2 class="terms__h2">8. Changes to These Terms</h2>
+        <p class="terms__p">
+          We may update these Terms of Use as the Service evolves. Material changes will be communicated by updating
+          the "Last Updated" date above. Continued use of the Service after the effective date constitutes acceptance
+          of the revised terms.
+        </p>
+      </section>
+
       <div class="terms__footer">
         <RouterLink :to="ROUTE.HOME" class="terms__back">← Back to ResoPulse</RouterLink>
+        <RouterLink :to="ROUTE.PRIVACY" class="terms__privacy-link">Privacy</RouterLink>
         <span class="terms__copy">© 2026 Tomer Preis. All rights reserved.</span>
       </div>
 
@@ -195,6 +238,16 @@ export default defineComponent({
     &:hover { text-decoration: underline; }
   }
 
+  &__quote {
+    font-size: var(--fs-sm);
+    line-height: 1.65;
+    color: var(--color-text-muted);
+    border-left: 2px solid var(--color-border);
+    padding-left: 1rem;
+    margin: 0.75rem 0 0;
+    font-style: italic;
+  }
+
   &__footer {
     margin-top: 2.5rem;
     display: flex;
@@ -204,7 +257,8 @@ export default defineComponent({
     gap: 0.75rem;
   }
 
-  &__back {
+  &__back,
+  &__privacy-link {
     font-family: var(--font-mono);
     font-size: var(--fs-xs);
     color: var(--color-primary);
@@ -218,7 +272,7 @@ export default defineComponent({
     font-family: var(--font-mono);
     font-size: var(--fs-xxs);
     color: var(--color-text-muted);
-    opacity: 0.65;
+    opacity: var(--op-dim);
     letter-spacing: 0.06em;
     text-transform: uppercase;
   }

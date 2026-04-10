@@ -388,14 +388,16 @@
   },
   "termsGate": {
     "eyebrow": "Research Access",
-    "title": "Experiment Lab, Terms of Use",
+    "title": "Experiment Lab, Terms and Privacy",
     "para": "ResoPulse is a <strong>computational simulation tool for in-vitro laboratory research only.</strong> It is not a medical device and must not be used for clinical diagnostics or human treatment.",
     "li1": "All algorithms, physics models, and source code are the exclusive property of <strong>Tomer Preis</strong> and protected by copyright.",
     "li2": "You may not reverse-engineer, clone, or use this tool to build competing software.",
     "li3": "Biophysical parameters are approximations, real-world results may vary.",
     "li4": "Tomer Preis assumes no liability for experimental outcomes or laboratory decisions.",
     "checkLabel": "I have read and agree to the",
-    "termsLink": "Terms of Use",
+    "termsLink": "Terms",
+    "privacyAnd": "and",
+    "privacyLink": "Privacy Policy",
     "cancelBtn": "← Go back",
     "enterBtn": "Enter Experiment Lab"
   },

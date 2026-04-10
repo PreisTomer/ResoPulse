@@ -37,8 +37,8 @@ app.use('/webhooks/clerk', express.raw({ type: 'application/json' }), webhookRou
 app.use(express.json({ limit: '16kb' }))
 
 // ── Public routes (registered before Clerk middleware — no auth required) ──────
-app.get('/health', (_req, res) => {
-  const outcomeCount = countOutcomes()
+app.get('/health', async (_req, res) => {
+  const outcomeCount = await countOutcomes()
   res.json({
     status:       'ok',
     service:      'resopulse-api',
@@ -61,13 +61,13 @@ app.get('/ai/health', (_req, res) => {
 app.use(clerk)
 
 // ── AI training data (protected: requires auth + optional secret) ─────────────
-app.get('/ai/training-data', requireAuth, (req, res) => {
+app.get('/ai/training-data', requireAuth, async (req, res) => {
   const secret = process.env.TRAINING_DATA_SECRET
   if (secret && req.headers['x-training-secret'] !== secret) {
     res.status(401).json({ error: 'Unauthorized' })
     return
   }
-  res.json(fetchTrainingRows())
+  res.json(await fetchTrainingRows())
 })
 
 app.post('/ai/retrain', requireAuth, async (_req, res) => {
