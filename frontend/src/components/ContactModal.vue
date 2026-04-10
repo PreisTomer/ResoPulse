@@ -146,7 +146,7 @@ export default defineComponent({
   &__icon { font-size: 1rem; color: var(--color-primary); }
 
   &__title {
-    font-size: var(--fs-md);
+    font-size: var(--fs-lg);
     font-weight: 700;
     color: var(--color-text-heading);
     letter-spacing: 0.01em;
@@ -166,7 +166,7 @@ export default defineComponent({
   }
 
   &__subtitle {
-    font-size: var(--fs-sm);
+    font-size: var(--fs-md);
     color: var(--color-text-heading);
     line-height: 1.5;
     margin: 0;
