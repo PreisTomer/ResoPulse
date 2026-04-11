@@ -13,14 +13,6 @@
             <span class="nav-bar__brand-tag">{{ $t('nav.researchPlatform') }}</span>
           </div>
         </RouterLink>
-
-        <button
-          class="nav-bar__theme-toggle"
-          :class="{ 'nav-bar__theme-toggle--oled': isOled }"
-          type="button"
-          :title="isOled ? $t('nav.themeSwitchDark') : $t('nav.themeSwitchOled')"
-          @click="themeStore.toggle()"
-        >{{ isOled ? $t('nav.themeOled') : $t('nav.themeDark') }}</button>
       </div>
 
       <nav class="nav-bar__nav" :class="{ 'nav-bar__nav--open': mobileOpen }">
@@ -34,11 +26,24 @@
           @click="mobileOpen = false"
         >{{ $t(link.labelKey) }}</RouterLink>
         <button class="nav-bar__link nav-bar__contact-mobile" @click="openContact">{{ ICON.MAIL }} {{ $t('nav.contact') }}</button>
+        <button
+          class="nav-bar__link nav-bar__theme-mobile"
+          :class="{ 'nav-bar__theme-mobile--oled': isOled }"
+          @click="themeStore.toggle()"
+        >{{ isOled ? $t('nav.themeOled') : $t('nav.themeDark') }}</button>
       </nav>
 
       <ContactModal v-if="isContactOpen" @close="isContactOpen = false" />
 
       <div class="nav-bar__right">
+        <button
+          class="nav-bar__theme-toggle"
+          :class="{ 'nav-bar__theme-toggle--oled': isOled }"
+          type="button"
+          :title="isOled ? $t('nav.themeSwitchDark') : $t('nav.themeSwitchOled')"
+          @click="themeStore.toggle()"
+        >{{ isOled ? $t('nav.themeOled') : $t('nav.themeDark') }}</button>
+
         <button class="nav-bar__contact-btn" @click="openContact">{{ ICON.MAIL }} {{ $t('nav.contact') }}</button>
 
         <NavUserArea v-if="isSignedIn" />
@@ -131,7 +136,6 @@ export default defineComponent({
   /* ── Left group: brand + theme toggle ───────────────────────────── */
   &__left {
     @include flex-row(0.65rem);
-    align-items: flex-end;
   }
 
   /* ── Brand ──────────────────────────────────────────────────────── */
@@ -197,6 +201,17 @@ export default defineComponent({
     cursor: pointer;
     font-family: inherit;
     text-align: left;
+  }
+
+  &__theme-mobile {
+    display: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    text-align: left;
+
+    &--oled { color: var(--color-primary); }
   }
 
   &__contact-btn {
@@ -344,6 +359,8 @@ export default defineComponent({
   .nav-bar__hamburger { display: flex; }
   .nav-bar__status-label { display: none; }
   .nav-bar__contact-btn { display: none; }
+  .nav-bar__theme-toggle { display: none; }
   .nav-bar__contact-mobile { display: flex; }
+  .nav-bar__theme-mobile { display: flex; }
 }
 </style>

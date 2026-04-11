@@ -50,10 +50,10 @@
             {{ $t('nav.contactWhatsApp') }}
           </a>
           <div class="cm__footer-right">
-            <span class="cm__note">{{ $t('nav.contactNote') }}</span>
             <button type="submit" class="cm__send" :disabled="!isSendable">
               {{ ICON.MAIL }} {{ $t('nav.contactSend') }}
             </button>
+            <span class="cm__note">{{ $t('nav.contactNote') }}</span>
           </div>
         </div>
 
@@ -214,8 +214,8 @@ export default defineComponent({
   }
 
   &__footer-right {
-    @include flex-row(0.75rem);
-    align-items: center;
+    @include flex-col(0.3rem);
+    align-items: flex-end;
   }
 
   &__whatsapp {
