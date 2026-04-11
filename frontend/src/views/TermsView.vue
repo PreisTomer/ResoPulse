@@ -44,7 +44,7 @@
         <ul class="terms__ul">
           <li>Attempt to decompile or reverse engineer any part of the virtual biophysics engine.</li>
           <li>Use the "Cell Library" data or "Experiment Lab" logic to build a competing software product.</li>
-          <li>Bypass any security measures or authentication layers provided via Vercel or Railway.</li>
+          <li>Bypass any security measures or authentication layers provided via Vercel or Neon.</li>
         </ul>
       </section>
 

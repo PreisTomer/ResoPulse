@@ -43,6 +43,7 @@
           <td v-tip="tipCellFreq(e)">{{ formatFreqKHz(e.freqKHz, 1) }}</td>
           <td v-tip="tipCellField(e)">{{ formatFieldVcm(e.fieldVcm) }}</td>
           <td class="reports-log-table__muted">{{ e.medium }}</td>
+          <td class="reports-log-table__waveform-val" v-tip="$t('reports.colWaveformTitle')">{{ e.waveform ?? NULL_DISPLAY }}</td>
           <td class="reports-log-table__cancer-val" v-tip="tipCellTargetVm(e)">{{ e.targetVm.toFixed(3) }}</td>
           <td class="reports-log-table__ref-val" v-tip="tipCellHealthyVm(e)">{{ e.healthyVm.toFixed(3) }}</td>
           <td :class="selClass(e.selectivity)" v-tip="tipCellSel(e)">{{ e.selectivity.toFixed(3) }}</td>
@@ -98,6 +99,7 @@ const TABLE_COLS_DEFS: Array<{ key: string; labelKey: string; tipKey?: string }>
   { key: 'freq',     labelKey: 'reports.colFreq',        tipKey: 'log.tipThFreq' },
   { key: 'field',    labelKey: 'reports.colField',       tipKey: 'log.tipThField' },
   { key: 'medium',   labelKey: 'reports.colMedium' },
+  { key: 'waveform', labelKey: 'reports.colWaveform',    tipKey: 'reports.colWaveformTitle' },
   { key: 'tVm',      labelKey: 'reports.colTVm',         tipKey: 'reports.colTVmTitle' },
   { key: 'hVm',      labelKey: 'reports.colHVm',         tipKey: 'reports.colHVmTitle' },
   { key: 'sel',      labelKey: 'reports.colSelectivity', tipKey: 'reports.colSelectivityTitle' },
@@ -319,7 +321,8 @@ export default defineComponent({
   }
 
   @include data-value-classes();
-  &__ref-val   { color: var(--color-primary); }
-  &__green-val { color: var(--color-lime); }
+  &__ref-val      { color: var(--color-primary); }
+  &__green-val    { color: var(--color-lime); }
+  &__waveform-val { color: var(--color-text-muted); opacity: var(--op-dim); letter-spacing: 0.04em; }
 }
 </style>

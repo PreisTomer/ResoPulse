@@ -51,6 +51,8 @@
     "colFreq": "Freq",
     "colField": "Field",
     "colMedium": "Medium",
+    "colWaveform": "Waveform",
+    "colWaveformTitle": "Waveform type at time of reading: CW (sinusoidal continuous-wave), pulsed (square IRE bursts), or H-FIRE (bipolar burst IRE). Determines PEF, waveform factor wf, and H-FIRE threshold multiplier applied to the disruption ratio.",
     "colTVm": "T-Vm (mV) ¹",
     "colTVmTitle": "Schwan transmembrane potential, ≈0 in Resonance mode (see T-Ratio %)",
     "colHVm": "H-Vm (mV) ¹",

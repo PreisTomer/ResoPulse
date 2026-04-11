@@ -5,7 +5,7 @@
 
       <div class="privacy__eyebrow">Legal</div>
       <h1 class="privacy__title">Privacy Policy</h1>
-      <p class="privacy__meta">Last Updated: April 10, 2026 &nbsp;·&nbsp; ResoPulse &nbsp;·&nbsp;
+      <p class="privacy__meta">Last Updated: April 11, 2026 &nbsp;·&nbsp; ResoPulse &nbsp;·&nbsp;
         <a href="https://www.resopulse-virtual-lab.com/" class="privacy__link" target="_blank" rel="noopener">resopulse-virtual-lab.com</a>
       </p>
 
@@ -42,9 +42,12 @@
           </dd>
           <dt>Local storage</dt>
           <dd>
-            We write a single key (<code>rp_terms_v1</code>) to your browser's local storage to
-            record that you have accepted these terms. Experiment UI state and user presets may
-            also be persisted locally via your browser.
+            We write the following keys to your browser's local storage:
+            <br><code>rp_terms_v1</code> — records that you have accepted these terms.
+            <br><code>br-experiment</code> — persists your current session log (entries, session name, sample description, notes) so the log survives a page reload.
+            <br><code>br-theme</code> — stores your UI theme preference (dark or OLED).
+            <br><code>resopulse_user_presets_v1</code> — stores any custom cell presets you have saved.
+            None of these keys contain authentication credentials or health information.
           </dd>
           <dt>Technical data</dt>
           <dd>
@@ -104,9 +107,9 @@
           <dd>Frontend hosting and CDN. Processes IP addresses and HTTP request data via edge
             network logs. Data centres globally.
             <a href="https://vercel.com/legal/privacy-policy" class="privacy__link" target="_blank" rel="noopener">Vercel Privacy Policy</a>.</dd>
-          <dt>Render / Neon (database host)</dt>
-          <dd>PostgreSQL database hosting. Stores your account reference and experiment data.
-            Data centre location: Frankfurt, EU.</dd>
+          <dt>Neon</dt>
+          <dd>Serverless PostgreSQL database hosting. Stores your account reference and experiment data.
+            <a href="https://neon.tech/privacy-policy" class="privacy__link" target="_blank" rel="noopener">Neon Privacy Policy</a>.</dd>
         </dl>
       </section>
 
@@ -149,7 +152,7 @@
         </p>
         <ul class="privacy__ul">
           <li><strong>Authentication session cookies</strong> — set by Clerk to maintain your logged-in session. These are strictly necessary and cannot be opted out of without logging out.</li>
-          <li><strong>Browser local storage</strong> — used for terms acceptance state and UI preferences. No personal data is stored in local storage.</li>
+          <li><strong>Browser local storage</strong> — used for terms acceptance, experiment session data, theme preference, and custom cell presets (see Section 2 for the full key list). Experiment session data may include user-provided text such as sample descriptions and session notes.</li>
         </ul>
       </section>
 
