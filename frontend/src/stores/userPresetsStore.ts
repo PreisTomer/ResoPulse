@@ -66,7 +66,13 @@ async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
 function loadLocal(): UserCellPreset[] {
   try {
     const raw = localStorage.getItem(LOCAL_KEY)
-    return raw ? (JSON.parse(raw) as UserCellPreset[]) : []
+    if (!raw) return []
+    const parsed = JSON.parse(raw) as UserCellPreset[]
+    // Apply fallback for fields missing in presets saved before schema migration
+    return parsed.map(p => ({
+      ...p,
+      parameterConfidence: p.parameterConfidence ?? 'literature',
+    }))
   } catch { return [] }
 }
 

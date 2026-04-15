@@ -340,3 +340,91 @@ describe('localStorage persistence', () => {
     expect(store.isGuest).toBe(true)
   })
 })
+
+// ── parameterConfidence ───────────────────────────────────────────────────────
+
+describe('parameterConfidence', () => {
+  it('stores literature confidence and retrieves it', async () => {
+    const store = await freshStore()
+    await store.add({ ...BASE_PRESET, parameterConfidence: 'literature' as const })
+    expect(store.presets[0]!.parameterConfidence).toBe('literature')
+  })
+
+  it('stores measured confidence and retrieves it', async () => {
+    const store = await freshStore()
+    await store.add({ ...BASE_PRESET, parameterConfidence: 'measured' as const })
+    expect(store.presets[0]!.parameterConfidence).toBe('measured')
+  })
+
+  it('stores estimated confidence and retrieves it', async () => {
+    const store = await freshStore()
+    await store.add({ ...BASE_PRESET, parameterConfidence: 'estimated' as const })
+    expect(store.presets[0]!.parameterConfidence).toBe('estimated')
+  })
+
+  it('persists confidence to localStorage', async () => {
+    const store = await freshStore()
+    await store.add({ ...BASE_PRESET, parameterConfidence: 'measured' as const })
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]') as { parameterConfidence: string }[]
+    expect(saved[0]!.parameterConfidence).toBe('measured')
+  })
+
+  it('round-trips all three confidence values through localStorage', async () => {
+    const store = await freshStore()
+    await store.add({ ...BASE_PRESET, parameterConfidence: 'literature' as const, label: 'Lit' })
+    await new Promise(r => setTimeout(r, 2))
+    await store.add({ ...BASE_PRESET, parameterConfidence: 'measured'   as const, label: 'Meas' })
+    await new Promise(r => setTimeout(r, 2))
+    await store.add({ ...BASE_PRESET, parameterConfidence: 'estimated'  as const, label: 'Est' })
+
+    setActivePinia(createPinia())
+    const store2 = useUserPresetsStore()
+    await store2.fetchAll()
+
+    const confidences = store2.presets.map(p => p.parameterConfidence)
+    expect(confidences).toContain('literature')
+    expect(confidences).toContain('measured')
+    expect(confidences).toContain('estimated')
+  })
+
+  it('falls back to literature when parameterConfidence is absent (old preset format)', async () => {
+    // Simulate a preset saved before the parameterConfidence field was introduced
+    const { parameterConfidence: _omit, ...withoutConfidence } = {
+      ...BASE_PRESET,
+      role:      'target',
+      cellType:  'mammalian',
+      id:        'user_old',
+      createdAt: 1000000,
+      parameterConfidence: 'literature',   // present in type but stripped below
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify([withoutConfidence]))
+
+    setActivePinia(createPinia())
+    const store = useUserPresetsStore()
+    await store.fetchAll()
+    expect(store.presets[0]!.parameterConfidence).toBe('literature')
+  })
+
+  it('confidence is preserved when other fields are updated', async () => {
+    const store = await freshStore()
+    await store.add({ ...BASE_PRESET, parameterConfidence: 'estimated' as const })
+    const id = store.presets[0]!.id
+    await store.update(id, { label: 'Updated Label' })
+    expect(store.presets[0]!.parameterConfidence).toBe('estimated')
+  })
+
+  it('toCellConfig does not include parameterConfidence', async () => {
+    const store = await freshStore()
+    await store.add({ ...BASE_PRESET, parameterConfidence: 'estimated' as const })
+    const config = store.toCellConfig(store.presets[0]!) as object as Record<string, unknown>
+    expect('parameterConfidence' in config).toBe(false)
+  })
+
+  it('confidence can be changed via update', async () => {
+    const store = await freshStore()
+    await store.add({ ...BASE_PRESET, parameterConfidence: 'literature' as const })
+    const id = store.presets[0]!.id
+    await store.update(id, { parameterConfidence: 'measured' as const })
+    expect(store.presets[0]!.parameterConfidence).toBe('measured')
+  })
+})

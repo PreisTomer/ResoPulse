@@ -99,7 +99,13 @@ router.put('/:id', requireAuth, requireOrg, async (req: Request, res: Response) 
   const { orgId } = getRequestAuth(req)
   const { id }    = req.params
 
-  const updated = await updateCellPreset(id, orgId!, req.body as Partial<CellPresetInput>)
+  const { errors, input } = validateInput(req.body as Record<string, unknown>)
+  if (errors.length > 0) {
+    res.status(400).json({ error: 'Validation failed', details: errors })
+    return
+  }
+
+  const updated = await updateCellPreset(id, orgId!, input!)
   if (!updated) {
     res.status(404).json({ error: 'Preset not found' })
     return

@@ -430,21 +430,7 @@ export default defineComponent({
 
     &-edit:hover { opacity: 1; color: var(--color-primary); }
     &-del:hover  { opacity: 1; color: var(--color-danger); }
-  }
 
-  // ── Confidence badge ──────────────────────────────────────────────────────
-  &__preset-confidence {
-    @include badge-pill(0.08rem 0.28rem, 3px);
-    font-size: 0.58rem;
-    flex-shrink: 0;
-
-    &--literature { @include color-variant(primary, 40%, 6%); }
-    &--measured   { @include color-variant(accent,  40%, 6%); }
-    &--estimated  { @include color-variant(amber,   40%, 6%); }
-  }
-
-  // ── Preset buttons (continued) ────────────────────────────────────────────
-  &__preset-btn {
     &-new {
       width:          100%;
       padding:        0.45rem 0.65rem;
@@ -466,6 +452,17 @@ export default defineComponent({
         border-color: color-mix(in srgb, var(--color-vibrating) 60%, transparent);
       }
     }
+  }
+
+  // ── Confidence badge ──────────────────────────────────────────────────────
+  &__preset-confidence {
+    @include badge-pill(0.08rem 0.28rem, 3px);
+    font-size: 0.58rem;
+    flex-shrink: 0;
+
+    &--literature { @include color-variant(primary, 40%, 6%); }
+    &--measured   { @include color-variant(accent,  40%, 6%); }
+    &--estimated  { @include color-variant(amber,   40%, 6%); }
   }
 }
 </style>

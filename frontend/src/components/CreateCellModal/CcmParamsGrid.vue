@@ -12,15 +12,15 @@
       <input
         :value="form.radius"
         class="ccm-params-grid__input"
-        :class="{ 'ccm-params-grid__input--warn': isFieldOutOfRange('radius') }"
+        :class="{ 'ccm-params-grid__input--warn': fieldHints['radius']?.isWarn }"
         type="number"
         step="0.001"
         min="0.001"
         max="100"
         @input="onNumericInput('radius', $event)"
       />
-      <span class="ccm-params-grid__range" :class="{ 'ccm-params-grid__range--warn': isFieldOutOfRange('radius') }">
-        {{ rangeHintFor('radius') }}
+      <span class="ccm-params-grid__range" :class="{ 'ccm-params-grid__range--warn': fieldHints['radius']?.isWarn }">
+        {{ fieldHints['radius']?.hint }}
       </span>
     </div>
 
@@ -34,15 +34,15 @@
       <input
         :value="form.membraneThickness"
         class="ccm-params-grid__input"
-        :class="{ 'ccm-params-grid__input--warn': isFieldOutOfRange('membraneThickness') }"
+        :class="{ 'ccm-params-grid__input--warn': fieldHints['membraneThickness']?.isWarn }"
         type="number"
         step="0.1"
         min="1"
         max="200"
         @input="onNumericInput('membraneThickness', $event)"
       />
-      <span class="ccm-params-grid__range" :class="{ 'ccm-params-grid__range--warn': isFieldOutOfRange('membraneThickness') }">
-        {{ rangeHintFor('membraneThickness') }}
+      <span class="ccm-params-grid__range" :class="{ 'ccm-params-grid__range--warn': fieldHints['membraneThickness']?.isWarn }">
+        {{ fieldHints['membraneThickness']?.hint }}
       </span>
     </div>
 
@@ -55,15 +55,15 @@
       <input
         :value="form.dielectricConstant"
         class="ccm-params-grid__input"
-        :class="{ 'ccm-params-grid__input--warn': isFieldOutOfRange('dielectricConstant') }"
+        :class="{ 'ccm-params-grid__input--warn': fieldHints['dielectricConstant']?.isWarn }"
         type="number"
         step="0.5"
         min="1"
         max="80"
         @input="onNumericInput('dielectricConstant', $event)"
       />
-      <span class="ccm-params-grid__range" :class="{ 'ccm-params-grid__range--warn': isFieldOutOfRange('dielectricConstant') }">
-        {{ rangeHintFor('dielectricConstant') }}
+      <span class="ccm-params-grid__range" :class="{ 'ccm-params-grid__range--warn': fieldHints['dielectricConstant']?.isWarn }">
+        {{ fieldHints['dielectricConstant']?.hint }}
       </span>
     </div>
 
@@ -77,15 +77,15 @@
       <input
         :value="form.conductivity"
         class="ccm-params-grid__input"
-        :class="{ 'ccm-params-grid__input--warn': isFieldOutOfRange('conductivity') }"
+        :class="{ 'ccm-params-grid__input--warn': fieldHints['conductivity']?.isWarn }"
         type="number"
         step="0.01"
         min="0.001"
         max="10"
         @input="onNumericInput('conductivity', $event)"
       />
-      <span class="ccm-params-grid__range" :class="{ 'ccm-params-grid__range--warn': isFieldOutOfRange('conductivity') }">
-        {{ rangeHintFor('conductivity') }}
+      <span class="ccm-params-grid__range" :class="{ 'ccm-params-grid__range--warn': fieldHints['conductivity']?.isWarn }">
+        {{ fieldHints['conductivity']?.hint }}
       </span>
     </div>
 
@@ -99,15 +99,15 @@
       <input
         :value="form.thresholdVoltage"
         class="ccm-params-grid__input"
-        :class="{ 'ccm-params-grid__input--warn': isFieldOutOfRange('thresholdVoltage') }"
+        :class="{ 'ccm-params-grid__input--warn': fieldHints['thresholdVoltage']?.isWarn }"
         type="number"
         step="0.05"
         min="0.05"
         max="10"
         @input="onNumericInput('thresholdVoltage', $event)"
       />
-      <span class="ccm-params-grid__range" :class="{ 'ccm-params-grid__range--warn': isFieldOutOfRange('thresholdVoltage') }">
-        {{ rangeHintFor('thresholdVoltage') }}
+      <span class="ccm-params-grid__range" :class="{ 'ccm-params-grid__range--warn': fieldHints['thresholdVoltage']?.isWarn }">
+        {{ fieldHints['thresholdVoltage']?.hint }}
       </span>
     </div>
 
@@ -121,15 +121,15 @@
       <input
         :value="form.density"
         class="ccm-params-grid__input"
-        :class="{ 'ccm-params-grid__input--warn': isFieldOutOfRange('density') }"
+        :class="{ 'ccm-params-grid__input--warn': fieldHints['density']?.isWarn }"
         type="number"
         step="10"
         min="500"
         max="2000"
         @input="onNumericInput('density', $event)"
       />
-      <span class="ccm-params-grid__range" :class="{ 'ccm-params-grid__range--warn': isFieldOutOfRange('density') }">
-        {{ rangeHintFor('density') }}
+      <span class="ccm-params-grid__range" :class="{ 'ccm-params-grid__range--warn': fieldHints['density']?.isWarn }">
+        {{ fieldHints['density']?.hint }}
       </span>
     </div>
 
@@ -143,15 +143,15 @@
       <input
         :value="form.specificHeatCapacity"
         class="ccm-params-grid__input"
-        :class="{ 'ccm-params-grid__input--warn': isFieldOutOfRange('specificHeatCapacity') }"
+        :class="{ 'ccm-params-grid__input--warn': fieldHints['specificHeatCapacity']?.isWarn }"
         type="number"
         step="50"
         min="500"
         max="5000"
         @input="onNumericInput('specificHeatCapacity', $event)"
       />
-      <span class="ccm-params-grid__range" :class="{ 'ccm-params-grid__range--warn': isFieldOutOfRange('specificHeatCapacity') }">
-        {{ rangeHintFor('specificHeatCapacity') }}
+      <span class="ccm-params-grid__range" :class="{ 'ccm-params-grid__range--warn': fieldHints['specificHeatCapacity']?.isWarn }">
+        {{ fieldHints['specificHeatCapacity']?.hint }}
       </span>
     </div>
 
@@ -230,33 +230,35 @@ export default defineComponent({
   computed: {
     UNIT() { return UNIT },
     EMIT() { return EMIT },
+
+    // Pre-compute all field hint data in one pass per render, keyed by field name.
+    // Using a computed avoids calling two separate methods 7 times each in the template.
+    fieldHints(): Record<string, { isWarn: boolean; hint: string }> {
+      const ct     = this.form.cellType as CellFormType
+      const ranges = LIT_RANGES[ct] ?? {}
+      const result: Record<string, { isWarn: boolean; hint: string }> = {}
+
+      for (const key of Object.keys(ranges)) {
+        const range  = ranges[key]!
+        const val    = Number(this.form[key])
+        const isWarn = isFinite(val) && (val < range[0] || val > range[1])
+        const unit     = FIELD_UNITS[key] ?? ''
+        const rangeStr = `${formatRangeNumber(range[0])}-${formatRangeNumber(range[1])}${unit ? ' ' + unit : ''}`
+        result[key] = {
+          isWarn,
+          hint: isWarn
+            ? this.$t('userPresets.litRangeWarn', { range: rangeStr })
+            : this.$t('userPresets.litRange',     { range: rangeStr }),
+        }
+      }
+      return result
+    },
   },
 
   methods: {
     onNumericInput(key: string, event: Event) {
       const value = parseFloat((event.target as HTMLInputElement).value)
       this.$emit(EMIT.FIELD_CHANGE, { key, value })
-    },
-
-    isFieldOutOfRange(key: string): boolean {
-      const ct    = this.form.cellType as CellFormType
-      const range = LIT_RANGES[ct]?.[key]
-      if (!range) return false
-      const val = Number(this.form[key])
-      if (!isFinite(val)) return false
-      return val < range[0] || val > range[1]
-    },
-
-    rangeHintFor(key: string): string {
-      const ct    = this.form.cellType as CellFormType
-      const range = LIT_RANGES[ct]?.[key]
-      if (!range) return ''
-      const [lo, hi] = range
-      const unit     = FIELD_UNITS[key] ?? ''
-      const rangeStr = `${formatRangeNumber(lo)}-${formatRangeNumber(hi)}${unit ? ' ' + unit : ''}`
-      return this.isFieldOutOfRange(key)
-        ? this.$t('userPresets.litRangeWarn', { range: rangeStr })
-        : this.$t('userPresets.litRange',     { range: rangeStr })
     },
   },
 })
