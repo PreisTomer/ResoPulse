@@ -59,6 +59,15 @@
               </span>
             </RouterLink>
             <template v-if="!isSignedIn">
+              <RouterLink :to="ROUTE.EXPERIMENT" class="home__btn home__btn--try">
+                {{ $t('home.btnTryGuest') }}
+                <span class="home__btn-arrow" aria-hidden="true">
+                  <svg class="home__arrow-svg" viewBox="0 0 24 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <line class="home__arrow-shaft" x1="0" y1="6" x2="16" y2="6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    <polyline class="home__arrow-head" points="11,1 18,6 11,11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                  </svg>
+                </span>
+              </RouterLink>
               <RouterLink :to="ROUTE.SIGN_UP" class="home__btn home__btn--primary">
                 {{ $t('home.btnStartFree') }}
                 <span class="home__btn-arrow" aria-hidden="true">

@@ -37,8 +37,8 @@
       <div class="nav-bar__right">
         <button class="nav-bar__contact-btn" @click="openContact">{{ ICON.MAIL }} {{ $t('nav.contact') }}</button>
 
-        <NavUserArea v-if="isSignedIn" @open-upgrade="isUpgradeOpen = true" />
-        <RouterLink v-else :to="ROUTE.SIGN_UP" class="nav-bar__start-free-btn">{{ $t('nav.startFree') }} →</RouterLink>
+        <NavUserArea  v-if="isSignedIn"      @open-upgrade="isUpgradeOpen = true" />
+        <NavGuestArea v-else-if="isClerkLoaded" />
 
         <button
           class="nav-bar__hamburger"
@@ -56,7 +56,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
-import { useUser } from '@clerk/vue'
+import { useUser, useClerk } from '@clerk/vue'
 
 import { useThemeStore } from '@/stores/themeStore'
 
@@ -64,6 +64,7 @@ import { ROUTE } from '@/constants/routes'
 import { ICON } from '@/constants/icons'
 
 import NavUserArea from './NavUserArea.vue'
+import NavGuestArea from './NavGuestArea.vue'
 import ContactModal from '@/components/ContactModal.vue'
 import UpgradeModal from '@/components/UpgradeModal.vue'
 
@@ -84,11 +85,12 @@ const MARKETING_NAV_LINKS = [
 
 export default defineComponent({
   name: 'NavBar',
-  components: { NavUserArea, ContactModal, UpgradeModal },
+  components: { NavUserArea, NavGuestArea, ContactModal, UpgradeModal },
 
   setup() {
     const { isSignedIn } = useUser()
-    return { isSignedIn }
+    const clerk          = useClerk()
+    return { isSignedIn, clerk }
   },
 
   data() {
@@ -102,6 +104,10 @@ export default defineComponent({
 
     activeNavLinks() {
       return this.isSignedIn ? APP_NAV_LINKS : MARKETING_NAV_LINKS
+    },
+
+    isClerkLoaded(): boolean {
+      return !!(this.clerk as { loaded?: boolean } | null)?.loaded
     },
   },
 

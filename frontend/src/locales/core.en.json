@@ -42,7 +42,12 @@
     "contactClose":           "Close",
     "contactWhatsApp":        "Chat on WhatsApp",
     "experiments":            "My Experiments",
-    "appearance":             "Appearance"
+    "appearance":             "Appearance",
+    "guestName":              "Guest",
+    "guestLabel":             "Guest Session",
+    "guestSignUpCta":         "Create account",
+    "guestSignInCta":         "Sign in",
+    "guestDropdownNote":      "You are browsing as a guest. Create an account to save experiments and access all lab features."
   },
   "cells": {
     "sectionTitle": "Cell Signature Profiles",

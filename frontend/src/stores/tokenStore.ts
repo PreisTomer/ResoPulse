@@ -8,6 +8,8 @@ import { defineStore } from 'pinia'
 
 import type { TokenBalance, TokenPlan } from '@/types/token'
 
+import { hasGuestSession } from '@/services/socket'
+
 const BACKEND_URL = (import.meta.env.VITE_BACKEND_URL as string ?? 'http://localhost:3001').replace(/\/$/, '')
 
 // Refresh interval in ms — balance is polled every 5 minutes while the tab is active.
@@ -27,7 +29,8 @@ interface TokenStoreState {
   isLoaded:       boolean
   isLoading:      boolean
   error:          string | null
-  pendingUpgrade: boolean  // set to true when an operation is blocked by insufficient tokens
+  pendingUpgrade:     boolean  // set to true when an operation is blocked by insufficient tokens
+  pendingGuestSignUp: boolean  // set to true when a guest tries a premium operation
   _pollTimer:     ReturnType<typeof setInterval> | null
 }
 
@@ -43,8 +46,9 @@ export const useTokenStore = defineStore('token', {
     isLoaded:       false,
     isLoading:      false,
     error:          null,
-    pendingUpgrade: false,
-    _pollTimer:     null,
+    pendingUpgrade:     false,
+    pendingGuestSignUp: false,
+    _pollTimer:         null,
   }),
 
   getters: {
@@ -167,7 +171,15 @@ export const useTokenStore = defineStore('token', {
     async consumeOperation(reason: string): Promise<boolean> {
       try {
         const token = await window.Clerk?.session?.getToken()
-        if (!token) return true  // not authenticated — don't block, backend will reject the socket call
+        if (!token) {
+          // Guest session: block the operation and prompt sign-up.
+          // If there is no guest session either (e.g. Clerk still initialising), let it pass.
+          if (hasGuestSession()) {
+            this.pendingGuestSignUp = true
+            return false
+          }
+          return true
+        }
 
         const res = await fetch(`${BACKEND_URL}/tokens/consume`, {
           method:  'POST',
@@ -203,13 +215,14 @@ export const useTokenStore = defineStore('token', {
     /** Resets state to defaults (call on sign-out). */
     reset(): void {
       this.stopPolling()
-      this.balance        = 0
-      this.quota          = 200
-      this.plan           = 'free'
-      this.resetAt        = null
-      this.usedThisPeriod = 0
-      this.isLoaded       = false
-      this.error          = null
+      this.balance            = 0
+      this.quota              = 200
+      this.plan               = 'free'
+      this.resetAt            = null
+      this.usedThisPeriod     = 0
+      this.isLoaded           = false
+      this.error              = null
+      this.pendingGuestSignUp = false
     },
   },
 })

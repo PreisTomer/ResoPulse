@@ -329,9 +329,18 @@ async function callPythonOptimizer(request: AiOptimizeRequest): Promise<AiOptimi
 }
 
 export function setupSocketServer(httpServer: HttpServer): Server {
-  const ALLOWED_ORIGINS: string[] | true = process.env.FRONTEND_URL
-    ? [process.env.FRONTEND_URL, 'http://localhost:5173', 'http://127.0.0.1:5173']
-    : true
+  // Mirror the same www/non-www variant logic used by the HTTP CORS middleware.
+  const ALLOWED_ORIGINS: string[] | true = (() => {
+    const base = process.env.FRONTEND_URL
+    if (!base) return true
+    const stripped = base.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')
+    return [
+      `https://www.${stripped}`,
+      `https://${stripped}`,
+      'http://localhost:5173',
+      'http://127.0.0.1:5173',
+    ]
+  })()
 
   const io = new Server(httpServer, {
     cors: { origin: ALLOWED_ORIGINS, methods: ['GET', 'POST'] },
@@ -347,6 +356,16 @@ export function setupSocketServer(httpServer: HttpServer): Server {
 
     if (!token) {
       next(new Error('Unauthorized'))
+      return
+    }
+
+    // Guest connections use a browser-generated "guest_{uuid}" token — no Clerk session required.
+    // Guests get null orgId (no token account) and are isolated to their own socket room.
+    if (token.startsWith('guest_')) {
+      socket.data.userId  = token
+      socket.data.orgId   = null
+      socket.data.isGuest = true
+      next()
       return
     }
 

@@ -54,18 +54,44 @@ async function wakeBackend(): Promise<void> {
   } catch { /* fall through to socket connect */ }
 }
 
+// ── Guest session ─────────────────────────────────────────────────────────────
+// Guests receive a browser-generated token persisted in sessionStorage.
+// The backend accepts any token starting with "guest_" without Clerk verification.
+// The token is scoped to the browser tab session and never sent to Clerk.
+
+const GUEST_KEY = 'rp_guest_id'
+
+function getOrCreateGuestToken(): string {
+  const existing = sessionStorage.getItem(GUEST_KEY)
+  if (existing) return existing
+  const id = `guest_${crypto.randomUUID()}`
+  sessionStorage.setItem(GUEST_KEY, id)
+  return id
+}
+
+/** Returns true if the current session has an active guest token in sessionStorage. */
+export function hasGuestSession(): boolean {
+  return sessionStorage.getItem(GUEST_KEY) !== null
+}
+
 export async function connectSocket(): Promise<void> {
   await wakeBackend()
 
   // Auth callback is invoked on every (re)connection attempt — Clerk token is always fresh.
+  // If there is no Clerk session, fall back to a guest token so unauthenticated users
+  // can still connect to the socket and run local simulations.
   socket = io(BACKEND_URL, {
     transports:           ['websocket'],
     timeout:              5000,
     reconnectionAttempts: 5,
     auth: (cb: (data: { token: string }) => void) => {
-      window.Clerk?.session?.getToken()
-        .then(token  => cb({ token: token ?? '' }))
-        .catch((err) => { console.error('[Socket] Failed to get Clerk token:', err); cb({ token: '' }) })
+      if (!window.Clerk?.session) {
+        cb({ token: getOrCreateGuestToken() })
+        return
+      }
+      window.Clerk.session.getToken()
+        .then(token  => cb({ token: token ?? getOrCreateGuestToken() }))
+        .catch(()    => cb({ token: getOrCreateGuestToken() }))
     },
   })
 

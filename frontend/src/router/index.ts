@@ -11,7 +11,7 @@ const router = createRouter({
   scrollBehavior: () => ({ top: 0 }),
   routes: [
     { path: ROUTE.HOME,        component: () => import('../views/HomeView/index.vue') },
-    { path: ROUTE.EXPERIMENT,  component: () => import('../views/ExperimentView.vue'),          meta: { requiresAuth: true } },
+    { path: ROUTE.EXPERIMENT,  component: () => import('../views/ExperimentView.vue') },
     { path: ROUTE.EXPERIMENTS, component: () => import('../views/ExperimentsView/index.vue'),   meta: { requiresAuth: true } },
     { path: ROUTE.DATASETS,    component: () => import('../views/DataSetsView/index.vue'),      meta: { requiresAuth: true } },
     { path: ROUTE.REPORTS,     component: () => import('../views/ReportsView/index.vue'),       meta: { requiresAuth: true } },

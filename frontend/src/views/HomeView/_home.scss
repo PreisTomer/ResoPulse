@@ -287,6 +287,19 @@
       &:hover { border-color: var(--color-primary); color: var(--color-primary); text-decoration: none; }
     }
 
+    &--try {
+      background: color-mix(in srgb, var(--color-amber) 12%, transparent);
+      color: var(--color-amber);
+      border: 1px solid color-mix(in srgb, var(--color-amber) 35%, transparent);
+
+      &:hover {
+        background: color-mix(in srgb, var(--color-amber) 20%, transparent);
+        border-color: var(--color-amber);
+        box-shadow: 0 0 14px color-mix(in srgb, var(--color-amber) 18%, transparent);
+        text-decoration: none;
+      }
+    }
+
     &--pricing {
       background: color-mix(in srgb, var(--color-purple) 8%, transparent);
       color: var(--color-purple);

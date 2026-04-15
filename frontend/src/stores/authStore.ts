@@ -28,6 +28,16 @@ export const useAuthStore = defineStore('auth', {
     hasOrg:                 false,
   }),
 
+  getters: {
+    /**
+     * True when Clerk has finished loading and the user is not signed in.
+     * This covers both new visitors and users who chose "Try the Lab" as a guest.
+     */
+    isGuest(): boolean {
+      return !this.isClerkLoading && !this.isSignedIn
+    },
+  },
+
   actions: {
     /** Called once the useAuth() isLoaded watcher fires true in App.vue. */
     setClerkLoaded(): void {
