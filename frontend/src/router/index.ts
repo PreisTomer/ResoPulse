@@ -77,7 +77,13 @@ router.beforeEach(async (to, from) => {
   // OAuth provider and Clerk redirected to fallback-redirect-url), cancel the
   // navigation to avoid a redirect loop that triggers Clerk's rate limit.
   if (to.meta.requiresAuth && !isSignedIn) {
-    if (from.path.startsWith(ROUTE.SIGN_IN) || from.path.startsWith(ROUTE.SIGN_UP)) return false
+    // Only cancel navigation (return false) when the user is already mid-flow on
+    // the sign-in/sign-up pages themselves — prevents a Clerk OAuth redirect loop.
+    // Any other origin (e.g. an idle session clicking a lab-link from /protocol)
+    // should redirect normally to sign-in with the intended destination preserved.
+    const isAlreadyInAuthFlow = from.path.startsWith(ROUTE.SIGN_IN) || from.path.startsWith(ROUTE.SIGN_UP)
+    const isNavigatingToAuthRoute = to.path.startsWith(ROUTE.SIGN_IN) || to.path.startsWith(ROUTE.SIGN_UP)
+    if (isAlreadyInAuthFlow && isNavigatingToAuthRoute) return false
     const redirectQuery = to.path === ROUTE.HOME ? {} : { redirect: to.fullPath }
     return { path: ROUTE.SIGN_IN, query: redirectQuery }
   }
