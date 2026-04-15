@@ -28,17 +28,22 @@ const router = Router()
 router.get('/balance', requireAuth, requireOrg, async (req: Request, res: Response) => {
   const { orgId, userId } = getRequestAuth(req)
 
-  // Auto-provision a free-tier account for orgs that existed before this feature launched.
-  // createTokenAccount() is idempotent (upsert), so calling it here is always safe.
-  await createTokenAccount(orgId!)
+  try {
+    // Auto-provision a free-tier account for orgs that existed before this feature launched.
+    // createTokenAccount() is idempotent (upsert), so calling it here is always safe.
+    await createTokenAccount(orgId!)
 
-  const result = await getTokenBalance(orgId!, userId)
-  if (!result) {
-    res.status(404).json({ error: 'No token account found for this organisation. Contact support.' })
-    return
+    const result = await getTokenBalance(orgId!, userId)
+    if (!result) {
+      res.status(404).json({ error: 'No token account found for this organisation. Contact support.' })
+      return
+    }
+
+    res.json(result)
+  } catch (err) {
+    console.error('[TokenRoute] GET /balance failed:', err)
+    res.status(500).json({ error: 'Internal server error.' })
   }
-
-  res.json(result)
 })
 
 // ── Transaction history ───────────────────────────────────────────────────────

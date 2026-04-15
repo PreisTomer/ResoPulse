@@ -61,11 +61,22 @@ async function wakeBackend(): Promise<void> {
 
 const GUEST_KEY = 'rp_guest_id'
 
+/**
+ * Reactive flag: true once a guest session token exists for this tab.
+ * Initialised from sessionStorage so it survives a page refresh on /experiment.
+ * Components that gate guest-only UI (e.g. NavGuestArea) should read this ref.
+ */
+export const guestSessionActive = ref(sessionStorage.getItem(GUEST_KEY) !== null)
+
 function getOrCreateGuestToken(): string {
   const existing = sessionStorage.getItem(GUEST_KEY)
-  if (existing) return existing
+  if (existing) {
+    guestSessionActive.value = true
+    return existing
+  }
   const id = `guest_${crypto.randomUUID()}`
   sessionStorage.setItem(GUEST_KEY, id)
+  guestSessionActive.value = true
   return id
 }
 

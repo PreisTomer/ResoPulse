@@ -57,6 +57,7 @@
     "tipCellManual": "Manual snapshot\nLogged by user at this timestamp.",
 
     "doseLabel": "SAR Dose",
-    "tipDose": "<strong>Cumulative Specific Energy Dose [J/kg]</strong>\nRunning integral of the specific absorption rate (SAR) over the session:\n  Dose = ∫ SAR × dc × dt\n  SAR = σ_i · α² · E² · wf / ρ   (W/kg)\n  α = 3σ_e / (2σ_e + σ_i)   (internal field factor)\n  wf = 0.5 (CW) · 1.0 (pulsed)\nDose accumulates only when the field is active.\nICNIRP 2020 occupational whole-body limit: 0.4 W/kg SAR.\nThis display tracks target-cell dose, not whole-body average.\nReset when the log is cleared."
+    "tipDose": "<strong>Cumulative Specific Energy Dose [J/kg]</strong>\nRunning integral of the specific absorption rate (SAR) over the session:\n  Dose = ∫ SAR × dc × dt\n  SAR = σ_i · α² · E² · wf / ρ   (W/kg)\n  α = 3σ_e / (2σ_e + σ_i)   (internal field factor)\n  wf = 0.5 (CW) · 1.0 (pulsed)\nDose accumulates only when the field is active.\nICNIRP 2020 occupational whole-body limit: 0.4 W/kg SAR.\nThis display tracks target-cell dose, not whole-body average.\nReset when the log is cleared.",
+    "guestExportNote": "Exporting session data requires an account. Create one to save experiments, export CSV reports, and generate publication-ready methods sections."
   }
 }

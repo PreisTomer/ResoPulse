@@ -52,6 +52,12 @@
       </div>
     </div>
 
+    <!-- Guest export note -->
+    <div v-if="showGuestExportNote" class="exp-log__guest-note">
+      {{ $t('log.guestExportNote') }}
+      <RouterLink :to="ROUTE.SIGN_UP" class="exp-log__guest-signup">{{ $t('nav.guestSignUpCta') }} →</RouterLink>
+    </div>
+
     <!-- Table -->
     <div class="exp-log__table-wrap">
       <table class="exp-log__table">
@@ -138,6 +144,7 @@ import { mapStores } from 'pinia'
 import { useExperimentStore } from '@/stores/experimentStore'
 import { useCellStore } from '@/stores/cellStore'
 import { useAiStore } from '@/stores/aiStore'
+import { useAuthStore } from '@/stores/authStore'
 import { useTokenStore } from '@/stores/tokenStore'
 
 import { broadcastLogEntry, broadcastLogOutcome } from '@/services/socket'
@@ -160,17 +167,23 @@ import { formatFreqKHz } from '@/utils/format'
 
 import { LOG_EVENT, NULL_DISPLAY } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
+import { ROUTE } from '@/constants/routes'
 import { THRESHOLDS } from '@/constants/physics'
 import { UNIT } from '@/constants/units'
 
 export default defineComponent({
   components: { AccordionPanel, StatusBadge },
 
+  data() {
+    return { showGuestExportNote: false }
+  },
+
   computed: {
-    ...mapStores(useExperimentStore, useCellStore, useAiStore, useTokenStore),
+    ...mapStores(useExperimentStore, useCellStore, useAiStore, useAuthStore, useTokenStore),
     LOG_EVENT()    { return LOG_EVENT },
     NULL_DISPLAY() { return NULL_DISPLAY },
     ICON()         { return ICON },
+    ROUTE()        { return ROUTE },
     THRESHOLDS()   { return THRESHOLDS },
 
     sessionName: {
@@ -212,7 +225,13 @@ export default defineComponent({
     depKDisplay(k: number | undefined): string { return depKDisplay(k) },
     depKDisplayFull(k: number | undefined): string { return depKDisplayFull(k) },
 
-    exportLastEntryMethods() {
+    async exportLastEntryMethods() {
+      const canProceed = await this.tokenStore.consumeOperation('EXPERIMENT_REPORT')
+      if (!canProceed) {
+        if (this.authStore.isGuest) this.showGuestExportNote = true
+        return
+      }
+      this.showGuestExportNote = false
       const last = this.experimentStore.entries[this.experimentStore.entries.length - 1]
       if (last) this.experimentStore.exportEntryMethods(last)
     },
@@ -222,7 +241,16 @@ export default defineComponent({
       const last = this.experimentStore.entries[this.experimentStore.entries.length - 1]
       if (last) broadcastLogEntry(last)
     },
-    exportCSV()  { this.experimentStore.exportCSV() },
+
+    async exportCSV() {
+      const canProceed = await this.tokenStore.consumeOperation('EXPERIMENT_REPORT')
+      if (!canProceed) {
+        if (this.authStore.isGuest) this.showGuestExportNote = true
+        return
+      }
+      this.showGuestExportNote = false
+      this.experimentStore.exportCSV()
+    },
     clearLog()   { this.experimentStore.clearLog() },
     eventVariant(event: string): string { return sharedEventVariant(event) },
 
@@ -249,7 +277,11 @@ export default defineComponent({
     },
     async submitRating(entryId: number, rating: number) {
       const canProceed = await this.tokenStore.consumeOperation('LOG_OUTCOME')
-      if (!canProceed) return
+      if (!canProceed) {
+        if (this.authStore.isGuest) this.showGuestExportNote = true
+        return
+      }
+      this.showGuestExportNote = false
       const aiApplied = this.aiStore.suggestionApplied
       const entry = this.experimentStore.logOutcome(entryId, rating, aiApplied)
       if (entry) broadcastLogOutcome(entry, rating, aiApplied)
@@ -457,6 +489,25 @@ export default defineComponent({
         transform: scale(1.2);
       }
     }
+  }
+
+  &__guest-note {
+    @include flex-col(0.35rem);
+    margin: 0.5rem 0.75rem;
+    font-size: var(--fs-sm);
+    color: var(--color-primary);
+    padding: 0.5rem 0.65rem;
+    background: color-mix(in srgb, var(--color-primary) 7%, transparent);
+    border: 1px solid var(--color-primary-border);
+    border-radius: var(--radius);
+  }
+
+  &__guest-signup {
+    @include mono-upper(var(--fs-xxs), 0.05em);
+    color: var(--color-primary);
+    text-decoration: none;
+
+    &:hover { text-decoration: underline; }
   }
 }
 </style>

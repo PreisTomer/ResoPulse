@@ -107,6 +107,12 @@
             {{ ICON.WARNING }} {{ $t('ai.errorNote') }}
           </div>
 
+          <!-- Guest note: shown when a guest tries to run the optimizer -->
+          <div v-if="showGuestNote" class="ai-tab__guest-note">
+            {{ $t('ai.guestNote') }}
+            <RouterLink :to="ROUTE.SIGN_UP" class="ai-tab__guest-signup">{{ $t('nav.guestSignUpCta') }} →</RouterLink>
+          </div>
+
           <!-- Low-confidence warning -->
           <div v-if="showLowConfidenceWarning" class="ai-tab__warn-note">
             {{ ICON.WARNING }} {{ $t('ai.lowConfidenceWarning', { conf: (aiStore.confidence * 100).toFixed(0) + '%' }) }}
@@ -165,6 +171,7 @@ import { defineComponent } from 'vue'
 import { mapStores } from 'pinia'
 
 import { useAiStore } from '@/stores/aiStore'
+import { useAuthStore } from '@/stores/authStore'
 import { useExperimentStore } from '@/stores/experimentStore'
 import { useTokenStore } from '@/stores/tokenStore'
 
@@ -174,6 +181,7 @@ import SideTabPanel from '@/components/ExperimentLab/SideTabPanel.vue'
 import AiResultCard from '@/components/ExperimentLab/AiResultCard.vue'
 
 import { ICON } from '@/constants/icons'
+import { ROUTE } from '@/constants/routes'
 
 export default defineComponent({
   name: 'AiOptimizerTab',
@@ -183,6 +191,7 @@ export default defineComponent({
   data() {
     return {
       showOfflineNote:      false,
+      showGuestNote:        false,
       modelTrainingSamples: 0,
       isRetraining:         false,
       retrainMessage:       '' as string,
@@ -201,8 +210,9 @@ export default defineComponent({
   },
 
   computed: {
-    ICON() { return ICON },
-    ...mapStores(useAiStore, useExperimentStore, useTokenStore),
+    ICON()  { return ICON  },
+    ROUTE() { return ROUTE },
+    ...mapStores(useAiStore, useAuthStore, useExperimentStore, useTokenStore),
 
     panelSubtitle(): string {
       if (this.aiStore.isLoading) return this.$t('ai.panelSubtitleLoading')
@@ -240,7 +250,11 @@ export default defineComponent({
   methods: {
     async runOptimize() {
       const canProceed = await this.tokenStore.consumeOperation('AI_OPTIMIZE')
-      if (!canProceed) return
+      if (!canProceed) {
+        if (this.authStore.isGuest) this.showGuestNote = true
+        return
+      }
+      this.showGuestNote = false
 
       this.showOfflineNote = false
       const requestId = this.aiStore.startRequest()
@@ -468,6 +482,24 @@ export default defineComponent({
     background: color-mix(in srgb, var(--color-amber) 8%, transparent);
     border: 1px solid color-mix(in srgb, var(--color-amber) 28%, transparent);
     border-radius: var(--radius);
+  }
+
+  &__guest-note {
+    @include flex-col(0.4rem);
+    font-size: var(--fs-sm);
+    color: var(--color-primary);
+    padding: 0.5rem 0.65rem;
+    background: color-mix(in srgb, var(--color-primary) 7%, transparent);
+    border: 1px solid var(--color-primary-border);
+    border-radius: var(--radius);
+  }
+
+  &__guest-signup {
+    @include mono-upper(var(--fs-xxs), 0.05em);
+    color: var(--color-primary);
+    text-decoration: none;
+
+    &:hover { text-decoration: underline; }
   }
 
   &__warn-note {
