@@ -1,0 +1,25 @@
+{
+  "resonance": {
+    "speculativeBannerTitle": "SPECULATIVE MODEL: No experimental RF validation",
+    "speculativeBannerDetail": "The Dykeman & Sankey (2010) acoustic resonance model was validated on non-enveloped icosahedral protein capsids (TMV, CCMV). Enveloped viruses (influenza, SARS-CoV-2) have fluid lipid bilayers with no defined elastic modulus or mechanical resonance Q. GHz RF fields also face severe EM field penetration limits in aqueous media at high frequencies (Debye relaxation of water above 1 GHz). These parameters are theoretical extrapolations.",
+    "chartTitle": "Resonant Capsid / Cell-Wall Disruption",
+    "chartNote": "Disruption ratio = (E / E_thr) × L(f, f_res, Q)",
+    "legendTarget": "Target (active)",
+    "legendHealthy": "Healthy (no GHz resonance)",
+    "legendLibrary": "Preset library",
+    "legendThreshold": "≥1.0 Disruption threshold",
+    "noteTitle": "Resonance mode",
+    "noteBody": "Acoustic/mechanical capsid & cell-wall disruption. f_res ≈ v_protein/(2R): viral capsids ~10-12 GHz, bacterial walls ~0.5-1.5 GHz. Mammalian cells (R ≈ 10 µm) have no GHz resonance, frequency-selective disruption. Ref: Tsen et al. (2007); Dykeman & Sankey (2010)",
+    "noResonance": "No resonance parameters for this cell",
+    "tipFieldTitle": "Applied Field Intensity (Resonance Mode)",
+    "tipFieldFormula": "Disruption ratio = (E / E_threshold) × L(f, f_res, Q)",
+    "tipFieldRatio": "Current ratio",
+    "tipFieldDisruptNote": "ratio ≥ 1.0 → capsid/cell-wall disruption threshold exceeded",
+    "tipTargetBadgeTitle": "Target resonant disruption: {pct}%",
+    "tipTargetBadgeFormula": "ratio = (E / E_threshold) × L(f, f_res, Q)",
+    "tipTargetBadgeNote": "≥100% at resonance → capsid/cell-wall disruption threshold exceeded",
+    "tipHealthyBadgeTitle": "Healthy cell: no GHz resonance",
+    "tipHealthyBadgeBody": "Mammalian cells lack rigid-shell resonance, Schwan Vm → 0 at GHz (ωτ ≫ 1).\nAt f_res(target) in GHz, healthy cell disruption ≈ 0.",
+    "tipHealthyBadgeSafe": "Frequency-selective, healthy tissue is unperturbed"
+  }
+}
