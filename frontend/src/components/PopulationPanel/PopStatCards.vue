@@ -155,7 +155,7 @@ export default defineComponent({
 
   &__badge-se {
     font-size: 0.75em;
-    opacity: 0.6;
+    opacity: 0.6; // intentional: sub-script superscript-style element
   }
 
   &__stat-sub {

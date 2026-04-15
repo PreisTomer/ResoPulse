@@ -38,6 +38,7 @@
   --color-danger-light: #f87171; /* soft danger (readout warn, non-critical) */
   --color-muted-border: #444;    /* dead / disabled state neutral border  */
   --color-purple: #a78bfa;
+  --color-purple-deep: #7c3aed;                                                       /* saturated violet — dominant CTAs       */
   --color-purple-light: #c4b5fd;
   --color-purple-surface: color-mix(in srgb, var(--color-purple) 6%, transparent);   /* subtle tint: active pill bg, hover overlays */
   --color-purple-dim:     color-mix(in srgb, var(--color-purple) 12%, transparent);  /* medium purple tint  */

@@ -54,12 +54,14 @@ export default defineComponent({
 
   data() {
     return {
-      ctx:            null as CanvasRenderingContext2D | null,
-      grid:           [] as number[],
-      redrawTimer:    null as ReturnType<typeof setTimeout> | null,
-      resizeObserver: null as ResizeObserver | null,
-      displayW:       HMAP_CANVAS_W,
-      displayH:       HMAP_CANVAS_H,
+      ctx:              null as CanvasRenderingContext2D | null,
+      grid:             [] as number[],
+      redrawTimer:      null as ReturnType<typeof setTimeout> | null,
+      resizeObserver:   null as ResizeObserver | null,
+      displayW:         HMAP_CANVAS_W,
+      displayH:         HMAP_CANVAS_H,
+      _hoverRafPending: false,
+      _lastHoverEvent:  null as MouseEvent | null,
     }
   },
 
@@ -595,7 +597,19 @@ export default defineComponent({
     },
 
     onCanvasMove(e: MouseEvent) {
+      // RAF-throttle: physics computation capped at one frame per rAF tick (~60 fps).
+      this._lastHoverEvent = e
+      if (this._hoverRafPending) return
+      this._hoverRafPending = true
+      requestAnimationFrame(() => {
+        this._hoverRafPending = false
+        if (this._lastHoverEvent) this._processHover(this._lastHoverEvent)
+      })
+    },
+
+    _processHover(e: MouseEvent) {
       const canvas = this.$refs.canvas as HTMLCanvasElement
+      if (!canvas) return
       const rect   = canvas.getBoundingClientRect()
       const cx = e.clientX - rect.left
       const cy = e.clientY - rect.top

@@ -307,7 +307,7 @@ export default defineComponent({
   &__freq-line {
     stroke: var(--color-accent);
     stroke-width: 1.5;
-    opacity: 0.85;
+    opacity: 0.85; // intentional: cursor line slightly faded
   }
 
   &__freq-label {
@@ -319,7 +319,7 @@ export default defineComponent({
   &__dc-line {
     stroke: var(--color-text-muted);
     stroke-width: 1;
-    opacity: 0.45;
+    opacity: 0.45; // intentional: grid line near-ghost
   }
 
   &__axis-label {

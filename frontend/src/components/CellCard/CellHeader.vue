@@ -128,7 +128,7 @@ export default defineComponent({
     white-space: nowrap;
   }
 
-  &__meta-sep       { opacity: 0.4; }
+  &__meta-sep       { opacity: 0.4; } // intentional: near-ghost separator
   &__meta-state     { text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
   &__meta-temp-warn { color: var(--color-amber-warm); }
 

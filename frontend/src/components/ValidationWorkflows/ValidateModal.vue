@@ -208,7 +208,7 @@ export default defineComponent({
     transition: opacity var(--tr-fast), filter var(--tr-fast);
 
     &:hover {
-      opacity: 0.85;
+      opacity: 0.85; // intentional: hover pre-active state
       filter: brightness(1.3);
     }
   }

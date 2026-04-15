@@ -445,18 +445,18 @@ export default defineComponent({
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  &__td-id   { opacity: 0.6; }
+  &__td-id   { opacity: 0.6; } // intentional: de-emphasised ID column
   &__td-mono { }
   &__td-target     { color: var(--color-danger); }
   &__td-healthy    { color: var(--color-primary); }
   &__td-healthy-dr { color: var(--color-primary); opacity: var(--op-dim); }
   &__td-sel        { color: var(--color-text-heading); font-weight: 600; }
-  &__td-dep        { opacity: 0.85; }
+  &__td-dep        { opacity: 0.85; } // intentional: slightly faded non-primary column
   &__td-bms        { color: var(--color-primary); opacity: var(--op-dim); font-size: var(--fs-xs); }
   &__td-pdep       { color: var(--color-lime); }
   &__td-ndep       { color: var(--color-amber); }
   &__td-event      { }
-  &__td-empty      { text-align: center; opacity: 0.6; padding: 1rem; }
+  &__td-empty      { text-align: center; opacity: 0.6; padding: 1rem; } // intentional: empty-state hint
 
   &__th-rating {
     min-width: 5rem;

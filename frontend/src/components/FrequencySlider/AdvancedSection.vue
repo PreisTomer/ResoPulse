@@ -364,7 +364,7 @@ export default defineComponent({
       white-space: nowrap;
     }
 
-    &-sub { font-size: var(--fs-xxs); font-family: var(--font-mono); color: var(--color-text-muted); white-space: nowrap; opacity: 0.75; }
+    &-sub { font-size: var(--fs-xxs); font-family: var(--font-mono); color: var(--color-text-muted); white-space: nowrap; opacity: 0.75; } // intentional: secondary sub-label
   }
 }
 </style>

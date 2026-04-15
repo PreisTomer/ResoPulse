@@ -283,7 +283,7 @@ export default defineComponent({
       height: 2px;
       background: var(--color-text-muted);
       border-radius: 2px;
-      transition: transform 0.22s ease, opacity 0.22s ease, background-color var(--tr-fast);
+      transition: transform 0.22s ease, opacity 0.22s ease, background-color var(--tr-fast); // intentional: between fast/normal for hamburger morph
     }
 
     &--open {

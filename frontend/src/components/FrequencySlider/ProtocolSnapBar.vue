@@ -118,7 +118,7 @@ export default defineComponent({
   &__label {
     @include mono-upper();
     color: var(--color-text-muted);
-    opacity: 0.65;
+    opacity: 0.65; // intentional: between-tier snap label
 
     white-space: nowrap;
     flex-shrink: 0;

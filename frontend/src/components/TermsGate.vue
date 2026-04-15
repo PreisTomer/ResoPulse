@@ -217,7 +217,7 @@ export default defineComponent({
     background: transparent;
     color: var(--color-text-muted);
     cursor: not-allowed;
-    transition: all 0.18s;
+    transition: border-color var(--tr-normal), color var(--tr-normal), background var(--tr-normal), box-shadow var(--tr-normal), filter var(--tr-normal);
 
     &--ready {
       background: var(--color-primary);

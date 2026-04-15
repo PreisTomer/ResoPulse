@@ -429,9 +429,8 @@ export default defineComponent({
 
     &--danger  { background: var(--color-danger);  opacity: var(--op-muted); }
     &--primary { background: var(--color-primary); opacity: var(--op-muted); }
-    &--optimal { background: var(--color-purple);  opacity: 0.60; }
-
-    &--purple  { background: var(--color-purple);  opacity: 0.60; }
+    &--optimal { background: var(--color-purple);  opacity: 0.60; } // intentional: overlay marker below muted token
+    &--purple  { background: var(--color-purple);  opacity: 0.60; } // intentional: same
 
   }
 
@@ -470,7 +469,7 @@ export default defineComponent({
       font-family: var(--font-mono);
       color: var(--color-text-muted);
       white-space: nowrap;
-      opacity: 0.82;
+      opacity: 0.82; // intentional: near-partial secondary text
 
     }
 

@@ -61,6 +61,11 @@ import {
 import type { CellConfig, CellState } from '@/types/cell'
 import type { MediumKey } from '@/types/media'
 
+// Module-level cache: skips the 300-point Schwan scan when cell/waveform params are unchanged.
+// Needed because effectiveSigmaE (a dependency) changes 10×/sec during temperature updates.
+interface OptFreqCache { key: string; result: { khz: number; sel: number } }
+let _optFreqCache: OptFreqCache | null = null
+
 // ── Module-level computation helpers (pure functions - no store context needed) ──
 
 // Pulse envelope: 1.0 for CW; 1−exp(−t_p/τ) for pulsed
@@ -567,54 +572,59 @@ export const useCellStore = defineStore('cell', {
       const state  = this as CellStoreState
       const target = state.target as CellConfig & { resonantFreqGHz?: number; resonantThresholdVcm?: number; capsidQ?: number }
       const cat    = this.targetCellCategory
+
       if (
         this.isResonanceMode &&
         (cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) &&
         target.resonantFreqGHz && target.resonantThresholdVcm
       ) {
-        // Compute actual TI at f_res instead of returning an arbitrary sentinel value
-        const freqKhz = target.resonantFreqGHz * 1e6  // GHz → kHz
-        // Acoustic resonance threshold: temperature correction only — hfireMult does not apply
+        const freqKhz   = target.resonantFreqGHz * 1e6
         const effThr    = tempCorrectedVth(target.resonantThresholdVcm, state.targetTemp)
         const drT = computeResonantDisruption(
-          target.resonantFreqGHz,
-          target.capsidQ ?? DEFAULT_CAPSID_Q,
-          effThr,
-          freqKhz * KHZ_TO_HZ,
-          state.fieldIntensity,
+          target.resonantFreqGHz, target.capsidQ ?? DEFAULT_CAPSID_Q, effThr,
+          freqKhz * KHZ_TO_HZ, state.fieldIntensity,
         )
-        const sigma_e = this.effectiveSigmaE
+        const sigma_e   = this.effectiveSigmaE
         const hfireMult = state.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
         const hVm = computeSchwan(state.healthy, freqKhz, state.fieldIntensity, sigma_e, this.cosThetaFactor)
-        const vthH = tempCorrectedVth(state.healthy.thresholdVoltage, state.healthyTemp)
-        const drH  = (hVm * this.pulseEnvelopeFactorHealthy) / (vthH * hfireMult)
+        const drH = (hVm * this.pulseEnvelopeFactorHealthy) / (tempCorrectedVth(state.healthy.thresholdVoltage, state.healthyTemp) * hfireMult)
         return { khz: freqKhz, sel: safeRatio(drT, drH, THRESHOLDS.TI_DISPLAY_CAP, NEAR_ZERO_DR) }
       }
-      const sigma_e   = this.effectiveSigmaE
+
+      // Build cache key from all inputs that affect the scan. Round temps to 0.1 °C to
+      // avoid cache misses from floating-point noise in the Euler integration.
+      const sigma_e = this.effectiveSigmaE
+      const cacheKey = [
+        state.healthy.id, state.healthy.radius, state.healthy.membraneThickness,
+        state.healthy.dielectricConstant, state.healthy.conductivity, state.healthy.thresholdVoltage,
+        state.target.id, state.target.radius, state.target.membraneThickness,
+        state.target.dielectricConstant, state.target.conductivity, state.target.thresholdVoltage,
+        state.waveform, state.dutyCycle, state.pulseWidthNs, state.chartMode,
+        Math.round(sigma_e * 1e6),  // µS/m precision — avoids misses from tiny temp-driven σ_e drift
+        Math.round(state.healthyTemp * 10), Math.round(state.targetTemp * 10),
+      ].join('|')
+
+      if (_optFreqCache?.key === cacheKey) return _optFreqCache.result
+
       const hfireMult = state.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
-      // Apply same threshold corrections as the live DR getters so returned `sel` matches TI display.
-      const hThr    = tempCorrectedVth(state.healthy.thresholdVoltage, state.healthyTemp) * hfireMult
-      const tThr    = tempCorrectedVth(state.target.thresholdVoltage,  state.targetTemp)  * hfireMult
-      // PEF is frequency-independent (depends on τ, not f), so it scales the DR for each cell
-      // uniformly across the scan - it doesn't shift the argmax but DOES change the TI magnitude.
-      // Include PEF so the returned `sel` matches what the disruption ratio getters compute.
-      const pefH    = this.pulseEnvelopeFactorHealthy
-      const pefT    = this.pulseEnvelopeFactorTarget
-      // cosTheta cancels in tDr/hDr (both Vm scale identically), so omitting it here is correct
-      // for finding argmax and for the returned sel ratio.
-      // Field largely cancels in tDr/hDr for cell pairs with similar τ (both Vm ∝ E).
-      // Using unit field avoids a reactive dependency on fieldIntensity that would cause
-      // 300 unnecessary Schwan evaluations on every slider move. Minor inaccuracy when the
-      // two cells have very different τ (different fc), but negligible for typical mammalian pairs.
+      const hThr = tempCorrectedVth(state.healthy.thresholdVoltage, state.healthyTemp) * hfireMult
+      const tThr = tempCorrectedVth(state.target.thresholdVoltage,  state.targetTemp)  * hfireMult
+      const pefH = this.pulseEnvelopeFactorHealthy
+      const pefT = this.pulseEnvelopeFactorTarget
+      // cosTheta and field cancel in the tDr/hDr ratio — use unit field to avoid a reactive
+      // dependency on fieldIntensity that would bust the cache on every field slider move.
       const UNIT_FIELD = 1.0
-      const logMin  = Math.log10(10), logMax = Math.log10(500_000)
+      const logMin = Math.log10(10), logMax = Math.log10(500_000)
       const { khz: optKhz, sel: maxSel } = Array.from({ length: 300 }, (_, i) => {
         const khz = Math.pow(10, logMin + (logMax - logMin) * i / 299)
         const hDr = (computeSchwan(state.healthy, khz, UNIT_FIELD, sigma_e) * pefH) / hThr
         const tDr = (computeSchwan(state.target,  khz, UNIT_FIELD, sigma_e) * pefT) / tThr
         return { khz, sel: hDr > 0 ? tDr / hDr : 0 }
       }).reduce((best, pt) => pt.sel > best.sel ? pt : best, { khz: 10, sel: -Infinity })
-      return { khz: optKhz, sel: Math.max(0, maxSel) }
+
+      const result = { khz: optKhz, sel: Math.max(0, maxSel) }
+      _optFreqCache = { key: cacheKey, result }
+      return result
     },
 
     hmapFreqMaxKHz(): number {

@@ -399,7 +399,7 @@ export default defineComponent({
       font-family: var(--font-mono);
       color: var(--color-text-muted);
       white-space: nowrap;
-      opacity: 0.82;
+      opacity: 0.82; // intentional: near-partial secondary text
 
       &--pw-ok      { color: var(--color-lime);   opacity: 1; }
       &--pw-marginal { color: var(--color-amber);  opacity: 1; }

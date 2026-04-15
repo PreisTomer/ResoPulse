@@ -158,7 +158,7 @@ export default defineComponent({
   &__biostim-theoretical {
     @include mono-upper(0.52rem, 0.06em);
     color: var(--color-amber);
-    opacity: 0.65;
+    opacity: 0.65; // intentional: between-tier badge label
     border: 1px solid color-mix(in srgb, var(--color-amber) 30%, transparent);
     border-radius: 2px;
     padding: 0.04rem 0.3rem;
@@ -172,7 +172,7 @@ export default defineComponent({
     transition: color var(--tr-slow);
 
     &--low    { color: var(--color-accent); opacity: 0.40; }
-    &--medium { color: var(--color-accent); opacity: 0.75; }
+    &--medium { color: var(--color-accent); opacity: 0.75; } // intentional: mid-level biomod state
     &--high   { color: var(--color-lime); }
     &--active { animation: nourish-text-pulse 2.2s ease-in-out infinite; }
   }
@@ -218,7 +218,7 @@ export default defineComponent({
     font-family: var(--font-mono);
     color: var(--color-text-muted);
     text-align: right;
-    opacity: 0.75;
+    opacity: 0.75; // intentional: secondary score label
 
   }
 }

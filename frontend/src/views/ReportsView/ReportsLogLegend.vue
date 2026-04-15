@@ -77,7 +77,7 @@ export default defineComponent({
     width: 100%;
     font-size: var(--fs-xxs);
     color: var(--color-text-muted);
-    opacity: 0.65;
+    opacity: 0.65; // intentional: between-tier legend description
     margin-top: 0.15rem;
     line-height: 1.5;
   }

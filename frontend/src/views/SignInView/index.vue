@@ -161,7 +161,7 @@ const CLERK_APPEARANCE = {
     colorSuccess:         '#4ade80',
     colorDanger:          '#ff4d6d',
     colorNeutral:         '#1e3a5f',
-    colorShimmer:         'rgba(0,212,255,0.04)',
+    colorShimmer:         'color-mix(in srgb, #00d4ff 4%, transparent)',
     borderRadius:         '8px',
     fontFamily:           "'Inter', system-ui, sans-serif",
     fontFamilyButtons:    "'Inter', system-ui, sans-serif",
@@ -191,7 +191,7 @@ const CLERK_APPEARANCE = {
     formFieldLabel:          { color: '#7a9ab8', fontSize: '0.75rem', letterSpacing: '0.03em', textTransform: 'capitalize', paddingLeft: '2px' },
     formFieldInput:          { background: '#0a1520', border: '1px solid #1e3a5f', color: '#c8d8e8', borderRadius: '8px', caretColor: '#00d4ff' },
     formFieldInputPlaceholder: { color: '#6a9ab8' },
-    formButtonPrimary:       { background: 'rgba(0,212,255,0.08)', color: '#00d4ff', border: '1px solid rgba(0,212,255,0.3)', fontFamily: "'Inter', system-ui, sans-serif", letterSpacing: '0.04em', textTransform: 'uppercase', fontWeight: '600', borderRadius: '8px', boxShadow: 'none' },
+    formButtonPrimary:       { background: 'color-mix(in srgb, #00d4ff 8%, transparent)', color: '#00d4ff', border: '1px solid color-mix(in srgb, #00d4ff 30%, transparent)', fontFamily: "'Inter', system-ui, sans-serif", letterSpacing: '0.04em', textTransform: 'uppercase', fontWeight: '600', borderRadius: '8px', boxShadow: 'none' },
     buttonArrowIcon:         { display: 'none' },
     footerActionLink:        { color: '#00d4ff' },
     footerAction:            { display: 'none' },
@@ -484,7 +484,7 @@ export default defineComponent({
       inset: 0;
       width: 100%;
       height: 100%;
-      opacity: 0.6;
+      opacity: 0.6; // intentional: particle canvas layer intensity
     }
 
     &-hex {
@@ -575,7 +575,7 @@ export default defineComponent({
     height: 560px;
     pointer-events: none;
     z-index: 0;
-    opacity: 0.6;
+    opacity: 0.6; // intentional: ring group intensity
 
     &-svg {
       width: 100%;

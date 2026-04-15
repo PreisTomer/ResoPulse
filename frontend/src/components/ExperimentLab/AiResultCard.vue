@@ -398,7 +398,7 @@ export default defineComponent({
     height: 100%;
     background: var(--color-primary);
     border-radius: 2px;
-    transition: width 0.4s ease;
+    transition: width 0.4s ease; // intentional: slower progress bar fill
   }
 
   &__importance-pct {

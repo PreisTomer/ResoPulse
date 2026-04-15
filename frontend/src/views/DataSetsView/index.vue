@@ -304,7 +304,7 @@ export default defineComponent({
     border-radius: var(--radius);
     text-decoration: none;
     box-shadow: var(--glow-md);
-    transition: all 0.18s;
+    transition: filter var(--tr-normal), box-shadow var(--tr-normal);
 
     &:hover {
       filter: brightness(1.1);

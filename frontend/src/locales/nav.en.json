@@ -47,6 +47,9 @@
     "guestLabel": "Guest Session",
     "guestSignUpCta": "Create account",
     "guestSignInCta": "Sign in",
-    "guestDropdownNote": "You are browsing as a guest. Create an account to save experiments and access all lab features."
+    "guestDropdownNote": "You are browsing as a guest. Create an account to save experiments and access all lab features.",
+    "footerCopy": "© 2026 Tomer Preis. All rights reserved.",
+    "footerTerms": "Terms",
+    "footerPrivacy": "Privacy"
   }
 }

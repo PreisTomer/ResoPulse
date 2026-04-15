@@ -65,7 +65,7 @@ export default defineComponent({
   font-family: var(--font-mono);
   font-size: var(--fs-sm);
   color: var(--color-primary);
-  opacity: 0.75;
+  opacity: 0.75; // intentional: secondary reference link
   flex-shrink: 0;
   min-width: 2.2rem;
   padding-top: 0.1rem;
@@ -92,7 +92,7 @@ export default defineComponent({
   font-family: var(--font-mono);
   font-size: var(--fs-xs);
   color: var(--color-text-muted);
-  opacity: 0.6;
+  opacity: 0.6; // intentional: muted italic annotation
   font-style: italic;
 }
 </style>

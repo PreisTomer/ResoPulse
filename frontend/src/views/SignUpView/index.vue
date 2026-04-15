@@ -120,7 +120,7 @@ const CLERK_APPEARANCE = {
     colorSuccess:                 '#4ade80',
     colorDanger:                  '#ff4d6d',
     colorNeutral:                 '#2a1f5f',
-    colorShimmer:                 'rgba(167,139,250,0.04)',
+    colorShimmer:                 'color-mix(in srgb, #a78bfa 4%, transparent)',
     borderRadius:                 '8px',
     fontFamily:                   "'Inter', system-ui, sans-serif",
     fontFamilyButtons:            "'Inter', system-ui, sans-serif",
@@ -143,7 +143,7 @@ const CLERK_APPEARANCE = {
     formFieldLabel:               { color: '#7a72b0', fontSize: '0.75rem', letterSpacing: '0.03em', textTransform: 'capitalize', paddingLeft: '2px' },
     formFieldInput:               { background: '#0a0b1a', border: '1px solid #2a1f5f', color: '#d4cef8', borderRadius: '8px', caretColor: '#a78bfa' },
     formFieldInputPlaceholder:    { color: '#7a6aaa' },
-    formButtonPrimary:            { background: 'rgba(167,139,250,0.10)', color: '#a78bfa', border: '1px solid rgba(167,139,250,0.35)', fontFamily: "'Inter', system-ui, sans-serif", letterSpacing: '0.04em', textTransform: 'uppercase', fontWeight: '600', borderRadius: '8px', boxShadow: 'none' },
+    formButtonPrimary:            { background: 'color-mix(in srgb, #a78bfa 10%, transparent)', color: '#a78bfa', border: '1px solid color-mix(in srgb, #a78bfa 35%, transparent)', fontFamily: "'Inter', system-ui, sans-serif", letterSpacing: '0.04em', textTransform: 'uppercase', fontWeight: '600', borderRadius: '8px', boxShadow: 'none' },
     buttonArrowIcon:              { display: 'none' },
     footerActionLink:             { color: '#a78bfa' },
     footerAction:                 { display: 'none' },
@@ -450,7 +450,7 @@ export default defineComponent({
       inset: 0;
       width: 100%;
       height: 100%;
-      opacity: 0.65;
+      opacity: 0.65; // intentional: hex canvas layer intensity
       mask-image: radial-gradient(ellipse 75% 70% at 50% 50%, black 20%, transparent 100%);
     }
 

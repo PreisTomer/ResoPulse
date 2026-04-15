@@ -186,7 +186,7 @@ export default defineComponent({
   &__sub-label {
     font-size: var(--fs-xxs);
     color: var(--color-text-muted);
-    opacity: 0.6;
+    opacity: 0.6; // intentional: secondary info text
   }
 
   &__input-row {

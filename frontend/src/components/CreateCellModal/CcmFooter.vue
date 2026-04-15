@@ -94,7 +94,7 @@ export default defineComponent({
       color:      var(--color-btn-dark);
 
       &:hover:not(:disabled) { filter: brightness(1.1); }
-      &:disabled { opacity: 0.4; cursor: not-allowed; }
+      &:disabled { opacity: 0.4; cursor: not-allowed; } // intentional: disabled state below ghost
     }
   }
 }

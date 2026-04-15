@@ -74,6 +74,17 @@ export default defineComponent({
       const t = this.cellStore.target as { experimentalBasis?: string }
       return t.experimentalBasis === 'speculative'
     },
+
+    physicsKey(): string {
+      const s = this.cellStore
+      const t = s.target as { resonantFreqGHz?: number; capsidQ?: number; resonantThresholdVcm?: number }
+      return [
+        s.healthy.id, s.healthy.radius, s.healthy.conductivity, s.healthy.thresholdVoltage,
+        s.target.id, s.target.radius, s.target.thresholdVoltage,
+        t.resonantFreqGHz ?? 0, t.capsidQ ?? 0, t.resonantThresholdVcm ?? 0,
+        s.fieldIntensity, s.targetTemp, s.resetCounter,
+      ].join('|')
+    },
   },
 
   data() {
@@ -88,10 +99,8 @@ export default defineComponent({
   },
 
   watch: {
-    'cellStore.target':         { handler() { this.updateChart() }, deep: true },
-    'cellStore.healthy':        { handler() { this.updateChart() }, deep: true },
-    'cellStore.fieldIntensity': { handler() { this.updateChart() } },
-    'cellStore.currentBroadcastFrequency': { handler() { this.updateCursor() } },
+    physicsKey()                          { this.updateChart() },
+    'cellStore.currentBroadcastFrequency'() { this.updateCursor() },
   },
 
   mounted() {

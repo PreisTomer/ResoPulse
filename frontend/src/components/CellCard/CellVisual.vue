@@ -163,6 +163,7 @@ import { useExperimentStore } from '@/stores/experimentStore'
 import { useImpedanceStore } from '@/stores/impedanceStore'
 import { useReplayStore } from '@/stores/replayStore'
 
+
 import { broadcastLogEntry } from '@/services/socket'
 import { sonification } from '@/services/sonification'
 
@@ -184,6 +185,12 @@ import { UNIT } from '@/constants/units'
 import { EMIT } from '@/constants/emitEvents'
 
 import type { CellConfig, CellRecord, CellState, BlobFrame, OscFrame } from '@/types/cell'
+
+// Module-level interpolators — created once per cell type, not per render tick.
+const COLOR_INTERP = {
+  healthy: d3.interpolateRgb(CELL_COLORS.healthy.interpFrom, CELL_COLORS.healthy.interpTo),
+  target:  d3.interpolateRgb(CELL_COLORS.target.interpFrom,  CELL_COLORS.target.interpTo),
+} as const
 
 import { setupBlobAnimation, setupOscilloscope, spawnFragment } from './cellAnimation'
 import type { CellVisualProfile } from './cellAnimation'
@@ -222,7 +229,7 @@ export default defineComponent({
   },
 
   computed: {
-    ...mapStores(useCellStore, useExperimentStore, useImpedanceStore),
+    ...mapStores(useCellStore, useExperimentStore, useImpedanceStore, useReplayStore),
     CELL_STATE() { return CELL_STATE },
     CELL_TYPE()  { return CELL_TYPE },
     ICON()       { return ICON },
@@ -282,8 +289,7 @@ export default defineComponent({
     },
 
     cellColor(): string {
-      const { interpFrom, interpTo } = CELL_COLORS[this.type]
-      return d3.interpolateRgb(interpFrom, interpTo)(Math.min(1, this.disruptionRatio))
+      return COLOR_INTERP[this.type](Math.min(1, this.disruptionRatio))
     },
 
     biostimScore(): number { return this.cellStore.healthyBiomodScore },
@@ -612,14 +618,13 @@ export default defineComponent({
       this.cellState = CELL_STATE.LYSING
       if (this.type === CELL_TYPE.HEALTHY) this.cellStore.setHealthyCellState(CELL_STATE.LYSING)
       else this.cellStore.setTargetCellState(CELL_STATE.LYSING)
-      const expStore = useExperimentStore()
       // Do not log or broadcast during validation replay — replication is not a real experiment
-      if (!useReplayStore().isReplaying) {
-        expStore.logReading(useCellStore(), 'lysis')
-        const last = expStore.entries[expStore.entries.length - 1]
+      if (!this.replayStore.isReplaying) {
+        this.experimentStore.logReading(this.cellStore, 'lysis')
+        const last = this.experimentStore.entries[this.experimentStore.entries.length - 1]
         if (last) broadcastLogEntry(last)
       }
-      if (this.type === CELL_TYPE.TARGET) useImpedanceStore().snapshotSimulatedReading()
+      if (this.type === CELL_TYPE.TARGET) this.impedanceStore.snapshotSimulatedReading()
       const el = this.$refs.cellCanvas as HTMLElement
       this.particleInterval = setInterval(() => { if (el) spawnFragment(el) }, FRAGMENT_INTERVAL_MS)
       this.shatterTimeout = setTimeout(() => {
@@ -727,7 +732,7 @@ export default defineComponent({
     font-family: var(--font-mono);
     font-size: var(--fs-xxs);
     color: var(--color-purple);
-    opacity: 0.75;
+    opacity: 0.75; // intentional: secondary nuclear label
 
     white-space: nowrap;
     width: 1.8rem;
@@ -756,7 +761,7 @@ export default defineComponent({
     font-family: var(--font-mono);
     font-size: var(--fs-xxs);
     color: var(--color-purple);
-    opacity: 0.75;
+    opacity: 0.75; // intentional: secondary nuclear label
 
     width: 2rem;
     text-align: right;

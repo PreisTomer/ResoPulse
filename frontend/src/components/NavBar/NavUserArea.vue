@@ -365,7 +365,7 @@ export default defineComponent({
     background: var(--color-surface);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-lg);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+    box-shadow: 0 12px 40px color-mix(in srgb, black 45%, transparent);
     z-index: 200;
     padding: 0.5rem;
     @include flex-col(0);
@@ -479,7 +479,7 @@ export default defineComponent({
       height: 100%;
       border-radius: 2px;
       background: var(--color-primary);
-      transition: width 0.4s ease, background var(--tr-normal);
+      transition: width 0.4s ease, background var(--tr-normal); // intentional: slower fill animation for token bar
 
       &--mid      { background: color-mix(in srgb, var(--color-amber) 50%, var(--color-primary)); }
       &--low      { background: var(--color-amber); }
@@ -599,7 +599,7 @@ export default defineComponent({
     background: transparent;
     color: var(--color-text-muted);
     cursor: pointer;
-    transition: all var(--tr-fast);
+    transition: border-color var(--tr-fast), color var(--tr-fast), background var(--tr-fast);
 
     &--active {
       border-color: var(--color-primary-border);

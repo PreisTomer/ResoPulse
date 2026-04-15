@@ -520,7 +520,7 @@ export default defineComponent({
 
   &__axis-unit {
     font-size: var(--fs-xxs);
-    opacity: 0.6;
+    opacity: 0.6; // intentional: axis unit label de-emphasised
     margin-top: 0.1rem;
   }
 
@@ -546,7 +546,7 @@ export default defineComponent({
     padding: 0 3.55rem;
 
     &-label {
-      opacity: 0.5;
+      opacity: 0.5; // intentional: between ghost/muted tier
       font-size: var(--fs-xxs);
     }
   }
@@ -629,7 +629,7 @@ export default defineComponent({
   &__chain-arrow {
     font-size: var(--fs-xl);
     color: var(--color-primary);
-    opacity: 0.3;
+    opacity: 0.3; // intentional: below ghost — decorative icon
     flex-shrink: 0;
   }
 

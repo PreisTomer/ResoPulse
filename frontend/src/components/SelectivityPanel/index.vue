@@ -301,7 +301,7 @@ export default defineComponent({
     font-family: var(--font-mono);
     letter-spacing: -0.04em;
     line-height: 1;
-    transition: color 0.4s;
+    transition: color 0.4s; // intentional: slower score colour shift for readability
 
     flex-shrink: 0;
 
@@ -404,7 +404,7 @@ export default defineComponent({
     font-size: var(--fs-xxs);
     font-family: var(--font-mono);
     color: var(--color-text-muted);
-    opacity: 0.6;
+    opacity: 0.6; // intentional: de-emphasised annotation
   }
 
   /* ── Random-orientation lysis fraction ─────────────────────── */

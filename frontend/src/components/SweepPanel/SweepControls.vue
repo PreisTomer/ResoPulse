@@ -109,7 +109,7 @@ export default defineComponent({
     background: transparent;
     color: var(--color-text-muted);
     cursor: pointer;
-    transition: all 0.15s;
+    transition: border-color var(--tr-fast), color var(--tr-fast), background var(--tr-fast);
 
     &--active {
       border-color: var(--color-primary);
@@ -147,7 +147,7 @@ export default defineComponent({
     background: transparent;
     color: var(--color-text-muted);
     cursor: pointer;
-    transition: all 0.15s;
+    transition: border-color var(--tr-fast), color var(--tr-fast), background var(--tr-fast);
 
     &:hover { border-color: var(--color-primary); color: var(--color-primary); }
   }

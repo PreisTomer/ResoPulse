@@ -391,7 +391,7 @@ export default defineComponent({
   }
 
   &--lysed {
-    opacity: 0.65;
+    opacity: 0.65; // intentional: lysed cell is visually retired
 
     border-color: var(--color-muted-border) !important;
     box-shadow: none;

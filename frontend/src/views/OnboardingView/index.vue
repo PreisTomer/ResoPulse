@@ -51,13 +51,13 @@
         <div class="onboarding__pulse-header" aria-hidden="true">
           <svg viewBox="0 0 460 120" preserveAspectRatio="none" class="onboarding__pulse-svg">
             <!-- Grid lines — horizontal; x-axis at y=85 (lower third) -->
-            <line x1="0" y1="85" x2="460" y2="85" stroke="rgba(0,212,255,0.09)" stroke-width="1"/>
-            <line x1="0" y1="55" x2="460" y2="55" stroke="rgba(0,212,255,0.04)" stroke-width="0.5"/>
-            <line x1="0" y1="25" x2="460" y2="25" stroke="rgba(0,212,255,0.04)" stroke-width="0.5"/>
+            <line x1="0" y1="85" x2="460" y2="85" class="onboarding__pulse-grid--major" stroke-width="1"/>
+            <line x1="0" y1="55" x2="460" y2="55" class="onboarding__pulse-grid--minor" stroke-width="0.5"/>
+            <line x1="0" y1="25" x2="460" y2="25" class="onboarding__pulse-grid--minor" stroke-width="0.5"/>
             <!-- Grid lines — vertical (frequency axis divisions) -->
-            <line x1="115" y1="0" x2="115" y2="120" stroke="rgba(0,212,255,0.04)" stroke-width="0.5"/>
-            <line x1="230" y1="0" x2="230" y2="120" stroke="rgba(0,212,255,0.04)" stroke-width="0.5"/>
-            <line x1="345" y1="0" x2="345" y2="120" stroke="rgba(0,212,255,0.04)" stroke-width="0.5"/>
+            <line x1="115" y1="0" x2="115" y2="120" class="onboarding__pulse-grid--minor" stroke-width="0.5"/>
+            <line x1="230" y1="0" x2="230" y2="120" class="onboarding__pulse-grid--minor" stroke-width="0.5"/>
+            <line x1="345" y1="0" x2="345" y2="120" class="onboarding__pulse-grid--minor" stroke-width="0.5"/>
             <!--
               Schwan Vm(f) — morphs between two parameter regimes over 8s:
               Shape 1: high σ_e (saline) — narrow peak near fc ≈ 100 kHz range
@@ -496,7 +496,7 @@ export default defineComponent({
       inset: 0;
       width: 100%;
       height: 100%;
-      opacity: 0.9;
+      opacity: 0.9; // intentional: near-opaque canvas layer
       mask-image: linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%);
     }
 
@@ -861,6 +861,11 @@ export default defineComponent({
     height: 100%;
   }
 
+  &__pulse-grid {
+    &--major { stroke: color-mix(in srgb, var(--color-primary) 9%, transparent); }
+    &--minor { stroke: color-mix(in srgb, var(--color-primary) 4%, transparent); }
+  }
+
   &__pulse-trace {
     fill: none;
     stroke-width: 1.5;
@@ -875,7 +880,7 @@ export default defineComponent({
 
     &--sel {
       stroke: var(--color-purple);
-      opacity: 0.6;
+      opacity: 0.6; // intentional: dashed overlay less prominent than main trace
       stroke-dasharray: 4 3;
       animation-delay: 0.3s;
     }

@@ -22,6 +22,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+import { mapStores } from 'pinia'
 
 import { useImpedanceStore } from '@/stores/impedanceStore'
 import { useCellStore } from '@/stores/cellStore'
@@ -43,6 +44,7 @@ export default defineComponent({
     }
   },
   computed: {
+    ...mapStores(useImpedanceStore, useCellStore),
     pitchDisplay(): string {
       return `${this.pitchHz.toFixed(0)} ${UNIT.HZ}`
     },
@@ -67,10 +69,8 @@ export default defineComponent({
     _startTick() {
       this._stopTick()
       this._tickHandle = setInterval(() => {
-        const impStore  = useImpedanceStore()
-        const cellStore = useCellStore()
-        const drift = impStore.impedanceDriftPct
-        const dr    = cellStore.targetDisruptionRatio
+        const drift = this.impedanceStore.impedanceDriftPct
+        const dr    = this.cellStore.targetDisruptionRatio
         // Derive cell state from DR (mirrors CellCard logic without importing it)
         const state = dr >= 1.0                          ? 'lysis'
                     : dr >= THRESHOLDS.DISRUPTION_WARN   ? 'vibrating'

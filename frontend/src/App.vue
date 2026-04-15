@@ -12,9 +12,9 @@
     <ProtocolGuidePanel v-if="showGuidePanel && !isAuthPage" />
     <TermsGate v-if="showTermsGate" @accepted="onTermsAccepted" />
     <footer class="app-footer">
-      <span class="app-footer__copy">© 2026 Tomer Preis. All rights reserved.</span>
-      <RouterLink :to="ROUTE.TERMS" class="app-footer__link">Terms</RouterLink>
-      <RouterLink :to="ROUTE.PRIVACY" class="app-footer__link">Privacy</RouterLink>
+      <span class="app-footer__copy">{{ $t('nav.footerCopy') }}</span>
+      <RouterLink :to="ROUTE.TERMS" class="app-footer__link">{{ $t('nav.footerTerms') }}</RouterLink>
+      <RouterLink :to="ROUTE.PRIVACY" class="app-footer__link">{{ $t('nav.footerPrivacy') }}</RouterLink>
     </footer>
   </div>
 </template>

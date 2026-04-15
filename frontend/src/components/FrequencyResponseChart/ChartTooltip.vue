@@ -121,7 +121,7 @@ export default defineComponent({
 
   &__dr {
     font-size: var(--fs-xs);
-    opacity: 0.65;
+    opacity: 0.65; // intentional: secondary tooltip row
     font-family: var(--font-mono);
   }
 
@@ -129,7 +129,7 @@ export default defineComponent({
     font-size: var(--fs-xxs);
     font-family: var(--font-mono);
     color: var(--color-amber);
-    opacity: 0.85;
+    opacity: 0.85; // intentional: warning row slightly faded
     margin-top: 0.18rem;
   }
 

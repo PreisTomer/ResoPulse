@@ -130,8 +130,6 @@ export default defineComponent({
 
   computed: {
     ...mapStores(useUserPresetsStore, useCellStore),
-    presetsStore() { return useUserPresetsStore() },
-    cellStore()    { return useCellStore() },
 
     sigmaE(): number {
       return this.cellStore.effectiveSigmaE
@@ -237,7 +235,7 @@ export default defineComponent({
         ...(this.form.cellType !== 'mammalian' && this.form.capsidQ              != null && { capsidQ:              this.form.capsidQ }),
         ...(this.form.cellType !== 'mammalian' && this.form.resonantThresholdVcm != null && { resonantThresholdVcm: this.form.resonantThresholdVcm }),
       }
-      this.presetsStore.add(preset)
+      this.userPresetsStore.add(preset)
       this.$emit(EMIT.SAVED, preset)
       this.$emit(EMIT.CLOSE)
     },

@@ -216,7 +216,7 @@ export default defineComponent({
     }
   }
 
-  &__params-toggle-arrow { font-size: var(--fs-xs); opacity: 0.75; }
+  &__params-toggle-arrow { font-size: var(--fs-xs); opacity: 0.75; } // intentional: secondary icon
 
 
   &__params-panel {
@@ -316,7 +316,7 @@ export default defineComponent({
     font-size: var(--fs-xxs);
     font-family: var(--font-mono);
     color: var(--color-text-muted);
-    opacity: 0.6;
+    opacity: 0.6; // intentional: tertiary label
 
     width: 2.5rem;
     text-align: left;
@@ -333,7 +333,7 @@ export default defineComponent({
   &__params-derived-label {
     @include mono-upper(0.52rem, 0.12em);
     color: var(--color-text-muted);
-    opacity: 0.65;
+    opacity: 0.65; // intentional: between-tier section label
 
   }
 

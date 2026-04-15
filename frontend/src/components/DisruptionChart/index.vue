@@ -72,24 +72,26 @@ export default defineComponent({
     ...mapStores(useCellStore),
     ICON() { return ICON },
 
-    warningIcon(): string {
-      return ICON.WARNING
+    warningIcon(): string { return ICON.WARNING },
+
+    physicsKey(): string {
+      const s = this.cellStore
+      const t = s.target as { resonantFreqGHz?: number }
+      return [
+        s.healthy.id, s.healthy.radius, s.healthy.membraneThickness,
+        s.healthy.dielectricConstant, s.healthy.conductivity, s.healthy.thresholdVoltage,
+        s.target.id, s.target.radius, s.target.membraneThickness,
+        s.target.dielectricConstant, s.target.conductivity, s.target.thresholdVoltage,
+        t.resonantFreqGHz ?? 0,
+        s.fieldIntensity, s.medium, s.waveform, s.dutyCycle, s.pulseWidthNs,
+        s.chartMode, s.orientationDeg, s.healthyTemp, s.targetTemp, s.resetCounter,
+      ].join('|')
     },
   },
 
   watch: {
-    'cellStore.healthy':                   { handler() { this.updateChart() }, deep: true },
-    'cellStore.target':                    { handler() { this.updateChart() }, deep: true },
-    'cellStore.fieldIntensity':            { handler() { this.updateChart() } },
-    'cellStore.effectiveSigmaE':           { handler() { this.updateChart() } },
-    'cellStore.cosThetaFactor':            { handler() { this.updateChart() } },
-    'cellStore.pulseEnvelopeFactorHealthy':{ handler() { this.updateChart() } },
-    'cellStore.pulseEnvelopeFactorTarget': { handler() { this.updateChart() } },
-    'cellStore.healthyTemp':               { handler() { this.updateChart() } },
-    'cellStore.targetTemp':                { handler() { this.updateChart() } },
-    'cellStore.waveform':                  { handler() { this.updateChart() } },
-    'cellStore.chartMode':                 { handler() { this.updateChart() } },
-    'cellStore.currentBroadcastFrequency': { handler() { this.updateCursor() } },
+    physicsKey()                          { this.updateChart() },
+    'cellStore.currentBroadcastFrequency'() { this.updateCursor() },
   },
 
   mounted() {

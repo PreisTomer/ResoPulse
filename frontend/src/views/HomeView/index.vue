@@ -49,6 +49,8 @@
 
         <div class="home__hero-cta">
           <div class="home__actions">
+
+            <!-- Tier 1: Signed-in shortcut -->
             <RouterLink v-if="isSignedIn" :to="ROUTE.EXPERIMENT" class="home__btn home__btn--primary">
               {{ $t('home.btnPrimary') }}
               <span class="home__btn-arrow" aria-hidden="true">
@@ -58,16 +60,20 @@
                 </svg>
               </span>
             </RouterLink>
-            <template v-if="!isSignedIn">
-              <RouterLink :to="ROUTE.EXPERIMENT" class="home__btn home__btn--try">
-                {{ $t('home.btnTryGuest') }}
-                <span class="home__btn-arrow" aria-hidden="true">
-                  <svg class="home__arrow-svg" viewBox="0 0 24 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <line class="home__arrow-shaft" x1="0" y1="6" x2="16" y2="6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                    <polyline class="home__arrow-head" points="11,1 18,6 11,11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-                  </svg>
-                </span>
-              </RouterLink>
+
+            <!-- Tier 1: Guest dominant CTA (full-width) -->
+            <RouterLink v-if="!isSignedIn" :to="ROUTE.EXPERIMENT" class="home__btn home__btn--try">
+              {{ $t('home.btnTryGuest') }}
+              <span class="home__btn-arrow" aria-hidden="true">
+                <svg class="home__arrow-svg" viewBox="0 0 24 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <line class="home__arrow-shaft" x1="0" y1="6" x2="16" y2="6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                  <polyline class="home__arrow-head" points="11,1 18,6 11,11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                </svg>
+              </span>
+            </RouterLink>
+
+            <!-- Tier 2: Account CTAs (half-width each) -->
+            <div v-if="!isSignedIn" class="home__actions-row">
               <RouterLink :to="ROUTE.SIGN_UP" class="home__btn home__btn--primary">
                 {{ $t('home.btnStartFree') }}
                 <span class="home__btn-arrow" aria-hidden="true">
@@ -86,25 +92,19 @@
                   </svg>
                 </span>
               </RouterLink>
-            </template>
-            <RouterLink :to="ROUTE.PRICING" class="home__btn home__btn--pricing">
-              {{ $t('home.btnViewPricing') }}
-              <span class="home__btn-arrow" aria-hidden="true">
-                <svg class="home__arrow-svg" viewBox="0 0 24 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <line class="home__arrow-shaft" x1="0" y1="6" x2="16" y2="6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                  <polyline class="home__arrow-head" points="11,1 18,6 11,11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-                </svg>
-              </span>
-            </RouterLink>
-            <RouterLink :to="ROUTE.PROTOCOL" class="home__btn home__btn--ghost">
-              {{ $t('home.btnGhost') }}
-              <span class="home__btn-arrow" aria-hidden="true">
-                <svg class="home__arrow-svg" viewBox="0 0 24 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <line class="home__arrow-shaft" x1="0" y1="6" x2="16" y2="6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                  <polyline class="home__arrow-head" points="11,1 18,6 11,11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-                </svg>
-              </span>
-            </RouterLink>
+            </div>
+
+            <!-- Tier 3: Passive navigation links -->
+            <div class="home__text-links">
+              <RouterLink :to="ROUTE.PRICING" class="home__text-link home__text-link--pricing">
+                {{ $t('home.btnViewPricing') }}
+              </RouterLink>
+              <span class="home__text-link-sep" aria-hidden="true">·</span>
+              <RouterLink :to="ROUTE.PROTOCOL" class="home__text-link">
+                {{ $t('home.btnGhost') }}
+              </RouterLink>
+            </div>
+
           </div>
           <p class="home__cta-refs">{{ $t('home.ctaRefs1') }}<br>{{ $t('home.ctaRefs2') }}</p>
         </div>

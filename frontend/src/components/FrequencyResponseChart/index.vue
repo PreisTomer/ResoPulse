@@ -38,6 +38,11 @@ import { CELL_CATEGORY, WAVEFORM } from '@/constants/strings'
 import { MEDIA } from '@/constants/media'
 import { UNIT } from '@/constants/units'
 
+// Module-level cache for the 19 library preset Vm curves.
+// Only busts when sigma_e, cosTheta, or fieldIntensity change — not on cursor drags.
+interface LibraryCurveCache { key: string; curves: Map<string, { hz: number; vm: number }[]> }
+let _libCurveCache: LibraryCurveCache | null = null
+
 import ChartLegend from './ChartLegend.vue'
 import ChartTooltip from './ChartTooltip.vue'
 import {
@@ -80,23 +85,27 @@ export default defineComponent({
   computed: {
     ...mapStores(useCellStore),
     UNIT() { return UNIT },
+
+    physicsKey(): string {
+      const s = this.cellStore
+      const t = s.target as { resonantFreqGHz?: number }
+      return [
+        s.healthy.id, s.healthy.radius, s.healthy.membraneThickness,
+        s.healthy.dielectricConstant, s.healthy.conductivity, s.healthy.thresholdVoltage,
+        s.healthy.nuclearRadius ?? 0,
+        s.target.id, s.target.radius, s.target.membraneThickness,
+        s.target.dielectricConstant, s.target.conductivity, s.target.thresholdVoltage,
+        s.target.nuclearRadius ?? 0, t.resonantFreqGHz ?? 0,
+        s.fieldIntensity, s.medium, s.waveform, s.dutyCycle, s.pulseWidthNs,
+        s.chartMode, s.doubleShellEnabled, s.orientationDeg,
+        s.healthyTemp, s.targetTemp, s.resetCounter,
+      ].join('|')
+    },
   },
 
   watch: {
-    'cellStore.healthy':                   { handler() { this.updateChart() }, deep: true },
-    'cellStore.target':                    { handler() { this.updateChart() }, deep: true },
-    'cellStore.fieldIntensity':            { handler() { this.updateChart() } },
-    'cellStore.medium':                    { handler() { this.updateChart() } },
-    'cellStore.effectiveSigmaE':           { handler() { this.updateChart() } },
-    'cellStore.cosThetaFactor':            { handler() { this.updateChart() } },
-    'cellStore.currentBroadcastFrequency': { handler() { if (!this._isDragging) this.updateCursor() } },
-    'cellStore.doubleShellEnabled':        { handler() { this.updateChart() } },
-    'cellStore.chartMode':                 { handler() { this.updateChart() } },
-    'cellStore.waveform':                  { handler() { this.updateChart() } },
-    'cellStore.dutyCycle':                 { handler() { this.updateChart() } },
-    'cellStore.healthyTemp':               { handler() { this.updateChart() } },
-    'cellStore.targetTemp':                { handler() { this.updateChart() } },
-    'cellStore.pulseWidthNs':              { handler() { this.updateChart() } },
+    physicsKey()                                                    { this.updateChart() },
+    'cellStore.currentBroadcastFrequency'() { if (!this._isDragging) this.updateCursor() },
   },
 
   mounted() {
@@ -384,7 +393,15 @@ export default defineComponent({
         .y((d) => this._yScale!(d.vm))
         .curve(d3.curveBasis)
 
-      // Library preset curves (faint background)
+      // Library preset curves (faint background) — cached on sigma_e / cosTheta / fieldIntensity
+      const libKey = `${sigma_e}|${cosTheta}|${this.cellStore.fieldIntensity}`
+      if (!_libCurveCache || _libCurveCache.key !== libKey) {
+        const curves = new Map<string, { hz: number; vm: number }[]>()
+        for (const preset of CELL_PRESETS) {
+          curves.set(preset.presetId, computeVmCurve(preset, this.cellStore.fieldIntensity, sigma_e, cosTheta))
+        }
+        _libCurveCache = { key: libKey, curves }
+      }
       g.select<SVGGElement>('.curves-library')
         .selectAll<SVGPathElement, typeof CELL_PRESETS[0]>('path.lib-curve')
         .data(CELL_PRESETS, (d) => d.presetId)
@@ -394,7 +411,7 @@ export default defineComponent({
         .attr('stroke', (d) => GROUP_COLORS[d.group])
         .attr('stroke-width', 1)
         .attr('stroke-opacity', 0.18)
-        .attr('d', (d) => lineGen(computeVmCurve(d, this.cellStore.fieldIntensity, sigma_e, cosTheta)) || '')
+        .attr('d', (d) => lineGen(_libCurveCache!.curves.get(d.presetId) ?? []) || '')
 
       const areaGen = d3.area<{ hz: number; vmLow: number; vmHigh: number }>()
         .x((d) => this._xScale!(d.hz))

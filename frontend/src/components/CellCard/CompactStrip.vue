@@ -97,7 +97,7 @@ export default defineComponent({
     &--lysed       { color: color-mix(in srgb, var(--color-danger) 60%, transparent); }
   }
 
-  &__sep  { color: var(--color-text-muted); opacity: 0.45; font-size: var(--fs-xl); }
+  &__sep  { color: var(--color-text-muted); opacity: 0.45; font-size: var(--fs-xl); } // intentional: decorative separator
   &__temp { font-size: 1.0rem; color: var(--color-text-muted); opacity: var(--op-partial); }
 
   &__dot {

@@ -70,7 +70,7 @@ export default defineComponent({
     font-family: var(--font-mono);
     font-size: var(--fs-xxs);
     color: var(--color-text-muted);
-    opacity: 0.75;
+    opacity: 0.75; // intentional: secondary subtitle
     white-space: nowrap;
   }
 }

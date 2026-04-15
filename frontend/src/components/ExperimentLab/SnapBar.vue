@@ -201,7 +201,7 @@ export default defineComponent({
   }
 
   &--confirmed {
-    opacity: 0.45;
+    opacity: 0.45; // intentional: confirmed state is visually retired
     cursor: not-allowed;
     border-color: color-mix(in srgb, white 15%, transparent);
     color: var(--color-text-muted);
