@@ -132,6 +132,8 @@ import { mapStores } from 'pinia'
 import { useTokenStore } from '@/stores/tokenStore'
 import { useThemeStore } from '@/stores/themeStore'
 
+import { disconnectSocket } from '@/services/socket'
+
 import { ROUTE } from '@/constants/routes'
 import { ICON } from '@/constants/icons'
 import { PLAN_LABEL } from '@/types/token'
@@ -250,6 +252,9 @@ export default defineComponent({
 
     doSignOut(): void {
       this.closeMenu()
+      this.tokenStore.stopPolling()
+      this.tokenStore.reset()
+      disconnectSocket()
       ;(this.clerk as { signOut?(opts?: { redirectUrl?: string }): Promise<void> })
         ?.signOut?.({ redirectUrl: ROUTE.SIGN_IN })
     },

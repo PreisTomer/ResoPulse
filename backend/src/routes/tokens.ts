@@ -109,6 +109,9 @@ router.post('/consume', requireAuth, requireOrg, async (req: Request, res: Respo
     return
   }
 
+  // Guarantee account exists — covers the window between signup and webhook delivery.
+  await createTokenAccount(orgId!)
+
   const cost   = COST_MAP[reason as keyof typeof COST_MAP]
   const result = await consumeTokens(orgId!, userId, cost, reason)
 

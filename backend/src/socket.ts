@@ -473,7 +473,9 @@ export function setupSocketServer(httpServer: HttpServer): Server {
       if (!raw || typeof raw !== 'object') return
       const packet = validateImpedancePacket(raw as Record<string, unknown>)
       if (!packet) return
-      io.emit(SOCKET_EVENTS.IMPEDANCE_BROADCAST, packet)
+      // Scope broadcast to the instrument's session room — never global.
+      const currentRoom = socketToRoom.get(socket.id) ?? DEFAULT_ROOM
+      socket.to(currentRoom).emit(SOCKET_EVENTS.IMPEDANCE_BROADCAST, packet)
     })
 
     socket.on(SOCKET_EVENTS.DISCONNECT, () => {
