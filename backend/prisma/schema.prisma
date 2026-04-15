@@ -36,6 +36,7 @@ model Organization {
   memberships  Membership[]
   tokenAccount TokenAccount?
   experiments  ExperimentSession[]
+  cellPresets  UserCellPreset[]
 
   @@map("organizations")
 }
@@ -130,6 +131,44 @@ model TokenTransaction {
 
   @@index([accountId, createdAt])
   @@map("token_transactions")
+}
+
+// ── UserCellPreset ────────────────────────────────────────────────────────────
+// Lab-level custom cell definitions. One row per cell profile created by a lab.
+// role: "target" | "healthy" — determines which picker the cell appears in.
+// cellType: "mammalian" | "bacteria" | "virus" — governs which physics path runs.
+
+model UserCellPreset {
+  id                   String   @id @default(cuid())
+  orgId                String
+  createdBy            String
+  role                 String   @db.VarChar(8)    // "target" | "healthy"
+  cellType             String   @db.VarChar(12)   // "mammalian" | "bacteria" | "virus"
+  label                String   @db.VarChar(120)
+  shortLabel           String   @db.VarChar(40)
+  notes                String?  @db.VarChar(500)
+  // "literature" | "measured" | "estimated" — how the parameters were obtained
+  parameterConfidence  String   @default("literature") @db.VarChar(16)
+  // ── Required Schwan / thermal parameters ──────────────────────────────────
+  radius               Float
+  membraneThickness    Float
+  dielectricConstant   Float
+  conductivity         Float
+  thresholdVoltage     Float
+  density              Float
+  specificHeatCapacity Float
+  // ── Acoustic / mechanical resonance (bacteria / virus only) ───────────────
+  resonantFreqGHz      Float?
+  capsidQ              Float?
+  resonantThresholdVcm Float?
+  // ── Timestamps ────────────────────────────────────────────────────────────
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@index([orgId])
+  @@map("user_cell_presets")
 }
 
 // ── Outcome ───────────────────────────────────────────────────────────────────

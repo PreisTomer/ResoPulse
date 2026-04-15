@@ -29,6 +29,7 @@
         ref="healthyPicker"
         @opened="closePicker('target')"
         @select="loadHealthyPreset"
+        @selectUser="loadUserPreset"
       />
       <TargetCellPicker
         ref="targetPicker"
@@ -167,8 +168,10 @@ export default defineComponent({
     },
 
     loadUserPreset(preset: UserCellPreset) {
-      const config = this.userPresetsStore.toCellConfig(preset, 'target')
-      this.cellStore.loadPreset('target', config)
+      const config = this.userPresetsStore.toCellConfig(preset)
+      const slot   = preset.role === 'healthy' ? 'healthy' : 'target'
+      this.cellStore.loadPreset(slot, config)
+      broadcastStateSync()
     },
 
     closeAllPickers() {

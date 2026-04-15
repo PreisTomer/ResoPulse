@@ -11,16 +11,20 @@
       >{{ err }}</span>
     </div>
 
+    <!-- Save error -->
+    <div v-if="saveError" class="ccm-footer__save-error">{{ saveError }}</div>
+
     <div class="ccm-footer__actions">
-      <button class="ccm-footer__btn ccm-footer__btn--cancel" @click="$emit(EMIT.CANCEL)">
+      <button class="ccm-footer__btn ccm-footer__btn--cancel" :disabled="saving" @click="$emit(EMIT.CANCEL)">
         {{ $t('userPresets.cancelBtn') }}
       </button>
       <button
         class="ccm-footer__btn ccm-footer__btn--save"
-        :disabled="!canSave"
+        :disabled="!canSave || saving"
         @click="$emit(EMIT.SAVE)"
       >
-        {{ $t('userPresets.saveBtn') }}
+        <span v-if="saving" class="ccm-footer__spinner" aria-hidden="true"></span>
+        {{ saving ? $t('userPresets.savingBtn') : $t('userPresets.saveBtn') }}
       </button>
     </div>
 
@@ -37,6 +41,8 @@ export default defineComponent({
   props: {
     canSave:          { type: Boolean, required: true },
     validationErrors: { type: Array as () => string[], default: () => [] },
+    saving:           { type: Boolean, default: false },
+    saveError:        { type: String,  default: '' },
   },
 
   emits: [EMIT.SAVE, EMIT.CANCEL],
@@ -90,12 +96,35 @@ export default defineComponent({
     }
 
     &--save {
+      @include flex-row(0.45rem);
       background: var(--color-primary);
       color:      var(--color-btn-dark);
 
       &:hover:not(:disabled) { filter: brightness(1.1); }
-      &:disabled { opacity: 0.4; cursor: not-allowed; } // intentional: disabled state below ghost
+      &:disabled { opacity: 0.4; cursor: not-allowed; }
     }
   }
+
+  &__save-error {
+    font-size:   var(--fs-sm);
+    color:       var(--color-danger);
+    font-family: var(--font-mono);
+    text-align:  right;
+  }
+
+  &__spinner {
+    display:       inline-block;
+    width:         11px;
+    height:        11px;
+    border:        2px solid color-mix(in srgb, var(--color-btn-dark) 30%, transparent);
+    border-top:    2px solid var(--color-btn-dark);
+    border-radius: 50%;
+    animation:     ccm-spin 0.6s linear infinite;
+    flex-shrink:   0;
+  }
+}
+
+@keyframes ccm-spin {
+  to { transform: rotate(360deg); }
 }
 </style>

@@ -17,8 +17,12 @@
 
     <!-- Picker dropdown -->
     <div v-if="isOpen" class="experiment__cell-picker">
-      <div class="experiment__cell-picker-title">{{ $t('exp.pickerHealthyTitle') }}</div>
+      <div class="experiment__cell-picker-hdr">
+        <div class="experiment__cell-picker-title">{{ $t('exp.pickerHealthyTitle') }}</div>
+      </div>
+
       <div class="experiment__cell-picker-grid">
+        <!-- Built-in reference presets -->
         <button
           v-for="p in healthyPresets"
           :key="p.presetId"
@@ -29,10 +33,49 @@
           <span class="experiment__preset-btn-name">{{ p.shortLabel }}</span>
           <span class="experiment__preset-btn-sub">{{ p.notes }}</span>
         </button>
+
+        <!-- User reference presets -->
+        <div
+          v-for="p in userPresetsStore.healthyPresets"
+          :key="p.id"
+          class="experiment__preset-btn experiment__preset-btn--custom"
+          :class="{ 'experiment__preset-btn--active': cellStore.healthy.id === p.id }"
+          role="button"
+          tabindex="0"
+          @click="selectUserPreset(p)"
+          @keydown.enter="selectUserPreset(p)"
+        >
+          <div class="experiment__preset-btn-row">
+            <span class="experiment__preset-btn-name">{{ p.shortLabel }}</span>
+            <span
+              class="experiment__preset-confidence"
+              :class="`experiment__preset-confidence--${p.parameterConfidence}`"
+              :title="$t(`userPresets.confidenceTip${capitalizeFirst(p.parameterConfidence)}`)"
+            >{{ confidenceBadge(p.parameterConfidence) }}</span>
+          </div>
+          <span class="experiment__preset-btn-sub">{{ p.notes || p.label }}</span>
+          <div class="experiment__preset-btn-actions">
+            <button class="experiment__preset-btn-edit" @click.stop="openEditModal(p)" :title="$t('userPresets.editBtn')">{{ ICON.EDIT }}</button>
+            <button class="experiment__preset-btn-del" @click.stop="deletePreset(p.id)" :title="$t('exp.deletePreset')">{{ ICON.CLOSE }}</button>
+          </div>
+        </div>
+
+        <!-- Add new reference cell button -->
+        <button class="experiment__preset-btn-new" @click.stop="openCreateModal">
+          {{ $t('userPresets.createHealthyBtn') }}
+        </button>
       </div>
     </div>
 
   </div>
+
+  <CreateCellModal
+    :visible="showModal"
+    :edit-preset="editingPreset"
+    :default-role="'healthy'"
+    @close="closeModal"
+    @saved="closeModal"
+  />
 </template>
 
 <script lang="ts">
@@ -40,6 +83,10 @@ import { defineComponent } from 'vue'
 import { mapStores } from 'pinia'
 
 import { useCellStore } from '@/stores/cellStore'
+import { useUserPresetsStore } from '@/stores/userPresetsStore'
+import type { UserCellPreset } from '@/stores/userPresetsStore'
+
+import CreateCellModal from '@/components/CreateCellModal/index.vue'
 
 import { formatFreqKHz } from '@/utils/format'
 import { tipCellBadgeHealthy } from '@/tooltips/experimentTooltips'
@@ -52,17 +99,21 @@ import { ICON } from '@/constants/icons'
 export default defineComponent({
   name: 'HealthyCellPicker',
 
-  emits: ['select', 'opened'],
+  components: { CreateCellModal },
+
+  emits: ['select', 'selectUser', 'opened'],
 
   data() {
     return {
-      isOpen: false,
+      isOpen:        false,
+      showModal:     false,
+      editingPreset: null as UserCellPreset | null,
     }
   },
 
   computed: {
     ICON() { return ICON },
-    ...mapStores(useCellStore),
+    ...mapStores(useCellStore, useUserPresetsStore),
 
     healthyPresets(): CellPreset[] {
       return CELL_PRESETS.filter((p) => p.group === CELL_GROUP.REFERENCE)
@@ -93,9 +144,47 @@ export default defineComponent({
       this.isOpen = false
     },
 
+    capitalizeFirst(s: string): string {
+      return s.charAt(0).toUpperCase() + s.slice(1)
+    },
+
+    confidenceBadge(confidence: string): string {
+      const map: Record<string, string> = {
+        literature: this.$t('userPresets.confidenceBadgeLit'),
+        measured:   this.$t('userPresets.confidenceBadgeMeas'),
+        estimated:  this.$t('userPresets.confidenceBadgeEst'),
+      }
+      return map[confidence] ?? confidence.toUpperCase().slice(0, 4)
+    },
+
     selectPreset(preset: CellPreset) {
       this.isOpen = false
       this.$emit('select', preset)
+    },
+
+    selectUserPreset(preset: UserCellPreset) {
+      this.isOpen = false
+      this.$emit('selectUser', preset)
+    },
+
+    openCreateModal() {
+      this.editingPreset = null
+      this.showModal     = true
+    },
+
+    openEditModal(preset: UserCellPreset) {
+      this.editingPreset = preset
+      this.showModal     = true
+    },
+
+    closeModal() {
+      this.showModal     = false
+      this.editingPreset = null
+    },
+
+    async deletePreset(id: string) {
+      if (!window.confirm(this.$t('userPresets.deleteConfirm'))) return
+      await this.userPresetsStore.remove(id)
     },
   },
 })
@@ -200,6 +289,8 @@ export default defineComponent({
       max-width: none;
     }
 
+    &-hdr { margin-bottom: 0.6rem; }
+
     &-title {
       @include mono-upper(var(--fs-xs), 0.1em);
       color: var(--color-text-muted);
@@ -233,6 +324,16 @@ export default defineComponent({
 
     &--healthy.experiment__preset-btn--active { border-color: var(--color-primary); }
 
+    &--custom {
+      position: relative;
+      padding-right: 3.5rem;
+    }
+
+    &-row {
+      @include flex-row(0.4rem);
+      align-items: center;
+    }
+
     &-name {
       font-family: var(--font-mono);
       font-size: var(--fs-xs);
@@ -247,6 +348,65 @@ export default defineComponent({
       color: var(--color-text-muted);
       line-height: 1.35;
     }
+
+    &-actions {
+      position:   absolute;
+      top:        50%;
+      right:      0.4rem;
+      transform:  translateY(-50%);
+      display:    flex;
+      gap:        0.15rem;
+      align-items: center;
+    }
+
+    &-edit,
+    &-del {
+      background:  transparent;
+      border:      none;
+      color:       var(--color-text-muted);
+      font-size:   var(--fs-xxs);
+      cursor:      pointer;
+      padding:     0.15rem 0.2rem;
+      line-height: 1;
+      opacity:     0.5;
+      transition:  opacity var(--tr-fast), color var(--tr-fast);
+    }
+
+    &-edit:hover { opacity: 1; color: var(--color-primary); }
+    &-del:hover  { opacity: 1; color: var(--color-danger); }
+
+    &-new {
+      width:          100%;
+      padding:        0.45rem 0.65rem;
+      background:     color-mix(in srgb, var(--color-primary) 6%, transparent);
+      border:         1px dashed color-mix(in srgb, var(--color-primary) 35%, transparent);
+      border-radius:  4px;
+      color:          color-mix(in srgb, var(--color-primary) 85%, transparent);
+      font-family:    var(--font-mono);
+      font-size:      var(--fs-xs);
+      font-weight:    600;
+      letter-spacing: 0.04em;
+      cursor:         pointer;
+      text-align:     left;
+      transition:     background var(--tr-fast), border-color var(--tr-fast);
+      margin-top:     0.1rem;
+
+      &:hover {
+        background:   color-mix(in srgb, var(--color-primary) 12%, transparent);
+        border-color: color-mix(in srgb, var(--color-primary) 60%, transparent);
+      }
+    }
+  }
+
+  // ── Confidence badge ──────────────────────────────────────────────────────
+  &__preset-confidence {
+    @include badge-pill(0.08rem 0.28rem, 3px);
+    font-size: 0.58rem;
+    flex-shrink: 0;
+
+    &--literature { @include color-variant(primary, 40%, 6%); }
+    &--measured   { @include color-variant(accent,  40%, 6%); }
+    &--estimated  { @include color-variant(amber,   40%, 6%); }
   }
 }
 </style>

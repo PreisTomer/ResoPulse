@@ -317,7 +317,7 @@
     "steps": {
       "s01": {
         "title": "Select cell pair",
-        "desc": "In the Experiment Lab, use the <span class=\"proto-lab-link\" data-target=\"hl-cell-badges\" data-route=\"/experiment\">preset picker in the setup bar</span> to choose healthy reference and target cell types. Each preset loads biophysical parameters from the cell library (see Data Sets tab). Open the <span class=\"proto-lab-link\" data-target=\"hl-cell-cards\" data-route=\"/experiment\">Cell Parameters panel</span> on either card to enter custom values or perform sensitivity analysis. For bacteria and virus targets, the mode toggle automatically offers Resonance mode."
+        "desc": "In the Experiment Lab, use the <span class=\"proto-lab-link\" data-target=\"hl-cell-badges\" data-route=\"/experiment\">preset picker in the setup bar</span> to choose healthy reference and target cell types. Built-in library presets load peer-reviewed biophysical parameters from the cell library (see Data Sets tab). To use your own measured parameters, click <strong>+ New Target Cell</strong> or <strong>+ New Reference Cell</strong> directly in the picker: the new profile is saved to your shared lab library and appears alongside built-in presets in every session. Open the <span class=\"proto-lab-link\" data-target=\"hl-cell-cards\" data-route=\"/experiment\">Cell Parameters panel</span> on either card to enter custom values or perform sensitivity analysis. For bacteria and virus targets, the mode toggle automatically offers Resonance mode."
       },
       "s02": {
         "title": "Set propagation medium",

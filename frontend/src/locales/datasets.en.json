@@ -7,6 +7,7 @@
     "cellLib": {
       "sectionTitle": "Cell Library",
       "sectionTag": "{n} presets",
+      "addCellBtn": "+ Add Cell Profile",
       "colGroup": "Group",
       "colCell": "Cell / Pathogen",
       "colR": "R (µm)",
@@ -35,7 +36,7 @@
       "colQTitle": "Mechanical quality factor, sharpness of resonance peak",
       "colEthr": "E<sub>thr</sub>† (V/cm)",
       "colEthrTitle": "Theoretical RF field amplitude for capsid/cell-wall disruption at resonance. Tsen et al. experiments used femtosecond laser excitation, not RF; these V/cm values are extrapolations with no direct experimental basis.",
-      "colNotes": "Notes",
+      "colNotes": "Source / Citation",
       "fLabel1": "Membrane capacitance",
       "fEq1": "C_m = ε_r · ε₀ / d",
       "fLabel2": "RC time constant",

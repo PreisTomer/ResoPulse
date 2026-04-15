@@ -32,6 +32,7 @@ import ProtocolGuidePanel from './components/ExperimentLab/ProtocolGuidePanel.vu
 import { useThemeStore } from './stores/themeStore'
 import { useAuthStore } from './stores/authStore'
 import { useTokenStore } from './stores/tokenStore'
+import { useUserPresetsStore } from './stores/userPresetsStore'
 
 import { ROUTE } from './constants/routes'
 
@@ -43,6 +44,7 @@ export default defineComponent({
   setup() {
     const authStore              = useAuthStore()
     const tokenStore             = useTokenStore()
+    const userPresetsStore       = useUserPresetsStore()
     const { isLoaded, isSignedIn, orgId } = useAuth()
 
     // Keep authStore in sync with Clerk's reactive state.
@@ -55,13 +57,16 @@ export default defineComponent({
         authStore.syncFromClerk(!!signedIn, !!oid)
         if (authStore.isClerkLoading) authStore.setClerkLoaded()
 
-        // Fetch token balance as soon as the user is signed in with an active org.
-        // startPolling() is idempotent — safe to call on every state change.
+        // Fetch token balance and cell library as soon as auth state resolves.
+        // startPolling() and fetchAll() are idempotent — safe on every state change.
         if (signedIn && oid) {
           tokenStore.fetchBalance()
           tokenStore.startPolling()
+          userPresetsStore.fetchAll()
         } else {
           tokenStore.reset()
+          // Load guest presets from localStorage if not signed in
+          userPresetsStore.fetchAll()
         }
       },
       { immediate: true },

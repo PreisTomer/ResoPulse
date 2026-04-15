@@ -8,97 +8,224 @@ import type { CellConfig } from '@/types/cell'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
+export type CellRole            = 'target' | 'healthy'
+export type CellFormType        = 'mammalian' | 'bacteria' | 'virus'
+export type ParameterConfidence = 'literature' | 'measured' | 'estimated'
+
 export interface UserCellPreset {
   id:                   string
+  role:                 CellRole
+  cellType:             CellFormType
   label:                string
   shortLabel:           string
-  notes:                string           // e.g. citation or lab context
+  notes:                string
+  parameterConfidence:  ParameterConfidence
   // Required Schwan parameters
-  radius:               number           // µm
-  membraneThickness:    number           // nm
-  dielectricConstant:   number           // membrane ε_r (effective, typically 5-15)
-  conductivity:         number           // intracellular σ_i [S/m]
-  thresholdVoltage:     number           // Vm lysis threshold [V]
+  radius:               number
+  membraneThickness:    number
+  dielectricConstant:   number
+  conductivity:         number
+  thresholdVoltage:     number
   // Thermal
-  density:              number           // kg/m³ (default 1000)
-  specificHeatCapacity: number           // J/(kg·K) (default 3500)
+  density:              number
+  specificHeatCapacity: number
   // Acoustic / mechanical resonance (bacteria / virus only)
-  resonantFreqGHz?:       number         // Capsid or cell-wall fundamental resonant frequency [GHz]
-  capsidQ?:               number         // Mechanical quality factor
-  resonantThresholdVcm?:  number         // Field amplitude at resonance for disruption [V/cm]
-  createdAt:            number           // Unix ms
+  resonantFreqGHz?:       number
+  capsidQ?:               number
+  resonantThresholdVcm?:  number
+  createdAt:            number
 }
 
-// ── Persistence helpers ────────────────────────────────────────────────────────
+export type UserCellPresetInput = Omit<UserCellPreset, 'id' | 'createdAt'>
 
-const STORAGE_KEY = 'resopulse_user_presets_v1'
+// ── API helpers ────────────────────────────────────────────────────────────────
 
-function load(): UserCellPreset[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    return raw ? (JSON.parse(raw) as UserCellPreset[]) : []
-  } catch {
-    return []
+const BACKEND_URL    = (import.meta.env.VITE_BACKEND_URL as string ?? 'http://localhost:3001').replace(/\/$/, '')
+const LOCAL_KEY      = 'resopulse_user_presets_v2'
+
+async function authHeaders(): Promise<Record<string, string> | null> {
+  const token = await window.Clerk?.session?.getToken()
+  if (!token) return null
+  return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }
+}
+
+async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const headers = await authHeaders()
+  if (!headers) throw new Error('Not authenticated')
+  const res = await fetch(`${BACKEND_URL}${path}`, { ...init, headers: { ...headers, ...(init.headers ?? {}) } })
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({})) as { error?: string }
+    throw new Error(body.error ?? `HTTP ${res.status}`)
   }
+  if (res.status === 204 || res.headers.get('content-length') === '0') return undefined as T
+  return res.json() as Promise<T>
 }
 
-function save(presets: UserCellPreset[]): void {
+// ── Local-storage fallback (guests only) ──────────────────────────────────────
+
+function loadLocal(): UserCellPreset[] {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(presets))
-  } catch { /* quota exceeded, fail silently */ }
+    const raw = localStorage.getItem(LOCAL_KEY)
+    return raw ? (JSON.parse(raw) as UserCellPreset[]) : []
+  } catch { return [] }
+}
+
+function saveLocal(presets: UserCellPreset[]): void {
+  try { localStorage.setItem(LOCAL_KEY, JSON.stringify(presets)) } catch { /* quota */ }
+}
+
+// ── Backend DTO → UserCellPreset ───────────────────────────────────────────────
+
+interface BackendPreset {
+  id: string; role: string; cellType: string; label: string; shortLabel: string
+  notes: string | null; parameterConfidence: string; radius: number; membraneThickness: number
+  dielectricConstant: number; conductivity: number; thresholdVoltage: number
+  density: number; specificHeatCapacity: number
+  resonantFreqGHz: number | null; capsidQ: number | null; resonantThresholdVcm: number | null
+  createdAt: string
+}
+
+function fromBackend(p: BackendPreset): UserCellPreset {
+  return {
+    id:                   p.id,
+    role:                 p.role as CellRole,
+    cellType:             p.cellType as CellFormType,
+    label:                p.label,
+    shortLabel:           p.shortLabel,
+    notes:                p.notes ?? '',
+    parameterConfidence:  (p.parameterConfidence as ParameterConfidence) ?? 'literature',
+    radius:               p.radius,
+    membraneThickness:    p.membraneThickness,
+    dielectricConstant:   p.dielectricConstant,
+    conductivity:         p.conductivity,
+    thresholdVoltage:     p.thresholdVoltage,
+    density:              p.density,
+    specificHeatCapacity: p.specificHeatCapacity,
+    ...(p.resonantFreqGHz      != null && { resonantFreqGHz:      p.resonantFreqGHz }),
+    ...(p.capsidQ               != null && { capsidQ:              p.capsidQ }),
+    ...(p.resonantThresholdVcm  != null && { resonantThresholdVcm: p.resonantThresholdVcm }),
+    createdAt: new Date(p.createdAt).getTime(),
+  }
 }
 
 // ── Store ──────────────────────────────────────────────────────────────────────
 
 export const useUserPresetsStore = defineStore('userPresets', {
   state: () => ({
-    presets: load() as UserCellPreset[],
+    presets:  [] as UserCellPreset[],
+    loading:  false,
+    isGuest:  false,
   }),
 
   getters: {
-    hasPresets(): boolean { return this.presets.length > 0 },
+    hasPresets():      boolean        { return this.presets.length > 0 },
+    targetPresets():   UserCellPreset[] { return this.presets.filter(p => p.role === 'target') },
+    healthyPresets():  UserCellPreset[] { return this.presets.filter(p => p.role === 'healthy') },
   },
 
   actions: {
-    add(preset: Omit<UserCellPreset, 'id' | 'createdAt'>) {
-      const entry: UserCellPreset = {
-        ...preset,
-        id:        `user_${Date.now()}`,
-        createdAt: Date.now(),
+    async fetchAll(): Promise<void> {
+      const headers = await authHeaders()
+      if (!headers) {
+        // Guest: use localStorage
+        this.isGuest = true
+        this.presets = loadLocal()
+        return
       }
-      this.presets.push(entry)
-      save(this.presets)
+      this.isGuest = false
+      this.loading = true
+      try {
+        const data = await apiFetch<{ presets: BackendPreset[] }>('/cell-presets')
+        this.presets = data.presets.map(fromBackend)
+      } catch (err) {
+        console.error('[userPresetsStore] fetchAll failed:', err)
+      } finally {
+        this.loading = false
+      }
     },
 
-    remove(id: string) {
-      this.presets = this.presets.filter(p => p.id !== id)
-      save(this.presets)
+    async add(input: UserCellPresetInput): Promise<UserCellPreset | null> {
+      if (this.isGuest) {
+        const entry: UserCellPreset = { ...input, id: `user_${Date.now()}`, createdAt: Date.now() }
+        this.presets.push(entry)
+        saveLocal(this.presets)
+        return entry
+      }
+      try {
+        const data = await apiFetch<{ preset: BackendPreset }>('/cell-presets', {
+          method: 'POST',
+          body:   JSON.stringify(input),
+        })
+        const entry = fromBackend(data.preset)
+        this.presets.push(entry)
+        return entry
+      } catch (err) {
+        console.error('[userPresetsStore] add failed:', err)
+        return null
+      }
     },
 
-    toCellConfig(preset: UserCellPreset, type: CellType = CELL_TYPE.TARGET): CellConfig {
+    async update(id: string, changes: Partial<UserCellPresetInput>): Promise<boolean> {
+      if (this.isGuest) {
+        const idx = this.presets.findIndex(p => p.id === id)
+        if (idx === -1) return false
+        this.presets[idx] = { ...this.presets[idx]!, ...changes }
+        saveLocal(this.presets)
+        return true
+      }
+      try {
+        const data = await apiFetch<{ preset: BackendPreset }>(`/cell-presets/${id}`, {
+          method: 'PUT',
+          body:   JSON.stringify(changes),
+        })
+        const idx = this.presets.findIndex(p => p.id === id)
+        if (idx !== -1) this.presets[idx] = fromBackend(data.preset)
+        return true
+      } catch (err) {
+        console.error('[userPresetsStore] update failed:', err)
+        return false
+      }
+    },
+
+    async remove(id: string): Promise<void> {
+      if (this.isGuest) {
+        this.presets = this.presets.filter(p => p.id !== id)
+        saveLocal(this.presets)
+        return
+      }
+      try {
+        await apiFetch<void>(`/cell-presets/${id}`, { method: 'DELETE' })
+        this.presets = this.presets.filter(p => p.id !== id)
+      } catch (err) {
+        console.error('[userPresetsStore] remove failed:', err)
+      }
+    },
+
+    toCellConfig(preset: UserCellPreset, typeOverride?: CellType): CellConfig {
+      const type = typeOverride ?? (preset.role === 'healthy' ? CELL_TYPE.HEALTHY : CELL_TYPE.TARGET)
       return {
         id:                   preset.id,
-        type:                 type === CELL_TYPE.HEALTHY ? CELL_TYPE.HEALTHY : CELL_TYPE.TARGET,
+        type,
         label:                preset.label,
         description:          preset.notes || undefined,
         radius:               preset.radius,
         membraneThickness:    preset.membraneThickness,
-        naturalFrequency:     0,              // animation only
+        naturalFrequency:     0,
         thresholdVoltage:     preset.thresholdVoltage,
         dielectricConstant:   preset.dielectricConstant,
         conductivity:         preset.conductivity,
         density:              preset.density,
         specificHeatCapacity: preset.specificHeatCapacity,
         amplitude:            0.5,
-        // Optional resonance fields (bacteria / virus only) - omit if undefined
-        ...(preset.resonantFreqGHz       != null && { resonantFreqGHz:      preset.resonantFreqGHz }),
-        ...(preset.capsidQ               != null && { capsidQ:              preset.capsidQ }),
-        ...(preset.resonantThresholdVcm  != null && { resonantThresholdVcm: preset.resonantThresholdVcm }),
+        ...(preset.resonantFreqGHz      != null && { resonantFreqGHz:      preset.resonantFreqGHz }),
+        ...(preset.capsidQ              != null && { capsidQ:              preset.capsidQ }),
+        ...(preset.resonantThresholdVcm != null && { resonantThresholdVcm: preset.resonantThresholdVcm }),
       }
     },
 
-    reload() {
-      this.presets = load()
+    // Legacy — kept for guest compatibility; callers should use fetchAll() instead
+    reload(): void {
+      if (this.isGuest) this.presets = loadLocal()
     },
   },
 })

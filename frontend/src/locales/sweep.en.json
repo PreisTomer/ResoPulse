@@ -25,6 +25,10 @@
     "keyLysis": "Target lysis (100%)",
 
     "cursorCurrent": "current",
+    "hoverTarget": "Target DR",
+    "hoverHealthy": "Healthy DR",
+    "hoverTI": "TI",
+    "hoverInWindow": "In selectivity window",
     "axisFieldIntensity": "Field Intensity",
     "axisFrequency": "Frequency",
     "axisDisruptionRatio": "Disruption Ratio",

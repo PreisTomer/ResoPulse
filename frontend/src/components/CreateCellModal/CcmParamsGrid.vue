@@ -12,13 +12,16 @@
       <input
         :value="form.radius"
         class="ccm-params-grid__input"
+        :class="{ 'ccm-params-grid__input--warn': isFieldOutOfRange('radius') }"
         type="number"
         step="0.001"
         min="0.001"
         max="100"
         @input="onNumericInput('radius', $event)"
       />
-      <span class="ccm-params-grid__sub-hint">{{ $t('userPresets.fieldRadiusSub') }}</span>
+      <span class="ccm-params-grid__range" :class="{ 'ccm-params-grid__range--warn': isFieldOutOfRange('radius') }">
+        {{ rangeHintFor('radius') }}
+      </span>
     </div>
 
     <!-- Membrane thickness -->
@@ -31,13 +34,16 @@
       <input
         :value="form.membraneThickness"
         class="ccm-params-grid__input"
+        :class="{ 'ccm-params-grid__input--warn': isFieldOutOfRange('membraneThickness') }"
         type="number"
         step="0.1"
         min="1"
         max="200"
         @input="onNumericInput('membraneThickness', $event)"
       />
-      <span class="ccm-params-grid__sub-hint">{{ $t('userPresets.fieldMemThickSub') }}</span>
+      <span class="ccm-params-grid__range" :class="{ 'ccm-params-grid__range--warn': isFieldOutOfRange('membraneThickness') }">
+        {{ rangeHintFor('membraneThickness') }}
+      </span>
     </div>
 
     <!-- Dielectric constant -->
@@ -49,13 +55,16 @@
       <input
         :value="form.dielectricConstant"
         class="ccm-params-grid__input"
+        :class="{ 'ccm-params-grid__input--warn': isFieldOutOfRange('dielectricConstant') }"
         type="number"
         step="0.5"
         min="1"
         max="80"
         @input="onNumericInput('dielectricConstant', $event)"
       />
-      <span class="ccm-params-grid__sub-hint">{{ $t('userPresets.fieldEpsRSub') }}</span>
+      <span class="ccm-params-grid__range" :class="{ 'ccm-params-grid__range--warn': isFieldOutOfRange('dielectricConstant') }">
+        {{ rangeHintFor('dielectricConstant') }}
+      </span>
     </div>
 
     <!-- Intracellular conductivity -->
@@ -68,13 +77,16 @@
       <input
         :value="form.conductivity"
         class="ccm-params-grid__input"
+        :class="{ 'ccm-params-grid__input--warn': isFieldOutOfRange('conductivity') }"
         type="number"
         step="0.01"
         min="0.001"
         max="10"
         @input="onNumericInput('conductivity', $event)"
       />
-      <span class="ccm-params-grid__sub-hint">{{ $t('userPresets.fieldSigmaISub') }}</span>
+      <span class="ccm-params-grid__range" :class="{ 'ccm-params-grid__range--warn': isFieldOutOfRange('conductivity') }">
+        {{ rangeHintFor('conductivity') }}
+      </span>
     </div>
 
     <!-- Lysis threshold -->
@@ -87,13 +99,16 @@
       <input
         :value="form.thresholdVoltage"
         class="ccm-params-grid__input"
+        :class="{ 'ccm-params-grid__input--warn': isFieldOutOfRange('thresholdVoltage') }"
         type="number"
         step="0.05"
         min="0.05"
         max="10"
         @input="onNumericInput('thresholdVoltage', $event)"
       />
-      <span class="ccm-params-grid__sub-hint">{{ $t('userPresets.fieldVmThrSub') }}</span>
+      <span class="ccm-params-grid__range" :class="{ 'ccm-params-grid__range--warn': isFieldOutOfRange('thresholdVoltage') }">
+        {{ rangeHintFor('thresholdVoltage') }}
+      </span>
     </div>
 
     <!-- Density -->
@@ -106,13 +121,16 @@
       <input
         :value="form.density"
         class="ccm-params-grid__input"
+        :class="{ 'ccm-params-grid__input--warn': isFieldOutOfRange('density') }"
         type="number"
         step="10"
         min="500"
         max="2000"
         @input="onNumericInput('density', $event)"
       />
-      <span class="ccm-params-grid__sub-hint">{{ $t('userPresets.fieldDensitySub') }}</span>
+      <span class="ccm-params-grid__range" :class="{ 'ccm-params-grid__range--warn': isFieldOutOfRange('density') }">
+        {{ rangeHintFor('density') }}
+      </span>
     </div>
 
     <!-- Specific heat capacity -->
@@ -125,13 +143,16 @@
       <input
         :value="form.specificHeatCapacity"
         class="ccm-params-grid__input"
+        :class="{ 'ccm-params-grid__input--warn': isFieldOutOfRange('specificHeatCapacity') }"
         type="number"
         step="50"
         min="500"
         max="5000"
         @input="onNumericInput('specificHeatCapacity', $event)"
       />
-      <span class="ccm-params-grid__sub-hint">{{ $t('userPresets.fieldCpSub') }}</span>
+      <span class="ccm-params-grid__range" :class="{ 'ccm-params-grid__range--warn': isFieldOutOfRange('specificHeatCapacity') }">
+        {{ rangeHintFor('specificHeatCapacity') }}
+      </span>
     </div>
 
   </div>
@@ -142,6 +163,61 @@ import { defineComponent } from 'vue'
 
 import { UNIT } from '@/constants/units'
 import { EMIT } from '@/constants/emitEvents'
+
+type CellFormType = 'mammalian' | 'bacteria' | 'virus'
+
+// ── Literature ranges by cell type and field ──────────────────────────────────
+// Sources: Kotnik & Miklavcic (2000, 2006); Gascoyne & Vykoukal (2002);
+//          Weaver & Chizmadzhev (1996); Gabriel et al. (1996); Schwan (1957).
+// These are [min, max] soft bounds — values outside trigger a non-blocking amber
+// warning to prompt the user to verify their source before saving.
+const LIT_RANGES: Record<CellFormType, Partial<Record<string, [number, number]>>> = {
+  mammalian: {
+    radius:               [5,     20   ],
+    membraneThickness:    [5,     10   ],
+    dielectricConstant:   [5,     15   ],
+    conductivity:         [0.4,   1.5  ],
+    thresholdVoltage:     [0.5,   1.5  ],
+    density:              [1000,  1100 ],
+    specificHeatCapacity: [3000,  4000 ],
+  },
+  bacteria: {
+    radius:               [0.5,   2.0  ],
+    membraneThickness:    [5,     10   ],
+    dielectricConstant:   [8,     18   ],
+    conductivity:         [0.2,   0.5  ],
+    thresholdVoltage:     [0.8,   2.0  ],
+    density:              [1050,  1150 ],
+    specificHeatCapacity: [3000,  4000 ],
+  },
+  virus: {
+    radius:               [0.02,  0.15 ],
+    membraneThickness:    [3,     8    ],
+    dielectricConstant:   [10,    30   ],
+    conductivity:         [0.05,  0.4  ],
+    thresholdVoltage:     [0.2,   0.8  ],
+    density:              [1100,  1400 ],
+    specificHeatCapacity: [2000,  3500 ],
+  },
+}
+
+// Display units for each field key (used in range hint string)
+const FIELD_UNITS: Partial<Record<string, string>> = {
+  radius:               UNIT.UM,
+  membraneThickness:    UNIT.NM,
+  dielectricConstant:   '',
+  conductivity:         UNIT.S_PER_M,
+  thresholdVoltage:     UNIT.V,
+  density:              UNIT.KG_PER_M3,
+  specificHeatCapacity: UNIT.J_PER_KG_K,
+}
+
+function formatRangeNumber(n: number): string {
+  if (n < 1)   return n.toString()
+  if (n % 1 === 0) return n.toString()
+  return n.toFixed(1)
+}
+
 export default defineComponent({
   name: 'CcmParamsGrid',
 
@@ -161,12 +237,32 @@ export default defineComponent({
       const value = parseFloat((event.target as HTMLInputElement).value)
       this.$emit(EMIT.FIELD_CHANGE, { key, value })
     },
+
+    isFieldOutOfRange(key: string): boolean {
+      const ct    = this.form.cellType as CellFormType
+      const range = LIT_RANGES[ct]?.[key]
+      if (!range) return false
+      const val = Number(this.form[key])
+      if (!isFinite(val)) return false
+      return val < range[0] || val > range[1]
+    },
+
+    rangeHintFor(key: string): string {
+      const ct    = this.form.cellType as CellFormType
+      const range = LIT_RANGES[ct]?.[key]
+      if (!range) return ''
+      const [lo, hi] = range
+      const unit     = FIELD_UNITS[key] ?? ''
+      const rangeStr = `${formatRangeNumber(lo)}-${formatRangeNumber(hi)}${unit ? ' ' + unit : ''}`
+      return this.isFieldOutOfRange(key)
+        ? this.$t('userPresets.litRangeWarn', { range: rangeStr })
+        : this.$t('userPresets.litRange',     { range: rangeStr })
+    },
   },
 })
 </script>
 
 <style lang="scss" scoped>
-
 
 .ccm-params-grid {
   display:               grid;
@@ -207,6 +303,8 @@ export default defineComponent({
 
     &:focus { border-color: var(--color-primary); }
 
+    &--warn { border-color: color-mix(in srgb, var(--color-amber) 60%, transparent); }
+
     -moz-appearance: textfield;
     appearance:      textfield;
 
@@ -217,10 +315,17 @@ export default defineComponent({
     }
   }
 
-  &__sub-hint {
-    font-size: var(--fs-xs);
-    color:     var(--color-text-muted);
-    opacity:   0.7;
+  &__range {
+    font-family: var(--font-mono);
+    font-size:   var(--fs-xs);
+    color:       var(--color-text-muted);
+    opacity:     var(--op-muted);
+    transition:  color var(--tr-fast), opacity var(--tr-fast);
+
+    &--warn {
+      color:   var(--color-amber);
+      opacity: 1;
+    }
   }
 
   &__tip-btn {

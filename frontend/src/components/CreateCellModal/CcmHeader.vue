@@ -2,7 +2,7 @@
 <template>
   <div class="ccm-header">
     <div class="ccm-header__row">
-      <span class="ccm-header__title">{{ $t('userPresets.modalTitle') }}</span>
+      <span class="ccm-header__title">{{ isEditMode ? $t('userPresets.modalTitleEdit') : $t('userPresets.modalTitle') }}</span>
       <button class="ccm-header__close" @click="$emit(EMIT.CANCEL)">{{ ICON.CLOSE }}</button>
     </div>
     <p class="ccm-header__sub">{{ $t('userPresets.modalSub') }}</p>
@@ -16,6 +16,10 @@ import { ICON } from '@/constants/icons'
 import { EMIT } from '@/constants/emitEvents'
 export default defineComponent({
   name: 'CcmHeader',
+
+  props: {
+    isEditMode: { type: Boolean, default: false },
+  },
 
   emits: [EMIT.CANCEL],
 

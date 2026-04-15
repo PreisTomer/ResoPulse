@@ -6,6 +6,7 @@ import { defineStore } from 'pinia'
 import { cloneDeep } from 'lodash'
 
 import { useExperimentStore } from '@/stores/experimentStore'
+import { useUserPresetsStore } from '@/stores/userPresetsStore'
 
 import { computeSchwan, computeSAR, computeFc, computeTau, computeNuclearTau, computeResonantDisruption, computeNuclearVm, computePulseStepResponse, computeSkinDepthMm, computeDepCmReal, computeDepCrossoverKHz, computeDepSecondCrossoverKHz, computePopulationLysisFraction, safeRatio, tempCorrectedVth } from '@/utils/physics'
 
@@ -782,11 +783,23 @@ export const useCellStore = defineStore('cell', {
 
     loadPresetIfNeeded(cellType: 'healthy' | 'target', presetId: string) {
       if (!presetId || presetId === this[cellType].id) return
-      const preset = CELL_PRESETS.find(c => c.id === presetId)
-      if (!preset) return
-      const cfg = cloneDeep(preset) as CellConfig
-      if (!cfg.description && preset.notes) cfg.description = preset.notes
-      this[cellType] = cfg
+
+      // Check built-in library first
+      const builtin = CELL_PRESETS.find(c => c.id === presetId)
+      if (builtin) {
+        const cfg = cloneDeep(builtin) as CellConfig
+        if (!cfg.description && builtin.notes) cfg.description = builtin.notes
+        this[cellType] = cfg
+        if (cellType === 'target') this.targetTemp = BODY_TEMP_C
+        else this.healthyTemp = BODY_TEMP_C
+        this.resetCounter++
+        return
+      }
+
+      // Fall back to org custom presets (enables multi-user sync of custom cells)
+      const userPreset = useUserPresetsStore().presets.find(p => p.id === presetId)
+      if (!userPreset) return
+      this[cellType] = useUserPresetsStore().toCellConfig(userPreset)
       if (cellType === 'target') this.targetTemp = BODY_TEMP_C
       else this.healthyTemp = BODY_TEMP_C
       this.resetCounter++

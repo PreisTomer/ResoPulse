@@ -5,7 +5,7 @@
       <div v-if="visible" class="ccm-backdrop" @mousedown.self="onCancel">
         <div class="ccm" role="dialog" aria-modal="true">
 
-          <CcmHeader @cancel="onCancel" />
+          <CcmHeader :is-edit-mode="isEditMode" @cancel="onCancel" />
 
           <div class="ccm__body">
             <CcmIdentitySection
@@ -39,6 +39,8 @@
           <CcmFooter
             :can-save="isValid"
             :validation-errors="validationErrors"
+            :saving="saving"
+            :save-error="saveError"
             @save="onSave"
             @cancel="onCancel"
           />
@@ -52,11 +54,11 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue'
+import { defineComponent, type PropType } from 'vue'
 import { mapStores } from 'pinia'
 
 import { useUserPresetsStore } from '@/stores/userPresetsStore'
-import type { UserCellPreset } from '@/stores/userPresetsStore'
+import type { UserCellPreset, UserCellPresetInput } from '@/stores/userPresetsStore'
 import { useCellStore } from '@/stores/cellStore'
 
 import { computeTau, computeFc } from '@/utils/physics'
@@ -75,7 +77,9 @@ import CcmFooter from './CcmFooter.vue'
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
-type CellFormType = 'mammalian' | 'bacteria' | 'virus'
+type CellFormType        = 'mammalian' | 'bacteria' | 'virus'
+type CellRole            = 'target' | 'healthy'
+type ParameterConfidence = 'literature' | 'measured' | 'estimated'
 type TipKey = 'radius' | 'memThick' | 'epsR' | 'sigmaI' | 'vmThr' | 'density' | 'cp' | 'derivedFc' | 'cellType' | 'resFreq' | 'capsidQ' | 'resThr'
 
 // ── Per-type scientifically representative defaults ────────────────────────
@@ -95,10 +99,12 @@ const TYPE_DEFAULTS: Record<CellFormType, TypeDefaults> = {
 }
 
 const DEFAULT_FORM = () => ({
+  role:                 'target' as CellRole,
   cellType:             'mammalian' as CellFormType,
   label:                '',
   shortLabel:           '',
   notes:                '',
+  parameterConfidence:  'literature' as ParameterConfidence,
   ...TYPE_DEFAULTS.mammalian,
 })
 
@@ -116,7 +122,10 @@ export default defineComponent({
   },
 
   props: {
-    visible: { type: Boolean, default: false },
+    visible:         { type: Boolean, default: false },
+    editPreset:      { type: Object as PropType<UserCellPreset | null>, default: null },
+    defaultCellType: { type: String as PropType<CellFormType | null>, default: null },
+    defaultRole:     { type: String as PropType<CellRole | null>,     default: null },
   },
 
   emits: [EMIT.CLOSE, EMIT.SAVED],
@@ -125,11 +134,15 @@ export default defineComponent({
     return {
       form:      DEFAULT_FORM() as ReturnType<typeof DEFAULT_FORM>,
       activeTip: null as TipKey | null,
+      saving:    false,
+      saveError: '',
     }
   },
 
   computed: {
     ...mapStores(useUserPresetsStore, useCellStore),
+
+    isEditMode(): boolean { return this.editPreset !== null },
 
     sigmaE(): number {
       return this.cellStore.effectiveSigmaE
@@ -144,7 +157,6 @@ export default defineComponent({
         thresholdVoltage:     this.form.thresholdVoltage,
         density:              this.form.density,
         specificHeatCapacity: this.form.specificHeatCapacity,
-        // required by CellConfig but unused in Cm/tau/fc calc
         id: 'preview', type: 'target' as const, label: '', naturalFrequency: 0, amplitude: 0.5,
       }
     },
@@ -178,6 +190,7 @@ export default defineComponent({
       const errs: string[] = []
       if (!this.form.label.trim())              errs.push('Cell name is required.')
       if (!this.form.shortLabel.trim())         errs.push('Short label is required.')
+      if (!this.form.notes.trim())              errs.push(this.$t('userPresets.sourceRequired'))
       if (this.form.radius <= 0)                errs.push('Radius must be > 0.')
       if (this.form.radius > 100)               errs.push('Radius must be ≤ 100 µm.')
       if (this.form.membraneThickness <= 0)     errs.push('Membrane thickness must be > 0.')
@@ -199,7 +212,36 @@ export default defineComponent({
 
   watch: {
     visible(val: boolean) {
-      if (val) this.form = DEFAULT_FORM()
+      if (!val) return
+      this.saving    = false
+      this.saveError = ''
+      if (this.editPreset) {
+        const p = this.editPreset
+        const ct: CellFormType = p.cellType as CellFormType
+        this.form = {
+          role:                 p.role as CellRole,
+          cellType:             ct,
+          label:                p.label,
+          shortLabel:           p.shortLabel,
+          notes:                p.notes,
+          parameterConfidence:  (p.parameterConfidence as ParameterConfidence) ?? 'literature',
+          radius:               p.radius,
+          membraneThickness:    p.membraneThickness,
+          dielectricConstant:   p.dielectricConstant,
+          conductivity:         p.conductivity,
+          thresholdVoltage:     p.thresholdVoltage,
+          density:              p.density,
+          specificHeatCapacity: p.specificHeatCapacity,
+          resonantFreqGHz:      p.resonantFreqGHz      ?? null,
+          capsidQ:              p.capsidQ              ?? null,
+          resonantThresholdVcm: p.resonantThresholdVcm ?? null,
+        }
+      } else {
+        const base = DEFAULT_FORM()
+        const ct   = (this.defaultCellType ?? 'mammalian') as CellFormType
+        const role = (this.defaultRole     ?? 'target')    as CellRole
+        this.form  = { ...base, ...TYPE_DEFAULTS[ct], cellType: ct, role }
+      }
     },
   },
 
@@ -217,12 +259,15 @@ export default defineComponent({
       Object.assign(this.form, TYPE_DEFAULTS[ct], { cellType: ct, label, shortLabel, notes })
     },
 
-    onSave() {
-      if (!this.isValid) return
-      const preset: Omit<UserCellPreset, 'id' | 'createdAt'> = {
+    async onSave() {
+      if (!this.isValid || this.saving) return
+      const input: UserCellPresetInput = {
+        role:                 this.form.role as CellRole,
+        cellType:             this.form.cellType as CellFormType,
         label:                this.form.label.trim(),
         shortLabel:           this.form.shortLabel.trim(),
         notes:                this.form.notes.trim(),
+        parameterConfidence:  this.form.parameterConfidence as ParameterConfidence,
         radius:               this.form.radius,
         membraneThickness:    this.form.membraneThickness,
         dielectricConstant:   this.form.dielectricConstant,
@@ -230,14 +275,29 @@ export default defineComponent({
         thresholdVoltage:     this.form.thresholdVoltage,
         density:              this.form.density,
         specificHeatCapacity: this.form.specificHeatCapacity,
-        // Resonance fields included only when bacteria/virus and user provided values
+        // Resonance fields only for bacteria/virus
         ...(this.form.cellType !== 'mammalian' && this.form.resonantFreqGHz      != null && { resonantFreqGHz:      this.form.resonantFreqGHz }),
         ...(this.form.cellType !== 'mammalian' && this.form.capsidQ              != null && { capsidQ:              this.form.capsidQ }),
         ...(this.form.cellType !== 'mammalian' && this.form.resonantThresholdVcm != null && { resonantThresholdVcm: this.form.resonantThresholdVcm }),
       }
-      this.userPresetsStore.add(preset)
-      this.$emit(EMIT.SAVED, preset)
-      this.$emit(EMIT.CLOSE)
+
+      this.saving    = true
+      this.saveError = ''
+      try {
+        if (this.isEditMode && this.editPreset) {
+          const ok = await this.userPresetsStore.update(this.editPreset.id, input)
+          if (!ok) { this.saveError = this.$t('userPresets.saveErrorMsg'); return }
+        } else {
+          const result = await this.userPresetsStore.add(input)
+          if (!result) { this.saveError = this.$t('userPresets.saveErrorMsg'); return }
+        }
+        this.$emit(EMIT.SAVED, input)
+        this.$emit(EMIT.CLOSE)
+      } catch {
+        this.saveError = this.$t('userPresets.saveErrorMsg')
+      } finally {
+        this.saving = false
+      }
     },
 
     onCancel() {

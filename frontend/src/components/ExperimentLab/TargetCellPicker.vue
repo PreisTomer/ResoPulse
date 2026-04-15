@@ -29,37 +29,26 @@
             :style="activeCategory === cat ? { borderColor: GROUP_COLORS[cat], color: GROUP_COLORS[cat] } : {}"
             @click.stop="activeCategory = cat"
           >{{ GROUP_LABELS[cat] }}</button>
-          <button
-            class="experiment__cell-picker-tab experiment__cell-picker-tab--custom"
-            :class="{ 'experiment__cell-picker-tab--active': activeCategory === 'custom' }"
-            @click.stop="activeCategory = 'custom'"
-          >{{ $t('userPresets.tabLabel') }}</button>
         </div>
       </div>
 
-      <!-- Built-in presets -->
-      <div v-if="activeCategory !== 'custom'" class="experiment__cell-picker-grid">
+      <div class="experiment__cell-picker-grid">
+        <!-- Built-in presets for this category -->
         <button
           v-for="p in presetsForCategory"
           :key="p.presetId"
           class="experiment__preset-btn"
           :class="{ 'experiment__preset-btn--active': cellStore.target.id === p.presetId }"
-          :style="cellStore.target.id === p.presetId ? { borderColor: GROUP_COLORS[activeCategory as CellGroup], color: GROUP_COLORS[activeCategory as CellGroup] } : {}"
+          :style="cellStore.target.id === p.presetId ? { borderColor: GROUP_COLORS[activeCategory], color: GROUP_COLORS[activeCategory] } : {}"
           @click="selectPreset(p)"
         >
           <span class="experiment__preset-btn-name">{{ p.shortLabel }}</span>
           <span class="experiment__preset-btn-sub">{{ p.notes }}</span>
         </button>
-      </div>
 
-      <!-- Custom presets -->
-      <div v-else class="experiment__cell-picker-grid">
-        <p v-if="!userPresetsStore.hasPresets" class="experiment__custom-empty">
-          {{ $t('userPresets.emptyMsg') }}<br />
-          <span class="experiment__custom-hint">{{ $t('userPresets.emptyHint') }}</span>
-        </p>
+        <!-- User presets for this category -->
         <div
-          v-for="p in userPresetsStore.presets"
+          v-for="p in userPresetsForCategory"
           :key="p.id"
           class="experiment__preset-btn experiment__preset-btn--custom"
           :class="{ 'experiment__preset-btn--active': cellStore.target.id === p.id }"
@@ -68,23 +57,37 @@
           @click="selectUserPreset(p)"
           @keydown.enter="selectUserPreset(p)"
         >
-          <span class="experiment__preset-btn-name">{{ p.shortLabel }}</span>
+          <div class="experiment__preset-btn-row">
+            <span class="experiment__preset-btn-name">{{ p.shortLabel }}</span>
+            <span
+              class="experiment__preset-confidence"
+              :class="`experiment__preset-confidence--${p.parameterConfidence}`"
+              :title="$t(`userPresets.confidenceTip${capitalizeFirst(p.parameterConfidence)}`)"
+            >{{ confidenceBadge(p.parameterConfidence) }}</span>
+          </div>
           <span class="experiment__preset-btn-sub">{{ p.notes || p.label }}</span>
-          <button class="experiment__preset-btn-del" @click.stop="userPresetsStore.remove(p.id)" :title="$t('exp.deletePreset')">{{ ICON.CLOSE }}</button>
+          <div class="experiment__preset-btn-actions">
+            <button class="experiment__preset-btn-edit" @click.stop="openEditModal(p)" :title="$t('userPresets.editBtn')">{{ ICON.EDIT }}</button>
+            <button class="experiment__preset-btn-del" @click.stop="deletePreset(p.id)" :title="$t('exp.deletePreset')">{{ ICON.CLOSE }}</button>
+          </div>
         </div>
+
+        <!-- Add new cell button -->
         <button class="experiment__preset-btn-new" @click.stop="openCreateModal">
-          {{ $t('userPresets.createBtn') }}
+          {{ $t('userPresets.createTargetBtn') }}
         </button>
       </div>
     </div>
 
   </div>
 
-  <!-- Create Cell Profile modal — lives here so onSaved can switch to custom tab -->
   <CreateCellModal
-    :visible="showCreateModal"
-    @close="showCreateModal = false"
-    @saved="onUserPresetSaved"
+    :visible="showModal"
+    :edit-preset="editingPreset"
+    :default-cell-type="createCellType"
+    :default-role="'target'"
+    @close="closeModal"
+    @saved="closeModal"
   />
 </template>
 
@@ -106,6 +109,14 @@ import type { CellPreset, CellGroup } from '@/constants/cellLibrary'
 import { CELL_GROUP } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
 
+type CellFormType = 'mammalian' | 'bacteria' | 'virus'
+
+function categoryToCellType(cat: CellGroup): CellFormType {
+  if (cat === CELL_GROUP.BACTERIA) return 'bacteria'
+  if (cat === CELL_GROUP.VIRUS)    return 'virus'
+  return 'mammalian'
+}
+
 export default defineComponent({
   name: 'TargetCellPicker',
 
@@ -115,9 +126,11 @@ export default defineComponent({
 
   data() {
     return {
-      isOpen: false,
-      activeCategory: CELL_GROUP.CANCER as CellGroup | 'custom',
-      showCreateModal: false,
+      isOpen:         false,
+      activeCategory: CELL_GROUP.CANCER as CellGroup,
+      showModal:      false,
+      editingPreset:  null as UserCellPreset | null,
+      createCellType: null as CellFormType | null,
       GROUP_COLORS,
       GROUP_LABELS,
     }
@@ -132,8 +145,12 @@ export default defineComponent({
     },
 
     presetsForCategory(): CellPreset[] {
-      if (this.activeCategory === 'custom') return []
       return CELL_PRESETS.filter((p) => p.group === this.activeCategory)
+    },
+
+    userPresetsForCategory(): UserCellPreset[] {
+      const cellType = categoryToCellType(this.activeCategory)
+      return this.userPresetsStore.targetPresets.filter(p => p.cellType === cellType)
     },
 
     tipBadge(): string {
@@ -167,14 +184,40 @@ export default defineComponent({
       this.$emit('selectUser', preset)
     },
 
-    openCreateModal() {
-      this.showCreateModal = true
+    capitalizeFirst(s: string): string {
+      return s.charAt(0).toUpperCase() + s.slice(1)
     },
 
-    onUserPresetSaved() {
-      this.showCreateModal = false
-      this.activeCategory = 'custom'
-      this.isOpen = true
+    confidenceBadge(confidence: string): string {
+      const map: Record<string, string> = {
+        literature: this.$t('userPresets.confidenceBadgeLit'),
+        measured:   this.$t('userPresets.confidenceBadgeMeas'),
+        estimated:  this.$t('userPresets.confidenceBadgeEst'),
+      }
+      return map[confidence] ?? confidence.toUpperCase().slice(0, 4)
+    },
+
+    openCreateModal() {
+      this.editingPreset  = null
+      this.createCellType = categoryToCellType(this.activeCategory)
+      this.showModal      = true
+    },
+
+    openEditModal(preset: UserCellPreset) {
+      this.editingPreset  = preset
+      this.createCellType = null
+      this.showModal      = true
+    },
+
+    closeModal() {
+      this.showModal      = false
+      this.editingPreset  = null
+      this.createCellType = null
+    },
+
+    async deletePreset(id: string) {
+      if (!window.confirm(this.$t('userPresets.deleteConfirm'))) return
+      await this.userPresetsStore.remove(id)
     },
   },
 })
@@ -310,17 +353,6 @@ export default defineComponent({
       }
 
       &--active { background: color-mix(in srgb, white 4%, transparent); }
-
-      &--custom {
-        border-color: color-mix(in srgb, var(--color-vibrating) 40%, transparent);
-        color:        color-mix(in srgb, var(--color-vibrating) 80%, transparent);
-
-        &.experiment__cell-picker-tab--active {
-          border-color: color-mix(in srgb, var(--color-vibrating) 70%, transparent);
-          color:        var(--color-vibrating);
-          background:   color-mix(in srgb, var(--color-vibrating) 8%, transparent);
-        }
-      }
     }
 
     &-grid { @include flex-col(0.35rem); }
@@ -350,7 +382,12 @@ export default defineComponent({
 
     &--custom {
       position: relative;
-      padding-right: 1.6rem;
+      padding-right: 3.5rem;
+    }
+
+    &-row {
+      @include flex-row(0.4rem);
+      align-items: center;
     }
 
     &-name {
@@ -368,24 +405,46 @@ export default defineComponent({
       line-height: 1.35;
     }
 
+    &-actions {
+      position:   absolute;
+      top:        50%;
+      right:      0.4rem;
+      transform:  translateY(-50%);
+      display:    flex;
+      gap:        0.15rem;
+      align-items: center;
+    }
+
+    &-edit,
     &-del {
-      position:    absolute;
-      top:         50%;
-      right:       0.4rem;
-      transform:   translateY(-50%);
       background:  transparent;
       border:      none;
       color:       var(--color-text-muted);
       font-size:   var(--fs-xxs);
       cursor:      pointer;
-      padding:     0.1rem;
+      padding:     0.15rem 0.2rem;
       line-height: 1;
       opacity:     0.5;
       transition:  opacity var(--tr-fast), color var(--tr-fast);
-
-      &:hover { opacity: 1; color: var(--color-danger); }
     }
 
+    &-edit:hover { opacity: 1; color: var(--color-primary); }
+    &-del:hover  { opacity: 1; color: var(--color-danger); }
+  }
+
+  // ── Confidence badge ──────────────────────────────────────────────────────
+  &__preset-confidence {
+    @include badge-pill(0.08rem 0.28rem, 3px);
+    font-size: 0.58rem;
+    flex-shrink: 0;
+
+    &--literature { @include color-variant(primary, 40%, 6%); }
+    &--measured   { @include color-variant(accent,  40%, 6%); }
+    &--estimated  { @include color-variant(amber,   40%, 6%); }
+  }
+
+  // ── Preset buttons (continued) ────────────────────────────────────────────
+  &__preset-btn {
     &-new {
       width:          100%;
       padding:        0.45rem 0.65rem;
@@ -407,20 +466,6 @@ export default defineComponent({
         border-color: color-mix(in srgb, var(--color-vibrating) 60%, transparent);
       }
     }
-  }
-
-  // ── Custom preset empty state ─────────────────────────────────────────────
-  &__custom-empty {
-    font-size:   var(--fs-sm);
-    color:       var(--color-text-muted);
-    padding:     0.5rem 0.25rem;
-    margin:      0;
-    line-height: 1.5;
-  }
-
-  &__custom-hint {
-    font-size: var(--fs-xxs);
-    opacity:   var(--op-partial);
   }
 }
 </style>

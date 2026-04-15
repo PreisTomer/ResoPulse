@@ -53,6 +53,7 @@ export const ICON = {
   SAVE:        '◫',  // save / cloud persist experiment session
   FOLDER:      '⊡',  // experiments list / workspace folder
   SEARCH:      '⌕',  // search / filter input
+  EDIT:        '✎',  // edit / pencil button
 } as const
 
 export type Icon = typeof ICON[keyof typeof ICON]
