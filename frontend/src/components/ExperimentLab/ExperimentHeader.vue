@@ -328,15 +328,12 @@ export default defineComponent({
 
     &:hover {
       opacity: 1;
-      border-color: color-mix(in srgb, var(--color-primary) 60%, transparent);
-      background: color-mix(in srgb, var(--color-primary) 6%, transparent);
+      @include tinted-surface(primary, 60%, 6%);
     }
 
     &--copied {
       opacity: 1;
-      border-color: color-mix(in srgb, var(--color-lime) 50%, transparent);
-      color: var(--color-lime);
-      background: color-mix(in srgb, var(--color-lime) 6%, transparent);
+      @include color-variant(lime, 50%, 6%);
     }
 
     @media (max-width: 540px) { display: none; }

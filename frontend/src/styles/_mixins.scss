@@ -244,6 +244,22 @@ $_cell-states: (
   margin-bottom: 0.05rem;
 }
 
+// ── Colour-variant badge (status badges, score tiers, direction labels) ──────
+// Generates color + tinted border + tinted background from a CSS color token name.
+// Usage: @include color-variant(lime, 30%, 7%);
+@mixin color-variant($name, $border-pct: 30%, $bg-pct: 7%) {
+  color: var(--color-#{$name});
+  border-color: color-mix(in srgb, var(--color-#{$name}) #{$border-pct}, transparent);
+  background:   color-mix(in srgb, var(--color-#{$name}) #{$bg-pct}, transparent);
+}
+
+// ── Tinted surface (border + background only, no text colour) ─────────────────
+// Usage: @include tinted-surface(primary, 25%, 5%);
+@mixin tinted-surface($name, $border-pct: 25%, $bg-pct: 5%) {
+  border-color: color-mix(in srgb, var(--color-#{$name}) #{$border-pct}, transparent);
+  background:   color-mix(in srgb, var(--color-#{$name}) #{$bg-pct}, transparent);
+}
+
 // ── Readout inline input ────────────────────────────────────────────────────
 @mixin readout-inline-input() {
   font-size: 1rem;

@@ -176,22 +176,12 @@ export default defineComponent({
 
   &__badge {
     @include badge-pill();
-    color: var(--color-primary);
-    border-color: color-mix(in srgb, var(--color-primary) 30%, transparent);
-    background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+    @include color-variant(primary, 30%, 8%);
     white-space: nowrap;
     flex-shrink: 0;
 
-    .validate-section__card--cancer & {
-      color: var(--color-danger);
-      border-color: color-mix(in srgb, var(--color-danger) 30%, transparent);
-      background: color-mix(in srgb, var(--color-danger) 8%, transparent);
-    }
-    .validate-section__card--resonance & {
-      color: var(--color-amber);
-      border-color: color-mix(in srgb, var(--color-amber) 30%, transparent);
-      background: color-mix(in srgb, var(--color-amber) 8%, transparent);
-    }
+    .validate-section__card--cancer    & { @include color-variant(danger, 30%, 8%); }
+    .validate-section__card--resonance & { @include color-variant(amber,  30%, 8%); }
   }
 
   &__metric {

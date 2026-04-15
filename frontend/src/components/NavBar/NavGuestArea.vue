@@ -33,8 +33,7 @@
       <RouterLink :to="ROUTE.SIGN_UP" class="guest-panel__signup-btn" @click="closeMenu">
         {{ $t('nav.guestSignUpCta') }}
       </RouterLink>
-      <RouterLink :to="ROUTE.SIGN_IN" class="guest-panel__item" @click="closeMenu">
-        <span class="guest-panel__item-icon">{{ ICON.USER }}</span>
+      <RouterLink :to="ROUTE.SIGN_IN" class="guest-panel__signin-btn" @click="closeMenu">
         {{ $t('nav.guestSignInCta') }}
       </RouterLink>
 
@@ -288,6 +287,27 @@ export default defineComponent({
     text-align: center;
     flex-shrink: 0;
     opacity: var(--op-dim);
+  }
+
+  &__signin-btn {
+    display: block;
+    margin: 0 0.85rem 0.5rem;
+    padding: 0.4rem 1rem;
+    background: transparent;
+    color: var(--color-text-muted);
+    border: 1px solid var(--color-border);
+    border-radius: 5px;
+    text-align: center;
+    text-decoration: none;
+    font-size: var(--fs-sm);
+    transition: border-color var(--tr-fast), color var(--tr-fast), background var(--tr-fast);
+
+    &:hover {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+      background: var(--color-primary-surface);
+      text-decoration: none;
+    }
   }
 
   /* ── Appearance toggle ──────────────────────────────────────────── */

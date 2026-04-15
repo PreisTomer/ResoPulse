@@ -213,16 +213,8 @@ export default defineComponent({
     @include badge-pill(0.15rem 0.5rem, 3px);
     font-size: var(--fs-xxs);
 
-    &--physics {
-      color: var(--color-amber);
-      border-color: color-mix(in srgb, var(--color-amber) 35%, transparent);
-      background: color-mix(in srgb, var(--color-amber) 8%, transparent);
-    }
-    &--ml {
-      color: var(--color-primary);
-      border-color: color-mix(in srgb, var(--color-primary) 35%, transparent);
-      background: color-mix(in srgb, var(--color-primary) 8%, transparent);
-    }
+    &--physics { @include color-variant(amber, 35%, 8%); }
+    &--ml      { @include color-variant(primary, 35%, 8%); }
   }
 
   &__confidence {
@@ -235,10 +227,8 @@ export default defineComponent({
 
   &__applied-badge {
     @include badge-pill(0.12rem 0.4rem, 3px);
+    @include color-variant(lime, 30%, 8%);
     font-size: var(--fs-xxs);
-    color: var(--color-lime);
-    border-color: color-mix(in srgb, var(--color-lime) 30%, transparent);
-    background: color-mix(in srgb, var(--color-lime) 8%, transparent);
   }
 
   // ── Section label ──────────────────────────────────────────────────────────

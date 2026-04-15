@@ -3,24 +3,27 @@
   <div class="user-panel" @click="toggleMenu">
 
     <!-- ── Trigger: caret + avatar + token status dot ───────────────────────── -->
-    <div class="user-panel__trigger">
+    <div class="user-panel__trigger" :class="{ 'user-panel__trigger--signing-out': isSigningOut }">
       <span class="user-panel__caret">{{ ICON.EXPAND }}</span>
       <div class="user-panel__avatar-wrap">
-        <img
-          v-if="userImageUrl"
-          :src="userImageUrl"
-          :alt="userName"
-          class="user-panel__avatar"
-        />
-        <span v-else class="user-panel__initials">{{ userInitials }}</span>
-        <span
-          v-if="tokenStore.isLoaded"
-          class="user-panel__status-dot"
-          :class="{
-            'user-panel__status-dot--low':      tokenStore.isLowBalance,
-            'user-panel__status-dot--exhausted': tokenStore.isExhausted,
-          }"
-        ></span>
+        <span v-if="isSigningOut" class="user-panel__sign-out-spinner"></span>
+        <template v-else>
+          <img
+            v-if="userImageUrl"
+            :src="userImageUrl"
+            :alt="userName"
+            class="user-panel__avatar"
+          />
+          <span v-else class="user-panel__initials">{{ userInitials }}</span>
+          <span
+            v-if="tokenStore.isLoaded"
+            class="user-panel__status-dot"
+            :class="{
+              'user-panel__status-dot--low':      tokenStore.isLowBalance,
+              'user-panel__status-dot--exhausted': tokenStore.isExhausted,
+            }"
+          ></span>
+        </template>
       </div>
     </div>
 
@@ -152,7 +155,7 @@ export default defineComponent({
   },
 
   data() {
-    return { menuOpen: false }
+    return { menuOpen: false, isSigningOut: false }
   },
 
   watch: {
@@ -251,12 +254,13 @@ export default defineComponent({
     },
 
     doSignOut(): void {
+      this.isSigningOut = true
       this.closeMenu()
       this.tokenStore.stopPolling()
-      this.tokenStore.reset()
       disconnectSocket()
       ;(this.clerk as { signOut?(opts?: { redirectUrl?: string }): Promise<void> })
         ?.signOut?.({ redirectUrl: ROUTE.SIGN_IN })
+        ?.catch(() => { this.isSigningOut = false })
     },
   },
 })
@@ -324,6 +328,23 @@ export default defineComponent({
       background: var(--color-amber);
       animation: token-pulse 1.8s ease-in-out infinite;
     }
+  }
+
+  &__trigger {
+    &--signing-out {
+      pointer-events: none;
+      opacity: var(--op-dim);
+    }
+  }
+
+  &__sign-out-spinner {
+    display: block;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: 2px solid var(--color-border);
+    border-top-color: var(--color-primary);
+    animation: onboard-spin 0.7s linear infinite;
   }
 
   &__caret {

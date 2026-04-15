@@ -171,9 +171,7 @@ export default defineComponent({
 
   &__category-badge {
     @include badge-pill();
-    color: var(--color-primary);
-    border-color: color-mix(in srgb, var(--color-primary) 30%, transparent);
-    background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+    @include color-variant(primary, 30%, 8%);
     align-self: flex-start;
   }
 
@@ -256,10 +254,8 @@ export default defineComponent({
 
   &__metric-badge {
     @include badge-pill();
+    @include color-variant(amber, 30%, 8%);
     align-self: flex-start;
-    color: var(--color-amber);
-    border-color: color-mix(in srgb, var(--color-amber) 30%, transparent);
-    background: color-mix(in srgb, var(--color-amber) 8%, transparent);
     margin-top: 0.15rem;
   }
 

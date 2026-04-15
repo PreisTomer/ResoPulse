@@ -436,9 +436,9 @@ export default defineComponent({
     flex-shrink: 0;
     cursor: default;
 
-    &--nominal  { color: var(--color-primary);        border-color: color-mix(in srgb, var(--color-primary) 40%, transparent);     background: color-mix(in srgb, var(--color-primary) 6%, transparent); }
-    &--warning  { color: var(--color-amber-warm);     border-color: color-mix(in srgb, var(--color-amber) 45%, transparent);   background: color-mix(in srgb, var(--color-amber) 8%, transparent); }
-    &--critical { color: var(--color-danger); border-color: color-mix(in srgb, var(--color-danger) 45%, transparent);  background: color-mix(in srgb, var(--color-danger) 8%, transparent); }
+    &--nominal  { @include color-variant(primary, 40%, 6%); }
+    &--warning  { color: var(--color-amber-warm); @include tinted-surface(amber, 45%, 8%); }
+    &--critical { @include color-variant(danger, 45%, 8%); }
   }
 
   /* ── Stat row ── */
@@ -461,9 +461,9 @@ export default defineComponent({
     padding: 0.5rem 0.65rem;
     cursor: default;
 
-    &--live   { border-color: color-mix(in srgb, var(--color-primary) 25%, transparent);   background: color-mix(in srgb, var(--color-primary) 4%, transparent); }
-    &--warn   { border-color: color-mix(in srgb, var(--color-amber) 30%, transparent);   background: color-mix(in srgb, var(--color-amber) 5%, transparent); }
-    &--danger { border-color: color-mix(in srgb, var(--color-danger) 30%, transparent);   background: color-mix(in srgb, var(--color-danger) 5%, transparent); }
+    &--live   { @include tinted-surface(primary, 25%, 4%); }
+    &--warn   { @include tinted-surface(amber); }
+    &--danger { @include tinted-surface(danger); }
 
     &-label {
       font-size: var(--fs-xxs);
@@ -606,9 +606,9 @@ export default defineComponent({
     text-align: center;
     transition: border-color var(--tr-normal), background var(--tr-normal);
 
-    &--active  { border-color: color-mix(in srgb, var(--color-primary) 30%, transparent);   background: color-mix(in srgb, var(--color-primary) 6%, transparent); }
-    &--warn    { border-color: color-mix(in srgb, var(--color-amber) 35%, transparent);  background: color-mix(in srgb, var(--color-amber) 7%, transparent); }
-    &--danger  { border-color: color-mix(in srgb, var(--color-danger) 35%, transparent);  background: color-mix(in srgb, var(--color-danger) 7%, transparent); }
+    &--active  { @include tinted-surface(primary, 30%, 6%); }
+    &--warn    { @include tinted-surface(amber, 35%, 7%); }
+    &--danger  { @include tinted-surface(danger, 35%, 7%); }
   }
 
   &__chain-label {

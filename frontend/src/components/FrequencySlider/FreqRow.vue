@@ -388,25 +388,19 @@ export default defineComponent({
     &:active { background: color-mix(in srgb, var(--color-purple) 25%, transparent); }
 
     &--beyond {
-      color: var(--color-text-muted);
-      background: color-mix(in srgb, var(--color-text-muted) 6%, transparent);
-      border-color: color-mix(in srgb, var(--color-text-muted) 20%, transparent);
+      @include color-variant(text-muted, 20%, 6%);
       &:hover { background: color-mix(in srgb, var(--color-text-muted) 12%, transparent); border-color: color-mix(in srgb, var(--color-text-muted) 35%, transparent); box-shadow: none; color: var(--color-text-muted); }
     }
 
     &--fc   { font-size: var(--fs-xxs); padding: 0.15rem 0.45rem; }
 
     &--fc-h {
-      color: var(--color-primary);
-      background: color-mix(in srgb, var(--color-primary) 6%, transparent);
-      border-color: color-mix(in srgb, var(--color-primary) 25%, transparent);
+      @include color-variant(primary, 25%, 6%);
       &:hover { background: color-mix(in srgb, var(--color-primary) 14%, transparent); border-color: color-mix(in srgb, var(--color-primary) 50%, transparent); color: var(--color-primary); box-shadow: 0 0 6px color-mix(in srgb, var(--color-primary) 20%, transparent); }
     }
 
     &--fc-t {
-      color: var(--color-danger);
-      background: color-mix(in srgb, var(--color-danger) 6%, transparent);
-      border-color: color-mix(in srgb, var(--color-danger) 25%, transparent);
+      @include color-variant(danger, 25%, 6%);
       &:hover { background: color-mix(in srgb, var(--color-danger) 14%, transparent); border-color: color-mix(in srgb, var(--color-danger) 50%, transparent); color: var(--color-danger); box-shadow: 0 0 6px color-mix(in srgb, var(--color-danger) 20%, transparent); }
     }
   }
@@ -533,9 +527,9 @@ export default defineComponent({
     margin-bottom: -0.25rem;
     transition: color var(--tr-normal), border-color var(--tr-normal), background var(--tr-normal);
 
-    &--electrolytic { color: var(--color-primary);    border-color: color-mix(in srgb, var(--color-primary) 30%, transparent); background: color-mix(in srgb, var(--color-primary) 5%, transparent); }
-    &--nearfield_rf { color: var(--color-amber-warm); border-color: color-mix(in srgb, var(--color-amber) 35%, transparent); background: color-mix(in srgb, var(--color-amber) 6%, transparent); }
-    &--microwave    { color: var(--color-danger);      border-color: color-mix(in srgb, var(--color-danger) 35%, transparent); background: color-mix(in srgb, var(--color-danger) 6%, transparent); }
+    &--electrolytic { @include color-variant(primary, 30%, 5%); }
+    &--nearfield_rf { color: var(--color-amber-warm); @include tinted-surface(amber, 35%, 6%); }
+    &--microwave    { @include color-variant(danger, 35%, 6%); }
   }
 
   &__regime-dot {
@@ -559,11 +553,7 @@ export default defineComponent({
     line-height: 1.4;
     cursor: default;
 
-    &--danger {
-      color: var(--color-danger);
-      background: color-mix(in srgb, var(--color-danger) 8%, transparent);
-      border-color: color-mix(in srgb, var(--color-danger) 35%, transparent);
-    }
+    &--danger { @include color-variant(danger, 35%, 8%); }
 
     @media (max-width: 768px) { display: none; }
   }

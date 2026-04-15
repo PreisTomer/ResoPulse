@@ -69,23 +69,15 @@ export default defineComponent({
     border: 1px solid;
     animation: thermal-pulse 2s ease-in-out infinite;
 
-    &--hyperthermic {
-      color: var(--color-amber);
-      background: color-mix(in srgb, var(--color-amber) 7%, transparent);
-      border-color: color-mix(in srgb, var(--color-amber) 30%, transparent);
-    }
+    &--hyperthermic { @include color-variant(amber, 30%, 7%); }
 
     &--denaturing {
-      color: var(--color-orange);
-      background: color-mix(in srgb, var(--color-orange) 10%, transparent);
-      border-color: color-mix(in srgb, var(--color-orange) 40%, transparent);
+      @include color-variant(orange, 40%, 10%);
       animation: thermal-pulse 1s ease-in-out infinite;
     }
 
     &--vaporizing {
-      color: var(--color-danger);
-      background: color-mix(in srgb, var(--color-danger) 10%, transparent);
-      border-color: color-mix(in srgb, var(--color-danger) 50%, transparent);
+      @include color-variant(danger, 50%, 10%);
       animation: thermal-pulse 0.5s ease-in-out infinite;
     }
   }

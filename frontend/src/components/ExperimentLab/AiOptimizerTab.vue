@@ -431,8 +431,8 @@ export default defineComponent({
     @include badge-pill(0.12rem 0.45rem, 3px);
     font-size: var(--fs-xxs);
 
-    &--ready   { color: var(--color-lime);    border-color: color-mix(in srgb, var(--color-lime)    30%, transparent); background: color-mix(in srgb, var(--color-lime)    8%, transparent); }
-    &--pending { color: var(--color-amber);   border-color: color-mix(in srgb, var(--color-amber)   30%, transparent); background: color-mix(in srgb, var(--color-amber)   8%, transparent); }
+    &--ready   { @include color-variant(lime, 30%, 8%); }
+    &--pending { @include color-variant(amber, 30%, 8%); }
     &--offline { color: var(--color-text-muted); border-color: var(--color-border); background: transparent; }
   }
 
@@ -470,9 +470,9 @@ export default defineComponent({
     border-radius: var(--radius);
     border: 1px solid;
 
-    &--ok    { color: var(--color-lime);    border-color: color-mix(in srgb, var(--color-lime)    30%, transparent); background: color-mix(in srgb, var(--color-lime)    7%, transparent); }
-    &--warn  { color: var(--color-amber);   border-color: color-mix(in srgb, var(--color-amber)   30%, transparent); background: color-mix(in srgb, var(--color-amber)   7%, transparent); }
-    &--error { color: var(--color-danger);  border-color: color-mix(in srgb, var(--color-danger)  30%, transparent); background: color-mix(in srgb, var(--color-danger)  7%, transparent); }
+    &--ok    { @include color-variant(lime); }
+    &--warn  { @include color-variant(amber); }
+    &--error { @include color-variant(danger); }
   }
 
   &__error-note {

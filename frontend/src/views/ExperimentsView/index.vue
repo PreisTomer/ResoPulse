@@ -94,8 +94,12 @@
               <button
                 class="exp-card__action-btn"
                 type="button"
+                :disabled="forkingId === item.id"
                 @click="handleFork(item.id, item.title)"
-              >{{ $t('experiments.forkBtn') }}</button>
+              >
+                <span v-if="forkingId === item.id" class="exp-card__btn-spinner"></span>
+                <template v-else>{{ $t('experiments.forkBtn') }}</template>
+              </button>
               <button
                 class="exp-card__action-btn"
                 type="button"
@@ -150,8 +154,12 @@
                 <button
                   class="exp-card__delete-confirm-btn exp-card__delete-confirm-btn--danger"
                   type="button"
+                  :disabled="deletingId === item.id"
                   @click="handleDelete(item.id)"
-                >{{ $t('experiments.deleteBtn') }}</button>
+                >
+                  <span v-if="deletingId === item.id" class="exp-card__btn-spinner"></span>
+                  <template v-else>{{ $t('experiments.deleteBtn') }}</template>
+                </button>
                 <button
                   class="exp-card__delete-confirm-btn"
                   type="button"
@@ -288,6 +296,8 @@ export default defineComponent({
       deleteConfirmId:   null as string | null,
       sharingInProgress: false,
       loadingId:         null as string | null,
+      forkingId:         null as string | null,
+      deletingId:        null as string | null,
 
       // Flash feedback strip
       flashMessage: '',
@@ -443,8 +453,10 @@ export default defineComponent({
     // ── Duplicate ─────────────────────────────────────────────────────────────
 
     async handleFork(id: string, title: string): Promise<void> {
+      this.forkingId = id
       const newTitle = `${this.$t('experiments.forkTitlePrefix')} ${title}`.slice(0, 120)
       const result   = await this.savedExperimentsStore.forkExperiment(id, newTitle)
+      this.forkingId = null
       if (result) {
         this.showFlash(this.$t('experiments.successSaved'))
       }
@@ -458,7 +470,9 @@ export default defineComponent({
     },
 
     async handleDelete(id: string): Promise<void> {
+      this.deletingId = id
       const ok = await this.savedExperimentsStore.deleteExperiment(id)
+      this.deletingId = null
       if (ok) {
         this.deleteConfirmId = null
         this.showFlash(this.$t('experiments.successDeleted'))
@@ -945,6 +959,17 @@ export default defineComponent({
       border-color: color-mix(in srgb, var(--color-danger) 32%, transparent);
       &:hover:not(:disabled) { background: color-mix(in srgb, var(--color-danger) 9%, transparent); }
     }
+  }
+
+  &__btn-spinner {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 1.5px solid currentColor;
+    border-top-color: transparent;
+    animation: onboard-spin 0.6s linear infinite;
+    opacity: var(--op-strong);
   }
 
   // ── Share panel ─────────────────────────────────────────────────────────────

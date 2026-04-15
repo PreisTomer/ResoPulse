@@ -124,8 +124,8 @@ export default defineComponent({
     border: 1px solid var(--color-border);
     cursor: help;
 
-    &--target  { border-color: color-mix(in srgb, var(--color-danger) 25%, transparent);  background: color-mix(in srgb, var(--color-danger) 4%, transparent); }
-    &--healthy { border-color: color-mix(in srgb, var(--color-primary) 20%, transparent);   background: color-mix(in srgb, var(--color-primary) 3%, transparent); }
+    &--target  { @include tinted-surface(danger, 25%, 4%); }
+    &--healthy { @include tinted-surface(primary, 20%, 3%); }
   }
 
   &__stat-label {

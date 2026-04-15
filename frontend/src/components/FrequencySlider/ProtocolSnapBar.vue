@@ -145,9 +145,7 @@ export default defineComponent({
     transition: background var(--tr-fast), border-color var(--tr-fast), color var(--tr-fast), box-shadow var(--tr-fast);
 
     &--dc {
-      color: var(--color-primary);
-      background: color-mix(in srgb, var(--color-primary) 7%, transparent);
-      border-color: color-mix(in srgb, var(--color-primary) 22%, transparent);
+      @include color-variant(primary, 22%, 7%);
       &:hover {
         background: color-mix(in srgb, var(--color-primary) 15%, transparent);
         border-color: color-mix(in srgb, var(--color-primary) 50%, transparent);
@@ -156,9 +154,7 @@ export default defineComponent({
     }
 
     &--selective {
-      color: var(--color-lime);
-      background: color-mix(in srgb, var(--color-lime) 6%, transparent);
-      border-color: color-mix(in srgb, var(--color-lime) 22%, transparent);
+      @include color-variant(lime, 22%, 6%);
       &:hover {
         background: color-mix(in srgb, var(--color-lime) 13%, transparent);
         border-color: color-mix(in srgb, var(--color-lime) 50%, transparent);
@@ -167,9 +163,7 @@ export default defineComponent({
     }
 
     &--nsep {
-      color: var(--color-orange);
-      background: color-mix(in srgb, var(--color-orange) 7%, transparent);
-      border-color: color-mix(in srgb, var(--color-orange) 22%, transparent);
+      @include color-variant(orange, 22%, 7%);
       &:hover {
         background: color-mix(in srgb, var(--color-orange) 15%, transparent);
         border-color: color-mix(in srgb, var(--color-orange) 50%, transparent);
@@ -178,9 +172,7 @@ export default defineComponent({
     }
 
     &--thermal {
-      color: var(--color-amber);
-      background: color-mix(in srgb, var(--color-amber) 7%, transparent);
-      border-color: color-mix(in srgb, var(--color-amber) 22%, transparent);
+      @include color-variant(amber, 22%, 7%);
       &:hover {
         background: color-mix(in srgb, var(--color-amber) 15%, transparent);
         border-color: color-mix(in srgb, var(--color-amber) 50%, transparent);

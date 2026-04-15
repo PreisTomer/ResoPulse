@@ -10,10 +10,11 @@
           <div class="reports__header-actions">
             <button
               class="reports__btn reports__btn--export"
-              :disabled="totalReadings === 0"
+              :disabled="totalReadings === 0 || isExporting"
               @click="handleExportCSV()"
             >
-              {{ $t('reports.exportCsv') }}
+              <span v-if="isExporting" class="reports__btn-spinner"></span>
+              <template v-else>{{ $t('reports.exportCsv') }}</template>
             </button>
             <button
               class="reports__btn reports__btn--clear"
@@ -165,10 +166,13 @@ export default defineComponent({
       return 'reports__cancer-val'
     }
 
+    const isExporting = ref(false)
+
     return {
       store,
       tokenStore,
       selectedEntry,
+      isExporting,
       totalReadings,
       reversedEntries,
       distinctSessionCount,
@@ -193,9 +197,14 @@ export default defineComponent({
       if (this.selectedEntry) this.store.exportEntryMethods(this.selectedEntry)
     },
     async handleExportCSV() {
+      this.isExporting = true
       const canProceed = await this.tokenStore.consumeOperation('EXPERIMENT_REPORT')
-      if (!canProceed) return
+      if (!canProceed) {
+        this.isExporting = false
+        return
+      }
       this.store.exportCSV()
+      this.isExporting = false
     },
   },
 })
@@ -249,6 +258,16 @@ export default defineComponent({
     background: transparent;
 
     &:disabled { opacity: 0.3; cursor: not-allowed; }
+
+    &-spinner {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: 2px solid currentColor;
+      border-top-color: transparent;
+      animation: onboard-spin 0.6s linear infinite;
+    }
 
     &--export {
       color: var(--color-primary);

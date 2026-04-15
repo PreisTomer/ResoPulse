@@ -115,8 +115,8 @@ export default defineComponent({
     border: 1px solid;
     flex-shrink: 0;
 
-    &--pdep { color: var(--color-lime); border-color: color-mix(in srgb, var(--color-lime) 35%, transparent); background: color-mix(in srgb, var(--color-lime) 6%, transparent); }
-    &--ndep { color: var(--color-dep); border-color: color-mix(in srgb, var(--color-dep) 35%, transparent); background: color-mix(in srgb, var(--color-dep) 6%, transparent); }
+    &--pdep { @include color-variant(lime, 35%, 6%); }
+    &--ndep { @include color-variant(dep,  35%, 6%); }
   }
 
   &__k {

@@ -50,31 +50,10 @@ export default defineComponent({
     background: color-mix(in srgb, white 4%, transparent);
   }
 
-  &--ok {
-    color: var(--color-ok);
-    border-color: color-mix(in srgb, var(--color-ok) 35%, transparent);
-    background: color-mix(in srgb, var(--color-ok) 8%, transparent);
-  }
-
-  &--warn,
-  &--amber {
-    color: var(--color-amber);
-    border-color: color-mix(in srgb, var(--color-amber) 35%, transparent);
-    background: color-mix(in srgb, var(--color-amber) 8%, transparent);
-  }
-
-  &--danger {
-    color: var(--color-danger);
-    border-color: color-mix(in srgb, var(--color-danger) 35%, transparent);
-    background: color-mix(in srgb, var(--color-danger) 8%, transparent);
-  }
-
-  &--info,
-  &--primary {
-    color: var(--color-primary);
-    border-color: color-mix(in srgb, var(--color-primary) 35%, transparent);
-    background: color-mix(in srgb, var(--color-primary) 8%, transparent);
-  }
+  &--ok                   { @include color-variant(ok, 35%, 8%); }
+  &--warn, &--amber       { @include color-variant(amber, 35%, 8%); }
+  &--danger               { @include color-variant(danger, 35%, 8%); }
+  &--info, &--primary     { @include color-variant(primary, 35%, 8%); }
 
   &--muted {
     color: var(--color-text-muted);

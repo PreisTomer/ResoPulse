@@ -141,9 +141,9 @@ export default defineComponent({
     border-radius: 2px;
     border: 1px solid;
 
-    &--validated    { color: var(--color-lime);   border-color: color-mix(in srgb, var(--color-lime)   30%, transparent); background: color-mix(in srgb, var(--color-lime)   6%, transparent); }
-    &--extrapolated { color: var(--color-amber);  border-color: color-mix(in srgb, var(--color-amber)  30%, transparent); background: color-mix(in srgb, var(--color-amber)  6%, transparent); }
-    &--speculative  { color: var(--color-danger); border-color: color-mix(in srgb, var(--color-danger) 30%, transparent); background: color-mix(in srgb, var(--color-danger) 6%, transparent); }
+    &--validated    { @include color-variant(lime,   30%, 6%); }
+    &--extrapolated { @include color-variant(amber,  30%, 6%); }
+    &--speculative  { @include color-variant(danger, 30%, 6%); }
   }
 }
 </style>
