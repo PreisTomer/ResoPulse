@@ -3,28 +3,16 @@
   <div class="home">
     <div class="home__bg-grid" aria-hidden="true"></div>
     <canvas ref="particleCanvas" class="home__bg-particles" aria-hidden="true"></canvas>
+    <canvas ref="hexCanvas" class="home__bg-hex" aria-hidden="true"></canvas>
 
     <!-- ── Fixed validation tab — visible on wide screens only ── -->
-    <button class="home__validate-tab" @click="isValidateDrawerOpen = true" :aria-expanded="isValidateDrawerOpen">
+    <RouterLink :to="{ path: ROUTE.PROTOCOL, hash: '#validation' }" class="home__validate-tab" :aria-label="$t('home.validateTabLine1')">
       <span class="home__validate-tab-top">
         <span class="home__validate-tab-check">{{ ICON.CHECK }}</span>
         <span class="home__validate-tab-title">{{ $t('home.validateTabLine1') }}</span>
       </span>
       <span class="home__validate-tab-sub">{{ $t('home.validateTabLine2') }}</span>
-    </button>
-
-    <!-- ── Validation drawer overlay ── -->
-    <Transition name="home-validate">
-      <div v-if="isValidateDrawerOpen" class="home__validate-overlay">
-        <div class="home__validate-overlay-bg" @click="isValidateDrawerOpen = false"></div>
-        <div class="home__validate-panel">
-          <button class="home__validate-panel-close" @click="isValidateDrawerOpen = false">
-            {{ ICON.CLOSE }}
-          </button>
-          <ValidateSection />
-        </div>
-      </div>
-    </Transition>
+    </RouterLink>
 
 
     <div class="home__inner">
@@ -61,11 +49,52 @@
 
         <div class="home__hero-cta">
           <div class="home__actions">
-            <RouterLink :to="ROUTE.EXPERIMENT" class="home__btn home__btn--primary">
-              {{ $t('home.btnPrimary') }} <span class="home__btn-arrow">{{ ICON.ARROW_R }}</span>
+            <RouterLink v-if="isSignedIn" :to="ROUTE.EXPERIMENT" class="home__btn home__btn--primary">
+              {{ $t('home.btnPrimary') }}
+              <span class="home__btn-arrow" aria-hidden="true">
+                <svg class="home__arrow-svg" viewBox="0 0 24 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <line class="home__arrow-shaft" x1="0" y1="6" x2="16" y2="6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                  <polyline class="home__arrow-head" points="11,1 18,6 11,11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                </svg>
+              </span>
+            </RouterLink>
+            <template v-if="!isSignedIn">
+              <RouterLink :to="ROUTE.SIGN_UP" class="home__btn home__btn--primary">
+                {{ $t('home.btnStartFree') }}
+                <span class="home__btn-arrow" aria-hidden="true">
+                  <svg class="home__arrow-svg" viewBox="0 0 24 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <line class="home__arrow-shaft" x1="0" y1="6" x2="16" y2="6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    <polyline class="home__arrow-head" points="11,1 18,6 11,11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                  </svg>
+                </span>
+              </RouterLink>
+              <RouterLink :to="ROUTE.SIGN_IN" class="home__btn home__btn--signin">
+                {{ $t('nav.signIn') }}
+                <span class="home__btn-arrow" aria-hidden="true">
+                  <svg class="home__arrow-svg" viewBox="0 0 24 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <line class="home__arrow-shaft" x1="0" y1="6" x2="16" y2="6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    <polyline class="home__arrow-head" points="11,1 18,6 11,11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                  </svg>
+                </span>
+              </RouterLink>
+            </template>
+            <RouterLink :to="ROUTE.PRICING" class="home__btn home__btn--pricing">
+              {{ $t('home.btnViewPricing') }}
+              <span class="home__btn-arrow" aria-hidden="true">
+                <svg class="home__arrow-svg" viewBox="0 0 24 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <line class="home__arrow-shaft" x1="0" y1="6" x2="16" y2="6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                  <polyline class="home__arrow-head" points="11,1 18,6 11,11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                </svg>
+              </span>
             </RouterLink>
             <RouterLink :to="ROUTE.PROTOCOL" class="home__btn home__btn--ghost">
-              {{ $t('home.btnGhost') }} <span class="home__btn-arrow">{{ ICON.ARROW_R }}</span>
+              {{ $t('home.btnGhost') }}
+              <span class="home__btn-arrow" aria-hidden="true">
+                <svg class="home__arrow-svg" viewBox="0 0 24 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <line class="home__arrow-shaft" x1="0" y1="6" x2="16" y2="6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                  <polyline class="home__arrow-head" points="11,1 18,6 11,11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                </svg>
+              </span>
             </RouterLink>
           </div>
           <p class="home__cta-refs">{{ $t('home.ctaRefs1') }}<br>{{ $t('home.ctaRefs2') }}</p>
@@ -79,7 +108,7 @@
         <!-- Physics illustration strip (hidden on small screens) -->
         <div class="home__science-strip">
 
-          <RouterLink :to="ROUTE.EXPERIMENT" class="home__sci-panel" v-tip="$t('home.tipSciCell')">
+          <RouterLink :to="isSignedIn ? ROUTE.EXPERIMENT : ROUTE.SIGN_UP" class="home__sci-panel" v-tip="$t('home.tipSciCell')">
             <div class="home__sci-meta">
               <span class="home__sci-meta-id">{{ $t('home.sciCellMetaId') }}</span>
               <span class="home__sci-meta-status">{{ $t('home.sciCellMetaStatus') }}</span>
@@ -94,7 +123,7 @@
 
           <div class="home__sci-divider" aria-hidden="true"></div>
 
-          <RouterLink :to="ROUTE.EXPERIMENT" class="home__sci-panel" v-tip="$t('home.tipSciChart')">
+          <RouterLink :to="isSignedIn ? ROUTE.EXPERIMENT : ROUTE.SIGN_UP" class="home__sci-panel" v-tip="$t('home.tipSciChart')">
             <div class="home__sci-meta">
               <span class="home__sci-meta-id">{{ $t('home.sciChartMetaId') }}</span>
               <span class="home__sci-meta-status">{{ $t('home.sciChartMetaStatus') }}</span>
@@ -131,8 +160,8 @@
         <div class="home__feature-cards">
 
           <RouterLink
-            v-for="(card, i) in featureCards"
-            :key="card.to"
+            v-for="(card, i) in resolvedFeatureCards"
+            :key="card.titleKey"
             :to="card.to"
             class="home__feature-card"
             :class="{ 'home__feature-card--primary': card.primary }"
@@ -146,13 +175,15 @@
                 <span class="home__fc-title">{{ $t(`home.${card.titleKey}`) }}</span>
                 <span class="home__fc-tag">{{ $t(`home.${card.tagKey}`) }}</span>
               </div>
+              <span v-if="card.plan === 'free'" class="home__fc-plan-badge home__fc-plan-badge--free">{{ $t('home.planFree') }}</span>
+              <span v-else-if="card.plan === 'pro'" class="home__fc-plan-badge home__fc-plan-badge--pro">{{ $t('home.planPro') }}</span>
             </div>
             <span class="home__fc-desc">{{ $t(`home.${card.descKey}`) }}</span>
           </RouterLink>
 
           <!-- Selectivity preview — animated sweep shows the platform's core value visually -->
           <RouterLink
-            :to="ROUTE.EXPERIMENT"
+            :to="isSignedIn ? ROUTE.EXPERIMENT : ROUTE.SIGN_UP"
             class="home__feature-card home__feature-card--sel"
             :class="{
               'home__feature-card--sel-win': selInWindow,
@@ -215,7 +246,14 @@
 
       <!-- ── Zone 4: Validate — inline on mobile only; desktop uses the fixed side tab ── -->
       <div class="home__zone home__zone--validate home__zone--validate--mobile home__zone--anim">
-        <ValidateSection />
+        <div class="home__validate-gate">
+          <span class="home__validate-gate-icon">{{ ICON.CHECK }}</span>
+          <h3 class="home__validate-gate-title">{{ $t('home.validateTabLine2') }}</h3>
+          <p class="home__validate-gate-sub">{{ $t('home.validateGateSub') }}</p>
+          <RouterLink :to="{ path: ROUTE.PROTOCOL, hash: '#validation' }" class="home__btn home__btn--primary home__validate-gate-btn">
+            {{ $t('home.validateTabLine1') }} {{ ICON.ARROW_R }}
+          </RouterLink>
+        </div>
       </div>
 
       <!-- ── Zone 5: Bottom — static, no animation ── -->
@@ -243,10 +281,9 @@
 
 <script lang="ts">
 import { defineComponent, markRaw } from 'vue'
-
 import { mapStores } from 'pinia'
 
-import { useUiStore } from '@/stores/uiStore'
+import { useAuthStore } from '@/stores/authStore'
 
 import { ICON } from '@/constants/icons'
 import { ROUTE } from '@/constants/routes'
@@ -256,8 +293,6 @@ import CellIllustrationSvg from './CellIllustrationSvg.vue'
 import BodePlotSvg from './BodePlotSvg.vue'
 import OscilloscopeSvg from './OscilloscopeSvg.vue'
 
-import ValidateSection from '@/components/ValidationWorkflows/index.vue'
-
 const SEL_CYCLE_MS      = 9000
 const PARTICLE_COUNT    = 45
 const PARTICLE_SPEED    = 0.16
@@ -265,7 +300,14 @@ const PARTICLE_RADIUS   = 1.3
 const PARTICLE_OPACITY  = 0.38
 const CONNECTION_DIST   = 120
 
+const HEX_RADIUS        = 26
+const HEX_OPEN_SPEED    = 0.010
+const HEX_FADE_SPEED    = 0.003
+const HEX_IDLE_MAX      = 3200
+const HEX_BORDER_ALPHA  = 0.012
+
 interface Particle { x: number; y: number; vx: number; vy: number }
+interface HexCell  { cx: number; cy: number; phase: 'idle' | 'opening' | 'fading'; progress: number; idleTick: number; idleTarget: number }
 
 export default defineComponent({
   name: 'HomeView',
@@ -275,23 +317,20 @@ export default defineComponent({
     CellIllustrationSvg,
     BodePlotSvg,
     OscilloscopeSvg,
-    ValidateSection,
   },
 
   data() {
     return {
-      isValidateDrawerOpen: false,
-
       workflowSteps: ['wf1', 'wf2', 'wf3'],
 
       featureCards: [
         // Row 1 — core science workflow
-        { to: ROUTE.EXPERIMENT, icon: ICON.FLASK,   titleKey: 'card1Title', descKey: 'card1Desc', tagKey: 'card1Tag', primary: true },
-        { to: ROUTE.DATASETS,   icon: ICON.GRID,    titleKey: 'card4Title', descKey: 'card4Desc', tagKey: 'card4Tag', primary: false },
-        { to: ROUTE.PROTOCOL,   icon: ICON.SECTION, titleKey: 'card5Title', descKey: 'card5Desc', tagKey: 'card5Tag', primary: false },
+        { to: ROUTE.SIGN_UP,  icon: ICON.FLASK,   titleKey: 'card1Title', descKey: 'card1Desc', tagKey: 'card1Tag', primary: true,  plan: 'free' },
+        { to: ROUTE.SIGN_UP,  icon: ICON.GRID,    titleKey: 'card4Title', descKey: 'card4Desc', tagKey: 'card4Tag', primary: false, plan: 'free' },
+        { to: ROUTE.PROTOCOL, icon: ICON.SECTION, titleKey: 'card5Title', descKey: 'card5Desc', tagKey: 'card5Tag', primary: false, plan: null   },
         // Row 2 — tooling & output
-        { to: ROUTE.INSTRUMENT, icon: ICON.PLUG,    titleKey: 'card2Title', descKey: 'card2Desc', tagKey: 'card2Tag', primary: false },
-        { to: ROUTE.REPORTS,    icon: ICON.CELL,    titleKey: 'card3Title', descKey: 'card3Desc', tagKey: 'card3Tag', primary: false },
+        { to: ROUTE.SIGN_UP,  icon: ICON.PLUG,    titleKey: 'card2Title', descKey: 'card2Desc', tagKey: 'card2Tag', primary: false, plan: 'pro'  },
+        { to: ROUTE.SIGN_UP,  icon: ICON.CELL,    titleKey: 'card3Title', descKey: 'card3Desc', tagKey: 'card3Tag', primary: false, plan: 'free' },
       ],
 
       scopeTags: [
@@ -304,7 +343,9 @@ export default defineComponent({
       selProgress:     0,
       selAnimId:       null as ReturnType<typeof requestAnimationFrame> | null,
       particleFrameId: null as ReturnType<typeof requestAnimationFrame> | null,
+      hexFrameId:      null as ReturnType<typeof requestAnimationFrame> | null,
       particles:       [] as Particle[],
+      hexCells:        markRaw([] as HexCell[]),
     }
   },
 
@@ -325,22 +366,37 @@ export default defineComponent({
     this.startSelAnimation()
     this.initParticles()
     this.startParticleLoop()
+    this.buildHexGrid()
+    this.startHexLoop()
 
-    if (this.uiStore.pendingValidateDrawer) {
-      this.uiStore.consumeValidateDrawer()
-      this.isValidateDrawerOpen = true
-    }
   },
 
   beforeUnmount() {
     if (this.selAnimId       !== null) cancelAnimationFrame(this.selAnimId)
     if (this.particleFrameId !== null) cancelAnimationFrame(this.particleFrameId)
+    if (this.hexFrameId      !== null) cancelAnimationFrame(this.hexFrameId)
   },
 
   computed: {
     ICON() { return ICON },
     ROUTE() { return ROUTE },
-    ...mapStores(useUiStore),
+    ...mapStores(useAuthStore),
+
+    isSignedIn(): boolean {
+      return this.authStore.isSignedIn
+    },
+
+    resolvedFeatureCards(): { to: string; icon: string; titleKey: string; descKey: string; tagKey: string; primary: boolean; plan: string | null }[] {
+      if (!this.isSignedIn) return this.featureCards
+      // Map sign-up destinations to real routes for signed-in users
+      const destMap: Record<string, string> = {
+        [ROUTE.SIGN_UP]: ROUTE.EXPERIMENT,
+      }
+      return this.featureCards.map((card) => ({
+        ...card,
+        to: destMap[card.to] ?? card.to,
+      }))
+    },
 
     eyebrowItems(): string[] {
       return (this.$tm as Function)('home.eyebrowItems') as string[]
@@ -468,6 +524,89 @@ export default defineComponent({
         ctx.fillStyle = `rgba(0, 212, 255, ${PARTICLE_OPACITY * edgeFade})`
         ctx.fill()
       }
+    },
+
+    buildHexGrid(): void {
+      const canvas = this.$refs['hexCanvas'] as HTMLCanvasElement | null
+      if (!canvas) return
+      const w  = canvas.width  = canvas.offsetWidth
+      const h  = canvas.height = canvas.offsetHeight
+      const r  = HEX_RADIUS
+      const dx = r * 1.732
+      const dy = r * 1.5
+      const cells: HexCell[] = []
+      for (let row = -1; row < Math.ceil(h / dy) + 2; row++) {
+        const cols = Math.ceil(w / dx) + 2
+        for (let col = -1; col < cols; col++) {
+          const cx = col * dx + (row % 2 === 0 ? 0 : dx / 2)
+          const cy = row * dy
+          cells.push({ cx, cy, phase: 'idle', progress: 0, idleTick: 0, idleTarget: Math.floor(Math.random() * HEX_IDLE_MAX) })
+        }
+      }
+      this.hexCells = markRaw(cells)
+    },
+
+    startHexLoop(): void {
+      const canvas = this.$refs['hexCanvas'] as HTMLCanvasElement | null
+      if (!canvas) return
+      const ctx = canvas.getContext('2d')
+      if (!ctx) return
+      const tick = () => {
+        const w = canvas.offsetWidth
+        const h = canvas.offsetHeight
+        if (canvas.width !== w || canvas.height !== h) {
+          canvas.width  = w
+          canvas.height = h
+          this.buildHexGrid()
+        }
+        ctx.clearRect(0, 0, w, h)
+        this.drawHexFrame(ctx)
+        this.hexFrameId = requestAnimationFrame(tick)
+      }
+      this.hexFrameId = requestAnimationFrame(tick)
+    },
+
+    drawHexFrame(ctx: CanvasRenderingContext2D): void {
+      for (const cell of this.hexCells) {
+        this.tickHexCell(cell)
+        if (cell.phase !== 'idle' || cell.progress > 0) this.drawHexCell(ctx, cell)
+      }
+    },
+
+    tickHexCell(cell: HexCell): void {
+      if (cell.phase === 'idle') {
+        cell.idleTick++
+        if (cell.idleTick >= cell.idleTarget) {
+          cell.phase      = 'opening'
+          cell.idleTick   = 0
+          cell.idleTarget = Math.floor(Math.random() * HEX_IDLE_MAX) + HEX_IDLE_MAX / 2
+        }
+      } else if (cell.phase === 'opening') {
+        cell.progress += HEX_OPEN_SPEED
+        if (cell.progress >= 1) { cell.progress = 1; cell.phase = 'fading' }
+      } else {
+        cell.progress -= HEX_FADE_SPEED
+        if (cell.progress <= 0) { cell.progress = 0; cell.phase = 'idle' }
+      }
+    },
+
+    drawHexCell(ctx: CanvasRenderingContext2D, cell: HexCell): void {
+      const alpha = cell.progress * HEX_BORDER_ALPHA
+      ctx.beginPath()
+      this.traceHex(ctx, cell.cx, cell.cy, HEX_RADIUS)
+      ctx.strokeStyle = `rgba(180, 100, 255, ${alpha})`
+      ctx.lineWidth   = 1
+      ctx.stroke()
+    },
+
+    traceHex(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number): void {
+      for (let i = 0; i < 6; i++) {
+        const angle = (Math.PI / 3) * i - Math.PI / 6
+        const x = cx + r * Math.cos(angle)
+        const y = cy + r * Math.sin(angle)
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y)
+      }
+      ctx.closePath()
     },
 
     startSelAnimation(): void {

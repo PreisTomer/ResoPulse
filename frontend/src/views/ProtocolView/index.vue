@@ -21,7 +21,7 @@
         <span class="protocol__toc-mobile-caret" :class="{ 'protocol__toc-mobile-caret--open': tocMobileOpen }">{{ ICON.CARET_DOWN }}</span>
       </button>
 
-      <!-- Two-column layout: TOC + content -->
+      <!-- Two-column layout: TOC + content (+ validation indicator on wide screens) -->
       <div class="protocol__layout">
 
         <!-- Sidebar TOC -->
@@ -36,6 +36,8 @@
         <!-- Main document -->
         <article class="protocol__doc">
           <ProtocolSectionOverview />
+
+          <ProtocolSectionValidation />
 
           <ProtocolSectionPhysics
             :schwan-params="schwanParams"
@@ -52,6 +54,30 @@
 
           <ProtocolSectionRefs :ref-list="refList" />
         </article>
+
+        <!-- Validation indicator panel — shown only on very wide screens where space is available -->
+        <aside class="protocol__validate-aside">
+          <div class="protocol__validate-card">
+            <span class="protocol__validate-icon">{{ ICON.FLASK }}</span>
+            <span class="protocol__validate-tag">{{ $t('protocol.validateAside.tag') }}</span>
+            <h3 class="protocol__validate-card-title">{{ $t('protocol.validateAside.title') }}</h3>
+            <p class="protocol__validate-card-desc">{{ $t('protocol.validateAside.desc') }}</p>
+            <a
+              class="protocol__validate-btn"
+              href="#validation"
+              @click.prevent="scrollToValidation"
+            >{{ $t('protocol.validateAside.cta') }}</a>
+            <div class="protocol__validate-scenarios">
+              <span class="protocol__validate-scenario-label">{{ $t('protocol.validateAside.scenariosLabel') }}</span>
+              <span
+                v-for="s in validateScenarios"
+                :key="s"
+                class="protocol__validate-scenario-pill"
+              >{{ s }}</span>
+            </div>
+          </div>
+        </aside>
+
       </div>
     </div>
 
@@ -73,6 +99,7 @@ import { scrollAndHighlight } from '@/utils/highlight'
 
 import ProtocolToc from './ProtocolToc.vue'
 import ProtocolSectionOverview from './ProtocolSectionOverview.vue'
+import ProtocolSectionValidation from './ProtocolSectionValidation.vue'
 import ProtocolSectionPhysics from './ProtocolSectionPhysics.vue'
 import ProtocolSectionSteps from './ProtocolSectionSteps.vue'
 import ProtocolSectionSafety from './ProtocolSectionSafety.vue'
@@ -93,6 +120,7 @@ import type {
 
 const TOC_ITEMS: TocItem[] = [
   { id: 'overview',       key: 'overview',      indent: false },
+  { id: 'validation',     key: 'validate',      indent: false },
   { id: 'physics',        key: 'physics',       indent: false, physicsParent: true },
   { id: 'schwan',         key: 'schwan',        indent: true },
   { id: 'thermal',        key: 'thermal',       indent: true },
@@ -113,6 +141,7 @@ const TOC_ITEMS: TocItem[] = [
 
 const ALL_SECTION_IDS = [
   'overview',
+  'validation',
   'physics', 'schwan', 'thermal', 'maxwell', 'disruption',
   'resonance', 'nsep', 'doubleshell', 'dep', 'uncertainty', 'biomodulation',
   'impedance', 'sonification',
@@ -128,6 +157,7 @@ export default defineComponent({
     PageHeader,
     ProtocolToc,
     ProtocolSectionOverview,
+    ProtocolSectionValidation,
     ProtocolSectionPhysics,
     ProtocolSectionSteps,
     ProtocolSectionSafety,
@@ -200,6 +230,10 @@ export default defineComponent({
                : undefined,
       }))
     },
+
+    validateScenarios(): string[] {
+      return (this.$tm as Function)('protocol.validateAside.scenarios') as string[]
+    },
   },
 
   watch: {
@@ -237,11 +271,25 @@ export default defineComponent({
       return item.physicsParent ? this.isPhysicsActive : this.activeSection === item.id
     },
 
+    scrollToValidation(): void {
+      document.getElementById('validation')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    },
+
     scrollToRefHash(hash: string): void {
-      if (!hash.startsWith('#ref')) return
+      if (!hash.startsWith('#')) return
       const id = hash.slice(1)
+
+      if (!hash.startsWith('#ref')) {
+        // Section anchor (e.g. #validation) — scroll only, no highlight.
+        this._refScrollTimer = setTimeout(() => {
+          this._refScrollTimer = null
+          document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }, 400)
+        return
+      }
+
       if (id === 'refs') {
-        // Section-level link — scroll only, no highlight animation.
+        // Section-level ref link — scroll only, no highlight animation.
         this._refScrollTimer = setTimeout(() => {
           this._refScrollTimer = null
           document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -282,6 +330,103 @@ export default defineComponent({
     grid-template-columns: 220px minmax(0, 1fr);
     gap: 2.5rem;
     align-items: start;
+
+    @media (min-width: 1540px) {
+      grid-template-columns: 220px minmax(0, 1fr) 200px;
+    }
+  }
+
+  // ── Validation aside panel — right column, wide screens only ─────────────────
+  &__validate-aside {
+    display: none;
+    position: sticky;
+    top: 5rem;
+
+    @media (min-width: 1540px) {
+      display: block;
+    }
+  }
+
+  &__validate-card {
+    @include flex-col(0.55rem);
+    padding: 1rem 0.9rem 1.1rem;
+    background: color-mix(in srgb, var(--color-primary) 5%, var(--color-surface));
+    border: 1px solid color-mix(in srgb, var(--color-primary) 28%, transparent);
+    border-radius: var(--radius);
+    box-shadow: 0 2px 18px color-mix(in srgb, var(--color-primary) 6%, transparent);
+  }
+
+  &__validate-icon {
+    font-size: 1.6rem;
+    line-height: 1;
+    opacity: var(--op-partial);
+  }
+
+  &__validate-tag {
+    @include mono-upper(0.58rem, 0.1em);
+    color: var(--color-primary);
+    opacity: var(--op-dim);
+  }
+
+  &__validate-card-title {
+    font-family: var(--font-mono);
+    font-size: var(--fs-sm);
+    font-weight: 700;
+    color: var(--color-text);
+    margin: 0;
+    line-height: 1.35;
+  }
+
+  &__validate-card-desc {
+    font-size: var(--fs-xs);
+    color: var(--color-text-muted);
+    line-height: 1.6;
+    margin: 0;
+    opacity: var(--op-dim);
+  }
+
+  &__validate-btn {
+    display: block;
+    text-align: center;
+    padding: 0.45rem 0.7rem;
+    background: color-mix(in srgb, var(--color-primary) 14%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-primary) 45%, transparent);
+    border-radius: var(--radius);
+    color: var(--color-primary);
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-decoration: none;
+    transition: background var(--tr-normal), border-color var(--tr-normal), box-shadow var(--tr-normal);
+
+    &:hover {
+      background: color-mix(in srgb, var(--color-primary) 22%, transparent);
+      border-color: var(--color-primary);
+      box-shadow: 0 0 10px color-mix(in srgb, var(--color-primary) 20%, transparent);
+    }
+  }
+
+  &__validate-scenarios {
+    @include flex-col(0.3rem);
+    margin-top: 0.1rem;
+  }
+
+  &__validate-scenario-label {
+    @include mono-upper(0.58rem, 0.08em);
+    color: var(--color-text-muted);
+    opacity: var(--op-ghost);
+  }
+
+  &__validate-scenario-pill {
+    font-family: var(--font-mono);
+    font-size: 0.6rem; // deliberate micro below scale
+    padding: 0.12rem 0.45rem;
+    border-radius: 3px;
+    border: 1px solid var(--color-border);
+    color: var(--color-text-muted);
+    opacity: var(--op-dim);
+    line-height: 1.5;
   }
 
   /* ── Document ──────────────────────────────────────────── */

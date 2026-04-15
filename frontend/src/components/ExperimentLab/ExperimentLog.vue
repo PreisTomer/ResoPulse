@@ -138,6 +138,7 @@ import { mapStores } from 'pinia'
 import { useExperimentStore } from '@/stores/experimentStore'
 import { useCellStore } from '@/stores/cellStore'
 import { useAiStore } from '@/stores/aiStore'
+import { useTokenStore } from '@/stores/tokenStore'
 
 import { broadcastLogEntry, broadcastLogOutcome } from '@/services/socket'
 
@@ -166,7 +167,7 @@ export default defineComponent({
   components: { AccordionPanel, StatusBadge },
 
   computed: {
-    ...mapStores(useExperimentStore, useCellStore, useAiStore),
+    ...mapStores(useExperimentStore, useCellStore, useAiStore, useTokenStore),
     LOG_EVENT()    { return LOG_EVENT },
     NULL_DISPLAY() { return NULL_DISPLAY },
     ICON()         { return ICON },
@@ -246,7 +247,9 @@ export default defineComponent({
         ? this.$t('log.tipCellLysis')
         : this.$t('log.tipCellManual')
     },
-    submitRating(entryId: number, rating: number) {
+    async submitRating(entryId: number, rating: number) {
+      const canProceed = await this.tokenStore.consumeOperation('LOG_OUTCOME')
+      if (!canProceed) return
       const aiApplied = this.aiStore.suggestionApplied
       const entry = this.experimentStore.logOutcome(entryId, rating, aiApplied)
       if (entry) broadcastLogOutcome(entry, rating, aiApplied)

@@ -69,7 +69,6 @@ import { mapStores } from 'pinia'
 
 import { useReplayStore } from '@/stores/replayStore'
 import { useCellStore } from '@/stores/cellStore'
-import { useUiStore } from '@/stores/uiStore'
 
 import { ICON } from '@/constants/icons'
 import { ROUTE } from '@/constants/routes'
@@ -84,7 +83,7 @@ export default defineComponent({
   computed: {
     ICON() { return ICON },
     ROUTE() { return ROUTE },
-    ...mapStores(useReplayStore, useCellStore, useUiStore),
+    ...mapStores(useReplayStore, useCellStore),
 
     isVisible(): boolean {
       return this.replayStore.isReplaying || this.replayStore.isComplete
@@ -134,8 +133,7 @@ export default defineComponent({
 
     onTryAnother() {
       this.replayStore.dismiss()
-      this.uiStore.requestValidateDrawer()
-      this.$router.push('/')
+      this.$router.push({ path: ROUTE.PROTOCOL, hash: '#validation' })
     },
   },
 })
@@ -149,7 +147,7 @@ export default defineComponent({
   top: 1rem;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 900;
+  z-index: 1001;
   display: flex;
   flex-direction: column;
   align-items: center;

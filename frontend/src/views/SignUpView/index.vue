@@ -191,6 +191,7 @@ export default defineComponent({
     this.startHexLoop()
     this.initParticles()
     this.startParticleLoop()
+    this.patchClerkAutocomplete()
   },
 
   beforeUnmount() {
@@ -199,6 +200,21 @@ export default defineComponent({
   },
 
   methods: {
+
+    patchClerkAutocomplete(): void {
+      // Clerk renders password inputs without autocomplete attributes, causing a browser warning.
+      // We observe the card subtree and patch any password input Clerk adds after it mounts.
+      const cardWrap = this.$el?.querySelector('.auth-page__card')
+      if (!cardWrap) return
+      const observer = new MutationObserver(() => {
+        const passwordInput = cardWrap.querySelector('input[type="password"]') as HTMLInputElement | null
+        if (passwordInput && !passwordInput.getAttribute('autocomplete')) {
+          passwordInput.setAttribute('autocomplete', 'new-password')
+          observer.disconnect()
+        }
+      })
+      observer.observe(cardWrap, { childList: true, subtree: true })
+    },
 
     // ── Hex grid ─────────────────────────────────────────────────────
 
@@ -716,7 +732,5 @@ export default defineComponent({
   }
 }
 
-/* ── Clerk placeholder override — Clerk injects its own ::placeholder color ── */
-:deep(.cl-formFieldInput::placeholder) { color: #7a6aaa; opacity: 1; }
 
 </style>

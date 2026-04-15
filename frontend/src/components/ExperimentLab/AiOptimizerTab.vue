@@ -166,6 +166,7 @@ import { mapStores } from 'pinia'
 
 import { useAiStore } from '@/stores/aiStore'
 import { useExperimentStore } from '@/stores/experimentStore'
+import { useTokenStore } from '@/stores/tokenStore'
 
 import { requestAiOptimization, broadcastStateSync } from '@/services/socket'
 
@@ -201,7 +202,7 @@ export default defineComponent({
 
   computed: {
     ICON() { return ICON },
-    ...mapStores(useAiStore, useExperimentStore),
+    ...mapStores(useAiStore, useExperimentStore, useTokenStore),
 
     panelSubtitle(): string {
       if (this.aiStore.isLoading) return this.$t('ai.panelSubtitleLoading')
@@ -237,7 +238,10 @@ export default defineComponent({
   },
 
   methods: {
-    runOptimize() {
+    async runOptimize() {
+      const canProceed = await this.tokenStore.consumeOperation('AI_OPTIMIZE')
+      if (!canProceed) return
+
       this.showOfflineNote = false
       const requestId = this.aiStore.startRequest()
       requestAiOptimization(requestId, (result) => {

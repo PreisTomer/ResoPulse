@@ -31,6 +31,7 @@ import ProtocolGuidePanel from './components/ExperimentLab/ProtocolGuidePanel.vu
 
 import { useThemeStore } from './stores/themeStore'
 import { useAuthStore } from './stores/authStore'
+import { useTokenStore } from './stores/tokenStore'
 
 import { ROUTE } from './constants/routes'
 
@@ -40,7 +41,8 @@ export default defineComponent({
   components: { NavBar, ModeBanner, LiteratureStrip, TermsGate, ProtocolGuidePanel },
 
   setup() {
-    const authStore             = useAuthStore()
+    const authStore              = useAuthStore()
+    const tokenStore             = useTokenStore()
     const { isLoaded, isSignedIn, orgId } = useAuth()
 
     // Keep authStore in sync with Clerk's reactive state.
@@ -52,6 +54,15 @@ export default defineComponent({
         if (!loaded) return
         authStore.syncFromClerk(!!signedIn, !!oid)
         if (authStore.isClerkLoading) authStore.setClerkLoaded()
+
+        // Fetch token balance as soon as the user is signed in with an active org.
+        // startPolling() is idempotent — safe to call on every state change.
+        if (signedIn && oid) {
+          tokenStore.fetchBalance()
+          tokenStore.startPolling()
+        } else {
+          tokenStore.reset()
+        }
       },
       { immediate: true },
     )

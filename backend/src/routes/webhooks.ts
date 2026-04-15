@@ -11,6 +11,7 @@
 import { Router, type Request, type Response } from 'express'
 import { Webhook } from 'svix'
 import { prisma } from '../prisma'
+import { createTokenAccount } from '../services/tokenService'
 
 const router = Router()
 
@@ -114,6 +115,9 @@ async function upsertOrganization(data: ClerkOrgData): Promise<void> {
     update: { name: data.name, slug: data.slug ?? null },
     create: { id: data.id,  name: data.name, slug: data.slug ?? null },
   })
+  // Provision a free-tier token account for every new organisation.
+  // upsert inside createTokenAccount is idempotent — safe on update events too.
+  await createTokenAccount(data.id)
 }
 
 async function deleteOrganization(orgId: string): Promise<void> {

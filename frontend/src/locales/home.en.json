@@ -7,6 +7,11 @@
     "tagline1b": ": the\u00a0exact frequency where target cells lyse while healthy cells survive.",
     "tagline2": "Nine peer-reviewed physics models, an AI optimizer, and live hardware impedance feedback, all in one workspace. Design your protocol in silico, then export a complete Materials and Methods section ready for publication.",
     "btnPrimary": "Open Experiment Lab",
+    "btnStartFree": "Start free",
+    "btnViewPricing": "View pricing",
+    "cardSignUpHint": "Sign up to access",
+    "planFree": "Free",
+    "planPro": "Pro",
     "btnGhost": "Read the Science",
     "capVm":          "Schwan Vm Model",
     "capSelectivity": "Selectivity Index (TI)",
@@ -85,6 +90,7 @@
     "disclaimer": "for research visualisation only · not a medical device",
     "validateTabLine1": "Verified",
     "validateTabLine2": "Replicate Published Results",
+    "validateGateSub": "Two-step experimental validation against peer-reviewed papers. Create a free account to run replication workflows.",
     "validateDrawerClose": "Close"
   }
 }

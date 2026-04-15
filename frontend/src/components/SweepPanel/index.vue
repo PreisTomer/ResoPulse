@@ -49,6 +49,7 @@ import { defineComponent } from 'vue'
 import { mapStores } from 'pinia'
 
 import { useCellStore } from '@/stores/cellStore'
+import { useTokenStore } from '@/stores/tokenStore'
 
 import AccordionPanel from '@/components/AccordionPanel.vue'
 
@@ -116,7 +117,7 @@ export default defineComponent({
 
   computed: {
     ICON() { return ICON },
-    ...mapStores(useCellStore),
+    ...mapStores(useCellStore, useTokenStore),
 
     isResonanceTarget(): boolean {
       const cat = this.cellStore.targetCellCategory
@@ -281,7 +282,10 @@ export default defineComponent({
       this.sweepMax   = max
     },
 
-    exportCSV() {
+    async exportCSV() {
+      const canProceed = await this.tokenStore.consumeOperation('SELECTIVITY_SWEEP')
+      if (!canProceed) return
+
       const { cellStore } = this
       const meta = [
         `# ResoPulse: ${this.sweepParam === 'field' ? 'Field' : 'Frequency'} Sweep Export`,

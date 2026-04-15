@@ -28,22 +28,39 @@
     "close": "Close",
     "contents": "Contents",
     "overview": "1. Overview",
-    "physics": "2. Physical Model",
-    "schwan": "2.1 Schwan Equation",
-    "thermal": "2.2 SAR &amp; Pennes Bioheat",
-    "maxwell": "2.3 Effective Medium (Maxwell-Garnett)",
-    "disruption": "2.4 Disruption Criterion (IRE)",
-    "resonance": "2.5 Acoustic Resonance (Virus/Bacteria)",
-    "nsep": "2.6 Nanosecond Pulsed EP (nsEP)",
-    "doubleshell": "2.7 Double-Shell Nuclear Envelope",
-    "dep": "2.8 Dielectrophoresis (DEP)",
-    "uncertainty": "2.9 Conductivity Uncertainty",
-    "biomodulation": "2.10 Sub-threshold Biomodulation",
-    "impedance": "2.11 Impedance Feedback",
-    "sonification": "2.12 Auditory Display",
-    "protocol": "3. Experimental Protocol",
-    "safety": "4. Safety &amp; Thresholds",
-    "refs": "5. References"
+    "validate": "2. Experimental Validation",
+    "physics": "3. Physical Model",
+    "schwan": "3.1 Schwan Equation",
+    "thermal": "3.2 SAR &amp; Pennes Bioheat",
+    "maxwell": "3.3 Effective Medium (Maxwell-Garnett)",
+    "disruption": "3.4 Disruption Criterion (IRE)",
+    "resonance": "3.5 Acoustic Resonance (Virus/Bacteria)",
+    "nsep": "3.6 Nanosecond Pulsed EP (nsEP)",
+    "doubleshell": "3.7 Double-Shell Nuclear Envelope",
+    "dep": "3.8 Dielectrophoresis (DEP)",
+    "uncertainty": "3.9 Conductivity Uncertainty",
+    "biomodulation": "3.10 Sub-threshold Biomodulation",
+    "impedance": "3.11 Impedance Feedback",
+    "sonification": "3.12 Auditory Display",
+    "protocol": "4. Experimental Protocol",
+    "safety": "5. Safety &amp; Thresholds",
+    "refs": "6. References"
+  },
+  "validation": {
+    "title": "2. Experimental Validation",
+    "intro": "The two workflows below replay published electroporation experiments using this platform's physics models. Each workflow loads the exact cell parameters, field settings, and protocol steps from the cited paper, runs the simulation, and reports how closely the computed outcome matches the published result. A scientist can reproduce these in under two minutes to verify the model before designing their own protocol."
+  },
+  "validateAside": {
+    "tag":            "MODEL VERIFICATION",
+    "title":          "Experiment Validation",
+    "desc":           "Run proven scenarios from published EP studies to verify simulation accuracy before designing your protocol.",
+    "cta":            "Go to Section 2: Experimental Validation",
+    "scenariosLabel": "Verified scenarios",
+    "scenarios": [
+      "CHO cell IRE (Weaver 1996)",
+      "E. coli PEF lysis (Wouters 2001)",
+      "Jurkat nsEP (Vernier 2004)"
+    ]
   },
   "overview": {
     "title": "1. Overview",
@@ -63,9 +80,9 @@
     "disclaimer": "This platform is intended for research visualisation only and does not constitute clinical guidance or a validated medical device. All biophysical parameters are approximate values derived from the bioelectromagnetics literature."
   },
   "physics": {
-    "title": "2. Physical Model",
+    "title": "3. Physical Model",
     "schwan": {
-      "title": "2.1 Schwan Equation",
+      "title": "3.1 Schwan Equation",
       "tip": "<strong>Schwan Single-Shell Model</strong>\nPredicts peak transmembrane voltage Vm(f) = 1.5·E·R·cosθ / √(1+(ωτ)²)\nτ = R·Cm·(2σe+σi)/(2σe·σi)  ·  Cm = εr·ε₀/d  ·  fc = 1/(2πτ)\nAt quasi-DC (f≪fc): Vm ≈ 1.5·E·R  ·  Selectivity = R_T / R_H\nAbove fc: Vm falls -20 dB/decade (larger cells roll off first).",
       "p1": "For a spherical cell modelled as a single-shell dielectric in a uniform AC electric field, the peak induced transmembrane potential is given by the Schwan equation. The <strong>cos θ</strong> factor accounts for the angle between the applied field and the cell's long axis: θ = 0° (field-aligned) yields maximum coupling; θ = 90° gives V<sub>m</sub> = 0. Crucially, cos θ cancels exactly in the selectivity ratio V<sub>m,T</sub>/V<sub>m,H</sub>, so field orientation does not affect the Selectivity Index (TI), it scales both cells equally. The orientation slider in the Advanced panel rotates both cells simultaneously.",
       "p2": "The membrane time constant τ determines the characteristic frequency f<sub>c</sub> = 1/(2πτ), above which V<sub>m</sub> falls at −20 dB/decade. Cells with large radius R, high membrane permittivity ε<sub>r</sub>, or thin membrane d exhibit a larger C<sub>m</sub> and lower f<sub>c</sub>, making them preferentially disrupted at lower frequencies relative to smaller reference cells. The extracellular conductivity σ<sub>e</sub> is temperature-corrected at each simulation step using a medium-specific coefficient α: σ<sub>e</sub>(T) = σ<sub>e0</sub> × (1 + α × (T − 37°C)), which shifts τ and f<sub>c</sub> dynamically as the medium heats. α is 0.020/°C for saline, DMEM, PBS, RPMI, and EP buffer; 0.017/°C for whole blood; 0.015/°C for soft tissue; 0.028/°C for distilled water (Gabriel et al. [21]; Foster &amp; Schwan [5]).",
@@ -94,7 +111,7 @@
       ]
     },
     "thermal": {
-      "title": "2.2 SAR &amp; Pennes Bioheat Model",
+      "title": "3.2 SAR &amp; Pennes Bioheat Model",
       "tip": "<strong>SAR and Pennes Bioheat</strong>\nSAR = σi · α² · E² · wf / ρ  [W/kg]\nα = 3σe/(2σe+σi)  ·  wf = 0.5 (CW sinusoidal) or 1.0 (pulsed)\nT_ss = 37 + SAR·dc / (λ·cp)  ·  λ = 0.02 s⁻¹ Newton cooling\nBlood perfusion: λ_perf = ωb × 63.9 / cp  (Pennes 1948)",
       "p1": "Ohmic heating is modelled via the specific absorption rate (SAR). The internal field factor α = 3σ<sub>e</sub>/(2σ<sub>e</sub> + σ<sub>i</sub>) is the exact DC Clausius-Mossotti solution for a conducting sphere in a uniform field (Foster &amp; Schwan [5]). At frequencies above f<sub>c</sub>, the membrane capacitance shields the cell interior, so the displayed SAR is an upper bound that grows as f → f<sub>c</sub> from below.",
       "p2": "Steady-state temperature follows the <strong>Pennes bioheat equation</strong> [16] with two parallel cooling pathways: Newton surface cooling (λ<sub>Newton</sub> = 0.02 s⁻¹, representing combined thermal diffusion and surface loss) and blood perfusion cooling (λ<sub>perf</sub> = ω<sub>b</sub> × 63.9 / c<sub>p</sub>), where ω<sub>b</sub> [mL/(g·min)] is set in the Advanced panel. In vitro experiments with no blood supply use ω<sub>b</sub> = 0. The 63.9 factor combines blood density (1060 g/L), specific heat (3617 J/(kg·K)), and unit conversion to s⁻¹ per mL/(g·min). At steady state: T<sub>ss</sub> = 37 + SAR<sub>eff</sub> / ((λ<sub>Newton</sub> + λ<sub>perf</sub>) × c<sub>p</sub>).",
@@ -108,7 +125,7 @@
       "eqNote": "Pennes bioheat equation: Harold H. Pennes, J. Appl. Physiol. 1:93 (1948) [16] &nbsp;·&nbsp; SAR formulation: Kenneth R. Foster &amp; Herman P. Schwan (1989) [5]"
     },
     "maxwell": {
-      "title": "2.3 Effective Medium (Maxwell-Garnett)",
+      "title": "3.3 Effective Medium (Maxwell-Garnett)",
       "tip": "<strong>Maxwell-Garnett Effective Medium</strong>\nCorrects extracellular conductivity for cell volume fraction φ.\nσ_eff = σe · (1−φ) / (1+φ/2)  (DC insulating-sphere limit)\nφ = 0: isolated cells  ·  φ ≈ 0.64: random close-packing\nApplied before computing τ, Vm, and SAR for dense suspensions.",
       "p1": "At high cell packing densities φ (volume fraction of cells), neighbouring cells reduce the effective extracellular conductivity σ<sub>e,eff</sub> experienced by each cell. This is captured by the <strong>Maxwell-Garnett mixing rule</strong> [17] for insulating spheres in a conducting medium, the DC limit applicable when cell membranes are capacitive (f ≪ f<sub>c</sub>). Notably, this formula is mathematically identical to the <strong>Hashin-Shtrikman lower bound</strong> for insulating inclusions — the tightest rigorous lower bound on σ<sub>eff</sub> — so it is not merely an approximation but the exact lower bound at DC:",
       "p2": "The simulation applies this correction to σ<sub>e</sub> before computing τ, V<sub>m</sub>, and SAR, so all downstream outputs reflect the dense-suspension environment. φ = 0 corresponds to isolated cells in bulk medium (in vitro single-cell); φ ≈ 0.64-0.74 represents random close-packing of spheres (dense cell aggregate). The Cell Packing slider is in the Advanced panel. For most in vitro well-plate experiments, φ ≈ 0.01-0.05 (sparse); cell aggregates and organoids can reach φ ≈ 0.6-0.8. Note: the Maxwell-Garnett DC formula is the appropriate limit here, the full Bruggeman or Bergman-Milton bounds apply at higher frequencies and are not implemented.",
@@ -118,7 +135,7 @@
       "eqNote": "James Clerk Maxwell Garnett, Phil. Trans. R. Soc. Lond. A 203:385 (1904) [17]"
     },
     "disruption": {
-      "title": "2.4 Disruption Criterion (IRE)",
+      "title": "3.4 Disruption Criterion (IRE)",
       "tip": "<strong>Disruption Ratio and IRE Criterion</strong>\nDR = Vm(f) × PEF / Vth  ·  PEF = 1−exp(−tp/τ) (RC charging factor)\n8-45%: Nourishing: sub-threshold biomodulation active\n50-85%: Rev-EP: reversible pores, drug/gene delivery regime\n>85%: LYSIS ARMED: irreversible EP · lysis countdown starts\nFires after N×tp/dc (pulsed) or 2.5 s (CW)\nH-FIRE: Vth,eff = Vth × 1.75 (bipolar burst, reduced net membrane charging per unit peak field)",
       "p1": "Membrane disruption (irreversible electroporation; Neumann et al. [7]; membrane deformation dynamics reviewed in Dimova et al. [6]) is initiated when the disruption ratio exceeds threshold for a sustained period. The <strong>pulse-envelope factor</strong> f<sub>pulse</sub> = 1 − exp(−t<sub>p</sub>/τ) captures the RC charging dynamics of the membrane during a rectangular pulse of width t<sub>p</sub> (Weaver &amp; Chizmadzhev [3]): at t<sub>p</sub> ≫ τ (standard IRE with µs pulses), f<sub>pulse</sub> ≈ 1 and the listed V<sub>m,threshold</sub> values apply directly. At t<sub>p</sub> ≪ τ (nsEP with 10 ns pulses), f<sub>pulse</sub> ≈ 0.07 for a hepatocyte, the effective threshold is ~14× higher, requiring proportionally greater field for disruption. CW mode sets f<sub>pulse</sub> = 1.",
       "p2": "Cancer cells exhibit lower V<sub>m,threshold</sub> (~0.65-0.85 V) than healthy tissue (~1.0-1.1 V), creating a selectivity window where tumour cell disruption occurs at sub-lethal field intensities for normal cells. For adenocarcinoma vs. hepatocyte in saline, maximum V<sub>m</sub> selectivity ≈ R<sub>T</sub>/R<sub>H</sub> = <strong>1.5×</strong> occurs at quasi-DC (f ≪ f<sub>c</sub>(T)); the Selectivity Index (TI) (accounting for different lysis thresholds) reaches <strong>~2.4×</strong> at quasi-DC. Selectivity <em>decreases</em> with increasing frequency as the larger target cell rolls off before the smaller healthy cell.",
@@ -137,7 +154,7 @@
       "eqNote": "James C. Weaver &amp; Yuri A. Chizmadzhev, Bioelectrochem. Bioenerg. 41:135 (1996) [3] &nbsp;·&nbsp; H-FIRE threshold: Arena et al., Biomed. Eng. Online 10:102 (2011) [27]; Sano et al., Sci. Rep. 5:14999 (2015) [28]"
     },
     "resonance": {
-      "title": "2.5 Acoustic / Mechanical Resonance, Virus &amp; Bacteria",
+      "title": "3.5 Acoustic / Mechanical Resonance, Virus &amp; Bacteria",
       "tip": "<strong>Acoustic Resonance Model (Bacteria / Virus)</strong>\nModels mechanical disruption of rigid capsid shells and peptidoglycan walls.\nDisruption ratio = (E / Ethr) × L(f, fres, Q)\nL(f) = 1/√(1+(Q·(f/f₀−f₀/f))²)  Lorentzian lineshape\nfres ≈ v_shell/(2R)  ·  Mammalian cells have no rigid-shell resonance.",
       "p1": "For sub-micron targets (virions and bacteria), the Schwan model predicts reduced selectivity at quasi-DC because V<sub>m</sub> ∝ R, small cells generate lower transmembrane voltage than large cells. The correct disruption mechanism at GHz frequencies is <strong>acoustic/mechanical resonance</strong> of the capsid protein shell or bacterial cell wall, modelled by a Lorentzian lineshape. Mammalian cells lack the rigid protein/peptidoglycan shell required for this resonance; their Schwan V<sub>m</sub> rolls off above ~1 MHz and approaches zero at GHz frequencies, leaving healthy tissue unperturbed at pathogen-targeting frequencies.",
       "rfBasis": "<strong>RF vs. laser excitation:</strong> f<sub>res</sub> values derive from femtosecond pulsed laser (near-IR, ~800 nm) impulsive stimulated Raman scattering experiments (Tsen et al. [10]), not direct RF/microwave delivery. E<sub>thr</sub> values for RF excitation are theoretical extrapolations with no experimental validation. The RF-to-GHz-acoustic coupling mechanism is not established in the literature; microwave delivery at 10-12 GHz faces a tissue penetration depth of ~1-2 mm.",
@@ -164,7 +181,7 @@
       ]
     },
     "nsep": {
-      "title": "2.6 Nanosecond Pulsed EP (nsEP), Reference Model",
+      "title": "3.6 Nanosecond Pulsed EP (nsEP), Reference Model",
       "tip": "<strong>Nanosecond Pulsed EP: Reference Model</strong>\nUses DC step response, not AC Schwan model.\nVm_eff = 1.5·E·R·cosθ · (1−exp(−tp/τ))\nAt tp≪τ: small cells (short τ) charge proportionally more than large cells.\nLab Pulse Width slider sets lysis timing (PEF), not AC Vm per se.",
       "p1": "Nanosecond pulsed electroporation (nsEP) uses DC rectangular pulses (not sinusoidal RF) applied from specialised pulsed-power generators. The membrane charges as a first-order RC step response: V<sub>m,eff</sub>(t<sub>p</sub>) = 1.5 · E · R · cos θ × (1 − exp(−t<sub>p</sub>/τ)). At t<sub>p</sub> = 10 ns in saline: τ<sub>E.coli</sub> ≈ 14 ns → factor ≈ 0.51; τ<sub>hepatocyte</sub> ≈ 147 ns → factor ≈ 0.065. The quasi-DC V<sub>m</sub> ratio of 0.10× (E. coli vs. hepatocyte) <em>improves</em> to ~0.78×, the small cell charges proportionally more per pulse than the large cell. The theoretical TI limit as t<sub>p</sub> → 0 remains below 1× because V<sub>m,thr,bacteria</sub> > V<sub>m,thr,hepatocyte</sub> (cell-wall reinforcement raises the lysis threshold).",
       "scope": "<strong>Simulation scope:</strong> The Experiment Lab simulates duty-cycled AC sinusoidal fields, the Schwan V<sub>m</sub>(f) model is evaluated at the RF carrier frequency, which is the correct model for continuous-wave RF or pulse-modulated RF bursts. True nsEP (DC rectangular pulses, pulsed-power hardware) uses the step-response formula above. The Pulse Width slider in the lab controls lysis protocol timing and the SAR waveform factor (f<sub>pulse</sub>), not V<sub>m</sub> per se. For dedicated nsEP modelling, use the DC step-response formula directly.",
@@ -173,7 +190,7 @@
       "eqNote": "Michael Stacey et al. [8]; Karl H. Schoenbach, Stephen J. Beebe &amp; Eric S. Buescher [13]"
     },
     "doubleshell": {
-      "title": "2.7 Double-Shell Nuclear Envelope Model",
+      "title": "3.7 Double-Shell Nuclear Envelope Model",
       "tip": "<strong>Double-Shell Nuclear Envelope (Kotnik 2006)</strong>\nAdds nuclear membrane as a second concentric dielectric shell.\nNuclear Vm is a bandpass function, peaking at fpeak = 1/(2π√(τ_out·τ_ne))\nFor presets: fpeak ≈ 0.74-1.66 MHz (±30% model accuracy vs full Kotnik 2006)\nEnable via Shell Model toggle in Field Control. Schwan mode only.",
       "p1": "For mammalian nucleated cells, an optional <strong>double-shell model</strong> (Kotnik &amp; Miklavcic 2006 [15]) adds the nuclear membrane as a second concentric dielectric shell. The nuclear membrane V<sub>m</sub> is a two-pole bandpass function of frequency, with peak at f<sub>peak</sub> = 1/(2π√(τ<sub>out</sub>·τ<sub>ne</sub>)), typically in the <strong>0.74-1.66 MHz</strong> range for the presets in this library. Cancer cells have a higher nuclear-to-cytoplasmic (N/C) ratio, thinner nuclear envelopes, and lower nuclear V<sub>m</sub> thresholds, creating an additional cancer-selectivity axis. Enable via the <strong>Shell Model</strong> toggle in the Field Control panel.",
       "fpeak": "<strong>f<sub>peak</sub> model accuracy:</strong> The formula f<sub>peak</sub> = 1/(2π√(τ<sub>out</sub>·τ<sub>ne</sub>)) is exact for the simplified nuclear Vm expression used here (proven by setting d/dω of the bandpass numerator to zero). The ±30% caveat applies at the model level: the simplified two-time-constant formula deviates from the full Kotnik &amp; Miklavcic (2006) two-shell transfer function by up to ±30% when 0.1 &lt; τ<sub>out</sub>/τ<sub>ne</sub> &lt; 10, which includes all presets in this library. Displayed f<sub>peak</sub> values are exact for the implemented model; use the full two-pole transfer function (Kotnik &amp; Miklavcic 2006, Eq. 12) for higher-accuracy estimates.",
@@ -200,7 +217,7 @@
       ]
     },
     "dep": {
-      "title": "2.8 Dielectrophoresis (DEP)",
+      "title": "3.8 Dielectrophoresis (DEP)",
       "tip": "<strong>Dielectrophoresis: Clausius-Mossotti Factor</strong>\nRe[K(f)] ∈ [-0.5, +0.5]: determines DEP force direction.\nRe[K] > 0: pDEP, attracted to field maxima (electrode edges)\nRe[K] < 0: nDEP, repelled from field maxima\nF_DEP = 2π·εm·R³·Re[K]·∇&#124;E&#124;²  ·  Model invalid at GHz resonance frequencies.",
       "p1": "Dielectrophoresis (DEP) is the translational motion of a polarisable particle placed in a spatially non-uniform electric field. Unlike electrophoresis (which requires a net charge), DEP arises from the <em>induced dipole</em> generated by the mismatch between particle and medium permittivity, and operates on all cells regardless of charge. The time-averaged DEP force on a spherical cell of radius R is:",
       "eqForce": "⟨F<sub>DEP</sub>⟩ = 2π ε<sub>m</sub> R³ Re[K(ω)] ∇&#124;E&#124;²",
@@ -229,7 +246,7 @@
       ]
     },
     "uncertainty": {
-      "title": "2.9 Cytoplasm Conductivity (σ<sub>i</sub>) Uncertainty",
+      "title": "3.9 Cytoplasm Conductivity (σ<sub>i</sub>) Uncertainty",
       "tip": "<strong>σi Uncertainty Bands</strong>\nσi controls τ, SAR, Vm, and TI simultaneously (highest-impact uncertain parameter).\nUncertainty: ±20% mammalian  ·  ±35% bacteria  ·  ±45% virus\nShown as shaded bands on the Bode chart (cyan: healthy, red: target).\nTI uncertainty range in Selectivity Panel applies worst-case σi bounds.",
       "p1": "Cytoplasm conductivity σ<sub>i</sub> is the most influential uncertain parameter in the Schwan model: it controls both τ and the SAR internal field factor α, affecting V<sub>m</sub>, f<sub>c</sub>, temperature, and the Selectivity Index (TI) simultaneously. Literature values span considerable ranges depending on measurement technique (impedance spectroscopy, patch-clamp, rotation assay), ionic composition, growth phase, and osmolarity.",
       "p2": "The simulation visualises σ<sub>i</sub> uncertainty as <strong>shaded bands</strong> on the frequency response chart (healthy: cyan, target: red, 10% opacity each). The band bounds are ±20% for mammalian cells, ±35% for bacteria, and ±45% for viruses. The <strong>TI uncertainty range</strong> displayed in the Selectivity Panel computes worst-case Selectivity Index (TI) bounds: TI<sub>low</sub> applies maximum σ<sub>i</sub> penalty for the target and minimum for healthy; TI<sub>high</sub> applies the inverse. These bounds represent the realistic spread of outcomes across the literature parameter ranges, not measurement error or model uncertainty per se.",
@@ -245,7 +262,7 @@
       ]
     },
     "biomodulation": {
-      "title": "2.10 Sub-threshold Biomodulation (Empirical Index)",
+      "title": "3.10 Sub-threshold Biomodulation (Empirical Index)",
       "tip": "<strong>Sub-threshold Biomodulation (Empirical Index)</strong>\nAutomatic state, no mode toggle. Active when healthy cell DR 8-45%.\nPathways: PIEZO1 Ca²⁺ influx + CaM-NOS nitric oxide (Pilla 2012; Lee 2018)\nBMS = 0.55·SI + 0.25·MTE + 0.20·MA\nIMPORTANT: The BMS formula, weighting coefficients, and MTE definition are\nexploratory constructs with no peer-reviewed validation. Use for qualitative\nexploration only. Not a clinical or research-grade index.\nOptimal parameters: pulsed mode, dc ≈ 10⁻⁴, f &lt; fc, DR ≈ 20-40%.",
       "empiricalWarn": "<strong>Empirical Index Warning:</strong> The Biomodulation Score (BMS) and its components (SI, MTE, MA) are simulator constructs with no peer-reviewed validation for the specific formula, weight coefficients, or MTE definition. The MTE term reuses the Schwan electrical roll-off as a proxy for mechanical coupling, which conflates two distinct physical mechanisms. The underlying Ca²⁺ and NO signalling pathways are experimentally established; the composite BMS scoring is not. Treat this section as a qualitative exploration tool, not a quantitative research output.",
       "p1": "At DR 8-45%, pulsed fields activate mechanosensitive and voltage-gated ion channels without causing lysis. The simulation labels this the <strong>Nourishing</strong> state (8-45% DR, below the NOURISHING = 45% threshold): a simulator convention for the sub-lytic biomodulation window, not a clinical category. Two established in vitro pathways drive the response:",
@@ -256,7 +273,7 @@
       "p2": "<strong>(1) PIEZO1 / voltage-gated Ca²⁺:</strong> Sub-threshold fields generate transient intracellular Ca²⁺ spikes at DR 20-40% via two distinct pathways: PIEZO1 mechanosensitive channels (stretch-activated, gated indirectly by field-induced membrane tension and deformation rather than by the field potential directly) and VGCCs (voltage-gated Ca²⁺ channels, directly activated by the sub-threshold transmembrane potential), without permanent permeabilisation. Ca²⁺ drives downstream gene expression and cytoskeletal remodelling (Pall [19]). <strong>(2) CaM-NOS nitric oxide:</strong> Ca²⁺ influx activates calmodulin-dependent NOS, modulating NO production with reported effects on vasodilation and inflammation resolution (Pilla [18]). In vitro evidence is well-established; translation to in vivo outcomes remains an active research area and is not modelled here. Recommended parameters: pulsed mode, dc ≈ 10⁻⁵-10⁻⁴, f &lt; f<sub>c</sub>, DR ≈ 20-40%."
     },
     "impedance": {
-      "title": "2.11 Impedance Feedback &amp; Ion Release Model",
+      "title": "3.11 Impedance Feedback &amp; Ion Release Model",
       "tip": "<strong>Impedance Feedback and Ion Release</strong>\nLysed cells release cytoplasm, shifting σe by φ·flysed·(σi−σe₀)·η.\nDirection: σe rises (Z drops) when σi > σe₀ (low-σ EP buffer).\nσe falls (Z rises) when σi < σe₀ (saline/PBS with mammalian cells).\nVoltage divider: Efield = Egen × Z/(Z+Rs). Corrected: Egen = Etarget × (1+Rs/Z).\nInstrument Panel tracks drift; connect hardware via impedanceReading socket event.",
       "p1": "As cells lyse during an electroporation protocol, intracellular ions (K⁺, Na⁺, Cl⁻, ATP, and other solutes) are released into the extracellular medium. This ion release shifts the medium conductivity σ<sub>e</sub> according to σ<sub>e</sub>(t) = σ<sub>e₀</sub> + φ·f<sub>lysed</sub>·(σ<sub>i</sub>−σ<sub>e₀</sub>)·η. The direction depends on the conductivity contrast: in low-conductivity EP buffers (σ<sub>e₀</sub> ≈ 0.1 S/m, σ<sub>i</sub> ≈ 0.5-0.7 S/m), lysis raises σ<sub>e</sub> and lowers the cuvette impedance Z = d/(σ<sub>e</sub>·A). In high-conductivity media such as saline or PBS (σ<sub>e₀</sub> = 1.5 S/m, σ<sub>i</sub> ≈ 0.5-0.7 S/m for mammalian cells), σ<sub>i</sub> &lt; σ<sub>e₀</sub> so lysis slightly reduces σ<sub>e</sub> and raises Z instead; at typical cell densities of 10<sup>6</sup> cells/mL the effect is negligible (&lt;0.1%). The impedance drift problem is most significant in EP buffer at high cell concentrations. In either case, the generator and cable have a source impedance R<sub>s</sub> (typically 50 Ω), forming a voltage divider with the cuvette. Without field correction, the delivered field deviates from the set point (Kotnik et al. [22]).",
       "p2": "The <strong>Instrument Panel</strong> (/instrument) models this drift in real time. The ion-release model computes the live conductivity from the current disruption ratio; the corrected generator output is then displayed so the operator knows exactly how much to increase the generator voltage to maintain a constant intra-cuvette field.",
@@ -275,7 +292,7 @@
       "hardwareDrivers": "Start with <code>instrument-bridge run --driver &lt;name&gt;</code>:<br><code>demo</code> — synthetic cuvette, no hardware (verify socket and UI first)<br><code>ascii_serial</code> — generic ASCII LCR meters via RS-232: DE-5000, Peak LCR45, BK Precision 889B<br><code>btx</code> — BTX ECM 830 / ECM 2001 electroporator quasi-DC resistance readback (RS-232, 9600 baud)<br><code>visa_lcr</code> — SCPI LCR meters via GPIB/USB/LAN: Keysight E4980A, Hioki IM3533/3536, Agilent 4284A/4285A<br><code>nanopulse</code> — Pulse Biosciences NanoPulse (formerly CellFX) nsPEF generator; TCP/IP, default port 20000; reports quasi-DC cuvette load resistance<br><code>pulse_select</code> — Pulse Biosciences PulseSelect nsPEF generator; TCP/IP, default port 20000; firmware ≥ 3.0 returns full complex Z (real + imag) with AC check frequency"
     },
     "sonification": {
-      "title": "2.12 Auditory Display (Sonification)",
+      "title": "3.12 Auditory Display (Sonification)",
       "tip": "<strong>Auditory Display (Sonification)</strong>\nMaps live physics values to sound via Web Audio API.\nImpedance drift → pitch (220-1760 Hz)  ·  DR → volume\nRev-EP state → 6 Hz tremolo  ·  Lysis event → 880 Hz burst\nIMPORTANT: These are data representations, NOT the RF applied-field frequencies.",
       "p1": "Sonification is the use of non-speech audio to convey information. In the context of this platform, live experiment parameters are mapped to audible tones via the Web Audio API, enabling an operator to monitor experiment state without continuously watching the screen, a technique first formalised by Kramer et al. (1999) [23]. The technique is particularly suited to multi-parameter monitoring during long electroporation protocols where both impedance drift and cell disruption ratio evolve simultaneously.",
       "disclaimer": "<strong>Important:</strong> These sounds are NOT the RF applied-field frequencies. The electroporation and resonance frequencies used in this platform are in the kHz-GHz range, far above the 20 Hz-20 kHz audible spectrum. The sonification maps data <em>values</em> to audible tones; it has no physical relationship to the applied field and does not affect the cells.",
@@ -296,7 +313,7 @@
   },
   "followInLab": "Follow in Lab",
   "protocol": {
-    "title": "3. Experimental Protocol",
+    "title": "4. Experimental Protocol",
     "steps": {
       "s01": {
         "title": "Select cell pair",
@@ -349,7 +366,7 @@
     }
   },
   "safety": {
-    "title": "4. Safety &amp; Thresholds",
+    "title": "5. Safety &amp; Thresholds",
     "intro": "The following reference thresholds are used in the simulation and are based on published bioelectromagnetics literature.",
     "thParam": "Parameter",
     "thValue": "Value",
@@ -371,7 +388,7 @@
     ]
   },
   "refs": {
-    "title": "5. References",
+    "title": "6. References",
     "list": [
       {
         "body": "Herman P. Schwan. <em>Electrical properties of tissue and cell suspensions.</em> Advances in Biological and Medical Physics. 1957;5:147-209.",

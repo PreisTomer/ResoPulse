@@ -42,7 +42,10 @@ export default defineComponent({
 
 
 .stat-card {
-  @include surface-card(var(--radius), 1rem 1.1rem);
+  @include surface-card(var(--radius-lg), 1rem 1.25rem);
+  transition: box-shadow var(--tr-normal);
+
+  &:hover { box-shadow: var(--glow-subtle); }
   display: flex;
   flex-direction: column;
   gap: 0.35rem;

@@ -291,12 +291,22 @@ function validateAiOptimizeRequest(raw: Record<string, unknown>): AiOptimizeRequ
   }
 }
 
-// Room name sanitised to safe chars; scoped to "session:" namespace.
-function sessionRoom(name: string): string {
-  const safe = (name || 'default')
+/**
+ * Compute the room key for a given session.
+ *
+ * Rooms are always scoped to the team (org) or, for solo users, to the
+ * individual user. This ensures that two different orgs — or two solo users —
+ * who happen to use the same session name never share a room.
+ *
+ *   org members  → "org:{orgId}:session:{name}"
+ *   solo users   → "user:{userId}:session:{name}"
+ */
+export function sessionRoom(name: string, orgId: string | null, userId: string): string {
+  const safeName  = (name || 'default')
     .replace(/[^a-zA-Z0-9_\-.]/g, '_')
     .slice(0, BOUNDS.SESSION_MAX_LEN)
-  return `session:${safe}`
+  const scopePrefix = orgId ? `org:${orgId}` : `user:${userId}`
+  return `${scopePrefix}:session:${safeName}`
 }
 
 async function callPythonOptimizer(request: AiOptimizeRequest): Promise<AiOptimizeResult | null> {
@@ -328,6 +338,8 @@ export function setupSocketServer(httpServer: HttpServer): Server {
   })
 
   // Reject unauthenticated connections before any event handler runs.
+  // In test mode the auth token may be a JSON-encoded identity stub so tests
+  // can inject arbitrary userId/orgId without a real Clerk keypair.
   io.use(async (socket, next) => {
     const token = typeof socket.handshake.auth?.token === 'string'
       ? socket.handshake.auth.token
@@ -338,11 +350,28 @@ export function setupSocketServer(httpServer: HttpServer): Server {
       return
     }
 
+    if (process.env.NODE_ENV === 'test') {
+      try {
+        const stub = JSON.parse(token) as { userId: string; orgId?: string }
+        if (typeof stub.userId !== 'string') throw new Error()
+        socket.data.userId = stub.userId
+        socket.data.orgId  = stub.orgId ?? null
+        next()
+        return
+      } catch {
+        next(new Error('Unauthorized'))
+        return
+      }
+    }
+
     try {
       const payload = await verifyToken(token, {
         secretKey: process.env.CLERK_SECRET_KEY ?? '',
       })
       socket.data.userId = payload.sub
+      // org_id is present when the user's active session is org-scoped (Clerk standard claim).
+      // Solo users (no active org) get undefined here — rooms fall back to user-scoped isolation.
+      socket.data.orgId  = typeof payload.org_id === 'string' ? payload.org_id : null
       next()
     } catch {
       next(new Error('Unauthorized'))
@@ -360,7 +389,7 @@ export function setupSocketServer(httpServer: HttpServer): Server {
       const packet = validateStatePacket(raw as Record<string, unknown>)
       if (!packet) return
 
-      const targetRoom  = sessionRoom(packet.sessionName)
+      const targetRoom  = sessionRoom(packet.sessionName, socket.data.orgId as string | null, socket.data.userId as string)
       const currentRoom = socketToRoom.get(socket.id) ?? DEFAULT_ROOM
 
       if (targetRoom !== currentRoom) {

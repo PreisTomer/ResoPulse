@@ -8,7 +8,7 @@
     <!-- ── Main content ──────────────────────────────────────────── -->
     <div class="experiment__main">
 
-      <!-- Notes bar — floats in the top padding above the healthy cell card -->
+      <!-- Notes bar — sits above the workspace, collapses inline -->
       <div class="experiment__notes-bar">
         <button
           class="experiment__notes-btn"
@@ -17,31 +17,34 @@
           :title="$t('exp.notesToggleTip')"
           @click="notesOpen = !notesOpen"
         >{{ $t('exp.notesToggle') }}</button>
-        <template v-if="notesOpen">
-          <input
-            class="experiment__notes-input"
-            type="text"
-            :placeholder="$t('exp.notesSamplePlaceholder')"
-            :value="experimentStore.sampleDescription"
-            @input="experimentStore.setSampleDescription(($event.target as HTMLInputElement).value)"
-            spellcheck="false"
-          />
-          <textarea
-            class="experiment__notes-textarea"
-            :placeholder="$t('exp.notesNotesPlaceholder')"
-            :value="experimentStore.sessionNotes"
-            @input="experimentStore.setSessionNotes(($event.target as HTMLTextAreaElement).value)"
-            rows="1"
-            spellcheck="false"
-          ></textarea>
-        </template>
+        <input
+          v-show="notesOpen"
+          class="experiment__notes-input"
+          type="text"
+          :placeholder="$t('exp.notesSamplePlaceholder')"
+          :value="experimentStore.sampleDescription"
+          @input="experimentStore.setSampleDescription(($event.target as HTMLInputElement).value)"
+          spellcheck="false"
+        />
+        <textarea
+          v-show="notesOpen"
+          class="experiment__notes-textarea"
+          :placeholder="$t('exp.notesNotesPlaceholder')"
+          :value="experimentStore.sessionNotes"
+          @input="experimentStore.setSessionNotes(($event.target as HTMLTextAreaElement).value)"
+          rows="1"
+          spellcheck="false"
+        ></textarea>
       </div>
 
-      <!-- Row 1: Cell cards side-by-side + field controls -->
-      <div class="experiment__top">
-        <!-- Sentinel: observed by IntersectionObserver to detect when cells scroll out of view -->
-        <div ref="cellsAnchor" class="experiment__cells-anchor"></div>
-        <div id="hl-cell-cards" class="experiment__cells">
+      <!-- Sentinel: observed by IntersectionObserver — must be in normal flow, not inside display:none -->
+      <div ref="cellsAnchor" class="experiment__cells-anchor"></div>
+
+      <!-- ── Workspace: cell pair + protocol controls ────────────────── -->
+      <div class="experiment__workspace">
+
+        <!-- Cell comparison pair — both always visible side-by-side -->
+        <div id="hl-cell-cards" class="experiment__cell-pair">
           <CellCard
             v-for="cell in cells"
             :key="cell.id"
@@ -54,13 +57,18 @@
             @full-reset="applyTargetDefaults"
           />
         </div>
-        <div id="hl-freq-slider" class="experiment__field">
+
+        <!-- Protocol controls -->
+        <div id="hl-freq-slider" class="experiment__ws-right">
           <FrequencySlider />
         </div>
+
       </div>
 
-      <!-- Row 2: Chart (full width, collapsible) -->
-      <div id="hl-freq-chart" class="experiment__chart-section">
+      <!-- ── Full-width analysis panels ──────────────────────────────── -->
+
+      <!-- Vm / Resonance chart -->
+      <div id="hl-freq-chart" class="experiment__chart-section experiment__chart-section--primary">
         <AccordionPanel
           :icon="ICON.WAVE"
           :title="$t('exp.chartSectionTitle')"
@@ -73,7 +81,7 @@
         </AccordionPanel>
       </div>
 
-      <!-- Row 2b: Disruption ratio chart (full width, collapsible) -->
+      <!-- Disruption ratio chart -->
       <div id="hl-disruption-chart" class="experiment__chart-section">
         <AccordionPanel
           :icon="ICON.LYSIS_BOLT"
@@ -86,21 +94,21 @@
         </AccordionPanel>
       </div>
 
-      <!-- Row 3: Selectivity (full width) -->
+      <!-- Selectivity (full width) -->
       <SelectivityPanel id="hl-selectivity-panel" />
 
-      <!-- Row 4: Therapeutic Heatmap (full width, collapsible) -->
+      <!-- Therapeutic Heatmap (full width, collapsible) -->
       <TherapeuticHeatmap />
 
-      <!-- Row 5 & 6: Research analysis tools - sweep + population (collapsible, full width) -->
+      <!-- Sweep + population (collapsible, full width) -->
       <SweepPanel id="hl-sweep-panel" @window-change="onSweepWindowChange" @open-change="sweepPanelOpen = $event" />
 
-      <!-- Therapeutic window snap bar - appears below sweep results, where the user already is -->
+      <!-- Therapeutic window snap bar -->
       <SnapBar v-if="sweepWindow" :sweep-window="sweepWindow" />
 
       <PopulationPanel id="hl-population-panel" @open-change="populationPanelOpen = $event" />
 
-      <!-- Row 7: Log (full width) -->
+      <!-- Experiment log -->
       <ExperimentLog id="hl-experiment-log" />
 
     </div>
@@ -130,6 +138,7 @@ import { useCellStore } from '@/stores/cellStore'
 import { useExperimentStore } from '@/stores/experimentStore'
 import { useUiStore } from '@/stores/uiStore'
 import { useReplayStore } from '@/stores/replayStore'
+import { useAuthStore } from '@/stores/authStore'
 
 import { connectSocket, broadcastStateSync } from '@/services/socket'
 
@@ -155,6 +164,8 @@ import { scrollAndHighlight } from '@/utils/highlight'
 import { parseShareParam } from '@/utils/shareUrl'
 
 import { CELL_PRESETS } from '@/constants/cellLibrary'
+
+
 import { CATEGORY_DEFAULTS, INITIAL_RESONANT_FIELD_FRACTION, DEFAULT_LYSIS_N_PULSES, DEFAULT_ORIENTATION_DEG } from '@/constants/experimentDefaults'
 import { WF_CW, WF_PULSED } from '@/constants/physics'
 import { CELL_CATEGORY, CELL_TYPE, CHART_MODE, WAVEFORM } from '@/constants/strings'
@@ -242,6 +253,7 @@ export default defineComponent({
     guideOpen(): boolean {
       return this.uiStore.protocolGuideOpen
     },
+
 
     currentTargetId(): string {
       return this.cellStore.target.id
@@ -420,6 +432,13 @@ export default defineComponent({
     if (this.replayStore.hasPendingScript) {
       setTimeout(() => { this.replayStore.startReplay() }, 600)
     }
+
+    // On first visit, open the protocol guide so new users know it exists.
+    const authStore = useAuthStore()
+    if (!authStore.hasSeenGuide) {
+      authStore.markGuideSeen()
+      setTimeout(() => { this.uiStore.protocolGuideOpen = true }, 800)
+    }
   },
 
   beforeUnmount() {
@@ -439,45 +458,35 @@ export default defineComponent({
   min-height: 0;
   padding: 0 0 2rem;
 
-  /* ── Main content ────────────────────────────────────────────── */
+  // ── Main content ─────────────────────────────────────────────────────────────
   &__main {
     position: relative;
     display: flex;
     flex-direction: column;
-    gap: 1.25rem;
-    padding: 1.2rem 2rem 2rem;
-    max-width: 1600px;
+    gap: 0.4rem;
+    padding: 0.52rem 1.25rem 1.5rem;
+    max-width: 1800px;
     width: 100%;
     margin: 0 auto;
     flex: 1;
     min-height: 0;
   }
 
-  &__top {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(420px, 520px);
-    gap: 1.25rem;
-    align-items: stretch;
-  }
-
+  // ── Notes bar ────────────────────────────────────────────────────────────────
   &__notes-bar {
-    position: absolute;
-    top: 1.3rem;
-    transform: translateY(-50%);
-    left: 2rem;
-    right: 2rem;
-    @include flex-row(0.6rem);
+    @include flex-row(0.5rem);
+    align-items: center;
+    height: 1.8rem;
+    overflow: hidden;
 
-    @media (max-width: 1200px) { left: 1.5rem; right: 1.5rem; }
-    @media (max-width: 900px)  { left: 0.85rem; right: 0.85rem; }
-    @media (max-width: 768px)  { left: 0.65rem; right: 0.65rem; }
+    @media (max-width: 768px) { flex-wrap: wrap; height: auto; overflow: visible; }
   }
 
   &__notes-btn {
     font-size: var(--fs-xs);
     font-family: var(--font-mono);
     letter-spacing: 0.06em;
-    padding: 0.28rem 0.85rem;
+    padding: 0.20rem 0.60rem;
     background: color-mix(in srgb, var(--color-text) 6%, transparent);
     border: 1px solid color-mix(in srgb, var(--color-text) 28%, transparent);
     border-radius: var(--radius);
@@ -519,57 +528,73 @@ export default defineComponent({
   &__notes-input    { flex: 0 0 200px; }
   &__notes-textarea { flex: 1; line-height: 1.4; }
 
-  &__cells {
+  // ── Workspace: cell pair + protocol controls ─────────────────────────────────
+  &__workspace {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 1.25rem;
-    min-width: 0;
+    grid-template-columns: 1fr minmax(390px, 470px);
+    gap: 0.9rem;
+    align-items: start;
+
+    @media (max-width: 1100px) {
+      grid-template-columns: 1fr minmax(340px, 400px);
+      gap: 0.75rem;
+    }
+
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+    }
   }
 
-  &__field {
+  // Both cell cards side by side — always visible for direct comparison
+  &__cell-pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.65rem;
+    min-width: 0;
+
+    @media (max-width: 600px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  // ── Right: protocol controls ──────────────────────────────────────────────────
+  &__ws-right {
     min-width: 0;
     display: flex;
     flex-direction: column;
+
+    @media (max-width: 860px) {
+      grid-column: 1;
+    }
   }
 
-  /* ── Chart section (collapsible) ─────────────────────────────── */
+  // ── Chart sections ────────────────────────────────────────────────────────────
   &__chart-section {
     @include surface-card(var(--radius));
     overflow: hidden;
+
+    &--primary {
+      // Primary chart takes full center height with a slightly stronger border
+      border-color: color-mix(in srgb, var(--color-primary) 20%, var(--color-border));
+    }
   }
 }
 
-// ── Sticky cells sentinel ──────────────────────────────────────────────────────
+// ── Sticky cells sentinel ─────────────────────────────────────────────────────
 .experiment__cells-anchor {
   height: 0;
-  grid-column: 1 / -1;
   pointer-events: none;
 }
 
-// ── Mobile / Responsive ───────────────────────────────────────────────────────
-@media (max-width: 1200px) {
-  .experiment__main { padding: 2rem 1.5rem 2rem; }
-  .experiment__top {
-    grid-template-columns: minmax(0, 1fr) minmax(380px, 460px);
-    gap: 1rem;
-  }
-}
+// ── Responsive: 2-col layout shows horizontal QuickPresetStrip above workspace ─
+// The left sidebar is hidden at ≤1100px; show the horizontal strip above instead.
+// The horizontal strip is rendered as the first child of ws-center via a
+// fallback strip shown below the workspace on narrow screens (handled in parent).
 
-@media (max-width: 900px) {
-  .experiment__main { padding: 1.5rem 0.85rem 0.85rem; gap: 0.85rem; }
-  .experiment__top  { grid-template-columns: 1fr; }
-  .experiment__cells { grid-template-columns: 1fr 1fr; }
-}
-
+// ── Mobile notes bar ─────────────────────────────────────────────────────────
 @media (max-width: 768px) {
-  .experiment__main { padding: 0.65rem; gap: 0.7rem; }
+  .experiment__main { padding: 0.45rem 0.55rem 1rem; gap: 0.55rem; }
 }
 
-@media (max-width: 540px) {
-  .experiment__cells {
-    grid-template-columns: 1fr;
-    gap: 0.7rem;
-  }
-  .experiment__cells > * { min-height: 260px; }
-}
+
 </style>

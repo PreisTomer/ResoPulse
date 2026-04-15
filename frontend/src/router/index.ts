@@ -10,12 +10,14 @@ const router = createRouter({
   history: createWebHistory(),
   scrollBehavior: () => ({ top: 0 }),
   routes: [
-    { path: ROUTE.HOME,        component: () => import('../views/HomeView/index.vue'),            meta: { requiresAuth: true } },
+    { path: ROUTE.HOME,        component: () => import('../views/HomeView/index.vue') },
     { path: ROUTE.EXPERIMENT,  component: () => import('../views/ExperimentView.vue'),          meta: { requiresAuth: true } },
+    { path: ROUTE.EXPERIMENTS, component: () => import('../views/ExperimentsView/index.vue'),   meta: { requiresAuth: true } },
     { path: ROUTE.DATASETS,    component: () => import('../views/DataSetsView/index.vue'),      meta: { requiresAuth: true } },
     { path: ROUTE.REPORTS,     component: () => import('../views/ReportsView/index.vue'),       meta: { requiresAuth: true } },
     { path: ROUTE.PROTOCOL,    component: () => import('../views/ProtocolView/index.vue') },
     { path: ROUTE.INSTRUMENT,  component: () => import('../views/InstrumentView.vue'),          meta: { requiresAuth: true } },
+    { path: ROUTE.PRICING,     component: () => import('../views/PricingView.vue') },
     { path: ROUTE.TERMS,       component: () => import('../views/TermsView.vue') },
     { path: ROUTE.PRIVACY,     component: () => import('../views/PrivacyView.vue') },
     { path: ROUTE.SIGN_IN,                         component: () => import('../views/SignInView/index.vue'),  meta: { guestOnly: true } },
@@ -61,7 +63,8 @@ function waitForClerkLoaded(): Promise<void> {
 router.beforeEach(async (to, from) => {
   await waitForClerkLoaded()
 
-  const { isSignedIn } = useAuthStore()
+  const authStore   = useAuthStore()
+  const { isSignedIn } = authStore
 
   // Signed-in user landing on a guest-only page → go to home.
   if (to.meta.guestOnly && isSignedIn) {
@@ -79,15 +82,10 @@ router.beforeEach(async (to, from) => {
     return { path: ROUTE.SIGN_IN, query: redirectQuery }
   }
 
-  // Signed-in user without an active org hitting a protected route → onboarding.
-  // if (isSignedIn && !hasOrg && PROTECTED_ROUTES.includes(to.path)) {
-  //   return { path: ROUTE.ONBOARDING }
-  // }
-
-  // Signed-in user with an org trying to access onboarding again → home.
-  // if (to.path === ROUTE.ONBOARDING && isSignedIn && hasOrg) {
-  //   return { path: ROUTE.HOME }
-  // }
+  // Signed-in user who has completed onboarding trying to access it again → lab.
+  if (to.path === ROUTE.ONBOARDING && isSignedIn && authStore.hasCompletedOnboarding) {
+    return { path: ROUTE.EXPERIMENT }
+  }
 })
 
 export default router

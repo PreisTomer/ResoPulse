@@ -2,14 +2,25 @@
 <template>
   <div id="hl-setup-bar" class="experiment__header">
 
-    <!-- Far left: session name -->
+    <!-- Far left: session name + copy link -->
     <div class="experiment__header-left">
       <input
         v-model="experimentStore.sessionName"
         class="experiment__session-name"
         spellcheck="false"
         :title="$t('exp.renameSession')"
+        :style="{ width: sessionNameWidth }"
       />
+      <button
+        id="hl-share-btn"
+        class="experiment__share-btn"
+        :class="{ 'experiment__share-btn--copied': shareCopied }"
+        v-tip="$t('exp.copyLinkTip')"
+        @click="copyShareUrl"
+      >
+        <span>{{ ICON.LINK }}</span>
+        {{ shareCopied ? $t('exp.copyLinkDone') : $t('exp.copyLink') }}
+      </button>
     </div>
 
     <!-- Center: cell selectors -->
@@ -27,7 +38,7 @@
       />
     </div>
 
-    <!-- Far right: share + connection status -->
+    <!-- Far right: connection status -->
     <div class="experiment__header-right">
       <RouterLink
         v-if="showZDriftBadge"
@@ -38,16 +49,6 @@
         <span class="experiment__z-drift-icon">{{ ICON.FLASK }}</span>
         {{ $t('exp.zDriftLabel') }} {{ impedanceStore.impedanceDriftPct.toFixed(1) }}%
       </RouterLink>
-      <button
-        id="hl-share-btn"
-        class="experiment__share-btn"
-        :class="{ 'experiment__share-btn--copied': shareCopied }"
-        v-tip="$t('exp.copyLinkTip')"
-        @click="copyShareUrl"
-      >
-        <span>{{ ICON.LINK }}</span>
-        {{ shareCopied ? $t('exp.copyLinkDone') : $t('exp.copyLink') }}
-      </button>
       <span
         class="experiment__chip"
         :class="socketConnected ? 'experiment__chip--connected' : 'experiment__chip--local'"
@@ -112,6 +113,13 @@ export default defineComponent({
     ICON() { return ICON },
     ROUTE() { return ROUTE },
     ...mapStores(useCellStore, useExperimentStore, useImpedanceStore, useUserPresetsStore),
+
+    sessionNameWidth(): string {
+      // ch units are accurate for monospace fonts; +2 gives room for the caret
+      // and accumulated letter-spacing at the end of the text
+      const len = (this.experimentStore.sessionName || 'Session').length
+      return `${Math.max(len + 2, 8)}ch`
+    },
 
     showZDriftBadge(): boolean {
       return Math.abs(this.impedanceStore.impedanceDriftPct) > 5
@@ -219,7 +227,7 @@ export default defineComponent({
     }
   }
 
-  // ── Session name input ────────────────────────────────────────────────────────
+  // ── Session name input — width driven by :style binding (sessionNameWidth computed) ──
   &__session-name {
     background: transparent;
     border: none;
@@ -229,8 +237,6 @@ export default defineComponent({
     font-size: var(--fs-xs);
     letter-spacing: 0.06em;
     outline: none;
-    min-width: 100px;
-    max-width: 200px;
     padding: 0.05rem 0.1rem;
     transition: border-color var(--tr-fast);
 

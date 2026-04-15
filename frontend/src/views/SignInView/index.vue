@@ -7,6 +7,7 @@
     <div class="auth-page__bg" aria-hidden="true">
       <div class="auth-page__bg-grid"></div>
       <canvas ref="particleCanvas" class="auth-page__bg-canvas"></canvas>
+      <canvas ref="hexCanvas" class="auth-page__bg-hex"></canvas>
     </div>
 
     <!-- ── Three-column layout ── -->
@@ -35,6 +36,12 @@
             </span>
           </li>
         </ul>
+
+        <div class="auth-page__free-tier">
+          <span class="auth-page__free-tier-badge">Free</span>
+          <span class="auth-page__free-tier-text">{{ $t('signIn.freeTierText') }}</span>
+          <RouterLink :to="ROUTE.PRICING" class="auth-page__free-tier-link">{{ $t('signIn.freeTierPricingLink') }} →</RouterLink>
+        </div>
 
         <p class="auth-page__footnote">
           Kotnik &amp; Miklavcic 2000 · Weaver &amp; Chizmadzhev 1996 · Pennes 1948
@@ -124,7 +131,14 @@ const PARTICLE_RADIUS  = 1.4
 const PARTICLE_OPACITY = 0.45
 const CONNECTION_DIST  = 130
 
+const HEX_RADIUS       = 28
+const HEX_OPEN_SPEED   = 0.010
+const HEX_FADE_SPEED   = 0.003
+const HEX_IDLE_MAX     = 3400
+const HEX_BORDER_ALPHA = 0.013
+
 interface Particle { x: number; y: number; vx: number; vy: number }
+interface HexCell  { cx: number; cy: number; phase: 'idle' | 'opening' | 'fading'; progress: number; idleTick: number; idleTarget: number }
 
 const FEATURES = [
   { icon: ICON.WAVE,        label: 'Schwan EP model',      metric: '1.5',  suffix: ' V',   unit: 'Vm peak',  tipKey: 'signIn.tipSchwan'     },
@@ -194,13 +208,16 @@ export default defineComponent({
 
   setup() {
     const particleCanvas = ref<HTMLCanvasElement | null>(null)
-    return { particleCanvas }
+    const hexCanvas      = ref<HTMLCanvasElement | null>(null)
+    return { particleCanvas, hexCanvas }
   },
 
   data() {
     return {
       animFrameId:    null as ReturnType<typeof requestAnimationFrame> | null,
+      hexFrameId:     null as ReturnType<typeof requestAnimationFrame> | null,
       particles:      [] as Particle[],
+      hexCells:       markRaw([] as HexCell[]),
       displayMetrics: [] as string[],
       features:       markRaw(FEATURES),
       isContactOpen:  false,
@@ -208,7 +225,7 @@ export default defineComponent({
   },
 
   computed: {
-    ROUTE() { return ROUTE },
+    ROUTE()          { return ROUTE },
     clerkAppearance() { return CLERK_APPEARANCE },
 
     afterSignInUrl(): string {
@@ -221,14 +238,116 @@ export default defineComponent({
     this.displayMetrics = this.features.map(() => '0')
     this.initParticles()
     this.startParticleLoop()
+    this.buildHexGrid()
+    this.startHexLoop()
     this.animateCounters()
+    this.patchClerkAutocomplete()
   },
 
   beforeUnmount() {
     if (this.animFrameId !== null) cancelAnimationFrame(this.animFrameId)
+    if (this.hexFrameId  !== null) cancelAnimationFrame(this.hexFrameId)
   },
 
   methods: {
+
+    buildHexGrid(): void {
+      const canvas = this.hexCanvas
+      if (!canvas) return
+      const w  = canvas.width  = canvas.offsetWidth
+      const h  = canvas.height = canvas.offsetHeight
+      const r  = HEX_RADIUS
+      const dx = r * 1.732
+      const dy = r * 1.5
+      const cells: HexCell[] = []
+      for (let row = -1; row < Math.ceil(h / dy) + 2; row++) {
+        const cols = Math.ceil(w / dx) + 2
+        for (let col = -1; col < cols; col++) {
+          const cx = col * dx + (row % 2 === 0 ? 0 : dx / 2)
+          const cy = row * dy
+          cells.push({ cx, cy, phase: 'idle', progress: 0, idleTick: 0, idleTarget: Math.floor(Math.random() * HEX_IDLE_MAX) })
+        }
+      }
+      this.hexCells = markRaw(cells)
+    },
+
+    startHexLoop(): void {
+      const canvas = this.hexCanvas
+      if (!canvas) return
+      const ctx = canvas.getContext('2d')
+      if (!ctx) return
+      const tick = () => {
+        const w = canvas.offsetWidth
+        const h = canvas.offsetHeight
+        if (canvas.width !== w || canvas.height !== h) {
+          canvas.width  = w
+          canvas.height = h
+          this.buildHexGrid()
+        }
+        ctx.clearRect(0, 0, w, h)
+        this.drawHexFrame(ctx)
+        this.hexFrameId = requestAnimationFrame(tick)
+      }
+      this.hexFrameId = requestAnimationFrame(tick)
+    },
+
+    drawHexFrame(ctx: CanvasRenderingContext2D): void {
+      for (const cell of this.hexCells) {
+        this.tickHexCell(cell)
+        if (cell.phase !== 'idle' || cell.progress > 0) this.drawHexCell(ctx, cell)
+      }
+    },
+
+    tickHexCell(cell: HexCell): void {
+      if (cell.phase === 'idle') {
+        cell.idleTick++
+        if (cell.idleTick >= cell.idleTarget) {
+          cell.phase      = 'opening'
+          cell.idleTick   = 0
+          cell.idleTarget = Math.floor(Math.random() * HEX_IDLE_MAX) + HEX_IDLE_MAX / 2
+        }
+      } else if (cell.phase === 'opening') {
+        cell.progress += HEX_OPEN_SPEED
+        if (cell.progress >= 1) { cell.progress = 1; cell.phase = 'fading' }
+      } else {
+        cell.progress -= HEX_FADE_SPEED
+        if (cell.progress <= 0) { cell.progress = 0; cell.phase = 'idle' }
+      }
+    },
+
+    drawHexCell(ctx: CanvasRenderingContext2D, cell: HexCell): void {
+      const alpha = cell.progress * HEX_BORDER_ALPHA
+      ctx.beginPath()
+      this.traceHex(ctx, cell.cx, cell.cy, HEX_RADIUS)
+      ctx.strokeStyle = `rgba(180, 100, 255, ${alpha})`
+      ctx.lineWidth   = 1
+      ctx.stroke()
+    },
+
+    traceHex(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number): void {
+      for (let i = 0; i < 6; i++) {
+        const angle = (Math.PI / 3) * i - Math.PI / 6
+        const x = cx + r * Math.cos(angle)
+        const y = cy + r * Math.sin(angle)
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y)
+      }
+      ctx.closePath()
+    },
+
+    patchClerkAutocomplete(): void {
+      // Clerk renders password inputs without autocomplete attributes, causing a browser warning.
+      // We observe the card subtree and patch any password input Clerk adds after it mounts.
+      const cardWrap = this.$el?.querySelector('.auth-page__card')
+      if (!cardWrap) return
+      const observer = new MutationObserver(() => {
+        const passwordInput = cardWrap.querySelector('input[type="password"]') as HTMLInputElement | null
+        if (passwordInput && !passwordInput.getAttribute('autocomplete')) {
+          passwordInput.setAttribute('autocomplete', 'current-password')
+          observer.disconnect()
+        }
+      })
+      observer.observe(cardWrap, { childList: true, subtree: true })
+    },
 
     animateCounters(): void {
       this.features.forEach((feat, i) => {
@@ -366,6 +485,13 @@ export default defineComponent({
       width: 100%;
       height: 100%;
       opacity: 0.6;
+    }
+
+    &-hex {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
     }
   }
 
@@ -658,6 +784,48 @@ export default defineComponent({
   }
 
   /* ── Science footnote ────────────────────────────────────────────── */
+  &__free-tier {
+    position: relative;
+    z-index: 1;
+    @include flex-row(0.6rem);
+    flex-wrap: wrap;
+    align-items: center;
+    padding: 0.5rem 0.8rem;
+    border-radius: var(--radius);
+    border: 1px solid var(--color-purple-border);
+    background: color-mix(in srgb, var(--color-purple) 5%, var(--color-surface));
+    max-width: 380px;
+
+    @media (max-width: 900px) { max-width: 100%; }
+
+    &-badge {
+      @include badge-pill(0.1rem 0.5rem, 10px);
+      background: var(--color-purple);
+      color: var(--color-bg);
+      border-color: var(--color-purple);
+      font-size: 0.55rem;
+    }
+
+    &-text {
+      font-size: var(--fs-xs);
+      color: var(--color-text-muted);
+      flex: 1;
+      min-width: 0;
+    }
+
+    &-link {
+      font-family: var(--font-mono);
+      font-size: var(--fs-xxs);
+      color: var(--color-purple);
+      text-decoration: none;
+      white-space: nowrap;
+      opacity: var(--op-dim);
+      transition: opacity var(--tr-fast);
+
+      &:hover { opacity: 1; text-decoration: underline; }
+    }
+  }
+
   &__footnote {
     position: relative;
     z-index: 1;
@@ -786,7 +954,5 @@ export default defineComponent({
   }
 }
 
-/* ── Clerk placeholder override — Clerk injects its own ::placeholder color ── */
-:deep(.cl-formFieldInput::placeholder) { color: #6a9ab8; opacity: 1; }
 
 </style>

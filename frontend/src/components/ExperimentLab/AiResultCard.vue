@@ -29,7 +29,7 @@
       <div class="ai-tab__params-grid">
         <span class="ai-tab__param-key">{{ $t('slider.freq') }}</span>
         <span class="ai-tab__param-val">{{ formatFreqKHz(aiResult.suggestion.freqKHz) }}</span>
-        <span class="ai-tab__param-key">{{ $t('slider.field') }}</span>
+        <span class="ai-tab__param-key">{{ $t('slider.fieldIntensity') }}</span>
         <span class="ai-tab__param-val">{{ aiResult.suggestion.fieldVcm }} {{ UNIT.V_PER_CM }}</span>
         <span class="ai-tab__param-key">{{ $t('slider.dutyCycle') }}</span>
         <span class="ai-tab__param-val">{{ formatDutyCycle(aiResult.suggestion.dutyCycle) }}</span>

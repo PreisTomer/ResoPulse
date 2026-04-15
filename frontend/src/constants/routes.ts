@@ -4,10 +4,12 @@
 export const ROUTE = {
   HOME:        '/',
   EXPERIMENT:  '/experiment',
+  EXPERIMENTS: '/experiments',
   DATASETS:    '/datasets',
   REPORTS:     '/reports',
   PROTOCOL:    '/protocol',
   INSTRUMENT:  '/instrument',
+  PRICING:     '/pricing',
   TERMS:       '/terms',
   PRIVACY:     '/privacy',
   SIGN_IN:     '/sign-in',

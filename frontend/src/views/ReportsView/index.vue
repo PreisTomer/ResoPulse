@@ -11,7 +11,7 @@
             <button
               class="reports__btn reports__btn--export"
               :disabled="totalReadings === 0"
-              @click="store.exportCSV()"
+              @click="handleExportCSV()"
             >
               {{ $t('reports.exportCsv') }}
             </button>
@@ -93,6 +93,7 @@ import { useI18n } from 'vue-i18n'
 
 import type { LogEntry } from '@/stores/experimentStore'
 import { useExperimentStore } from '@/stores/experimentStore'
+import { useTokenStore } from '@/stores/tokenStore'
 
 import StatCard from '@/components/StatCard.vue'
 import PageHeader from '@/components/PageHeader.vue'
@@ -113,7 +114,8 @@ export default defineComponent({
   components: { StatCard, PageHeader, ReportsLogEmpty, ReportsMethodsBar, ReportsLogTable, ReportsLogLegend },
 
   setup() {
-    const store = useExperimentStore()
+    const store      = useExperimentStore()
+    const tokenStore = useTokenStore()
     const { t } = useI18n()
     const selectedEntry = ref<LogEntry | null>(null)
 
@@ -165,6 +167,7 @@ export default defineComponent({
 
     return {
       store,
+      tokenStore,
       selectedEntry,
       totalReadings,
       reversedEntries,
@@ -188,6 +191,11 @@ export default defineComponent({
     },
     downloadSelectedMethods() {
       if (this.selectedEntry) this.store.exportEntryMethods(this.selectedEntry)
+    },
+    async handleExportCSV() {
+      const canProceed = await this.tokenStore.consumeOperation('EXPERIMENT_REPORT')
+      if (!canProceed) return
+      this.store.exportCSV()
     },
   },
 })

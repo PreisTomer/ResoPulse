@@ -250,9 +250,10 @@
             </div>
 
             <div class="account__card account__card--danger">
-              <span class="account__label">{{ $t('account.dangerDeleteTitle') }}</span>
-              <p class="account__muted">{{ $t('account.dangerDeleteDesc') }}</p>
-              <div class="account__field-col">
+              <span class="account__label">{{ deleteContextTitle }}</span>
+              <p class="account__muted">{{ deleteContextDesc }}</p>
+
+              <div v-if="canDeleteAccount" class="account__field-col">
                 <label class="account__label" for="delete-confirm">{{ $t('account.dangerDeleteConfirmLabel') }}</label>
                 <input
                   id="delete-confirm"
@@ -263,12 +264,15 @@
                 />
               </div>
               <button
+                v-if="canDeleteAccount"
                 class="account__btn account__btn--danger-solid"
                 :disabled="deleteConfirmText !== 'DELETE' || deleting"
                 @click="deleteAccount"
               >
                 {{ deleting ? $t('account.dangerDeleting') : $t('account.dangerDeleteBtn') }}
               </button>
+              <p v-else class="account__muted account__muted--warn">{{ $t('account.dangerDeleteNotAllowed') }}</p>
+
               <span v-if="deleteError" class="account__error">{{ deleteError }}</span>
             </div>
           </section>
@@ -442,6 +446,39 @@ export default defineComponent({
       if (this.isOwner)                   return 'account__badge--primary'
       if (this.myRole === 'org:admin')    return 'account__badge--primary'
       return 'account__badge--dim'
+    },
+
+    canDeleteAccount(): boolean {
+      // Clerk sets deleteSelfEnabled on the user object when the instance permits self-deletion.
+      return (this.clerkUser as { deleteSelfEnabled?: boolean } | null)?.deleteSelfEnabled === true
+    },
+
+    orgMembersCount(): number {
+      return (this.organization as { membersCount?: number } | null)?.membersCount ?? 0
+    },
+
+    isSoleOrgMember(): boolean {
+      return this.isOwnerOrAdmin && this.orgMembersCount === 1
+    },
+
+    isSoleAdminMultiMember(): boolean {
+      return this.isOwnerOrAdmin && this.orgMembersCount > 1
+    },
+
+    deleteContextDesc(): string {
+      if (this.isSoleOrgMember) {
+        return this.$t('account.dangerDeleteDescSoleOrgMember', { org: this.orgName })
+      }
+      if (this.isSoleAdminMultiMember) {
+        return this.$t('account.dangerDeleteDescOrgAdmin', { org: this.orgName })
+      }
+      return this.$t('account.dangerDeleteDesc')
+    },
+
+    deleteContextTitle(): string {
+      if (this.isSoleOrgMember)        return this.$t('account.dangerDeleteTitleSoleOrgMember')
+      if (this.isSoleAdminMultiMember) return this.$t('account.dangerDeleteTitleOrgAdmin')
+      return this.$t('account.dangerDeleteTitle')
     },
 
     otherSessions(): SessionInfo[] {
@@ -645,13 +682,33 @@ export default defineComponent({
 
     async deleteAccount(): Promise<void> {
       if (this.deleteConfirmText !== 'DELETE' || !this.clerkUser) return
-      this.deleting     = true
-      this.deleteError  = ''
+      this.deleting    = true
+      this.deleteError = ''
       try {
-        await (this.clerkUser as { delete(): Promise<void> }).delete()
+        type OrgResource        = { membersCount: number; destroy(): Promise<unknown> }
+        type MembershipResource = { role: string; destroy(): Promise<unknown>; organization: OrgResource }
+        type DeletableUser      = { delete(): Promise<void>; organizationMemberships: MembershipResource[] }
+
+        const user = this.clerkUser as object as DeletableUser
+
+        for (const membership of user.organizationMemberships) {
+          if (membership.role !== 'org:admin') continue
+
+          if (membership.organization.membersCount === 1) {
+            // Sole member — safe to destroy the entire org.
+            await membership.organization.destroy()
+          } else {
+            // Other members exist — leave the org. Clerk will reject this if no
+            // other admin exists; the caught error will surface to the user.
+            await membership.destroy()
+          }
+        }
+
+        await user.delete()
         this.$router.push(ROUTE.SIGN_IN)
       } catch (err) {
-        this.deleteError = (err as { errors?: { message: string }[] })?.errors?.[0]?.message ?? 'Failed to delete account.'
+        const clerkMsg = (err as { errors?: { message: string }[] })?.errors?.[0]?.message
+        this.deleteError = clerkMsg ?? this.$t('account.dangerDeleteFailed')
         this.deleting = false
       }
     },
@@ -926,6 +983,11 @@ export default defineComponent({
     color: var(--color-text-muted);
     opacity: var(--op-muted);
     line-height: 1.5;
+
+    &--warn {
+      color: var(--color-amber);
+      opacity: var(--op-dim);
+    }
   }
 
   &__kv-row {

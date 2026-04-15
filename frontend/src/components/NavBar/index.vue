@@ -17,7 +17,7 @@
 
       <nav class="nav-bar__nav" :class="{ 'nav-bar__nav--open': mobileOpen }">
         <RouterLink
-          v-for="link in navLinks"
+          v-for="link in activeNavLinks"
           :key="link.to"
           :to="link.to"
           class="nav-bar__link"
@@ -26,32 +26,19 @@
           @click="mobileOpen = false"
         >{{ $t(link.labelKey) }}</RouterLink>
         <button class="nav-bar__link nav-bar__contact-mobile" @click="openContact">{{ ICON.MAIL }} {{ $t('nav.contact') }}</button>
-        <button
-          class="nav-bar__link nav-bar__theme-mobile"
-          :class="{ 'nav-bar__theme-mobile--oled': isOled }"
-          @click="themeStore.toggle()"
-        >{{ isOled ? $t('nav.themeOled') : $t('nav.themeDark') }}</button>
+        <template v-if="!isSignedIn">
+          <RouterLink :to="ROUTE.SIGN_UP" class="nav-bar__link nav-bar__start-free-mobile" @click="mobileOpen = false">{{ $t('nav.startFree') }} →</RouterLink>
+        </template>
       </nav>
 
       <ContactModal v-if="isContactOpen" @close="isContactOpen = false" />
+      <UpgradeModal v-if="isUpgradeOpen" @close="isUpgradeOpen = false" />
 
       <div class="nav-bar__right">
-        <button
-          class="nav-bar__theme-toggle"
-          :class="{ 'nav-bar__theme-toggle--oled': isOled }"
-          type="button"
-          :title="isOled ? $t('nav.themeSwitchDark') : $t('nav.themeSwitchOled')"
-          @click="themeStore.toggle()"
-        >{{ isOled ? $t('nav.themeOled') : $t('nav.themeDark') }}</button>
-
         <button class="nav-bar__contact-btn" @click="openContact">{{ ICON.MAIL }} {{ $t('nav.contact') }}</button>
 
-        <NavUserArea v-if="isSignedIn" />
-        <RouterLink
-          v-else
-          :to="ROUTE.SIGN_IN"
-          class="nav-bar__sign-in-link"
-        >{{ $t('nav.signIn') }}</RouterLink>
+        <NavUserArea v-if="isSignedIn" @open-upgrade="isUpgradeOpen = true" />
+        <RouterLink v-else :to="ROUTE.SIGN_UP" class="nav-bar__start-free-btn">{{ $t('nav.startFree') }} →</RouterLink>
 
         <button
           class="nav-bar__hamburger"
@@ -78,19 +65,26 @@ import { ICON } from '@/constants/icons'
 
 import NavUserArea from './NavUserArea.vue'
 import ContactModal from '@/components/ContactModal.vue'
+import UpgradeModal from '@/components/UpgradeModal.vue'
 
-const NAV_LINKS = [
-  { to: ROUTE.HOME,       labelKey: 'nav.home',      exact: true },
+// App nav — shown to authenticated users in the lab.
+const APP_NAV_LINKS = [
   { to: ROUTE.EXPERIMENT, labelKey: 'nav.experiment', exact: false },
+  { to: ROUTE.PROTOCOL,   labelKey: 'nav.protocol',   exact: false },
   { to: ROUTE.DATASETS,   labelKey: 'nav.dataSets',   exact: false },
   { to: ROUTE.INSTRUMENT, labelKey: 'nav.instrument', exact: false },
-  { to: ROUTE.REPORTS,    labelKey: 'nav.reports',    exact: false },
-  { to: ROUTE.PROTOCOL,   labelKey: 'nav.protocol',   exact: false },
+]
+
+// Marketing nav — shown to visitors on the public landing pages.
+const MARKETING_NAV_LINKS = [
+  { to: ROUTE.HOME,    labelKey: 'nav.home',     exact: true  },
+  { to: ROUTE.PRICING, labelKey: 'nav.pricing',  exact: false },
+  { to: ROUTE.PROTOCOL, labelKey: 'nav.protocol', exact: false },
 ]
 
 export default defineComponent({
   name: 'NavBar',
-  components: { NavUserArea, ContactModal },
+  components: { NavUserArea, ContactModal, UpgradeModal },
 
   setup() {
     const { isSignedIn } = useUser()
@@ -98,14 +92,17 @@ export default defineComponent({
   },
 
   data() {
-    return { mobileOpen: false, navLinks: NAV_LINKS, isContactOpen: false }
+    return { mobileOpen: false, isContactOpen: false, isUpgradeOpen: false }
   },
 
   computed: {
     ROUTE() { return ROUTE },
     ICON()  { return ICON },
     themeStore() { return useThemeStore() },
-    isOled(): boolean { return this.themeStore.theme === 'oled' },
+
+    activeNavLinks() {
+      return this.isSignedIn ? APP_NAV_LINKS : MARKETING_NAV_LINKS
+    },
   },
 
   methods: {
@@ -123,7 +120,7 @@ export default defineComponent({
   border-bottom: 1px solid var(--color-border);
   position: sticky;
   top: 0;
-  z-index: 100;
+  z-index: 1000;
 
   &__inner {
     padding: 0 1.75rem;
@@ -203,17 +200,6 @@ export default defineComponent({
     text-align: left;
   }
 
-  &__theme-mobile {
-    display: none;
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-family: inherit;
-    text-align: left;
-
-    &--oled { color: var(--color-primary); }
-  }
-
   &__contact-btn {
     @include mono-upper(0.6rem, 0.08em);
     @include flex-row(0.3rem);
@@ -241,44 +227,21 @@ export default defineComponent({
     justify-self: end;
   }
 
-  &__sign-in-link {
-    font-family: var(--font-mono);
-    font-size: var(--fs-xxs);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    padding: 0.22rem 0.75rem;
+  &__start-free-btn {
+    @include mono-upper(var(--fs-xxs), 0.06em);
+    padding: 0.25rem 0.85rem;
     border: 1px solid var(--color-primary-border);
     border-radius: 4px;
-    color: var(--color-primary);
-    background: var(--color-primary-surface);
+    color: var(--color-bg);
+    background: var(--color-primary);
     text-decoration: none;
     transition: background var(--tr-fast), box-shadow var(--tr-fast);
     white-space: nowrap;
 
-    &:hover { background: var(--color-primary-dim); box-shadow: var(--glow-sm); text-decoration: none; }
+    &:hover { background: color-mix(in srgb, var(--color-primary) 85%, white); box-shadow: var(--glow-sm); text-decoration: none; }
   }
 
-  /* ── Theme toggle ───────────────────────────────────────────────── */
-  &__theme-toggle {
-    @include mono-upper(0.6rem, 0.08em);
-    margin-bottom: 2px;
-    padding: 0.22rem 0.6rem;
-    background: transparent;
-    border: 1px solid var(--color-border);
-    border-radius: 4px;
-    color: var(--color-text-muted);
-    cursor: pointer;
-    transition: color var(--tr-fast), border-color var(--tr-fast), background var(--tr-fast);
-    white-space: nowrap;
-
-    &:hover { color: var(--color-text); border-color: var(--color-text-muted); }
-
-    &--oled {
-      color: var(--color-primary);
-      border-color: var(--color-primary-border);
-      background: var(--color-primary-surface);
-    }
-  }
+  &__start-free-mobile { display: none; }
 
   /* ── Hamburger ──────────────────────────────────────────────────── */
   &__hamburger {
@@ -357,10 +320,9 @@ export default defineComponent({
   }
 
   .nav-bar__hamburger { display: flex; }
-  .nav-bar__status-label { display: none; }
   .nav-bar__contact-btn { display: none; }
-  .nav-bar__theme-toggle { display: none; }
   .nav-bar__contact-mobile { display: flex; }
-  .nav-bar__theme-mobile { display: flex; }
+  .nav-bar__start-free-mobile { display: flex; }
+  .nav-bar__start-free-btn { display: none; }
 }
 </style>

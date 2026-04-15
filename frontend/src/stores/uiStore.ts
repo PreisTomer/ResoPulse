@@ -6,7 +6,6 @@ import { defineStore } from 'pinia'
 
 interface UiState {
   pendingHighlight: string | null
-  pendingValidateDrawer: boolean      // open the validate drawer when HomeView mounts
   replayExpandedCellParams: string[]  // 'healthy' | 'target' panels forced open during replay
   replayProtocolOpen: boolean         // ProtocolSection accordion forced open during replay
   protocolGuideOpen: boolean          // protocol step guide panel visible in experiment lab
@@ -16,7 +15,6 @@ interface UiState {
 export const useUiStore = defineStore('ui', {
   state: (): UiState => ({
     pendingHighlight: null,
-    pendingValidateDrawer: false,
     replayExpandedCellParams: [],
     replayProtocolOpen: false,
     protocolGuideOpen: false,
@@ -51,12 +49,5 @@ export const useUiStore = defineStore('ui', {
       this.protocolGuideChecked[index] = !this.protocolGuideChecked[index]
     },
 
-    requestValidateDrawer() {
-      this.pendingValidateDrawer = true
-    },
-
-    consumeValidateDrawer() {
-      this.pendingValidateDrawer = false
-    },
   },
 })

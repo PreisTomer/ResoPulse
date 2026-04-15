@@ -33,8 +33,13 @@
           <span class="onboarding__progress-label">{{ $t('onboarding.stepLabSetup') }}</span>
         </div>
         <div class="onboarding__progress-connector" :class="{ 'onboarding__progress-connector--done': step >= 3 }"></div>
-        <div class="onboarding__progress-step" :class="{ 'onboarding__progress-step--active': step === 3 }">
+        <div class="onboarding__progress-step" :class="{ 'onboarding__progress-step--done': step >= 4, 'onboarding__progress-step--active': step === 3 }">
           <span class="onboarding__progress-num">3</span>
+          <span class="onboarding__progress-label">{{ $t('onboarding.stepProtocol') }}</span>
+        </div>
+        <div class="onboarding__progress-connector" :class="{ 'onboarding__progress-connector--done': step >= 4 }"></div>
+        <div class="onboarding__progress-step" :class="{ 'onboarding__progress-step--active': step === 4 }">
+          <span class="onboarding__progress-num">4</span>
           <span class="onboarding__progress-label">{{ $t('onboarding.stepSystemReady') }}</span>
         </div>
       </div>
@@ -134,7 +139,7 @@
           <div class="onboarding__field">
             <label class="onboarding__field-label" for="org-slug">{{ $t('onboarding.fieldSlugLabel') }} <span class="onboarding__field-optional">{{ $t('onboarding.fieldOptional') }}</span></label>
             <div class="onboarding__slug-row">
-              <span class="onboarding__slug-prefix">resopulse.app/</span>
+              <span class="onboarding__slug-prefix">resopulse-virtual-lab.com/</span>
               <input
                 id="org-slug"
                 v-model="orgSlug"
@@ -172,7 +177,38 @@
 
       </div>
 
-      <!-- Step 3: Done — brief success screen before redirect -->
+      <!-- Step 3: Read the protocol prompt -->
+      <div v-else-if="step === 3" class="onboarding__card onboarding__card--protocol">
+        <div class="onboarding__protocol-icon" aria-hidden="true">
+          <svg viewBox="0 0 200 200" fill="none" class="onboarding__success-svg">
+            <circle class="onboarding__success-ring--1" cx="100" cy="100" r="40"  stroke-width="1.5" fill="none"/>
+            <circle class="onboarding__success-ring--2" cx="100" cy="100" r="65"  stroke-width="1"   fill="none"/>
+            <circle class="onboarding__success-ring--3" cx="100" cy="100" r="90"  stroke-width="0.8" fill="none"/>
+            <text x="100" y="107" text-anchor="middle" class="onboarding__success-icon">{{ ICON.SECTION }}</text>
+          </svg>
+        </div>
+        <div class="onboarding__card-header">
+          <span class="onboarding__card-eyebrow">{{ $t('onboarding.step3Label') }}</span>
+          <h1 class="onboarding__card-title">{{ $t('onboarding.protocolTitle') }}</h1>
+          <p class="onboarding__card-desc">{{ $t('onboarding.protocolDesc') }}</p>
+        </div>
+        <div class="onboarding__protocol-features">
+          <div v-for="feat in protocolFeatures" :key="feat.key" class="onboarding__protocol-feat">
+            <span class="onboarding__protocol-feat-icon">{{ feat.icon }}</span>
+            <span class="onboarding__protocol-feat-label">{{ $t(feat.key) }}</span>
+          </div>
+        </div>
+        <div class="onboarding__protocol-actions">
+          <RouterLink :to="ROUTE.PROTOCOL" class="onboarding__btn onboarding__btn--primary" @click="finishToProtocol">
+            {{ $t('onboarding.btnReadProtocol') }}
+          </RouterLink>
+          <button class="onboarding__btn onboarding__btn--ghost" @click="finishToLab">
+            {{ $t('onboarding.btnSkipToLab') }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 4: Done — brief success screen before redirect -->
       <div v-else class="onboarding__card onboarding__card--success">
         <div class="onboarding__success-rings" aria-hidden="true">
           <svg viewBox="0 0 200 200" fill="none" class="onboarding__success-svg">
@@ -249,7 +285,7 @@ export default defineComponent({
 
   data() {
     return {
-      step:             2 as 1 | 2 | 3,
+      step:             2 as 1 | 2 | 3 | 4,
       waveFrameId:      null as ReturnType<typeof requestAnimationFrame> | null,
       particleFrameId:  null as ReturnType<typeof requestAnimationFrame> | null,
       waves:            markRaw(WAVE_INIT.map(w => ({ ...w, phase: Math.random() * Math.PI * 2 }))),
@@ -265,7 +301,17 @@ export default defineComponent({
   },
 
   computed: {
-    ICON() { return ICON },
+    ICON()  { return ICON  },
+    ROUTE() { return ROUTE },
+
+    protocolFeatures() {
+      return [
+        { icon: ICON.CHECK, key: 'onboarding.protocolFeat1' },
+        { icon: ICON.CHECK, key: 'onboarding.protocolFeat2' },
+        { icon: ICON.CHECK, key: 'onboarding.protocolFeat3' },
+        { icon: ICON.CHECK, key: 'onboarding.protocolFeat4' },
+      ]
+    },
   },
 
   methods: {
@@ -298,16 +344,25 @@ export default defineComponent({
           slug: this.orgSlug || undefined,
         })
         await this.clerk.setActive?.({ organization: org.id })
-        this.authStore.completeOnboarding()
         this.isCreatingOrg = false
         this.step          = 3
-        setTimeout(() => { this.$router.push(ROUTE.HOME) }, REDIRECT_DELAY_MS)
       } catch (err) {
         const msg = (err as { errors?: { message: string }[] })?.errors?.[0]?.message
         this.submitError = msg ?? this.$t('onboarding.errorGeneric')
       } finally {
         this.isSubmitting = false
       }
+    },
+
+    finishToProtocol(): void {
+      this.authStore.completeOnboarding()
+      // Navigation is handled by the RouterLink — no push needed here.
+    },
+
+    finishToLab(): void {
+      this.authStore.completeOnboarding()
+      this.step = 4
+      setTimeout(() => { this.$router.push(ROUTE.EXPERIMENT) }, REDIRECT_DELAY_MS)
     },
 
     // ── Wave loop ────────────────────────────────────────────────────
@@ -863,6 +918,42 @@ export default defineComponent({
     font-size: 28px;
     fill: var(--color-ok);
     font-family: var(--font-sans);
+  }
+
+  // ── Protocol step ───────────────────────────────────────────────────────
+  &__card--protocol {
+    gap: 1.5rem;
+  }
+
+  &__protocol-icon {
+    display: flex;
+    justify-content: center;
+  }
+
+  &__protocol-features {
+    @include flex-col(0.5rem);
+    padding: 0.75rem 1rem;
+    background: color-mix(in srgb, var(--color-primary) 5%, var(--color-surface-2));
+    border: 1px solid color-mix(in srgb, var(--color-primary) 15%, var(--color-border));
+    border-radius: var(--radius);
+  }
+
+  &__protocol-feat {
+    @include flex-row(0.6rem);
+    font-size: var(--fs-md);
+    color: var(--color-text);
+    opacity: var(--op-dim);
+
+    &-icon {
+      color: var(--color-primary);
+      font-size: var(--fs-sm);
+      flex-shrink: 0;
+      opacity: 1;
+    }
+  }
+
+  &__protocol-actions {
+    @include flex-col(0.6rem);
   }
 
   &__redirect-bar {

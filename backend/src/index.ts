@@ -1,11 +1,14 @@
 // Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
+import 'dotenv/config'
 import http from 'http'
 import express from 'express'
 import cors from 'cors'
 import { setupSocketServer } from './socket'
 import { countOutcomes, fetchTrainingRows } from './db'
 import { clerk, requireAuth } from './middleware/clerkAuth'
-import webhookRouter from './routes/webhooks'
+import webhookRouter     from './routes/webhooks'
+import experimentsRouter from './routes/experiments'
+import tokensRouter      from './routes/tokens'
 
 const AI_SERVICE_URL      = (process.env.AI_SERVICE_URL ?? 'http://localhost:8000').replace(/\/$/, '')
 const AI_PROXY_TIMEOUT_MS = 10_000
@@ -70,6 +73,10 @@ app.get('/ai/training-data', requireAuth, async (req, res) => {
   }
   res.json(await fetchTrainingRows())
 })
+
+// ── Experiments and token routes (require auth via requireOrg inside routers) ──
+app.use('/experiments', experimentsRouter)
+app.use('/tokens',      tokensRouter)
 
 app.post('/ai/retrain', requireAuth, async (_req, res) => {
   try {

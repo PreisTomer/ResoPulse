@@ -1,13 +1,37 @@
 services:
+  # ── Node.js backend (Express + Socket.IO) ────────────────────────────────────
   - type: web
     name: resopulse-backend
     runtime: node
-    rootDir: backend
     buildCommand: cd backend && npm install && npm run build
     startCommand: cd backend && npm start
     envVars:
       - key: NODE_ENV
         value: production
       - key: FRONTEND_URL
-        sync: false   # set this in the Render dashboard to your Vercel URL
+        sync: false   # set in dashboard: your Vercel URL, e.g. https://resopulse.vercel.app
+      - key: AI_SERVICE_URL
+        sync: false   # set in dashboard: https://resopulse-ai.onrender.com
+      - key: TRAINING_DATA_SECRET
+        sync: false   # shared secret between backend and AI service; set the same value in both
+    healthCheckPath: /health
+
+  # ── Python AI service (FastAPI + XGBoost) ────────────────────────────────────
+  # First-time setup: after both services are deployed, hit the "Retrain" button in
+  # the AI Optimizer panel (or POST /ai/retrain) to train the model from your outcomes.
+  # The model lives in-memory and resets on restart — retrain rebuilds it instantly
+  # from the Postgres outcomes stored in the backend.
+  - type: web
+    name: resopulse-ai
+    runtime: python
+    buildCommand: cd instrument-bridge && pip install uv && uv sync --extra ai
+    startCommand: cd instrument-bridge && uv run instrument-bridge ai-service --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: NODE_API_URL
+        sync: false   # set in dashboard: https://resopulse-backend.onrender.com
+                      # the AI service fetches training data from this URL on retrain
+      - key: TRAINING_DATA_SECRET
+        sync: false   # same value as in resopulse-backend
+      - key: DEMO_SEED
+        value: "0"    # never auto-inject synthetic data in production
     healthCheckPath: /health

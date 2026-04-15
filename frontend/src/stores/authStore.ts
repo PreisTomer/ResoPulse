@@ -9,6 +9,8 @@ import { defineStore } from 'pinia'
 export interface AuthState {
   /** Whether the user has completed the "create your first lab" onboarding step. */
   hasCompletedOnboarding: boolean
+  /** Whether the user has seen the protocol guide panel in the experiment lab. */
+  hasSeenGuide: boolean
   /** True while App.vue has not yet received the first useAuth() isLoaded=true event. */
   isClerkLoading: boolean
   /** Mirrors useAuth().isSignedIn — updated reactively from App.vue. */
@@ -20,6 +22,7 @@ export interface AuthState {
 export const useAuthStore = defineStore('auth', {
   state: (): AuthState => ({
     hasCompletedOnboarding: false,
+    hasSeenGuide:           false,
     isClerkLoading:         true,
     isSignedIn:             false,
     hasOrg:                 false,
@@ -36,6 +39,11 @@ export const useAuthStore = defineStore('auth', {
       this.hasCompletedOnboarding = true
     },
 
+    /** Marks the protocol guide as seen so it is not auto-opened again. */
+    markGuideSeen(): void {
+      this.hasSeenGuide = true
+    },
+
     /**
      * Syncs Clerk's reactive auth state into the store.
      * Called by the App.vue watcher whenever useAuth() values change.
@@ -46,8 +54,8 @@ export const useAuthStore = defineStore('auth', {
     },
   },
 
-  // Only persist onboarding completion — auth state is always re-derived from Clerk on load.
+  // Only persist onboarding/guide flags — auth state is always re-derived from Clerk on load.
   persist: {
-    pick: ['hasCompletedOnboarding'],
+    pick: ['hasCompletedOnboarding', 'hasSeenGuide'],
   },
 })
