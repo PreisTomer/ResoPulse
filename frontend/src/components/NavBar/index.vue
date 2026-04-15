@@ -37,8 +37,9 @@
       <div class="nav-bar__right">
         <button class="nav-bar__contact-btn" @click="openContact">{{ ICON.MAIL }} {{ $t('nav.contact') }}</button>
 
-        <NavUserArea  v-if="isSignedIn"                       @open-upgrade="isUpgradeOpen = true" />
-        <NavGuestArea v-else-if="guestSessionActive" />
+        <NavUserArea  v-if="isSignedIn"          @open-upgrade="isUpgradeOpen = true" />
+        <NavGuestArea v-else-if="showNavGuestArea" />
+        <RouterLink   v-else-if="showStartFreeBtn" :to="ROUTE.SIGN_UP" class="nav-bar__start-free-btn">{{ $t('nav.startFree') }} →</RouterLink>
 
         <button
           class="nav-bar__hamburger"
@@ -105,6 +106,17 @@ export default defineComponent({
 
     activeNavLinks() {
       return this.isSignedIn ? APP_NAV_LINKS : MARKETING_NAV_LINKS
+    },
+
+    // Show the guest avatar only when a guest session is active AND the user is
+    // not on the home page. The home page is a marketing landing — it should always
+    // show the "Start Free" CTA, not a guest avatar that hides the conversion path.
+    showNavGuestArea(): boolean {
+      return !this.isSignedIn && this.guestSessionActive && this.$route.path !== ROUTE.HOME
+    },
+
+    showStartFreeBtn(): boolean {
+      return !this.isSignedIn && !this.showNavGuestArea
     },
   },
 

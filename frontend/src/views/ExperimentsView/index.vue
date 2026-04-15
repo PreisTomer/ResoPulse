@@ -393,6 +393,13 @@ export default defineComponent({
 
     async handleSave(): Promise<void> {
       if (this.isSaveDisabled) return
+
+      const canProceed = await this.tokenStore.consumeOperation('SAVE_EXPERIMENT')
+      if (!canProceed) {
+        this.saveError = this.$t('experiments.errorInsufficientTokens')
+        return
+      }
+
       this.isSaving  = true
       this.saveError = ''
       try {
@@ -406,11 +413,7 @@ export default defineComponent({
           this.saveModalOpen = false
           this.showFlash(this.$t('experiments.successSaved'))
         } else {
-          const err = this.savedExperimentsStore.error ?? ''
-          const isTokenErr = err.toLowerCase().includes('insufficient') || err.toLowerCase().includes('token')
-          this.saveError = isTokenErr
-            ? this.$t('experiments.errorInsufficientTokens')
-            : this.$t('experiments.errorGeneric')
+          this.saveError = this.$t('experiments.errorGeneric')
         }
       } finally {
         this.isSaving = false
