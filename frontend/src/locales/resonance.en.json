@@ -1,7 +1,7 @@
 {
   "resonance": {
-    "speculativeBannerTitle": "SPECULATIVE MODEL: No experimental RF validation",
-    "speculativeBannerDetail": "The Dykeman & Sankey (2010) acoustic resonance model was validated on non-enveloped icosahedral protein capsids (TMV, CCMV). Enveloped viruses (influenza, SARS-CoV-2) have fluid lipid bilayers with no defined elastic modulus or mechanical resonance Q. GHz RF fields also face severe EM field penetration limits in aqueous media at high frequencies (Debye relaxation of water above 1 GHz). These parameters are theoretical extrapolations.",
+    "speculativeBannerTitle": "SPECULATIVE MODEL: No experimental validation",
+    "speculativeBannerDetail": "The Dykeman & Sankey (2010) acoustic resonance model was validated on rigid non-enveloped protein capsids (CCMV, TMV). For cells with SPECULATIVE basis, f_res and Q are theoretical estimates without direct spectroscopic measurement. GHz EM fields also face penetration limits in aqueous media (Debye relaxation above 1 GHz). Treat these as starting estimates for protocol design.",
     "chartTitle": "Resonant Capsid / Cell-Wall Disruption",
     "chartNote": "Disruption ratio = (E / E_thr) × L(f, f_res, Q)",
     "legendTarget": "Target (active)",

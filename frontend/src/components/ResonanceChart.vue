@@ -54,7 +54,7 @@ const Y_MAX = 1.5
 
 const MARGIN = { top: 22, right: 72, bottom: 52, left: 54 }
 
-type ResonantCell = CellConfig & { resonantFreqGHz?: number; capsidQ?: number; resonantThresholdVcm?: number; group?: CellGroup }
+type ResonantCell = CellConfig & { resonantFreqGHz?: number; capsidQ?: number; resonantThresholdVcm?: number; resonantFreqGHz2?: number; capsidQ2?: number; resonantMode2Amplitude?: number; group?: CellGroup }
 
 function logspace(min: number, max: number, n: number): number[] {
   const step = (Math.log10(max) - Math.log10(min)) / (n - 1)
@@ -135,6 +135,7 @@ export default defineComponent({
           cell.resonantThresholdVcm!,
           hz,
           this.cellStore.fieldIntensity,
+          cell.resonantFreqGHz2, cell.capsidQ2, cell.resonantMode2Amplitude,
         ),
       }))
     },
@@ -376,31 +377,34 @@ export default defineComponent({
       const t = this.cellStore.target as ResonantCell
       if (!t.resonantFreqGHz) return
 
-      const fHz = t.resonantFreqGHz * 1e9
-      if (fHz < F_MIN_HZ || fHz > F_MAX_HZ) return
-
-      const cx = this._xScale(fHz)
       const color = t.group ? GROUP_COLORS[t.group] : C.purple
 
-      markG.append('line')
-        .attr('x1', cx).attr('x2', cx)
-        .attr('y1', 0).attr('y2', this._chartH)
-        .attr('stroke', color)
-        .attr('stroke-width', 1)
-        .attr('stroke-dasharray', '4,3')
-        .attr('opacity', 0.65)
+      const drawModeMarker = (ghz: number, label: string, yOffset: number) => {
+        const fHz = ghz * 1e9
+        if (fHz < F_MIN_HZ || fHz > F_MAX_HZ) return
+        const cx = this._xScale!(fHz)
+        markG.append('line')
+          .attr('x1', cx).attr('x2', cx)
+          .attr('y1', 0).attr('y2', this._chartH)
+          .attr('stroke', color)
+          .attr('stroke-width', 1)
+          .attr('stroke-dasharray', '4,3')
+          .attr('opacity', 0.65)
+        const labelX = cx > this._chartW - 72 ? cx - 3 : cx + 3
+        const anchor = cx > this._chartW - 72 ? 'end' : 'start'
+        markG.append('text')
+          .attr('x', labelX)
+          .attr('y', yOffset)
+          .attr('text-anchor', anchor)
+          .attr('fill', color)
+          .attr('opacity', 0.9)
+          .attr('font-size', '0.56rem')
+          .attr('font-family', 'var(--font-mono)')
+          .text(`${label}=${this.formatHz(fHz)}`)
+      }
 
-      const labelX = cx > this._chartW - 72 ? cx - 3 : cx + 3
-      const anchor = cx > this._chartW - 72 ? 'end' : 'start'
-      markG.append('text')
-        .attr('x', labelX)
-        .attr('y', 12)
-        .attr('text-anchor', anchor)
-        .attr('fill', color)
-        .attr('opacity', 0.9)
-        .attr('font-size', '0.56rem')
-        .attr('font-family', 'var(--font-mono)')
-        .text(`f_res=${this.formatHz(fHz)}`)
+      drawModeMarker(t.resonantFreqGHz, 'f₁', 12)
+      if (t.resonantFreqGHz2) drawModeMarker(t.resonantFreqGHz2, 'f₂', 24)
     },
 
     updateCursor() {

@@ -283,14 +283,33 @@ export function tipLysisN(opts: {
   const periodStr = periodMs > 0
     ? (periodMs < 1 ? `${(periodMs * 1000).toFixed(1)} ${UNIT.US}` : `${periodMs.toFixed(3)} ${UNIT.MS}`)
     : ', '
-  return `<strong>Pulses to Lysis  N = ${n}</strong>
+  const nFactor   = n > 1 ? Math.max(0.35, Math.pow(n, -0.20)) : 1.0
+  const nPct      = (nFactor * 100).toFixed(0)
+  return `<strong>Pulse Count  N = ${n}</strong>
 Estimated protocol time: <span class="tip-val">${formatLysisTime(lysisDelayMs)}</span>
 
-Number of above-threshold pulses required for irreversible lysis.
-Based on cumulative electroporation pore-formation kinetics.
+N has two independent effects on the simulation:
 
-Protocol time = N × t_period = N × (t_p / dc)
+<strong>1. Protocol timing</strong>
+  Time = N × (t_p / dc)
   t_period = <span class="tip-val">${periodStr}</span>  ·  N = <span class="tip-val">${n}</span>
+
+<strong>2. Electrosensitization (EP threshold reduction)</strong>
+  Each pulse pre-conditions membrane pore populations, lowering
+  the effective lysis threshold on subsequent pulses.
+  Model: V_th_eff = V_th × N^(−0.20) × temp_correction
+  At N = ${n}: threshold factor = <span class="tip-val">${nPct}%</span> of nominal
+  Floor: 35% (prevents unphysical sub-physiological threshold)
+  Applies to: both target and healthy EP thresholds.
+  Acoustic resonance thresholds are unaffected (mechanical
+  capsid disruption has no pulse-conditioning equivalent).
+
+<span class="tip-warn">Model caveat: N^(−0.20) is a population-averaged empirical
+approximation (Weaver and Chizmadzhev 1996; Pakhomov et al. 2010).
+The true exponent is cell-type dependent. Cells with softer membranes
+sensitize faster; bacteria with rigid cell walls sensitize more slowly.
+Use this as a first-order protocol design tool, not a cell-specific
+quantitative prediction. See Protocol page §3.13 for full derivation.</span>
 
 Lysis countdown in the cell card resets immediately when N changes.
 At CW waveform a fixed 2.5 s delay is used instead.`
@@ -314,7 +333,9 @@ Different Vm responses arise purely from each cell's biophysical parameters (R, 
 <strong>Cell-specific parameters</strong> (Radius, ε_r, σ_i, Threshold Vm) are edited individually
 on each cell card and determine how each cell responds to the shared applied field.
 
-<strong>Pulses to Lysis N</strong> controls target-cell lysis timing only, it has no effect on the healthy cell.`
+<strong>Pulse Count N</strong> affects both cells: protocol timing (N × t_p / dc) and EP threshold
+reduction via electrosensitization (N^(−0.20), applied to both healthy and target
+thresholds). Acoustic resonance thresholds are unaffected. See §3.13 of the Protocol page.`
 }
 
 export function tipThermalBanner(level: 'vaporizing' | 'denaturing' | 'hyperthermic'): string {

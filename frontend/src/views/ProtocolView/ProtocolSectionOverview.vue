@@ -19,6 +19,7 @@
       <span class="protocol__info-icon">{{ ICON.INFO }}</span>
       <span v-html="$t('protocol.overview.disclaimer')"></span>
     </div>
+    <div class="protocol__warn-box" v-html="$t('protocol.overview.honesty')"></div>
   </section>
 </template>
 

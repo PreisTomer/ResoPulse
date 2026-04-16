@@ -29,6 +29,7 @@ export interface HoverParams {
   pulseEnvelopeFactorTarget: number
   targetCellCategory: string
   isResonanceMode: boolean
+  lysisNPulses: number
 }
 
 export function buildHoverTooltip(params: HoverParams): TooltipData | null {
@@ -38,7 +39,7 @@ export function buildHoverTooltip(params: HoverParams): TooltipData | null {
     fieldIntensity, effectiveSigmaE, cosThetaFactor,
     medium, waveform, healthyTemp, targetTemp,
     pulseEnvelopeFactorHealthy, pulseEnvelopeFactorTarget,
-    targetCellCategory, isResonanceMode,
+    targetCellCategory, isResonanceMode, lysisNPulses,
   } = params
 
   const flipLeft = mx > chartW * 0.55
@@ -46,6 +47,9 @@ export function buildHoverTooltip(params: HoverParams): TooltipData | null {
     resonantFreqGHz?: number
     capsidQ?: number
     resonantThresholdVcm?: number
+    resonantFreqGHz2?: number
+    capsidQ2?: number
+    resonantMode2Amplitude?: number
   }
 
   if (
@@ -61,6 +65,7 @@ export function buildHoverTooltip(params: HoverParams): TooltipData | null {
       effThreshold,
       hz,
       fieldIntensity,
+      t.resonantFreqGHz2, t.capsidQ2, t.resonantMode2Amplitude,
     )
     return {
       x: mx, freqHz: hz, mode: 'resonance',
@@ -75,8 +80,8 @@ export function buildHoverTooltip(params: HoverParams): TooltipData | null {
   const hfireMult = waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
   const hVm = computeSchwan(healthy, khz, fieldIntensity, sigma_e, cosThetaFactor) * 1000
   const tVm = computeSchwan(target,  khz, fieldIntensity, sigma_e, cosThetaFactor) * 1000
-  const hVthEffMv = tempCorrectedVth(healthy.thresholdVoltage, healthyTemp) * hfireMult * 1000
-  const tVthEffMv = tempCorrectedVth(target.thresholdVoltage,  targetTemp)  * hfireMult * 1000
+  const hVthEffMv = tempCorrectedVth(healthy.thresholdVoltage, healthyTemp, lysisNPulses) * hfireMult * 1000
+  const tVthEffMv = tempCorrectedVth(target.thresholdVoltage,  targetTemp,  lysisNPulses) * hfireMult * 1000
   const hDRPct  = (hVm * pulseEnvelopeFactorHealthy / hVthEffMv) * 100
   const tDRPct  = (tVm * pulseEnvelopeFactorTarget  / tVthEffMv) * 100
   const selRatio = hVm > 0.01 ? tVm / hVm : 0

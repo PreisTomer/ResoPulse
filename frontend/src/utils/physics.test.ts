@@ -1,6 +1,7 @@
 // Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 
-// Unit tests: Schwan Vm/τ, H-FIRE threshold, PEF, lysis field, DR field independence, slider bounds
+// Unit tests: Schwan Vm/τ, H-FIRE threshold, PEF, lysis field, DR field independence,
+//             tempCorrectedVth electrosensitization, slider bounds
 
 import { describe, it, expect } from 'vitest'
 
@@ -10,6 +11,11 @@ import {
   SCHWAN_SPHERE_FACTOR,
   TWO_PI,
   MIN_PULSE_ENVELOPE,
+  ELECTROSENSITIZATION_EXPONENT,
+  ELECTROSENSITIZATION_CLAMP_MIN,
+  TEMP_EP_COEFF,
+  TEMP_EP_CLAMP_MIN,
+  BODY_TEMP_C,
 } from '@/constants/physics'
 
 import type { CellConfig } from '@/types/cell'
@@ -19,6 +25,7 @@ import {
   computeTau,
   computePulseStepResponse,
   computeSAR,
+  tempCorrectedVth,
 } from './physics'
 import { TARGET_CELL, HEALTHY_CELL, SIGMA_E, FIELD } from './testFixtures'
 
@@ -345,5 +352,116 @@ describe('MIN_PULSE_ENVELOPE', () => {
   it('lysis field with pef=0 uses MIN_PULSE_ENVELOPE, not infinity', () => {
     const e = lysisFieldImpl(TARGET_CELL, 500, SIGMA_E, 1.0, 0, 1.0)
     expect(isFinite(e)).toBe(true)
+  })
+})
+
+// ── tempCorrectedVth — electrosensitization and temperature correction ─────────
+// Central threshold function. Two independent multiplicative corrections:
+//   1. Temperature: max(TEMP_EP_CLAMP_MIN, 1 − TEMP_EP_COEFF × max(0, T − 37))
+//   2. Electrosensitization: max(CLAMP_MIN, N^(−α)) when N > 1, else 1.0
+
+describe('tempCorrectedVth — N=1 baseline (no electrosensitization)', () => {
+  it('N=1 at body temp returns nominal Vth unchanged', () => {
+    expect(tempCorrectedVth(1.0, BODY_TEMP_C, 1)).toBeCloseTo(1.0, 10)
+  })
+
+  it('N=0 (single-call edge case) behaves as N=1 — no reduction', () => {
+    // pulseCount <= 1 → nFactor = 1.0; same result as N=1
+    expect(tempCorrectedVth(1.0, BODY_TEMP_C, 0)).toBeCloseTo(1.0, 10)
+  })
+
+  it('scales linearly with nominalVth regardless of N', () => {
+    const v1 = tempCorrectedVth(0.5, BODY_TEMP_C, 1)
+    const v2 = tempCorrectedVth(1.0, BODY_TEMP_C, 1)
+    const v3 = tempCorrectedVth(2.0, BODY_TEMP_C, 1)
+    expect(v2).toBeCloseTo(v1 * 2, 10)
+    expect(v3).toBeCloseTo(v1 * 4, 10)
+  })
+})
+
+describe('tempCorrectedVth — electrosensitization N factor', () => {
+  it('N=10: factor = 10^(−0.20) ≈ 0.631', () => {
+    const expected = Math.pow(10, -ELECTROSENSITIZATION_EXPONENT)
+    expect(tempCorrectedVth(1.0, BODY_TEMP_C, 10)).toBeCloseTo(expected, 5)
+  })
+
+  it('N=100: factor = 100^(−0.20) ≈ 0.398', () => {
+    const expected = Math.pow(100, -ELECTROSENSITIZATION_EXPONENT)
+    expect(tempCorrectedVth(1.0, BODY_TEMP_C, 100)).toBeCloseTo(expected, 5)
+  })
+
+  it('N=2: factor = 2^(−0.20) ≈ 0.871', () => {
+    const expected = Math.pow(2, -ELECTROSENSITIZATION_EXPONENT)
+    expect(tempCorrectedVth(1.0, BODY_TEMP_C, 2)).toBeCloseTo(expected, 5)
+  })
+
+  it('N=200: factor is clamped to ELECTROSENSITIZATION_CLAMP_MIN (0.35)', () => {
+    // 200^(−0.20) ≈ 0.347 < 0.35, so clamp applies
+    expect(tempCorrectedVth(1.0, BODY_TEMP_C, 200)).toBeCloseTo(ELECTROSENSITIZATION_CLAMP_MIN, 5)
+  })
+
+  it('N=1000: deeply clamped — still returns CLAMP_MIN, not near-zero', () => {
+    expect(tempCorrectedVth(1.0, BODY_TEMP_C, 1000)).toBeCloseTo(ELECTROSENSITIZATION_CLAMP_MIN, 5)
+  })
+
+  it('threshold decreases monotonically as N increases from 1 to 100', () => {
+    const v1   = tempCorrectedVth(1.0, BODY_TEMP_C, 1)
+    const v5   = tempCorrectedVth(1.0, BODY_TEMP_C, 5)
+    const v20  = tempCorrectedVth(1.0, BODY_TEMP_C, 20)
+    const v100 = tempCorrectedVth(1.0, BODY_TEMP_C, 100)
+    expect(v1).toBeGreaterThan(v5)
+    expect(v5).toBeGreaterThan(v20)
+    expect(v20).toBeGreaterThan(v100)
+  })
+
+  it('threshold at very high N never drops below CLAMP_MIN × nominalVth', () => {
+    const vth = 0.8
+    const floor = vth * ELECTROSENSITIZATION_CLAMP_MIN
+    expect(tempCorrectedVth(vth, BODY_TEMP_C, 10_000)).toBeGreaterThanOrEqual(floor - 1e-12)
+  })
+})
+
+describe('tempCorrectedVth — temperature correction', () => {
+  it('at body temperature (37°C) there is no thermal reduction', () => {
+    expect(tempCorrectedVth(1.0, BODY_TEMP_C, 1)).toBeCloseTo(1.0, 10)
+  })
+
+  it('below body temperature also has no thermal reduction (one-sided softening)', () => {
+    // max(0, T−37) clamps negative delta to 0 — cold doesn't harden the threshold
+    expect(tempCorrectedVth(1.0, 20, 1)).toBeCloseTo(1.0, 10)
+    expect(tempCorrectedVth(1.0, 4,  1)).toBeCloseTo(1.0, 10)
+  })
+
+  it('at T=42°C: factor = max(0.70, 1 − 0.003×5) = 0.985', () => {
+    const expected = Math.max(TEMP_EP_CLAMP_MIN, 1 - TEMP_EP_COEFF * 5)
+    expect(tempCorrectedVth(1.0, 42, 1)).toBeCloseTo(expected, 8)
+  })
+
+  it('at T=137°C: factor is exactly TEMP_EP_CLAMP_MIN (0.70) — clamp boundary', () => {
+    // 1 − 0.003×100 = 0.70, exactly at the clamp
+    expect(tempCorrectedVth(1.0, 137, 1)).toBeCloseTo(TEMP_EP_CLAMP_MIN, 8)
+  })
+
+  it('above clamp temperature (T=200°C) still returns TEMP_EP_CLAMP_MIN, not lower', () => {
+    expect(tempCorrectedVth(1.0, 200, 1)).toBeCloseTo(TEMP_EP_CLAMP_MIN, 8)
+  })
+})
+
+describe('tempCorrectedVth — combined temperature and electrosensitization', () => {
+  it('N=10, T=42°C: both corrections multiply independently', () => {
+    const nFactor   = Math.pow(10, -ELECTROSENSITIZATION_EXPONENT)              // ≈ 0.631
+    const tempFactor = Math.max(TEMP_EP_CLAMP_MIN, 1 - TEMP_EP_COEFF * 5)      // 0.985
+    expect(tempCorrectedVth(1.0, 42, 10)).toBeCloseTo(nFactor * tempFactor, 7)
+  })
+
+  it('N=100, T=42°C: corrections independent and always positive', () => {
+    const result = tempCorrectedVth(1.0, 42, 100)
+    expect(result).toBeGreaterThan(0)
+    expect(result).toBeLessThan(1.0)
+  })
+
+  it('result is always strictly positive regardless of inputs', () => {
+    expect(tempCorrectedVth(1.0, 500, 10_000)).toBeGreaterThan(0)
+    expect(tempCorrectedVth(0.001, 500, 10_000)).toBeGreaterThan(0)
   })
 })

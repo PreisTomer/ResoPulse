@@ -285,12 +285,12 @@ export function requestAiOptimization(requestId: string, onResult: AiResultCallb
   let predDrT: number
 
   if (isResonanceTarget) {
-    const tr      = store.target as { resonantFreqGHz: number; capsidQ?: number; resonantThresholdVcm: number }
+    const tr = store.target as { resonantFreqGHz: number; capsidQ?: number; resonantThresholdVcm: number; resonantFreqGHz2?: number; capsidQ2?: number; resonantMode2Amplitude?: number }
     // hfireMult does NOT apply to acoustic resonance — mechanical disruption, not EP membrane charging.
     const tVthEff = tempCorrectedVth(tr.resonantThresholdVcm, store.targetTemp)
     // At exact resonance the Lorentzian lineshape = 1, so DR = E / tVthEff.
     suggestedFieldVcm = 0.9 * tVthEff
-    predDrT = computeResonantDisruption(tr.resonantFreqGHz, tr.capsidQ ?? DEFAULT_CAPSID_Q, tVthEff, optFreqKhz * 1e3, suggestedFieldVcm)
+    predDrT = computeResonantDisruption(tr.resonantFreqGHz, tr.capsidQ ?? DEFAULT_CAPSID_Q, tVthEff, optFreqKhz * 1e3, suggestedFieldVcm, tr.resonantFreqGHz2, tr.capsidQ2, tr.resonantMode2Amplitude)
   } else {
     // Schwan path: invert the equation to find the lysis field, then predict DR.
     suggestedFieldVcm = lysisFieldAtFreq(

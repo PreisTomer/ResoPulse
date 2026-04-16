@@ -74,9 +74,10 @@ export function computeDR(
     && (cell as CellConfig & { resonantFreqGHz?: number }).resonantFreqGHz != null
 
   if (isAcoustic) {
-    const t = cell as CellConfig & { resonantFreqGHz: number; capsidQ?: number }
-    // vthEff carries resonantThresholdVcm corrected for temperature and H-FIRE multiplier
-    return computeResonantDisruption(t.resonantFreqGHz, t.capsidQ ?? DEFAULT_CAPSID_Q, vthEff, hz, field) * pef
+    const t = cell as CellConfig & { resonantFreqGHz: number; capsidQ?: number; resonantFreqGHz2?: number; capsidQ2?: number; resonantMode2Amplitude?: number }
+    // Acoustic resonance is mechanical — PEF (RC membrane-charging model) does not apply.
+    // Matches cellStore, HeatmapCanvas, and chartHover which all omit PEF for the resonance path.
+    return computeResonantDisruption(t.resonantFreqGHz, t.capsidQ ?? DEFAULT_CAPSID_Q, vthEff, hz, field, t.resonantFreqGHz2, t.capsidQ2, t.resonantMode2Amplitude)
   }
 
   const vm = computeSchwan(cell, hz / 1000, field, sigma_e, cosTheta)
@@ -105,7 +106,8 @@ export function computeCurves(
   }))
 }
 
-// Compute temp + H-FIRE corrected threshold voltage for a cell. Used by callers of computeCurves.
-export function effectiveVth(nominalVth: number, tempC: number, hfireMult: number): number {
-  return tempCorrectedVth(nominalVth, tempC) * hfireMult
+// Compute temp + electrosensitization + H-FIRE corrected threshold voltage for a cell.
+// pulseCount: lysisNPulses from cellStore. Pass 1 for acoustic resonance thresholds.
+export function effectiveVth(nominalVth: number, tempC: number, hfireMult: number, pulseCount = 1): number {
+  return tempCorrectedVth(nominalVth, tempC, pulseCount) * hfireMult
 }

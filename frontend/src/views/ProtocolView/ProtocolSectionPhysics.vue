@@ -305,13 +305,46 @@
     <div class="protocol__note">
       <div class="protocol__bullet" v-html="$t('protocol.physics.sonification.refNote')"></div>
     </div>
+
+    <!-- §3.13 Multi-Pulse Electrosensitization -->
+    <h3 id="electrosensitization" class="protocol__subsection-title" v-html="$t('protocol.physics.electrosensitization.title')" v-tip="$t('protocol.physics.electrosensitization.tip')"></h3>
+    <p class="protocol__body-text" v-html="$t('protocol.physics.electrosensitization.p1')"></p>
+    <div class="protocol__eq-block">
+      <div class="protocol__eq-main" v-html="$t('protocol.physics.electrosensitization.eq')"></div>
+      <div class="protocol__eq-sub" v-html="$t('protocol.physics.electrosensitization.eqSub1')"></div>
+      <div class="protocol__eq-sub" v-html="$t('protocol.physics.electrosensitization.eqSub2')"></div>
+      <div class="protocol__eq-sub" v-html="$t('protocol.physics.electrosensitization.eqSub3')"></div>
+      <div class="protocol__eq-sub" v-html="$t('protocol.physics.electrosensitization.eqSub4')"></div>
+      <div class="protocol__eq-sub" v-html="$t('protocol.physics.electrosensitization.eqSub5')"></div>
+    </div>
+    <p class="protocol__body-text" v-html="$t('protocol.physics.electrosensitization.examplesTitle')"></p>
+    <table class="protocol__param-table">
+      <thead>
+        <tr>
+          <th v-html="$t('protocol.physics.electrosensitization.thN')"></th>
+          <th v-html="$t('protocol.physics.electrosensitization.thFactor')"></th>
+          <th v-html="$t('protocol.physics.electrosensitization.thNote')"></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="row in electrosensitizationExamples" :key="row.n">
+          <td class="protocol__mono protocol__primary-val" v-html="row.n"></td>
+          <td :class="['protocol__mono', `protocol__${row.factorClass}`]" v-html="row.factor"></td>
+          <td v-html="row.note"></td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="protocol__warn-box" v-html="$t('protocol.physics.electrosensitization.warnBox')"></div>
+    <div class="protocol__note">
+      <div class="protocol__bullet" v-html="$t('protocol.physics.electrosensitization.refNote')"></div>
+    </div>
   </section>
 </template>
 
 <script lang="ts">
 import { defineComponent, type PropType } from 'vue'
 
-import type { SchwanParamRow, ResonanceRow, DoubleshellRow, DepRow, UncertaintyRow, SonificationRow } from './types'
+import type { SchwanParamRow, ResonanceRow, DoubleshellRow, DepRow, UncertaintyRow, SonificationRow, ElectrosensitizationRow } from './types'
 
 import { ICON } from '@/constants/icons'
 export default defineComponent({
@@ -340,6 +373,10 @@ export default defineComponent({
     },
     sonificationMappings: {
       type: Array as PropType<SonificationRow[]>,
+      required: true,
+    },
+    electrosensitizationExamples: {
+      type: Array as PropType<ElectrosensitizationRow[]>,
       required: true,
     },
   },

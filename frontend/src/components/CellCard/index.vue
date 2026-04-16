@@ -268,7 +268,7 @@ export default defineComponent({
       return tipVmFn({
         vmDisplay:        this.vmDisplay,
         disruptionRatio:  this.disruptionRatio,
-        thresholdVoltage: tempCorrectedVth(cell.thresholdVoltage, this.temperature) * hfireMult,
+        thresholdVoltage: tempCorrectedVth(cell.thresholdVoltage, this.temperature, this.cellStore.lysisNPulses) * hfireMult,
         waveform:         this.cellStore.waveform,
       })
     },

@@ -496,8 +496,8 @@ export default defineComponent({
         g.select<SVGGElement>('.thresholds'),
         this._yScale!, this._chartW, maxVm,
         [
-          { label: this.$t('chart.thrH'), vm: tempCorrectedVth(this.cellStore.healthy.thresholdVoltage, this.cellStore.healthyTemp) * thrHfireMult * 1000, color: C.primary },
-          { label: this.$t('chart.thrT'), vm: tempCorrectedVth(this.cellStore.target.thresholdVoltage,  this.cellStore.targetTemp)  * thrHfireMult * 1000, color: C.danger  },
+          { label: this.$t('chart.thrH'), vm: tempCorrectedVth(this.cellStore.healthy.thresholdVoltage, this.cellStore.healthyTemp, this.cellStore.lysisNPulses) * thrHfireMult * 1000, color: C.primary },
+          { label: this.$t('chart.thrT'), vm: tempCorrectedVth(this.cellStore.target.thresholdVoltage,  this.cellStore.targetTemp,  this.cellStore.lysisNPulses) * thrHfireMult * 1000, color: C.danger  },
         ],
         this.$t('chart.revEp'),
       )
@@ -594,6 +594,7 @@ export default defineComponent({
         pulseEnvelopeFactorTarget: this.cellStore.pulseEnvelopeFactorTarget,
         targetCellCategory: this.cellStore.targetCellCategory,
         isResonanceMode: this.cellStore.isResonanceMode,
+        lysisNPulses: this.cellStore.lysisNPulses,
       })
     },
   },

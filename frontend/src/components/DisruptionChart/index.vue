@@ -252,8 +252,9 @@ export default defineComponent({
         this.cellStore.pulseEnvelopeFactorHealthy, this.cellStore.pulseEnvelopeFactorTarget,
         this.cellStore.isResonanceMode,
         isAcousticTarget,
-        effectiveVth(this.cellStore.healthy.thresholdVoltage, this.cellStore.healthyTemp, hfireMult),
-        effectiveVth(tNominalVth, this.cellStore.targetTemp, tHfireMult),
+        effectiveVth(this.cellStore.healthy.thresholdVoltage, this.cellStore.healthyTemp, hfireMult, this.cellStore.lysisNPulses),
+        // Acoustic resonance: no electrosensitization (tHfireMult=1 already guards this; pulseCount omitted)
+        effectiveVth(tNominalVth, this.cellStore.targetTemp, tHfireMult, isAcousticRes ? 1 : this.cellStore.lysisNPulses),
       )
       this._curveData = data
       const peakDR = data.reduce((m, d) => Math.max(m, d.hDR, d.tDR), 0)

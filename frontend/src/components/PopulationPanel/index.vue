@@ -274,15 +274,17 @@ export default defineComponent({
             ? sampleGaussian(t.resonantThresholdVcm!, t.resonantThresholdVcm! * vThUncFrac, t.resonantThresholdVcm! * 0.5, t.resonantThresholdVcm! * 2.0)
             : t.resonantThresholdVcm!
           // Acoustic resonance threshold: temperature correction only — hfireMult does not apply
-          const threshEff = tempCorrectedVth(threshNominal, cellTemp)
-          return computeResonantDisruption(fResScaled, Q, threshEff, freqKHz * 1e3, E)
+          const threshEff    = tempCorrectedVth(threshNominal, cellTemp)
+          // 2nd mode also scales with radius (same breathing-mode physics)
+          const fRes2Scaled  = t.resonantFreqGHz2 != null ? t.resonantFreqGHz2 * (base.radius / R) : undefined
+          return computeResonantDisruption(fResScaled, Q, threshEff, freqKHz * 1e3, E, fRes2Scaled, t.capsidQ2, t.resonantMode2Amplitude)
         }
 
         // ── Schwan mode (all mammalian; bacteria / virus in IRE / CW mode) ──
         const tau   = computeTau(cell, sigma_e)
         const pef   = isPulsed ? computePulseStepResponse(tau, pwNs) : 1.0
         const vm    = computeSchwan(cell, freqKHz, E, sigma_e, cosTheta)
-        const vThEff = tempCorrectedVth(vThNominal, cellTemp) * hfireMult
+        const vThEff = tempCorrectedVth(vThNominal, cellTemp, this.cellStore.lysisNPulses) * hfireMult
         return (vm * pef) / vThEff
       }
 

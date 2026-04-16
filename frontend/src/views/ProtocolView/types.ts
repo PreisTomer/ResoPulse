@@ -10,3 +10,4 @@ export interface RawRefItem       { body: string; doi?: string; pmid?: string; n
 export interface RefItem          { body: string; url?: string; urlLabel?: string; note?: string }
 export interface TocItem          { id: string; key: string; indent: boolean; physicsParent?: boolean }
 export interface SonificationRow  { param: string; mapping: string; note: string }
+export interface ElectrosensitizationRow { n: string; factor: string; factorClass: string; note: string }

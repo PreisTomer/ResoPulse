@@ -69,9 +69,11 @@ export const CELL_GROUP = {
 
 // Experimental validation basis for resonance presets
 export const EXPERIMENTAL_BASIS = {
-  LASER_VALIDATED: 'laser-validated',
-  RF_EXTRAPOLATED: 'rf-extrapolated',
-  SPECULATIVE:     'speculative',
+  LASER_VALIDATED:       'laser-validated',        // ISRS pulsed-laser spectroscopy (Tsen 2007)
+  RF_EXTRAPOLATED:       'rf-extrapolated',        // RF/microwave extrapolated from structural data
+  SPECULATIVE:           'speculative',            // theoretical estimate only, no direct measurement
+  MW_VALIDATED:          'mw-validated',           // direct microwave absorption spectroscopy (Thakur 2015; Sci. Rep. 2022)
+  ULTRAFAST_SPECTROSCOPY: 'ultrafast-spectroscopy', // ultrafast pump-probe / ISRS vibrational spectroscopy (PNAS 2025)
 } as const
 
 // Cuvette load impedance state derived from drift magnitude
@@ -153,6 +155,7 @@ export const PRESET_ID = {
   MRSA:           'mrsa',
   INFLUENZA:      'influenza',
   SARSCOV2:       'sarscov2',
+  LENTIVIRUS:     'lentivirus',
 } as const
 
 export const DEFAULT_SESSION_NAME = 'Session 001'

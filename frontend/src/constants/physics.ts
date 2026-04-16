@@ -62,6 +62,16 @@ export const TEMP_EP_COEFF = 0.003
 // Lower clamp for Vth temperature correction — prevents unphysical zero/negative threshold.
 export const TEMP_EP_CLAMP_MIN = 0.70
 
+// Electrosensitization: repeated pulses condition membrane pores, reducing lysis threshold.
+// Vth_eff = Vth × N^(−α) × temperature_correction. Applied to EP thresholds only (not acoustic resonance).
+// Basis: Weaver & Chizmadzhev 1996 Bioelectrochemistry 41:135; Pakhomov et al. 2010 Biochim. Biophys. Acta.
+// α = 0.20: N=10 → 63% of nominal; N=100 → 40% of nominal (clamped). Cell-type variation is ±0.05.
+export const ELECTROSENSITIZATION_EXPONENT = 0.20
+
+// Minimum threshold factor from electrosensitization — prevents unphysical sub-physiological threshold.
+// At N=100 and α=0.20 the raw factor is 0.40, so the clamp only engages for very large N.
+export const ELECTROSENSITIZATION_CLAMP_MIN = 0.35
+
 // Upper limit of direct-electrode (electrolytic) coupling regime [kHz] = 300 MHz. Foster & Schwan 1989.
 export const FREQ_ELECTROLYTIC_LIMIT_KHZ = 300_000
 

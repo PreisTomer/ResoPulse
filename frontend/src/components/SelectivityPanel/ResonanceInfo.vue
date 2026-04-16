@@ -11,6 +11,10 @@
       <span class="res-info__label">{{ $t('selectivity.fresRangeLabel') }}</span>
       <span class="res-info__val">{{ resonantFreqRange }}</span>
     </div>
+    <div v-if="resonantFreqRange2" class="res-info__row" v-tip="$t('selectivity.tipFresRange')">
+      <span class="res-info__label">{{ $t('selectivity.fres2Label') }}</span>
+      <span class="res-info__val res-info__val--mode2">{{ resonantFreqRange2 }}</span>
+    </div>
     <div v-if="resonantQRange" class="res-info__row" v-tip="$t('selectivity.tipQFactor')">
       <span class="res-info__label">{{ $t('selectivity.qRangeLabel') }}</span>
       <span class="res-info__val">{{ resonantQRange }}</span>
@@ -74,20 +78,31 @@ export default defineComponent({
       return ''
     },
 
+    resonantFreqRange2(): string {
+      const t = this.cellStore.target
+      const f2 = t.resonantFreqGHz2
+      if (!f2) return ''
+      return formatFreqKHz(f2 * 1e6)
+    },
+
     basisLabel(): string {
       switch (this.cellStore.target.experimentalBasis) {
-        case EXPERIMENTAL_BASIS.LASER_VALIDATED: return this.$t('selectivity.basisLaserValidated')
-        case EXPERIMENTAL_BASIS.RF_EXTRAPOLATED: return this.$t('selectivity.basisRfExtrapolated')
-        case EXPERIMENTAL_BASIS.SPECULATIVE:     return this.$t('selectivity.basisSpeculative')
-        default:                                  return this.$t('selectivity.basisUnclassified')
+        case EXPERIMENTAL_BASIS.LASER_VALIDATED:        return this.$t('selectivity.basisLaserValidated')
+        case EXPERIMENTAL_BASIS.RF_EXTRAPOLATED:        return this.$t('selectivity.basisRfExtrapolated')
+        case EXPERIMENTAL_BASIS.SPECULATIVE:            return this.$t('selectivity.basisSpeculative')
+        case EXPERIMENTAL_BASIS.MW_VALIDATED:           return this.$t('selectivity.basisMwValidated')
+        case EXPERIMENTAL_BASIS.ULTRAFAST_SPECTROSCOPY: return this.$t('selectivity.basisUltrafastSpectroscopy')
+        default:                                         return this.$t('selectivity.basisUnclassified')
       }
     },
 
     basisClass(): string {
       switch (this.cellStore.target.experimentalBasis) {
-        case EXPERIMENTAL_BASIS.LASER_VALIDATED: return 'res-info__badge--validated'
-        case EXPERIMENTAL_BASIS.RF_EXTRAPOLATED: return 'res-info__badge--extrapolated'
-        default:                                  return 'res-info__badge--speculative'
+        case EXPERIMENTAL_BASIS.LASER_VALIDATED:        return 'res-info__badge--validated'
+        case EXPERIMENTAL_BASIS.MW_VALIDATED:           return 'res-info__badge--mw-validated'
+        case EXPERIMENTAL_BASIS.ULTRAFAST_SPECTROSCOPY: return 'res-info__badge--mw-validated'
+        case EXPERIMENTAL_BASIS.RF_EXTRAPOLATED:        return 'res-info__badge--extrapolated'
+        default:                                         return 'res-info__badge--speculative'
       }
     },
   },
@@ -127,6 +142,7 @@ export default defineComponent({
     &--deep    { color: var(--color-lime); }
     &--medium  { color: var(--color-amber); }
     &--shallow { color: var(--color-danger); }
+    &--mode2   { color: var(--color-primary); opacity: var(--op-dim); }
   }
 
   &__note {
@@ -141,9 +157,10 @@ export default defineComponent({
     border-radius: 2px;
     border: 1px solid;
 
-    &--validated    { @include color-variant(lime,   30%, 6%); }
-    &--extrapolated { @include color-variant(amber,  30%, 6%); }
-    &--speculative  { @include color-variant(danger, 30%, 6%); }
+    &--validated    { @include color-variant(lime,    30%, 6%); }
+    &--mw-validated { @include color-variant(primary, 30%, 6%); }
+    &--extrapolated { @include color-variant(amber,   30%, 6%); }
+    &--speculative  { @include color-variant(danger,  30%, 6%); }
   }
 }
 </style>

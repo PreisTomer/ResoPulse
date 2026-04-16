@@ -138,7 +138,7 @@ export default defineComponent({
     tipTargetBar(): string {
       const t = this.cellStore.target as { resonantFreqGHz?: number; resonantThresholdVcm?: number }
       const hfireMult = this.cellStore.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
-      const tVthEff = tempCorrectedVth(this.cellStore.target.thresholdVoltage, this.cellStore.targetTemp) * hfireMult
+      const tVthEff = tempCorrectedVth(this.cellStore.target.thresholdVoltage, this.cellStore.targetTemp, this.cellStore.lysisNPulses) * hfireMult
       return tipTargetBar({
         pct:                  this.targetRatioPct.toFixed(0),
         isResonanceTarget:    this.isResonanceTarget,
@@ -153,7 +153,7 @@ export default defineComponent({
 
     tipHealthyBar(): string {
       const hfireMult = this.cellStore.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
-      const hVthEff = tempCorrectedVth(this.cellStore.healthy.thresholdVoltage, this.cellStore.healthyTemp) * hfireMult
+      const hVthEff = tempCorrectedVth(this.cellStore.healthy.thresholdVoltage, this.cellStore.healthyTemp, this.cellStore.lysisNPulses) * hfireMult
       return tipHealthyBar({
         pct:               this.healthyRatioPct.toFixed(0),
         isResonanceTarget: this.isResonanceTarget,

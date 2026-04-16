@@ -85,7 +85,7 @@ export default defineComponent({
       const pefH = isPulsed ? Math.max(MIN_PULSE_ENVELOPE, 1 - Math.exp(-pw_ns * 1e-9 / hTau)) : 1.0
       // Lysis field: E_lysis = Vth_eff / (1.5 × R × cosθ × pef). cosT=0 (90° orientation) means
       // field cannot couple — fall back to a wide axis so the chart still renders.
-      const hVthEff = tempCorrectedVth(s.healthy.thresholdVoltage, s.healthyTemp) * hfireMult
+      const hVthEff = tempCorrectedVth(s.healthy.thresholdVoltage, s.healthyTemp, s.lysisNPulses) * hfireMult
       const healthyLysis = cosT < 1e-6
         ? 1000
         : hVthEff / (1.5 * s.healthy.radius * 1e-4 * cosT * pefH)
@@ -94,13 +94,13 @@ export default defineComponent({
       if (s.isResonanceMode) {
         const tr = s.target as { resonantThresholdVcm?: number }
         // Resonance threshold is already in V/cm and independent of cosTheta orientation.
-        // H-FIRE multiplier does NOT apply — acoustic resonance is mechanical, not EP membrane charging.
+        // H-FIRE multiplier + electrosensitization do NOT apply — acoustic resonance is mechanical.
         const tResVth = tr.resonantThresholdVcm ?? (s.target.thresholdVoltage / (1.5 * s.target.radius * 1e-4 * Math.max(cosT, 1e-6)))
         targetLysis = tempCorrectedVth(tResVth, s.targetTemp)
       } else {
         const tTau = computeTau(s.target, sigma)
         const pefT = isPulsed ? Math.max(MIN_PULSE_ENVELOPE, 1 - Math.exp(-pw_ns * 1e-9 / tTau)) : 1.0
-        const tVthEff = tempCorrectedVth(s.target.thresholdVoltage, s.targetTemp) * hfireMult
+        const tVthEff = tempCorrectedVth(s.target.thresholdVoltage, s.targetTemp, s.lysisNPulses) * hfireMult
         targetLysis = cosT < 1e-6
           ? 1000
           : tVthEff / (1.5 * s.target.radius * 1e-4 * cosT * pefT)
@@ -122,7 +122,7 @@ export default defineComponent({
         t.resonantFreqGHz,
         s.medium, s.waveform, s.dutyCycle, s.pulseWidthNs, s.chartMode,
         s.cellPackingFraction, s.perfusionRate,
-        s.orientationDeg,
+        s.orientationDeg, s.lysisNPulses,
         s.healthyTemp, s.targetTemp,
         s.resetCounter,
       ].join('|')
@@ -231,17 +231,15 @@ export default defineComponent({
       const hLambdaPerf = s.perfusionRate * PENNES_BLOOD_COEFF / hCp
       const hTss = BODY_TEMP_C + hSAR * dc / ((NEWTON_COOLING_LAMBDA + hLambdaPerf) * hCp)
       const hVm  = computeSchwan(s.healthy, freqKHz, fieldVcm, sigma_e, cosT)
-      const hDR  = (hVm * hPEF) / (tempCorrectedVth(s.healthy.thresholdVoltage, hTss) * hfireMult)
+      const hDR  = (hVm * hPEF) / (tempCorrectedVth(s.healthy.thresholdVoltage, hTss, s.lysisNPulses) * hfireMult)
 
       let tDR = 0
       if (s.isResonanceMode) {
-        const tr = s.target as { resonantFreqGHz?: number; capsidQ?: number; resonantThresholdVcm?: number }
+        const tr = s.target as { resonantFreqGHz?: number; capsidQ?: number; resonantThresholdVcm?: number; resonantFreqGHz2?: number; capsidQ2?: number; resonantMode2Amplitude?: number }
         if (tr.resonantFreqGHz && tr.capsidQ && tr.resonantThresholdVcm) {
-          // Resonance disruption is acoustic/mechanical: Joule SAR does not apply to the target.
-          // Use BODY_TEMP_C for threshold correction, consistent with store targetSAR = 0 in resonance mode.
-          // hfireMult does NOT apply — acoustic disruption is mechanical, not EP membrane charging.
+          // Resonance disruption is acoustic/mechanical: hfireMult + electrosensitization do NOT apply.
           const effThreshold = tempCorrectedVth(tr.resonantThresholdVcm, BODY_TEMP_C)
-          tDR = computeResonantDisruption(tr.resonantFreqGHz, tr.capsidQ, effThreshold, freqKHz * 1000, fieldVcm)
+          tDR = computeResonantDisruption(tr.resonantFreqGHz, tr.capsidQ, effThreshold, freqKHz * 1000, fieldVcm, tr.resonantFreqGHz2, tr.capsidQ2, tr.resonantMode2Amplitude)
         } else {
           // No capsid params (e.g. mammalian target in resonance mode): Schwan fallback, matching _computeGrid.
           const tCp  = s.target.specificHeatCapacity
@@ -251,7 +249,7 @@ export default defineComponent({
           const tTau = computeTau(s.target, sigma_e)
           const tPEF = isPulsed ? Math.max(MIN_PULSE_ENVELOPE, 1 - Math.exp(-pw_ns * 1e-9 / tTau)) : 1.0
           const tVm  = computeSchwan(s.target, freqKHz, fieldVcm, sigma_e, cosT)
-          tDR = (tVm * tPEF) / (tempCorrectedVth(s.target.thresholdVoltage, tTss) * hfireMult)
+          tDR = (tVm * tPEF) / (tempCorrectedVth(s.target.thresholdVoltage, tTss, s.lysisNPulses) * hfireMult)
         }
       } else {
         const tCp  = s.target.specificHeatCapacity
@@ -261,7 +259,7 @@ export default defineComponent({
         const tTau = computeTau(s.target, sigma_e)
         const tPEF = isPulsed ? Math.max(MIN_PULSE_ENVELOPE, 1 - Math.exp(-pw_ns * 1e-9 / tTau)) : 1.0
         const tVm  = computeSchwan(s.target, freqKHz, fieldVcm, sigma_e, cosT)
-        tDR = (tVm * tPEF) / (tempCorrectedVth(s.target.thresholdVoltage, tTss) * hfireMult)
+        tDR = (tVm * tPEF) / (tempCorrectedVth(s.target.thresholdVoltage, tTss, s.lysisNPulses) * hfireMult)
       }
 
       if (hTss >= HMAP_THERM_CRIT_C) return HMAP_ZONE.THERMAL
@@ -295,7 +293,7 @@ export default defineComponent({
       const tCp         = s.target.specificHeatCapacity
       const tLambdaPerf = s.perfusionRate * PENNES_BLOOD_COEFF / tCp
 
-      const tr     = s.target as { resonantFreqGHz?: number; capsidQ?: number; resonantThresholdVcm?: number }
+      const tr     = s.target as { resonantFreqGHz?: number; capsidQ?: number; resonantThresholdVcm?: number; resonantFreqGHz2?: number; capsidQ2?: number; resonantMode2Amplitude?: number }
       const hasRes = isRes && !!tr.resonantFreqGHz && !!tr.capsidQ && !!tr.resonantThresholdVcm
 
       const result = new Array<number>(HMAP_FREQ_STEPS * HMAP_FIELD_STEPS)
@@ -310,20 +308,21 @@ export default defineComponent({
           const hSAR = computeSAR(s.healthy, fieldVcm, sigma_e, wf)
           const hTss = BODY_TEMP_C + hSAR * dc / ((NEWTON_COOLING_LAMBDA + hLambdaPerf) * hCp)
           const hVm  = computeSchwan(s.healthy, freqKHz, fieldVcm, sigma_e, cosT)
-          const hDR  = (hVm * hPEF) / (tempCorrectedVth(s.healthy.thresholdVoltage, hTss) * hfireMult)
+          const hDR  = (hVm * hPEF) / (tempCorrectedVth(s.healthy.thresholdVoltage, hTss, s.lysisNPulses) * hfireMult)
 
           let tDR = 0
           if (hasRes) {
             // Resonance disruption is acoustic/mechanical: Joule SAR does not apply to the target.
             // Use BODY_TEMP_C for threshold correction, consistent with store targetSAR = 0 in resonance mode.
             // hfireMult does NOT apply — acoustic resonance is mechanical, not EP membrane charging.
+            // lysisNPulses does NOT apply — capsid resonance has no pulse-conditioning equivalent.
             const resThreshold = tempCorrectedVth(tr.resonantThresholdVcm!, BODY_TEMP_C)
-            tDR = computeResonantDisruption(tr.resonantFreqGHz!, tr.capsidQ!, resThreshold, freqHz, fieldVcm)
+            tDR = computeResonantDisruption(tr.resonantFreqGHz!, tr.capsidQ!, resThreshold, freqHz, fieldVcm, tr.resonantFreqGHz2, tr.capsidQ2, tr.resonantMode2Amplitude)
           } else {
             const tSAR = computeSAR(s.target, fieldVcm, sigma_e, wf)
             const tTss = BODY_TEMP_C + tSAR * dc / ((NEWTON_COOLING_LAMBDA + tLambdaPerf) * tCp)
             const tVm  = computeSchwan(s.target, freqKHz, fieldVcm, sigma_e, cosT)
-            tDR = (tVm * tPEF) / (tempCorrectedVth(s.target.thresholdVoltage, tTss) * hfireMult)
+            tDR = (tVm * tPEF) / (tempCorrectedVth(s.target.thresholdVoltage, tTss, s.lysisNPulses) * hfireMult)
           }
 
           if (hTss >= HMAP_THERM_CRIT_C) { result[fi * HMAP_FIELD_STEPS + vi] = HMAP_ZONE.THERMAL;    continue }
@@ -650,18 +649,18 @@ export default defineComponent({
       const hLPerf = s.perfusionRate * PENNES_BLOOD_COEFF / hCp
       const hTss   = BODY_TEMP_C + hSAR * dc / ((NEWTON_COOLING_LAMBDA + hLPerf) * hCp)
       const hVm    = computeSchwan(s.healthy, freqKHz, fieldVcm, sigma_e, cosT)
-      const hDR    = (hVm * hPEF) / (tempCorrectedVth(s.healthy.thresholdVoltage, hTss) * hoverHfireMult)
+      const hDR    = (hVm * hPEF) / (tempCorrectedVth(s.healthy.thresholdVoltage, hTss, s.lysisNPulses) * hoverHfireMult)
 
       let tDR = 0
       let usedResonancePath = false
       if (s.isResonanceMode) {
-        const tr = s.target as { resonantFreqGHz?: number; capsidQ?: number; resonantThresholdVcm?: number }
+        const tr = s.target as { resonantFreqGHz?: number; capsidQ?: number; resonantThresholdVcm?: number; resonantFreqGHz2?: number; capsidQ2?: number; resonantMode2Amplitude?: number }
         if (tr.resonantFreqGHz && tr.capsidQ && tr.resonantThresholdVcm) {
           // Resonance disruption is acoustic/mechanical: Joule SAR does not apply to the target.
           // Use BODY_TEMP_C for threshold correction, consistent with store targetSAR = 0 in resonance mode.
           // hoverHfireMult does NOT apply — acoustic disruption is mechanical, not EP membrane charging.
           const effThreshold = tempCorrectedVth(tr.resonantThresholdVcm, BODY_TEMP_C)
-          tDR = computeResonantDisruption(tr.resonantFreqGHz, tr.capsidQ, effThreshold, freqKHz * 1000, fieldVcm)
+          tDR = computeResonantDisruption(tr.resonantFreqGHz, tr.capsidQ, effThreshold, freqKHz * 1000, fieldVcm, tr.resonantFreqGHz2, tr.capsidQ2, tr.resonantMode2Amplitude)
           usedResonancePath = true
         } else {
           // No capsid params (e.g. mammalian target in resonance mode): Schwan fallback, matching _computeGrid.
@@ -672,7 +671,7 @@ export default defineComponent({
           const tTau = computeTau(s.target, sigma_e)
           const tPEF = isHoverPulsed ? Math.max(MIN_PULSE_ENVELOPE, 1 - Math.exp(-pw_ns * 1e-9 / tTau)) : 1.0
           const tVm  = computeSchwan(s.target, freqKHz, fieldVcm, sigma_e, cosT)
-          tDR = (tVm * tPEF) / (tempCorrectedVth(s.target.thresholdVoltage, tTss) * hoverHfireMult)
+          tDR = (tVm * tPEF) / (tempCorrectedVth(s.target.thresholdVoltage, tTss, s.lysisNPulses) * hoverHfireMult)
         }
       } else {
         const tCp  = s.target.specificHeatCapacity
@@ -682,7 +681,7 @@ export default defineComponent({
         const tTau = computeTau(s.target, sigma_e)
         const tPEF = isHoverPulsed ? Math.max(MIN_PULSE_ENVELOPE, 1 - Math.exp(-pw_ns * 1e-9 / tTau)) : 1.0
         const tVm  = computeSchwan(s.target, freqKHz, fieldVcm, sigma_e, cosT)
-        tDR = (tVm * tPEF) / (tempCorrectedVth(s.target.thresholdVoltage, tTss) * hoverHfireMult)
+        tDR = (tVm * tPEF) / (tempCorrectedVth(s.target.thresholdVoltage, tTss, s.lysisNPulses) * hoverHfireMult)
       }
 
       // Random-orientation lysis probability: P = max(0, 1 − 1/DR_max).

@@ -1,7 +1,7 @@
 // Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 
 // Biophysics utilities - Schwan single-shell model, SAR, nsEP, acoustic resonance, EM skin depth
-import { SCHWAN_SPHERE_FACTOR, WF_CW, EPSILON_R_CYTOPLASM, SIGMA_MEMBRANE_SI, TWO_PI, POP_LYSIS_GAUSS_N, POP_LYSIS_GAUSS_Z_MAX, BODY_TEMP_C, TEMP_EP_COEFF, TEMP_EP_CLAMP_MIN, EPSILON_0, MU_0 } from '@/constants/physics'
+import { SCHWAN_SPHERE_FACTOR, WF_CW, EPSILON_R_CYTOPLASM, SIGMA_MEMBRANE_SI, TWO_PI, POP_LYSIS_GAUSS_N, POP_LYSIS_GAUSS_Z_MAX, BODY_TEMP_C, TEMP_EP_COEFF, TEMP_EP_CLAMP_MIN, ELECTROSENSITIZATION_EXPONENT, ELECTROSENSITIZATION_CLAMP_MIN, EPSILON_0, MU_0 } from '@/constants/physics'
 
 import type { CellConfig } from '@/types/cell'
 
@@ -225,23 +225,55 @@ export function computeSkinDepthMm(freqKHz: number, sigma_e: number, epsilon_r =
 }
 
 // Resonant disruption ratio: (E/E_thr)·L(f,f_res,Q). >=1.0 → threshold exceeded.
+// Optional second mode: DR_total = DR_mode1 + alpha2 × DR_mode2, where alpha2 = resonantMode2Amplitude.
+// Models viruses with experimentally confirmed multiple dipolar modes (e.g. SARS-CoV-2 at 4 + 7.5 GHz).
 export function computeResonantDisruption(
   resonantFreqGHz: number,
   Q: number,
   thresholdVcm: number,
   freqHz: number,
   fieldVcm: number,
+  resonantFreqGHz2?: number,
+  capsidQ2?: number,
+  resonantMode2Amplitude?: number,
 ): number {
   if (thresholdVcm <= 0) return 0
-  return (fieldVcm / thresholdVcm) * computeResonantLineshape(resonantFreqGHz, Q, freqHz)
+  const dr1 = (fieldVcm / thresholdVcm) * computeResonantLineshape(resonantFreqGHz, Q, freqHz)
+  if (!resonantFreqGHz2) return dr1
+  const alpha2 = resonantMode2Amplitude ?? 0.5
+  const q2     = capsidQ2 ?? Q
+  const dr2 = alpha2 * (fieldVcm / thresholdVcm) * computeResonantLineshape(resonantFreqGHz2, q2, freqHz)
+  return dr1 + dr2
 }
 
-// ── Electroporation threshold temperature correction ──────────────────────────
-
-// Vth_eff = Vth × clamp(1 − 0.003×(T−37), 0.70, ∞). Weaver 1996; DeBruin 1999.
-export function tempCorrectedVth(nominalVth: number, tempC: number): number {
-  const correction = Math.max(TEMP_EP_CLAMP_MIN, 1 - TEMP_EP_COEFF * Math.max(0, tempC - BODY_TEMP_C))
-  return nominalVth * correction
+// ── Electroporation threshold correction (temperature + electrosensitization) ─
+//
+// Full formula: Vth_eff = Vth × N^(−α) × clamp(1 − 0.003×(T−37), 0.70, ∞)
+//
+// Temperature term: Arrhenius pore-nucleation energy decreases with bilayer fluidity.
+//   Weaver & Chizmadzhev 1996 Bioelectrochemistry 41:135.
+//
+// Electrosensitization term: repeated pulses condition membrane pore populations, reducing
+//   the field required for irreversible disruption on subsequent pulses. Each delivered pulse
+//   leaves a population of sub-threshold pores that lower the nucleation barrier for the next.
+//   Pakhomov et al. 2010 Biochim. Biophys. Acta 1798:2260; Weaver 1996 ibid.
+//   α = ELECTROSENSITIZATION_EXPONENT (0.20 default). Clamped so threshold never falls below
+//   35% of nominal regardless of pulse count.
+//
+// pulseCount applies only to EP thresholds (thresholdVoltage, nuclearThresholdVoltage).
+// Do NOT pass pulseCount for acoustic resonance thresholds (resonantThresholdVcm) — mechanical
+// capsid disruption has no pulse-conditioning equivalent in the current model.
+export function tempCorrectedVth(
+  nominalVth: number,
+  tempC: number,
+  pulseCount = 1,
+  alpha = ELECTROSENSITIZATION_EXPONENT,
+): number {
+  const tempFactor = Math.max(TEMP_EP_CLAMP_MIN, 1 - TEMP_EP_COEFF * Math.max(0, tempC - BODY_TEMP_C))
+  const nFactor    = pulseCount > 1
+    ? Math.max(ELECTROSENSITIZATION_CLAMP_MIN, Math.pow(pulseCount, -alpha))
+    : 1.0
+  return nominalVth * tempFactor * nFactor
 }
 
 // ── Population lysis fraction (log-normal size distribution) ─────────────────

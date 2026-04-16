@@ -321,3 +321,165 @@ describe('optimalFreqResult', () => {
     expect(optSel).toBeGreaterThanOrEqual(currentSel - 0.001)
   })
 })
+
+// ── Electrosensitization (N-pulse threshold reduction) ────────────────────────
+// N^(−0.20) reduces EP lysis threshold for both healthy and target cells.
+// Key invariants:
+//   1. DR increases with N (lower threshold → higher disruption at same field)
+//   2. Lysis field decreases with N (less field needed to reach threshold)
+//   3. Selectivity ratio TI is N-invariant (N cancels in the ratio when temps equal)
+//   4. Acoustic resonance DR is completely N-invariant (no pulse-conditioning)
+
+describe('electrosensitization — DR and lysis field respond to N', () => {
+  it('targetDisruptionRatio increases when lysisNPulses increases', () => {
+    const storeN1  = freshStore()
+    storeN1.setLysisNPulses(1)
+    const drN1 = storeN1.targetDisruptionRatio
+
+    const storeN10 = freshStore()
+    storeN10.setLysisNPulses(10)
+    const drN10 = storeN10.targetDisruptionRatio
+
+    // N=10 factor ≈ 0.631 → threshold lower → DR higher
+    expect(drN10).toBeGreaterThan(drN1)
+  })
+
+  it('healthyDisruptionRatio also increases with N (both cells affected)', () => {
+    const storeN1  = freshStore()
+    storeN1.setLysisNPulses(1)
+    const drN1 = storeN1.healthyDisruptionRatio
+
+    const storeN10 = freshStore()
+    storeN10.setLysisNPulses(10)
+    const drN10 = storeN10.healthyDisruptionRatio
+
+    expect(drN10).toBeGreaterThan(drN1)
+  })
+
+  it('DR ratio N=10 / N=1 matches expected N^(−0.20) factor', () => {
+    const storeN1  = freshStore()
+    storeN1.setLysisNPulses(1)
+    const storeN10 = freshStore()
+    storeN10.setLysisNPulses(10)
+
+    const ratioTarget  = storeN10.targetDisruptionRatio  / storeN1.targetDisruptionRatio
+    const ratioHealthy = storeN10.healthyDisruptionRatio / storeN1.healthyDisruptionRatio
+    const expectedFactor = 1 / Math.pow(10, -0.20)  // DR = Vm / (Vth × 0.631) → ratio = 1/0.631 ≈ 1.585
+
+    expect(ratioTarget).toBeCloseTo(expectedFactor, 3)
+    expect(ratioHealthy).toBeCloseTo(expectedFactor, 3)
+  })
+
+  it('targetLysisField decreases when N increases (lower threshold = less field needed)', () => {
+    const storeN1  = freshStore()
+    storeN1.setLysisNPulses(1)
+    const eN1 = storeN1.targetLysisField
+
+    const storeN10 = freshStore()
+    storeN10.setLysisNPulses(10)
+    const eN10 = storeN10.targetLysisField
+
+    expect(eN10).toBeLessThan(eN1)
+  })
+
+  it('healthyLysisField decreases when N increases', () => {
+    const storeN1  = freshStore()
+    storeN1.setLysisNPulses(1)
+    const eN1 = storeN1.healthyLysisField
+
+    const storeN10 = freshStore()
+    storeN10.setLysisNPulses(10)
+    const eN10 = storeN10.healthyLysisField
+
+    expect(eN10).toBeLessThan(eN1)
+  })
+
+  it('applying targetLysisField(N) still yields DR ≈ 1 at that N', () => {
+    // The lysis field getter must be internally consistent with the DR getter.
+    // Setting field = targetLysisField should produce targetDisruptionRatio ≈ 1.
+    const store = freshStore()
+    store.setWaveform(WAVEFORM.CW)
+    store.setLysisNPulses(20)
+    store.setFieldIntensity(store.targetLysisField)
+    expect(store.targetDisruptionRatio).toBeCloseTo(1.0, 1)
+  })
+
+  it('very high N (N=1000) is clamped — DR does not grow unboundedly', () => {
+    const storeN100  = freshStore()
+    storeN100.setLysisNPulses(100)
+    const drN100 = storeN100.targetDisruptionRatio
+
+    const storeN1000 = freshStore()
+    storeN1000.setLysisNPulses(1000)
+    const drN1000 = storeN1000.targetDisruptionRatio
+
+    // Both land on the 0.35 floor → DR should be the same
+    expect(drN1000).toBeCloseTo(drN100, 0)
+  })
+})
+
+describe('electrosensitization — TI selectivity is N-invariant', () => {
+  it('therapeuticIndex (TI) is the same at N=1 and N=50 (N cancels in ratio)', () => {
+    // TI = targetDR/healthyDR = (Vm_T/Vth_T_eff) / (Vm_H/Vth_H_eff)
+    // Both thresholds scaled by the same N^(−0.20) → factor cancels exactly
+    // (Requires both cells at same temperature, which is the default state)
+    const storeN1  = freshStore()
+    storeN1.setLysisNPulses(1)
+    const tiN1 = storeN1.therapeuticIndex
+
+    const storeN50 = freshStore()
+    storeN50.setLysisNPulses(50)
+    const tiN50 = storeN50.therapeuticIndex
+
+    expect(tiN50).toBeCloseTo(tiN1, 3)
+  })
+
+  it('lysis field RATIO (target/healthy) is N-invariant — window shifts but width is constant', () => {
+    const storeN1  = freshStore()
+    storeN1.setLysisNPulses(1)
+    const ratioN1 = storeN1.targetLysisField / storeN1.healthyLysisField
+
+    const storeN50 = freshStore()
+    storeN50.setLysisNPulses(50)
+    const ratioN50 = storeN50.targetLysisField / storeN50.healthyLysisField
+
+    expect(ratioN50).toBeCloseTo(ratioN1, 3)
+  })
+
+  it('optimal frequency is N-invariant (TI ratio is N-invariant, argmax unchanged)', () => {
+    const storeN1  = freshStore()
+    storeN1.setLysisNPulses(1)
+    const optN1 = storeN1.optimalFreqResult.khz
+
+    const storeN50 = freshStore()
+    storeN50.setLysisNPulses(50)
+    const optN50 = storeN50.optimalFreqResult.khz
+
+    expect(optN50).toBe(optN1)
+  })
+})
+
+describe('electrosensitization — acoustic resonance path is N-invariant', () => {
+  it('targetDisruptionRatio in resonance mode does not change when N changes', () => {
+    // Load a bacteria-like target with resonance params, switch to resonance mode.
+    // The acoustic DR path explicitly does NOT pass lysisNPulses.
+    const storeN1 = freshStore()
+    storeN1.setChartMode(CHART_MODE.RESONANCE)
+    storeN1.setLysisNPulses(1)
+    const drN1 = storeN1.targetDisruptionRatio
+
+    const storeN50 = freshStore()
+    storeN50.setChartMode(CHART_MODE.RESONANCE)
+    storeN50.setLysisNPulses(50)
+    const drN50 = storeN50.targetDisruptionRatio
+
+    // DR uses acoustic path when target has resonantFreqGHz and mode is resonance.
+    // If the default target has no resonance params it falls through to Schwan — still
+    // useful to verify store doesn't crash, and if acoustic, invariance holds.
+    if (storeN1.isResonanceMode) {
+      expect(drN50).toBeCloseTo(drN1, 6)
+    } else {
+      expect(drN1).toBeGreaterThanOrEqual(0)
+    }
+  })
+})

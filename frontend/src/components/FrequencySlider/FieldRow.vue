@@ -156,7 +156,7 @@ export default defineComponent({
 
     tipTargetBadgeLabel(): string {
       const hfireMult  = this.cellStore.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
-      const tEffMv     = tempCorrectedVth(this.cellStore.target.thresholdVoltage, this.cellStore.targetTemp) * hfireMult * 1000
+      const tEffMv     = tempCorrectedVth(this.cellStore.target.thresholdVoltage, this.cellStore.targetTemp, this.cellStore.lysisNPulses) * hfireMult * 1000
       const targetWithEff = { ...this.cellStore.target as Parameters<typeof tipTargetBadge>[0]['target'], effThresholdMv: tEffMv }
       return tipTargetBadge({
         isResonanceMode:      this.cellStore.isResonanceMode,
@@ -171,7 +171,7 @@ export default defineComponent({
 
     tipHealthyBadgeLabel(): string {
       const hfireMult = this.cellStore.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
-      const hEffMv    = tempCorrectedVth(this.cellStore.healthy.thresholdVoltage, this.cellStore.healthyTemp) * hfireMult * 1000
+      const hEffMv    = tempCorrectedVth(this.cellStore.healthy.thresholdVoltage, this.cellStore.healthyTemp, this.cellStore.lysisNPulses) * hfireMult * 1000
       return tipHealthyBadge({
         isResonanceMode:       this.cellStore.isResonanceMode,
         healthyDisruptPercent: this.healthyDisruptPercent,

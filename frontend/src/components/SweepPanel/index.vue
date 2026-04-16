@@ -162,6 +162,7 @@ export default defineComponent({
       const perfRate   = cellStore.perfusionRate
       const wf         = waveform === WAVEFORM.CW ? WF_CW : WF_PULSED
 
+      const nPulses    = cellStore.lysisNPulses
       const tauH = computeTau(healthy, sigma_e)
       const tauT = computeTau(target,  sigma_e)
       const isPulsed   = waveform === WAVEFORM.PULSED || waveform === WAVEFORM.H_FIRE
@@ -171,7 +172,7 @@ export default defineComponent({
         ? computePulseStepResponse(tauT, pwNs)
         : 1.0
 
-      const t = target as CellConfig & { resonantFreqGHz?: number; capsidQ?: number; resonantThresholdVcm?: number }
+      const t = target as CellConfig & { resonantFreqGHz?: number; capsidQ?: number; resonantThresholdVcm?: number; resonantFreqGHz2?: number; capsidQ2?: number; resonantMode2Amplitude?: number }
 
       const points: SweepPoint[] = []
       for (let i = 0; i <= N_POINTS; i++) {
@@ -185,14 +186,14 @@ export default defineComponent({
           // Store returns targetSAR=0 in resonance mode; mirror that here for consistency.
           tT = this.isResonanceTarget ? BODY_TEMP_C : computeTemp(target, x, sigma_e, wf, dc, perfRate)
           const vmH    = computeSchwan(healthy, freqKHz, x, sigma_e, cosTheta)
-          const hVthEff = tempCorrectedVth(healthy.thresholdVoltage, tH) * hfireMult
+          const hVthEff = tempCorrectedVth(healthy.thresholdVoltage, tH, nPulses) * hfireMult
           drH = (vmH * pefH) / hVthEff
           if (this.isResonanceTarget) {
-            // hfireMult does NOT apply to acoustic resonance — mechanical disruption, not EP membrane charging.
+            // hfireMult + electrosensitization do NOT apply to acoustic resonance — mechanical disruption
             const resVthEff = tempCorrectedVth(t.resonantThresholdVcm!, tT)
-            drT = computeResonantDisruption(t.resonantFreqGHz!, t.capsidQ ?? DEFAULT_CAPSID_Q, resVthEff, freqKHz * 1e3, x)
+            drT = computeResonantDisruption(t.resonantFreqGHz!, t.capsidQ ?? DEFAULT_CAPSID_Q, resVthEff, freqKHz * 1e3, x, t.resonantFreqGHz2, t.capsidQ2, t.resonantMode2Amplitude)
           } else {
-            const tVthEff = tempCorrectedVth(target.thresholdVoltage, tT) * hfireMult
+            const tVthEff = tempCorrectedVth(target.thresholdVoltage, tT, nPulses) * hfireMult
             drT = (computeSchwan(target, freqKHz, x, sigma_e, cosTheta) * pefT) / tVthEff
           }
         } else {
@@ -202,14 +203,14 @@ export default defineComponent({
           // Store returns targetSAR=0 in resonance mode; mirror that here for consistency.
           tT = this.isResonanceTarget ? BODY_TEMP_C : computeTemp(target, E, sigma_e, wf, dc, perfRate)
           const vmH    = computeSchwan(healthy, x, E, sigma_e, cosTheta)
-          const hVthEff = tempCorrectedVth(healthy.thresholdVoltage, tH) * hfireMult
+          const hVthEff = tempCorrectedVth(healthy.thresholdVoltage, tH, nPulses) * hfireMult
           drH = (vmH * pefH) / hVthEff
           if (this.isResonanceTarget) {
-            // hfireMult does NOT apply to acoustic resonance — mechanical disruption, not EP membrane charging.
+            // hfireMult + electrosensitization do NOT apply to acoustic resonance — mechanical disruption
             const resVthEff = tempCorrectedVth(t.resonantThresholdVcm!, tT)
-            drT = computeResonantDisruption(t.resonantFreqGHz!, t.capsidQ ?? DEFAULT_CAPSID_Q, resVthEff, x * 1e3, E)
+            drT = computeResonantDisruption(t.resonantFreqGHz!, t.capsidQ ?? DEFAULT_CAPSID_Q, resVthEff, x * 1e3, E, t.resonantFreqGHz2, t.capsidQ2, t.resonantMode2Amplitude)
           } else {
-            const tVthEff = tempCorrectedVth(target.thresholdVoltage, tT) * hfireMult
+            const tVthEff = tempCorrectedVth(target.thresholdVoltage, tT, nPulses) * hfireMult
             drT = (computeSchwan(target, x, E, sigma_e, cosTheta) * pefT) / tVthEff
           }
         }

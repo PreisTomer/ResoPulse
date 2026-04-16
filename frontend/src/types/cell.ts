@@ -21,6 +21,10 @@ export interface CellConfig {
   resonantFreqGHz?: number       // Capsid/cell-wall fundamental resonant frequency (GHz)
   capsidQ?: number               // Mechanical quality factor (nominal)
   resonantThresholdVcm?: number  // Field amplitude at resonance required for disruption (V/cm)
+  // Second resonant mode (e.g. SARS-CoV-2 has a 1st dipolar mode at 4 GHz and 2nd at 7.5 GHz)
+  resonantFreqGHz2?: number      // 2nd mode resonant frequency (GHz); omit if single-mode
+  capsidQ2?: number              // Q of the 2nd mode; defaults to capsidQ if omitted
+  resonantMode2Amplitude?: number // Relative DR contribution of the 2nd mode (0-1); default 0.5
   // Resonance model uncertainty & experimental provenance
   resonantFreqUncertaintyPct?: number   // ±% uncertainty on f_res (from v_sound literature range)
   capsidQMin?: number                   // Lower Q bound for Lorentzian uncertainty band

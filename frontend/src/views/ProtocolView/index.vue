@@ -46,6 +46,7 @@
             :dep-rows="depRows"
             :uncertainty-rows="uncertaintyRows"
             :sonification-mappings="sonificationMappings"
+            :electrosensitization-examples="electrosensitizationExamples"
           />
 
           <ProtocolSectionSteps :step-keys="protocolStepKeys" />
@@ -116,6 +117,7 @@ import type {
   RawRefItem,
   RefItem,
   SonificationRow,
+  ElectrosensitizationRow,
 } from './types'
 
 const TOC_ITEMS: TocItem[] = [
@@ -133,7 +135,8 @@ const TOC_ITEMS: TocItem[] = [
   { id: 'uncertainty',    key: 'uncertainty',   indent: true },
   { id: 'biomodulation',  key: 'biomodulation', indent: true },
   { id: 'impedance',      key: 'impedance',     indent: true },
-  { id: 'sonification',   key: 'sonification',  indent: true },
+  { id: 'sonification',          key: 'sonification',          indent: true },
+  { id: 'electrosensitization',  key: 'electrosensitization',  indent: true },
   { id: 'protocol-steps', key: 'protocol',      indent: false },
   { id: 'safety',         key: 'safety',        indent: false },
   { id: 'refs',           key: 'refs',          indent: false },
@@ -144,11 +147,11 @@ const ALL_SECTION_IDS = [
   'validation',
   'physics', 'schwan', 'thermal', 'maxwell', 'disruption',
   'resonance', 'nsep', 'doubleshell', 'dep', 'uncertainty', 'biomodulation',
-  'impedance', 'sonification',
+  'impedance', 'sonification', 'electrosensitization',
   'protocol-steps', 'safety', 'refs',
 ] as const
 
-const PHYSICS_IDS = new Set(['physics', 'schwan', 'thermal', 'maxwell', 'disruption', 'resonance', 'nsep', 'doubleshell', 'dep', 'uncertainty', 'biomodulation', 'impedance', 'sonification'])
+const PHYSICS_IDS = new Set(['physics', 'schwan', 'thermal', 'maxwell', 'disruption', 'resonance', 'nsep', 'doubleshell', 'dep', 'uncertainty', 'biomodulation', 'impedance', 'sonification', 'electrosensitization'])
 
 export default defineComponent({
   name: 'ProtocolView',
@@ -215,6 +218,10 @@ export default defineComponent({
 
     sonificationMappings(): SonificationRow[] {
       return (this.$tm as Function)('protocol.physics.sonification.mappings') as SonificationRow[]
+    },
+
+    electrosensitizationExamples(): ElectrosensitizationRow[] {
+      return (this.$tm as Function)('protocol.physics.electrosensitization.examples') as ElectrosensitizationRow[]
     },
 
     refList(): RefItem[] {

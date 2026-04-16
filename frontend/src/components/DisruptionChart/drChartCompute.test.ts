@@ -45,7 +45,7 @@ const FREQ_AT_RESONANCE_HZ = ECOLI.resonantFreqGHz * 1e9  // 1.5 MHz
 
 // ── effectiveVth ──────────────────────────────────────────────────────────────
 
-describe('effectiveVth', () => {
+describe('effectiveVth — baseline (pulseCount=1, default)', () => {
   it('returns nominalVth unchanged at body temperature with hfireMult=1', () => {
     expect(effectiveVth(1.0, BODY_TEMP_C, 1.0)).toBeCloseTo(1.0, 9)
   })
@@ -60,6 +60,49 @@ describe('effectiveVth', () => {
     const vthTempOnly = effectiveVth(1.0, 42, 1.0)
     const vthHfire    = effectiveVth(1.0, 42, H_FIRE_THRESHOLD_MULTIPLIER)
     expect(vthHfire).toBeCloseTo(vthTempOnly * H_FIRE_THRESHOLD_MULTIPLIER, 9)
+  })
+
+  it('explicit pulseCount=1 matches the no-arg default', () => {
+    // Ensures the default parameter is truly 1 and not some other value
+    const withDefault  = effectiveVth(1.0, BODY_TEMP_C, 1.0)
+    const withExplicit = effectiveVth(1.0, BODY_TEMP_C, 1.0, 1)
+    expect(withExplicit).toBeCloseTo(withDefault, 12)
+  })
+})
+
+describe('effectiveVth — electrosensitization (pulseCount > 1)', () => {
+  it('N=10 reduces effective threshold vs N=1 at body temp', () => {
+    const vthN1  = effectiveVth(1.0, BODY_TEMP_C, 1.0, 1)
+    const vthN10 = effectiveVth(1.0, BODY_TEMP_C, 1.0, 10)
+    expect(vthN10).toBeLessThan(vthN1)
+  })
+
+  it('N=10: threshold factor ≈ 0.631 (10^(−0.20))', () => {
+    const expected = Math.pow(10, -0.20)
+    expect(effectiveVth(1.0, BODY_TEMP_C, 1.0, 10)).toBeCloseTo(expected, 5)
+  })
+
+  it('N=200: factor clamped at 0.35 minimum', () => {
+    // 200^(−0.20) ≈ 0.347, below the 0.35 floor
+    expect(effectiveVth(1.0, BODY_TEMP_C, 1.0, 200)).toBeCloseTo(0.35, 5)
+  })
+
+  it('H-FIRE and N are both applied (multiplicative): N=10, H-FIRE', () => {
+    // H-FIRE raises threshold by ×1.75; N=10 lowers by ×0.631 — both multiply
+    const nFactor    = Math.pow(10, -0.20)
+    const expected   = 1.0 * nFactor * H_FIRE_THRESHOLD_MULTIPLIER
+    expect(effectiveVth(1.0, BODY_TEMP_C, H_FIRE_THRESHOLD_MULTIPLIER, 10)).toBeCloseTo(expected, 5)
+  })
+
+  it('acoustic callers: passing pulseCount=1 explicitly gives N-invariant result', () => {
+    // Acoustic resonance callers always pass pulseCount=1 to prevent N from affecting
+    // mechanical capsid thresholds. This test confirms passing 1 is truly a no-op.
+    const acousticN1   = effectiveVth(800.0, BODY_TEMP_C, 1.0, 1)
+    const acousticN100 = effectiveVth(800.0, BODY_TEMP_C, 1.0, 1)  // always 1 for acoustic
+    expect(acousticN1).toBeCloseTo(acousticN100, 12)
+    // And it must NOT equal the EP result with N=100
+    const epN100 = effectiveVth(800.0, BODY_TEMP_C, 1.0, 100)
+    expect(acousticN1).toBeGreaterThan(epN100)
   })
 })
 

@@ -75,7 +75,7 @@ function pulseEnvelope(cell: CellConfig, pulseWidthNs: number, sigma_e: number):
 }
 
 // Lysis field [V/cm]: Vth_eff·hfireMult·√(1+(ωτ)²)/(1.5·R·cosθ·100·pef). Returns SENTINEL near θ=90°.
-// tempC applies the same threshold reduction as disruptionRatio, keeping E_lys consistent with DR=1.
+// tempC and nPulses apply the same threshold reductions as disruptionRatio, keeping E_lys consistent with DR=1.
 function lysisField(
   cell: CellConfig,
   freqKHz: number,
@@ -84,11 +84,12 @@ function lysisField(
   pef: number,
   hfireMult: number,
   tempC: number,
+  nPulses: number,
 ): number {
   if (cosTheta < MIN_COS_THETA) return LYSIS_FIELD_SENTINEL
   const omega   = TWO_PI * freqKHz * 1e3
   const tau     = computeTau(cell, sigma_e)
-  const vthEff  = tempCorrectedVth(cell.thresholdVoltage, tempC)
+  const vthEff  = tempCorrectedVth(cell.thresholdVoltage, tempC, nPulses)
   return (vthEff * hfireMult * Math.sqrt(1 + (omega * tau) ** 2)) /
     (SCHWAN_SPHERE_FACTOR * cell.radius * 1e-6 * cosTheta * V_CM_TO_V_M * Math.max(MIN_PULSE_ENVELOPE, pef))
 }
@@ -254,7 +255,7 @@ export const useCellStore = defineStore('cell', {
     healthyDisruptionRatio(): number {
       const state = this as CellStoreState
       const hfireMult = state.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
-      const vthEff = tempCorrectedVth(state.healthy.thresholdVoltage, state.healthyTemp)
+      const vthEff = tempCorrectedVth(state.healthy.thresholdVoltage, state.healthyTemp, state.lysisNPulses)
       return (this.healthyVm * this.pulseEnvelopeFactorHealthy) / (vthEff * hfireMult)
     },
 
@@ -269,7 +270,7 @@ export const useCellStore = defineStore('cell', {
         t.resonantFreqGHz && t.resonantThresholdVcm
       ) {
         // H-FIRE bipolar charge cancellation is an EP membrane-charging mechanism only.
-        // Acoustic resonance disruption is mechanical — hfireMult does NOT apply here.
+        // Acoustic resonance disruption is mechanical — hfireMult and electrosensitization do NOT apply here.
         const effThreshold = tempCorrectedVth(t.resonantThresholdVcm, state.targetTemp)
         return computeResonantDisruption(
           t.resonantFreqGHz,
@@ -277,9 +278,10 @@ export const useCellStore = defineStore('cell', {
           effThreshold,
           state.currentBroadcastFrequency * KHZ_TO_HZ,  // kHz → Hz
           state.fieldIntensity,
+          t.resonantFreqGHz2, t.capsidQ2, t.resonantMode2Amplitude,
         )
       }
-      const vthEff = tempCorrectedVth(state.target.thresholdVoltage, state.targetTemp)
+      const vthEff = tempCorrectedVth(state.target.thresholdVoltage, state.targetTemp, state.lysisNPulses)
       return (this.targetVm * this.pulseEnvelopeFactorTarget) / (vthEff * hfireMult)
     },
 
@@ -335,9 +337,9 @@ export const useCellStore = defineStore('cell', {
           const hDr    = this.healthyDisruptionRatio
           const freqHz = state.currentBroadcastFrequency * KHZ_TO_HZ
           // Q_min → smaller Lorentzian peak → lower DR_T → lower TI (worst case)
-          const drTMin = computeResonantDisruption(t.resonantFreqGHz, t.capsidQMin, effThr, freqHz, state.fieldIntensity)
+          const drTMin = computeResonantDisruption(t.resonantFreqGHz, t.capsidQMin, effThr, freqHz, state.fieldIntensity, t.resonantFreqGHz2, t.capsidQ2, t.resonantMode2Amplitude)
           // Q_max → taller Lorentzian peak → higher DR_T → higher TI (best case)
-          const drTMax = computeResonantDisruption(t.resonantFreqGHz, t.capsidQMax, effThr, freqHz, state.fieldIntensity)
+          const drTMax = computeResonantDisruption(t.resonantFreqGHz, t.capsidQMax, effThr, freqHz, state.fieldIntensity, t.resonantFreqGHz2, t.capsidQ2, t.resonantMode2Amplitude)
           const tiFromDr = (dr: number) =>
             safeRatio(dr, hDr, THRESHOLDS.TI_DISPLAY_CAP, NEAR_ZERO_DR)
           return { low: tiFromDr(drTMin), high: tiFromDr(drTMax) }
@@ -355,10 +357,10 @@ export const useCellStore = defineStore('cell', {
       const vmHHigh = computeSchwan({ ...state.healthy, conductivity: state.healthy.conductivity * (1 + uncH) }, freq, field, sigma_e, cosT)
       const pefT    = this.pulseEnvelopeFactorTarget
       const pefH    = this.pulseEnvelopeFactorHealthy
-      // Apply same temperature correction + H-FIRE multiplier as the live DR getters
+      // Apply same temperature + electrosensitization correction + H-FIRE multiplier as the live DR getters
       const hfireMult = state.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
-      const vthT = tempCorrectedVth(state.target.thresholdVoltage, state.targetTemp)
-      const vthH = tempCorrectedVth(state.healthy.thresholdVoltage, state.healthyTemp)
+      const vthT = tempCorrectedVth(state.target.thresholdVoltage, state.targetTemp, state.lysisNPulses)
+      const vthH = tempCorrectedVth(state.healthy.thresholdVoltage, state.healthyTemp, state.lysisNPulses)
       const drTLow  = (vmTLow  * pefT) / (vthT * hfireMult)
       const drHHigh = (vmHHigh * pefH) / (vthH * hfireMult)
       const tiLow   = Math.max(0, safeRatio(drTLow, drHHigh, THRESHOLDS.TI_DISPLAY_CAP, NEAR_ZERO_DR))
@@ -409,7 +411,7 @@ export const useCellStore = defineStore('cell', {
 
     healthyNuclearDisruptionRatio(): number {
       const state     = this as CellStoreState
-      const vth       = tempCorrectedVth(state.healthy.nuclearThresholdVoltage ?? THRESHOLDS.NUCLEAR_VM_DEFAULT, state.healthyTemp)
+      const vth       = tempCorrectedVth(state.healthy.nuclearThresholdVoltage ?? THRESHOLDS.NUCLEAR_VM_DEFAULT, state.healthyTemp, state.lysisNPulses)
       const hfireMult = state.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
       // Nuclear membrane is gated by outer membrane charging: apply outer PEF so nuclear DR
       // correctly approaches 0 for short pulses (t_p << τ_out), consistent with outer DR.
@@ -418,7 +420,7 @@ export const useCellStore = defineStore('cell', {
 
     targetNuclearDisruptionRatio(): number {
       const state     = this as CellStoreState
-      const vth       = tempCorrectedVth(state.target.nuclearThresholdVoltage ?? THRESHOLDS.NUCLEAR_VM_DEFAULT, state.targetTemp)
+      const vth       = tempCorrectedVth(state.target.nuclearThresholdVoltage ?? THRESHOLDS.NUCLEAR_VM_DEFAULT, state.targetTemp, state.lysisNPulses)
       const hfireMult = state.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
       // Nuclear membrane is gated by outer membrane charging: apply outer PEF so nuclear DR
       // correctly approaches 0 for short pulses (t_p << τ_out), consistent with outer DR.
@@ -432,13 +434,13 @@ export const useCellStore = defineStore('cell', {
     targetLysisField(): number {
       const state    = this as CellStoreState
       const hfireMult = state.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
-      return lysisField(state.target, state.currentBroadcastFrequency, this.effectiveSigmaE, this.cosThetaFactor, this.pulseEnvelopeFactorTarget, hfireMult, state.targetTemp)
+      return lysisField(state.target, state.currentBroadcastFrequency, this.effectiveSigmaE, this.cosThetaFactor, this.pulseEnvelopeFactorTarget, hfireMult, state.targetTemp, state.lysisNPulses)
     },
 
     healthyLysisField(): number {
       const state    = this as CellStoreState
       const hfireMult = state.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
-      return lysisField(state.healthy, state.currentBroadcastFrequency, this.effectiveSigmaE, this.cosThetaFactor, this.pulseEnvelopeFactorHealthy, hfireMult, state.healthyTemp)
+      return lysisField(state.healthy, state.currentBroadcastFrequency, this.effectiveSigmaE, this.cosThetaFactor, this.pulseEnvelopeFactorHealthy, hfireMult, state.healthyTemp, state.lysisNPulses)
     },
 
     healthySteadyStateTemp(): number {
@@ -584,11 +586,13 @@ export const useCellStore = defineStore('cell', {
         const drT = computeResonantDisruption(
           target.resonantFreqGHz, target.capsidQ ?? DEFAULT_CAPSID_Q, effThr,
           freqKhz * KHZ_TO_HZ, state.fieldIntensity,
+          target.resonantFreqGHz2, target.capsidQ2, target.resonantMode2Amplitude,
         )
         const sigma_e   = this.effectiveSigmaE
         const hfireMult = state.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
+        // Acoustic resonance optimal frequency: healthy DR uses EP threshold (with N), target uses resonance (no N)
         const hVm = computeSchwan(state.healthy, freqKhz, state.fieldIntensity, sigma_e, this.cosThetaFactor)
-        const drH = (hVm * this.pulseEnvelopeFactorHealthy) / (tempCorrectedVth(state.healthy.thresholdVoltage, state.healthyTemp) * hfireMult)
+        const drH = (hVm * this.pulseEnvelopeFactorHealthy) / (tempCorrectedVth(state.healthy.thresholdVoltage, state.healthyTemp, state.lysisNPulses) * hfireMult)
         return { khz: freqKhz, sel: safeRatio(drT, drH, THRESHOLDS.TI_DISPLAY_CAP, NEAR_ZERO_DR) }
       }
 
@@ -601,6 +605,7 @@ export const useCellStore = defineStore('cell', {
         state.target.id, state.target.radius, state.target.membraneThickness,
         state.target.dielectricConstant, state.target.conductivity, state.target.thresholdVoltage,
         state.waveform, state.dutyCycle, state.pulseWidthNs, state.chartMode,
+        state.lysisNPulses,  // electrosensitization affects threshold used in the scan
         Math.round(sigma_e * 1e6),  // µS/m precision — avoids misses from tiny temp-driven σ_e drift
         Math.round(state.healthyTemp * 10), Math.round(state.targetTemp * 10),
       ].join('|')
@@ -608,8 +613,8 @@ export const useCellStore = defineStore('cell', {
       if (_optFreqCache?.key === cacheKey) return _optFreqCache.result
 
       const hfireMult = state.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
-      const hThr = tempCorrectedVth(state.healthy.thresholdVoltage, state.healthyTemp) * hfireMult
-      const tThr = tempCorrectedVth(state.target.thresholdVoltage,  state.targetTemp)  * hfireMult
+      const hThr = tempCorrectedVth(state.healthy.thresholdVoltage, state.healthyTemp, state.lysisNPulses) * hfireMult
+      const tThr = tempCorrectedVth(state.target.thresholdVoltage,  state.targetTemp,  state.lysisNPulses) * hfireMult
       const pefH = this.pulseEnvelopeFactorHealthy
       const pefT = this.pulseEnvelopeFactorTarget
       // cosTheta and field cancel in the tDr/hDr ratio — use unit field to avoid a reactive
@@ -671,25 +676,25 @@ export const useCellStore = defineStore('cell', {
     },
 
     // Quasi-DC TI ceiling: (R_T × Vth_H) / (R_H × Vth_T). PEF and H-FIRE cancel in the ratio.
-    // Temperature correction applied: cells may be at different steady-state temperatures.
+    // Temperature and electrosensitization corrections applied consistently.
     tiQuasiDc(): number {
       const state = this as CellStoreState
-      const vthT = tempCorrectedVth(state.target.thresholdVoltage,  state.targetTemp)
-      const vthH = tempCorrectedVth(state.healthy.thresholdVoltage, state.healthyTemp)
+      const vthT = tempCorrectedVth(state.target.thresholdVoltage,  state.targetTemp,  state.lysisNPulses)
+      const vthH = tempCorrectedVth(state.healthy.thresholdVoltage, state.healthyTemp, state.lysisNPulses)
       if (vthT <= 0) return 0
       return (state.target.radius * vthH) / (state.healthy.radius * vthT)
     },
 
     // High-frequency TI limit: (R_T·τ_H·Vth_H) / (R_H·τ_T·Vth_T). Sub-unity when target rolls
     // off faster than healthy (larger R or higher Cm). Valid only in Schwan/IRE mode.
-    // Temperature correction applied: cells may be at different steady-state temperatures.
+    // Temperature and electrosensitization corrections applied consistently.
     tiHighFreqLimit(): number {
       const state = this as CellStoreState
       const sigma_e = this.effectiveSigmaE
       const tauT = computeTau(state.target,  sigma_e)
       const tauH = computeTau(state.healthy, sigma_e)
-      const vthT = tempCorrectedVth(state.target.thresholdVoltage,  state.targetTemp)
-      const vthH = tempCorrectedVth(state.healthy.thresholdVoltage, state.healthyTemp)
+      const vthT = tempCorrectedVth(state.target.thresholdVoltage,  state.targetTemp,  state.lysisNPulses)
+      const vthH = tempCorrectedVth(state.healthy.thresholdVoltage, state.healthyTemp, state.lysisNPulses)
       if (tauT <= 0 || vthT <= 0) return 0
       return (state.target.radius * tauH * vthH) / (state.healthy.radius * tauT * vthT)
     },
