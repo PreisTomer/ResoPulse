@@ -54,7 +54,7 @@ import { useTokenStore } from '@/stores/tokenStore'
 import AccordionPanel from '@/components/AccordionPanel/index.vue'
 
 import {
-  computeSchwan, computeSAR, computeTau, computePulseStepResponse,
+  computeSchwan, computeSAR, computeSteadyStateTemp, computeTau, computePulseStepResponse,
   computeResonantDisruption, tempCorrectedVth,
 } from '@/utils/physics'
 import { formatFreqKHz } from '@/utils/format'
@@ -62,7 +62,7 @@ import { formatFreqKHz } from '@/utils/format'
 import { WAVEFORM, CELL_CATEGORY } from '@/constants/strings'
 import {
   THRESHOLDS, DEFAULT_CAPSID_Q, NEAR_ZERO_DR,
-  NEWTON_COOLING_LAMBDA, PENNES_BLOOD_COEFF, WF_CW, WF_PULSED, BODY_TEMP_C,
+  WF_CW, WF_PULSED, BODY_TEMP_C,
   H_FIRE_THRESHOLD_MULTIPLIER,
 } from '@/constants/physics'
 import { ICON } from '@/constants/icons'
@@ -93,15 +93,6 @@ interface KeyPoint {
   x: number; drH: number; drT: number; ti: number; tH: number; tT: number
 }
 
-function computeTemp(cell: CellConfig, E: number, sigma_e: number, wf: number, dc: number, perfRate: number): number {
-  const sar         = computeSAR(cell, E, sigma_e, wf)
-  const sarEff      = sar * dc
-  const lambdaPerf  = perfRate * PENNES_BLOOD_COEFF / cell.specificHeatCapacity
-  return Math.min(
-    BODY_TEMP_C + sarEff / ((NEWTON_COOLING_LAMBDA + lambdaPerf) * cell.specificHeatCapacity),
-    THRESHOLDS.TEMP_CAP,
-  )
-}
 
 export default defineComponent({
   components: { AccordionPanel, SweepControls, SweepChart, SweepWindowInfo, SweepKeyPoints },
@@ -181,10 +172,10 @@ export default defineComponent({
 
         if (this.sweepParam === 'field') {
           // Compute per-point temperatures first so threshold correction uses the local steady-state temp
-          tH = computeTemp(healthy, x, sigma_e, wf, dc, perfRate)
+          tH = computeSteadyStateTemp(computeSAR(healthy, x, sigma_e, wf), dc, healthy.specificHeatCapacity, perfRate)
           // Resonance targets: acoustic disruption is mechanical — Joule SAR does not apply.
           // Store returns targetSAR=0 in resonance mode; mirror that here for consistency.
-          tT = this.isResonanceTarget ? BODY_TEMP_C : computeTemp(target, x, sigma_e, wf, dc, perfRate)
+          tT = this.isResonanceTarget ? BODY_TEMP_C : computeSteadyStateTemp(computeSAR(target, x, sigma_e, wf), dc, target.specificHeatCapacity, perfRate)
           const vmH    = computeSchwan(healthy, freqKHz, x, sigma_e, cosTheta)
           const hVthEff = tempCorrectedVth(healthy.thresholdVoltage, tH, nPulses) * hfireMult
           drH = (vmH * pefH) / hVthEff
@@ -198,10 +189,10 @@ export default defineComponent({
           }
         } else {
           // Compute per-point temperatures first so threshold correction uses the local steady-state temp
-          tH = computeTemp(healthy, E, sigma_e, wf, dc, perfRate)
+          tH = computeSteadyStateTemp(computeSAR(healthy, E, sigma_e, wf), dc, healthy.specificHeatCapacity, perfRate)
           // Resonance targets: acoustic disruption is mechanical — Joule SAR does not apply.
           // Store returns targetSAR=0 in resonance mode; mirror that here for consistency.
-          tT = this.isResonanceTarget ? BODY_TEMP_C : computeTemp(target, E, sigma_e, wf, dc, perfRate)
+          tT = this.isResonanceTarget ? BODY_TEMP_C : computeSteadyStateTemp(computeSAR(target, E, sigma_e, wf), dc, target.specificHeatCapacity, perfRate)
           const vmH    = computeSchwan(healthy, x, E, sigma_e, cosTheta)
           const hVthEff = tempCorrectedVth(healthy.thresholdVoltage, tH, nPulses) * hfireMult
           drH = (vmH * pefH) / hVthEff

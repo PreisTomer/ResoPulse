@@ -35,6 +35,8 @@ import { broadcastStateSync } from '@/services/socket'
 
 import { computeResonantDisruption } from '@/utils/physics'
 
+import { logspace } from '@/utils/math'
+
 import { C } from '@/theme/colors'
 
 import { DEFAULT_CAPSID_Q } from '@/constants/physics'
@@ -55,11 +57,6 @@ const Y_MAX = 1.5
 const MARGIN = { top: 22, right: 72, bottom: 52, left: 54 }
 
 type ResonantCell = CellConfig & { resonantFreqGHz?: number; capsidQ?: number; resonantThresholdVcm?: number; resonantFreqGHz2?: number; capsidQ2?: number; resonantMode2Amplitude?: number; group?: CellGroup }
-
-function logspace(min: number, max: number, n: number): number[] {
-  const step = (Math.log10(max) - Math.log10(min)) / (n - 1)
-  return Array.from({ length: n }, (_, i) => Math.pow(10, Math.log10(min) + i * step))
-}
 
 const F_POINTS_HZ = logspace(F_MIN_HZ, F_MAX_HZ, N_POINTS)
 

@@ -1,7 +1,7 @@
 // Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 
 // Biophysics utilities - Schwan single-shell model, SAR, nsEP, acoustic resonance, EM skin depth
-import { SCHWAN_SPHERE_FACTOR, WF_CW, EPSILON_R_CYTOPLASM, SIGMA_MEMBRANE_SI, TWO_PI, POP_LYSIS_GAUSS_N, POP_LYSIS_GAUSS_Z_MAX, BODY_TEMP_C, TEMP_EP_COEFF, TEMP_EP_CLAMP_MIN, ELECTROSENSITIZATION_EXPONENT, ELECTROSENSITIZATION_CLAMP_MIN, EPSILON_0, MU_0, MIN_COS_THETA, LYSIS_FIELD_SENTINEL, MIN_PULSE_ENVELOPE, THRESHOLDS } from '@/constants/physics'
+import { SCHWAN_SPHERE_FACTOR, WF_CW, EPSILON_R_CYTOPLASM, SIGMA_MEMBRANE_SI, TWO_PI, POP_LYSIS_GAUSS_N, POP_LYSIS_GAUSS_Z_MAX, BODY_TEMP_C, TEMP_EP_COEFF, TEMP_EP_CLAMP_MIN, ELECTROSENSITIZATION_EXPONENT, ELECTROSENSITIZATION_CLAMP_MIN, EPSILON_0, MU_0, MIN_COS_THETA, LYSIS_FIELD_SENTINEL, MIN_PULSE_ENVELOPE, THRESHOLDS, NEWTON_COOLING_LAMBDA, PENNES_BLOOD_COEFF } from '@/constants/physics'
 
 import type { CellConfig } from '@/types/cell'
 
@@ -336,4 +336,48 @@ export function computeSigmaUncertaintyFactor(radius: number): number {
   if (radius < THRESHOLDS.RADIUS_VIRUS_MAX)    return THRESHOLDS.UNCERTAINTY_VIRUS
   if (radius < THRESHOLDS.RADIUS_BACTERIA_MAX) return THRESHOLDS.UNCERTAINTY_BACTERIA
   return THRESHOLDS.UNCERTAINTY_MAMMALIAN
+}
+
+// Steady-state temperature [°C] via Newton cooling + Pennes perfusion. Pennes 1948.
+// sar [W/kg], dc [0-1], specificHeat [J/(kg·K)], perfusionRate [mL/(g·min)].
+export function computeSteadyStateTemp(
+  sar:              number,
+  dc:               number,
+  specificHeat:     number,
+  perfusionRate:    number,
+): number {
+  const sarEff     = sar * dc
+  const lambdaPerf = perfusionRate * PENNES_BLOOD_COEFF / specificHeat
+  return Math.min(
+    BODY_TEMP_C + sarEff / ((NEWTON_COOLING_LAMBDA + lambdaPerf) * specificHeat),
+    THRESHOLDS.TEMP_CAP,
+  )
+}
+
+// Lysis-threshold field [V/cm] from flat cell parameters. Used by the AI optimisation
+// payload builder in socket.ts where a full CellConfig is not available.
+// Returns a value clamped to [10, 100 000] V/cm — prevents sentinel values in the payload.
+export function computeLysisFieldFromParams(
+  radiusUm:      number,
+  memThicknessNm: number,
+  dielectricConst: number,
+  conductivitySi: number,
+  thresholdV:    number,    // already temperature + electrosensitization corrected
+  freqKhz:       number,
+  sigmaE:        number,
+  waveform:      string,
+  pulseWidthNs:  number,
+  cosTheta:      number,
+  hfireMult:     number,
+): number {
+  const cell = { radius: radiusUm, membraneThickness: memThicknessNm, dielectricConstant: dielectricConst, conductivity: conductivitySi } as CellConfig
+  const tau   = computeTau(cell, sigmaE)
+  const pef   = (waveform === 'pulsed' || waveform === 'hfire')
+    ? Math.max(MIN_PULSE_ENVELOPE, computePulseStepResponse(tau, pulseWidthNs))
+    : 1.0
+  if (cosTheta < 1e-6) return 100_000
+  const omega = TWO_PI * freqKhz * KHZ_TO_HZ
+  const E_vm  = thresholdV * hfireMult * Math.sqrt(1 + (omega * tau) ** 2) /
+                (SCHWAN_SPHERE_FACTOR * radiusUm * UM_TO_M * cosTheta * pef)
+  return Math.min(Math.max(E_vm / VCM_TO_VM, 10), 100_000)
 }

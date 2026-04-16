@@ -14,9 +14,9 @@ import { useImpedanceStore } from '@/stores/impedanceStore'
 import type { HardwareImpedancePacket } from '@/stores/impedanceStore'
 import { useAiStore } from '@/stores/aiStore'
 
-import { computeTau, computeSchwan, computePulseStepResponse, computeResonantDisruption, tempCorrectedVth } from '@/utils/physics'
+import { computeTau, computeSchwan, computePulseStepResponse, computeResonantDisruption, computeLysisFieldFromParams, tempCorrectedVth } from '@/utils/physics'
 
-import { SCHWAN_SPHERE_FACTOR, TWO_PI, MIN_PULSE_ENVELOPE, H_FIRE_THRESHOLD_MULTIPLIER, DEFAULT_CAPSID_Q, THRESHOLDS } from '@/constants/physics'
+import { MIN_PULSE_ENVELOPE, H_FIRE_THRESHOLD_MULTIPLIER, DEFAULT_CAPSID_Q, THRESHOLDS } from '@/constants/physics'
 
 // URL priority: ?backend=<url> → VITE_BACKEND_URL → localhost:3001
 function resolveBackendUrl(): string {
@@ -233,29 +233,6 @@ export interface AiOptimizeResult {
 
 type AiResultCallback = (result: AiOptimizeResult) => void
 
-// ── Physics baseline helpers (pure, no store dependency) ─────────────────────
-
-// Lysis-threshold field [V/cm] at a given frequency, accounting for pulse width and orientation.
-function lysisFieldAtFreq(
-  radiusUm: number, memThicknessNm: number, dielectricConst: number,
-  conductivitySi: number, thresholdV: number,
-  freqKhz: number, sigmaE: number,
-  waveform: string, pulseWidthNs: number,
-  cosTheta: number, hfireMult: number,
-): number {
-  const tau   = computeTau(
-    { radius: radiusUm, membraneThickness: memThicknessNm, dielectricConstant: dielectricConst, conductivity: conductivitySi } as Parameters<typeof computeTau>[0],
-    sigmaE,
-  )
-  const pef   = (waveform === 'pulsed' || waveform === 'hfire') ? Math.max(MIN_PULSE_ENVELOPE, computePulseStepResponse(tau, pulseWidthNs)) : 1.0
-  const omega = TWO_PI * freqKhz * 1e3
-  // E_lysis = Vth × hfireMult × √(1 + (ωτ)²) / (1.5 × R × cosθ × pef). Solve Schwan for E.
-  // cosTheta = 0 (90° orientation) → field cannot couple to membrane; return sentinel.
-  if (cosTheta < 1e-6) return 100_000
-  const E_vm  = thresholdV * hfireMult * Math.sqrt(1 + (omega * tau) ** 2) /
-                (SCHWAN_SPHERE_FACTOR * radiusUm * 1e-6 * cosTheta * pef)
-  return Math.min(Math.max(E_vm / 100, 10), 100_000)   // V/m → V/cm, clamped
-}
 
 // Emit AI optimisation request. Frontend pre-computes all physics; Python service is pure ML.
 export function requestAiOptimization(requestId: string, onResult: AiResultCallback): void {
@@ -293,7 +270,7 @@ export function requestAiOptimization(requestId: string, onResult: AiResultCallb
     predDrT = computeResonantDisruption(tr.resonantFreqGHz, tr.capsidQ ?? DEFAULT_CAPSID_Q, tVthEff, optFreqKhz * 1e3, suggestedFieldVcm, tr.resonantFreqGHz2, tr.capsidQ2, tr.resonantMode2Amplitude)
   } else {
     // Schwan path: invert the equation to find the lysis field, then predict DR.
-    suggestedFieldVcm = lysisFieldAtFreq(
+    suggestedFieldVcm = computeLysisFieldFromParams(
       store.target.radius, store.target.membraneThickness, store.target.dielectricConstant,
       store.target.conductivity, tempCorrectedVth(store.target.thresholdVoltage, store.targetTemp, store.lysisNPulses),
       optFreqKhz, sigmaE, waveform, pulseWidthNs, cosT, hfireMult,

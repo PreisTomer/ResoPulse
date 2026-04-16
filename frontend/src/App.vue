@@ -38,8 +38,7 @@ import { useTokenStore } from './stores/tokenStore'
 import { useUserPresetsStore } from './stores/userPresetsStore'
 
 import { ROUTE } from './constants/routes'
-
-const TERMS_KEY = 'rp_terms_v1'
+import { STORAGE_KEY } from './constants/storageKeys'
 
 export default defineComponent({
   components: { NavBar, ModeBanner, LiteratureStrip, TermsGate, ProtocolGuidePanel },
@@ -80,7 +79,7 @@ export default defineComponent({
 
   data() {
     return {
-      termsAccepted: localStorage.getItem(TERMS_KEY) === '1',
+      termsAccepted: localStorage.getItem(STORAGE_KEY.TERMS_ACCEPTED) === '1',
     }
   },
 

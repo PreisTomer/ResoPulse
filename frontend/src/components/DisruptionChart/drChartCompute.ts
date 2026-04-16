@@ -2,6 +2,8 @@
 
 import { computeSchwan, computeResonantDisruption, tempCorrectedVth } from '@/utils/physics'
 
+import { logspace } from '@/utils/math'
+
 import { DEFAULT_CAPSID_Q } from '@/constants/physics'
 import { UNIT } from '@/constants/units'
 
@@ -35,12 +37,6 @@ export const DR_LYSIS  = 85   // lysis boundary
 export type CurvePoint = { hz: number; hDR: number; tDR: number }
 
 // ── Frequency point generation ──────────────────────────────────────────────
-
-// N logarithmically-spaced points between min and max
-export function logspace(min: number, max: number, n: number): number[] {
-  const step = (Math.log10(max) - Math.log10(min)) / (n - 1)
-  return Array.from({ length: n }, (_, i) => Math.pow(10, Math.log10(min) + i * step))
-}
 
 export const F_POINTS_HZ: number[] = logspace(F_MIN_HZ, F_MAX_HZ, N_POINTS)
 

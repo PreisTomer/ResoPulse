@@ -53,7 +53,8 @@ import { defineComponent } from 'vue'
 
 import { EMIT } from '@/constants/emitEvents'
 import { ROUTE } from '@/constants/routes'
-const STORAGE_KEY = 'rp_terms_v1'
+
+import { STORAGE_KEY } from '@/constants/storageKeys'
 
 export default defineComponent({
   name: 'TermsGate',
@@ -73,7 +74,7 @@ export default defineComponent({
   methods: {
     accept() {
       if (!this.agreed) return
-      localStorage.setItem(STORAGE_KEY, '1')
+      localStorage.setItem(STORAGE_KEY.TERMS_ACCEPTED, '1')
       this.$emit(EMIT.ACCEPTED)
     },
   },

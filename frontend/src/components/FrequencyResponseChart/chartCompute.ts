@@ -1,6 +1,8 @@
 // Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 
-import { computeSchwan, computeNuclearVm, computeDepCmReal } from '@/utils/physics'
+import { computeSchwan, computeNuclearVm, computeDepCmReal, computeSigmaUncertaintyFactor } from '@/utils/physics'
+
+import { logspace } from '@/utils/math'
 
 import { UNIT } from '@/constants/units'
 
@@ -14,13 +16,7 @@ export const F_CURSOR_MAX_KHZ = 10_000    // 10 MHz, covers bacteria fc range
 export const N_POINTS         = 200
 export const MARGIN            = { top: 22, right: 130, bottom: 52, left: 54 }
 
-// ── Frequency grid ────────────────────────────────────────────────────────────
-
-// N logarithmically-spaced points between min and max
-export function logspace(min: number, max: number, n: number): number[] {
-  const step = (Math.log10(max) - Math.log10(min)) / (n - 1)
-  return Array.from({ length: n }, (_, i) => Math.pow(10, Math.log10(min) + i * step))
-}
+export { logspace }
 
 export const F_POINTS_HZ: number[] = logspace(F_MIN_HZ, F_MAX_HZ, N_POINTS)
 
@@ -39,13 +35,9 @@ export function formatTooltipFreq(hz: number): string {
   return `${(hz / 1e3).toFixed(1)} ${UNIT.KHZ}`
 }
 
-// ── Uncertainty ───────────────────────────────────────────────────────────────
-
-// σ_i uncertainty % by category: virus R<0.1µm=45%, bacteria R<2µm=35%, mammalian=20%
+// σ_i uncertainty [%] by category — wraps the canonical physics factor × 100.
 export function sigmaUncPct(radius: number): number {
-  if (radius < 0.1) return 45
-  if (radius < 2.0) return 35
-  return 20
+  return computeSigmaUncertaintyFactor(radius) * 100
 }
 
 // ── Curve computers ───────────────────────────────────────────────────────────

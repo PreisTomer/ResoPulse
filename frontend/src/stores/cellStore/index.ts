@@ -8,7 +8,7 @@ import { cloneDeep } from 'lodash'
 import { useExperimentStore } from '@/stores/experimentStore'
 import { useUserPresetsStore } from '@/stores/userPresetsStore'
 
-import { computeSchwan, computeSAR, computeFc, computeTau, computeNuclearTau, computeResonantDisruption, computeNuclearVm, computeSkinDepthMm, computeDepCmReal, computeDepCrossoverKHz, computeDepSecondCrossoverKHz, computePopulationLysisFraction, safeRatio, tempCorrectedVth, computePulseEnvelope, computeLysisField, computeSigmaUncertaintyFactor } from '@/utils/physics'
+import { computeSchwan, computeSAR, computeSteadyStateTemp, computeFc, computeTau, computeNuclearTau, computeResonantDisruption, computeNuclearVm, computeSkinDepthMm, computeDepCmReal, computeDepCrossoverKHz, computeDepSecondCrossoverKHz, computePopulationLysisFraction, safeRatio, tempCorrectedVth, computePulseEnvelope, computeLysisField, computeSigmaUncertaintyFactor } from '@/utils/physics'
 
 import { cellConfigs } from '@/constants/defaultCells'
 import { CELL_PRESETS } from '@/constants/cellLibrary'
@@ -406,29 +406,15 @@ export const useCellStore = defineStore('cell', {
     },
 
     healthySteadyStateTemp(): number {
-      const state = this as CellStoreState
-      const sar_eff = this.healthySAR * this.effectiveDutyCycle
-      const cp = state.healthy.specificHeatCapacity
-      const lambda_perf = state.perfusionRate * PENNES_BLOOD_COEFF / cp
-      return Math.min(BODY_TEMP_C + sar_eff / ((NEWTON_COOLING_LAMBDA + lambda_perf) * cp), THRESHOLDS.TEMP_CAP)
+      return computeSteadyStateTemp(this.healthySAR, this.effectiveDutyCycle, (this as CellStoreState).healthy.specificHeatCapacity, (this as CellStoreState).perfusionRate)
     },
 
     targetSteadyStateTemp(): number {
-      const state = this as CellStoreState
-      const sar_eff = this.targetSAR * this.effectiveDutyCycle
-      const cp = state.target.specificHeatCapacity
-      const lambda_perf = state.perfusionRate * PENNES_BLOOD_COEFF / cp
-      return Math.min(BODY_TEMP_C + sar_eff / ((NEWTON_COOLING_LAMBDA + lambda_perf) * cp), THRESHOLDS.TEMP_CAP)
+      return computeSteadyStateTemp(this.targetSAR, this.effectiveDutyCycle, (this as CellStoreState).target.specificHeatCapacity, (this as CellStoreState).perfusionRate)
     },
 
     bulkMediumSteadyStateTempC(): number {
-      const dc          = this.effectiveDutyCycle
-      const cp_m        = MEDIUM_SPECIFIC_HEAT_J_KG_K
-      const lambda_perf = (this as CellStoreState).perfusionRate * PENNES_BLOOD_COEFF / cp_m
-      return Math.min(
-        BODY_TEMP_C + (this.mediumJouleHeatingSAR * dc) / ((NEWTON_COOLING_LAMBDA + lambda_perf) * cp_m),
-        THRESHOLDS.TEMP_CAP,
-      )
+      return computeSteadyStateTemp(this.mediumJouleHeatingSAR, this.effectiveDutyCycle, MEDIUM_SPECIFIC_HEAT_J_KG_K, (this as CellStoreState).perfusionRate)
     },
 
     pulsedEnergyDensity_mJcm3(): number {
