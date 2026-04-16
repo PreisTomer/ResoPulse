@@ -97,9 +97,10 @@ describe('resonance mode path isolation', () => {
 describe('waveform × DR consistency', () => {
   it('CW: effective duty cycle = 1.0, DR uses full Vm', () => {
     const store = freshStore()
+    store.setLysisNPulses(1)  // pin N=1 so electrosensitization factor = 1 (test is about waveform, not N)
     store.setWaveform(WAVEFORM.CW)
     expect(store.effectiveDutyCycle).toBe(1.0)
-    // PEF = 1 for CW → DR = Vm / Vth
+    // PEF = 1 for CW, N=1 → DR = Vm / Vth (no pulse envelope or electrosensitization correction)
     const expectedDR = store.healthyVm / store.healthy.thresholdVoltage
     expect(store.healthyDisruptionRatio).toBeCloseTo(expectedDR, 6)
   })
@@ -272,10 +273,11 @@ describe('temperature correction in DR', () => {
 
   it('temperature correction is absent at T = 37°C (baseline)', () => {
     const store = freshStore()
+    store.setLysisNPulses(1)  // pin N=1 so electrosensitization factor = 1 (test isolates temp correction)
     store.$patch({ targetTemp: BODY_TEMP_C })
     const drBaseline = store.targetDisruptionRatio
 
-    // DR should match the uncorrected formula exactly
+    // At T=37°C with N=1: temp factor = 1.0, N factor = 1.0 → DR = Vm * PEF / Vth exactly
     const vmT = store.targetVm
     const vthNominal = store.target.thresholdVoltage
     const expectedDR = (vmT * store.pulseEnvelopeFactorTarget) / vthNominal

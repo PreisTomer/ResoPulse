@@ -10,6 +10,7 @@ import { describe, it, expect } from 'vitest'
 import { H_FIRE_THRESHOLD_MULTIPLIER } from '@/constants/physics'
 import { SLIDER_RANGES }    from '@/constants/sliderBounds'
 import { CELL_CATEGORY, WAVEFORM, CHART_MODE } from '@/constants/strings'
+import { CELL_PRESETS } from '@/constants/cellLibrary'
 
 import { useCellStore }    from './cellStore'
 
@@ -461,25 +462,23 @@ describe('electrosensitization — TI selectivity is N-invariant', () => {
 
 describe('electrosensitization — acoustic resonance path is N-invariant', () => {
   it('targetDisruptionRatio in resonance mode does not change when N changes', () => {
-    // Load a bacteria-like target with resonance params, switch to resonance mode.
-    // The acoustic DR path explicitly does NOT pass lysisNPulses.
+    // Load E. coli (has resonantFreqGHz + capsidQ + resonantThresholdVcm) so the target
+    // actually takes the acoustic path. The acoustic DR path never receives lysisNPulses.
+    const ecoli = CELL_PRESETS.find(p => p.presetId === 'ecoli')!
+
     const storeN1 = freshStore()
+    storeN1.loadPreset('target', ecoli)
     storeN1.setChartMode(CHART_MODE.RESONANCE)
     storeN1.setLysisNPulses(1)
     const drN1 = storeN1.targetDisruptionRatio
 
     const storeN50 = freshStore()
+    storeN50.loadPreset('target', ecoli)
     storeN50.setChartMode(CHART_MODE.RESONANCE)
     storeN50.setLysisNPulses(50)
     const drN50 = storeN50.targetDisruptionRatio
 
-    // DR uses acoustic path when target has resonantFreqGHz and mode is resonance.
-    // If the default target has no resonance params it falls through to Schwan — still
-    // useful to verify store doesn't crash, and if acoustic, invariance holds.
-    if (storeN1.isResonanceMode) {
-      expect(drN50).toBeCloseTo(drN1, 6)
-    } else {
-      expect(drN1).toBeGreaterThanOrEqual(0)
-    }
+    // Acoustic disruption is mechanical — N-pulse electrosensitization does not apply.
+    expect(drN50).toBeCloseTo(drN1, 6)
   })
 })
