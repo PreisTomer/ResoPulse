@@ -10,7 +10,7 @@ import type { TokenBalance, TokenPlan } from '@/types/token'
 
 import { hasGuestSession } from '@/services/socket'
 
-const BACKEND_URL = (import.meta.env.VITE_BACKEND_URL as string ?? 'http://localhost:3001').replace(/\/$/, '')
+import { BACKEND_URL, getAuthToken } from '@/services/apiClient'
 
 // Refresh interval in ms — balance is polled every 5 minutes while the tab is active.
 const POLL_INTERVAL_MS = 5 * 60 * 1_000
@@ -87,7 +87,7 @@ export const useTokenStore = defineStore('token', {
       this.error     = null
 
       try {
-        const token = await window.Clerk?.session?.getToken()
+        const token = await getAuthToken()
         if (!token) {
           this.isLoaded  = false
           this.isLoading = false
@@ -118,9 +118,7 @@ export const useTokenStore = defineStore('token', {
       }
     },
 
-    /**
-     * Applies a TokenBalance payload from the API (also used after token consumption responses).
-     */
+    // Also called after token consumption responses to keep the balance in sync.
     applyBalance(data: TokenBalance): void {
       this.balance        = data.balance
       this.quota          = data.quota
@@ -130,19 +128,12 @@ export const useTokenStore = defineStore('token', {
       this.isLoaded       = true
     },
 
-    /**
-     * Optimistically deducts tokens from the local balance.
-     * Call this after a successful backend consumption response.
-     */
+    // Optimistic local deduction — call after a successful consumption response.
     deductLocal(amount: number): void {
       this.balance        = Math.max(0, this.balance - amount)
       this.usedThisPeriod = this.usedThisPeriod + amount
     },
 
-    /**
-     * Starts the background polling interval.
-     * Should be called once after sign-in / initial load.
-     */
     startPolling(): void {
       if (this._pollTimer !== null) return
       this._pollTimer = setInterval(() => {
@@ -150,9 +141,6 @@ export const useTokenStore = defineStore('token', {
       }, POLL_INTERVAL_MS)
     },
 
-    /**
-     * Stops background polling (called on sign-out).
-     */
     stopPolling(): void {
       if (this._pollTimer !== null) {
         clearInterval(this._pollTimer)
@@ -160,17 +148,11 @@ export const useTokenStore = defineStore('token', {
       }
     },
 
-    /**
-     * Deducts tokens for a named lab operation.
-     * Returns true if the operation may proceed, false if tokens are insufficient.
-     * On failure, sets pendingUpgrade=true so the NavBar can open the upgrade modal.
-     * Never throws — network errors are treated as non-blocking to avoid disrupting the lab UX.
-     *
-     * @param reason - A key from COST_MAP (e.g. 'AI_OPTIMIZE', 'SELECTIVITY_SWEEP')
-     */
+    // Returns false + sets pendingUpgrade/pendingGuestSignUp when tokens are insufficient.
+    // Never throws — network errors are non-blocking so a fetch glitch won't lock the lab.
     async consumeOperation(reason: string): Promise<boolean> {
       try {
-        const token = await window.Clerk?.session?.getToken()
+        const token = await getAuthToken()
         if (!token) {
           // Guest session: block the operation and prompt sign-up.
           // If there is no guest session either (e.g. Clerk still initialising), let it pass.

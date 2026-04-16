@@ -84,7 +84,7 @@ export default defineComponent({
         s.target.dielectricConstant, s.target.conductivity, s.target.thresholdVoltage,
         t.resonantFreqGHz ?? 0,
         s.fieldIntensity, s.medium, s.waveform, s.dutyCycle, s.pulseWidthNs,
-        s.chartMode, s.orientationDeg, s.healthyTemp, s.targetTemp, s.resetCounter,
+        s.chartMode, s.orientationDeg, s.healthyTemp, s.targetTemp, s.lysisNPulses, s.resetCounter,
       ].join('|')
     },
   },

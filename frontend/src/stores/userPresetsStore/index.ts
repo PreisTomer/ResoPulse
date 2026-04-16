@@ -1,6 +1,8 @@
 // Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 import { defineStore } from 'pinia'
 
+import { getAuthToken, apiFetch } from '@/services/apiClient'
+
 import { CELL_TYPE } from '@/constants/strings'
 import type { CellType } from '@/constants/strings'
 
@@ -38,28 +40,7 @@ export interface UserCellPreset {
 
 export type UserCellPresetInput = Omit<UserCellPreset, 'id' | 'createdAt'>
 
-// ── API helpers ────────────────────────────────────────────────────────────────
-
-const BACKEND_URL    = (import.meta.env.VITE_BACKEND_URL as string ?? 'http://localhost:3001').replace(/\/$/, '')
-const LOCAL_KEY      = 'resopulse_user_presets_v2'
-
-async function authHeaders(): Promise<Record<string, string> | null> {
-  const token = await window.Clerk?.session?.getToken()
-  if (!token) return null
-  return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }
-}
-
-async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const headers = await authHeaders()
-  if (!headers) throw new Error('Not authenticated')
-  const res = await fetch(`${BACKEND_URL}${path}`, { ...init, headers: { ...headers, ...(init.headers ?? {}) } })
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({})) as { error?: string }
-    throw new Error(body.error ?? `HTTP ${res.status}`)
-  }
-  if (res.status === 204 || res.headers.get('content-length') === '0') return undefined as T
-  return res.json() as Promise<T>
-}
+const LOCAL_KEY = 'resopulse_user_presets_v2'
 
 // ── Local-storage fallback (guests only) ──────────────────────────────────────
 
@@ -131,8 +112,8 @@ export const useUserPresetsStore = defineStore('userPresets', {
 
   actions: {
     async fetchAll(): Promise<void> {
-      const headers = await authHeaders()
-      if (!headers) {
+      const token = await getAuthToken()
+      if (!token) {
         // Guest: use localStorage
         this.isGuest = true
         this.presets = loadLocal()

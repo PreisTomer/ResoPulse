@@ -1,10 +1,8 @@
 // Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 
-// Saved experiment sessions store.
-// Manages the list of cloud-persisted experiments for the current org.
-// All mutations call the backend REST API and require an active Clerk session.
-
 import { defineStore } from 'pinia'
+
+import { BACKEND_URL, apiFetch } from '@/services/apiClient'
 
 import type {
   SavedExperimentItem,
@@ -13,29 +11,6 @@ import type {
   ExperimentSnapshot,
   ShareInfo,
 } from '@/types/savedExperiment'
-
-const BACKEND_URL = (import.meta.env.VITE_BACKEND_URL as string ?? 'http://localhost:3001').replace(/\/$/, '')
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-async function authHeaders(): Promise<Record<string, string>> {
-  const token = await window.Clerk?.session?.getToken()
-  if (!token) throw new Error('Not authenticated.')
-  return {
-    'Content-Type':  'application/json',
-    'Authorization': `Bearer ${token}`,
-  }
-}
-
-async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const headers = await authHeaders()
-  const res = await fetch(`${BACKEND_URL}${path}`, { ...init, headers: { ...headers, ...(init.headers ?? {}) } })
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({})) as { error?: string }
-    throw new Error(body.error ?? `HTTP ${res.status}`)
-  }
-  return res.json() as Promise<T>
-}
 
 // ── State ──────────────────────────────────────────────────────────────────────
 
@@ -63,7 +38,7 @@ export const useSavedExperimentsStore = defineStore('savedExperiments', {
   }),
 
   getters: {
-    /** The experiment record that is currently loaded in the lab (if any). */
+    // The experiment record currently loaded in the lab (if any).
     activeExperiment(): SavedExperimentItem | null {
       return this.experiments.find(e => e.id === this.activeId) ?? null
     },
@@ -74,23 +49,11 @@ export const useSavedExperimentsStore = defineStore('savedExperiments', {
   },
 
   actions: {
-    // ── List ─────────────────────────────────────────────────────────────────
-
-    /**
-     * Fetches the first page of experiments for the current org.
-     * Replaces the current list.
-     */
     async fetchList(search = '', sortBy = 'updatedAt', sortDir: 'asc' | 'desc' = 'desc'): Promise<void> {
       this.isLoading = true
       this.error     = null
       try {
-        const params = new URLSearchParams({
-          page:    '1',
-          limit:   String(this.limit),
-          search,
-          sortBy,
-          sortDir,
-        })
+        const params = new URLSearchParams({ page: '1', limit: String(this.limit), search, sortBy, sortDir })
         const result = await apiFetch<ExperimentListResponse>(`/experiments?${params}`)
         this.experiments = result.experiments
         this.total       = result.total
@@ -103,23 +66,14 @@ export const useSavedExperimentsStore = defineStore('savedExperiments', {
       }
     },
 
-    /**
-     * Loads the next page and appends to the list.
-     */
     async fetchNextPage(search = '', sortBy = 'updatedAt', sortDir: 'asc' | 'desc' = 'desc'): Promise<void> {
       if (!this.hasMore || this.isLoading) return
       this.isLoading = true
       this.error     = null
       try {
         const nextPage = this.page + 1
-        const params   = new URLSearchParams({
-          page:    String(nextPage),
-          limit:   String(this.limit),
-          search,
-          sortBy,
-          sortDir,
-        })
-        const result = await apiFetch<ExperimentListResponse>(`/experiments?${params}`)
+        const params   = new URLSearchParams({ page: String(nextPage), limit: String(this.limit), search, sortBy, sortDir })
+        const result   = await apiFetch<ExperimentListResponse>(`/experiments?${params}`)
         this.experiments.push(...result.experiments)
         this.total = result.total
         this.page  = nextPage
@@ -130,11 +84,6 @@ export const useSavedExperimentsStore = defineStore('savedExperiments', {
       }
     },
 
-    // ── Get / load ────────────────────────────────────────────────────────────
-
-    /**
-     * Fetches the full detail (including snapshot) for one experiment.
-     */
     async getDetail(id: string): Promise<SavedExperimentDetail | null> {
       try {
         return await apiFetch<SavedExperimentDetail>(`/experiments/${id}`)
@@ -144,9 +93,7 @@ export const useSavedExperimentsStore = defineStore('savedExperiments', {
       }
     },
 
-    /**
-     * Fetches a publicly shared experiment by its share token (no auth required).
-     */
+    // Share-token fetch is unauthenticated — uses raw fetch, not apiFetch.
     async getByShareToken(shareToken: string): Promise<SavedExperimentDetail | null> {
       try {
         const res = await fetch(`${BACKEND_URL}/experiments/share/${shareToken}`)
@@ -157,12 +104,7 @@ export const useSavedExperimentsStore = defineStore('savedExperiments', {
       }
     },
 
-    // ── Create ────────────────────────────────────────────────────────────────
-
-    /**
-     * Saves a new experiment to the cloud. Returns the created record.
-     * Costs SAVE_EXPERIMENT tokens — the backend returns 402 if balance is insufficient.
-     */
+    // Costs SAVE_EXPERIMENT tokens — backend returns 402 if balance is insufficient.
     async createExperiment(
       title:       string,
       description: string | null,
@@ -184,14 +126,9 @@ export const useSavedExperimentsStore = defineStore('savedExperiments', {
       }
     },
 
-    // ── Update ────────────────────────────────────────────────────────────────
-
-    /**
-     * Updates the title, description, and/or snapshot of an experiment in place.
-     */
     async updateExperiment(
-      id:       string,
-      updates:  { title?: string; description?: string | null; snapshot?: ExperimentSnapshot },
+      id:      string,
+      updates: { title?: string; description?: string | null; snapshot?: ExperimentSnapshot },
     ): Promise<boolean> {
       this.error = null
       try {
@@ -208,11 +145,6 @@ export const useSavedExperimentsStore = defineStore('savedExperiments', {
       }
     },
 
-    // ── Version ───────────────────────────────────────────────────────────────
-
-    /**
-     * Saves the current snapshot as a new version of an existing experiment.
-     */
     async saveNewVersion(
       parentId: string,
       title:    string,
@@ -233,11 +165,6 @@ export const useSavedExperimentsStore = defineStore('savedExperiments', {
       }
     },
 
-    // ── Fork / duplicate ──────────────────────────────────────────────────────
-
-    /**
-     * Creates an independent fork (copy) of an experiment.
-     */
     async forkExperiment(sourceId: string, newTitle: string): Promise<SavedExperimentItem | null> {
       this.error = null
       try {
@@ -254,12 +181,7 @@ export const useSavedExperimentsStore = defineStore('savedExperiments', {
       }
     },
 
-    // ── Sharing ───────────────────────────────────────────────────────────────
-
-    /**
-     * Enables (or rotates) sharing for an experiment.
-     * Returns the share token string, or null on failure.
-     */
+    // enableSharing rotates the token on repeat calls.
     async enableSharing(id: string, shareMode: 'view' | 'edit'): Promise<ShareInfo | null> {
       this.error = null
       try {
@@ -267,8 +189,7 @@ export const useSavedExperimentsStore = defineStore('savedExperiments', {
           method: 'POST',
           body:   JSON.stringify({ shareMode }),
         })
-        const idx = this.experiments.findIndex(e => e.id === id)
-        const item = idx !== -1 ? this.experiments[idx] : undefined
+        const item = this.experiments.find(e => e.id === id)
         if (item) item.shareMode = result.shareMode
         return result
       } catch (err) {
@@ -277,15 +198,11 @@ export const useSavedExperimentsStore = defineStore('savedExperiments', {
       }
     },
 
-    /**
-     * Revokes the share link for an experiment.
-     */
     async disableSharing(id: string): Promise<boolean> {
       this.error = null
       try {
         await apiFetch<{ ok: boolean }>(`/experiments/${id}/share`, { method: 'DELETE' })
-        const idx = this.experiments.findIndex(e => e.id === id)
-        const item = idx !== -1 ? this.experiments[idx] : undefined
+        const item = this.experiments.find(e => e.id === id)
         if (item) item.shareMode = null
         return true
       } catch (err) {
@@ -294,11 +211,7 @@ export const useSavedExperimentsStore = defineStore('savedExperiments', {
       }
     },
 
-    // ── Delete ────────────────────────────────────────────────────────────────
-
-    /**
-     * Soft-deletes an experiment and removes it from the local list.
-     */
+    // Soft-delete: backend flags the record; it is not permanently removed from the DB.
     async deleteExperiment(id: string): Promise<boolean> {
       this.error = null
       try {
@@ -313,15 +226,8 @@ export const useSavedExperimentsStore = defineStore('savedExperiments', {
       }
     },
 
-    // ── Active experiment ─────────────────────────────────────────────────────
-
-    setActiveId(id: string | null): void {
-      this.activeId = id
-    },
-
-    clearError(): void {
-      this.error = null
-    },
+    setActiveId(id: string | null): void { this.activeId = id },
+    clearError():                   void { this.error    = null },
 
     reset(): void {
       this.experiments = []

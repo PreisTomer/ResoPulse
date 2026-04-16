@@ -7,16 +7,11 @@
 import { defineStore } from 'pinia'
 
 export interface AuthState {
-  /** Whether the user has completed the "create your first lab" onboarding step. */
-  hasCompletedOnboarding: boolean
-  /** Whether the user has seen the protocol guide panel in the experiment lab. */
-  hasSeenGuide: boolean
-  /** True while App.vue has not yet received the first useAuth() isLoaded=true event. */
-  isClerkLoading: boolean
-  /** Mirrors useAuth().isSignedIn — updated reactively from App.vue. */
-  isSignedIn: boolean
-  /** True when the session has an active organisation (mirrors useAuth().orgId). */
-  hasOrg: boolean
+  hasCompletedOnboarding: boolean  // persisted; true after "create your first lab"
+  hasSeenGuide:           boolean  // persisted; suppresses auto-open of protocol guide
+  isClerkLoading:         boolean  // true until first useAuth() isLoaded=true fires
+  isSignedIn:             boolean  // mirrors useAuth().isSignedIn, updated from App.vue
+  hasOrg:                 boolean  // mirrors useAuth().orgId !== null
 }
 
 export const useAuthStore = defineStore('auth', {
@@ -29,35 +24,18 @@ export const useAuthStore = defineStore('auth', {
   }),
 
   getters: {
-    /**
-     * True when Clerk has finished loading and the user is not signed in.
-     * This covers both new visitors and users who chose "Try the Lab" as a guest.
-     */
-    isGuest(): boolean {
-      return !this.isClerkLoading && !this.isSignedIn
-    },
+    // Covers both new visitors and users who entered the lab as a guest.
+    isGuest(): boolean { return !this.isClerkLoading && !this.isSignedIn },
   },
 
   actions: {
-    /** Called once the useAuth() isLoaded watcher fires true in App.vue. */
-    setClerkLoaded(): void {
-      this.isClerkLoading = false
-    },
+    // Called once in App.vue after the useAuth() isLoaded watcher fires.
+    setClerkLoaded(): void { this.isClerkLoading = false },
 
-    /** Marks onboarding as complete. */
-    completeOnboarding(): void {
-      this.hasCompletedOnboarding = true
-    },
+    completeOnboarding(): void { this.hasCompletedOnboarding = true },
+    markGuideSeen():      void { this.hasSeenGuide           = true },
 
-    /** Marks the protocol guide as seen so it is not auto-opened again. */
-    markGuideSeen(): void {
-      this.hasSeenGuide = true
-    },
-
-    /**
-     * Syncs Clerk's reactive auth state into the store.
-     * Called by the App.vue watcher whenever useAuth() values change.
-     */
+    // Syncs Clerk's reactive auth into the store — called by App.vue watcher on every change.
     syncFromClerk(isSignedIn: boolean, hasOrg: boolean): void {
       this.isSignedIn = isSignedIn
       this.hasOrg     = hasOrg

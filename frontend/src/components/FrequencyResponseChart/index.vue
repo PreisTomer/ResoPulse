@@ -98,7 +98,7 @@ export default defineComponent({
         s.target.nuclearRadius ?? 0, t.resonantFreqGHz ?? 0,
         s.fieldIntensity, s.medium, s.waveform, s.dutyCycle, s.pulseWidthNs,
         s.chartMode, s.doubleShellEnabled, s.orientationDeg,
-        s.healthyTemp, s.targetTemp, s.resetCounter,
+        s.healthyTemp, s.targetTemp, s.lysisNPulses, s.resetCounter,
       ].join('|')
     },
   },
