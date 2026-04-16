@@ -12,9 +12,12 @@
     <ProtocolGuidePanel v-if="showGuidePanel && !isAuthPage" />
     <TermsGate v-if="showTermsGate" @accepted="onTermsAccepted" />
     <footer class="app-footer">
-      <span class="app-footer__copy">{{ $t('nav.footerCopy') }}</span>
-      <RouterLink :to="ROUTE.TERMS" class="app-footer__link">{{ $t('nav.footerTerms') }}</RouterLink>
-      <RouterLink :to="ROUTE.PRIVACY" class="app-footer__link">{{ $t('nav.footerPrivacy') }}</RouterLink>
+      <div class="app-footer__row">
+        <span class="app-footer__copy">{{ $t('nav.footerCopy') }}</span>
+        <RouterLink :to="ROUTE.TERMS" class="app-footer__link">{{ $t('nav.footerTerms') }}</RouterLink>
+        <RouterLink :to="ROUTE.PRIVACY" class="app-footer__link">{{ $t('nav.footerPrivacy') }}</RouterLink>
+      </div>
+      <p class="app-footer__ip">{{ $t('nav.footerIp') }}</p>
     </footer>
   </div>
 </template>
@@ -125,13 +128,20 @@ main {
 
 .app-footer {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 1.5rem;
-  padding: 0.65rem 1.5rem;
+  gap: 0.35rem;
+  padding: 0.65rem 1.5rem 0.75rem;
   border-top: 1px solid var(--color-border);
   background: var(--color-surface);
   flex-shrink: 0;
+
+  &__row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+  }
 
   &__copy {
     font-family: var(--font-mono);
@@ -153,6 +163,18 @@ main {
     transition: opacity var(--tr-fast);
 
     &:hover { opacity: 1; }
+  }
+
+  &__ip {
+    font-family: var(--font-mono);
+    font-size: 0.6rem; // deliberate sub-scale micro-size for legal notice
+    letter-spacing: 0.04em;
+    color: var(--color-text-muted);
+    opacity: var(--op-ghost);
+    text-align: center;
+    max-width: 72ch;
+    margin: 0;
+    line-height: 1.5;
   }
 }
 </style>
