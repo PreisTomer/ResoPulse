@@ -11,15 +11,15 @@ const router = createRouter({
   scrollBehavior: () => ({ top: 0 }),
   routes: [
     { path: ROUTE.HOME,        component: () => import('../views/HomeView/index.vue') },
-    { path: ROUTE.EXPERIMENT,  component: () => import('../views/ExperimentView.vue') },
+    { path: ROUTE.EXPERIMENT,  component: () => import('@/views/ExperimentView/index.vue') },
     { path: ROUTE.EXPERIMENTS, component: () => import('../views/ExperimentsView/index.vue'),   meta: { requiresAuth: true } },
     { path: ROUTE.DATASETS,    component: () => import('../views/DataSetsView/index.vue'),      meta: { requiresAuth: true } },
     { path: ROUTE.REPORTS,     component: () => import('../views/ReportsView/index.vue'),       meta: { requiresAuth: true } },
     { path: ROUTE.PROTOCOL,    component: () => import('../views/ProtocolView/index.vue') },
-    { path: ROUTE.INSTRUMENT,  component: () => import('../views/InstrumentView.vue'),          meta: { requiresAuth: true } },
-    { path: ROUTE.PRICING,     component: () => import('../views/PricingView.vue') },
-    { path: ROUTE.TERMS,       component: () => import('../views/TermsView.vue') },
-    { path: ROUTE.PRIVACY,     component: () => import('../views/PrivacyView.vue') },
+    { path: ROUTE.INSTRUMENT,  component: () => import('@/views/InstrumentView/index.vue'),          meta: { requiresAuth: true } },
+    { path: ROUTE.PRICING,     component: () => import('@/views/PricingView/index.vue') },
+    { path: ROUTE.TERMS,       component: () => import('@/views/TermsView/index.vue') },
+    { path: ROUTE.PRIVACY,     component: () => import('@/views/PrivacyView/index.vue') },
     { path: ROUTE.SIGN_IN,                         component: () => import('../views/SignInView/index.vue'),  meta: { guestOnly: true } },
     // Sub-paths Clerk needs for OAuth callbacks, MFA, and email verification.
     // No guestOnly — the user may already be partially authenticated at these points.

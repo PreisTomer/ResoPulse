@@ -96,8 +96,8 @@ import type { LogEntry } from '@/stores/experimentStore'
 import { useExperimentStore } from '@/stores/experimentStore'
 import { useTokenStore } from '@/stores/tokenStore'
 
-import StatCard from '@/components/StatCard.vue'
-import PageHeader from '@/components/PageHeader.vue'
+import StatCard from '@/components/StatCard/index.vue'
+import PageHeader from '@/components/PageHeader/index.vue'
 
 import { formatFreqKHz, formatFieldVcm, formatRange } from '@/utils/format'
 

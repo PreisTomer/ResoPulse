@@ -92,7 +92,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 
-import PageHeader from '@/components/PageHeader.vue'
+import PageHeader from '@/components/PageHeader/index.vue'
 
 import { ICON } from '@/constants/icons'
 

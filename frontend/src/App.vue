@@ -27,9 +27,9 @@ import { defineComponent, watch } from 'vue'
 import { useAuth } from '@clerk/vue'
 
 import NavBar from './components/NavBar/index.vue'
-import ModeBanner from './components/ModeBanner.vue'
-import LiteratureStrip from './components/LiteratureStrip.vue'
-import TermsGate from './components/TermsGate.vue'
+import ModeBanner from '@/components/ModeBanner/index.vue'
+import LiteratureStrip from '@/components/LiteratureStrip/index.vue'
+import TermsGate from '@/components/TermsGate/index.vue'
 import ProtocolGuidePanel from './components/ExperimentLab/ProtocolGuidePanel.vue'
 
 import { useThemeStore } from './stores/themeStore'

@@ -13,7 +13,7 @@ import { H_FIRE_THRESHOLD_MULTIPLIER, BODY_TEMP_C } from '@/constants/physics'
 
 import type { CellConfig } from '@/types/cell'
 
-import { computeDR, effectiveVth } from './drChartCompute'
+import { computeDR, effectiveVth } from '@/components/DisruptionChart/drChartCompute'
 
 // ── Test fixtures ─────────────────────────────────────────────────────────────
 

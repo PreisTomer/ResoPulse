@@ -51,7 +51,7 @@ import { mapStores } from 'pinia'
 import { useCellStore } from '@/stores/cellStore'
 import { useTokenStore } from '@/stores/tokenStore'
 
-import AccordionPanel from '@/components/AccordionPanel.vue'
+import AccordionPanel from '@/components/AccordionPanel/index.vue'
 
 import {
   computeSchwan, computeSAR, computeTau, computePulseStepResponse,

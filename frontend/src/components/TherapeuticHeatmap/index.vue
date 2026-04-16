@@ -34,7 +34,7 @@ import { mapStores } from 'pinia'
 
 import { useCellStore } from '@/stores/cellStore'
 
-import AccordionPanel  from '@/components/AccordionPanel.vue'
+import AccordionPanel  from '@/components/AccordionPanel/index.vue'
 
 import { CELL_CATEGORY } from '@/constants/strings'
 import { ICON } from '@/constants/icons'

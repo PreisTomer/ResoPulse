@@ -98,7 +98,7 @@ import { mapStores } from 'pinia'
 
 import { useCellStore } from '@/stores/cellStore'
 
-import AccordionPanel from '@/components/AccordionPanel.vue'
+import AccordionPanel from '@/components/AccordionPanel/index.vue'
 
 import { safeRatio, tempCorrectedVth } from '@/utils/physics'
 import { formatPct } from '@/utils/format'

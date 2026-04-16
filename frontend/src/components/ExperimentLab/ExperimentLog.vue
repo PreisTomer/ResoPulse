@@ -149,8 +149,8 @@ import { useTokenStore } from '@/stores/tokenStore'
 
 import { broadcastLogEntry, broadcastLogOutcome } from '@/services/socket'
 
-import AccordionPanel from '@/components/AccordionPanel.vue'
-import StatusBadge from '@/components/StatusBadge.vue'
+import AccordionPanel from '@/components/AccordionPanel/index.vue'
+import StatusBadge from '@/components/StatusBadge/index.vue'
 
 import { eventVariant as sharedEventVariant, depKDisplay, depKDisplayFull } from '@/utils/experimentUtils'
 import {

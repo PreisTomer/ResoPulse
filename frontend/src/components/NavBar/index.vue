@@ -68,8 +68,8 @@ import { guestSessionActive } from '@/services/socket'
 
 import NavUserArea from './NavUserArea.vue'
 import NavGuestArea from './NavGuestArea.vue'
-import ContactModal from '@/components/ContactModal.vue'
-import UpgradeModal from '@/components/UpgradeModal.vue'
+import ContactModal from '@/components/ContactModal/index.vue'
+import UpgradeModal from '@/components/UpgradeModal/index.vue'
 
 // App nav — shown to authenticated users in the lab.
 const APP_NAV_LINKS = [

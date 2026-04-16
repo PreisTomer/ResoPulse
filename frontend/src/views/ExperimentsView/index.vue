@@ -248,7 +248,7 @@ import { useCellStore } from '@/stores/cellStore'
 import { useExperimentStore } from '@/stores/experimentStore'
 import { useTokenStore } from '@/stores/tokenStore'
 
-import PageHeader from '@/components/PageHeader.vue'
+import PageHeader from '@/components/PageHeader/index.vue'
 
 import { ICON } from '@/constants/icons'
 import { ROUTE } from '@/constants/routes'

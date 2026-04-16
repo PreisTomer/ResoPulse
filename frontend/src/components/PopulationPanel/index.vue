@@ -63,7 +63,7 @@ import * as d3 from 'd3'
 
 import { useCellStore } from '@/stores/cellStore'
 
-import AccordionPanel from '@/components/AccordionPanel.vue'
+import AccordionPanel from '@/components/AccordionPanel/index.vue'
 
 import { computeSchwan, computeTau, computePulseStepResponse, computeResonantDisruption, tempCorrectedVth } from '@/utils/physics'
 

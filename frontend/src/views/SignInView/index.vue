@@ -123,7 +123,7 @@ import { ROUTE } from '@/constants/routes'
 
 import { ICON } from '@/constants/icons'
 
-import ContactModal from '@/components/ContactModal.vue'
+import ContactModal from '@/components/ContactModal/index.vue'
 
 const PARTICLE_COUNT   = 55
 const PARTICLE_SPEED   = 0.18

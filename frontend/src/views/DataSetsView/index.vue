@@ -58,7 +58,7 @@
 import { defineComponent, computed } from 'vue'
 import { mapStores } from 'pinia'
 
-import PageHeader from '@/components/PageHeader.vue'
+import PageHeader from '@/components/PageHeader/index.vue'
 import CreateCellModal from '@/components/CreateCellModal/index.vue'
 
 import { membraneCm, computeFc, computeTau, computeNuclearTau, computeDepCrossoverKHz, computeDepSecondCrossoverKHz } from '@/utils/physics'
