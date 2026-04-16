@@ -7,7 +7,6 @@
       <h1 class="terms__title">Terms of Use</h1>
       <p class="terms__meta">Last Updated: April 16, 2026 &nbsp;·&nbsp; ResoPulse &nbsp;·&nbsp;
         <a href="https://www.resopulse-virtual-lab.com/" class="terms__link" target="_blank" rel="noopener">resopulse-virtual-lab.com</a>
-        &nbsp;·&nbsp; <strong class="terms__patent-badge">Patent Pending</strong>
       </p>
 
       <p class="terms__intro">
@@ -19,9 +18,9 @@
         <h2 class="terms__h2">1. Intellectual Property Ownership</h2>
         <dl class="terms__dl">
           <dt>Proprietary Logic</dt>
-          <dd>All algorithms, including the Schwan single-shell and Kotnik-Miklavcic double-shell models, the real-time closed-loop impedance feedback system, the population-lysis integration model, and the Window of Selectivity optimisation framework, are the exclusive intellectual property of Tomer Preis.</dd>
-          <dt>Patent Pending</dt>
-          <dd>The novel methods implemented in this platform, including the closed-loop impedance feedback system, the Window of Selectivity optimisation algorithm, the instrument-bridge integration architecture, and the dual-population selectivity scoring methodology, are the subject of pending patent applications. Any reproduction, implementation, or commercialisation of these methods without written authorisation is strictly prohibited.</dd>
+          <dd>ResoPulse implements established biophysics models from the scientific literature (Schwan single-shell, Kotnik-Miklavcic double-shell, Pennes bioheat) under standard academic conventions. The exclusive intellectual property of Tomer Preis consists of the novel elements built upon these foundations: the real-time closed-loop impedance feedback system, the population-lysis Gaussian integration model, the Window of Selectivity optimisation framework, the dual-population Therapeutic Index scoring methodology, and the instrument-bridge integration architecture. These novel methods, and their specific combination in a unified simulation workspace, are proprietary.</dd>
+          <dt>IP Protection</dt>
+          <dd>The novel methods listed above are the subject of ongoing intellectual property filings. Any reproduction, implementation, or commercialisation of these methods without prior written authorisation from Tomer Preis is strictly prohibited.</dd>
           <dt>Codebase</dt>
           <dd>The Vue 3, TypeScript, and Node.js source code, along with all custom physics modules (Pennes bioheat, nsEP pulse envelopes, Kotnik double-shell model, population lysis integration, DEP Clausius-Mossotti solver), are protected by copyright law. Copyright &copy; 2026 Tomer Preis. All rights reserved.</dd>
           <dt>Protocol Documentation</dt>
@@ -45,7 +44,8 @@
 
       <section class="terms__section">
         <h2 class="terms__h2">3. User Restrictions</h2>
-        <p class="terms__p">You strictly agree <strong>NOT</strong> to:</p>
+        <p class="terms__p">Individual academic researchers using the Service solely for non-commercial scientific research, peer-reviewed publication, or teaching are not subject to the prohibitions below, provided they are not acting on behalf of or for the financial benefit of a commercial entity.</p>
+        <p class="terms__p">All other users strictly agree <strong>NOT</strong> to:</p>
         <ul class="terms__ul">
           <li>Attempt to decompile, disassemble, or reverse engineer any part of the virtual biophysics engine, its algorithms, or its physics modules.</li>
           <li>Use the Cell Library parameters, Experiment Lab logic, or any simulation outputs to design, develop, train, or commercialise a competing computational biophysics platform, electroporation simulation tool, or cell-engineering software product.</li>
@@ -170,7 +170,7 @@
       <div class="terms__footer">
         <RouterLink :to="ROUTE.HOME" class="terms__back">← Back to ResoPulse</RouterLink>
         <RouterLink :to="ROUTE.PRIVACY" class="terms__privacy-link">Privacy</RouterLink>
-        <span class="terms__copy">© 2026 Tomer Preis. All rights reserved. Patent Pending.</span>
+        <span class="terms__copy">© 2026 Tomer Preis. All rights reserved.</span>
       </div>
 
     </div>
@@ -298,20 +298,6 @@ export default defineComponent({
       line-height: 1.6;
       color: var(--color-text);
     }
-  }
-
-  &__patent-badge {
-    font-family: var(--font-mono);
-    font-size: var(--fs-xxs);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--color-amber);
-    border: 1px solid color-mix(in srgb, var(--color-amber) 40%, transparent);
-    background: color-mix(in srgb, var(--color-amber) 8%, transparent);
-    padding: 0.1rem 0.45rem;
-    border-radius: 3px;
-    font-weight: 700;
-    white-space: nowrap;
   }
 
   &__link {

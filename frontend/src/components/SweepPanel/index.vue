@@ -251,6 +251,14 @@ export default defineComponent({
     },
 
     recommendedMax(): number | null {
+      // When f_res > sweepMax, maxDrT ≈ 0 and the "counter-selective" fallback fires incorrectly.
+      if (this.isResonanceTarget && this.sweepParam === 'freq' && !this.windowRange) {
+        const t = this.cellStore.target as CellConfig & { resonantFreqGHz?: number }
+        if (t.resonantFreqGHz) {
+          const fresPeakKhz = t.resonantFreqGHz * 1e6
+          if (fresPeakKhz > this.sweepMax) return this.defaultFreqMax
+        }
+      }
       if (this.windowRange || !this.hasTheoreticalWindow) return null
       const maxDrT = Math.max(0, ...this.sweepData.map(p => p.drT))
       if (maxDrT < 1e-6) return null

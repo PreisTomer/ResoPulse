@@ -88,7 +88,7 @@
     "sciCta": "Open Experiment Lab →",
     "tipSciCell": "Schwan equation: Vm = 1.5 E R cos(θ) / √(1+(ωτ)²). Cyan ions drift toward the +Vm pole, red toward -Vm, building the transmembrane potential that drives electroporation. Click to explore in the lab.",
     "tipSciChart": "Vm rolls off above the characteristic frequency fc = 1/(2πτ). Below fc the membrane fully charges; above fc it stays sub-threshold. The animated dot illustrates the roll-off behaviour. Click to open the Experiment Lab and tune parameters live.",
-    "disclaimer": "© 2026 Tomer Preis · Patent Pending · for research visualisation only · not a medical device",
+    "disclaimer": "© 2026 Tomer Preis · for research visualisation only · not a medical device",
     "validateTabLine1": "Verified",
     "validateTabLine2": "Replicate Published Results",
     "validateGateSub": "Two-step experimental validation against peer-reviewed papers. Create a free account to run replication workflows.",

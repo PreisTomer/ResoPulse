@@ -172,9 +172,11 @@ main {
     color: var(--color-text-muted);
     opacity: var(--op-ghost);
     text-align: center;
-    max-width: 72ch;
+    width: 100%;
     margin: 0;
     line-height: 1.5;
+    padding: 0 1rem;
+    box-sizing: border-box;
   }
 }
 </style>
