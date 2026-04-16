@@ -309,13 +309,44 @@ const PARTICLE_RADIUS   = 1.3
 const PARTICLE_OPACITY  = 0.38
 const CONNECTION_DIST   = 138
 
+// ── Particle enhancements ─────────────────────────────────────────────────
+// NODE particles (20%) represent target/mammalian cells — larger, brighter, with a halo.
+// Regular particles represent background healthy cells or suspended ions.
+const NODE_FRACTION       = 0.20
+const NODE_RADIUS         = 2.4
+
+// Mouse repulsion: hovering applies a virtual E-field pulse that disperses nearby particles.
+const MOUSE_REPEL_DIST    = 175
+const MOUSE_REPEL_FORCE   = 0.30
+const MAX_PARTICLE_SPEED  = PARTICLE_SPEED * 4.5
+
+// Energized connection: particles within ENERGIZE_DIST model high local field → high Vm.
+const ENERGIZE_DIST       = 46
+
+// Pre-squared thresholds avoid Math.sqrt in the hot O(n²) pair loop.
+const CONNECTION_DIST_SQ  = CONNECTION_DIST * CONNECTION_DIST
+const MOUSE_REPEL_DIST_SQ = MOUSE_REPEL_DIST * MOUSE_REPEL_DIST
+const ENERGIZE_DIST_SQ    = ENERGIZE_DIST * ENERGIZE_DIST
+
+// EP pulse wave: a brightness ring propagates outward from the hero centre every ~6s,
+// metaphor for a delivered electroporation pulse.
+const WAVE_PERIOD_MS      = 6200
+const WAVE_TRAVEL_MS      = 2500
+const WAVE_WIDTH_PX       = 68
+
 const HEX_RADIUS        = 26
 const HEX_OPEN_SPEED    = 0.010
 const HEX_FADE_SPEED    = 0.003
 const HEX_IDLE_MAX      = 3200
 const HEX_BORDER_ALPHA  = 0.012
 
-interface Particle { x: number; y: number; vx: number; vy: number }
+interface Particle {
+  x: number; y: number; vx: number; vy: number
+  isNode: boolean       // true = target/mammalian cell (larger, brighter)
+  pulsePhase: number    // individual membrane oscillation phase [0, 2π]
+  pulseSpeed: number    // oscillation angular speed — each cell has its own rhythm
+  naturalSpeed: number  // base drift speed — used for post-repulsion damping
+}
 interface HexCell  { cx: number; cy: number; phase: 'idle' | 'opening' | 'fading'; progress: number; idleTick: number; idleTarget: number }
 
 export default defineComponent({
@@ -355,6 +386,7 @@ export default defineComponent({
       hexFrameId:      null as ReturnType<typeof requestAnimationFrame> | null,
       particles:       [] as Particle[],
       hexCells:        markRaw([] as HexCell[]),
+      mousePos:        null as { x: number; y: number } | null,
     }
   },
 
@@ -378,6 +410,17 @@ export default defineComponent({
     this.buildHexGrid()
     this.startHexLoop()
 
+    // Attach mouse tracking for E-field repulsion interaction.
+    // The particle canvas has pointer-events: none, so we listen on the home root element
+    // and translate viewport coordinates into canvas-space using getBoundingClientRect().
+    const homeEl = this.$el as HTMLElement
+    homeEl.addEventListener('mousemove', (e: MouseEvent) => {
+      const canvas = this.$refs.particleCanvas as HTMLCanvasElement | null
+      if (!canvas) return
+      const rect = canvas.getBoundingClientRect()
+      this.mousePos = { x: e.clientX - rect.left, y: e.clientY - rect.top }
+    })
+    homeEl.addEventListener('mouseleave', () => { this.mousePos = null })
   },
 
   beforeUnmount() {
@@ -458,12 +501,20 @@ export default defineComponent({
       if (!canvas) return
       const w = canvas.width  = canvas.offsetWidth
       const h = canvas.height = canvas.offsetHeight
-      this.particles = markRaw(Array.from({ length: PARTICLE_COUNT }, () => ({
-        x:  Math.random() * w,
-        y:  Math.random() * h,
-        vx: (Math.random() - 0.5) * PARTICLE_SPEED * 2,
-        vy: (Math.random() - 0.5) * PARTICLE_SPEED * 2,
-      })))
+      this.particles = markRaw(Array.from({ length: PARTICLE_COUNT }, () => {
+        const vx = (Math.random() - 0.5) * PARTICLE_SPEED * 2
+        const vy = (Math.random() - 0.5) * PARTICLE_SPEED * 2
+        return {
+          x:            Math.random() * w,
+          y:            Math.random() * h,
+          vx,
+          vy,
+          isNode:       Math.random() < NODE_FRACTION,
+          pulsePhase:   Math.random() * Math.PI * 2,
+          pulseSpeed:   0.006 + Math.random() * 0.018,
+          naturalSpeed: Math.sqrt(vx * vx + vy * vy),
+        }
+      }))
     },
 
     startParticleLoop(): void {
@@ -472,7 +523,7 @@ export default defineComponent({
       const ctx = canvas.getContext('2d')
       if (!ctx) return
 
-      const tick = () => {
+      const tick = (ts: number) => {
         const w = canvas.offsetWidth
         const h = canvas.offsetHeight
         if (canvas.width !== w || canvas.height !== h) {
@@ -482,7 +533,7 @@ export default defineComponent({
         }
         ctx.clearRect(0, 0, w, h)
         this.updateParticles(w, h)
-        this.drawParticles(ctx, w, h)
+        this.drawParticles(ctx, w, h, ts)
         this.particleFrameId = requestAnimationFrame(tick)
       }
 
@@ -490,47 +541,140 @@ export default defineComponent({
     },
 
     updateParticles(w: number, h: number): void {
+      const mouse = this.mousePos
       for (const p of this.particles) {
+
+        // ── E-field pulse: mouse repels nearby particles (cells dispersed by field) ──
+        if (mouse) {
+          const mdx    = p.x - mouse.x
+          const mdy    = p.y - mouse.y
+          const mDistSq = mdx * mdx + mdy * mdy
+          if (mDistSq < MOUSE_REPEL_DIST_SQ && mDistSq > 0.01) {
+            const mDist = Math.sqrt(mDistSq)
+            const force = MOUSE_REPEL_FORCE * (1 - mDist / MOUSE_REPEL_DIST) / mDist
+            p.vx += mdx * force
+            p.vy += mdy * force
+          }
+        }
+
+        // ── Velocity: damp excess speed (cells settling after a pulse), hard-clamp runaway ──
+        const speedSq  = p.vx * p.vx + p.vy * p.vy
+        const natSq    = p.naturalSpeed * p.naturalSpeed
+        if (speedSq > natSq * 1.08) {
+          p.vx *= 0.994
+          p.vy *= 0.994
+        }
+        const maxSq = MAX_PARTICLE_SPEED * MAX_PARTICLE_SPEED
+        if (speedSq > maxSq) {
+          const s = MAX_PARTICLE_SPEED / Math.sqrt(speedSq)
+          p.vx *= s
+          p.vy *= s
+        }
+
         p.x += p.vx
         p.y += p.vy
-        if (p.x < 0 || p.x > w) p.vx *= -1
-        if (p.y < 0 || p.y > h) p.vy *= -1
+
+        // Bounce with clamp to prevent sticking at edge
+        if (p.x < 0)  { p.vx =  Math.abs(p.vx); p.x = 0 }
+        if (p.x > w)  { p.vx = -Math.abs(p.vx); p.x = w }
+        if (p.y < 0)  { p.vy =  Math.abs(p.vy); p.y = 0 }
+        if (p.y > h)  { p.vy = -Math.abs(p.vy); p.y = h }
+
+        // ── Advance individual membrane oscillation phase ────────────────────────
+        p.pulsePhase += p.pulseSpeed
       }
     },
 
-    drawParticles(ctx: CanvasRenderingContext2D, w: number, h: number): void {
-      // Fade edges so particles don't compete with hero text
-      const fadeX = w * 0.12
-      const fadeY = h * 0.12
+    drawParticles(ctx: CanvasRenderingContext2D, w: number, h: number, ts: number): void {
+      const fadeW = w * 0.10
+      const fadeH = h * 0.10
+
+      // ── EP wave pulse: brightening ring propagating from hero centre every WAVE_PERIOD_MS ──
+      // Metaphor: a delivered electroporation pulse radiating through the cell suspension.
+      const waveCx      = w / 2
+      const waveCy      = h * 0.28  // approximate hero-zone centroid within full-page canvas
+      const maxWaveDist = Math.sqrt(waveCx * waveCx + (h - waveCy) * (h - waveCy)) * 1.3
+      const wavePct     = (ts % WAVE_PERIOD_MS) / WAVE_PERIOD_MS
+      const travelFrac  = WAVE_TRAVEL_MS / WAVE_PERIOD_MS
+      // waveRadius = -1 during the quiet phase between pulses
+      const waveRadius  = wavePct < travelFrac ? (wavePct / travelFrac) * maxWaveDist : -1
+
+      // ── Connection lines (drawn first so dots render on top) ────────────────────
       for (let i = 0; i < this.particles.length; i++) {
         for (let j = i + 1; j < this.particles.length; j++) {
-          const a    = this.particles[i]
-          const b    = this.particles[j]
-          if (!a || !b) continue
-          const dx   = a.x - b.x
-          const dy   = a.y - b.y
-          const dist = Math.sqrt(dx * dx + dy * dy)
-          if (dist < CONNECTION_DIST) {
-            const edgeFade = Math.min(
-              a.x / fadeX, (w - a.x) / fadeX,
-              a.y / fadeY, (h - a.y) / fadeY,
-              1,
-            )
-            const alpha = (1 - dist / CONNECTION_DIST) * 0.18 * edgeFade
-            ctx.beginPath()
-            ctx.moveTo(a.x, a.y)
-            ctx.lineTo(b.x, b.y)
-            ctx.strokeStyle = `rgba(0, 212, 255, ${alpha})`
-            ctx.lineWidth   = 0.6
-            ctx.stroke()
-          }
+          const a  = this.particles[i]!
+          const b  = this.particles[j]!
+          const dx = a.x - b.x
+          const dy = a.y - b.y
+          // Skip O(n²) sqrt for pairs clearly out of range
+          const distSq = dx * dx + dy * dy
+          if (distSq >= CONNECTION_DIST_SQ) continue
+          const dist = Math.sqrt(distSq)
+
+          // Fade lines near all four canvas edges
+          const edgeFade = Math.min(
+            a.x / fadeW, (w - a.x) / fadeW,
+            a.y / fadeH, (h - a.y) / fadeH,
+            b.x / fadeW, (w - b.x) / fadeW,
+            b.y / fadeH, (h - b.y) / fadeH,
+            1,
+          )
+          if (edgeFade <= 0) continue
+
+          // Energized: very close pair = high local field = high transmembrane voltage
+          const energized = distSq < ENERGIZE_DIST_SQ
+          const baseAlpha = (1 - dist / CONNECTION_DIST) * (energized ? 0.42 : 0.17)
+
+          // EP wave boost: connection briefly brightens as the wavefront passes through
+          const midX    = (a.x + b.x) * 0.5
+          const midY    = (a.y + b.y) * 0.5
+          const midDist = Math.sqrt((midX - waveCx) * (midX - waveCx) + (midY - waveCy) * (midY - waveCy))
+          const waveBoost = waveRadius > 0
+            ? Math.max(0, 1 - Math.abs(midDist - waveRadius) / WAVE_WIDTH_PX) * 0.24
+            : 0
+
+          ctx.beginPath()
+          ctx.moveTo(a.x, a.y)
+          ctx.lineTo(b.x, b.y)
+          ctx.strokeStyle = `rgba(0,212,255,${(baseAlpha + waveBoost) * edgeFade})`
+          ctx.lineWidth   = energized ? 1.1 : 0.6
+          ctx.stroke()
         }
       }
+
+      // ── Dots ────────────────────────────────────────────────────────────────────
       for (const p of this.particles) {
-        const edgeFade = Math.min(p.x / (w * 0.08), (w - p.x) / (w * 0.08), 1)
+        const edgeFade = Math.min(
+          p.x / (w * 0.08), (w - p.x) / (w * 0.08),
+          p.y / (h * 0.08), (h - p.y) / (h * 0.08),
+          1,
+        )
+        if (edgeFade <= 0) continue
+
+        // Individual membrane oscillation (each cell has its own bioelectric rhythm)
+        const pulse     = 0.62 + 0.38 * Math.sin(p.pulsePhase)  // range [0.62, 1.0]
+
+        // EP wave brightens dots it passes through
+        const dotDist   = Math.sqrt((p.x - waveCx) * (p.x - waveCx) + (p.y - waveCy) * (p.y - waveCy))
+        const waveBoost = waveRadius > 0
+          ? Math.max(0, 1 - Math.abs(dotDist - waveRadius) / WAVE_WIDTH_PX) * 0.55
+          : 0
+
+        const radius  = p.isNode ? NODE_RADIUS : PARTICLE_RADIUS
+        const baseOp  = p.isNode ? PARTICLE_OPACITY * 1.6 : PARTICLE_OPACITY
+        const opacity = Math.min(1, (baseOp * pulse + waveBoost) * edgeFade)
+
+        // Node halo: larger target cell has a faint outer ring (Schwan sphere model visual)
+        if (p.isNode) {
+          ctx.beginPath()
+          ctx.arc(p.x, p.y, radius * 2.6, 0, Math.PI * 2)
+          ctx.fillStyle = `rgba(0,212,255,${opacity * 0.16})`
+          ctx.fill()
+        }
+
         ctx.beginPath()
-        ctx.arc(p.x, p.y, PARTICLE_RADIUS, 0, Math.PI * 2)
-        ctx.fillStyle = `rgba(0, 212, 255, ${PARTICLE_OPACITY * edgeFade})`
+        ctx.arc(p.x, p.y, radius, 0, Math.PI * 2)
+        ctx.fillStyle = `rgba(0,212,255,${opacity})`
         ctx.fill()
       }
     },
