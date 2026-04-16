@@ -242,6 +242,16 @@ export default defineComponent({
           // hfireMult does NOT apply — acoustic disruption is mechanical, not EP membrane charging.
           const effThreshold = tempCorrectedVth(tr.resonantThresholdVcm, BODY_TEMP_C)
           tDR = computeResonantDisruption(tr.resonantFreqGHz, tr.capsidQ, effThreshold, freqKHz * 1000, fieldVcm)
+        } else {
+          // No capsid params (e.g. mammalian target in resonance mode): Schwan fallback, matching _computeGrid.
+          const tCp  = s.target.specificHeatCapacity
+          const tSAR = computeSAR(s.target, fieldVcm, sigma_e, wf)
+          const tLambdaPerf = s.perfusionRate * PENNES_BLOOD_COEFF / tCp
+          const tTss = BODY_TEMP_C + tSAR * dc / ((NEWTON_COOLING_LAMBDA + tLambdaPerf) * tCp)
+          const tTau = computeTau(s.target, sigma_e)
+          const tPEF = isPulsed ? Math.max(MIN_PULSE_ENVELOPE, 1 - Math.exp(-pw_ns * 1e-9 / tTau)) : 1.0
+          const tVm  = computeSchwan(s.target, freqKHz, fieldVcm, sigma_e, cosT)
+          tDR = (tVm * tPEF) / (tempCorrectedVth(s.target.thresholdVoltage, tTss) * hfireMult)
         }
       } else {
         const tCp  = s.target.specificHeatCapacity
@@ -643,6 +653,7 @@ export default defineComponent({
       const hDR    = (hVm * hPEF) / (tempCorrectedVth(s.healthy.thresholdVoltage, hTss) * hoverHfireMult)
 
       let tDR = 0
+      let usedResonancePath = false
       if (s.isResonanceMode) {
         const tr = s.target as { resonantFreqGHz?: number; capsidQ?: number; resonantThresholdVcm?: number }
         if (tr.resonantFreqGHz && tr.capsidQ && tr.resonantThresholdVcm) {
@@ -651,6 +662,17 @@ export default defineComponent({
           // hoverHfireMult does NOT apply — acoustic disruption is mechanical, not EP membrane charging.
           const effThreshold = tempCorrectedVth(tr.resonantThresholdVcm, BODY_TEMP_C)
           tDR = computeResonantDisruption(tr.resonantFreqGHz, tr.capsidQ, effThreshold, freqKHz * 1000, fieldVcm)
+          usedResonancePath = true
+        } else {
+          // No capsid params (e.g. mammalian target in resonance mode): Schwan fallback, matching _computeGrid.
+          const tCp  = s.target.specificHeatCapacity
+          const tSAR = computeSAR(s.target, fieldVcm, sigma_e, wf)
+          const tLPerf = s.perfusionRate * PENNES_BLOOD_COEFF / tCp
+          const tTss = BODY_TEMP_C + tSAR * dc / ((NEWTON_COOLING_LAMBDA + tLPerf) * tCp)
+          const tTau = computeTau(s.target, sigma_e)
+          const tPEF = isHoverPulsed ? Math.max(MIN_PULSE_ENVELOPE, 1 - Math.exp(-pw_ns * 1e-9 / tTau)) : 1.0
+          const tVm  = computeSchwan(s.target, freqKHz, fieldVcm, sigma_e, cosT)
+          tDR = (tVm * tPEF) / (tempCorrectedVth(s.target.thresholdVoltage, tTss) * hoverHfireMult)
         }
       } else {
         const tCp  = s.target.specificHeatCapacity
@@ -664,9 +686,8 @@ export default defineComponent({
       }
 
       // Random-orientation lysis probability: P = max(0, 1 − 1/DR_max).
-      // In Schwan mode, tDR includes cosTheta — recover DR_max = tDR / cosT.
-      // In resonance mode, tDR from computeResonantDisruption is orientation-independent.
-      const tDRmax = (!s.isResonanceMode && cosT > MIN_COS_THETA) ? tDR / cosT : tDR
+      // Resonance path is orientation-independent; Schwan path (incl. fallback) includes cosTheta.
+      const tDRmax = (!usedResonancePath && cosT > MIN_COS_THETA) ? tDR / cosT : tDR
       const pLysis = (!s.isResonanceMode || s.targetCellCategory === CELL_CATEGORY.MAMMALIAN)
         ? `${(Math.max(0, 1 - 1 / Math.max(0.001, tDRmax)) * 100).toFixed(0)}%`
         : '\u2014'
