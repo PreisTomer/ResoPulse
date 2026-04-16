@@ -8,7 +8,7 @@
 import { Router } from 'express'
 import type { Request, Response } from 'express'
 
-import { requireAuth, requireOrg, getRequestAuth } from '../middleware/clerkAuth'
+import { requireAuth, requireOrg, getRequestAuth } from '../../middleware/clerkAuth'
 import {
   getTokenBalance,
   getTransactionHistory,
@@ -17,7 +17,7 @@ import {
   consumeTokens,
   PLAN_QUOTA,
   COST_MAP,
-} from '../services/tokenService'
+} from '../../services/tokenService'
 
 const router = Router()
 

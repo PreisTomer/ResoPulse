@@ -10,8 +10,8 @@
 
 import { Router, type Request, type Response } from 'express'
 import { Webhook } from 'svix'
-import { prisma } from '../prisma'
-import { createTokenAccount } from '../services/tokenService'
+import { prisma } from '../../prisma'
+import { createTokenAccount } from '../../services/tokenService'
 
 const router = Router()
 
@@ -122,7 +122,7 @@ async function upsertOrganization(data: ClerkOrgData): Promise<void> {
 
 async function deleteOrganization(orgId: string): Promise<void> {
   await prisma.membership.deleteMany({ where: { orgId } })
-  await prisma.organization.delete({ where: { id: orgId } }).catch((err) => {
+  await prisma.organization.delete({ where: { id: orgId } }).catch((err: unknown) => {
     console.warn('[webhook] deleteOrganization: org already gone or delete failed', orgId, err)
   })
 }

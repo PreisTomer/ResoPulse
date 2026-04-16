@@ -1,7 +1,7 @@
 // Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 
 // Biophysics utilities - Schwan single-shell model, SAR, nsEP, acoustic resonance, EM skin depth
-import { SCHWAN_SPHERE_FACTOR, WF_CW, EPSILON_R_CYTOPLASM, SIGMA_MEMBRANE_SI, TWO_PI, POP_LYSIS_GAUSS_N, POP_LYSIS_GAUSS_Z_MAX, BODY_TEMP_C, TEMP_EP_COEFF, TEMP_EP_CLAMP_MIN, ELECTROSENSITIZATION_EXPONENT, ELECTROSENSITIZATION_CLAMP_MIN, EPSILON_0, MU_0 } from '@/constants/physics'
+import { SCHWAN_SPHERE_FACTOR, WF_CW, EPSILON_R_CYTOPLASM, SIGMA_MEMBRANE_SI, TWO_PI, POP_LYSIS_GAUSS_N, POP_LYSIS_GAUSS_Z_MAX, BODY_TEMP_C, TEMP_EP_COEFF, TEMP_EP_CLAMP_MIN, ELECTROSENSITIZATION_EXPONENT, ELECTROSENSITIZATION_CLAMP_MIN, EPSILON_0, MU_0, MIN_COS_THETA, LYSIS_FIELD_SENTINEL, MIN_PULSE_ENVELOPE, THRESHOLDS } from '@/constants/physics'
 
 import type { CellConfig } from '@/types/cell'
 
@@ -302,4 +302,38 @@ export function computePopulationLysisFraction(dr: number, cv: number): number {
 // Sigmoid EP probability [0-100%]: P=1/(1+exp(−(dr−center)/slope)).
 export function computeLysisProbability(dr: number, center: number, slope: number): number {
   return Math.round(100 / (1 + Math.exp(-(dr - center) / slope)))
+}
+
+// ── cellStore physics helpers ─────────────────────────────────────────────────
+
+// Pulse envelope: fraction of RC charge reached in pulse width t_p. Returns 1.0 for CW.
+export function computePulseEnvelope(cell: CellConfig, pulseWidthNs: number, sigma_e: number): number {
+  return computePulseStepResponse(computeTau(cell, sigma_e), pulseWidthNs)
+}
+
+// Lysis field [V/cm]: E that drives DR=1 at freqKHz with current waveform and thresholds.
+// Returns LYSIS_FIELD_SENTINEL when cosTheta < MIN_COS_THETA (θ→90°, Vm→0).
+export function computeLysisField(
+  cell:       CellConfig,
+  freqKHz:    number,
+  sigma_e:    number,
+  cosTheta:   number,
+  pef:        number,
+  hfireMult:  number,
+  tempC:      number,
+  nPulses:    number,
+): number {
+  if (cosTheta < MIN_COS_THETA) return LYSIS_FIELD_SENTINEL
+  const omega  = TWO_PI * freqKHz * KHZ_TO_HZ
+  const tau    = computeTau(cell, sigma_e)
+  const vthEff = tempCorrectedVth(cell.thresholdVoltage, tempC, nPulses)
+  return (vthEff * hfireMult * Math.sqrt(1 + (omega * tau) ** 2)) /
+    (SCHWAN_SPHERE_FACTOR * cell.radius * UM_TO_M * cosTheta * VCM_TO_VM * Math.max(MIN_PULSE_ENVELOPE, pef))
+}
+
+// σ_i uncertainty factor by cell category: virus 45%, bacteria 35%, mammalian 20%.
+export function computeSigmaUncertaintyFactor(radius: number): number {
+  if (radius < THRESHOLDS.RADIUS_VIRUS_MAX)    return THRESHOLDS.UNCERTAINTY_VIRUS
+  if (radius < THRESHOLDS.RADIUS_BACTERIA_MAX) return THRESHOLDS.UNCERTAINTY_BACTERIA
+  return THRESHOLDS.UNCERTAINTY_MAMMALIAN
 }

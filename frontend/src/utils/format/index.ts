@@ -51,3 +51,14 @@ export function formatLysisTime(ms: number): string {
 export function formatPct(value: number, decimals = 0): string {
   return `${(value * 100).toFixed(decimals)}%`
 }
+
+// Current date-time as "YYYY-MM-DD HH:MM:SS" (local time, 24 h).
+export function nowHMS(): string {
+  const d = new Date()
+  return `${d.toISOString().slice(0, 10)} ${d.toLocaleTimeString('en-GB', { hour12: false })}`
+}
+
+// Round a number to a fixed number of decimal places, stripping trailing zeros.
+export function round(value: number, decimals: number): number {
+  return parseFloat(value.toFixed(decimals))
+}

@@ -6,6 +6,8 @@ import { useCellStore } from '@/stores/cellStore'
 
 import { downloadText, buildEntryMethodsText, buildCsvText } from '@/utils/experimentExport'
 
+import { nowHMS, round } from '@/utils/format'
+
 import { CHART_MODE, DEFAULT_SESSION_NAME } from '@/constants/strings'
 import { MEDIA } from '@/constants/media'
 import { SIGMA_MEMBRANE_SI } from '@/constants/physics'
@@ -81,17 +83,6 @@ interface CellSnapshot {
 }
 
 // ── Local helpers ──────────────────────────────────────────────────────────
-
-function nowHMS(): string {
-  const d    = new Date()
-  const date = d.toISOString().slice(0, 10)
-  const time = d.toLocaleTimeString('en-GB', { hour12: false })
-  return `${date} ${time}`
-}
-
-function round(value: number, decimals: number): number {
-  return parseFloat(value.toFixed(decimals))
-}
 
 const LS_KEY = 'br-experiment'
 

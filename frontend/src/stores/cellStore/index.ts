@@ -8,7 +8,7 @@ import { cloneDeep } from 'lodash'
 import { useExperimentStore } from '@/stores/experimentStore'
 import { useUserPresetsStore } from '@/stores/userPresetsStore'
 
-import { computeSchwan, computeSAR, computeFc, computeTau, computeNuclearTau, computeResonantDisruption, computeNuclearVm, computePulseStepResponse, computeSkinDepthMm, computeDepCmReal, computeDepCrossoverKHz, computeDepSecondCrossoverKHz, computePopulationLysisFraction, safeRatio, tempCorrectedVth } from '@/utils/physics'
+import { computeSchwan, computeSAR, computeFc, computeTau, computeNuclearTau, computeResonantDisruption, computeNuclearVm, computeSkinDepthMm, computeDepCmReal, computeDepCrossoverKHz, computeDepSecondCrossoverKHz, computePopulationLysisFraction, safeRatio, tempCorrectedVth, computePulseEnvelope, computeLysisField, computeSigmaUncertaintyFactor } from '@/utils/physics'
 
 import { cellConfigs } from '@/constants/defaultCells'
 import { CELL_PRESETS } from '@/constants/cellLibrary'
@@ -20,7 +20,6 @@ import { MEDIUM_SPECIFIC_HEAT_J_KG_K } from '@/constants/cuvette'
 import {
   THRESHOLDS,
   DEFAULT_CAPSID_Q,
-  SCHWAN_SPHERE_FACTOR,
   BODY_TEMP_C,
   NEWTON_COOLING_LAMBDA,
   PENNES_BLOOD_COEFF,
@@ -31,8 +30,6 @@ import {
   THERMAL_MA_PEAK_C,
   TEMP_UPDATE_INTERVAL_MS,
   MIN_COS_THETA,
-  LYSIS_FIELD_SENTINEL,
-  MIN_PULSE_ENVELOPE,
   NEAR_ZERO_DR,
   FREQ_ELECTROLYTIC_LIMIT_KHZ,
   FREQ_NEARFIELD_RF_LIMIT_KHZ,
@@ -66,41 +63,6 @@ import type { MediumKey } from '@/types/media'
 // Needed because effectiveSigmaE (a dependency) changes 10×/sec during temperature updates.
 interface OptFreqCache { key: string; result: { khz: number; sel: number } }
 let _optFreqCache: OptFreqCache | null = null
-
-// ── Module-level computation helpers (pure functions - no store context needed) ──
-
-// Pulse envelope: 1.0 for CW; 1−exp(−t_p/τ) for pulsed
-function pulseEnvelope(cell: CellConfig, pulseWidthNs: number, sigma_e: number): number {
-  return computePulseStepResponse(computeTau(cell, sigma_e), pulseWidthNs)
-}
-
-// Lysis field [V/cm]: Vth_eff·hfireMult·√(1+(ωτ)²)/(1.5·R·cosθ·100·pef). Returns SENTINEL near θ=90°.
-// tempC and nPulses apply the same threshold reductions as disruptionRatio, keeping E_lys consistent with DR=1.
-function lysisField(
-  cell: CellConfig,
-  freqKHz: number,
-  sigma_e: number,
-  cosTheta: number,
-  pef: number,
-  hfireMult: number,
-  tempC: number,
-  nPulses: number,
-): number {
-  if (cosTheta < MIN_COS_THETA) return LYSIS_FIELD_SENTINEL
-  const omega   = TWO_PI * freqKHz * 1e3
-  const tau     = computeTau(cell, sigma_e)
-  const vthEff  = tempCorrectedVth(cell.thresholdVoltage, tempC, nPulses)
-  return (vthEff * hfireMult * Math.sqrt(1 + (omega * tau) ** 2)) /
-    (SCHWAN_SPHERE_FACTOR * cell.radius * 1e-6 * cosTheta * V_CM_TO_V_M * Math.max(MIN_PULSE_ENVELOPE, pef))
-}
-
-// σ_i uncertainty: virus 45%, bacteria 35%, mammalian 20%
-function uncertaintyFactor(radius: number): number {
-  const { RADIUS_VIRUS_MAX, RADIUS_BACTERIA_MAX } = THRESHOLDS
-  if (radius < RADIUS_VIRUS_MAX)    return THRESHOLDS.UNCERTAINTY_VIRUS
-  if (radius < RADIUS_BACTERIA_MAX) return THRESHOLDS.UNCERTAINTY_BACTERIA
-  return THRESHOLDS.UNCERTAINTY_MAMMALIAN
-}
 
 
 export interface FieldPacket {
@@ -228,14 +190,14 @@ export const useCellStore = defineStore('cell', {
     pulseEnvelopeFactorHealthy(): number {
       const state = this as CellStoreState
       if (state.waveform !== WAVEFORM.PULSED && state.waveform !== WAVEFORM.H_FIRE) return 1.0
-      return pulseEnvelope(state.healthy, state.pulseWidthNs, this.effectiveSigmaE)
+      return computePulseEnvelope(state.healthy, state.pulseWidthNs, this.effectiveSigmaE)
     },
 
     pulseEnvelopeFactorTarget(): number {
       const state = this as CellStoreState
       const isPulsed = state.waveform === WAVEFORM.PULSED || state.waveform === WAVEFORM.H_FIRE
       if (!isPulsed || this.isResonanceMode) return 1.0
-      return pulseEnvelope(state.target, state.pulseWidthNs, this.effectiveSigmaE)
+      return computePulseEnvelope(state.target, state.pulseWidthNs, this.effectiveSigmaE)
     },
 
     healthyVm(): number {
@@ -350,8 +312,8 @@ export const useCellStore = defineStore('cell', {
       const field   = state.fieldIntensity
       const freq    = state.currentBroadcastFrequency
       const cosT    = this.cosThetaFactor
-      const uncH    = uncertaintyFactor(state.healthy.radius)
-      const uncT    = uncertaintyFactor(state.target.radius)
+      const uncH    = computeSigmaUncertaintyFactor(state.healthy.radius)
+      const uncT    = computeSigmaUncertaintyFactor(state.target.radius)
       // TI_low: weakest target + strongest healthy coupling
       const vmTLow  = computeSchwan({ ...state.target,  conductivity: state.target.conductivity  * (1 - uncT) }, freq, field, sigma_e, cosT)
       const vmHHigh = computeSchwan({ ...state.healthy, conductivity: state.healthy.conductivity * (1 + uncH) }, freq, field, sigma_e, cosT)
@@ -432,15 +394,15 @@ export const useCellStore = defineStore('cell', {
     },
 
     targetLysisField(): number {
-      const state    = this as CellStoreState
+      const state     = this as CellStoreState
       const hfireMult = state.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
-      return lysisField(state.target, state.currentBroadcastFrequency, this.effectiveSigmaE, this.cosThetaFactor, this.pulseEnvelopeFactorTarget, hfireMult, state.targetTemp, state.lysisNPulses)
+      return computeLysisField(state.target, state.currentBroadcastFrequency, this.effectiveSigmaE, this.cosThetaFactor, this.pulseEnvelopeFactorTarget, hfireMult, state.targetTemp, state.lysisNPulses)
     },
 
     healthyLysisField(): number {
-      const state    = this as CellStoreState
+      const state     = this as CellStoreState
       const hfireMult = state.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
-      return lysisField(state.healthy, state.currentBroadcastFrequency, this.effectiveSigmaE, this.cosThetaFactor, this.pulseEnvelopeFactorHealthy, hfireMult, state.healthyTemp, state.lysisNPulses)
+      return computeLysisField(state.healthy, state.currentBroadcastFrequency, this.effectiveSigmaE, this.cosThetaFactor, this.pulseEnvelopeFactorHealthy, hfireMult, state.healthyTemp, state.lysisNPulses)
     },
 
     healthySteadyStateTemp(): number {

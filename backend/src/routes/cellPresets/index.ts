@@ -7,14 +7,14 @@
 import { Router } from 'express'
 import type { Request, Response } from 'express'
 
-import { requireAuth, requireOrg, getRequestAuth } from '../middleware/clerkAuth'
+import { requireAuth, requireOrg, getRequestAuth } from '../../middleware/clerkAuth'
 import {
   listCellPresets,
   createCellPreset,
   updateCellPreset,
   deleteCellPreset,
-} from '../services/cellPresetsService'
-import type { CellPresetInput } from '../services/cellPresetsService'
+} from '../../services/cellPresetsService'
+import type { CellPresetInput } from '../../services/cellPresetsService'
 
 const router = Router()
 
@@ -34,7 +34,7 @@ function validateInput(body: Record<string, unknown>): { errors: string[]; input
   if (!body.shortLabel || typeof body.shortLabel !== 'string' || !(body.shortLabel as string).trim())
     errors.push('shortLabel is required')
 
-  const numFields: (keyof CellPresetInput)[] = [
+  const numFields: string[] = [
     'radius', 'membraneThickness', 'dielectricConstant',
     'conductivity', 'thresholdVoltage', 'density', 'specificHeatCapacity',
   ]

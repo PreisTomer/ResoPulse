@@ -9,7 +9,7 @@ import type { Request, Response } from 'express'
 
 import { Prisma } from '@prisma/client'
 
-import { requireAuth, requireOrg, getRequestAuth } from '../middleware/clerkAuth'
+import { requireAuth, requireOrg, getRequestAuth } from '../../middleware/clerkAuth'
 import {
   listExperiments,
   getExperiment,
@@ -22,8 +22,8 @@ import {
   enableSharing,
   disableSharing,
   getVersionHistory,
-} from '../services/experimentService'
-import { consumeTokens, refundTokens, createTokenAccount, COST_MAP } from '../services/tokenService'
+} from '../../services/experimentService'
+import { consumeTokens, refundTokens, createTokenAccount, COST_MAP } from '../../services/tokenService'
 
 const router = Router()
 
