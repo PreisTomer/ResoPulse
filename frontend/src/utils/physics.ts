@@ -1,7 +1,7 @@
 // Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 
 // Biophysics utilities - Schwan single-shell model, SAR, nsEP, acoustic resonance, EM skin depth
-import { SCHWAN_SPHERE_FACTOR, WF_CW, EPSILON_R_CYTOPLASM, SIGMA_MEMBRANE_SI, TWO_PI, POP_LYSIS_GAUSS_N, POP_LYSIS_GAUSS_Z_MAX, BODY_TEMP_C, TEMP_EP_COEFF, TEMP_EP_CLAMP_MIN, EPSILON_0 } from '@/constants/physics'
+import { SCHWAN_SPHERE_FACTOR, WF_CW, EPSILON_R_CYTOPLASM, SIGMA_MEMBRANE_SI, TWO_PI, POP_LYSIS_GAUSS_N, POP_LYSIS_GAUSS_Z_MAX, BODY_TEMP_C, TEMP_EP_COEFF, TEMP_EP_CLAMP_MIN, EPSILON_0, MU_0 } from '@/constants/physics'
 
 import type { CellConfig } from '@/types/cell'
 
@@ -212,8 +212,7 @@ export function computeResonantLineshape(
 
 // EM skin depth [mm]: δ=1/α, α=ω√(με/2)·√(√(1+(σ/ωε)²)−1). Gabriel 1996.
 export function computeSkinDepthMm(freqKHz: number, sigma_e: number, epsilon_r = 80): number {
-  const MU_0 = 4 * Math.PI * 1e-7  // H/m
-  const f    = freqKHz * KHZ_TO_HZ
+  const f = freqKHz * KHZ_TO_HZ  // MU_0 imported from constants/physics
   if (f <= 0 || sigma_e <= 0) return Infinity
   const omega       = TWO_PI * f
   const epsilon     = epsilon_r * EPSILON_0

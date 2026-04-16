@@ -209,6 +209,7 @@ export default defineComponent({
     backdrop-filter: blur(12px);
     overflow-y: auto;
     overflow-x: hidden;
+    scrollbar-gutter: stable;
 
     .side-tab-panel--left & {
       border-left: 1px solid color-mix(in srgb, white 12%, transparent);

@@ -1,7 +1,7 @@
 <!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
 <template>
   <div class="home__hero-bg" aria-hidden="true">
-    <svg class="home__hero-bg-svg" viewBox="0 0 900 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg class="home__hero-bg-svg" viewBox="0 0 900 900" overflow="visible" fill="none" xmlns="http://www.w3.org/2000/svg">
       <!-- Origin dot: blinks first, rings shoot outward from it -->
       <circle class="home__hero-bg-dot" cx="450" cy="450" r="6"/>
       <!-- Concentric rings: same visual language as the logo rings, amplified -->
@@ -10,6 +10,8 @@
       <circle class="home__hero-bg-ring home__hero-bg-ring--3" cx="450" cy="450" r="338" stroke-width="0.9" fill="none"/>
       <circle class="home__hero-bg-ring home__hero-bg-ring--4" cx="450" cy="450" r="440" stroke-width="0.8" fill="none"/>
       <circle class="home__hero-bg-ring home__hero-bg-ring--5" cx="450" cy="450" r="542" stroke-width="0.7" fill="none"/>
+      <circle class="home__hero-bg-ring home__hero-bg-ring--6" cx="450" cy="450" r="648" stroke-width="0.6" fill="none"/>
+      <circle class="home__hero-bg-ring home__hero-bg-ring--7" cx="450" cy="450" r="756" stroke-width="0.5" fill="none"/>
     </svg>
   </div>
 </template>
@@ -24,22 +26,37 @@ export default defineComponent({
 
 <style lang="scss" scoped>
 .home__hero-bg {
+  // Positioned relative to .home (outer container, full page width) — moved outside
+  // home__inner so the rings can span the full viewport rather than the 900px content box.
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
   pointer-events: none;
   z-index: 0;
-  mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+  // Fade rings out toward the bottom of the viewport; left/right edges remain visible
+  mask-image: linear-gradient(to bottom, black 65%, transparent 100%);
 
   @media (max-width: 520px) { display: none; }
 
   &-svg {
-    width: 760px;
+    // Responsive width: fills ~88vw so rings reach near viewport edges on all screen sizes.
+    // Capped at 1600px to avoid over-scaling on ultra-wide displays.
+    // overflow="visible" on the SVG element lets rings beyond the 900×900 viewBox render.
+    width: min(88vw, 1600px);
+    min-width: 760px;
     height: auto;
     mix-blend-mode: screen;
     animation: hero-bg-reveal 2s ease-out forwards;
+
+    @media (max-width: 768px) {
+      width: max(680px, 88vw);
+      min-width: unset;
+    }
   }
 
   &-dot {
@@ -63,6 +80,8 @@ export default defineComponent({
     &--3 { stroke: color-mix(in srgb, var(--color-primary) 65%, transparent);        animation-delay: 0.28s, 2.25s; }
     &--4 { stroke: color-mix(in srgb, var(--color-primary) 45%, transparent);        animation-delay: 0.33s, 2.95s; }
     &--5 { stroke: color-mix(in srgb, var(--color-primary) 25%, transparent);        animation-delay: 0.38s, 3.65s; }
+    &--6 { stroke: color-mix(in srgb, var(--color-primary) 14%, transparent);        animation-delay: 0.43s, 4.35s; }
+    &--7 { stroke: color-mix(in srgb, var(--color-primary)  7%, transparent);        animation-delay: 0.48s, 5.05s; }
   }
 }
 

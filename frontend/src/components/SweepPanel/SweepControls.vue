@@ -25,13 +25,13 @@
       <input
         class="sweep-ctrl__input"
         type="number"
-        :value="sweepMax"
+        :value="sweepParam === 'field' ? sweepMax : freqDisplayValue"
         v-tip="tipMaxLabel"
-        :step="sweepParam === 'field' ? 100 : 1000"
-        :min="sweepParam === 'field' ? 100 : 100"
+        :step="sweepParam === 'field' ? 100 : freqInputStep"
+        :min="sweepParam === 'field' ? 100 : freqInputMin"
         @input="onMaxInput"
       />
-      <span class="sweep-ctrl__unit">{{ sweepParam === 'field' ? $t('sweep.fieldUnit') : $t('sweep.freqUnit') }}</span>
+      <span class="sweep-ctrl__unit">{{ sweepParam === 'field' ? $t('sweep.fieldUnit') : freqUnit }}</span>
     </div>
 
     <button class="sweep-ctrl__export" v-tip="$t('sweep.tipExport')" @click="$emit(EMIT.EXPORT)">
@@ -44,8 +44,11 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 
+import { splitFreqKHz } from '@/utils/format'
+
 import { UNIT } from '@/constants/units'
 import { EMIT } from '@/constants/emitEvents'
+
 export default defineComponent({
   props: {
     sweepParam:     { type: String as () => 'field' | 'freq', required: true },
@@ -56,8 +59,38 @@ export default defineComponent({
 
   computed: {
     EMIT() { return EMIT },
+
+    // Unit string (kHz / MHz / GHz) anchored to defaultFreqMax so it stays stable while typing
+    freqUnit(): string {
+      return splitFreqKHz(this.defaultFreqMax).unit
+    },
+
+    // Multiplicative factor: display unit → kHz (e.g. GHz → 1_000_000)
+    freqUnitFactor(): number {
+      if (this.freqUnit === UNIT.GHZ) return 1_000_000
+      if (this.freqUnit === UNIT.MHZ) return 1_000
+      return 1
+    },
+
+    // sweepMax expressed in the display unit for the input :value binding
+    freqDisplayValue(): number {
+      return this.sweepMax / this.freqUnitFactor
+    },
+
+    // Step size in display unit: 0.1 GHz / 1 MHz / 100 kHz
+    freqInputStep(): number {
+      if (this.freqUnit === UNIT.GHZ) return 0.1
+      if (this.freqUnit === UNIT.MHZ) return 1
+      return 100
+    },
+
+    // Minimum input value in display unit (corresponds to 100 kHz absolute minimum)
+    freqInputMin(): number {
+      return 100 / this.freqUnitFactor
+    },
+
     tipMaxLabel(): string {
-      const unit = this.sweepParam === 'field' ? UNIT.V_PER_CM : UNIT.KHZ
+      const unit = this.sweepParam === 'field' ? UNIT.V_PER_CM : this.freqUnit
       return this.$t('sweep.tipMaxLabel', { unit })
     },
   },
@@ -65,7 +98,10 @@ export default defineComponent({
   methods: {
     onMaxInput(e: Event) {
       const v = +(e.target as HTMLInputElement).value
-      if (v > 0) this.$emit(EMIT.MAX_CHANGE, v)
+      if (v <= 0) return
+      // Convert display-unit value back to kHz before emitting
+      const kHz = this.sweepParam === 'field' ? v : v * this.freqUnitFactor
+      this.$emit(EMIT.MAX_CHANGE, kHz)
     },
   },
 })

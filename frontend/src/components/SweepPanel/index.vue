@@ -127,9 +127,14 @@ export default defineComponent({
         this.cellStore.isResonanceMode
     },
 
-    // Category sweep max: mammalian=5MHz, bacteria=200MHz, virus=500MHz (GHz inaccessible)
+    // In acoustic resonance mode, default to 2×f_res so the Lorentzian peak is visible.
+    // In Schwan/IRE mode: mammalian=5 MHz, bacteria=200 MHz, virus=500 MHz.
     defaultFreqMax(): number {
       const cat = this.cellStore.targetCellCategory
+      if (this.cellStore.isResonanceMode) {
+        const t = this.cellStore.target as CellConfig & { resonantFreqGHz?: number }
+        if (t.resonantFreqGHz) return Math.round(t.resonantFreqGHz * 1e6 * 2)  // 2×f_res in kHz
+      }
       if (cat === CELL_CATEGORY.BACTERIA) return 200_000   // 200 MHz in kHz
       if (cat === CELL_CATEGORY.VIRUS)    return 500_000   // 500 MHz in kHz
       return 5_000                                         // 5 MHz for mammalian
@@ -147,7 +152,8 @@ export default defineComponent({
       const sigma_e    = cellStore.effectiveSigmaE
       const cosTheta   = cellStore.cosThetaFactor
       const waveform   = cellStore.waveform
-      const dc         = cellStore.dutyCycle
+      // CW is continuous (dc=1.0); for pulsed/H-FIRE use the stored duty cycle.
+      const dc         = waveform === WAVEFORM.CW ? 1.0 : cellStore.dutyCycle
       const pwNs       = cellStore.pulseWidthNs
       const freqKHz    = cellStore.currentBroadcastFrequency
       const E          = cellStore.fieldIntensity
@@ -175,7 +181,9 @@ export default defineComponent({
         if (this.sweepParam === 'field') {
           // Compute per-point temperatures first so threshold correction uses the local steady-state temp
           tH = computeTemp(healthy, x, sigma_e, wf, dc, perfRate)
-          tT = computeTemp(target,  x, sigma_e, wf, dc, perfRate)
+          // Resonance targets: acoustic disruption is mechanical — Joule SAR does not apply.
+          // Store returns targetSAR=0 in resonance mode; mirror that here for consistency.
+          tT = this.isResonanceTarget ? BODY_TEMP_C : computeTemp(target, x, sigma_e, wf, dc, perfRate)
           const vmH    = computeSchwan(healthy, freqKHz, x, sigma_e, cosTheta)
           const hVthEff = tempCorrectedVth(healthy.thresholdVoltage, tH) * hfireMult
           drH = (vmH * pefH) / hVthEff
@@ -190,7 +198,9 @@ export default defineComponent({
         } else {
           // Compute per-point temperatures first so threshold correction uses the local steady-state temp
           tH = computeTemp(healthy, E, sigma_e, wf, dc, perfRate)
-          tT = computeTemp(target,  E, sigma_e, wf, dc, perfRate)
+          // Resonance targets: acoustic disruption is mechanical — Joule SAR does not apply.
+          // Store returns targetSAR=0 in resonance mode; mirror that here for consistency.
+          tT = this.isResonanceTarget ? BODY_TEMP_C : computeTemp(target, E, sigma_e, wf, dc, perfRate)
           const vmH    = computeSchwan(healthy, x, E, sigma_e, cosTheta)
           const hVthEff = tempCorrectedVth(healthy.thresholdVoltage, tH) * hfireMult
           drH = (vmH * pefH) / hVthEff

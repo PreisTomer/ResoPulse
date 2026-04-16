@@ -38,7 +38,7 @@ import {
 } from '@/constants/heatmap'
 import {
   BODY_TEMP_C, NEWTON_COOLING_LAMBDA, PENNES_BLOOD_COEFF, WF_CW, WF_PULSED, MIN_PULSE_ENVELOPE,
-  H_FIRE_THRESHOLD_MULTIPLIER,
+  H_FIRE_THRESHOLD_MULTIPLIER, MIN_COS_THETA,
 } from '@/constants/physics'
 import { ICON } from '@/constants/icons'
 import { EMIT } from '@/constants/emitEvents'
@@ -221,7 +221,7 @@ export default defineComponent({
       const isPulsed   = s.waveform === WAVEFORM.PULSED || s.waveform === WAVEFORM.H_FIRE
       const hfireMult  = s.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
       const wf         = isPulsed ? WF_PULSED : WF_CW
-      const dc         = s.dutyCycle
+      const dc         = s.waveform === WAVEFORM.CW ? 1.0 : s.dutyCycle
       const pw_ns      = s.pulseWidthNs
 
       const hTau = computeTau(s.healthy, sigma_e)
@@ -237,13 +237,10 @@ export default defineComponent({
       if (s.isResonanceMode) {
         const tr = s.target as { resonantFreqGHz?: number; capsidQ?: number; resonantThresholdVcm?: number }
         if (tr.resonantFreqGHz && tr.capsidQ && tr.resonantThresholdVcm) {
-          // Compute temperature at this specific field so threshold correction is field-dependent,
-          // matching the Schwan path. hfireMult does NOT apply — acoustic disruption is mechanical.
-          const tCp_z  = s.target.specificHeatCapacity
-          const tLP_z  = s.perfusionRate * PENNES_BLOOD_COEFF / tCp_z
-          const tSAR_z = computeSAR(s.target, fieldVcm, sigma_e, wf)
-          const tTss_z = BODY_TEMP_C + tSAR_z * dc / ((NEWTON_COOLING_LAMBDA + tLP_z) * tCp_z)
-          const effThreshold = tempCorrectedVth(tr.resonantThresholdVcm, tTss_z)
+          // Resonance disruption is acoustic/mechanical: Joule SAR does not apply to the target.
+          // Use BODY_TEMP_C for threshold correction, consistent with store targetSAR = 0 in resonance mode.
+          // hfireMult does NOT apply — acoustic disruption is mechanical, not EP membrane charging.
+          const effThreshold = tempCorrectedVth(tr.resonantThresholdVcm, BODY_TEMP_C)
           tDR = computeResonantDisruption(tr.resonantFreqGHz, tr.capsidQ, effThreshold, freqKHz * 1000, fieldVcm)
         }
       } else {
@@ -274,7 +271,7 @@ export default defineComponent({
       const isPulsed   = s.waveform === WAVEFORM.PULSED || s.waveform === WAVEFORM.H_FIRE
       const hfireMult  = s.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
       const wf         = isPulsed ? WF_PULSED : WF_CW
-      const dc         = s.dutyCycle
+      const dc         = s.waveform === WAVEFORM.CW ? 1.0 : s.dutyCycle
       const pw_ns      = s.pulseWidthNs
       const isRes      = s.isResonanceMode
 
@@ -307,12 +304,10 @@ export default defineComponent({
 
           let tDR = 0
           if (hasRes) {
-            // Compute temperature at this field step so the threshold correction matches
-            // the Schwan path (which also uses per-cell-per-field temperature).
+            // Resonance disruption is acoustic/mechanical: Joule SAR does not apply to the target.
+            // Use BODY_TEMP_C for threshold correction, consistent with store targetSAR = 0 in resonance mode.
             // hfireMult does NOT apply — acoustic resonance is mechanical, not EP membrane charging.
-            const tSAR_res = computeSAR(s.target, fieldVcm, sigma_e, wf)
-            const tTss_res = BODY_TEMP_C + tSAR_res * dc / ((NEWTON_COOLING_LAMBDA + tLambdaPerf) * tCp)
-            const resThreshold = tempCorrectedVth(tr.resonantThresholdVcm!, tTss_res)
+            const resThreshold = tempCorrectedVth(tr.resonantThresholdVcm!, BODY_TEMP_C)
             tDR = computeResonantDisruption(tr.resonantFreqGHz!, tr.capsidQ!, resThreshold, freqHz, fieldVcm)
           } else {
             const tSAR = computeSAR(s.target, fieldVcm, sigma_e, wf)
@@ -637,7 +632,7 @@ export default defineComponent({
       const isHoverPulsed  = s.waveform === WAVEFORM.PULSED || s.waveform === WAVEFORM.H_FIRE
       const hoverHfireMult = s.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
       const wf             = isHoverPulsed ? WF_PULSED : WF_CW
-      const dc             = s.dutyCycle, pw_ns = s.pulseWidthNs
+      const dc             = s.waveform === WAVEFORM.CW ? 1.0 : s.dutyCycle, pw_ns = s.pulseWidthNs
       const hCp    = s.healthy.specificHeatCapacity
       const hTau   = computeTau(s.healthy, sigma_e)
       const hPEF   = isHoverPulsed ? Math.max(MIN_PULSE_ENVELOPE, 1 - Math.exp(-pw_ns * 1e-9 / hTau)) : 1.0
@@ -651,15 +646,10 @@ export default defineComponent({
       if (s.isResonanceMode) {
         const tr = s.target as { resonantFreqGHz?: number; capsidQ?: number; resonantThresholdVcm?: number }
         if (tr.resonantFreqGHz && tr.capsidQ && tr.resonantThresholdVcm) {
-          // H-FIRE bipolar charge cancellation is an EP membrane-charging mechanism only.
-          // Acoustic resonance disruption is mechanical — hoverHfireMult must NOT apply here.
-          // Compute temperature at the hover field (not the active operating point) for consistency
-          // with the grid path and the Schwan hover path below.
-          const tCp_h   = s.target.specificHeatCapacity
-          const tLP_h   = s.perfusionRate * PENNES_BLOOD_COEFF / tCp_h
-          const tSAR_h  = computeSAR(s.target, fieldVcm, sigma_e, wf)
-          const tTss_h  = BODY_TEMP_C + tSAR_h * dc / ((NEWTON_COOLING_LAMBDA + tLP_h) * tCp_h)
-          const effThreshold = tempCorrectedVth(tr.resonantThresholdVcm, tTss_h)
+          // Resonance disruption is acoustic/mechanical: Joule SAR does not apply to the target.
+          // Use BODY_TEMP_C for threshold correction, consistent with store targetSAR = 0 in resonance mode.
+          // hoverHfireMult does NOT apply — acoustic disruption is mechanical, not EP membrane charging.
+          const effThreshold = tempCorrectedVth(tr.resonantThresholdVcm, BODY_TEMP_C)
           tDR = computeResonantDisruption(tr.resonantFreqGHz, tr.capsidQ, effThreshold, freqKHz * 1000, fieldVcm)
         }
       } else {
@@ -673,8 +663,12 @@ export default defineComponent({
         tDR = (tVm * tPEF) / (tempCorrectedVth(s.target.thresholdVoltage, tTss) * hoverHfireMult)
       }
 
+      // Random-orientation lysis probability: P = max(0, 1 − 1/DR_max).
+      // In Schwan mode, tDR includes cosTheta — recover DR_max = tDR / cosT.
+      // In resonance mode, tDR from computeResonantDisruption is orientation-independent.
+      const tDRmax = (!s.isResonanceMode && cosT > MIN_COS_THETA) ? tDR / cosT : tDR
       const pLysis = (!s.isResonanceMode || s.targetCellCategory === CELL_CATEGORY.MAMMALIAN)
-        ? `${(Math.max(0, 1 - 1 / Math.max(0.001, tDR)) * 100).toFixed(0)}%`
+        ? `${(Math.max(0, 1 - 1 / Math.max(0.001, tDRmax)) * 100).toFixed(0)}%`
         : '\u2014'
 
       // Outcome badges

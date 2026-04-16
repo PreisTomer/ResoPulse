@@ -132,12 +132,14 @@ describe('targetLysisProbabilityRandom', () => {
     }
   })
 
-  it('max(0, 1 - 1/DR) formula: at DR=2 → 50% of randomly-oriented cells lyse', () => {
-    // We can't set DR=2 directly, but we can compute it from store
+  it('max(0, 1 - 1/DR_max) formula: random-orientation P uses DR at cosθ=1, not the display DR', () => {
+    // targetLysisProbabilityRandom uses DR_max (orientation-independent) so that the
+    // random-suspension lysis fraction is correct regardless of the UI orientation slider.
     const store = freshStore()
-    // Read actual DR and compute expected lysis probability
-    const dr = store.targetDisruptionRatio
-    const expected = Math.max(0, Math.min(1, 1 - 1 / dr))
+    const dr   = store.targetDisruptionRatio    // orientation-specific (includes cosTheta)
+    const cosT = store.cosThetaFactor
+    const drMax  = cosT > 0.01 ? dr / cosT : dr  // recover DR at θ=0 (field-aligned pole)
+    const expected = Math.max(0, Math.min(1, 1 - 1 / drMax))
     expect(store.targetLysisProbabilityRandom).toBeCloseTo(expected, 6)
   })
 })

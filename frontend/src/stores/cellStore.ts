@@ -707,15 +707,23 @@ export const useCellStore = defineStore('cell', {
     },
 
     targetLysisProbabilityRandom(): number {
-      const dr = this.targetDisruptionRatio
+      const dr   = this.targetDisruptionRatio
       if (dr <= 0) return 0
-      return Math.max(0, Math.min(1, 1 - 1 / dr))
+      // In resonance mode, DR is orientation-independent (acoustic, not Schwan Vm).
+      // In Schwan mode, DR includes cosTheta — recover DR_max = DR / cosTheta for the
+      // random-orientation integral: P = max(0, 1 − 1/DR_max).
+      const cosT  = this.cosThetaFactor
+      const drMax = (!this.isResonanceMode && cosT > MIN_COS_THETA) ? dr / cosT : dr
+      return Math.max(0, Math.min(1, 1 - 1 / drMax))
     },
 
     healthyLysisProbabilityRandom(): number {
-      const dr = this.healthyDisruptionRatio
+      const dr   = this.healthyDisruptionRatio
       if (dr <= 0) return 0
-      return Math.max(0, Math.min(1, 1 - 1 / dr))
+      // healthyDisruptionRatio always uses Schwan Vm with cosTheta — recover DR_max.
+      const cosT  = this.cosThetaFactor
+      const drMax = cosT > MIN_COS_THETA ? dr / cosT : dr
+      return Math.max(0, Math.min(1, 1 - 1 / drMax))
     },
 
     // ── Population size distribution model ────────────────────────────────────
@@ -727,14 +735,31 @@ export const useCellStore = defineStore('cell', {
       return POP_CV_MAMMALIAN
     },
 
-    healthyPopulationSizeCV(): number { return POP_CV_MAMMALIAN },
+    // Mirror targetPopulationSizeCV: derive CV from the actual healthy-cell category rather
+    // than hard-coding mammalian, so custom bacterial/viral "healthy" references are correct.
+    healthyPopulationSizeCV(): number {
+      const state = this as CellStoreState
+      const r = state.healthy.radius
+      if (r < THRESHOLDS.RADIUS_VIRUS_MAX)    return POP_CV_VIRUS
+      if (r < THRESHOLDS.RADIUS_BACTERIA_MAX) return POP_CV_BACTERIA
+      return POP_CV_MAMMALIAN
+    },
 
     targetPopulationLysisFraction(): number {
-      return computePopulationLysisFraction(this.targetDisruptionRatio, this.targetPopulationSizeCV)
+      // computePopulationLysisFraction expects DR_max (orientation-independent).
+      // In Schwan mode, recover DR_max = DR / cosTheta; in resonance mode, DR is already orientation-free.
+      const dr   = this.targetDisruptionRatio
+      const cosT = this.cosThetaFactor
+      const drMax = (!this.isResonanceMode && cosT > MIN_COS_THETA) ? dr / cosT : dr
+      return computePopulationLysisFraction(drMax, this.targetPopulationSizeCV)
     },
 
     healthyPopulationLysisFraction(): number {
-      return computePopulationLysisFraction(this.healthyDisruptionRatio, this.healthyPopulationSizeCV)
+      // healthyDisruptionRatio always uses Schwan Vm — recover DR_max = DR / cosTheta.
+      const dr   = this.healthyDisruptionRatio
+      const cosT = this.cosThetaFactor
+      const drMax = cosT > MIN_COS_THETA ? dr / cosT : dr
+      return computePopulationLysisFraction(drMax, this.healthyPopulationSizeCV)
     },
 
   },

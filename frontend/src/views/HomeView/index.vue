@@ -15,13 +15,13 @@
     </RouterLink>
 
 
+    <!-- Pulse rings — moved outside home__inner so they can span full viewport width -->
+    <HeroRingsSvg />
+
     <div class="home__inner">
 
       <!-- ── Zone 1: Hero — full viewport, staggered CSS entrance ── -->
       <div class="home__zone home__zone--hero">
-
-        <!-- Pulse rings — logo motif echoed at page scale + ambient E-field lines -->
-        <HeroRingsSvg />
 
         <div class="home__hero-brand">
           <div class="home__title-lockup">
@@ -303,11 +303,11 @@ import BodePlotSvg from './BodePlotSvg.vue'
 import OscilloscopeSvg from './OscilloscopeSvg.vue'
 
 const SEL_CYCLE_MS      = 9000
-const PARTICLE_COUNT    = 45
+const PARTICLE_COUNT    = 65
 const PARTICLE_SPEED    = 0.16
 const PARTICLE_RADIUS   = 1.3
 const PARTICLE_OPACITY  = 0.38
-const CONNECTION_DIST   = 120
+const CONNECTION_DIST   = 138
 
 const HEX_RADIUS        = 26
 const HEX_OPEN_SPEED    = 0.010

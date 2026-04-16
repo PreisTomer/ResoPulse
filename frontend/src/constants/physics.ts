@@ -153,8 +153,10 @@ export const RESEAL_PULSE_EXPONENT = 0.3  // sublinear pulse-count scaling expon
 export const RESEAL_TIME_MIN_S = 0.5      // min resealing time display clamp [s]
 export const RESEAL_TIME_MAX_S = 60.0     // max resealing time display clamp [s]
 
-// Default acoustic Q when preset omits capsidQ. Rigid capsids Q~30; peptidoglycan Q~3-4.
-export const DEFAULT_CAPSID_Q = 2
+// Default acoustic Q when preset omits capsidQ. Rigid icosahedral protein capsids Q~30;
+// peptidoglycan cell walls Q~3-4 (viscoelastic damping). Default=3: conservative lower
+// bound of the peptidoglycan range — all current presets define capsidQ explicitly.
+export const DEFAULT_CAPSID_Q = 3
 
 // ── Electromagnetic constants ─────────────────────────────────────────────────
 
