@@ -2,10 +2,10 @@
   "home": {
     "eyebrowItems": ["Schwan Equation", "IRE / nsEP", "Acoustic Resonance", "DEP Crossover", "SAR Bioheat"],
     "subtitle": "Virtual Biophysics Engine",
-    "tagline1a": "Design electroporation and acoustic resonance protocols with live Schwan-equation physics. Instantly identify the ",
+    "tagline1a": "Design electroporation and acoustic resonance experiments with live Schwan physics. Map the ",
     "tagline1Highlight": "Window of Selectivity",
-    "tagline1b": ": the\u00a0exact frequency where target cells lyse while healthy cells survive.",
-    "tagline2": "Nine peer-reviewed physics models, an AI optimizer, and live hardware impedance feedback, all in one workspace. Design your protocol in silico, then export a complete Materials and Methods section ready for publication.",
+    "tagline1b": ": the\u00a0predicted frequency band where target cells cross the lysis threshold while healthy cells stay below.",
+    "tagline2": "Nine peer-reviewed physics models, an AI optimizer, and live impedance feedback in one bench workspace. Simulate before the cuvette, then export a fully-cited Methods draft for your paper.",
     "btnPrimary": "Open Experiment Lab",
     "btnStartFree": "Start free",
     "btnTryGuest": "Try as a Guest",
