@@ -42,14 +42,18 @@ describe('resonance mode path isolation', () => {
     expect(isFinite(drH)).toBe(true)
   })
 
-  it('switching to resonance mode disables double-shell model', () => {
+  it('resonance-mode bacteria target reports zero nuclear DR (no nucleus → numerically gated)', () => {
+    // Nuclear influence is no longer gated by a boolean flag flip on mode switch —
+    // it is naturally zero for cells without nuclearRadius (bacteria, viruses), which
+    // are the species that drive resonance-mode use. Assert the numeric outcome.
     const store = freshStore()
-    store.setChartMode(CHART_MODE.SCHWAN)
-    store.toggleDoubleShell()
-    expect(store.doubleShellEnabled).toBe(true)
-
+    const ecoli = CELL_PRESETS.find(p => p.presetId === 'ecoli')!
+    store.loadPreset('target', ecoli)
     store.setChartMode(CHART_MODE.RESONANCE)
-    expect(store.doubleShellEnabled).toBe(false)
+
+    expect(store.target.nuclearRadius).toBeFalsy()
+    expect(store.targetNuclearVm).toBe(0)
+    expect(store.targetNuclearDisruptionRatio).toBe(0)
   })
 
   it('H-FIRE multiplier does NOT apply to acoustic resonance DR', () => {
@@ -123,6 +127,7 @@ describe('waveform × DR consistency', () => {
 
     const storeHfire = freshStore()
     storeHfire.setWaveform(WAVEFORM.H_FIRE)
+    storeHfire.setLysisNPulses(1)  // pin N=1 so electrosensitization factor = 1 (test is about waveform, not N)
     storeHfire.setPulseWidthNs(100_000)  // long pulse → PEF ≈ 1
     const drHfire = storeHfire.targetDisruptionRatio
 
@@ -136,6 +141,7 @@ describe('waveform × DR consistency', () => {
 
     const storePulsed = freshStore()
     storePulsed.setWaveform(WAVEFORM.PULSED)
+    storePulsed.setLysisNPulses(1)  // pin N=1 so electrosensitization factor = 1 (test is about PEF, not N)
     storePulsed.setPulseWidthNs(100_000)  // 100 µs >> τ ≈ 500 ns
     expect(storePulsed.targetDisruptionRatio).toBeCloseTo(drCW, 1)
   })

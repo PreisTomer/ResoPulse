@@ -5,6 +5,8 @@ import { defineStore } from 'pinia'
 
 import { cloneDeep } from 'lodash'
 
+import type { StatePacket } from '@resopulse/shared-types'
+
 import { useExperimentStore } from '@/stores/experimentStore'
 import { useUserPresetsStore } from '@/stores/userPresetsStore'
 
@@ -77,23 +79,7 @@ export interface FieldPacket {
 }
 
 
-export interface StatePacket {
-  freqKHz:             number
-  fieldVcm:            number
-  medium:              string
-  dutyCycle:           number
-  pulseWidthNs:        number
-  waveform:            'cw' | 'pulsed' | 'hfire'
-  orientationDeg:      number
-  lysisNPulses:        number
-  chartMode:           'schwan' | 'resonance'
-  doubleShellEnabled:  boolean
-  perfusionRate:       number
-  cellPackingFraction: number
-  targetPresetId:      string
-  healthyPresetId:     string
-  sessionName:         string
-}
+export type { StatePacket }
 
 interface CellStoreState {
   healthy: CellConfig

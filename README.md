@@ -85,7 +85,7 @@ npm run backend     # ts-node-dev      →  http://localhost:3001
 The bridge streams impedance readings from a bench instrument to the backend over Socket.IO. It requires Python 3.11+ and [uv](https://github.com/astral-sh/uv).
 
 ```bash
-cd instrument-bridge
+cd apps/instrument-bridge
 uv sync                      # base install (no hardware drivers)
 uv sync --extra serial       # add PySerial for RS-232 instruments
 uv sync --extra visa         # add PyVISA for GPIB/USB-TMC instruments
@@ -155,7 +155,7 @@ The service blends two sources:
 ### Start the AI service
 
 ```bash
-cd instrument-bridge
+cd apps/instrument-bridge
 uv sync --extra ai
 uv run instrument-bridge ai-service              # localhost:8000
 uv run instrument-bridge ai-service --host 0.0.0.0 --port 8000   # expose on LAN
@@ -186,13 +186,12 @@ Or set `DEMO_SEED=true` in the environment before starting `ai-service` for auto
 
 ## Testing
 
-Tests live in `frontend/src/**/*.test.ts` and run via Vitest.
+Tests live in `apps/web/src/**/*.test.ts` and run via Vitest.
 
 ```bash
-cd frontend
-npm run test            # single run
-npm run test:watch      # watch mode
-npm run test:coverage   # coverage report
+npm test                         # frontend + backend
+npm -w @resopulse/web run test:watch     # frontend watch mode
+npm -w @resopulse/web run test:coverage  # frontend coverage report
 ```
 
 127 tests across three files: physics unit tests (`physics.test.ts`, `physicsAdvanced.test.ts`) and store integration tests (`cellStore.test.ts`).

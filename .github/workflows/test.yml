@@ -23,10 +23,10 @@ jobs:
         # Delete the Windows-generated lockfile before installing so npm resolves
         # platform-specific optional binaries (e.g. @rollup/rollup-linux-x64-gnu)
         # for the current OS rather than skipping entries absent from the lockfile.
-        run: rm -f frontend/package-lock.json && npm --prefix frontend install
+        run: rm -f package-lock.json && npm install
 
       - name: Run tests
-        run: npm --prefix frontend run test
+        run: npm test
 
       - name: Build (type-check + bundle)
-        run: npm --prefix frontend run build
+        run: npm run build:all

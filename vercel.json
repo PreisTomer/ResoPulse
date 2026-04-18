@@ -1,6 +1,6 @@
 {
-  "buildCommand": "npm --prefix frontend install && npm --prefix frontend run test && npm --prefix frontend run build",
-  "outputDirectory": "frontend/dist",
-  "installCommand": "npm --prefix frontend install",
+  "buildCommand": "npm run test -w @resopulse/web && npm run build -w @resopulse/web",
+  "outputDirectory": "apps/web/dist",
+  "installCommand": "npm install",
   "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
 }

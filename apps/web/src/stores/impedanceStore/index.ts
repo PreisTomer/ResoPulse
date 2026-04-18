@@ -4,6 +4,8 @@
 
 import { defineStore } from 'pinia'
 
+import type { HardwareImpedancePacket } from '@resopulse/shared-types'
+
 import { useCellStore } from '@/stores/cellStore'
 
 import {
@@ -41,13 +43,7 @@ import {
 
 // ── Public types ───────────────────────────────────────────────────────────────
 
-export interface HardwareImpedancePacket {
-  zReal:        number   // real part [Ω]
-  zImag:        number   // imaginary part [Ω] (negative = capacitive)
-  freqHz:       number   // measurement frequency [Hz]
-  conductivity?: number  // σ_e [S/m] if provided directly by instrument
-  timestamp:    number   // Unix ms
-}
+export type { HardwareImpedancePacket }
 
 export interface ImpedanceHistoryPoint {
   ts:     number  // Unix ms

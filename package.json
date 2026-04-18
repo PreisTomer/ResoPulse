@@ -2,14 +2,23 @@
   "name": "resopulse",
   "version": "0.1.0",
   "private": true,
+  "workspaces": [
+    "apps/web",
+    "apps/api",
+    "packages/*"
+  ],
   "scripts": {
-    "frontend":    "npm --prefix frontend run dev",
-    "backend":     "npm --prefix backend run dev",
-    "ai":          "cd instrument-bridge && DEMO_SEED=1 uv run instrument-bridge ai-service",
-    "dev":         "concurrently --names \"BACKEND,FRONTEND,AI\" --prefix-colors \"cyan,green,magenta\" \"npm run backend\" \"npm run frontend\" \"npm run ai\"",
-    "dev:no-ai":   "concurrently --names \"BACKEND,FRONTEND\" --prefix-colors \"cyan,green\" \"npm run backend\" \"npm run frontend\"",
-    "install:all": "npm --prefix frontend install && npm --prefix backend install && cd instrument-bridge && uv sync --extra ai",
-    "build:frontend": "npm --prefix frontend run build"
+    "frontend":         "npm -w @resopulse/web run dev",
+    "backend":          "npm -w @resopulse/api run dev",
+    "ai":               "cd apps/instrument-bridge && DEMO_SEED=1 uv run instrument-bridge ai-service",
+    "dev":              "concurrently --names \"BACKEND,FRONTEND,AI\" --prefix-colors \"cyan,green,magenta\" \"npm run backend\" \"npm run frontend\" \"npm run ai\"",
+    "dev:no-ai":        "concurrently --names \"BACKEND,FRONTEND\" --prefix-colors \"cyan,green\" \"npm run backend\" \"npm run frontend\"",
+    "install:all":      "npm install && cd apps/instrument-bridge && uv sync --extra ai",
+    "build:frontend":   "npm -w @resopulse/web run build",
+    "build:backend":    "npm -w @resopulse/api run build",
+    "build:all":        "npm run build:frontend && npm run build:backend",
+    "test":             "npm -w @resopulse/web run test && npm -w @resopulse/api run test",
+    "typecheck:shared": "npm -w @resopulse/shared-types run typecheck"
   },
   "devDependencies": {
     "concurrently": "^9.2.1"

@@ -1,5 +1,5 @@
 {
-  "name": "resopulse-backend",
+  "name": "@resopulse/api",
   "version": "0.1.0",
   "description": "ResoPulse API server — biophysical field modelling backend",
   "main": "dist/index.js",
@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@clerk/express": "^2.1.0",
+    "@resopulse/shared-types": "*",
     "@prisma/adapter-pg": "^7.7.0",
     "@prisma/client": "^7.7.0",
     "@types/cors": "^2.8.17",

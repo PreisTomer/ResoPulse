@@ -6,12 +6,17 @@ import { ref } from 'vue'
 import { io } from 'socket.io-client'
 import type { Socket } from 'socket.io-client'
 
+import type {
+  StatePacket,
+  HardwareImpedancePacket,
+  AiParamSuggestion,
+  AiOptimizeResult,
+} from '@resopulse/shared-types'
+
 import { useCellStore } from '@/stores/cellStore'
-import type { StatePacket } from '@/stores/cellStore'
 import { useExperimentStore } from '@/stores/experimentStore'
 import type { LogEntry } from '@/stores/experimentStore'
 import { useImpedanceStore } from '@/stores/impedanceStore'
-import type { HardwareImpedancePacket } from '@/stores/impedanceStore'
 import { useAiStore } from '@/stores/aiStore'
 
 import { computeTau, computeSchwan, computePulseStepResponse, computeResonantDisruption, computeLysisFieldFromParams, tempCorrectedVth } from '@/utils/physics'
@@ -209,27 +214,8 @@ export function broadcastLogOutcome(entry: LogEntry, rating: number, aiSuggestio
   })
 }
 
-// ── AI Optimizer types (mirrored from backend/src/types/socket.ts) ──────────
-
-export interface AiParamSuggestion {
-  freqKHz:      number
-  fieldVcm:     number
-  dutyCycle:    number
-  pulseWidthNs: number
-  waveform:     'cw' | 'pulsed' | 'hfire'
-}
-
-export interface AiOptimizeResult {
-  requestId:          string
-  suggestion:         AiParamSuggestion | null
-  predictedTargetDr:  number
-  predictedHealthyDr: number
-  predictedTi:        number
-  confidenceScore:    number
-  explanation:        string
-  featureImportance:  Record<string, number>
-  isPhysicsBaseline:  boolean
-}
+// AI Optimizer wire types live in @resopulse/shared-types — re-exported for callers.
+export type { AiParamSuggestion, AiOptimizeResult }
 
 type AiResultCallback = (result: AiOptimizeResult) => void
 

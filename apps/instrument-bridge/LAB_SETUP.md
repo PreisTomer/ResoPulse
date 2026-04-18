@@ -122,13 +122,13 @@ strings (e.g. GPIB0::17::INSTR).  Copy the correct value into your `.env` file.
 
 Start the ResoPulse backend (if it is not already running):
 ```
-cd ..\backend
-npm run dev
+cd ../..
+npm run backend
 ```
 
 Then, in a new terminal, start the bridge in demo mode:
 ```
-cd instrument-bridge
+cd apps/instrument-bridge
 uv run instrument-bridge run --driver demo
 ```
 
@@ -204,7 +204,7 @@ cuvette.  The conductivity derivation depends on the correct gap and electrode
 area.
 
 **"Backend connection failed" at startup**
-The ResoPulse backend is not running.  Start it with `cd backend && npm run dev`.
+The ResoPulse backend is not running.  Start it from the repo root with `npm run backend`.
 The bridge will automatically retry every few seconds once the backend is up.
 
 **App shows stale data (yellow status) after instrument was unplugged**

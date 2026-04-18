@@ -57,6 +57,7 @@ describe('disruptionRatio', () => {
 
     const storeB = freshStore()
     storeB.setWaveform(WAVEFORM.H_FIRE)
+    storeB.setLysisNPulses(1)  // pin N=1 so electrosensitization factor = 1 (test is about waveform, not N)
     const drHfire = storeB.targetDisruptionRatio
 
     // H-FIRE raises effective threshold ×1.75, so DR is 1/1.75 of CW
@@ -70,6 +71,7 @@ describe('disruptionRatio', () => {
 
     const storePulsed = freshStore()
     storePulsed.setWaveform(WAVEFORM.PULSED)
+    storePulsed.setLysisNPulses(1)  // pin N=1 so electrosensitization factor = 1 (test is about PEF, not N)
     storePulsed.setPulseWidthNs(100_000)  // very long pulse → PEF → 1
     const drPulsed = storePulsed.targetDisruptionRatio
 
@@ -161,6 +163,7 @@ describe('targetLysisField / healthyLysisField', () => {
 
     const storeHfire = freshStore()
     storeHfire.setWaveform(WAVEFORM.H_FIRE)
+    storeHfire.setLysisNPulses(1)  // pin N=1 so electrosensitization factor = 1 (test is about waveform, not N)
     const eHfire = storeHfire.targetLysisField
 
     expect(eHfire / eCW).toBeCloseTo(H_FIRE_THRESHOLD_MULTIPLIER, 2)
@@ -221,6 +224,7 @@ describe('waveform consistency', () => {
 
     const storeHfire = freshStore()
     storeHfire.setWaveform(WAVEFORM.H_FIRE)
+    storeHfire.setLysisNPulses(1)  // pin N=1 so electrosensitization factor = 1 (test is about waveform, not N)
     const drHHfire = storeHfire.healthyDisruptionRatio
 
     expect(drHCW / drHHfire).toBeCloseTo(H_FIRE_THRESHOLD_MULTIPLIER, 1)
