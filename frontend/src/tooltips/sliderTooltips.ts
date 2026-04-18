@@ -33,6 +33,9 @@ export function tipWaveform(currentField: number, maxSteadyTemp: number): string
   SAR = σ_i·α²·E²/(2ρ)  [waveformFactor = 0.5, RMS halving]
   Thermal: effective duty cycle = 1.0 (full continuous heating)
   Use case: continuous RF sinusoidal exposure (e.g. unmodulated carrier)
+  <span class="tip-note">Lysis path uses a fixed 2.5 s countdown (standard IRE window).
+  Pulse-envelope factor PEF = 1 and electrosensitization N^(−0.20) are
+  not applied, no t_p and no discrete pulse count exist for CW.</span>
 
 <span class="tip-val">Pulsed (Monopolar IRE)</span> , unipolar square pulses at set duty cycle
   SAR = σ_i·α²·E²/ρ  [waveformFactor = 1.0; E²_rms = E²_peak during on-time]

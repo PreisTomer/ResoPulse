@@ -1,7 +1,7 @@
 // Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 
 // Biophysics utilities - Schwan single-shell model, SAR, nsEP, acoustic resonance, EM skin depth
-import { SCHWAN_SPHERE_FACTOR, WF_CW, EPSILON_R_CYTOPLASM, SIGMA_MEMBRANE_SI, TWO_PI, POP_LYSIS_GAUSS_N, POP_LYSIS_GAUSS_Z_MAX, BODY_TEMP_C, TEMP_EP_COEFF, TEMP_EP_CLAMP_MIN, ELECTROSENSITIZATION_EXPONENT, ELECTROSENSITIZATION_CLAMP_MIN, EPSILON_0, MU_0, MIN_COS_THETA, LYSIS_FIELD_SENTINEL, MIN_PULSE_ENVELOPE, THRESHOLDS, NEWTON_COOLING_LAMBDA, PENNES_BLOOD_COEFF } from '@/constants/physics'
+import { SCHWAN_SPHERE_FACTOR, WF_CW, EPSILON_R_CYTOPLASM, SIGMA_MEMBRANE_SI, TWO_PI, POP_LYSIS_GAUSS_N, POP_LYSIS_GAUSS_Z_MAX, BODY_TEMP_C, TEMP_EP_COEFF, TEMP_EP_CLAMP_MIN, ELECTROSENSITIZATION_EXPONENT, ELECTROSENSITIZATION_CLAMP_MIN, EPSILON_0, MU_0, MIN_COS_THETA, LYSIS_FIELD_SENTINEL, MIN_PULSE_ENVELOPE, THRESHOLDS, NEWTON_COOLING_LAMBDA, PENNES_BLOOD_COEFF, DEBYE_TAU_AQUEOUS_S, EPS_INF_AQUEOUS } from '@/constants/physics'
 
 import type { CellConfig } from '@/types/cell'
 
@@ -83,8 +83,6 @@ export function computeDepCmReal(
   epsilon_r_medium: number,
 ): number {
   const omega = TWO_PI * freqKHz * KHZ_TO_HZ
-  // DC limit: Re[K] = (σ_i − σ_e) / (σ_i + 2σ_e)
-  if (omega < 1) return (cell.conductivity - sigma_e) / (cell.conductivity + 2 * sigma_e)
 
   // Complex permittivities: ε*(ω) = ε_r·ε₀ − j·σ/ω
   const epsCyto: Cpx = [EPSILON_R_CYTOPLASM  * EPSILON_0, -cell.conductivity / omega]
@@ -109,24 +107,51 @@ export function computeDepCmReal(
   return Math.max(-0.5, Math.min(0.5, K[0]))
 }
 
-// First DEP crossover [kHz] — log-space bisection 1 kHz to 10 GHz; 0 if none found.
+// DEP crossover log-scan — coarse 80-pt log sweep [1 kHz, 10 GHz] bracketing every Re[K]
+// sign change, then geometric bisection inside each bracket. Returns crossover frequencies
+// in ascending order. Replaces single endpoint-bisection, which missed dual crossovers
+// typical of low-σ_e media (Pethig 2010 Biomicrofluidics 4:022811).
+const DEP_SCAN_LO_KHZ = 1
+const DEP_SCAN_HI_KHZ = 10_000_000
+const DEP_SCAN_POINTS = 80
+const DEP_BISECT_ITERS = 40
+
+function scanDepCrossoversKHz(
+  cell: CellConfig,
+  sigma_e: number,
+  epsilon_r_medium: number,
+): number[] {
+  const crossovers: number[] = []
+  const logLo = Math.log10(DEP_SCAN_LO_KHZ)
+  const logHi = Math.log10(DEP_SCAN_HI_KHZ)
+  let prevF = DEP_SCAN_LO_KHZ
+  let prevK = computeDepCmReal(cell, prevF, sigma_e, epsilon_r_medium)
+  for (let i = 1; i <= DEP_SCAN_POINTS; i++) {
+    const f = Math.pow(10, logLo + (logHi - logLo) * i / DEP_SCAN_POINTS)
+    const k = computeDepCmReal(cell, f, sigma_e, epsilon_r_medium)
+    if (prevK * k < 0) {
+      let lo = prevF, hi = f, kLo = prevK
+      for (let j = 0; j < DEP_BISECT_ITERS; j++) {
+        const mid  = Math.sqrt(lo * hi)
+        const kMid = computeDepCmReal(cell, mid, sigma_e, epsilon_r_medium)
+        if (Math.abs(kMid) < 1e-12) { lo = hi = mid; break }
+        if (kLo * kMid < 0) { hi = mid } else { lo = mid; kLo = kMid }
+      }
+      crossovers.push(Math.sqrt(lo * hi))
+    }
+    prevF = f
+    prevK = k
+  }
+  return crossovers
+}
+
+// First DEP crossover [kHz] — coarse log-scan 1 kHz to 10 GHz; 0 if none found.
 export function computeDepCrossoverKHz(
   cell: CellConfig,
   sigma_e: number,
   epsilon_r_medium: number,
 ): number {
-  const fLo = 1, fHi = 10_000_000  // kHz: 1 kHz to 10 GHz
-  const kLo = computeDepCmReal(cell, fLo, sigma_e, epsilon_r_medium)
-  const kHi = computeDepCmReal(cell, fHi, sigma_e, epsilon_r_medium)
-  if (kLo * kHi > 0) return 0  // no zero-crossing in range
-  let lo = fLo, hi = fHi
-  for (let i = 0; i < 52; i++) {
-    const mid  = Math.sqrt(lo * hi)  // geometric midpoint (log-scale bisection)
-    const kMid = computeDepCmReal(cell, mid, sigma_e, epsilon_r_medium)
-    if (Math.abs(kMid) < 1e-12) return mid
-    if (kLo * kMid < 0) { hi = mid } else { lo = mid }
-  }
-  return Math.sqrt(lo * hi)
+  return scanDepCrossoversKHz(cell, sigma_e, epsilon_r_medium)[0] ?? 0
 }
 
 // Second DEP crossover [kHz] — Re[K] sign change above f_cross1; 0 if none. Pethig 2010.
@@ -135,22 +160,7 @@ export function computeDepSecondCrossoverKHz(
   sigma_e: number,
   epsilon_r_medium: number,
 ): number {
-  const fFirst = computeDepCrossoverKHz(cell, sigma_e, epsilon_r_medium)
-  if (fFirst <= 0) return 0  // no first crossover, second is impossible
-  const fLo = fFirst * 1.01
-  const fHi = 10_000_000  // kHz: to 10 GHz
-  if (fLo >= fHi) return 0
-  const kLo = computeDepCmReal(cell, fLo, sigma_e, epsilon_r_medium)
-  const kHi = computeDepCmReal(cell, fHi, sigma_e, epsilon_r_medium)
-  if (kLo * kHi > 0) return 0  // same sign above first crossover, no second crossing
-  let lo = fLo, hi = fHi
-  for (let i = 0; i < 52; i++) {
-    const mid  = Math.sqrt(lo * hi)
-    const kMid = computeDepCmReal(cell, mid, sigma_e, epsilon_r_medium)
-    if (Math.abs(kMid) < 1e-12) return mid
-    if (kLo * kMid < 0) { hi = mid } else { lo = mid }
-  }
-  return Math.sqrt(lo * hi)
+  return scanDepCrossoversKHz(cell, sigma_e, epsilon_r_medium)[1] ?? 0
 }
 
 // fc = 1/(2πτ) [kHz]
@@ -210,14 +220,26 @@ export function computeResonantLineshape(
 
 // ── EM skin depth ────────────────────────────────────────────────────────────
 
-// EM skin depth [mm]: δ=1/α, α=ω√(με/2)·√(√(1+(σ/ωε)²)−1). Gabriel 1996.
+// EM skin depth [mm]: δ=1/α, α=ω√(με/2)·√(√(1+(σ_eff/ωε')²)−1). Gabriel 1996; Debye 1929.
+//
+// Includes dielectric relaxation loss: above ~1 GHz, water's polar-molecule reorientation
+// (τ_D ≈ 8.3 ps) contributes σ_loss = ωε₀·ε″(ω) that dominates over σ_dc. Without this term
+// the formula returns unphysically large skin depths at GHz frequencies (e.g. >10 m in
+// EP buffer at 20 GHz, when the true value is sub-mm). ε*(ω) = ε_∞ + (ε_s−ε_∞)/(1+jωτ_D).
 export function computeSkinDepthMm(freqKHz: number, sigma_e: number, epsilon_r = 80): number {
-  const f = freqKHz * KHZ_TO_HZ  // MU_0 imported from constants/physics
+  const f = freqKHz * KHZ_TO_HZ
   if (f <= 0 || sigma_e <= 0) return Infinity
-  const omega       = TWO_PI * f
-  const epsilon     = epsilon_r * EPSILON_0
+  const omega = TWO_PI * f
+  // Debye dispersion of aqueous medium (treats epsilon_r as static ε_s; ε_∞ and τ_D are
+  // aqueous-literature values independent of buffer salt content).
+  const wt       = omega * DEBYE_TAU_AQUEOUS_S
+  const denom    = 1 + wt * wt
+  const epsReal  = EPS_INF_AQUEOUS + (epsilon_r - EPS_INF_AQUEOUS) / denom
+  const epsLoss  = (epsilon_r - EPS_INF_AQUEOUS) * wt / denom
+  const sigmaEff = sigma_e + omega * EPSILON_0 * epsLoss
+  const epsilon  = epsReal * EPSILON_0
   // Exact lossy-dielectric attenuation constant (Cheng 1989; Jackson 1999)
-  const lossTangent = sigma_e / (omega * epsilon)
+  const lossTangent = sigmaEff / (omega * epsilon)
   const alpha       = omega * Math.sqrt(MU_0 * epsilon / 2) *
     Math.sqrt(Math.sqrt(1 + lossTangent ** 2) - 1)
   if (alpha <= 0) return Infinity

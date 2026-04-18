@@ -39,7 +39,9 @@
       "cm": "Membrane Cm",
       "tau": "Time const τ",
       "fc": "Char. freq fc",
-      "bw": "Acoustic BW"
+      "bw": "Acoustic BW",
+      "thinShell": "R/d (thin-shell)",
+      "thinShellTip": "<strong>Thin-shell assumption weakened</strong>\nThe Schwan single-shell model assumes d ≪ R.\nFor this cell R/d &lt; 50 (γ = ((R−d)/R)³ deviates appreciably from 1),\nso Vm, τ, and DEP Re[K] are approximations.\nThe curvature correction (1−d/R)³ is applied,\nbut the thin-shell derivation itself loses accuracy for viruses."
     },
     "derivedLabel": "Derived constants",
     "derivedTip": "<strong>Derived biophysical parameters</strong>\nComputed in real time from the editable values above.\n\n<span class='tip-val'>Cm</span> = ε_r × ε₀ / d\n  Membrane specific capacitance [mF/m²]\n\n<span class='tip-val'>τ</span> = R·Cm·(2σ_e+σ_i) / (2σ_e·σ_i)\n  Schwan time constant (Kotnik &amp; Miklavcic 2000)\n  Sets the frequency roll-off\n\n<span class='tip-val'>fc</span> = 1/(2πτ)\n  Characteristic frequency, Vm drops −3 dB here\n  Below fc: quasi-DC regime, Vm at maximum",

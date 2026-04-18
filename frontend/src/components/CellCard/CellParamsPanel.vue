@@ -50,7 +50,13 @@
         >
           <span class="cell-card__params-derived-label">{{ derivedLabel }}</span>
         </div>
-        <div v-for="p in derivedParams" :key="p.label" class="cell-card__param-row cell-card__param-row--derived">
+        <div
+          v-for="p in derivedParams"
+          :key="p.label"
+          class="cell-card__param-row cell-card__param-row--derived"
+          :class="{ 'cell-card__param-row--caveat': p.warn }"
+          v-tip="p.tip || undefined"
+        >
           <label class="cell-card__param-label">{{ p.label }}</label>
           <span class="cell-card__param-derived-value">{{ p.value }}</span>
           <span class="cell-card__param-unit">{{ p.unit }}</span>
@@ -100,7 +106,7 @@ export default defineComponent({
       required: true,
     },
     derivedParams: {
-      type: Array as PropType<Array<{ label: string; value: string; unit: string }>>,
+      type: Array as PropType<Array<{ label: string; value: string; unit: string; tip?: string; warn?: boolean }>>,
       required: true,
     },
     canResetToPreset: { type: Boolean, required: true },
@@ -239,6 +245,15 @@ export default defineComponent({
 
     &--flash {
       animation: param-flash 0.7s ease-out forwards;
+    }
+
+    &--caveat {
+      pointer-events: auto;
+      cursor: help;
+      color: var(--color-amber);
+      .cell-card__param-label,
+      .cell-card__param-derived-value,
+      .cell-card__param-unit { color: var(--color-amber); }
     }
   }
 

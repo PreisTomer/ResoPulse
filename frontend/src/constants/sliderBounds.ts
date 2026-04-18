@@ -29,7 +29,7 @@ export const SLIDER_DC = {
 // Advanced-section slider attributes — orientation, pulse count, perfusion, cell packing
 export const SLIDER_ADV = {
   ORI_MIN:           0,    ORI_MAX:           90,  ORI_STEP:    1,
-  LYSIS_N_LOG_MIN:   0,    LYSIS_N_LOG_MAX:    3,  LYSIS_N_LOG_STEP: 0.05,  // 10⁰=1 … 10³=1000
+  LYSIS_N_LOG_MIN:   0,    LYSIS_N_LOG_MAX:    2.3,  LYSIS_N_LOG_STEP: 0.05,  // 10⁰=1 … 10²·³≈200 — electrosensitization threshold clamp engages at N≈190, higher N has no further effect
   PERF_MIN:          0,    PERF_MAX:           5,  PERF_STEP:   0.05,
   PHI_MIN:           0,    PHI_MAX:          0.9,  PHI_STEP:    0.01,
 } as const

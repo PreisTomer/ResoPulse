@@ -76,7 +76,7 @@ import {
 import { CELL_PRESETS } from '@/constants/cellLibrary'
 import { EDITABLE_PARAMS, EDITABLE_PARAMS_ACOUSTIC, THRESHOLDS } from '@/constants/cellCard'
 import { CELL_STATE, CELL_TYPE, CELL_CATEGORY, WAVEFORM } from '@/constants/strings'
-import { H_FIRE_THRESHOLD_MULTIPLIER } from '@/constants/physics'
+import { H_FIRE_THRESHOLD_MULTIPLIER, THIN_SHELL_RATIO_WARN } from '@/constants/physics'
 import { UNIT } from '@/constants/units'
 import { EMIT } from '@/constants/emitEvents'
 
@@ -210,6 +210,14 @@ export default defineComponent({
       const tauNs   = computeTau(cell, sigma_e) * 1e9
       const fc      = this.type === CELL_TYPE.HEALTHY ? this.cellStore.healthyFc : this.cellStore.targetFc
       const fcParts = splitFreqKHz(fc, 2)
+      const rOverD  = (cell.radius * 1000) / cell.membraneThickness
+      const thinShellRow = rOverD < THIN_SHELL_RATIO_WARN ? [{
+        label: this.$t('cells.derivedParams.thinShell'),
+        value: rOverD.toFixed(1),
+        unit:  '',
+        tip:   this.$t('cells.derivedParams.thinShellTip'),
+        warn:  true,
+      }] : []
 
       if (this.isAcousticTarget) {
         const acousticCell = cell as CellConfig & { resonantFreqGHz?: number; capsidQ?: number }
@@ -222,6 +230,7 @@ export default defineComponent({
           { label: this.$t('cells.derivedParams.tau'), value: tauNs.toFixed(1), unit: UNIT.NS       },
           { label: this.$t('cells.derivedParams.fc'),  value: fcParts.value,    unit: fcParts.unit  },
           { label: this.$t('cells.derivedParams.bw'),  value: bwParts.value,    unit: bwParts.unit  },
+          ...thinShellRow,
         ]
       }
 
@@ -230,6 +239,7 @@ export default defineComponent({
         { label: this.$t('cells.derivedParams.cm'),  value: Cm.toFixed(2),    unit: UNIT.MF_PER_M2 },
         { label: this.$t('cells.derivedParams.tau'), value: tauNs.toFixed(1), unit: UNIT.NS         },
         { label: this.$t('cells.derivedParams.fc'),  value: fcParts.value,    unit: fcParts.unit    },
+        ...thinShellRow,
       ]
     },
 

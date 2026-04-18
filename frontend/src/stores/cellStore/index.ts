@@ -862,7 +862,9 @@ export const useCellStore = defineStore('cell', {
     },
 
     setLysisNPulses(n: number) {
-      this.lysisNPulses = Math.max(1, Math.min(1000, Math.round(n)))
+      // Upper bound 200 matches SLIDER_ADV.LYSIS_N_LOG_MAX = 2.3; beyond ~190 the
+      // electrosensitization factor hits its ELECTROSENSITIZATION_CLAMP_MIN floor.
+      this.lysisNPulses = Math.max(1, Math.min(200, Math.round(n)))
     },
 
     setChartMode(mode: 'schwan' | 'resonance') {

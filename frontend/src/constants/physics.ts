@@ -89,6 +89,22 @@ export const EPSILON_R_CYTOPLASM = 60
 // Intact membrane conductivity [S/m]: lipid bilayer nearly insulating at RF. Gascoyne 2002.
 export const SIGMA_MEMBRANE_SI = 1e-7
 
+// Thin-shell assumption (d ≪ R) weakens when R/d < 50: γ = ((R−d)/R)³ deviates from 1 by
+// more than 6%, and the Schwan / Gascoyne single-shell formulas lose accuracy. Used as a
+// UI caveat trigger for viruses (R ~ 50 nm, d ~ 10 nm → R/d ≈ 5). Kotnik & Miklavcic 2000.
+export const THIN_SHELL_RATIO_WARN = 50
+
+// ── Debye dielectric relaxation of aqueous media (water & buffers) ────────────
+// ε*(ω) = ε_∞ + (ε_s − ε_∞)/(1+jωτ_D). Loss contribution σ_loss(ω) = ωε₀·ε″(ω) dominates
+// above f_D = 1/(2πτ_D) ≈ 19 GHz at 37 °C, making GHz-range skin depth finite even when the
+// DC conductivity is low. Kaatze 1989 J. Chem. Eng. Data; Debye 1929 Polar Molecules.
+
+// Water infinite-frequency (optical) relative permittivity — Kaatze 1989.
+export const EPS_INF_AQUEOUS = 5
+
+// Debye relaxation time of pure water at 37 °C [s] — Kaatze 1989 (τ_D ≈ 8.3 ps).
+export const DEBYE_TAU_AQUEOUS_S = 8.3e-12
+
 // ── Biophysical model thresholds ─────────────────────────────────────────────
 
 export const THRESHOLDS = {
