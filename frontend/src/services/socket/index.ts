@@ -188,11 +188,11 @@ export function broadcastLogOutcome(entry: LogEntry, rating: number, aiSuggestio
     fieldVcm:            entry.fieldVcm,
     medium:              entry.medium,
     targetPreset:        entry.targetPreset,
-    waveform:            entry.waveform ?? 'cw',
-    dutyCycle:           entry.dutyCycle ?? 1,
-    pulseWidthNs:        entry.pulseWidthNs ?? 100,
-    orientationDeg:      entry.orientationDeg ?? 0,
-    lysisNPulses:        entry.lysisNPulses ?? 1,
+    waveform:            entry.waveform       ?? store.waveform,
+    dutyCycle:           entry.dutyCycle      ?? store.dutyCycle,
+    pulseWidthNs:        entry.pulseWidthNs   ?? store.pulseWidthNs,
+    orientationDeg:      entry.orientationDeg ?? store.orientationDeg,
+    lysisNPulses:        entry.lysisNPulses   ?? store.lysisNPulses,
     targetRatio:         entry.targetRatio,
     healthyRatio:        entry.healthyRatio,
     selectivity:         entry.selectivity,
@@ -272,18 +272,18 @@ export function requestAiOptimization(requestId: string, onResult: AiResultCallb
     // Schwan path: invert the equation to find the lysis field, then predict DR.
     suggestedFieldVcm = computeLysisFieldFromParams(
       store.target.radius, store.target.membraneThickness, store.target.dielectricConstant,
-      store.target.conductivity, tempCorrectedVth(store.target.thresholdVoltage, store.targetTemp, store.lysisNPulses),
+      store.target.conductivity, tempCorrectedVth(store.target.thresholdVoltage, store.targetTemp, store.effectivePulseCount),
       optFreqKhz, sigmaE, waveform, pulseWidthNs, cosT, hfireMult,
     )
     const pefTarget = isPulsedWaveform
       ? Math.max(MIN_PULSE_ENVELOPE, computePulseStepResponse(tauTargetS, pulseWidthNs))
       : 1.0
     const vmTarget = computeSchwan(store.target, optFreqKhz, suggestedFieldVcm, sigmaE, cosT) * pefTarget
-    predDrT = vmTarget / (tempCorrectedVth(store.target.thresholdVoltage, store.targetTemp, store.lysisNPulses) * hfireMult)
+    predDrT = vmTarget / (tempCorrectedVth(store.target.thresholdVoltage, store.targetTemp, store.effectivePulseCount) * hfireMult)
   }
 
   const vmHealthy = computeSchwan(store.healthy, optFreqKhz, suggestedFieldVcm, sigmaE, cosT) * pefHealthy
-  const predDrH   = vmHealthy / (tempCorrectedVth(store.healthy.thresholdVoltage, store.healthyTemp, store.lysisNPulses) * hfireMult)
+  const predDrH   = vmHealthy / (tempCorrectedVth(store.healthy.thresholdVoltage, store.healthyTemp, store.effectivePulseCount) * hfireMult)
   const predTi    = predDrH > 1e-6 ? Math.min(THRESHOLDS.TI_DISPLAY_CAP, predDrT / predDrH) : THRESHOLDS.TI_DISPLAY_CAP
 
   const sessionState: StatePacket = {

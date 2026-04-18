@@ -98,7 +98,7 @@ export default defineComponent({
         s.target.nuclearRadius ?? 0, t.resonantFreqGHz ?? 0,
         s.fieldIntensity, s.medium, s.waveform, s.dutyCycle, s.pulseWidthNs,
         s.chartMode, s.doubleShellEnabled, s.orientationDeg,
-        s.healthyTemp, s.targetTemp, s.lysisNPulses, s.resetCounter,
+        s.healthyTemp, s.targetTemp, s.effectivePulseCount, s.resetCounter,
       ].join('|')
     },
   },
@@ -496,8 +496,8 @@ export default defineComponent({
         g.select<SVGGElement>('.thresholds'),
         this._yScale!, this._chartW, maxVm,
         [
-          { label: this.$t('chart.thrH'), vm: tempCorrectedVth(this.cellStore.healthy.thresholdVoltage, this.cellStore.healthyTemp, this.cellStore.lysisNPulses) * thrHfireMult * 1000, color: C.primary },
-          { label: this.$t('chart.thrT'), vm: tempCorrectedVth(this.cellStore.target.thresholdVoltage,  this.cellStore.targetTemp,  this.cellStore.lysisNPulses) * thrHfireMult * 1000, color: C.danger  },
+          { label: this.$t('chart.thrH'), vm: tempCorrectedVth(this.cellStore.healthy.thresholdVoltage, this.cellStore.healthyTemp, this.cellStore.effectivePulseCount) * thrHfireMult * 1000, color: C.primary },
+          { label: this.$t('chart.thrT'), vm: tempCorrectedVth(this.cellStore.target.thresholdVoltage,  this.cellStore.targetTemp,  this.cellStore.effectivePulseCount) * thrHfireMult * 1000, color: C.danger  },
         ],
         this.$t('chart.revEp'),
       )
@@ -594,7 +594,7 @@ export default defineComponent({
         pulseEnvelopeFactorTarget: this.cellStore.pulseEnvelopeFactorTarget,
         targetCellCategory: this.cellStore.targetCellCategory,
         isResonanceMode: this.cellStore.isResonanceMode,
-        lysisNPulses: this.cellStore.lysisNPulses,
+        lysisNPulses: this.cellStore.effectivePulseCount,
       })
     },
   },

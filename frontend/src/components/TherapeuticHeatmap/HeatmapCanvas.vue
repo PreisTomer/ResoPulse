@@ -85,7 +85,7 @@ export default defineComponent({
       const pefH = isPulsed ? Math.max(MIN_PULSE_ENVELOPE, 1 - Math.exp(-pw_ns * 1e-9 / hTau)) : 1.0
       // Lysis field: E_lysis = Vth_eff / (1.5 × R × cosθ × pef). cosT=0 (90° orientation) means
       // field cannot couple — fall back to a wide axis so the chart still renders.
-      const hVthEff = tempCorrectedVth(s.healthy.thresholdVoltage, s.healthyTemp, s.lysisNPulses) * hfireMult
+      const hVthEff = tempCorrectedVth(s.healthy.thresholdVoltage, s.healthyTemp, s.effectivePulseCount) * hfireMult
       const healthyLysis = cosT < 1e-6
         ? 1000
         : hVthEff / (1.5 * s.healthy.radius * 1e-4 * cosT * pefH)
@@ -100,7 +100,7 @@ export default defineComponent({
       } else {
         const tTau = computeTau(s.target, sigma)
         const pefT = isPulsed ? Math.max(MIN_PULSE_ENVELOPE, 1 - Math.exp(-pw_ns * 1e-9 / tTau)) : 1.0
-        const tVthEff = tempCorrectedVth(s.target.thresholdVoltage, s.targetTemp, s.lysisNPulses) * hfireMult
+        const tVthEff = tempCorrectedVth(s.target.thresholdVoltage, s.targetTemp, s.effectivePulseCount) * hfireMult
         targetLysis = cosT < 1e-6
           ? 1000
           : tVthEff / (1.5 * s.target.radius * 1e-4 * cosT * pefT)
@@ -122,7 +122,7 @@ export default defineComponent({
         t.resonantFreqGHz,
         s.medium, s.waveform, s.dutyCycle, s.pulseWidthNs, s.chartMode,
         s.cellPackingFraction, s.perfusionRate,
-        s.orientationDeg, s.lysisNPulses,
+        s.orientationDeg, s.effectivePulseCount,
         s.healthyTemp, s.targetTemp,
         s.resetCounter,
       ].join('|')
@@ -231,7 +231,7 @@ export default defineComponent({
       const hLambdaPerf = s.perfusionRate * PENNES_BLOOD_COEFF / hCp
       const hTss = BODY_TEMP_C + hSAR * dc / ((NEWTON_COOLING_LAMBDA + hLambdaPerf) * hCp)
       const hVm  = computeSchwan(s.healthy, freqKHz, fieldVcm, sigma_e, cosT)
-      const hDR  = (hVm * hPEF) / (tempCorrectedVth(s.healthy.thresholdVoltage, hTss, s.lysisNPulses) * hfireMult)
+      const hDR  = (hVm * hPEF) / (tempCorrectedVth(s.healthy.thresholdVoltage, hTss, s.effectivePulseCount) * hfireMult)
 
       let tDR = 0
       if (s.isResonanceMode) {
@@ -249,7 +249,7 @@ export default defineComponent({
           const tTau = computeTau(s.target, sigma_e)
           const tPEF = isPulsed ? Math.max(MIN_PULSE_ENVELOPE, 1 - Math.exp(-pw_ns * 1e-9 / tTau)) : 1.0
           const tVm  = computeSchwan(s.target, freqKHz, fieldVcm, sigma_e, cosT)
-          tDR = (tVm * tPEF) / (tempCorrectedVth(s.target.thresholdVoltage, tTss, s.lysisNPulses) * hfireMult)
+          tDR = (tVm * tPEF) / (tempCorrectedVth(s.target.thresholdVoltage, tTss, s.effectivePulseCount) * hfireMult)
         }
       } else {
         const tCp  = s.target.specificHeatCapacity
@@ -259,7 +259,7 @@ export default defineComponent({
         const tTau = computeTau(s.target, sigma_e)
         const tPEF = isPulsed ? Math.max(MIN_PULSE_ENVELOPE, 1 - Math.exp(-pw_ns * 1e-9 / tTau)) : 1.0
         const tVm  = computeSchwan(s.target, freqKHz, fieldVcm, sigma_e, cosT)
-        tDR = (tVm * tPEF) / (tempCorrectedVth(s.target.thresholdVoltage, tTss, s.lysisNPulses) * hfireMult)
+        tDR = (tVm * tPEF) / (tempCorrectedVth(s.target.thresholdVoltage, tTss, s.effectivePulseCount) * hfireMult)
       }
 
       if (hTss >= HMAP_THERM_CRIT_C) return HMAP_ZONE.THERMAL
@@ -308,7 +308,7 @@ export default defineComponent({
           const hSAR = computeSAR(s.healthy, fieldVcm, sigma_e, wf)
           const hTss = BODY_TEMP_C + hSAR * dc / ((NEWTON_COOLING_LAMBDA + hLambdaPerf) * hCp)
           const hVm  = computeSchwan(s.healthy, freqKHz, fieldVcm, sigma_e, cosT)
-          const hDR  = (hVm * hPEF) / (tempCorrectedVth(s.healthy.thresholdVoltage, hTss, s.lysisNPulses) * hfireMult)
+          const hDR  = (hVm * hPEF) / (tempCorrectedVth(s.healthy.thresholdVoltage, hTss, s.effectivePulseCount) * hfireMult)
 
           let tDR = 0
           if (hasRes) {
@@ -322,7 +322,7 @@ export default defineComponent({
             const tSAR = computeSAR(s.target, fieldVcm, sigma_e, wf)
             const tTss = BODY_TEMP_C + tSAR * dc / ((NEWTON_COOLING_LAMBDA + tLambdaPerf) * tCp)
             const tVm  = computeSchwan(s.target, freqKHz, fieldVcm, sigma_e, cosT)
-            tDR = (tVm * tPEF) / (tempCorrectedVth(s.target.thresholdVoltage, tTss, s.lysisNPulses) * hfireMult)
+            tDR = (tVm * tPEF) / (tempCorrectedVth(s.target.thresholdVoltage, tTss, s.effectivePulseCount) * hfireMult)
           }
 
           if (hTss >= HMAP_THERM_CRIT_C) { result[fi * HMAP_FIELD_STEPS + vi] = HMAP_ZONE.THERMAL;    continue }
@@ -649,7 +649,7 @@ export default defineComponent({
       const hLPerf = s.perfusionRate * PENNES_BLOOD_COEFF / hCp
       const hTss   = BODY_TEMP_C + hSAR * dc / ((NEWTON_COOLING_LAMBDA + hLPerf) * hCp)
       const hVm    = computeSchwan(s.healthy, freqKHz, fieldVcm, sigma_e, cosT)
-      const hDR    = (hVm * hPEF) / (tempCorrectedVth(s.healthy.thresholdVoltage, hTss, s.lysisNPulses) * hoverHfireMult)
+      const hDR    = (hVm * hPEF) / (tempCorrectedVth(s.healthy.thresholdVoltage, hTss, s.effectivePulseCount) * hoverHfireMult)
 
       let tDR = 0
       let usedResonancePath = false
@@ -671,7 +671,7 @@ export default defineComponent({
           const tTau = computeTau(s.target, sigma_e)
           const tPEF = isHoverPulsed ? Math.max(MIN_PULSE_ENVELOPE, 1 - Math.exp(-pw_ns * 1e-9 / tTau)) : 1.0
           const tVm  = computeSchwan(s.target, freqKHz, fieldVcm, sigma_e, cosT)
-          tDR = (tVm * tPEF) / (tempCorrectedVth(s.target.thresholdVoltage, tTss, s.lysisNPulses) * hoverHfireMult)
+          tDR = (tVm * tPEF) / (tempCorrectedVth(s.target.thresholdVoltage, tTss, s.effectivePulseCount) * hoverHfireMult)
         }
       } else {
         const tCp  = s.target.specificHeatCapacity
@@ -681,7 +681,7 @@ export default defineComponent({
         const tTau = computeTau(s.target, sigma_e)
         const tPEF = isHoverPulsed ? Math.max(MIN_PULSE_ENVELOPE, 1 - Math.exp(-pw_ns * 1e-9 / tTau)) : 1.0
         const tVm  = computeSchwan(s.target, freqKHz, fieldVcm, sigma_e, cosT)
-        tDR = (tVm * tPEF) / (tempCorrectedVth(s.target.thresholdVoltage, tTss, s.lysisNPulses) * hoverHfireMult)
+        tDR = (tVm * tPEF) / (tempCorrectedVth(s.target.thresholdVoltage, tTss, s.effectivePulseCount) * hoverHfireMult)
       }
 
       // Random-orientation lysis probability: P = max(0, 1 − 1/DR_max).

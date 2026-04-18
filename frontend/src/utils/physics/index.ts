@@ -60,6 +60,26 @@ export function computeSAR(
   return (cell.conductivity * alpha ** 2 * E_si ** 2 * waveformFactor) / cell.density
 }
 
+// Intracellular SAR at GHz (resonance mode). Membrane becomes capacitively transparent,
+// so the external field penetrates the cytoplasm (α → 1) and the aqueous phase absorbs
+// Debye dielectric loss alongside ionic conduction. σ_eff = σ_i + ω·ε₀·ε″(ω), where
+// ε″(ω) = (ε_s − ε_∞)·ωτ_D/(1+(ωτ_D)²). Equates to Joule SAR at low GHz, peaks near
+// 1/(2πτ_D) ≈ 20 GHz. Uses cytoplasm permittivity as ε_s.
+export function computeIntracellularDebyeSAR(
+  cell: CellConfig,
+  fieldVcm: number,
+  freqKHz: number,
+  waveformFactor = WF_CW,
+): number {
+  if (cell.density <= 0) return 0
+  const E_si    = fieldVcm * VCM_TO_VM
+  const omega   = TWO_PI * freqKHz * KHZ_TO_HZ
+  const wt      = omega * DEBYE_TAU_AQUEOUS_S
+  const epsLoss = (EPSILON_R_CYTOPLASM - EPS_INF_AQUEOUS) * wt / (1 + wt * wt)
+  const sigmaEff = cell.conductivity + omega * EPSILON_0 * epsLoss
+  return (sigmaEff * E_si ** 2 * waveformFactor) / cell.density
+}
+
 // ── Dielectrophoresis - Clausius-Mossotti factor (single-shell model) ────────
 
 // Inline complex arithmetic helpers  [real, imaginary]
@@ -76,6 +96,9 @@ function cmul(a: Cpx, b: Cpx): Cpx {
 }
 
 // Re[K(ω)] — Clausius-Mossotti, single-shell. K=(ε*_eff−ε*_m)/(ε*_eff+2ε*_m). Gascoyne 2002.
+// Medium permittivity uses Debye dispersion (τ_D ≈ 8.3 ps): below ~1 GHz this reduces to the
+// static form, but above ~1 GHz both the real part drops (ε_s → ε_∞) and dielectric loss adds
+// to σ_eff, shifting the high-frequency crossover into physically correct territory.
 export function computeDepCmReal(
   cell: CellConfig,
   freqKHz: number,
@@ -84,11 +107,18 @@ export function computeDepCmReal(
 ): number {
   const omega = TWO_PI * freqKHz * KHZ_TO_HZ
 
-  // Complex permittivities: ε*(ω) = ε_r·ε₀ − j·σ/ω
+  // Debye dispersion of the aqueous medium (Gabriel 1996; Debye 1929). ωτ_D ≪ 1 at kHz.
+  const wt          = omega * DEBYE_TAU_AQUEOUS_S
+  const debyeDenom  = 1 + wt * wt
+  const epsMedReal  = EPS_INF_AQUEOUS + (epsilon_r_medium - EPS_INF_AQUEOUS) / debyeDenom
+  const epsMedLoss  = (epsilon_r_medium - EPS_INF_AQUEOUS) * wt / debyeDenom
+  const sigmaMedEff = sigma_e + omega * EPSILON_0 * epsMedLoss
+
+  // Complex permittivities: ε*(ω) = ε_r·ε₀ − j·σ_eff/ω
   const epsCyto: Cpx = [EPSILON_R_CYTOPLASM  * EPSILON_0, -cell.conductivity / omega]
   const sigma_mem = cell.membraneConductivity ?? SIGMA_MEMBRANE_SI
   const epsMem:  Cpx = [cell.dielectricConstant * EPSILON_0, -sigma_mem / omega]
-  const epsMed:  Cpx = [epsilon_r_medium * EPSILON_0, -sigma_e / omega]
+  const epsMed:  Cpx = [epsMedReal * EPSILON_0, -sigmaMedEff / omega]
 
   // Single-shell geometry: γ = (r_inner/R)³  [thin-shell: d ≪ R]
   const R     = cell.radius * UM_TO_M
@@ -107,13 +137,17 @@ export function computeDepCmReal(
   return Math.max(-0.5, Math.min(0.5, K[0]))
 }
 
-// DEP crossover log-scan — coarse 80-pt log sweep [1 kHz, 10 GHz] bracketing every Re[K]
+// DEP crossover log-scan — coarse 80-pt log sweep [0.01 kHz, 10 GHz] bracketing every Re[K]
 // sign change, then geometric bisection inside each bracket. Returns crossover frequencies
 // in ascending order. Replaces single endpoint-bisection, which missed dual crossovers
 // typical of low-σ_e media (Pethig 2010 Biomicrofluidics 4:022811).
-const DEP_SCAN_LO_KHZ = 1
+//
+// Extended lower bound to 0.01 kHz (10 Hz) so crossovers in very-low-σ_e buffers (e.g.
+// distilled water, dense cell packing) that sit below 1 kHz are detected. The bracketing
+// scheme already handles the case where Re[K] has no sign change at all by returning [].
+const DEP_SCAN_LO_KHZ = 0.01
 const DEP_SCAN_HI_KHZ = 10_000_000
-const DEP_SCAN_POINTS = 80
+const DEP_SCAN_POINTS = 100
 const DEP_BISECT_ITERS = 40
 
 function scanDepCrossoversKHz(
@@ -367,11 +401,12 @@ export function computeSteadyStateTemp(
   dc:               number,
   specificHeat:     number,
   perfusionRate:    number,
+  ambientC:         number = BODY_TEMP_C,
 ): number {
   const sarEff     = sar * dc
   const lambdaPerf = perfusionRate * PENNES_BLOOD_COEFF / specificHeat
   return Math.min(
-    BODY_TEMP_C + sarEff / ((NEWTON_COOLING_LAMBDA + lambdaPerf) * specificHeat),
+    ambientC + sarEff / ((NEWTON_COOLING_LAMBDA + lambdaPerf) * specificHeat),
     THRESHOLDS.TEMP_CAP,
   )
 }

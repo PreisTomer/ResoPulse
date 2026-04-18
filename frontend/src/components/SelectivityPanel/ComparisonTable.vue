@@ -75,7 +75,7 @@ export default defineComponent({
       // Use healthyTemp for threshold correction — healthy cell is the live simulated reference.
       const pefH  = isPulsed ? Math.max(MIN_PULSE_ENVELOPE, computePulseStepResponse(computeTau(this.cellStore.healthy, sigma_e), pwNs)) : 1.0
       const hVm   = computeSchwan(this.cellStore.healthy, freq, field, sigma_e, cosT)
-      const hVthE = tempCorrectedVth(this.cellStore.healthy.thresholdVoltage, this.cellStore.healthyTemp, this.cellStore.lysisNPulses)
+      const hVthE = tempCorrectedVth(this.cellStore.healthy.thresholdVoltage, this.cellStore.healthyTemp, this.cellStore.effectivePulseCount)
       const hDr   = (hVm * pefH) / (hVthE * hfireMult)
 
       return CELL_PRESETS
@@ -107,7 +107,7 @@ export default defineComponent({
             const pefT    = isPulsed ? Math.max(MIN_PULSE_ENVELOPE, computePulseStepResponse(computeTau(p, sigma_e), pwNs)) : 1.0
             const tVm     = computeSchwan(p, freq, field, sigma_e, cosT)
             // Active preset uses live N; library comparison presets also get N — same protocol, different cell
-            const tVthE   = tempCorrectedVth(p.thresholdVoltage, schTemp, this.cellStore.lysisNPulses)
+            const tVthE   = tempCorrectedVth(p.thresholdVoltage, schTemp, this.cellStore.effectivePulseCount)
             const tDr   = (tVm * pefT) / (tVthE * hfireMult)
             sel = hDr > NEAR_ZERO_DR ? Math.min(THRESHOLDS.TI_DISPLAY_CAP, tDr / hDr) : 0
             tVmMv = (tVm * 1000).toFixed(1)

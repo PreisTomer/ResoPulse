@@ -61,6 +61,8 @@
     "qRangeLabel": "Q range",
     "basisLabel": "Basis",
     "switchToResonanceBtn": "→ Switch to Resonance Mode",
+    "bacteriaSchwanAdvisory": "Advisory: Schwan/IRE valid for bacteria, but this cell has published resonance at {fres} GHz. Resonance mode may match the literature protocol more closely.",
+    "schwanGhzAdvisory": "Schwan/IRE model has no predictive value for virus/bacteria above ~100 MHz. Membrane RC charging saturates (ωτ ≫ 1), cytoplasm Debye loss dominates energy deposition, and rigid-shell mechanical modes are not captured. Switch to Resonance mode or move below 100 MHz.",
 
     "windowScoreLabel": "Pop. Window Score",
     "wsFormula": "= P(T)\u00d7(1-P(H))",

@@ -31,10 +31,25 @@ export interface UserCellPreset {
   // Thermal
   density:              number
   specificHeatCapacity: number
+  // σ_mem for DEP CM model (optional — falls back to 10⁻⁷ S/m mammalian bilayer)
+  membraneConductivity?: number
+  // Nuclear envelope (mammalian only; Kotnik & Miklavcic 2006)
+  nuclearRadius?:              number
+  nuclearMembraneThickness?:   number
+  nuclearMembraneEps?:         number
+  nucleoplasmConductivity?:    number
+  nuclearThresholdVoltage?:    number
   // Acoustic / mechanical resonance (bacteria / virus only)
-  resonantFreqGHz?:       number
-  capsidQ?:               number
-  resonantThresholdVcm?:  number
+  resonantFreqGHz?:             number
+  capsidQ?:                     number
+  resonantThresholdVcm?:        number
+  // Resonance uncertainty bands & secondary mode
+  resonantFreqUncertaintyPct?:  number
+  capsidQMin?:                  number
+  capsidQMax?:                  number
+  resonantFreqGHz2?:            number
+  capsidQ2?:                    number
+  resonantMode2Amplitude?:      number
   createdAt:            number
 }
 
@@ -68,7 +83,19 @@ interface BackendPreset {
   notes: string | null; parameterConfidence: string; radius: number; membraneThickness: number
   dielectricConstant: number; conductivity: number; thresholdVoltage: number
   density: number; specificHeatCapacity: number
+  membraneConductivity: number | null
+  nuclearRadius: number | null
+  nuclearMembraneThickness: number | null
+  nuclearMembraneEps: number | null
+  nucleoplasmConductivity: number | null
+  nuclearThresholdVoltage: number | null
   resonantFreqGHz: number | null; capsidQ: number | null; resonantThresholdVcm: number | null
+  resonantFreqUncertaintyPct: number | null
+  capsidQMin: number | null
+  capsidQMax: number | null
+  resonantFreqGHz2: number | null
+  capsidQ2: number | null
+  resonantMode2Amplitude: number | null
   createdAt: string
 }
 
@@ -88,9 +115,21 @@ function fromBackend(p: BackendPreset): UserCellPreset {
     thresholdVoltage:     p.thresholdVoltage,
     density:              p.density,
     specificHeatCapacity: p.specificHeatCapacity,
-    ...(p.resonantFreqGHz      != null && { resonantFreqGHz:      p.resonantFreqGHz }),
-    ...(p.capsidQ               != null && { capsidQ:              p.capsidQ }),
-    ...(p.resonantThresholdVcm  != null && { resonantThresholdVcm: p.resonantThresholdVcm }),
+    ...(p.membraneConductivity       != null && { membraneConductivity:       p.membraneConductivity }),
+    ...(p.nuclearRadius              != null && { nuclearRadius:              p.nuclearRadius }),
+    ...(p.nuclearMembraneThickness   != null && { nuclearMembraneThickness:   p.nuclearMembraneThickness }),
+    ...(p.nuclearMembraneEps         != null && { nuclearMembraneEps:         p.nuclearMembraneEps }),
+    ...(p.nucleoplasmConductivity    != null && { nucleoplasmConductivity:    p.nucleoplasmConductivity }),
+    ...(p.nuclearThresholdVoltage    != null && { nuclearThresholdVoltage:    p.nuclearThresholdVoltage }),
+    ...(p.resonantFreqGHz            != null && { resonantFreqGHz:            p.resonantFreqGHz }),
+    ...(p.capsidQ                    != null && { capsidQ:                    p.capsidQ }),
+    ...(p.resonantThresholdVcm       != null && { resonantThresholdVcm:       p.resonantThresholdVcm }),
+    ...(p.resonantFreqUncertaintyPct != null && { resonantFreqUncertaintyPct: p.resonantFreqUncertaintyPct }),
+    ...(p.capsidQMin                 != null && { capsidQMin:                 p.capsidQMin }),
+    ...(p.capsidQMax                 != null && { capsidQMax:                 p.capsidQMax }),
+    ...(p.resonantFreqGHz2           != null && { resonantFreqGHz2:           p.resonantFreqGHz2 }),
+    ...(p.capsidQ2                   != null && { capsidQ2:                   p.capsidQ2 }),
+    ...(p.resonantMode2Amplitude     != null && { resonantMode2Amplitude:     p.resonantMode2Amplitude }),
     createdAt: new Date(p.createdAt).getTime(),
   }
 }
@@ -204,9 +243,21 @@ export const useUserPresetsStore = defineStore('userPresets', {
         density:              preset.density,
         specificHeatCapacity: preset.specificHeatCapacity,
         amplitude:            0.5,
-        ...(preset.resonantFreqGHz      != null && { resonantFreqGHz:      preset.resonantFreqGHz }),
-        ...(preset.capsidQ              != null && { capsidQ:              preset.capsidQ }),
-        ...(preset.resonantThresholdVcm != null && { resonantThresholdVcm: preset.resonantThresholdVcm }),
+        ...(preset.membraneConductivity       != null && { membraneConductivity:       preset.membraneConductivity }),
+        ...(preset.nuclearRadius              != null && { nuclearRadius:              preset.nuclearRadius }),
+        ...(preset.nuclearMembraneThickness   != null && { nuclearMembraneThickness:   preset.nuclearMembraneThickness }),
+        ...(preset.nuclearMembraneEps         != null && { nuclearMembraneEps:         preset.nuclearMembraneEps }),
+        ...(preset.nucleoplasmConductivity    != null && { nucleoplasmConductivity:    preset.nucleoplasmConductivity }),
+        ...(preset.nuclearThresholdVoltage    != null && { nuclearThresholdVoltage:    preset.nuclearThresholdVoltage }),
+        ...(preset.resonantFreqGHz            != null && { resonantFreqGHz:            preset.resonantFreqGHz }),
+        ...(preset.capsidQ                    != null && { capsidQ:                    preset.capsidQ }),
+        ...(preset.resonantThresholdVcm       != null && { resonantThresholdVcm:       preset.resonantThresholdVcm }),
+        ...(preset.resonantFreqUncertaintyPct != null && { resonantFreqUncertaintyPct: preset.resonantFreqUncertaintyPct }),
+        ...(preset.capsidQMin                 != null && { capsidQMin:                 preset.capsidQMin }),
+        ...(preset.capsidQMax                 != null && { capsidQMax:                 preset.capsidQMax }),
+        ...(preset.resonantFreqGHz2           != null && { resonantFreqGHz2:           preset.resonantFreqGHz2 }),
+        ...(preset.capsidQ2                   != null && { capsidQ2:                   preset.capsidQ2 }),
+        ...(preset.resonantMode2Amplitude     != null && { resonantMode2Amplitude:     preset.resonantMode2Amplitude }),
       }
     },
 

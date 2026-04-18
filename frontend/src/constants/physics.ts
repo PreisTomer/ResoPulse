@@ -72,6 +72,10 @@ export const ELECTROSENSITIZATION_EXPONENT = 0.20
 // At N=100 and α=0.20 the raw factor is 0.40, so the clamp only engages for very large N.
 export const ELECTROSENSITIZATION_CLAMP_MIN = 0.35
 
+// Smallest N at which N^(−α) reaches the floor; beyond this, additional pulses do not further
+// reduce the lysis threshold. Derived from clamp = N^(−α) → N = clamp^(−1/α).
+export const ELECTROSENSITIZATION_FLOOR_N = Math.ceil(Math.pow(ELECTROSENSITIZATION_CLAMP_MIN, -1 / ELECTROSENSITIZATION_EXPONENT))
+
 // Upper limit of direct-electrode (electrolytic) coupling regime [kHz] = 300 MHz. Foster & Schwan 1989.
 export const FREQ_ELECTROLYTIC_LIMIT_KHZ = 300_000
 
@@ -149,6 +153,8 @@ export const THRESHOLDS = {
   BMS_WEIGHT_MTE:      0.25,
   BMS_WEIGHT_MA:       0.20,
   BMS_NOURISHING:      0.55,  // minimum biomod score for nourishing cell state
+  BMS_TAPER_LO:        0.40,  // start of smoothstep taper — biomod score begins rolling off
+  BMS_TAPER_HI:        0.55,  // end of taper — biomod score reaches 0 as EP onset dominates
   // SI bell curve: SI = 4·r·(1−r), r = DR / NOURISHING; peak at r=0.5 → DR = NOURISHING/2 ≈ 22.5%
   BIOSTIM_DR_OPT_LOW_PCT:  5,   // lower bound of the optimal SI stimulation window (% of lysis thr)
   BIOSTIM_DR_OPT_HIGH_PCT: 40,  // upper bound of the optimal SI stimulation window (% of lysis thr)
@@ -245,3 +251,8 @@ export const LYSIS_DELAY_MAX_MS = 30_000 // max pulsed-mode lysis delay [ms]
 export const ELECTRODE_POLARIZATION_LIMIT_KHZ = 50
 // GHz field warning: skin depth in saline at 1 GHz ~13 mm; cannot penetrate cuvette. Gabriel 1996.
 export const GHZ_FIELD_WARNING_V_CM = 100
+
+// Schwan / IRE advisory frequency ceiling [kHz]. Above 100 MHz the single-shell RC model
+// has no predictive value for small microbes; Debye loss of cytoplasm and membrane radiative
+// coupling are not captured. Rules out applying Schwan to virus/bacteria at GHz carriers.
+export const SCHWAN_ADVISORY_FREQ_KHZ = 100_000

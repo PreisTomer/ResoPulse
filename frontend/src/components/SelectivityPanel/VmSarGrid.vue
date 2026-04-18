@@ -57,7 +57,11 @@ export default defineComponent({
     isResonanceTarget(): boolean {
       const cat = this.cellStore.targetCellCategory
       const t = this.cellStore.target as { resonantFreqGHz?: number; resonantThresholdVcm?: number }
-      return (cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) && !!t.resonantFreqGHz && !!t.resonantThresholdVcm && this.cellStore.isResonanceMode
+      const hasResonance = !!t.resonantFreqGHz && !!t.resonantThresholdVcm
+      // Virus: always render as resonance target (EP never meaningful, even in Schwan chart mode).
+      // Bacteria: follow the user's chart-mode selection so Schwan verification flows keep E_lys visible.
+      if (cat === CELL_CATEGORY.VIRUS && hasResonance) return true
+      return cat === CELL_CATEGORY.BACTERIA && hasResonance && this.cellStore.isResonanceMode
     },
 
     targetRatioPct(): number { return Math.min(100, this.cellStore.targetDisruptionRatio * 100) },

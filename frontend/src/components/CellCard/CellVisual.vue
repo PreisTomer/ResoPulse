@@ -375,7 +375,7 @@ export default defineComponent({
       const cell      = this.type === CELL_TYPE.HEALTHY ? this.cellStore.healthy : this.cellStore.target
       const cellTemp  = this.type === CELL_TYPE.HEALTHY ? this.cellStore.healthyTemp : this.cellStore.targetTemp
       const hfireMult = this.cellStore.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
-      const effVth    = tempCorrectedVth(cell.thresholdVoltage, cellTemp, this.cellStore.lysisNPulses) * hfireMult
+      const effVth    = tempCorrectedVth(cell.thresholdVoltage, cellTemp, this.cellStore.effectivePulseCount) * hfireMult
       return tipVmFn({ vmDisplay: this.vmDisplay, disruptionRatio: this.disruptionRatio, thresholdVoltage: effVth, waveform: this.cellStore.waveform })
     },
 
@@ -417,11 +417,11 @@ export default defineComponent({
         : this.cellStore.pulseEnvelopeFactorTarget
       const cellTempForDr = this.type === CELL_TYPE.HEALTHY ? this.cellStore.healthyTemp : this.cellStore.targetTemp
       const hfireMultDr   = this.cellStore.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
-      const effVthDr      = tempCorrectedVth(cell.thresholdVoltage, cellTempForDr, this.cellStore.lysisNPulses) * hfireMultDr
+      const effVthDr      = tempCorrectedVth(cell.thresholdVoltage, cellTempForDr, this.cellStore.effectivePulseCount) * hfireMultDr
       return tipDisruptionFn({
         disruptionRatio:     this.disruptionRatio,
         thresholdVoltage:    effVthDr,
-        lysisNPulses:        this.cellStore.lysisNPulses,
+        lysisNPulses:        this.cellStore.effectivePulseCount,
         lysisDelayMs:        this.cellStore.lysisDelayMs,
         pulseEnvelopeFactor: pef,
         waveform:            this.cellStore.waveform,

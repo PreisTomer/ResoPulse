@@ -77,6 +77,9 @@
     "perfusionInVitro": "0 (in vitro)",
     "cellPackingIsolated": "0% (isolated)",
     "tipMinPulse": "<strong>Minimum pulse width, 3τ rule</strong>\nFull membrane charging requires t_p ≥ 3τ (≥95% plateau).\nGreen: full charging · Amber: partial (τ - 3τ) · Red: sub-threshold (<τ)\nτ = R·Cm·(2σ_e+σ_i)/(2σ_e·σ_i)  [Kotnik & Miklavcic 2000]",
+    "tipBathTemp": "<strong>Bath Steady-State Temperature (T_bath)</strong>\nBulk medium temperature the cuvette settles to under Joule heating.\nT_bath = 37 + SAR_medium · dc / (λ · Cp_water).\n\nCells cool toward T_bath (not ambient 37°C) in the Euler integrator,\nso a hot bath keeps cell core temperatures elevated between pulses.\n\nIn resonance mode, cell Joule SAR → 0 but medium SAR persists via\nDebye dielectric loss of water (ε″(ω)·ω·ε₀), so T_bath can still rise\nat GHz with strong field amplitude.",
+    "electrosensitizationFloor": "ES floor",
+    "tipElectrosensitizationFloor": "<strong>Electrosensitization Threshold Floor</strong>\nAt N ≥ ~190, the N^(−0.20) factor reaches the physiological clamp\n(V_th_eff ≥ 0.35 × V_th_nominal). Additional pulses extend lysis delay\nbut do not further lower the effective disruption threshold.\n\nThe floor prevents unphysical sub-physiological thresholds;\nempirical studies show membrane conditioning saturates near this range.\nRef: Pakhomov et al. (2010) Biochim. Biophys. Acta.",
     "regime": {
       "electrolytic": "Electrolytic: direct electrode",
       "nearfield_rf": "Near-field RF: coaxial probe",

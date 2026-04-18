@@ -8,10 +8,11 @@ import { cloneDeep } from 'lodash'
 import { useExperimentStore } from '@/stores/experimentStore'
 import { useUserPresetsStore } from '@/stores/userPresetsStore'
 
-import { computeSchwan, computeSAR, computeSteadyStateTemp, computeFc, computeTau, computeNuclearTau, computeResonantDisruption, computeNuclearVm, computeSkinDepthMm, computeDepCmReal, computeDepCrossoverKHz, computeDepSecondCrossoverKHz, computePopulationLysisFraction, safeRatio, tempCorrectedVth, computePulseEnvelope, computeLysisField, computeSigmaUncertaintyFactor } from '@/utils/physics'
+import { computeSchwan, computeSAR, computeIntracellularDebyeSAR, computeSteadyStateTemp, computeFc, computeTau, computeNuclearTau, computeResonantDisruption, computeNuclearVm, computeSkinDepthMm, computeDepCmReal, computeDepCrossoverKHz, computeDepSecondCrossoverKHz, computePopulationLysisFraction, safeRatio, tempCorrectedVth, computePulseEnvelope, computeLysisField, computeSigmaUncertaintyFactor } from '@/utils/physics'
 
 import { cellConfigs } from '@/constants/defaultCells'
 import { CELL_PRESETS } from '@/constants/cellLibrary'
+import { EDITABLE_PARAMS, EDITABLE_PARAMS_ACOUSTIC } from '@/constants/cellCard'
 import { MEDIA } from '@/constants/media'
 import { SLIDER_RANGES, type SliderRange } from '@/constants/sliderBounds'
 import { CELL_CATEGORY, CELL_STATE, CHART_MODE, WAVEFORM, CELL_TYPE, FREQ_REGIME } from '@/constants/strings'
@@ -54,6 +55,9 @@ import {
   LYSIS_DELAY_MAX_MS,
   ELECTRODE_POLARIZATION_LIMIT_KHZ,
   GHZ_FIELD_WARNING_V_CM,
+  DEBYE_TAU_AQUEOUS_S,
+  EPS_INF_AQUEOUS,
+  EPSILON_0,
 } from '@/constants/physics'
 
 import type { CellConfig, CellState } from '@/types/cell'
@@ -112,6 +116,7 @@ interface CellStoreState {
   resetCounter: number
   healthyCellState: CellState
   targetCellState: CellState
+  bulkMediumTemp: number          // bath/medium T [°C]; cells cool toward this, not BODY_TEMP_C
 }
 
 export const useCellStore = defineStore('cell', {
@@ -136,12 +141,16 @@ export const useCellStore = defineStore('cell', {
     resetCounter: 0,
     healthyCellState: 'stable' as CellState,
     targetCellState:  'stable' as CellState,
+    bulkMediumTemp:   BODY_TEMP_C,
   }),
 
   getters: {
     sigma_e: (state): number => MEDIA[state.medium].conductivity,
     cosThetaFactor: (state): number => Math.abs(Math.cos(state.orientationDeg * Math.PI / 180)),
     isResonanceMode: (state): boolean => state.chartMode === CHART_MODE.RESONANCE,
+
+    // CW: no pulse sequence, so N collapses to 1 (electrosensitization cannot apply).
+    effectivePulseCount: (state): number => state.waveform === WAVEFORM.CW ? 1 : state.lysisNPulses,
 
     // σ_eff = σ_T·(1−φ)/(1+φ/2) — temperature + Maxwell-Garnett cell packing correction. Foster 1989.
     effectiveSigmaE: (state): number => {
@@ -217,7 +226,7 @@ export const useCellStore = defineStore('cell', {
     healthyDisruptionRatio(): number {
       const state = this as CellStoreState
       const hfireMult = state.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
-      const vthEff = tempCorrectedVth(state.healthy.thresholdVoltage, state.healthyTemp, state.lysisNPulses)
+      const vthEff = tempCorrectedVth(state.healthy.thresholdVoltage, state.healthyTemp, this.effectivePulseCount)
       return (this.healthyVm * this.pulseEnvelopeFactorHealthy) / (vthEff * hfireMult)
     },
 
@@ -243,23 +252,21 @@ export const useCellStore = defineStore('cell', {
           t.resonantFreqGHz2, t.capsidQ2, t.resonantMode2Amplitude,
         )
       }
-      const vthEff = tempCorrectedVth(state.target.thresholdVoltage, state.targetTemp, state.lysisNPulses)
+      const vthEff = tempCorrectedVth(state.target.thresholdVoltage, state.targetTemp, this.effectivePulseCount)
       return (this.targetVm * this.pulseEnvelopeFactorTarget) / (vthEff * hfireMult)
     },
 
     healthySAR(): number {
-      // Acoustic resonance uses a different energy-deposition mechanism (mechanical, not RF).
-      // The Joule-heating SAR formula (σ_i·α²·E²/ρ) does not apply in resonance mode.
-      if (this.isResonanceMode) return 0
       const state = this as CellStoreState
       const wf = state.waveform === WAVEFORM.CW ? WF_CW : WF_PULSED
+      if (this.isResonanceMode) return computeIntracellularDebyeSAR(state.healthy, state.fieldIntensity, state.currentBroadcastFrequency, wf)
       return computeSAR(state.healthy, state.fieldIntensity, this.effectiveSigmaE, wf)
     },
 
     targetSAR(): number {
-      if (this.isResonanceMode) return 0
       const state = this as CellStoreState
       const wf = state.waveform === WAVEFORM.CW ? WF_CW : WF_PULSED
+      if (this.isResonanceMode) return computeIntracellularDebyeSAR(state.target, state.fieldIntensity, state.currentBroadcastFrequency, wf)
       return computeSAR(state.target, state.fieldIntensity, this.effectiveSigmaE, wf)
     },
 
@@ -288,6 +295,7 @@ export const useCellStore = defineStore('cell', {
         const t = state.target as CellConfig & {
           resonantFreqGHz?: number; capsidQ?: number
           capsidQMin?: number; capsidQMax?: number; resonantThresholdVcm?: number
+          resonantFreqUncertaintyPct?: number
         }
         if (
           (cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) &&
@@ -296,12 +304,24 @@ export const useCellStore = defineStore('cell', {
         ) {
           // Acoustic resonance threshold: temperature correction only — hfireMult does not apply
           const effThr    = tempCorrectedVth(t.resonantThresholdVcm, state.targetTemp)
-          const hDr    = this.healthyDisruptionRatio
-          const freqHz = state.currentBroadcastFrequency * KHZ_TO_HZ
-          // Q_min → smaller Lorentzian peak → lower DR_T → lower TI (worst case)
-          const drTMin = computeResonantDisruption(t.resonantFreqGHz, t.capsidQMin, effThr, freqHz, state.fieldIntensity, t.resonantFreqGHz2, t.capsidQ2, t.resonantMode2Amplitude)
-          // Q_max → taller Lorentzian peak → higher DR_T → higher TI (best case)
-          const drTMax = computeResonantDisruption(t.resonantFreqGHz, t.capsidQMax, effThr, freqHz, state.fieldIntensity, t.resonantFreqGHz2, t.capsidQ2, t.resonantMode2Amplitude)
+          const hDr      = this.healthyDisruptionRatio
+          const freqHz   = state.currentBroadcastFrequency * KHZ_TO_HZ
+          // Sweep (Q_min, Q_max) × (f_res × (1 ± pct/100)) and pick envelope. f_res
+          // uncertainty moves the Lorentzian peak laterally; without it the band can
+          // miss cases where the broadcast frequency is slightly off the nominal peak.
+          const fresPct  = t.resonantFreqUncertaintyPct ?? 0
+          const fresLo   = t.resonantFreqGHz * (1 - fresPct / 100)
+          const fresHi   = t.resonantFreqGHz * (1 + fresPct / 100)
+          const qGrid    = [t.capsidQMin, t.capsidQMax]
+          const fresGrid = fresPct > 0 ? [fresLo, t.resonantFreqGHz, fresHi] : [t.resonantFreqGHz]
+          let drTMin = Infinity, drTMax = -Infinity
+          for (const q of qGrid) {
+            for (const fres of fresGrid) {
+              const dr = computeResonantDisruption(fres, q, effThr, freqHz, state.fieldIntensity, t.resonantFreqGHz2, t.capsidQ2, t.resonantMode2Amplitude)
+              if (dr < drTMin) drTMin = dr
+              if (dr > drTMax) drTMax = dr
+            }
+          }
           const tiFromDr = (dr: number) =>
             safeRatio(dr, hDr, THRESHOLDS.TI_DISPLAY_CAP, NEAR_ZERO_DR)
           return { low: tiFromDr(drTMin), high: tiFromDr(drTMax) }
@@ -321,8 +341,8 @@ export const useCellStore = defineStore('cell', {
       const pefH    = this.pulseEnvelopeFactorHealthy
       // Apply same temperature + electrosensitization correction + H-FIRE multiplier as the live DR getters
       const hfireMult = state.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
-      const vthT = tempCorrectedVth(state.target.thresholdVoltage, state.targetTemp, state.lysisNPulses)
-      const vthH = tempCorrectedVth(state.healthy.thresholdVoltage, state.healthyTemp, state.lysisNPulses)
+      const vthT = tempCorrectedVth(state.target.thresholdVoltage, state.targetTemp, this.effectivePulseCount)
+      const vthH = tempCorrectedVth(state.healthy.thresholdVoltage, state.healthyTemp, this.effectivePulseCount)
       const drTLow  = (vmTLow  * pefT) / (vthT * hfireMult)
       const drHHigh = (vmHHigh * pefH) / (vthH * hfireMult)
       const tiLow   = Math.max(0, safeRatio(drTLow, drHHigh, THRESHOLDS.TI_DISPLAY_CAP, NEAR_ZERO_DR))
@@ -373,19 +393,16 @@ export const useCellStore = defineStore('cell', {
 
     healthyNuclearDisruptionRatio(): number {
       const state     = this as CellStoreState
-      const vth       = tempCorrectedVth(state.healthy.nuclearThresholdVoltage ?? THRESHOLDS.NUCLEAR_VM_DEFAULT, state.healthyTemp, state.lysisNPulses)
+      const vth       = tempCorrectedVth(state.healthy.nuclearThresholdVoltage ?? THRESHOLDS.NUCLEAR_VM_DEFAULT, state.healthyTemp, this.effectivePulseCount)
       const hfireMult = state.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
-      // Nuclear membrane is gated by outer membrane charging: apply outer PEF so nuclear DR
-      // correctly approaches 0 for short pulses (t_p << τ_out), consistent with outer DR.
+      // Gate by outer PEF so nuclear DR → 0 for t_p << τ_out.
       return (this.healthyNuclearVm * this.pulseEnvelopeFactorHealthy) / (vth * hfireMult)
     },
 
     targetNuclearDisruptionRatio(): number {
       const state     = this as CellStoreState
-      const vth       = tempCorrectedVth(state.target.nuclearThresholdVoltage ?? THRESHOLDS.NUCLEAR_VM_DEFAULT, state.targetTemp, state.lysisNPulses)
+      const vth       = tempCorrectedVth(state.target.nuclearThresholdVoltage ?? THRESHOLDS.NUCLEAR_VM_DEFAULT, state.targetTemp, this.effectivePulseCount)
       const hfireMult = state.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
-      // Nuclear membrane is gated by outer membrane charging: apply outer PEF so nuclear DR
-      // correctly approaches 0 for short pulses (t_p << τ_out), consistent with outer DR.
       return (this.targetNuclearVm * this.pulseEnvelopeFactorTarget) / (vth * hfireMult)
     },
 
@@ -396,21 +413,21 @@ export const useCellStore = defineStore('cell', {
     targetLysisField(): number {
       const state     = this as CellStoreState
       const hfireMult = state.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
-      return computeLysisField(state.target, state.currentBroadcastFrequency, this.effectiveSigmaE, this.cosThetaFactor, this.pulseEnvelopeFactorTarget, hfireMult, state.targetTemp, state.lysisNPulses)
+      return computeLysisField(state.target, state.currentBroadcastFrequency, this.effectiveSigmaE, this.cosThetaFactor, this.pulseEnvelopeFactorTarget, hfireMult, state.targetTemp, this.effectivePulseCount)
     },
 
     healthyLysisField(): number {
       const state     = this as CellStoreState
       const hfireMult = state.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
-      return computeLysisField(state.healthy, state.currentBroadcastFrequency, this.effectiveSigmaE, this.cosThetaFactor, this.pulseEnvelopeFactorHealthy, hfireMult, state.healthyTemp, state.lysisNPulses)
+      return computeLysisField(state.healthy, state.currentBroadcastFrequency, this.effectiveSigmaE, this.cosThetaFactor, this.pulseEnvelopeFactorHealthy, hfireMult, state.healthyTemp, this.effectivePulseCount)
     },
 
     healthySteadyStateTemp(): number {
-      return computeSteadyStateTemp(this.healthySAR, this.effectiveDutyCycle, (this as CellStoreState).healthy.specificHeatCapacity, (this as CellStoreState).perfusionRate)
+      return computeSteadyStateTemp(this.healthySAR, this.effectiveDutyCycle, (this as CellStoreState).healthy.specificHeatCapacity, (this as CellStoreState).perfusionRate, (this as CellStoreState).bulkMediumTemp)
     },
 
     targetSteadyStateTemp(): number {
-      return computeSteadyStateTemp(this.targetSAR, this.effectiveDutyCycle, (this as CellStoreState).target.specificHeatCapacity, (this as CellStoreState).perfusionRate)
+      return computeSteadyStateTemp(this.targetSAR, this.effectiveDutyCycle, (this as CellStoreState).target.specificHeatCapacity, (this as CellStoreState).perfusionRate, (this as CellStoreState).bulkMediumTemp)
     },
 
     bulkMediumSteadyStateTempC(): number {
@@ -431,11 +448,18 @@ export const useCellStore = defineStore('cell', {
     },
 
     mediumJouleHeatingSAR(): number {
-      if (this.isResonanceMode) return 0
       const state = this as CellStoreState
       const wf   = state.waveform === WAVEFORM.CW ? WF_CW : WF_PULSED
       const E_si = state.fieldIntensity * V_CM_TO_V_M
-      return (this.effectiveSigmaE * E_si ** 2 * wf) / RHO_AQUEOUS_KG_M3
+      // σ_eff = σ_dc + ω·ε₀·ε″(ω). At kHz-MHz the Debye loss term is ~0 and this reduces
+      // to the ionic conduction case. At GHz (resonance mode) dielectric relaxation of
+      // water dominates and must be included, otherwise medium heating reads as zero.
+      const omega    = TWO_PI * state.currentBroadcastFrequency * KHZ_TO_HZ
+      const eps_r_s  = MEDIA[state.medium].permittivity
+      const wt       = omega * DEBYE_TAU_AQUEOUS_S
+      const epsLoss  = (eps_r_s - EPS_INF_AQUEOUS) * wt / (1 + wt * wt)
+      const sigmaEff = this.effectiveSigmaE + omega * EPSILON_0 * epsLoss
+      return (sigmaEff * E_si ** 2 * wf) / RHO_AQUEOUS_KG_M3
     },
 
     skinDepthMm(): number {
@@ -490,7 +514,7 @@ export const useCellStore = defineStore('cell', {
       const dr = this.targetDisruptionRatio
       if (dr < THRESHOLDS.HEALTHY_APPROACHING || dr >= THRESHOLDS.DISRUPTION_WARN) return 0
       const tempC  = state.targetTemp
-      const nPulses = state.waveform === WAVEFORM.CW ? 1 : Math.max(1, state.lysisNPulses)
+      const nPulses = Math.max(1, this.effectivePulseCount)
       const drTerm    = Math.pow(Math.min(1, dr) / RESEAL_DR_REF, RESEAL_DR_EXPONENT)
       const tempTerm  = Math.exp(-RESEAL_TEMP_COEFF * Math.max(0, tempC - BODY_TEMP_C))
       const pulseTerm = Math.pow(nPulses, RESEAL_PULSE_EXPONENT)
@@ -529,19 +553,27 @@ export const useCellStore = defineStore('cell', {
         (cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) &&
         target.resonantFreqGHz && target.resonantThresholdVcm
       ) {
-        const freqKhz   = target.resonantFreqGHz * 1e6
         const effThr    = tempCorrectedVth(target.resonantThresholdVcm, state.targetTemp)
-        const drT = computeResonantDisruption(
-          target.resonantFreqGHz, target.capsidQ ?? DEFAULT_CAPSID_Q, effThr,
-          freqKhz * KHZ_TO_HZ, state.fieldIntensity,
-          target.resonantFreqGHz2, target.capsidQ2, target.resonantMode2Amplitude,
-        )
         const sigma_e   = this.effectiveSigmaE
         const hfireMult = state.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
-        // Acoustic resonance optimal frequency: healthy DR uses EP threshold (with N), target uses resonance (no N)
-        const hVm = computeSchwan(state.healthy, freqKhz, state.fieldIntensity, sigma_e, this.cosThetaFactor)
-        const drH = (hVm * this.pulseEnvelopeFactorHealthy) / (tempCorrectedVth(state.healthy.thresholdVoltage, state.healthyTemp, state.lysisNPulses) * hfireMult)
-        return { khz: freqKhz, sel: safeRatio(drT, drH, THRESHOLDS.TI_DISPLAY_CAP, NEAR_ZERO_DR) }
+        const hThr      = tempCorrectedVth(state.healthy.thresholdVoltage, state.healthyTemp, this.effectivePulseCount) * hfireMult
+        // Candidate peaks: mode 1 and (if present) mode 2. Pick whichever delivers better
+        // selectivity — for multi-mode cells the higher-frequency mode can give greater
+        // target/healthy contrast because healthy Schwan Vm rolls off faster above fc.
+        const selAt = (fresGHz: number): { khz: number; sel: number } => {
+          const khz = fresGHz * 1e6
+          const drT = computeResonantDisruption(
+            target.resonantFreqGHz!, target.capsidQ ?? DEFAULT_CAPSID_Q, effThr,
+            khz * KHZ_TO_HZ, state.fieldIntensity,
+            target.resonantFreqGHz2, target.capsidQ2, target.resonantMode2Amplitude,
+          )
+          const hVm = computeSchwan(state.healthy, khz, state.fieldIntensity, sigma_e, this.cosThetaFactor)
+          const drH = (hVm * this.pulseEnvelopeFactorHealthy) / hThr
+          return { khz, sel: safeRatio(drT, drH, THRESHOLDS.TI_DISPLAY_CAP, NEAR_ZERO_DR) }
+        }
+        const candidates = [selAt(target.resonantFreqGHz)]
+        if (target.resonantFreqGHz2) candidates.push(selAt(target.resonantFreqGHz2))
+        return candidates.reduce((best, c) => c.sel > best.sel ? c : best)
       }
 
       // Build cache key from all inputs that affect the scan. Round temps to 0.1 °C to
@@ -553,7 +585,7 @@ export const useCellStore = defineStore('cell', {
         state.target.id, state.target.radius, state.target.membraneThickness,
         state.target.dielectricConstant, state.target.conductivity, state.target.thresholdVoltage,
         state.waveform, state.dutyCycle, state.pulseWidthNs, state.chartMode,
-        state.lysisNPulses,  // electrosensitization affects threshold used in the scan
+        this.effectivePulseCount,
         Math.round(sigma_e * 1e6),  // µS/m precision — avoids misses from tiny temp-driven σ_e drift
         Math.round(state.healthyTemp * 10), Math.round(state.targetTemp * 10),
       ].join('|')
@@ -561,8 +593,8 @@ export const useCellStore = defineStore('cell', {
       if (_optFreqCache?.key === cacheKey) return _optFreqCache.result
 
       const hfireMult = state.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
-      const hThr = tempCorrectedVth(state.healthy.thresholdVoltage, state.healthyTemp, state.lysisNPulses) * hfireMult
-      const tThr = tempCorrectedVth(state.target.thresholdVoltage,  state.targetTemp,  state.lysisNPulses) * hfireMult
+      const hThr = tempCorrectedVth(state.healthy.thresholdVoltage, state.healthyTemp, this.effectivePulseCount) * hfireMult
+      const tThr = tempCorrectedVth(state.target.thresholdVoltage,  state.targetTemp,  this.effectivePulseCount) * hfireMult
       const pefH = this.pulseEnvelopeFactorHealthy
       const pefT = this.pulseEnvelopeFactorTarget
       // cosTheta and field cancel in the tDr/hDr ratio — use unit field to avoid a reactive
@@ -598,14 +630,19 @@ export const useCellStore = defineStore('cell', {
     },
 
     healthyBiomodScore(): number {
-      // Biomodulation is only meaningful below the EP onset threshold (DR < 50%).
-      // Above that, membrane charging dominates and biomod sub-threshold effects are irrelevant.
-      if (this.healthyDisruptionRatio >= THRESHOLDS.HEALTHY_APPROACHING) return 0
-      return (
+      const dr   = this.healthyDisruptionRatio
+      const taperLo = THRESHOLDS.BMS_TAPER_LO
+      const taperHi = THRESHOLDS.BMS_TAPER_HI
+      if (dr >= taperHi) return 0
+      const rawScore = (
         THRESHOLDS.BMS_WEIGHT_SI  * this.healthyStimIndex +
         THRESHOLDS.BMS_WEIGHT_MTE * this.healthyMechTransductionEff +
         THRESHOLDS.BMS_WEIGHT_MA  * this.healthyMildThermalActivation
       )
+      if (dr <= taperLo) return rawScore
+      const t = (dr - taperLo) / (taperHi - taperLo)
+      const smooth = 1 - (t * t * (3 - 2 * t))  // inverted smoothstep: 1 at dr=taperLo → 0 at dr=taperHi
+      return rawScore * smooth
     },
 
     // Electrode double-layer (Cdl) absorbs voltage at <50 kHz; Vm overestimated. Foster 1989.
@@ -627,8 +664,8 @@ export const useCellStore = defineStore('cell', {
     // Temperature and electrosensitization corrections applied consistently.
     tiQuasiDc(): number {
       const state = this as CellStoreState
-      const vthT = tempCorrectedVth(state.target.thresholdVoltage,  state.targetTemp,  state.lysisNPulses)
-      const vthH = tempCorrectedVth(state.healthy.thresholdVoltage, state.healthyTemp, state.lysisNPulses)
+      const vthT = tempCorrectedVth(state.target.thresholdVoltage,  state.targetTemp,  this.effectivePulseCount)
+      const vthH = tempCorrectedVth(state.healthy.thresholdVoltage, state.healthyTemp, this.effectivePulseCount)
       if (vthT <= 0) return 0
       return (state.target.radius * vthH) / (state.healthy.radius * vthT)
     },
@@ -641,8 +678,8 @@ export const useCellStore = defineStore('cell', {
       const sigma_e = this.effectiveSigmaE
       const tauT = computeTau(state.target,  sigma_e)
       const tauH = computeTau(state.healthy, sigma_e)
-      const vthT = tempCorrectedVth(state.target.thresholdVoltage,  state.targetTemp,  state.lysisNPulses)
-      const vthH = tempCorrectedVth(state.healthy.thresholdVoltage, state.healthyTemp, state.lysisNPulses)
+      const vthT = tempCorrectedVth(state.target.thresholdVoltage,  state.targetTemp,  this.effectivePulseCount)
+      const vthH = tempCorrectedVth(state.healthy.thresholdVoltage, state.healthyTemp, this.effectivePulseCount)
       if (tauT <= 0 || vthT <= 0) return 0
       return (state.target.radius * tauH * vthH) / (state.healthy.radius * tauT * vthT)
     },
@@ -742,18 +779,24 @@ export const useCellStore = defineStore('cell', {
     },
 
     handleStatePacket(packet: StatePacket) {
-      this.currentBroadcastFrequency = packet.freqKHz
-      this.fieldIntensity            = packet.fieldVcm
-      if (packet.medium in MEDIA) this.medium = packet.medium as MediumKey
-      this.dutyCycle           = packet.dutyCycle
-      this.pulseWidthNs        = packet.pulseWidthNs
-      this.waveform            = packet.waveform
-      this.orientationDeg      = packet.orientationDeg
-      this.lysisNPulses        = packet.lysisNPulses
-      this.chartMode           = packet.chartMode
-      this.doubleShellEnabled  = packet.doubleShellEnabled
-      this.perfusionRate       = packet.perfusionRate
-      this.cellPackingFraction = packet.cellPackingFraction
+      // Route every field through its sanitising setter so malformed or stale
+      // peer packets cannot inject out-of-range values (dc=0, orientation=180, N=10_000…).
+      if (Number.isFinite(packet.freqKHz))  this.currentBroadcastFrequency = packet.freqKHz
+      if (Number.isFinite(packet.fieldVcm)) this.fieldIntensity            = packet.fieldVcm
+      if (packet.medium in MEDIA)                 this.setMedium(packet.medium as MediumKey)
+      if (Number.isFinite(packet.dutyCycle))      this.setDutyCycle(packet.dutyCycle)
+      if (Number.isFinite(packet.pulseWidthNs))   this.setPulseWidthNs(packet.pulseWidthNs)
+      if (packet.waveform === WAVEFORM.CW || packet.waveform === WAVEFORM.PULSED || packet.waveform === WAVEFORM.H_FIRE) {
+        this.setWaveform(packet.waveform)
+      }
+      if (Number.isFinite(packet.orientationDeg)) this.setOrientationDeg(packet.orientationDeg)
+      if (Number.isFinite(packet.lysisNPulses))   this.setLysisNPulses(packet.lysisNPulses)
+      if (packet.chartMode === CHART_MODE.SCHWAN || packet.chartMode === CHART_MODE.RESONANCE) {
+        this.setChartMode(packet.chartMode)
+      }
+      if (typeof packet.doubleShellEnabled === 'boolean') this.doubleShellEnabled = packet.doubleShellEnabled
+      if (Number.isFinite(packet.perfusionRate))       this.setPerfusionRate(packet.perfusionRate)
+      if (Number.isFinite(packet.cellPackingFraction)) this.setCellPackingFraction(packet.cellPackingFraction)
       this.loadPresetIfNeeded('target',  packet.targetPresetId)
       this.loadPresetIfNeeded('healthy', packet.healthyPresetId)
       if (packet.sessionName) useExperimentStore().setSessionName(packet.sessionName)
@@ -770,6 +813,7 @@ export const useCellStore = defineStore('cell', {
         this[cellType] = cfg
         if (cellType === 'target') this.targetTemp = BODY_TEMP_C
         else this.healthyTemp = BODY_TEMP_C
+        if (cellType === 'target') this.syncChartModeToTarget()
         this.resetCounter++
         return
       }
@@ -780,11 +824,18 @@ export const useCellStore = defineStore('cell', {
       this[cellType] = useUserPresetsStore().toCellConfig(userPreset)
       if (cellType === 'target') this.targetTemp = BODY_TEMP_C
       else this.healthyTemp = BODY_TEMP_C
+      if (cellType === 'target') this.syncChartModeToTarget()
       this.resetCounter++
     },
 
     updateCellParam(cellType: 'healthy' | 'target', key: string, value: number) {
-      ;(this[cellType] as object as Record<string, number>)[key] = value
+      if (!Number.isFinite(value)) return
+      const cell = this[cellType] as CellConfig & { resonantFreqGHz?: number }
+      const paramSet = cell.resonantFreqGHz != null ? EDITABLE_PARAMS_ACOUSTIC : EDITABLE_PARAMS
+      const def = paramSet.find(p => p.key === key)
+      if (!def) return
+      const clamped = Math.max(def.min, Math.min(def.max, value))
+      ;(this[cellType] as object as Record<string, number>)[key] = clamped
     },
 
     startSession() {
@@ -793,14 +844,18 @@ export const useCellStore = defineStore('cell', {
       const dt_s = TEMP_UPDATE_INTERVAL_MS * MS_TO_S
       this.tempTimer = setInterval(() => {
         const dc  = this.effectiveDutyCycle
+        const mL  = NEWTON_COOLING_LAMBDA + this.perfusionRate * PENNES_BLOOD_COEFF / MEDIUM_SPECIFIC_HEAT_J_KG_K
+        const dTm = (this.mediumJouleHeatingSAR * dc / MEDIUM_SPECIFIC_HEAT_J_KG_K - mL * (this.bulkMediumTemp - BODY_TEMP_C)) * dt_s
+        this.bulkMediumTemp = Math.max(BODY_TEMP_C, Math.min(THRESHOLDS.TEMP_CAP, this.bulkMediumTemp + dTm))
+        const baseline = this.bulkMediumTemp
         const hCp = this.healthy.specificHeatCapacity
         const hL  = NEWTON_COOLING_LAMBDA + this.perfusionRate * PENNES_BLOOD_COEFF / hCp
-        const dTh = (this.healthySAR * dc / hCp - hL * (this.healthyTemp - BODY_TEMP_C)) * dt_s
-        this.healthyTemp = Math.max(BODY_TEMP_C, Math.min(THRESHOLDS.TEMP_CAP, this.healthyTemp + dTh))
+        const dTh = (this.healthySAR * dc / hCp - hL * (this.healthyTemp - baseline)) * dt_s
+        this.healthyTemp = Math.max(baseline, Math.min(THRESHOLDS.TEMP_CAP, this.healthyTemp + dTh))
         const tCp = this.target.specificHeatCapacity
         const tL  = NEWTON_COOLING_LAMBDA + this.perfusionRate * PENNES_BLOOD_COEFF / tCp
-        const dTt = (this.targetSAR * dc / tCp - tL * (this.targetTemp - BODY_TEMP_C)) * dt_s
-        this.targetTemp = Math.max(BODY_TEMP_C, Math.min(THRESHOLDS.TEMP_CAP, this.targetTemp + dTt))
+        const dTt = (this.targetSAR * dc / tCp - tL * (this.targetTemp - baseline)) * dt_s
+        this.targetTemp = Math.max(baseline, Math.min(THRESHOLDS.TEMP_CAP, this.targetTemp + dTt))
       }, TEMP_UPDATE_INTERVAL_MS)
     },
 
@@ -833,6 +888,7 @@ export const useCellStore = defineStore('cell', {
         this.targetTemp = BODY_TEMP_C
         this.targetCellState = CELL_STATE.STABLE
       }
+      _optFreqCache = null
       this.resetCounter++
     },
 
@@ -848,13 +904,16 @@ export const useCellStore = defineStore('cell', {
       } else {
         this.targetTemp = BODY_TEMP_C
         this.targetCellState = CELL_STATE.STABLE
+        this.syncChartModeToTarget()
       }
+      _optFreqCache = null
       this.resetCounter++
     },
 
     resetTemps() {
       this.healthyTemp = BODY_TEMP_C
       this.targetTemp = BODY_TEMP_C
+      this.bulkMediumTemp = BODY_TEMP_C
     },
 
     setOrientationDeg(deg: number) {
@@ -862,14 +921,28 @@ export const useCellStore = defineStore('cell', {
     },
 
     setLysisNPulses(n: number) {
-      // Upper bound 200 matches SLIDER_ADV.LYSIS_N_LOG_MAX = 2.3; beyond ~190 the
-      // electrosensitization factor hits its ELECTROSENSITIZATION_CLAMP_MIN floor.
-      this.lysisNPulses = Math.max(1, Math.min(200, Math.round(n)))
+      // Cap at 1000 rather than the slider's 200 so legacy saved experiments with
+      // high N aren't silently truncated on load. Physics is unchanged past ~190
+      // because tempCorrectedVth() hits ELECTROSENSITIZATION_CLAMP_MIN there.
+      this.lysisNPulses = Math.max(1, Math.min(1000, Math.round(n)))
     },
 
     setChartMode(mode: 'schwan' | 'resonance') {
+      // Virus targets lack a validated Schwan range (fc in GHz is inaccessible). Force resonance.
+      const t = this.target as CellConfig & { resonantFreqGHz?: number; resonantThresholdVcm?: number }
+      if (mode === CHART_MODE.SCHWAN && this.targetCellCategory === CELL_CATEGORY.VIRUS && t.resonantFreqGHz && t.resonantThresholdVcm) {
+        this.chartMode = CHART_MODE.RESONANCE
+        return
+      }
       this.chartMode = mode
-      if (mode === CHART_MODE.RESONANCE) this.doubleShellEnabled = false  // nuclear model is Schwan-only
+    },
+
+    // Virus targets auto-switch to resonance; bacteria/mammalian keep the user's choice.
+    syncChartModeToTarget() {
+      const t = this.target as CellConfig & { resonantFreqGHz?: number; resonantThresholdVcm?: number }
+      if (this.targetCellCategory === CELL_CATEGORY.VIRUS && t.resonantFreqGHz && t.resonantThresholdVcm) {
+        this.chartMode = CHART_MODE.RESONANCE
+      }
     },
 
     toggleDoubleShell() {
@@ -877,7 +950,7 @@ export const useCellStore = defineStore('cell', {
     },
 
     setPerfusionRate(rate: number) {
-      this.perfusionRate = Math.max(0, Math.min(10, rate))
+      this.perfusionRate = Math.max(0, Math.min(5, rate))
     },
 
     setCellPackingFraction(phi: number) {

@@ -284,7 +284,7 @@ export default defineComponent({
         const tau   = computeTau(cell, sigma_e)
         const pef   = isPulsed ? computePulseStepResponse(tau, pwNs) : 1.0
         const vm    = computeSchwan(cell, freqKHz, E, sigma_e, cosTheta)
-        const vThEff = tempCorrectedVth(vThNominal, cellTemp, this.cellStore.lysisNPulses) * hfireMult
+        const vThEff = tempCorrectedVth(vThNominal, cellTemp, this.cellStore.effectivePulseCount) * hfireMult
         return (vm * pef) / vThEff
       }
 

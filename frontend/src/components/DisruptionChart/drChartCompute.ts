@@ -102,8 +102,7 @@ export function computeCurves(
   }))
 }
 
-// Compute temp + electrosensitization + H-FIRE corrected threshold voltage for a cell.
-// pulseCount: lysisNPulses from cellStore. Pass 1 for acoustic resonance thresholds.
+// pulseCount: pass store.effectivePulseCount; pass 1 for acoustic resonance thresholds.
 export function effectiveVth(nominalVth: number, tempC: number, hfireMult: number, pulseCount = 1): number {
   return tempCorrectedVth(nominalVth, tempC, pulseCount) * hfireMult
 }

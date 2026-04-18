@@ -153,7 +153,7 @@ export default defineComponent({
       const perfRate   = cellStore.perfusionRate
       const wf         = waveform === WAVEFORM.CW ? WF_CW : WF_PULSED
 
-      const nPulses    = cellStore.lysisNPulses
+      const nPulses    = cellStore.effectivePulseCount
       const tauH = computeTau(healthy, sigma_e)
       const tauT = computeTau(target,  sigma_e)
       const isPulsed   = waveform === WAVEFORM.PULSED || waveform === WAVEFORM.H_FIRE

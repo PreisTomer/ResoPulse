@@ -89,8 +89,30 @@
       </span>
     </div>
 
-    <!-- Lysis threshold -->
+    <!-- Membrane conductivity (DEP CM model) -->
     <div class="ccm-params-grid__field">
+      <label class="ccm-params-grid__label">
+        {{ $t('userPresets.fieldSigmaMem') }}
+        <span class="ccm-params-grid__unit">{{ UNIT.S_PER_M }}</span>
+        <button class="ccm-params-grid__tip-btn" @click="$emit(EMIT.SHOW_TIP, 'sigmaMem')">?</button>
+      </label>
+      <input
+        :value="form.membraneConductivity"
+        class="ccm-params-grid__input"
+        :class="{ 'ccm-params-grid__input--warn': fieldHints['membraneConductivity']?.isWarn }"
+        type="number"
+        step="1e-7"
+        min="1e-9"
+        max="1e-3"
+        @input="onNumericInput('membraneConductivity', $event)"
+      />
+      <span class="ccm-params-grid__range" :class="{ 'ccm-params-grid__range--warn': fieldHints['membraneConductivity']?.isWarn }">
+        {{ fieldHints['membraneConductivity']?.hint }}
+      </span>
+    </div>
+
+    <!-- Lysis threshold (IRE/Vm) — not rendered for viruses; IRE does not apply -->
+    <div v-if="isEpThresholdVisible" class="ccm-params-grid__field">
       <label class="ccm-params-grid__label">
         {{ $t('userPresets.fieldVmThr') }}
         <span class="ccm-params-grid__unit">{{ UNIT.V }}</span>
@@ -166,50 +188,59 @@ import { EMIT } from '@/constants/emitEvents'
 
 type CellFormType = 'mammalian' | 'bacteria' | 'virus'
 
-// ── Literature ranges by cell type and field ──────────────────────────────────
-// Sources: Kotnik & Miklavcic (2000, 2006); Gascoyne & Vykoukal (2002);
-//          Weaver & Chizmadzhev (1996); Gabriel et al. (1996); Schwan (1957).
-// These are [min, max] soft bounds — values outside trigger a non-blocking amber
-// warning to prompt the user to verify their source before saving.
 const LIT_RANGES: Record<CellFormType, Partial<Record<string, [number, number]>>> = {
   mammalian: {
-    radius:               [5,     20   ],
-    membraneThickness:    [5,     10   ],
-    dielectricConstant:   [5,     15   ],
-    conductivity:         [0.4,   1.5  ],
-    thresholdVoltage:     [0.5,   1.5  ],
-    density:              [1000,  1100 ],
-    specificHeatCapacity: [3000,  4000 ],
+    radius:               [5,      20    ],
+    membraneThickness:    [5,      10    ],
+    dielectricConstant:   [5,      15    ],
+    conductivity:         [0.4,    1.5   ],
+    membraneConductivity: [1e-8,   1e-6  ],
+    thresholdVoltage:     [0.5,    1.5   ],
+    density:              [1000,   1100  ],
+    specificHeatCapacity: [3000,   4000  ],
   },
   bacteria: {
-    radius:               [0.5,   2.0  ],
-    membraneThickness:    [5,     10   ],
-    dielectricConstant:   [8,     18   ],
-    conductivity:         [0.2,   0.5  ],
-    thresholdVoltage:     [0.8,   2.0  ],
-    density:              [1050,  1150 ],
-    specificHeatCapacity: [3000,  4000 ],
+    radius:               [0.5,    2.0   ],
+    membraneThickness:    [5,      10    ],
+    dielectricConstant:   [8,      18    ],
+    conductivity:         [0.2,    0.5   ],
+    membraneConductivity: [1e-6,   1e-4  ],
+    thresholdVoltage:     [0.8,    2.0   ],
+    density:              [1050,   1150  ],
+    specificHeatCapacity: [3000,   4000  ],
   },
   virus: {
-    radius:               [0.02,  0.15 ],
-    membraneThickness:    [3,     8    ],
-    dielectricConstant:   [10,    30   ],
-    conductivity:         [0.05,  0.4  ],
-    thresholdVoltage:     [0.2,   0.8  ],
-    density:              [1100,  1400 ],
-    specificHeatCapacity: [2000,  3500 ],
+    radius:               [0.02,   0.15  ],
+    membraneThickness:    [3,      8     ],
+    dielectricConstant:   [10,     30    ],
+    conductivity:         [0.05,   0.4   ],
+    membraneConductivity: [1e-8,   1e-6  ],
+    thresholdVoltage:     [0.2,    0.8   ],
+    density:              [1100,   1400  ],
+    specificHeatCapacity: [2000,   3500  ],
   },
 }
 
-// Display units for each field key (used in range hint string)
 const FIELD_UNITS: Partial<Record<string, string>> = {
   radius:               UNIT.UM,
   membraneThickness:    UNIT.NM,
   dielectricConstant:   '',
   conductivity:         UNIT.S_PER_M,
+  membraneConductivity: UNIT.S_PER_M,
   thresholdVoltage:     UNIT.V,
   density:              UNIT.KG_PER_M3,
   specificHeatCapacity: UNIT.J_PER_KG_K,
+}
+
+const HARD_BOUNDS: Record<string, [number, number]> = {
+  radius:               [0.001,  100   ],
+  membraneThickness:    [1,      200   ],
+  dielectricConstant:   [1,      80    ],
+  conductivity:         [0.001,  10    ],
+  membraneConductivity: [1e-9,   1e-3  ],
+  thresholdVoltage:     [0.05,   10    ],
+  density:              [500,    2000  ],
+  specificHeatCapacity: [500,    5000  ],
 }
 
 function formatRangeNumber(n: number): string {
@@ -231,8 +262,10 @@ export default defineComponent({
     UNIT() { return UNIT },
     EMIT() { return EMIT },
 
-    // Pre-compute all field hint data in one pass per render, keyed by field name.
-    // Using a computed avoids calling two separate methods 7 times each in the template.
+    isEpThresholdVisible(): boolean {
+      return this.form.cellType !== 'virus'
+    },
+
     fieldHints(): Record<string, { isWarn: boolean; hint: string }> {
       const ct     = this.form.cellType as CellFormType
       const ranges = LIT_RANGES[ct] ?? {}
@@ -257,7 +290,11 @@ export default defineComponent({
 
   methods: {
     onNumericInput(key: string, event: Event) {
-      const value = parseFloat((event.target as HTMLInputElement).value)
+      const raw = (event.target as HTMLInputElement).value
+      const parsed = parseFloat(raw)
+      if (!Number.isFinite(parsed)) return
+      const bounds = HARD_BOUNDS[key]
+      const value  = bounds ? Math.max(bounds[0], Math.min(bounds[1], parsed)) : parsed
       this.$emit(EMIT.FIELD_CHANGE, { key, value })
     },
   },

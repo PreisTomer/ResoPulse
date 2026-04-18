@@ -39,7 +39,7 @@ import { broadcastStateSync } from '@/services/socket'
 import { formatFreqKHz } from '@/utils/format'
 import { tipOptimal } from '@/tooltips/selectivityTooltips'
 
-import { THRESHOLDS } from '@/constants/physics'
+import { THRESHOLDS, SCHWAN_ADVISORY_FREQ_KHZ } from '@/constants/physics'
 import { CELL_CATEGORY, CHART_MODE } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
 
@@ -104,6 +104,9 @@ export default defineComponent({
         return `${ICON.WARNING} Resonance mode has no physical meaning for mammalian cells, they have no rigid protein capsid or peptidoglycan cell wall. Switch back to IRE/Vm mode.`
       }
       if (cat === CELL_CATEGORY.VIRUS) {
+        if (!this.cellStore.isResonanceMode && this.cellStore.currentBroadcastFrequency > SCHWAN_ADVISORY_FREQ_KHZ) {
+          return `${ICON.WARNING} ${this.$t('selectivity.schwanGhzAdvisory')}`
+        }
         if (t.resonantFreqGHz) {
           return `${ICON.WARNING} IRE model inapplicable for virions (R < 0.1 µm) · Acoustic capsid disruption at ${t.resonantFreqGHz} GHz${ghzCaveat}`
         }
@@ -115,6 +118,12 @@ export default defineComponent({
         if (tLysis > 3000) {
           const res = t.resonantFreqGHz ? ` · Resonance mode (${t.resonantFreqGHz} GHz) available${ghzCaveat}` : ''
           return `${ICON.WARNING} E_lysis ≈ ${(tLysis / 1000).toFixed(1)} kV/cm, standard IRE impractical · Consider nsEP (pulse width slider)${res}`
+        }
+        if (!this.cellStore.isResonanceMode && this.cellStore.currentBroadcastFrequency > SCHWAN_ADVISORY_FREQ_KHZ) {
+          return `${ICON.WARNING} ${this.$t('selectivity.schwanGhzAdvisory')}`
+        }
+        if (!this.cellStore.isResonanceMode && t.resonantFreqGHz && t.resonantThresholdVcm) {
+          return `${ICON.WARNING} ${this.$t('selectivity.bacteriaSchwanAdvisory', { fres: t.resonantFreqGHz })}`
         }
       }
       if (this.cellStore.fcBelowSliderMin) {

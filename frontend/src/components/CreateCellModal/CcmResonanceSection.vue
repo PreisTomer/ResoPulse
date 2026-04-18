@@ -64,6 +64,116 @@
         <span class="ccm-resonance__sub-hint">{{ $t('userPresets.fieldResThrSub') }}</span>
       </div>
 
+      <!-- f_res uncertainty band (±%) -->
+      <div class="ccm-resonance__field">
+        <label class="ccm-resonance__label">
+          {{ $t('userPresets.fieldResFreqUnc') }}
+          <span class="ccm-resonance__unit">%</span>
+          <button class="ccm-resonance__tip-btn" @click="$emit(EMIT.SHOW_TIP, 'resFreqUnc')">?</button>
+        </label>
+        <input
+          :value="form.resonantFreqUncertaintyPct"
+          class="ccm-resonance__input"
+          type="number"
+          step="1"
+          min="0"
+          max="80"
+          @input="onNumericInput('resonantFreqUncertaintyPct', $event)"
+        />
+        <span class="ccm-resonance__sub-hint">{{ $t('userPresets.fieldResFreqUncSub') }}</span>
+      </div>
+
+      <!-- Q lower bound (uncertainty) -->
+      <div class="ccm-resonance__field">
+        <label class="ccm-resonance__label">
+          {{ $t('userPresets.fieldCapsidQMin') }}
+          <button class="ccm-resonance__tip-btn" @click="$emit(EMIT.SHOW_TIP, 'capsidQMin')">?</button>
+        </label>
+        <input
+          :value="form.capsidQMin"
+          class="ccm-resonance__input"
+          type="number"
+          step="0.5"
+          min="1"
+          max="100"
+          @input="onNumericInput('capsidQMin', $event)"
+        />
+        <span class="ccm-resonance__sub-hint">{{ $t('userPresets.fieldCapsidQMinSub') }}</span>
+      </div>
+
+      <!-- Q upper bound (uncertainty) -->
+      <div class="ccm-resonance__field">
+        <label class="ccm-resonance__label">
+          {{ $t('userPresets.fieldCapsidQMax') }}
+          <button class="ccm-resonance__tip-btn" @click="$emit(EMIT.SHOW_TIP, 'capsidQMax')">?</button>
+        </label>
+        <input
+          :value="form.capsidQMax"
+          class="ccm-resonance__input"
+          type="number"
+          step="0.5"
+          min="1"
+          max="100"
+          @input="onNumericInput('capsidQMax', $event)"
+        />
+        <span class="ccm-resonance__sub-hint">{{ $t('userPresets.fieldCapsidQMaxSub') }}</span>
+      </div>
+
+      <!-- Secondary mode frequency (optional) -->
+      <div class="ccm-resonance__field">
+        <label class="ccm-resonance__label">
+          {{ $t('userPresets.fieldResFreq2') }}
+          <span class="ccm-resonance__unit">{{ UNIT.GHZ }}</span>
+          <button class="ccm-resonance__tip-btn" @click="$emit(EMIT.SHOW_TIP, 'resFreq2')">?</button>
+        </label>
+        <input
+          :value="form.resonantFreqGHz2"
+          class="ccm-resonance__input"
+          type="number"
+          step="0.01"
+          min="0"
+          max="1000"
+          @input="onNumericInput('resonantFreqGHz2', $event)"
+        />
+        <span class="ccm-resonance__sub-hint">{{ $t('userPresets.fieldResFreq2Sub') }}</span>
+      </div>
+
+      <!-- Secondary mode Q (optional, defaults to primary Q when blank) -->
+      <div class="ccm-resonance__field">
+        <label class="ccm-resonance__label">
+          {{ $t('userPresets.fieldCapsidQ2') }}
+          <button class="ccm-resonance__tip-btn" @click="$emit(EMIT.SHOW_TIP, 'capsidQ2')">?</button>
+        </label>
+        <input
+          :value="form.capsidQ2"
+          class="ccm-resonance__input"
+          type="number"
+          step="1"
+          min="1"
+          max="100"
+          @input="onNumericInput('capsidQ2', $event)"
+        />
+        <span class="ccm-resonance__sub-hint">{{ $t('userPresets.fieldCapsidQ2Sub') }}</span>
+      </div>
+
+      <!-- Secondary mode relative amplitude (0-1) -->
+      <div class="ccm-resonance__field">
+        <label class="ccm-resonance__label">
+          {{ $t('userPresets.fieldResMode2Amp') }}
+          <button class="ccm-resonance__tip-btn" @click="$emit(EMIT.SHOW_TIP, 'resMode2Amp')">?</button>
+        </label>
+        <input
+          :value="form.resonantMode2Amplitude"
+          class="ccm-resonance__input"
+          type="number"
+          step="0.05"
+          min="0"
+          max="1"
+          @input="onNumericInput('resonantMode2Amplitude', $event)"
+        />
+        <span class="ccm-resonance__sub-hint">{{ $t('userPresets.fieldResMode2AmpSub') }}</span>
+      </div>
+
     </div>
   </div>
 </template>

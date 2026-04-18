@@ -55,6 +55,7 @@
             v-tip="tipDutyCycle"
           >{{ dutyCycleDisplay }}</span>
           <span class="field-panel__readout-sub" v-tip="tipDutyCycle">T_ss {{ maxSteadyTemp.toFixed(0) }} {{ UNIT.DEG_C }}</span>
+          <span class="field-panel__readout-sub" v-tip="$t('slider.tipBathTemp')">T_bath {{ cellStore.bulkMediumSteadyStateTempC.toFixed(0) }} {{ UNIT.DEG_C }}</span>
           <span class="field-panel__readout-sub" v-tip="tipDutyCycle">SAR_eff {{ CELL_LABEL.TARGET }} {{ (cellStore.targetSAR * cellStore.dutyCycle).toFixed(1) }} {{ UNIT.W_PER_KG }}</span>
         </div>
       </div>
@@ -193,7 +194,7 @@ export default defineComponent({
         healthyFc:         this.cellStore.healthyFc,
         pulseWidthDisplay: this.pulseWidthDisplay,
         lysisDelayMs:      this.cellStore.lysisDelayMs,
-        lysisNPulses:      this.cellStore.lysisNPulses,
+        lysisNPulses:      this.cellStore.effectivePulseCount,
         dutyCycle:         this.cellStore.dutyCycle,
       })
     },

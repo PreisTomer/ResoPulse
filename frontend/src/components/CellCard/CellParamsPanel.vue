@@ -247,6 +247,8 @@ export default defineComponent({
       animation: param-flash 0.7s ease-out forwards;
     }
 
+    // Re-enable pointer-events so the v-tip tooltip triggers on thin-shell warn rows
+    // (the --derived modifier disables pointer-events to keep read-only rows non-interactive).
     &--caveat {
       pointer-events: auto;
       cursor: help;

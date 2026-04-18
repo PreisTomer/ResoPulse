@@ -34,6 +34,11 @@
         <span class="field-panel__row-label" v-tip="tipLysisNFull">{{ $t('slider.pulsesN') }} <span class="field-panel__scope-tag field-panel__scope-tag--target">{{ CELL_LABEL.TARGET }}</span></span>
         <div class="field-panel__readout" v-tip="tipLysisN">
           <span class="field-panel__readout-value">{{ lysisNDisplay }}</span>
+          <span
+            v-if="isElectrosensitizationFloor"
+            class="field-panel__readout-sub field-panel__readout-sub--es-floor"
+            v-tip="$t('slider.tipElectrosensitizationFloor')"
+          >{{ $t('slider.electrosensitizationFloor') }}</span>
         </div>
       </div>
       <div class="field-panel__track">
@@ -136,7 +141,7 @@ import { WAVEFORM, CELL_CATEGORY, CELL_LABEL } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
 import { SLIDER_ADV } from '@/constants/sliderBounds'
 import { UNIT } from '@/constants/units'
-import { NEWTON_COOLING_LAMBDA, PENNES_BLOOD_COEFF } from '@/constants/physics'
+import { NEWTON_COOLING_LAMBDA, PENNES_BLOOD_COEFF, ELECTROSENSITIZATION_FLOOR_N } from '@/constants/physics'
 
 export default defineComponent({
   data() {
@@ -166,6 +171,10 @@ export default defineComponent({
     lysisNDisplay(): string {
       const n = this.cellStore.lysisNPulses
       return `×${n} · ~${formatLysisTime(this.cellStore.lysisDelayMs)}`
+    },
+
+    isElectrosensitizationFloor(): boolean {
+      return this.cellStore.lysisNPulses >= ELECTROSENSITIZATION_FLOOR_N
     },
 
     tipOrientation(): string {
@@ -364,7 +373,12 @@ export default defineComponent({
       white-space: nowrap;
     }
 
-    &-sub { font-size: var(--fs-xxs); font-family: var(--font-mono); color: var(--color-text-muted); white-space: nowrap; opacity: 0.75; } // intentional: secondary sub-label
+    &-sub {
+      font-size: var(--fs-xxs); font-family: var(--font-mono); color: var(--color-text-muted);
+      white-space: nowrap; opacity: 0.75;
+
+      &--es-floor { @include color-variant(amber); opacity: var(--op-partial); }
+    }
   }
 }
 </style>

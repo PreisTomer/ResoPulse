@@ -312,7 +312,13 @@ approximation (Weaver and Chizmadzhev 1996; Pakhomov et al. 2010).
 The true exponent is cell-type dependent. Cells with softer membranes
 sensitize faster; bacteria with rigid cell walls sensitize more slowly.
 Use this as a first-order protocol design tool, not a cell-specific
-quantitative prediction. See Protocol page §3.13 for full derivation.</span>
+quantitative prediction. See Protocol page §3.13 for full derivation.
+
+Reseal-time caveat: the displayed pore-reseal estimate is extrapolated
+from the Rols 1990 model, which is calibrated for N &lt; 20. Beyond
+N ≈ 50, cumulative pore saturation and membrane lipid reorganisation
+break the power-law assumption and the predicted reseal time becomes
+an order-of-magnitude estimate only.</span>
 
 Lysis countdown in the cell card resets immediately when N changes.
 At CW waveform a fixed 2.5 s delay is used instead.`

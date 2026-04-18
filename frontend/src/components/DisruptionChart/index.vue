@@ -84,7 +84,7 @@ export default defineComponent({
         s.target.dielectricConstant, s.target.conductivity, s.target.thresholdVoltage,
         t.resonantFreqGHz ?? 0,
         s.fieldIntensity, s.medium, s.waveform, s.dutyCycle, s.pulseWidthNs,
-        s.chartMode, s.orientationDeg, s.healthyTemp, s.targetTemp, s.lysisNPulses, s.resetCounter,
+        s.chartMode, s.orientationDeg, s.healthyTemp, s.targetTemp, s.effectivePulseCount, s.resetCounter,
       ].join('|')
     },
   },
@@ -252,9 +252,8 @@ export default defineComponent({
         this.cellStore.pulseEnvelopeFactorHealthy, this.cellStore.pulseEnvelopeFactorTarget,
         this.cellStore.isResonanceMode,
         isAcousticTarget,
-        effectiveVth(this.cellStore.healthy.thresholdVoltage, this.cellStore.healthyTemp, hfireMult, this.cellStore.lysisNPulses),
-        // Acoustic resonance: no electrosensitization (tHfireMult=1 already guards this; pulseCount omitted)
-        effectiveVth(tNominalVth, this.cellStore.targetTemp, tHfireMult, isAcousticRes ? 1 : this.cellStore.lysisNPulses),
+        effectiveVth(this.cellStore.healthy.thresholdVoltage, this.cellStore.healthyTemp, hfireMult, this.cellStore.effectivePulseCount),
+        effectiveVth(tNominalVth, this.cellStore.targetTemp, tHfireMult, isAcousticRes ? 1 : this.cellStore.effectivePulseCount),
       )
       this._curveData = data
       const peakDR = data.reduce((m, d) => Math.max(m, d.hDR, d.tDR), 0)

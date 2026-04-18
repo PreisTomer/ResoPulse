@@ -221,8 +221,8 @@ export default defineComponent({
       return {
         rT:   this.cellStore.target.radius,
         rH:   this.cellStore.healthy.radius,
-        vthT: tempCorrectedVth(this.cellStore.target.thresholdVoltage,  this.cellStore.targetTemp,  this.cellStore.lysisNPulses) * hfireMult,
-        vthH: tempCorrectedVth(this.cellStore.healthy.thresholdVoltage, this.cellStore.healthyTemp, this.cellStore.lysisNPulses) * hfireMult,
+        vthT: tempCorrectedVth(this.cellStore.target.thresholdVoltage,  this.cellStore.targetTemp,  this.cellStore.effectivePulseCount) * hfireMult,
+        vthH: tempCorrectedVth(this.cellStore.healthy.thresholdVoltage, this.cellStore.healthyTemp, this.cellStore.effectivePulseCount) * hfireMult,
       }
     },
 
