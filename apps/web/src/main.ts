@@ -21,6 +21,13 @@ if (!PUBLISHABLE_KEY) {
   throw new Error('VITE_CLERK_PUBLISHABLE_KEY is not set. Add it to your .env file.')
 }
 
+// Recover from stale lazy-chunk hashes after a deploy: when a user's cached
+// HTML references a bundle hash that no longer exists on the server, the
+// dynamic import fails. Reloading picks up fresh HTML with current hashes.
+window.addEventListener('vite:preloadError', () => {
+  window.location.reload()
+})
+
 const pinia = createPinia()
 pinia.use(piniaPluginPersistedstate)
 

@@ -2,5 +2,5 @@
   "buildCommand": "npm run test -w @resopulse/web && npm run build -w @resopulse/web",
   "outputDirectory": "apps/web/dist",
   "installCommand": "npm install",
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+  "rewrites": [{ "source": "/((?!assets/).*)", "destination": "/index.html" }]
 }
