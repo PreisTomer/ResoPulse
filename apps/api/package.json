@@ -4,7 +4,7 @@
   "description": "ResoPulse API server — biophysical field modelling backend",
   "main": "dist/index.js",
   "scripts": {
-    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+    "dev": "tsx watch src/index.ts",
     "build": "prisma generate && tsc",
     "start": "npx prisma migrate deploy && node dist/index.js",
     "demo": "node scripts/demo.mjs",
@@ -30,15 +30,12 @@
     "socket.io": "^4.8.3",
     "svix": "^1.90.0"
   },
-  "overrides": {
-    "@hono/node-server": ">=1.19.13"
-  },
   "devDependencies": {
     "@ngrok/ngrok": "^1.4.0",
     "@vitest/coverage-v8": "^4.1.4",
     "prisma": "^7.7.0",
     "socket.io-client": "^4.8.3",
-    "ts-node-dev": "^2.0.0",
+    "tsx": "^4.19.2",
     "typescript": "^5.3.3",
     "vitest": "^4.1.4"
   }

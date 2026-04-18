@@ -3,7 +3,7 @@
 Physics functions for the demo driver's synthetic impedance generator.
 
 The complex cuvette impedance formula used here is identical to the one
-implemented in the frontend at frontend/src/utils/impedance.ts
+implemented in the frontend at apps/web/src/utils/impedance.ts
 (computeCuvetteComplexImpedanceMag), so demo readings land in the UI charts
 as physically plausible values rather than arbitrary numbers.
 
@@ -110,7 +110,7 @@ def derive_conductivity_from_z_real(
 
     sigma_e = d / (A * Z_real)   (DC approximation, valid at f << f_relax)
 
-    This is the same formula used in frontend/src/utils/impedance.ts
+    This is the same formula used in apps/web/src/utils/impedance.ts
     (computeSigmaEFromImpedance) so the displayed conductivity is consistent.
 
     Args:

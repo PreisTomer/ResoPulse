@@ -38,7 +38,7 @@ TEST_PORT          = 19876           # Ephemeral port, unlikely to conflict
 PACKETS_EXPECTED   = 5              # Number of packets to collect
 TIMEOUT_S          = 30.0           # Abort if not collected within this time
 
-# Mirror of backend/src/socket.ts IMP_BOUNDS
+# Mirror of apps/api/src/socket.ts IMP_BOUNDS
 Z_MIN    = 0.01
 Z_MAX    = 1_000_000
 FREQ_MIN = 1.0

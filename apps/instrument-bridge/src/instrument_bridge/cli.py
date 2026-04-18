@@ -40,7 +40,7 @@ def main():
     Quick start (no hardware needed):
 
     \b
-        cd instrument-bridge
+        cd apps/instrument-bridge
         uv sync
         cp .env.example .env
         uv run instrument-bridge run --driver demo

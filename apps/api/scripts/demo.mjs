@@ -14,8 +14,7 @@
  *        PowerShell:    $env:VERCEL_URL="https://your-app.vercel.app"
  *
  * Usage:
- *   cd backend
- *   npm run demo
+ *   npm -w @resopulse/api run demo
  */
 
 import ngrok from '@ngrok/ngrok'
