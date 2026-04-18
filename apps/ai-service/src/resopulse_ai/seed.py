@@ -11,7 +11,7 @@ and is NOT labelled as user-collected data — a distinct session_name marks the
 rows so they can be audited or deleted later.
 
 Run once:
-    uv run instrument-bridge seed-demo
+    uv run resopulse-ai seed-demo
 """
 
 import logging

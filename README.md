@@ -66,7 +66,7 @@ Schwan equation derivation, SAR model, pulse-envelope factor (Weaver & Chizmadzh
 | Instrument Bridge | Python 3.11+, asyncio, python-socketio, Click, Rich, Pydantic |
 | AI Service | FastAPI, Uvicorn, XGBoost, scikit-learn, NumPy, joblib |
 | Physics | Custom TypeScript: Schwan equation, Pennes bioheat, Lorentzian resonance, nsEP pulse envelope |
-| Deployment | Vercel (frontend), Railway (backend) |
+| Deployment | Vercel (frontend), Render (backend + AI service), Neon (Postgres) |
 
 ---
 
@@ -89,8 +89,7 @@ cd apps/instrument-bridge
 uv sync                      # base install (no hardware drivers)
 uv sync --extra serial       # add PySerial for RS-232 instruments
 uv sync --extra visa         # add PyVISA for GPIB/USB-TMC instruments
-uv sync --extra ai           # add FastAPI + XGBoost for the AI service
-uv sync --extra all          # everything
+uv sync --extra all          # serial + visa
 
 cp .env.example .env         # configure backend URL and driver settings
 ```
@@ -145,7 +144,7 @@ instrument-bridge probe --driver visa_lcr --visa-resource "USB0::0x0957::0x0909:
 
 ## AI Optimizer Service
 
-The AI service is a FastAPI microservice that runs alongside the instrument bridge. The Node.js backend calls it over HTTP to fetch protocol recommendations.
+The AI service is a FastAPI microservice in its own Python package (`apps/ai-service`), deployed independently from the instrument bridge. The Node.js backend calls it over HTTP to fetch protocol recommendations.
 
 The service blends two sources:
 
@@ -155,11 +154,11 @@ The service blends two sources:
 ### Start the AI service
 
 ```bash
-cd apps/instrument-bridge
-uv sync --extra ai
-uv run instrument-bridge ai-service              # localhost:8000
-uv run instrument-bridge ai-service --host 0.0.0.0 --port 8000   # expose on LAN
-uv run instrument-bridge ai-service --reload     # dev mode with auto-reload
+cd apps/ai-service
+uv sync
+uv run resopulse-ai serve                               # localhost:8000
+uv run resopulse-ai serve --host 0.0.0.0 --port 8000    # expose on LAN
+uv run resopulse-ai serve --reload                      # dev mode with auto-reload
 ```
 
 Set `AI_SERVICE_URL=http://localhost:8000` in the Node.js backend environment.
@@ -177,10 +176,10 @@ Set `AI_SERVICE_URL=http://localhost:8000` in the Node.js backend environment.
 To pre-populate the outcomes database with synthetic training data so the ML model activates immediately:
 
 ```bash
-uv run instrument-bridge seed-demo
+uv run resopulse-ai seed-demo
 ```
 
-Or set `DEMO_SEED=true` in the environment before starting `ai-service` for automatic seeding on first launch.
+Or set `DEMO_SEED=true` in the environment before starting `resopulse-ai serve` for automatic seeding on first launch.
 
 ---
 

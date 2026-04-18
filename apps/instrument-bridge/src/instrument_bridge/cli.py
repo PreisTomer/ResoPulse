@@ -6,10 +6,8 @@ import sys
 import click
 from loguru import logger
 
-from instrument_bridge.commands.ai_service import register_ai_service_command
 from instrument_bridge.commands.probe import register_probe_command
 from instrument_bridge.commands.run import register_run_command
-from instrument_bridge.commands.seed_demo import register_seed_demo_command
 
 
 # ── Logging setup ──────────────────────────────────────────────────────────────
@@ -53,6 +51,4 @@ def main():
 
 
 register_run_command(main, _configure_logging)
-register_ai_service_command(main)
 register_probe_command(main, _configure_logging)
-register_seed_demo_command(main, _configure_logging)

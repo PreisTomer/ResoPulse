@@ -9,7 +9,7 @@ trained model bundle to DATA_DIR/ai_model/.
 All physics is pre-computed by the frontend — this module is ML-only.
 
 Usage (manual trigger):
-    python -m instrument_bridge.ai.train
+    python -m resopulse_ai.train
 
 Or via the FastAPI endpoint:
     POST /ai/retrain
@@ -156,7 +156,7 @@ def retrain_model() -> int:
     try:
         import xgboost as xgb
     except ImportError:
-        logger.error("[Train] xgboost not installed — run: uv sync --extra ai")
+        logger.error("[Train] xgboost not installed — run: uv sync (in apps/ai-service)")
         return 0
 
     result = _load_training_data()

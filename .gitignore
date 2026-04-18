@@ -7,3 +7,10 @@ packages/*/dist/
 *.log
 
 .vercel
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+apps/*/data/
+apps/*/.venv/

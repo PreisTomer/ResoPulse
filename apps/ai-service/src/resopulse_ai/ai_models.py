@@ -3,7 +3,7 @@
 Pydantic models for the AI optimizer API.
 
 Field names use camelCase to match the TypeScript types in
-backend/src/types/socket.ts — FastAPI serialises/deserialises them directly
+packages/shared-types/src/ai.ts — FastAPI serialises/deserialises them directly
 without conversion so Node.js can call the service with no mapping layer.
 """
 
@@ -11,7 +11,7 @@ from pydantic import BaseModel, Field, ConfigDict
 
 
 class CellBiophysics(BaseModel):
-    """Key biophysical parameters for one cell. Mirrors CellBiophysics in socket.ts."""
+    """Key biophysical parameters for one cell. Mirrors CellBiophysics in shared-types/ai.ts."""
     model_config = ConfigDict(populate_by_name=True)
 
     id:               str
@@ -26,7 +26,7 @@ class CellBiophysics(BaseModel):
 
 
 class AiPhysicsFeatures(BaseModel):
-    """Pre-computed physics features from the frontend. Mirrors AiPhysicsFeatures in socket.ts."""
+    """Pre-computed physics features from the frontend. Mirrors AiPhysicsFeatures in shared-types/ai.ts."""
     model_config = ConfigDict(populate_by_name=True)
 
     targetTauNs:          float = Field(gt=0)
@@ -60,7 +60,7 @@ class AiPhysicsBaseline(BaseModel):
 
 
 class SessionState(BaseModel):
-    """Current session state. Mirrors StatePacket in socket.ts."""
+    """Current session state. Mirrors StatePacket in shared-types/socket.ts."""
     model_config = ConfigDict(populate_by_name=True)
 
     freqKHz:             float
@@ -81,7 +81,7 @@ class SessionState(BaseModel):
 
 
 class OptimizeRequest(BaseModel):
-    """Full AI optimize request. Mirrors AiOptimizeRequest in socket.ts."""
+    """Full AI optimize request. Mirrors AiOptimizeRequest in shared-types/ai.ts."""
     model_config = ConfigDict(populate_by_name=True)
 
     requestId:       str
@@ -93,7 +93,7 @@ class OptimizeRequest(BaseModel):
 
 
 class OptimizeResponse(BaseModel):
-    """AI optimize response. Mirrors AiOptimizeResult in socket.ts."""
+    """AI optimize response. Mirrors AiOptimizeResult in shared-types/ai.ts."""
     model_config = ConfigDict(populate_by_name=True)
 
     requestId:          str

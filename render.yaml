@@ -24,8 +24,8 @@ services:
   - type: web
     name: resopulse-ai
     runtime: python
-    buildCommand: cd apps/instrument-bridge && pip install uv && uv sync --extra ai
-    startCommand: cd apps/instrument-bridge && uv run instrument-bridge ai-service --host 0.0.0.0 --port $PORT
+    buildCommand: cd apps/ai-service && pip install uv && uv sync
+    startCommand: cd apps/ai-service && uv run resopulse-ai serve --host 0.0.0.0 --port $PORT
     envVars:
       - key: NODE_API_URL
         sync: false   # set in dashboard: https://resopulse-backend.onrender.com

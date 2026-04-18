@@ -1,8 +1,8 @@
 """
-Pydantic models that mirror the TypeScript interfaces in backend/src/types/socket.ts.
+Pydantic models that mirror the TypeScript interfaces in packages/shared-types/src/socket.ts.
 
 The field names, types, and validation bounds are kept in sync with the server-side
-validateHardwareImpedancePacket() function in backend/src/socket.ts so that packets
+validateHardwareImpedancePacket() function in apps/api/src/socket.ts so that packets
 are rejected here (with a clear Python error) before they ever reach the network,
 rather than being silently dropped by the server.
 """
@@ -13,7 +13,7 @@ from pydantic import BaseModel, Field
 
 class ImpedanceReading(BaseModel):
     """
-    Mirrors HardwareImpedancePacket in backend/src/types/socket.ts.
+    Mirrors HardwareImpedancePacket in packages/shared-types/src/socket.ts.
 
     Validation bounds match the server's IMP_BOUNDS constants exactly:
       Z_MIN = 0.01 Ω,  Z_MAX = 1 MΩ
