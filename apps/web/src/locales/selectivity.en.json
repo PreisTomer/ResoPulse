@@ -1,6 +1,14 @@
 {
   "selectivity": {
     "title": "Selectivity Analysis",
+    "tabSelectivity": "Selectivity",
+    "tabMembrane": "Membrane & Thermal",
+    "tabComparison": "Comparison",
+    "tabSelectivityTip": "<strong>Selectivity View</strong>\nTherapeutic Index (TI), window score, disruption bars, and population lysis probabilities at current field and frequency. The primary readout for judging protocol selectivity.",
+    "tabMembraneTip": "<strong>Membrane &amp; Thermal View</strong>\nTransmembrane voltage (Vm), SAR, steady-state temperature, and dielectrophoresis (Re[K]) readouts, the biophysical state variables behind the selectivity result.",
+    "tabComparisonTip": "<strong>Preset Comparison</strong>\nHow every library preset of the relevant group would score against the current healthy baseline at the current field and frequency. Useful for finding a better target fit without changing the protocol.",
+    "tabBadgePresets": "{n} presets",
+    "tabBadgeBetter": "{n} better",
     "ratioLabel": "Selectivity Index (TI)",
     "vmSelLabel": "Vm",
     "vmHealthyStressLabel": "Vm_H EP stress",

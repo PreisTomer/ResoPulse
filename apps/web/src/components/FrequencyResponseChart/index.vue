@@ -230,10 +230,10 @@ export default defineComponent({
 
       g.append('text')
         .attr('class', 'cursor-drag-hint')
-        .attr('y', -4)
+        .attr('y', -6)
         .attr('text-anchor', 'middle')
-        .attr('fill', C.w28)
-        .attr('font-size', '0.5rem')
+        .attr('fill', C.w55)
+        .attr('font-size', '0.58rem')
         .attr('font-family', 'var(--font-mono)')
         .attr('letter-spacing', '0.08em')
         .attr('pointer-events', 'none')

@@ -109,7 +109,18 @@
     "zoomTip": "Toggle Y-axis scale. Zoom: fits axis to current data range (min 20%). Full: always shows 0-110% with both threshold lines visible.",
     "disclaimerLowField": "Both cells are below 5% DR across all frequencies. Increase the field intensity to see meaningful disruption curves.",
     "disclaimerBacteriaVirus": "Bacteria and virus targets cannot be disrupted at IRE field strengths. These cell types require acoustic resonance protocols (GHz). Switch to Resonance mode.",
-    "offscreenLysis": "Lysis 85% above"
+    "offscreenLysis": "Lysis 85% above",
+    "thermChipLabel": "T_ss",
+    "thermZoneCool": "cool",
+    "thermZoneNourish": "nourishing",
+    "thermZoneWarm": "warm",
+    "thermZoneHot": "hot",
+    "thermChipTip": "<strong>Predicted Steady-State Temperature</strong>\nMax of Pennes-bioheat estimate for healthy and target cells: T_ss = 37 + SAR\u00b7dc / (\u03bb\u00b7cp).\n\u00b7 <strong>cool</strong> (<38.5\u00b0C): negligible heating\n\u00b7 <strong>nourishing</strong> (38.5\u201341\u00b0C): mild thermal activation window\n\u00b7 <strong>warm</strong> (41\u201342\u00b0C): hyperthermic stress\n\u00b7 <strong>hot</strong> (\u226542\u00b0C): thermal-damage regime \u2014 reduce field or duty cycle\nModel assumes uniform field and neglects convective mixing; valid for in-vitro approximation only.",
+    "logModeSchwan": "S",
+    "logModeResonance": "R",
+    "logModeTipSchwan": "<strong>Schwan mode row</strong>\nLogged while chart was in Schwan (membrane voltage) mode.\nVm, selectivity and Re[K] columns reflect this physics model.",
+    "logModeTipResonance": "<strong>Resonance mode row</strong>\nLogged while chart was in acoustic resonance (Lorentzian) mode.\nDR columns reflect the lineshape model at GHz; Vm/DEP columns are not applicable.",
+    "drDragHint": "drag cursor \u2194"
   },
   "litStrip": {
     "prefix": "Physics grounded in:",

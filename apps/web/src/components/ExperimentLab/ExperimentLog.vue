@@ -86,10 +86,20 @@
           <tr
             v-for="e in entries"
             :key="e.id"
-            :class="{ 'exp-log__row--lysis': e.event === LOG_EVENT.LYSIS }"
+            :class="{
+              'exp-log__row--lysis':       e.event === LOG_EVENT.LYSIS,
+              'exp-log__row--mode-stale':  modeOf(e) !== currentChartMode,
+            }"
           >
             <td v-if="showSessionCol" class="exp-log__td-session" v-tip="tipCellSession(e)">{{ e.sessionName ?? NULL_DISPLAY }}</td>
-            <td class="exp-log__td-id">{{ e.id }}</td>
+            <td class="exp-log__td-id">
+              <span class="exp-log__id-num">{{ e.id }}</span>
+              <span
+                class="exp-log__mode-pill"
+                :class="`exp-log__mode-pill--${modeOf(e)}`"
+                v-tip="modeTipFor(modeOf(e))"
+              >{{ modeLabelFor(modeOf(e)) }}</span>
+            </td>
             <td class="exp-log__td-mono">{{ e.timestamp }}</td>
             <td class="exp-log__td-mono" v-tip="tipCellFreq(e)">{{ formatFreqKHz(e.freqKHz) }}</td>
             <td class="exp-log__td-mono" v-tip="tipCellField(e)">{{ e.fieldVcm != null ? e.fieldVcm : NULL_DISPLAY }}</td>
@@ -165,7 +175,8 @@ import {
 } from '@/tooltips/logTooltips'
 import { formatFreqKHz } from '@/utils/format'
 
-import { LOG_EVENT, NULL_DISPLAY } from '@/constants/strings'
+import { CHART_MODE, LOG_EVENT, NULL_DISPLAY } from '@/constants/strings'
+import type { ChartMode } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
 import { ROUTE } from '@/constants/routes'
 import { THRESHOLDS } from '@/constants/physics'
@@ -203,6 +214,9 @@ export default defineComponent({
       return this.$t('exp.logSubtitle', { n: all.length, lysis: lysisCount })
     },
     isResonanceMode(): boolean { return this.cellStore.isResonanceMode },
+    currentChartMode(): ChartMode {
+      return this.isResonanceMode ? CHART_MODE.RESONANCE : CHART_MODE.SCHWAN
+    },
     showSessionCol(): boolean {
       const names = new Set(this.experimentStore.entries.map((e) => e.sessionName ?? ''))
       return names.size > 1
@@ -292,6 +306,20 @@ export default defineComponent({
       const aiApplied = this.aiStore.suggestionApplied
       const entry = this.experimentStore.logOutcome(entryId, rating, aiApplied)
       if (entry) broadcastLogOutcome(entry, rating, aiApplied)
+    },
+
+    modeOf(e: { chartMode?: ChartMode }): ChartMode {
+      return e.chartMode ?? CHART_MODE.SCHWAN
+    },
+    modeLabelFor(mode: ChartMode): string {
+      return mode === CHART_MODE.RESONANCE
+        ? this.$t('drChart.logModeResonance')
+        : this.$t('drChart.logModeSchwan')
+    },
+    modeTipFor(mode: ChartMode): string {
+      return mode === CHART_MODE.RESONANCE
+        ? this.$t('drChart.logModeTipResonance')
+        : this.$t('drChart.logModeTipSchwan')
     },
 
     depKClass(k: number | undefined): string {
@@ -452,7 +480,31 @@ export default defineComponent({
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  &__td-id   { opacity: 0.6; } // intentional: de-emphasised ID column
+  &__td-id   {
+    @include flex-row(0.3rem);
+    align-items: center;
+    line-height: 1;
+  }
+
+  &__id-num { opacity: 0.6; } // intentional: de-emphasised ID number
+
+  &__mode-pill {
+    @include mono-upper(0.5rem, 0.06em);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 0.85rem;
+    padding: 0.05rem 0.22rem;
+    border-radius: 2px;
+    border: 1px solid;
+    line-height: 1.1;
+    cursor: help;
+
+    &--schwan    { @include color-variant(primary, 40%, 12%); }
+    &--resonance { @include color-variant(purple,  40%, 12%); }
+  }
+
+  &__row--mode-stale td { opacity: var(--op-muted); } // intentional: rows logged in the other mode are de-emphasised
   &__td-mono { }
   &__td-target     { color: var(--color-danger); }
   &__td-healthy    { color: var(--color-primary); }

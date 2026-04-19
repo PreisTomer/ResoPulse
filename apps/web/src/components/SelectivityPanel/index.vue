@@ -11,82 +11,93 @@
     >
     <div class="sel-panel__body">
 
-      <!-- ── Selectivity ratio + Vm selectivity ──────────────────── -->
-      <div id="hl-ti-ratio" class="sel-panel__ratio-wrap" v-tip="tipSelectivity">
-        <span class="sel-panel__ratio" :class="selectivityClass">
-          {{ ICON.TIMES }}{{ selectivity.toFixed(2) }}
-        </span>
-        <div class="sel-panel__ratio-labels">
-          <span class="sel-panel__ratio-label">{{ $t('selectivity.ratioLabel') }}</span>
-          <span v-if="isResonanceTarget" class="sel-panel__ti-label" v-tip="$t('selectivity.tipVmHealthyStress')">{{ $t('selectivity.vmHealthyStressLabel') }} {{ healthyVmMv }} {{ UNIT.MV }}</span>
-          <span v-else class="sel-panel__ti-label">{{ $t('selectivity.vmSelLabel') }} {{ ICON.TIMES }}<span>{{ vmSelectivityRatio >= 99 ? ICON.INFINITY : vmSelectivityRatio.toFixed(2) }}</span></span>
+      <!-- ── Tab strip ──────────────────────────────────────────── -->
+      <div class="sel-panel__tabs" role="tablist">
+        <button
+          v-for="tab in tabs"
+          :key="tab.id"
+          class="sel-panel__tab"
+          :class="{ 'sel-panel__tab--active': activeTab === tab.id }"
+          role="tab"
+          :aria-selected="activeTab === tab.id"
+          v-tip="tab.tip"
+          @click="activeTab = tab.id"
+        >
+          <span class="sel-panel__tab-label">{{ tab.label }}</span>
+          <span class="sel-panel__tab-badge" :class="tab.badgeClass">{{ tab.badge }}</span>
+        </button>
+      </div>
+
+      <!-- ── Tab: Selectivity ──────────────────────────────────── -->
+      <div v-show="activeTab === 'selectivity'" class="sel-panel__tab-pane">
+        <div id="hl-ti-ratio" class="sel-panel__ratio-wrap" v-tip="tipSelectivity">
+          <span class="sel-panel__ratio" :class="selectivityClass">
+            {{ ICON.TIMES }}{{ selectivity.toFixed(2) }}
+          </span>
+          <div class="sel-panel__ratio-labels">
+            <span class="sel-panel__ratio-label">{{ $t('selectivity.ratioLabel') }}</span>
+            <span v-if="isResonanceTarget" class="sel-panel__ti-label" v-tip="$t('selectivity.tipVmHealthyStress')">{{ $t('selectivity.vmHealthyStressLabel') }} {{ healthyVmMv }} {{ UNIT.MV }}</span>
+            <span v-else class="sel-panel__ti-label">{{ $t('selectivity.vmSelLabel') }} {{ ICON.TIMES }}<span>{{ vmSelectivityRatio >= 99 ? ICON.INFINITY : vmSelectivityRatio.toFixed(2) }}</span></span>
+          </div>
         </div>
-      </div>
 
-      <!-- ── Population window score (lysis prob × healthy survival) ── -->
-      <div class="sel-panel__ws-row" v-tip="tipWindowScore">
-        <span class="sel-panel__ws-label">{{ $t('selectivity.windowScoreLabel') }}</span>
-        <span class="sel-panel__ws-val" :class="windowScoreClass">{{ windowScorePct }}</span>
-        <span class="sel-panel__ws-formula">{{ $t('selectivity.wsFormula') }}</span>
-      </div>
-
-      <!-- ── σ_i uncertainty band on TI (Schwan mode only) ─────── -->
-      <div v-if="showTiUncertainty" class="sel-panel__ti-range" v-tip="tipTiRange">
-        <span class="sel-panel__ti-range-label">{{ $t('selectivity.sigmaIRange') }}</span>
-        <span class="sel-panel__ti-range-val">
-          [{{ ICON.TIMES }}{{ tiRange.low.toFixed(2) }} - {{ ICON.TIMES }}{{ tiRange.high >= 99 ? ICON.INFINITY : tiRange.high.toFixed(2) }}]
-        </span>
-      </div>
-
-      <!-- ── Small-cell selectivity disadvantage note ───────────── -->
-      <div v-if="smallCellNote" class="sel-panel__size-note" :class="{ 'sel-panel__size-note--inverted': selectionInverted }" v-tip="smallCellNoteTip">
-        <span class="sel-panel__size-note-icon">{{ ICON.WARNING }}</span>
-        <span class="sel-panel__size-note-label">{{ $t('selectivity.smallCellNoteLabel') }}</span>
-        <span class="sel-panel__size-note-val">R_T/R_H = {{ smallCellRadiusRatio }}</span>
-        <span class="sel-panel__size-note-limit">TI_DC ≤ {{ smallCellTiDcLimit }}</span>
-      </div>
-
-      <!-- ── Disruption progress bars ──────────────────────────── -->
-      <div class="sel-panel__sep"></div>
-      <DisruptionBars />
-
-      <!-- ── Random-orientation lysis fraction ─────────────────── -->
-      <div class="sel-panel__orient-row" v-tip="$t('selectivity.tipOrientFrac')">
-        <span class="sel-panel__orient-label">{{ $t('selectivity.orientFracLabel') }}</span>
-        <div class="sel-panel__orient-vals">
-          <span class="sel-panel__orient-t">T {{ targetOrientPct }}</span>
-          <span class="sel-panel__orient-h">H {{ healthyOrientPct }}</span>
+        <div class="sel-panel__ws-row" v-tip="tipWindowScore">
+          <span class="sel-panel__ws-label">{{ $t('selectivity.windowScoreLabel') }}</span>
+          <span class="sel-panel__ws-val" :class="windowScoreClass">{{ windowScorePct }}</span>
+          <span class="sel-panel__ws-formula">{{ $t('selectivity.wsFormula') }}</span>
         </div>
-      </div>
 
-      <!-- ── Population + size distribution lysis fraction ─────── -->
-      <div class="sel-panel__orient-row sel-panel__orient-row--popdist" v-tip="$t('selectivity.tipPopDist')">
-        <span class="sel-panel__orient-label">{{ $t('selectivity.popDistLabel') }}</span>
-        <div class="sel-panel__orient-vals">
-          <span class="sel-panel__orient-t">T {{ targetPopDistPct }}</span>
-          <span class="sel-panel__orient-h">H {{ healthyPopDistPct }}</span>
+        <div v-if="showTiUncertainty" class="sel-panel__ti-range" v-tip="tipTiRange">
+          <span class="sel-panel__ti-range-label">{{ $t('selectivity.sigmaIRange') }}</span>
+          <span class="sel-panel__ti-range-val">
+            [{{ ICON.TIMES }}{{ tiRange.low.toFixed(2) }} - {{ ICON.TIMES }}{{ tiRange.high >= 99 ? ICON.INFINITY : tiRange.high.toFixed(2) }}]
+          </span>
         </div>
-      </div>
 
-      <!-- ── DEP (Schwan mode only) ─────────────────────────────── -->
-      <template v-if="!cellStore.isResonanceMode">
+        <div v-if="smallCellNote" class="sel-panel__size-note" :class="{ 'sel-panel__size-note--inverted': selectionInverted }" v-tip="smallCellNoteTip">
+          <span class="sel-panel__size-note-icon">{{ ICON.WARNING }}</span>
+          <span class="sel-panel__size-note-label">{{ $t('selectivity.smallCellNoteLabel') }}</span>
+          <span class="sel-panel__size-note-val">R_T/R_H = {{ smallCellRadiusRatio }}</span>
+          <span class="sel-panel__size-note-limit">TI_DC ≤ {{ smallCellTiDcLimit }}</span>
+        </div>
+
         <div class="sel-panel__sep"></div>
-        <DepSection />
-      </template>
+        <DisruptionBars />
 
-      <!-- ── Vm / SAR readout ───────────────────────────────────── -->
-      <div class="sel-panel__sep"></div>
-      <VmSarGrid />
+        <div class="sel-panel__orient-row" v-tip="$t('selectivity.tipOrientFrac')">
+          <span class="sel-panel__orient-label">{{ $t('selectivity.orientFracLabel') }}</span>
+          <div class="sel-panel__orient-vals">
+            <span class="sel-panel__orient-t">T {{ targetOrientPct }}</span>
+            <span class="sel-panel__orient-h">H {{ healthyOrientPct }}</span>
+          </div>
+        </div>
 
-      <!-- ── Resonance physics (resonance mode + resonance target) ─ -->
-      <ResonanceInfo v-if="isResonanceSectionVisible" />
+        <div class="sel-panel__orient-row sel-panel__orient-row--popdist" v-tip="$t('selectivity.tipPopDist')">
+          <span class="sel-panel__orient-label">{{ $t('selectivity.popDistLabel') }}</span>
+          <div class="sel-panel__orient-vals">
+            <span class="sel-panel__orient-t">T {{ targetPopDistPct }}</span>
+            <span class="sel-panel__orient-h">H {{ healthyPopDistPct }}</span>
+          </div>
+        </div>
+      </div>
 
-      <!-- ── Mode badge + optimal snap + physics warning ────────── -->
+      <!-- ── Tab: Membrane & Thermal ───────────────────────────── -->
+      <div v-show="activeTab === 'membrane'" class="sel-panel__tab-pane">
+        <VmSarGrid />
+        <template v-if="!cellStore.isResonanceMode">
+          <div class="sel-panel__sep"></div>
+          <DepSection />
+        </template>
+        <ResonanceInfo v-if="isResonanceSectionVisible" />
+      </div>
+
+      <!-- ── Tab: Comparison ──────────────────────────────────── -->
+      <div v-show="activeTab === 'comparison'" class="sel-panel__tab-pane">
+        <ComparisonTable />
+      </div>
+
+      <!-- ── Mode badge (always visible: carries optimal-snap CTA + warnings) ── -->
       <ModeBadge />
-
-      <!-- ── Preset selectivity comparison ─────────────────────── -->
-      <div class="sel-panel__sep"></div>
-      <ComparisonTable />
 
     </div><!-- /slot content -->
     </AccordionPanel>
@@ -106,9 +117,20 @@ import { formatPct } from '@/utils/format'
 import { tipTiRange, tipSelectivity, tipSmallCellNote } from '@/tooltips/selectivityTooltips'
 
 import { THRESHOLDS, NEAR_ZERO_VM, H_FIRE_THRESHOLD_MULTIPLIER } from '@/constants/physics'
-import { CELL_CATEGORY, CHART_MODE, WAVEFORM } from '@/constants/strings'
+import { CELL_CATEGORY, CELL_GROUP, CHART_MODE, WAVEFORM } from '@/constants/strings'
+import { CELL_PRESETS } from '@/constants/cellLibrary'
 import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'
+
+type TabId = 'selectivity' | 'membrane' | 'comparison'
+
+interface TabDef {
+  id:         TabId
+  label:      string
+  badge:      string
+  badgeClass: string
+  tip:        string
+}
 
 import DisruptionBars from './DisruptionBars.vue'
 import ComparisonTable from './ComparisonTable.vue'
@@ -121,7 +143,11 @@ export default defineComponent({
   components: { AccordionPanel, DisruptionBars, ComparisonTable, DepSection, VmSarGrid, ResonanceInfo, ModeBadge },
 
   data() {
-    return { CHART_MODE, ICON }
+    return {
+      CHART_MODE,
+      ICON,
+      activeTab: 'selectivity' as TabId,
+    }
   },
 
   computed: {
@@ -272,6 +298,52 @@ export default defineComponent({
       const pH = formatPct(this.cellStore.healthyLysisProbabilityRandom)
       return this.$t('selectivity.tipWindowScore', { score: this.windowScorePct, pT, pH })
     },
+
+    relevantPresetCount(): number {
+      const cat = this.cellStore.targetCellCategory
+      const relevantGroup = cat === CELL_CATEGORY.MAMMALIAN ? CELL_GROUP.CANCER : cat
+      return CELL_PRESETS.filter((p) => p.group === relevantGroup).length
+    },
+
+    selectivityTabBadge(): string {
+      return this.selectivity >= 99 ? ICON.INFINITY : `${ICON.TIMES}${this.selectivity.toFixed(2)}`
+    },
+
+    membraneTabBadge(): string {
+      const vmMv = Math.round(this.cellStore.targetVm * 1000)
+      const tss  = this.cellStore.targetSteadyStateTemp.toFixed(1)
+      return `${vmMv}${UNIT.MV} · ${tss}${UNIT.DEG_C}`
+    },
+
+    comparisonTabBadge(): string {
+      return this.$t('selectivity.tabBadgePresets', { n: this.relevantPresetCount })
+    },
+
+    tabs(): TabDef[] {
+      return [
+        {
+          id:         'selectivity',
+          label:      this.$t('selectivity.tabSelectivity'),
+          badge:      this.selectivityTabBadge,
+          badgeClass: `sel-panel__tab-badge--${this.selectivityClass.replace('sel-panel__ratio--', '')}`,
+          tip:        this.$t('selectivity.tabSelectivityTip'),
+        },
+        {
+          id:         'membrane',
+          label:      this.$t('selectivity.tabMembrane'),
+          badge:      this.membraneTabBadge,
+          badgeClass: 'sel-panel__tab-badge--muted',
+          tip:        this.$t('selectivity.tabMembraneTip'),
+        },
+        {
+          id:         'comparison',
+          label:      this.$t('selectivity.tabComparison'),
+          badge:      this.comparisonTabBadge,
+          badgeClass: 'sel-panel__tab-badge--muted',
+          tip:        this.$t('selectivity.tabComparisonTip'),
+        },
+      ]
+    },
   },
 })
 </script>
@@ -288,6 +360,54 @@ export default defineComponent({
     @include flex-col(0.75rem);
     padding-bottom: 0.75rem;
   }
+
+  /* ── Tab strip ─────────────────────────────────────────────── */
+  &__tabs {
+    @include flex-row(0);
+    border-bottom: 1px solid var(--color-border);
+    margin: 0 -0.3rem;
+  }
+
+  &__tab {
+    @include flex-row(0.45rem);
+    align-items: center;
+    justify-content: center;
+    flex: 1 1 0;
+    padding: 0.45rem 0.5rem;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    cursor: pointer;
+    color: var(--color-text-muted);
+    transition: color var(--tr-fast), border-color var(--tr-fast), background var(--tr-fast);
+
+    &:hover { background: color-mix(in srgb, white 3%, transparent); color: var(--color-text); }
+
+    &--active {
+      color: var(--color-text);
+      border-bottom-color: var(--color-primary);
+      background: color-mix(in srgb, var(--color-primary) 5%, transparent);
+    }
+  }
+
+  &__tab-label { @include mono-upper(var(--fs-xxs), 0.07em); }
+
+  &__tab-badge {
+    @include badge-pill(0.08rem 0.38rem, 3px);
+    font-size: var(--fs-xxs);
+
+    &--strong   { @include color-variant(lime); }
+    &--marginal { @include color-variant(amber); }
+    &--weak     { @include color-variant(danger); }
+    &--muted {
+      color: var(--color-text-muted);
+      border-color: var(--color-border);
+      background: color-mix(in srgb, white 4%, transparent);
+    }
+  }
+
+  &__tab-pane { @include flex-col(0.75rem); }
 
   /* ── Separator ─────────────────────────────────────────────── */
   &__sep {

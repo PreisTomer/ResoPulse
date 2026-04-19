@@ -4,6 +4,15 @@
     <div class="dr-chart__header">
       <span class="dr-chart__title" v-tip="$t('drChart.tipTitle')">{{ $t('drChart.title') }}</span>
       <div class="dr-chart__header-right">
+        <span
+          class="dr-chart__therm-chip"
+          :class="`dr-chart__therm-chip--${thermalZone}`"
+          v-tip="$t('drChart.thermChipTip')"
+        >
+          <span class="dr-chart__therm-label">{{ $t('drChart.thermChipLabel') }}</span>
+          <span class="dr-chart__therm-val">{{ peakTempDisplay }}</span>
+          <span class="dr-chart__therm-zone">{{ thermalZoneLabel }}</span>
+        </span>
         <button
           class="dr-chart__zoom-btn"
           :class="{ 'dr-chart__zoom-btn--active': zoomMode }"
@@ -13,12 +22,12 @@
         <DrChartLegend />
       </div>
     </div>
+    <div v-if="showDisclaimer" class="dr-chart__disclaimer">
+      <span class="dr-chart__disclaimer-icon">{{ warningIcon }}</span>
+      <span class="dr-chart__disclaimer-text">{{ isDisclaimerBacteriaVirus ? $t('drChart.disclaimerBacteriaVirus') : $t('drChart.disclaimerLowField') }}</span>
+    </div>
     <div ref="chartEl" class="dr-chart__svg-wrap">
       <DrChartTooltip :info="hoverInfo" />
-      <div v-if="showDisclaimer" class="dr-chart__disclaimer">
-        <span class="dr-chart__disclaimer-icon">{{ warningIcon }}</span>
-        <span class="dr-chart__disclaimer-text">{{ isDisclaimerBacteriaVirus ? $t('drChart.disclaimerBacteriaVirus') : $t('drChart.disclaimerLowField') }}</span>
-      </div>
     </div>
   </div>
 </template>
@@ -36,8 +45,11 @@ import { broadcastStateSync } from '@/services/socket'
 import { C } from '@/theme/colors'
 
 import { CELL_CATEGORY, WAVEFORM } from '@/constants/strings'
-import { H_FIRE_THRESHOLD_MULTIPLIER } from '@/constants/physics'
+import { H_FIRE_THRESHOLD_MULTIPLIER, THRESHOLDS, THERMAL_MA_PEAK_C } from '@/constants/physics'
 import { ICON } from '@/constants/icons'
+import { UNIT } from '@/constants/units'
+
+const THERM_NOURISH_ENTER_C = 38.5
 
 import DrChartLegend from './DrChartLegend.vue'
 import DrChartTooltip from './DrChartTooltip.vue'
@@ -73,6 +85,32 @@ export default defineComponent({
     ICON() { return ICON },
 
     warningIcon(): string { return ICON.WARNING },
+
+    peakSteadyStateTemp(): number {
+      return Math.max(this.cellStore.healthySteadyStateTemp, this.cellStore.targetSteadyStateTemp)
+    },
+
+    peakTempDisplay(): string {
+      return `${this.peakSteadyStateTemp.toFixed(1)}${UNIT.DEG_C}`
+    },
+
+    thermalZone(): 'cool' | 'nourish' | 'warm' | 'hot' {
+      const t = this.peakSteadyStateTemp
+      if (t >= THRESHOLDS.TEMP_WARN) return 'hot'
+      if (t >= THERMAL_MA_PEAK_C)    return 'warm'
+      if (t >= THERM_NOURISH_ENTER_C) return 'nourish'
+      return 'cool'
+    },
+
+    thermalZoneLabel(): string {
+      const key: Record<typeof this.thermalZone, string> = {
+        cool:    this.$t('drChart.thermZoneCool'),
+        nourish: this.$t('drChart.thermZoneNourish'),
+        warm:    this.$t('drChart.thermZoneWarm'),
+        hot:     this.$t('drChart.thermZoneHot'),
+      }
+      return key[this.thermalZone]
+    },
 
     physicsKey(): string {
       const s = this.cellStore
@@ -188,10 +226,10 @@ export default defineComponent({
 
       g.append('text')
         .attr('class', 'cursor-drag-hint')
-        .attr('y', -4)
+        .attr('y', -6)
         .attr('text-anchor', 'middle')
-        .attr('fill', C.w28)
-        .attr('font-size', '0.5rem')
+        .attr('fill', C.w55)
+        .attr('font-size', '0.58rem')
         .attr('font-family', 'var(--font-mono)')
         .attr('letter-spacing', '0.08em')
         .attr('pointer-events', 'none')
@@ -512,22 +550,14 @@ export default defineComponent({
   }
 
   &__disclaimer {
-    position: absolute;
-    bottom: 2.5rem;
-    left: 3.5rem;
-    right: 1rem;
     @include flex-row(0.4rem);
     align-items: flex-start;
-    background: color-mix(in srgb, var(--color-surface) 85%, transparent);
-    border: 1px solid var(--color-border);
+    margin: 0 0 0.4rem 0;
+    @include tinted-surface(amber, 30%, 7%);
+    border-width: 1px;
+    border-style: solid;
     border-radius: var(--radius);
     padding: 0.4rem 0.6rem;
-    pointer-events: none;
-
-    @media (max-width: 480px) {
-      left: 1rem;
-      bottom: 1.5rem;
-    }
   }
 
   &__disclaimer-icon {
@@ -543,5 +573,42 @@ export default defineComponent({
     color: var(--color-text-muted);
     line-height: 1.5;
   }
+
+  &__therm-chip {
+    @include flex-row(0.3rem);
+    align-items: center;
+    padding: 0.18rem 0.5rem;
+    border-radius: 3px;
+    border: 1px solid;
+    font-family: var(--font-mono);
+    cursor: help;
+    flex-shrink: 0;
+    transition: color var(--tr-fast), border-color var(--tr-fast), background var(--tr-fast);
+
+    &--cool    { @include color-variant(text-muted, 25%, 4%); }
+    &--nourish { @include color-variant(lime,       35%, 10%); }
+    &--warm    { @include color-variant(amber,      40%, 10%); }
+    &--hot     { @include color-variant(danger,     50%, 12%); animation: therm-pulse 1.8s ease-in-out infinite; }
+  }
+
+  &__therm-label {
+    @include mono-upper(0.55rem, 0.08em);
+    opacity: var(--op-dim);
+  }
+
+  &__therm-val {
+    font-size: var(--fs-xs);
+    font-weight: 600;
+  }
+
+  &__therm-zone {
+    @include mono-upper(0.55rem, 0.08em);
+    opacity: var(--op-partial);
+  }
+}
+
+@keyframes therm-pulse {
+  0%, 100% { filter: brightness(1); }
+  50%      { filter: brightness(1.25); }
 }
 </style>
