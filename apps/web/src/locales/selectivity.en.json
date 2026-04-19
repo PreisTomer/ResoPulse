@@ -3,6 +3,8 @@
     "title": "Selectivity Analysis",
     "ratioLabel": "Selectivity Index (TI)",
     "vmSelLabel": "Vm",
+    "vmHealthyStressLabel": "Vm_H EP stress",
+    "tipVmHealthyStress": "<strong>Healthy EP Stress (Vm_H)</strong>\nResonance mode: target disruption is acoustic, not EP voltage.\nVm_T ≈ 0 at GHz (ωτ ≫ 1), so the Vm ratio is uninformative.\n\nShown here: Schwan Vm induced on the healthy mammalian cell\nby the same RF field delivering the acoustic excitation.\nThis is the collateral bilayer-charging stress on healthy tissue, \nthe physically meaningful safety readout in resonance mode.\n\nRule of thumb:\n  &lt; 100 mV: sub-threshold, healthy membrane unperturbed\n  100-500 mV: reversible EP regime\n  &gt; 1 V: healthy cells at risk of irreversible lysis",
     "targetBar": "T",
     "healthyBar": "H",
     "tDisr": "T-Disr",

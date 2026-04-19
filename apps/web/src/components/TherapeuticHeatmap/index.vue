@@ -4,7 +4,7 @@
     <AccordionPanel
       :icon="ICON.WAVE"
       :title="$t('heatmap.title')"
-      :subtitle="$t('heatmap.subtitle')"
+      :subtitle="subtitle"
       :initial-open="false"
       :border-on-toggle="true"
       @open-change="onAccordionChange"
@@ -54,6 +54,14 @@ export default defineComponent({
     ICON() { return ICON },
     CELL_CATEGORY() { return CELL_CATEGORY },
     ...mapStores(useCellStore),
+
+    subtitle(): string {
+      const sel = this.cellStore.selectivityRatio
+      const selStr = sel >= 99 ? ICON.INFINITY : `×${sel.toFixed(2)}`
+      const tPct = (this.cellStore.targetDisruptionRatio  * 100).toFixed(0)
+      const hPct = (this.cellStore.healthyDisruptionRatio * 100).toFixed(0)
+      return `${selStr} · T ${tPct}% · H ${hPct}%`
+    },
   },
 
   data() {

@@ -153,7 +153,10 @@ export default defineComponent({
 
     subtitle(): string {
       const { nCells } = this
-      return `N=${nCells} · ${this.cellStore.fieldIntensity} ${UNIT.V_PER_CM} · ${this.cellStore.currentBroadcastFrequency} ${UNIT.KHZ}`
+      const pT = this.cellStore.targetPopulationLysisFraction
+      const pH = this.cellStore.healthyPopulationLysisFraction
+      const ws = pT * (1 - pH)
+      return `N=${nCells} · target ${(pT * 100).toFixed(0)}% · WS ${ws.toFixed(2)}`
     },
 
     tipWindowScore(): string {

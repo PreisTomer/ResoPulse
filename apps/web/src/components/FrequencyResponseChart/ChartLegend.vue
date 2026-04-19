@@ -19,6 +19,11 @@
       v-tip="$t('chart.tipActiveT')"
     ><span class="freq-chart__legend-line freq-chart__legend-line--t"></span> {{ $t('chart.activeT') }}</span>
     <span
+      v-if="!cellStore.isResonanceMode"
+      class="freq-chart__legend-item"
+      v-tip="$t('chart.tipSigmaBand')"
+    ><span class="freq-chart__legend-swatch"></span> {{ $t('chart.legendSigmaBand') }}</span>
+    <span
       class="freq-chart__legend-item"
       v-tip="$t('chart.tipVmRatio')"
     ><span class="freq-chart__legend-line freq-chart__legend-line--sel"></span> {{ $t('chart.legendVmRatio') }}</span>
@@ -106,6 +111,19 @@ export default defineComponent({
     border-radius: 50%;
     opacity: 0.75; // intentional between-tier value
     flex-shrink: 0;
+  }
+
+  &__legend-swatch {
+    width: 14px; height: 8px;
+    border-radius: 2px;
+    flex-shrink: 0;
+    background: linear-gradient(
+      to right,
+      color-mix(in srgb, var(--color-primary) 30%, transparent) 0%,
+      color-mix(in srgb, var(--color-primary) 30%, transparent) 50%,
+      color-mix(in srgb, var(--color-danger) 30%, transparent) 50%,
+      color-mix(in srgb, var(--color-danger) 30%, transparent) 100%
+    );
   }
 
   &__legend-line {

@@ -57,7 +57,6 @@ import {
   computeSchwan, computeSAR, computeSteadyStateTemp, computeTau, computePulseStepResponse,
   computeResonantDisruption, tempCorrectedVth,
 } from '@/utils/physics'
-import { formatFreqKHz } from '@/utils/format'
 
 import { WAVEFORM, CELL_CATEGORY } from '@/constants/strings'
 import {
@@ -132,10 +131,19 @@ export default defineComponent({
     },
 
     sweepSubtitle(): string {
-      if (this.sweepParam === 'field') {
-        return `E: 0 - ${this.sweepMax} ${UNIT.V_PER_CM} @ ${formatFreqKHz(this.cellStore.currentBroadcastFrequency, 1)}`
+      const unit = this.sweepParam === 'field' ? UNIT.V_PER_CM : UNIT.KHZ
+      const win  = this.windowRange
+      if (win) {
+        const ti = this.bestTIPoint ? this.bestTIPoint.ti.toFixed(2) : '—'
+        return this.$t('sweep.subWindowFound', {
+          lo:   win.lo.toFixed(0),
+          hi:   win.hi.toFixed(0),
+          unit,
+          ti,
+        })
       }
-      return `f: 0 - ${formatFreqKHz(this.sweepMax, 1)} @ ${this.cellStore.fieldIntensity} ${UNIT.V_PER_CM}`
+      const ti = this.bestTIPoint ? this.bestTIPoint.ti.toFixed(2) : '—'
+      return this.$t('sweep.subNoWindow', { ti })
     },
 
     sweepData(): SweepPoint[] {

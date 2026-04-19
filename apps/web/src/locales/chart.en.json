@@ -12,6 +12,8 @@
     "legendNucT": "Nucleus T",
     "legendDepH": "H Re[K]",
     "legendDepT": "T Re[K]",
+    "legendSigmaBand": "\u00b1\u03c3_i spread",
+    "tipSigmaBand": "<strong>\u00b1\u03c3_i Population Spread</strong>\nTranslucent fill around each Vm curve shows the spread expected from population-averaged cytoplasmic conductivity uncertainty.\nBand width: mammalian \u00b120%, bacteria \u00b130%, virus \u00b145% (CLAUDE.md literature bounds).\nNarrow band \u2192 Vm weakly depends on \u03c3_i at this frequency; wide band \u2192 individual cells can deviate noticeably from the mean curve.",
 
     "axisFrequency": "FREQUENCY (Hz)",
     "axisVm": "Vm",

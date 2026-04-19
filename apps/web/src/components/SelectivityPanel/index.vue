@@ -18,7 +18,8 @@
         </span>
         <div class="sel-panel__ratio-labels">
           <span class="sel-panel__ratio-label">{{ $t('selectivity.ratioLabel') }}</span>
-          <span class="sel-panel__ti-label">{{ $t('selectivity.vmSelLabel') }} {{ ICON.TIMES }}<span>{{ vmSelectivityRatio >= 99 ? ICON.INFINITY : vmSelectivityRatio.toFixed(2) }}</span></span>
+          <span v-if="isResonanceTarget" class="sel-panel__ti-label" v-tip="$t('selectivity.tipVmHealthyStress')">{{ $t('selectivity.vmHealthyStressLabel') }} {{ healthyVmMv }} {{ UNIT.MV }}</span>
+          <span v-else class="sel-panel__ti-label">{{ $t('selectivity.vmSelLabel') }} {{ ICON.TIMES }}<span>{{ vmSelectivityRatio >= 99 ? ICON.INFINITY : vmSelectivityRatio.toFixed(2) }}</span></span>
         </div>
       </div>
 
@@ -107,6 +108,7 @@ import { tipTiRange, tipSelectivity, tipSmallCellNote } from '@/tooltips/selecti
 import { THRESHOLDS, NEAR_ZERO_VM, H_FIRE_THRESHOLD_MULTIPLIER } from '@/constants/physics'
 import { CELL_CATEGORY, CHART_MODE, WAVEFORM } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
+import { UNIT } from '@/constants/units'
 
 import DisruptionBars from './DisruptionBars.vue'
 import ComparisonTable from './ComparisonTable.vue'
@@ -124,6 +126,7 @@ export default defineComponent({
 
   computed: {
     ...mapStores(useCellStore),
+    UNIT() { return UNIT },
     selectivity(): number { return this.cellStore.selectivityRatio },
 
     isResonanceSectionVisible(): boolean { return this.isResonanceTarget && this.cellStore.isResonanceMode },
@@ -145,7 +148,7 @@ export default defineComponent({
         if (t >= THRESHOLDS.HEALTHY_APPROACHING)                                    return this.$t('selectivity.modeApproaching')
         return this.$t('selectivity.modeSubThreshold')
       })()
-      return `TI ${selStr} · ${modeLabel}`
+      return `TI ${selStr} · WS ${this.windowScorePct} · ${modeLabel}`
     },
 
     selectivityClass(): string {
@@ -156,6 +159,10 @@ export default defineComponent({
 
     vmSelectivityRatio(): number {
       return safeRatio(this.cellStore.targetVm, this.cellStore.healthyVm, THRESHOLDS.TI_DISPLAY_CAP, NEAR_ZERO_VM)
+    },
+
+    healthyVmMv(): string {
+      return (this.cellStore.healthyVm * 1000).toFixed(0)
     },
 
     tiRange(): { low: number; high: number } { return this.cellStore.tiUncertaintyRange },

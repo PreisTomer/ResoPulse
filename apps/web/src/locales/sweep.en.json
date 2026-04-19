@@ -24,6 +24,9 @@
     "keyLysisArmed": "Target lysis armed (85%)",
     "keyLysis": "Target lysis (100%)",
 
+    "subWindowFound": "window {lo}–{hi} {unit} · best TI ×{ti}",
+    "subNoWindow": "no window · max TI ×{ti}",
+
     "cursorCurrent": "current",
     "hoverTarget": "Target DR",
     "hoverHealthy": "Healthy DR",

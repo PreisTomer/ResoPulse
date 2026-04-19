@@ -5,7 +5,7 @@
     <AccordionPanel
       :icon="ICON.LINES"
       :title="$t('exp.logTitle')"
-      :subtitle="hasEntries ? $t('exp.logReadingsCount', { n: experimentStore.entries.length }) : $t('exp.logNoReadings')"
+      :subtitle="logSubtitle"
       :border-on-toggle="true"
     >
     <div>
@@ -195,6 +195,13 @@ export default defineComponent({
       return this.experimentStore.entries.slice(-20).reverse()
     },
     hasEntries(): boolean { return this.experimentStore.entries.length > 0 },
+
+    logSubtitle(): string {
+      const all = this.experimentStore.entries
+      if (all.length === 0) return this.$t('exp.logNoReadings')
+      const lysisCount = all.filter((e) => e.event === LOG_EVENT.LYSIS).length
+      return this.$t('exp.logSubtitle', { n: all.length, lysis: lysisCount })
+    },
     isResonanceMode(): boolean { return this.cellStore.isResonanceMode },
     showSessionCol(): boolean {
       const names = new Set(this.experimentStore.entries.map((e) => e.sessionName ?? ''))

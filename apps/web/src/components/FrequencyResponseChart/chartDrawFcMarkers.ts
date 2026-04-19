@@ -49,6 +49,11 @@ export function drawFcMarkers(
 
   visibleFc.forEach(({ x, color, label, fcDisplay, tauDisplay }, i) => {
     const anchor: 'middle' | 'end' | 'start' = anchors[i] ?? 'middle'
+    group.append('line')
+      .attr('x1', x).attr('x2', x)
+      .attr('y1', 0).attr('y2', chartH)
+      .attr('stroke', color).attr('stroke-width', 0.75)
+      .attr('stroke-dasharray', '3,4').attr('stroke-opacity', 0.35)
     group.append('text')
       .attr('x', x).attr('y', chartH + 20)
       .attr('text-anchor', 'middle')

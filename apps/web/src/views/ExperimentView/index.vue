@@ -72,10 +72,15 @@
         <AccordionPanel
           :icon="ICON.WAVE"
           :title="$t('exp.chartSectionTitle')"
-          :subtitle="chartModeLabel"
+          :subtitle="chartModeSubtitle"
           :initial-open="true"
           :border-on-toggle="true"
         >
+          <template #badge>
+            <span class="experiment__regime-badge" :class="`experiment__regime-badge--${regimeClass}`" v-tip="$t('exp.regimeBadgeTip')">
+              {{ regimeBadgeLabel }}
+            </span>
+          </template>
           <FrequencyResponseChart v-if="!cellStore.isResonanceMode" />
           <ResonanceChart v-else />
         </AccordionPanel>
@@ -86,7 +91,7 @@
         <AccordionPanel
           :icon="ICON.LYSIS_BOLT"
           :title="$t('drChart.sectionTitle')"
-          :subtitle="$t('drChart.sectionTip')"
+          :subtitle="drChartSubtitle"
           :initial-open="false"
           :border-on-toggle="true"
         >
@@ -167,7 +172,7 @@ import { CELL_PRESETS } from '@/constants/cellLibrary'
 
 
 import { CATEGORY_DEFAULTS, INITIAL_RESONANT_FIELD_FRACTION, DEFAULT_LYSIS_N_PULSES, DEFAULT_ORIENTATION_DEG } from '@/constants/experimentDefaults'
-import { WF_CW, WF_PULSED } from '@/constants/physics'
+import { WF_CW, WF_PULSED, THRESHOLDS } from '@/constants/physics'
 import { CELL_CATEGORY, CELL_TYPE, CHART_MODE, WAVEFORM } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
 
@@ -267,6 +272,39 @@ export default defineComponent({
       return !this.cellStore.isResonanceMode
         ? this.$t('exp.chartModeSchwan')
         : this.$t('exp.chartModeResonance')
+    },
+
+    regimeBadgeLabel(): string {
+      if (this.cellStore.isResonanceMode) {
+        return this.$t('exp.regimeResonance')
+      }
+      const w = this.cellStore.waveform
+      if (w === WAVEFORM.CW)     return this.$t('exp.regimeSchwanCw')
+      if (w === WAVEFORM.H_FIRE) return this.$t('exp.regimeSchwanHfire')
+      return this.$t('exp.regimeSchwanPulsed')
+    },
+
+    regimeClass(): string {
+      if (this.cellStore.isResonanceMode) return 'resonance'
+      if (this.cellStore.waveform === WAVEFORM.CW)     return 'cw'
+      if (this.cellStore.waveform === WAVEFORM.H_FIRE) return 'hfire'
+      return 'pulsed'
+    },
+
+    chartModeSubtitle(): string {
+      const f = this.cellStore.currentBroadcastFrequency
+      const E = this.cellStore.fieldIntensity
+      const fStr = f >= 1000 ? `${(f / 1000).toFixed(1)} MHz` : `${f.toFixed(0)} kHz`
+      return `${fStr} · ${E} V/cm`
+    },
+
+    drChartSubtitle(): string {
+      const t = this.cellStore.targetDisruptionRatio
+      const h = this.cellStore.healthyDisruptionRatio
+      const verdict = (t >= THRESHOLDS.DISRUPTION_WARN && h < THRESHOLDS.HEALTHY_APPROACHING)
+        ? this.$t('drChart.subWindowOpen')
+        : this.$t('drChart.subWindowClosed')
+      return `T ${(t * 100).toFixed(0)}% · H ${(h * 100).toFixed(0)}% · ${verdict}`
     },
 
     cells(): CellCardRow[] {
@@ -470,6 +508,18 @@ export default defineComponent({
     margin: 0 auto;
     flex: 1;
     min-height: 0;
+  }
+
+  // ── Regime badge (primary chart header) ──────────────────────────────────────
+  &__regime-badge {
+    @include badge-pill();
+    cursor: help;
+    flex-shrink: 0;
+
+    &--pulsed    { @include color-variant(primary); }
+    &--cw        { @include color-variant(amber); }
+    &--hfire     { @include color-variant(amber, 45%, 12%); }
+    &--resonance { @include color-variant(purple); }
   }
 
   // ── Notes bar ────────────────────────────────────────────────────────────────

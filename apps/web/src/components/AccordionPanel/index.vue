@@ -15,6 +15,7 @@
       <span class="accordion-panel__left">
         <span class="accordion-panel__icon">{{ icon }}</span>
         <span class="accordion-panel__title">{{ title }}</span>
+        <slot name="badge" />
         <span v-if="subtitle" class="accordion-panel__sub">{{ subtitle }}</span>
       </span>
       <span class="accordion-panel__chevron" :class="{ 'accordion-panel__chevron--open': isOpen }">{{ ICON.CHEVRON }}</span>
