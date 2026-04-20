@@ -313,8 +313,6 @@ export default defineComponent({
     align-items: stretch;
     gap: 0;
     background: var(--color-bg);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
     border-top: 1px solid var(--color-border);
     padding: 1.5rem 1.25rem;
     z-index: 99;

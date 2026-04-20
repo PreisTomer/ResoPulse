@@ -166,7 +166,6 @@ export default defineComponent({
     border-right: none;
     border-radius: 8px 0 0 8px;
     box-shadow: -3px 0 14px color-mix(in srgb, black 55%, transparent);
-    backdrop-filter: blur(12px);
     cursor: pointer;
     display: flex;
     flex-direction: column;
@@ -206,7 +205,6 @@ export default defineComponent({
     box-shadow:
       0 8px 48px color-mix(in srgb, black 80%, transparent),
       0 0 0 1px color-mix(in srgb, white 5%, transparent);
-    backdrop-filter: blur(12px);
     overflow-y: auto;
     overflow-x: hidden;
     scrollbar-gutter: stable;

@@ -6,9 +6,343 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="ResoPulse — Virtual Biophysics Engine for selective electroporation and bioelectric field research" />
     <title>ResoPulse</title>
+    <!--
+      Inline boot screen — paints before the JS bundle downloads so users on slow
+      wifi never see a blank page. Mirrors the Home hero ring language:
+      origin dot flash, staggered concentric ring expansion, pulsing loop.
+      Adds orbiting ion particles, a rotating polarized membrane, breathing
+      cell core / nucleus, wordmark, tagline, and an indeterminate progress bar.
+      Vue replaces #app's contents on mount, so this disappears automatically.
+      Colours hard-coded because style.css may not be fetched yet.
+    -->
+    <style>
+      html, body {
+        margin: 0; padding: 0;
+        background: #080e1a;
+        color: #c8d8e8;
+        font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+      }
+      #app { min-height: 100vh; }
+      /* Boot screen is position:fixed and covers the viewport, so lock page scroll
+         only while the screen is mounted — Vue removes .boot on mount, which
+         automatically restores scroll. Scoping to :has() avoids leaving
+         overflow:hidden on html/body after the app takes over. */
+      html:has(.boot), body:has(.boot) { overflow: hidden; }
+      .boot {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 1.25rem;
+        background: radial-gradient(ellipse at center, #0d1826 0%, #080e1a 70%);
+        animation: boot-reveal 0.9s ease-out forwards;
+      }
+      .boot__stage {
+        position: relative;
+        width: 320px;
+        height: 320px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .boot__svg {
+        width: 100%;
+        height: 100%;
+        overflow: visible;
+        mix-blend-mode: screen;
+      }
+
+      /* ── Origin flash — fires first, rings shoot outward from it ─────────── */
+      .boot__dot {
+        fill: #00d4ff;
+        transform-origin: 160px 160px;
+        animation: boot-dot-flash 0.6s ease-out forwards;
+      }
+
+      /* ── Concentric rings — stagger-expand, then infinite pulse ──────────── */
+      .boot__ring {
+        fill: none;
+        transform-origin: 160px 160px;
+        animation:
+          boot-ring-expand 0.7s cubic-bezier(0.16, 1, 0.3, 1) both,
+          boot-ring-pulse  3.6s ease-in-out infinite;
+      }
+      .boot__ring--1 { stroke: #00d4ff;                  stroke-width: 1.4; animation-delay: 0.15s, 0.90s; }
+      .boot__ring--2 { stroke: rgba(0, 212, 255, 0.85);  stroke-width: 1.2; animation-delay: 0.20s, 1.55s; }
+      .boot__ring--3 { stroke: rgba(0, 212, 255, 0.65);  stroke-width: 1.0; animation-delay: 0.25s, 2.20s; }
+      .boot__ring--4 { stroke: rgba(0, 212, 255, 0.45);  stroke-width: 0.9; animation-delay: 0.30s, 2.85s; }
+      .boot__ring--5 { stroke: rgba(0, 212, 255, 0.30);  stroke-width: 0.8; animation-delay: 0.35s, 3.50s; }
+      .boot__ring--6 { stroke: rgba(0, 212, 255, 0.18);  stroke-width: 0.7; animation-delay: 0.40s, 4.15s; }
+      .boot__ring--7 { stroke: rgba(167, 139, 250, 0.14);stroke-width: 0.6; animation-delay: 0.45s, 4.80s; }
+
+      /* ── Rotating polarized membrane — dashed, drifting around core ──────── */
+      .boot__membrane {
+        fill: none;
+        stroke: #00d4ff;
+        stroke-width: 1.5;
+        stroke-dasharray: 9 6;
+        stroke-linecap: round;
+        transform-origin: 160px 160px;
+        filter: drop-shadow(0 0 4px rgba(0, 212, 255, 0.55));
+        opacity: 0;
+        animation: boot-membrane 7s linear infinite, boot-fade-in 0.6s ease-out 0.7s forwards;
+      }
+
+      /* ── Cell core + nucleus — slow breathing, background layer ──────────── */
+      .boot__core {
+        fill: #0d1826;
+        stroke: #a78bfa;
+        stroke-width: 1.1;
+        opacity: 0;
+        animation: boot-core 2.8s ease-in-out infinite, boot-fade-in 0.6s ease-out 0.55s forwards;
+      }
+      .boot__nucleus {
+        fill: #a78bfa;
+        opacity: 0;
+        transform-origin: 160px 160px;
+        animation: boot-nucleus 2.8s ease-in-out infinite, boot-fade-in 0.6s ease-out 0.7s forwards;
+      }
+
+      /* ── Orbiting ion particles — 3 rings, mixed directions & speeds ─────── */
+      .boot__orbit {
+        transform-origin: 160px 160px;
+        opacity: 0;
+        animation: boot-fade-in 0.8s ease-out 1.2s forwards;
+      }
+      .boot__orbit--inner  { animation: boot-fade-in 0.8s ease-out 1.1s forwards, boot-spin-cw  8s linear infinite; }
+      .boot__orbit--middle { animation: boot-fade-in 0.8s ease-out 1.3s forwards, boot-spin-ccw 14s linear infinite; }
+      .boot__orbit--outer  { animation: boot-fade-in 0.8s ease-out 1.5s forwards, boot-spin-cw  22s linear infinite; }
+
+      .boot__particle {
+        fill: #00d4ff;
+        filter: drop-shadow(0 0 3px rgba(0, 212, 255, 0.9));
+        animation: boot-particle-pulse 1.8s ease-in-out infinite;
+      }
+      .boot__particle--purple {
+        fill: #a78bfa;
+        filter: drop-shadow(0 0 3px rgba(167, 139, 250, 0.9));
+      }
+      .boot__particle--dim   { opacity: 0.55; animation-delay: 0.4s; }
+      .boot__particle--dim2  { opacity: 0.45; animation-delay: 0.8s; }
+      .boot__particle--dim3  { opacity: 0.35; animation-delay: 1.1s; }
+
+      /* ── Text stack ──────────────────────────────────────────────────────── */
+      .boot__text {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.45rem;
+      }
+      .boot__wordmark {
+        font-size: 1.55rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        color: #c8d8e8;
+        opacity: 0;
+        animation: boot-fade-in 0.8s ease-out 0.3s forwards;
+      }
+      .boot__wordmark-pulse {
+        color: #6fb8e8;
+        -webkit-text-stroke: 0.8px #00d4ff;
+        paint-order: stroke fill;
+        animation: boot-wordmark-pulse 2.4s ease-in-out infinite;
+      }
+      .boot__tagline {
+        font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+        font-size: 0.6rem;
+        text-transform: capitalize;
+        letter-spacing: 0.02em;
+        color: #00d4ff;
+        opacity: 0;
+        animation: boot-fade-in 0.8s ease-out 0.55s forwards;
+      }
+
+      /* ── Progress rail — indeterminate sweeping wavefront ────────────────── */
+      .boot__progress {
+        position: relative;
+        width: 220px;
+        height: 2px;
+        border-radius: 2px;
+        background: rgba(0, 212, 255, 0.08);
+        overflow: hidden;
+        opacity: 0;
+        animation: boot-fade-in 0.8s ease-out 0.8s forwards;
+      }
+      .boot__progress-pulse {
+        position: absolute;
+        top: 0;
+        left: -40%;
+        width: 40%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent 0%,
+          rgba(0, 212, 255, 0.35) 25%,
+          #00d4ff 55%,
+          rgba(167, 139, 250, 0.75) 80%,
+          transparent 100%
+        );
+        filter: drop-shadow(0 0 4px rgba(0, 212, 255, 0.65));
+        animation: boot-progress-sweep 1.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+      }
+      .boot__status {
+        font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+        font-size: 0.62rem;
+        letter-spacing: 0.06em;
+        color: #8fa3b8;
+        opacity: 0;
+        animation: boot-fade-in 0.8s ease-out 1s forwards, boot-status-cycle 6s ease-in-out 1.6s infinite;
+      }
+
+      /* ── Keyframes ───────────────────────────────────────────────────────── */
+      @keyframes boot-reveal {
+        from { opacity: 0; }
+        to   { opacity: 1; }
+      }
+      @keyframes boot-dot-flash {
+        0%   { opacity: 0; transform: scale(0); }
+        30%  { opacity: 1; transform: scale(4); }
+        70%  { opacity: 0.8; transform: scale(1.2); }
+        100% { opacity: 0; transform: scale(0); }
+      }
+      @keyframes boot-ring-expand {
+        from { transform: scale(0); opacity: 0; }
+        to   { transform: scale(1); opacity: 1; }
+      }
+      @keyframes boot-ring-pulse {
+        0%, 100% { opacity: 0.2; }
+        50%       { opacity: 1; }
+      }
+      @keyframes boot-membrane {
+        from { transform: rotate(0deg); }
+        to   { transform: rotate(360deg); }
+      }
+      @keyframes boot-spin-cw {
+        from { transform: rotate(0deg); }
+        to   { transform: rotate(360deg); }
+      }
+      @keyframes boot-spin-ccw {
+        from { transform: rotate(0deg); }
+        to   { transform: rotate(-360deg); }
+      }
+      @keyframes boot-particle-pulse {
+        0%, 100% { opacity: 0.55; }
+        50%       { opacity: 1; }
+      }
+      @keyframes boot-core {
+        0%, 100% { opacity: 0.7; stroke-width: 1.1; }
+        50%      { opacity: 1;   stroke-width: 1.6; }
+      }
+      @keyframes boot-nucleus {
+        0%, 100% { opacity: 0.6; transform: scale(1); }
+        50%      { opacity: 0.95; transform: scale(1.18); }
+      }
+      @keyframes boot-wordmark-pulse {
+        0%, 100% { filter: none; }
+        50%      { filter: drop-shadow(0 0 6px rgba(0, 212, 255, 0.45)); }
+      }
+      @keyframes boot-fade-in {
+        to { opacity: 1; }
+      }
+      @keyframes boot-progress-sweep {
+        0%   { left: -40%; }
+        100% { left: 100%; }
+      }
+      @keyframes boot-status-cycle {
+        0%, 18%  { opacity: 1; }
+        22%, 30% { opacity: 0.15; }
+        34%, 100% { opacity: 1; }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .boot__ring,
+        .boot__membrane,
+        .boot__core,
+        .boot__nucleus,
+        .boot__orbit,
+        .boot__particle,
+        .boot__dot,
+        .boot__progress-pulse,
+        .boot__wordmark-pulse,
+        .boot,
+        .boot__status {
+          animation: none;
+        }
+        .boot__ring,
+        .boot__membrane,
+        .boot__core,
+        .boot__nucleus,
+        .boot__orbit,
+        .boot__wordmark,
+        .boot__tagline,
+        .boot__progress,
+        .boot__status { opacity: 1; }
+        .boot__progress-pulse { left: 0; width: 100%; opacity: 0.7; }
+      }
+
+      @media (max-width: 480px) {
+        .boot__stage { width: 240px; height: 240px; }
+        .boot__wordmark { font-size: 1.3rem; }
+        .boot__progress { width: 180px; }
+      }
+    </style>
   </head>
   <body>
-    <div id="app"></div>
+    <div id="app">
+      <div class="boot">
+        <div class="boot__stage">
+          <svg class="boot__svg" viewBox="0 0 320 320" aria-hidden="true">
+            <!-- Expanding concentric rings (same visual language as Home hero) -->
+            <circle class="boot__ring boot__ring--7" cx="160" cy="160" r="150" />
+            <circle class="boot__ring boot__ring--6" cx="160" cy="160" r="128" />
+            <circle class="boot__ring boot__ring--5" cx="160" cy="160" r="106" />
+            <circle class="boot__ring boot__ring--4" cx="160" cy="160" r="86" />
+            <circle class="boot__ring boot__ring--3" cx="160" cy="160" r="68" />
+            <circle class="boot__ring boot__ring--2" cx="160" cy="160" r="52" />
+            <circle class="boot__ring boot__ring--1" cx="160" cy="160" r="38" />
+
+            <!-- Cell core + nucleus (breathing background) -->
+            <circle class="boot__core"    cx="160" cy="160" r="26" />
+            <circle class="boot__nucleus" cx="160" cy="160" r="9" />
+
+            <!-- Rotating polarized membrane (dashed) -->
+            <circle class="boot__membrane" cx="160" cy="160" r="30" />
+
+            <!-- Orbiting ion particles — three staggered orbits, mixed directions -->
+            <g class="boot__orbit boot__orbit--inner">
+              <circle class="boot__particle"                          cx="214" cy="160" r="2.6" />
+              <circle class="boot__particle boot__particle--dim"      cx="106" cy="160" r="2"   />
+            </g>
+            <g class="boot__orbit boot__orbit--middle">
+              <circle class="boot__particle boot__particle--purple"   cx="246" cy="160" r="2.4" />
+              <circle class="boot__particle boot__particle--dim2"     cx="160" cy="74"  r="2"   />
+              <circle class="boot__particle boot__particle--dim"      cx="160" cy="246" r="1.8" />
+            </g>
+            <g class="boot__orbit boot__orbit--outer">
+              <circle class="boot__particle boot__particle--purple boot__particle--dim3" cx="284" cy="160" r="2"   />
+              <circle class="boot__particle boot__particle--dim2"     cx="36"  cy="160" r="1.8" />
+              <circle class="boot__particle"                          cx="228" cy="228" r="1.6" />
+              <circle class="boot__particle boot__particle--dim3"     cx="92"  cy="92"  r="1.4" />
+            </g>
+
+            <!-- Origin dot — flashes first, then clears -->
+            <circle class="boot__dot" cx="160" cy="160" r="3" />
+          </svg>
+        </div>
+
+        <div class="boot__text">
+          <div class="boot__wordmark">Reso<span class="boot__wordmark-pulse">Pulse</span></div>
+          <div class="boot__tagline">Virtual Biophysics Engine</div>
+        </div>
+
+        <div class="boot__progress">
+          <div class="boot__progress-pulse"></div>
+        </div>
+        <div class="boot__status">Initializing Biophysics Engine</div>
+      </div>
+    </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

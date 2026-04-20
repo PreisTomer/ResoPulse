@@ -72,7 +72,22 @@
     "libPresets": "presets",
     "copyLink": "Copy Experiment URL",
     "copyLinkDone": "Copied",
-    "copyLinkTip": "<strong>Share Experiment Setup</strong>\nCopies a URL that restores this exact configuration: cell pair, frequency, field, waveform, and all other parameters.\nPaste it into a browser to open the same setup instantly."
+    "copyLinkTip": "<strong>Share Experiment Setup</strong>\nCopies a URL that restores this exact configuration: cell pair, frequency, field, waveform, and all other parameters.\nPaste it into a browser to open the same setup instantly.",
+    "outcomeStripTitle": "Live Predictions",
+    "outcomeStripTip": "<strong>Live Protocol Predictions</strong>\nReal-time physics-model outputs for the current cell pair and protocol.\nAll values are simulator predictions (Schwan, Pennes, BMS models), not measured data.\n<br><br>\nEach chip is clickable and scrolls to the panel that explains it in depth.",
+    "outcomeTiLabel": "TI",
+    "outcomeDrTLabel": "DR_T",
+    "outcomeDrHLabel": "DR_H",
+    "outcomeTssLabel": "T_ss",
+    "outcomeBiomodLabel": "Biomod",
+    "outcomeTiTip": "<strong>Therapeutic Index</strong>\nRatio of target to healthy disruption: DR_T / DR_H.\nHigher is better; \u22652 is a strong window, 1.0\u20132.0 is marginal.\nClick to scroll to the Selectivity panel.",
+    "outcomeDrTTip": "<strong>Target Disruption Ratio</strong>\nFraction of Vm_threshold reached in the target cell.\n\u226585% sustained triggers lysis.\nClick to scroll to the Disruption Ratio chart.",
+    "outcomeDrHTip": "<strong>Healthy Disruption Ratio</strong>\nFraction of Vm_threshold reached in the healthy cell.\nKeep below 50% to stay in the reversible/safe regime.\nClick to scroll to the Disruption Ratio chart.",
+    "outcomeTssTip": "<strong>Steady-State Temperature</strong>\nPennes-bioheat prediction: max(T_ss_H, T_ss_T).\n\u22651\u00b0C above 37 = heating; \u226542\u00b0C = hyperthermic damage.\nClick to scroll to the Disruption Ratio chart (thermal zone overlay).",
+    "outcomeBiomodTip": "<strong>Biomodulation Score</strong>\nSimulator construct, not from cited works.\nWeighted blend of sub-lytic SI, MTE, MA for the healthy cell.\n\u22650.55 = \u201cnourishing\u201d regime.\nClick to scroll to the Healthy cell card biostim panel.",
+    "outcomeWindowOpen": "selective",
+    "outcomeWindowClosed": "not selective",
+    "outcomeWindowTip": "<strong>Selectivity Window</strong>\nBinary verdict on whether the current protocol lyses target cells while sparing healthy cells.\n<br><br>\n<strong>Selective</strong>: DR_T \u2265 85% (target lysing) <em>and</em> DR_H &lt; 50% (healthy in reversible regime).\n<strong>Not selective</strong>: either target is not lysing, or healthy is being stressed past the reversible threshold.\n<br><br>\nThis is the same window used by the SnapBar, the DR chart\u2019s green fill, and the Selectivity panel. Not selective does not mean the protocol is broken, only that both criteria have not been satisfied at the same time."
   },
   "live": {
     "label": "LIVE",

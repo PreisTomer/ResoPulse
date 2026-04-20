@@ -41,6 +41,9 @@ export const H_FIRE_THRESHOLD_MULTIPLIER = 1.75
 // Mild thermal activation peak temperature [°C] — bell peak in 37-42°C biomodulation window
 export const THERMAL_MA_PEAK_C = 41
 
+// Lower boundary of the "nourishing" thermal zone [°C] — above this, mild thermal activation kicks in
+export const THERM_NOURISH_ENTER_C = 38.5
+
 // Temperature update interval [ms] in Newton-cooling session loop
 export const TEMP_UPDATE_INTERVAL_MS = 100
 

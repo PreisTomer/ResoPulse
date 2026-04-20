@@ -144,8 +144,7 @@ export default defineComponent({
   display: flex;
   align-items: center;
   justify-content: center;
-  background: color-mix(in srgb, var(--color-bg) 60%, transparent);
-  backdrop-filter: blur(6px);
+  background: color-mix(in srgb, var(--color-bg) 92%, transparent);
   padding: 1rem;
 
   &__panel {

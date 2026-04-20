@@ -1,6 +1,7 @@
 <!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
 <template>
   <div id="layout">
+    <RouteLoadingBar />
     <template v-if="!isAuthPage">
       <NavBar />
       <ModeBanner />
@@ -30,6 +31,7 @@ import NavBar from './components/NavBar/index.vue'
 import ModeBanner from '@/components/ModeBanner/index.vue'
 import LiteratureStrip from '@/components/LiteratureStrip/index.vue'
 import TermsGate from '@/components/TermsGate/index.vue'
+import RouteLoadingBar from '@/components/RouteLoadingBar.vue'
 import ProtocolGuidePanel from './components/ExperimentLab/ProtocolGuidePanel.vue'
 
 import { useThemeStore } from './stores/themeStore'
@@ -41,7 +43,7 @@ import { ROUTE } from './constants/routes'
 import { STORAGE_KEY } from './constants/storageKeys'
 
 export default defineComponent({
-  components: { NavBar, ModeBanner, LiteratureStrip, TermsGate, ProtocolGuidePanel },
+  components: { NavBar, ModeBanner, LiteratureStrip, TermsGate, RouteLoadingBar, ProtocolGuidePanel },
 
   setup() {
     const authStore              = useAuthStore()

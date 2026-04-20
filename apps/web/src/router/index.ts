@@ -5,6 +5,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 
 import { ROUTE } from '@/constants/routes'
 import { useAuthStore } from '@/stores/authStore'
+import { startRouteLoading, stopRouteLoading } from '@/utils/routeLoading'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -59,6 +60,16 @@ function waitForClerkLoaded(): Promise<void> {
     )
   })
 }
+
+// Route-loading indicator — fires BEFORE the auth guard so the bar appears immediately.
+// The utility adds a 150 ms grace period internally, so instant navigations do not flash it.
+router.beforeEach(() => {
+  startRouteLoading()
+  return true
+})
+
+router.afterEach(stopRouteLoading)
+router.onError(stopRouteLoading)
 
 router.beforeEach(async (to, from) => {
   await waitForClerkLoaded()

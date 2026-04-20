@@ -8,34 +8,8 @@
     <!-- ── Main content ──────────────────────────────────────────── -->
     <div class="experiment__main">
 
-      <!-- Notes bar — sits above the workspace, collapses inline -->
-      <div class="experiment__notes-bar">
-        <button
-          class="experiment__notes-btn"
-          :class="{ 'experiment__notes-btn--active': notesOpen }"
-          type="button"
-          :title="$t('exp.notesToggleTip')"
-          @click="notesOpen = !notesOpen"
-        >{{ $t('exp.notesToggle') }}</button>
-        <input
-          v-show="notesOpen"
-          class="experiment__notes-input"
-          type="text"
-          :placeholder="$t('exp.notesSamplePlaceholder')"
-          :value="experimentStore.sampleDescription"
-          @input="experimentStore.setSampleDescription(($event.target as HTMLInputElement).value)"
-          spellcheck="false"
-        />
-        <textarea
-          v-show="notesOpen"
-          class="experiment__notes-textarea"
-          :placeholder="$t('exp.notesNotesPlaceholder')"
-          :value="experimentStore.sessionNotes"
-          @input="experimentStore.setSessionNotes(($event.target as HTMLTextAreaElement).value)"
-          rows="1"
-          spellcheck="false"
-        ></textarea>
-      </div>
+      <!-- Persistent outcome strip: TI · DR_T · DR_H · T_ss · Biomod -->
+      <OutcomeStrip />
 
       <!-- Sentinel: observed by IntersectionObserver — must be in normal flow, not inside display:none -->
       <div ref="cellsAnchor" class="experiment__cells-anchor"></div>
@@ -65,10 +39,24 @@
 
       </div>
 
-      <!-- ── Full-width analysis panels ──────────────────────────────── -->
+      <!-- Disruption ratio chart — primary bench-scientist outcome, open by default -->
+      <div id="hl-disruption-chart" class="experiment__chart-section experiment__chart-section--primary">
+        <AccordionPanel
+          :icon="ICON.LYSIS_BOLT"
+          :title="$t('drChart.sectionTitle')"
+          :subtitle="drChartSubtitle"
+          :initial-open="true"
+          :border-on-toggle="true"
+        >
+          <DisruptionChart />
+        </AccordionPanel>
+      </div>
 
-      <!-- Vm / Resonance chart -->
-      <div id="hl-freq-chart" class="experiment__chart-section experiment__chart-section--primary">
+      <!-- Selectivity panel — ratio, window score, comparison -->
+      <SelectivityPanel id="hl-selectivity-panel" />
+
+      <!-- Vm / Resonance chart — mechanism, not outcome -->
+      <div id="hl-freq-chart" class="experiment__chart-section">
         <AccordionPanel
           :icon="ICON.WAVE"
           :title="$t('exp.chartSectionTitle')"
@@ -86,32 +74,43 @@
         </AccordionPanel>
       </div>
 
-      <!-- Disruption ratio chart -->
-      <div id="hl-disruption-chart" class="experiment__chart-section">
-        <AccordionPanel
-          :icon="ICON.LYSIS_BOLT"
-          :title="$t('drChart.sectionTitle')"
-          :subtitle="drChartSubtitle"
-          :initial-open="false"
-          :border-on-toggle="true"
-        >
-          <DisruptionChart />
-        </AccordionPanel>
-      </div>
-
-      <!-- Selectivity (full width) -->
-      <SelectivityPanel id="hl-selectivity-panel" />
-
       <!-- Therapeutic Heatmap (full width, collapsible) -->
       <TherapeuticHeatmap />
 
-      <!-- Sweep + population (collapsible, full width) -->
+      <!-- Sweep panel + snap bar -->
       <SweepPanel id="hl-sweep-panel" @window-change="onSweepWindowChange" @open-change="sweepPanelOpen = $event" />
-
-      <!-- Therapeutic window snap bar -->
       <SnapBar v-if="sweepWindow" :sweep-window="sweepWindow" />
 
       <PopulationPanel id="hl-population-panel" @open-change="populationPanelOpen = $event" />
+
+      <!-- Notes bar — session metadata attached to log artefact -->
+      <div class="experiment__notes-bar">
+        <button
+          class="experiment__notes-btn"
+          :class="{ 'experiment__notes-btn--active': notesOpen }"
+          type="button"
+          :title="$t('exp.notesToggleTip')"
+          @click="notesOpen = !notesOpen"
+        >{{ $t('exp.notesToggle') }}</button>
+        <input
+          v-show="notesOpen"
+          class="experiment__notes-input"
+          type="text"
+          :placeholder="$t('exp.notesSamplePlaceholder')"
+          :value="experimentStore.sampleDescription"
+          @input="experimentStore.setSampleDescription(($event.target as HTMLInputElement).value)"
+          spellcheck="false"
+        />
+        <textarea
+          v-show="notesOpen"
+          class="experiment__notes-textarea"
+          :placeholder="$t('exp.notesNotesPlaceholder')"
+          :value="experimentStore.sessionNotes"
+          @input="experimentStore.setSessionNotes(($event.target as HTMLTextAreaElement).value)"
+          rows="1"
+          spellcheck="false"
+        ></textarea>
+      </div>
 
       <!-- Experiment log -->
       <ExperimentLog id="hl-experiment-log" />
@@ -162,6 +161,7 @@ import ExperimentHeader from '@/components/ExperimentLab/ExperimentHeader.vue'
 import SnapBar from '@/components/ExperimentLab/SnapBar.vue'
 import StickyCellView, { type CellCardRow } from '@/components/ExperimentLab/StickyCellView.vue'
 import AiOptimizerTab from '@/components/ExperimentLab/AiOptimizerTab.vue'
+import OutcomeStrip from '@/components/ExperimentLab/OutcomeStrip.vue'
 import ReplayOverlay from '@/components/ValidationWorkflows/ReplayOverlay.vue'
 
 import { computeSAR } from '@/utils/physics'
@@ -195,6 +195,7 @@ export default defineComponent({
     SnapBar,
     StickyCellView,
     AiOptimizerTab,
+    OutcomeStrip,
     ReplayOverlay,
   },
 

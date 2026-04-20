@@ -45,11 +45,9 @@ import { broadcastStateSync } from '@/services/socket'
 import { C } from '@/theme/colors'
 
 import { CELL_CATEGORY, WAVEFORM } from '@/constants/strings'
-import { H_FIRE_THRESHOLD_MULTIPLIER, THRESHOLDS, THERMAL_MA_PEAK_C } from '@/constants/physics'
+import { H_FIRE_THRESHOLD_MULTIPLIER, THRESHOLDS, THERMAL_MA_PEAK_C, THERM_NOURISH_ENTER_C } from '@/constants/physics'
 import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'
-
-const THERM_NOURISH_ENTER_C = 38.5
 
 import DrChartLegend from './DrChartLegend.vue'
 import DrChartTooltip from './DrChartTooltip.vue'
