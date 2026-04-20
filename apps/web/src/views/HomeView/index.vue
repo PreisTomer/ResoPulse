@@ -111,6 +111,48 @@
 
       </div>
 
+      <!-- ── Zone 1.5: IO block — plain "what this computes" statement ── -->
+      <div class="home__zone home__zone--io home__zone--anim">
+        <div class="home__io">
+          <div class="home__io-header">
+            <h2 class="home__io-title">{{ $t('home.ioTitle') }}</h2>
+            <p class="home__io-subtitle">{{ $t('home.ioSubtitle') }}</p>
+          </div>
+          <div class="home__io-grid">
+
+            <div class="home__io-col home__io-col--inputs">
+              <span class="home__io-col-label">{{ $t('home.ioColInputs') }}</span>
+              <ul class="home__io-list">
+                <li v-for="n in 7" :key="n" class="home__io-item">{{ $t(`home.ioInput${n}`) }}</li>
+              </ul>
+            </div>
+
+            <span class="home__io-arrow" aria-hidden="true">{{ ICON.ARROW_R }}</span>
+
+            <div class="home__io-col home__io-col--equations">
+              <span class="home__io-col-label">{{ $t('home.ioColEquations') }}</span>
+              <ul class="home__io-list home__io-list--mono">
+                <li v-for="n in 6" :key="n" class="home__io-item home__io-item--eq">{{ $t(`home.ioEq${n}`) }}</li>
+              </ul>
+            </div>
+
+            <span class="home__io-arrow" aria-hidden="true">{{ ICON.ARROW_R }}</span>
+
+            <div class="home__io-col home__io-col--outputs">
+              <span class="home__io-col-label">{{ $t('home.ioColOutputs') }}</span>
+              <ul class="home__io-list">
+                <li v-for="n in 6" :key="n" class="home__io-item">{{ $t(`home.ioOutput${n}`) }}</li>
+              </ul>
+            </div>
+
+          </div>
+          <div class="home__io-footer">
+            <p class="home__io-note">{{ $t('home.ioNote') }}</p>
+            <RouterLink :to="ROUTE.PROTOCOL" class="home__io-derivation">{{ $t('home.ioDerivationLink') }} {{ ICON.ARROW_R }}</RouterLink>
+          </div>
+        </div>
+      </div>
+
       <!-- ── Zone 2: Science — scroll-reveal physics illustrations ── -->
       <div class="home__zone home__zone--science home__zone--anim">
 

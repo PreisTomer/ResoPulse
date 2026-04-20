@@ -83,6 +83,14 @@
       padding: 4rem 2rem 0;
     }
 
+    /* IO block is deliberately utilitarian: mono equations, no glow, no gradient.
+       Sits between the hero (marketing) and the science strip (illustrative),
+       giving a researcher the direct inputs/equations/outputs answer up front. */
+    &--io {
+      gap: 1rem;
+      padding: 3rem 2rem 2rem;
+    }
+
     &--bottom {
       gap: 0.75rem;
       padding: 1.5rem 2rem 3rem;
@@ -1261,6 +1269,156 @@
     text-decoration: none;
 
     &:hover { text-decoration: none; }
+  }
+
+  /* ── IO block (deterministic "what this computes" answer) ──────────────
+     Lab-tool aesthetic: no gradients, no glow, mono for equations.
+     This is the block a researcher reads to decide whether the tool is worth
+     their time — keep it dense, direct, and traceable. */
+  &__io {
+    width: 100%;
+    max-width: 1100px;
+    @include surface-card(var(--radius-lg));
+    padding: 1.5rem 1.75rem;
+    text-align: left; // .home__zone centers text by default; override for spec-sheet look
+  }
+
+  &__io-header {
+    @include flex-col(0.25rem);
+    align-items: flex-start;
+    padding-bottom: 1rem;
+    margin-bottom: 1.25rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
+  }
+
+  &__io-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--color-text-heading);
+    margin: 0;
+    letter-spacing: 0.01em;
+    text-align: left;
+  }
+
+  &__io-subtitle {
+    font-size: var(--fs-md);
+    color: var(--color-text-muted);
+    margin: 0;
+    line-height: 1.5;
+    text-align: left;
+  }
+
+  &__io-grid {
+    display: grid;
+    // Inputs/outputs auto-size to their longest item (keeps them on single lines);
+    // equations fill the remaining space and scroll horizontally if too wide.
+    grid-template-columns: max-content auto minmax(0, 1fr) auto max-content;
+    gap: 1.5rem;
+    align-items: stretch;
+
+    @media (max-width: 900px) {
+      grid-template-columns: 1fr;
+      gap: 0.9rem;
+    }
+  }
+
+  &__io-col {
+    @include flex-col(0.55rem);
+    align-items: flex-start;
+    min-width: 0;
+    width: 100%;
+  }
+
+  &__io-col-label {
+    @include mono-upper(var(--fs-xxs), 0.1em);
+    color: var(--color-primary);
+    font-weight: 700;
+    padding-bottom: 0.45rem;
+    width: 100%;
+    text-align: left;
+    border-bottom: 1px solid color-mix(in srgb, var(--color-primary) 30%, transparent);
+  }
+
+  &__io-list {
+    @include flex-col(0.45rem);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+
+    &--mono .home__io-item {
+      font-family: var(--font-mono);
+      font-size: var(--fs-xs);
+      white-space: nowrap;
+      overflow-x: auto;
+    }
+  }
+
+  &__io-item {
+    font-size: var(--fs-sm);
+    color: var(--color-text);
+    line-height: 1.5;
+    text-align: left;
+
+    &--eq {
+      color: color-mix(in srgb, var(--color-text) 92%, transparent);
+      letter-spacing: 0.01em;
+    }
+  }
+
+  // Arrow sits at the top of the column (aligned with the label baseline) so that
+  // I/O flow reads left→right at a glance regardless of list length differences.
+  &__io-arrow {
+    font-family: var(--font-mono);
+    font-size: 1.3rem;
+    color: var(--color-primary);
+    opacity: var(--op-partial);
+    align-self: start;
+    padding-top: 0.15rem;
+
+    @media (max-width: 900px) {
+      transform: rotate(90deg);
+      padding: 0.2rem 0;
+      align-self: center;
+      justify-self: center;
+    }
+  }
+
+  &__io-footer {
+    @include flex-row(1.5rem);
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
+  }
+
+  &__io-note {
+    font-size: var(--fs-xs);
+    color: var(--color-text-muted);
+    opacity: var(--op-muted);
+    margin: 0;
+    flex: 1 1 20rem;
+    line-height: 1.5;
+    text-align: left;
+  }
+
+  &__io-derivation {
+    @include mono-upper(var(--fs-xxs), 0.1em);
+    color: var(--color-primary);
+    text-decoration: none;
+    font-weight: 700;
+    padding: 0.4rem 0.75rem;
+    border: 1px solid color-mix(in srgb, var(--color-primary) 35%, transparent);
+    border-radius: var(--radius);
+    transition: background var(--tr-fast), border-color var(--tr-fast);
+    flex-shrink: 0;
+
+    &:hover {
+      background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+      border-color: var(--color-primary);
+    }
   }
 
 }
