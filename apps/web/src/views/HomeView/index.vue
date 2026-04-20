@@ -131,8 +131,11 @@
 
             <div class="home__io-col home__io-col--equations">
               <span class="home__io-col-label">{{ $t('home.ioColEquations') }}</span>
-              <ul class="home__io-list home__io-list--mono">
-                <li v-for="n in 6" :key="n" class="home__io-item home__io-item--eq">{{ $t(`home.ioEq${n}`) }}</li>
+              <ul class="home__io-list">
+                <li v-for="n in 6" :key="n" class="home__io-item home__io-item--eq">
+                  <span class="home__io-eq-expr">{{ $t(`home.ioEq${n}`) }}</span>
+                  <span class="home__io-eq-cite">{{ $t(`home.ioEqCite${n}`) }}</span>
+                </li>
               </ul>
             </div>
 
@@ -146,6 +149,20 @@
             </div>
 
           </div>
+
+          <div class="home__io-example">
+            <span class="home__io-example-label">{{ $t('home.ioExampleLabel') }}</span>
+            <div class="home__io-example-row">
+              <span class="home__io-example-tag">{{ $t('home.ioExampleInputsLabel') }}</span>
+              <span class="home__io-example-code">{{ $t('home.ioExampleInputs') }}</span>
+            </div>
+            <div class="home__io-example-row">
+              <span class="home__io-example-tag home__io-example-tag--out">{{ $t('home.ioExampleOutputsLabel') }}</span>
+              <span class="home__io-example-code home__io-example-code--out">{{ $t('home.ioExampleOutputs') }}</span>
+            </div>
+            <p class="home__io-example-caption">{{ $t('home.ioExampleCaption') }}</p>
+          </div>
+
           <div class="home__io-footer">
             <p class="home__io-note">{{ $t('home.ioNote') }}</p>
             <RouterLink :to="ROUTE.PROTOCOL" class="home__io-derivation">{{ $t('home.ioDerivationLink') }} {{ ICON.ARROW_R }}</RouterLink>

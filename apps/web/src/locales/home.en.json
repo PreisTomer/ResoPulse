@@ -94,7 +94,7 @@
     "validateGateSub": "Two-step experimental validation against peer-reviewed papers. Create a free account to run replication workflows.",
     "validateDrawerClose": "Close",
     "ioTitle": "What the simulator computes",
-    "ioSubtitle": "A deterministic function from protocol parameters to cell-level biophysics predictions",
+    "ioSubtitle": "Nine physics models, one cell pair, one self-consistent solve. Every output below comes from the same system of equations.",
     "ioColInputs": "Inputs you control",
     "ioColEquations": "Equations solved",
     "ioColOutputs": "Outputs returned",
@@ -111,6 +111,12 @@
     "ioEq4": "SAR = σ_i · α² · E² · wf / ρ",
     "ioEq5": "T_ss = 37 + SAR · dc / (λ · c_p)",
     "ioEq6": "DR_res = 1 / (1 + (2Q · (f − f₀) / f₀)²)",
+    "ioEqCite1": "Kotnik 2000",
+    "ioEqCite2": "Kotnik 2000",
+    "ioEqCite3": "Weaver 1996",
+    "ioEqCite4": "Schwan 1957",
+    "ioEqCite5": "Pennes 1948",
+    "ioEqCite6": "Lorentzian",
     "ioOutput1": "Transmembrane voltage V_m(f)",
     "ioOutput2": "Disruption ratio DR_T, DR_H",
     "ioOutput3": "Therapeutic index TI = DR_T / DR_H",
@@ -118,6 +124,12 @@
     "ioOutput5": "DEP crossover f_DEP",
     "ioOutput6": "Population lysis fraction",
     "ioNote": "Every output is a model prediction, not measured data. Each equation links to its source paper in the Protocol documentation.",
-    "ioDerivationLink": "Read full derivations"
+    "ioDerivationLink": "Read full derivations",
+    "ioExampleLabel": "Example engine output",
+    "ioExampleInputsLabel": "Inputs",
+    "ioExampleOutputsLabel": "Outputs",
+    "ioExampleInputs": "HeLa (target) vs PBMC (healthy) · E = 800 V/cm · 300 kHz · CW",
+    "ioExampleOutputs": "V_m,T = 1.10 V · V_m,H = 0.47 V · DR_T = 0.92 · DR_H = 0.39 · TI = 2.4",
+    "ioExampleCaption": "Representative output, not a benchmark. The engine solves this same system for your chosen cell pair in the lab."
   }
 }
