@@ -150,18 +150,7 @@
 
           </div>
 
-          <div class="home__io-example">
-            <span class="home__io-example-label">{{ $t('home.ioExampleLabel') }}</span>
-            <div class="home__io-example-row">
-              <span class="home__io-example-tag">{{ $t('home.ioExampleInputsLabel') }}</span>
-              <span class="home__io-example-code">{{ $t('home.ioExampleInputs') }}</span>
-            </div>
-            <div class="home__io-example-row">
-              <span class="home__io-example-tag home__io-example-tag--out">{{ $t('home.ioExampleOutputsLabel') }}</span>
-              <span class="home__io-example-code home__io-example-code--out">{{ $t('home.ioExampleOutputs') }}</span>
-            </div>
-            <p class="home__io-example-caption">{{ $t('home.ioExampleCaption') }}</p>
-          </div>
+          <IoMiniWidget />
 
           <div class="home__io-footer">
             <p class="home__io-note">{{ $t('home.ioNote') }}</p>
@@ -360,6 +349,7 @@ import HeroRingsSvg from './HeroRingsSvg.vue'
 import CellIllustrationSvg from './CellIllustrationSvg.vue'
 import BodePlotSvg from './BodePlotSvg.vue'
 import OscilloscopeSvg from './OscilloscopeSvg.vue'
+import IoMiniWidget from './IoMiniWidget.vue'
 
 const SEL_CYCLE_MS      = 9000
 const PARTICLE_COUNT    = 65
@@ -416,6 +406,7 @@ export default defineComponent({
     CellIllustrationSvg,
     BodePlotSvg,
     OscilloscopeSvg,
+    IoMiniWidget,
   },
 
   data() {

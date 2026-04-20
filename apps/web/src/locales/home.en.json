@@ -125,11 +125,12 @@
     "ioOutput6": "Population lysis fraction",
     "ioNote": "Every output is a model prediction, not measured data. Each equation links to its source paper in the Protocol documentation.",
     "ioDerivationLink": "Read full derivations",
-    "ioExampleLabel": "Example engine output",
-    "ioExampleInputsLabel": "Inputs",
-    "ioExampleOutputsLabel": "Outputs",
-    "ioExampleInputs": "HeLa (target) vs PBMC (healthy) · E = 800 V/cm · 300 kHz · CW",
-    "ioExampleOutputs": "V_m,T = 1.10 V · V_m,H = 0.47 V · DR_T = 0.92 · DR_H = 0.39 · TI = 2.4",
-    "ioExampleCaption": "Representative output, not a benchmark. The engine solves this same system for your chosen cell pair in the lab."
+    "ioMiniLabel": "Try the math",
+    "ioMiniSub": "Target R = 10 µm (cancer) vs healthy R = 4 µm · CW drive · drag E and f",
+    "ioMiniFieldLabel": "Field",
+    "ioMiniFreqLabel": "Frequency",
+    "ioMiniWindowBadge": "SELECTIVITY WINDOW",
+    "ioMiniCaption": "Outputs computed live from the Schwan equation above. Open the lab to run the full pipeline (pulses, SAR, DEP, resonance) on your own cell pair.",
+    "ioMiniCtaLab": "Open the lab"
   }
 }
