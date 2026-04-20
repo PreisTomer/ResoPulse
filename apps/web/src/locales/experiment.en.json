@@ -87,7 +87,16 @@
     "outcomeBiomodTip": "<strong>Biomodulation Score</strong>\nSimulator construct, not from cited works.\nWeighted blend of sub-lytic SI, MTE, MA for the healthy cell.\n\u22650.55 = \u201cnourishing\u201d regime.\nClick to scroll to the Healthy cell card biostim panel.",
     "outcomeWindowOpen": "selective",
     "outcomeWindowClosed": "not selective",
-    "outcomeWindowTip": "<strong>Selectivity Window</strong>\nBinary verdict on whether the current protocol lyses target cells while sparing healthy cells.\n<br><br>\n<strong>Selective</strong>: DR_T \u2265 85% (target lysing) <em>and</em> DR_H &lt; 50% (healthy in reversible regime).\n<strong>Not selective</strong>: either target is not lysing, or healthy is being stressed past the reversible threshold.\n<br><br>\nThis is the same window used by the SnapBar, the DR chart\u2019s green fill, and the Selectivity panel. Not selective does not mean the protocol is broken, only that both criteria have not been satisfied at the same time."
+    "outcomeWindowTip": "<strong>Selectivity Window</strong>\nBinary verdict on whether the current protocol lyses target cells while sparing healthy cells.\n<br><br>\n<strong>Selective</strong>: DR_T \u2265 85% (target lysing) <em>and</em> DR_H &lt; 50% (healthy in reversible regime).\n<strong>Not selective</strong>: either target is not lysing, or healthy is being stressed past the reversible threshold.\n<br><br>\nThis is the same window used by the SnapBar, the DR chart\u2019s green fill, and the Selectivity panel. Not selective does not mean the protocol is broken, only that both criteria have not been satisfied at the same time.",
+    "equationStripTitle": "Active equation",
+    "equationStripTip": "<strong>Live Equation</strong>\nThe exact formula being evaluated for the current protocol, with every parameter substituted.\nNumbers update in real time as you change field intensity, frequency, orientation, or cells.\nClick the derivation button to open the full model in the Protocol documentation.",
+    "equationStripModeSchwan": "Schwan, membrane voltage",
+    "equationStripModeResonance": "Lorentzian, acoustic resonance",
+    "equationStripCiteSchwan": "Schwan 1957, Kotnik and Miklavcic 2000",
+    "equationStripCiteResonance": "Dykeman and Sankey 2010",
+    "equationStripNoResonance": "No resonance defined for this cell",
+    "equationStripDerivationBtn": "Derivation",
+    "equationStripDerivationTip": "<strong>Open Derivation</strong>\nJumps to the Protocol documentation section that derives this model from first principles, with citations and caveats."
   },
   "live": {
     "label": "LIVE",

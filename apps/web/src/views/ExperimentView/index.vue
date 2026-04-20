@@ -11,6 +11,9 @@
       <!-- Persistent outcome strip: TI · DR_T · DR_H · T_ss · Biomod -->
       <OutcomeStrip />
 
+      <!-- Live equation: exact formula being evaluated, with substituted values -->
+      <EquationStrip />
+
       <!-- Sentinel: observed by IntersectionObserver — must be in normal flow, not inside display:none -->
       <div ref="cellsAnchor" class="experiment__cells-anchor"></div>
 
@@ -162,6 +165,7 @@ import SnapBar from '@/components/ExperimentLab/SnapBar.vue'
 import StickyCellView, { type CellCardRow } from '@/components/ExperimentLab/StickyCellView.vue'
 import AiOptimizerTab from '@/components/ExperimentLab/AiOptimizerTab.vue'
 import OutcomeStrip from '@/components/ExperimentLab/OutcomeStrip.vue'
+import EquationStrip from '@/components/ExperimentLab/EquationStrip.vue'
 import ReplayOverlay from '@/components/ValidationWorkflows/ReplayOverlay.vue'
 
 import { computeSAR } from '@/utils/physics'
@@ -196,6 +200,7 @@ export default defineComponent({
     StickyCellView,
     AiOptimizerTab,
     OutcomeStrip,
+    EquationStrip,
     ReplayOverlay,
   },
 
@@ -503,7 +508,9 @@ export default defineComponent({
     display: flex;
     flex-direction: column;
     gap: 0.4rem;
-    padding: 0.52rem 1.25rem 1.5rem;
+    // Horizontal padding reserves room for the 32px side tab panels (guide left,
+    // AI right). Anything less and the tabs overdraw content like the equation strip.
+    padding: 0.52rem 2.75rem 1.5rem;
     max-width: 1800px;
     width: 100%;
     margin: 0 auto;
