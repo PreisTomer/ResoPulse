@@ -124,7 +124,6 @@ export default defineComponent({
         s.medium, s.waveform, s.dutyCycle, s.pulseWidthNs, s.chartMode,
         s.cellPackingFraction, s.perfusionRate,
         s.orientationDeg, s.effectivePulseCount,
-        s.healthyTemp, s.targetTemp,
         s.resetCounter,
       ].join('|')
     },
