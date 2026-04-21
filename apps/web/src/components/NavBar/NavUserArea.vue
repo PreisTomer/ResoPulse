@@ -67,7 +67,7 @@
           ></div>
         </div>
 
-        <div v-if="tokenStore.isLowBalance || tokenStore.isExhausted" class="user-panel__credits-warn">
+        <div v-if="hasBalanceWarning" class="user-panel__credits-warn">
           {{ tokenStore.isExhausted ? $t('tokens.balanceExhausted') : $t('tokens.balanceLow') }}
         </div>
 
@@ -205,6 +205,10 @@ export default defineComponent({
       if (this.tokenStore.isLowBalance)   return 'user-panel__credits-fill--low'
       if (this.tokenStore.balancePct < 50) return 'user-panel__credits-fill--mid'
       return ''
+    },
+
+    hasBalanceWarning(): boolean {
+      return this.tokenStore.isLowBalance || this.tokenStore.isExhausted
     },
   },
 

@@ -27,7 +27,33 @@ export function downloadText(txt: string, filename: string, mimeType = 'text/pla
 
 // ── Section builders ───────────────────────────────────────────────────────
 
-export function buildHealthySection(h: CellParamSnapshot, isDbl: boolean, mediumName: string): string[] {
+interface HealthySectionOptions {
+  doubleShellEnabled: boolean
+  mediumName: string
+}
+
+interface TargetSectionOptions {
+  resonanceMode: boolean
+  doubleShellEnabled: boolean
+  mediumName: string
+}
+
+interface ModelSectionOptions {
+  resonanceMode: boolean
+  pulsed: boolean
+  doubleShellEnabled: boolean
+  hFire: boolean
+}
+
+interface RefsOptions {
+  resonanceMode: boolean
+  doubleShellEnabled: boolean
+  category: string
+  hFire: boolean
+}
+
+export function buildHealthySection(h: CellParamSnapshot, opts: HealthySectionOptions): string[] {
+  const { doubleShellEnabled: isDbl, mediumName } = opts
   const cm      = (h.dielectricConstant * EPSILON_0 / (h.membraneThickness * 1e-9) * 1e3).toFixed(2)
   const tau     = h.fc > 0 ? (1e6 / (TWO_PI * h.fc)).toFixed(0) : ', '
   const sigmaMem = h.membraneConductivity ?? SIGMA_MEMBRANE_SI
@@ -56,7 +82,8 @@ export function buildHealthySection(h: CellParamSnapshot, isDbl: boolean, medium
   return lines
 }
 
-export function buildTargetSection(t: CellParamSnapshot, isRes: boolean, isDbl: boolean, mediumName: string): string[] {
+export function buildTargetSection(t: CellParamSnapshot, opts: TargetSectionOptions): string[] {
+  const { resonanceMode: isRes, doubleShellEnabled: isDbl, mediumName } = opts
   const cm       = (t.dielectricConstant * EPSILON_0 / (t.membraneThickness * 1e-9) * 1e3).toFixed(2)
   const sigmaMem = t.membraneConductivity ?? SIGMA_MEMBRANE_SI
   const lines: string[] = [
@@ -118,7 +145,8 @@ export function buildTargetSection(t: CellParamSnapshot, isRes: boolean, isDbl: 
   return lines
 }
 
-export function buildModelSection(isRes: boolean, isPulsed: boolean, isDbl: boolean, isHFire = false): string[] {
+export function buildModelSection(opts: ModelSectionOptions): string[] {
+  const { resonanceMode: isRes, pulsed: isPulsed, doubleShellEnabled: isDbl, hFire: isHFire } = opts
   const lines: string[] = []
   if (isRes) {
     lines.push(
@@ -212,7 +240,8 @@ export function buildModelSection(isRes: boolean, isPulsed: boolean, isDbl: bool
   return lines
 }
 
-export function buildRefs(isRes: boolean, isDbl: boolean, cat: string, isHFire = false): string[] {
+export function buildRefs(opts: RefsOptions): string[] {
+  const { resonanceMode: isRes, doubleShellEnabled: isDbl, category: cat, hFire: isHFire } = opts
   const refs: string[] = []
   let i = 1
   refs.push(
@@ -501,9 +530,9 @@ export function buildEntryMethodsText(entry: LogEntry, sessionName: string, samp
     '',
     'CELL MODELS',
     sep(),
-    ...buildHealthySection(h, isDbl, medName),
+    ...buildHealthySection(h, { doubleShellEnabled: isDbl, mediumName: medName }),
     '',
-    ...buildTargetSection(t, isRes, isDbl, medName),
+    ...buildTargetSection(t, { resonanceMode: isRes, doubleShellEnabled: isDbl, mediumName: medName }),
     '',
     'EXPOSURE PROTOCOL',
     sep(),
@@ -521,11 +550,11 @@ export function buildEntryMethodsText(entry: LogEntry, sessionName: string, samp
     '',
     'PHYSICAL MODEL',
     sep(),
-    ...buildModelSection(isRes, isPulsed, isDbl, isHFire),
+    ...buildModelSection({ resonanceMode: isRes, pulsed: isPulsed, doubleShellEnabled: isDbl, hFire: isHFire }),
     '',
     'REFERENCES',
     sep(),
-    ...buildRefs(isRes, isDbl, cat, isHFire),
+    ...buildRefs({ resonanceMode: isRes, doubleShellEnabled: isDbl, category: cat, hFire: isHFire }),
     '',
     sep('═'),
     'ResoPulse: virtual in-vitro biophysics engine',

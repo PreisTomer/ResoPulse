@@ -107,7 +107,7 @@ import { useCellStore } from '@/stores/cellStore'
 import { broadcastStateSync } from '@/services/socket'
 
 import { formatFreqKHz } from '@/utils/format'
-import { tipFreq, tipFcSub, tipOptimalBtn } from '@/tooltips/sliderTooltips'
+import { tipFreq, tipFcSub, tipOptimalBtnInRange, tipOptimalBtnBeyondRange } from '@/tooltips/sliderTooltips'
 
 import { CELL_CATEGORY, FREQ_REGIME } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
@@ -221,7 +221,9 @@ export default defineComponent({
         targetCategory:   this.cellStore.targetCellCategory,
       })
     },
-    tipOptimalBtnLabel(): string { return tipOptimalBtn(this.optimalBeyondRange) },
+    tipOptimalBtnLabel(): string {
+      return this.optimalBeyondRange ? tipOptimalBtnBeyondRange() : tipOptimalBtnInRange()
+    },
     tipSnapFcH(): string         { return this.$t('slider.tipSnapFcH', { fc: this.healthyFcDisplay }) },
     tipSnapFcT(): string         { return this.$t('slider.tipSnapFcT', { fc: this.targetFcDisplay }) },
 

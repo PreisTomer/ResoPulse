@@ -64,15 +64,15 @@
             <td class="datasets__mono" :class="p.hasResonance ? 'datasets__warn-val' : 'datasets__muted'">{{ p.resEthrDisplay }}</td>
             <td class="datasets__notes-cell" v-tip="p.techNotes ?? p.notes">
               <span
-                v-if="p.isCustom && p.parameterConfidence"
+                v-if="hasConfidenceBadge(p)"
                 class="datasets__confidence-badge"
                 :class="`datasets__confidence-badge--${p.parameterConfidence}`"
-                :title="$t(`userPresets.confidenceTip${capitalize(p.parameterConfidence)}`)"
-              >{{ confidenceBadgeLabel(p.parameterConfidence) }}</span>
+                :title="$t(`userPresets.confidenceTip${capitalize(p.parameterConfidence!)}`)"
+              >{{ confidenceBadgeLabel(p.parameterConfidence!) }}</span>
               {{ p.notes }}
             </td>
             <td class="datasets__actions-cell">
-              <template v-if="p.isCustom && p.customPreset">
+              <template v-if="hasEditableCustomPreset(p)">
                 <button class="datasets__action-btn datasets__action-btn--edit" :title="$t('userPresets.editBtn')" @click="$emit('edit', p.customPreset)">{{ ICON.EDIT }}</button>
                 <button class="datasets__action-btn datasets__action-btn--del" :title="$t('userPresets.deleteConfirm')" @click="$emit('delete', p.customPreset)">{{ ICON.CLOSE }}</button>
               </template>
@@ -141,6 +141,14 @@ export default defineComponent({
         estimated:  this.$t('userPresets.confidenceBadgeEst'),
       }
       return map[confidence] ?? confidence.toUpperCase().slice(0, 4)
+    },
+
+    hasConfidenceBadge(preset: AugmentedPreset): boolean {
+      return !!preset.isCustom && !!preset.parameterConfidence
+    },
+
+    hasEditableCustomPreset(preset: AugmentedPreset): boolean {
+      return !!preset.isCustom && !!preset.customPreset
     },
   },
 })

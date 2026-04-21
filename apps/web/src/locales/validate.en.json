@@ -76,7 +76,7 @@
       "step2f": "CCMV resonant frequency: f_res = 7.7 GHz, measured by Tsen (2007) ISRS laser spectroscopy",
       "step2q": "CCMV quality factor: Q = 12. Rigid icosahedral protein capsid gives a sharp Lorentzian resonance.",
       "step3": "Switching to resonance chart mode",
-      "step4": "Setting frequency: 7.7 GHz (7,700,000 kHz) — the CCMV capsid resonant frequency",
+      "step4": "Setting frequency: 7.7 GHz (7,700,000 kHz), the CCMV capsid resonant frequency",
       "step5": "Setting field: 500 V/cm (acoustic disruption threshold, Tsen 2007)",
       "step6": "Resonance chart: CCMV DR > 1 (capsid disrupting), hepatocyte DR near zero (Vm collapsed)",
       "resultAgreement": "The acoustic resonance model confirms selective CCMV capsid disruption at f_res = 7.7 GHz (Tsen 2007, laser-measured). At this frequency, hepatocyte Schwan Vm collapses to near zero (f/fc > 22,000), producing TI > 99. This matches Tsen et al. (2007)'s observation of complete viral inactivation with zero damage to co-incubated mammalian cells."

@@ -149,7 +149,7 @@
                   </div>
                   <span class="account__badge" :class="memberRoleClass(m.role)">{{ memberRoleLabel(m.role) }}</span>
                   <button
-                    v-if="isOwnerOrAdmin && m.userId !== currentUserId"
+                    v-if="canRemoveMember(m)"
                     class="account__icon-btn account__icon-btn--danger"
                     :title="$t('account.workspaceRemove')"
                     @click="removeMember(m)"
@@ -512,6 +512,10 @@ export default defineComponent({
     memberRoleClass(role: string): string {
       if (role === 'org:owner' || role === 'org:admin') return 'account__badge--primary'
       return 'account__badge--dim'
+    },
+
+    canRemoveMember(member: OrgMember): boolean {
+      return this.isOwnerOrAdmin && member.userId !== this.currentUserId
     },
 
     triggerAvatarUpload(): void {

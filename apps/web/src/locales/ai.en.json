@@ -24,7 +24,7 @@
     "featureImportanceTitle": "Feature importance (XGBoost)",
     "noDataNote": "The ML model requires at least 20 rated outcomes to activate. Currently using the physics baseline.",
     "consentGateTitle": "Log outcomes to train the AI optimizer",
-    "consentGateBody": "Enabling outcome logging allows the AI optimizer to learn from your experiment results. Only protocol parameters and outcome ratings are stored — no identifiable sample data.",
+    "consentGateBody": "Enabling outcome logging allows the AI optimizer to learn from your experiment results. Only protocol parameters and outcome ratings are stored, no identifiable sample data.",
     "consentToggleLabel": "Enable outcome logging",
     "consentRequired": "Enable outcome logging above to use the AI optimizer.",
     "errorNote": "Optimizer unavailable. Ensure the Python AI service is running.",

@@ -16,9 +16,9 @@
 
     "roleLabel":        "Cell Role",
     "roleTarget":       "Target Cell",
-    "roleTargetSub":    "Cancer, bacteria, virus — the cell you are targeting",
+    "roleTargetSub":    "Cancer, bacteria, virus: the cell you are targeting",
     "roleHealthy":      "Reference Cell",
-    "roleHealthySub":   "Healthy or control cell — used for selectivity comparison",
+    "roleHealthySub":   "Healthy or control cell, used for selectivity comparison",
 
     "fieldLabel":       "Cell / Species Name",
     "fieldShortLabel":  "Short Label",

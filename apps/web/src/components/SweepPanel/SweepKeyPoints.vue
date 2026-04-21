@@ -40,7 +40,7 @@ import { defineComponent, type PropType } from 'vue'
 import { THRESHOLDS } from '@/constants/physics'
 
 import {
-  tipThThreshold, tipThTI, tipThTemp,
+  tipThThresholdField, tipThThresholdFrequency, tipThTI, tipThTemp,
   tipKpLabel, tipKpDrT, tipKpDrH, tipKpTI, tipKpTemp,
 } from '@/tooltips/sweepTooltips'
 interface KeyPoint {
@@ -58,7 +58,9 @@ export default defineComponent({
   },
 
   computed: {
-    tipThThreshold(): string { return tipThThreshold(this.sweepParam === 'field') },
+    tipThThreshold(): string {
+      return this.sweepParam === 'field' ? tipThThresholdField() : tipThThresholdFrequency()
+    },
     tipThTI():        string { return tipThTI() },
     tipThTemp():      string { return tipThTemp() },
   },

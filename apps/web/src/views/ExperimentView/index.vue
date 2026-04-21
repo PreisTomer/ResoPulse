@@ -123,7 +123,7 @@
 
   <!-- Sticky live cell view - suppressed when protocol guide is open (right side conflict) -->
   <StickyCellView
-    v-if="showStickySimView && !guideOpen"
+    v-if="isStickyCellViewVisible"
     :cells="cells"
     @scroll-to-cells="scrollToCells"
     @full-reset="applyTargetDefaults"
@@ -263,6 +263,10 @@ export default defineComponent({
 
     guideOpen(): boolean {
       return this.uiStore.protocolGuideOpen
+    },
+
+    isStickyCellViewVisible(): boolean {
+      return this.showStickySimView && !this.guideOpen
     },
 
 

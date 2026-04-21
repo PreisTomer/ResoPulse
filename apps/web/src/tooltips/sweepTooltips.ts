@@ -21,22 +21,28 @@ Operating within this window maximises selectivity.
 Use the <span class="tip-val">⭐ Set to Window Center</span> button in the snap bar to apply ${center} ${unit} to the active parameter.`
 }
 
-export function tipNoWindow(isField: boolean): string {
+function buildTipNoWindow(label: string): string {
   return `<strong>No Selectivity Window</strong>
-No ${isField ? 'field intensity' : 'frequency'} range found where:
+No ${label} range found where:
   DR_target ≥ 85%  AND  DR_healthy &lt; 50%
 
 Try increasing the sweep maximum, adjusting pulse width,
 or switching from CW to pulsed mode for better selectivity.`
 }
 
-export function tipThThreshold(isField: boolean): string {
+export function tipNoWindowField(): string     { return buildTipNoWindow('field intensity') }
+export function tipNoWindowFrequency(): string { return buildTipNoWindow('frequency') }
+
+function buildTipThThreshold(label: string): string {
   return `<strong>Operating Threshold</strong>
-Key ${isField ? 'field' : 'frequency'} value where target DR crosses a biophysical milestone:
+Key ${label} value where target DR crosses a biophysical milestone:
   50%, reversible electroporation onset
   85%, lysis countdown arms (irreversible pore accumulation)
   100%, lysis threshold reached`
 }
+
+export function tipThThresholdField(): string     { return buildTipThThreshold('field') }
+export function tipThThresholdFrequency(): string { return buildTipThThreshold('frequency') }
 
 export function tipThTI(): string {
   const { TI_STRONG: s, TI_MARGINAL: m } = THRESHOLDS

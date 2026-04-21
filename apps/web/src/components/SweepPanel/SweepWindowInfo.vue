@@ -36,7 +36,7 @@
 <script lang="ts">
 import { defineComponent, type PropType } from 'vue'
 
-import { tipWindow, tipNoWindow } from '@/tooltips/sweepTooltips'
+import { tipWindow, tipNoWindowField, tipNoWindowFrequency } from '@/tooltips/sweepTooltips'
 
 import { UNIT } from '@/constants/units'
 import { EMIT } from '@/constants/emitEvents'
@@ -67,7 +67,9 @@ export default defineComponent({
         unit:   this.sweepParam === 'field' ? UNIT.V_PER_CM : UNIT.KHZ,
       })
     },
-    tipNoWindow(): string { return tipNoWindow(this.sweepParam === 'field') },
+    tipNoWindow(): string {
+      return this.sweepParam === 'field' ? tipNoWindowField() : tipNoWindowFrequency()
+    },
   },
 })
 </script>

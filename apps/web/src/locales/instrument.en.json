@@ -196,7 +196,7 @@
         "serial": "Serial LCR"
       },
       "quick": {
-        "title":   "Quick Start — Verify the full pipeline with no hardware",
+        "title":   "Quick Start: Verify the full pipeline with no hardware",
         "sub":     "Run these steps first. Takes about 2 minutes. Confirms the bridge, backend, and UI are all communicating before connecting real equipment.",
         "s1Label": "Confirm Python 3.12 is installed",
         "s1Note":  "Open a terminal (Command Prompt or PowerShell on Windows). You should see Python 3.12.x or later.",
@@ -212,7 +212,7 @@
         "s6Note":  "Click the Live Hardware button above. The status dot should turn green within 2 seconds. If it does, the full pipeline is working correctly."
       },
       "btx": {
-        "title":     "BTX ECM 830 / ECM 2001 — RS-232 Serial",
+        "title":     "BTX ECM 830 / ECM 2001 (RS-232 Serial)",
         "sub":       "Reads post-pulse cuvette resistance after each electroporation pulse. Requires a USB-to-serial adapter if your computer has no DB9 port.",
         "s1Label":   "Connect the RS-232 cable and discover the port",
         "s1Note":    "The probe command lists all serial ports detected on this machine. Use the port name shown (e.g. COM4 on Windows, /dev/ttyUSB0 on Linux).",
@@ -224,7 +224,7 @@
         "warn":      "The BTX ECM RS-232 protocol is not publicly documented by Harvard Apparatus. The driver uses a best-effort parser based on community captures. If readings do not appear, run with --log-level DEBUG to inspect the raw serial lines, then adjust the driver if your firmware uses a different response format."
       },
       "visa": {
-        "title":   "VISA-Compatible LCR Meter — GPIB, USB, or LAN",
+        "title":   "VISA-Compatible LCR Meter (GPIB, USB, or LAN)",
         "sub":     "Tested with Keysight E4980A, Hioki IM3533, Agilent 4284A. Any instrument that responds to standard SCPI commands (IEEE 488.2) should work.",
         "s1Label": "Install a VISA backend",
         "s1Note":  "Choose one option: NI-VISA (download from ni.com/visa, free account required), or Keysight IO Libraries (keysight.com/iosuite). For USB and LAN instruments, pyvisa-py is already included and works without installing NI-VISA on most systems.",
@@ -234,7 +234,7 @@
         "s3Note":  "The bridge configures the instrument for series-Z measurements (ZS-RS SCPI function) and triggers readings at the frequency set by BRIDGE_MEAS_FREQ_HZ in your .env file."
       },
       "serial": {
-        "title":   "Generic ASCII Serial LCR — DE-5000, Peak LCR45, BK 889B",
+        "title":   "Generic ASCII Serial LCR (DE-5000, Peak LCR45, BK 889B)",
         "sub":     "For instruments that stream comma or space-delimited Z values over serial without requiring SCPI commands. The bridge reads one line per poll and parses the first numeric tokens as Z_real and Z_imag.",
         "s1Label": "Set the measurement frequency on the instrument front panel",
         "s1Note":  "These instruments cannot be commanded remotely. Set the test frequency directly on the device, then enter the same value as BRIDGE_MEAS_FREQ_HZ in the .env file so the UI reports it correctly.",

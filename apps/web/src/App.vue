@@ -10,7 +10,7 @@
     <main>
       <RouterView />
     </main>
-    <ProtocolGuidePanel v-if="showGuidePanel && !isAuthPage" />
+    <ProtocolGuidePanel v-if="isGuidePanelVisible" />
     <TermsGate v-if="showTermsGate" @accepted="onTermsAccepted" />
     <footer class="app-footer">
       <div class="app-footer__row">
@@ -99,6 +99,10 @@ export default defineComponent({
 
     showGuidePanel(): boolean {
       return ([ROUTE.EXPERIMENT, ROUTE.INSTRUMENT, ROUTE.REPORTS] as string[]).includes(this.$route.path)
+    },
+
+    isGuidePanelVisible(): boolean {
+      return this.showGuidePanel && !this.isAuthPage
     },
   },
 
