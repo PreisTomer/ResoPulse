@@ -79,8 +79,8 @@ import { formatFieldVcm, FIELD_KV_THRESHOLD } from '@/utils/format'
 import { tempCorrectedVth } from '@/utils/physics'
 import { tipField, tipTargetBadge, tipHealthyBadge } from '@/tooltips/sliderTooltips'
 
-import { CELL_LABEL, THERMAL_LEVEL, WAVEFORM } from '@/constants/strings'
-import { THRESHOLDS, H_FIRE_THRESHOLD_MULTIPLIER } from '@/constants/physics'
+import { CELL_LABEL, THERMAL_LEVEL } from '@/constants/strings'
+import { THRESHOLDS } from '@/constants/physics'
 import type { SliderRange } from '@/constants/sliderBounds'
 
 // 400 px horizontal drag = full slider range
@@ -155,7 +155,7 @@ export default defineComponent({
     },
 
     tipTargetBadgeLabel(): string {
-      const hfireMult  = this.cellStore.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
+      const hfireMult  = this.cellStore.hFireMultiplier
       const tEffMv     = tempCorrectedVth(this.cellStore.target.thresholdVoltage, this.cellStore.targetTemp, this.cellStore.effectivePulseCount) * hfireMult * 1000
       const targetWithEff = { ...this.cellStore.target as Parameters<typeof tipTargetBadge>[0]['target'], effThresholdMv: tEffMv }
       return tipTargetBadge({
@@ -170,7 +170,7 @@ export default defineComponent({
     },
 
     tipHealthyBadgeLabel(): string {
-      const hfireMult = this.cellStore.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
+      const hfireMult = this.cellStore.hFireMultiplier
       const hEffMv    = tempCorrectedVth(this.cellStore.healthy.thresholdVoltage, this.cellStore.healthyTemp, this.cellStore.effectivePulseCount) * hfireMult * 1000
       return tipHealthyBadge({
         isResonanceMode:       this.cellStore.isResonanceMode,

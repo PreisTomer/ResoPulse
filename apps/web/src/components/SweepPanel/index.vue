@@ -62,7 +62,6 @@ import { WAVEFORM, CELL_CATEGORY } from '@/constants/strings'
 import {
   THRESHOLDS, DEFAULT_CAPSID_Q, NEAR_ZERO_DR,
   WF_CW, WF_PULSED, BODY_TEMP_C,
-  H_FIRE_THRESHOLD_MULTIPLIER,
 } from '@/constants/physics'
 import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'
@@ -109,13 +108,7 @@ export default defineComponent({
     ICON() { return ICON },
     ...mapStores(useCellStore, useTokenStore),
 
-    isResonanceTarget(): boolean {
-      const cat = this.cellStore.targetCellCategory
-      const t = this.cellStore.target as CellConfig & { resonantFreqGHz?: number; resonantThresholdVcm?: number }
-      return (cat === CELL_CATEGORY.BACTERIA || cat === CELL_CATEGORY.VIRUS) &&
-        !!t.resonantFreqGHz && !!t.resonantThresholdVcm &&
-        this.cellStore.isResonanceMode
-    },
+    isResonanceTarget(): boolean { return this.cellStore.isResonanceTarget },
 
     // In acoustic resonance mode, default to 2×f_res so the Lorentzian peak is visible.
     // In Schwan/IRE mode: mammalian=5 MHz, bacteria=200 MHz, virus=500 MHz.
@@ -165,7 +158,7 @@ export default defineComponent({
       const tauH = computeTau(healthy, sigma_e)
       const tauT = computeTau(target,  sigma_e)
       const isPulsed   = waveform === WAVEFORM.PULSED || waveform === WAVEFORM.H_FIRE
-      const hfireMult  = waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
+      const hfireMult  = cellStore.hFireMultiplier
       const pefH = isPulsed ? computePulseStepResponse(tauH, pwNs) : 1.0
       const pefT = isPulsed && !this.isResonanceTarget
         ? computePulseStepResponse(tauT, pwNs)

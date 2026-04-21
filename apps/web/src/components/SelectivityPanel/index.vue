@@ -116,8 +116,8 @@ import { safeRatio, tempCorrectedVth } from '@/utils/physics'
 import { formatPct } from '@/utils/format'
 import { tipTiRange, tipSelectivity, tipSmallCellNote } from '@/tooltips/selectivityTooltips'
 
-import { THRESHOLDS, NEAR_ZERO_VM, H_FIRE_THRESHOLD_MULTIPLIER } from '@/constants/physics'
-import { CELL_CATEGORY, CELL_GROUP, CHART_MODE, WAVEFORM } from '@/constants/strings'
+import { THRESHOLDS, NEAR_ZERO_VM } from '@/constants/physics'
+import { CELL_CATEGORY, CELL_GROUP, CHART_MODE } from '@/constants/strings'
 import { CELL_PRESETS } from '@/constants/cellLibrary'
 import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'
@@ -158,9 +158,7 @@ export default defineComponent({
     isResonanceSectionVisible(): boolean { return this.isResonanceTarget && this.cellStore.isResonanceMode },
 
     isResonanceTarget(): boolean {
-      const cat = this.cellStore.targetCellCategory
-      const t = this.cellStore.target as { resonantFreqGHz?: number; resonantThresholdVcm?: number }
-      return (cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) && !!t.resonantFreqGHz && !!t.resonantThresholdVcm && this.cellStore.isResonanceMode
+      return this.cellStore.isResonanceTarget
     },
 
     toggleSubtitle(): string {
@@ -250,7 +248,7 @@ export default defineComponent({
     windowScorePct(): string { return formatPct(this.windowScore) },
 
     cellSizeParams(): { rT: number; rH: number; vthT: number; vthH: number } {
-      const hfireMult = this.cellStore.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
+      const hfireMult = this.cellStore.hFireMultiplier
       return {
         rT:   this.cellStore.target.radius,
         rH:   this.cellStore.healthy.radius,

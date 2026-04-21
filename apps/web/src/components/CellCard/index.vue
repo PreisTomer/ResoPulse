@@ -75,8 +75,8 @@ import {
 
 import { CELL_PRESETS } from '@/constants/cellLibrary'
 import { EDITABLE_PARAMS, EDITABLE_PARAMS_ACOUSTIC, THRESHOLDS } from '@/constants/cellCard'
-import { CELL_STATE, CELL_TYPE, CELL_CATEGORY, WAVEFORM } from '@/constants/strings'
-import { H_FIRE_THRESHOLD_MULTIPLIER, THIN_SHELL_RATIO_WARN } from '@/constants/physics'
+import { CELL_STATE, CELL_TYPE, CELL_CATEGORY } from '@/constants/strings'
+import { THIN_SHELL_RATIO_WARN } from '@/constants/physics'
 import { UNIT } from '@/constants/units'
 import { EMIT } from '@/constants/emitEvents'
 
@@ -274,7 +274,7 @@ export default defineComponent({
         })
       }
       const cell        = this.type === CELL_TYPE.HEALTHY ? this.cellStore.healthy : this.cellStore.target
-      const hfireMult   = this.cellStore.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
+      const hfireMult   = this.cellStore.hFireMultiplier
       return tipVmFn({
         vmDisplay:        this.vmDisplay,
         disruptionRatio:  this.disruptionRatio,

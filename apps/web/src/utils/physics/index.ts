@@ -1,7 +1,8 @@
 // Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 
 // Biophysics utilities - Schwan single-shell model, SAR, nsEP, acoustic resonance, EM skin depth
-import { SCHWAN_SPHERE_FACTOR, WF_CW, EPSILON_R_CYTOPLASM, SIGMA_MEMBRANE_SI, TWO_PI, POP_LYSIS_GAUSS_N, POP_LYSIS_GAUSS_Z_MAX, BODY_TEMP_C, TEMP_EP_COEFF, TEMP_EP_CLAMP_MIN, ELECTROSENSITIZATION_EXPONENT, ELECTROSENSITIZATION_CLAMP_MIN, EPSILON_0, MU_0, MIN_COS_THETA, LYSIS_FIELD_SENTINEL, MIN_PULSE_ENVELOPE, THRESHOLDS, NEWTON_COOLING_LAMBDA, PENNES_BLOOD_COEFF, DEBYE_TAU_AQUEOUS_S, EPS_INF_AQUEOUS } from '@/constants/physics'
+import { SCHWAN_SPHERE_FACTOR, WF_CW, EPSILON_R_CYTOPLASM, SIGMA_MEMBRANE_SI, TWO_PI, POP_LYSIS_GAUSS_N, POP_LYSIS_GAUSS_Z_MAX, BODY_TEMP_C, TEMP_EP_COEFF, TEMP_EP_CLAMP_MIN, ELECTROSENSITIZATION_EXPONENT, ELECTROSENSITIZATION_CLAMP_MIN, EPSILON_0, MU_0, MIN_COS_THETA, LYSIS_FIELD_SENTINEL, MIN_PULSE_ENVELOPE, THRESHOLDS, NEWTON_COOLING_LAMBDA, PENNES_BLOOD_COEFF, DEBYE_TAU_AQUEOUS_S, EPS_INF_AQUEOUS, H_FIRE_THRESHOLD_MULTIPLIER } from '@/constants/physics'
+import { WAVEFORM, CELL_CATEGORY } from '@/constants/strings'
 
 import type { CellConfig } from '@/types/cell'
 
@@ -238,6 +239,36 @@ export function computePulseStepResponse(tau_s: number, pulseWidthNs: number): n
   return 1 - Math.exp(-(pulseWidthNs * NS_TO_S) / tau_s)
 }
 
+// Pulse envelope factor with the MIN_PULSE_ENVELOPE floor applied. Returns 1.0 when not
+// pulsed (CW) or when the resonance path suppresses RC membrane-charging. Centralises the
+// Math.max(MIN_PULSE_ENVELOPE, 1−exp(−t_p/τ)) pattern used in the heatmap canvas, comparison
+// table, socket payload, and store getters — see CLAUDE.md "Selection-Conditional Correctness".
+export function pulseEnvelopeClamped(tau_s: number, pulseWidthNs: number, isPulsed: boolean): number {
+  if (!isPulsed) return 1.0
+  return Math.max(MIN_PULSE_ENVELOPE, computePulseStepResponse(tau_s, pulseWidthNs))
+}
+
+// H-FIRE bipolar charge cancellation raises the effective EP threshold by a fixed multiplier.
+// Applies ONLY to the Schwan EP path. Acoustic resonance (virus/bacteria) is mechanical and
+// must NOT receive this factor — see cellStore.targetDisruptionRatio for the guard.
+export function getHFireMultiplier(waveform: string): number {
+  return waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
+}
+
+// True when current mode + target cell parameters together drive the acoustic-resonance path
+// (chartMode === RESONANCE, category is BACTERIA or VIRUS, and resonant params are populated).
+// Centralises the guard that previously existed as a local computed in 6 components.
+export function isResonanceTargetActive(
+  isResonanceMode: boolean,
+  category: 'mammalian' | 'bacteria' | 'virus',
+  target: CellConfig,
+): boolean {
+  if (!isResonanceMode) return false
+  if (category !== CELL_CATEGORY.VIRUS && category !== CELL_CATEGORY.BACTERIA) return false
+  const t = target as CellConfig & { resonantFreqGHz?: number; resonantThresholdVcm?: number }
+  return !!t.resonantFreqGHz && !!t.resonantThresholdVcm
+}
+
 // ── Acoustic resonance (virus/bacteria) ─────────────────────────────────────
 
 // Lorentzian: 1/√(1+(Q·(f/f₀−f₀/f))²), =1 at f=f_res. Tsen 2007; Dykeman 2010.
@@ -429,9 +460,8 @@ export function computeLysisFieldFromParams(
 ): number {
   const cell = { radius: radiusUm, membraneThickness: memThicknessNm, dielectricConstant: dielectricConst, conductivity: conductivitySi } as CellConfig
   const tau   = computeTau(cell, sigmaE)
-  const pef   = (waveform === 'pulsed' || waveform === 'hfire')
-    ? Math.max(MIN_PULSE_ENVELOPE, computePulseStepResponse(tau, pulseWidthNs))
-    : 1.0
+  const isPulsed = waveform === WAVEFORM.PULSED || waveform === WAVEFORM.H_FIRE
+  const pef   = pulseEnvelopeClamped(tau, pulseWidthNs, isPulsed)
   if (cosTheta < 1e-6) return 100_000
   const omega = TWO_PI * freqKhz * KHZ_TO_HZ
   const E_vm  = thresholdV * hfireMult * Math.sqrt(1 + (omega * tau) ** 2) /

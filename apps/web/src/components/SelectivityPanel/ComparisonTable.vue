@@ -33,11 +33,11 @@ import { mapStores } from 'pinia'
 
 import { useCellStore } from '@/stores/cellStore'
 
-import { computeSchwan, computeResonantDisruption, safeRatio, computeTau, computePulseStepResponse, tempCorrectedVth } from '@/utils/physics'
+import { computeSchwan, computeResonantDisruption, safeRatio, computeTau, pulseEnvelopeClamped, tempCorrectedVth } from '@/utils/physics'
 import { tipCmpTitle, tipCmpRow } from '@/tooltips/selectivityTooltips'
 
 import { CELL_PRESETS, GROUP_COLORS } from '@/constants/cellLibrary'
-import { DEFAULT_CAPSID_Q, THRESHOLDS, NEAR_ZERO_DR, H_FIRE_THRESHOLD_MULTIPLIER, BODY_TEMP_C, MIN_PULSE_ENVELOPE } from '@/constants/physics'
+import { DEFAULT_CAPSID_Q, THRESHOLDS, NEAR_ZERO_DR, BODY_TEMP_C } from '@/constants/physics'
 import { CELL_CATEGORY, CELL_GROUP, WAVEFORM } from '@/constants/strings'
 import { UNIT } from '@/constants/units'
 
@@ -66,14 +66,14 @@ export default defineComponent({
       const field     = this.cellStore.fieldIntensity
       const pwNs      = this.cellStore.pulseWidthNs
       const isPulsed  = this.cellStore.waveform === WAVEFORM.PULSED || this.cellStore.waveform === WAVEFORM.H_FIRE
-      const hfireMult = this.cellStore.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
+      const hfireMult = this.cellStore.hFireMultiplier
 
       const cat = this.cellStore.targetCellCategory
       const relevantGroup = cat === CELL_CATEGORY.MAMMALIAN ? CELL_GROUP.CANCER : cat
 
       // PEF for the healthy reference cell (frequency-independent, computed once).
       // Use healthyTemp for threshold correction — healthy cell is the live simulated reference.
-      const pefH  = isPulsed ? Math.max(MIN_PULSE_ENVELOPE, computePulseStepResponse(computeTau(this.cellStore.healthy, sigma_e), pwNs)) : 1.0
+      const pefH  = pulseEnvelopeClamped(computeTau(this.cellStore.healthy, sigma_e), pwNs, isPulsed)
       const hVm   = computeSchwan(this.cellStore.healthy, freq, field, sigma_e, cosT)
       const hVthE = tempCorrectedVth(this.cellStore.healthy.thresholdVoltage, this.cellStore.healthyTemp, this.cellStore.effectivePulseCount)
       const hDr   = (hVm * pefH) / (hVthE * hfireMult)
@@ -104,7 +104,7 @@ export default defineComponent({
           } else {
             // Active preset uses live targetTemp; others use BODY_TEMP_C (not live-simulated).
             const schTemp = p.presetId === this.cellStore.target.id ? this.cellStore.targetTemp : BODY_TEMP_C
-            const pefT    = isPulsed ? Math.max(MIN_PULSE_ENVELOPE, computePulseStepResponse(computeTau(p, sigma_e), pwNs)) : 1.0
+            const pefT    = pulseEnvelopeClamped(computeTau(p, sigma_e), pwNs, isPulsed)
             const tVm     = computeSchwan(p, freq, field, sigma_e, cosT)
             // Active preset uses live N; library comparison presets also get N — same protocol, different cell
             const tVthE   = tempCorrectedVth(p.thresholdVoltage, schTemp, this.cellStore.effectivePulseCount)

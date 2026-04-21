@@ -70,7 +70,7 @@ import { computeSchwan, computeTau, computePulseStepResponse, computeResonantDis
 import { C } from '@/theme/colors'
 
 import { WAVEFORM, CELL_CATEGORY } from '@/constants/strings'
-import { THRESHOLDS, DEFAULT_CAPSID_Q, H_FIRE_THRESHOLD_MULTIPLIER } from '@/constants/physics'
+import { THRESHOLDS, DEFAULT_CAPSID_Q } from '@/constants/physics'
 import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'
 import { EMIT } from '@/constants/emitEvents'
@@ -113,11 +113,7 @@ export default defineComponent({
     UNIT()       { return UNIT },
 
     isResonanceTarget(): boolean {
-      const cat = this.cellStore.targetCellCategory
-      const t = this.cellStore.target as CellConfig & { resonantFreqGHz?: number; resonantThresholdVcm?: number }
-      return (cat === CELL_CATEGORY.BACTERIA || cat === CELL_CATEGORY.VIRUS) &&
-        !!(t.resonantFreqGHz && t.resonantThresholdVcm) &&
-        this.cellStore.isResonanceMode
+      return this.cellStore.isResonanceTarget
     },
 
     targetUncPct(): number {
@@ -250,7 +246,7 @@ export default defineComponent({
       const rVar       = this.rVariancePct     / 100
       const vThUncFrac = this.vThVariancePct   / 100
       const isPulsed   = waveform === WAVEFORM.PULSED || waveform === WAVEFORM.H_FIRE
-      const hfireMult  = waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
+      const hfireMult  = cellStore.hFireMultiplier
 
       const sampleDR = (base: CellConfig, sigmaUnc: number, isTarget: boolean): number => {
         // ── Sample biophysical parameters independently (Box-Muller) ────────

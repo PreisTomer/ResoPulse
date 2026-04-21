@@ -44,8 +44,8 @@ import { broadcastStateSync } from '@/services/socket'
 
 import { C } from '@/theme/colors'
 
-import { CELL_CATEGORY, WAVEFORM } from '@/constants/strings'
-import { H_FIRE_THRESHOLD_MULTIPLIER, THRESHOLDS, THERMAL_MA_PEAK_C, THERM_NOURISH_ENTER_C } from '@/constants/physics'
+import { CELL_CATEGORY } from '@/constants/strings'
+import { THRESHOLDS, THERMAL_MA_PEAK_C, THERM_NOURISH_ENTER_C } from '@/constants/physics'
 import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'
 
@@ -268,7 +268,7 @@ export default defineComponent({
       const isAcousticTarget = this.cellStore.targetCellCategory === CELL_CATEGORY.BACTERIA
         || this.cellStore.targetCellCategory === CELL_CATEGORY.VIRUS
 
-      const hfireMult = this.cellStore.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
+      const hfireMult = this.cellStore.hFireMultiplier
       // Resonance targets store their threshold in V/cm (resonantThresholdVcm); Schwan targets in V.
       const tRes = this.cellStore.target as { resonantThresholdVcm?: number }
       // isAcousticRes: true only when the chart is in resonance mode AND the preset has a resonant threshold.

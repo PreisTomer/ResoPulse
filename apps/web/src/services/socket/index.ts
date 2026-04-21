@@ -19,9 +19,9 @@ import type { LogEntry } from '@/stores/experimentStore'
 import { useImpedanceStore } from '@/stores/impedanceStore'
 import { useAiStore } from '@/stores/aiStore'
 
-import { computeTau, computeSchwan, computePulseStepResponse, computeResonantDisruption, computeLysisFieldFromParams, tempCorrectedVth } from '@/utils/physics'
+import { computeTau, computeSchwan, pulseEnvelopeClamped, computeResonantDisruption, computeLysisFieldFromParams, tempCorrectedVth } from '@/utils/physics'
 
-import { MIN_PULSE_ENVELOPE, H_FIRE_THRESHOLD_MULTIPLIER, DEFAULT_CAPSID_Q, THRESHOLDS } from '@/constants/physics'
+import { DEFAULT_CAPSID_Q, THRESHOLDS } from '@/constants/physics'
 
 // URL priority: ?backend=<url> → VITE_BACKEND_URL → localhost:3001
 function resolveBackendUrl(): string {
@@ -230,18 +230,15 @@ export function requestAiOptimization(requestId: string, onResult: AiResultCallb
   const cosT         = store.cosThetaFactor
   const waveform     = store.waveform
   const pulseWidthNs = store.pulseWidthNs
-  const hfireMult    = waveform === 'hfire' ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
+  const hfireMult    = store.hFireMultiplier
   const { khz: optFreqKhz, sel: selectivityAtOptimal } = store.optimalFreqResult
 
   const tauTargetS  = computeTau(store.target,  sigmaE)
   const tauHealthyS = computeTau(store.healthy, sigmaE)
 
   const isPulsedWaveform   = waveform === 'pulsed' || waveform === 'hfire'
-  const pefHealthy         = isPulsedWaveform
-    ? Math.max(MIN_PULSE_ENVELOPE, computePulseStepResponse(tauHealthyS, pulseWidthNs))
-    : 1.0
-  const isResonanceTarget  = store.isResonanceMode &&
-    !!(store.target as { resonantFreqGHz?: number }).resonantFreqGHz
+  const pefHealthy         = pulseEnvelopeClamped(tauHealthyS, pulseWidthNs, isPulsedWaveform)
+  const isResonanceTarget  = store.isResonanceTarget
 
   // Physics baseline: suggest field that brings DR_T ≈ 0.9 at the optimal frequency.
   let suggestedFieldVcm: number
@@ -261,9 +258,7 @@ export function requestAiOptimization(requestId: string, onResult: AiResultCallb
       store.target.conductivity, tempCorrectedVth(store.target.thresholdVoltage, store.targetTemp, store.effectivePulseCount),
       optFreqKhz, sigmaE, waveform, pulseWidthNs, cosT, hfireMult,
     )
-    const pefTarget = isPulsedWaveform
-      ? Math.max(MIN_PULSE_ENVELOPE, computePulseStepResponse(tauTargetS, pulseWidthNs))
-      : 1.0
+    const pefTarget = pulseEnvelopeClamped(tauTargetS, pulseWidthNs, isPulsedWaveform)
     const vmTarget = computeSchwan(store.target, optFreqKhz, suggestedFieldVcm, sigmaE, cosT) * pefTarget
     predDrT = vmTarget / (tempCorrectedVth(store.target.thresholdVoltage, store.targetTemp, store.effectivePulseCount) * hfireMult)
   }

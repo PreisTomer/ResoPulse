@@ -87,8 +87,8 @@ import {
   tipHealthyBar,
 } from '@/tooltips/disruptionBarTooltips'
 
-import { THRESHOLDS, H_FIRE_THRESHOLD_MULTIPLIER } from '@/constants/physics'
-import { CELL_CATEGORY, CELL_LABEL, WAVEFORM } from '@/constants/strings'
+import { THRESHOLDS } from '@/constants/physics'
+import { CELL_CATEGORY, CELL_LABEL } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
 
 export default defineComponent({
@@ -117,9 +117,7 @@ export default defineComponent({
     },
 
     isResonanceTarget(): boolean {
-      const cat = this.cellStore.targetCellCategory
-      const t = this.cellStore.target as { resonantFreqGHz?: number; resonantThresholdVcm?: number }
-      return (cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) && !!t.resonantFreqGHz && !!t.resonantThresholdVcm && this.cellStore.isResonanceMode
+      return this.cellStore.isResonanceTarget
     },
 
     tipTargetPlysis(): string { return tipTargetPlysis(this.lysisTimeDisplay) },
@@ -137,7 +135,7 @@ export default defineComponent({
 
     tipTargetBar(): string {
       const t = this.cellStore.target as { resonantFreqGHz?: number; resonantThresholdVcm?: number }
-      const hfireMult = this.cellStore.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
+      const hfireMult = this.cellStore.hFireMultiplier
       const tVthEff = tempCorrectedVth(this.cellStore.target.thresholdVoltage, this.cellStore.targetTemp, this.cellStore.effectivePulseCount) * hfireMult
       return tipTargetBar({
         pct:                  this.targetRatioPct.toFixed(0),
@@ -152,7 +150,7 @@ export default defineComponent({
     },
 
     tipHealthyBar(): string {
-      const hfireMult = this.cellStore.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
+      const hfireMult = this.cellStore.hFireMultiplier
       const hVthEff = tempCorrectedVth(this.cellStore.healthy.thresholdVoltage, this.cellStore.healthyTemp, this.cellStore.effectivePulseCount) * hfireMult
       return tipHealthyBar({
         pct:               this.healthyRatioPct.toFixed(0),

@@ -1,9 +1,9 @@
 // Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 
-import { computeSchwan, computeResonantDisruption, computeDepCmReal, tempCorrectedVth } from '@/utils/physics'
+import { computeSchwan, computeResonantDisruption, computeDepCmReal, tempCorrectedVth, getHFireMultiplier } from '@/utils/physics'
 
-import { DEFAULT_CAPSID_Q, THRESHOLDS, H_FIRE_THRESHOLD_MULTIPLIER } from '@/constants/physics'
-import { CELL_CATEGORY, WAVEFORM } from '@/constants/strings'
+import { DEFAULT_CAPSID_Q, THRESHOLDS } from '@/constants/physics'
+import { CELL_CATEGORY } from '@/constants/strings'
 import { MEDIA } from '@/constants/media'
 
 import type { MediumKey } from '@/types/media'
@@ -77,7 +77,7 @@ export function buildHoverTooltip(params: HoverParams): TooltipData | null {
 
   const khz = hz / 1000
   const sigma_e = effectiveSigmaE
-  const hfireMult = waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
+  const hfireMult = getHFireMultiplier(waveform)
   const hVm = computeSchwan(healthy, khz, fieldIntensity, sigma_e, cosThetaFactor) * 1000
   const tVm = computeSchwan(target,  khz, fieldIntensity, sigma_e, cosThetaFactor) * 1000
   const hVthEffMv = tempCorrectedVth(healthy.thresholdVoltage, healthyTemp, lysisNPulses) * hfireMult * 1000

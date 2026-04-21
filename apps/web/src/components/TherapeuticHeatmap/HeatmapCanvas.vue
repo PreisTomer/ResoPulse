@@ -21,6 +21,7 @@ import { broadcastStateSync } from '@/services/socket'
 
 import {
   computeSchwan, computeTau, computeSAR, computeResonantDisruption, tempCorrectedVth,
+  pulseEnvelopeClamped,
 } from '@/utils/physics'
 import { formatFreqKHz } from '@/utils/format'
 import { tipCanvas, tipHoverDynamic } from '@/tooltips/heatmapTooltips'
@@ -37,8 +38,8 @@ import {
   HMAP_CANVAS_FONT_AXIS, HMAP_CANVAS_FONT_TINY, HMAP_LABEL_OPT, HMAP_LABEL_FRES,
 } from '@/constants/heatmap'
 import {
-  BODY_TEMP_C, NEWTON_COOLING_LAMBDA, PENNES_BLOOD_COEFF, WF_CW, WF_PULSED, MIN_PULSE_ENVELOPE,
-  H_FIRE_THRESHOLD_MULTIPLIER, MIN_COS_THETA,
+  BODY_TEMP_C, NEWTON_COOLING_LAMBDA, PENNES_BLOOD_COEFF, WF_CW, WF_PULSED,
+  MIN_COS_THETA,
 } from '@/constants/physics'
 import { ICON } from '@/constants/icons'
 import { EMIT } from '@/constants/emitEvents'
@@ -78,11 +79,11 @@ export default defineComponent({
       const sigma      = s.effectiveSigmaE
       const cosT       = s.cosThetaFactor
       const isPulsed   = s.waveform === WAVEFORM.PULSED || s.waveform === WAVEFORM.H_FIRE
-      const hfireMult  = s.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
+      const hfireMult  = s.hFireMultiplier
       const pw_ns      = s.pulseWidthNs
 
       const hTau = computeTau(s.healthy, sigma)
-      const pefH = isPulsed ? Math.max(MIN_PULSE_ENVELOPE, 1 - Math.exp(-pw_ns * 1e-9 / hTau)) : 1.0
+      const pefH = pulseEnvelopeClamped(hTau, pw_ns, isPulsed)
       // Lysis field: E_lysis = Vth_eff / (1.5 × R × cosθ × pef). cosT=0 (90° orientation) means
       // field cannot couple — fall back to a wide axis so the chart still renders.
       const hVthEff = tempCorrectedVth(s.healthy.thresholdVoltage, s.healthyTemp, s.effectivePulseCount) * hfireMult
@@ -99,7 +100,7 @@ export default defineComponent({
         targetLysis = tempCorrectedVth(tResVth, s.targetTemp)
       } else {
         const tTau = computeTau(s.target, sigma)
-        const pefT = isPulsed ? Math.max(MIN_PULSE_ENVELOPE, 1 - Math.exp(-pw_ns * 1e-9 / tTau)) : 1.0
+        const pefT = pulseEnvelopeClamped(tTau, pw_ns, isPulsed)
         const tVthEff = tempCorrectedVth(s.target.thresholdVoltage, s.targetTemp, s.effectivePulseCount) * hfireMult
         targetLysis = cosT < 1e-6
           ? 1000
@@ -219,13 +220,13 @@ export default defineComponent({
       const sigma_e    = s.effectiveSigmaE
       const cosT       = s.cosThetaFactor
       const isPulsed   = s.waveform === WAVEFORM.PULSED || s.waveform === WAVEFORM.H_FIRE
-      const hfireMult  = s.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
+      const hfireMult  = s.hFireMultiplier
       const wf         = isPulsed ? WF_PULSED : WF_CW
       const dc         = s.waveform === WAVEFORM.CW ? 1.0 : s.dutyCycle
       const pw_ns      = s.pulseWidthNs
 
       const hTau = computeTau(s.healthy, sigma_e)
-      const hPEF = isPulsed ? Math.max(MIN_PULSE_ENVELOPE, 1 - Math.exp(-pw_ns * 1e-9 / hTau)) : 1.0
+      const hPEF = pulseEnvelopeClamped(hTau, pw_ns, isPulsed)
       const hCp  = s.healthy.specificHeatCapacity
       const hSAR = computeSAR(s.healthy, fieldVcm, sigma_e, wf)
       const hLambdaPerf = s.perfusionRate * PENNES_BLOOD_COEFF / hCp
@@ -247,7 +248,7 @@ export default defineComponent({
           const tLambdaPerf = s.perfusionRate * PENNES_BLOOD_COEFF / tCp
           const tTss = BODY_TEMP_C + tSAR * dc / ((NEWTON_COOLING_LAMBDA + tLambdaPerf) * tCp)
           const tTau = computeTau(s.target, sigma_e)
-          const tPEF = isPulsed ? Math.max(MIN_PULSE_ENVELOPE, 1 - Math.exp(-pw_ns * 1e-9 / tTau)) : 1.0
+          const tPEF = pulseEnvelopeClamped(tTau, pw_ns, isPulsed)
           const tVm  = computeSchwan(s.target, freqKHz, fieldVcm, sigma_e, cosT)
           tDR = (tVm * tPEF) / (tempCorrectedVth(s.target.thresholdVoltage, tTss, s.effectivePulseCount) * hfireMult)
         }
@@ -257,7 +258,7 @@ export default defineComponent({
         const tLambdaPerf = s.perfusionRate * PENNES_BLOOD_COEFF / tCp
         const tTss = BODY_TEMP_C + tSAR * dc / ((NEWTON_COOLING_LAMBDA + tLambdaPerf) * tCp)
         const tTau = computeTau(s.target, sigma_e)
-        const tPEF = isPulsed ? Math.max(MIN_PULSE_ENVELOPE, 1 - Math.exp(-pw_ns * 1e-9 / tTau)) : 1.0
+        const tPEF = pulseEnvelopeClamped(tTau, pw_ns, isPulsed)
         const tVm  = computeSchwan(s.target, freqKHz, fieldVcm, sigma_e, cosT)
         tDR = (tVm * tPEF) / (tempCorrectedVth(s.target.thresholdVoltage, tTss, s.effectivePulseCount) * hfireMult)
       }
@@ -277,19 +278,19 @@ export default defineComponent({
       const sigma_e    = s.effectiveSigmaE
       const cosT       = s.cosThetaFactor
       const isPulsed   = s.waveform === WAVEFORM.PULSED || s.waveform === WAVEFORM.H_FIRE
-      const hfireMult  = s.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
+      const hfireMult  = s.hFireMultiplier
       const wf         = isPulsed ? WF_PULSED : WF_CW
       const dc         = s.waveform === WAVEFORM.CW ? 1.0 : s.dutyCycle
       const pw_ns      = s.pulseWidthNs
       const isRes      = s.isResonanceMode
 
       const hTau        = computeTau(s.healthy, sigma_e)
-      const hPEF        = isPulsed ? Math.max(MIN_PULSE_ENVELOPE, 1 - Math.exp(-pw_ns * 1e-9 / hTau)) : 1.0
+      const hPEF        = pulseEnvelopeClamped(hTau, pw_ns, isPulsed)
       const hCp         = s.healthy.specificHeatCapacity
       const hLambdaPerf = s.perfusionRate * PENNES_BLOOD_COEFF / hCp
 
       const tTau        = isRes ? 0 : computeTau(s.target, sigma_e)
-      const tPEF        = (isPulsed && !isRes) ? Math.max(MIN_PULSE_ENVELOPE, 1 - Math.exp(-pw_ns * 1e-9 / tTau)) : 1.0
+      const tPEF        = pulseEnvelopeClamped(tTau, pw_ns, isPulsed && !isRes)
       const tCp         = s.target.specificHeatCapacity
       const tLambdaPerf = s.perfusionRate * PENNES_BLOOD_COEFF / tCp
 
@@ -639,12 +640,12 @@ export default defineComponent({
       const s          = this.cellStore, sigma_e = s.effectiveSigmaE
       const cosT       = s.cosThetaFactor
       const isHoverPulsed  = s.waveform === WAVEFORM.PULSED || s.waveform === WAVEFORM.H_FIRE
-      const hoverHfireMult = s.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
+      const hoverHfireMult = s.hFireMultiplier
       const wf             = isHoverPulsed ? WF_PULSED : WF_CW
       const dc             = s.waveform === WAVEFORM.CW ? 1.0 : s.dutyCycle, pw_ns = s.pulseWidthNs
       const hCp    = s.healthy.specificHeatCapacity
       const hTau   = computeTau(s.healthy, sigma_e)
-      const hPEF   = isHoverPulsed ? Math.max(MIN_PULSE_ENVELOPE, 1 - Math.exp(-pw_ns * 1e-9 / hTau)) : 1.0
+      const hPEF   = pulseEnvelopeClamped(hTau, pw_ns, isHoverPulsed)
       const hSAR   = computeSAR(s.healthy, fieldVcm, sigma_e, wf)
       const hLPerf = s.perfusionRate * PENNES_BLOOD_COEFF / hCp
       const hTss   = BODY_TEMP_C + hSAR * dc / ((NEWTON_COOLING_LAMBDA + hLPerf) * hCp)
@@ -669,7 +670,7 @@ export default defineComponent({
           const tLPerf = s.perfusionRate * PENNES_BLOOD_COEFF / tCp
           const tTss = BODY_TEMP_C + tSAR * dc / ((NEWTON_COOLING_LAMBDA + tLPerf) * tCp)
           const tTau = computeTau(s.target, sigma_e)
-          const tPEF = isHoverPulsed ? Math.max(MIN_PULSE_ENVELOPE, 1 - Math.exp(-pw_ns * 1e-9 / tTau)) : 1.0
+          const tPEF = pulseEnvelopeClamped(tTau, pw_ns, isHoverPulsed)
           const tVm  = computeSchwan(s.target, freqKHz, fieldVcm, sigma_e, cosT)
           tDR = (tVm * tPEF) / (tempCorrectedVth(s.target.thresholdVoltage, tTss, s.effectivePulseCount) * hoverHfireMult)
         }
@@ -679,7 +680,7 @@ export default defineComponent({
         const tLPerf = s.perfusionRate * PENNES_BLOOD_COEFF / tCp
         const tTss = BODY_TEMP_C + tSAR * dc / ((NEWTON_COOLING_LAMBDA + tLPerf) * tCp)
         const tTau = computeTau(s.target, sigma_e)
-        const tPEF = isHoverPulsed ? Math.max(MIN_PULSE_ENVELOPE, 1 - Math.exp(-pw_ns * 1e-9 / tTau)) : 1.0
+        const tPEF = pulseEnvelopeClamped(tTau, pw_ns, isHoverPulsed)
         const tVm  = computeSchwan(s.target, freqKHz, fieldVcm, sigma_e, cosT)
         tDR = (tVm * tPEF) / (tempCorrectedVth(s.target.thresholdVoltage, tTss, s.effectivePulseCount) * hoverHfireMult)
       }

@@ -50,9 +50,7 @@ export default defineComponent({
     ICON()       { return ICON },
 
     isResonanceTarget(): boolean {
-      const cat = this.cellStore.targetCellCategory
-      const t = this.cellStore.target as { resonantFreqGHz?: number; resonantThresholdVcm?: number }
-      return (cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) && !!t.resonantFreqGHz && !!t.resonantThresholdVcm && this.cellStore.isResonanceMode
+      return this.cellStore.isResonanceTarget
     },
 
     badge(): { label: string } {

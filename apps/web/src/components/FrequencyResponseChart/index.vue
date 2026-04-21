@@ -33,8 +33,7 @@ import { computeFc, computeTau, tempCorrectedVth } from '@/utils/physics'
 import { C } from '@/theme/colors'
 
 import { CELL_PRESETS, GROUP_COLORS } from '@/constants/cellLibrary'
-import { H_FIRE_THRESHOLD_MULTIPLIER } from '@/constants/physics'
-import { CELL_CATEGORY, WAVEFORM } from '@/constants/strings'
+import { CELL_CATEGORY } from '@/constants/strings'
 import { MEDIA } from '@/constants/media'
 import { UNIT } from '@/constants/units'
 
@@ -490,7 +489,7 @@ export default defineComponent({
         ...(this._yScale!.domain()),
       ]
       const maxVm = allVm[1] ?? 100
-      const thrHfireMult = this.cellStore.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
+      const thrHfireMult = this.cellStore.hFireMultiplier
 
       drawThresholds(
         g.select<SVGGElement>('.thresholds'),

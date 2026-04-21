@@ -10,7 +10,7 @@ import type { StatePacket } from '@resopulse/shared-types'
 import { useExperimentStore } from '@/stores/experimentStore'
 import { useUserPresetsStore } from '@/stores/userPresetsStore'
 
-import { computeSchwan, computeSAR, computeIntracellularDebyeSAR, computeSteadyStateTemp, computeFc, computeTau, computeNuclearTau, computeResonantDisruption, computeNuclearVm, computeSkinDepthMm, computeDepCmReal, computeDepCrossoverKHz, computeDepSecondCrossoverKHz, computePopulationLysisFraction, safeRatio, tempCorrectedVth, computePulseEnvelope, computeLysisField, computeSigmaUncertaintyFactor } from '@/utils/physics'
+import { computeSchwan, computeSAR, computeIntracellularDebyeSAR, computeSteadyStateTemp, computeFc, computeTau, computeNuclearTau, computeResonantDisruption, computeNuclearVm, computeSkinDepthMm, computeDepCmReal, computeDepCrossoverKHz, computeDepSecondCrossoverKHz, computePopulationLysisFraction, safeRatio, tempCorrectedVth, computePulseEnvelope, computeLysisField, computeSigmaUncertaintyFactor, getHFireMultiplier, isResonanceTargetActive } from '@/utils/physics'
 
 import { cellConfigs } from '@/constants/defaultCells'
 import { CELL_PRESETS } from '@/constants/cellLibrary'
@@ -29,7 +29,6 @@ import {
   TWO_PI,
   WF_CW,
   WF_PULSED,
-  H_FIRE_THRESHOLD_MULTIPLIER,
   THERMAL_MA_PEAK_C,
   TEMP_UPDATE_INTERVAL_MS,
   MIN_COS_THETA,
@@ -135,6 +134,11 @@ export const useCellStore = defineStore('cell', {
     cosThetaFactor: (state): number => Math.abs(Math.cos(state.orientationDeg * Math.PI / 180)),
     isResonanceMode: (state): boolean => state.chartMode === CHART_MODE.RESONANCE,
 
+    // H-FIRE threshold multiplier for EP path only. Centralises the `waveform === H_FIRE ? 1.75 : 1.0`
+    // ternary that previously lived inline in 13 files. Acoustic resonance getters MUST NOT apply
+    // this factor — see targetDisruptionRatio guard.
+    hFireMultiplier: (state): number => getHFireMultiplier(state.waveform),
+
     // CW: no pulse sequence, so N collapses to 1 (electrosensitization cannot apply).
     effectivePulseCount: (state): number => state.waveform === WAVEFORM.CW ? 1 : state.lysisNPulses,
 
@@ -161,6 +165,14 @@ export const useCellStore = defineStore('cell', {
       if (state.target.radius < THRESHOLDS.RADIUS_VIRUS_MAX)    return CELL_CATEGORY.VIRUS
       if (state.target.radius < THRESHOLDS.RADIUS_BACTERIA_MAX) return CELL_CATEGORY.BACTERIA
       return CELL_CATEGORY.MAMMALIAN
+    },
+
+    // True when current mode + target cell together drive the acoustic-resonance physics path.
+    // Consolidates the identical `isResonanceTarget` computed previously duplicated in SweepPanel,
+    // PopulationPanel, SelectivityPanel/index, ModeBadge, DisruptionBars, and VmSarGrid.
+    isResonanceTarget(): boolean {
+      const state = this as CellStoreState
+      return isResonanceTargetActive(this.isResonanceMode, this.targetCellCategory, state.target)
     },
 
     systemReady: (state): boolean =>
@@ -211,7 +223,7 @@ export const useCellStore = defineStore('cell', {
 
     healthyDisruptionRatio(): number {
       const state = this as CellStoreState
-      const hfireMult = state.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
+      const hfireMult = this.hFireMultiplier
       const vthEff = tempCorrectedVth(state.healthy.thresholdVoltage, state.healthyTemp, this.effectivePulseCount)
       return (this.healthyVm * this.pulseEnvelopeFactorHealthy) / (vthEff * hfireMult)
     },
@@ -220,7 +232,7 @@ export const useCellStore = defineStore('cell', {
       const state = this as CellStoreState
       const cat = this.targetCellCategory
       const t = state.target as CellConfig & { resonantFreqGHz?: number; capsidQ?: number; resonantThresholdVcm?: number }
-      const hfireMult = state.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
+      const hfireMult = this.hFireMultiplier
       if (
         this.isResonanceMode &&
         (cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) &&
@@ -326,7 +338,7 @@ export const useCellStore = defineStore('cell', {
       const pefT    = this.pulseEnvelopeFactorTarget
       const pefH    = this.pulseEnvelopeFactorHealthy
       // Apply same temperature + electrosensitization correction + H-FIRE multiplier as the live DR getters
-      const hfireMult = state.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
+      const hfireMult = this.hFireMultiplier
       const vthT = tempCorrectedVth(state.target.thresholdVoltage, state.targetTemp, this.effectivePulseCount)
       const vthH = tempCorrectedVth(state.healthy.thresholdVoltage, state.healthyTemp, this.effectivePulseCount)
       const drTLow  = (vmTLow  * pefT) / (vthT * hfireMult)
@@ -380,7 +392,7 @@ export const useCellStore = defineStore('cell', {
     healthyNuclearDisruptionRatio(): number {
       const state     = this as CellStoreState
       const vth       = tempCorrectedVth(state.healthy.nuclearThresholdVoltage ?? THRESHOLDS.NUCLEAR_VM_DEFAULT, state.healthyTemp, this.effectivePulseCount)
-      const hfireMult = state.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
+      const hfireMult = this.hFireMultiplier
       // Gate by outer PEF so nuclear DR → 0 for t_p << τ_out.
       return (this.healthyNuclearVm * this.pulseEnvelopeFactorHealthy) / (vth * hfireMult)
     },
@@ -388,7 +400,7 @@ export const useCellStore = defineStore('cell', {
     targetNuclearDisruptionRatio(): number {
       const state     = this as CellStoreState
       const vth       = tempCorrectedVth(state.target.nuclearThresholdVoltage ?? THRESHOLDS.NUCLEAR_VM_DEFAULT, state.targetTemp, this.effectivePulseCount)
-      const hfireMult = state.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
+      const hfireMult = this.hFireMultiplier
       return (this.targetNuclearVm * this.pulseEnvelopeFactorTarget) / (vth * hfireMult)
     },
 
@@ -398,13 +410,13 @@ export const useCellStore = defineStore('cell', {
 
     targetLysisField(): number {
       const state     = this as CellStoreState
-      const hfireMult = state.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
+      const hfireMult = this.hFireMultiplier
       return computeLysisField(state.target, state.currentBroadcastFrequency, this.effectiveSigmaE, this.cosThetaFactor, this.pulseEnvelopeFactorTarget, hfireMult, state.targetTemp, this.effectivePulseCount)
     },
 
     healthyLysisField(): number {
       const state     = this as CellStoreState
-      const hfireMult = state.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
+      const hfireMult = this.hFireMultiplier
       return computeLysisField(state.healthy, state.currentBroadcastFrequency, this.effectiveSigmaE, this.cosThetaFactor, this.pulseEnvelopeFactorHealthy, hfireMult, state.healthyTemp, this.effectivePulseCount)
     },
 
@@ -541,7 +553,7 @@ export const useCellStore = defineStore('cell', {
       ) {
         const effThr    = tempCorrectedVth(target.resonantThresholdVcm, state.targetTemp)
         const sigma_e   = this.effectiveSigmaE
-        const hfireMult = state.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
+        const hfireMult = this.hFireMultiplier
         const hThr      = tempCorrectedVth(state.healthy.thresholdVoltage, state.healthyTemp, this.effectivePulseCount) * hfireMult
         // Candidate peaks: mode 1 and (if present) mode 2. Pick whichever delivers better
         // selectivity — for multi-mode cells the higher-frequency mode can give greater
@@ -578,7 +590,7 @@ export const useCellStore = defineStore('cell', {
 
       if (_optFreqCache?.key === cacheKey) return _optFreqCache.result
 
-      const hfireMult = state.waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
+      const hfireMult = this.hFireMultiplier
       const hThr = tempCorrectedVth(state.healthy.thresholdVoltage, state.healthyTemp, this.effectivePulseCount) * hfireMult
       const tThr = tempCorrectedVth(state.target.thresholdVoltage,  state.targetTemp,  this.effectivePulseCount) * hfireMult
       const pefH = this.pulseEnvelopeFactorHealthy
