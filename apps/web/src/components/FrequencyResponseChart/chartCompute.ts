@@ -4,21 +4,17 @@ import { computeSchwan, computeNuclearVm, computeDepCmReal, computeSigmaUncertai
 
 import { logspace } from '@/utils/math'
 
+import { F_MIN_HZ, F_MAX_HZ, N_POINTS, F_POINTS_HZ } from '@/constants/chartDomain'
 import { UNIT } from '@/constants/units'
 
 import type { CellConfig } from '@/types/cell'
 
 // ── Chart geometry constants ──────────────────────────────────────────────────
 
-export const F_MIN_HZ         = 10_000
-export const F_MAX_HZ         = 500_000_000
 export const F_CURSOR_MAX_KHZ = 10_000    // 10 MHz, covers bacteria fc range
-export const N_POINTS         = 200
-export const MARGIN            = { top: 22, right: 130, bottom: 52, left: 54 }
+export const MARGIN           = { top: 22, right: 130, bottom: 52, left: 54 }
 
-export { logspace }
-
-export const F_POINTS_HZ: number[] = logspace(F_MIN_HZ, F_MAX_HZ, N_POINTS)
+export { logspace, F_MIN_HZ, F_MAX_HZ, N_POINTS, F_POINTS_HZ }
 
 // ── Frequency label formatters ────────────────────────────────────────────────
 

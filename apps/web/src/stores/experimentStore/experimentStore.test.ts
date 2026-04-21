@@ -5,6 +5,7 @@ import { describe, it, expect } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 
 import { useExperimentStore } from '@/stores/experimentStore'
+import { STORAGE_KEY } from '@/constants/storageKeys'
 
 // ── Minimal CellSnapshot (matches the internal interface shape) ───────────────
 
@@ -226,7 +227,7 @@ describe('localStorage persistence', () => {
     store1.setSessionName('Persistent Name')
 
     // Manually write state (simulating what $subscribe / persistedstate would do)
-    localStorage.setItem('br-experiment', JSON.stringify({
+    localStorage.setItem(STORAGE_KEY.EXPERIMENT_SESSION, JSON.stringify({
       entries: [], nextId: 1, sessionName: 'Persistent Name',
       sampleDescription: '', sessionNotes: '', cumulativeDoseJkg: 0,
       sessionStartMs: Date.now(), aiConsentGiven: false,
@@ -246,7 +247,7 @@ describe('localStorage persistence', () => {
   })
 
   it('returns default state when localStorage contains corrupt JSON', () => {
-    localStorage.setItem('br-experiment', 'NOT JSON {{{{')
+    localStorage.setItem(STORAGE_KEY.EXPERIMENT_SESSION, 'NOT JSON {{{{')
     setActivePinia(createPinia())
     const store = useExperimentStore()
     expect(store.entries).toHaveLength(0)

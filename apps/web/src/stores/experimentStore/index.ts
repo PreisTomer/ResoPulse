@@ -7,10 +7,12 @@ import { useCellStore } from '@/stores/cellStore'
 import { downloadText, buildEntryMethodsText, buildCsvText } from '@/utils/experimentExport'
 
 import { nowHMS, round } from '@/utils/format'
+import { loadFromStorage } from '@/utils/storageClient'
 
 import { CHART_MODE, DEFAULT_SESSION_NAME } from '@/constants/strings'
 import { MEDIA } from '@/constants/media'
 import { SIGMA_MEMBRANE_SI } from '@/constants/physics'
+import { STORAGE_KEY } from '@/constants/storageKeys'
 
 import type { MediumKey } from '@/types/media'
 
@@ -84,28 +86,26 @@ interface CellSnapshot {
 
 // ── Local helpers ──────────────────────────────────────────────────────────
 
-const LS_KEY = 'br-experiment'
-
-function loadState(): ExperimentState {
-  try {
-    const saved = localStorage.getItem(LS_KEY)
-    if (saved) {
-      const parsed = JSON.parse(saved) as ExperimentState
-      return {
-        ...parsed,
-        sampleDescription: parsed.sampleDescription ?? '',
-        sessionNotes:      parsed.sessionNotes      ?? '',
-        cumulativeDoseJkg: parsed.cumulativeDoseJkg ?? 0,
-        sessionStartMs:    parsed.sessionStartMs    ?? Date.now(),
-        aiConsentGiven:    parsed.aiConsentGiven    ?? false,
-      }
-    }
-  } catch { /* ignore corrupt data */ }
+function defaultState(): ExperimentState {
   return {
     entries: [], nextId: 1, sessionName: DEFAULT_SESSION_NAME,
     sampleDescription: '', sessionNotes: '', cumulativeDoseJkg: 0,
     sessionStartMs: Date.now(), aiConsentGiven: false,
   }
+}
+
+function loadState(): ExperimentState {
+  return loadFromStorage(STORAGE_KEY.EXPERIMENT_SESSION, defaultState(), raw => {
+    const parsed = JSON.parse(raw) as ExperimentState
+    return {
+      ...parsed,
+      sampleDescription: parsed.sampleDescription ?? '',
+      sessionNotes:      parsed.sessionNotes      ?? '',
+      cumulativeDoseJkg: parsed.cumulativeDoseJkg ?? 0,
+      sessionStartMs:    parsed.sessionStartMs    ?? Date.now(),
+      aiConsentGiven:    parsed.aiConsentGiven    ?? false,
+    }
+  })
 }
 
 // ── Store ──────────────────────────────────────────────────────────────────

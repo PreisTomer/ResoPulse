@@ -14,6 +14,8 @@ import { i18n } from './plugins/i18n'
 import router from './router'
 import { vTip } from './directives/vTooltip'
 import { useExperimentStore } from './stores/experimentStore'
+import { saveToStorage } from './utils/storageClient'
+import { STORAGE_KEY } from './constants/storageKeys'
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY as string
 
@@ -50,7 +52,7 @@ app.directive('tip', vTip)
 // for previously saved sessions) - plugin hydration would conflict with that.
 const expStore = useExperimentStore()
 expStore.$subscribe((_mutation, state) => {
-  localStorage.setItem('br-experiment', JSON.stringify({
+  saveToStorage(STORAGE_KEY.EXPERIMENT_SESSION, JSON.stringify({
     entries:            state.entries,
     nextId:             state.nextId,
     sessionName:        state.sessionName,

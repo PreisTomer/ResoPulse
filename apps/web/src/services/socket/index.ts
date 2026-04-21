@@ -22,6 +22,7 @@ import { useAiStore } from '@/stores/aiStore'
 import { computeTau, computeSchwan, pulseEnvelopeClamped, computeResonantDisruption, computeLysisFieldFromParams, tempCorrectedVth } from '@/utils/physics'
 
 import { DEFAULT_CAPSID_Q, THRESHOLDS } from '@/constants/physics'
+import { STORAGE_KEY } from '@/constants/storageKeys'
 
 // URL priority: ?backend=<url> → VITE_BACKEND_URL → localhost:3001
 function resolveBackendUrl(): string {
@@ -64,30 +65,28 @@ async function wakeBackend(): Promise<void> {
 // The backend accepts any token starting with "guest_" without Clerk verification.
 // The token is scoped to the browser tab session and never sent to Clerk.
 
-const GUEST_KEY = 'rp_guest_id'
-
 /**
  * Reactive flag: true once a guest session token exists for this tab.
  * Initialised from sessionStorage so it survives a page refresh on /experiment.
  * Components that gate guest-only UI (e.g. NavGuestArea) should read this ref.
  */
-export const guestSessionActive = ref(sessionStorage.getItem(GUEST_KEY) !== null)
+export const guestSessionActive = ref(sessionStorage.getItem(STORAGE_KEY.GUEST_ID) !== null)
 
 function getOrCreateGuestToken(): string {
-  const existing = sessionStorage.getItem(GUEST_KEY)
+  const existing = sessionStorage.getItem(STORAGE_KEY.GUEST_ID)
   if (existing) {
     guestSessionActive.value = true
     return existing
   }
   const id = `guest_${crypto.randomUUID()}`
-  sessionStorage.setItem(GUEST_KEY, id)
+  sessionStorage.setItem(STORAGE_KEY.GUEST_ID, id)
   guestSessionActive.value = true
   return id
 }
 
 /** Returns true if the current session has an active guest token in sessionStorage. */
 export function hasGuestSession(): boolean {
-  return sessionStorage.getItem(GUEST_KEY) !== null
+  return sessionStorage.getItem(STORAGE_KEY.GUEST_ID) !== null
 }
 
 export async function connectSocket(): Promise<void> {

@@ -2,16 +2,16 @@
 
 import { defineStore } from 'pinia'
 
+import { loadFromStorage, saveToStorage } from '@/utils/storageClient'
+
+import { STORAGE_KEY } from '@/constants/storageKeys'
+
 export type AppTheme = 'dark' | 'oled'
 
-const LS_KEY = 'br-theme'
-
 function loadTheme(): AppTheme {
-  try {
-    const saved = localStorage.getItem(LS_KEY)
-    if (saved === 'dark' || saved === 'oled') return saved
-  } catch { /* ignore */ }
-  return 'dark'
+  return loadFromStorage<AppTheme>(STORAGE_KEY.THEME, 'dark', raw =>
+    (raw === 'dark' || raw === 'oled') ? raw : 'dark',
+  )
 }
 
 export const useThemeStore = defineStore('theme', {
@@ -22,7 +22,7 @@ export const useThemeStore = defineStore('theme', {
   actions: {
     setTheme(t: AppTheme) {
       this.theme = t
-      try { localStorage.setItem(LS_KEY, t) } catch { /* ignore */ }
+      saveToStorage(STORAGE_KEY.THEME, t)
       applyTheme(t)
     },
 

@@ -5,8 +5,9 @@ import { describe, it, expect } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 
 import { useUserPresetsStore } from '@/stores/userPresetsStore'
+import { STORAGE_KEY } from '@/constants/storageKeys'
 
-const STORAGE_KEY = 'resopulse_user_presets_v2'
+const USER_PRESETS_KEY = STORAGE_KEY.USER_PRESETS
 
 // Narrow accessor for optional acoustic-resonance fields on CellConfig
 interface ResonanceFields {
@@ -81,7 +82,7 @@ describe('add', () => {
   it('persists to localStorage immediately', async () => {
     const store = await freshStore()
     await store.add(BASE_PRESET)
-    const raw = localStorage.getItem(STORAGE_KEY)
+    const raw = localStorage.getItem(USER_PRESETS_KEY)
     expect(raw).not.toBeNull()
     const saved = JSON.parse(raw!) as unknown[]
     expect(saved).toHaveLength(1)
@@ -107,7 +108,7 @@ describe('remove', () => {
     await store.add(BASE_PRESET)
     const id = store.presets[0]!.id
     await store.remove(id)
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]') as unknown[]
+    const saved = JSON.parse(localStorage.getItem(USER_PRESETS_KEY) ?? '[]') as unknown[]
     expect(saved).toHaveLength(0)
   })
 
@@ -152,7 +153,7 @@ describe('update', () => {
     await store.add(BASE_PRESET)
     const id = store.presets[0]!.id
     await store.update(id, { shortLabel: 'XX' })
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]') as { shortLabel: string }[]
+    const saved = JSON.parse(localStorage.getItem(USER_PRESETS_KEY) ?? '[]') as { shortLabel: string }[]
     expect(saved[0]!.shortLabel).toBe('XX')
   })
 
@@ -319,7 +320,7 @@ describe('localStorage persistence', () => {
   it('restores presets on cold-start via fetchAll (guest path)', async () => {
     // Write directly to localStorage as if a previous session saved it
     const saved = [{ ...BASE_PRESET, role: 'target', cellType: 'mammalian', id: 'user_111', createdAt: 1000000 }]
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(saved))
+    localStorage.setItem(USER_PRESETS_KEY, JSON.stringify(saved))
     setActivePinia(createPinia())
     const store = useUserPresetsStore()
     await store.fetchAll()              // guest path: loads localStorage
@@ -328,7 +329,7 @@ describe('localStorage persistence', () => {
   })
 
   it('returns empty array when localStorage contains corrupt JSON', async () => {
-    localStorage.setItem(STORAGE_KEY, '{{corrupt')
+    localStorage.setItem(USER_PRESETS_KEY, '{{corrupt')
     setActivePinia(createPinia())
     const store = useUserPresetsStore()
     await store.fetchAll()
@@ -365,7 +366,7 @@ describe('parameterConfidence', () => {
   it('persists confidence to localStorage', async () => {
     const store = await freshStore()
     await store.add({ ...BASE_PRESET, parameterConfidence: 'measured' as const })
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]') as { parameterConfidence: string }[]
+    const saved = JSON.parse(localStorage.getItem(USER_PRESETS_KEY) ?? '[]') as { parameterConfidence: string }[]
     expect(saved[0]!.parameterConfidence).toBe('measured')
   })
 
@@ -397,7 +398,7 @@ describe('parameterConfidence', () => {
       createdAt: 1000000,
       parameterConfidence: 'literature',   // present in type but stripped below
     }
-    localStorage.setItem(STORAGE_KEY, JSON.stringify([withoutConfidence]))
+    localStorage.setItem(USER_PRESETS_KEY, JSON.stringify([withoutConfidence]))
 
     setActivePinia(createPinia())
     const store = useUserPresetsStore()

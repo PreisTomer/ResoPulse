@@ -2,8 +2,7 @@
 
 import { computeSchwan, computeResonantDisruption, tempCorrectedVth } from '@/utils/physics'
 
-import { logspace } from '@/utils/math'
-
+import { F_MIN_HZ, F_MAX_HZ, N_POINTS, F_POINTS_HZ } from '@/constants/chartDomain'
 import { DEFAULT_CAPSID_Q } from '@/constants/physics'
 import { UNIT } from '@/constants/units'
 
@@ -11,9 +10,8 @@ import type { CellConfig } from '@/types/cell'
 
 // ── Chart domain constants ──────────────────────────────────────────────────
 
-export const F_MIN_HZ      = 10_000
-export const F_MAX_HZ      = 500_000_000
-export const N_POINTS      = 200
+export { F_MIN_HZ, F_MAX_HZ, N_POINTS, F_POINTS_HZ }
+
 // Y axis always reaches at least 110% so both threshold lines (50% Rev-EP, 85% Lysis)
 // remain inside the visible chart area regardless of how low the current DR curves are.
 export const Y_MIN_MAX         = 110
@@ -35,10 +33,6 @@ export const DR_LYSIS  = 85   // lysis boundary
 // ── Types ───────────────────────────────────────────────────────────────────
 
 export type CurvePoint = { hz: number; hDR: number; tDR: number }
-
-// ── Frequency point generation ──────────────────────────────────────────────
-
-export const F_POINTS_HZ: number[] = logspace(F_MIN_HZ, F_MAX_HZ, N_POINTS)
 
 // ── Axis formatting ─────────────────────────────────────────────────────────
 

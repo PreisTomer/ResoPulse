@@ -3,8 +3,11 @@ import { defineStore } from 'pinia'
 
 import { getAuthToken, apiFetch } from '@/services/apiClient'
 
+import { loadFromStorage, saveToStorage } from '@/utils/storageClient'
+
 import { CELL_TYPE } from '@/constants/strings'
 import type { CellType } from '@/constants/strings'
+import { STORAGE_KEY } from '@/constants/storageKeys'
 
 import type { CellConfig } from '@/types/cell'
 
@@ -55,25 +58,21 @@ export interface UserCellPreset {
 
 export type UserCellPresetInput = Omit<UserCellPreset, 'id' | 'createdAt'>
 
-const LOCAL_KEY = 'resopulse_user_presets_v2'
-
 // ── Local-storage fallback (guests only) ──────────────────────────────────────
 
 function loadLocal(): UserCellPreset[] {
-  try {
-    const raw = localStorage.getItem(LOCAL_KEY)
-    if (!raw) return []
+  return loadFromStorage<UserCellPreset[]>(STORAGE_KEY.USER_PRESETS, [], raw => {
     const parsed = JSON.parse(raw) as UserCellPreset[]
     // Apply fallback for fields missing in presets saved before schema migration
     return parsed.map(p => ({
       ...p,
       parameterConfidence: p.parameterConfidence ?? 'literature',
     }))
-  } catch { return [] }
+  })
 }
 
 function saveLocal(presets: UserCellPreset[]): void {
-  try { localStorage.setItem(LOCAL_KEY, JSON.stringify(presets)) } catch { /* quota */ }
+  saveToStorage(STORAGE_KEY.USER_PRESETS, JSON.stringify(presets))
 }
 
 // ── Backend DTO → UserCellPreset ───────────────────────────────────────────────
