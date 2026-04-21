@@ -260,6 +260,20 @@ $_cell-states: (
   background:   color-mix(in srgb, var(--color-#{$name}) #{$bg-pct}, transparent);
 }
 
+// ── Number input spinner reset ──────────────────────────────────────────────
+// Hides the browser's default stepper arrows on <input type="number"> so the
+// element renders as a plain text-like field. Apply to the input selector.
+@mixin number-input-reset() {
+  -moz-appearance: textfield;
+  appearance:      textfield;
+
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    appearance:         none;
+  }
+}
+
 // ── Readout inline input ────────────────────────────────────────────────────
 @mixin readout-inline-input() {
   font-size: 1rem;
@@ -275,8 +289,5 @@ $_cell-states: (
   text-align: right;
   padding: 0;
   width: 5rem;
-  &::-webkit-outer-spin-button,
-  &::-webkit-inner-spin-button { -webkit-appearance: none; appearance: none; }
-  -moz-appearance: textfield;
-  appearance: textfield;
+  @include number-input-reset();
 }

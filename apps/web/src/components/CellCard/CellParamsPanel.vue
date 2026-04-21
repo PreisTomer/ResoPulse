@@ -320,11 +320,7 @@ export default defineComponent({
     font-size: var(--fs-sm);
     padding: 0.24rem 0.4rem;
     text-align: left;
-    -moz-appearance: textfield;
-    appearance: textfield;
-
-    &::-webkit-inner-spin-button,
-    &::-webkit-outer-spin-button { display: none; }
+    @include number-input-reset();
 
     &:focus { outline: none; }
   }

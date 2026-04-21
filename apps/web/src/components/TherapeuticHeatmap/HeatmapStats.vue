@@ -145,99 +145,101 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-.hmap__stats {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem 1.2rem;
-  padding: 0.35rem 0.65rem;
-  background: color-mix(in srgb, black 20%, transparent);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  cursor: default;
-}
+.hmap {
+  &__stats {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 1.2rem;
+    padding: 0.35rem 0.65rem;
+    background: color-mix(in srgb, black 20%, transparent);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    cursor: default;
 
-.hmap__stats-label {
-  font-size: var(--fs-xxs);
-  font-family: var(--font-mono);
-  color: var(--color-text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-  flex-shrink: 0;
-}
-
-.hmap__stat {
-  display: flex;
-  align-items: baseline;
-  gap: 0.3rem;
-}
-
-.hmap__stat-k {
-  font-size: var(--fs-xxs);
-  font-family: var(--font-mono);
-  color: var(--color-text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  flex-shrink: 0;
-}
-
-.hmap__stat-v {
-  font-size: var(--fs-sm);
-  font-family: var(--font-mono);
-  font-weight: 700;
-  color: var(--color-text);
-  transition: color var(--tr-slow);
-
-  &--warn   { color: var(--color-amber); }
-  &--danger { color: var(--color-danger); }
-  &--ok     { color: var(--color-lime); }
-  &--zone   { color: var(--op-zone-color, var(--color-text)); }
-}
-
-.hmap__stat-badge {
-  font-size: var(--fs-xxs);
-  font-family: var(--font-mono);
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-  padding: 0.15rem 0.45rem;
-  border-radius: 3px;
-  border: 1px solid;
-
-  &--regime {
-    &--electrolytic { color: var(--color-primary); border-color: color-mix(in srgb, var(--color-primary) 35%, transparent); background: color-mix(in srgb, var(--color-primary) 7%, transparent); }
-    &--nearfield_rf { color: var(--color-amber);   border-color: color-mix(in srgb, var(--color-amber) 35%, transparent); background: color-mix(in srgb, var(--color-amber) 7%, transparent); }
-    &--microwave    { color: var(--color-danger);  border-color: color-mix(in srgb, var(--color-danger) 35%, transparent); background: color-mix(in srgb, var(--color-danger) 7%, transparent); }
+    &-label {
+      font-size: var(--fs-xxs);
+      font-family: var(--font-mono);
+      color: var(--color-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      flex-shrink: 0;
+    }
   }
-}
 
-.hmap__info-btn {
-  font-size: var(--fs-xs);
-  color: var(--color-text-muted);
-  opacity: var(--op-muted);
-  cursor: default;
-  flex-shrink: 0;
-  transition: opacity var(--tr-fast);
+  &__stat {
+    display: flex;
+    align-items: baseline;
+    gap: 0.3rem;
 
-  &:hover { opacity: 1; }
-}
+    &-k {
+      font-size: var(--fs-xxs);
+      font-family: var(--font-mono);
+      color: var(--color-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      flex-shrink: 0;
+    }
 
-.hmap__snap-btn {
-  margin-left: auto;
-  background: color-mix(in srgb, var(--color-amber) 10%, transparent);
-  border: 1px solid color-mix(in srgb, var(--color-amber) 35%, transparent);
-  border-radius: 3px;
-  color: var(--color-amber);
-  font-family: var(--font-mono);
-  font-size: var(--fs-xs);
-  letter-spacing: 0.06em;
-  padding: 0.18rem 0.55rem;
-  cursor: pointer;
-  transition: background var(--tr-fast), border-color var(--tr-fast);
-  white-space: nowrap;
+    &-v {
+      font-size: var(--fs-sm);
+      font-family: var(--font-mono);
+      font-weight: 700;
+      color: var(--color-text);
+      transition: color var(--tr-slow);
 
-  &:hover {
-    background: color-mix(in srgb, var(--color-amber) 20%, transparent);
-    border-color: color-mix(in srgb, var(--color-amber) 65%, transparent);
+      &--warn   { color: var(--color-amber); }
+      &--danger { color: var(--color-danger); }
+      &--ok     { color: var(--color-lime); }
+      &--zone   { color: var(--op-zone-color, var(--color-text)); }
+    }
+
+    &-badge {
+      font-size: var(--fs-xxs);
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      padding: 0.15rem 0.45rem;
+      border-radius: 3px;
+      border: 1px solid;
+
+      &--regime {
+        &--electrolytic { color: var(--color-primary); border-color: color-mix(in srgb, var(--color-primary) 35%, transparent); background: color-mix(in srgb, var(--color-primary) 7%, transparent); }
+        &--nearfield_rf { color: var(--color-amber);   border-color: color-mix(in srgb, var(--color-amber) 35%, transparent); background: color-mix(in srgb, var(--color-amber) 7%, transparent); }
+        &--microwave    { color: var(--color-danger);  border-color: color-mix(in srgb, var(--color-danger) 35%, transparent); background: color-mix(in srgb, var(--color-danger) 7%, transparent); }
+      }
+    }
+  }
+
+  &__info-btn {
+    font-size: var(--fs-xs);
+    color: var(--color-text-muted);
+    opacity: var(--op-muted);
+    cursor: default;
+    flex-shrink: 0;
+    transition: opacity var(--tr-fast);
+
+    &:hover { opacity: 1; }
+  }
+
+  &__snap-btn {
+    margin-left: auto;
+    background: color-mix(in srgb, var(--color-amber) 10%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-amber) 35%, transparent);
+    border-radius: 3px;
+    color: var(--color-amber);
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    letter-spacing: 0.06em;
+    padding: 0.18rem 0.55rem;
+    cursor: pointer;
+    transition: background var(--tr-fast), border-color var(--tr-fast);
+    white-space: nowrap;
+
+    &:hover {
+      background: color-mix(in srgb, var(--color-amber) 20%, transparent);
+      border-color: color-mix(in srgb, var(--color-amber) 65%, transparent);
+    }
   }
 }
 </style>

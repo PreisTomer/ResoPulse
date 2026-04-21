@@ -196,14 +196,7 @@ export default defineComponent({
 
     &:focus { border-color: var(--color-primary); }
 
-    -moz-appearance: textfield;
-    appearance:      textfield;
-
-    &::-webkit-inner-spin-button,
-    &::-webkit-outer-spin-button {
-      -webkit-appearance: none;
-      appearance:         none;
-    }
+    @include number-input-reset();
   }
 
   &__sub-hint {

@@ -344,14 +344,7 @@ export default defineComponent({
 
     &--warn { border-color: color-mix(in srgb, var(--color-amber) 60%, transparent); }
 
-    -moz-appearance: textfield;
-    appearance:      textfield;
-
-    &::-webkit-inner-spin-button,
-    &::-webkit-outer-spin-button {
-      -webkit-appearance: none;
-      appearance:         none;
-    }
+    @include number-input-reset();
   }
 
   &__range {

@@ -113,115 +113,115 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-/* ── Therapeutic window snap bar ─────────────────────────────── */
-.experiment__snap-bar {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.55rem 1.1rem;
-  background: linear-gradient(90deg, color-mix(in srgb, var(--color-ok) 8%, transparent) 0%, color-mix(in srgb, var(--color-ok) 4%, transparent) 100%);
-  border: 1px solid color-mix(in srgb, var(--color-ok) 28%, transparent);
-  border-radius: var(--radius);
-  flex-wrap: wrap;
-  gap: 0.4rem 0.75rem;
-}
+.experiment {
+  &__snap-bar {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.4rem 0.75rem;
+    flex-wrap: wrap;
+    padding: 0.55rem 1.1rem;
+    background: linear-gradient(90deg, color-mix(in srgb, var(--color-ok) 8%, transparent) 0%, color-mix(in srgb, var(--color-ok) 4%, transparent) 100%);
+    border: 1px solid color-mix(in srgb, var(--color-ok) 28%, transparent);
+    border-radius: var(--radius);
 
-.experiment__snap-bar-label {
-  font-family: var(--font-mono);
-  font-size: var(--fs-xs);
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  color: color-mix(in srgb, var(--color-ok) 90%, transparent);
-  white-space: nowrap;
-}
+    &-label {
+      font-family: var(--font-mono);
+      font-size: var(--fs-xs);
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      color: color-mix(in srgb, var(--color-ok) 90%, transparent);
+      white-space: nowrap;
+    }
 
-.experiment__snap-bar-range {
-  font-family: var(--font-mono);
-  font-size: var(--fs-sm);
-  color: var(--color-text-heading);
-  background: color-mix(in srgb, var(--color-ok) 12%, transparent);
-  border: 1px solid color-mix(in srgb, var(--color-ok) 25%, transparent);
-  border-radius: 3px;
-  padding: 0.1rem 0.45rem;
-  white-space: nowrap;
-}
+    &-range {
+      font-family: var(--font-mono);
+      font-size: var(--fs-sm);
+      color: var(--color-text-heading);
+      background: color-mix(in srgb, var(--color-ok) 12%, transparent);
+      border: 1px solid color-mix(in srgb, var(--color-ok) 25%, transparent);
+      border-radius: 3px;
+      padding: 0.1rem 0.45rem;
+      white-space: nowrap;
+    }
 
-.experiment__snap-bar-affects {
-  font-size: var(--fs-xs);
-  color: var(--color-text-muted);
-  flex: 1;
-  white-space: nowrap;
-}
+    &-affects {
+      font-size: var(--fs-xs);
+      color: var(--color-text-muted);
+      flex: 1;
+      white-space: nowrap;
+    }
 
-.experiment__snap-bar-lysis-warn {
-  font-size: var(--fs-xxs);
-  font-family: var(--font-mono);
-  color: var(--color-danger);
-  opacity: var(--op-partial);
-  white-space: nowrap;
-}
+    &-lysis-warn {
+      font-size: var(--fs-xxs);
+      font-family: var(--font-mono);
+      color: var(--color-danger);
+      opacity: var(--op-partial);
+      white-space: nowrap;
+    }
 
-.experiment__snap-confirm-row {
-  margin-left: auto;
-  display: flex;
-  gap: 0.4rem;
-  align-items: center;
-  flex-shrink: 0;
-}
+    &-btn {
+      padding: 0.22rem 0.75rem;
+      background: color-mix(in srgb, var(--color-ok) 14%, transparent);
+      border: 1px solid color-mix(in srgb, var(--color-ok) 40%, transparent);
+      border-radius: 4px;
+      color: color-mix(in srgb, var(--color-ok) 95%, transparent);
+      font-family: var(--font-mono);
+      font-size: var(--fs-xs);
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      transition: background var(--tr-fast), border-color var(--tr-fast), color var(--tr-fast);
+      white-space: nowrap;
 
-.experiment__snap-bar-btn {
-  padding: 0.22rem 0.75rem;
-  background: color-mix(in srgb, var(--color-ok) 14%, transparent);
-  border: 1px solid color-mix(in srgb, var(--color-ok) 40%, transparent);
-  border-radius: 4px;
-  color: color-mix(in srgb, var(--color-ok) 95%, transparent);
-  font-family: var(--font-mono);
-  font-size: var(--fs-xs);
-  letter-spacing: 0.04em;
-  cursor: pointer;
-  transition: background var(--tr-fast), border-color var(--tr-fast), color var(--tr-fast);
-  white-space: nowrap;
+      &:hover {
+        background: color-mix(in srgb, var(--color-ok) 24%, transparent);
+        border-color: color-mix(in srgb, var(--color-ok) 65%, transparent);
+      }
 
-  &:hover {
-    background: color-mix(in srgb, var(--color-ok) 24%, transparent);
-    border-color: color-mix(in srgb, var(--color-ok) 65%, transparent);
-  }
+      &--confirm {
+        background: color-mix(in srgb, var(--color-danger) 14%, transparent);
+        border-color: color-mix(in srgb, var(--color-danger) 55%, transparent);
+        color: var(--color-danger);
+        animation: snap-confirm-pulse 0.7s ease-in-out infinite alternate;
 
-  &--confirm {
-    background: color-mix(in srgb, var(--color-danger) 14%, transparent);
-    border-color: color-mix(in srgb, var(--color-danger) 55%, transparent);
-    color: var(--color-danger);
-    animation: snap-confirm-pulse 0.7s ease-in-out infinite alternate;
+        &:hover {
+          background: color-mix(in srgb, var(--color-danger) 24%, transparent);
+          border-color: color-mix(in srgb, var(--color-danger) 80%, transparent);
+        }
+      }
 
-    &:hover {
-      background: color-mix(in srgb, var(--color-danger) 24%, transparent);
-      border-color: color-mix(in srgb, var(--color-danger) 80%, transparent);
+      &--confirmed {
+        opacity: 0.45; // intentional: confirmed state is visually retired
+        cursor: not-allowed;
+        border-color: color-mix(in srgb, white 15%, transparent);
+        color: var(--color-text-muted);
+
+        &:hover {
+          background: transparent;
+          border-color: color-mix(in srgb, white 15%, transparent);
+        }
+      }
+
+      &--cancel {
+        background: transparent;
+        border-color: color-mix(in srgb, white 18%, transparent);
+        color: var(--color-text-muted);
+
+        &:hover {
+          background: color-mix(in srgb, white 6%, transparent);
+          border-color: color-mix(in srgb, white 32%, transparent);
+          color: var(--color-text);
+        }
+      }
     }
   }
 
-  &--confirmed {
-    opacity: 0.45; // intentional: confirmed state is visually retired
-    cursor: not-allowed;
-    border-color: color-mix(in srgb, white 15%, transparent);
-    color: var(--color-text-muted);
-
-    &:hover {
-      background: transparent;
-      border-color: color-mix(in srgb, white 15%, transparent);
-    }
-  }
-
-  &--cancel {
-    background: transparent;
-    border-color: color-mix(in srgb, white 18%, transparent);
-    color: var(--color-text-muted);
-
-    &:hover {
-      background: color-mix(in srgb, white 6%, transparent);
-      border-color: color-mix(in srgb, white 32%, transparent);
-      color: var(--color-text);
-    }
+  &__snap-confirm-row {
+    margin-left: auto;
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+    flex-shrink: 0;
   }
 }
 

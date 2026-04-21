@@ -88,33 +88,33 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-// ── Sticky tab indicator ────────────────────────────────────────────────────
-.experiment__sticky-tab-dot {
-  color: var(--color-primary);
-  font-size: var(--fs-sm);
-  animation: sticky-pulse 2s ease-in-out infinite;
-}
-
-// ── Panel body interior ─────────────────────────────────────────────────────
-.experiment__sticky-cells-body {
-  padding: 0.75rem 0.75rem 0.5rem;
-  cursor: pointer;
-  transition: border-color var(--tr-fast);
-
-  &-label {
-    font-family: var(--font-mono);
-    font-size: var(--fs-xxs);
-    letter-spacing: 0.14em;
+.experiment {
+  &__sticky-tab-dot {
     color: var(--color-primary);
-    opacity: var(--op-partial);
-    margin-bottom: 0.5rem;
-    padding-left: 0.1rem;
+    font-size: var(--fs-sm);
+    animation: sticky-pulse 2s ease-in-out infinite;
   }
 
-  &-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
+  &__sticky-cells-body {
+    padding: 0.75rem 0.75rem 0.5rem;
+    cursor: pointer;
+    transition: border-color var(--tr-fast);
+
+    &-label {
+      font-family: var(--font-mono);
+      font-size: var(--fs-xxs);
+      letter-spacing: 0.14em;
+      color: var(--color-primary);
+      opacity: var(--op-partial);
+      margin-bottom: 0.5rem;
+      padding-left: 0.1rem;
+    }
+
+    &-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
   }
 }
 

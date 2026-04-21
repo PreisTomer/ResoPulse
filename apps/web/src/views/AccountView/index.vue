@@ -1125,7 +1125,7 @@ export default defineComponent({
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.75rem;
+    font-size: var(--fs-sm);
     flex-shrink: 0;
     transition: background var(--tr-fast), border-color var(--tr-fast), color var(--tr-fast);
 
