@@ -58,6 +58,8 @@
       <span v-if="inWindow" class="iomw__win-badge">{{ $t('home.ioMiniWindowBadge') }}</span>
     </div>
 
+    <p class="iomw__disclosure">{{ $t('home.ioMiniDisclosure') }}</p>
+
     <div class="iomw__foot">
       <p class="iomw__caption">{{ $t('home.ioMiniCaption') }}</p>
       <RouterLink :to="ROUTE.EXPERIMENT" class="iomw__cta">{{ $t('home.ioMiniCtaLab') }} {{ ICON.ARROW_R }}</RouterLink>
@@ -74,22 +76,47 @@ import { ICON } from '@/constants/icons'
 import { ROUTE } from '@/constants/routes'
 
 // ── Demo cell pair ──
-// Target: representative cancer cell (HeLa-class) — larger radius → lower fc.
-// Healthy: representative small lymphocyte (PBMC-class) — smaller radius → higher fc.
-// These values are for the home-page didactic widget only; the lab uses the full cellLibrary.
+// Target and healthy differ in FOUR parameters (not just radius), reflecting real
+// cancer-vs-healthy biophysical literature. Values are representative ranges, not a
+// specific cell line. Citations in the disclosure line beneath the widget.
 const UM_TO_M = 1e-6
 const SIGMA_E_S_M = 1.5      // saline external conductivity, typical EP buffer
-const TARGET_R_UM  = 10
-const HEALTHY_R_UM = 4
-const CM_F_M2      = 0.01    // 1 µF/cm², representative membrane capacitance
-const SIGMA_I_S_M  = 0.5     // cytoplasm conductivity (both cells)
-const V_THR_V      = 1.2     // lysis threshold voltage (fixed for demo)
+
+interface DemoCell {
+  radius_um: number
+  Cm_F_m2:   number   // membrane capacitance
+  sigma_i:   number   // cytoplasm conductivity
+  V_thr:     number   // lysis threshold voltage
+}
+
+// Target: cancer-like. Larger R (Pethig 2010), elevated Cm from cholesterol depletion /
+// increased phosphatidylserine (Pethig 2010 reports 1.3-1.8 µF/cm² for carcinoma lines),
+// elevated σ_i from overexpressed ion channels (Anand 2019 MDA-MB-231), lower V_thr from
+// cholesterol-depleted membrane (Polevaya 1999 reports 0.7-1.0 V for cancer lines).
+const TARGET: DemoCell = {
+  radius_um: 10,
+  Cm_F_m2:   0.015,
+  sigma_i:   0.7,
+  V_thr:     0.9,
+}
+
+// Healthy: PBMC/lymphocyte-like. Smaller R, normal Cm (Gascoyne 1992 lymphocyte ~9 mF/m²),
+// normal σ_i (Pauly & Schwan 1966), higher V_thr reflecting more ordered cholesterol-rich
+// membrane (Polevaya 1999 normal reference ~1.0-1.2 V).
+const HEALTHY: DemoCell = {
+  radius_um: 4,
+  Cm_F_m2:   0.009,
+  sigma_i:   0.3,
+  V_thr:     1.1,
+}
 
 // ── Slider bounds ──
 const E_MIN    = 100
 const E_MAX    = 2000
 const E_STEP   = 10
-const E_DEFAULT = 800
+// Default E starts BELOW the selectivity window so the scientist has to discover it by
+// dragging up. Landing the window as a reward, not a default, avoids the "rigged demo" read.
+const E_DEFAULT = 400
 
 // Frequency slider maps position [F_POS_MIN..F_POS_MAX] to f in kHz via log interpolation
 // so the full rolloff is visible in linear slider travel.
@@ -98,7 +125,9 @@ const F_POS_MAX  = 1000
 const F_POS_STEP = 1
 const F_MIN_KHZ  = 10
 const F_MAX_KHZ  = 5000
-const F_DEFAULT_POS = 609     // ≈ 300 kHz in log-space: log(300/10)/log(5000/10) * 1000
+// Default f = 100 kHz: well below both cells' fc, Schwan in quasi-DC regime.
+// pos = log(100/10) / log(5000/10) · 1000 ≈ 371
+const F_DEFAULT_POS = 371
 
 // Window thresholds (visual cue when the scientist finds a selective spot)
 const WINDOW_DR_T_MIN = 0.80
@@ -106,15 +135,6 @@ const WINDOW_DR_H_MAX = 0.40
 
 // Display scale thresholds for Vm formatting
 const VM_MV_THRESHOLD = 1.0  // V → mV when |Vm| < 1 V
-
-interface DemoCell {
-  radius_um: number
-  Cm_F_m2: number
-  sigma_i: number
-}
-
-const TARGET: DemoCell  = { radius_um: TARGET_R_UM,  Cm_F_m2: CM_F_M2, sigma_i: SIGMA_I_S_M }
-const HEALTHY: DemoCell = { radius_um: HEALTHY_R_UM, Cm_F_m2: CM_F_M2, sigma_i: SIGMA_I_S_M }
 
 // Schwan Vm for the demo pair: Vm = 1.5·E·R·cosθ / √(1+(ωτ)²), cosθ = 1.
 // Inlined rather than going through CellConfig since the demo uses fixed synthetic cells.
@@ -158,8 +178,8 @@ export default defineComponent({
     vmT(): number { return demoVm(TARGET,  this.E_vcm, this.fKhz) },
     vmH(): number { return demoVm(HEALTHY, this.E_vcm, this.fKhz) },
 
-    drT(): number { return this.vmT / V_THR_V },
-    drH(): number { return this.vmH / V_THR_V },
+    drT(): number { return this.vmT / TARGET.V_thr },
+    drH(): number { return this.vmH / HEALTHY.V_thr },
 
     ti(): number {
       if (this.drH < 0.01) return this.drT > 0 ? Infinity : 0
@@ -316,6 +336,18 @@ function formatVm(vm: number): string {
     border-radius: 3px;
     background: color-mix(in srgb, var(--color-ok) 10%, transparent);
     animation: iomw-win-pulse 1.4s ease-in-out infinite;
+  }
+
+  &__disclosure {
+    font-size: var(--fs-xs);
+    color: var(--color-text-muted);
+    opacity: var(--op-dim);
+    margin: 0;
+    line-height: 1.5;
+    padding: 0.5rem 0.75rem;
+    border-left: 2px solid color-mix(in srgb, var(--color-border) 80%, transparent);
+    background: color-mix(in srgb, var(--color-text) 2%, transparent);
+    border-radius: 0 3px 3px 0;
   }
 
   &__foot {

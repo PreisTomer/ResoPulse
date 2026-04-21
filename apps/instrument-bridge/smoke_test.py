@@ -16,21 +16,23 @@ Exit codes:
 """
 
 import asyncio
+import json
 import sys
 import time
-
-# Force UTF-8 output so Rich can render unicode characters (e.g. Ω) on
-# Windows terminals that default to a legacy codepage (cp1250, cp1255, etc.)
-sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 from dataclasses import dataclass, field
 
 import socketio
 from aiohttp import web
+from rich import box
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
-from rich import box
+
+# Force UTF-8 output so Rich can render unicode characters (e.g. Ω) on
+# Windows terminals that default to a legacy codepage (cp1250, cp1255, etc.)
+# Must run before Console() is constructed so Rich picks up the new encoding.
+sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
 # ── Config ─────────────────────────────────────────────────────────────────────
 
@@ -233,7 +235,6 @@ def print_report(run: TestRun) -> None:
 
     if run.packets_received:
         console.print("\n[dim]Sample packet (first received):[/dim]")
-        import json
         console.print(
             f"[cyan]{json.dumps(run.packets_received[0], indent=2)}[/cyan]"
         )

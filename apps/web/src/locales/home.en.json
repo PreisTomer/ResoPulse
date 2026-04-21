@@ -126,11 +126,12 @@
     "ioNote": "Every output is a model prediction, not measured data. Each equation links to its source paper in the Protocol documentation.",
     "ioDerivationLink": "Read full derivations",
     "ioMiniLabel": "Try the math",
-    "ioMiniSub": "Target R = 10 µm (cancer) vs healthy R = 4 µm · CW drive · drag E and f",
+    "ioMiniSub": "Representative cancer target vs healthy reference · CW drive · drag E and f to find the window",
     "ioMiniFieldLabel": "Field",
     "ioMiniFreqLabel": "Frequency",
     "ioMiniWindowBadge": "SELECTIVITY WINDOW",
-    "ioMiniCaption": "Outputs computed live from the Schwan equation above. Open the lab to run the full pipeline (pulses, SAR, DEP, resonance) on your own cell pair.",
+    "ioMiniDisclosure": "Cells differ in radius, membrane capacitance, and lysis threshold (representative cancer vs healthy ranges from Pethig 2010, Anand 2019, Polevaya 1999). Pulse dynamics, electrosensitization, SAR, and DEP are additional selectivity sources solved in the lab.",
+    "ioMiniCaption": "Outputs computed live from the Schwan equation above. Open the lab to run the full pipeline on your own cell pair.",
     "ioMiniCtaLab": "Open the lab"
   }
 }
