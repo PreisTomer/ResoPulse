@@ -14,3 +14,15 @@ __pycache__/
 .venv/
 apps/*/data/
 apps/*/.venv/
+
+# Claude Code: share project-wide rules and hooks; keep local state ignored.
+# Overrides the global .gitignore rules that exclude CLAUDE.md and all of .claude/.
+!CLAUDE.md
+!.claude/
+!.claude/settings.json
+!.claude/hooks/
+!.claude/hooks/**
+!.claude/rules/
+!.claude/rules/**
+.claude/settings.local.json
+.claude/worktrees/

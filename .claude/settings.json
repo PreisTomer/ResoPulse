@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(do)",
+      "Bash(sed -i 's/font-size: 1rem;/font-size: var\\(--fs-2xl\\);/g' \"$f\")",
+      "Bash(npm audit:*)",
+      "Bash(cp \"e:/code/ResoPulse/frontend/src/views/DataSetsView/_shared.scss\" \"e:/code/ResoPulse/frontend/src/views/DataSetsView/_datasets.scss\")",
+      "Bash(rm \"e:/code/ResoPulse/frontend/src/views/DataSetsView/_shared.scss\")",
+      "Bash(ls -lh /e/code/ResoPulse/frontend/src/components/*.vue)",
+      "Read(//e/code/ResoPulse/**)"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\Tomer"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/check-rules.mjs"
+          }
+        ]
+      }
+    ]
+  }
+}
