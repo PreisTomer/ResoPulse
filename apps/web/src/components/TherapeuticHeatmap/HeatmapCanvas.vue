@@ -312,10 +312,7 @@ export default defineComponent({
 
           let tDR = 0
           if (hasRes) {
-            // Resonance disruption is acoustic/mechanical: Joule SAR does not apply to the target.
-            // Use BODY_TEMP_C for threshold correction, consistent with store targetSAR = 0 in resonance mode.
-            // hfireMult does NOT apply — acoustic resonance is mechanical, not EP membrane charging.
-            // lysisNPulses does NOT apply — capsid resonance has no pulse-conditioning equivalent.
+            // Acoustic/mechanical: no Joule SAR, no hfireMult, no N-pulse conditioning. Use BODY_TEMP_C (mirrors store targetSAR=0).
             const resThreshold = tempCorrectedVth(tr.resonantThresholdVcm!, BODY_TEMP_C)
             tDR = computeResonantDisruption(tr.resonantFreqGHz!, tr.capsidQ!, resThreshold, freqHz, fieldVcm, tr.resonantFreqGHz2, tr.capsidQ2, tr.resonantMode2Amplitude)
           } else {
@@ -656,9 +653,7 @@ export default defineComponent({
       if (s.isResonanceMode) {
         const tr = s.target as { resonantFreqGHz?: number; capsidQ?: number; resonantThresholdVcm?: number; resonantFreqGHz2?: number; capsidQ2?: number; resonantMode2Amplitude?: number }
         if (tr.resonantFreqGHz && tr.capsidQ && tr.resonantThresholdVcm) {
-          // Resonance disruption is acoustic/mechanical: Joule SAR does not apply to the target.
-          // Use BODY_TEMP_C for threshold correction, consistent with store targetSAR = 0 in resonance mode.
-          // hoverHfireMult does NOT apply — acoustic disruption is mechanical, not EP membrane charging.
+          // Acoustic/mechanical: no SAR, no hoverHfireMult. Use BODY_TEMP_C (mirrors store targetSAR=0).
           const effThreshold = tempCorrectedVth(tr.resonantThresholdVcm, BODY_TEMP_C)
           tDR = computeResonantDisruption(tr.resonantFreqGHz, tr.capsidQ, effThreshold, freqKHz * 1000, fieldVcm, tr.resonantFreqGHz2, tr.capsidQ2, tr.resonantMode2Amplitude)
           usedResonancePath = true

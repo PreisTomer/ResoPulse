@@ -11,14 +11,48 @@ import { loadFromStorage } from '@/utils/storageClient'
 
 import { CHART_MODE, DEFAULT_SESSION_NAME } from '@/constants/strings'
 import { MEDIA } from '@/constants/media'
-import { SIGMA_MEMBRANE_SI } from '@/constants/physics'
+import { SIGMA_MEMBRANE_SI, THRESHOLDS } from '@/constants/physics'
 import { STORAGE_KEY } from '@/constants/storageKeys'
 
 import type { MediumKey } from '@/types/media'
 
 // Re-export types so existing importers (e.g. socket.ts) don't need to change
-export type { CellParamSnapshot, LogEntry } from '@/types/experiment'
-import type { CellParamSnapshot, LogEntry } from '@/types/experiment'
+export type { CellParamSnapshot, LogEntry, MeasuredOutcome } from '@/types/experiment'
+import type { CellParamSnapshot, LogEntry, MeasuredOutcome } from '@/types/experiment'
+
+// Calibration tier — shared UI label for "how well does the simulator match this lab's bench data".
+export type CalibrationTier = 'none' | 'drift' | 'moderate' | 'strong'
+
+// Snapshot of the current session's calibration state — exposed by store getter for UI consumption.
+export interface CalibrationSummary {
+  tier:                  CalibrationTier
+  sampleCount:           number
+  worstResidualPct:      number | null   // max(|meanTargetΔ|, |meanHealthyΔ|); null when no data
+  meanTargetResidualPct: number | null
+  meanHealthyResidualPct: number | null
+  meanFieldResidualVcm:  number | null
+}
+
+// Per-entry residual — computed by joining measured to predicted. Used for the
+// details panel bar chart and cell-card overlays.
+export interface EntryResidual {
+  entryId:               number
+  timestamp:             string
+  sessionName:           string | undefined
+  targetResidualPct:     number | null
+  healthyResidualPct:    number | null
+  fieldResidualVcm:      number | null
+}
+
+// Most-recent measured-vs-predicted pairing for one cell type — powers the
+// cell-card "predicted → measured" overlay bar.
+export interface MeasuredVsPredicted {
+  entryId:       number
+  timestamp:     string
+  predictedPct:  number   // 0-100, simulator prediction
+  measuredPct:   number   // 0-100, bench measurement
+  deltaPct:      number   // measured - predicted, signed
+}
 
 // ── Internal state types ───────────────────────────────────────────────────
 
@@ -110,8 +144,97 @@ function loadState(): ExperimentState {
 
 // ── Store ──────────────────────────────────────────────────────────────────
 
+// ── Local helpers for calibration getters ─────────────────────────────────────
+
+function mean(values: number[]): number | null {
+  if (values.length === 0) return null
+  return values.reduce((acc, v) => acc + v, 0) / values.length
+}
+
+function pickTier(count: number, worst: number | null): CalibrationTier {
+  if (count < THRESHOLDS.CALIB_MIN_SAMPLES || worst === null) return 'none'
+  if (worst > THRESHOLDS.CALIB_DRIFT_PP)                      return 'drift'
+  if (count >= THRESHOLDS.CALIB_STRONG_SAMPLES
+      && worst < THRESHOLDS.CALIB_STRONG_PP)                  return 'strong'
+  return 'moderate'
+}
+
+function entryResidualOf(entry: LogEntry): EntryResidual {
+  const m = entry.measured
+  return {
+    entryId:            entry.id,
+    timestamp:          entry.timestamp,
+    sessionName:        entry.sessionName,
+    targetResidualPct:  m?.targetLysisPct  !== undefined ? m.targetLysisPct  - entry.targetRatio  * 100 : null,
+    healthyResidualPct: m?.healthyLysisPct !== undefined ? m.healthyLysisPct - entry.healthyRatio * 100 : null,
+    fieldResidualVcm:   m?.actualFieldVcm  !== undefined ? m.actualFieldVcm  - entry.fieldVcm          : null,
+  }
+}
+
+// ── Store ──────────────────────────────────────────────────────────────────
+
 export const useExperimentStore = defineStore('experiment', {
   state: (): ExperimentState => loadState(),
+
+  getters: {
+    /** Entries that have a measured-outcome blob attached. */
+    measuredEntries(state): LogEntry[] {
+      return state.entries.filter(e => e.measured !== undefined)
+    },
+
+    /** Per-entry residuals for every measured entry, newest first. */
+    measuredResiduals(): EntryResidual[] {
+      return (this.measuredEntries as LogEntry[])
+        .map(entryResidualOf)
+        .reverse()
+    },
+
+    /** Newest measured-vs-predicted pair per cell type (null when none logged). */
+    latestMeasuredOutcomes(): { healthy: MeasuredVsPredicted | null; target: MeasuredVsPredicted | null } {
+      const entries = (this.measuredEntries as LogEntry[])
+      const newestTarget  = [...entries].reverse().find(e => e.measured?.targetLysisPct  !== undefined)
+      const newestHealthy = [...entries].reverse().find(e => e.measured?.healthyLysisPct !== undefined)
+
+      const pair = (entry: LogEntry | undefined, ratioKey: 'targetRatio' | 'healthyRatio', measuredKey: 'targetLysisPct' | 'healthyLysisPct'): MeasuredVsPredicted | null => {
+        if (!entry || !entry.measured) return null
+        const measured = entry.measured[measuredKey]
+        if (measured === undefined) return null
+        const predicted = entry[ratioKey] * 100
+        return {
+          entryId:      entry.id,
+          timestamp:    entry.timestamp,
+          predictedPct: predicted,
+          measuredPct:  measured,
+          deltaPct:     measured - predicted,
+        }
+      }
+
+      return {
+        healthy: pair(newestHealthy, 'healthyRatio', 'healthyLysisPct'),
+        target:  pair(newestTarget,  'targetRatio',  'targetLysisPct'),
+      }
+    },
+
+    /** Aggregated calibration summary across all sessions — the AI tab indicator. */
+    calibrationSummary(): CalibrationSummary {
+      const residuals = this.measuredResiduals as EntryResidual[]
+      const count     = residuals.length
+      const meanT     = mean(residuals.map(r => r.targetResidualPct ).filter((v): v is number => v !== null))
+      const meanH     = mean(residuals.map(r => r.healthyResidualPct).filter((v): v is number => v !== null))
+      const meanF     = mean(residuals.map(r => r.fieldResidualVcm  ).filter((v): v is number => v !== null))
+      const worst     = (meanT === null && meanH === null)
+        ? null
+        : Math.max(Math.abs(meanT ?? 0), Math.abs(meanH ?? 0))
+      return {
+        tier:                   pickTier(count, worst),
+        sampleCount:            count,
+        worstResidualPct:       worst,
+        meanTargetResidualPct:  meanT,
+        meanHealthyResidualPct: meanH,
+        meanFieldResidualVcm:   meanF,
+      }
+    },
+  },
 
   actions: {
     logReading(snap: CellSnapshot, event: LogEntry['event']) {
@@ -200,11 +323,52 @@ export const useExperimentStore = defineStore('experiment', {
       return entry
     },
 
+    logMeasuredOutcome(entryId: number, measured: Omit<MeasuredOutcome, 'measuredAt'> & { measuredAt?: string }): LogEntry | null {
+      const entry = this.entries.find(e => e.id === entryId)
+      if (!entry) return null
+      const clampPct = (v: number | undefined) =>
+        v === undefined || Number.isNaN(v) ? undefined : Math.max(0, Math.min(100, v))
+      const roundOrU = (v: number | undefined, digits: number) =>
+        v === undefined || Number.isNaN(v) ? undefined : round(v, digits)
+      const nonNeg = (v: number | undefined) =>
+        v === undefined || Number.isNaN(v) ? undefined : Math.max(0, v)
+      entry.measured = {
+        measuredAt:           measured.measuredAt ?? new Date().toISOString(),
+        targetLysisPct:       clampPct(measured.targetLysisPct),
+        healthyLysisPct:      clampPct(measured.healthyLysisPct),
+        viabilityPct:         clampPct(measured.viabilityPct),
+        permeabilizedPct:     clampPct(measured.permeabilizedPct),
+        transfectionPct:      clampPct(measured.transfectionPct),
+        viabilityAssay:       measured.viabilityAssay,
+        assayTimepointH:      roundOrU(nonNeg(measured.assayTimepointH),      2),
+        tempC:                roundOrU(measured.tempC,                        1),
+        actualFieldVcm:       roundOrU(nonNeg(measured.actualFieldVcm),       1),
+        observedLysisDelayMs: roundOrU(nonNeg(measured.observedLysisDelayMs), 0),
+        notes:                measured.notes?.trim() || undefined,
+      }
+      return entry
+    },
+
+    // Applies peer measured-outcome patch; match key (sessionName, timestamp) is the only cross-session identifier. No re-broadcast.
+    receiveMeasuredOutcome(sessionName: string, timestamp: string, measured: MeasuredOutcome): boolean {
+      const entry = this.entries.find(e => e.sessionName === sessionName && e.timestamp === timestamp)
+      if (!entry) return false
+      entry.measured = { ...measured }
+      return true
+    },
+
     clearLog() {
       this.entries           = []
       this.nextId            = 1
       this.cumulativeDoseJkg = 0
       this.sessionStartMs    = Date.now()
+    },
+
+    deleteEntry(entryId: number): boolean {
+      const idx = this.entries.findIndex(e => e.id === entryId)
+      if (idx === -1) return false
+      this.entries.splice(idx, 1)
+      return true
     },
 
     addDoseSample(sarWkg: number, dutyCycle: number, dtMs: number) {

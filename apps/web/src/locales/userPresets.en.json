@@ -35,6 +35,27 @@
 
     "radiusBinWarn":    "Radius was outside the typical range for {type}; it was replaced with the type default. Previous value: {prev} µm → {forced} µm.",
 
+    "sigmaProvSectionTitle":         "σ_i Provenance (optional)",
+    "sigmaProvSectionSub":           "σ_i is the most uncertain Schwan parameter. Recording the measurement technique and ±% band lets the digital twin weight this preset accurately against others in the community library.",
+    "fieldSigmaUncertaintyPct":      "σ_i Uncertainty",
+    "fieldSigmaUncertaintyPctSub":   "±% band around σ_i (e.g. literature 20-45%, electrorotation 8-15%).",
+    "sigmaUncertaintyPlaceholder":   "e.g. 25",
+    "fieldSigmaSource":              "Measurement Source",
+    "fieldSigmaSourceSub":           "How σ_i was determined. More specific sources carry higher weight in community priors.",
+    "sigmaSourceUnspecified":        "(unspecified)",
+    "sigmaSourceLiterature":         "Literature value",
+    "sigmaSourceMeasured":           "Measured (generic)",
+    "sigmaSourceElectrorotation":    "Electrorotation fit",
+    "sigmaSourceImpedance":          "Impedance spectroscopy",
+    "sigmaSourceEstimated":          "Estimated / extrapolated",
+    "fieldSigmaCitation":            "σ_i Citation / Protocol",
+    "fieldSigmaCitationSub":         "DOI, author-year, or measurement protocol identifier for the σ_i value specifically (if distinct from the overall Parameter Source).",
+    "sigmaCitationPlaceholder":      "e.g. Gascoyne & Vykoukal (2002) J Phys D 35:R83",
+
+    "tipSigmaUncertaintyPct": "<strong>σ_i Uncertainty ±%</strong>\nThe ±% band around the entered intracellular conductivity. Represents how tightly this value is known given the measurement technique.\nTypical: literature 20-45% · electrorotation 8-15% · impedance spectroscopy 10-20% · dielectrophoretic crossover 15-25%.\nThe simulator uses this band to weight σ_i-dependent outputs (τ, fc, SAR) and to propagate uncertainty when aggregating into the community library.",
+    "tipSigmaSource":         "<strong>σ_i Measurement Source</strong>\nHow the intracellular conductivity was obtained.\n<em>Literature</em>: value taken from a published source.\n<em>Measured</em>: measured in your own lab but technique not specified.\n<em>Electrorotation fit</em>: σ_i obtained from electrorotation spectrum fitting (high specificity).\n<em>Impedance spectroscopy</em>: σ_i obtained from broadband impedance fit.\n<em>Estimated</em>: extrapolated or adapted from a similar cell type.\nMore specific sources carry higher weight in the community σ_i prior.",
+    "tipSigmaCitation":       "<strong>σ_i Citation / Protocol</strong>\nCitation or protocol identifier for the σ_i value specifically. Use when the σ_i source differs from the overall Parameter Source (e.g. morphology and thresholds from paper A, σ_i from your own electrorotation measurement).\nLeave blank if the overall Parameter Source already covers σ_i.",
+
     "nuclearSectionTitle": "Nuclear Envelope (double-shell)",
     "nuclearSectionSub":   "Optional. Enables Kotnik & Miklavcic (2006) double-shell model for nuclear Vm and NE-selective disruption.",
     "fieldNuclearRadius":    "Nuclear Radius R_nuc",

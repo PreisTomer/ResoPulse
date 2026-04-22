@@ -137,6 +137,30 @@ describe('createCellPreset', () => {
     expect(data.capsidQ).toBeNull()
     expect(data.resonantThresholdVcm).toBeNull()
   })
+
+  it('stores sigma provenance fields when provided, trimming citation', async () => {
+    mockPrisma.userCellPreset.create.mockResolvedValue(DB_ROW)
+    const input: CellPresetInput = {
+      ...BASE_INPUT,
+      sigmaUncertaintyPct: 25,
+      sigmaSource:         'electrorotation',
+      sigmaCitation:       '  Gascoyne & Vykoukal (2002)  ',
+    }
+    await createCellPreset(ORG_ID, CREATED_BY, input)
+    const data = mockPrisma.userCellPreset.create.mock.calls[0][0].data
+    expect(data.sigmaUncertaintyPct).toBe(25)
+    expect(data.sigmaSource).toBe('electrorotation')
+    expect(data.sigmaCitation).toBe('Gascoyne & Vykoukal (2002)')
+  })
+
+  it('nulls sigma provenance fields when not provided', async () => {
+    mockPrisma.userCellPreset.create.mockResolvedValue(DB_ROW)
+    await createCellPreset(ORG_ID, CREATED_BY, BASE_INPUT)
+    const data = mockPrisma.userCellPreset.create.mock.calls[0][0].data
+    expect(data.sigmaUncertaintyPct).toBeNull()
+    expect(data.sigmaSource).toBeNull()
+    expect(data.sigmaCitation).toBeNull()
+  })
 })
 
 // ── updateCellPreset ──────────────────────────────────────────────────────────
@@ -164,6 +188,30 @@ describe('updateCellPreset', () => {
     await updateCellPreset(PRESET_ID, ORG_ID, { resonantFreqGHz: null })
     const data = mockPrisma.userCellPreset.update.mock.calls[0][0].data
     expect(data.resonantFreqGHz).toBeNull()
+  })
+
+  it('allows explicitly clearing sigma provenance fields with null', async () => {
+    mockPrisma.userCellPreset.findFirst.mockResolvedValue(DB_ROW)
+    mockPrisma.userCellPreset.update.mockResolvedValue(DB_ROW)
+    await updateCellPreset(PRESET_ID, ORG_ID, {
+      sigmaUncertaintyPct: null,
+      sigmaSource:         null,
+      sigmaCitation:       null,
+    })
+    const data = mockPrisma.userCellPreset.update.mock.calls[0][0].data
+    expect(data.sigmaUncertaintyPct).toBeNull()
+    expect(data.sigmaSource).toBeNull()
+    expect(data.sigmaCitation).toBeNull()
+  })
+
+  it('leaves sigma provenance untouched when fields are undefined', async () => {
+    mockPrisma.userCellPreset.findFirst.mockResolvedValue(DB_ROW)
+    mockPrisma.userCellPreset.update.mockResolvedValue(DB_ROW)
+    await updateCellPreset(PRESET_ID, ORG_ID, { label: 'Renamed' })
+    const data = mockPrisma.userCellPreset.update.mock.calls[0][0].data
+    expect(data.sigmaUncertaintyPct).toBeUndefined()
+    expect(data.sigmaSource).toBeUndefined()
+    expect(data.sigmaCitation).toBeUndefined()
   })
 })
 

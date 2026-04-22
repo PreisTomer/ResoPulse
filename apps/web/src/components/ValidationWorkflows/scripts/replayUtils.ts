@@ -4,17 +4,7 @@
 
 const ANIMATE_STEPS = 40  // number of increments for smooth visual sweep
 
-/**
- * Animates a numeric store setter from its current value to a target value
- * over the given duration. Fires the setter ~40 times so the UI slider visibly
- * sweeps rather than jumping. Calls setter(target) exactly at the end to
- * guarantee the final value is precisely correct.
- *
- * @param getter   - returns the current value (read from store)
- * @param setter   - store action that accepts the new value
- * @param target   - final value to reach
- * @param durationMs - total animation time in milliseconds (use the step delayMs)
- */
+// Animates getter→target over durationMs in ~40 steps so sliders sweep; final setter(target) guarantees exact value.
 export function animateTo(
   getter: () => number,
   setter: (v: number) => void,

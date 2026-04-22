@@ -1,20 +1,8 @@
 // Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 
-// =============================================================================
-// src/theme/tokens.ts
-//
-// Design token constants for use in TypeScript / D3 / canvas contexts.
-// CSS counterparts live in src/style.css as custom properties (--fs-*, --op-*, etc.).
-// SCSS counterparts live in src/styles/_tokens.scss as variables ($fs-*, $op-*, etc.).
-//
-// Usage in TypeScript:
-//   import { FS, OPACITY, TRANSITION } from '@/theme/tokens'
-//   import { FS } from '@/theme'   // via barrel
-// =============================================================================
+// Design tokens for TS/D3/canvas; CSS mirrors in style.css (--fs-*, --op-*), SCSS in _tokens.scss. Import via `@/theme` barrel.
 
-// ── Font-size scale ───────────────────────────────────────────────────────────
-// Six named tiers covering all UI text; minimum is xxs (0.65rem).
-// D3 / canvas text sizes are managed independently in utils/cellAnimation.ts.
+// Font-size scale: six UI tiers (xxs=0.65rem min). D3/canvas sizes live in utils/cellAnimation.ts.
 export const FS = {
   xxs: '0.65rem',   // section titles, formula annotations, orient labels
   xs:  '0.70rem',   // secondary mono data, stat sub-labels

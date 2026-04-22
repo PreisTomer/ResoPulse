@@ -1,12 +1,6 @@
 // Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 
-// Anand et al., RSC Advances 2019 — DOI: 10.1039/C9RA07428G
-// MCF-7 σ_i = 0.23 S/m (Table 1) vs MCF-10A σ_i = 0.30 S/m.
-// R(MCF-7) = 8.15 µm (Gascoyne 2002), R(MCF-10A) = 10 µm.
-// Vth(MCF-7) = 0.72 V, Vth(MCF-10A) = 1.0 V (Polevaya 1999).
-// E_lys(MCF-7) = 589 V/cm, E_lys(MCF-10A) = 667 V/cm → TI = 1.13.
-// Protocol: EP buffer (σ_e = 0.14 S/m), 10 kHz, pulsed IRE, θ = 0° (pole-on Schwan).
-// Validation field 620 V/cm sits inside the +78 V/cm selectivity window.
+// Anand 2019 (RSC Adv., 10.1039/C9RA07428G) MCF-7 vs MCF-10A; 620 V/cm, 10 kHz pulsed IRE, θ=0°, TI=1.13.
 
 import { useCellStore } from '@/stores/cellStore'
 import { useUiStore } from '@/stores/uiStore'
@@ -33,9 +27,7 @@ const VALIDATION_FIELD_VCM = 620   // V/cm — midpoint of 589–667 V/cm select
 const VALIDATION_FREQ_KHZ  = 10    // kHz  — 10 kHz pulsed IRE (Anand 2019)
 const VALIDATION_ORIENT    = 0     // deg  — θ=0° pole-on: E_lys = Vth/(1.5R)
 
-// Animation durations.
-// PARAM_HOLD_MS must be well above PARAM_ANIM_MS to account for setTimeout chain
-// latency accumulating across 40 ticks, and to give the user reading time.
+// PARAM_HOLD_MS > PARAM_ANIM_MS to absorb 40-tick setTimeout drift and allow user reading time.
 const PARAM_ANIM_MS  = 1000  // time for each cell param value to sweep to its target
 const PARAM_HOLD_MS  = 2400  // hold = anim + 1400 ms reading time (safe margin for drift)
 const FIELD_ANIM_MS  = 2000  // field sweep — long enough to see MCF-7 cross threshold
@@ -80,9 +72,7 @@ export const createMCF7BreastScript: ScriptFactory = () => {
         },
       },
 
-      // ── Step 1: Load MCF-10A, then animate each Anand 2019 param into view ───
-      // Preset loaded first with placeholder values so the user sees each param
-      // sweep from a neutral starting point to the published Anand 2019 value.
+      // Step 1: load MCF-10A at placeholder values so each param animates to its Anand 2019 target.
       {
         highlightId: 'hl-healthy-card',
         labelKey:    'validate.mcf7.step1',
@@ -132,10 +122,7 @@ export const createMCF7BreastScript: ScriptFactory = () => {
         ),
       },
 
-      // ── Step 2: Load MCF-7 starting at MCF-10A values, animate to cancer values
-      // User sees each cancer-specific parameter diverge from the reference.
-      // applyTargetDefaults fires on id change and sets orientationDeg = 60°.
-      // The setTimeout(0) override runs after the watcher flush to restore θ = 0°.
+      // Step 2: load MCF-7 at MCF-10A values so params diverge on-screen. setTimeout(0) restores θ=0° after applyTargetDefaults sets 60°.
       {
         highlightId: 'hl-target-card',
         labelKey:    'validate.mcf7.step2',
@@ -196,14 +183,15 @@ export const createMCF7BreastScript: ScriptFactory = () => {
           cellStore.setMedium('epbuffer')
         },
       },
-      // ── Step 4: Confirm waveform is pulsed IRE ───────────────────────────────
-      // applyTargetDefaults already sets pulsed for mammalian cells; this step
-      // explicitly confirms it and highlights the control so the user reads it.
+      // Step 4: pin N=1 so electrosensitization (N^-0.20) doesn't drop E_lys ~37% below Anand's 589/667 V/cm.
       {
         highlightId: 'hl-waveform-row',
         labelKey:    'validate.mcf7.step4',
         delayMs:     1400,
-        action:      () => cellStore.setWaveform('pulsed'),
+        action:      () => {
+          cellStore.setWaveform('pulsed')
+          cellStore.setLysisNPulses(1)
+        },
       },
       // ── Step 5: Sweep frequency down to 10 kHz ───────────────────────────────
       {
@@ -217,9 +205,7 @@ export const createMCF7BreastScript: ScriptFactory = () => {
           1800,
         ),
       },
-      // ── Step 6: Sweep field 1 → 620 V/cm — user watches MCF-7 cross threshold
-      // Field is explicitly reset to 1 first so the sweep always starts from the
-      // bottom regardless of what applyTargetDefaults may have set.
+      // Step 6: reset field to 1, then sweep to 620 V/cm so the sweep always starts from the bottom.
       {
         highlightId: 'hl-field-row',
         labelKey:    'validate.mcf7.step6',

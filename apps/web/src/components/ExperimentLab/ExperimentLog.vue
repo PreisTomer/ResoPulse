@@ -79,6 +79,7 @@
             <th v-if="!isResonanceMode" v-tip="$t('log.tipThDepT')">{{ $t('log.logThDepT') }}</th>
             <th v-if="!isResonanceMode" v-tip="$t('log.tipThBms')">{{ $t('log.logThBms') }}</th>
             <th v-tip="$t('log.tipThEvent')">{{ $t('exp.logThEvent') }}</th>
+            <th class="exp-log__th-measured" v-tip="$t('log.tipLogMeasured')">{{ $t('log.logMeasuredBtn') }}</th>
             <th v-if="experimentStore.aiConsentGiven" class="exp-log__th-rating">{{ $t('ai.rateSubmitBtn').slice(0, 4) }}</th>
           </tr>
         </thead>
@@ -116,6 +117,28 @@
             <td class="exp-log__td-event">
               <StatusBadge :label="e.event" :variant="eventVariant(e.event)" :tooltip="tipCellEvent(e)" />
             </td>
+            <td class="exp-log__td-measured">
+              <button
+                v-if="!e.measured"
+                class="exp-log__measured-btn"
+                v-tip="$t('log.tipLogMeasured')"
+                @click="openMeasuredModal(e.id)"
+              >{{ ICON.FLASK }} {{ $t('log.logMeasuredBtn') }}</button>
+              <div
+                v-else
+                class="exp-log__measured-summary"
+                v-tip="tipMeasuredBadge(e)"
+                @click="openMeasuredModal(e.id)"
+              >
+                <span class="exp-log__measured-badge">{{ ICON.FLASK }} {{ $t('log.measuredBadge') }}</span>
+                <span
+                  v-for="delta in deltaChips(e)"
+                  :key="delta.key"
+                  class="exp-log__delta-chip"
+                  :class="`exp-log__delta-chip--${delta.variant}`"
+                >{{ delta.label }} {{ delta.value }}</span>
+              </div>
+            </td>
             <td v-if="experimentStore.aiConsentGiven" class="exp-log__td-rating">
               <div v-if="e.outcomeRating != null" class="exp-log__rating-stars" v-tip="$t('ai.ratedBadge')">
                 <span
@@ -144,6 +167,14 @@
 
     </div>
     </AccordionPanel>
+
+    <LogMeasuredModal
+      v-if="measuredModalEntry"
+      :is-open="measuredModalEntryId !== null"
+      :entry="measuredModalEntry"
+      @close="closeMeasuredModal"
+      @save="saveMeasuredOutcome"
+    />
   </div><!-- /exp-log -->
 </template>
 
@@ -157,10 +188,12 @@ import { useAiStore } from '@/stores/aiStore'
 import { useAuthStore } from '@/stores/authStore'
 import { useTokenStore } from '@/stores/tokenStore'
 
-import { broadcastLogEntry, broadcastLogOutcome } from '@/services/socket'
+import { broadcastLogEntry, broadcastLogOutcome, broadcastLogMeasuredOutcome } from '@/services/socket'
 
 import AccordionPanel from '@/components/AccordionPanel/index.vue'
 import StatusBadge from '@/components/StatusBadge/index.vue'
+
+import LogMeasuredModal from './LogMeasuredModal.vue'
 
 import { eventVariant as sharedEventVariant, depKDisplay, depKDisplayFull } from '@/utils/experimentUtils'
 import {
@@ -177,16 +210,20 @@ import { formatFreqKHz } from '@/utils/format'
 
 import { CHART_MODE, LOG_EVENT, NULL_DISPLAY } from '@/constants/strings'
 import type { ChartMode } from '@/constants/strings'
+import type { LogEntry, MeasuredOutcome } from '@/types/experiment'
 import { ICON } from '@/constants/icons'
 import { ROUTE } from '@/constants/routes'
 import { THRESHOLDS } from '@/constants/physics'
 import { UNIT } from '@/constants/units'
 
 export default defineComponent({
-  components: { AccordionPanel, StatusBadge },
+  components: { AccordionPanel, StatusBadge, LogMeasuredModal },
 
   data() {
-    return { showGuestExportNote: false }
+    return {
+      showGuestExportNote: false,
+      measuredModalEntryId: null as number | null,
+    }
   },
 
   computed: {
@@ -222,10 +259,18 @@ export default defineComponent({
       return names.size > 1
     },
     emptyColspan(): number {
-      // Schwan: #, time, freq, field, T-Vm, H-Vm, sel, DEP-H, DEP-T, BMS, event = 11
-      // Resonance: #, time, freq, field, T-DR%, H-DR%, event = 7
-      const base = this.isResonanceMode ? 7 : 11
-      return this.showSessionCol ? base + 1 : base
+      // Schwan: #, time, freq, field, T-Vm, H-Vm, sel, DEP-H, DEP-T, BMS, event, measured = 12
+      // Resonance: #, time, freq, field, T-DR%, H-DR%, event, measured = 8
+      const base = this.isResonanceMode ? 8 : 12
+      let extra = 0
+      if (this.showSessionCol) extra += 1
+      if (this.experimentStore.aiConsentGiven) extra += 1
+      return base + extra
+    },
+
+    measuredModalEntry(): LogEntry | null {
+      if (this.measuredModalEntryId === null) return null
+      return this.experimentStore.entries.find((e) => e.id === this.measuredModalEntryId) ?? null
     },
 
     tipThSel(): string {
@@ -334,6 +379,100 @@ export default defineComponent({
     },
     tipCellDepT(e: { depTargetK?: number }): string {
       return sharedTipCellDepT(this.$t.bind(this), e)
+    },
+
+    // ── Measured outcome modal ────────────────────────────────────────────────
+    openMeasuredModal(entryId: number) {
+      this.measuredModalEntryId = entryId
+    },
+    closeMeasuredModal() {
+      this.measuredModalEntryId = null
+    },
+    async saveMeasuredOutcome(measured: Omit<MeasuredOutcome, 'measuredAt'>) {
+      const entryId = this.measuredModalEntryId
+      if (entryId === null) return
+      const canProceed = await this.tokenStore.consumeOperation('LOG_MEASURED')
+      if (!canProceed) {
+        if (this.authStore.isGuest) this.showGuestExportNote = true
+        this.closeMeasuredModal()
+        return
+      }
+      this.showGuestExportNote = false
+      const entry = this.experimentStore.logMeasuredOutcome(entryId, measured)
+      if (entry?.measured && this.experimentStore.aiConsentGiven && entry.sessionName) {
+        broadcastLogMeasuredOutcome(entry.sessionName, entry.timestamp, entry.measured)
+      }
+      this.closeMeasuredModal()
+    },
+
+    deltaChips(e: LogEntry): Array<{ key: string; label: string; value: string; variant: 'ok' | 'warn' | 'bad' }> {
+      const m = e.measured
+      if (!m) return []
+      const out: Array<{ key: string; label: string; value: string; variant: 'ok' | 'warn' | 'bad' }> = []
+      if (m.targetLysisPct !== undefined) {
+        const delta = m.targetLysisPct - (e.targetRatio ?? 0) * 100
+        out.push({ key: 'tgt', label: 'T',  value: this.formatPctDelta(delta),   variant: this.pctVariant(delta) })
+      }
+      if (m.healthyLysisPct !== undefined) {
+        const delta = m.healthyLysisPct - (e.healthyRatio ?? 0) * 100
+        out.push({ key: 'hlt', label: 'H',  value: this.formatPctDelta(delta),   variant: this.pctVariant(delta) })
+      }
+      if (m.viabilityPct !== undefined) {
+        const predicted = Math.max(0, 100 - (e.healthyRatio ?? 0) * 100)
+        const delta = m.viabilityPct - predicted
+        out.push({ key: 'via', label: 'V',  value: this.formatPctDelta(delta),   variant: this.pctVariant(delta) })
+      }
+      if (m.permeabilizedPct !== undefined) {
+        out.push({ key: 'pm',  label: 'Pm', value: `${m.permeabilizedPct.toFixed(1)}%`, variant: 'ok' })
+      }
+      if (m.transfectionPct !== undefined) {
+        out.push({ key: 'tx',  label: 'Tx', value: `${m.transfectionPct.toFixed(1)}%`,  variant: 'ok' })
+      }
+      if (m.actualFieldVcm !== undefined) {
+        const delta = m.actualFieldVcm - (e.fieldVcm ?? 0)
+        out.push({ key: 'fld', label: 'F',  value: this.formatRawDelta(delta, 0, 'V/cm'), variant: this.fieldVariant(delta, e.fieldVcm ?? 0) })
+      }
+      if (m.tempC !== undefined) {
+        const delta = m.tempC - (e.targetTemp ?? 0)
+        out.push({ key: 'tmp', label: 'Tp', value: this.formatRawDelta(delta, 1, '°C'),   variant: this.tempVariant(delta) })
+      }
+      return out
+    },
+
+    formatPctDelta(delta: number): string {
+      const sign = delta >= 0 ? '+' : ''
+      return `${sign}${delta.toFixed(1)}%`
+    },
+
+    formatRawDelta(delta: number, digits: number, unit: string): string {
+      const sign = delta >= 0 ? '+' : ''
+      return `${sign}${delta.toFixed(digits)} ${unit}`
+    },
+
+    pctVariant(delta: number): 'ok' | 'warn' | 'bad' {
+      const abs = Math.abs(delta)
+      if (abs <= 10) return 'ok'
+      if (abs <= 25) return 'warn'
+      return 'bad'
+    },
+
+    fieldVariant(delta: number, programmed: number): 'ok' | 'warn' | 'bad' {
+      const pct = programmed > 0 ? Math.abs(delta) / programmed : 0
+      if (pct <= 0.05) return 'ok'
+      if (pct <= 0.15) return 'warn'
+      return 'bad'
+    },
+
+    tempVariant(delta: number): 'ok' | 'warn' | 'bad' {
+      const abs = Math.abs(delta)
+      if (abs <= 1) return 'ok'
+      if (abs <= 3) return 'warn'
+      return 'bad'
+    },
+
+    tipMeasuredBadge(e: LogEntry): string {
+      const time = e.measured?.measuredAt ? new Date(e.measured.measuredAt).toLocaleString() : ''
+      return this.$t('log.tipMeasuredBadge', { time })
     },
   },
 })
@@ -548,6 +687,56 @@ export default defineComponent({
         transform: scale(1.2);
       }
     }
+  }
+
+  &__th-measured {
+    min-width: 9rem;
+    opacity: var(--op-muted);
+  }
+
+  &__td-measured {
+    min-width: 9rem;
+    padding: 0.18rem 0.45rem;
+  }
+
+  &__measured-btn {
+    @include mono-upper(var(--fs-xxs));
+    padding: 0.15rem 0.5rem;
+    background: transparent;
+    border: 1px dashed color-mix(in srgb, var(--color-primary) 35%, transparent);
+    border-radius: 3px;
+    color: var(--color-primary);
+    cursor: pointer;
+    transition: background var(--tr-fast), border-color var(--tr-fast);
+    opacity: var(--op-partial);
+
+    &:hover {
+      opacity: 1;
+      background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+      border-color: var(--color-primary);
+    }
+  }
+
+  &__measured-summary {
+    @include flex-row(0.3rem);
+    cursor: pointer;
+    flex-wrap: wrap;
+  }
+
+  &__measured-badge {
+    @include badge-pill(0.1rem 0.4rem, 3px);
+    @include color-variant(primary, 35%, 10%);
+  }
+
+  &__delta-chip {
+    @include mono-upper(var(--fs-xxs));
+    padding: 0.08rem 0.35rem;
+    border-radius: 3px;
+    border: 1px solid;
+
+    &--ok   { @include color-variant(lime,   35%, 10%); }
+    &--warn { @include color-variant(amber,  35%, 10%); }
+    &--bad  { @include color-variant(danger, 35%, 10%); }
   }
 
   &__guest-note {

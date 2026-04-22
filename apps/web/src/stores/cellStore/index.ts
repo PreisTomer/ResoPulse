@@ -9,6 +9,7 @@ import type { StatePacket } from '@resopulse/shared-types'
 
 import { useExperimentStore } from '@/stores/experimentStore'
 import { useUserPresetsStore } from '@/stores/userPresetsStore'
+import { useCellCalibrationStore } from '@/stores/cellCalibrationStore'
 
 import { computeSchwan, computeSAR, computeIntracellularDebyeSAR, computeSteadyStateTemp, computeFc, computeTau, computeNuclearTau, computeResonantDisruption, computeNuclearVm, computeSkinDepthMm, computeDepCmReal, computeDepCrossoverKHz, computeDepSecondCrossoverKHz, computePopulationLysisFraction, safeRatio, tempCorrectedVth, computePulseEnvelope, computeLysisField, computeSigmaUncertaintyFactor, getHFireMultiplier, isResonanceTargetActive } from '@/utils/physics'
 
@@ -134,9 +135,7 @@ export const useCellStore = defineStore('cell', {
     cosThetaFactor: (state): number => Math.abs(Math.cos(state.orientationDeg * Math.PI / 180)),
     isResonanceMode: (state): boolean => state.chartMode === CHART_MODE.RESONANCE,
 
-    // H-FIRE threshold multiplier for EP path only. Centralises the `waveform === H_FIRE ? 1.75 : 1.0`
-    // ternary that previously lived inline in 13 files. Acoustic resonance getters MUST NOT apply
-    // this factor — see targetDisruptionRatio guard.
+    // H-FIRE ×1.75 threshold multiplier for EP path only; acoustic resonance must NOT apply it.
     hFireMultiplier: (state): number => getHFireMultiplier(state.waveform),
 
     // CW: no pulse sequence, so N collapses to 1 (electrosensitization cannot apply).
@@ -150,6 +149,34 @@ export const useCellStore = defineStore('cell', {
       const sigma_T  = sigma_e0 * (1 + alpha * (T_mean - BODY_TEMP_C))
       const phi = Math.min(0.9, Math.max(0, state.cellPackingFraction))
       return sigma_T * (1 - phi) / (1 + phi / 2)
+    },
+
+    // Calibrated σ_i per preset: sigma_i_corrected = sigma_i_base × multiplier. Falls through to
+    // 1.0 when no calibration row exists (guest session, untested preset, or pre-fit collecting state).
+    healthyCalibrationMultiplier: (state): number =>
+      useCellCalibrationStore().multiplierFor(state.healthy.id),
+
+    targetCalibrationMultiplier: (state): number =>
+      useCellCalibrationStore().multiplierFor(state.target.id),
+
+    // Residual-ratio std from the sigma-multiplier fit. 0 when no fit exists — callers then fall
+    // back to the static literature σ_i uncertainty (computeSigmaUncertaintyFactor by radius).
+    healthyCalibrationUncertainty: (state): number =>
+      useCellCalibrationStore().uncertaintyFor(state.healthy.id),
+
+    targetCalibrationUncertainty: (state): number =>
+      useCellCalibrationStore().uncertaintyFor(state.target.id),
+
+    // Cell configs with σ_i scaled by the per-preset calibration multiplier. Used as the base for
+    // every physics getter on the Schwan/EP path so DR, TI, PEF, and Vm all reflect the digital twin.
+    effectiveHealthy(): CellConfig {
+      const state = this as CellStoreState
+      return { ...state.healthy, conductivity: state.healthy.conductivity * this.healthyCalibrationMultiplier }
+    },
+
+    effectiveTarget(): CellConfig {
+      const state = this as CellStoreState
+      return { ...state.target, conductivity: state.target.conductivity * this.targetCalibrationMultiplier }
     },
 
     lysisDelayMs: (state): number => {
@@ -167,9 +194,7 @@ export const useCellStore = defineStore('cell', {
       return CELL_CATEGORY.MAMMALIAN
     },
 
-    // True when current mode + target cell together drive the acoustic-resonance physics path.
-    // Consolidates the identical `isResonanceTarget` computed previously duplicated in SweepPanel,
-    // PopulationPanel, SelectivityPanel/index, ModeBadge, DisruptionBars, and VmSarGrid.
+    // True when mode + target cell together drive the acoustic-resonance physics path.
     isResonanceTarget(): boolean {
       const state = this as CellStoreState
       return isResonanceTargetActive(this.isResonanceMode, this.targetCellCategory, state.target)
@@ -197,28 +222,28 @@ export const useCellStore = defineStore('cell', {
     pulseEnvelopeFactorHealthy(): number {
       const state = this as CellStoreState
       if (state.waveform !== WAVEFORM.PULSED && state.waveform !== WAVEFORM.H_FIRE) return 1.0
-      return computePulseEnvelope(state.healthy, state.pulseWidthNs, this.effectiveSigmaE)
+      return computePulseEnvelope(this.effectiveHealthy, state.pulseWidthNs, this.effectiveSigmaE)
     },
 
     pulseEnvelopeFactorTarget(): number {
       const state = this as CellStoreState
       const isPulsed = state.waveform === WAVEFORM.PULSED || state.waveform === WAVEFORM.H_FIRE
       if (!isPulsed || this.isResonanceMode) return 1.0
-      return computePulseEnvelope(state.target, state.pulseWidthNs, this.effectiveSigmaE)
+      return computePulseEnvelope(this.effectiveTarget, state.pulseWidthNs, this.effectiveSigmaE)
     },
 
     healthyVm(): number {
       const state = this as CellStoreState
       const sigma_e = this.effectiveSigmaE
       const cosT = this.cosThetaFactor
-      return computeSchwan(state.healthy, state.currentBroadcastFrequency, state.fieldIntensity, sigma_e, cosT)
+      return computeSchwan(this.effectiveHealthy, state.currentBroadcastFrequency, state.fieldIntensity, sigma_e, cosT)
     },
 
     targetVm(): number {
       const state = this as CellStoreState
       const sigma_e = this.effectiveSigmaE
       const cosT = this.cosThetaFactor
-      return computeSchwan(state.target, state.currentBroadcastFrequency, state.fieldIntensity, sigma_e, cosT)
+      return computeSchwan(this.effectiveTarget, state.currentBroadcastFrequency, state.fieldIntensity, sigma_e, cosT)
     },
 
     healthyDisruptionRatio(): number {
@@ -304,9 +329,7 @@ export const useCellStore = defineStore('cell', {
           const effThr    = tempCorrectedVth(t.resonantThresholdVcm, state.targetTemp)
           const hDr      = this.healthyDisruptionRatio
           const freqHz   = state.currentBroadcastFrequency * KHZ_TO_HZ
-          // Sweep (Q_min, Q_max) × (f_res × (1 ± pct/100)) and pick envelope. f_res
-          // uncertainty moves the Lorentzian peak laterally; without it the band can
-          // miss cases where the broadcast frequency is slightly off the nominal peak.
+          // Sweep (Q_min,Q_max) × (f_res × (1±pct/100)); f_res jitter catches off-peak broadcasts.
           const fresPct  = t.resonantFreqUncertaintyPct ?? 0
           const fresLo   = t.resonantFreqGHz * (1 - fresPct / 100)
           const fresHi   = t.resonantFreqGHz * (1 + fresPct / 100)
@@ -330,11 +353,16 @@ export const useCellStore = defineStore('cell', {
       const field   = state.fieldIntensity
       const freq    = state.currentBroadcastFrequency
       const cosT    = this.cosThetaFactor
-      const uncH    = computeSigmaUncertaintyFactor(state.healthy.radius)
-      const uncT    = computeSigmaUncertaintyFactor(state.target.radius)
+      // Band: calibration residual if fit exists, else literature σ_i prior. Residual propagates as σ_i ± (first-order).
+      const calH    = this.healthyCalibrationUncertainty
+      const calT    = this.targetCalibrationUncertainty
+      const uncH    = calH > 0 ? calH : computeSigmaUncertaintyFactor(state.healthy.radius)
+      const uncT    = calT > 0 ? calT : computeSigmaUncertaintyFactor(state.target.radius)
+      const baseH   = this.effectiveHealthy
+      const baseT   = this.effectiveTarget
       // TI_low: weakest target + strongest healthy coupling
-      const vmTLow  = computeSchwan({ ...state.target,  conductivity: state.target.conductivity  * (1 - uncT) }, freq, field, sigma_e, cosT)
-      const vmHHigh = computeSchwan({ ...state.healthy, conductivity: state.healthy.conductivity * (1 + uncH) }, freq, field, sigma_e, cosT)
+      const vmTLow  = computeSchwan({ ...baseT, conductivity: baseT.conductivity * (1 - uncT) }, freq, field, sigma_e, cosT)
+      const vmHHigh = computeSchwan({ ...baseH, conductivity: baseH.conductivity * (1 + uncH) }, freq, field, sigma_e, cosT)
       const pefT    = this.pulseEnvelopeFactorTarget
       const pefH    = this.pulseEnvelopeFactorHealthy
       // Apply same temperature + electrosensitization correction + H-FIRE multiplier as the live DR getters
@@ -345,8 +373,8 @@ export const useCellStore = defineStore('cell', {
       const drHHigh = (vmHHigh * pefH) / (vthH * hfireMult)
       const tiLow   = Math.max(0, safeRatio(drTLow, drHHigh, THRESHOLDS.TI_DISPLAY_CAP, NEAR_ZERO_DR))
       // TI_high: strongest target + weakest healthy coupling
-      const vmTHigh = computeSchwan({ ...state.target,  conductivity: state.target.conductivity  * (1 + uncT) }, freq, field, sigma_e, cosT)
-      const vmHLow  = computeSchwan({ ...state.healthy, conductivity: state.healthy.conductivity * (1 - uncH) }, freq, field, sigma_e, cosT)
+      const vmTHigh = computeSchwan({ ...baseT, conductivity: baseT.conductivity * (1 + uncT) }, freq, field, sigma_e, cosT)
+      const vmHLow  = computeSchwan({ ...baseH, conductivity: baseH.conductivity * (1 - uncH) }, freq, field, sigma_e, cosT)
       const drTHigh = (vmTHigh * pefT) / (vthT * hfireMult)
       const drHLow  = (vmHLow  * pefH) / (vthH * hfireMult)
       const tiHigh  = safeRatio(drTHigh, drHLow, THRESHOLDS.TI_DISPLAY_CAP, NEAR_ZERO_DR)
@@ -358,7 +386,7 @@ export const useCellStore = defineStore('cell', {
       if (!state.healthy.nuclearRadius) return 0
       const sigma_e = this.effectiveSigmaE
       const cosT    = this.cosThetaFactor
-      return computeNuclearVm(state.healthy, state.currentBroadcastFrequency, state.fieldIntensity, sigma_e, cosT)
+      return computeNuclearVm(this.effectiveHealthy, state.currentBroadcastFrequency, state.fieldIntensity, sigma_e, cosT)
     },
 
     targetNuclearVm(): number {
@@ -366,7 +394,7 @@ export const useCellStore = defineStore('cell', {
       if (!state.target.nuclearRadius) return 0
       const sigma_e = this.effectiveSigmaE
       const cosT    = this.cosThetaFactor
-      return computeNuclearVm(state.target, state.currentBroadcastFrequency, state.fieldIntensity, sigma_e, cosT)
+      return computeNuclearVm(this.effectiveTarget, state.currentBroadcastFrequency, state.fieldIntensity, sigma_e, cosT)
     },
 
     healthyNuclearFpeakKHz(): number {
@@ -438,9 +466,7 @@ export const useCellStore = defineStore('cell', {
       // CW: wf=0.5, tp_s=1s → energy/second. Pulsed: wf=1.0, tp_s=t_p → energy/pulse.
       const wf   = state.waveform === WAVEFORM.CW ? WF_CW : WF_PULSED
       const tp_s = state.waveform === WAVEFORM.CW ? 1.0 : state.pulseWidthNs * NS_TO_S
-      // P_volume = σ_e × E²_rms [W/m³] × time window [s] → J/m³
-      // Note: do NOT multiply by dutyCycle here — that would give σ_e × E² × t_p × dc = t_p²/T,
-      // which is neither energy-per-pulse nor average-power and has no standard physical meaning.
+      // P_vol = σ_e·E²_rms [W/m³] × tp [s] → J/m³. No dutyCycle: σ_e·E²·tp·dc = tp²/T is meaningless.
       const energyDensity_J_m3 = this.effectiveSigmaE * E_si ** 2 * wf * tp_s
       return energyDensity_J_m3 * J_M3_TO_MJ_CM3
     },
@@ -449,9 +475,7 @@ export const useCellStore = defineStore('cell', {
       const state = this as CellStoreState
       const wf   = state.waveform === WAVEFORM.CW ? WF_CW : WF_PULSED
       const E_si = state.fieldIntensity * V_CM_TO_V_M
-      // σ_eff = σ_dc + ω·ε₀·ε″(ω). At kHz-MHz the Debye loss term is ~0 and this reduces
-      // to the ionic conduction case. At GHz (resonance mode) dielectric relaxation of
-      // water dominates and must be included, otherwise medium heating reads as zero.
+      // σ_eff = σ_dc + ω·ε₀·ε″(ω); Debye term ~0 at kHz-MHz but dominates at GHz (needed or medium heating reads 0).
       const omega    = TWO_PI * state.currentBroadcastFrequency * KHZ_TO_HZ
       const eps_r_s  = MEDIA[state.medium].permittivity
       const wt       = omega * DEBYE_TAU_AQUEOUS_S
@@ -555,9 +579,7 @@ export const useCellStore = defineStore('cell', {
         const sigma_e   = this.effectiveSigmaE
         const hfireMult = this.hFireMultiplier
         const hThr      = tempCorrectedVth(state.healthy.thresholdVoltage, state.healthyTemp, this.effectivePulseCount) * hfireMult
-        // Candidate peaks: mode 1 and (if present) mode 2. Pick whichever delivers better
-        // selectivity — for multi-mode cells the higher-frequency mode can give greater
-        // target/healthy contrast because healthy Schwan Vm rolls off faster above fc.
+        // Pick best peak between mode 1 / mode 2; higher-f mode wins when healthy Schwan rolls off past fc.
         const selAt = (fresGHz: number): { khz: number; sel: number } => {
           const khz = fresGHz * 1e6
           const drT = computeResonantDisruption(
@@ -649,9 +671,7 @@ export const useCellStore = defineStore('cell', {
       return !this.isResonanceMode && state.currentBroadcastFrequency < ELECTRODE_POLARIZATION_LIMIT_KHZ
     },
 
-    // True when σe is so low (e.g. distilled water, dense packing) that both cells' fc fall
-    // below the slider minimum. In this regime the slider always operates in the rolled-off
-    // 1/f zone, so the displayed TI underestimates the true quasi-DC selectivity.
+    // True when low σe drops both fc below slider min — TI underestimates quasi-DC selectivity.
     fcBelowSliderMin(): boolean {
       if (this.isResonanceMode) return false
       if (this.targetCellCategory !== CELL_CATEGORY.MAMMALIAN) return false
@@ -668,9 +688,7 @@ export const useCellStore = defineStore('cell', {
       return (state.target.radius * vthH) / (state.healthy.radius * vthT)
     },
 
-    // High-frequency TI limit: (R_T·τ_H·Vth_H) / (R_H·τ_T·Vth_T). Sub-unity when target rolls
-    // off faster than healthy (larger R or higher Cm). Valid only in Schwan/IRE mode.
-    // Temperature and electrosensitization corrections applied consistently.
+    // High-f TI limit (R_T·τ_H·Vth_H)/(R_H·τ_T·Vth_T); sub-unity when target rolls off faster. Schwan/IRE only.
     tiHighFreqLimit(): number {
       const state = this as CellStoreState
       const sigma_e = this.effectiveSigmaE
@@ -697,9 +715,7 @@ export const useCellStore = defineStore('cell', {
     targetLysisProbabilityRandom(): number {
       const dr   = this.targetDisruptionRatio
       if (dr <= 0) return 0
-      // In resonance mode, DR is orientation-independent (acoustic, not Schwan Vm).
-      // In Schwan mode, DR includes cosTheta — recover DR_max = DR / cosTheta for the
-      // random-orientation integral: P = max(0, 1 − 1/DR_max).
+      // Schwan DR includes cosθ; recover DR_max = DR/cosθ for P = max(0, 1 − 1/DR_max). Resonance is orientation-independent.
       const cosT  = this.cosThetaFactor
       const drMax = (!this.isResonanceMode && cosT > MIN_COS_THETA) ? dr / cosT : dr
       return Math.max(0, Math.min(1, 1 - 1 / drMax))
@@ -919,9 +935,7 @@ export const useCellStore = defineStore('cell', {
     },
 
     setLysisNPulses(n: number) {
-      // Cap at 1000 rather than the slider's 200 so legacy saved experiments with
-      // high N aren't silently truncated on load. Physics is unchanged past ~190
-      // because tempCorrectedVth() hits ELECTROSENSITIZATION_CLAMP_MIN there.
+      // Cap 1000, not slider's 200, so legacy saves don't truncate; past ~190 the Vth clamp makes it a no-op anyway.
       this.lysisNPulses = Math.max(1, Math.min(1000, Math.round(n)))
     },
 
@@ -959,9 +973,7 @@ export const useCellStore = defineStore('cell', {
 
   persist: {
     key: 'br-cell-store',
-    // Only persist cell identities and physical model assumptions.
-    // Field/frequency/waveform are re-derived on mount to avoid stale cross-session state.
-    // chartMode excluded: sanitizeCategoryParams() derives it from target cell category.
+    // Persist cell identities + model assumptions only; field/frequency/waveform re-derive on mount.
     pick: [
       'healthy',
       'target',

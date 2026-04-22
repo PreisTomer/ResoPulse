@@ -324,22 +324,6 @@ Lysis countdown in the cell card resets immediately when N changes.
 At CW waveform a fixed 2.5 s delay is used instead.`
 }
 
-function buildTipOptimalBtn(beyondNote: string): string {
-  return `<strong>⭐ Snap to Optimal Frequency</strong>
-Frequency that maximises selectivity ratio TI = T-DR / H-DR.
-300-point log scan 10 kHz-500 MHz at current field &amp; medium.${beyondNote}`
-}
-
-export function tipOptimalBtnInRange(): string {
-  return buildTipOptimalBtn('\nClick to set frequency to optimal.')
-}
-
-export function tipOptimalBtnBeyondRange(): string {
-  return buildTipOptimalBtn(
-    '\n<span class="tip-warn">Optimal lies outside current slider range, slider clamped to nearest bound.</span>',
-  )
-}
-
 export function tipScopeNote(): string {
   return `<strong>Applied field parameters</strong>
 Medium · RF Frequency · Field Intensity · Waveform · Duty Cycle · Pulse Width · Orientation θ

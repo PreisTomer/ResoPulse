@@ -1,11 +1,6 @@
 // Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 
-// Tests for drChartCompute.ts: covers all DR computation paths including the critical
-// resonance-vs-Schwan routing, H-FIRE threshold handling, and acoustic cell selection logic.
-//
-// These tests exist because the bugs fixed were in component-level logic that duplicates store
-// computations. The store has its own guard (isResonanceMode && resonantThresholdVcm), but the
-// chart compute layer must independently apply the same gate — which it failed to do.
+// drChartCompute DR paths: resonance-vs-Schwan routing, H-FIRE Vth, acoustic cell selection — chart layer must mirror the store's isResonanceMode gate.
 
 import { describe, it, expect } from 'vitest'
 
@@ -28,9 +23,7 @@ const MAMMALIAN: CellConfig = {
   naturalFrequency: 0.5, specificHeatCapacity: 3600, amplitude: 0.8,
 }
 
-// Bacteria preset mirror — has both EP threshold (thresholdVoltage, V) and
-// acoustic threshold (resonantThresholdVcm, V/cm). These are different quantities:
-// mixing them up is the exact class of bug being guarded against.
+// Bacteria preset mirror — carries both EP Vth [V] and acoustic Vcm [V/cm]; mixing them is the guarded-against bug.
 const ECOLI: CellConfig & { resonantFreqGHz: number; capsidQ: number; resonantThresholdVcm: number } = {
   id: 'ecoli', type: 'target', label: 'E. coli K-12',
   radius: 1.0, membraneThickness: 8, dielectricConstant: 10,

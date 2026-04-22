@@ -327,13 +327,7 @@ describe('optimalFreqResult', () => {
   })
 })
 
-// ── Electrosensitization (N-pulse threshold reduction) ────────────────────────
-// N^(−0.20) reduces EP lysis threshold for both healthy and target cells.
-// Key invariants:
-//   1. DR increases with N (lower threshold → higher disruption at same field)
-//   2. Lysis field decreases with N (less field needed to reach threshold)
-//   3. Selectivity ratio TI is N-invariant (N cancels in the ratio when temps equal)
-//   4. Acoustic resonance DR is completely N-invariant (no pulse-conditioning)
+// Electrosensitization invariants: DR↑ with N, lysis field↓ with N, TI is N-invariant when temps match, resonance DR is fully N-invariant.
 
 describe('electrosensitization — DR and lysis field respond to N', () => {
   it('targetDisruptionRatio increases when lysisNPulses increases', () => {
@@ -425,9 +419,7 @@ describe('electrosensitization — DR and lysis field respond to N', () => {
 
 describe('electrosensitization — TI selectivity is N-invariant', () => {
   it('therapeuticIndex (TI) is the same at N=1 and N=50 (N cancels in ratio)', () => {
-    // TI = targetDR/healthyDR = (Vm_T/Vth_T_eff) / (Vm_H/Vth_H_eff)
-    // Both thresholds scaled by the same N^(−0.20) → factor cancels exactly
-    // (Requires both cells at same temperature, which is the default state)
+    // TI = (Vm_T/Vth_T_eff)/(Vm_H/Vth_H_eff); N^(−0.20) cancels exactly when temps match (default state).
     const storeN1  = freshStore()
     storeN1.setLysisNPulses(1)
     const tiN1 = storeN1.therapeuticIndex

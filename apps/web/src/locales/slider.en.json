@@ -7,7 +7,6 @@
     "thermalVaporizing": "VAPORIZING: T > 100°C · SAR model invalid above boiling point",
     "thermalDenaturing": "PROTEIN DENATURATION: reduce duty cycle",
     "thermalHyperthermic": "HYPERTHERMIC: thermal damage onset",
-    "snapOptimal": "⭐ Optimal",
     "snapFcH": "→ fc(H)",
     "snapFcT": "→ fc(T)",
     "tipSnapFcH": "Snap frequency to healthy cell corner frequency fc(H) = {fc}\nAt fc: Vm drops to 1/√2 of quasi-DC peak. Useful for selective τ measurement.",

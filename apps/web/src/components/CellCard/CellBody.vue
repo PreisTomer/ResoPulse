@@ -21,6 +21,34 @@
         <span class="cell-body__metric-value">{{ metricsFc }}</span>
       </div>
     </div>
+
+    <!-- Any-type: predicted vs measured overlay ("the magic moment") -->
+    <div
+      v-if="measuredOverlay"
+      class="cell-body__mvp"
+      v-tip="$t('cells.measuredVsPredicted.tip')"
+    >
+      <div class="cell-body__mvp-header">
+        <span class="cell-body__mvp-label">{{ $t('cells.measuredVsPredicted.label') }}</span>
+        <span class="cell-body__mvp-delta" :class="mvpDeltaClass">{{ mvpDeltaText }}</span>
+      </div>
+      <div class="cell-body__mvp-bars">
+        <div class="cell-body__mvp-bar cell-body__mvp-bar--predicted">
+          <div class="cell-body__mvp-bar-fill" :style="{ width: mvpPredictedWidth }"></div>
+          <div class="cell-body__mvp-bar-value">
+            <span class="cell-body__mvp-bar-caption">{{ $t('cells.measuredVsPredicted.predicted') }}</span>
+            <span class="cell-body__mvp-bar-number">{{ mvpPredictedPct }}%</span>
+          </div>
+        </div>
+        <div class="cell-body__mvp-bar cell-body__mvp-bar--measured">
+          <div class="cell-body__mvp-bar-fill" :style="{ width: mvpMeasuredWidth }"></div>
+          <div class="cell-body__mvp-bar-value">
+            <span class="cell-body__mvp-bar-caption">{{ $t('cells.measuredVsPredicted.measured') }}</span>
+            <span class="cell-body__mvp-bar-number">{{ mvpMeasuredPct }}%</span>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -30,11 +58,14 @@ import type { PropType } from 'vue'
 import { mapStores } from 'pinia'
 
 import { useCellStore } from '@/stores/cellStore'
+import { useExperimentStore } from '@/stores/experimentStore'
 
 import { splitFreqKHz, formatLysisFieldVcm } from '@/utils/format'
 
 import { CELL_STATE, CELL_TYPE } from '@/constants/strings'
 import { LYSIS_FIELD_SENTINEL, THRESHOLDS } from '@/constants/physics'
+
+import type { MeasuredVsPredicted } from '@/stores/experimentStore'
 
 export default defineComponent({
   props: {
@@ -43,7 +74,7 @@ export default defineComponent({
   },
 
   computed: {
-    ...mapStores(useCellStore),
+    ...mapStores(useCellStore, useExperimentStore),
     CELL_STATE() { return CELL_STATE },
     CELL_TYPE()  { return CELL_TYPE },
 
@@ -84,6 +115,38 @@ export default defineComponent({
     },
 
     isMetricsVisible(): boolean { return this.type === CELL_TYPE.TARGET && this.cellState !== CELL_STATE.LYSED },
+
+    measuredOverlay(): MeasuredVsPredicted | null {
+      return this.experimentStore.latestMeasuredOutcomes[this.type]
+    },
+
+    mvpPredictedPct(): string { return this.measuredOverlay ? this.measuredOverlay.predictedPct.toFixed(0) : '0' },
+    mvpMeasuredPct():  string { return this.measuredOverlay ? this.measuredOverlay.measuredPct.toFixed(0)  : '0' },
+
+    mvpPredictedWidth(): string {
+      if (!this.measuredOverlay) return '0%'
+      return `${Math.min(100, Math.max(0, this.measuredOverlay.predictedPct))}%`
+    },
+
+    mvpMeasuredWidth(): string {
+      if (!this.measuredOverlay) return '0%'
+      return `${Math.min(100, Math.max(0, this.measuredOverlay.measuredPct))}%`
+    },
+
+    mvpDeltaText(): string {
+      if (!this.measuredOverlay) return ''
+      const d = this.measuredOverlay.deltaPct
+      const sign = d > 0 ? '+' : ''
+      return this.$t('cells.measuredVsPredicted.deltaPp', { pp: `${sign}${d.toFixed(1)}` })
+    },
+
+    mvpDeltaClass(): string {
+      if (!this.measuredOverlay) return ''
+      const abs = Math.abs(this.measuredOverlay.deltaPct)
+      if (abs > THRESHOLDS.CALIB_DRIFT_PP)   return 'cell-body__mvp-delta--drift'
+      if (abs < THRESHOLDS.CALIB_STRONG_PP)  return 'cell-body__mvp-delta--strong'
+      return 'cell-body__mvp-delta--moderate'
+    },
   },
 })
 </script>
@@ -136,6 +199,79 @@ export default defineComponent({
     &--good   { color: var(--color-accent); }
     &--warn   { color: var(--color-amber); }
     &--danger { color: var(--color-danger); }
+  }
+
+  &__mvp {
+    @include flex-col(0.35rem);
+    margin-top: 0.6rem;
+    padding: 0.45rem 0.55rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    background: color-mix(in srgb, white 2.5%, transparent);
+    cursor: help;
+  }
+
+  &__mvp-header {
+    @include flex-between(0.5rem);
+    align-items: baseline;
+  }
+
+  &__mvp-label {
+    @include mono-upper(var(--fs-xxs), 0.08em);
+    opacity: var(--op-muted);
+  }
+
+  &__mvp-delta {
+    @include mono-upper(var(--fs-xxs), 0.05em);
+    font-weight: 700;
+
+    &--drift    { color: var(--color-danger); }
+    &--moderate { color: var(--color-amber); }
+    &--strong   { color: var(--color-accent); }
+  }
+
+  &__mvp-bars {
+    @include flex-col(0.25rem);
+  }
+
+  &__mvp-bar {
+    position: relative;
+    height: 1.1rem;
+    border-radius: 3px;
+    background: color-mix(in srgb, white 3%, transparent);
+    overflow: hidden;
+
+    &--predicted .cell-body__mvp-bar-fill { background: color-mix(in srgb, var(--color-primary) 35%, transparent); }
+    &--measured  .cell-body__mvp-bar-fill { background: color-mix(in srgb, var(--color-accent)  55%, transparent); }
+  }
+
+  &__mvp-bar-fill {
+    position: absolute;
+    inset: 0 auto 0 0;
+    transition: width var(--tr-slow);
+  }
+
+  &__mvp-bar-value {
+    position: relative;
+    z-index: 1;
+    @include flex-between(0.5rem);
+    align-items: center;
+    height: 100%;
+    padding: 0 0.5rem;
+    font-family: var(--font-mono);
+    font-size: var(--fs-xxs);
+    line-height: 1;
+  }
+
+  &__mvp-bar-caption {
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    opacity: var(--op-muted);
+  }
+
+  &__mvp-bar-number {
+    font-weight: 700;
+    letter-spacing: -0.01em;
   }
 }
 </style>

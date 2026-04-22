@@ -52,6 +52,13 @@
   100% { background: transparent; }
 }
 
+@keyframes import-row-flash {
+  0%   { background: transparent; }
+  12%  { background: rgba(251, 191, 36, 0.28); }
+  55%  { background: rgba(251, 191, 36, 0.14); }
+  100% { background: transparent; }
+}
+
 // ── NavBar ────────────────────────────────────────────────────────────────────
 
 @keyframes token-pulse {

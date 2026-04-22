@@ -38,6 +38,7 @@ import { useThemeStore } from './stores/themeStore'
 import { useAuthStore } from './stores/authStore'
 import { useTokenStore } from './stores/tokenStore'
 import { useUserPresetsStore } from './stores/userPresetsStore'
+import { useCellCalibrationStore } from './stores/cellCalibrationStore'
 
 import { ROUTE } from './constants/routes'
 import { STORAGE_KEY } from './constants/storageKeys'
@@ -49,11 +50,10 @@ export default defineComponent({
     const authStore              = useAuthStore()
     const tokenStore             = useTokenStore()
     const userPresetsStore       = useUserPresetsStore()
+    const calibrationStore       = useCellCalibrationStore()
     const { isLoaded, isSignedIn, orgId } = useAuth()
 
-    // Keep authStore in sync with Clerk's reactive state.
-    // isLoaded becomes true once Clerk has resolved the initial session check —
-    // only then is it safe for the router guard to read auth state.
+    // Mirror Clerk → authStore; router guard must wait for isLoaded before reading auth.
     watch(
       [isLoaded, isSignedIn, orgId],
       ([loaded, signedIn, oid]) => {
@@ -67,8 +67,10 @@ export default defineComponent({
           tokenStore.fetchBalance()
           tokenStore.startPolling()
           userPresetsStore.fetchAll()
+          calibrationStore.fetchAll()
         } else {
           tokenStore.reset()
+          calibrationStore.reset()
           // Load guest presets from localStorage if not signed in
           userPresetsStore.fetchAll()
         }

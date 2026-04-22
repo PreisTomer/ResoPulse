@@ -72,9 +72,7 @@ export function computeCuvetteComplexImpedanceMag(
   return (d_m / A_m2) / Math.sqrt(sigmaEffective ** 2 + (omega * eps) ** 2)
 }
 
-// Z_real and Z_imag of the parallel-RC cuvette model [Ω].
-// Useful for computing the exact complex reflection coefficient (see computeReflectionCoeffComplex).
-// Z_real = (d/A)·σ/(σ²+(ωε)²),  Z_imag = −(d/A)·ωε/(σ²+(ωε)²)
+// Parallel-RC cuvette Z [Ω]: Z_real = (d/A)·σ/(σ²+(ωε)²), Z_imag = −(d/A)·ωε/(σ²+(ωε)²). Drives exact Γ.
 export function computeCuvetteZComponents(
   gapMm:          number,
   areaCm2:        number,
@@ -111,10 +109,7 @@ export function computeReflectionCoeff(zLoadOhm: number, z0Ohm: number): number 
   return Math.abs((zLoadOhm - z0Ohm) / (zLoadOhm + z0Ohm))
 }
 
-// |Γ| = √((R−Z₀)²+X²) / √((R+Z₀)²+X²) — correct formula for complex load Z_L = R+jX.
-// Required for accurate VSWR when hardware reports reactive impedance component (non-zero Z_imag).
-// At EP frequencies (<1 MHz) Z_imag is small vs Z_real so error from the scalar version is <5%;
-// at RF/GHz frequencies or in hardware mode with capacitive cuvettes this is the correct formula.
+// |Γ| for complex Z_L = R+jX: √((R−Z₀)²+X²)/√((R+Z₀)²+X²). Scalar version errs <5% sub-MHz but is wrong at RF/GHz.
 export function computeReflectionCoeffComplex(
   zRealOhm: number,
   zImagOhm: number,
@@ -198,9 +193,7 @@ export function computeCorrectedFieldVcm(
 
 // ── Hardware back-derivation ──────────────────────────────────────────────────
 
-// σ = d/(Z_real·A) [S/m] — DC approximation, valid when |Z_imag| ≪ |Z_real|.
-// Error < 5% at typical EP frequencies (<1 MHz); use computeSigmaEFromComplexImpedance when
-// hardware reports a significant imaginary component (RF/GHz range).
+// σ = d/(Z_real·A) — DC approx; err <5% sub-MHz, use computeSigmaEFromComplexImpedance when Z_imag is non-negligible.
 export function computeSigmaEFromImpedance(
   gapMm:     number,
   areaCm2:   number,
@@ -212,9 +205,7 @@ export function computeSigmaEFromImpedance(
   return d_m / (zRealOhm * A_m2)
 }
 
-// σ = Z_real·d/(A·|Z|²) [S/m] — exact formula from Re[Y] = G = σA/d.
-// Use when hardware impedance bridge provides both real and imaginary parts (RF mode).
-// Derivation: Y = G + jB = 1/Z → G = Z_real/|Z|² → σ = G·d/A.
+// σ = Z_real·d/(A·|Z|²) — exact, from Y = 1/Z → G = Z_real/|Z|². Used when bridge reports both R and X (RF mode).
 export function computeSigmaEFromComplexImpedance(
   gapMm:     number,
   areaCm2:   number,

@@ -1,13 +1,7 @@
 // Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 // @vitest-environment jsdom
 
-// Integration tests for cellStore covering cross-cutting scenarios:
-// - Resonance mode vs Schwan mode path isolation
-// - All three waveforms (CW / Pulsed / H-FIRE) × multiple media
-// - Cell packing fraction + medium switching
-// - Temperature correction flowing into DR
-// - Quasi-DC TI and high-frequency TI limit formulas
-// - Population lysis consistency with DR
+// cellStore integration: resonance/Schwan path isolation, waveforms×media, packing+medium, temp→DR, TI limits, population lysis.
 
 import { setActivePinia, createPinia } from 'pinia'
 import { describe, it, expect } from 'vitest'
@@ -43,9 +37,7 @@ describe('resonance mode path isolation', () => {
   })
 
   it('resonance-mode bacteria target reports zero nuclear DR (no nucleus → numerically gated)', () => {
-    // Nuclear influence is no longer gated by a boolean flag flip on mode switch —
-    // it is naturally zero for cells without nuclearRadius (bacteria, viruses), which
-    // are the species that drive resonance-mode use. Assert the numeric outcome.
+    // Nuclear influence is numerically gated (zero for bacteria/viruses without nuclearRadius), not flag-gated on mode switch.
     const store = freshStore()
     const ecoli = CELL_PRESETS.find(p => p.presetId === 'ecoli')!
     store.loadPreset('target', ecoli)

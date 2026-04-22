@@ -102,6 +102,67 @@
             {{ retrainMessage }}
           </div>
 
+          <!-- Per-cell σ_i calibration status -->
+          <div v-if="sigmaCalibVisible" class="ai-tab__sigma-calib" v-tip="$t('ai.sigmaCalibTip')">
+            <div class="ai-tab__sigma-calib-title">{{ $t('ai.sigmaCalibTitle') }}</div>
+            <div class="ai-tab__sigma-calib-row" :class="sigmaCalibRowClass(healthyCalibStatus)">
+              <span class="ai-tab__sigma-calib-label">{{ $t('ai.sigmaCalibRowHealthy') }}</span>
+              <span class="ai-tab__sigma-calib-value">{{ sigmaCalibLine(healthyCalibStatus) }}</span>
+            </div>
+            <div class="ai-tab__sigma-calib-row" :class="sigmaCalibRowClass(targetCalibStatus)">
+              <span class="ai-tab__sigma-calib-label">{{ $t('ai.sigmaCalibRowTarget') }}</span>
+              <span class="ai-tab__sigma-calib-value">{{ sigmaCalibLine(targetCalibStatus) }}</span>
+            </div>
+            <button
+              v-if="canPreviewCalibration"
+              class="ai-tab__sigma-calib-cta"
+              @click="openCalibrationPreview"
+            >{{ $t('ai.sigmaCalibPreviewCta') }}</button>
+            <div v-else-if="isResonanceCalibPath" class="ai-tab__sigma-calib-note">
+              {{ $t('ai.sigmaCalibResonanceNote') }}
+            </div>
+          </div>
+
+          <ApplyCalibrationModal
+            :is-open="calibPreviewOpen"
+            :healthy-multiplier="healthyCalibStatus.sigmaMultiplier"
+            :target-multiplier="targetCalibStatus.sigmaMultiplier"
+            @close="closeCalibrationPreview"
+          />
+
+          <!-- Model calibration: measured vs predicted residuals across this lab's sessions -->
+          <CalibrationBadge
+            variant="full"
+            @click-log="goToReports"
+            @click-details="toggleCalibDetails"
+          />
+
+          <!-- Residual details (collapsible) -->
+          <div v-if="calibDetailsOpen" class="ai-tab__calib-details">
+            <div class="ai-tab__calib-details-title">{{ $t('ai.calibDetailsTitle') }}</div>
+            <div v-if="recentResiduals.length === 0" class="ai-tab__calib-details-empty">
+              {{ $t('ai.calibEmpty') }}
+            </div>
+            <table v-else class="ai-tab__calib-table">
+              <thead>
+                <tr>
+                  <th>{{ $t('ai.calibColEntry') }}</th>
+                  <th>{{ $t('ai.calibColTarget') }}</th>
+                  <th>{{ $t('ai.calibColHealthy') }}</th>
+                  <th>{{ $t('ai.calibColField') }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="r in recentResiduals" :key="r.entryId">
+                  <td>#{{ r.entryId }}</td>
+                  <td :class="residualCellClass(r.targetResidualPct)">{{ formatPp(r.targetResidualPct) }}</td>
+                  <td :class="residualCellClass(r.healthyResidualPct)">{{ formatPp(r.healthyResidualPct) }}</td>
+                  <td>{{ formatVcm(r.fieldResidualVcm) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
           <!-- Offline note -->
           <div v-if="showOfflineNote" class="ai-tab__error-note">
             {{ ICON.WARNING }} {{ $t('ai.errorNote') }}
@@ -172,6 +233,8 @@ import { mapStores } from 'pinia'
 
 import { useAiStore } from '@/stores/aiStore'
 import { useAuthStore } from '@/stores/authStore'
+import { useCellStore } from '@/stores/cellStore'
+import { useCellCalibrationStore } from '@/stores/cellCalibrationStore'
 import { useExperimentStore } from '@/stores/experimentStore'
 import { useTokenStore } from '@/stores/tokenStore'
 
@@ -179,14 +242,19 @@ import { requestAiOptimization, broadcastStateSync } from '@/services/socket'
 
 import SideTabPanel from '@/components/ExperimentLab/SideTabPanel.vue'
 import AiResultCard from '@/components/ExperimentLab/AiResultCard.vue'
+import ApplyCalibrationModal from '@/components/ExperimentLab/ApplyCalibrationModal.vue'
+import CalibrationBadge from '@/components/CalibrationBadge/index.vue'
 
 import { ICON } from '@/constants/icons'
 import { ROUTE } from '@/constants/routes'
+import { THRESHOLDS } from '@/constants/physics'
+
+import type { CalibrationStatus } from '@/stores/cellCalibrationStore'
 
 export default defineComponent({
   name: 'AiOptimizerTab',
 
-  components: { SideTabPanel, AiResultCard },
+  components: { SideTabPanel, AiResultCard, ApplyCalibrationModal, CalibrationBadge },
 
   data() {
     return {
@@ -196,6 +264,8 @@ export default defineComponent({
       isRetraining:         false,
       retrainMessage:       '' as string,
       retrainMsgClass:      '' as string,
+      calibDetailsOpen:     false,
+      calibPreviewOpen:     false,
       _healthPollTimer:     null as ReturnType<typeof setInterval> | null,
     }
   },
@@ -212,7 +282,36 @@ export default defineComponent({
   computed: {
     ICON()  { return ICON  },
     ROUTE() { return ROUTE },
-    ...mapStores(useAiStore, useAuthStore, useExperimentStore, useTokenStore),
+    SIGMA_MIN() { return THRESHOLDS.SIGMA_CALIB_MULT_MIN.toFixed(1) },
+    SIGMA_MAX() { return THRESHOLDS.SIGMA_CALIB_MULT_MAX.toFixed(1) },
+    SIGMA_MIN_SAMPLES() { return THRESHOLDS.SIGMA_CALIB_MIN_SAMPLES },
+    ...mapStores(useAiStore, useAuthStore, useCellStore, useCellCalibrationStore, useExperimentStore, useTokenStore),
+
+    healthyCalibStatus(): CalibrationStatus {
+      return this.cellCalibrationStore.statusFor(this.cellStore.healthy.id)
+    },
+    targetCalibStatus(): CalibrationStatus {
+      return this.cellCalibrationStore.statusFor(this.cellStore.target.id)
+    },
+    sigmaCalibVisible(): boolean {
+      return this.authStore.isSignedIn && this.authStore.hasOrg
+    },
+
+    isResonanceCalibPath(): boolean {
+      return this.cellStore.isResonanceTarget
+    },
+
+    hasActionableMultiplier(): boolean {
+      const h = this.healthyCalibStatus
+      const t = this.targetCalibStatus
+      const meaningful = (s: { state: string; sigmaMultiplier: number }) =>
+        (s.state === 'calibrated' || s.state === 'clamped') && Math.abs(s.sigmaMultiplier - 1.0) > 1e-3
+      return meaningful(h) || meaningful(t)
+    },
+
+    canPreviewCalibration(): boolean {
+      return this.hasActionableMultiplier && !this.isResonanceCalibPath
+    },
 
     panelSubtitle(): string {
       if (this.aiStore.isLoading) return this.$t('ai.panelSubtitleLoading')
@@ -245,6 +344,10 @@ export default defineComponent({
     showLowConfidenceWarning(): boolean {
       return this.aiStore.hasResult && this.aiStore.confidence < 0.55
     },
+
+    recentResiduals() {
+      return this.experimentStore.measuredResiduals.slice(0, 5)
+    },
   },
 
   methods: {
@@ -270,6 +373,7 @@ export default defineComponent({
     },
 
     applyAndBroadcast() {
+      this.tokenStore.consumeOperationLenient('AI_RETRAIN')
       this.aiStore.applySuggestion()
       broadcastStateSync()
     },
@@ -288,6 +392,7 @@ export default defineComponent({
     async triggerRetrain() {
       this.isRetraining   = true
       this.retrainMessage = ''
+      this.tokenStore.consumeOperationLenient('AI_RETRAIN')
       try {
         const backendUrl = (import.meta.env.VITE_BACKEND_URL ?? 'http://localhost:3001').replace(/\/$/, '')
         const res  = await fetch(`${backendUrl}/ai/retrain`, {
@@ -303,6 +408,14 @@ export default defineComponent({
           this.retrainMessage  = this.$t('ai.retrainNoData')
           this.retrainMsgClass = 'ai-tab__retrain-msg--warn'
         }
+        // Refit σ_i for the active cells in parallel with the global retrain — server-side
+        // compute is org-scoped, so skip silently for guests and no-org users.
+        if (this.sigmaCalibVisible) {
+          await Promise.all([
+            this.cellCalibrationStore.compute(this.cellStore.healthy.id),
+            this.cellCalibrationStore.compute(this.cellStore.target.id),
+          ])
+        }
       } catch {
         this.retrainMessage  = this.$t('ai.errorNote')
         this.retrainMsgClass = 'ai-tab__retrain-msg--error'
@@ -310,6 +423,61 @@ export default defineComponent({
         this.isRetraining = false
         setTimeout(() => { this.retrainMessage = '' }, 5_000)
       }
+    },
+
+    sigmaCalibLine(status: CalibrationStatus): string {
+      switch (status.state) {
+        case 'collecting': return this.$t('ai.sigmaCalibCollecting', {
+          n:    status.nSamples,
+          need: THRESHOLDS.SIGMA_CALIB_MIN_SAMPLES,
+        })
+        case 'clamped': return this.$t('ai.sigmaCalibClamped', {
+          m:   status.sigmaMultiplier.toFixed(2),
+          min: this.SIGMA_MIN,
+          max: this.SIGMA_MAX,
+        }) + this.errorDeltaSuffix(status)
+        case 'calibrated': return this.$t('ai.sigmaCalibCalibrated', {
+          m:   status.sigmaMultiplier.toFixed(2),
+          std: status.uncertaintyStd.toFixed(2),
+          n:   status.nSamples,
+        }) + this.errorDeltaSuffix(status)
+        default: return this.$t('ai.sigmaCalibUnknown')
+      }
+    },
+
+    errorDeltaSuffix(status: CalibrationStatus): string {
+      if (status.rmseBefore <= 0 || status.rmseAfter <= 0) return ''
+      return this.$t('ai.sigmaCalibErrorDelta', {
+        before: (status.rmseBefore * 100).toFixed(1),
+        after:  (status.rmseAfter  * 100).toFixed(1),
+      })
+    },
+
+    sigmaCalibRowClass(status: CalibrationStatus): string {
+      return `ai-tab__sigma-calib-row--${status.state}`
+    },
+
+    toggleCalibDetails()       { this.calibDetailsOpen = !this.calibDetailsOpen },
+    openCalibrationPreview()   { this.calibPreviewOpen = true                    },
+    closeCalibrationPreview()  { this.calibPreviewOpen = false                   },
+    goToReports()              { this.$router.push(ROUTE.REPORTS)                },
+
+    formatPp(v: number | null): string {
+      if (v === null) return '—'
+      const sign = v >= 0 ? '+' : ''
+      return `${sign}${v.toFixed(1)} pp`
+    },
+    formatVcm(v: number | null): string {
+      if (v === null) return '—'
+      const sign = v >= 0 ? '+' : ''
+      return `${sign}${v.toFixed(0)} V/cm`
+    },
+    residualCellClass(v: number | null): string {
+      if (v === null)          return ''
+      const abs = Math.abs(v)
+      if (abs > 15) return 'ai-tab__calib-cell--drift'
+      if (abs <  5) return 'ai-tab__calib-cell--strong'
+      return 'ai-tab__calib-cell--moderate'
     },
 
     formatFeatureKey(key: string): string {
@@ -463,6 +631,65 @@ export default defineComponent({
     &--running { animation: ai-pulse 1.4s ease-in-out infinite; }
   }
 
+  // ── Per-cell sigma_i calibration status ────────────────────────
+  &__sigma-calib {
+    @include flex-col(0.3rem);
+    padding: 0.45rem 0.55rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    background: color-mix(in srgb, white 2%, transparent);
+  }
+
+  &__sigma-calib-title {
+    @include mono-upper(var(--fs-xxs), 0.08em);
+    color: var(--color-text-muted);
+  }
+
+  &__sigma-calib-row {
+    @include flex-between();
+    gap: 0.5rem;
+    font-size: var(--fs-xs);
+    font-family: var(--font-mono);
+
+    &--unknown    { color: var(--color-text-muted); opacity: var(--op-dim); }
+    &--collecting { color: var(--color-amber); }
+    &--clamped    { color: var(--color-danger); }
+    &--calibrated { color: var(--color-lime); }
+  }
+
+  &__sigma-calib-label {
+    color: var(--color-text-muted);
+    flex-shrink: 0;
+  }
+
+  &__sigma-calib-value {
+    text-align: right;
+    min-width: 0;
+  }
+
+  &__sigma-calib-cta {
+    @include mono-upper(var(--fs-xxs), 0.06em);
+    align-self: flex-end;
+    margin-top: 0.25rem;
+    padding: 0.2rem 0.45rem;
+    background: transparent;
+    border: 1px solid color-mix(in srgb, var(--color-primary) 30%, transparent);
+    border-radius: 3px;
+    color: var(--color-primary);
+    cursor: pointer;
+    transition: background var(--tr-fast), border-color var(--tr-fast);
+
+    &:hover { background: color-mix(in srgb, var(--color-primary) 10%, transparent); }
+  }
+
+  &__sigma-calib-note {
+    font-size: var(--fs-xxs);
+    color: var(--color-text-muted);
+    opacity: var(--op-muted);
+    line-height: 1.4;
+    margin-top: 0.25rem;
+  }
+
   // ── Feedback messages ──────────────────────────────────────────
   &__retrain-msg {
     font-size: var(--fs-xs);
@@ -552,6 +779,57 @@ export default defineComponent({
     transition: border-color var(--tr-fast), color var(--tr-fast);
 
     &:hover { border-color: var(--color-danger); color: var(--color-danger); }
+  }
+
+  // ── Calibration details ────────────────────────────────────────
+  &__calib-details {
+    @include flex-col(0.4rem);
+    padding: 0.55rem 0.6rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    background: color-mix(in srgb, white 2%, transparent);
+  }
+
+  &__calib-details-title {
+    @include mono-upper(var(--fs-xxs), 0.08em);
+    color: var(--color-text-muted);
+  }
+
+  &__calib-details-empty {
+    font-size: var(--fs-xs);
+    color: var(--color-text-muted);
+    opacity: var(--op-muted);
+  }
+
+  &__calib-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--font-mono);
+    font-size: var(--fs-xxs);
+
+    th {
+      @include mono-upper(var(--fs-xxs), 0.06em);
+      color: var(--color-text-muted);
+      padding: 0.25rem 0.35rem;
+      text-align: right;
+      border-bottom: 1px solid var(--color-border);
+
+      &:first-child { text-align: left; }
+    }
+
+    td {
+      padding: 0.25rem 0.35rem;
+      text-align: right;
+      color: var(--color-text);
+
+      &:first-child { text-align: left; color: var(--color-text-muted); }
+    }
+  }
+
+  &__calib-cell {
+    &--strong   { color: var(--color-lime); }
+    &--moderate { color: var(--color-text); }
+    &--drift    { color: var(--color-amber); }
   }
 
   // ── No-data note ───────────────────────────────────────────────

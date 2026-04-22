@@ -37,6 +37,7 @@ model Organization {
   tokenAccount TokenAccount?
   experiments  ExperimentSession[]
   cellPresets  UserCellPreset[]
+  calibrations CellCalibration[]
 
   @@map("organizations")
 }
@@ -157,6 +158,11 @@ model UserCellPreset {
   thresholdVoltage     Float
   density              Float
   specificHeatCapacity Float
+  // ── σ_i provenance (optional — most uncertain Schwan parameter) ───────────
+  // sigmaSource: "literature" | "measured" | "electrorotation" | "impedance" | "estimated"
+  sigmaUncertaintyPct  Float?
+  sigmaSource          String?  @db.VarChar(16)
+  sigmaCitation        String?  @db.VarChar(500)
   // ── Acoustic / mechanical resonance (bacteria / virus only) ───────────────
   resonantFreqGHz      Float?
   capsidQ              Float?
@@ -171,12 +177,44 @@ model UserCellPreset {
   @@map("user_cell_presets")
 }
 
+// ── CellCalibration ──────────────────────────────────────────────────────────
+// Per-lab (org) scalar correction applied to a cell preset's conductivity.
+// Fitted server-side via scipy least-squares against measured outcome rows for
+// that (org, cellPresetId) pair. Applied at simulation time as:
+//   sigma_i_corrected = sigma_i_base * sigmaMultiplier
+// uncertaintyStd drives the existing sigma_i band visualisation on TI + hero.
+//
+// cellPresetId is a plain string so it matches both built-in cellLibrary ids
+// ("adenocarcinoma") and UserCellPreset.id values — calibration is uniform
+// across preset sources. One active row per (orgId, cellPresetId).
+
+model CellCalibration {
+  id              String   @id @default(cuid())
+  orgId           String
+  cellPresetId    String   // built-in cellLibrary id or UserCellPreset.id
+  sigmaMultiplier Float    @default(1.0)
+  uncertaintyStd  Float    @default(0.0)
+  nSamples        Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@unique([orgId, cellPresetId])
+  @@index([orgId])
+  @@map("cell_calibrations")
+}
+
 // ── Outcome ───────────────────────────────────────────────────────────────────
 // AI training data: one row per user-rated experiment outcome.
 
 model Outcome {
   id             Int      @id @default(autoincrement())
   createdAt      DateTime @default(now())
+  // Clerk orgId (nullable: historical rows predate org-scoped logging).
+  // Calibration fits only use rows where orgId matches the caller's org so
+  // each lab's corrections stay isolated.
+  orgId          String?
   sessionName    String?
   timestamp      String?
   freqKhz        Int
@@ -202,8 +240,27 @@ model Outcome {
   targetRadiusUm Float    @default(0)
   sigmaE         Float    @default(0)
 
+  // ── Measured outcomes (Stage C.2) ─────────────────────────────────────────
+  // Populated via logMeasuredOutcome socket event after the scientist records
+  // bench measurements. All nullable: a row starts as pure prediction and
+  // gains measured columns once the assay is read.
+  measuredAt               String?
+  measuredTargetLysisPct   Float?
+  measuredHealthyLysisPct  Float?
+  measuredViabilityPct     Float?
+  measuredPermeabilizedPct Float?
+  measuredTransfectionPct  Float?
+  measuredViabilityAssay   String? @db.VarChar(20)
+  measuredAssayTimepointH  Float?
+  measuredTempC            Float?
+  measuredFieldVcm         Float?
+  measuredLysisDelayMs     Int?
+  measuredNotes            String? @db.VarChar(500)
+
   @@index([targetPreset])
   @@index([rating])
   @@index([targetTauNs])
+  @@index([sessionName, timestamp])
+  @@index([orgId, targetPreset])
   @@map("outcomes")
 }

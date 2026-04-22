@@ -21,6 +21,9 @@
       :nuclear-vm-mv="nuclearVmMv"
       :nuclear-disruption-ratio="nuclearDisruptionRatio"
       :has-cell-data="!!cellData"
+      :provenance-chip="provenanceChip"
+      :provenance-chip-variant="provenanceChipVariant"
+      :provenance-tip="provenanceTip"
     />
 
     <CellParamsPanel
@@ -63,6 +66,8 @@ import { mapStores } from 'pinia'
 
 import { useCellStore } from '@/stores/cellStore'
 import { useUiStore } from '@/stores/uiStore'
+import { useUserPresetsStore } from '@/stores/userPresetsStore'
+import type { UserCellPreset } from '@/stores/userPresetsStore'
 
 import { membraneCm, computeTau, tempCorrectedVth } from '@/utils/physics'
 import { splitFreqKHz } from '@/utils/format'
@@ -116,9 +121,65 @@ export default defineComponent({
   },
 
   computed: {
-    ...mapStores(useCellStore, useUiStore),
+    ...mapStores(useCellStore, useUiStore, useUserPresetsStore),
     CELL_STATE() { return CELL_STATE },
     CELL_TYPE()  { return CELL_TYPE },
+
+    userPreset(): UserCellPreset | null {
+      if (!this.cellData) return null
+      return this.userPresetsStore.presets.find((p) => p.id === this.cellData!.id) ?? null
+    },
+
+    provenanceChip(): string {
+      const p = this.userPreset
+      if (!p) return ''
+      const confidence = p.parameterConfidence ?? 'literature'
+      const map: Record<string, string> = {
+        literature: this.$t('userPresets.confidenceBadgeLit'),
+        measured:   this.$t('userPresets.confidenceBadgeMeas'),
+        estimated:  this.$t('userPresets.confidenceBadgeEst'),
+      }
+      return map[confidence] ?? confidence.toUpperCase().slice(0, 4)
+    },
+
+    provenanceChipVariant(): string {
+      const p = this.userPreset
+      return p?.parameterConfidence ?? 'literature'
+    },
+
+    provenanceTip(): string {
+      const p = this.userPreset
+      if (!p) return ''
+      const lines: string[] = ['<strong>Parameter Provenance</strong>']
+      const confidence = p.parameterConfidence ?? 'literature'
+      const confLabel  = {
+        literature: this.$t('userPresets.confidenceLiterature'),
+        measured:   this.$t('userPresets.confidenceMeasured'),
+        estimated:  this.$t('userPresets.confidenceEstimated'),
+      }[confidence] ?? confidence
+      lines.push(`Confidence: <span class="tip-val">${confLabel}</span>`)
+      if (p.notes?.trim()) lines.push(`Source: ${p.notes.trim()}`)
+      const sigmaLines: string[] = []
+      if (p.sigmaUncertaintyPct != null) {
+        sigmaLines.push(`σ_i uncertainty: ±${p.sigmaUncertaintyPct.toFixed(0)}${UNIT.PERCENT}`)
+      }
+      if (p.sigmaSource) {
+        const srcLabel = {
+          literature:      this.$t('userPresets.sigmaSourceLiterature'),
+          measured:        this.$t('userPresets.sigmaSourceMeasured'),
+          electrorotation: this.$t('userPresets.sigmaSourceElectrorotation'),
+          impedance:       this.$t('userPresets.sigmaSourceImpedance'),
+          estimated:       this.$t('userPresets.sigmaSourceEstimated'),
+        }[p.sigmaSource] ?? p.sigmaSource
+        sigmaLines.push(`σ_i technique: ${srcLabel}`)
+      }
+      if (p.sigmaCitation?.trim()) sigmaLines.push(`σ_i citation: ${p.sigmaCitation.trim()}`)
+      if (sigmaLines.length > 0) {
+        lines.push('')
+        lines.push(...sigmaLines)
+      }
+      return lines.join('\n')
+    },
 
     cellState(): CellState {
       return this.type === CELL_TYPE.HEALTHY

@@ -4,11 +4,19 @@
     <span :class="['cell-card__icon', `cell-card__icon--${type}`]">{{ ICON.CELL }}</span>
     <div class="cell-card__name">
       <div class="cell-card__label">{{ label }}</div>
-      <div
-        class="cell-card__sublabel"
-        :class="{ 'cell-card__sublabel--has-tip': sublabelTip }"
-        v-tip="sublabelTip || undefined"
-      >{{ sublabel }}</div>
+      <div class="cell-card__sublabel-row">
+        <div
+          class="cell-card__sublabel"
+          :class="{ 'cell-card__sublabel--has-tip': sublabelTip }"
+          v-tip="sublabelTip || undefined"
+        >{{ sublabel }}</div>
+        <span
+          v-if="provenanceChip"
+          class="cell-card__provenance-chip"
+          :class="`cell-card__provenance-chip--${provenanceChipVariant}`"
+          v-tip="provenanceTip"
+        >{{ provenanceChip }}</span>
+      </div>
       <div v-if="hasCellData" class="cell-card__meta">
         <span class="cell-card__meta-item" v-tip="tipVm">{{ vmDisplay }}</span>
         <span class="cell-card__meta-sep">·</span>
@@ -61,6 +69,9 @@ export default defineComponent({
     nuclearVmMv:        { type: Number, required: true },
     nuclearDisruptionRatio: { type: Number, required: true },
     hasCellData:        { type: Boolean, required: true },
+    provenanceChip:        { type: String, default: '' },
+    provenanceChipVariant: { type: String, default: 'literature' },
+    provenanceTip:         { type: String, default: '' },
   },
 
   computed: {
@@ -107,6 +118,11 @@ export default defineComponent({
     line-height: 1.25;
   }
 
+  &__sublabel-row {
+    @include flex-row(0.4rem);
+    flex-wrap: wrap;
+  }
+
   &__sublabel {
     @include mono-upper(0.72rem);
     color: var(--color-text-muted);
@@ -117,6 +133,16 @@ export default defineComponent({
       border-bottom: 1px dotted color-mix(in srgb, white 25%, transparent);
       text-decoration-skip-ink: none;
     }
+  }
+
+  &__provenance-chip {
+    @include badge-pill(0.05rem 0.3rem, 3px);
+    font-size: 0.55rem;
+    cursor: help;
+
+    &--literature { @include color-variant(primary, 35%, 10%); }
+    &--measured   { @include color-variant(accent,  35%, 10%); }
+    &--estimated  { @include color-variant(amber,   35%, 10%); }
   }
 
   &__meta {

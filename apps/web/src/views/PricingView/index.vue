@@ -215,9 +215,7 @@ import { useTokenStore } from '@/stores/tokenStore'
 import { ROUTE } from '@/constants/routes'
 import { ICON } from '@/constants/icons'
 
-// ── Ghostly hex cell config ────────────────────────────────────────────────────
-// Compared to the sign-up page: larger radius (lower density), slower animation,
-// lower opacity — giving a ghost-like quality appropriate for a background canvas.
+// Ghostly hex config: larger radius, slower animation, lower opacity than sign-up's foreground version.
 
 const HEX_RADIUS       = 28
 const HEX_INNER_RATIO  = 0.72

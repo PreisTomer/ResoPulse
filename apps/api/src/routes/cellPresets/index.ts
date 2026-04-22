@@ -18,9 +18,10 @@ import type { CellPresetInput } from '../../services/cellPresetsService'
 
 const router = Router()
 
-const VALID_ROLES        = new Set(['target', 'healthy'])
-const VALID_CELL_TYPES   = new Set(['mammalian', 'bacteria', 'virus'])
-const VALID_CONFIDENCES  = new Set(['literature', 'measured', 'estimated'])
+const VALID_ROLES         = new Set(['target', 'healthy'])
+const VALID_CELL_TYPES    = new Set(['mammalian', 'bacteria', 'virus'])
+const VALID_CONFIDENCES   = new Set(['literature', 'measured', 'estimated'])
+const VALID_SIGMA_SOURCES = new Set(['literature', 'measured', 'electrorotation', 'impedance', 'estimated'])
 
 function validateInput(body: Record<string, unknown>): { errors: string[]; input: CellPresetInput | null } {
   const errors: string[] = []
@@ -43,6 +44,13 @@ function validateInput(body: Record<string, unknown>): { errors: string[]; input
     if (!isFinite(v) || v <= 0) errors.push(`${field} must be a positive number`)
   }
 
+  if (body.sigmaUncertaintyPct != null) {
+    const v = Number(body.sigmaUncertaintyPct)
+    if (!isFinite(v) || v < 0 || v > 100) errors.push('sigmaUncertaintyPct must be between 0 and 100')
+  }
+  if (body.sigmaSource != null && body.sigmaSource !== '' && !VALID_SIGMA_SOURCES.has(body.sigmaSource as string))
+    errors.push(`sigmaSource must be one of: ${Array.from(VALID_SIGMA_SOURCES).join(', ')}`)
+
   if (errors.length > 0) return { errors, input: null }
 
   return {
@@ -63,6 +71,11 @@ function validateInput(body: Record<string, unknown>): { errors: string[]; input
       thresholdVoltage:     Number(body.thresholdVoltage),
       density:              Number(body.density),
       specificHeatCapacity: Number(body.specificHeatCapacity),
+      sigmaUncertaintyPct:  body.sigmaUncertaintyPct  != null ? Number(body.sigmaUncertaintyPct)  : null,
+      sigmaSource:          typeof body.sigmaSource   === 'string' && body.sigmaSource !== ''
+                              ? (body.sigmaSource as string)
+                              : null,
+      sigmaCitation:        typeof body.sigmaCitation === 'string' ? (body.sigmaCitation as string) : null,
       resonantFreqGHz:      body.resonantFreqGHz      != null ? Number(body.resonantFreqGHz)      : null,
       capsidQ:              body.capsidQ               != null ? Number(body.capsidQ)               : null,
       resonantThresholdVcm: body.resonantThresholdVcm  != null ? Number(body.resonantThresholdVcm)  : null,

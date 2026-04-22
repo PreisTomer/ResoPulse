@@ -90,14 +90,7 @@ export const CELL_PRESETS: CellPreset[] = [
     amplitude: 0.8,
   },
 
-  // ── Cancer cells ────────────────────────────────────────────────────────────
-  // All cancer presets use the single-shell Schwan model.
-  // MEMBRANE THICKNESS: all mammalian cell membranes are physically 7 nm — the lipid bilayer
-  // thickness does not change significantly with malignancy. The elevated membrane capacitance
-  // Cm in cancer cells arises from altered lipid composition (cholesterol depletion, increased
-  // phosphatidylserine), which raises effective ε_r, NOT from membrane thinning.
-  // Each preset's ε_r is scaled to preserve the physically correct Cm derived from literature.
-  // Ref: Pethig (2010) Biomicrofluidics 4:022811; Gascoyne & Vykoukal (2002) Electrophoresis 23:1973.
+  // Cancer cells: mammalian membrane is 7 nm; elevated Cm via ε_r scaling (lipid comp), not thinning (Pethig 2010, Gascoyne 2002).
   {
     presetId: 'adenocarcinoma',
     group: 'cancer',
@@ -163,12 +156,7 @@ export const CELL_PRESETS: CellPreset[] = [
     nuclearRadius: 6.0, nuclearMembraneThickness: 13, nuclearMembraneEps: 11,
     nucleoplasmConductivity: 1.0, nuclearThresholdVoltage: 0.42,
   },
-  // ── Anand 2019 (RSC Advances) exact measured parameters ────────────────────
-  // Used exclusively by the MCF-7 breast cancer validation workflow.
-  // σ_i = 0.23 S/m and R = 8.15 µm are from Anand Table 1, different from the
-  // general-purpose MCF-7 preset above (Polevaya 1999 electrorotation values).
-  // DO NOT use this preset for general experiments — it is calibrated to one
-  // specific study's cuvette conditions (EP buffer σ_e = 0.14 S/m, 10 kHz pulsed IRE).
+  // Anand 2019 MCF-7: validation-only preset calibrated to one cuvette (EP buffer 0.14 S/m, 10 kHz pulsed IRE). Do not use for general experiments.
   {
     presetId: 'mcf7-anand2019',
     group: 'cancer',
@@ -394,12 +382,7 @@ export const CELL_PRESETS: CellPreset[] = [
     amplitude: 0.5,
   },
 
-  // ── Non-enveloped icosahedral virus (rigid protein capsid) ─────────────────
-  // CCMV (Cowpea Chlorotic Mottle Virus) is the primary experimental benchmark for
-  // acoustic capsid resonance. Tsen et al. (2007) measured f_res = 7.7 GHz and Q ≈ 10-15
-  // for CCMV using impulsive stimulated Raman scattering (ISRS) pulsed laser excitation.
-  // The same paper demonstrated selective capsid disruption with no mammalian cell damage.
-  // CCMV is a T=3 icosahedral plant virus with a well-characterised 28-nm diameter (R=14 nm).
+  // CCMV: rigid T=3 icosahedral capsid (R=14 nm); Tsen 2007 measured f_res=7.7 GHz, Q~10-15 via ISRS — benchmark for acoustic capsid resonance.
   {
     presetId: 'ccmv',
     group: 'virus',
@@ -481,10 +464,7 @@ export const CELL_PRESETS: CellPreset[] = [
     specificHeatCapacity: 4000,
     amplitude: 0.4,
   },
-  // ── Lentivirus (enveloped retrovirus, ~90 nm) ──────────────────────────────
-  // Vibrational modes measured by ultrafast pump-probe spectroscopy (PNAS 2025).
-  // HIV-1 is the canonical lentivirus; parameters are for a generic lentiviral pseudovirus
-  // of this size class (used in gene delivery and vaccine vector research).
+  // Lentivirus (~90 nm, HIV-1 class): generic pseudovirus for gene-delivery; modes via ultrafast pump-probe (PNAS 2025).
   {
     presetId: 'lentivirus',
     group: 'virus',

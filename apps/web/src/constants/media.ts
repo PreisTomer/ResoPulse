@@ -2,16 +2,7 @@
 
 import type { MediaEntry, MediumKey } from '@/types/media'
 
-// permittivity values (ε_r) from Gabriel et al. (1996) "Dielectric properties of biological
-// tissues" at ~1 MHz, the representative mid-range for DEP experiments.
-// Full Cole-Cole frequency dependence is not modelled here; values are appropriate for
-// the 10 kHz-100 MHz range used in this simulator.
-// tempCoeff values [1/°C]: σ_e(T) = σ_e0 × (1 + tempCoeff × (T − 37))
-// Refs: Gabriel et al. (1996) for saline/blood/tissue/water; Foster & Schwan (1989)
-// Culture media (dmem, rpmi, mhb): dominated by NaCl/NaHCO₃ — approximated at 2%/°C
-// EP buffer: low-conductivity sucrose/glucose-based electroporation buffer.
-//   σ_e ≈ 0.14 S/m (Zimmermann 1982; Weaver & Chizmadzhev 1996 Table 1).
-//   Dramatically lengthens τ and lowers fc relative to saline — correct for in-vitro EP protocols.
+// ε_r at ~1 MHz, tempCoeff [1/°C]: σ_e(T)=σ_e0·(1+tempCoeff·(T−37)). Refs: Gabriel 1996, Foster & Schwan 1989, Zimmermann 1982.
 export const MEDIA: Record<MediumKey, MediaEntry> = {
   saline:   { name: 'Physiological Saline (0.9%)', conductivity: 1.5,   permittivity: 80, tempCoeff: 0.020 },
   blood:    { name: 'Whole Blood',                  conductivity: 0.7,   permittivity: 64, tempCoeff: 0.017 },

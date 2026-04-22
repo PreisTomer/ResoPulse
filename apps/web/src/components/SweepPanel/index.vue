@@ -216,9 +216,7 @@ export default defineComponent({
     windowRange(): { lo: number; hi: number } | null {
       let lo = -1, hi = -1
       for (const p of this.sweepData) {
-        // Require target above lysis threshold, healthy sub-threshold, AND neither cell thermally denaturing.
-        // Both temperatures must be checked: healthy (mammalian) heats more than bacteria at the same field,
-        // so checking only the target temperature would allow dangerously hot healthy cells.
+        // Check both temps: healthy (mammalian) heats more than bacteria, so target-only would miss overheated healthy cells.
         if (
           p.drT >= THRESHOLDS.DISRUPTION_WARN &&
           p.drH < THRESHOLDS.HEALTHY_APPROACHING &&

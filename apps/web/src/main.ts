@@ -23,9 +23,7 @@ if (!PUBLISHABLE_KEY) {
   throw new Error('VITE_CLERK_PUBLISHABLE_KEY is not set. Add it to your .env file.')
 }
 
-// Recover from stale lazy-chunk hashes after a deploy: when a user's cached
-// HTML references a bundle hash that no longer exists on the server, the
-// dynamic import fails. Reloading picks up fresh HTML with current hashes.
+// Recover from stale lazy-chunk hashes post-deploy: reload fetches fresh HTML + current bundles.
 window.addEventListener('vite:preloadError', () => {
   window.location.reload()
 })
@@ -46,10 +44,7 @@ app
 
 app.directive('tip', vTip)
 
-// Persist experiment log to localStorage on every state change.
-// Uses manual $subscribe rather than the plugin because experimentStore
-// bootstraps its own state via loadState() (handles missing-field defaults
-// for previously saved sessions) - plugin hydration would conflict with that.
+// Manual $subscribe persistence: experimentStore's loadState() handles legacy defaults, so plugin hydration would conflict.
 const expStore = useExperimentStore()
 expStore.$subscribe((_mutation, state) => {
   saveToStorage(STORAGE_KEY.EXPERIMENT_SESSION, JSON.stringify({

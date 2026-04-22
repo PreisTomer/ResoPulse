@@ -49,10 +49,7 @@ describe('computeTau', () => {
   })
 
   it('matches known value for HeLa-like cell in EP buffer (~µs range)', () => {
-    // τ = R·Cm·(2σ_e+σ_i)/(2σ_e·σ_i)
-    // R = 10e-6 m, Cm = 10*ε₀/7e-9 ≈ 12.65e-3 F/m²
-    // (2*0.14 + 0.4)/(2*0.14*0.4) = 0.68/0.112 ≈ 6.07
-    // τ ≈ 10e-6 * 12.65e-3 * 6.07 ≈ 768 ns
+    // τ = R·Cm·(2σ_e+σ_i)/(2σ_e·σ_i) ≈ 768 ns for HeLa in EP buffer.
     const tau = computeTau(TARGET_CELL, SIGMA_E)
     expect(tau).toBeGreaterThan(100e-9)    // > 100 ns
     expect(tau).toBeLessThan(10e-6)        // < 10 µs
@@ -210,9 +207,7 @@ describe('lysisField formula', () => {
   })
 })
 
-// ── Disruption-ratio field independence ──────────────────────────────────────
-// DR_T/DR_H = (Vm_T/Vth_T) / (Vm_H/Vth_H) — field cancels in ratio.
-// This is the core justification for using UNIT_FIELD in optimalFreqResult.
+// DR ratio: field cancels in DR_T/DR_H — justifies UNIT_FIELD in optimalFreqResult.
 
 describe('DR selectivity ratio is field-independent', () => {
   it('selectivity ratio is the same at any field intensity', () => {
@@ -270,9 +265,7 @@ describe('computeSAR', () => {
   })
 })
 
-// ── Slider ranges ─────────────────────────────────────────────────────────────
-// Validates that each category has a sensible, non-overlapping frequency range
-// and that the snap-to-optimal clamping logic will operate correctly.
+// Slider ranges: each category has a non-overlapping freq range so snap-to-optimal clamps correctly.
 
 describe('SLIDER_RANGES', () => {
   const ranges = [
@@ -355,10 +348,7 @@ describe('MIN_PULSE_ENVELOPE', () => {
   })
 })
 
-// ── tempCorrectedVth — electrosensitization and temperature correction ─────────
-// Central threshold function. Two independent multiplicative corrections:
-//   1. Temperature: max(TEMP_EP_CLAMP_MIN, 1 − TEMP_EP_COEFF × max(0, T − 37))
-//   2. Electrosensitization: max(CLAMP_MIN, N^(−α)) when N > 1, else 1.0
+// tempCorrectedVth: two multiplicative corrections — temperature clamp × N^(−α) electrosensitization.
 
 describe('tempCorrectedVth — N=1 baseline (no electrosensitization)', () => {
   it('N=1 at body temp returns nominal Vth unchanged', () => {

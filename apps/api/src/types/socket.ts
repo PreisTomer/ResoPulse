@@ -13,6 +13,8 @@ export type {
   AiParamSuggestion,
   AiOptimizeResult,
   OutcomeEntry,
+  MeasuredOutcome,
+  MeasuredOutcomeEntry,
 } from '@resopulse/shared-types'
 
 // Backend-specific: validated wire form of a log entry. The frontend's LogEntry

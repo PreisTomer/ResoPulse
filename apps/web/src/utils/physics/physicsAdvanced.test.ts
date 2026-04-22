@@ -87,9 +87,7 @@ describe('computeNuclearVm', () => {
   })
 
   it('nuclear Vm exhibits bandpass resonance: non-zero at intermediate freq, zero at DC and HF extremes', () => {
-    // Kotnik & Miklavcic (2006) double-shell: bandpass due to (ωτ_out) numerator factor.
-    // At intermediate f, nuclear Vm can exceed plasma membrane Vm in this simplified model
-    // (it ignores cytoplasmic shielding attenuation, which would require the full 3-shell calc).
+    // Kotnik & Miklavcic 2006 double-shell bandpass (ωτ_out); simplified form ignores cytoplasmic shielding.
     const vmDC   = computeNuclearVm(NUCLEAR_CELL, 0.0001,   FIELD, SIGMA_E)
     const vmMid  = computeNuclearVm(NUCLEAR_CELL, 1_000,    FIELD, SIGMA_E)
     const vmHigh = computeNuclearVm(NUCLEAR_CELL, 10_000_000, FIELD, SIGMA_E)
@@ -231,9 +229,7 @@ describe('computePopulationLysisFraction', () => {
   })
 
   it('returns a small positive fraction at DR=1 with non-zero CV', () => {
-    // With size spread (cv > 0), some larger cells in the population cross threshold
-    // even when the mean DR = 1 (randomly oriented — cosθ < 1 further reduces their Vm).
-    // So the fraction is small but > 0.
+    // cv > 0 at mean DR=1: larger cells still cross threshold, so fraction stays small but > 0.
     expect(computePopulationLysisFraction(1.0, 0.1)).toBeGreaterThan(0)
     expect(computePopulationLysisFraction(1.0, 0.1)).toBeLessThan(0.2)
   })
@@ -294,9 +290,7 @@ describe('computeDepCmReal', () => {
     // For a mammalian cell in typical buffer, there should be a crossover somewhere
     const freq_low  = computeDepCmReal(TARGET_CELL, 10,      SIGMA_E, 80)
     const freq_high = computeDepCmReal(TARGET_CELL, 1_000_000, SIGMA_E, 80)
-    // Low conductivity cell in standard buffer: at DC typically nDEP (cm < 0)
-    // At high frequency: pDEP (cm > 0)
-    // This ensures there IS a crossover — values differ in sign or magnitude
+    // Low-σ cell in standard buffer: nDEP at DC → pDEP at HF, so a crossover must exist.
     expect(freq_low).not.toBeCloseTo(freq_high, 2)
   })
 
@@ -311,10 +305,7 @@ describe('computeDepCmReal', () => {
   })
 })
 
-// ── tempCorrectedVth (via DR sensitivity test) ─────────────────────────────────
-// This function is module-private in cellStore.ts but we can test its effect
-// indirectly: above 37°C the effective threshold decreases (−0.3%/°C),
-// which means DR should increase as temperature rises (easier to lyse hot cells).
+// tempCorrectedVth (indirect via DR): above 37°C threshold drops ~0.3%/°C, so DR rises with T.
 
 describe('temperature-corrected threshold (indirect via DR formula)', () => {
   it('DR increases when temperature rises above 37°C (lower effective threshold)', () => {

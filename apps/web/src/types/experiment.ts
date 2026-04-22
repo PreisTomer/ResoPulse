@@ -1,6 +1,10 @@
 // Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 
+import type { MeasuredOutcome } from '@resopulse/shared-types'
+
 import type { LogEventType } from '@/constants/strings'
+
+export type { MeasuredOutcome }
 
 // ── Parameter snapshot captured at log time ────────────────────────────────
 export interface CellParamSnapshot {
@@ -74,4 +78,6 @@ export interface LogEntry {
   // ── AI training fields (populated via Log Outcome action) ────────────────
   outcomeRating?: number         // 1=failed 2=poor 3=acceptable 4=good 5=excellent
   aiSuggestionApplied?: boolean  // true when this protocol was AI-suggested before the run
+  // ── Measured outcome (populated via Log Measured action) ─────────────────
+  measured?: MeasuredOutcome
 }

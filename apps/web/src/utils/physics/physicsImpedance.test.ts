@@ -1,8 +1,6 @@
 // Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 
-// Comprehensive tests: computeFc, tempCorrectedVth, computeLysisProbability, DEP crossover,
-// medium switching, packing fraction, impedance utils, orientation 90°, and scalar vs complex
-// reflection coefficient.
+// Covers computeFc, tempCorrectedVth, lysis probability, DEP crossover, impedance/reflection scalar vs complex.
 
 import { describe, it, expect } from 'vitest'
 
@@ -174,11 +172,7 @@ describe('medium switching: τ and fc', () => {
 
 describe('computeDepCrossoverKHz', () => {
   it('returns a finite non-negative value for a typical mammalian cell in EP buffer', () => {
-    // For TARGET_CELL (σ_i=0.4 S/m, σ_mem=1e-7 S/m) in EP buffer (σ_e=0.14 S/m):
-    // The low-frequency DEP crossover (pDEP→nDEP) occurs at ~50-180 Hz — below the 1 kHz
-    // search minimum, so the function correctly returns 0 for the 1 kHz–10 GHz range.
-    // The high-frequency limit is nDEP (ε_cyto=60 < ε_med=78) so there is no second crossing.
-    // This tests the function does not crash and returns a valid number.
+    // TARGET_CELL in EP buffer: low-f crossover ~50-180 Hz is below 1 kHz search, HF stays nDEP → returns 0 safely.
     const sigma_e  = MEDIA.epbuffer.conductivity   // 0.14 S/m
     const eps_r    = MEDIA.epbuffer.permittivity   // 78
     const fCross   = computeDepCrossoverKHz(TARGET_CELL, sigma_e, eps_r)
@@ -187,9 +181,7 @@ describe('computeDepCrossoverKHz', () => {
   })
 
   it('returns a positive crossover frequency for a highly conductive cell in very low-σ_e medium', () => {
-    // For a cell with high σ_i in distilled water (σ_e very low), the cell looks like a
-    // conductor vs insulating medium. Crossover from pDEP to nDEP occurs at mid-RF range.
-    // Use distilled water (σ_e=0.001 S/m) where transition is pushed to accessible frequencies.
+    // High σ_i in distilled water (σ_e=0.001): pDEP→nDEP crossover lands in accessible mid-RF.
     const sigma_e  = MEDIA.water.conductivity   // 0.001 S/m
     const eps_r    = MEDIA.water.permittivity   // 80
     const highConductCell: CellConfig = {
@@ -464,10 +456,7 @@ describe('computeSigmaEFromComplexImpedance', () => {
   })
 
   it('gives lower σ_e than DC formula when reactive component is non-zero', () => {
-    // Complex formula: σ = Z_real · d / (A · |Z|²).
-    // When Z_imag ≠ 0, |Z|² = Z_real² + Z_imag² > Z_real², so G = Z_real/|Z|² < 1/Z_real.
-    // The DC approximation (σ = d/(Z_real·A)) over-estimates conductivity;
-    // the complex formula correctly accounts for the reactive component.
+    // σ = Z_real·d/(A·|Z|²): when Z_imag ≠ 0 the DC approx (d/(Z_real·A)) over-estimates σ.
     const dc      = computeSigmaEFromImpedance(1, 0.1, 71.4)
     const complex = computeSigmaEFromComplexImpedance(1, 0.1, 71.4, -30)
     expect(complex).toBeLessThan(dc)

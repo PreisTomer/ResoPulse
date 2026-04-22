@@ -21,14 +21,15 @@ export default defineConfig({
   css: {
     preprocessorOptions: {
       scss: {
-        // Allow @use 'globals' (short name) from any component style block.
+        // Allow @use 'rp-globals' (short name) from any component style block.
+        // Prefixed to avoid collision with the `globals` npm package pulled in by eslint.
         loadPaths: [path.resolve(__dirname, 'src/styles')],
         // Auto-inject globals into every Vue SFC <style lang="scss"> block.
         // Skip SCSS partials (filenames starting with _) to avoid circular @forward.
         additionalData: (source: string, filename: string) => {
           const base = (filename.split('/').pop() ?? filename.split('\\').pop() ?? '')
           if (base.startsWith('_')) return source
-          return `@use 'globals' as *;\n${source}`
+          return `@use 'rp-globals' as *;\n${source}`
         },
       },
     },

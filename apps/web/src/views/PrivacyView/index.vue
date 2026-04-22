@@ -40,6 +40,18 @@
             associated with your account. This data is scientific in nature and contains no
             personal health information.
           </dd>
+          <dt>Measured outcomes (optional, user-entered)</dt>
+          <dd>
+            When you enter results from your own bench assay via the Log Measured action
+            (target lysis %, healthy lysis %, viability %, permeabilized % such as PI+ or
+            YO-PRO+ or SYTOX+, transfection / cargo+ %, viability assay method, assay
+            timepoint in hours post-pulse, post-run temperature, actual field measured on
+            your pulse monitor, observed time-to-lysis, and free-form notes), we store those
+            values alongside the corresponding simulated entry so the app can display the
+            predicted-vs-measured delta and use it for closed-loop model calibration. Only
+            scientific measurements you type in are stored. Do not paste personal or clinical
+            patient data into the notes field.
+          </dd>
           <dt>Local storage</dt>
           <dd>
             We write the following keys to your browser's local storage:

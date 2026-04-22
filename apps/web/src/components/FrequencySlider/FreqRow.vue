@@ -1,6 +1,7 @@
 <!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
 <template>
-  <!-- Snap to Optimal / fc buttons (non-resonance only) -->
+  <!-- Snap to corner-frequency buttons (non-resonance only).
+       The ⭐ Snap to Optimal CTA lives in the OutcomeStrip at the top of the page. -->
   <div v-if="!isResonanceMode" class="field-panel__optimal-row">
     <button
       class="field-panel__optimal-btn field-panel__optimal-btn--fc field-panel__optimal-btn--fc-h"
@@ -10,11 +11,6 @@
       class="field-panel__optimal-btn field-panel__optimal-btn--fc field-panel__optimal-btn--fc-t"
       v-tip="tipSnapFcT" @click="snapToFc('target')" type="button"
     >{{ $t('slider.snapFcT') }} {{ targetFcDisplay }}</button>
-    <button
-      class="field-panel__optimal-btn"
-      :class="{ 'field-panel__optimal-btn--beyond': optimalBeyondRange }"
-      v-tip="tipOptimalBtnLabel" @click="snapToOptimal" type="button"
-    >{{ $t('slider.snapOptimal') }} {{ optimalFreqLabel }}</button>
   </div>
 
   <!-- RF Frequency row -->
@@ -107,7 +103,7 @@ import { useCellStore } from '@/stores/cellStore'
 import { broadcastStateSync } from '@/services/socket'
 
 import { formatFreqKHz } from '@/utils/format'
-import { tipFreq, tipFcSub, tipOptimalBtnInRange, tipOptimalBtnBeyondRange } from '@/tooltips/sliderTooltips'
+import { tipFreq, tipFcSub } from '@/tooltips/sliderTooltips'
 
 import { CELL_CATEGORY, FREQ_REGIME } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
@@ -162,16 +158,6 @@ export default defineComponent({
 
     optimalFreqResult(): { khz: number; sel: number } { return this.cellStore.optimalFreqResult },
 
-    optimalBeyondRange(): boolean {
-      const { khz } = this.optimalFreqResult
-      return khz > this.sliderRanges.freqMax || khz < this.sliderRanges.freqMin
-    },
-
-    optimalFreqLabel(): string {
-      const { khz, sel } = this.optimalFreqResult
-      return ` ${formatFreqKHz(khz)} · ×${sel >= 99 ? ICON.INFINITY : sel.toFixed(2)}${this.optimalBeyondRange ? ICON.BEYOND : ''}`
-    },
-
     freqInputUnit(): string {
       const f = this.currentFreq
       if (f >= 1_000_000) return 'GHz'
@@ -221,9 +207,6 @@ export default defineComponent({
         targetCategory:   this.cellStore.targetCellCategory,
       })
     },
-    tipOptimalBtnLabel(): string {
-      return this.optimalBeyondRange ? tipOptimalBtnBeyondRange() : tipOptimalBtnInRange()
-    },
     tipSnapFcH(): string         { return this.$t('slider.tipSnapFcH', { fc: this.healthyFcDisplay }) },
     tipSnapFcT(): string         { return this.$t('slider.tipSnapFcT', { fc: this.targetFcDisplay }) },
 
@@ -269,13 +252,6 @@ export default defineComponent({
       broadcastStateSync()
     },
 
-    snapToOptimal() {
-      const { khz } = this.optimalFreqResult
-      const snapped = Math.round(Math.max(this.sliderRanges.freqMin, Math.min(this.sliderRanges.freqMax, khz)))
-      this.cellStore.setBroadcastFreqKHz(snapped)
-      broadcastStateSync()
-    },
-
     // ── Inline type-in edit ───────────────────────────────────────────────────
     startEditFreq() {
       const f = this.currentFreq
@@ -314,9 +290,7 @@ export default defineComponent({
       broadcastStateSync()
     },
 
-    // ── Scrub drag on readout value ───────────────────────────────────────────
-    // Drag right → increase freq (log scale), drag left → decrease.
-    // A single click (no movement past deadzone) opens the type-in editor.
+    // Scrub drag (log scale) on readout: drag adjusts freq; click without deadzone movement opens the type-in editor.
     startScrubFreq(e: MouseEvent) {
       if (this.editingFreq) return
       this.scrubbing     = true
@@ -388,11 +362,6 @@ export default defineComponent({
     }
 
     &:active { background: color-mix(in srgb, var(--color-purple) 25%, transparent); }
-
-    &--beyond {
-      @include color-variant(text-muted, 20%, 6%);
-      &:hover { background: color-mix(in srgb, var(--color-text-muted) 12%, transparent); border-color: color-mix(in srgb, var(--color-text-muted) 35%, transparent); box-shadow: none; color: var(--color-text-muted); }
-    }
 
     &--fc   { font-size: var(--fs-xxs); padding: 0.15rem 0.45rem; }
 

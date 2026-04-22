@@ -9,9 +9,7 @@ function clearAllHighlights(): void {
   })
 }
 
-// Scroll element into view and play the lab-highlight animation.
-// Clears any existing highlights first so only one element is active at a time.
-// Glow delayed 400 ms after scroll settles; skipped when already in viewport.
+// Scroll into view + glow; single active highlight; glow delayed 400 ms after scroll, skipped if already in viewport.
 export function scrollAndHighlight(targetId: string, delayMs = 0): void {
   const run = () => {
     clearAllHighlights()
@@ -43,12 +41,7 @@ function applyHighlight(target: HTMLElement): void {
   })
 }
 
-// Resolve which DOM element(s) to highlight:
-// 1. Direct-child .accordion-panel → outer container (avoids overflow:hidden clipping)
-// 2. Direct-child .field-panel__accordion → header button strip
-// 3. Inside a closed .field-panel__accordion-body → nearest header button
-// 4. Contains .cell-card__params-toggle → all toggles simultaneously
-// 5. Otherwise → element itself
+// Highlight target resolution: accordion-panel → outer (dodge overflow clip); accordion header button strip for closed bodies; cell-card toggles = all; else self.
 function resolveHighlightTargets(el: HTMLElement): HTMLElement[] {
   if (el.querySelector<HTMLElement>(':scope > .accordion-panel')) return [el]
 

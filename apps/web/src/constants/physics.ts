@@ -32,10 +32,7 @@ export const NEAR_ZERO_VM = 1e-12
 // SAR waveform factor for pulsed bipolar square wave: E²_rms = E²_peak
 export const WF_PULSED = 1.0
 
-// H-FIRE lysis threshold multiplier: bipolar burst charge cancellation reduces effective membrane charging,
-// raising the lysis threshold relative to unipolar IRE. Arena et al. (2011) BioMedical Engineering OnLine 10:102
-// report H-FIRE requiring ~1.5-2× higher voltage for equivalent ablation; Sano et al. (2015) Sci Rep 5:11168
-// report similar bipolar attenuation. 1.75 is the arithmetic midpoint of the experimental range (empirical).
+// H-FIRE bipolar charge cancellation raises Vth ~1.5-2× vs unipolar IRE (Arena 2011, Sano 2015); 1.75 = midpoint.
 export const H_FIRE_THRESHOLD_MULTIPLIER = 1.75
 
 // Mild thermal activation peak temperature [°C] — bell peak in 37-42°C biomodulation window
@@ -56,19 +53,13 @@ export const LYSIS_FIELD_SENTINEL = 1e6
 // Minimum pulse envelope factor to prevent division artefacts (t_p→0 limit)
 export const MIN_PULSE_ENVELOPE = 1e-4
 
-// EP threshold temperature coefficient [1/°C]: Vth_eff = Vth×max(CLAMP_MIN, 1−coeff×(T−37)). ~−0.3%/°C.
-// Basis: Arrhenius pore-nucleation energy decreases as lipid bilayer fluidity increases with T.
-// Q₁₀ ≈ 1.3 for membrane pore formation (Weaver & Chizmadzhev 1996 Bioelectrochemistry 41:135) →
-// linearised first-order approximation of threshold shift in the 37-60°C physiological range.
+// EP Vth temp coeff [1/°C], ~−0.3%/°C — linearised Q₁₀≈1.3 pore nucleation (Weaver & Chizmadzhev 1996) over 37-60°C.
 export const TEMP_EP_COEFF = 0.003
 
 // Lower clamp for Vth temperature correction — prevents unphysical zero/negative threshold.
 export const TEMP_EP_CLAMP_MIN = 0.70
 
-// Electrosensitization: repeated pulses condition membrane pores, reducing lysis threshold.
-// Vth_eff = Vth × N^(−α) × temperature_correction. Applied to EP thresholds only (not acoustic resonance).
-// Basis: Weaver & Chizmadzhev 1996 Bioelectrochemistry 41:135; Pakhomov et al. 2010 Biochim. Biophys. Acta.
-// α = 0.20: N=10 → 63% of nominal; N=100 → 40% of nominal (clamped). Cell-type variation is ±0.05.
+// Electrosensitization exponent: Vth_eff = Vth·N^(−α) (EP only; Weaver 1996, Pakhomov 2010). α=0.20 ±0.05 cell-dependent.
 export const ELECTROSENSITIZATION_EXPONENT = 0.20
 
 // Minimum threshold factor from electrosensitization — prevents unphysical sub-physiological threshold.
@@ -96,15 +87,10 @@ export const EPSILON_R_CYTOPLASM = 60
 // Intact membrane conductivity [S/m]: lipid bilayer nearly insulating at RF. Gascoyne 2002.
 export const SIGMA_MEMBRANE_SI = 1e-7
 
-// Thin-shell assumption (d ≪ R) weakens when R/d < 50: γ = ((R−d)/R)³ deviates from 1 by
-// more than 6%, and the Schwan / Gascoyne single-shell formulas lose accuracy. Used as a
-// UI caveat trigger for viruses (R ~ 50 nm, d ~ 10 nm → R/d ≈ 5). Kotnik & Miklavcic 2000.
+// R/d < 50 → thin-shell γ deviates >6%; triggers UI caveat for viruses (Kotnik & Miklavcic 2000).
 export const THIN_SHELL_RATIO_WARN = 50
 
-// ── Debye dielectric relaxation of aqueous media (water & buffers) ────────────
-// ε*(ω) = ε_∞ + (ε_s − ε_∞)/(1+jωτ_D). Loss contribution σ_loss(ω) = ωε₀·ε″(ω) dominates
-// above f_D = 1/(2πτ_D) ≈ 19 GHz at 37 °C, making GHz-range skin depth finite even when the
-// DC conductivity is low. Kaatze 1989 J. Chem. Eng. Data; Debye 1929 Polar Molecules.
+// ── Debye dielectric relaxation of aqueous media (Kaatze 1989; Debye 1929) ─── f_D ≈ 19 GHz @ 37 °C.
 
 // Water infinite-frequency (optical) relative permittivity — Kaatze 1989.
 export const EPS_INF_AQUEOUS = 5
@@ -165,6 +151,15 @@ export const THRESHOLDS = {
   MTE_COUPLING_THRESHOLD_PCT: 70,  // minimum acceptable coupling efficiency (%)
   // Population panel success note: minimum target lysis fraction [%] to show the "success window" note
   POP_NOTE_TARGET_LYSIS_MIN: 50,
+  // Model calibration tiers — compare simulator predictions with measured outcomes
+  CALIB_MIN_SAMPLES:     3,    // below this, tier is "none" (not enough data to judge)
+  CALIB_STRONG_SAMPLES:  10,   // samples required to earn the "strong" tier
+  CALIB_DRIFT_PP:        15,   // |Δ| in percentage points above this triggers the "drift" tier
+  CALIB_STRONG_PP:        5,   // |Δ| below this with enough samples is "strong"
+  // Per-cell σ_i fit gates — mirror apps/ai-service CALIBRATION_* constants
+  SIGMA_CALIB_MIN_SAMPLES: 5,     // below this, fit is not persisted; UI shows "collecting data"
+  SIGMA_CALIB_MULT_MIN:    0.3,   // biological plausibility lower bound on σ_i multiplier
+  SIGMA_CALIB_MULT_MAX:    3.0,   // biological plausibility upper bound on σ_i multiplier
 } as const
 
 export type ThresholdKey = keyof typeof THRESHOLDS
@@ -188,9 +183,7 @@ export const RESEAL_PULSE_EXPONENT = 0.3  // sublinear pulse-count scaling expon
 export const RESEAL_TIME_MIN_S = 0.5      // min resealing time display clamp [s]
 export const RESEAL_TIME_MAX_S = 60.0     // max resealing time display clamp [s]
 
-// Default acoustic Q when preset omits capsidQ. Rigid icosahedral protein capsids Q~30;
-// peptidoglycan cell walls Q~3-4 (viscoelastic damping). Default=3: conservative lower
-// bound of the peptidoglycan range — all current presets define capsidQ explicitly.
+// Default capsid Q=3 (peptidoglycan lower bound; rigid virus capsids ~30). Every preset sets this explicitly.
 export const DEFAULT_CAPSID_Q = 3
 
 // ── Electromagnetic constants ─────────────────────────────────────────────────
@@ -255,7 +248,5 @@ export const ELECTRODE_POLARIZATION_LIMIT_KHZ = 50
 // GHz field warning: skin depth in saline at 1 GHz ~13 mm; cannot penetrate cuvette. Gabriel 1996.
 export const GHZ_FIELD_WARNING_V_CM = 100
 
-// Schwan / IRE advisory frequency ceiling [kHz]. Above 100 MHz the single-shell RC model
-// has no predictive value for small microbes; Debye loss of cytoplasm and membrane radiative
-// coupling are not captured. Rules out applying Schwan to virus/bacteria at GHz carriers.
+// Schwan/IRE advisory ceiling [kHz]: above 100 MHz the single-shell RC model breaks for small microbes at GHz.
 export const SCHWAN_ADVISORY_FREQ_KHZ = 100_000

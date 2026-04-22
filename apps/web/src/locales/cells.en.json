@@ -84,6 +84,13 @@
       "tipTi": "<strong>Selectivity Index (TI)</strong>\nTI = DR_target / DR_healthy = ratio of target disruption to healthy disruption at identical field and frequency.\nTI > 1.5: good selectivity window. TI > 2: strong selectivity. TI < 1: healthy cell more affected than target.",
       "tipFc": "<strong>Characteristic Frequency f_c</strong>\nf_c = 1 / (2π τ) where τ = R · Cm · (2σ_e + σ_i) / (2σ_e · σ_i).\nBelow f_c the membrane charges fully (quasi-DC regime, maximum Vm). Above f_c, Vm rolls off at -20 dB/decade. Operating below f_c maximises selectivity for mammalian targets."
     },
+    "measuredVsPredicted": {
+      "label":      "LAST MEASURED",
+      "predicted":  "PRED",
+      "measured":   "MEAS",
+      "deltaPp":    "Δ {pp} pp",
+      "tip":        "<strong>Predicted vs Measured</strong>\nCompares the simulator-predicted lysis fraction for this cell type with the most recent measured value you logged. Drives the AI-tab calibration badge.\n\nSign: measured minus predicted. Positive Δ means bench exceeds prediction; negative Δ means the simulator over-predicts."
+    },
     "compactStates": {
       "stable": "STABLE",
       "nourishing": "NOURISH",

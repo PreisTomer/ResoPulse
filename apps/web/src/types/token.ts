@@ -30,6 +30,7 @@ export interface CostMap {
   ACOUSTIC_RESONANCE: number
   HEATMAP_LYSIS:      number
   AI_OPTIMIZE:        number
+  AI_RETRAIN:         number
   LOG_OUTCOME:        number
   SAVE_EXPERIMENT:    number
 }

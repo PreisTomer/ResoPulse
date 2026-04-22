@@ -370,9 +370,7 @@ export default defineComponent({
         }
         this.sweepWindow = w
       } else {
-        // Null window: hold 450 ms before hiding the snap bar.
-        // If the sweep produces a window again within that window (e.g. after snap settles),
-        // the null is discarded and the bar stays visible without any flash.
+        // Null window: 450 ms hold so post-snap re-windows don't flash the bar.
         if (this._sweepNullTimer) clearTimeout(this._sweepNullTimer)
         this._sweepNullTimer = setTimeout(() => {
           this._sweepNullTimer = null
@@ -648,10 +646,7 @@ export default defineComponent({
   pointer-events: none;
 }
 
-// ── Responsive: 2-col layout shows horizontal QuickPresetStrip above workspace ─
-// The left sidebar is hidden at ≤1100px; show the horizontal strip above instead.
-// The horizontal strip is rendered as the first child of ws-center via a
-// fallback strip shown below the workspace on narrow screens (handled in parent).
+// ≤1100px: hide left sidebar, render horizontal QuickPresetStrip as first ws-center child (parent-handled fallback).
 
 // ── Mobile notes bar ─────────────────────────────────────────────────────────
 @media (max-width: 768px) {

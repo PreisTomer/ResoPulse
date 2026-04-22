@@ -1,8 +1,6 @@
 // Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 
-// App-level auth state that complements Clerk's internal session management.
-// isSignedIn / hasOrg are kept in sync reactively from App.vue via useAuth().
-// Only hasCompletedOnboarding is persisted — the rest is always sourced from Clerk on load.
+// Mirrors Clerk session reactively; only hasCompletedOnboarding persists locally.
 
 import { defineStore } from 'pinia'
 

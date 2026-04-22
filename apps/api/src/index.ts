@@ -6,10 +6,11 @@ import cors from 'cors'
 import { setupSocketServer } from './socket'
 import { countOutcomes, fetchTrainingRows } from './db'
 import { clerk, requireAuth } from './middleware/clerkAuth'
-import webhookRouter     from './routes/webhooks'
-import experimentsRouter from './routes/experiments'
-import tokensRouter      from './routes/tokens'
-import cellPresetsRouter from './routes/cellPresets'
+import webhookRouter         from './routes/webhooks'
+import experimentsRouter     from './routes/experiments'
+import tokensRouter          from './routes/tokens'
+import cellPresetsRouter     from './routes/cellPresets'
+import cellCalibrationRouter from './routes/cellCalibration'
 
 const AI_SERVICE_URL      = (process.env.AI_SERVICE_URL ?? 'http://localhost:8000').replace(/\/$/, '')
 const AI_PROXY_TIMEOUT_MS = 10_000
@@ -76,11 +77,16 @@ app.get('/ai/training-data', requireAuth, async (req, res) => {
 })
 
 // ── Experiments and token routes (require auth via requireOrg inside routers) ──
-app.use('/experiments',  experimentsRouter)
-app.use('/tokens',       tokensRouter)
-app.use('/cell-presets', cellPresetsRouter)
+app.use('/experiments',      experimentsRouter)
+app.use('/tokens',           tokensRouter)
+app.use('/cell-presets',     cellPresetsRouter)
+app.use('/cell-calibration', cellCalibrationRouter)
 
-app.post('/ai/retrain', requireAuth, async (_req, res) => {
+// Retrain is intentionally public: the global XGBoost model is retrained from
+// aggregated outcomes with no per-caller data leakage, and the roadmap treats
+// AI_RETRAIN as lenient for guests and early users. Client-side disables the
+// button while in flight; upstream handles duplicate-call debouncing.
+app.post('/ai/retrain', async (_req, res) => {
   try {
     const upstream = await fetch(`${AI_SERVICE_URL}/ai/retrain`, {
       method: 'POST',

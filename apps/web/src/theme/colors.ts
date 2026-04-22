@@ -1,16 +1,7 @@
 // Copyright © 2026 Tomer Preis. All rights reserved.
 // Unauthorized copying or distribution is prohibited.
 
-// =============================================================================
-// src/theme/colors.ts
-//
-// Single source of truth for all design-token color constants.
-// CSS counterparts live in src/style.css as custom properties (--color-*).
-//
-// Usage in TypeScript / Vue script blocks:
-//   import { C, GROUP_COLORS, CELL_COLORS } from '@/theme/colors'
-//   import { C } from '@/theme'   // via barrel
-// =============================================================================
+// Design-token color constants; CSS mirrors live in style.css as --color-*. Import via `@/theme` barrel.
 
 // ── Core palette (1:1 with --color-* vars in style.css) ───────────────────────
 export const C = {
@@ -70,9 +61,7 @@ export const C = {
   rayInterp1:    '#4a9eff',   // field-ray frequency gradient: mid blue (cyan→violet scale)
   rayInterp2:    '#7c6cff',   // field-ray frequency gradient: mid violet
 
-  // ── D3/canvas white semi-transparent ────────────────────────────────────────
-  // canvas ctx and D3 .attr() cannot evaluate CSS custom properties; use these
-  // named constants instead. CSS <style> blocks must use color-mix() instead.
+  // D3/canvas semi-transparent whites: canvas ctx cannot evaluate CSS vars — use color-mix() in <style> blocks.
   w85: 'rgba(255,255,255,0.85)',  // strong: cursor tick labels, cursor line stroke
   w75: 'rgba(255,255,255,0.75)',  // secondary cursor labels
   w70: 'rgba(255,255,255,0.70)',  // bright canvas text

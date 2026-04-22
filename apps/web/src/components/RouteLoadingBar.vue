@@ -55,9 +55,7 @@ export default defineComponent({
     box-shadow: 0 0 8px color-mix(in srgb, var(--color-primary) 20%, transparent);
   }
 
-  // Sweeping wavefront — cyan core with purple trail, mimics the frequency-ray
-  // interpolation used elsewhere in the app. Stays paused unless the bar is active,
-  // so it never burns GPU while hidden.
+  // Sweeping wavefront (cyan→purple, matches frequency-ray gradient); paused when hidden to spare GPU.
   &__pulse {
     position: absolute;
     top: 0;

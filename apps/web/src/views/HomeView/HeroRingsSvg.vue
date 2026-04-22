@@ -44,9 +44,7 @@ export default defineComponent({
   @media (max-width: 520px) { display: none; }
 
   &-svg {
-    // Responsive width: fills ~88vw so rings reach near viewport edges on all screen sizes.
-    // Capped at 1600px to avoid over-scaling on ultra-wide displays.
-    // overflow="visible" on the SVG element lets rings beyond the 900×900 viewBox render.
+    // 88vw fills viewport; capped at 1600px; overflow="visible" lets rings render outside 900×900 viewBox.
     width: min(88vw, 1600px);
     min-width: 760px;
     height: auto;

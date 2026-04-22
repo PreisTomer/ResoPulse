@@ -76,6 +76,7 @@ const APP_NAV_LINKS = [
   { to: ROUTE.EXPERIMENT, labelKey: 'nav.experiment', exact: false },
   { to: ROUTE.PROTOCOL,   labelKey: 'nav.protocol',   exact: false },
   { to: ROUTE.DATASETS,   labelKey: 'nav.dataSets',   exact: false },
+  { to: ROUTE.REPORTS,    labelKey: 'nav.reports',    exact: false },
   { to: ROUTE.INSTRUMENT, labelKey: 'nav.instrument', exact: false },
 ]
 
@@ -108,9 +109,7 @@ export default defineComponent({
       return this.isSignedIn ? APP_NAV_LINKS : MARKETING_NAV_LINKS
     },
 
-    // Show the guest avatar only when a guest session is active AND the user is
-    // not on the home page. The home page is a marketing landing — it should always
-    // show the "Start Free" CTA, not a guest avatar that hides the conversion path.
+    // Guest avatar hidden on home (marketing landing must keep "Start Free" CTA visible).
     showNavGuestArea(): boolean {
       return !this.isSignedIn && this.guestSessionActive && this.$route.path !== ROUTE.HOME
     },

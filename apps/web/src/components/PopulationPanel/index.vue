@@ -177,10 +177,7 @@ export default defineComponent({
       }
     },
     targetDRs() { if (this.open) this._drawChart() },
-    // All parameter changes are funnelled through _scheduleResample (150 ms debounce).
-    // This prevents a burst of redraws when a single user action (e.g. snap-to-window)
-    // triggers multiple store mutations in one tick.
-    // Note: no open guard here — _drawChart() is gated on open via the targetDRs watcher.
+    // _scheduleResample (150 ms debounce) absorbs multi-mutation bursts (e.g. snap-to-window). Open gate lives in targetDRs watcher.
     'cellStore.fieldIntensity'()            { this._scheduleResample() },
     'cellStore.currentBroadcastFrequency'() { this._scheduleResample() },
     'cellStore.waveform'()                  { this._scheduleResample() },

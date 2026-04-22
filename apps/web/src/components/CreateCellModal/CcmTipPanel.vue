@@ -20,35 +20,39 @@ import { EMIT } from '@/constants/emitEvents'
 type TipKey =
   | 'radius' | 'memThick' | 'epsR' | 'sigmaI' | 'sigmaMem' | 'vmThr' | 'density' | 'cp'
   | 'derivedFc' | 'cellType'
+  | 'sigmaUncertaintyPct' | 'sigmaSource' | 'sigmaCitation'
   | 'resFreq' | 'capsidQ' | 'resThr' | 'resFreqUnc' | 'capsidQMin' | 'capsidQMax'
   | 'resFreq2' | 'capsidQ2' | 'resMode2Amp'
   | 'nuclearRadius' | 'nuclearMemThick' | 'nuclearEps' | 'nucleoplasmSigma' | 'nuclearVmThr'
 
 const TIP_I18N_MAP: Record<TipKey, string> = {
-  radius:           'userPresets.tipRadius',
-  memThick:         'userPresets.tipMemThick',
-  epsR:             'userPresets.tipEpsR',
-  sigmaI:           'userPresets.tipSigmaI',
-  sigmaMem:         'userPresets.tipSigmaMem',
-  vmThr:            'userPresets.tipVmThr',
-  density:          'userPresets.tipDensity',
-  cp:               'userPresets.tipCp',
-  derivedFc:        'userPresets.tipDerivedFc',
-  cellType:         'userPresets.tipCellType',
-  resFreq:          'userPresets.tipResFreq',
-  capsidQ:          'userPresets.tipCapsidQ',
-  resThr:           'userPresets.tipResThr',
-  resFreqUnc:       'userPresets.tipResFreqUnc',
-  capsidQMin:       'userPresets.tipCapsidQMin',
-  capsidQMax:       'userPresets.tipCapsidQMax',
-  resFreq2:         'userPresets.tipResFreq2',
-  capsidQ2:         'userPresets.tipCapsidQ2',
-  resMode2Amp:      'userPresets.tipResMode2Amp',
-  nuclearRadius:    'userPresets.tipNuclearRadius',
-  nuclearMemThick:  'userPresets.tipNuclearMemThick',
-  nuclearEps:       'userPresets.tipNuclearEps',
-  nucleoplasmSigma: 'userPresets.tipNucleoplasmSigma',
-  nuclearVmThr:     'userPresets.tipNuclearVmThr',
+  radius:              'userPresets.tipRadius',
+  memThick:            'userPresets.tipMemThick',
+  epsR:                'userPresets.tipEpsR',
+  sigmaI:              'userPresets.tipSigmaI',
+  sigmaMem:            'userPresets.tipSigmaMem',
+  vmThr:               'userPresets.tipVmThr',
+  density:             'userPresets.tipDensity',
+  cp:                  'userPresets.tipCp',
+  derivedFc:           'userPresets.tipDerivedFc',
+  cellType:            'userPresets.tipCellType',
+  sigmaUncertaintyPct: 'userPresets.tipSigmaUncertaintyPct',
+  sigmaSource:         'userPresets.tipSigmaSource',
+  sigmaCitation:       'userPresets.tipSigmaCitation',
+  resFreq:             'userPresets.tipResFreq',
+  capsidQ:             'userPresets.tipCapsidQ',
+  resThr:              'userPresets.tipResThr',
+  resFreqUnc:          'userPresets.tipResFreqUnc',
+  capsidQMin:          'userPresets.tipCapsidQMin',
+  capsidQMax:          'userPresets.tipCapsidQMax',
+  resFreq2:            'userPresets.tipResFreq2',
+  capsidQ2:            'userPresets.tipCapsidQ2',
+  resMode2Amp:         'userPresets.tipResMode2Amp',
+  nuclearRadius:       'userPresets.tipNuclearRadius',
+  nuclearMemThick:     'userPresets.tipNuclearMemThick',
+  nuclearEps:          'userPresets.tipNuclearEps',
+  nucleoplasmSigma:    'userPresets.tipNucleoplasmSigma',
+  nuclearVmThr:        'userPresets.tipNuclearVmThr',
 }
 
 export default defineComponent({

@@ -75,10 +75,7 @@ import { UNIT } from '@/constants/units'
 import { ICON } from '@/constants/icons'
 import { ROUTE } from '@/constants/routes'
 
-// ── Demo cell pair ──
-// Target and healthy differ in FOUR parameters (not just radius), reflecting real
-// cancer-vs-healthy biophysical literature. Values are representative ranges, not a
-// specific cell line. Citations in the disclosure line beneath the widget.
+// Demo cells differ in R, Cm, σ_i, V_thr (representative ranges, not a specific line — citations below widget).
 const UM_TO_M = 1e-6
 const SIGMA_E_S_M = 1.5      // saline external conductivity, typical EP buffer
 
@@ -89,10 +86,7 @@ interface DemoCell {
   V_thr:     number   // lysis threshold voltage
 }
 
-// Target: cancer-like. Larger R (Pethig 2010), elevated Cm from cholesterol depletion /
-// increased phosphatidylserine (Pethig 2010 reports 1.3-1.8 µF/cm² for carcinoma lines),
-// elevated σ_i from overexpressed ion channels (Anand 2019 MDA-MB-231), lower V_thr from
-// cholesterol-depleted membrane (Polevaya 1999 reports 0.7-1.0 V for cancer lines).
+// Target cancer-like: ↑R, ↑Cm, ↑σ_i, ↓V_thr (Pethig 2010; Anand 2019; Polevaya 1999).
 const TARGET: DemoCell = {
   radius_um: 10,
   Cm_F_m2:   0.015,
@@ -100,9 +94,7 @@ const TARGET: DemoCell = {
   V_thr:     0.9,
 }
 
-// Healthy: PBMC/lymphocyte-like. Smaller R, normal Cm (Gascoyne 1992 lymphocyte ~9 mF/m²),
-// normal σ_i (Pauly & Schwan 1966), higher V_thr reflecting more ordered cholesterol-rich
-// membrane (Polevaya 1999 normal reference ~1.0-1.2 V).
+// Healthy PBMC-like: ↓R, baseline Cm/σ_i, ↑V_thr (Gascoyne 1992; Pauly & Schwan 1966; Polevaya 1999).
 const HEALTHY: DemoCell = {
   radius_um: 4,
   Cm_F_m2:   0.009,

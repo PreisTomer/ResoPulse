@@ -1,8 +1,6 @@
 // Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 
-// Types for the ValidationWorkflows replay system.
-// A ReplayScript is produced by a factory function (ScriptFactory) at click-time so that
-// each step's action closes over live Pinia store references — no circular imports.
+// ScriptFactory produces ReplayScript at click-time so each step closes over live stores, avoiding circular imports.
 
 export interface ReplayStep {
   /** DOM element id to scroll-into-view and pulse-highlight. */

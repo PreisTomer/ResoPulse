@@ -80,9 +80,7 @@ export default defineComponent({
   },
 
   mounted() {
-    // Defer enabling the CSS transition by one tick so the initial transform
-    // (applied via inline :style) is never animated — only collapse/expand
-    // interactions after first paint should trigger the transition.
+    // Delay CSS transition by a tick so the initial inline-style transform doesn't animate on first paint.
     if (this.forceOpen) this.isCollapsed = false
     this.$nextTick(() => { this.transitionReady = true })
     if (this.introAnimation) {

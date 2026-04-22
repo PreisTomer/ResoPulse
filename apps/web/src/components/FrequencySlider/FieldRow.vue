@@ -228,9 +228,7 @@ export default defineComponent({
       broadcastStateSync()
     },
 
-    // ── Scrub drag on readout value (linear scale) ────────────────────────────
-    // Drag right → increase field, drag left → decrease.
-    // A single click (no movement past deadzone) opens the type-in editor.
+    // Scrub drag (linear) on readout: drag adjusts field; click without deadzone movement opens the type-in editor.
     startScrubField(e: MouseEvent) {
       if (this.editingField) return
       this.scrubbing     = true

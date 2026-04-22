@@ -7,9 +7,7 @@ import { CELL_STATE } from '@/constants/strings'
 
 // ── Pitch mapping constants ────────────────────────────────────────────────────
 
-// Pitch tracks disruption ratio: DR=0 → A3 (220 Hz), DR=1 → A5 (880 Hz), DR>1 → A6 (1760 Hz).
-// Two octaves over the [0,1] DR range gives musically clear, non-fatiguing feedback.
-// Impedance drift adds a ±semitone vibrato on top so hardware users still get drift cues.
+// Pitch maps DR to 2 octaves (A3→A5→A6); impedance drift adds a ±semitone vibrato for hardware cue.
 const BASE_FREQ_HZ     = 220    // A3, baseline tone at DR = 0
 const MID_FREQ_HZ      = 880    // A5, tone at DR = 1.0 (lysis threshold)
 const MAX_FREQ_HZ      = 1760   // A6, tone at DR > 1 (full lysis)
@@ -99,9 +97,7 @@ class SonificationService {
     const now = this.ctx.currentTime
     const absDrift = Math.abs(impedanceDriftPct)
 
-    // ── Pitch: primary driver is DR, drift adds a subtle vibrato ────────────
-    // DR in [0, 1]: interpolate A3→A5 (one octave per doubling gives perceptual linearity)
-    // DR > 1: interpolate A5→A6 (capped, already in lysis)
+    // Pitch: DR drives A3→A5→A6 (log-perceptual); drift adds subtle vibrato.
     const dr = Math.max(0, disruptionRatio)
     const drBase = dr <= 1
       ? BASE_FREQ_HZ + (MID_FREQ_HZ - BASE_FREQ_HZ) * dr

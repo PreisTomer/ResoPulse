@@ -4,9 +4,11 @@ import type { Server as HttpServer } from 'http'
 import { verifyToken } from '@clerk/express'
 import type {
   StatePacket, LogEntry, HardwareImpedancePacket,
-  OutcomeEntry, AiOptimizeRequest, AiOptimizeResult,
+  OutcomeEntry, MeasuredOutcome, MeasuredOutcomeEntry,
+  AiOptimizeRequest, AiOptimizeResult,
 } from '../types/socket'
-import { insertOutcome } from '../db'
+import type { ViabilityAssay } from '@resopulse/shared-types'
+import { insertOutcome, attachMeasuredOutcome } from '../db'
 
 // Domain constants
 const MEDIUM = {
@@ -81,8 +83,10 @@ const SOCKET_EVENTS = {
   NEW_LOG_ENTRY:       'newLogEntry',
   IMPEDANCE_READING:   'impedanceReading',
   IMPEDANCE_BROADCAST: 'impedanceBroadcast',
-  LOG_OUTCOME:         'logOutcome',
-  NEW_OUTCOME:         'newOutcome',
+  LOG_OUTCOME:            'logOutcome',
+  NEW_OUTCOME:            'newOutcome',
+  LOG_MEASURED_OUTCOME:   'logMeasuredOutcome',
+  NEW_MEASURED_OUTCOME:   'newMeasuredOutcome',
   AI_OPTIMIZE_REQUEST: 'aiOptimizeRequest',
   AI_OPTIMIZE_RESULT:  'aiOptimizeResult',
   DISCONNECT:          'disconnect',
@@ -270,6 +274,57 @@ function validateOutcomeEntry(raw: Record<string, unknown>): OutcomeEntry | null
   }
 }
 
+const VIABILITY_ASSAYS: ReadonlySet<ViabilityAssay> = new Set<ViabilityAssay>([
+  'trypan', 'mtt', 'flowPi', 'resazurin', 'cellTiterGlo', 'other',
+])
+
+const optNum = (v: unknown): number | undefined => {
+  if (v === undefined || v === null) return undefined
+  const n = Number(v)
+  return isNaN(n) ? undefined : n
+}
+
+const clampPct = (v: number | undefined): number | undefined =>
+  v === undefined ? undefined : Math.max(0, Math.min(100, v))
+
+function validateMeasuredOutcome(raw: Record<string, unknown>): MeasuredOutcome | null {
+  const measuredAt = typeof raw.measuredAt === 'string' ? raw.measuredAt : new Date().toISOString()
+  const viabilityAssay: ViabilityAssay | undefined =
+    typeof raw.viabilityAssay === 'string' && VIABILITY_ASSAYS.has(raw.viabilityAssay as ViabilityAssay)
+      ? (raw.viabilityAssay as ViabilityAssay)
+      : undefined
+  const notes = typeof raw.notes === 'string' ? raw.notes.slice(0, 500) : undefined
+
+  return {
+    measuredAt,
+    targetLysisPct:       clampPct(optNum(raw.targetLysisPct)),
+    healthyLysisPct:      clampPct(optNum(raw.healthyLysisPct)),
+    viabilityPct:         clampPct(optNum(raw.viabilityPct)),
+    permeabilizedPct:     clampPct(optNum(raw.permeabilizedPct)),
+    transfectionPct:      clampPct(optNum(raw.transfectionPct)),
+    viabilityAssay,
+    assayTimepointH:      optNum(raw.assayTimepointH),
+    tempC:                optNum(raw.tempC),
+    actualFieldVcm:       optNum(raw.actualFieldVcm),
+    observedLysisDelayMs: optNum(raw.observedLysisDelayMs),
+    notes,
+  }
+}
+
+function validateMeasuredOutcomeEntry(raw: Record<string, unknown>): MeasuredOutcomeEntry | null {
+  if (typeof raw.sessionName !== 'string' || typeof raw.timestamp !== 'string') return null
+  if (!raw.measured || typeof raw.measured !== 'object')                        return null
+
+  const measured = validateMeasuredOutcome(raw.measured as Record<string, unknown>)
+  if (!measured) return null
+
+  return {
+    sessionName: raw.sessionName.slice(0, BOUNDS.SESSION_MAX_LEN),
+    timestamp:   raw.timestamp,
+    measured,
+  }
+}
+
 function validateAiOptimizeRequest(raw: Record<string, unknown>): AiOptimizeRequest | null {
   if (typeof raw.requestId !== 'string' || raw.requestId.length === 0) return null
   if (!raw.sessionState    || typeof raw.sessionState    !== 'object') return null
@@ -440,9 +495,26 @@ export function setupSocketServer(httpServer: HttpServer): Server {
       if (!raw || typeof raw !== 'object') return
       const entry = validateOutcomeEntry(raw as Record<string, unknown>)
       if (!entry) return
-      await insertOutcome(entry)
+      // Tag the outcome with the connected lab (orgId) so calibration can
+      // scope fits per-lab. Guests connect with orgId=null and their rows
+      // stay excluded from calibration queries.
+      await insertOutcome(entry, socket.data.orgId as string | null)
       const room = socketToRoom.get(socket.id) ?? DEFAULT_ROOM
       socket.to(room).emit(SOCKET_EVENTS.NEW_OUTCOME, entry)
+    })
+
+    socket.on(SOCKET_EVENTS.LOG_MEASURED_OUTCOME, async (raw: unknown) => {
+      if (!raw || typeof raw !== 'object') return
+      const entry = validateMeasuredOutcomeEntry(raw as Record<string, unknown>)
+      if (!entry) return
+      const updated = await attachMeasuredOutcome(entry)
+      if (updated === 0) {
+        console.warn('[Socket] logMeasuredOutcome matched zero rows', {
+          sessionName: entry.sessionName, timestamp: entry.timestamp,
+        })
+      }
+      const room = socketToRoom.get(socket.id) ?? DEFAULT_ROOM
+      socket.to(room).emit(SOCKET_EVENTS.NEW_MEASURED_OUTCOME, entry)
     })
 
     socket.on(SOCKET_EVENTS.AI_OPTIMIZE_REQUEST, async (raw: unknown) => {

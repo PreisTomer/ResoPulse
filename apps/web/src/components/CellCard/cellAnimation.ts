@@ -1,11 +1,6 @@
 // Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 
-// Pure D3 animation helpers for CellCard. Each setup function takes a DOM element
-// and a getFrame() callback that reads Vue reactive state on each tick.
-// Anatomy: mammalian=nucleus+mito+cortex+rays+pores; ecoli=rod+dbl-mem+nucleoid+ribosome+flagellum+rays;
-// mrsa=sphere+peptidoglycan+septum+nucleoid+rays; influenza=12 spikes+RNP+RNA+rays;
-// sarscov2=16 spikes+lipid envelope+nucleocapsid+RNA+rays.
-// Field rays: color=frequency (cyan→violet, log 10kHz–30GHz); opacity=field intensity.
+// Pure D3 animation helpers for CellCard. setup*() takes a DOM element + getFrame() that reads Vue reactive state.
 import * as d3 from 'd3'
 
 import { C } from '@/theme/colors'
@@ -188,9 +183,7 @@ function buildMitoData(
         { x:  -3, y:  18, rx: 7, ry: 3.0, angle:  55 },
       ]
     default: {
-      // Custom preset: derive mito count and size from cytoplasmic conductivity.
-      // Higher σ_i = stronger Warburg glycolytic reprogramming = more fragmented, more numerous mito.
-      // σ_i range for mammalian targets: ~0.3 S/m (low metabolism) to ~1.2 S/m (highly active).
+      // Warburg proxy: higher σ_i → more fragmented, more numerous mito.
       const sigma = profile.conductivity
       const count = Math.min(6, Math.max(2, Math.round(sigma * 6.5)))
       const rxBase = Math.max(4.0, 7.5 - sigma * 1.5)  // smaller mito at higher conductivity (fragmentation)
@@ -755,9 +748,7 @@ function updateBacteriaAnatomy(anat: BacteriaAnatomy, p: BacteriaUpdateParams): 
     anat.bacteriaWallElOuter!.attr('stroke', color).attr('stroke-opacity', wallOpacity * 0.85)
     anat.bacteriaWallElInner!.attr('stroke', color).attr('stroke-opacity', wallOpacity * 0.60)
 
-    // 3 peritrichous flagella: hook joints + helical filaments bundled during swimming,
-    // splayed during tumbling (CW switch triggers run→tumble).
-    // Biology: E. coli flagella bundle CCW → propulsion; CW switch → individual splay.
+    // 3 peritrichous flagella: CCW bundles during swimming, CW splays during tumbling.
     const FLAG_AMP    = 5.5    // helix amplitude (px)
     const FLAG_LEN    = 30     // filament length (px)
     const FLAG_CYCLES = 3.2    // helical turns visible along filament
@@ -967,9 +958,7 @@ export function setupBlobAnimation(
     .attr('gradientUnits', 'userSpaceOnUse')
     .attr('x1', 0).attr('y1', -cy).attr('x2', 0).attr('y2', -northPoleR)
   rayNGrad.append('stop').attr('offset', '0%').attr('stop-color', accentColor).attr('stop-opacity', 0)
-  // Peak brightness at 88% of gradient length (just before cell surface), then fades to 0.
-  // The zero-opacity tail extends into the cell interior — hidden by blobFill — so the
-  // ray tip never appears as an abrupt edge even when the blob membrane oscillates inward.
+  // Peak at 88% (just before cell surface); tail into interior hidden by blobFill so ray tip has no abrupt edge.
   const rayNBrightStop = rayNGrad.append('stop').attr('offset', '88%')
     .attr('stop-color', accentColor).attr('stop-opacity', 1.0)
   rayNGrad.append('stop').attr('offset', '100%')
@@ -990,10 +979,7 @@ export function setupBlobAnimation(
   // ── Cell groups (all coordinates relative to cell centre) ─────────────────
   const cellG = svg.append('g').attr('transform', `translate(${cx},${cy})`)
 
-  // ── Ray mask: clips rays to only appear outside cell + membrane glow zone ──
-  // Black circle (radius BASE_R + 20) hides rays inside the cell area.
-  // The +20 buffer covers membrane oscillation (±10 px) and the glow blur (stdDev 3 → ~9 px).
-  // maskUnits/maskContentUnits both use cellG's local space (cell centre = 0,0).
+  // Ray mask: +20 buffer covers membrane oscillation (±10 px) + glow blur (~9 px).
   const RAY_MASK_R = BASE_R + 20
   const rayMaskId = `rayMask-${type}`
   const rayMaskEl = defs.append('mask').attr('id', rayMaskId)
@@ -1025,16 +1011,12 @@ export function setupBlobAnimation(
   const raySR = raysG.append('rect').attr('x', 11).attr('y', southPoleR - RAY_OVERLAP).attr('width', 3).attr('height', raySTopH)
     .attr('fill', `url(#${raySGradId})`)
 
-  // ── Nourishing background bloom (behind cell body, in cellG) ─────────────
-  // A large softly blurred filled circle that creates a radial glow emanating
-  // from behind the cell into the dark canvas. Hidden in all non-nourishing states.
+  // Nourishing background bloom: hidden unless in nourishing state.
   const nourishBloom = cellG.append('circle').attr('r', BASE_R * 1.55)
     .attr('fill', accentColor).attr('fill-opacity', 0)
     .attr('filter', `url(#${nourishBloomId})`).attr('pointer-events', 'none')
 
-  // ── Acoustic standing-wave rings (bacteria/virus resonance mode only) ─────
-  // 5 phase-staggered concentric rings that oscillate in radius, representing
-  // the radial displacement field of a spherically oscillating particle.
+  // Acoustic standing-wave rings: 5 phase-staggered concentric rings, bacteria/virus resonance only.
   const standingWaveRings = d3.range(5).map((i) =>
     cellG.append('circle').attr('r', BASE_R + 10 + i * 9).attr('fill', 'none')
       .attr('stroke', accentColor).attr('stroke-width', Math.max(0.4, 1.0 - i * 0.11)).attr('stroke-opacity', 0)
@@ -1047,11 +1029,7 @@ export function setupBlobAnimation(
   const blobBg   = bodyG.append('path').attr('fill', CANVAS_BG)
   const blobFill = bodyG.append('path').attr('fill', `url(#${gradId})`)
 
-  // ── Calcium wave rings (PIEZO1/TRP Ca²⁺ transients, nourishing state) ──────
-  // Ca²⁺ enters through transiently-opened channels at the membrane and diffuses
-  // INWARD toward the nucleus. Each wave is a circle centered at the cell origin
-  // that contracts from BASE_R (membrane) down to ~15% of BASE_R (perinuclear region).
-  // This correctly models inward Ca²⁺ diffusion — not outward aura rings.
+  // Ca²⁺ wave rings (PIEZO1/TRP): contract inward from BASE_R to ~15% BASE_R — models inward diffusion, not outward aura.
   const calciumWaves = d3.range(5).map((i) => ({
     el: bodyG.append('circle').attr('r', 0).attr('fill', 'none')
       .attr('stroke', accentColor).attr('stroke-width', 1.4).attr('stroke-opacity', 0)
@@ -1073,19 +1051,13 @@ export function setupBlobAnimation(
   const blobStroke = bodyG.append('path').attr('fill', 'none').attr('stroke', accentColor)
     .attr('stroke-width', 2.5).attr('filter', `url(#${glowId})`)
 
-  // ── Nourishing membrane halo (wide blurred path matching cell border) ──────
-  // Only visible during nourishing/biomodulation state. Sits above the crisp membrane
-  // line, bleeding outward as a diffuse living glow. Conveys that the membrane is
-  // energised — not disrupted. Grows with biomodScore (impact).
+  // Nourishing membrane halo: scales with biomodScore, nourishing state only.
   const nourishGlow = bodyG.append('path').attr('fill', 'none')
     .attr('stroke', accentColor).attr('stroke-width', 15)
     .attr('stroke-opacity', 0).attr('pointer-events', 'none')
     .attr('filter', `url(#${nourishGlowId})`)
 
-  // ── Membrane blebs (mammalian only; circular protrusions at elevated DR) ──
-  // Only the two field-axis poles (north = cathodic, south = anodic) develop significant blebs.
-  // Physics: Maxwell stress is proportional to Vm² ∝ cos²θ — maximum at θ=0/π, zero at equator.
-  // Each pole bleb has an independent pulse phase and speed (stochastic osmotic pressure).
+  // Membrane blebs (mammalian, field-axis poles only): Maxwell stress ∝ Vm² ∝ cos²θ peaks at θ=0/π.
   const blebData: Array<{ el: D3Sel<SVGCircleElement>; idx: number; phaseShift: number; pulseSpeed: number }> = []
   if (cellCategory === CELL_CATEGORY.MAMMALIAN) {
     const N_BLOB = BLOB_POINTS
@@ -1102,9 +1074,7 @@ export function setupBlobAnimation(
     })
   }
 
-  // ── Electroporation pores (BG-coloured holes) ─────────────────────────────
-  // Inset PORE_INSET fraction from membrane; max radius = PORE_MAX_R.
-  // Side pores disabled for rod shape (off-membrane positions).
+  // EP pores (BG holes); side pores disabled for rod shape.
   const PORE_MAX_R = Math.floor(BASE_R * 0.18)
   const SIN60 = Math.sin(Math.PI / 3), COS60 = Math.cos(Math.PI / 3)
   const northPore = bodyG.append('circle').attr('cy', -northPoleR * PORE_INSET).attr('r', 0).attr('fill', CANVAS_BG)
@@ -1161,12 +1131,7 @@ export function setupBlobAnimation(
     .attr('fill', accentColor).attr('fill-opacity', 0)
     .attr('pointer-events', 'none')
 
-  // ── DEP visual effects state ──────────────────────────────────────────────
-  // 1. Blob deformation: pDEP = N-S elongation (prolate); nDEP = E-W elongation (oblate).
-  //    depDeform(θ) = K·BASE_R·0.24·cos(2θ) ∝ Re[K]·P₂(cosθ) — elongates along field axis for K>0.
-  //    Ref: Engelhardt & Sackmann (1988) Biophys J 54; Dimova et al. (2007) Soft Matter.
-  // 2. Bacteria alignment: pDEP → 0° (field-parallel); nDEP → 90°
-  // 3. Translational drift: pDEP → toward electrode (−Y); nDEP → away (+Y); max ±8 px
+  // DEP: deform ∝ Re[K]·P₂(cosθ) (Engelhardt & Sackmann 1988; Dimova 2007); align 0°/90°; drift ±8 px.
   let depDeformScale = 0   // updated every timer tick before blobPts
   let depAlignAngle  = 0   // bacteria rotation toward/from field axis (degrees)
   let depDriftY      = 0   // whole-cell translational drift (px, toward/from field source)
@@ -1232,9 +1197,7 @@ export function setupBlobAnimation(
       ? (depCmReal > 0 ? 0 : 90)
       : 0
     depAlignAngle += (targetAlignAngle - depAlignAngle) * 0.025
-    // ── Pseudo-3D Y-axis rotation (mammalian only): scaleX = cos θ illusion ───
-    // Period ≈ 14 s; amplitude ±0.14 gives a 72–100% width oscillation that reads
-    // as a slow tumble on the microscopy stage without distorting bacteria DEP alignment.
+    // Pseudo-3D Y-rotation (mammalian): ±0.14 amplitude, 14 s period; bacteria keep scaleX=1 so DEP alignment stays true.
     const spinScaleX = cellCategory === CELL_CATEGORY.MAMMALIAN
       ? 0.86 + 0.14 * Math.cos(elapsed * 0.00045)
       : 1.0
@@ -1428,9 +1391,7 @@ export function setupBlobAnimation(
       .attr('stroke-opacity', 1).attr('stroke-width', membraneStrokeWidth)
 
 
-    // ── Acoustic standing-wave rings (bacteria/virus resonance mode) ─────────
-    // 5 rings oscillate in radius at staggered phases, representing the radial
-    // displacement field of a spherically resonating capsid/cell wall.
+    // Acoustic standing-wave rings: radial displacement of resonating capsid/cell wall.
     standingWaveRings.forEach((ring, i) => {
       if (!isAcousticMode) { ring.attr('stroke-opacity', 0); return }
       const baseR = BASE_R + 10 + i * 9
@@ -1456,10 +1417,7 @@ export function setupBlobAnimation(
       updateVirusAnatomy(virusAnatomy, { elapsed, color, impact, state })
     }
 
-    // ── Nourishing background bloom + membrane halo ───────────────────────────
-    // Two layered effects: a large radial bloom behind the cell (background aura)
-    // and a wide blurred membrane halo tracing the cell border.
-    // Both breathe at slightly different rates so the glow feels alive, not mechanical.
+    // Nourishing bloom + halo: bloom behind body (slow), halo on border (fast) — staggered so it feels alive.
     if (isNourishing) {
       const breatheFast = (Math.sin(elapsed * 0.0013) + 1) / 2  // ~4.8 s cycle — membrane halo
       const breatheSlow = (Math.sin(elapsed * 0.0007) + 1) / 2  // ~9.0 s cycle — background bloom
@@ -1474,9 +1432,7 @@ export function setupBlobAnimation(
       nourishGlow.attr('stroke-opacity', 0)
     }
 
-    // ── Calcium wave propagation (PIEZO1/TRP Ca²⁺ transients, nourishing state) ──
-    // Waves contract inward from the membrane (BASE_R) toward the perinuclear region,
-    // modelling Ca²⁺ diffusion after membrane entry — not outward expansion.
+    // Ca²⁺ waves: contract inward (membrane → perinuclear), not outward.
     if (isNourishing) {
       if (elapsed - lastCalciumElapsed > 1800) {
         lastCalciumElapsed = elapsed
@@ -1537,10 +1493,7 @@ export function setupBlobAnimation(
       ion.attr('cy', sPorePos * (1 - t)).attr('fill-opacity', Math.sin(t * Math.PI) * 0.70)
     })
 
-    // ── Membrane blebs: two field-axis polar protrusions (mammalian only) ────────
-    // Physics: Maxwell stress ∝ Vm² ∝ cos²θ peaks at the anodic and cathodic poles.
-    // Blebs grow from DR ~28% onward; each pulse independently (stochastic osmotic pressure).
-    // Amber at Rev-EP (transient, reseals); danger-red at vibrating (irreversible herniation).
+    // Membrane blebs: grow from DR ~28%; amber at Rev-EP (resealable), red at vibrating (irreversible).
     blebData.forEach(({ el: bEl, idx, phaseShift, pulseSpeed }) => {
       const blebActive = state === CELL_STATE.APPROACHING || isRevEp || isVibrating
       if (!blebActive) { bEl.attr('r', 0).attr('stroke-opacity', 0); return }
@@ -1613,9 +1566,7 @@ export function setupOscilloscope(
     const amp      = isNourishing ? baseAmp * (1 + impact * 0.4) : baseAmp
     const speedMult = isVibrating ? 1 + impact * 5 : isLysing ? 8 : 1
 
-    // Waveform clipping at Rev-EP and above: above electroporation threshold the membrane
-    // conductance spikes, clamping Vm — the linear Schwan model no longer applies and the
-    // waveform saturates. Clip level decreases from 1.0 (no clip, 50% DR) to 0.15 (heavy clip, 85% DR).
+    // Above EP threshold, membrane conductance spikes clamp Vm — Schwan no longer applies, waveform saturates (1.0 @ 50% DR → 0.15 @ 85%).
     const clipLevel   = impact > 0.50 ? Math.max(0.15, 1.0 - (impact - 0.50) * 2.0) : 1.0
     const isEpClipped = clipLevel < 0.95
     const pts = d3.range(120).map((i: number) => {

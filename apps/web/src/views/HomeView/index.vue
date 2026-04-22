@@ -358,9 +358,7 @@ const PARTICLE_RADIUS   = 1.3
 const PARTICLE_OPACITY  = 0.38
 const CONNECTION_DIST   = 138
 
-// ── Particle enhancements ─────────────────────────────────────────────────
-// NODE particles (20%) represent target/mammalian cells — larger, brighter, with a halo.
-// Regular particles represent background healthy cells or suspended ions.
+// 20% NODE particles (larger + halo) are target cells; the rest represent background cells/ions.
 const NODE_FRACTION       = 0.20
 const NODE_RADIUS         = 2.4
 
@@ -460,9 +458,7 @@ export default defineComponent({
     this.buildHexGrid()
     this.startHexLoop()
 
-    // Attach mouse tracking for E-field repulsion interaction.
-    // The particle canvas has pointer-events: none, so we listen on the home root element
-    // and translate viewport coordinates into canvas-space using getBoundingClientRect().
+    // Mouse tracking on home root (canvas is pointer-events:none); rect.left/top maps viewport → canvas space.
     const homeEl = this.$el as HTMLElement
     homeEl.addEventListener('mousemove', (e: MouseEvent) => {
       const canvas = this.$refs.particleCanvas as HTMLCanvasElement | null

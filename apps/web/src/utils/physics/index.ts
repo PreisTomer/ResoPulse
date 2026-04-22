@@ -61,11 +61,7 @@ export function computeSAR(
   return (cell.conductivity * alpha ** 2 * E_si ** 2 * waveformFactor) / cell.density
 }
 
-// Intracellular SAR at GHz (resonance mode). Membrane becomes capacitively transparent,
-// so the external field penetrates the cytoplasm (α → 1) and the aqueous phase absorbs
-// Debye dielectric loss alongside ionic conduction. σ_eff = σ_i + ω·ε₀·ε″(ω), where
-// ε″(ω) = (ε_s − ε_∞)·ωτ_D/(1+(ωτ_D)²). Equates to Joule SAR at low GHz, peaks near
-// 1/(2πτ_D) ≈ 20 GHz. Uses cytoplasm permittivity as ε_s.
+// GHz SAR: membrane transparent (α→1), σ_eff = σ_i + ω·ε₀·ε″(ω); peaks near 1/(2πτ_D) ≈ 20 GHz.
 export function computeIntracellularDebyeSAR(
   cell: CellConfig,
   fieldVcm: number,
@@ -96,10 +92,7 @@ function cmul(a: Cpx, b: Cpx): Cpx {
   return [a[0]*b[0] - a[1]*b[1], a[0]*b[1] + a[1]*b[0]]
 }
 
-// Re[K(ω)] — Clausius-Mossotti, single-shell. K=(ε*_eff−ε*_m)/(ε*_eff+2ε*_m). Gascoyne 2002.
-// Medium permittivity uses Debye dispersion (τ_D ≈ 8.3 ps): below ~1 GHz this reduces to the
-// static form, but above ~1 GHz both the real part drops (ε_s → ε_∞) and dielectric loss adds
-// to σ_eff, shifting the high-frequency crossover into physically correct territory.
+// Re[K(ω)] — Clausius-Mossotti single-shell (Gascoyne 2002). Medium uses Debye τ_D ≈ 8.3 ps so >1 GHz crossover is physical.
 export function computeDepCmReal(
   cell: CellConfig,
   freqKHz: number,
@@ -138,14 +131,7 @@ export function computeDepCmReal(
   return Math.max(-0.5, Math.min(0.5, K[0]))
 }
 
-// DEP crossover log-scan — coarse 80-pt log sweep [0.01 kHz, 10 GHz] bracketing every Re[K]
-// sign change, then geometric bisection inside each bracket. Returns crossover frequencies
-// in ascending order. Replaces single endpoint-bisection, which missed dual crossovers
-// typical of low-σ_e media (Pethig 2010 Biomicrofluidics 4:022811).
-//
-// Extended lower bound to 0.01 kHz (10 Hz) so crossovers in very-low-σ_e buffers (e.g.
-// distilled water, dense cell packing) that sit below 1 kHz are detected. The bracketing
-// scheme already handles the case where Re[K] has no sign change at all by returning [].
+// DEP crossover log-scan [10 Hz, 10 GHz]: bracket sign changes, bisect. Pethig 2010. Catches dual crossovers in low-σ_e media.
 const DEP_SCAN_LO_KHZ = 0.01
 const DEP_SCAN_HI_KHZ = 10_000_000
 const DEP_SCAN_POINTS = 100
@@ -239,25 +225,18 @@ export function computePulseStepResponse(tau_s: number, pulseWidthNs: number): n
   return 1 - Math.exp(-(pulseWidthNs * NS_TO_S) / tau_s)
 }
 
-// Pulse envelope factor with the MIN_PULSE_ENVELOPE floor applied. Returns 1.0 when not
-// pulsed (CW) or when the resonance path suppresses RC membrane-charging. Centralises the
-// Math.max(MIN_PULSE_ENVELOPE, 1−exp(−t_p/τ)) pattern used in the heatmap canvas, comparison
-// table, socket payload, and store getters — see CLAUDE.md "Selection-Conditional Correctness".
+// Pulse envelope factor with MIN_PULSE_ENVELOPE floor; 1.0 for CW and resonance.
 export function pulseEnvelopeClamped(tau_s: number, pulseWidthNs: number, isPulsed: boolean): number {
   if (!isPulsed) return 1.0
   return Math.max(MIN_PULSE_ENVELOPE, computePulseStepResponse(tau_s, pulseWidthNs))
 }
 
-// H-FIRE bipolar charge cancellation raises the effective EP threshold by a fixed multiplier.
-// Applies ONLY to the Schwan EP path. Acoustic resonance (virus/bacteria) is mechanical and
-// must NOT receive this factor — see cellStore.targetDisruptionRatio for the guard.
+// H-FIRE bipolar charge cancellation raises EP threshold; Schwan path only, not acoustic.
 export function getHFireMultiplier(waveform: string): number {
   return waveform === WAVEFORM.H_FIRE ? H_FIRE_THRESHOLD_MULTIPLIER : 1.0
 }
 
-// True when current mode + target cell parameters together drive the acoustic-resonance path
-// (chartMode === RESONANCE, category is BACTERIA or VIRUS, and resonant params are populated).
-// Centralises the guard that previously existed as a local computed in 6 components.
+// True when mode+category+resonant params all agree on the acoustic-resonance path.
 export function isResonanceTargetActive(
   isResonanceMode: boolean,
   category: 'mammalian' | 'bacteria' | 'virus',
@@ -285,12 +264,7 @@ export function computeResonantLineshape(
 
 // ── EM skin depth ────────────────────────────────────────────────────────────
 
-// EM skin depth [mm]: δ=1/α, α=ω√(με/2)·√(√(1+(σ_eff/ωε')²)−1). Gabriel 1996; Debye 1929.
-//
-// Includes dielectric relaxation loss: above ~1 GHz, water's polar-molecule reorientation
-// (τ_D ≈ 8.3 ps) contributes σ_loss = ωε₀·ε″(ω) that dominates over σ_dc. Without this term
-// the formula returns unphysically large skin depths at GHz frequencies (e.g. >10 m in
-// EP buffer at 20 GHz, when the true value is sub-mm). ε*(ω) = ε_∞ + (ε_s−ε_∞)/(1+jωτ_D).
+// EM skin depth [mm]: δ=1/α, α=ω√(με/2)·√(√(1+(σ_eff/ωε')²)−1) (Gabriel 1996). Debye loss needed or >1 GHz reads unphysical.
 export function computeSkinDepthMm(freqKHz: number, sigma_e: number, epsilon_r = 80): number {
   const f = freqKHz * KHZ_TO_HZ
   if (f <= 0 || sigma_e <= 0) return Infinity
@@ -311,9 +285,7 @@ export function computeSkinDepthMm(freqKHz: number, sigma_e: number, epsilon_r =
   return (1 / alpha) * 1000  // m → mm
 }
 
-// Resonant disruption ratio: (E/E_thr)·L(f,f_res,Q). >=1.0 → threshold exceeded.
-// Optional second mode: DR_total = DR_mode1 + alpha2 × DR_mode2, where alpha2 = resonantMode2Amplitude.
-// Models viruses with experimentally confirmed multiple dipolar modes (e.g. SARS-CoV-2 at 4 + 7.5 GHz).
+// Resonant DR = (E/E_thr)·L(f,f_res,Q); optional second mode added with alpha2 weight (e.g. SARS-CoV-2 4 + 7.5 GHz).
 export function computeResonantDisruption(
   resonantFreqGHz: number,
   Q: number,
@@ -333,23 +305,8 @@ export function computeResonantDisruption(
   return dr1 + dr2
 }
 
-// ── Electroporation threshold correction (temperature + electrosensitization) ─
-//
-// Full formula: Vth_eff = Vth × N^(−α) × clamp(1 − 0.003×(T−37), 0.70, ∞)
-//
-// Temperature term: Arrhenius pore-nucleation energy decreases with bilayer fluidity.
-//   Weaver & Chizmadzhev 1996 Bioelectrochemistry 41:135.
-//
-// Electrosensitization term: repeated pulses condition membrane pore populations, reducing
-//   the field required for irreversible disruption on subsequent pulses. Each delivered pulse
-//   leaves a population of sub-threshold pores that lower the nucleation barrier for the next.
-//   Pakhomov et al. 2010 Biochim. Biophys. Acta 1798:2260; Weaver 1996 ibid.
-//   α = ELECTROSENSITIZATION_EXPONENT (0.20 default). Clamped so threshold never falls below
-//   35% of nominal regardless of pulse count.
-//
-// pulseCount applies only to EP thresholds (thresholdVoltage, nuclearThresholdVoltage).
-// Do NOT pass pulseCount for acoustic resonance thresholds (resonantThresholdVcm) — mechanical
-// capsid disruption has no pulse-conditioning equivalent in the current model.
+// Vth_eff = Vth·N^(−α)·clamp(1−0.003·(T−37), 0.70, ∞). Arrhenius bilayer fluidity (Weaver & Chizmadzhev 1996)
+// + pulse-conditioning sub-threshold pores (Pakhomov 2010). EP path only — never for acoustic resonance.
 export function tempCorrectedVth(
   nominalVth: number,
   tempC: number,
@@ -442,9 +399,7 @@ export function computeSteadyStateTemp(
   )
 }
 
-// Lysis-threshold field [V/cm] from flat cell parameters. Used by the AI optimisation
-// payload builder in socket.ts where a full CellConfig is not available.
-// Returns a value clamped to [10, 100 000] V/cm — prevents sentinel values in the payload.
+// Lysis-threshold field [V/cm] from flat cell params (for AI payload builder); clamped to [10, 100 000] V/cm.
 export function computeLysisFieldFromParams(
   radiusUm:      number,
   memThicknessNm: number,

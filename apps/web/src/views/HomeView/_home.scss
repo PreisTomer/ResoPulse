@@ -83,9 +83,7 @@
       padding: 4rem 2rem 0;
     }
 
-    /* IO block is deliberately utilitarian: mono equations, no glow, no gradient.
-       Sits between the hero (marketing) and the science strip (illustrative),
-       giving a researcher the direct inputs/equations/outputs answer up front. */
+    /* IO block: utilitarian mono equations (no glow/gradient), direct answer between marketing hero and illustrative strip. */
     &--io {
       gap: 1rem;
       padding: 3rem 2rem 2rem;
@@ -1271,10 +1269,7 @@
     &:hover { text-decoration: none; }
   }
 
-  /* ── IO block (deterministic "what this computes" answer) ──────────────
-     Lab-tool aesthetic: no gradients, no glow, mono for equations.
-     This is the block a researcher reads to decide whether the tool is worth
-     their time — keep it dense, direct, and traceable. */
+  /* IO block: dense, direct, traceable — the "does this tool help me" readout. */
   &__io {
     width: 100%;
     max-width: 1100px;

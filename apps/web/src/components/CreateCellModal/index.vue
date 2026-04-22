@@ -23,6 +23,12 @@
 
             <div v-if="radiusBinWarn" class="ccm__radius-warn">{{ radiusBinWarn }}</div>
 
+            <CcmSigmaProvenanceSection
+              :form="(form as Record<string, unknown>)"
+              @field-change="onFieldChange"
+              @show-tip="showTip"
+            />
+
             <CcmNuclearSection
               v-if="form.cellType === 'mammalian'"
               :form="(form as Record<string, unknown>)"
@@ -80,6 +86,7 @@ import CcmHeader from './CcmHeader.vue'
 import CcmTipPanel from './CcmTipPanel.vue'
 import CcmIdentitySection from './CcmIdentitySection.vue'
 import CcmParamsGrid from './CcmParamsGrid.vue'
+import CcmSigmaProvenanceSection from './CcmSigmaProvenanceSection.vue'
 import CcmNuclearSection from './CcmNuclearSection.vue'
 import CcmResonanceSection from './CcmResonanceSection.vue'
 import CcmDerivedPreview from './CcmDerivedPreview.vue'
@@ -88,9 +95,11 @@ import CcmFooter from './CcmFooter.vue'
 type CellFormType        = 'mammalian' | 'bacteria' | 'virus'
 type CellRole            = 'target' | 'healthy'
 type ParameterConfidence = 'literature' | 'measured' | 'estimated'
+type SigmaSource         = 'literature' | 'measured' | 'electrorotation' | 'impedance' | 'estimated'
 type TipKey =
   | 'radius' | 'memThick' | 'epsR' | 'sigmaI' | 'sigmaMem' | 'vmThr' | 'density' | 'cp'
   | 'derivedFc' | 'cellType'
+  | 'sigmaUncertaintyPct' | 'sigmaSource' | 'sigmaCitation'
   | 'resFreq' | 'capsidQ' | 'resThr' | 'resFreqUnc' | 'capsidQMin' | 'capsidQMax'
   | 'resFreq2' | 'capsidQ2' | 'resMode2Amp'
   | 'nuclearRadius' | 'nuclearMemThick' | 'nuclearEps' | 'nucleoplasmSigma' | 'nuclearVmThr'
@@ -163,6 +172,9 @@ const DEFAULT_FORM = () => ({
   shortLabel:           '',
   notes:                '',
   parameterConfidence:  'literature' as ParameterConfidence,
+  sigmaUncertaintyPct:  null as number | null,
+  sigmaSource:          '' as SigmaSource | '',
+  sigmaCitation:        '',
   ...TYPE_DEFAULTS.mammalian,
 })
 
@@ -174,6 +186,7 @@ export default defineComponent({
     CcmTipPanel,
     CcmIdentitySection,
     CcmParamsGrid,
+    CcmSigmaProvenanceSection,
     CcmNuclearSection,
     CcmResonanceSection,
     CcmDerivedPreview,
@@ -290,6 +303,9 @@ export default defineComponent({
           shortLabel:                 p.shortLabel,
           notes:                      p.notes,
           parameterConfidence:        (p.parameterConfidence as ParameterConfidence) ?? 'literature',
+          sigmaUncertaintyPct:        p.sigmaUncertaintyPct        ?? null,
+          sigmaSource:                (p.sigmaSource as SigmaSource | undefined) ?? '',
+          sigmaCitation:              p.sigmaCitation              ?? '',
           radius:                     p.radius,
           membraneThickness:          p.membraneThickness,
           dielectricConstant:         p.dielectricConstant,
@@ -368,6 +384,9 @@ export default defineComponent({
         density:              this.form.density,
         specificHeatCapacity: this.form.specificHeatCapacity,
         ...(this.form.membraneConductivity != null && { membraneConductivity: this.form.membraneConductivity }),
+        ...(this.form.sigmaUncertaintyPct != null && { sigmaUncertaintyPct: this.form.sigmaUncertaintyPct }),
+        ...(this.form.sigmaSource         !== '' && { sigmaSource: this.form.sigmaSource as SigmaSource }),
+        ...(this.form.sigmaCitation.trim() !== '' && { sigmaCitation: this.form.sigmaCitation.trim() }),
         ...(isMammalian && this.form.nuclearRadius              != null && { nuclearRadius:              this.form.nuclearRadius }),
         ...(isMammalian && this.form.nuclearMembraneThickness   != null && { nuclearMembraneThickness:   this.form.nuclearMembraneThickness }),
         ...(isMammalian && this.form.nuclearMembraneEps         != null && { nuclearMembraneEps:         this.form.nuclearMembraneEps }),

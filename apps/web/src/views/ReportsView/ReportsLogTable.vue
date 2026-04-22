@@ -17,6 +17,7 @@
             </svg>
           </th>
           <th v-for="col in TABLE_COLS" :key="col.key" v-tip="col.tip">{{ col.label }}</th>
+          <th class="reports-log-table__col-delete" aria-hidden="true"></th>
         </tr>
       </thead>
       <tbody>
@@ -27,6 +28,7 @@
           :class="{
             'reports-log-table__row--lysis':    e.event === LOG_EVENT.LYSIS,
             'reports-log-table__row--selected': selectedEntry?.id === e.id,
+            'reports-log-table__row--flash':    recentlyImportedIds.includes(e.id),
           }"
           @click="$emit(EMIT.SELECT, e)"
         >
@@ -58,6 +60,14 @@
           <td :class="depKClass(e.depTargetK)" v-tip="tipCellDepT(e)">{{ depKDisplay(e.depTargetK) }}</td>
           <td>
             <StatusBadge :label="e.event" :variant="eventVariant(e.event)" />
+          </td>
+          <td class="reports-log-table__td-delete">
+            <button
+              class="reports-log-table__delete-btn"
+              :aria-label="$t('reports.deleteEntry')"
+              v-tip="$t('reports.deleteEntryTitle')"
+              @click.stop="$emit(EMIT.DELETE, e.id)"
+            >×</button>
           </td>
         </tr>
       </tbody>
@@ -126,9 +136,13 @@ export default defineComponent({
       type: Object as PropType<LogEntry | null>,
       default: null,
     },
+    recentlyImportedIds: {
+      type: Array as PropType<number[]>,
+      default: () => [],
+    },
   },
 
-  emits: [EMIT.SELECT],
+  emits: [EMIT.SELECT, EMIT.DELETE],
 
   setup() {
     const { t } = useI18n()
@@ -252,6 +266,10 @@ export default defineComponent({
   }
   &__row--selected:hover td { background: color-mix(in srgb, var(--color-purple) 16%, transparent) !important; }
 
+  &__row--flash td {
+    animation: import-row-flash 1.8s ease-out;
+  }
+
   &__row--selectable {
     cursor: pointer;
     user-select: none;
@@ -324,5 +342,44 @@ export default defineComponent({
   &__ref-val      { color: var(--color-primary); }
   &__green-val    { color: var(--color-lime); }
   &__waveform-val { color: var(--color-text-muted); opacity: var(--op-dim); letter-spacing: 0.04em; }
+
+  &__col-delete,
+  &__td-delete {
+    width: 32px;
+    min-width: 32px;
+    padding: 0.4rem 0.5rem !important;
+    text-align: center !important;
+  }
+
+  &__delete-btn {
+    @include inline-flex-center();
+    width: 22px;
+    height: 22px;
+    border-radius: var(--radius);
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    font-size: 1rem;
+    font-family: var(--font-mono);
+    line-height: 1;
+    opacity: 0;
+    transition: color var(--tr-fast), border-color var(--tr-fast), background var(--tr-fast), opacity var(--tr-fast);
+
+    &:hover {
+      color: var(--color-danger);
+      border-color: color-mix(in srgb, var(--color-danger) 35%, transparent);
+      background: color-mix(in srgb, var(--color-danger) 10%, transparent);
+    }
+
+    &:focus-visible {
+      opacity: 1;
+      outline: none;
+      border-color: var(--color-danger);
+    }
+  }
+
+  &__table tr:hover &__delete-btn { opacity: var(--op-dim); }
+  &__table tr:hover &__delete-btn:hover { opacity: 1; }
 }
 </style>

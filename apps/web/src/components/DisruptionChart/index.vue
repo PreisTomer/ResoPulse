@@ -271,10 +271,7 @@ export default defineComponent({
       const hfireMult = this.cellStore.hFireMultiplier
       // Resonance targets store their threshold in V/cm (resonantThresholdVcm); Schwan targets in V.
       const tRes = this.cellStore.target as { resonantThresholdVcm?: number }
-      // isAcousticRes: true only when the chart is in resonance mode AND the preset has a resonant threshold.
-      // Mirrors the exact gate in cellStore.targetDisruptionRatio (isResonanceMode && resonantThresholdVcm).
-      // In Schwan mode with a bacteria preset, resonantThresholdVcm is a V/cm field strength, NOT a voltage —
-      // using it as a Schwan threshold would give wrong units and wildly wrong DR.
+      // Mirror cellStore.targetDisruptionRatio gate: resonantThresholdVcm is V/cm and mis-used as V in Schwan would blow up DR.
       const isAcousticRes = isAcousticTarget && !!tRes.resonantThresholdVcm && this.cellStore.isResonanceMode
       const tNominalVth = isAcousticRes
         ? tRes.resonantThresholdVcm!

@@ -515,6 +515,43 @@ export function buildEntryMethodsText(entry: LogEntry, sessionName: string, samp
     'CV ≈ 25% mammalian / 12% bacteria / 8% virus) is not included in this entry.',
   ]
 
+  const measuredLines: string[] = []
+  if (entry.measured) {
+    const m = entry.measured
+    const deltaLine = (predictedPct: number, measuredPct: number | undefined) =>
+      measuredPct === undefined ? 'not recorded' : `${measuredPct.toFixed(1)}%  (Δ ${(measuredPct - predictedPct >= 0 ? '+' : '')}${(measuredPct - predictedPct).toFixed(1)} pp vs predicted ${predictedPct.toFixed(1)}%)`
+    const predictedField = entry.fieldVcm
+    const fieldDeltaLine = m.actualFieldVcm !== undefined
+      ? `${m.actualFieldVcm.toFixed(1)} ${UNIT.V_PER_CM}  (Δ ${(m.actualFieldVcm - predictedField >= 0 ? '+' : '')}${(m.actualFieldVcm - predictedField).toFixed(1)} vs programmed ${predictedField} ${UNIT.V_PER_CM})`
+      : 'not recorded'
+    const lysisDelayPred = computeLysisDelayMs(entry)
+    const lysisDelayLine = m.observedLysisDelayMs !== undefined
+      ? `${m.observedLysisDelayMs.toFixed(0)} ms  (Δ ${(m.observedLysisDelayMs - lysisDelayPred >= 0 ? '+' : '')}${(m.observedLysisDelayMs - lysisDelayPred).toFixed(0)} ms vs modelled ${lysisDelayPred.toFixed(0)} ms)`
+      : 'not recorded'
+    measuredLines.push(
+      fld('Measured at',            new Date(m.measuredAt).toISOString()),
+      fld('Target lysis (meas.)',   deltaLine(entry.targetRatio  * 100, m.targetLysisPct)),
+      fld('Healthy lysis (meas.)',  deltaLine(entry.healthyRatio * 100, m.healthyLysisPct)),
+      fld('Viability (meas.)',      m.viabilityPct      !== undefined ? `${m.viabilityPct.toFixed(1)}%`      : 'not recorded'),
+      fld('Permeabilized (meas.)',  m.permeabilizedPct  !== undefined ? `${m.permeabilizedPct.toFixed(1)}%  [PI+ / YO-PRO+ / SYTOX+]` : 'not recorded'),
+      fld('Transfection (meas.)',   m.transfectionPct   !== undefined ? `${m.transfectionPct.toFixed(1)}%  [cargo+ via flow]`         : 'not recorded'),
+      fld('Viability assay method', m.viabilityAssay ?? 'unspecified'),
+      fld('Assay timepoint',        m.assayTimepointH   !== undefined ? `${m.assayTimepointH} h post-pulse` : 'not recorded'),
+      fld('Temperature (meas.)',    m.tempC             !== undefined ? `${m.tempC.toFixed(1)} ${UNIT.DEG_C}` : 'not recorded'),
+      fld('Actual field (meas.)',   fieldDeltaLine),
+      fld('Lysis delay (meas.)',    lysisDelayLine),
+      ...(m.notes ? [fld('Notes', m.notes)] : []),
+      '',
+      'NOTE: Measured values are user-reported assay readouts. Δ columns show',
+      'measured − predicted in percentage points (lysis/viability), V/cm (field),',
+      'or ms (lysis delay). These residuals are useful for in-lab calibration of',
+      'cell-specific thresholds (Vm,thr, E_thr, radius, σ_i) and pulse-delivery losses.',
+      'Assay method is recorded because trypan, MTT, flow+PI, resazurin, and CellTiter-Glo',
+      'measure different aspects of cell state (membrane integrity vs metabolic activity',
+      'vs ATP content); readouts are not directly interchangeable.',
+    )
+  }
+
 
   const resolvedSample = sampleDescription || entry.sampleDescription || ''
 
@@ -547,6 +584,12 @@ export function buildEntryMethodsText(entry: LogEntry, sessionName: string, samp
     'PROTOCOL ASSESSMENT',
     sep(),
     ...assessmentLines,
+    ...(measuredLines.length > 0 ? [
+      '',
+      'MEASURED OUTCOME (lab-reported)',
+      sep(),
+      ...measuredLines,
+    ] : []),
     '',
     'PHYSICAL MODEL',
     sep(),
@@ -615,19 +658,45 @@ export function buildCsvText(
     `${H}-f_cross (${UNIT.KHZ})`, `${T}-f_cross (${UNIT.KHZ})`,
     `${H}-BMS`,
     'Event',
+    `${T}-Lysis measured (%)`, `${H}-Lysis measured (%)`,
+    'Viability measured (%)', 'Permeabilized measured (%)', 'Transfection measured (%)',
+    'Viability assay', 'Assay timepoint (h)',
+    `Temp measured (${UNIT.DEG_C})`,
+    `Actual field measured (${UNIT.V_PER_CM})`,
+    'Lysis delay measured (ms)',
+    `${T}-Lysis Δ (pp)`, `${H}-Lysis Δ (pp)`,
+    `Field Δ (${UNIT.V_PER_CM})`, 'Lysis delay Δ (ms)',
+    'Measured at', 'Measured notes',
   ]
-  const rows = entries.map((e) => [
-    e.id, e.timestamp, e.sessionName ?? sessionName, e.freqKHz, e.fieldVcm, e.medium, e.targetPreset,
-    e.targetVm, e.healthyVm, e.selectivity,
-    (e.targetRatio  * 100).toFixed(1),
-    (e.healthyRatio * 100).toFixed(1),
-    e.targetTemp, e.healthyTemp,
-    e.orientationDeg ?? 0,
-    e.depHealthyK ?? '', e.depTargetK ?? '',
-    e.depHealthyCrossoverKHz ?? '', e.depTargetCrossoverKHz ?? '',
-    e.healthyBiomodScore ?? '',
-    e.event,
-  ])
+  const rows = entries.map((e) => {
+    const m = e.measured
+    const tDelta = m?.targetLysisPct  !== undefined ? (m.targetLysisPct  - e.targetRatio  * 100).toFixed(1) : ''
+    const hDelta = m?.healthyLysisPct !== undefined ? (m.healthyLysisPct - e.healthyRatio * 100).toFixed(1) : ''
+    const fDelta = m?.actualFieldVcm  !== undefined ? (m.actualFieldVcm  - e.fieldVcm).toFixed(1) : ''
+    const dDelta = m?.observedLysisDelayMs !== undefined ? (m.observedLysisDelayMs - computeLysisDelayMs(e)).toFixed(0) : ''
+    const notes  = m?.notes ? `"${m.notes.replace(/"/g, '""').replace(/\n/g, ' ')}"` : ''
+    return [
+      e.id, e.timestamp, e.sessionName ?? sessionName, e.freqKHz, e.fieldVcm, e.medium, e.targetPreset,
+      e.targetVm, e.healthyVm, e.selectivity,
+      (e.targetRatio  * 100).toFixed(1),
+      (e.healthyRatio * 100).toFixed(1),
+      e.targetTemp, e.healthyTemp,
+      e.orientationDeg ?? 0,
+      e.depHealthyK ?? '', e.depTargetK ?? '',
+      e.depHealthyCrossoverKHz ?? '', e.depTargetCrossoverKHz ?? '',
+      e.healthyBiomodScore ?? '',
+      e.event,
+      m?.targetLysisPct     ?? '', m?.healthyLysisPct  ?? '',
+      m?.viabilityPct       ?? '', m?.permeabilizedPct ?? '', m?.transfectionPct ?? '',
+      m?.viabilityAssay     ?? '', m?.assayTimepointH  ?? '',
+      m?.tempC              ?? '',
+      m?.actualFieldVcm     ?? '',
+      m?.observedLysisDelayMs ?? '',
+      tDelta, hDelta,
+      fDelta, dDelta,
+      m?.measuredAt ?? '', notes,
+    ]
+  })
 
   const text = meta + '\n' + [headers, ...rows].map((row) => row.join(',')).join('\n')
   const filename = `${sessionName.replace(/\s+/g, '_')}_${Date.now()}.csv`

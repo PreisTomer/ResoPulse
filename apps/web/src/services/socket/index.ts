@@ -11,6 +11,8 @@ import type {
   HardwareImpedancePacket,
   AiParamSuggestion,
   AiOptimizeResult,
+  MeasuredOutcome,
+  MeasuredOutcomeEntry,
 } from '@resopulse/shared-types'
 
 import { useCellStore } from '@/stores/cellStore'
@@ -42,6 +44,8 @@ const SOCKET_EVENTS = {
   IMPEDANCE_BROADCAST:  'impedanceBroadcast',
   LOG_OUTCOME:          'logOutcome',
   NEW_OUTCOME:          'newOutcome',
+  LOG_MEASURED_OUTCOME: 'logMeasuredOutcome',
+  NEW_MEASURED_OUTCOME: 'newMeasuredOutcome',
   AI_OPTIMIZE_REQUEST:  'aiOptimizeRequest',
   AI_OPTIMIZE_RESULT:   'aiOptimizeResult',
   CONNECT:              'connect',
@@ -60,10 +64,7 @@ async function wakeBackend(): Promise<void> {
   } catch { /* fall through to socket connect */ }
 }
 
-// ── Guest session ─────────────────────────────────────────────────────────────
-// Guests receive a browser-generated token persisted in sessionStorage.
-// The backend accepts any token starting with "guest_" without Clerk verification.
-// The token is scoped to the browser tab session and never sent to Clerk.
+// Guest session: browser-generated `guest_*` token in sessionStorage (tab-scoped); backend accepts it without Clerk.
 
 /**
  * Reactive flag: true once a guest session token exists for this tab.
@@ -92,9 +93,7 @@ export function hasGuestSession(): boolean {
 export async function connectSocket(): Promise<void> {
   await wakeBackend()
 
-  // Auth callback is invoked on every (re)connection attempt — Clerk token is always fresh.
-  // If there is no Clerk session, fall back to a guest token so unauthenticated users
-  // can still connect to the socket and run local simulations.
+  // Auth callback fires on every (re)connect so Clerk token is fresh; falls back to guest token for unauth users.
   socket = io(BACKEND_URL, {
     transports:           ['websocket'],
     timeout:              5000,
@@ -138,6 +137,11 @@ export async function connectSocket(): Promise<void> {
   // AI optimizer result — received by all clients in the room; aiStore filters by requestId
   socket.on(SOCKET_EVENTS.AI_OPTIMIZE_RESULT, (result: AiOptimizeResult) => {
     useAiStore().receiveResult(result)
+  })
+
+  // Peer attached measured outcomes to a prior entry — apply locally without rebroadcast.
+  socket.on(SOCKET_EVENTS.NEW_MEASURED_OUTCOME, (entry: MeasuredOutcomeEntry) => {
+    useExperimentStore().receiveMeasuredOutcome(entry.sessionName, entry.timestamp, entry.measured)
   })
 
   socket.on(SOCKET_EVENTS.CONNECT_ERROR, () => {
@@ -211,6 +215,13 @@ export function broadcastLogOutcome(entry: LogEntry, rating: number, aiSuggestio
     targetRadiusUm:      store.target.radius,
     sigmaE,
   })
+}
+
+// Broadcast measured-outcome patch for a prior entry. Caller must verify aiConsentGiven.
+// Matched on (sessionName, timestamp) — no stable id crosses sessions.
+export function broadcastLogMeasuredOutcome(sessionName: string, timestamp: string, measured: MeasuredOutcome): void {
+  if (!socket?.connected) return
+  socket.emit(SOCKET_EVENTS.LOG_MEASURED_OUTCOME, { sessionName, timestamp, measured })
 }
 
 // AI Optimizer wire types live in @resopulse/shared-types — re-exported for callers.

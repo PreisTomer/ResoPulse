@@ -17,7 +17,13 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException
 
-from .ai_models import OptimizeRequest, OptimizeResponse
+from .ai_models import (
+    CalibrationRequest,
+    CalibrationResponse,
+    OptimizeRequest,
+    OptimizeResponse,
+)
+from .calibration import CalibrationRow, fit_sigma_multiplier
 from .constants import (
     AI_SERVICE_DESCRIPTION,
     AI_SERVICE_NAME,
@@ -101,6 +107,38 @@ async def optimize(request: OptimizeRequest) -> OptimizeResponse:
     except Exception as exc:
         logger.error("[AI Service] Unhandled error in /ai/optimize: %s", exc, exc_info=True)
         raise HTTPException(status_code=500, detail="Optimizer failed — check service logs")
+
+
+@app.post("/ai/calibrate", response_model=CalibrationResponse)
+async def calibrate(request: CalibrationRequest) -> CalibrationResponse:
+    """
+    Fit a scalar sigma_i multiplier against (predicted, measured) ratio pairs
+    for one (org, cellPresetId). Below CALIBRATION_MIN_SAMPLES the response
+    carries collecting=True and multiplier=1.0 so the UI can show progress.
+
+    This endpoint is stateless — persistence (upsert into cell_calibrations)
+    is handled by the Node API after receiving the response. Keeping it
+    stateless lets us reuse the fit for what-if previews without writing.
+    """
+    try:
+        rows = [
+            CalibrationRow(predicted_ratio=s.predictedRatio, measured_ratio=s.measuredRatio)
+            for s in request.samples
+        ]
+        fit = fit_sigma_multiplier(rows)
+        return CalibrationResponse(
+            sigmaMultiplier=fit.sigma_multiplier,
+            uncertaintyStd=fit.uncertainty_std,
+            nSamples=fit.n_samples,
+            collecting=fit.collecting,
+            clamped=fit.clamped,
+            outliersRemoved=fit.outliers_removed,
+            rmseBefore=fit.rmse_before,
+            rmseAfter=fit.rmse_after,
+        )
+    except Exception as exc:
+        logger.error("[AI Service] Calibration failed: %s", exc, exc_info=True)
+        raise HTTPException(status_code=500, detail="Calibration fit failed — check service logs")
 
 
 @app.post("/ai/retrain")

@@ -244,9 +244,7 @@ $_cell-states: (
   margin-bottom: 0.05rem;
 }
 
-// ── Colour-variant badge (status badges, score tiers, direction labels) ──────
-// Generates color + tinted border + tinted background from a CSS color token name.
-// Usage: @include color-variant(lime, 30%, 7%);
+// Colour-variant badge: @include color-variant(lime, 30%, 7%); — text + tinted border + tinted bg from a --color-$name token.
 @mixin color-variant($name, $border-pct: 30%, $bg-pct: 7%) {
   color: var(--color-#{$name});
   border-color: color-mix(in srgb, var(--color-#{$name}) #{$border-pct}, transparent);
@@ -260,9 +258,7 @@ $_cell-states: (
   background:   color-mix(in srgb, var(--color-#{$name}) #{$bg-pct}, transparent);
 }
 
-// ── Number input spinner reset ──────────────────────────────────────────────
-// Hides the browser's default stepper arrows on <input type="number"> so the
-// element renders as a plain text-like field. Apply to the input selector.
+// Hides browser stepper arrows on <input type="number">. Apply directly to the input selector.
 @mixin number-input-reset() {
   -moz-appearance: textfield;
   appearance:      textfield;

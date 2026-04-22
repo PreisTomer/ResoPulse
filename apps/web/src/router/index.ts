@@ -40,10 +40,7 @@ const router = createRouter({
   ],
 })
 
-// ── Navigation guard ───────────────────────────────────────────────────────
-// Auth state is sourced from authStore, which App.vue keeps in sync with
-// Clerk's reactive useAuth() composable. This avoids reading window.Clerk
-// directly (which is null during async initialisation and session refreshes).
+// Auth via authStore (App.vue mirrors Clerk's useAuth); avoids window.Clerk reads during async init.
 
 /**
  * Blocks until App.vue's useAuth() watcher has fired with isLoaded=true.
@@ -82,16 +79,8 @@ router.beforeEach(async (to, from) => {
     return { path: ROUTE.HOME }
   }
 
-  // Unauthenticated user hitting any protected route → sign-in,
-  // preserving the intended destination so we can redirect back after login.
-  // Exception: if we are already on the sign-in flow (e.g. the user cancelled an
-  // OAuth provider and Clerk redirected to fallback-redirect-url), cancel the
-  // navigation to avoid a redirect loop that triggers Clerk's rate limit.
+  // Unauth → sign-in (preserve redirect). Abort only if user is mid sign-in/sign-up to dodge Clerk's OAuth rate-limit loop.
   if (to.meta.requiresAuth && !isSignedIn) {
-    // Only cancel navigation (return false) when the user is already mid-flow on
-    // the sign-in/sign-up pages themselves — prevents a Clerk OAuth redirect loop.
-    // Any other origin (e.g. an idle session clicking a lab-link from /protocol)
-    // should redirect normally to sign-in with the intended destination preserved.
     const isAlreadyInAuthFlow = from.path.startsWith(ROUTE.SIGN_IN) || from.path.startsWith(ROUTE.SIGN_UP)
     const isNavigatingToAuthRoute = to.path.startsWith(ROUTE.SIGN_IN) || to.path.startsWith(ROUTE.SIGN_UP)
     if (isAlreadyInAuthFlow && isNavigatingToAuthRoute) return false

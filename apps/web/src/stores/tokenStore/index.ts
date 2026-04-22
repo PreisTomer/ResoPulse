@@ -1,8 +1,6 @@
 // Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 
-// Token balance store — tracks the current org's token account.
-// Fetches from GET /tokens/balance on sign-in and refreshes periodically.
-// Exposes low-balance and exhausted computed flags for conditional UI.
+// Org token balance — polled on sign-in + refresh; exposes low/exhausted flags.
 
 import { defineStore } from 'pinia'
 
@@ -191,6 +189,34 @@ export const useTokenStore = defineStore('token', {
       } catch {
         // Network error — don't block lab operations
         return true
+      }
+    },
+
+    /**
+     * Lenient variant — records usage server-side when possible but never blocks the caller.
+     * Used for operations we want telemetry on without deterring guests or users at quota
+     * (e.g. AI_RETRAIN, Apply Suggestion). Silently drops 402 / guest / offline cases.
+     */
+    async consumeOperationLenient(reason: string): Promise<void> {
+      try {
+        const token = await getAuthToken()
+        if (!token) return
+
+        const res = await fetch(`${BACKEND_URL}/tokens/consume`, {
+          method:  'POST',
+          headers: {
+            'Content-Type':  'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({ reason }),
+        })
+
+        if (res.ok) {
+          const data = await res.json() as { balance: number; quota: number }
+          this.balance = data.balance
+        }
+      } catch {
+        // lenient: ignore network errors
       }
     },
 

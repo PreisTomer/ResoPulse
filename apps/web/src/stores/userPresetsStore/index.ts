@@ -16,6 +16,7 @@ import type { CellConfig } from '@/types/cell'
 export type CellRole            = 'target' | 'healthy'
 export type CellFormType        = 'mammalian' | 'bacteria' | 'virus'
 export type ParameterConfidence = 'literature' | 'measured' | 'estimated'
+export type SigmaSource         = 'literature' | 'measured' | 'electrorotation' | 'impedance' | 'estimated'
 
 export interface UserCellPreset {
   id:                   string
@@ -36,6 +37,10 @@ export interface UserCellPreset {
   specificHeatCapacity: number
   // σ_mem for DEP CM model (optional — falls back to 10⁻⁷ S/m mammalian bilayer)
   membraneConductivity?: number
+  // σ_i provenance — ±% uncertainty, measurement source, citation (most uncertain Schwan parameter)
+  sigmaUncertaintyPct?: number
+  sigmaSource?:         SigmaSource
+  sigmaCitation?:       string
   // Nuclear envelope (mammalian only; Kotnik & Miklavcic 2006)
   nuclearRadius?:              number
   nuclearMembraneThickness?:   number
@@ -83,6 +88,9 @@ interface BackendPreset {
   dielectricConstant: number; conductivity: number; thresholdVoltage: number
   density: number; specificHeatCapacity: number
   membraneConductivity: number | null
+  sigmaUncertaintyPct: number | null
+  sigmaSource:         string | null
+  sigmaCitation:       string | null
   nuclearRadius: number | null
   nuclearMembraneThickness: number | null
   nuclearMembraneEps: number | null
@@ -115,6 +123,9 @@ function fromBackend(p: BackendPreset): UserCellPreset {
     density:              p.density,
     specificHeatCapacity: p.specificHeatCapacity,
     ...(p.membraneConductivity       != null && { membraneConductivity:       p.membraneConductivity }),
+    ...(p.sigmaUncertaintyPct        != null && { sigmaUncertaintyPct:        p.sigmaUncertaintyPct }),
+    ...(p.sigmaSource                != null && p.sigmaSource !== '' && { sigmaSource: p.sigmaSource as SigmaSource }),
+    ...(p.sigmaCitation              != null && p.sigmaCitation !== '' && { sigmaCitation: p.sigmaCitation }),
     ...(p.nuclearRadius              != null && { nuclearRadius:              p.nuclearRadius }),
     ...(p.nuclearMembraneThickness   != null && { nuclearMembraneThickness:   p.nuclearMembraneThickness }),
     ...(p.nuclearMembraneEps         != null && { nuclearMembraneEps:         p.nuclearMembraneEps }),

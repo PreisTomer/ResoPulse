@@ -210,9 +210,7 @@ export const useImpedanceStore = defineStore('impedance', {
       return computeRelaxationFreqHz(this.sigmaEWithLysis) / 1e6
     },
 
-    // ── RF matching metrics (complex impedance path) ──────────────────────────
-    // When hardware reports Z_real + Z_imag, use the exact complex |Γ| formula.
-    // In simulation mode derive real/imag components from the parallel-RC cuvette model.
+    // RF matching: hardware Z_real+Z_imag drives exact |Γ|; sim derives components from parallel-RC cuvette.
 
     cuvetteZComponents(): { real: number; imag: number } {
       const s = this as ImpedanceStoreState
@@ -238,9 +236,7 @@ export const useImpedanceStore = defineStore('impedance', {
     },
 
     vswr(): number {
-      // Use the same complex Γ as powerDeliveryEfficiency for consistency.
-      // computeVSWR (scalar |Z|) and reflectionCoeff (complex Z_real + Z_imag) diverge
-      // at high frequencies or when Z_imag is significant — always use complex path here.
+      // Use complex Γ (matches powerDeliveryEfficiency); scalar computeVSWR diverges at HF or large Z_imag.
       const gamma = this.reflectionCoeff
       if (gamma >= 1) return Infinity
       return (1 + gamma) / (1 - gamma)

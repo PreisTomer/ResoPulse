@@ -220,3 +220,58 @@ describe('consumeOperation', () => {
     expect(ok).toBe(true)
   })
 })
+
+// ── consumeOperationLenient ──────────────────────────────────────────────────
+
+describe('consumeOperationLenient', () => {
+  beforeEach(() => {
+    vi.stubGlobal('Clerk', { session: { getToken: vi.fn().mockResolvedValue('mock-jwt') } })
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    vi.restoreAllMocks()
+  })
+
+  it('updates balance on success (200) — records usage', async () => {
+    const store = freshStore()
+    store.applyBalance(BALANCE_RESPONSE)
+
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok:     true,
+      status: 200,
+      json:   async () => ({ balance: 147, quota: 200 }),
+    }))
+
+    await store.consumeOperationLenient('AI_RETRAIN')
+    expect(store.balance).toBe(147)
+    expect(store.pendingUpgrade).toBe(false)
+  })
+
+  it('does not set pendingUpgrade on 402 — silently proceeds', async () => {
+    const store = freshStore()
+    store.applyBalance({ ...BALANCE_RESPONSE, balance: 0 })
+
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok:     false,
+      status: 402,
+      json:   async () => ({ balance: 0, quota: 200 }),
+    }))
+
+    await store.consumeOperationLenient('AI_RETRAIN')
+    expect(store.pendingUpgrade).toBe(false)
+  })
+
+  it('does not set pendingGuestSignUp when unauthenticated', async () => {
+    vi.stubGlobal('Clerk', undefined)
+    const store = freshStore()
+    await store.consumeOperationLenient('AI_RETRAIN')
+    expect(store.pendingGuestSignUp).toBe(false)
+  })
+
+  it('swallows network errors without throwing', async () => {
+    const store = freshStore()
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('Network failure')))
+    await expect(store.consumeOperationLenient('AI_RETRAIN')).resolves.toBeUndefined()
+  })
+})

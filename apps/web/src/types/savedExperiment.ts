@@ -2,9 +2,7 @@
 
 // Types for saved experiment sessions (cloud persistence layer).
 
-// ── Snapshot ──────────────────────────────────────────────────────────────────
-// The shape stored in the ExperimentSession.snapshot JSONB column.
-// The backend is agnostic to this structure — the frontend owns serialization.
+// Shape of ExperimentSession.snapshot JSONB — frontend owns serialization, backend is agnostic.
 
 export interface ExperimentSnapshot {
   schemaVersion: 1

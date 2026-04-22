@@ -1,8 +1,6 @@
 // Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 
-// Tsen et al. (2007), Biophysical Journal 93:1340 — DOI: 10.1529/biophysj.107.108977
-// CCMV capsid f_res = 7.7 GHz (ISRS laser, measured). At 7.7 GHz, hepatocyte fc ≈ 350 kHz
-// → ratio f/fc ≈ 22,000 → Schwan Vm ≈ 0 → DR ≈ 0. TI display-capped at 99.9.
+// Tsen 2007 (Biophys. J. 93:1340) CCMV f_res=7.7 GHz; at this f hepatocyte Vm≈0 so TI display caps at 99.9.
 
 import { useCellStore } from '@/stores/cellStore'
 import { useUiStore } from '@/stores/uiStore'
@@ -103,9 +101,7 @@ export const createCCMVTsen2007Script: ScriptFactory = () => {
             resonantFreqGHz: 0.5,
             capsidQ:         1,
           })
-          // Resonance mode is set by the ExperimentView watcher (loadPreset → id change → applyTargetDefaults)
-          // Override waveform to CW: resonance excitation is continuous-wave at f_res, not pulsed EP
-          setTimeout(() => cellStore.setWaveform('cw'), 0)
+          // Keep pulsed (dc=1e-6, Tsen 2007 ~100 fs ISRS): CW at 7.7 GHz would vaporise hepatocyte via water Debye loss.
         },
       },
 

@@ -39,6 +39,7 @@ export const EMIT = {
   DOWNLOAD: 'download',
   DISMISS:  'dismiss',
   SELECT:   'select',
+  DELETE:   'delete',
 
   // ── Sweep panel ────────────────────────────────────────────────────────────
   EXPAND:     'expand',

@@ -1,8 +1,6 @@
 // Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 
-// Shared log-spaced frequency domain for the Schwan-mode charts
-// (FrequencyResponseChart and DisruptionChart). Acoustic ResonanceChart
-// operates in the GHz range and keeps its own domain.
+// Shared log-spaced domain for Schwan-mode charts. Acoustic ResonanceChart (GHz) keeps its own.
 
 import { logspace } from '@/utils/math'
 

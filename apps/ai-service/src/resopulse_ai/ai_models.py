@@ -105,3 +105,39 @@ class OptimizeResponse(BaseModel):
     explanation:        str
     featureImportance:  dict[str, float]
     isPhysicsBaseline:  bool
+
+
+# ── Calibration models ──────────────────────────────────────────────────────
+# Scalar sigma_i multiplier fit per (org, cellPresetId). The Node API collects
+# measured outcome rows for one (org, cellPresetId), derives (predicted, measured)
+# ratios, and POSTs them here — the fit is purely numeric and stateless.
+
+class CalibrationSampleInput(BaseModel):
+    """One (predicted, measured) pair. Both are fractional ratios in [0, 1]."""
+    model_config = ConfigDict(populate_by_name=True)
+
+    predictedRatio: float = Field(ge=0, le=1)
+    measuredRatio:  float = Field(ge=0, le=1)
+
+
+class CalibrationRequest(BaseModel):
+    """Request payload for /ai/calibrate. Mirrors AiCalibrationRequest in shared-types/ai.ts."""
+    model_config = ConfigDict(populate_by_name=True)
+
+    orgId:        str
+    cellPresetId: str
+    samples:      list[CalibrationSampleInput]
+
+
+class CalibrationResponse(BaseModel):
+    """Response from /ai/calibrate. Mirrors AiCalibrationResult in shared-types/ai.ts."""
+    model_config = ConfigDict(populate_by_name=True)
+
+    sigmaMultiplier: float
+    uncertaintyStd:  float
+    nSamples:        int
+    collecting:      bool
+    clamped:         bool
+    outliersRemoved: int
+    rmseBefore:      float
+    rmseAfter:       float

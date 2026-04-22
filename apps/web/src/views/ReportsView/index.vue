@@ -5,27 +5,36 @@
 
       <!-- Page header -->
       <PageHeader :eyebrow="$t('reports.eyebrow')" :title="$t('reports.title')">
-        <div id="hl-reports-export" class="reports__header-row">
-          <p class="reports__subtitle">{{ $t('reports.subtitle') }}</p>
-          <div class="reports__header-actions">
-            <button
-              class="reports__btn reports__btn--export"
-              :disabled="totalReadings === 0 || isExporting"
-              @click="handleExportCSV()"
-            >
-              <span v-if="isExporting" class="reports__btn-spinner"></span>
-              <template v-else>{{ $t('reports.exportCsv') }}</template>
-            </button>
-            <button
-              class="reports__btn reports__btn--clear"
-              :disabled="totalReadings === 0"
-              @click="store.clearLog()"
-            >
-              {{ $t('reports.clearLog') }}
-            </button>
-          </div>
-        </div>
+        <p class="reports__subtitle">{{ $t('reports.subtitle') }}</p>
       </PageHeader>
+
+      <!-- Import summary banner (dismissable) -->
+      <div v-if="importSummary" class="reports__import-banner" :class="importBannerVariantClass">
+        <div class="reports__import-banner-body">
+          <span class="reports__import-banner-title">{{ $t('reports.importSummaryHeading') }}</span>
+          <span v-if="importSummary.matched > 0" class="reports__import-banner-line">
+            {{ $t('reports.importSummaryMatched', { n: importSummary.matched }) }}
+          </span>
+          <span v-if="importSummary.ignored > 0" class="reports__import-banner-line">
+            {{ $t('reports.importSummaryIgnored', { n: importSummary.ignored }) }}
+          </span>
+          <span v-if="isImportSummaryEmpty" class="reports__import-banner-line">
+            {{ $t('reports.importSummaryNoneApplied') }}
+          </span>
+        </div>
+        <button class="reports__import-banner-dismiss" @click="dismissImportSummary()">
+          {{ $t('reports.importSummaryDismiss') }}
+        </button>
+      </div>
+
+      <div v-if="importError" class="reports__import-banner reports__import-banner--error">
+        <div class="reports__import-banner-body">
+          <span class="reports__import-banner-title">{{ importError }}</span>
+        </div>
+        <button class="reports__import-banner-dismiss" @click="importError = null">
+          {{ $t('reports.importSummaryDismiss') }}
+        </button>
+      </div>
 
       <!-- Session summary (read-only) -->
       <div class="reports__session-summary">
@@ -59,10 +68,52 @@
       <!-- Log card -->
       <div class="reports__log-card">
         <div class="reports__log-card-hdr">
-          <span class="reports__log-title">{{ $t('reports.logTitle') }}</span>
-          <span class="reports__log-count">
-            {{ totalReadings }} {{ countLabel }}
-          </span>
+          <div class="reports__log-card-hdr-title">
+            <span class="reports__log-title">{{ $t('reports.logTitle') }}</span>
+            <span class="reports__log-count">
+              {{ totalReadings }} {{ countLabel }}
+            </span>
+          </div>
+          <div id="hl-reports-export" class="reports__log-card-actions" :aria-label="$t('reports.toolbarLabel')">
+            <div class="reports__log-card-action">
+              <button
+                class="reports__btn reports__btn--export"
+                :disabled="totalReadings === 0 || isExporting"
+                @click="handleExportCSV()"
+              >
+                <span v-if="isExporting" class="reports__btn-spinner"></span>
+                <template v-else>{{ $t('reports.exportCsv') }}</template>
+              </button>
+            </div>
+            <div class="reports__log-card-action">
+              <button
+                class="reports__btn reports__btn--import"
+                :disabled="totalReadings === 0 || isImporting"
+                v-tip="$t('reports.importCsvTitle')"
+                @click="triggerImportPicker()"
+              >
+                <span v-if="isImporting" class="reports__btn-spinner"></span>
+                <template v-else>{{ $t('reports.importCsv') }}</template>
+              </button>
+              <span class="reports__btn-caption">{{ $t('reports.importCsvCaption') }}</span>
+              <input
+                ref="importFileInput"
+                type="file"
+                accept=".csv,text/csv"
+                class="reports__file-input"
+                @change="onImportFileChosen($event)"
+              />
+            </div>
+            <div class="reports__log-card-action">
+              <button
+                class="reports__btn reports__btn--clear"
+                :disabled="totalReadings === 0"
+                @click="store.clearLog()"
+              >
+                {{ $t('reports.clearLog') }}
+              </button>
+            </div>
+          </div>
         </div>
 
         <ReportsLogEmpty v-if="totalReadings === 0" />
@@ -78,7 +129,9 @@
           v-if="totalReadings > 0"
           :entries="reversedEntries"
           :selected-entry="selectedEntry"
+          :recently-imported-ids="recentlyImportedIds"
           @select="selectEntry"
+          @delete="deleteEntry"
         />
 
         <ReportsLogLegend v-if="totalReadings > 0" />
@@ -92,6 +145,8 @@
 import { defineComponent, computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
+import { broadcastLogMeasuredOutcome } from '@/services/socket'
+
 import type { LogEntry } from '@/stores/experimentStore'
 import { useExperimentStore } from '@/stores/experimentStore'
 import { useTokenStore } from '@/stores/tokenStore'
@@ -100,6 +155,7 @@ import StatCard from '@/components/StatCard/index.vue'
 import PageHeader from '@/components/PageHeader/index.vue'
 
 import { formatFreqKHz, formatFieldVcm, formatRange } from '@/utils/format'
+import { parseMeasuredCsv } from '@/utils/experimentImport'
 
 import { LOG_EVENT, NULL_DISPLAY } from '@/constants/strings'
 import { THRESHOLDS } from '@/constants/physics'
@@ -149,16 +205,42 @@ export default defineComponent({
       (Math.max(...store.entries.map((e) => e.targetRatio)) * 100).toFixed(1) + '%'
     ))
 
-    const statCards = computed(() => [
-      { label: t('reports.totalReadings'),   value: String(totalReadings.value),        variant: totalReadings.value === 0 ? 'muted' : 'default', tooltip: t('reports.totalReadingsTitle') },
-      { label: t('reports.lysisEvents'),     value: String(lysisEvents.value),          variant: 'danger',  tooltip: t('reports.lysisEventsTitle') },
-      { label: t('reports.manualReadings'),  value: String(manualReadings.value),       variant: undefined, tooltip: t('reports.manualReadingsTitle') },
-      { label: t('reports.avgSelectivity'),  value: avgSelectivity.value  ?? NULL_DISPLAY, variant: 'primary', tooltip: t('reports.avgSelectivityTitle') },
-      { label: t('reports.peakSelectivity'), value: peakSelectivity.value ?? NULL_DISPLAY, variant: 'ok',      tooltip: t('reports.peakSelectivityTitle') },
-      { label: t('reports.peakTargetRatio'), value: peakTargetRatio.value ?? NULL_DISPLAY, variant: 'danger',  tooltip: t('reports.peakTargetRatioTitle') },
-      { label: t('reports.freqRange'),       value: freqRange.value  ?? NULL_DISPLAY,   variant: undefined, tooltip: t('reports.freqRangeTitle'),  wide: true },
-      { label: t('reports.fieldRange'),      value: fieldRange.value ?? NULL_DISPLAY,   variant: undefined, tooltip: t('reports.fieldRangeTitle'), wide: true },
-    ])
+    // Calibration summary is computed in the store — reuse it so the stats row
+    // and the AI-tab badge always agree on n, mean residual, and tier.
+    const calibration = computed(() => store.calibrationSummary)
+
+    function formatSignedPct(delta: number | null): string {
+      if (delta === null) return NULL_DISPLAY
+      const sign = delta >= 0 ? '+' : ''
+      return `${sign}${delta.toFixed(1)}%`
+    }
+    function formatSignedVcm(delta: number | null): string {
+      if (delta === null) return NULL_DISPLAY
+      const sign = delta >= 0 ? '+' : ''
+      return `${sign}${delta.toFixed(0)} V/cm`
+    }
+
+    const statCards = computed(() => {
+      const baseCards = [
+        { label: t('reports.totalReadings'),   value: String(totalReadings.value),        variant: totalReadings.value === 0 ? 'muted' : 'default', tooltip: t('reports.totalReadingsTitle') },
+        { label: t('reports.lysisEvents'),     value: String(lysisEvents.value),          variant: 'danger',  tooltip: t('reports.lysisEventsTitle') },
+        { label: t('reports.manualReadings'),  value: String(manualReadings.value),       variant: undefined, tooltip: t('reports.manualReadingsTitle') },
+        { label: t('reports.avgSelectivity'),  value: avgSelectivity.value  ?? NULL_DISPLAY, variant: 'primary', tooltip: t('reports.avgSelectivityTitle') },
+        { label: t('reports.peakSelectivity'), value: peakSelectivity.value ?? NULL_DISPLAY, variant: 'ok',      tooltip: t('reports.peakSelectivityTitle') },
+        { label: t('reports.peakTargetRatio'), value: peakTargetRatio.value ?? NULL_DISPLAY, variant: 'danger',  tooltip: t('reports.peakTargetRatioTitle') },
+        { label: t('reports.freqRange'),       value: freqRange.value  ?? NULL_DISPLAY,   variant: undefined, tooltip: t('reports.freqRangeTitle'),  wide: true },
+        { label: t('reports.fieldRange'),      value: fieldRange.value ?? NULL_DISPLAY,   variant: undefined, tooltip: t('reports.fieldRangeTitle'), wide: true },
+      ]
+      const c = calibration.value
+      if (c.sampleCount === 0) return baseCards
+      return [
+        ...baseCards,
+        { label: t('reports.measuredRows'),     value: String(c.sampleCount),                          variant: 'primary', tooltip: t('reports.measuredRowsTitle') },
+        { label: t('reports.meanTargetDelta'),  value: formatSignedPct(c.meanTargetResidualPct),       variant: undefined, tooltip: t('reports.meanTargetDeltaTitle') },
+        { label: t('reports.meanHealthyDelta'), value: formatSignedPct(c.meanHealthyResidualPct),      variant: undefined, tooltip: t('reports.meanHealthyDeltaTitle') },
+        { label: t('reports.meanFieldDelta'),   value: formatSignedVcm(c.meanFieldResidualVcm),        variant: undefined, tooltip: t('reports.meanFieldDeltaTitle') },
+      ]
+    })
 
     function selClass(sel: number): string {
       if (sel >= THRESHOLDS.SEL_STRONG)   return 'reports__green-val'
@@ -167,12 +249,20 @@ export default defineComponent({
     }
 
     const isExporting = ref(false)
+    const isImporting = ref(false)
+    const importSummary = ref<{ matched: number; ignored: number } | null>(null)
+    const importError   = ref<string | null>(null)
+    const recentlyImportedIds = ref<number[]>([])
 
     return {
       store,
       tokenStore,
       selectedEntry,
       isExporting,
+      isImporting,
+      importSummary,
+      importError,
+      recentlyImportedIds,
       totalReadings,
       reversedEntries,
       distinctSessionCount,
@@ -184,6 +274,31 @@ export default defineComponent({
       statCards,
       selClass,
     }
+  },
+
+  data() {
+    return {
+      flashTimer: null as ReturnType<typeof setTimeout> | null,
+    }
+  },
+
+  beforeUnmount() {
+    if (this.flashTimer !== null) clearTimeout(this.flashTimer)
+  },
+
+  computed: {
+    importBannerVariantClass(): Record<string, boolean> {
+      const s = this.importSummary
+      if (!s) return {}
+      return {
+        'reports__import-banner--ok':   s.matched > 0,
+        'reports__import-banner--warn': s.matched === 0,
+      }
+    },
+    isImportSummaryEmpty(): boolean {
+      const s = this.importSummary
+      return s !== null && s.matched === 0 && s.ignored === 0
+    },
   },
 
   methods: {
@@ -206,6 +321,67 @@ export default defineComponent({
       this.store.exportCSV()
       this.isExporting = false
     },
+
+    triggerImportPicker() {
+      this.importError   = null
+      this.importSummary = null
+      const input = this.$refs.importFileInput as HTMLInputElement | undefined
+      if (input) input.click()
+    },
+
+    async onImportFileChosen(evt: Event) {
+      const input = evt.target as HTMLInputElement
+      const file  = input.files?.[0]
+      input.value = ''   // allow re-selecting the same file later
+      if (!file) return
+
+      this.isImporting = true
+      const canProceed = await this.tokenStore.consumeOperation('IMPORT_MEASURED')
+      if (!canProceed) {
+        this.isImporting = false
+        return
+      }
+
+      try {
+        const text   = await file.text()
+        const report = parseMeasuredCsv(text)
+        const knownIds = new Set(this.store.entries.map((e) => e.id))
+        const matchedIds: number[] = []
+        let ignored = report.ignoredRows.length
+        for (const row of report.matchable) {
+          if (!knownIds.has(row.id)) { ignored++; continue }
+          const entry = this.store.logMeasuredOutcome(row.id, row.measured)
+          if (entry?.measured && this.store.aiConsentGiven && entry.sessionName) {
+            broadcastLogMeasuredOutcome(entry.sessionName, entry.timestamp, entry.measured)
+          }
+          matchedIds.push(row.id)
+        }
+        this.importSummary = { matched: matchedIds.length, ignored }
+        this.flashRecentlyImported(matchedIds)
+      } catch {
+        this.importError = this.$t('reports.importError')
+      } finally {
+        this.isImporting = false
+      }
+    },
+
+    flashRecentlyImported(ids: number[]) {
+      if (this.flashTimer !== null) clearTimeout(this.flashTimer)
+      this.recentlyImportedIds = ids
+      this.flashTimer = setTimeout(() => {
+        this.recentlyImportedIds = []
+        this.flashTimer = null
+      }, 1900)
+    },
+
+    dismissImportSummary() {
+      this.importSummary = null
+    },
+
+    deleteEntry(entryId: number) {
+      if (this.selectedEntry?.id === entryId) this.selectedEntry = null
+      this.store.deleteEntry(entryId)
+    },
   },
 })
 </script>
@@ -225,25 +401,11 @@ export default defineComponent({
     @include flex-col(1.5rem);
   }
 
-  &__header-row {
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 1rem;
-    flex-wrap: wrap;
-  }
-
   &__subtitle {
     font-size: var(--fs-lg);
     color: var(--color-text-muted);
     margin: 0;
     font-family: var(--font-mono);
-  }
-
-  &__header-actions {
-    display: flex;
-    gap: 0.5rem;
-    flex-shrink: 0;
   }
 
   &__btn {
@@ -288,6 +450,66 @@ export default defineComponent({
         background: color-mix(in srgb, var(--color-danger) 10%, transparent);
       }
     }
+
+    &--import {
+      color: var(--color-amber);
+      border-color: color-mix(in srgb, var(--color-amber) 35%, transparent);
+      background: color-mix(in srgb, var(--color-amber) 8%, transparent);
+
+      &:hover:not(:disabled) {
+        background: color-mix(in srgb, var(--color-amber) 16%, transparent);
+        border-color: var(--color-amber);
+      }
+    }
+  }
+
+  &__file-input {
+    display: none;
+  }
+
+  /* ── Import summary banner ────────────────────────────────────────────────── */
+  &__import-banner {
+    @include flex-between(1rem);
+    padding: 0.85rem 1.1rem;
+    border-radius: var(--radius);
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    font-family: var(--font-mono);
+    font-size: var(--fs-md);
+    color: var(--color-text);
+
+    &--ok    { @include tinted-surface(primary); }
+    &--warn  { @include tinted-surface(amber); }
+    &--error { @include tinted-surface(danger); }
+  }
+
+  &__import-banner-body {
+    @include flex-col(0.2rem);
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__import-banner-title {
+    @include mono-upper(var(--fs-xs), 0.08em);
+    color: var(--color-text-heading);
+  }
+
+  &__import-banner-line {
+    font-size: var(--fs-md);
+    color: var(--color-text);
+  }
+
+  &__import-banner-dismiss {
+    @include mono-upper(var(--fs-xxs), 0.06em);
+    padding: 0.3rem 0.75rem;
+    border-radius: var(--radius);
+    border: 1px solid var(--color-border);
+    background: transparent;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    transition: color var(--tr-fast), border-color var(--tr-fast);
+
+    &:hover { color: var(--color-text); border-color: var(--color-text-muted); }
   }
 
   /* ── Session summary (read-only) ──────────────────────────────────────────── */
@@ -324,8 +546,7 @@ export default defineComponent({
 
   /* ── Mobile layout ────────────────────────────────────────────────────────── */
   @media (max-width: 700px) {
-    &__inner      { padding: 1rem 0.85rem 3rem; }
-    &__header-row { flex-direction: column; align-items: flex-start; }
+    &__inner           { padding: 1rem 0.85rem 3rem; }
     &__session-summary { flex-wrap: wrap; }
   }
 
@@ -336,9 +557,45 @@ export default defineComponent({
   }
 
   &__log-card-hdr {
-    @include flex-between();
+    @include flex-between(1rem);
+    align-items: flex-start;
     padding: 1rem 1.5rem;
     border-bottom: 1px solid var(--color-border);
+    flex-wrap: wrap;
+
+    @media (max-width: 700px) {
+      flex-direction: column;
+      align-items: stretch;
+    }
+  }
+
+  &__log-card-hdr-title {
+    @include flex-row(0.75rem);
+    flex-wrap: wrap;
+  }
+
+  &__log-card-actions {
+    @include flex-row(0.75rem);
+    align-items: flex-start;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+  }
+
+  &__log-card-action {
+    @include flex-col(0.3rem);
+    align-items: stretch;
+  }
+
+  &__btn-caption {
+    @include mono-upper(var(--fs-xxs), 0.06em);
+    color: var(--color-text-muted);
+    opacity: var(--op-dim);
+    text-align: center;
+    line-height: 1.3;
+    width: 0;             // do not let caption drive column width
+    min-width: 100%;      // but render at full button width and wrap
+    white-space: normal;
+    overflow-wrap: break-word;
   }
 
   &__log-title {
