@@ -152,7 +152,7 @@ export default defineComponent({
   &__overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.6);
+    background: color-mix(in srgb, black 60%, transparent);
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
     z-index: 500;
@@ -171,7 +171,7 @@ export default defineComponent({
   overflow-y: auto;
   padding: 1.75rem;
   @include flex-col(1.25rem);
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 24px 64px color-mix(in srgb, black 50%, transparent);
 
   &__header {
     @include flex-between();

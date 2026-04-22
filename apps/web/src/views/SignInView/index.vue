@@ -894,7 +894,7 @@ export default defineComponent({
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     box-shadow:
-      0 24px 48px color-mix(in srgb, #000 55%, transparent),
+      0 24px 48px color-mix(in srgb, black 55%, transparent),
       0 0 0 1px color-mix(in srgb, var(--color-primary) 6%, transparent),
       inset 0 1px 0 color-mix(in srgb, white 4%, transparent);
     display: flex;

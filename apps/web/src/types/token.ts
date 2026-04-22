@@ -12,12 +12,14 @@ export interface TokenBalance {
 
 export type TokenPlan = 'free' | 'pro' | 'team' | 'enterprise'
 
+export type TokenTransactionMeta = Record<string, string | number | boolean | null>
+
 export interface TokenTransaction {
   id:        string
   delta:     number
   reason:    string
   createdAt: string
-  meta:      unknown
+  meta:      TokenTransactionMeta
 }
 
 export interface CostMap {

@@ -650,7 +650,7 @@ export default defineComponent({
     background: color-mix(in srgb, var(--color-surface) 90%, transparent);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    box-shadow: 0 24px 48px color-mix(in srgb, #000 55%, transparent);
+    box-shadow: 0 24px 48px color-mix(in srgb, black 55%, transparent);
     display: flex;
     flex-direction: column;
     gap: 1.25rem;

@@ -69,7 +69,7 @@ export default defineComponent({
       transparent 0%,
       color-mix(in srgb, var(--color-primary) 35%, transparent) 30%,
       var(--color-primary) 55%,
-      color-mix(in srgb, #a78bfa 80%, transparent) 80%,
+      color-mix(in srgb, var(--color-purple) 80%, transparent) 80%,
       transparent 100%
     );
     filter: drop-shadow(0 0 4px color-mix(in srgb, var(--color-primary) 60%, transparent));
