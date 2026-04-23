@@ -87,6 +87,9 @@ export interface MeasuredOutcome {
   transfectionPct?:      number   // 0-100, cargo+ fraction (GFP+ / marker+ via flow)
   viabilityAssay?:       ViabilityAssay
   assayTimepointH?:      number   // hours post-pulse when the assay was read
+  // ── qPCR readout (optional) ───────────────────────────────────────────────
+  qpcrFoldChange?:       number   // 2^(-ΔΔCt); <1 knockdown, >1 upregulation
+  qpcrTarget?:           string   // transcript label (e.g. "GAPDH", "HSP70")
   // ── Physical conditions observed on-bench ─────────────────────────────────
   tempC?:                number   // °C, measured post-run temperature (probe/IR)
   actualFieldVcm?:       number   // V/cm, measured applied field from pulse monitor
@@ -167,4 +170,29 @@ export interface MeasuredOutcomeEntry {
   sessionName: string
   timestamp:   string
   measured:    MeasuredOutcome
+}
+
+// ── Trainer metrics + retrain broadcast (Stage D promotion pipeline) ─────────
+// Emitted by the API after every /ai/retrain upstream call. `promoted=true`
+// means the new bundle beat the previous best holdout MAE and replaced the
+// active model; `promoted=false` means the fit ran but the old bundle was
+// retained. Clients refresh their aiStore snapshot either way so they see
+// the updated training-sample count and "best-model-so-far" metrics.
+
+export interface TrainerOutcomeMetrics {
+  rmse: number
+  mae:  number
+}
+
+export interface TrainingCompletePayload {
+  samplesUsed:       number
+  modelReady:        boolean
+  at:                string               // ISO timestamp of retrain completion
+  modelVersion:      string | null        // promoted or staged version; null when fit was skipped
+  promoted:          boolean              // true only when the active model was replaced
+  holdoutMaeOverall: number | null        // mean of (target_dr, healthy_dr, rating) MAE
+  previousBestMae:   number | null        // MAE the new fit had to beat; null on first run
+  targetDr:          TrainerOutcomeMetrics | null
+  healthyDr:         TrainerOutcomeMetrics | null
+  rating:            TrainerOutcomeMetrics | null
 }

@@ -4,7 +4,7 @@
     :is="rootTag"
     class="calib"
     :class="[`calib--${variant}`, `calib--${tier}`]"
-    v-tip="$t('ai.calibTip')"
+    v-tip="tipText"
     @click="onClick"
   >
     <span class="calib__dot" aria-hidden="true"></span>
@@ -78,6 +78,16 @@ export default defineComponent({
         case 'strong':   return this.$t('ai.calibStrongBody',   { pp, n })
       }
       return ''
+    },
+
+    tipText(): string {
+      if (this.tier === 'none') {
+        return this.$t('ai.calibTipNone', {
+          have: this.summary.sampleCount,
+          need: THRESHOLDS.CALIB_MIN_SAMPLES,
+        }) as string
+      }
+      return this.$t('ai.calibTip') as string
     },
 
     showActionCue(): boolean { return this.clickable },

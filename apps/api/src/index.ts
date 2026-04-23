@@ -3,9 +3,10 @@ import 'dotenv/config'
 import http from 'http'
 import express from 'express'
 import cors from 'cors'
-import { setupSocketServer } from './socket'
+import { setupSocketServer, SOCKET_EVENTS } from './socket'
 import { countOutcomes, fetchTrainingRows } from './db'
 import { clerk, requireAuth } from './middleware/clerkAuth'
+import { persistTrainerMetrics, type RetrainUpstreamResponse } from './services/trainerMetricsService'
 import webhookRouter         from './routes/webhooks'
 import experimentsRouter     from './routes/experiments'
 import tokensRouter          from './routes/tokens'
@@ -15,8 +16,10 @@ import cellCalibrationRouter from './routes/cellCalibration'
 const AI_SERVICE_URL      = (process.env.AI_SERVICE_URL ?? 'http://localhost:8000').replace(/\/$/, '')
 const AI_PROXY_TIMEOUT_MS = 10_000
 
-const app  = express()
-const PORT = process.env.PORT ?? 3001
+const app        = express()
+const PORT       = process.env.PORT ?? 3001
+const httpServer = http.createServer(app)
+const io         = setupSocketServer(httpServer)
 
 // In production set FRONTEND_URL to your production domain; unset allows all origins.
 // Both www and non-www variants are always included to avoid redirect-vs-CORS mismatches.
@@ -92,14 +95,27 @@ app.post('/ai/retrain', async (_req, res) => {
       method: 'POST',
       signal: AbortSignal.timeout(AI_PROXY_TIMEOUT_MS),
     })
-    res.json(await upstream.json())
+    const body = await upstream.json() as RetrainUpstreamResponse
+    if (body.status === 'ok' && (body.samplesUsed ?? 0) > 0) {
+      await persistTrainerMetrics(body)
+      io.emit(SOCKET_EVENTS.TRAINING_COMPLETE, {
+        samplesUsed:       body.samplesUsed       ?? 0,
+        modelReady:        body.modelReady        ?? false,
+        at:                new Date().toISOString(),
+        modelVersion:      body.modelVersion      ?? null,
+        promoted:          body.promoted          ?? false,
+        holdoutMaeOverall: body.holdoutMaeOverall ?? null,
+        previousBestMae:   body.previousBestMae   ?? null,
+        targetDr:          body.targetDr          ?? null,
+        healthyDr:         body.healthyDr         ?? null,
+        rating:            body.rating            ?? null,
+      })
+    }
+    res.json(body)
   } catch {
     res.status(503).json({ status: 'error', detail: 'AI service unreachable' })
   }
 })
-
-const httpServer = http.createServer(app)
-setupSocketServer(httpServer)
 
 httpServer.listen(PORT, () => {
   console.log(`ResoPulse API + Socket running on http://localhost:${PORT}`)

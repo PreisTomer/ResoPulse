@@ -4,6 +4,8 @@
 
 import type { MeasuredOutcome, ViabilityAssay } from '@resopulse/shared-types'
 
+import type { CsvColumnMapping, CsvMappingField } from '@/stores/csvMappingStore'
+
 export interface ImportedRow {
   id:       number
   measured: Omit<MeasuredOutcome, 'measuredAt'> & { measuredAt?: string }
@@ -17,18 +19,20 @@ export interface ImportReport {
 }
 
 const ID_HEADERS       = ['#', 'id', 'entry', 'entry #', 'entry#']
-const MEASURED_COLS: Record<keyof Omit<MeasuredOutcome, 'measuredAt' | 'notes' | 'viabilityAssay'>, string[]> = {
+const MEASURED_COLS: Record<keyof Omit<MeasuredOutcome, 'measuredAt' | 'notes' | 'viabilityAssay' | 'qpcrTarget'>, string[]> = {
   targetLysisPct:       ['t-lysis measured (%)', 'target lysis measured (%)', 'target lysis (%)', 'target lysis %'],
   healthyLysisPct:      ['h-lysis measured (%)', 'healthy lysis measured (%)', 'healthy lysis (%)', 'healthy lysis %'],
   viabilityPct:         ['viability measured (%)', 'viability (%)', 'viability %'],
   permeabilizedPct:     ['permeabilized measured (%)', 'permeabilized (%)', 'permeabilized %', 'pi+ (%)', 'pi uptake (%)'],
   transfectionPct:      ['transfection measured (%)', 'transfection (%)', 'transfection %', 'gfp+ (%)', 'cargo+ (%)'],
   assayTimepointH:      ['assay timepoint (h)', 'timepoint (h)', 'assay timepoint h'],
+  qpcrFoldChange:       ['qpcr fold-change', 'qpcr fold change', 'qpcr 2^-ddct', '2^(-ddct)', 'fold-change (qpcr)'],
   tempC:                ['temp measured (°c)', 'temp measured (c)', 'temperature (°c)', 'post-run temp (°c)', 'temp meas (°c)'],
   actualFieldVcm:       ['actual field measured (v/cm)', 'actual field (v/cm)', 'field measured (v/cm)'],
   observedLysisDelayMs: ['lysis delay measured (ms)', 'lysis delay (ms)', 'observed lysis delay (ms)'],
 }
-const ASSAY_COL_NAMES = ['viability assay', 'assay method', 'viability method']
+const ASSAY_COL_NAMES = ['viability assay', 'assay method', 'viability method', 'assay type', 'assay_type']
+const QPCR_TARGET_COL_NAMES = ['qpcr transcript', 'qpcr target', 'qpcr gene']
 const NOTES_COL_NAMES = ['measured notes', 'notes']
 const MEASURED_AT_COL_NAMES = ['measured at']
 
@@ -81,7 +85,7 @@ function toAssayOrU(raw: string | undefined): ViabilityAssay | undefined {
   return match
 }
 
-export function parseMeasuredCsv(text: string): ImportReport {
+export function parseMeasuredCsv(text: string, userMapping: CsvColumnMapping = {}): ImportReport {
   const report: ImportReport = {
     rowsSeen:             0,
     rowsWithMeasuredData: 0,
@@ -102,14 +106,20 @@ export function parseMeasuredCsv(text: string): ImportReport {
     return report
   }
 
+  const aliasesFor = (field: CsvMappingField, builtIn: string[]): string[] => {
+    const user = userMapping[field]
+    return user ? [user, ...builtIn] : builtIn
+  }
+
   const colIndex: Partial<Record<keyof typeof MEASURED_COLS, number>> = {}
   ;(Object.keys(MEASURED_COLS) as Array<keyof typeof MEASURED_COLS>).forEach(key => {
-    const idx = findColumn(headers, MEASURED_COLS[key])
+    const idx = findColumn(headers, aliasesFor(key, MEASURED_COLS[key]))
     if (idx !== -1) colIndex[key] = idx
   })
-  const assayIdx      = findColumn(headers, ASSAY_COL_NAMES)
-  const notesIdx      = findColumn(headers, NOTES_COL_NAMES)
-  const measuredAtIdx = findColumn(headers, MEASURED_AT_COL_NAMES)
+  const assayIdx      = findColumn(headers, aliasesFor('viabilityAssay', ASSAY_COL_NAMES))
+  const qpcrTargetIdx = findColumn(headers, aliasesFor('qpcrTarget',     QPCR_TARGET_COL_NAMES))
+  const notesIdx      = findColumn(headers, aliasesFor('notes',          NOTES_COL_NAMES))
+  const measuredAtIdx = findColumn(headers, aliasesFor('measuredAt',     MEASURED_AT_COL_NAMES))
 
   for (let i = 1; i < lines.length; i++) {
     const cells = splitCsvLine(lines[i]!)
@@ -136,6 +146,13 @@ export function parseMeasuredCsv(text: string): ImportReport {
       const assay = toAssayOrU(cells[assayIdx])
       if (assay !== undefined) {
         measured.viabilityAssay = assay
+        any = true
+      }
+    }
+    if (qpcrTargetIdx !== -1) {
+      const label = cells[qpcrTargetIdx]?.trim()
+      if (label) {
+        measured.qpcrTarget = label
         any = true
       }
     }

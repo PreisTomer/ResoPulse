@@ -215,6 +215,18 @@ export const useExperimentStore = defineStore('experiment', {
       }
     },
 
+    /** Newest measured qPCR fold-change + transcript, or null when none logged. */
+    latestMeasuredQpcr(): { foldChange: number; transcript: string | null; entryId: number } | null {
+      const entries = (this.measuredEntries as LogEntry[])
+      const newest  = [...entries].reverse().find(e => e.measured?.qpcrFoldChange !== undefined)
+      if (!newest || !newest.measured || newest.measured.qpcrFoldChange === undefined) return null
+      return {
+        foldChange: newest.measured.qpcrFoldChange,
+        transcript: newest.measured.qpcrTarget ?? null,
+        entryId:    newest.id,
+      }
+    },
+
     /** Aggregated calibration summary across all sessions — the AI tab indicator. */
     calibrationSummary(): CalibrationSummary {
       const residuals = this.measuredResiduals as EntryResidual[]
@@ -341,6 +353,8 @@ export const useExperimentStore = defineStore('experiment', {
         transfectionPct:      clampPct(measured.transfectionPct),
         viabilityAssay:       measured.viabilityAssay,
         assayTimepointH:      roundOrU(nonNeg(measured.assayTimepointH),      2),
+        qpcrTarget:           measured.qpcrTarget?.trim() || undefined,
+        qpcrFoldChange:       roundOrU(nonNeg(measured.qpcrFoldChange),       3),
         tempC:                roundOrU(measured.tempC,                        1),
         actualFieldVcm:       roundOrU(nonNeg(measured.actualFieldVcm),       1),
         observedLysisDelayMs: roundOrU(nonNeg(measured.observedLysisDelayMs), 0),

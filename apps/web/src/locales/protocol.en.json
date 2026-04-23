@@ -120,7 +120,7 @@
       "scope": "<strong>Thermal model scope:</strong> The Newton cooling coefficient λ<sub>Newton</sub> = 0.02 s⁻¹ (time constant τ<sub>th</sub> ≈ 50 s) represents tissue-level lumped heat dissipation, appropriate for macroscopic electroporation applicators in perfused tissue. A free cell in solution has τ<sub>th</sub> ≈ R²ρc<sub>p</sub>/κ ≈ 0.6 ms (R = 10 µm, κ ≈ 0.6 W/m·K), equilibrating with its medium in milliseconds. The temperature displayed reflects <em>bulk medium heating</em>, not local membrane temperature, which is relevant for comparing treatment protocols rather than single-pulse effects.",
       "eqSar": "SAR = σ<sub>i</sub> · α² · E² · w<sub>f</sub> / ρ",
       "eqSarSub1": "α = 3σ<sub>e</sub> / (2σ<sub>e</sub> + σ<sub>i</sub>) &nbsp; (DC internal field factor for sphere in medium)",
-      "eqSarSub2": "w<sub>f</sub> = 0.5 (CW sinusoidal) &nbsp;|&nbsp; 1.0 (pulsed bipolar square wave / H-FIRE)",
+      "eqSarSub2": "w<sub>f</sub> = 0.5 (CW sinusoidal) &nbsp;∣&nbsp; 1.0 (pulsed bipolar square wave / H-FIRE)",
       "eqTss": "T<sub>ss</sub> = 37 + SAR<sub>eff</sub> / ((λ<sub>Newton</sub> + λ<sub>perf</sub>) · c<sub>p</sub>)",
       "eqTssSub1": "SAR<sub>eff</sub> = SAR<sub>peak</sub> × dc &nbsp;&nbsp; λ<sub>Newton</sub> = 0.02 s⁻¹ (surface / diffusion cooling)",
       "eqTssSub2": "λ<sub>perf</sub> = ω<sub>b</sub> × 63.9 / c<sub>p</sub> &nbsp;&nbsp; ω<sub>b</sub> [mL/(g·min)], blood perfusion rate (Advanced panel)",

@@ -102,6 +102,40 @@
             {{ retrainMessage }}
           </div>
 
+          <!-- Active-learning next-experiment suggestion -->
+          <div class="ai-tab__explore-row">
+            <button
+              class="ai-tab__explore-btn"
+              v-tip="$t('ai.exploreBtnTip')"
+              @click="suggestExploreNext"
+            >{{ $t('ai.exploreBtn') }}</button>
+          </div>
+          <div v-if="hasExploreSuggestions" class="ai-tab__explore-list">
+            <div
+              v-for="(s, i) in exploreSuggestions"
+              :key="`explore-${i}`"
+              class="ai-tab__explore-card"
+            >
+              <div class="ai-tab__explore-card-head">
+                <span class="ai-tab__explore-title">{{ exploreCardTitle(i) }}</span>
+                <span class="ai-tab__explore-strategy">{{ exploreStrategyLabelFor(s) }}</span>
+              </div>
+              <div class="ai-tab__explore-row-grid">
+                <span class="ai-tab__explore-k">{{ $t('ai.exploreFreqLabel') }}</span>
+                <span class="ai-tab__explore-v">{{ s.freqKHz }} kHz</span>
+                <span class="ai-tab__explore-k">{{ $t('ai.exploreFieldLabel') }}</span>
+                <span class="ai-tab__explore-v">{{ s.fieldVcm }} V/cm</span>
+                <span class="ai-tab__explore-k">{{ $t('ai.exploreDutyLabel') }}</span>
+                <span class="ai-tab__explore-v">{{ (s.dutyCycle * 100).toFixed(2) }} %</span>
+              </div>
+              <p class="ai-tab__explore-rationale">{{ s.rationale }}</p>
+              <div class="ai-tab__explore-actions">
+                <button class="ai-tab__explore-apply" @click="applyExploreSuggestion(s)">{{ $t('ai.exploreApplyBtn') }}</button>
+                <button class="ai-tab__explore-dismiss" @click="dismissExploreSuggestion(i)">{{ $t('ai.exploreDismissBtn') }}</button>
+              </div>
+            </div>
+          </div>
+
           <!-- Per-cell σ_i calibration status -->
           <div v-if="sigmaCalibVisible" class="ai-tab__sigma-calib" v-tip="$t('ai.sigmaCalibTip')">
             <div class="ai-tab__sigma-calib-title">{{ $t('ai.sigmaCalibTitle') }}</div>
@@ -225,6 +259,19 @@
       </div><!-- /panel -->
     </template>
   </SideTabPanel>
+
+  <AiRetrainSuccessModal
+    :is-open="retrainModalOpen"
+    :samples-used="modelTrainingSamples"
+    :model-version="aiStore.lastModelVersion"
+    :promoted="aiStore.lastPromoted"
+    :holdout-mae="aiStore.lastHoldoutMae"
+    :previous-best-mae="aiStore.lastPreviousBestMae"
+    :target-dr="aiStore.lastTargetDr"
+    :healthy-dr="aiStore.lastHealthyDr"
+    :rating="aiStore.lastRating"
+    @close="closeRetrainModal"
+  />
 </template>
 
 <script lang="ts">
@@ -240,32 +287,37 @@ import { useTokenStore } from '@/stores/tokenStore'
 
 import { requestAiOptimization, broadcastStateSync } from '@/services/socket'
 
+import { suggestNextProtocols, type SuggestedProtocol } from '@/utils/activeLearning'
+
 import SideTabPanel from '@/components/ExperimentLab/SideTabPanel.vue'
 import AiResultCard from '@/components/ExperimentLab/AiResultCard.vue'
+import AiRetrainSuccessModal from '@/components/ExperimentLab/AiRetrainSuccessModal.vue'
 import ApplyCalibrationModal from '@/components/ExperimentLab/ApplyCalibrationModal.vue'
 import CalibrationBadge from '@/components/CalibrationBadge/index.vue'
 
 import { ICON } from '@/constants/icons'
 import { ROUTE } from '@/constants/routes'
 import { THRESHOLDS } from '@/constants/physics'
+import { STORAGE_KEY } from '@/constants/storageKeys'
 
 import type { CalibrationStatus } from '@/stores/cellCalibrationStore'
 
 export default defineComponent({
   name: 'AiOptimizerTab',
 
-  components: { SideTabPanel, AiResultCard, ApplyCalibrationModal, CalibrationBadge },
+  components: { SideTabPanel, AiResultCard, AiRetrainSuccessModal, ApplyCalibrationModal, CalibrationBadge },
 
   data() {
     return {
       showOfflineNote:      false,
       showGuestNote:        false,
-      modelTrainingSamples: 0,
       isRetraining:         false,
       retrainMessage:       '' as string,
       retrainMsgClass:      '' as string,
       calibDetailsOpen:     false,
       calibPreviewOpen:     false,
+      exploreSuggestions:   [] as SuggestedProtocol[],
+      retrainModalOpen:     false,
       _healthPollTimer:     null as ReturnType<typeof setInterval> | null,
     }
   },
@@ -277,6 +329,14 @@ export default defineComponent({
 
   beforeUnmount() {
     if (this._healthPollTimer) clearInterval(this._healthPollTimer)
+  },
+
+  watch: {
+    'aiStore.retrainJustCompleted'(isComplete: boolean) {
+      if (!isComplete)                                                return
+      if (localStorage.getItem(STORAGE_KEY.SEEN_RETRAIN_MODAL) !== null) return
+      this.retrainModalOpen = true
+    },
   },
 
   computed: {
@@ -322,6 +382,8 @@ export default defineComponent({
     isAiResultReady(): boolean       { return this.aiStore.hasResult && !!this.aiStore.result },
     isPhysicsBaselineIdle(): boolean { return this.aiStore.isPhysicsBaseline && !this.aiStore.isLoading && !this.aiStore.hasResult },
 
+    modelTrainingSamples(): number { return this.aiStore.modelTrainingSamples },
+
     statusBadgeLabel(): string {
       if (this.modelTrainingSamples === 0)  return this.$t('ai.serviceOfflineBadge')
       if (this.modelTrainingSamples >= 20)  return this.$t('ai.modelReadyBadge')
@@ -347,6 +409,10 @@ export default defineComponent({
 
     recentResiduals() {
       return this.experimentStore.measuredResiduals.slice(0, 5)
+    },
+
+    hasExploreSuggestions(): boolean {
+      return this.exploreSuggestions.length > 0
     },
   },
 
@@ -382,8 +448,11 @@ export default defineComponent({
       try {
         const backendUrl = (import.meta.env.VITE_BACKEND_URL ?? 'http://localhost:3001').replace(/\/$/, '')
         const res  = await fetch(`${backendUrl}/ai/health`, { signal: AbortSignal.timeout(5_000) })
-        const data = await res.json() as { trainingSamples?: number }
-        this.modelTrainingSamples = data.trainingSamples ?? 0
+        const data = await res.json() as { trainingSamples?: number; modelReady?: boolean }
+        this.aiStore.setHealthSnapshot({
+          trainingSamples: data.trainingSamples ?? 0,
+          modelReady:      data.modelReady      ?? false,
+        })
       } catch {
         // service offline — keep existing count
       }
@@ -399,11 +468,14 @@ export default defineComponent({
           method: 'POST',
           signal: AbortSignal.timeout(15_000),
         })
-        const data = await res.json() as { samplesUsed?: number; status?: string }
+        const data = await res.json() as { samplesUsed?: number; status?: string; modelReady?: boolean }
         if (data.samplesUsed && data.samplesUsed > 0) {
-          this.retrainMessage       = this.$t('ai.retrainSuccess', { n: data.samplesUsed })
-          this.retrainMsgClass      = 'ai-tab__retrain-msg--ok'
-          this.modelTrainingSamples = data.samplesUsed
+          this.retrainMessage  = this.$t('ai.retrainSuccess', { n: data.samplesUsed })
+          this.retrainMsgClass = 'ai-tab__retrain-msg--ok'
+          this.aiStore.setHealthSnapshot({
+            trainingSamples: data.samplesUsed,
+            modelReady:      data.modelReady ?? this.aiStore.modelReady,
+          })
         } else {
           this.retrainMessage  = this.$t('ai.retrainNoData')
           this.retrainMsgClass = 'ai-tab__retrain-msg--warn'
@@ -457,10 +529,48 @@ export default defineComponent({
       return `ai-tab__sigma-calib-row--${status.state}`
     },
 
+    async suggestExploreNext(): Promise<void> {
+      const canProceed = await this.tokenStore.consumeOperation('AI_SUGGEST')
+      if (!canProceed) {
+        if (this.authStore.isGuest) this.showGuestNote = true
+        return
+      }
+      this.showGuestNote = false
+      this.exploreSuggestions = suggestNextProtocols(this.experimentStore.entries, this.cellStore.sliderRanges)
+    },
+
+    applyExploreSuggestion(s: SuggestedProtocol): void {
+      this.cellStore.setBroadcastFreqKHz(s.freqKHz)
+      this.cellStore.setFieldIntensity(s.fieldVcm)
+      this.cellStore.setDutyCycle(s.dutyCycle)
+      broadcastStateSync()
+      this.exploreSuggestions = []
+    },
+
+    dismissExploreSuggestion(index: number): void {
+      this.exploreSuggestions = this.exploreSuggestions.filter((_, i) => i !== index)
+    },
+
+    exploreCardTitle(index: number): string {
+      return this.$t('ai.exploreCardTitleN', { n: index + 1 })
+    },
+
+    exploreStrategyLabelFor(s: SuggestedProtocol): string {
+      return s.strategy === 'cold-start'
+        ? this.$t('ai.exploreStrategyColdStart')
+        : this.$t('ai.exploreStrategyExplore')
+    },
+
     toggleCalibDetails()       { this.calibDetailsOpen = !this.calibDetailsOpen },
     openCalibrationPreview()   { this.calibPreviewOpen = true                    },
     closeCalibrationPreview()  { this.calibPreviewOpen = false                   },
     goToReports()              { this.$router.push(ROUTE.REPORTS)                },
+
+    closeRetrainModal(): void {
+      localStorage.setItem(STORAGE_KEY.SEEN_RETRAIN_MODAL, '1')
+      this.aiStore.acknowledgeRetrain()
+      this.retrainModalOpen = false
+    },
 
     formatPp(v: number | null): string {
       if (v === null) return '—'
@@ -629,6 +739,106 @@ export default defineComponent({
 
     &:disabled { opacity: var(--op-ghost); cursor: not-allowed; }
     &--running { animation: ai-pulse 1.4s ease-in-out infinite; }
+  }
+
+  // ── Active-learning explore button + suggestion card ──────────
+  &__explore-row {
+    @include flex-row(0.4rem);
+    flex-wrap: wrap;
+  }
+
+  &__explore-btn {
+    @include mono-upper(var(--fs-xxs), 0.06em);
+    flex: 1;
+    padding: 0.35rem 0.6rem;
+    background: transparent;
+    border: 1px dashed color-mix(in srgb, var(--color-accent) 45%, transparent);
+    border-radius: var(--radius);
+    color: color-mix(in srgb, var(--color-accent) 90%, transparent);
+    cursor: pointer;
+    transition: background var(--tr-fast), border-color var(--tr-fast);
+
+    &:hover { background: color-mix(in srgb, var(--color-accent) 10%, transparent); }
+  }
+
+  &__explore-list {
+    @include flex-col(0.5rem);
+  }
+
+  &__explore-card {
+    @include flex-col(0.5rem);
+    padding: 0.6rem 0.7rem;
+    border: 1px solid color-mix(in srgb, var(--color-accent) 35%, transparent);
+    border-radius: var(--radius);
+    background: color-mix(in srgb, var(--color-accent) 6%, transparent);
+  }
+
+  &__explore-card-head {
+    @include flex-between();
+    gap: 0.5rem;
+  }
+
+  &__explore-title {
+    @include mono-upper(var(--fs-xxs), 0.08em);
+    color: var(--color-accent);
+  }
+
+  &__explore-strategy {
+    @include badge-pill(0.08rem 0.4rem, 3px);
+    font-size: var(--fs-xxs);
+    @include color-variant(accent, 30%, 8%);
+  }
+
+  &__explore-row-grid {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.2rem 0.6rem;
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+  }
+
+  &__explore-k {
+    color: var(--color-text-muted);
+  }
+
+  &__explore-v {
+    color: var(--color-text);
+  }
+
+  &__explore-rationale {
+    margin: 0;
+    font-size: var(--fs-xxs);
+    color: var(--color-text-muted);
+    line-height: 1.45;
+  }
+
+  &__explore-actions {
+    @include flex-row(0.4rem);
+  }
+
+  &__explore-apply {
+    @include mono-upper(var(--fs-xxs), 0.06em);
+    padding: 0.3rem 0.6rem;
+    background: color-mix(in srgb, var(--color-accent) 18%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-accent) 50%, transparent);
+    border-radius: 3px;
+    color: var(--color-accent);
+    cursor: pointer;
+    transition: background var(--tr-fast);
+
+    &:hover { background: color-mix(in srgb, var(--color-accent) 28%, transparent); }
+  }
+
+  &__explore-dismiss {
+    @include mono-upper(var(--fs-xxs), 0.06em);
+    padding: 0.3rem 0.6rem;
+    background: transparent;
+    border: 1px solid var(--color-border);
+    border-radius: 3px;
+    color: var(--color-text-muted);
+    cursor: pointer;
+
+    &:hover { color: var(--color-danger); border-color: color-mix(in srgb, var(--color-danger) 50%, transparent); }
   }
 
   // ── Per-cell sigma_i calibration status ────────────────────────

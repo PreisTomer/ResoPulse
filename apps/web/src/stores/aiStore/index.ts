@@ -4,13 +4,25 @@ import { defineStore } from 'pinia'
 
 import { useCellStore } from '@/stores/cellStore'
 
-import type { AiOptimizeResult, AiParamSuggestion } from '@/services/socket'
+import type { AiOptimizeResult, AiParamSuggestion, TrainingCompletePayload } from '@/services/socket'
+import type { TrainerOutcomeMetrics } from '@resopulse/shared-types'
 interface AiState {
   isLoading: boolean
   pendingRequestId: string | null  // in-flight requestId for response matching
   result: AiOptimizeResult | null
   suggestionApplied: boolean
   importanceExpanded: boolean
+  modelTrainingSamples: number
+  modelReady: boolean
+  lastTrainingAt: string | null
+  retrainJustCompleted: boolean
+  lastModelVersion: string | null
+  lastPromoted: boolean
+  lastHoldoutMae: number | null
+  lastPreviousBestMae: number | null
+  lastTargetDr: TrainerOutcomeMetrics | null
+  lastHealthyDr: TrainerOutcomeMetrics | null
+  lastRating: TrainerOutcomeMetrics | null
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -23,11 +35,22 @@ function generateRequestId(): string {
 
 export const useAiStore = defineStore('ai', {
   state: (): AiState => ({
-    isLoading:         false,
-    pendingRequestId:  null,
-    result:            null,
-    suggestionApplied: false,
-    importanceExpanded: false,
+    isLoading:             false,
+    pendingRequestId:      null,
+    result:                null,
+    suggestionApplied:     false,
+    importanceExpanded:    false,
+    modelTrainingSamples:  0,
+    modelReady:            false,
+    lastTrainingAt:        null,
+    retrainJustCompleted:  false,
+    lastModelVersion:      null,
+    lastPromoted:          false,
+    lastHoldoutMae:        null,
+    lastPreviousBestMae:   null,
+    lastTargetDr:          null,
+    lastHealthyDr:         null,
+    lastRating:            null,
   }),
 
   getters: {
@@ -97,6 +120,29 @@ export const useAiStore = defineStore('ai', {
 
     toggleImportance(): void {
       this.importanceExpanded = !this.importanceExpanded
+    },
+
+    receiveTrainingComplete(payload: TrainingCompletePayload): void {
+      this.modelTrainingSamples = payload.samplesUsed
+      this.modelReady           = payload.modelReady
+      this.lastTrainingAt       = payload.at
+      this.retrainJustCompleted = true
+      this.lastModelVersion     = payload.modelVersion
+      this.lastPromoted         = payload.promoted
+      this.lastHoldoutMae       = payload.holdoutMaeOverall
+      this.lastPreviousBestMae  = payload.previousBestMae
+      this.lastTargetDr         = payload.targetDr
+      this.lastHealthyDr        = payload.healthyDr
+      this.lastRating           = payload.rating
+    },
+
+    setHealthSnapshot(snapshot: { trainingSamples: number; modelReady: boolean }): void {
+      this.modelTrainingSamples = snapshot.trainingSamples
+      this.modelReady           = snapshot.modelReady
+    },
+
+    acknowledgeRetrain(): void {
+      this.retrainJustCompleted = false
     },
   },
 })

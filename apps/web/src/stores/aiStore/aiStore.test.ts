@@ -7,6 +7,7 @@ import { setActivePinia, createPinia } from 'pinia'
 import { useAiStore }   from '@/stores/aiStore'
 import { useCellStore } from '@/stores/cellStore'
 import type { AiOptimizeResult } from '@/services/socket'
+import type { TrainingCompletePayload } from '@resopulse/shared-types'
 
 function freshStores() {
   setActivePinia(createPinia())
@@ -184,5 +185,66 @@ describe('toggleImportance', () => {
     expect(ai.importanceExpanded).toBe(true)
     ai.toggleImportance()
     expect(ai.importanceExpanded).toBe(false)
+  })
+})
+
+// ── training snapshot + retrain broadcast ────────────────────────────────────
+
+function makeTrainPayload(overrides: Partial<TrainingCompletePayload> = {}): TrainingCompletePayload {
+  return {
+    samplesUsed:       42,
+    modelReady:        true,
+    at:                '2026-04-22T12:00:00.000Z',
+    modelVersion:      'v20260422-120000',
+    promoted:          true,
+    holdoutMaeOverall: 0.08,
+    previousBestMae:   null,
+    targetDr:          null,
+    healthyDr:         null,
+    rating:            null,
+    ...overrides,
+  }
+}
+
+describe('receiveTrainingComplete', () => {
+  it('updates sample count, model-ready flag and timestamp from socket broadcast', () => {
+    const { ai } = freshStores()
+    ai.receiveTrainingComplete(makeTrainPayload({ samplesUsed: 42 }))
+    expect(ai.modelTrainingSamples).toBe(42)
+    expect(ai.modelReady).toBe(true)
+    expect(ai.lastTrainingAt).toBe('2026-04-22T12:00:00.000Z')
+    expect(ai.retrainJustCompleted).toBe(true)
+  })
+
+  it('acknowledgeRetrain clears the just-completed flag without resetting sample count', () => {
+    const { ai } = freshStores()
+    ai.receiveTrainingComplete(makeTrainPayload({ samplesUsed: 30 }))
+    ai.acknowledgeRetrain()
+    expect(ai.retrainJustCompleted).toBe(false)
+    expect(ai.modelTrainingSamples).toBe(30)
+  })
+
+  it('stores enriched promotion metadata from the broadcast payload', () => {
+    const { ai } = freshStores()
+    ai.receiveTrainingComplete(makeTrainPayload({
+      modelVersion:      'v20260422-120000',
+      promoted:          true,
+      holdoutMaeOverall: 0.08,
+      previousBestMae:   0.12,
+    }))
+    expect(ai.lastModelVersion).toBe('v20260422-120000')
+    expect(ai.lastPromoted).toBe(true)
+    expect(ai.lastHoldoutMae).toBe(0.08)
+    expect(ai.lastPreviousBestMae).toBe(0.12)
+  })
+})
+
+describe('setHealthSnapshot', () => {
+  it('stores trainingSamples and modelReady from /ai/health poll', () => {
+    const { ai } = freshStores()
+    ai.setHealthSnapshot({ trainingSamples: 15, modelReady: false })
+    expect(ai.modelTrainingSamples).toBe(15)
+    expect(ai.modelReady).toBe(false)
+    expect(ai.retrainJustCompleted).toBe(false)   // health poll does NOT set the modal trigger
   })
 })

@@ -74,6 +74,18 @@
       <span class="outcome-strip__chip-val">{{ biomodDisplay }}</span>
     </button>
 
+    <button
+      type="button"
+      class="outcome-strip__chip outcome-strip__chip--qpcr"
+      :class="{ 'outcome-strip__chip--muted': qpcrPill.isPlaceholder }"
+      v-tip="qpcrTip"
+      @click="goToReports"
+    >
+      <span class="outcome-strip__chip-label">{{ $t('exp.outcomeQpcrLabel') }}</span>
+      <span class="outcome-strip__chip-val">{{ qpcrPill.value }}</span>
+      <span class="outcome-strip__chip-range">{{ qpcrPill.sublabel }}</span>
+    </button>
+
     <CalibrationBadge
       class="outcome-strip__calib"
       variant="compact"
@@ -104,6 +116,7 @@ import { defineComponent } from 'vue'
 import { mapStores } from 'pinia'
 
 import { useCellStore } from '@/stores/cellStore'
+import { useExperimentStore } from '@/stores/experimentStore'
 
 import { broadcastStateSync } from '@/services/socket'
 
@@ -112,6 +125,7 @@ import CalibrationBadge from '@/components/CalibrationBadge/index.vue'
 import { formatFreqKHz } from '@/utils/format'
 
 import { THRESHOLDS, THERMAL_MA_PEAK_C, THERM_NOURISH_ENTER_C } from '@/constants/physics'
+import { NULL_DISPLAY } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
 import { UNIT } from '@/constants/units'
 import { ROUTE } from '@/constants/routes'
@@ -122,7 +136,7 @@ export default defineComponent({
   components: { CalibrationBadge },
 
   computed: {
-    ...mapStores(useCellStore),
+    ...mapStores(useCellStore, useExperimentStore),
     ICON() { return ICON },
 
     selectivity(): number { return this.cellStore.selectivityRatio },
@@ -191,6 +205,28 @@ export default defineComponent({
       if (this.biomod >= THRESHOLDS.BMS_NOURISHING) return 'strong'
       if (this.biomod >= 0.25)                      return 'marginal'
       return 'muted'
+    },
+
+    qpcrPill(): { value: string; sublabel: string; isPlaceholder: boolean } {
+      const latest = this.experimentStore.latestMeasuredQpcr
+      if (!latest) {
+        return {
+          value:         NULL_DISPLAY,
+          sublabel:      this.$t('exp.outcomeQpcrPending') as string,
+          isPlaceholder: true,
+        }
+      }
+      return {
+        value:         `${latest.foldChange.toFixed(2)}${ICON.TIMES}`,
+        sublabel:      latest.transcript ?? this.$t('exp.outcomeQpcrFallbackTranscript') as string,
+        isPlaceholder: false,
+      }
+    },
+
+    qpcrTip(): string {
+      return this.qpcrPill.isPlaceholder
+        ? this.$t('exp.outcomeQpcrTipPending') as string
+        : this.$t('exp.outcomeQpcrTip', { transcript: this.qpcrPill.sublabel, fold: this.qpcrPill.value }) as string
     },
 
     optimalFreqResult(): { khz: number; sel: number } { return this.cellStore.optimalFreqResult },
@@ -353,6 +389,9 @@ export default defineComponent({
       color: var(--color-text-muted);
       border-color: var(--color-border);
       background: color-mix(in srgb, white 3%, transparent);
+    }
+    &--qpcr:not(&--muted) {
+      @include color-variant(primary, 30%, 6%);
     }
   }
 

@@ -183,6 +183,43 @@
           </section>
 
           <section class="lmm__section">
+            <h3 class="lmm__section-title">{{ $t('log.measuredSectionQpcr') }}</h3>
+            <p class="lmm__section-hint">{{ $t('log.measuredQpcrHint') }}</p>
+
+            <div class="lmm__grid">
+
+              <label class="lmm__field">
+                <span class="lmm__field-label">{{ $t('log.measuredQpcrTarget') }}</span>
+                <div class="lmm__row lmm__row--full">
+                  <input
+                    v-model="form.qpcrTarget"
+                    class="lmm__input lmm__input--wide"
+                    type="text"
+                    maxlength="60"
+                    :placeholder="$t('log.measuredQpcrTargetPlaceholder')"
+                  />
+                </div>
+              </label>
+
+              <label class="lmm__field">
+                <span class="lmm__field-label">{{ $t('log.measuredQpcrFoldChange') }}</span>
+                <div class="lmm__row">
+                  <span class="lmm__predicted lmm__predicted--ghost">{{ $t('log.measuredQpcrFoldChangeHint') }}</span>
+                  <input
+                    v-model.number="form.qpcrFoldChange"
+                    class="lmm__input"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    inputmode="decimal"
+                  />
+                </div>
+              </label>
+
+            </div>
+          </section>
+
+          <section class="lmm__section">
             <h3 class="lmm__section-title">{{ $t('log.measuredSectionNotes') }}</h3>
             <label class="lmm__field lmm__field--full">
               <textarea
@@ -227,6 +264,8 @@ interface MeasuredForm {
   transfectionPct:      number | null
   viabilityAssay:       ViabilityAssay | null
   assayTimepointH:      number | null
+  qpcrTarget:           string
+  qpcrFoldChange:       number | null
   tempC:                number | null
   actualFieldVcm:       number | null
   observedLysisDelayMs: number | null
@@ -242,6 +281,8 @@ function emptyForm(): MeasuredForm {
     transfectionPct:      null,
     viabilityAssay:       null,
     assayTimepointH:      null,
+    qpcrTarget:           '',
+    qpcrFoldChange:       null,
     tempC:                null,
     actualFieldVcm:       null,
     observedLysisDelayMs: null,
@@ -299,6 +340,8 @@ export default defineComponent({
           transfectionPct:      m.transfectionPct      ?? null,
           viabilityAssay:       m.viabilityAssay       ?? null,
           assayTimepointH:      m.assayTimepointH      ?? null,
+          qpcrTarget:           m.qpcrTarget           ?? '',
+          qpcrFoldChange:       m.qpcrFoldChange       ?? null,
           tempC:                m.tempC                ?? null,
           actualFieldVcm:       m.actualFieldVcm       ?? null,
           observedLysisDelayMs: m.observedLysisDelayMs ?? null,
@@ -321,6 +364,8 @@ export default defineComponent({
         transfectionPct:      toNumber(this.form.transfectionPct),
         viabilityAssay:       this.form.viabilityAssay ?? undefined,
         assayTimepointH:      toNumber(this.form.assayTimepointH),
+        qpcrTarget:           this.form.qpcrTarget.trim()     || undefined,
+        qpcrFoldChange:       toNumber(this.form.qpcrFoldChange),
         tempC:                toNumber(this.form.tempC),
         actualFieldVcm:       toNumber(this.form.actualFieldVcm),
         observedLysisDelayMs: toNumber(this.form.observedLysisDelayMs),
@@ -404,6 +449,14 @@ export default defineComponent({
     letter-spacing: 0.1em;
   }
 
+  &__section-hint {
+    font-size: var(--fs-xxs);
+    color: var(--color-text-heading);
+    opacity: var(--op-muted);
+    margin: 0;
+    line-height: 1.5;
+  }
+
   &__grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -457,6 +510,8 @@ export default defineComponent({
     transition: border-color var(--tr-fast);
 
     &:focus { border-color: var(--color-primary); }
+
+    &--wide { width: 100%; text-align: left; }
   }
 
   &__select {

@@ -76,7 +76,7 @@ const AI_SERVICE_TIMEOUT_MS        = 8_000
 const AI_BASELINE_CONFIDENCE_SCORE = 0.5
 const DEFAULT_ROOM                 = 'session:default'
 
-const SOCKET_EVENTS = {
+export const SOCKET_EVENTS = {
   STATE_SYNC:          'stateSync',
   STATE_UPDATE:        'stateUpdate',
   LOG_ENTRY:           'logEntry',
@@ -89,6 +89,7 @@ const SOCKET_EVENTS = {
   NEW_MEASURED_OUTCOME:   'newMeasuredOutcome',
   AI_OPTIMIZE_REQUEST: 'aiOptimizeRequest',
   AI_OPTIMIZE_RESULT:  'aiOptimizeResult',
+  TRAINING_COMPLETE:   'trainingComplete',
   DISCONNECT:          'disconnect',
 } as const
 

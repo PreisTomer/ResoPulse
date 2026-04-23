@@ -205,6 +205,34 @@ model CellCalibration {
   @@map("cell_calibrations")
 }
 
+// ── TrainerMetrics ──────────────────────────────────────────────────────────
+// One row per retrain attempt. Persists the holdout RMSE/MAE per outcome so
+// the ReportsView can trend "model error over time" and the server can
+// promotion-gate new bundles against the previous best MAE. `promoted=true`
+// means the new bundle replaced the active model; `promoted=false` means the
+// fit ran but the in-memory bundle was retained because the holdout was worse.
+
+model TrainerMetrics {
+  id                String   @id @default(cuid())
+  modelVersion      String   @unique @db.VarChar(40)
+  trainedAt         DateTime @default(now())
+  nSamples          Int
+  holdoutSamples    Int
+  rmseTargetDr      Float
+  maeTargetDr       Float
+  rmseHealthyDr     Float
+  maeHealthyDr      Float
+  rmseRating        Float
+  maeRating         Float
+  holdoutMaeOverall Float
+  previousBestMae   Float?
+  promoted          Boolean  @default(false)
+
+  @@index([trainedAt])
+  @@index([promoted, trainedAt])
+  @@map("trainer_metrics")
+}
+
 // ── Outcome ───────────────────────────────────────────────────────────────────
 // AI training data: one row per user-rated experiment outcome.
 
@@ -255,6 +283,10 @@ model Outcome {
   measuredTempC            Float?
   measuredFieldVcm         Float?
   measuredLysisDelayMs     Int?
+  // qPCR fold-change: 2^(-ΔΔCt) for a named transcript; values <1 indicate
+  // knockdown, >1 upregulation. Primary gene label travels alongside.
+  measuredQpcrFoldChange   Float?
+  measuredQpcrTarget       String? @db.VarChar(60)
   measuredNotes            String? @db.VarChar(500)
 
   @@index([targetPreset])

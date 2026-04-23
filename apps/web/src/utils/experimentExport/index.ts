@@ -540,6 +540,10 @@ export function buildEntryMethodsText(entry: LogEntry, sessionName: string, samp
       fld('Temperature (meas.)',    m.tempC             !== undefined ? `${m.tempC.toFixed(1)} ${UNIT.DEG_C}` : 'not recorded'),
       fld('Actual field (meas.)',   fieldDeltaLine),
       fld('Lysis delay (meas.)',    lysisDelayLine),
+      ...(m.qpcrTarget || m.qpcrFoldChange !== undefined ? [
+        fld('qPCR transcript',      m.qpcrTarget ?? 'unspecified'),
+        fld('qPCR fold-change',     m.qpcrFoldChange !== undefined ? `${m.qpcrFoldChange.toFixed(3)} (2^(-ΔΔCt))` : 'not recorded'),
+      ] : []),
       ...(m.notes ? [fld('Notes', m.notes)] : []),
       '',
       'NOTE: Measured values are user-reported assay readouts. Δ columns show',
@@ -666,6 +670,7 @@ export function buildCsvText(
     'Lysis delay measured (ms)',
     `${T}-Lysis Δ (pp)`, `${H}-Lysis Δ (pp)`,
     `Field Δ (${UNIT.V_PER_CM})`, 'Lysis delay Δ (ms)',
+    'qPCR transcript', 'qPCR fold-change',
     'Measured at', 'Measured notes',
   ]
   const rows = entries.map((e) => {
@@ -694,6 +699,7 @@ export function buildCsvText(
       m?.observedLysisDelayMs ?? '',
       tDelta, hDelta,
       fDelta, dDelta,
+      m?.qpcrTarget ?? '', m?.qpcrFoldChange ?? '',
       m?.measuredAt ?? '', notes,
     ]
   })

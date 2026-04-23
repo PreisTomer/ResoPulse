@@ -65,29 +65,32 @@
         />
       </div>
 
+      <!-- Calibration trend (shown once a measured outcome exists) -->
+      <ReportsCalibrationTrend
+        v-if="hasMeasuredResiduals"
+        :residuals="calibrationResiduals"
+      />
+
       <!-- Log card -->
       <div class="reports__log-card">
         <div class="reports__log-card-hdr">
           <div class="reports__log-card-hdr-title">
             <span class="reports__log-title">{{ $t('reports.logTitle') }}</span>
-            <span class="reports__log-count">
-              {{ totalReadings }} {{ countLabel }}
-            </span>
+            <span class="reports__log-count">{{ totalReadings }} {{ countLabel }}</span>
           </div>
           <div id="hl-reports-export" class="reports__log-card-actions" :aria-label="$t('reports.toolbarLabel')">
-            <div class="reports__log-card-action">
+            <button
+              class="reports__btn reports__btn--export"
+              :disabled="totalReadings === 0 || isExporting"
+              @click="handleExportCSV()"
+            >
+              <span v-if="isExporting" class="reports__btn-spinner"></span>
+              <template v-else>{{ $t('reports.exportCsv') }}</template>
+            </button>
+
+            <div class="reports__import-group">
               <button
-                class="reports__btn reports__btn--export"
-                :disabled="totalReadings === 0 || isExporting"
-                @click="handleExportCSV()"
-              >
-                <span v-if="isExporting" class="reports__btn-spinner"></span>
-                <template v-else>{{ $t('reports.exportCsv') }}</template>
-              </button>
-            </div>
-            <div class="reports__log-card-action">
-              <button
-                class="reports__btn reports__btn--import"
+                class="reports__btn reports__btn--import reports__btn--import-grouped"
                 :disabled="totalReadings === 0 || isImporting"
                 v-tip="$t('reports.importCsvTitle')"
                 @click="triggerImportPicker()"
@@ -95,24 +98,31 @@
                 <span v-if="isImporting" class="reports__btn-spinner"></span>
                 <template v-else>{{ $t('reports.importCsv') }}</template>
               </button>
-              <span class="reports__btn-caption">{{ $t('reports.importCsvCaption') }}</span>
-              <input
-                ref="importFileInput"
-                type="file"
-                accept=".csv,text/csv"
-                class="reports__file-input"
-                @change="onImportFileChosen($event)"
-              />
-            </div>
-            <div class="reports__log-card-action">
               <button
-                class="reports__btn reports__btn--clear"
+                class="reports__btn-mapping"
                 :disabled="totalReadings === 0"
-                @click="store.clearLog()"
+                v-tip="$t('reports.mappingBtnTip')"
+                @click="csvMappingOpen = true"
               >
-                {{ $t('reports.clearLog') }}
+                <span class="reports__btn-mapping-icon" aria-hidden="true">{{ ICON.PLUG }}</span>
+                {{ csvMappingStore.hasMapping ? $t('reports.mappingBtnEdit') : $t('reports.mappingBtnEmpty') }}
               </button>
             </div>
+
+            <button
+              class="reports__btn reports__btn--clear"
+              :disabled="totalReadings === 0"
+              @click="store.clearLog()"
+            >
+              {{ $t('reports.clearLog') }}
+            </button>
+            <input
+              ref="importFileInput"
+              type="file"
+              accept=".csv,text/csv"
+              class="reports__file-input"
+              @change="onImportFileChosen($event)"
+            />
           </div>
         </div>
 
@@ -138,6 +148,8 @@
       </div>
 
     </div>
+
+    <CsvMappingModal :is-open="csvMappingOpen" @close="csvMappingOpen = false" />
   </div>
 </template>
 
@@ -150,6 +162,7 @@ import { broadcastLogMeasuredOutcome } from '@/services/socket'
 import type { LogEntry } from '@/stores/experimentStore'
 import { useExperimentStore } from '@/stores/experimentStore'
 import { useTokenStore } from '@/stores/tokenStore'
+import { useCsvMappingStore } from '@/stores/csvMappingStore'
 
 import StatCard from '@/components/StatCard/index.vue'
 import PageHeader from '@/components/PageHeader/index.vue'
@@ -158,17 +171,20 @@ import { formatFreqKHz, formatFieldVcm, formatRange } from '@/utils/format'
 import { parseMeasuredCsv } from '@/utils/experimentImport'
 
 import { LOG_EVENT, NULL_DISPLAY } from '@/constants/strings'
+import { ICON } from '@/constants/icons'
 import { THRESHOLDS } from '@/constants/physics'
 
 import ReportsLogEmpty from './ReportsLogEmpty.vue'
 import ReportsMethodsBar from './ReportsMethodsBar.vue'
 import ReportsLogTable from './ReportsLogTable.vue'
 import ReportsLogLegend from './ReportsLogLegend.vue'
+import ReportsCalibrationTrend from './ReportsCalibrationTrend.vue'
+import CsvMappingModal from './CsvMappingModal.vue'
 
 export default defineComponent({
   name: 'ReportsView',
 
-  components: { StatCard, PageHeader, ReportsLogEmpty, ReportsMethodsBar, ReportsLogTable, ReportsLogLegend },
+  components: { StatCard, PageHeader, ReportsLogEmpty, ReportsMethodsBar, ReportsLogTable, ReportsLogLegend, ReportsCalibrationTrend, CsvMappingModal },
 
   setup() {
     const store      = useExperimentStore()
@@ -253,10 +269,14 @@ export default defineComponent({
     const importSummary = ref<{ matched: number; ignored: number } | null>(null)
     const importError   = ref<string | null>(null)
     const recentlyImportedIds = ref<number[]>([])
+    const csvMappingStore = useCsvMappingStore()
+    const csvMappingOpen  = ref(false)
 
     return {
       store,
       tokenStore,
+      csvMappingStore,
+      csvMappingOpen,
       selectedEntry,
       isExporting,
       isImporting,
@@ -273,6 +293,8 @@ export default defineComponent({
       sessionNotes: computed(() => store.sessionNotes),
       statCards,
       selClass,
+      calibrationResiduals: computed(() => store.measuredResiduals),
+      hasMeasuredResiduals: computed(() => store.measuredResiduals.some(r => r.targetResidualPct !== null)),
     }
   },
 
@@ -287,6 +309,7 @@ export default defineComponent({
   },
 
   computed: {
+    ICON() { return ICON },
     importBannerVariantClass(): Record<string, boolean> {
       const s = this.importSummary
       if (!s) return {}
@@ -344,7 +367,7 @@ export default defineComponent({
 
       try {
         const text   = await file.text()
-        const report = parseMeasuredCsv(text)
+        const report = parseMeasuredCsv(text, this.csvMappingStore.mapping)
         const knownIds = new Set(this.store.entries.map((e) => e.id))
         const matchedIds: number[] = []
         let ignored = report.ignoredRows.length
@@ -558,8 +581,8 @@ export default defineComponent({
 
   &__log-card-hdr {
     @include flex-between(1rem);
-    align-items: flex-start;
-    padding: 1rem 1.5rem;
+    align-items: center;
+    padding: 0.9rem 1.5rem;
     border-bottom: 1px solid var(--color-border);
     flex-wrap: wrap;
 
@@ -571,31 +594,62 @@ export default defineComponent({
 
   &__log-card-hdr-title {
     @include flex-row(0.75rem);
+    align-items: center;
     flex-wrap: wrap;
   }
 
   &__log-card-actions {
-    @include flex-row(0.75rem);
-    align-items: flex-start;
+    @include flex-row(0.6rem);
+    align-items: center;
     flex-shrink: 0;
     flex-wrap: wrap;
+
+    @media (max-width: 700px) {
+      width: 100%;
+
+      .reports__btn { flex: 1 1 auto; }
+    }
   }
 
-  &__log-card-action {
-    @include flex-col(0.3rem);
+  /* ── Import cluster (button + customise-columns attached) ─────────────────── */
+  &__import-group {
+    @include flex-row(0);
     align-items: stretch;
+    border-radius: var(--radius);
   }
 
-  &__btn-caption {
-    @include mono-upper(var(--fs-xxs), 0.06em);
-    color: var(--color-text-muted);
-    opacity: var(--op-dim);
-    text-align: center;
-    line-height: 1.3;
-    width: 0;             // do not let caption drive column width
-    min-width: 100%;      // but render at full button width and wrap
-    white-space: normal;
-    overflow-wrap: break-word;
+  &__btn--import-grouped {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    border-right: 0;
+  }
+
+  &__btn-mapping {
+    @include mono-upper(var(--fs-xxs), 0.08em);
+    @include flex-row(0.3rem);
+    align-items: center;
+    padding: 0 0.7rem;
+    background: color-mix(in srgb, var(--color-amber) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-amber) 35%, transparent);
+    border-left: 1px dashed color-mix(in srgb, var(--color-amber) 45%, transparent);
+    border-top-right-radius: var(--radius);
+    border-bottom-right-radius: var(--radius);
+    color: color-mix(in srgb, var(--color-amber) 90%, transparent);
+    cursor: pointer;
+    transition: background var(--tr-fast), border-color var(--tr-fast), color var(--tr-fast);
+
+    &:hover:not(:disabled) {
+      background: color-mix(in srgb, var(--color-amber) 16%, transparent);
+      border-color: var(--color-amber);
+      color: var(--color-amber);
+    }
+
+    &:disabled { opacity: var(--op-muted); cursor: not-allowed; }
+  }
+
+  &__btn-mapping-icon {
+    font-size: var(--fs-sm);
+    line-height: 1;
   }
 
   &__log-title {

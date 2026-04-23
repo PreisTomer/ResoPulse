@@ -5,7 +5,7 @@
 
       <div class="privacy__eyebrow">Legal</div>
       <h1 class="privacy__title">Privacy Policy</h1>
-      <p class="privacy__meta">Last Updated: April 11, 2026 &nbsp;·&nbsp; ResoPulse &nbsp;·&nbsp;
+      <p class="privacy__meta">Last Updated: April 22, 2026 &nbsp;·&nbsp; ResoPulse &nbsp;·&nbsp;
         <a href="https://www.resopulse-virtual-lab.com/" class="privacy__link" target="_blank" rel="noopener">resopulse-virtual-lab.com</a>
       </p>
 
@@ -46,11 +46,25 @@
             (target lysis %, healthy lysis %, viability %, permeabilized % such as PI+ or
             YO-PRO+ or SYTOX+, transfection / cargo+ %, viability assay method, assay
             timepoint in hours post-pulse, post-run temperature, actual field measured on
-            your pulse monitor, observed time-to-lysis, and free-form notes), we store those
+            your pulse monitor, observed time-to-lysis, an optional qPCR readout (target
+            transcript label and fold-change 2^(-ΔΔCt)), and free-form notes), we store those
             values alongside the corresponding simulated entry so the app can display the
             predicted-vs-measured delta and use it for closed-loop model calibration. Only
             scientific measurements you type in are stored. Do not paste personal or clinical
-            patient data into the notes field.
+            patient data into the notes field or the qPCR transcript label.
+          </dd>
+          <dt>Custom cell preset metadata (optional)</dt>
+          <dd>
+            When you create or edit a custom cell preset, we store the biophysical parameters
+            you enter (radius, membrane thickness, dielectric constant, intracellular
+            conductivity, threshold voltage, and optional nuclear or resonance parameters)
+            together with any provenance metadata you provide: the measurement confidence tier
+            (literature / measured / estimated), an optional intracellular conductivity (σ_i)
+            uncertainty percentage, the measurement technique used (e.g. electrorotation,
+            impedance), and a free-form citation or source note. This metadata is kept with
+            your preset so the Cell Card and Data Sets view can display the provenance of each
+            parameter. It is not personal data; do not paste personal or clinical identifiers
+            into the citation note.
           </dd>
           <dt>Local storage</dt>
           <dd>
@@ -59,6 +73,7 @@
             <br><code>br-experiment</code> — persists your current session log (entries, session name, sample description, notes) so the log survives a page reload.
             <br><code>br-theme</code> — stores your UI theme preference (dark or OLED).
             <br><code>resopulse_user_presets_v1</code> — stores any custom cell presets you have saved.
+            <br><code>rp_csv_column_mapping_v1</code> — remembers the CSV header names you have mapped to ResoPulse outcome fields, so your plate reader or flow cytometer exports import cleanly each time.
             None of these keys contain authentication credentials or health information.
           </dd>
           <dt>Technical data</dt>

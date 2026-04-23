@@ -85,11 +85,13 @@ app = FastAPI(
 async def health() -> dict:
     bundle = get_model_bundle()
     return {
-        "status": "ok",
-        "service": AI_SERVICE_NAME,
-        "modelReady": bundle is not None,
-        "trainingSamples": bundle.n_samples if bundle else 0,
+        "status":            "ok",
+        "service":           AI_SERVICE_NAME,
+        "modelReady":        bundle is not None,
+        "trainingSamples":   bundle.n_samples if bundle else 0,
         "isPhysicsBaseline": bundle is None,
+        "modelVersion":      getattr(bundle, "model_version", None) if bundle else None,
+        "holdoutMaeOverall": getattr(bundle, "holdout_mae_overall", None) if bundle else None,
     }
 
 
@@ -144,15 +146,26 @@ async def calibrate(request: CalibrationRequest) -> CalibrationResponse:
 @app.post("/ai/retrain")
 async def retrain() -> dict:
     """
-    Retrain the XGBoost model from the current SQLite outcomes database.
-    Replaces the in-memory model bundle on success.
+    Retrain the XGBoost model from the current outcomes store.
+    Stages the new bundle, compares holdout MAE against the previous best, and
+    only reloads the in-memory model when promotion succeeds. Returns the full
+    training report so the Node API can persist metrics and broadcast the
+    new model version to live clients.
     """
     try:
-        n = retrain_model()
-        if n > 0:
+        report = retrain_model()
+        if report is None:
+            return {
+                "status":       "ok",
+                "samplesUsed":  0,
+                "modelReady":   get_model_bundle() is not None,
+                "promoted":     False,
+                "modelVersion": None,
+            }
+        if report.promoted:
             set_model_bundle(load_model())
-            logger.info("[AI Service] Model retrained on %d samples", n)
-        return {"status": "ok", "samplesUsed": n, "modelReady": get_model_bundle() is not None}
+            logger.info("[AI Service] Active model updated to %s", report.modelVersion)
+        return {"status": "ok", **report.to_dict()}
     except Exception as exc:
         logger.error("[AI Service] Retraining failed: %s", exc, exc_info=True)
         raise HTTPException(status_code=500, detail="Retraining failed — check service logs")

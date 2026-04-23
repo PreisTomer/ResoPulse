@@ -30,6 +30,7 @@ export const COST_MAP = {
   HEATMAP_LYSIS:      8,   // therapeutic heatmap / population lysis fraction
   AI_OPTIMIZE:        5,   // AI optimizer request
   AI_RETRAIN:         3,   // apply suggestion / trigger retrain — lenient op (never blocked client-side)
+  AI_SUGGEST:         2,   // active-learning next-experiment batch (top-3 exploration picks)
   LOG_OUTCOME:        1,   // log a rated experiment outcome
   SAVE_EXPERIMENT:    2,   // persist experiment snapshot
 } as const

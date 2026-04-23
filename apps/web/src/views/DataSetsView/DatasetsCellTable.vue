@@ -4,9 +4,35 @@
     <div class="datasets__card-hdr">
       <h2 class="datasets__card-title">{{ $t('datasets.cellLib.sectionTitle') }}</h2>
       <span class="datasets__card-tag">{{ $t('datasets.cellLib.sectionTag', { n: presets.length }) }}</span>
-      <button class="datasets__add-cell-btn" @click="$emit('add')">
-        {{ $t('datasets.cellLib.addCellBtn') }}
-      </button>
+      <div class="datasets__header-actions">
+        <button
+          v-if="hasCustomPresets"
+          class="datasets__export-btn"
+          :title="$t('datasets.cellLib.exportJsonTip')"
+          @click="$emit('exportJson')"
+        >{{ $t('datasets.cellLib.exportJsonBtn') }}</button>
+        <button
+          v-if="hasCustomPresets"
+          class="datasets__export-btn"
+          :title="$t('datasets.cellLib.exportCsvTip')"
+          @click="$emit('exportCsv')"
+        >{{ $t('datasets.cellLib.exportCsvBtn') }}</button>
+        <button
+          class="datasets__export-btn"
+          :title="$t('datasets.cellLib.importJsonTip')"
+          @click="triggerImport"
+        >{{ $t('datasets.cellLib.importJsonBtn') }}</button>
+        <input
+          ref="importInput"
+          type="file"
+          accept="application/json,.json"
+          class="datasets__hidden-input"
+          @change="onImportFileSelected"
+        />
+        <button class="datasets__add-cell-btn" @click="$emit('add')">
+          {{ $t('datasets.cellLib.addCellBtn') }}
+        </button>
+      </div>
     </div>
     <div class="datasets__table-wrap">
       <table class="datasets__table">
@@ -121,15 +147,27 @@ export default defineComponent({
     },
   },
 
-  emits: ['add', 'edit', 'delete'],
+  emits: ['add', 'edit', 'delete', 'exportJson', 'exportCsv', 'importJson'],
 
   computed: {
     ICON() { return ICON },
     nullDisplay(): string { return NULL_DISPLAY },
     cellGroupReference(): string { return CELL_GROUP.REFERENCE },
+    hasCustomPresets(): boolean { return this.presets.some(p => p.isCustom) },
   },
 
   methods: {
+    triggerImport(): void {
+      (this.$refs.importInput as HTMLInputElement | undefined)?.click()
+    },
+
+    onImportFileSelected(event: Event): void {
+      const input = event.target as HTMLInputElement
+      const file  = input.files?.[0]
+      input.value = ''
+      if (file) this.$emit('importJson', file)
+    },
+
     capitalize(s: string): string {
       return s.charAt(0).toUpperCase() + s.slice(1)
     },
@@ -164,8 +202,13 @@ export default defineComponent({
 @include ds.datasets-utils();
 
 .datasets {
-  &__add-cell-btn {
+  &__header-actions {
+    @include flex-row(0.4rem);
     margin-left: auto;
+    flex-shrink: 0;
+  }
+
+  &__add-cell-btn {
     padding:        0.35rem 0.85rem;
     background:     color-mix(in srgb, var(--color-primary) 10%, transparent);
     border:         1px dashed color-mix(in srgb, var(--color-primary) 45%, transparent);
@@ -182,6 +225,30 @@ export default defineComponent({
     &:hover {
       background:   color-mix(in srgb, var(--color-primary) 18%, transparent);
       border-color: color-mix(in srgb, var(--color-primary) 70%, transparent);
+    }
+  }
+
+  &__hidden-input {
+    display: none;
+  }
+
+  &__export-btn {
+    padding:        0.35rem 0.7rem;
+    background:     transparent;
+    border:         1px solid color-mix(in srgb, var(--color-text-muted) 35%, transparent);
+    border-radius:  5px;
+    color:          var(--color-text-muted);
+    font-family:    var(--font-mono);
+    font-size:      var(--fs-xs);
+    font-weight:    600;
+    letter-spacing: 0.04em;
+    cursor:         pointer;
+    flex-shrink:    0;
+    transition:     color var(--tr-fast), border-color var(--tr-fast);
+
+    &:hover {
+      color:        var(--color-primary);
+      border-color: color-mix(in srgb, var(--color-primary) 55%, transparent);
     }
   }
 

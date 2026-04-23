@@ -13,6 +13,7 @@ import type {
   AiOptimizeResult,
   MeasuredOutcome,
   MeasuredOutcomeEntry,
+  TrainingCompletePayload,
 } from '@resopulse/shared-types'
 
 import { useCellStore } from '@/stores/cellStore'
@@ -48,6 +49,7 @@ const SOCKET_EVENTS = {
   NEW_MEASURED_OUTCOME: 'newMeasuredOutcome',
   AI_OPTIMIZE_REQUEST:  'aiOptimizeRequest',
   AI_OPTIMIZE_RESULT:   'aiOptimizeResult',
+  TRAINING_COMPLETE:    'trainingComplete',
   CONNECT:              'connect',
   DISCONNECT:           'disconnect',
   CONNECT_ERROR:        'connect_error',
@@ -139,6 +141,12 @@ export async function connectSocket(): Promise<void> {
     useAiStore().receiveResult(result)
   })
 
+  // Global retrain completed on the Python service — broadcast from the API after /ai/retrain succeeds.
+  // Updates aiStore.modelTrainingSamples so AI-tab UI refreshes without waiting for the 30s health poll.
+  socket.on(SOCKET_EVENTS.TRAINING_COMPLETE, (payload: TrainingCompletePayload) => {
+    useAiStore().receiveTrainingComplete(payload)
+  })
+
   // Peer attached measured outcomes to a prior entry — apply locally without rebroadcast.
   socket.on(SOCKET_EVENTS.NEW_MEASURED_OUTCOME, (entry: MeasuredOutcomeEntry) => {
     useExperimentStore().receiveMeasuredOutcome(entry.sessionName, entry.timestamp, entry.measured)
@@ -225,7 +233,7 @@ export function broadcastLogMeasuredOutcome(sessionName: string, timestamp: stri
 }
 
 // AI Optimizer wire types live in @resopulse/shared-types — re-exported for callers.
-export type { AiParamSuggestion, AiOptimizeResult }
+export type { AiParamSuggestion, AiOptimizeResult, TrainingCompletePayload }
 
 type AiResultCallback = (result: AiOptimizeResult) => void
 

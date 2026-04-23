@@ -146,6 +146,8 @@ export async function attachMeasuredOutcome(entry: MeasuredOutcomeEntry): Promis
         measuredTempC:            measured.tempC,
         measuredFieldVcm:         measured.actualFieldVcm,
         measuredLysisDelayMs:     measured.observedLysisDelayMs,
+        measuredQpcrFoldChange:   measured.qpcrFoldChange,
+        measuredQpcrTarget:       measured.qpcrTarget,
         measuredNotes:            measured.notes,
       },
     })

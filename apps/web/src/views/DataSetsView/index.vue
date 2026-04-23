@@ -28,6 +28,9 @@
         @add="openCreateModal"
         @edit="openEditModal"
         @delete="deletePreset"
+        @export-json="exportJson"
+        @export-csv="exportCsv"
+        @import-json="importJsonFile"
       />
       <DatasetsMediaTable :media-rows="mediaRows" />
       <DatasetsWindowCard :data="windowCardData" />
@@ -62,6 +65,8 @@ import PageHeader from '@/components/PageHeader/index.vue'
 import CreateCellModal from '@/components/CreateCellModal/index.vue'
 
 import { membraneCm, computeFc, computeTau, computeNuclearTau, computeDepCrossoverKHz, computeDepSecondCrossoverKHz } from '@/utils/physics'
+import { downloadUserPresetsJson, downloadUserPresetsCsv } from '@/utils/userPresetExport'
+import { parseUserPresetsJson } from '@/utils/userPresetImport'
 
 import { useUserPresetsStore } from '@/stores/userPresetsStore'
 import type { UserCellPreset } from '@/stores/userPresetsStore'
@@ -313,6 +318,43 @@ export default defineComponent({
     async deletePreset(preset: UserCellPreset) {
       if (!window.confirm(this.$t('userPresets.deleteConfirm'))) return
       await this.userPresetsStore.remove(preset.id)
+    },
+
+    exportJson() {
+      downloadUserPresetsJson(this.userPresetsStore.presets)
+    },
+
+    exportCsv() {
+      downloadUserPresetsCsv(this.userPresetsStore.presets)
+    },
+
+    async importJsonFile(file: File): Promise<void> {
+      let text: string
+      try {
+        text = await file.text()
+      } catch {
+        window.alert(this.$t('datasets.cellLib.importFail'))
+        return
+      }
+      const report = parseUserPresetsJson(text)
+      if (!report.ok && report.accepted.length === 0) {
+        const reason = report.error ?? report.rejected[0]?.reason ?? this.$t('datasets.cellLib.importFail')
+        window.alert(this.$t('datasets.cellLib.importNone', { reason }))
+        return
+      }
+
+      for (const input of report.accepted) {
+        await this.userPresetsStore.add(input)
+      }
+
+      const accepted = report.accepted.length
+      const rejected = report.rejected.length
+      if (rejected > 0) {
+        const reason = report.rejected[0]?.reason ?? ''
+        window.alert(this.$t('datasets.cellLib.importSuccessPartial', { accepted, rejected, reason }))
+      } else {
+        window.alert(this.$t('datasets.cellLib.importSuccess', { accepted }))
+      }
     },
   },
 })

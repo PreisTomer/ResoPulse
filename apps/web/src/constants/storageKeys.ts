@@ -9,4 +9,6 @@ export const STORAGE_KEY = {
   THEME:              'br-theme',
   USER_PRESETS:       'resopulse_user_presets_v2',
   GUEST_ID:           'rp_guest_id',
+  SEEN_RETRAIN_MODAL: 'rp_seen_retrain_modal',
+  CSV_COLUMN_MAPPING: 'rp_csv_column_mapping_v1',
 } as const
