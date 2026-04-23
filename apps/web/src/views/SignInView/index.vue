@@ -18,19 +18,16 @@
 
         <div class="auth-page__brand-identity">
           <h1 class="auth-page__brand-headline">
-            Precision biophysics,<br>
-            <span class="auth-page__brand-highlight">in silico.</span>
+            {{ $t('signIn.headlineLine1') }}<br>
+            <span class="auth-page__brand-highlight">{{ $t('signIn.headlineLine2') }}</span>
           </h1>
-          <p class="auth-page__brand-sub">
-            Model electroporation and acoustic resonance on individual cells.
-            Design your protocol before touching the bench.
-          </p>
+          <p class="auth-page__brand-sub">{{ $t('signIn.brandSub') }}</p>
         </div>
 
         <ul class="auth-page__features" aria-label="Platform features">
-          <li v-for="(feat, i) in features" :key="feat.label" class="auth-page__feature" v-tip="$t(feat.tipKey)">
+          <li v-for="(feat, i) in features" :key="feat.labelKey" class="auth-page__feature" v-tip="$t(feat.tipKey)">
             <span class="auth-page__feature-icon">{{ feat.icon }}</span>
-            <span class="auth-page__feature-label">{{ feat.label }}</span>
+            <span class="auth-page__feature-label">{{ $t(feat.labelKey) }}</span>
             <span class="auth-page__feature-metric">
               {{ displayMetrics[i] }}<span v-if="feat.unit" class="auth-page__feature-unit"> {{ feat.unit }}</span>
             </span>
@@ -141,11 +138,11 @@ interface Particle { x: number; y: number; vx: number; vy: number }
 interface HexCell  { cx: number; cy: number; phase: 'idle' | 'opening' | 'fading'; progress: number; idleTick: number; idleTarget: number }
 
 const FEATURES = [
-  { icon: ICON.WAVE,        label: 'Schwan EP model',      metric: '1.5',  suffix: ' V',   unit: 'Vm peak',  tipKey: 'signIn.tipSchwan'     },
-  { icon: ICON.FLASK,       label: 'Acoustic resonance',   metric: '2.4',  suffix: ' MHz', unit: 'fc',       tipKey: 'signIn.tipResonance'  },
-  { icon: ICON.AI,          label: 'AI optimizer',         metric: 'XGB',  suffix: '',     unit: 'XGBoost',  tipKey: 'signIn.tipAI'         },
-  { icon: ICON.SELECTIVITY, label: 'Selectivity & DEP',    metric: '3.2',  suffix: '×',    unit: 'TI ratio', tipKey: 'signIn.tipSelectivity' },
-  { icon: ICON.PLUG,        label: 'Multi-lab workspaces', metric: 'LIVE', suffix: '',     unit: '',         tipKey: 'signIn.tipWorkspaces' },
+  { icon: ICON.RELOAD,      labelKey: 'signIn.featClosedLoop',  metric: 'LIVE', suffix: '',     unit: 'σᵢ + residuals', tipKey: 'signIn.tipClosedLoop'  },
+  { icon: ICON.WAVE,        labelKey: 'signIn.featSchwan',      metric: '1.5',  suffix: ' V',   unit: 'Vm peak',        tipKey: 'signIn.tipSchwan'      },
+  { icon: ICON.FLASK,       labelKey: 'signIn.featCalibration', metric: '×1.0', suffix: '',     unit: 'per cell',       tipKey: 'signIn.tipCalibration' },
+  { icon: ICON.RETICLE,     labelKey: 'signIn.featActiveLearn', metric: 'n+1',  suffix: '',     unit: 'next condition', tipKey: 'signIn.tipActiveLearn' },
+  { icon: ICON.AI,          labelKey: 'signIn.featAiOptimizer', metric: 'XGB',  suffix: '',     unit: 'XGBoost',        tipKey: 'signIn.tipAiOptimizer' },
 ]
 
 const CLERK_APPEARANCE = {

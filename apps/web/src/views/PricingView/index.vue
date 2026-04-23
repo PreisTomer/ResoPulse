@@ -56,6 +56,23 @@
     <!-- ── Value props ───────────────────────────────────────────────────────── -->
     <section class="pricing__values">
       <div class="pricing__values-grid">
+        <div class="pricing__value-card pricing__value-card--cyan pricing__value-card--lead">
+          <div class="pricing__value-icon" aria-hidden="true">
+            <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="20" cy="20" r="14" stroke="currentColor" stroke-width="1.2" opacity="0.25"/>
+              <path d="M20 6 A14 14 0 0 1 33 22" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+              <path d="M33 22 L35 18 L30 20" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="20" cy="20" r="3" fill="currentColor"/>
+              <circle cx="11" cy="11" r="1.5" fill="currentColor" opacity="0.6"/>
+              <circle cx="29" cy="12" r="1.5" fill="currentColor" opacity="0.6"/>
+              <circle cx="12" cy="29" r="1.5" fill="currentColor" opacity="0.6"/>
+              <circle cx="30" cy="30" r="1.5" fill="currentColor" opacity="0.6"/>
+            </svg>
+          </div>
+          <h3 class="pricing__value-title">{{ $t('pricing.valueLoopTitle') }}</h3>
+          <p class="pricing__value-desc">{{ $t('pricing.valueLoopDesc') }}</p>
+        </div>
+
         <div class="pricing__value-card pricing__value-card--cyan">
           <div class="pricing__value-icon" aria-hidden="true">
             <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -624,12 +641,27 @@ export default defineComponent({
     @media (max-width: 768px) { padding: 2.5rem 1rem; }
   }
 
+  &__value-card--lead {
+    position: relative;
+
+    &::before {
+      content: '';
+      position: absolute;
+      inset: -1px;
+      border-radius: inherit;
+      pointer-events: none;
+      box-shadow: 0 0 24px color-mix(in srgb, var(--color-primary) 30%, transparent);
+      opacity: 0.7;
+    }
+  }
+
   &__values-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 1.25rem;
 
-    @media (max-width: 900px) { grid-template-columns: 1fr; gap: 1rem; }
+    @media (max-width: 1200px) { grid-template-columns: repeat(2, 1fr); }
+    @media (max-width: 640px)  { grid-template-columns: 1fr; gap: 1rem; }
   }
 
   &__value-card {

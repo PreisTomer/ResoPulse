@@ -10,6 +10,7 @@ interface UiState {
   replayProtocolOpen: boolean         // ProtocolSection accordion forced open during replay
   protocolGuideOpen: boolean          // protocol step guide panel visible in experiment lab
   protocolGuideChecked: boolean[]     // per-step checkbox state (12 steps)
+  aiPanelOpen: boolean                // AI optimizer side panel visibility (source of truth for forceOpen)
 }
 
 export const useUiStore = defineStore('ui', {
@@ -19,6 +20,7 @@ export const useUiStore = defineStore('ui', {
     replayProtocolOpen: false,
     protocolGuideOpen: false,
     protocolGuideChecked: Array(12).fill(false),
+    aiPanelOpen: false,
   }),
 
   actions: {
@@ -47,6 +49,10 @@ export const useUiStore = defineStore('ui', {
 
     toggleProtocolGuideStep(index: number) {
       this.protocolGuideChecked[index] = !this.protocolGuideChecked[index]
+    },
+
+    setAiPanelOpen(val: boolean) {
+      this.aiPanelOpen = val
     },
 
   },

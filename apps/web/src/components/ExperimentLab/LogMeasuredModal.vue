@@ -328,26 +328,29 @@ export default defineComponent({
   },
 
   watch: {
-    isOpen(open: boolean) {
-      if (!open) return
-      const m = this.entry.measured
-      this.form = m
-        ? {
-          targetLysisPct:       m.targetLysisPct       ?? null,
-          healthyLysisPct:      m.healthyLysisPct      ?? null,
-          viabilityPct:         m.viabilityPct         ?? null,
-          permeabilizedPct:     m.permeabilizedPct     ?? null,
-          transfectionPct:      m.transfectionPct      ?? null,
-          viabilityAssay:       m.viabilityAssay       ?? null,
-          assayTimepointH:      m.assayTimepointH      ?? null,
-          qpcrTarget:           m.qpcrTarget           ?? '',
-          qpcrFoldChange:       m.qpcrFoldChange       ?? null,
-          tempC:                m.tempC                ?? null,
-          actualFieldVcm:       m.actualFieldVcm       ?? null,
-          observedLysisDelayMs: m.observedLysisDelayMs ?? null,
-          notes:                m.notes                ?? '',
-        }
-        : emptyForm()
+    isOpen: {
+      immediate: true,
+      handler(open: boolean) {
+        if (!open) return
+        const m = this.entry.measured
+        this.form = m
+          ? {
+            targetLysisPct:       m.targetLysisPct       ?? null,
+            healthyLysisPct:      m.healthyLysisPct      ?? null,
+            viabilityPct:         m.viabilityPct         ?? null,
+            permeabilizedPct:     m.permeabilizedPct     ?? null,
+            transfectionPct:      m.transfectionPct      ?? null,
+            viabilityAssay:       m.viabilityAssay       ?? null,
+            assayTimepointH:      m.assayTimepointH      ?? null,
+            qpcrTarget:           m.qpcrTarget           ?? '',
+            qpcrFoldChange:       m.qpcrFoldChange       ?? null,
+            tempC:                m.tempC                ?? null,
+            actualFieldVcm:       m.actualFieldVcm       ?? null,
+            observedLysisDelayMs: m.observedLysisDelayMs ?? null,
+            notes:                m.notes                ?? '',
+          }
+          : emptyForm()
+      },
     },
   },
 

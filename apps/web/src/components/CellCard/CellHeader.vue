@@ -3,7 +3,6 @@
   <div class="cell-card__header">
     <span :class="['cell-card__icon', `cell-card__icon--${type}`]">{{ ICON.CELL }}</span>
     <div class="cell-card__name">
-      <div class="cell-card__label">{{ label }}</div>
       <div class="cell-card__sublabel-row">
         <div
           class="cell-card__sublabel"
@@ -16,6 +15,12 @@
           :class="`cell-card__provenance-chip--${provenanceChipVariant}`"
           v-tip="provenanceTip"
         >{{ provenanceChip }}</span>
+        <span
+          v-if="sigmaCalibration"
+          class="cell-card__sigma-chip"
+          :class="`cell-card__sigma-chip--${sigmaCalibration.state}`"
+          v-tip="sigmaCalibration.tip"
+        >{{ sigmaCalibration.label }}</span>
       </div>
       <div v-if="hasCellData" class="cell-card__meta">
         <span class="cell-card__meta-item" v-tip="tipVm">{{ vmDisplay }}</span>
@@ -53,7 +58,6 @@ import type { CellState } from '@/types/cell'
 export default defineComponent({
   props: {
     type:               { type: String as PropType<'healthy' | 'target'>, required: true },
-    label:              { type: String, required: true },
     sublabel:           { type: String, required: true },
     sublabelTip:        { type: String, default: '' },
     vmDisplay:          { type: String, required: true },
@@ -72,6 +76,7 @@ export default defineComponent({
     provenanceChip:        { type: String, default: '' },
     provenanceChipVariant: { type: String, default: 'literature' },
     provenanceTip:         { type: String, default: '' },
+    sigmaCalibration:      { type: Object as PropType<{ label: string; tip: string; state: 'calibrated' | 'clamped' | 'collecting' | 'unknown' } | null>, default: null },
   },
 
   computed: {
@@ -111,13 +116,6 @@ export default defineComponent({
     @include flex-col(0.15rem);
   }
 
-  &__label {
-    font-weight: 600;
-    font-size: var(--fs-2xl);
-    color: var(--color-text-heading);
-    line-height: 1.25;
-  }
-
   &__sublabel-row {
     @include flex-row(0.4rem);
     flex-wrap: wrap;
@@ -143,6 +141,19 @@ export default defineComponent({
     &--literature { @include color-variant(primary, 35%, 10%); }
     &--measured   { @include color-variant(accent,  35%, 10%); }
     &--estimated  { @include color-variant(amber,   35%, 10%); }
+  }
+
+  &__sigma-chip {
+    @include badge-pill(0.1rem 0.4rem, 3px);
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.02em;
+    text-transform: none;
+    cursor: help;
+
+    &--calibrated { @include color-variant(lime,   40%, 10%); }
+    &--clamped    { @include color-variant(amber,  40%, 10%); }
+    &--collecting { @include color-variant(primary, 30%, 6%); color: var(--color-text-muted); }
   }
 
   &__meta {

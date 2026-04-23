@@ -47,7 +47,7 @@
         <p class="terms__p">Individual academic researchers using the Service solely for non-commercial scientific research, peer-reviewed publication, or teaching are not subject to the prohibitions below, provided they are not acting on behalf of or for the financial benefit of a commercial entity.</p>
         <p class="terms__p">All other users strictly agree <strong>NOT</strong> to:</p>
         <ul class="terms__ul">
-          <li>Attempt to decompile, disassemble, or reverse engineer any part of the virtual biophysics engine, its algorithms, or its physics modules.</li>
+          <li>Attempt to decompile, disassemble, or reverse engineer any part of the Closed-Loop Electroporation Digital Twin, its algorithms, or its physics modules.</li>
           <li>Use the Cell Library parameters, Experiment Lab logic, or any simulation outputs to design, develop, train, or commercialise a competing computational biophysics platform, electroporation simulation tool, or cell-engineering software product.</li>
           <li>Use the ResoPulse Protocol Documentation, in whole or in part, as a design specification, technical blueprint, or competitive analysis basis for developing commercial electroporation or cell-transfection instruments, regardless of whether those instruments are marketed to overlapping customer segments.</li>
           <li>Train, fine-tune, or prompt any machine-learning model, large language model, generative AI system, or automated analysis pipeline using the platform's protocol text, cell library entries, simulation outputs, or biophysical model implementations for any commercial or competitive purpose.</li>
@@ -97,7 +97,7 @@
           reports, we ask (but do not require) that you acknowledge the tool. A suggested attribution:
         </p>
         <blockquote class="terms__quote">
-          Simulation performed using ResoPulse Virtual Biophysics Engine (resopulse-virtual-lab.com, 2026). Biophysical
+          Simulation performed using ResoPulse Closed-Loop Electroporation Digital Twin (resopulse-virtual-lab.com, 2026). Biophysical
           models based on Kotnik &amp; Miklavcic (2000), Weaver &amp; Chizmadzhev (1996), and Pennes (1948).
         </blockquote>
       </section>

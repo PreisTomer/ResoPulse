@@ -34,6 +34,7 @@ export const EMIT = {
   LOAD_HEALTHY_PRESET:  'load-healthy-preset',
   LOAD_TARGET_PRESET:   'load-target-preset',
   SCROLL_TO_CELLS:      'scroll-to-cells',
+  PICKER_OPENED:        'picker-opened',
 
   // ── Reports ────────────────────────────────────────────────────────────────
   DOWNLOAD: 'download',

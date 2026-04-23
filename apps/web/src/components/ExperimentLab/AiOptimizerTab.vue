@@ -8,10 +8,13 @@
     :scale="1"
     :z-index="149"
     :default-collapsed="true"
-    :intro-animation="true"
+    :intro-animation="false"
+    :force-open="uiStore.aiPanelOpen"
+    :hide-tab="true"
     tab-align="flex-start"
     :expand-tip="$t('ai.tabExpandTip')"
     :collapse-tip="$t('ai.tabCollapseTip')"
+    @toggle="onPanelToggle"
   >
     <!-- ── Tab icon: neural-network SVG + "AI" label ─────────────── -->
     <template #tab-icon="{ collapsed }">
@@ -52,8 +55,17 @@
 
         <!-- Panel header -->
         <div class="ai-tab__header">
-          <span class="ai-tab__title">{{ $t('ai.panelTitle') }}</span>
-          <span class="ai-tab__subtitle">{{ panelSubtitle }}</span>
+          <div class="ai-tab__header-text">
+            <span class="ai-tab__title">{{ $t('ai.panelTitle') }}</span>
+            <span class="ai-tab__subtitle">{{ panelSubtitle }}</span>
+          </div>
+          <button
+            type="button"
+            class="ai-tab__close"
+            v-tip="$t('ai.panelCloseTip')"
+            :aria-label="$t('ai.panelCloseTip')"
+            @click="closePanel"
+          >{{ ICON.CLOSE }}</button>
         </div>
 
         <!-- Consent gate -->
@@ -284,6 +296,7 @@ import { useCellStore } from '@/stores/cellStore'
 import { useCellCalibrationStore } from '@/stores/cellCalibrationStore'
 import { useExperimentStore } from '@/stores/experimentStore'
 import { useTokenStore } from '@/stores/tokenStore'
+import { useUiStore } from '@/stores/uiStore'
 
 import { requestAiOptimization, broadcastStateSync } from '@/services/socket'
 
@@ -345,7 +358,7 @@ export default defineComponent({
     SIGMA_MIN() { return THRESHOLDS.SIGMA_CALIB_MULT_MIN.toFixed(1) },
     SIGMA_MAX() { return THRESHOLDS.SIGMA_CALIB_MULT_MAX.toFixed(1) },
     SIGMA_MIN_SAMPLES() { return THRESHOLDS.SIGMA_CALIB_MIN_SAMPLES },
-    ...mapStores(useAiStore, useAuthStore, useCellStore, useCellCalibrationStore, useExperimentStore, useTokenStore),
+    ...mapStores(useAiStore, useAuthStore, useCellStore, useCellCalibrationStore, useExperimentStore, useTokenStore, useUiStore),
 
     healthyCalibStatus(): CalibrationStatus {
       return this.cellCalibrationStore.statusFor(this.cellStore.healthy.id)
@@ -417,6 +430,14 @@ export default defineComponent({
   },
 
   methods: {
+    onPanelToggle(open: boolean) {
+      this.uiStore.setAiPanelOpen(open)
+    },
+
+    closePanel() {
+      this.uiStore.setAiPanelOpen(false)
+    },
+
     async runOptimize() {
       const canProceed = await this.tokenStore.consumeOperation('AI_OPTIMIZE')
       if (!canProceed) {
@@ -642,9 +663,38 @@ export default defineComponent({
 
   // ── Header ─────────────────────────────────────────────────────
   &__header {
-    @include flex-col(0.2rem);
+    @include flex-between(0.6rem);
+    align-items: flex-start;
     padding-bottom: 0.6rem;
     border-bottom: 1px solid var(--color-border);
+  }
+
+  &__header-text {
+    @include flex-col(0.2rem);
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  &__close {
+    @include inline-flex-center();
+    width: 1.6rem;
+    height: 1.6rem;
+    padding: 0;
+    border-radius: 50%;
+    border: 1px solid var(--color-border);
+    background: transparent;
+    color: var(--color-text-muted);
+    font-size: var(--fs-md);
+    line-height: 1;
+    cursor: pointer;
+    transition: color var(--tr-fast), border-color var(--tr-fast), background var(--tr-fast);
+    flex-shrink: 0;
+
+    &:hover {
+      color: var(--color-danger);
+      border-color: color-mix(in srgb, var(--color-danger) 45%, transparent);
+      background: color-mix(in srgb, var(--color-danger) 10%, transparent);
+    }
   }
 
   &__title {

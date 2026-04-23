@@ -177,8 +177,14 @@ export const useExperimentStore = defineStore('experiment', {
   state: (): ExperimentState => loadState(),
 
   getters: {
-    /** Entries that have a measured-outcome blob attached. */
+    /** Entries with a measured-outcome blob AND not flagged excluded. */
     measuredEntries(state): LogEntry[] {
+      return state.entries.filter(e => e.measured !== undefined && !e.excludedFromCalibration)
+    },
+
+    /** Every entry that has a measured-outcome blob, INCLUDING excluded ones.
+     *  Used by UI that needs to show the excluded-state toggle. */
+    allMeasuredEntries(state): LogEntry[] {
       return state.entries.filter(e => e.measured !== undefined)
     },
 
@@ -335,7 +341,11 @@ export const useExperimentStore = defineStore('experiment', {
       return entry
     },
 
-    logMeasuredOutcome(entryId: number, measured: Omit<MeasuredOutcome, 'measuredAt'> & { measuredAt?: string }): LogEntry | null {
+    logMeasuredOutcome(
+      entryId: number,
+      measured: Omit<MeasuredOutcome, 'measuredAt'> & { measuredAt?: string },
+      mode: 'replace' | 'merge' = 'replace',
+    ): LogEntry | null {
       const entry = this.entries.find(e => e.id === entryId)
       if (!entry) return null
       const clampPct = (v: number | undefined) =>
@@ -344,7 +354,10 @@ export const useExperimentStore = defineStore('experiment', {
         v === undefined || Number.isNaN(v) ? undefined : round(v, digits)
       const nonNeg = (v: number | undefined) =>
         v === undefined || Number.isNaN(v) ? undefined : Math.max(0, v)
-      entry.measured = {
+
+      // Per-field patch computed from the incoming blob — undefined for any
+      // field the caller did not supply.
+      const patch: MeasuredOutcome = {
         measuredAt:           measured.measuredAt ?? new Date().toISOString(),
         targetLysisPct:       clampPct(measured.targetLysisPct),
         healthyLysisPct:      clampPct(measured.healthyLysisPct),
@@ -360,7 +373,57 @@ export const useExperimentStore = defineStore('experiment', {
         observedLysisDelayMs: roundOrU(nonNeg(measured.observedLysisDelayMs), 0),
         notes:                measured.notes?.trim() || undefined,
       }
+
+      if (mode === 'merge' && entry.measured) {
+        // Merge: keep existing field values for any key the caller left undefined,
+        // overwrite for every key the caller explicitly set.
+        const prev = entry.measured
+        entry.measured = {
+          measuredAt:           patch.measuredAt       ?? prev.measuredAt,
+          targetLysisPct:       patch.targetLysisPct       ?? prev.targetLysisPct,
+          healthyLysisPct:      patch.healthyLysisPct      ?? prev.healthyLysisPct,
+          viabilityPct:         patch.viabilityPct         ?? prev.viabilityPct,
+          permeabilizedPct:     patch.permeabilizedPct     ?? prev.permeabilizedPct,
+          transfectionPct:      patch.transfectionPct      ?? prev.transfectionPct,
+          viabilityAssay:       patch.viabilityAssay       ?? prev.viabilityAssay,
+          assayTimepointH:      patch.assayTimepointH      ?? prev.assayTimepointH,
+          qpcrTarget:           patch.qpcrTarget           ?? prev.qpcrTarget,
+          qpcrFoldChange:       patch.qpcrFoldChange       ?? prev.qpcrFoldChange,
+          tempC:                patch.tempC                ?? prev.tempC,
+          actualFieldVcm:       patch.actualFieldVcm       ?? prev.actualFieldVcm,
+          observedLysisDelayMs: patch.observedLysisDelayMs ?? prev.observedLysisDelayMs,
+          notes:                patch.notes                ?? prev.notes,
+        }
+      } else {
+        entry.measured = patch
+      }
       return entry
+    },
+
+    /** Wipes the measured-outcome blob on a single log entry without touching
+     *  the protocol snapshot itself. Used by "Remove measurement" row action. */
+    clearMeasuredOutcome(entryId: number): void {
+      const entry = this.entries.find(e => e.id === entryId)
+      if (!entry) return
+      entry.measured = undefined
+      entry.excludedFromCalibration = undefined
+    },
+
+    /** Wipes the measured-outcome blob on every log entry. Used by the
+     *  "Clear measured data" button on the Reports page. */
+    clearAllMeasuredOutcomes(): void {
+      for (const entry of this.entries) {
+        entry.measured = undefined
+        entry.excludedFromCalibration = undefined
+      }
+    },
+
+    /** Flag / unflag a single entry as excluded from the calibration summary.
+     *  Keeps the measured blob intact so the user can unflag later. */
+    setEntryExcludedFromCalibration(entryId: number, excluded: boolean): void {
+      const entry = this.entries.find(e => e.id === entryId)
+      if (!entry) return
+      entry.excludedFromCalibration = excluded || undefined
     },
 
     // Applies peer measured-outcome patch; match key (sessionName, timestamp) is the only cross-session identifier. No re-broadcast.

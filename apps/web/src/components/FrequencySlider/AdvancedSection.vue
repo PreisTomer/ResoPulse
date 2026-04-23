@@ -48,8 +48,9 @@
           :min="SLIDER_ADV.LYSIS_N_LOG_MIN"
           :max="SLIDER_ADV.LYSIS_N_LOG_MAX"
           :step="SLIDER_ADV.LYSIS_N_LOG_STEP"
-          :value="lysisNLogVal"
+          :value="dragLysisNLog ?? lysisNLogVal"
           @input="onLysisNInput"
+          @change="dragLysisNLog = null"
         />
       </div>
     </div>
@@ -145,7 +146,7 @@ import { NEWTON_COOLING_LAMBDA, PENNES_BLOOD_COEFF, ELECTROSENSITIZATION_FLOOR_N
 
 export default defineComponent({
   data() {
-    return { open: false }
+    return { open: false, dragLysisNLog: null as number | null }
   },
 
   computed: {
@@ -244,6 +245,7 @@ export default defineComponent({
 
     onLysisNInput(e: Event) {
       const logVal = Number((e.target as HTMLInputElement).value)
+      this.dragLysisNLog = logVal
       this.cellStore.setLysisNPulses(Math.round(Math.pow(10, logVal)))
       broadcastStateSync()
     },

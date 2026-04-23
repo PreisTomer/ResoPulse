@@ -1,18 +1,15 @@
 <!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
 <template>
-  <div class="experiment" @click.self="($refs.header as ExperimentHeaderInstance)?.closeAllPickers()">
+  <div class="experiment" @click.self="closeAllPickers">
 
     <!-- ── Combined header bar ───────────────────────────────────── -->
-    <ExperimentHeader ref="header" />
+    <ExperimentHeader />
 
     <!-- ── Main content ──────────────────────────────────────────── -->
     <div class="experiment__main">
 
-      <!-- Persistent outcome strip: TI · DR_T · DR_H · T_ss · Biomod -->
+      <!-- Persistent closed-loop strip: physics chips + Loop Actions -->
       <OutcomeStrip />
-
-      <!-- Live equation: exact formula being evaluated, with substituted values -->
-      <EquationStrip />
 
       <!-- Sentinel: observed by IntersectionObserver — must be in normal flow, not inside display:none -->
       <div ref="cellsAnchor" class="experiment__cells-anchor"></div>
@@ -23,15 +20,25 @@
         <!-- Cell comparison pair — both always visible side-by-side -->
         <div id="hl-cell-cards" class="experiment__cell-pair">
           <CellCard
-            v-for="cell in cells"
-            :key="cell.id"
-            :type="cell.type"
-            :label="cell.label"
-            :sublabel="cell.sublabel"
-            :sublabel-tip="cell.sublabelTip"
-            :description="cell.description"
-            :cell-data="cell.cellData"
+            ref="healthyCard"
+            :type="healthyCell.type"
+            :sublabel="healthyCell.sublabel"
+            :sublabel-tip="healthyCell.sublabelTip"
+            :description="healthyCell.description"
+            :cell-data="healthyCell.cellData"
             @full-reset="applyTargetDefaults"
+            @picker-opened="closeTargetPicker"
+          />
+          <CellCard
+            ref="targetCard"
+            :type="targetCell.type"
+            :sublabel="targetCell.sublabel"
+            :sublabel-tip="targetCell.sublabelTip"
+            :description="targetCell.description"
+            :cell-data="targetCell.cellData"
+            @full-reset="applyTargetDefaults"
+            @load-target-preset="applyTargetDefaults"
+            @picker-opened="closeHealthyPicker"
           />
         </div>
 
@@ -41,6 +48,9 @@
         </div>
 
       </div>
+
+      <!-- Active equation: relocated below workspace, reference readout -->
+      <EquationStrip />
 
       <!-- Disruption ratio chart — primary bench-scientist outcome, open by default -->
       <div id="hl-disruption-chart" class="experiment__chart-section experiment__chart-section--primary">
@@ -177,10 +187,10 @@ import { CELL_PRESETS } from '@/constants/cellLibrary'
 
 import { CATEGORY_DEFAULTS, INITIAL_RESONANT_FIELD_FRACTION, DEFAULT_LYSIS_N_PULSES, DEFAULT_ORIENTATION_DEG } from '@/constants/experimentDefaults'
 import { WF_CW, WF_PULSED, THRESHOLDS } from '@/constants/physics'
-import { CELL_CATEGORY, CELL_TYPE, CHART_MODE, WAVEFORM } from '@/constants/strings'
+import { CELL_CATEGORY, CHART_MODE, WAVEFORM } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
 
-type ExperimentHeaderInstance = InstanceType<typeof ExperimentHeader>
+type CellCardInstance = InstanceType<typeof CellCard>
 
 export default defineComponent({
   components: {
@@ -318,46 +328,54 @@ export default defineComponent({
     },
 
     cells(): CellCardRow[] {
-      // Resolve label + sublabel from the live store cell (changes when preset loads)
-      const cellLabel = (type: 'healthy' | 'target') => {
-        return type === CELL_TYPE.HEALTHY ? this.cellStore.healthy.label : this.cellStore.target.label
+      return [this.healthyCell, this.targetCell]
+    },
+
+    healthyCell(): CellCardRow {
+      const cell   = this.cellStore.healthy
+      const preset = CELL_PRESETS.find((p) => p.presetId === cell.id)
+      return {
+        id:          'healthy',
+        type:        'healthy' as const,
+        label:       cell.label,
+        sublabel:    preset ? preset.notes : this.$t('cells.healthy.sublabel'),
+        sublabelTip: preset?.techNotes ?? '',
+        description: cell.description ?? this.$t('cells.healthy.description'),
+        cellData:    cell,
       }
-      const cellSublabel = (type: 'healthy' | 'target') => {
-        const cell = type === CELL_TYPE.HEALTHY ? this.cellStore.healthy : this.cellStore.target
-        const preset = CELL_PRESETS.find((p) => p.presetId === cell.id)
-        return preset ? preset.notes : this.$t(`cells.${type}.sublabel`)
+    },
+
+    targetCell(): CellCardRow {
+      const cell   = this.cellStore.target
+      const preset = CELL_PRESETS.find((p) => p.presetId === cell.id)
+      return {
+        id:          'target',
+        type:        'target' as const,
+        label:       cell.label,
+        sublabel:    preset ? preset.notes : this.$t('cells.target.sublabel'),
+        sublabelTip: preset?.techNotes ?? '',
+        description: cell.description ?? this.$t('cells.target.description'),
+        cellData:    cell,
       }
-      const cellSublabelTip = (type: 'healthy' | 'target') => {
-        const cell = type === CELL_TYPE.HEALTHY ? this.cellStore.healthy : this.cellStore.target
-        const preset = CELL_PRESETS.find((p) => p.presetId === cell.id)
-        return preset?.techNotes ?? ''
-      }
-      return [
-        {
-          id: 'healthy',
-          type: 'healthy' as const,
-          label: cellLabel('healthy'),
-          sublabel: cellSublabel('healthy'),
-          sublabelTip: cellSublabelTip('healthy'),
-          description: this.cellStore.healthy.description ?? this.$t('cells.healthy.description'),
-          cellData: this.cellStore.healthy,
-        },
-        {
-          id: 'target',
-          type: 'target' as const,
-          label: cellLabel('target'),
-          sublabel: cellSublabel('target'),
-          sublabelTip: cellSublabelTip('target'),
-          description: this.cellStore.target.description ?? this.$t('cells.target.description'),
-          cellData: this.cellStore.target,
-        },
-      ]
     },
   },
 
   methods: {
     scrollToCells() {
       window.scrollTo({ top: 0, behavior: 'smooth' })
+    },
+
+    closeHealthyPicker() {
+      (this.$refs.healthyCard as CellCardInstance | undefined)?.closePicker()
+    },
+
+    closeTargetPicker() {
+      (this.$refs.targetCard as CellCardInstance | undefined)?.closePicker()
+    },
+
+    closeAllPickers() {
+      this.closeHealthyPicker()
+      this.closeTargetPicker()
     },
 
     onSweepWindowChange(w: { lo: number; hi: number; param: 'field' | 'freq' } | null) {

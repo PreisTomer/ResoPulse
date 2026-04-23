@@ -2,10 +2,27 @@
 <template>
   <div :id="`hl-${type}-card`" :class="['cell-card', `cell-card--${type}`, `cell-card--${cellState}`, { 'cell-card--compact': compact }]">
 
+    <!-- Inline picker as the card's identity — replaces the static header label -->
+    <HealthyCellPicker
+      v-if="!compact && isHealthy"
+      class="cell-card__picker"
+      ref="picker"
+      @opened="$emit(EMIT.PICKER_OPENED)"
+      @select="onSelectPreset"
+      @selectUser="onSelectUserPreset"
+    />
+    <TargetCellPicker
+      v-if="!compact && !isHealthy"
+      class="cell-card__picker"
+      ref="picker"
+      @opened="$emit(EMIT.PICKER_OPENED)"
+      @select="onSelectPreset"
+      @selectUser="onSelectUserPreset"
+    />
+
     <CellHeader
       v-if="!compact"
       :type="type"
-      :label="label"
       :sublabel="sublabel"
       :sublabel-tip="sublabelTip"
       :vm-display="vmDisplay"
@@ -24,6 +41,7 @@
       :provenance-chip="provenanceChip"
       :provenance-chip-variant="provenanceChipVariant"
       :provenance-tip="provenanceTip"
+      :sigma-calibration="sigmaCalibration"
     />
 
     <CellParamsPanel
@@ -68,6 +86,7 @@ import { useCellStore } from '@/stores/cellStore'
 import { useUiStore } from '@/stores/uiStore'
 import { useUserPresetsStore } from '@/stores/userPresetsStore'
 import type { UserCellPreset } from '@/stores/userPresetsStore'
+import { useCellCalibrationStore } from '@/stores/cellCalibrationStore'
 
 import { membraneCm, computeTau, tempCorrectedVth } from '@/utils/physics'
 import { splitFreqKHz } from '@/utils/format'
@@ -92,18 +111,23 @@ import CellHeader     from './CellHeader.vue'
 import CellParamsPanel from './CellParamsPanel.vue'
 import CellVisual     from './CellVisual.vue'
 import CellBody       from './CellBody.vue'
+import HealthyCellPicker from '@/components/ExperimentLab/HealthyCellPicker.vue'
+import TargetCellPicker  from '@/components/ExperimentLab/TargetCellPicker.vue'
+
+import { broadcastStateSync } from '@/services/socket'
+
+import type { CellPreset } from '@/constants/cellLibrary'
 
 export default defineComponent({
-  components: { CellHeader, CellParamsPanel, CellVisual, CellBody },
+  components: { CellHeader, CellParamsPanel, CellVisual, CellBody, HealthyCellPicker, TargetCellPicker },
 
-  emits: [EMIT.STABLE_RESET, EMIT.FULL_RESET],
+  emits: [EMIT.STABLE_RESET, EMIT.FULL_RESET, EMIT.LOAD_HEALTHY_PRESET, EMIT.LOAD_TARGET_PRESET, EMIT.PICKER_OPENED],
 
   props: {
     type: {
       type: String as PropType<'healthy' | 'target'>,
       required: true,
     },
-    label:       { type: String, required: true },
     sublabel:    { type: String, required: true },
     sublabelTip: { type: String, default: '' },
     description: { type: String, required: true },
@@ -121,9 +145,33 @@ export default defineComponent({
   },
 
   computed: {
-    ...mapStores(useCellStore, useUiStore, useUserPresetsStore),
+    ...mapStores(useCellStore, useUiStore, useUserPresetsStore, useCellCalibrationStore),
     CELL_STATE() { return CELL_STATE },
     CELL_TYPE()  { return CELL_TYPE },
+    EMIT()       { return EMIT },
+
+    isHealthy(): boolean { return this.type === CELL_TYPE.HEALTHY },
+
+    sigmaCalibration(): { label: string; tip: string; state: 'calibrated' | 'clamped' | 'collecting' | 'unknown' } | null {
+      const id = this.cellData?.id
+      if (!id) return null
+      const s = this.cellCalibrationStore.statusFor(id)
+      if (s.state === 'unknown')    return null
+      if (s.state === 'collecting') {
+        return {
+          state: 'collecting',
+          label: this.$t('ai.sigmaCalibCollecting', { n: s.nSamples, need: 5 }) as string,
+          tip:   this.$t('ai.sigmaCalibTip') as string,
+        }
+      }
+      const mult = s.sigmaMultiplier.toFixed(2)
+      const std  = s.uncertaintyStd.toFixed(2)
+      return {
+        state: s.state === 'clamped' ? 'clamped' : 'calibrated',
+        label: `σᵢ ×${mult} ±${std} · ${s.nSamples} runs`,
+        tip:   this.$t('ai.sigmaCalibTip') as string,
+      }
+    },
 
     userPreset(): UserCellPreset | null {
       if (!this.cellData) return null
@@ -381,6 +429,24 @@ export default defineComponent({
       const preset = CELL_PRESETS.find((p) => p.presetId === cell.id)
       if (preset) this.cellStore.loadPreset(this.type, preset)
     },
+
+    onSelectPreset(preset: CellPreset) {
+      this.cellStore.loadPreset(this.type, preset)
+      broadcastStateSync()
+      const evt = this.isHealthy ? EMIT.LOAD_HEALTHY_PRESET : EMIT.LOAD_TARGET_PRESET
+      this.$emit(evt, preset)
+    },
+
+    onSelectUserPreset(preset: UserCellPreset) {
+      const config = this.userPresetsStore.toCellConfig(preset)
+      this.cellStore.loadPreset(this.type, config)
+      broadcastStateSync()
+    },
+
+    closePicker() {
+      const picker = this.$refs.picker as { close(): void } | undefined
+      picker?.close()
+    },
   },
 })
 </script>
@@ -409,11 +475,46 @@ export default defineComponent({
   background-color: var(--color-surface-2);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  padding: 1.5rem;
+  padding: 0 1.5rem 1.5rem;
   @include flex-col(1rem);
   transition: border-color var(--tr-normal), box-shadow var(--tr-slow);
   min-width: 0;
-  overflow: hidden;
+  /* overflow visible so the embedded picker's dropdown is not clipped */
+  overflow: visible;
+  position: relative;
+
+  /* ── Embedded cell picker — the card's identity header ─────────────── */
+  &__picker {
+    @include flex-row(0);
+    justify-content: center;
+    margin: 0 -1.5rem;
+    padding: 0.8rem 1.25rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
+    background: color-mix(in srgb, var(--color-surface) 55%, transparent);
+
+    /* let the picker keep its natural pill width, just upsize the type slightly */
+    :deep(.experiment__cell-badge-row)      { padding: 0.5rem 0.9rem; }
+    :deep(.experiment__cell-badge-selected) { font-size: var(--fs-lg); font-weight: 700; }
+    :deep(.experiment__cell-badge-type)     { font-size: var(--fs-xxs); letter-spacing: 0.12em; }
+  }
+
+  &--healthy &__picker {
+    background: linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--color-primary) 10%, transparent) 0%,
+      color-mix(in srgb, var(--color-primary)  2%, transparent) 100%
+    );
+    border-bottom-color: color-mix(in srgb, var(--color-primary) 30%, transparent);
+  }
+
+  &--target &__picker {
+    background: linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--color-danger) 10%, transparent) 0%,
+      color-mix(in srgb, var(--color-danger)  2%, transparent) 100%
+    );
+    border-bottom-color: color-mix(in srgb, var(--color-danger) 30%, transparent);
+  }
 
   /* ── Compact modifier ──────────────────────────────────────────────── */
   &--compact {

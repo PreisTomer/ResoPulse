@@ -4,13 +4,15 @@
 
     <!-- Far left: session name + copy link -->
     <div class="experiment__header-left">
-      <input
-        v-model="experimentStore.sessionName"
-        class="experiment__session-name"
-        spellcheck="false"
-        :title="$t('exp.renameSession')"
-        :style="{ width: sessionNameWidth }"
-      />
+      <label class="experiment__session-name-wrap" v-tip="$t('exp.renameSession')">
+        <input
+          v-model="experimentStore.sessionName"
+          class="experiment__session-name"
+          spellcheck="false"
+          :style="{ width: sessionNameWidth }"
+        />
+        <span class="experiment__session-name-edit" aria-hidden="true">{{ ICON.EDIT }}</span>
+      </label>
       <button
         id="hl-share-btn"
         class="experiment__share-btn"
@@ -21,22 +23,6 @@
         <span>{{ ICON.LINK }}</span>
         {{ shareCopied ? $t('exp.copyLinkDone') : $t('exp.copyLink') }}
       </button>
-    </div>
-
-    <!-- Center: cell selectors -->
-    <div id="hl-cell-badges" class="experiment__cell-badges">
-      <HealthyCellPicker
-        ref="healthyPicker"
-        @opened="closePicker('target')"
-        @select="loadHealthyPreset"
-        @selectUser="loadUserPreset"
-      />
-      <TargetCellPicker
-        ref="targetPicker"
-        @opened="closePicker('healthy')"
-        @select="loadTargetPreset"
-        @selectUser="loadUserPreset"
-      />
     </div>
 
     <!-- Far right: connection status -->
@@ -78,29 +64,16 @@ import { mapStores } from 'pinia'
 import { useCellStore } from '@/stores/cellStore'
 import { useExperimentStore } from '@/stores/experimentStore'
 import { useImpedanceStore } from '@/stores/impedanceStore'
-import { useUserPresetsStore } from '@/stores/userPresetsStore'
-import type { UserCellPreset } from '@/stores/userPresetsStore'
 
-import { broadcastStateSync, socketConnected } from '@/services/socket'
-
-import HealthyCellPicker from '@/components/ExperimentLab/HealthyCellPicker.vue'
-import TargetCellPicker from '@/components/ExperimentLab/TargetCellPicker.vue'
+import { socketConnected } from '@/services/socket'
 
 import { buildShareUrl } from '@/utils/shareUrl'
 
-import type { CellPreset } from '@/constants/cellLibrary'
 import { ICON } from '@/constants/icons'
-import { EMIT } from '@/constants/emitEvents'
 import { ROUTE } from '@/constants/routes'
-
-type PickerRef = { close(): void }
 
 export default defineComponent({
   name: 'ExperimentHeader',
-
-  components: { HealthyCellPicker, TargetCellPicker },
-
-  emits: [EMIT.LOAD_HEALTHY_PRESET, EMIT.LOAD_TARGET_PRESET],
 
   data() {
     return {
@@ -113,7 +86,7 @@ export default defineComponent({
   computed: {
     ICON() { return ICON },
     ROUTE() { return ROUTE },
-    ...mapStores(useCellStore, useExperimentStore, useImpedanceStore, useUserPresetsStore),
+    ...mapStores(useCellStore, useExperimentStore, useImpedanceStore),
 
     sessionNameWidth(): string {
       // ch units are accurate for monospace fonts; +2 gives room for the caret
@@ -151,34 +124,6 @@ export default defineComponent({
   },
 
   methods: {
-    closePicker(which: 'healthy' | 'target') {
-      (this.$refs[`${which}Picker`] as PickerRef)?.close()
-    },
-
-    loadHealthyPreset(preset: CellPreset) {
-      this.cellStore.loadPreset('healthy', preset)
-      broadcastStateSync()
-      this.$emit(EMIT.LOAD_HEALTHY_PRESET, preset)
-    },
-
-    loadTargetPreset(preset: CellPreset) {
-      this.cellStore.loadPreset('target', preset)
-      // applyTargetDefaults fires via watcher on currentTargetId in ExperimentView
-      this.$emit(EMIT.LOAD_TARGET_PRESET, preset)
-    },
-
-    loadUserPreset(preset: UserCellPreset) {
-      const config = this.userPresetsStore.toCellConfig(preset)
-      const slot   = preset.role === 'healthy' ? 'healthy' : 'target'
-      this.cellStore.loadPreset(slot, config)
-      broadcastStateSync()
-    },
-
-    closeAllPickers() {
-      this.closePicker('healthy')
-      this.closePicker('target')
-    },
-
     async copyShareUrl(): Promise<void> {
       const url = buildShareUrl()
       await navigator.clipboard.writeText(url)
@@ -195,24 +140,25 @@ export default defineComponent({
 // ── BEM block: experiment — header-level elements only ────────────────────────
 .experiment {
 
-  // ── Header bar ───────────────────────────────────────────────────────────────
+  // ── Header bar — blends with workspace rather than banding it off ───────────
   &__header {
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
+    @include flex-between(1rem);
     align-items: center;
-    padding: 0.5rem 1.75rem;
-    border-bottom: 1px solid var(--color-border);
-    background: var(--color-surface);
+    padding: 0.55rem 1.75rem 0.5rem;
+    border-bottom: 1px dashed color-mix(in srgb, var(--color-primary) 14%, transparent);
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-surface) 55%, transparent) 0%,
+      transparent 100%
+    );
     flex-shrink: 0;
 
-    @media (max-width: 768px) { padding: 0.5rem 0.65rem; }
+    @media (max-width: 768px) { padding: 0.5rem 0.65rem 0.45rem; }
 
     @media (max-width: 540px) {
-      display: flex;
       flex-wrap: wrap;
-      gap: 0.4rem 0;
-      padding: 0.45rem 0.6rem;
-      align-items: center;
+      gap: 0.4rem;
+      padding: 0.45rem 0.6rem 0.4rem;
     }
 
     &-left {
@@ -230,11 +176,28 @@ export default defineComponent({
     }
   }
 
-  // ── Session name input — width driven by :style binding (sessionNameWidth computed) ──
+  // ── Session name input — persistent dotted underline + pencil affordance ─
+  &__session-name-wrap {
+    @include flex-row(0.3rem);
+    align-items: center;
+    padding: 0.12rem 0.45rem 0.12rem 0.1rem;
+    border-radius: 4px;
+    cursor: text;
+    border: 1px solid transparent;
+    transition: border-color var(--tr-fast), background var(--tr-fast);
+
+    &:hover {
+      border-color: color-mix(in srgb, var(--color-primary) 18%, transparent);
+      background: color-mix(in srgb, var(--color-primary)  4%, transparent);
+
+      .experiment__session-name-edit { opacity: var(--op-strong); }
+    }
+  }
+
   &__session-name {
     background: transparent;
     border: none;
-    border-bottom: 1px solid transparent;
+    border-bottom: 1px dashed color-mix(in srgb, var(--color-primary) 28%, transparent);
     color: var(--color-text-heading);
     font-family: var(--font-mono);
     font-size: var(--fs-xs);
@@ -243,21 +206,15 @@ export default defineComponent({
     padding: 0.05rem 0.1rem;
     transition: border-color var(--tr-fast);
 
-    &:focus { border-bottom-color: var(--color-primary); }
+    &:focus { border-bottom: 1px solid var(--color-primary); }
   }
 
-  // ── Cell selector container ───────────────────────────────────────────────────
-  &__cell-badges {
-    @include flex-row(1rem);
-
-    @media (max-width: 540px) {
-      order: 3;
-      width: 100%;
-      gap: 0.4rem;
-      display: flex !important;
-      flex-wrap: nowrap;
-      justify-content: stretch;
-    }
+  &__session-name-edit {
+    font-size: 0.7rem;
+    color: var(--color-primary);
+    opacity: var(--op-ghost);
+    transition: opacity var(--tr-fast);
+    pointer-events: none;
   }
 
   // ── Connection status chip ────────────────────────────────────────────────────

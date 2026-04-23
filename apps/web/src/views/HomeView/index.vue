@@ -41,6 +41,12 @@
               <span v-if="i < eyebrowItems.length - 1" class="home__eyebrow-sep" aria-hidden="true">•</span>
             </template>
           </div>
+          <div class="home__eyebrow home__eyebrow--physics">
+            <template v-for="(item, i) in eyebrowPhysics" :key="item">
+              <span class="home__eyebrow-item home__eyebrow-item--physics">{{ item }}</span>
+              <span v-if="i < eyebrowPhysics.length - 1" class="home__eyebrow-sep" aria-hidden="true">•</span>
+            </template>
+          </div>
           <div class="home__tagline-group">
             <p class="home__tagline">{{ $t('home.tagline1a') }}<strong class="home__tagline-highlight">{{ $t('home.tagline1Highlight') }}</strong>{{ $t('home.tagline1b') }}</p>
             <p class="home__tagline home__tagline--secondary">{{ $t('home.tagline2') }}</p>
@@ -111,52 +117,9 @@
 
       </div>
 
-      <!-- ── Zone 1.5: IO block — plain "what this computes" statement ── -->
-      <div class="home__zone home__zone--io home__zone--anim">
-        <div class="home__io">
-          <div class="home__io-header">
-            <h2 class="home__io-title">{{ $t('home.ioTitle') }}</h2>
-            <p class="home__io-subtitle">{{ $t('home.ioSubtitle') }}</p>
-          </div>
-          <div class="home__io-grid">
-
-            <div class="home__io-col home__io-col--inputs">
-              <span class="home__io-col-label">{{ $t('home.ioColInputs') }}</span>
-              <ul class="home__io-list">
-                <li v-for="n in 7" :key="n" class="home__io-item">{{ $t(`home.ioInput${n}`) }}</li>
-              </ul>
-            </div>
-
-            <span class="home__io-arrow" aria-hidden="true">{{ ICON.ARROW_R }}</span>
-
-            <div class="home__io-col home__io-col--equations">
-              <span class="home__io-col-label">{{ $t('home.ioColEquations') }}</span>
-              <ul class="home__io-list">
-                <li v-for="n in 6" :key="n" class="home__io-item home__io-item--eq">
-                  <span class="home__io-eq-expr">{{ $t(`home.ioEq${n}`) }}</span>
-                  <span class="home__io-eq-cite">{{ $t(`home.ioEqCite${n}`) }}</span>
-                </li>
-              </ul>
-            </div>
-
-            <span class="home__io-arrow" aria-hidden="true">{{ ICON.ARROW_R }}</span>
-
-            <div class="home__io-col home__io-col--outputs">
-              <span class="home__io-col-label">{{ $t('home.ioColOutputs') }}</span>
-              <ul class="home__io-list">
-                <li v-for="n in 6" :key="n" class="home__io-item">{{ $t(`home.ioOutput${n}`) }}</li>
-              </ul>
-            </div>
-
-          </div>
-
-          <IoMiniWidget />
-
-          <div class="home__io-footer">
-            <p class="home__io-note">{{ $t('home.ioNote') }}</p>
-            <RouterLink :to="ROUTE.PROTOCOL" class="home__io-derivation">{{ $t('home.ioDerivationLink') }} {{ ICON.ARROW_R }}</RouterLink>
-          </div>
-        </div>
+      <!-- ── Zone 1.5: Closed-Loop Digital Twin ─────────────────────────── -->
+      <div class="home__zone home__zone--loop home__zone--anim">
+        <ClosedLoopDiagram />
       </div>
 
       <!-- ── Zone 2: Science — scroll-reveal physics illustrations ── -->
@@ -349,7 +312,7 @@ import HeroRingsSvg from './HeroRingsSvg.vue'
 import CellIllustrationSvg from './CellIllustrationSvg.vue'
 import BodePlotSvg from './BodePlotSvg.vue'
 import OscilloscopeSvg from './OscilloscopeSvg.vue'
-import IoMiniWidget from './IoMiniWidget.vue'
+import ClosedLoopDiagram from './ClosedLoopDiagram.vue'
 
 const SEL_CYCLE_MS      = 9000
 const PARTICLE_COUNT    = 65
@@ -404,7 +367,7 @@ export default defineComponent({
     CellIllustrationSvg,
     BodePlotSvg,
     OscilloscopeSvg,
-    IoMiniWidget,
+    ClosedLoopDiagram,
   },
 
   data() {
@@ -498,6 +461,10 @@ export default defineComponent({
 
     eyebrowItems(): string[] {
       return (this.$tm as Function)('home.eyebrowItems') as string[]
+    },
+
+    eyebrowPhysics(): string[] {
+      return (this.$tm as Function)('home.eyebrowPhysics') as string[]
     },
 
     selSliderPct(): number {

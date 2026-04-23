@@ -23,13 +23,10 @@
             </div>
           </RouterLink>
           <h1 class="signup-page__brand-headline">
-            Start modelling<br>
-            <span class="signup-page__brand-highlight">your first protocol.</span>
+            {{ $t('signUp.headlineLine1') }}<br>
+            <span class="signup-page__brand-highlight">{{ $t('signUp.headlineLine2') }}</span>
           </h1>
-          <p class="signup-page__brand-sub">
-            Free access to the full biophysics simulator.
-            Invite your lab team and collaborate on protocol design.
-          </p>
+          <p class="signup-page__brand-sub">{{ $t('signUp.brandSub') }}</p>
         </div>
 
         <ul class="signup-page__steps" aria-label="Getting started steps">

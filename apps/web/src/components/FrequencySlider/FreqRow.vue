@@ -51,8 +51,9 @@
         :min="freqLogMin"
         :max="freqLogMax"
         step="0.005"
-        :value="freqLogVal"
+        :value="dragFreqLog ?? freqLogVal"
         @input="onFreqInput"
+        @change="dragFreqLog = null"
       />
       <div
         v-for="mark in freqMarkers"
@@ -127,6 +128,7 @@ export default defineComponent({
       scrubStartX:   0,
       scrubStartVal: 0,
       scrubMoved:    false,
+      dragFreqLog:   null as number | null,
     }
   },
 
@@ -238,6 +240,7 @@ export default defineComponent({
     // ── Log-scale slider input ────────────────────────────────────────────────
     onFreqInput(e: Event) {
       const logVal = Number((e.target as HTMLInputElement).value)
+      this.dragFreqLog = logVal
       const khz    = Math.round(Math.pow(10, logVal))
       this.cellStore.setBroadcastFreqKHz(
         Math.max(this.sliderRanges.freqMin, Math.min(this.sliderRanges.freqMax, khz))

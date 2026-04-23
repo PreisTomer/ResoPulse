@@ -1,4 +1,4 @@
-# ResoPulse — Virtual Biophysics Engine
+# ResoPulse — Closed-Loop Electroporation Digital Twin
 
 ### *Precision Simulation for Selective Electroporation & Bioelectric Field Research*
 

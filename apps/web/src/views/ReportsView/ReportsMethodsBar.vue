@@ -20,6 +20,21 @@
           <span class="reports-methods-bar__chip">{{ entry.waveform }}</span>
         </div>
         <div class="reports-methods-bar__actions">
+          <template v-if="hasMeasured">
+            <button
+              class="reports-methods-bar__btn reports-methods-bar__btn--toggle"
+              :class="{ 'reports-methods-bar__btn--active': isExcluded }"
+              v-tip="$t('reports.actionBarExcludeTip')"
+              @click.stop="toggleExcluded"
+            >
+              {{ isExcluded ? $t('reports.actionBarIncludeLabel') : $t('reports.actionBarExcludeLabel') }}
+            </button>
+            <button
+              class="reports-methods-bar__btn reports-methods-bar__btn--remove"
+              v-tip="$t('reports.actionBarRemoveMeasuredTip')"
+              @click.stop="removeMeasured"
+            >{{ $t('reports.actionBarRemoveMeasured') }}</button>
+          </template>
           <span v-if="!entry.healthySnap" class="reports-methods-bar__legacy">
             {{ $t('reports.actionBarLegacy') }}
           </span>
@@ -41,7 +56,9 @@
 
 <script lang="ts">
 import { defineComponent, type PropType } from 'vue'
+import { mapStores } from 'pinia'
 
+import { useExperimentStore } from '@/stores/experimentStore'
 import type { LogEntry } from '@/stores/experimentStore'
 
 import { formatFreqKHz, formatFieldVcm } from '@/utils/format'
@@ -63,11 +80,28 @@ export default defineComponent({
   computed: {
     ICON() { return ICON },
     EMIT() { return EMIT },
+    ...mapStores(useExperimentStore),
+
+    hasMeasured(): boolean { return this.entry?.measured !== undefined },
+
+    isExcluded(): boolean { return this.entry?.excludedFromCalibration === true },
   },
 
   methods: {
     formatFreqKHz(khz: number, decimals?: number) { return formatFreqKHz(khz, decimals) },
     formatFieldVcm(vcm: number) { return formatFieldVcm(vcm) },
+
+    toggleExcluded() {
+      if (!this.entry) return
+      this.experimentStore.setEntryExcludedFromCalibration(this.entry.id, !this.isExcluded)
+    },
+
+    removeMeasured() {
+      if (!this.entry) return
+      const msg = this.$t('reports.actionBarRemoveMeasuredConfirm', { id: this.entry.id }) as string
+      if (!window.confirm(msg)) return
+      this.experimentStore.clearMeasuredOutcome(this.entry.id)
+    },
   },
 })
 </script>
@@ -169,6 +203,47 @@ export default defineComponent({
       background: color-mix(in srgb, var(--color-purple) 32%, transparent);
       border-color: var(--color-purple);
       box-shadow: 0 0 14px color-mix(in srgb, var(--color-purple) 25%, transparent);
+    }
+
+    &--toggle {
+      padding: 0.4rem 0.85rem;
+      font-size: var(--fs-xs);
+      color: var(--color-text-muted);
+      border-color: var(--color-border);
+      background: transparent;
+
+      &:hover {
+        color: var(--color-text);
+        border-color: var(--color-text-muted);
+        background: color-mix(in srgb, white 4%, transparent);
+        box-shadow: none;
+      }
+    }
+
+    &--active {
+      color: var(--color-amber);
+      border-color: color-mix(in srgb, var(--color-amber) 55%, transparent);
+      background: color-mix(in srgb, var(--color-amber) 12%, transparent);
+
+      &:hover {
+        color: var(--color-amber);
+        border-color: var(--color-amber);
+        background: color-mix(in srgb, var(--color-amber) 22%, transparent);
+      }
+    }
+
+    &--remove {
+      padding: 0.4rem 0.85rem;
+      font-size: var(--fs-xs);
+      color: var(--color-danger);
+      border-color: color-mix(in srgb, var(--color-danger) 40%, transparent);
+      background: color-mix(in srgb, var(--color-danger) 8%, transparent);
+
+      &:hover {
+        background: color-mix(in srgb, var(--color-danger) 18%, transparent);
+        border-color: var(--color-danger);
+        box-shadow: none;
+      }
     }
   }
 

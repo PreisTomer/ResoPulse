@@ -2,103 +2,112 @@
 <template>
   <div class="outcome-strip" role="status" :aria-label="$t('exp.outcomeStripTitle')">
 
-    <div class="outcome-strip__title" v-tip="$t('exp.outcomeStripTip')">
-      <span class="outcome-strip__title-pulse"></span>
-      <span class="outcome-strip__title-label">{{ $t('exp.outcomeStripTitle') }}</span>
+    <!-- ── Zone 1: Readouts (live physics state) ────────────────────── -->
+    <div class="outcome-strip__zone outcome-strip__zone--readouts">
+
+      <div class="outcome-strip__title" v-tip="$t('exp.outcomeStripTip')">
+        <span class="outcome-strip__title-pulse"></span>
+        <span class="outcome-strip__title-label">{{ $t('exp.outcomeStripTitle') }}</span>
+        <span class="outcome-strip__title-sub">{{ $t('exp.loopStripEyebrow') }}</span>
+      </div>
+
+      <div
+        class="outcome-strip__mode"
+        :class="`outcome-strip__mode--${mode.classSuffix}`"
+        v-tip="$t('exp.outcomeModeTip')"
+      >
+        <span class="outcome-strip__mode-dot"></span>
+        <span class="outcome-strip__mode-label">{{ mode.label }}</span>
+      </div>
+
+      <button
+        type="button"
+        class="outcome-strip__chip"
+        :class="`outcome-strip__chip--${tiClass}`"
+        v-tip="$t('exp.outcomeTiTip')"
+        @click="scrollTo('hl-selectivity-panel')"
+      >
+        <span class="outcome-strip__chip-label">{{ $t('exp.outcomeTiLabel') }}</span>
+        <span class="outcome-strip__chip-val">{{ tiDisplay }}</span>
+        <span v-if="tiRangeDisplay" class="outcome-strip__chip-range">{{ tiRangeDisplay }}</span>
+      </button>
+
+      <button
+        type="button"
+        class="outcome-strip__chip"
+        :class="`outcome-strip__chip--${drTClass}`"
+        v-tip="$t('exp.outcomeDrTTip')"
+        @click="scrollTo('hl-disruption-chart')"
+      >
+        <span class="outcome-strip__chip-label">{{ $t('exp.outcomeDrTLabel') }}</span>
+        <span class="outcome-strip__chip-val">{{ drTDisplay }}</span>
+      </button>
+
+      <button
+        type="button"
+        class="outcome-strip__chip"
+        :class="`outcome-strip__chip--${drHClass}`"
+        v-tip="$t('exp.outcomeDrHTip')"
+        @click="scrollTo('hl-disruption-chart')"
+      >
+        <span class="outcome-strip__chip-label">{{ $t('exp.outcomeDrHLabel') }}</span>
+        <span class="outcome-strip__chip-val">{{ drHDisplay }}</span>
+      </button>
+
+      <button
+        type="button"
+        class="outcome-strip__chip outcome-strip__chip--qpcr"
+        :class="{ 'outcome-strip__chip--muted': qpcrPill.isPlaceholder }"
+        v-tip="qpcrTip"
+        @click="goToReports"
+      >
+        <span class="outcome-strip__chip-label">{{ $t('exp.outcomeQpcrLabel') }}</span>
+        <span class="outcome-strip__chip-val">{{ qpcrPill.value }}</span>
+        <span class="outcome-strip__chip-range">{{ qpcrPill.sublabel }}</span>
+      </button>
     </div>
 
-    <div class="outcome-strip__sep" aria-hidden="true"></div>
+    <!-- ── Vertical divider between read-outs and the loop actions ─── -->
+    <div class="outcome-strip__divider" aria-hidden="true"></div>
 
-    <div
-      class="outcome-strip__mode"
-      :class="`outcome-strip__mode--${mode.classSuffix}`"
-      v-tip="$t('exp.outcomeModeTip')"
-    >
-      <span class="outcome-strip__mode-dot"></span>
-      <span class="outcome-strip__mode-label">{{ mode.label }}</span>
+    <!-- ── Zone 2: Loop status + actions ────────────────────────────── -->
+    <div class="outcome-strip__zone outcome-strip__zone--loop">
+      <CalibrationBadge
+        class="outcome-strip__calib"
+        variant="inline"
+        @click-log="openAiPanel"
+        @click-details="openAiPanel"
+      />
+
+      <button
+        type="button"
+        class="outcome-strip__loop-btn outcome-strip__loop-btn--primary"
+        v-tip="$t('exp.loopBtnOptimizeTip')"
+        @click="openAiPanel"
+      >
+        <span class="outcome-strip__loop-btn-icon">{{ ICON.AI }}</span>
+        <span class="outcome-strip__loop-btn-label">{{ $t('exp.loopBtnOptimize') }}</span>
+      </button>
+
+      <button
+        type="button"
+        class="outcome-strip__loop-btn outcome-strip__loop-btn--secondary"
+        v-tip="$t('exp.loopBtnSuggestTip')"
+        @click="openAiPanel"
+      >
+        <span class="outcome-strip__loop-btn-icon">{{ ICON.RETICLE }}</span>
+        <span class="outcome-strip__loop-btn-label">{{ $t('exp.loopBtnSuggest') }}</span>
+      </button>
     </div>
 
-    <button
-      type="button"
-      class="outcome-strip__chip"
-      :class="`outcome-strip__chip--${tiClass}`"
-      v-tip="$t('exp.outcomeTiTip')"
-      @click="scrollTo('hl-selectivity-panel')"
-    >
-      <span class="outcome-strip__chip-label">{{ $t('exp.outcomeTiLabel') }}</span>
-      <span class="outcome-strip__chip-val">{{ tiDisplay }}</span>
-      <span v-if="tiRangeDisplay" class="outcome-strip__chip-range">{{ tiRangeDisplay }}</span>
-    </button>
-
-    <button
-      type="button"
-      class="outcome-strip__chip"
-      :class="`outcome-strip__chip--${drTClass}`"
-      v-tip="$t('exp.outcomeDrTTip')"
-      @click="scrollTo('hl-disruption-chart')"
-    >
-      <span class="outcome-strip__chip-label">{{ $t('exp.outcomeDrTLabel') }}</span>
-      <span class="outcome-strip__chip-val">{{ drTDisplay }}</span>
-    </button>
-
-    <button
-      type="button"
-      class="outcome-strip__chip"
-      :class="`outcome-strip__chip--${drHClass}`"
-      v-tip="$t('exp.outcomeDrHTip')"
-      @click="scrollTo('hl-disruption-chart')"
-    >
-      <span class="outcome-strip__chip-label">{{ $t('exp.outcomeDrHLabel') }}</span>
-      <span class="outcome-strip__chip-val">{{ drHDisplay }}</span>
-    </button>
-
-    <button
-      type="button"
-      class="outcome-strip__chip"
-      :class="`outcome-strip__chip--${tssClass}`"
-      v-tip="$t('exp.outcomeTssTip')"
-      @click="scrollTo('hl-disruption-chart')"
-    >
-      <span class="outcome-strip__chip-label">{{ $t('exp.outcomeTssLabel') }}</span>
-      <span class="outcome-strip__chip-val">{{ tssDisplay }}</span>
-    </button>
-
-    <button
-      type="button"
-      class="outcome-strip__chip"
-      :class="`outcome-strip__chip--${biomodClass}`"
-      v-tip="$t('exp.outcomeBiomodTip')"
-      @click="scrollTo('hl-cell-cards')"
-    >
-      <span class="outcome-strip__chip-label">{{ $t('exp.outcomeBiomodLabel') }}</span>
-      <span class="outcome-strip__chip-val">{{ biomodDisplay }}</span>
-    </button>
-
-    <button
-      type="button"
-      class="outcome-strip__chip outcome-strip__chip--qpcr"
-      :class="{ 'outcome-strip__chip--muted': qpcrPill.isPlaceholder }"
-      v-tip="qpcrTip"
-      @click="goToReports"
-    >
-      <span class="outcome-strip__chip-label">{{ $t('exp.outcomeQpcrLabel') }}</span>
-      <span class="outcome-strip__chip-val">{{ qpcrPill.value }}</span>
-      <span class="outcome-strip__chip-range">{{ qpcrPill.sublabel }}</span>
-    </button>
-
-    <CalibrationBadge
-      class="outcome-strip__calib"
-      variant="compact"
-      @click-log="goToReports"
-      @click-details="goToReports"
-    />
-
+    <!-- ── Zone 3: Snap to optimal (distinct, not a loop action) ───── -->
     <button
       type="button"
       class="outcome-strip__snap"
       :class="{
-        'outcome-strip__snap--no-window': hasNoSelectivityWindow,
-        'outcome-strip__snap--beyond':    !hasNoSelectivityWindow && isSnapBeyondRange,
+        'outcome-strip__snap--no-window':  hasNoSelectivityWindow,
+        'outcome-strip__snap--beyond':     isSnapBeyondOnly,
+        'outcome-strip__snap--calibrated': isSnapCalibrated,
       }"
       v-tip="tipSnap"
       @click="snapToOptimal"
@@ -117,6 +126,7 @@ import { mapStores } from 'pinia'
 
 import { useCellStore } from '@/stores/cellStore'
 import { useExperimentStore } from '@/stores/experimentStore'
+import { useUiStore } from '@/stores/uiStore'
 
 import { broadcastStateSync } from '@/services/socket'
 
@@ -124,10 +134,9 @@ import CalibrationBadge from '@/components/CalibrationBadge/index.vue'
 
 import { formatFreqKHz } from '@/utils/format'
 
-import { THRESHOLDS, THERMAL_MA_PEAK_C, THERM_NOURISH_ENTER_C } from '@/constants/physics'
+import { THRESHOLDS } from '@/constants/physics'
 import { NULL_DISPLAY } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
-import { UNIT } from '@/constants/units'
 import { ROUTE } from '@/constants/routes'
 
 export default defineComponent({
@@ -136,14 +145,12 @@ export default defineComponent({
   components: { CalibrationBadge },
 
   computed: {
-    ...mapStores(useCellStore, useExperimentStore),
+    ...mapStores(useCellStore, useExperimentStore, useUiStore),
     ICON() { return ICON },
 
     selectivity(): number { return this.cellStore.selectivityRatio },
     drT(): number         { return this.cellStore.targetDisruptionRatio },
     drH(): number         { return this.cellStore.healthyDisruptionRatio },
-    tss(): number         { return Math.max(this.cellStore.healthySteadyStateTemp, this.cellStore.targetSteadyStateTemp) },
-    biomod(): number      { return this.cellStore.healthyBiomodScore },
 
     mode(): { label: string; classSuffix: string } {
       const t = this.drT, h = this.drH
@@ -189,24 +196,6 @@ export default defineComponent({
       return 'strong'
     },
 
-    tssDisplay(): string { return `${this.tss.toFixed(1)}${UNIT.DEG_C}` },
-
-    tssClass(): string {
-      const t = this.tss
-      if (t >= THRESHOLDS.TEMP_WARN)       return 'weak'
-      if (t >= THERMAL_MA_PEAK_C)          return 'marginal'
-      if (t >= THERM_NOURISH_ENTER_C)      return 'strong'
-      return 'muted'
-    },
-
-    biomodDisplay(): string { return this.biomod.toFixed(2) },
-
-    biomodClass(): string {
-      if (this.biomod >= THRESHOLDS.BMS_NOURISHING) return 'strong'
-      if (this.biomod >= 0.25)                      return 'marginal'
-      return 'muted'
-    },
-
     qpcrPill(): { value: string; sublabel: string; isPlaceholder: boolean } {
       const latest = this.experimentStore.latestMeasuredQpcr
       if (!latest) {
@@ -242,6 +231,17 @@ export default defineComponent({
 
     hasNoSelectivityWindow(): boolean {
       return !this.isResonanceTarget && this.optimalFreqResult.sel < THRESHOLDS.SEL_MARGINAL
+    },
+
+    isSnapBeyondOnly(): boolean {
+      return !this.hasNoSelectivityWindow && this.isSnapBeyondRange
+    },
+
+    isSnapCalibrated(): boolean {
+      if (this.hasNoSelectivityWindow) return false
+      if (this.isSnapBeyondRange)      return false
+      const tier = this.experimentStore.calibrationSummary.tier
+      return tier === 'moderate' || tier === 'strong'
     },
 
     snapLabel(): string {
@@ -283,6 +283,10 @@ export default defineComponent({
       this.$router.push(ROUTE.REPORTS)
     },
 
+    openAiPanel() {
+      this.uiStore.setAiPanelOpen(true)
+    },
+
     snapToOptimal() {
       const { khz } = this.optimalFreqResult
       const { freqMin, freqMax } = this.cellStore.sliderRanges
@@ -296,14 +300,39 @@ export default defineComponent({
 <style lang="scss" scoped>
 
 .outcome-strip {
-  @include flex-row(0.5rem);
-  align-items: stretch;
+  @include flex-row(0.6rem);
+  align-items: center;
   flex-wrap: wrap;
-  padding: 0.4rem 0.6rem;
-  background: color-mix(in srgb, var(--color-surface) 88%, transparent);
+  padding: 0.55rem 0.85rem;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--color-surface) 92%, transparent) 0%,
+    color-mix(in srgb, var(--color-surface) 86%, transparent) 60%,
+    color-mix(in srgb, var(--color-primary)  7%, var(--color-surface)) 100%
+  );
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   margin-bottom: 0.2rem;
+
+  /* ── Zones: readouts (left) + loop (centre) + snap (right) ──────── */
+  &__zone {
+    @include flex-row(0.5rem);
+    align-items: center;
+    flex-wrap: wrap;
+
+    &--readouts { flex: 1 1 auto; min-width: 0; }
+    &--loop     { flex: 0 0 auto; }
+  }
+
+  &__divider {
+    width: 1px;
+    align-self: stretch;
+    background: color-mix(in srgb, var(--color-primary) 28%, transparent);
+    margin: 0.3rem 0.1rem;
+    flex-shrink: 0;
+
+    @media (max-width: 900px) { display: none; }
+  }
 
   &__title {
     @include flex-row(0.4rem);
@@ -329,6 +358,15 @@ export default defineComponent({
     white-space: nowrap;
   }
 
+  &__title-sub {
+    @include mono-upper(var(--fs-xxs), 0.12em);
+    color: var(--color-primary);
+    opacity: var(--op-dim);
+    white-space: nowrap;
+    padding-left: 0.45rem;
+    border-left: 1px solid color-mix(in srgb, var(--color-primary) 30%, transparent);
+  }
+
   &__sep {
     width: 1px;
     align-self: stretch;
@@ -342,7 +380,7 @@ export default defineComponent({
   &__mode {
     @include flex-row(0.4rem);
     align-items: center;
-    padding: 0.2rem 0.6rem;
+    padding: 0.35rem 0.75rem;
     border-radius: 999px;
     flex-shrink: 0;
     cursor: help;
@@ -372,7 +410,7 @@ export default defineComponent({
   &__chip {
     @include flex-row(0.4rem);
     align-items: baseline;
-    padding: 0.22rem 0.55rem;
+    padding: 0.35rem 0.7rem;
     border-radius: var(--radius);
     border: 1px solid var(--color-border);
     background: transparent;
@@ -419,11 +457,60 @@ export default defineComponent({
     align-self: center;
   }
 
+  /* ── Loop Actions: unboxed, grouped by adjacency + gap ────────────── */
+  &__loop-btn {
+    @include flex-row(0.4rem);
+    align-items: center;
+    padding: 0.35rem 0.75rem;
+    border-radius: var(--radius);
+    border: 1px solid;
+    cursor: pointer;
+    transition: background var(--tr-fast), border-color var(--tr-fast),
+                box-shadow var(--tr-fast), transform var(--tr-fast);
+
+    &--primary {
+      color: var(--color-primary);
+      border-color: color-mix(in srgb, var(--color-primary) 55%, transparent);
+      background: color-mix(in srgb, var(--color-primary) 22%, transparent);
+      box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-primary) 14%, transparent),
+                  0 6px 18px color-mix(in srgb, var(--color-primary) 18%, transparent);
+
+      &:hover {
+        background: color-mix(in srgb, var(--color-primary) 34%, transparent);
+        border-color: var(--color-primary);
+        transform: translateY(-1px);
+      }
+    }
+
+    &--secondary {
+      color: var(--color-text);
+      border-color: color-mix(in srgb, var(--color-primary) 30%, transparent);
+      background: color-mix(in srgb, var(--color-primary)  5%, transparent);
+
+      &:hover {
+        border-color: color-mix(in srgb, var(--color-primary) 55%, transparent);
+        background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+        transform: translateY(-1px);
+      }
+    }
+  }
+
+  &__loop-btn-icon {
+    font-size: var(--fs-md);
+    line-height: 1;
+  }
+
+  &__loop-btn-label {
+    @include mono-upper(var(--fs-xxs), 0.08em);
+    font-weight: 700;
+  }
+
   /* ── Snap-to-optimal CTA ────────────────────────────────────── */
   &__snap {
     @include flex-row(0.4rem);
     align-items: baseline;
-    padding: 0.22rem 0.6rem;
+    padding: 0.35rem 0.8rem;
+    border: 1px solid;
     border-radius: var(--radius);
     cursor: pointer;
     margin-left: auto;
@@ -445,6 +532,15 @@ export default defineComponent({
         background: color-mix(in srgb, white 6%, transparent);
       }
     }
+
+    &--calibrated {
+      animation: snap-calibrated-glow 2.8s ease-in-out infinite;
+    }
+  }
+
+  @keyframes snap-calibrated-glow {
+    0%, 100% { box-shadow: 0 0 0   color-mix(in srgb, var(--color-primary) 0%,  transparent); }
+    50%      { box-shadow: 0 0 16px color-mix(in srgb, var(--color-primary) 45%, transparent); }
   }
 
   &__snap-icon {

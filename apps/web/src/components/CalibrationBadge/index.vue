@@ -11,7 +11,8 @@
 
     <span class="calib__body">
       <span class="calib__title">{{ titleText }}</span>
-      <span v-if="isFullVariant" class="calib__subtitle">{{ subtitleText }}</span>
+      <span v-if="showInlineProgress" class="calib__progress">{{ inlineProgressText }}</span>
+      <span class="calib__subtitle">{{ subtitleText }}</span>
     </span>
 
     <span v-if="showActionCue" class="calib__cue" aria-hidden="true">›</span>
@@ -27,7 +28,7 @@ import { useExperimentStore } from '@/stores/experimentStore'
 
 import { THRESHOLDS } from '@/constants/physics'
 
-type BadgeVariant = 'compact' | 'full'
+type BadgeVariant = 'compact' | 'full' | 'inline'
 
 export default defineComponent({
   name: 'CalibrationBadge',
@@ -44,7 +45,8 @@ export default defineComponent({
 
     rootTag(): string { return this.clickable ? 'button' : 'div' },
 
-    isFullVariant(): boolean { return this.variant === 'full' },
+    isFullVariant(): boolean   { return this.variant === 'full' },
+    isInlineVariant(): boolean { return this.variant === 'inline' },
 
     summary() { return this.experimentStore.calibrationSummary },
 
@@ -71,6 +73,15 @@ export default defineComponent({
       const s  = this.summary
       const pp = this.worstPpDisplay
       const n  = s.sampleCount
+      if (this.isInlineVariant) {
+        switch (s.tier) {
+          case 'none':     return this.$t('ai.calibNoneShort',     { have: n, need: THRESHOLDS.CALIB_MIN_SAMPLES })
+          case 'drift':    return this.$t('ai.calibDriftShort',    { pp, n })
+          case 'moderate': return this.$t('ai.calibModerateShort', { pp, n })
+          case 'strong':   return this.$t('ai.calibStrongShort',   { pp, n })
+        }
+        return ''
+      }
       switch (s.tier) {
         case 'none':     return this.$t('ai.calibNoneBody',     { have: n, need: THRESHOLDS.CALIB_MIN_SAMPLES })
         case 'drift':    return this.$t('ai.calibDriftBody',    { pp, n })
@@ -87,10 +98,25 @@ export default defineComponent({
           need: THRESHOLDS.CALIB_MIN_SAMPLES,
         }) as string
       }
-      return this.$t('ai.calibTip') as string
+      const current = this.$t('ai.calibTipCurrent', {
+        pp: this.worstPpDisplay,
+        n:  this.summary.sampleCount,
+      }) as string
+      return `${this.$t('ai.calibTip')}\n\n${current}`
     },
 
     showActionCue(): boolean { return this.clickable },
+
+    showInlineProgress(): boolean {
+      return this.isInlineVariant && this.tier === 'none'
+    },
+
+    inlineProgressText(): string {
+      return this.$t('ai.calibProgressShort', {
+        have: this.summary.sampleCount,
+        need: THRESHOLDS.CALIB_MIN_SAMPLES,
+      }) as string
+    },
   },
 
   methods: {
@@ -151,12 +177,68 @@ export default defineComponent({
 
   // ── Variants ─────────────────────────────────────────────────────────────
   &--compact {
-    padding: 0.2rem 0.5rem;
-    gap: 0.35rem;
+    padding: 0.25rem 0.55rem;
+    gap: 0.4rem;
+
+    .calib__body {
+      @include flex-row(0.4rem);
+      flex-wrap: nowrap;
+      align-items: baseline;
+    }
+
+    .calib__subtitle {
+      font-size: var(--fs-xxs);
+      line-height: 1.3;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 260px;
+
+      &::before {
+        content: '·';
+        margin-right: 0.4rem;
+        opacity: var(--op-muted);
+      }
+    }
   }
 
   &--full {
     width: 100%;
+  }
+
+  &--inline {
+    padding: 0.38rem 0.75rem;
+    gap: 0.4rem;
+    height: 100%;
+
+    .calib__body {
+      @include flex-row(0.4rem);
+      flex-wrap: nowrap;
+      align-items: baseline;
+      white-space: nowrap;
+    }
+
+    .calib__title {
+      font-size: var(--fs-xxs);
+    }
+
+    /* Inline variant hides the subtitle — detail moves to the tooltip */
+    .calib__subtitle { display: none; }
+
+    .calib__progress {
+      font-family: var(--font-mono);
+      font-size: var(--fs-xxs);
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0;
+      color: var(--color-text);
+      opacity: var(--op-partial);
+      padding: 0.1rem 0.4rem;
+      border-radius: 3px;
+      background: color-mix(in srgb, currentColor 16%, transparent);
+      white-space: nowrap;
+    }
+
+    .calib__cue { opacity: var(--op-dim); }
   }
 
   &:hover {

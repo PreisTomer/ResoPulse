@@ -3,9 +3,32 @@
   <section class="calib-trend">
     <header class="calib-trend__header">
       <span class="calib-trend__title">{{ $t('reports.calibTrendTitle') }}</span>
-      <span v-if="hasData" class="calib-trend__mean">{{ $t('reports.calibTrendMean', { v: meanAbsFormatted }) }}</span>
+      <div class="calib-trend__header-actions">
+        <div v-if="hasMultipleSessions" class="calib-trend__filter" role="radiogroup">
+          <button
+            type="button"
+            class="calib-trend__filter-btn"
+            :class="{ 'calib-trend__filter-btn--active': filterMode === 'all' }"
+            v-tip="$t('reports.calibFilterAllTip')"
+            @click="filterMode = 'all'"
+          >{{ $t('reports.calibFilterAll') }}</button>
+          <button
+            type="button"
+            class="calib-trend__filter-btn"
+            :class="{ 'calib-trend__filter-btn--active': filterMode === 'session' }"
+            v-tip="$t('reports.calibFilterSessionTip')"
+            @click="filterMode = 'session'"
+          >{{ $t('reports.calibFilterSession') }}</button>
+        </div>
+        <span v-if="hasData" class="calib-trend__mean">{{ $t('reports.calibTrendMean', { v: meanAbsFormatted }) }}</span>
+      </div>
     </header>
     <p class="calib-trend__subtitle">{{ $t('reports.calibTrendSubtitle') }}</p>
+    <p
+      v-if="shouldShowDirection"
+      class="calib-trend__direction"
+      :class="`calib-trend__direction--${directionClass}`"
+    >{{ directionLabel }}</p>
 
     <div v-if="!hasData" class="calib-trend__empty">
       {{ $t('reports.calibTrendEmpty') }}
@@ -42,13 +65,22 @@
         :class="dotVariantClass(pt.value)"
       />
 
-      <!-- Y-axis labels -->
+      <!-- Y-axis tick values -->
       <text :x="PADDING_X - 6" :y="PADDING_Y + 4" text-anchor="end" class="calib-trend__axis-value">
         {{ maxAbsFormatted }}
       </text>
       <text :x="PADDING_X - 6" :y="axisY" text-anchor="end" class="calib-trend__axis-value">
         0
       </text>
+      <!-- Y-axis rotated label -->
+      <text
+        :x="12"
+        :y="axisY / 2 + PADDING_Y / 2"
+        text-anchor="middle"
+        class="calib-trend__axis-label"
+        :transform="`rotate(-90, 12, ${axisY / 2 + PADDING_Y / 2})`"
+      >{{ $t('reports.calibTrendAxisResidual') }}</text>
+      <!-- X-axis label -->
       <text :x="axisXLabelX" :y="VIEWBOX_H - 6" text-anchor="middle" class="calib-trend__axis-label">
         {{ $t('reports.calibTrendAxisEntry') }}
       </text>
@@ -58,8 +90,12 @@
 
 <script lang="ts">
 import { defineComponent, type PropType } from 'vue'
+import { mapStores } from 'pinia'
 
+import { useExperimentStore } from '@/stores/experimentStore'
 import type { EntryResidual } from '@/stores/experimentStore'
+
+type FilterMode = 'all' | 'session'
 
 interface Point { x: number; y: number; value: number }
 
@@ -80,6 +116,7 @@ export default defineComponent({
     return {
       viewBoxW:         VIEWBOX_W_DEFAULT,
       resizeObserver:   null as ResizeObserver | null,
+      filterMode:       'all' as FilterMode,
     }
   },
 
@@ -99,14 +136,35 @@ export default defineComponent({
   },
 
   computed: {
+    ...mapStores(useExperimentStore),
+
     VIEWBOX_W(): number { return this.viewBoxW },
     VIEWBOX_H() { return VIEWBOX_H },
     PADDING_X() { return PADDING_X },
     PADDING_Y() { return PADDING_Y },
 
+    activeSessionName(): string {
+      return this.experimentStore.sessionName
+    },
+
+    hasMultipleSessions(): boolean {
+      const seen = new Set<string>()
+      for (const r of this.residuals) {
+        if (r.targetResidualPct === null) continue
+        seen.add(r.sessionName ?? '')
+        if (seen.size > 1) return true
+      }
+      return false
+    },
+
+    filteredResiduals(): EntryResidual[] {
+      const withTarget = this.residuals.filter(r => r.targetResidualPct !== null)
+      if (this.filterMode === 'all') return withTarget
+      return withTarget.filter(r => (r.sessionName ?? '') === this.activeSessionName)
+    },
+
     absResiduals(): number[] {
-      return this.residuals
-        .filter(r => r.targetResidualPct !== null)
+      return this.filteredResiduals
         .map(r => Math.abs(r.targetResidualPct as number))
         .reverse()
     },
@@ -154,6 +212,36 @@ export default defineComponent({
     },
 
     axisXLabelX(): number { return this.viewBoxW / 2 },
+
+    trendDirection(): 'tightening' | 'drifting' | 'flat' | null {
+      const n = this.absResiduals.length
+      if (n < 5) return null
+      const mid = Math.floor(n / 2)
+      const firstHalf  = this.absResiduals.slice(0, mid)
+      const secondHalf = this.absResiduals.slice(mid)
+      const avg = (a: number[]) => a.reduce((s, v) => s + v, 0) / a.length
+      const delta = avg(secondHalf) - avg(firstHalf)
+      if (delta <= -2) return 'tightening'
+      if (delta >=  2) return 'drifting'
+      return 'flat'
+    },
+
+    shouldShowDirection(): boolean {
+      return this.hasData && this.trendDirection !== null
+    },
+
+    directionClass(): string {
+      return this.trendDirection ?? 'flat'
+    },
+
+    directionLabel(): string {
+      switch (this.trendDirection) {
+        case 'tightening': return this.$t('reports.calibTrendDirTightening') as string
+        case 'drifting':   return this.$t('reports.calibTrendDirDrifting')   as string
+        case 'flat':       return this.$t('reports.calibTrendDirFlat')       as string
+        default:           return ''
+      }
+    },
   },
 
   methods: {
@@ -180,6 +268,38 @@ export default defineComponent({
     flex-wrap: wrap;
   }
 
+  &__header-actions {
+    @include flex-row(0.75rem);
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  &__filter {
+    @include flex-row(0);
+    padding: 2px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    background: color-mix(in srgb, white 2%, transparent);
+  }
+
+  &__filter-btn {
+    @include mono-upper(var(--fs-xxs), 0.08em);
+    padding: 0.25rem 0.6rem;
+    border: none;
+    background: transparent;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background var(--tr-fast), color var(--tr-fast);
+
+    &:hover { color: var(--color-text); }
+
+    &--active {
+      color: var(--color-primary);
+      background: color-mix(in srgb, var(--color-primary) 14%, transparent);
+    }
+  }
+
   &__title {
     @include mono-upper(var(--fs-xs));
     color: var(--color-primary);
@@ -198,6 +318,19 @@ export default defineComponent({
     opacity: var(--op-muted);
     margin: 0;
     line-height: 1.45;
+  }
+
+  &__direction {
+    @include mono-upper(var(--fs-xxs), 0.08em);
+    margin: 0;
+    padding: 0.35rem 0.55rem;
+    border-radius: var(--radius);
+    border: 1px solid;
+    align-self: flex-start;
+
+    &--tightening { @include color-variant(lime,    40%, 10%); }
+    &--flat       { @include color-variant(primary, 30%, 8%);  }
+    &--drifting   { @include color-variant(amber,   40%, 12%); }
   }
 
   &__empty {

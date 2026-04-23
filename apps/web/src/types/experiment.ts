@@ -80,4 +80,8 @@ export interface LogEntry {
   aiSuggestionApplied?: boolean  // true when this protocol was AI-suggested before the run
   // ── Measured outcome (populated via Log Measured action) ─────────────────
   measured?: MeasuredOutcome
+  // When true, the entry's residuals are excluded from calibrationSummary even
+  // if a measured outcome is attached (e.g. the user flagged this run as a
+  // bench outlier after a pump failure or a cross-contamination incident).
+  excludedFromCalibration?: boolean
 }

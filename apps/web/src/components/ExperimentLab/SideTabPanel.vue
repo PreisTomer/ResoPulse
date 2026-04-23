@@ -11,6 +11,7 @@
         <slot name="panel" />
       </div>
       <button
+        v-if="!hideTab"
         class="side-tab-panel__tab side-tab-panel__tab--left"
         :class="{ 'side-tab-panel__tab--intro': introActive }"
         :style="{ height: tabHeight + 'px', alignSelf: tabAlign }"
@@ -24,6 +25,7 @@
 
     <template v-else>
       <button
+        v-if="!hideTab"
         class="side-tab-panel__tab"
         :class="{ 'side-tab-panel__tab--intro': introActive }"
         :style="{ height: tabHeight + 'px', alignSelf: tabAlign }"
@@ -56,6 +58,7 @@ export default defineComponent({
     defaultCollapsed: { type: Boolean, default: true },
     forceOpen:        { type: Boolean, default: false },
     introAnimation:   { type: Boolean, default: false },
+    hideTab:          { type: Boolean, default: false },
     tabAlign:         { type: String,  default: 'flex-start' },
     expandTip:        { type: String,  default: '' },
     collapseTip:      { type: String,  default: '' },

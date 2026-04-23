@@ -2,7 +2,7 @@
 
 ## Brand Identity — Logo Tagline
 
-The ResoPulse logo tagline is always **"Virtual Biophysics Engine"** — never "Virtual Cell Lab" or any other variant. Lives in `locales/nav.en.json` as `nav.researchPlatform`; always reference via `$t('nav.researchPlatform')`.
+The ResoPulse logo tagline is always **"Electroporation Digital Twin"** — never "Virtual Cell Lab" or any other variant. Lives in `locales/nav.en.json` as `nav.researchPlatform`; always reference via `$t('nav.researchPlatform')`.
 
 Styling: `text-transform: capitalize` (never `uppercase`), `font-family: var(--font-mono)`, `font-size: 0.6rem`, `letter-spacing: 0.02em`.
 

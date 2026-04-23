@@ -66,8 +66,9 @@
           :min="SLIDER_DC.LOG_MIN"
           :max="SLIDER_DC.LOG_MAX"
           :step="SLIDER_DC.LOG_STEP"
-          :value="dutyCycleLogVal"
+          :value="dragDutyCycleLog ?? dutyCycleLogVal"
           @input="onDutyCycleInput"
+          @change="dragDutyCycleLog = null"
         />
       </div>
     </div>
@@ -89,8 +90,9 @@
           :min="sliderRanges.pwLogMin"
           :max="sliderRanges.pwLogMax"
           step="0.05"
-          :value="pulseWidthLogVal"
+          :value="dragPulseWidthLog ?? pulseWidthLogVal"
           @input="onPulseWidthInput"
+          @change="dragPulseWidthLog = null"
         />
       </div>
     </div>
@@ -139,7 +141,12 @@ export default defineComponent({
   },
 
   data() {
-    return { open: true, WAVEFORM, THERMAL_LEVEL, ICON, UNIT, CELL_LABEL, CW_WAVEFORM_FACTOR, PULSED_WAVEFORM_FACTOR, H_FIRE_THRESHOLD_MULTIPLIER, SLIDER_DC }
+    return {
+      open: true,
+      WAVEFORM, THERMAL_LEVEL, ICON, UNIT, CELL_LABEL, CW_WAVEFORM_FACTOR, PULSED_WAVEFORM_FACTOR, H_FIRE_THRESHOLD_MULTIPLIER, SLIDER_DC,
+      dragDutyCycleLog:  null as number | null,
+      dragPulseWidthLog: null as number | null,
+    }
   },
 
   computed: {
@@ -240,12 +247,14 @@ export default defineComponent({
 
     onDutyCycleInput(e: Event) {
       const logVal = Number((e.target as HTMLInputElement).value)
+      this.dragDutyCycleLog = logVal
       this.cellStore.setDutyCycle(Math.pow(10, logVal))
       broadcastStateSync()
     },
 
     onPulseWidthInput(e: Event) {
       const logVal = Number((e.target as HTMLInputElement).value)
+      this.dragPulseWidthLog = logVal
       this.cellStore.setPulseWidthNs(Math.round(Math.pow(10, logVal)))
       broadcastStateSync()
     },

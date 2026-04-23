@@ -16,6 +16,7 @@ export interface ImportReport {
   rowsWithMeasuredData: number
   matchable:            ImportedRow[]
   ignoredRows:          Array<{ row: number; reason: string }>
+  duplicateIds:         number[]
 }
 
 const ID_HEADERS       = ['#', 'id', 'entry', 'entry #', 'entry#']
@@ -91,6 +92,7 @@ export function parseMeasuredCsv(text: string, userMapping: CsvColumnMapping = {
     rowsWithMeasuredData: 0,
     matchable:            [],
     ignoredRows:          [],
+    duplicateIds:         [],
   }
   if (!text) return report
 
@@ -172,6 +174,14 @@ export function parseMeasuredCsv(text: string, userMapping: CsvColumnMapping = {
     report.rowsWithMeasuredData++
     report.matchable.push({ id, measured })
   }
+
+  const seen = new Set<number>()
+  const dups = new Set<number>()
+  for (const row of report.matchable) {
+    if (seen.has(row.id)) dups.add(row.id)
+    seen.add(row.id)
+  }
+  report.duplicateIds = [...dups].sort((a, b) => a - b)
 
   return report
 }
