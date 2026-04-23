@@ -4,7 +4,7 @@ services:
     name: resopulse-backend
     runtime: node
     buildCommand: npm install && npm run build -w @resopulse/api
-    startCommand: cd apps/api && npx prisma migrate deploy && npm start
+    startCommand: cd apps/api && npm run migrate:deploy && npm start
     envVars:
       - key: NODE_ENV
         value: production
