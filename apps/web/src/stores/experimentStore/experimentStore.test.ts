@@ -392,6 +392,22 @@ describe('calibrationSummary / measuredResiduals / latestMeasuredOutcomes', () =
     expect(store.calibrationSummary.tier).toBe('moderate')
   })
 
+  it('does NOT pick tier "strong" when individual residual scatter exceeds the drift threshold', () => {
+    // Healthy predicted = 80 pp; alternate measurements 60/100 yield residuals -20/+20,
+    // mean ≈ 0 (low bias) but max |residual| = 20 (high scatter). Old tier logic
+    // incorrectly classified this as "strong"; the scatter gate must hold it at "moderate".
+    const store = freshStore()
+    for (let i = 0; i < 10; i++) {
+      store.logReading(SNAP, 'manual')
+      store.logMeasuredOutcome(i + 1, { healthyLysisPct: i % 2 === 0 ? 100 : 60 })
+    }
+    const summary = store.calibrationSummary
+    expect(summary.sampleCount).toBe(10)
+    expect(Math.abs(summary.meanHealthyResidualPct ?? 0)).toBeLessThan(1)
+    expect(summary.maxAbsResidualPct).toBeCloseTo(20, 5)
+    expect(summary.tier).toBe('moderate')
+  })
+
   it('latestMeasuredOutcomes returns newest per-type pair with signed delta', () => {
     const store = freshStore()
     store.logReading(SNAP, 'manual')                            // id 1

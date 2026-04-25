@@ -119,21 +119,21 @@ function rankByFarthestMinDistance(candidates: Candidate[], measured: LogEntry[]
 function pickWithEpsilonExclusion(ranked: Ranked[], count: number, b: SliderRange): Candidate[] {
   const fRange = Math.log10(Math.max(b.freqMax, 1))  - Math.log10(Math.max(b.freqMin, 1))  || 1
   const eRange = Math.log10(Math.max(b.fieldMax, 1)) - Math.log10(Math.max(b.fieldMin, 1)) || 1
-  const picks: Ranked[] = []
+  const picks  = new Set<Ranked>()
   for (const c of ranked) {
-    const tooClose = picks.some(p => {
+    const tooClose = [...picks].some(p => {
       const df = Math.abs(c.freqLog  - p.freqLog)  / fRange
       const de = Math.abs(c.fieldLog - p.fieldLog) / eRange
       return df < EPS_FREQ_LOG && de < EPS_FIELD_LOG
     })
-    if (!tooClose) picks.push(c)
-    if (picks.length >= count) break
+    if (!tooClose) picks.add(c)
+    if (picks.size >= count) break
   }
-  if (picks.length < count) {
+  if (picks.size < count) {
     for (const c of ranked) {
-      if (!picks.includes(c)) picks.push(c)
-      if (picks.length >= count) break
+      if (!picks.has(c)) picks.add(c)
+      if (picks.size >= count) break
     }
   }
-  return picks
+  return [...picks]
 }

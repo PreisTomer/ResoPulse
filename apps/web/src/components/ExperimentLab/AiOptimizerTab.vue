@@ -332,6 +332,7 @@ export default defineComponent({
       exploreSuggestions:   [] as SuggestedProtocol[],
       retrainModalOpen:     false,
       _healthPollTimer:     null as ReturnType<typeof setInterval> | null,
+      _optimizeTimeoutTimer: null as ReturnType<typeof setTimeout> | null,
     }
   },
 
@@ -341,7 +342,8 @@ export default defineComponent({
   },
 
   beforeUnmount() {
-    if (this._healthPollTimer) clearInterval(this._healthPollTimer)
+    if (this._healthPollTimer)      clearInterval(this._healthPollTimer)
+    if (this._optimizeTimeoutTimer) clearTimeout(this._optimizeTimeoutTimer)
   },
 
   watch: {
@@ -445,10 +447,16 @@ export default defineComponent({
 
       this.showOfflineNote = false
       const requestId = this.aiStore.startRequest()
+      if (this._optimizeTimeoutTimer) clearTimeout(this._optimizeTimeoutTimer)
       requestAiOptimization(requestId, (result) => {
+        if (this._optimizeTimeoutTimer) {
+          clearTimeout(this._optimizeTimeoutTimer)
+          this._optimizeTimeoutTimer = null
+        }
         this.aiStore.receiveResult(result)
       })
-      setTimeout(() => {
+      this._optimizeTimeoutTimer = setTimeout(() => {
+        this._optimizeTimeoutTimer = null
         if (this.aiStore.isLoading && this.aiStore.pendingRequestId === requestId) {
           this.aiStore.cancelRequest()
           this.showOfflineNote = true

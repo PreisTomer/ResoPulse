@@ -30,6 +30,10 @@ import { THRESHOLDS } from '@/constants/physics'
 
 type BadgeVariant = 'compact' | 'full' | 'inline'
 
+function capitalize(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1)
+}
+
 export default defineComponent({
   name: 'CalibrationBadge',
 
@@ -57,38 +61,27 @@ export default defineComponent({
       return v === null ? '—' : v.toFixed(1)
     },
 
-    titleText(): string {
-      const s = this.summary
-      const pp = this.worstPpDisplay
-      switch (s.tier) {
-        case 'none':     return this.$t('ai.calibNone')
-        case 'drift':    return this.$t('ai.calibDrift')
-        case 'moderate': return this.$t('ai.calibModerate', { pp })
-        case 'strong':   return this.$t('ai.calibStrong',   { pp })
+    /** Per-tier i18n keys: [titleKey, inlineSubtitleKey, fullSubtitleKey]. */
+    tierTexts(): { title: string; inline: string; full: string } {
+      const tier = this.summary.tier
+      const Title = `ai.calib${capitalize(tier)}`
+      return {
+        title:  Title,
+        inline: tier === 'none' ? 'ai.calibNoneShort' : `ai.calib${capitalize(tier)}Short`,
+        full:   tier === 'none' ? 'ai.calibNoneBody'  : `ai.calib${capitalize(tier)}Body`,
       }
-      return ''
+    },
+
+    titleText(): string {
+      return this.$t(this.tierTexts.title, { pp: this.worstPpDisplay }) as string
     },
 
     subtitleText(): string {
-      const s  = this.summary
-      const pp = this.worstPpDisplay
-      const n  = s.sampleCount
-      if (this.isInlineVariant) {
-        switch (s.tier) {
-          case 'none':     return this.$t('ai.calibNoneShort',     { have: n, need: THRESHOLDS.CALIB_MIN_SAMPLES })
-          case 'drift':    return this.$t('ai.calibDriftShort',    { pp, n })
-          case 'moderate': return this.$t('ai.calibModerateShort', { pp, n })
-          case 'strong':   return this.$t('ai.calibStrongShort',   { pp, n })
-        }
-        return ''
-      }
-      switch (s.tier) {
-        case 'none':     return this.$t('ai.calibNoneBody',     { have: n, need: THRESHOLDS.CALIB_MIN_SAMPLES })
-        case 'drift':    return this.$t('ai.calibDriftBody',    { pp, n })
-        case 'moderate': return this.$t('ai.calibModerateBody', { pp, n })
-        case 'strong':   return this.$t('ai.calibStrongBody',   { pp, n })
-      }
-      return ''
+      const key  = this.isInlineVariant ? this.tierTexts.inline : this.tierTexts.full
+      const args = this.summary.tier === 'none'
+        ? { have: this.summary.sampleCount, need: THRESHOLDS.CALIB_MIN_SAMPLES }
+        : { pp: this.worstPpDisplay, n: this.summary.sampleCount }
+      return this.$t(key, args) as string
     },
 
     tipText(): string {

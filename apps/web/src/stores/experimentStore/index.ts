@@ -27,7 +27,8 @@ export type CalibrationTier = 'none' | 'drift' | 'moderate' | 'strong'
 export interface CalibrationSummary {
   tier:                  CalibrationTier
   sampleCount:           number
-  worstResidualPct:      number | null   // max(|meanTargetΔ|, |meanHealthyΔ|); null when no data
+  worstResidualPct:      number | null   // max(|meanTargetΔ|, |meanHealthyΔ|) — bias magnitude. null when no data
+  maxAbsResidualPct:     number | null   // largest single |residual| (target+healthy) — scatter ceiling. null when no data
   meanTargetResidualPct: number | null
   meanHealthyResidualPct: number | null
   meanFieldResidualVcm:  number | null
@@ -151,11 +152,14 @@ function mean(values: number[]): number | null {
   return values.reduce((acc, v) => acc + v, 0) / values.length
 }
 
-function pickTier(count: number, worst: number | null): CalibrationTier {
-  if (count < THRESHOLDS.CALIB_MIN_SAMPLES || worst === null) return 'none'
-  if (worst > THRESHOLDS.CALIB_DRIFT_PP)                      return 'drift'
+function pickTier(count: number, meanAbsBias: number | null, maxAbsResidual: number | null): CalibrationTier {
+  if (count < THRESHOLDS.CALIB_MIN_SAMPLES || meanAbsBias === null) return 'none'
+  if (meanAbsBias > THRESHOLDS.CALIB_DRIFT_PP)                      return 'drift'
+  // Scatter gate: even with low mean bias, a single residual breaching the drift threshold
+  // means the model is unreliable point-by-point and we cannot honestly call it "strong".
   if (count >= THRESHOLDS.CALIB_STRONG_SAMPLES
-      && worst < THRESHOLDS.CALIB_STRONG_PP)                  return 'strong'
+      && meanAbsBias < THRESHOLDS.CALIB_STRONG_PP
+      && (maxAbsResidual ?? 0) < THRESHOLDS.CALIB_DRIFT_PP) return 'strong'
   return 'moderate'
 }
 
@@ -198,8 +202,8 @@ export const useExperimentStore = defineStore('experiment', {
     /** Newest measured-vs-predicted pair per cell type (null when none logged). */
     latestMeasuredOutcomes(): { healthy: MeasuredVsPredicted | null; target: MeasuredVsPredicted | null } {
       const entries = (this.measuredEntries as LogEntry[])
-      const newestTarget  = [...entries].reverse().find(e => e.measured?.targetLysisPct  !== undefined)
-      const newestHealthy = [...entries].reverse().find(e => e.measured?.healthyLysisPct !== undefined)
+      const newestTarget  = entries.findLast(e => e.measured?.targetLysisPct  !== undefined)
+      const newestHealthy = entries.findLast(e => e.measured?.healthyLysisPct !== undefined)
 
       const pair = (entry: LogEntry | undefined, ratioKey: 'targetRatio' | 'healthyRatio', measuredKey: 'targetLysisPct' | 'healthyLysisPct'): MeasuredVsPredicted | null => {
         if (!entry || !entry.measured) return null
@@ -224,8 +228,8 @@ export const useExperimentStore = defineStore('experiment', {
     /** Newest measured qPCR fold-change + transcript, or null when none logged. */
     latestMeasuredQpcr(): { foldChange: number; transcript: string | null; entryId: number } | null {
       const entries = (this.measuredEntries as LogEntry[])
-      const newest  = [...entries].reverse().find(e => e.measured?.qpcrFoldChange !== undefined)
-      if (!newest || !newest.measured || newest.measured.qpcrFoldChange === undefined) return null
+      const newest  = entries.findLast(e => e.measured?.qpcrFoldChange !== undefined)
+      if (!newest || newest.measured?.qpcrFoldChange === undefined) return null
       return {
         foldChange: newest.measured.qpcrFoldChange,
         transcript: newest.measured.qpcrTarget ?? null,
@@ -237,16 +241,23 @@ export const useExperimentStore = defineStore('experiment', {
     calibrationSummary(): CalibrationSummary {
       const residuals = this.measuredResiduals as EntryResidual[]
       const count     = residuals.length
-      const meanT     = mean(residuals.map(r => r.targetResidualPct ).filter((v): v is number => v !== null))
-      const meanH     = mean(residuals.map(r => r.healthyResidualPct).filter((v): v is number => v !== null))
-      const meanF     = mean(residuals.map(r => r.fieldResidualVcm  ).filter((v): v is number => v !== null))
-      const worst     = (meanT === null && meanH === null)
+      const targetPp  = residuals.map(r => r.targetResidualPct ).filter((v): v is number => v !== null)
+      const healthyPp = residuals.map(r => r.healthyResidualPct).filter((v): v is number => v !== null)
+      const meanT     = mean(targetPp)
+      const meanH     = mean(healthyPp)
+      const meanF     = mean(residuals.map(r => r.fieldResidualVcm).filter((v): v is number => v !== null))
+      const meanAbsBias = (meanT === null && meanH === null)
         ? null
         : Math.max(Math.abs(meanT ?? 0), Math.abs(meanH ?? 0))
+      const allResiduals = [...targetPp, ...healthyPp]
+      const maxAbsResidual = allResiduals.length === 0
+        ? null
+        : Math.max(...allResiduals.map(Math.abs))
       return {
-        tier:                   pickTier(count, worst),
+        tier:                   pickTier(count, meanAbsBias, maxAbsResidual),
         sampleCount:            count,
-        worstResidualPct:       worst,
+        worstResidualPct:       meanAbsBias,
+        maxAbsResidualPct:      maxAbsResidual,
         meanTargetResidualPct:  meanT,
         meanHealthyResidualPct: meanH,
         meanFieldResidualVcm:   meanF,
