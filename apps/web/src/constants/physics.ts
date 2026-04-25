@@ -151,11 +151,15 @@ export const THRESHOLDS = {
   MTE_COUPLING_THRESHOLD_PCT: 70,  // minimum acceptable coupling efficiency (%)
   // Population panel success note: minimum target lysis fraction [%] to show the "success window" note
   POP_NOTE_TARGET_LYSIS_MIN: 50,
-  // Model calibration tiers — compare simulator predictions with measured outcomes
-  CALIB_MIN_SAMPLES:     3,    // below this, tier is "none" (not enough data to judge)
-  CALIB_STRONG_SAMPLES:  10,   // samples required to earn the "strong" tier
-  CALIB_DRIFT_PP:        15,   // |Δ| in percentage points above this triggers the "drift" tier
-  CALIB_STRONG_PP:        5,   // |Δ| below this with enough samples is "strong"
+  // Model calibration tiers — compare simulator predictions with measured outcomes.
+  // n=5 = FDA bioanalytical-validation floor and aligns with the σ_i fit gate (SIGMA_CALIB_MIN_SAMPLES).
+  // n=10 = early-signal "strong" tier; full validation in the field is n≥20–30.
+  // 15pp = half-prediction drift; 5pp = noise floor of well-run flow / PI-uptake assays.
+  // Tier uses RMSE (combined bias+scatter) so a single outlier-free spread cannot read as "strong".
+  CALIB_MIN_SAMPLES:     5,
+  CALIB_STRONG_SAMPLES:  10,
+  CALIB_DRIFT_PP:        15,
+  CALIB_STRONG_PP:        5,
   // Per-cell σ_i fit gates — mirror apps/ai-service CALIBRATION_* constants
   SIGMA_CALIB_MIN_SAMPLES: 5,     // below this, fit is not persisted; UI shows "collecting data"
   SIGMA_CALIB_MULT_MIN:    0.3,   // biological plausibility lower bound on σ_i multiplier

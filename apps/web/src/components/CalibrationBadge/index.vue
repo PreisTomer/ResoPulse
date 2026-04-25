@@ -61,6 +61,11 @@ export default defineComponent({
       return v === null ? '—' : v.toFixed(1)
     },
 
+    rmsePpDisplay(): string {
+      const v = this.summary.rmseResidualPct
+      return v === null ? '—' : v.toFixed(1)
+    },
+
     /** Per-tier i18n keys: [titleKey, inlineSubtitleKey, fullSubtitleKey]. */
     tierTexts(): { title: string; inline: string; full: string } {
       const tier = this.summary.tier
@@ -92,8 +97,9 @@ export default defineComponent({
         }) as string
       }
       const current = this.$t('ai.calibTipCurrent', {
-        pp: this.worstPpDisplay,
-        n:  this.summary.sampleCount,
+        pp:   this.worstPpDisplay,
+        rmse: this.rmsePpDisplay,
+        n:    this.summary.sampleCount,
       }) as string
       return `${this.$t('ai.calibTip')}\n\n${current}`
     },

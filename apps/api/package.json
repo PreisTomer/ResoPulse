@@ -9,6 +9,7 @@
     "start": "node dist/index.js",
     "migrate:deploy": "node scripts/migrate-deploy.mjs",
     "demo": "node scripts/demo.mjs",
+    "pretest": "prisma generate",
     "test": "vitest run",
     "test:watch": "vitest"
   },

@@ -28,7 +28,7 @@ export interface CalibrationSummary {
   tier:                  CalibrationTier
   sampleCount:           number
   worstResidualPct:      number | null   // max(|meanTargetΔ|, |meanHealthyΔ|) — bias magnitude. null when no data
-  maxAbsResidualPct:     number | null   // largest single |residual| (target+healthy) — scatter ceiling. null when no data
+  rmseResidualPct:       number | null   // √mean(residual²) across target+healthy — combined bias+scatter (RMSE). Drives tier classification.
   meanTargetResidualPct: number | null
   meanHealthyResidualPct: number | null
   meanFieldResidualVcm:  number | null
@@ -152,14 +152,15 @@ function mean(values: number[]): number | null {
   return values.reduce((acc, v) => acc + v, 0) / values.length
 }
 
-function pickTier(count: number, meanAbsBias: number | null, maxAbsResidual: number | null): CalibrationTier {
-  if (count < THRESHOLDS.CALIB_MIN_SAMPLES || meanAbsBias === null) return 'none'
-  if (meanAbsBias > THRESHOLDS.CALIB_DRIFT_PP)                      return 'drift'
-  // Scatter gate: even with low mean bias, a single residual breaching the drift threshold
-  // means the model is unreliable point-by-point and we cannot honestly call it "strong".
+function pickTier(count: number, meanAbsBias: number | null, rmse: number | null): CalibrationTier {
+  if (count < THRESHOLDS.CALIB_MIN_SAMPLES || meanAbsBias === null || rmse === null) return 'none'
+  // RMSE (√mean(residual²)) is the standard regression-accuracy metric — it folds bias and scatter into one number.
+  // Drift gate uses RMSE so a low-bias / high-scatter calibration doesn't slip through as "moderate".
+  if (rmse > THRESHOLDS.CALIB_DRIFT_PP) return 'drift'
+  // Strong: enough samples AND low bias AND low scatter. Both gates must pass — bias-only or scatter-only is misleading.
   if (count >= THRESHOLDS.CALIB_STRONG_SAMPLES
       && meanAbsBias < THRESHOLDS.CALIB_STRONG_PP
-      && (maxAbsResidual ?? 0) < THRESHOLDS.CALIB_DRIFT_PP) return 'strong'
+      && rmse        < THRESHOLDS.CALIB_STRONG_PP) return 'strong'
   return 'moderate'
 }
 
@@ -250,14 +251,14 @@ export const useExperimentStore = defineStore('experiment', {
         ? null
         : Math.max(Math.abs(meanT ?? 0), Math.abs(meanH ?? 0))
       const allResiduals = [...targetPp, ...healthyPp]
-      const maxAbsResidual = allResiduals.length === 0
+      const rmse = allResiduals.length === 0
         ? null
-        : Math.max(...allResiduals.map(Math.abs))
+        : Math.sqrt(allResiduals.reduce((acc, v) => acc + v * v, 0) / allResiduals.length)
       return {
-        tier:                   pickTier(count, meanAbsBias, maxAbsResidual),
+        tier:                   pickTier(count, meanAbsBias, rmse),
         sampleCount:            count,
         worstResidualPct:       meanAbsBias,
-        maxAbsResidualPct:      maxAbsResidual,
+        rmseResidualPct:        rmse,
         meanTargetResidualPct:  meanT,
         meanHealthyResidualPct: meanH,
         meanFieldResidualVcm:   meanF,

@@ -356,21 +356,20 @@ describe('calibrationSummary / measuredResiduals / latestMeasuredOutcomes', () =
     expect(residuals[0]!.healthyResidualPct).toBeCloseTo(-5, 5)
   })
 
-  it('picks tier "drift" when mean residual exceeds CALIB_DRIFT_PP', () => {
+  it('picks tier "drift" when RMSE exceeds CALIB_DRIFT_PP', () => {
     const store = freshStore()
-    // 3 entries, each residual = 92 - 100 = -8 target (below drift threshold)
-    // but healthy residual = 100 - 80 = +20 → triggers drift on healthy path
-    for (let i = 0; i < 3; i++) {
+    // 5 entries (CALIB_MIN_SAMPLES). Healthy residual = 100 - 80 = +20 each → RMSE = 20 > 15 triggers drift.
+    for (let i = 0; i < 5; i++) {
       store.logReading(SNAP, 'manual')
       store.logMeasuredOutcome(i + 1, { targetLysisPct: 92, healthyLysisPct: 100 })
     }
     const summary = store.calibrationSummary
-    expect(summary.sampleCount).toBe(3)
+    expect(summary.sampleCount).toBe(5)
     expect(summary.tier).toBe('drift')
     expect(summary.meanHealthyResidualPct).toBeCloseTo(20, 5)
   })
 
-  it('picks tier "strong" only when n >= CALIB_STRONG_SAMPLES AND worst < CALIB_STRONG_PP', () => {
+  it('picks tier "strong" when n >= CALIB_STRONG_SAMPLES AND mean bias AND RMSE both < CALIB_STRONG_PP', () => {
     const store = freshStore()
     // 10 entries with residuals of ~0 pp (measured == predicted)
     for (let i = 0; i < 10; i++) {
@@ -379,32 +378,42 @@ describe('calibrationSummary / measuredResiduals / latestMeasuredOutcomes', () =
     }
     const summary = store.calibrationSummary
     expect(summary.sampleCount).toBe(10)
+    expect(summary.rmseResidualPct).toBeCloseTo(0, 5)
     expect(summary.tier).toBe('strong')
   })
 
   it('picks tier "moderate" when count >= min but residuals outside strong band', () => {
     const store = freshStore()
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < 5; i++) {
       store.logReading(SNAP, 'manual')
-      // +10 pp drift on target — above strong band (<5pp) but under drift (>15pp)
+      // +10 pp drift on target — above strong band (<5pp) but RMSE under drift (>15pp)
       store.logMeasuredOutcome(i + 1, { targetLysisPct: 110, healthyLysisPct: 80 })
     }
     expect(store.calibrationSummary.tier).toBe('moderate')
   })
 
-  it('does NOT pick tier "strong" when individual residual scatter exceeds the drift threshold', () => {
-    // Healthy predicted = 80 pp; alternate measurements 60/100 yield residuals -20/+20,
-    // mean ≈ 0 (low bias) but max |residual| = 20 (high scatter). Old tier logic
-    // incorrectly classified this as "strong"; the scatter gate must hold it at "moderate".
+  it('returns tier "none" when sample count below CALIB_MIN_SAMPLES (4 < 5)', () => {
+    const store = freshStore()
+    for (let i = 0; i < 4; i++) {
+      store.logReading(SNAP, 'manual')
+      store.logMeasuredOutcome(i + 1, { targetLysisPct: 100, healthyLysisPct: 80 })
+    }
+    expect(store.calibrationSummary.tier).toBe('none')
+  })
+
+  it('does NOT pick tier "strong" when residual scatter inflates RMSE despite zero mean bias', () => {
+    // Healthy predicted = 80; alternate ±10 measurements (90/70) give residuals ±10.
+    // mean bias ≈ 0 (would falsely pass an old bias-only gate), but RMSE = 10 > CALIB_STRONG_PP (5).
+    // Result: tier holds at "moderate" — the scientifically honest call.
     const store = freshStore()
     for (let i = 0; i < 10; i++) {
       store.logReading(SNAP, 'manual')
-      store.logMeasuredOutcome(i + 1, { healthyLysisPct: i % 2 === 0 ? 100 : 60 })
+      store.logMeasuredOutcome(i + 1, { healthyLysisPct: i % 2 === 0 ? 90 : 70 })
     }
     const summary = store.calibrationSummary
     expect(summary.sampleCount).toBe(10)
     expect(Math.abs(summary.meanHealthyResidualPct ?? 0)).toBeLessThan(1)
-    expect(summary.maxAbsResidualPct).toBeCloseTo(20, 5)
+    expect(summary.rmseResidualPct).toBeCloseTo(10, 5)
     expect(summary.tier).toBe('moderate')
   })
 
