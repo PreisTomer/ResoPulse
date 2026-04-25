@@ -182,6 +182,7 @@ export default defineComponent({
 
     .calib__body {
       @include flex-row(0.4rem);
+      flex-direction: row;
       flex-wrap: nowrap;
       align-items: baseline;
     }
@@ -213,8 +214,9 @@ export default defineComponent({
 
     .calib__body {
       @include flex-row(0.4rem);
+      flex-direction: row;
       flex-wrap: nowrap;
-      align-items: baseline;
+      align-items: center;
       white-space: nowrap;
     }
 

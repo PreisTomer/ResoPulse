@@ -292,11 +292,8 @@ export default defineComponent({
     depKDisplayFull(k: number | undefined): string { return depKDisplayFull(k) },
 
     async exportLastEntryMethods() {
-      const canProceed = await this.tokenStore.consumeOperation('EXPERIMENT_REPORT')
-      if (!canProceed) {
-        if (this.authStore.isGuest) this.showGuestExportNote = true
-        return
-      }
+      const canProceed = await this.tokenStore.consumeOperation('EXPERIMENT_REPORT', { allowGuest: true })
+      if (!canProceed) return
       this.showGuestExportNote = false
       const last = this.experimentStore.entries[this.experimentStore.entries.length - 1]
       if (last) this.experimentStore.exportEntryMethods(last)
@@ -309,11 +306,8 @@ export default defineComponent({
     },
 
     async exportCSV() {
-      const canProceed = await this.tokenStore.consumeOperation('EXPERIMENT_REPORT')
-      if (!canProceed) {
-        if (this.authStore.isGuest) this.showGuestExportNote = true
-        return
-      }
+      const canProceed = await this.tokenStore.consumeOperation('EXPERIMENT_REPORT', { allowGuest: true })
+      if (!canProceed) return
       this.showGuestExportNote = false
       this.experimentStore.exportCSV()
     },
@@ -342,11 +336,8 @@ export default defineComponent({
         : this.$t('log.tipCellManual')
     },
     async submitRating(entryId: number, rating: number) {
-      const canProceed = await this.tokenStore.consumeOperation('LOG_OUTCOME')
-      if (!canProceed) {
-        if (this.authStore.isGuest) this.showGuestExportNote = true
-        return
-      }
+      const canProceed = await this.tokenStore.consumeOperation('LOG_OUTCOME', { allowGuest: true })
+      if (!canProceed) return
       this.showGuestExportNote = false
       const aiApplied = this.aiStore.suggestionApplied
       const entry = this.experimentStore.logOutcome(entryId, rating, aiApplied)
@@ -391,9 +382,8 @@ export default defineComponent({
     async saveMeasuredOutcome(measured: Omit<MeasuredOutcome, 'measuredAt'>) {
       const entryId = this.measuredModalEntryId
       if (entryId === null) return
-      const canProceed = await this.tokenStore.consumeOperation('LOG_MEASURED')
+      const canProceed = await this.tokenStore.consumeOperation('LOG_MEASURED', { allowGuest: true })
       if (!canProceed) {
-        if (this.authStore.isGuest) this.showGuestExportNote = true
         this.closeMeasuredModal()
         return
       }

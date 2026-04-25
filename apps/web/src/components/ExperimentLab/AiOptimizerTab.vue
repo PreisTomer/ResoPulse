@@ -439,11 +439,8 @@ export default defineComponent({
     },
 
     async runOptimize() {
-      const canProceed = await this.tokenStore.consumeOperation('AI_OPTIMIZE')
-      if (!canProceed) {
-        if (this.authStore.isGuest) this.showGuestNote = true
-        return
-      }
+      const canProceed = await this.tokenStore.consumeOperation('AI_OPTIMIZE', { allowGuest: true })
+      if (!canProceed) return
       this.showGuestNote = false
 
       this.showOfflineNote = false
@@ -551,11 +548,8 @@ export default defineComponent({
     },
 
     async suggestExploreNext(): Promise<void> {
-      const canProceed = await this.tokenStore.consumeOperation('AI_SUGGEST')
-      if (!canProceed) {
-        if (this.authStore.isGuest) this.showGuestNote = true
-        return
-      }
+      const canProceed = await this.tokenStore.consumeOperation('AI_SUGGEST', { allowGuest: true })
+      if (!canProceed) return
       this.showGuestNote = false
       this.exploreSuggestions = suggestNextProtocols(this.experimentStore.entries, this.cellStore.sliderRanges)
     },

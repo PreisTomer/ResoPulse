@@ -87,6 +87,14 @@ const MARKETING_NAV_LINKS = [
   { to: ROUTE.PROTOCOL, labelKey: 'nav.protocol', exact: false },
 ]
 
+// Guest-in-lab nav — shown once a guest has entered the lab. Mirrors the app nav
+// but excludes pages still gated behind sign-in (Datasets, Instrument).
+const GUEST_NAV_LINKS = [
+  { to: ROUTE.EXPERIMENT, labelKey: 'nav.experiment', exact: false },
+  { to: ROUTE.PROTOCOL,   labelKey: 'nav.protocol',   exact: false },
+  { to: ROUTE.REPORTS,    labelKey: 'nav.reports',    exact: false },
+]
+
 export default defineComponent({
   name: 'NavBar',
   components: { NavUserArea, NavGuestArea, ContactModal, UpgradeModal },
@@ -106,7 +114,9 @@ export default defineComponent({
     themeStore() { return useThemeStore() },
 
     activeNavLinks() {
-      return this.isSignedIn ? APP_NAV_LINKS : MARKETING_NAV_LINKS
+      if (this.isSignedIn) return APP_NAV_LINKS
+      if (this.guestSessionActive) return GUEST_NAV_LINKS
+      return MARKETING_NAV_LINKS
     },
 
     // Guest avatar hidden on home (marketing landing must keep "Start Free" CTA visible).

@@ -5,6 +5,7 @@ import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 
 import { useTokenStore } from '@/stores/tokenStore'
+import { STORAGE_KEY } from '@/constants/storageKeys'
 import type { TokenBalance } from '@/types/token'
 
 function freshStore() {
@@ -218,6 +219,32 @@ describe('consumeOperation', () => {
     const store = freshStore()
     const ok = await store.consumeOperation('AI_OPTIMIZE')
     expect(ok).toBe(true)
+  })
+
+  it('blocks and sets pendingGuestSignUp when a guest session is active', async () => {
+    vi.stubGlobal('Clerk', undefined)
+    sessionStorage.setItem(STORAGE_KEY.GUEST_ID, 'guest_test')
+    try {
+      const store = freshStore()
+      const ok = await store.consumeOperation('AI_OPTIMIZE')
+      expect(ok).toBe(false)
+      expect(store.pendingGuestSignUp).toBe(true)
+    } finally {
+      sessionStorage.removeItem(STORAGE_KEY.GUEST_ID)
+    }
+  })
+
+  it('allowGuest:true lets a guest session proceed without prompting sign-up', async () => {
+    vi.stubGlobal('Clerk', undefined)
+    sessionStorage.setItem(STORAGE_KEY.GUEST_ID, 'guest_test')
+    try {
+      const store = freshStore()
+      const ok = await store.consumeOperation('AI_OPTIMIZE', { allowGuest: true })
+      expect(ok).toBe(true)
+      expect(store.pendingGuestSignUp).toBe(false)
+    } finally {
+      sessionStorage.removeItem(STORAGE_KEY.GUEST_ID)
+    }
   })
 })
 

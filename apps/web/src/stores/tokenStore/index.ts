@@ -148,13 +148,15 @@ export const useTokenStore = defineStore('token', {
 
     // Returns false + sets pendingUpgrade/pendingGuestSignUp when tokens are insufficient.
     // Never throws — network errors are non-blocking so a fetch glitch won't lock the lab.
-    async consumeOperation(reason: string): Promise<boolean> {
+    // `allowGuest`: lets guests run the operation locally without prompting sign-up
+    // (used for the digital-twin loop while it's being shown off as the product hook).
+    async consumeOperation(reason: string, opts: { allowGuest?: boolean } = {}): Promise<boolean> {
       try {
         const token = await getAuthToken()
         if (!token) {
           // Guest session: block the operation and prompt sign-up.
           // If there is no guest session either (e.g. Clerk still initialising), let it pass.
-          if (hasGuestSession()) {
+          if (hasGuestSession() && !opts.allowGuest) {
             this.pendingGuestSignUp = true
             return false
           }

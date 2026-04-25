@@ -503,7 +503,7 @@ export default defineComponent({
     },
     async handleExportCSV() {
       this.isExporting = true
-      const canProceed = await this.tokenStore.consumeOperation('EXPERIMENT_REPORT')
+      const canProceed = await this.tokenStore.consumeOperation('EXPERIMENT_REPORT', { allowGuest: true })
       if (!canProceed) {
         this.isExporting = false
         return
@@ -526,7 +526,7 @@ export default defineComponent({
       if (!file) return
 
       this.isImporting = true
-      const canProceed = await this.tokenStore.consumeOperation('IMPORT_MEASURED')
+      const canProceed = await this.tokenStore.consumeOperation('IMPORT_MEASURED', { allowGuest: true })
       if (!canProceed) {
         this.isImporting = false
         return
