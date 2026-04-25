@@ -314,25 +314,18 @@ export default defineComponent({
   border-radius: var(--radius);
   margin-bottom: 0.2rem;
 
-  /* ── Zones: readouts (left) + loop (centre) + snap (right) ──────── */
+  /* ── Zones: predictions on row 1, AI section (loop + snap) on row 2 ──────── */
   &__zone {
     @include flex-row(0.5rem);
     align-items: center;
     flex-wrap: wrap;
 
-    &--readouts { flex: 1 1 auto; min-width: 0; }
+    &--readouts { flex: 1 1 100%; min-width: 0; }
     &--loop     { flex: 0 0 auto; }
   }
 
-  &__divider {
-    width: 1px;
-    align-self: stretch;
-    background: color-mix(in srgb, var(--color-primary) 28%, transparent);
-    margin: 0.3rem 0.1rem;
-    flex-shrink: 0;
-
-    @media (max-width: 900px) { display: none; }
-  }
+  /* Vertical divider belonged to the single-line layout; the two-row structure separates zones by row instead. */
+  &__divider { display: none; }
 
   &__title {
     @include flex-row(0.4rem);
