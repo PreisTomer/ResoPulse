@@ -52,6 +52,9 @@
           <span class="sel-panel__ti-range-val">
             [{{ ICON.TIMES }}{{ tiRange.low.toFixed(2) }} - {{ ICON.TIMES }}{{ tiRange.high >= 99 ? ICON.INFINITY : tiRange.high.toFixed(2) }}]
           </span>
+          <span v-if="isTiBandCalibrated" class="sel-panel__ti-range-calib" v-tip="$t('selectivity.tipTiRangeCalibrated')">
+            {{ $t('selectivity.tiRangeCalibratedChip') }}
+          </span>
         </div>
 
         <div v-if="smallCellNote" class="sel-panel__size-note" :class="{ 'sel-panel__size-note--inverted': selectionInverted }" v-tip="smallCellNoteTip">
@@ -195,6 +198,11 @@ export default defineComponent({
       return !this.cellStore.isResonanceMode && Math.abs(this.tiRange.high - this.tiRange.low) > 0.01
     },
 
+    isTiBandCalibrated(): boolean {
+      return this.cellStore.healthyCalibrationUncertainty > 0
+        || this.cellStore.targetCalibrationUncertainty  > 0
+    },
+
     tipTiRange(): string {
       const { low, high } = this.tiRange
       const { RADIUS_VIRUS_MAX: rv, RADIUS_BACTERIA_MAX: rb } = THRESHOLDS
@@ -206,7 +214,7 @@ export default defineComponent({
         : this.cellStore.target.radius < rb
           ? `${(THRESHOLDS.UNCERTAINTY_BACTERIA  * 100).toFixed(0)}%`
           : `${(THRESHOLDS.UNCERTAINTY_MAMMALIAN * 100).toFixed(0)}%`
-      return tipTiRange({ low, high, uncH, uncT })
+      return tipTiRange({ low, high, uncH, uncT, calibrated: this.isTiBandCalibrated })
     },
 
     tipSelectivity(): string {
@@ -454,6 +462,12 @@ export default defineComponent({
     font-family: var(--font-mono);
     color: var(--color-text-muted);
     letter-spacing: 0.02em;
+    cursor: help;
+  }
+
+  &__ti-range-calib {
+    @include badge-pill();
+    @include color-variant(lime);
     cursor: help;
   }
 

@@ -3,6 +3,7 @@
 import { defineStore } from 'pinia'
 
 import { useCellStore } from '@/stores/cellStore'
+import { useExperimentStore } from '@/stores/experimentStore'
 
 import type { AiOptimizeResult, AiParamSuggestion, TrainingCompletePayload } from '@/services/socket'
 import type { TrainerOutcomeMetrics } from '@resopulse/shared-types'
@@ -115,6 +116,12 @@ export const useAiStore = defineStore('ai', {
       cell.setPulseWidthNs(s.pulseWidthNs)
       cell.setWaveform(s.waveform)
 
+      useExperimentStore().markAiSuggestionApplied({
+        source:    'optimizer',
+        freqKHz:   s.freqKHz,
+        fieldVcm:  s.fieldVcm,
+        dutyCycle: s.dutyCycle,
+      })
       this.suggestionApplied = true
     },
 

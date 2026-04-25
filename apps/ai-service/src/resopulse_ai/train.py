@@ -60,6 +60,13 @@ TRAINING_SECRET = os.environ.get(TRAINING_DATA_SECRET_ENV_VAR, "")
 
 MEASURED_SAMPLE_WEIGHT = 5.0
 HOLDOUT_FRACTION       = 0.20
+
+# Promotion gate margins. A new bundle replaces the active one only when its
+# holdout MAE is meaningfully better than the active bundle's, AND the holdout
+# itself is large enough to call the comparison reliable. Without these gates
+# noise-level MAE deltas churn the live model on every retrain.
+PROMOTION_MIN_REL_IMPROVEMENT = 0.01
+PROMOTION_MIN_HOLDOUT_SAMPLES = 5
 HOLDOUT_SEED           = 17
 
 
@@ -245,6 +252,22 @@ def _load_previous_best_mae() -> float | None:
         return None
 
 
+def _should_promote(new_mae: float, previous_best: float | None, holdout_n: int) -> bool:
+    """
+    Promote the new bundle only when (a) there is no previous bundle to beat,
+    or (b) the holdout is large enough to trust AND the new MAE beats the
+    previous best by at least PROMOTION_MIN_REL_IMPROVEMENT.
+    """
+    if not np.isfinite(new_mae):
+        return False
+    if previous_best is None:
+        return True
+    if holdout_n < PROMOTION_MIN_HOLDOUT_SAMPLES:
+        return False
+    required = previous_best * (1.0 - PROMOTION_MIN_REL_IMPROVEMENT)
+    return new_mae < required
+
+
 def retrain_model() -> TrainingReport | None:
     """
     Train XGBoost regressors on consented outcomes. Always fits on the training
@@ -314,12 +337,16 @@ def retrain_model() -> TrainingReport | None:
     joblib.dump(bundle, STAGING_PATH)
 
     previous_best = _load_previous_best_mae()
-    promoted      = previous_best is None or mae_overall < previous_best
+    holdout_n     = len(holdout_idx)
+    promoted      = _should_promote(mae_overall, previous_best, holdout_n)
     if promoted:
         joblib.dump(bundle, MODEL_PATH)
-        logger.info("[Train] Promoted model %s (holdoutMae=%.4f, prev=%s)", model_version, mae_overall, previous_best)
+        logger.info("[Train] Promoted model %s (holdoutMae=%.4f, prev=%s, holdoutN=%d)",
+                    model_version, mae_overall, previous_best, holdout_n)
     else:
-        logger.info("[Train] Retained previous model — new holdoutMae=%.4f >= prev=%.4f", mae_overall, previous_best)
+        logger.info("[Train] Retained previous model — new holdoutMae=%.4f vs prev=%s (holdoutN=%d, min=%d, minRelImprovement=%.2f%%)",
+                    mae_overall, previous_best, holdout_n,
+                    PROMOTION_MIN_HOLDOUT_SAMPLES, PROMOTION_MIN_REL_IMPROVEMENT * 100)
 
     return TrainingReport(
         modelVersion      = model_version,

@@ -338,6 +338,26 @@
     <div class="protocol__note">
       <div class="protocol__bullet" v-html="$t('protocol.physics.electrosensitization.refNote')"></div>
     </div>
+
+    <!-- §3.14 Closed-loop calibration -->
+    <h3 id="closedloop" class="protocol__subsection-title" v-html="$t('protocol.physics.closedloop.title')" v-tip="$t('protocol.physics.closedloop.tip')"></h3>
+    <p class="protocol__body-text" v-html="$t('protocol.physics.closedloop.p1')"></p>
+    <div class="protocol__eq-block">
+      <div class="protocol__eq-main" v-html="$t('protocol.physics.closedloop.eqMain')"></div>
+      <div class="protocol__eq-sub" v-html="$t('protocol.physics.closedloop.eqSub1')"></div>
+      <div class="protocol__eq-sub" v-html="$t('protocol.physics.closedloop.eqSub2')"></div>
+      <div class="protocol__eq-sub" v-html="$t('protocol.physics.closedloop.eqSub3')"></div>
+      <div class="protocol__eq-note" v-html="$t('protocol.physics.closedloop.eqNote')"></div>
+    </div>
+    <p class="protocol__body-text" v-html="$t('protocol.physics.closedloop.p2')"></p>
+    <p class="protocol__body-text" v-html="$t('protocol.physics.closedloop.p3')"></p>
+    <div class="protocol__warn-box" v-html="$t('protocol.physics.closedloop.warnBox')"></div>
+    <div class="protocol__note">
+      <div class="protocol__note-label" v-html="$t('protocol.physics.closedloop.scopeTitle')"></div>
+      <div class="protocol__bullet" v-html="$t('protocol.physics.closedloop.scope1')"></div>
+      <div class="protocol__bullet" v-html="$t('protocol.physics.closedloop.scope2')"></div>
+      <div class="protocol__bullet" v-html="$t('protocol.physics.closedloop.scope3')"></div>
+    </div>
   </section>
 </template>
 

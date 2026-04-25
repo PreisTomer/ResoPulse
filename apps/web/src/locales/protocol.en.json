@@ -43,6 +43,7 @@
     "impedance": "3.11 Impedance Feedback",
     "sonification": "3.12 Auditory Display",
     "electrosensitization": "3.13 Multi-Pulse Electrosensitization",
+    "closedloop": "3.14 Closed-Loop Calibration",
     "protocol": "4. Experimental Protocol",
     "safety": "5. Safety &amp; Thresholds",
     "refs": "6. References"
@@ -339,6 +340,23 @@
       "thNote": "Notes",
       "warnBox": "<strong>Model limitations and honesty statement:</strong> The N<sup>−0.20</sup> formula is a population-averaged empirical approximation derived from bulk electroporation dose-response literature. It should be understood as a first-order protocol design tool, not a cell-specific quantitative prediction. The following limitations apply: (1) <strong>Exponent α is cell-type dependent.</strong> Cells with thin, fluid membranes (e.g. erythrocytes, small bacteria with thin peptidoglycan) sensitize faster (α closer to 0.3-0.4); cells with reinforced membranes (MRSA, thick-wall gram-positives) sensitize more slowly (α closer to 0.1-0.15). The fixed α = 0.20 is the midpoint of the published range. (2) <strong>Pulse interval matters.</strong> If inter-pulse interval is long enough for membrane resealing, electrosensitization is reduced or eliminated. This model assumes pulses arrive within the resealing window (typically sub-second for IRE pulse trains). (3) <strong>The clamp at 35% is a conservative physiological floor,</strong> not a measured value. At very high N, the true threshold asymptote depends on cell-type-specific pore-size distributions and lipid composition. (4) <strong>This model is not validated for acoustic resonance.</strong> The N slider has no effect on resonant disruption thresholds, which are mechanical properties of the capsid or cell wall. See §3.5 for the acoustic model.",
       "refNote": "Weaver J.C. &amp; Chizmadzhev Y.A., <em>Theory of electroporation: a review.</em> Bioelectrochemistry and Bioenergetics 41:135 (1996) [3] &nbsp;·&nbsp; Pakhomov A.G. et al., <em>Long-lasting plasma membrane permeabilization in mammalian cells by nanosecond pulsed electric field (nsPEF).</em> Bioelectromagnetics 28:655 (2007) [25] &nbsp;·&nbsp; Rols M.P. &amp; Teissié J., <em>Electropermeabilization of mammalian cells: quantitative analysis of the phenomenon.</em> Biophys. J. 58:1089 (1990)"
+    },
+    "closedloop": {
+      "title": "3.14 Closed-Loop Calibration (Lab-Specific σ<sub>i</sub> Correction)",
+      "tip": "<strong>Closed-loop calibration</strong>\nσ_i_corrected = σ_i_base × multiplier, fitted per-org per-cell-line from logged measured outcomes. Uncertainty band shrinks as more outcomes are logged.",
+      "p1": "Every prediction in this simulator is a model output, not a measurement. The closed-loop calibration layer narrows that gap by fitting one scalar correction to your lab's intracellular conductivity (σ<sub>i</sub>) per cell preset against your own bench data. Once five or more outcomes are logged for a given preset, the simulator's σ<sub>i</sub> for that cell is multiplied by the fitted multiplier, and the σ<sub>i</sub> uncertainty band displayed alongside TI/DR is replaced by the residual standard deviation of the fit.",
+      "eqMain": "σ<sub>i,corrected</sub>(preset, lab) = σ<sub>i,base</sub>(preset) × m̂(lab, preset)",
+      "eqSub1": "m̂ = least-squares fit of measured-vs-predicted target lysis ratio over all logged outcomes for (lab, preset)",
+      "eqSub2": "σ̂ = residual standard deviation after fit; drives the σ_i band on the TI display and frequency-response chart",
+      "eqSub3": "n = number of outcomes contributing; below CALIB_MIN_SAMPLES the fit reports <em>collecting</em> and the static literature prior continues to drive the band",
+      "eqNote": "Outliers are MAD-rejected before the fit. Multipliers are clamped to [0.4, 2.5] to keep the simulator within physiological bounds — a clamp event is surfaced as <em>clamped</em> in the calibration badge.",
+      "p2": "The σ<sub>i</sub> multiplier flows through every downstream physics getter on the Schwan / EP path: τ → f<sub>c</sub> → V<sub>m</sub> → DR → TI all reflect the calibrated conductivity. The cell card shows the active multiplier and sample count; panels that consume the band (TI uncertainty range, frequency-response chart) carry a <em>calibrated</em> chip when the band is fit-driven rather than literature-driven.",
+      "p3": "Independently from the per-preset σ<sub>i</sub> calibration, the global XGBoost model is retrained from the aggregated outcome corpus across all opt-in labs. Retrains are gated by a holdout-MAE comparison against the previous active bundle: a new bundle replaces the live model only when its mean holdout absolute error beats the previous best by at least one percent on a holdout of at least five samples. Failed promotions are recorded in TrainerMetrics so a retrain attempt is never silently lost.",
+      "warnBox": "<strong>Model caveats:</strong> (1) The σ<sub>i</sub> multiplier is a single scalar — it cannot correct shape mismatches in the underlying Schwan model, only its overall amplitude. If the calibrated σ<sub>i</sub> band is wide and persistent across many outcomes, that is a signal the residual is structural, not parametric. (2) The fit uses target-lysis residuals only; healthy-cell residuals are reported but not fitted, to avoid double-counting an inverted bias. (3) Acoustic resonance thresholds are not calibrated by this loop — capsid Q and resonant frequency are treated as fixed literature values. (4) The aggregated XGBoost retrain operates on anonymised outcomes; per-lab data is not used to make predictions for other labs.",
+      "scopeTitle": "Scope",
+      "scope1": "Per-lab σ<sub>i</sub> correction is per-org and per-cellPresetId. It applies to both built-in cellLibrary presets and your own UserCellPreset entries with no behavioural difference.",
+      "scope2": "Guests log outcomes locally; the per-lab fit only runs for authenticated org members.",
+      "scope3": "Calibration runs on demand from the AI Optimizer tab and from the Reports view's drift banner. There is no scheduled background fit."
     }
   },
   "followInLab": "Follow in Lab",

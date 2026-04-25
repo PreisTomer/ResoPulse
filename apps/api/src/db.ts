@@ -127,13 +127,18 @@ export async function countOutcomes(): Promise<number> {
 }
 
 // Attaches measured-outcome fields to the most-recent matching outcome row.
-// Matched on (sessionName, timestamp) — these together uniquely identify a
-// given reading within a session. Returns the number of rows updated.
-export async function attachMeasuredOutcome(entry: MeasuredOutcomeEntry): Promise<number> {
+// Matched on (orgId, sessionName, timestamp) — orgId scoping prevents one tenant
+// overwriting another's measurements when (sessionName, timestamp) pairs collide.
+// Guests (orgId=null) only update their own null-orgId rows. Returns the number
+// of rows updated.
+export async function attachMeasuredOutcome(
+  entry: MeasuredOutcomeEntry,
+  orgId: string | null,
+): Promise<number> {
   const { sessionName, timestamp, measured } = entry
   try {
     const result = await prisma.outcome.updateMany({
-      where: { sessionName, timestamp },
+      where: { orgId, sessionName, timestamp },
       data:  {
         measuredAt:               measured.measuredAt,
         measuredTargetLysisPct:   measured.targetLysisPct,

@@ -12,9 +12,13 @@ export function tipTiRange(params: {
   high: number
   uncH: string
   uncT: string
+  calibrated: boolean
 }): string {
-  const { low, high, uncH, uncT } = params
-  const highStr = high >= 99 ? '∞' : high.toFixed(2)
+  const { low, high, uncH, uncT, calibrated } = params
+  const highStr  = high >= 99 ? '∞' : high.toFixed(2)
+  const sourceLine = calibrated
+    ? '<span class="tip-ok">Source: per-lab calibration residual fit from your measured outcomes (overrides the literature prior).</span>'
+    : '<span class="tip-note">Source: literature σ_i range. Once you log measured outcomes the band switches to your lab\'s calibration residual.</span>'
   return `<strong>TI Uncertainty from σ_i Variability</strong>
 TI_low  = ×${low.toFixed(2)} (worst case: target σ_i at −${uncT}, healthy at +${uncH})
 TI_high = ×${highStr} (best case: target σ_i at +${uncT}, healthy at −${uncH})
@@ -22,6 +26,8 @@ TI_high = ×${highStr} (best case: target σ_i at +${uncT}, healthy at −${uncH
 σ_i (cytoplasm conductivity) is a literature range, not a single measured value.
 Variability: healthy (±${uncH}) · target (±${uncT})
 These bounds propagate through τ → fc → Vm → DR → TI.
+
+${sourceLine}
 
 <span class="tip-note">A wide uncertainty band means the TI claim depends strongly on
 the exact σ_i value used. Validate with measured cell impedance (patch clamp / DEP).</span>`

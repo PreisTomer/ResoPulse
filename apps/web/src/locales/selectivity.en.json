@@ -19,6 +19,8 @@
     "hSafe": "H-Safe",
     "noGhzRes": "No GHz res.",
     "sigmaIRange": "σ_i range:",
+    "tiRangeCalibratedChip": "calibrated",
+    "tipTiRangeCalibrated": "<strong>Band sourced from your lab calibration</strong>\nThe σ_i uncertainty driving this TI band is the residual std of your fit against logged measured outcomes for this preset, not the static literature prior. Width shrinks as you log more outcomes.",
     "smallCellNoteLabel": "Size disadvantage",
 
     "tipEthrFull": "<strong>Target disruption threshold</strong>\nResonant field at which capsid/cell-wall disruption triggers.\nDisruption ratio = (E / E_thr) × L(f, f_res, Q) ≥ 1.0 → disruption",

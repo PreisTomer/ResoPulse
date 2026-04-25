@@ -56,7 +56,7 @@ export default defineComponent({
   methods: {
     isActive(item: TocItem): boolean {
       if (item.physicsParent) {
-        const physicsIds = new Set(['physics', 'schwan', 'thermal', 'maxwell', 'disruption', 'resonance', 'nsep', 'doubleshell', 'dep', 'uncertainty', 'biomodulation', 'impedance', 'sonification'])
+        const physicsIds = new Set(['physics', 'schwan', 'thermal', 'maxwell', 'disruption', 'resonance', 'nsep', 'doubleshell', 'dep', 'uncertainty', 'biomodulation', 'impedance', 'sonification', 'electrosensitization', 'closedloop'])
         return physicsIds.has(this.activeSection)
       }
       return this.activeSection === item.id

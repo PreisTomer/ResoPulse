@@ -508,7 +508,8 @@ export function setupSocketServer(httpServer: HttpServer): Server {
       if (!raw || typeof raw !== 'object') return
       const entry = validateMeasuredOutcomeEntry(raw as Record<string, unknown>)
       if (!entry) return
-      const updated = await attachMeasuredOutcome(entry)
+      const orgId   = socket.data.orgId as string | null
+      const updated = await attachMeasuredOutcome(entry, orgId)
       if (updated === 0) {
         console.warn('[Socket] logMeasuredOutcome matched zero rows', {
           sessionName: entry.sessionName, timestamp: entry.timestamp,

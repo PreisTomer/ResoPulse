@@ -18,7 +18,7 @@ import type { MediumKey } from '@/types/media'
 
 // Re-export types so existing importers (e.g. socket.ts) don't need to change
 export type { CellParamSnapshot, LogEntry, MeasuredOutcome } from '@/types/experiment'
-import type { CellParamSnapshot, LogEntry, MeasuredOutcome } from '@/types/experiment'
+import type { CellParamSnapshot, LogEntry, MeasuredOutcome, AppliedAiSuggestion } from '@/types/experiment'
 
 // Calibration tier — shared UI label for "how well does the simulator match this lab's bench data".
 export type CalibrationTier = 'none' | 'drift' | 'moderate' | 'strong'
@@ -66,6 +66,9 @@ interface ExperimentState {
   cumulativeDoseJkg: number   // J/kg, cumulative specific energy absorbed this session
   sessionStartMs: number      // Unix ms, when the current session started
   aiConsentGiven: boolean  // user opted in to anonymized outcome logging for AI training
+  // One-shot tag: set when an AI/space-filling suggestion is applied to sliders, consumed by
+  // the very next logReading() so the resulting LogEntry can later report a measured-vs-suggested delta.
+  pendingAiSuggestion: AppliedAiSuggestion | null
 }
 
 // Extended snapshot pulled from cellStore - avoids circular import
@@ -126,6 +129,7 @@ function defaultState(): ExperimentState {
     entries: [], nextId: 1, sessionName: DEFAULT_SESSION_NAME,
     sampleDescription: '', sessionNotes: '', cumulativeDoseJkg: 0,
     sessionStartMs: Date.now(), aiConsentGiven: false,
+    pendingAiSuggestion: null,
   }
 }
 
@@ -139,6 +143,7 @@ function loadState(): ExperimentState {
       cumulativeDoseJkg: parsed.cumulativeDoseJkg ?? 0,
       sessionStartMs:    parsed.sessionStartMs    ?? Date.now(),
       aiConsentGiven:    parsed.aiConsentGiven    ?? false,
+      pendingAiSuggestion: null,
     }
   })
 }
@@ -270,6 +275,8 @@ export const useExperimentStore = defineStore('experiment', {
     logReading(snap: CellSnapshot, event: LogEntry['event']) {
       const h = snap.healthy
       const t = snap.target
+      const appliedAiSuggestion = this.pendingAiSuggestion ? { ...this.pendingAiSuggestion } : undefined
+      if (this.pendingAiSuggestion) this.pendingAiSuggestion = null
       this.entries.push({
         id:           this.nextId++,
         sessionName:  this.sessionName,
@@ -331,6 +338,7 @@ export const useExperimentStore = defineStore('experiment', {
           resonantFreqUncertaintyPct: t.resonantFreqUncertaintyPct,
           experimentalBasis: t.experimentalBasis,
         } satisfies CellParamSnapshot,
+        ...(appliedAiSuggestion && { appliedAiSuggestion }),
       })
     },
 
@@ -344,6 +352,16 @@ export const useExperimentStore = defineStore('experiment', {
     setSampleDescription(desc: string)    { this.sampleDescription  = desc  },
     setSessionNotes(notes: string)        { this.sessionNotes        = notes },
     setAiConsent(value: boolean)          { this.aiConsentGiven     = value },
+
+    // Arms a one-shot tag consumed by the next logReading. Lets the resulting LogEntry record what the
+    // suggestion was at apply time so the CSV/Reports can compute the lab-vs-suggestion delta later.
+    markAiSuggestionApplied(meta: AppliedAiSuggestion) {
+      this.pendingAiSuggestion = { ...meta }
+    },
+
+    clearPendingAiSuggestion() {
+      this.pendingAiSuggestion = null
+    },
 
     logOutcome(entryId: number, rating: number, aiSuggestionApplied: boolean): LogEntry | null {
       const entry = this.entries.find(e => e.id === entryId)

@@ -7,6 +7,7 @@ import { setupSocketServer, SOCKET_EVENTS } from './socket'
 import { countOutcomes, fetchTrainingRows } from './db'
 import { clerk, requireAuth } from './middleware/clerkAuth'
 import { persistTrainerMetrics, type RetrainUpstreamResponse } from './services/trainerMetricsService'
+import { createRetrainCooldownGate } from './utils/retrainCooldown'
 import webhookRouter         from './routes/webhooks'
 import experimentsRouter     from './routes/experiments'
 import tokensRouter          from './routes/tokens'
@@ -85,11 +86,21 @@ app.use('/tokens',           tokensRouter)
 app.use('/cell-presets',     cellPresetsRouter)
 app.use('/cell-calibration', cellCalibrationRouter)
 
-// Retrain is intentionally public: the global XGBoost model is retrained from
-// aggregated outcomes with no per-caller data leakage, and the roadmap treats
-// AI_RETRAIN as lenient for guests and early users. Client-side disables the
-// button while in flight; upstream handles duplicate-call debouncing.
+// Retrain is unauthenticated by design (the global XGBoost model is fit on
+// aggregated outcomes with no per-caller data leakage and we want guests
+// to trigger it). The cooldown gate prevents a flood from churning the model.
+const retrainGate = createRetrainCooldownGate()
+
 app.post('/ai/retrain', async (_req, res) => {
+  const decision = retrainGate.attempt(Date.now())
+  if (!decision.allowed) {
+    res.status(429).set('Retry-After', String(decision.retryAfterSec)).json({
+      status: 'rate_limited',
+      detail: 'Retrain is globally cooled down; another retrain ran very recently.',
+      retryAfterSec: decision.retryAfterSec,
+    })
+    return
+  }
   try {
     const upstream = await fetch(`${AI_SERVICE_URL}/ai/retrain`, {
       method: 'POST',

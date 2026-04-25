@@ -142,6 +142,53 @@ describe('receiveEntry', () => {
   })
 })
 
+// ── markAiSuggestionApplied ──────────────────────────────────────────────────
+
+describe('markAiSuggestionApplied', () => {
+  it('tags the very next logReading and clears the pending one-shot', () => {
+    const store = freshStore()
+    store.markAiSuggestionApplied({
+      source:    'optimizer',
+      freqKHz:   500,
+      fieldVcm:  1200,
+      dutyCycle: 0.01,
+    })
+    expect(store.pendingAiSuggestion).not.toBeNull()
+    store.logReading(SNAP, 'manual')
+    expect(store.entries[0]!.appliedAiSuggestion).toEqual({
+      source: 'optimizer', freqKHz: 500, fieldVcm: 1200, dutyCycle: 0.01,
+    })
+    expect(store.pendingAiSuggestion).toBeNull()
+  })
+
+  it('does not tag subsequent logReadings after the one-shot fires', () => {
+    const store = freshStore()
+    store.markAiSuggestionApplied({
+      source: 'space-filling', freqKHz: 100, fieldVcm: 800, dutyCycle: 0.02,
+    })
+    store.logReading(SNAP, 'manual')
+    store.logReading(SNAP, 'manual')
+    expect(store.entries[0]!.appliedAiSuggestion).toBeDefined()
+    expect(store.entries[1]!.appliedAiSuggestion).toBeUndefined()
+  })
+
+  it('logReading without a pending suggestion leaves appliedAiSuggestion unset', () => {
+    const store = freshStore()
+    store.logReading(SNAP, 'manual')
+    expect(store.entries[0]!.appliedAiSuggestion).toBeUndefined()
+  })
+
+  it('clearPendingAiSuggestion drops the tag without consuming it', () => {
+    const store = freshStore()
+    store.markAiSuggestionApplied({
+      source: 'optimizer', freqKHz: 500, fieldVcm: 1200, dutyCycle: 0.01,
+    })
+    store.clearPendingAiSuggestion()
+    store.logReading(SNAP, 'manual')
+    expect(store.entries[0]!.appliedAiSuggestion).toBeUndefined()
+  })
+})
+
 // ── logOutcome ────────────────────────────────────────────────────────────────
 
 describe('logOutcome', () => {

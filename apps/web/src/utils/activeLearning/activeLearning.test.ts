@@ -42,13 +42,13 @@ describe('suggestNextProtocol', () => {
     expect(s.strategy).toBe('cold-start')
   })
 
-  it('in explore mode, suggests a point far from all measured entries in log-space', () => {
+  it('in space-filling mode, suggests a point far from all measured entries in log-space', () => {
     const measured = [
       makeEntry(1, BOUNDS.freqMin,  BOUNDS.fieldMin),
       makeEntry(2, BOUNDS.freqMin,  BOUNDS.fieldMin * 2),
     ]
     const s = suggestNextProtocol(measured, BOUNDS)
-    expect(s.strategy).toBe('explore')
+    expect(s.strategy).toBe('space-filling')
     expect(s.freqKHz).toBeGreaterThan(BOUNDS.freqMin)
     expect(s.fieldVcm).toBeGreaterThan(BOUNDS.fieldMin)
   })
@@ -65,20 +65,26 @@ describe('suggestNextProtocol', () => {
     expect(s.fieldVcm).toBeLessThanOrEqual(BOUNDS.fieldMax)
   })
 
-  it('returns a rationale string mentioning the measurement count in explore mode', () => {
+  it('reports the measurement count on space-filling picks for honest UI labelling', () => {
     const entries = [makeEntry(1, 100, 500), makeEntry(2, 300, 1000), makeEntry(3, 1000, 200)]
     const s = suggestNextProtocol(entries, BOUNDS)
-    expect(s.strategy).toBe('explore')
-    expect(s.rationale).toContain('3')
+    expect(s.strategy).toBe('space-filling')
+    expect(s.measuredCount).toBe(3)
+  })
+
+  it('reports measuredCount=0 on a cold-start pick', () => {
+    const s = suggestNextProtocol([], BOUNDS)
+    expect(s.strategy).toBe('cold-start')
+    expect(s.measuredCount).toBe(0)
   })
 })
 
 describe('suggestNextProtocols — top-N batch', () => {
-  it('returns three diverse explore picks when measured data exists', () => {
+  it('returns three diverse space-filling picks when measured data exists', () => {
     const entries = [makeEntry(1, 100, 500), makeEntry(2, 300, 1000)]
     const picks = suggestNextProtocols(entries, BOUNDS, 3)
     expect(picks).toHaveLength(3)
-    expect(picks.every(p => p.strategy === 'explore')).toBe(true)
+    expect(picks.every(p => p.strategy === 'space-filling')).toBe(true)
   })
 
   it('picks do not collapse into a single region (epsilon exclusion)', () => {

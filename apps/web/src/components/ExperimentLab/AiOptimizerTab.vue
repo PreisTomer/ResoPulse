@@ -140,7 +140,7 @@
                 <span class="ai-tab__explore-k">{{ $t('ai.exploreDutyLabel') }}</span>
                 <span class="ai-tab__explore-v">{{ (s.dutyCycle * 100).toFixed(2) }} %</span>
               </div>
-              <p class="ai-tab__explore-rationale">{{ s.rationale }}</p>
+              <p class="ai-tab__explore-rationale">{{ exploreRationaleFor(s) }}</p>
               <div class="ai-tab__explore-actions">
                 <button class="ai-tab__explore-apply" @click="applyExploreSuggestion(s)">{{ $t('ai.exploreApplyBtn') }}</button>
                 <button class="ai-tab__explore-dismiss" @click="dismissExploreSuggestion(i)">{{ $t('ai.exploreDismissBtn') }}</button>
@@ -566,6 +566,12 @@ export default defineComponent({
       this.cellStore.setBroadcastFreqKHz(s.freqKHz)
       this.cellStore.setFieldIntensity(s.fieldVcm)
       this.cellStore.setDutyCycle(s.dutyCycle)
+      this.experimentStore.markAiSuggestionApplied({
+        source:    'space-filling',
+        freqKHz:   s.freqKHz,
+        fieldVcm:  s.fieldVcm,
+        dutyCycle: s.dutyCycle,
+      })
       broadcastStateSync()
       this.exploreSuggestions = []
     },
@@ -581,7 +587,13 @@ export default defineComponent({
     exploreStrategyLabelFor(s: SuggestedProtocol): string {
       return s.strategy === 'cold-start'
         ? this.$t('ai.exploreStrategyColdStart')
-        : this.$t('ai.exploreStrategyExplore')
+        : this.$t('ai.exploreStrategySpaceFilling')
+    },
+
+    exploreRationaleFor(s: SuggestedProtocol): string {
+      if (s.strategy === 'cold-start') return this.$t('ai.exploreRationaleColdStart')
+      const key = s.measuredCount === 1 ? 'ai.exploreRationaleSpaceFillingOne' : 'ai.exploreRationaleSpaceFillingMany'
+      return this.$t(key, { n: s.measuredCount })
     },
 
     toggleCalibDetails()       { this.calibDetailsOpen = !this.calibDetailsOpen },

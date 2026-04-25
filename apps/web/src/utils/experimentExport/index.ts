@@ -672,6 +672,9 @@ export function buildCsvText(
     `Field Δ (${UNIT.V_PER_CM})`, 'Lysis delay Δ (ms)',
     'qPCR transcript', 'qPCR fold-change',
     'Measured at', 'Measured notes',
+    'AI suggestion source',
+    `AI suggested freq (${UNIT.KHZ})`, `AI suggested field (${UNIT.V_PER_CM})`, 'AI suggested duty',
+    `AI freq Δ (${UNIT.KHZ})`, `AI field Δ (${UNIT.V_PER_CM})`, 'AI duty Δ',
   ]
   const rows = entries.map((e) => {
     const m = e.measured
@@ -680,6 +683,10 @@ export function buildCsvText(
     const fDelta = m?.actualFieldVcm  !== undefined ? (m.actualFieldVcm  - e.fieldVcm).toFixed(1) : ''
     const dDelta = m?.observedLysisDelayMs !== undefined ? (m.observedLysisDelayMs - computeLysisDelayMs(e)).toFixed(0) : ''
     const notes  = m?.notes ? `"${m.notes.replace(/"/g, '""').replace(/\n/g, ' ')}"` : ''
+    const ai = e.appliedAiSuggestion
+    const aiFreqDelta  = ai ? (e.freqKHz   - ai.freqKHz).toString()                              : ''
+    const aiFieldDelta = ai ? (e.fieldVcm  - ai.fieldVcm).toString()                             : ''
+    const aiDutyDelta  = ai && e.dutyCycle !== undefined ? (e.dutyCycle - ai.dutyCycle).toFixed(4) : ''
     return [
       e.id, e.timestamp, e.sessionName ?? sessionName, e.freqKHz, e.fieldVcm, e.medium, e.targetPreset,
       e.targetVm, e.healthyVm, e.selectivity,
@@ -701,6 +708,9 @@ export function buildCsvText(
       fDelta, dDelta,
       m?.qpcrTarget ?? '', m?.qpcrFoldChange ?? '',
       m?.measuredAt ?? '', notes,
+      ai?.source ?? '',
+      ai?.freqKHz ?? '', ai?.fieldVcm ?? '', ai?.dutyCycle ?? '',
+      aiFreqDelta, aiFieldDelta, aiDutyDelta,
     ]
   })
 

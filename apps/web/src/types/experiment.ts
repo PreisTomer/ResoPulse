@@ -6,6 +6,15 @@ import type { LogEventType } from '@/constants/strings'
 
 export type { MeasuredOutcome }
 
+export type AppliedAiSuggestionSource = 'optimizer' | 'space-filling'
+
+export interface AppliedAiSuggestion {
+  source:    AppliedAiSuggestionSource
+  freqKHz:   number
+  fieldVcm:  number
+  dutyCycle: number
+}
+
 // ── Parameter snapshot captured at log time ────────────────────────────────
 export interface CellParamSnapshot {
   label: string
@@ -78,6 +87,9 @@ export interface LogEntry {
   // ── AI training fields (populated via Log Outcome action) ────────────────
   outcomeRating?: number         // 1=failed 2=poor 3=acceptable 4=good 5=excellent
   aiSuggestionApplied?: boolean  // true when this protocol was AI-suggested before the run
+  // Snapshot of the AI/space-filling suggestion that was active at log time. Lets the CSV/Reports
+  // surface "AI proposed X, lab actually ran X'" delta after the user modified sliders before running.
+  appliedAiSuggestion?: AppliedAiSuggestion
   // ── Measured outcome (populated via Log Measured action) ─────────────────
   measured?: MeasuredOutcome
   // When true, the entry's residuals are excluded from calibrationSummary even

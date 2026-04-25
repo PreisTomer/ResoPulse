@@ -3,14 +3,14 @@
 import type { LogEntry } from '@/types/experiment'
 import type { SliderRange } from '@/constants/sliderBounds'
 
-export type SuggestionStrategy = 'cold-start' | 'explore'
+export type SuggestionStrategy = 'cold-start' | 'space-filling'
 
 export interface SuggestedProtocol {
-  freqKHz:   number
-  fieldVcm:  number
-  dutyCycle: number
-  rationale: string
-  strategy:  SuggestionStrategy
+  freqKHz:        number
+  fieldVcm:       number
+  dutyCycle:      number
+  strategy:       SuggestionStrategy
+  measuredCount:  number
 }
 
 const FREQ_GRID_STEPS  = 5
@@ -42,21 +42,21 @@ export function suggestNextProtocols(entries: LogEntry[], bounds: SliderRange, n
   const picks      = pickWithEpsilonExclusion(ranked, count, bounds)
 
   return picks.map(c => ({
-    freqKHz:   c.freqKHz,
-    fieldVcm:  c.fieldVcm,
-    dutyCycle: c.dutyCycle,
-    rationale: `exploration: covers the (f, E, duty) region farthest from your ${measured.length} measured ${measured.length === 1 ? 'entry' : 'entries'}.`,
-    strategy:  'explore',
+    freqKHz:       c.freqKHz,
+    fieldVcm:      c.fieldVcm,
+    dutyCycle:     c.dutyCycle,
+    strategy:      'space-filling',
+    measuredCount: measured.length,
   }))
 }
 
 function coldStart(bounds: SliderRange): SuggestedProtocol {
   return {
-    freqKHz:   Math.round(geometricMean(bounds.freqMin, bounds.freqMax)),
-    fieldVcm:  Math.round(geometricMean(bounds.fieldMin, bounds.fieldMax)),
-    dutyCycle: DEFAULT_DUTY,
-    rationale: 'cold-start: no measured outcomes yet. Start at the geometric midpoint of the slider bounds to anchor the parameter sweep.',
-    strategy:  'cold-start',
+    freqKHz:       Math.round(geometricMean(bounds.freqMin, bounds.freqMax)),
+    fieldVcm:      Math.round(geometricMean(bounds.fieldMin, bounds.fieldMax)),
+    dutyCycle:     DEFAULT_DUTY,
+    strategy:      'cold-start',
+    measuredCount: 0,
   }
 }
 

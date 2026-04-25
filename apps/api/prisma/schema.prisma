@@ -294,5 +294,6 @@ model Outcome {
   @@index([targetTauNs])
   @@index([sessionName, timestamp])
   @@index([orgId, targetPreset])
+  @@index([orgId, sessionName, timestamp])
   @@map("outcomes")
 }

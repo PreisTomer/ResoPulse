@@ -146,6 +146,11 @@
               {{ $t('reports.loopHeroCtaLab') }} {{ ICON.ARROW_SHORT }}
             </RouterLink>
           </div>
+          <button
+            class="reports__loop-hero-sample"
+            v-tip="$t('reports.sampleCsvTip')"
+            @click="downloadSampleCsv()"
+          >{{ $t('reports.sampleCsvCta') }}</button>
         </div>
       </section>
 
@@ -208,6 +213,11 @@
                 <span class="reports__btn-mapping-icon" aria-hidden="true">{{ ICON.PLUG }}</span>
                 {{ csvMappingStore.hasMapping ? $t('reports.mappingBtnEdit') : $t('reports.mappingBtnEmpty') }}
               </button>
+              <button
+                class="reports__btn-mapping reports__btn-sample"
+                v-tip="$t('reports.sampleCsvTip')"
+                @click="downloadSampleCsv()"
+              >{{ $t('reports.sampleCsvBtn') }}</button>
             </div>
 
             <button
@@ -281,6 +291,7 @@ import CalibrationBadge from '@/components/CalibrationBadge/index.vue'
 
 import { formatFreqKHz, formatFieldVcm, formatRange } from '@/utils/format'
 import { parseMeasuredCsv } from '@/utils/experimentImport'
+import { downloadSampleMeasuredCsv } from '@/utils/sampleMeasuredCsv'
 
 import { LOG_EVENT, NULL_DISPLAY } from '@/constants/strings'
 import { ICON } from '@/constants/icons'
@@ -517,6 +528,10 @@ export default defineComponent({
       this.importSummary = null
       const input = this.$refs.importFileInput as HTMLInputElement | undefined
       if (input) input.click()
+    },
+
+    downloadSampleCsv() {
+      downloadSampleMeasuredCsv()
     },
 
     async onImportFileChosen(evt: Event) {
@@ -986,6 +1001,21 @@ export default defineComponent({
     @include flex-row(0.6rem);
     flex-wrap: wrap;
     margin-top: 0.3rem;
+  }
+
+  &__loop-hero-sample {
+    margin-top: 0.6rem;
+    align-self: flex-start;
+    padding: 0.25rem 0;
+    background: transparent;
+    border: 0;
+    color: var(--color-text-muted);
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    text-decoration: underline;
+    cursor: pointer;
+    transition: color var(--tr-fast);
+    &:hover { color: var(--color-text); }
   }
 
   /* ── Session stats pill row ───────────────────────────────────────────────── */

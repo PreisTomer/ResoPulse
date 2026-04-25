@@ -137,6 +137,7 @@ const TOC_ITEMS: TocItem[] = [
   { id: 'impedance',      key: 'impedance',     indent: true },
   { id: 'sonification',          key: 'sonification',          indent: true },
   { id: 'electrosensitization',  key: 'electrosensitization',  indent: true },
+  { id: 'closedloop',            key: 'closedloop',            indent: true },
   { id: 'protocol-steps', key: 'protocol',      indent: false },
   { id: 'safety',         key: 'safety',        indent: false },
   { id: 'refs',           key: 'refs',          indent: false },
@@ -147,11 +148,11 @@ const ALL_SECTION_IDS = [
   'validation',
   'physics', 'schwan', 'thermal', 'maxwell', 'disruption',
   'resonance', 'nsep', 'doubleshell', 'dep', 'uncertainty', 'biomodulation',
-  'impedance', 'sonification', 'electrosensitization',
+  'impedance', 'sonification', 'electrosensitization', 'closedloop',
   'protocol-steps', 'safety', 'refs',
 ] as const
 
-const PHYSICS_IDS = new Set(['physics', 'schwan', 'thermal', 'maxwell', 'disruption', 'resonance', 'nsep', 'doubleshell', 'dep', 'uncertainty', 'biomodulation', 'impedance', 'sonification', 'electrosensitization'])
+const PHYSICS_IDS = new Set(['physics', 'schwan', 'thermal', 'maxwell', 'disruption', 'resonance', 'nsep', 'doubleshell', 'dep', 'uncertainty', 'biomodulation', 'impedance', 'sonification', 'electrosensitization', 'closedloop'])
 
 export default defineComponent({
   name: 'ProtocolView',
