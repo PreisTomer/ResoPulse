@@ -280,7 +280,7 @@ export default defineComponent({
       // Acoustic resonance disruption is mechanical — hfireMult must NOT apply to the resonant threshold.
       const tHfireMult = isAcousticRes ? 1.0 : hfireMult
       const data = computeCurves(
-        this.cellStore.healthy, this.cellStore.target,
+        this.cellStore.effectiveHealthy, this.cellStore.effectiveTarget,
         this.cellStore.fieldIntensity, this.cellStore.effectiveSigmaE, this.cellStore.cosThetaFactor,
         this.cellStore.pulseEnvelopeFactorHealthy, this.cellStore.pulseEnvelopeFactorTarget,
         this.cellStore.isResonanceMode,

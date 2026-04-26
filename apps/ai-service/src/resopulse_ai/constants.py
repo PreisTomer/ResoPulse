@@ -24,16 +24,69 @@ MIN_TRAINING_SAMPLES = 20
 CONFIDENCE_BASE = 0.50
 CONFIDENCE_ML_MAX = 0.90
 
-# ── Cell calibration (scalar sigma_i multiplier) ────────────────────────────
-# Fit produces sigma_i_corrected = sigma_i_base * multiplier. Bounds protect
-# against ill-posed fits from small-N or outlier-dominated residuals pushing
-# the correction outside biological plausibility (sigma_i typically drifts
-# only tens of percent across cell lines of the same category).
-CALIBRATION_MIN_SAMPLES = 5          # below this we return multiplier=1.0, flag=collecting
-CALIBRATION_MULT_MIN = 0.3           # clamp lower bound
-CALIBRATION_MULT_MAX = 3.0           # clamp upper bound
-CALIBRATION_OUTLIER_SIGMA = 3.0      # residual-std threshold for outlier rejection
-CALIBRATION_PREDICTION_FLOOR = 1e-4  # avoid division by zero when predicted ratio ~ 0
+# ── Calibration: shared invariants ──────────────────────────────────────────
+# n=5 mirrors THRESHOLDS.SIGMA_CALIB_MIN_SAMPLES on the frontend.
+CALIBRATION_MIN_SAMPLES         = 5
+CALIBRATION_OUTLIER_SIGMA       = 3.0      # MAD threshold for residual clipping
+CALIBRATION_PREDICTION_FLOOR    = 1e-4     # avoids 1/0 when forward DR ≈ 0
+
+# Condition number above which (JᵀJ) is treated as ill-conditioned. The
+# value 1e8 is a practical safety floor for double-precision LM fits — beyond
+# this the inverted covariance is dominated by floating-point noise. When
+# triggered we drop to a 1-D fit and pin the worse-conditioned parameter.
+CALIBRATION_UNIDENTIFIABLE_COND = 1.0e8
+
+# ── Calibration: physiological multiplier bounds ────────────────────────────
+# Multiplier scale: a value of 1.0 means "no correction from the literature
+# baseline". Bounds are wider than typical (~30%) to accept measured drift
+# from buffer ionic strength, freezer-thaw cycles, or pathological samples,
+# while still ruling out unphysical fits dominated by outliers.
+#
+# Sources (web-checked 2026-04-26):
+#   σ_i mammalian:  0.35–1.0 S/m (CHO, RBC, hepatocyte literature)
+#   σ_i bacteria:   0.1–0.6 S/m  (gram-positive vs gram-negative spread)
+#   σ_i virus:      0.05–0.5 S/m (rigid-shell scattering measurements)
+#   V_th  EP:       0.3–2.0 V    (cell-line variability; cancer typically lower)
+#   Q_capsid:       1–50         (peptidoglycan ~3, rigid icosahedral up to ~30)
+#   V_thr_res:      ~10–500 V/cm (literature spread for capsid acoustic disruption)
+
+CALIBRATION_BOUNDS = {
+    'schwan': {
+        'mammalian': {
+            'param1': (0.5, 2.0),   # σ_i multiplier  →  e.g. 0.5×0.5 = 0.25 S/m to 0.5×2.0 = 1.0 S/m
+            'param2': (0.4, 2.5),   # V_th multiplier
+        },
+        'bacteria': {
+            'param1': (0.3, 3.0),   # bacteria σ_i has wider literature spread
+            'param2': (0.4, 3.0),
+        },
+        'virus': {
+            'param1': (0.2, 4.0),   # virus σ_i is least-characterised
+            'param2': (0.3, 4.0),
+        },
+    },
+    'resonance': {
+        # Resonance uses the same per-category buckets even though only
+        # bacteria/virus exercise this path; mammalian is included with the
+        # same bounds as bacteria as a defensive fallback.
+        'mammalian': {
+            'param1': (0.3, 3.0),   # Q multiplier
+            'param2': (0.3, 3.0),   # V_thr_res multiplier
+        },
+        'bacteria': {
+            'param1': (0.3, 3.0),
+            'param2': (0.3, 3.0),
+        },
+        'virus': {
+            'param1': (0.3, 3.5),   # rigid capsid Q better-characterised than σ_i
+            'param2': (0.3, 3.5),
+        },
+    },
+}
+
+# ── Legacy aliases (deprecated; kept for one release of backward compat) ────
+CALIBRATION_MULT_MIN = CALIBRATION_BOUNDS['schwan']['mammalian']['param1'][0]
+CALIBRATION_MULT_MAX = CALIBRATION_BOUNDS['schwan']['mammalian']['param1'][1]
 
 DATA_DIR_ENV_VAR = "DATA_DIR"
 NODE_API_URL_ENV_VAR = "NODE_API_URL"

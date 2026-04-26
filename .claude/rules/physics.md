@@ -19,17 +19,20 @@ fc    = 1 / (2π·τ)
 - Quasi-DC Vm is **independent of medium conductivity** (σ_e only affects τ and fc)
 
 ## SAR and Thermal Model
-*Pennes 1948 bioheat; Newton cooling approximation*
+*Lumped 0-D thermal balance with Pennes-style perfusion sink (NOT the full Pennes PDE)*
 
 ```
 α    = 3σ_e / (2σ_e + σ_i)          ← internal-field coupling
 SAR  = σ_i · α² · E² · wf / ρ       ← wf = duty-cycle weighted factor
-T_ss = 37 + SAR · dc / (λ · cp)     ← steady-state temperature rise
-λ    = 0.02 s⁻¹                     ← Newton cooling rate constant
+T_ss = T_amb + SAR · dc / (λ · cp)  ← steady-state temperature (closed-form lumped)
+T(t) = T_amb + (T_ss − T_amb)·(1 − e^(−λt)) + (T₀ − T_amb)·e^(−λt)   ← transient ramp
+λ    = U·A / (ρ·V·cp) (default 0.02 s⁻¹ for BTX 1mm cuvette)
 ```
 
 - `α` is **not** `(σ_e + σ_i) / 2` — that form is wrong
 - Waveform factor `wf`: CW = 0.5 (sinusoidal, E²_rms = E²_peak/2); pulsed = 1.0 (square wave); duty cycle applied separately as `SAR_eff = SAR × dc` in T_ss
+- The model is a 0-D well-mixed-cuvette approximation, valid for in-vitro only. The full Pennes PDE (with k∇²T spatial conduction and metabolic heat source) is out of scope per `lab-context.md`. Always label as "Pennes-style" or "lumped thermal balance" in user-visible text — never bare "Pennes" without that qualifier
+- `newtonCoolingLambda(A_cm², V_mL, U, ρ, cp)` derives λ from cuvette geometry; pass a custom λ to `computeTemperatureRamp` to override the default for a non-BTX cuvette
 
 ## Electroporation — Lysis and Pulse Envelope
 *Weaver & Chizmadzhev 1996*

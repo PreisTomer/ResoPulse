@@ -7,6 +7,8 @@ packages/shared-types/src/ai.ts — FastAPI serialises/deserialises them directl
 without conversion so Node.js can call the service with no mapping layer.
 """
 
+from typing import Literal
+
 from pydantic import BaseModel, Field, ConfigDict
 
 
@@ -23,6 +25,10 @@ class CellBiophysics(BaseModel):
     thresholdV:       float = Field(gt=0)
     resonantFreqGhz:  float | None = None
     capsidQ:          float | None = None
+    resonantThresholdVcm: float | None = None
+    resonantFreqGhz2: float | None = None
+    capsidQ2:         float | None = None
+    resonantMode2Amp: float | None = None
 
 
 class AiPhysicsFeatures(BaseModel):
@@ -107,37 +113,102 @@ class OptimizeResponse(BaseModel):
     isPhysicsBaseline:  bool
 
 
-# ── Calibration models ──────────────────────────────────────────────────────
-# Scalar sigma_i multiplier fit per (org, cellPresetId). The Node API collects
-# measured outcome rows for one (org, cellPresetId), derives (predicted, measured)
-# ratios, and POSTs them here — the fit is purely numeric and stateless.
+# ── Calibration models (physics-inversion API) ──────────────────────────────
+# The new contract sends one CellParams block + per-row protocol context; the
+# AI service inverts the actual Schwan or Resonance physics to recover
+# (σ_i_mult, V_th_mult) for Schwan, or (Q_mult, V_thr_mult) for Resonance.
 
-class CalibrationSampleInput(BaseModel):
-    """One (predicted, measured) pair. Both are fractional ratios in [0, 1]."""
+class CalibrationCellParams(BaseModel):
+    """Cell baseline biophysics needed to evaluate forward DR.
+
+    `mode` selects which path is being calibrated; resonance fields are
+    required when mode='resonance'.
+    """
     model_config = ConfigDict(populate_by_name=True)
 
-    predictedRatio: float = Field(ge=0, le=1)
-    measuredRatio:  float = Field(ge=0, le=1)
+    radiusUm:                float = Field(gt=0)
+    memThicknessNm:          float = Field(gt=0)
+    dielectricConst:         float = Field(gt=0)
+    sigmaIBaseline:          float = Field(gt=0)
+    vthBaseline:             float = Field(gt=0)
+    resonantFreqGhz:         float | None = None
+    capsidQBaseline:         float | None = None
+    resonantThresholdVcmBaseline: float | None = None
+    resonantFreqGhz2:        float | None = None
+    capsidQ2:                float | None = None
+    resonantMode2Amp:        float | None = None
+
+
+class CalibrationProtocol(BaseModel):
+    """Per-row protocol + environment for one bench measurement.
+
+    Mirrors ProtocolConditions in physics.py; fields are camelCase to keep
+    the wire format consistent with the rest of the AI surface.
+    """
+    model_config = ConfigDict(populate_by_name=True)
+
+    freqKhz:        float = Field(gt=0)
+    fieldVcm:       float = Field(gt=0)
+    sigmaE:         float = Field(gt=0)
+    tempC:          float
+    nPulses:        int = Field(ge=1)
+    pulseWidthNs:   float = Field(gt=0)
+    dutyCycle:      float = Field(ge=0, le=1)
+    waveform:       Literal['cw', 'pulsed', 'hfire']
+    orientationDeg: float
+
+
+class CalibrationSampleInput(BaseModel):
+    """One bench measurement (for the new physics-inversion fit)."""
+    model_config = ConfigDict(populate_by_name=True)
+
+    measuredRatio: float = Field(ge=0, le=1)
+    protocol:      CalibrationProtocol
 
 
 class CalibrationRequest(BaseModel):
-    """Request payload for /ai/calibrate. Mirrors AiCalibrationRequest in shared-types/ai.ts."""
+    """Request payload for /ai/calibrate. The new physics-inversion shape.
+
+    `cellParams` and `category` and `mode` together identify the physics
+    path being calibrated. `samples` carry the bench measurements.
+    """
     model_config = ConfigDict(populate_by_name=True)
 
     orgId:        str
     cellPresetId: str
+    mode:         Literal['schwan', 'resonance']
+    category:     Literal['mammalian', 'bacteria', 'virus']
+    cellParams:   CalibrationCellParams
     samples:      list[CalibrationSampleInput]
 
 
 class CalibrationResponse(BaseModel):
-    """Response from /ai/calibrate. Mirrors AiCalibrationResult in shared-types/ai.ts."""
+    """Response from /ai/calibrate. Mirrors AiCalibrationResult in shared-types/ai.ts.
+
+    Field semantics:
+      mode               - which physics path was calibrated
+      param1Mult         - Schwan: σ_i multiplier; Resonance: Q multiplier
+      param2Mult         - Schwan: V_th multiplier; Resonance: V_thr multiplier
+      cov11/cov12/cov22  - parameter covariance on the multiplier scale
+      residualStd        - σ of fitted residuals on DR scale
+      param1/2Unidentifiable - True when JᵀJ was ill-conditioned and that
+                               parameter was pinned at 1.0 for an honest fit
+    """
     model_config = ConfigDict(populate_by_name=True)
 
-    sigmaMultiplier: float
-    uncertaintyStd:  float
-    nSamples:        int
-    collecting:      bool
-    clamped:         bool
-    outliersRemoved: int
-    rmseBefore:      float
-    rmseAfter:       float
+    mode:             Literal['schwan', 'resonance']
+    param1Mult:       float
+    param2Mult:       float
+    cov11:            float
+    cov12:            float
+    cov22:            float
+    residualStd:      float
+    nSamples:         int
+    collecting:       bool
+    clampedParam1:    bool
+    clampedParam2:    bool
+    param1Unidentifiable: bool
+    param2Unidentifiable: bool
+    outliersRemoved:  int
+    rmseBefore:       float
+    rmseAfter:        float

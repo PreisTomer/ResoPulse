@@ -1,6 +1,6 @@
 // Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 
-import { computeSchwan, computeNuclearVm, computeDepCmReal, computeSigmaUncertaintyFactor } from '@/utils/physics'
+import { computeSchwan, computeNuclearVm, computeDepCmReal, computeSigmaUncertaintyFactor, jacobianSchwanVm, propagateScalarVariance, type CalibrationCovariance } from '@/utils/physics'
 
 import { logspace } from '@/utils/math'
 
@@ -112,26 +112,26 @@ export function computeOptimalFreqHz(
   return optHz
 }
 
-// σ_i uncertainty band [mV]: varies σ_i by ±pct% to produce vmLow/vmHigh bounds
+// 68% Vm uncertainty band [mV]. Two paths:
+//   - With a calibration covariance (post-fit Σ on the σ_i_multiplier scale): use first-order propagation σ_Vm² = (∂Vm/∂σ_i_mult)²·cov_11. Vm doesn't depend on V_th so cov_22 / cov_12 contribute nothing.
+//   - Without a fit: fall back to the literature radius-based σ_i prior — same propagation with cov_11 = (computeSigmaUncertaintyFactor(R))².
 export function computeUncBand(
   cell: CellConfig,
   field: number,
   sigma_e: number,
   cosTheta: number,
-  pct: number,
+  cov: CalibrationCovariance | null,
 ): { hz: number; vmLow: number; vmHigh: number }[] {
-  const sigma_i = cell.conductivity
+  const effectiveCov: CalibrationCovariance = cov && cov.cov11 > 0
+    ? cov
+    : { cov11: computeSigmaUncertaintyFactor(cell.radius) ** 2, cov12: 0, cov22: 0 }
   return F_POINTS_HZ.map((hz) => {
     const khz   = hz / 1000
-    const vmLow = computeSchwan(
-      { ...cell, conductivity: sigma_i * (1 - pct / 100) },
-      khz, field, sigma_e, cosTheta,
-    ) * 1000
-    const vmHigh = computeSchwan(
-      { ...cell, conductivity: sigma_i * (1 + pct / 100) },
-      khz, field, sigma_e, cosTheta,
-    ) * 1000
-    return { hz, vmLow, vmHigh }
+    const vm    = computeSchwan(cell, khz, field, sigma_e, cosTheta) * 1000
+    const jac   = jacobianSchwanVm(cell, khz, field, sigma_e, cosTheta)
+    const jacMv = { p1: jac.p1 * 1000, p2: jac.p2 * 1000 }
+    const sigma = Math.sqrt(propagateScalarVariance(jacMv, effectiveCov))
+    return { hz, vmLow: vm - sigma, vmHigh: vm + sigma }
   })
 }
 

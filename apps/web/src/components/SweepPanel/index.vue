@@ -149,8 +149,8 @@ export default defineComponent({
       const pwNs       = cellStore.pulseWidthNs
       const freqKHz    = cellStore.currentBroadcastFrequency
       const E          = cellStore.fieldIntensity
-      const healthy    = cellStore.healthy
-      const target     = cellStore.target
+      const healthy    = cellStore.effectiveHealthy
+      const target     = cellStore.effectiveTarget
       const perfRate   = cellStore.perfusionRate
       const wf         = waveform === WAVEFORM.CW ? WF_CW : WF_PULSED
 

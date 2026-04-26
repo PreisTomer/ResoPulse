@@ -26,3 +26,4 @@ apps/*/.venv/
 !.claude/rules/**
 .claude/settings.local.json
 .claude/worktrees/
+.gitnexus

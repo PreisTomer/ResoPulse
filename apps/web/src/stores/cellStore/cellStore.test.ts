@@ -478,3 +478,128 @@ describe('electrosensitization — acoustic resonance path is N-invariant', () =
     expect(drN50).toBeCloseTo(drN1, 6)
   })
 })
+
+// ── Closed-loop calibration: multipliers must reach DR / TI / lysis field / opt-freq ──
+
+describe('calibration multipliers propagate to live physics', () => {
+  it('Schwan: doubling V_th multiplier halves both target and healthy DR (V_th is in DR denominator)', async () => {
+    const { useCellCalibrationStore } = await import('@/stores/cellCalibrationStore')
+    const store = freshStore()
+    const drTBase = store.targetDisruptionRatio
+    const drHBase = store.healthyDisruptionRatio
+
+    const cal = useCellCalibrationStore()
+    cal.receive({
+      id: 'c-h', orgId: 'org', cellPresetId: store.healthy.id, mode: 'schwan', category: 'mammalian',
+      param1Mult: 1.0, param2Mult: 2.0,
+      cov11: 0, cov12: 0, cov22: 0, residualStd: 0,
+      param1Clamped: false, param2Clamped: false, param1Unident: false, param2Unident: false,
+      nSamples: 8, updatedAt: '2026-04-26T00:00:00Z',
+    })
+    cal.receive({
+      id: 'c-t', orgId: 'org', cellPresetId: store.target.id, mode: 'schwan', category: 'mammalian',
+      param1Mult: 1.0, param2Mult: 2.0,
+      cov11: 0, cov12: 0, cov22: 0, residualStd: 0,
+      param1Clamped: false, param2Clamped: false, param1Unident: false, param2Unident: false,
+      nSamples: 8, updatedAt: '2026-04-26T00:00:00Z',
+    })
+    expect(store.targetDisruptionRatio).toBeCloseTo(drTBase * 0.5, 5)
+    expect(store.healthyDisruptionRatio).toBeCloseTo(drHBase * 0.5, 5)
+  })
+
+  it('Schwan: asymmetric V_th multipliers shift TI by the V_th_H / V_th_T ratio', async () => {
+    const { useCellCalibrationStore } = await import('@/stores/cellCalibrationStore')
+    const store = freshStore()
+    const tiBase = store.therapeuticIndex
+    const cal = useCellCalibrationStore()
+    cal.receive({
+      id: 'c-h', orgId: 'org', cellPresetId: store.healthy.id, mode: 'schwan', category: 'mammalian',
+      param1Mult: 1.0, param2Mult: 2.0,   // V_th_H × 2
+      cov11: 0, cov12: 0, cov22: 0, residualStd: 0,
+      param1Clamped: false, param2Clamped: false, param1Unident: false, param2Unident: false,
+      nSamples: 8, updatedAt: '2026-04-26T00:00:00Z',
+    })
+    // Only healthy V_th is doubled → DR_H halved → TI doubled.
+    expect(store.therapeuticIndex / tiBase).toBeCloseTo(2.0, 5)
+  })
+
+  it('optimalFreqResult cache busts when V_th calibration changes (selectivity recomputes)', async () => {
+    const { useCellCalibrationStore } = await import('@/stores/cellCalibrationStore')
+    const store = freshStore()
+    const optBase = store.optimalFreqResult
+    const cal = useCellCalibrationStore()
+    cal.receive({
+      id: 'c-h', orgId: 'org', cellPresetId: store.healthy.id, mode: 'schwan', category: 'mammalian',
+      param1Mult: 1.0, param2Mult: 2.0,
+      cov11: 0, cov12: 0, cov22: 0, residualStd: 0,
+      param1Clamped: false, param2Clamped: false, param1Unident: false, param2Unident: false,
+      nSamples: 8, updatedAt: '2026-04-26T00:00:00Z',
+    })
+    const optCal = store.optimalFreqResult
+    // Cache key must include V_th — selectivity magnitude shifts even when the optimum frequency is unchanged.
+    expect(optCal.sel).not.toBeCloseTo(optBase.sel, 6)
+  })
+
+  it('tiHighFreqLimit reflects calibrated V_th ratio', async () => {
+    const { useCellCalibrationStore } = await import('@/stores/cellCalibrationStore')
+    const store = freshStore()
+    const limBase = store.tiHighFreqLimit
+    const cal = useCellCalibrationStore()
+    cal.receive({
+      id: 'c-t', orgId: 'org', cellPresetId: store.target.id, mode: 'schwan', category: 'mammalian',
+      param1Mult: 1.0, param2Mult: 2.0,   // V_th_T × 2
+      cov11: 0, cov12: 0, cov22: 0, residualStd: 0,
+      param1Clamped: false, param2Clamped: false, param1Unident: false, param2Unident: false,
+      nSamples: 8, updatedAt: '2026-04-26T00:00:00Z',
+    })
+    // V_th_T doubled → high-freq TI limit halved.
+    expect(store.tiHighFreqLimit).toBeCloseTo(limBase * 0.5, 5)
+  })
+
+  it('Resonance: V_thr multiplier scales DR inversely on the resonance path', async () => {
+    const { useCellCalibrationStore } = await import('@/stores/cellCalibrationStore')
+    const store = freshStore()
+    const virusPreset = CELL_PRESETS.find(p => p.group === 'virus' && p.resonantFreqGHz && p.resonantThresholdVcm)
+    if (!virusPreset) return
+    store.loadPreset('target', virusPreset)
+    store.setChartMode(CHART_MODE.RESONANCE)
+    store.setBroadcastFreqKHz(virusPreset.resonantFreqGHz! * 1e6)
+    store.setFieldIntensity(50)   // sub-saturation field at on-resonance
+    const drBase = store.targetDisruptionRatio
+    if (drBase <= 0) return
+
+    const cal = useCellCalibrationStore()
+    cal.receive({
+      id: 'c-tr', orgId: 'org', cellPresetId: virusPreset.id, mode: 'resonance', category: 'virus',
+      param1Mult: 1.0, param2Mult: 2.0,   // V_thr × 2 → DR halved
+      cov11: 0, cov12: 0, cov22: 0, residualStd: 0,
+      param1Clamped: false, param2Clamped: false, param1Unident: false, param2Unident: false,
+      nSamples: 8, updatedAt: '2026-04-26T00:00:00Z',
+    })
+    expect(store.targetDisruptionRatio).toBeCloseTo(drBase * 0.5, 4)
+  })
+
+  it('Resonance: Q multiplier sharpens lineshape — off-resonance DR drops when Q increases', async () => {
+    const { useCellCalibrationStore } = await import('@/stores/cellCalibrationStore')
+    const store = freshStore()
+    const virusPreset = CELL_PRESETS.find(p => p.group === 'virus' && p.resonantFreqGHz && p.resonantThresholdVcm)
+    if (!virusPreset) return
+    store.loadPreset('target', virusPreset)
+    store.setChartMode(CHART_MODE.RESONANCE)
+    // Detune by 30% — Q drives the lineshape value here (zero gradient at exact resonance).
+    store.setBroadcastFreqKHz(virusPreset.resonantFreqGHz! * 1e6 * 0.7)
+    store.setFieldIntensity(50)
+    const drBase = store.targetDisruptionRatio
+    if (drBase <= 0) return
+
+    const cal = useCellCalibrationStore()
+    cal.receive({
+      id: 'c-tr', orgId: 'org', cellPresetId: virusPreset.id, mode: 'resonance', category: 'virus',
+      param1Mult: 2.0, param2Mult: 1.0,   // Q × 2
+      cov11: 0, cov12: 0, cov22: 0, residualStd: 0,
+      param1Clamped: false, param2Clamped: false, param1Unident: false, param2Unident: false,
+      nSamples: 8, updatedAt: '2026-04-26T00:00:00Z',
+    })
+    expect(store.targetDisruptionRatio).toBeLessThan(drBase)
+  })
+})

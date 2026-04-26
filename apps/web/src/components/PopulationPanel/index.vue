@@ -116,6 +116,7 @@ export default defineComponent({
       return this.cellStore.isResonanceTarget
     },
 
+    // Per-cell σ_i CV for the population resample reflects cell-to-cell biological variability — a *literature population spread*, not a calibration uncertainty. Calibration shifts the population MEAN (already absorbed into base.conductivity = effectiveTarget.conductivity in resample()) but does not shrink the population spread. So this stays at the literature prior in both calibrated and uncalibrated states.
     targetUncPct(): number {
       const cat = this.cellStore.targetCellCategory
       if (cat === CELL_CATEGORY.VIRUS)    return THRESHOLDS.UNCERTAINTY_VIRUS     * 100
@@ -123,7 +124,10 @@ export default defineComponent({
       return THRESHOLDS.UNCERTAINTY_MAMMALIAN * 100
     },
 
-    healthyUncPct(): number { return THRESHOLDS.UNCERTAINTY_MAMMALIAN * 100 },
+    healthyUncPct(): number {
+      // Healthy is always mammalian (no acoustic resonance preset support).
+      return THRESHOLDS.UNCERTAINTY_MAMMALIAN * 100
+    },
 
     targetStats(): PopStats  { return this._calcStats(this.targetDRs) },
     healthyStats(): PopStats { return this._calcStats(this.healthyDRs) },
@@ -228,8 +232,8 @@ export default defineComponent({
       const freqKHz  = cellStore.currentBroadcastFrequency
       const E        = cellStore.fieldIntensity
 
-      const healthy = cellStore.healthy
-      const target  = cellStore.target
+      const healthy = cellStore.effectiveHealthy
+      const target  = cellStore.effectiveTarget
       const t = target as CellConfig & {
         resonantFreqGHz?: number
         capsidQ?: number

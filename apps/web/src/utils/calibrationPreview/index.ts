@@ -21,19 +21,22 @@ import { NEAR_ZERO_DR, THRESHOLDS } from '@/constants/physics'
 import type { CellConfig } from '@/types/cell'
 
 export interface CalibrationPreviewInput {
-  healthy:             CellConfig
-  target:              CellConfig
-  sigmaE:              number
-  cosThetaFactor:      number
-  freqKHz:             number
-  fieldVcm:            number
-  healthyTemp:         number
-  targetTemp:          number
-  waveform:            string
-  pulseWidthNs:        number
-  effectivePulseCount: number
-  healthyMultiplier:   number
-  targetMultiplier:    number
+  healthy:               CellConfig
+  target:                CellConfig
+  sigmaE:                number
+  cosThetaFactor:        number
+  freqKHz:               number
+  fieldVcm:              number
+  healthyTemp:           number
+  targetTemp:            number
+  waveform:              string
+  pulseWidthNs:          number
+  effectivePulseCount:   number
+  // Schwan-mode multipliers — both σ_i and V_th now drive the calibration; preview compares baseline (m=1,1) against fitted (m_σ, m_Vth).
+  healthyMultiplier:     number    // σ_i multiplier on healthy
+  targetMultiplier:      number    // σ_i multiplier on target
+  healthyVthMultiplier?: number    // V_th multiplier on healthy (defaults to 1.0 for back-compat)
+  targetVthMultiplier?:  number    // V_th multiplier on target  (defaults to 1.0 for back-compat)
 }
 
 export interface CalibrationPreviewOutput {
@@ -43,8 +46,18 @@ export interface CalibrationPreviewOutput {
 }
 
 export function computeCalibrationPreview(input: CalibrationPreviewInput): CalibrationPreviewOutput {
-  const healthy = { ...input.healthy, conductivity: input.healthy.conductivity * input.healthyMultiplier }
-  const target  = { ...input.target,  conductivity: input.target.conductivity  * input.targetMultiplier  }
+  const hVthMult = input.healthyVthMultiplier ?? 1.0
+  const tVthMult = input.targetVthMultiplier  ?? 1.0
+  const healthy = {
+    ...input.healthy,
+    conductivity:     input.healthy.conductivity     * input.healthyMultiplier,
+    thresholdVoltage: input.healthy.thresholdVoltage * hVthMult,
+  }
+  const target = {
+    ...input.target,
+    conductivity:     input.target.conductivity     * input.targetMultiplier,
+    thresholdVoltage: input.target.thresholdVoltage * tVthMult,
+  }
 
   const vmHealthy = computeSchwan(healthy, input.freqKHz, input.fieldVcm, input.sigmaE, input.cosThetaFactor)
   const vmTarget  = computeSchwan(target,  input.freqKHz, input.fieldVcm, input.sigmaE, input.cosThetaFactor)
@@ -54,8 +67,8 @@ export function computeCalibrationPreview(input: CalibrationPreviewInput): Calib
   const pefTarget  = isPulsed ? computePulseEnvelope(target,  input.pulseWidthNs, input.sigmaE) : 1.0
 
   const hfireMult  = getHFireMultiplier(input.waveform)
-  const vthHealthy = tempCorrectedVth(input.healthy.thresholdVoltage, input.healthyTemp, input.effectivePulseCount)
-  const vthTarget  = tempCorrectedVth(input.target.thresholdVoltage,  input.targetTemp,  input.effectivePulseCount)
+  const vthHealthy = tempCorrectedVth(healthy.thresholdVoltage, input.healthyTemp, input.effectivePulseCount)
+  const vthTarget  = tempCorrectedVth(target.thresholdVoltage,  input.targetTemp,  input.effectivePulseCount)
 
   const healthyDr = (vmHealthy * pefHealthy) / (vthHealthy * hfireMult)
   const targetDr  = (vmTarget  * pefTarget)  / (vthTarget  * hfireMult)

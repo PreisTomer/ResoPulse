@@ -76,7 +76,7 @@ export default defineComponent({
     provenanceChip:        { type: String, default: '' },
     provenanceChipVariant: { type: String, default: 'literature' },
     provenanceTip:         { type: String, default: '' },
-    sigmaCalibration:      { type: Object as PropType<{ label: string; tip: string; state: 'calibrated' | 'clamped' | 'collecting' | 'unknown' } | null>, default: null },
+    sigmaCalibration:      { type: Object as PropType<{ label: string; tip: string; state: 'calibrated' | 'clamped' | 'unidentifiable' | 'collecting' | 'unknown' } | null>, default: null },
   },
 
   computed: {

@@ -28,6 +28,9 @@ export const MEDIUM_RELATIVE_PERMITTIVITY = 74
 export const MEDIUM_DENSITY_KG_M3         = 1000  // [kg/m³], for Joule heating estimate
 export const MEDIUM_SPECIFIC_HEAT_J_KG_K  = 4182  // [J/(kg·K)], for Joule heating estimate
 
+// Wall heat-transfer coefficient U [W/(m²·K)]. Plastic cuvette walls in still air, free-convection regime. Bird, Stewart & Lightfoot 2002 — typical values for this surface type. The default NEWTON_COOLING_LAMBDA = 0.02 s⁻¹ in physics constants is calibrated for a BTX 1mm cuvette at this U; users with different cuvette geometry can derive their own λ via newtonCoolingLambda().
+export const CUVETTE_WALL_U_W_M2K = 50
+
 // ── Cuvette geometry input bounds ────────────────────────────────────────────
 
 export const CUVETTE_GAP_MIN_MM    = 0.5

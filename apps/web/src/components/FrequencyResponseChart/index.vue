@@ -48,7 +48,7 @@ import {
   F_MIN_HZ, F_MAX_HZ, F_CURSOR_MAX_KHZ, MARGIN,
   formatHz,
   computeVmCurve, computeNuclearVmCurve, computeDepCurve, computeSelCurve,
-  computeUncBand, sigmaUncPct,
+  computeUncBand,
 } from './chartCompute'
 import type { TooltipData } from './chartCompute'
 import { drawThresholds } from './chartDrawThresholds'
@@ -304,8 +304,8 @@ export default defineComponent({
       this.updateFcMarkers(g, sigma_e)
 
       const eps_r = MEDIA[this.cellStore.medium].permittivity
-      const depHCurve = computeDepCurve(this.cellStore.healthy, sigma_e, eps_r)
-      const depTCurve = computeDepCurve(this.cellStore.target,  sigma_e, eps_r)
+      const depHCurve = computeDepCurve(this.cellStore.effectiveHealthy, sigma_e, eps_r)
+      const depTCurve = computeDepCurve(this.cellStore.effectiveTarget,  sigma_e, eps_r)
 
       drawDepOverlay(
         g.select<SVGGElement>('.dep-curves'),
@@ -331,13 +331,13 @@ export default defineComponent({
         g.select<SVGGElement>('.y-right-axis'),
         this._xScale!, this._yRightScale!,
         this._chartW, this._chartH,
-        computeSelCurve(this.cellStore.healthy, this.cellStore.target, this.cellStore.fieldIntensity, sigma_e),
+        computeSelCurve(this.cellStore.effectiveHealthy, this.cellStore.effectiveTarget, this.cellStore.fieldIntensity, sigma_e),
       )
 
       drawOptimalMarker(
         g.select<SVGGElement>('.opt-marker'),
         this._xScale!, this._chartW, this._chartH,
-        this.cellStore.healthy, this.cellStore.target,
+        this.cellStore.effectiveHealthy, this.cellStore.effectiveTarget,
         this.cellStore.fieldIntensity, sigma_e,
         (optHz, sel) => optHz >= 1e6
           ? `${(optHz / 1e6).toFixed(2)}M Vm×${sel.toFixed(1)}`
@@ -380,8 +380,8 @@ export default defineComponent({
       sigma_e: number,
       cosTheta: number,
     ) {
-      const healthyCurve = computeVmCurve(this.cellStore.healthy, this.cellStore.fieldIntensity, sigma_e, cosTheta)
-      const targetCurve  = computeVmCurve(this.cellStore.target,  this.cellStore.fieldIntensity, sigma_e, cosTheta)
+      const healthyCurve = computeVmCurve(this.cellStore.effectiveHealthy, this.cellStore.fieldIntensity, sigma_e, cosTheta)
+      const targetCurve  = computeVmCurve(this.cellStore.effectiveTarget,  this.cellStore.fieldIntensity, sigma_e, cosTheta)
 
       const allVm = [...healthyCurve.map((d) => d.vm), ...targetCurve.map((d) => d.vm)]
       const maxVm = Math.ceil(Math.max(...allVm, 50) / 50) * 50
@@ -418,20 +418,20 @@ export default defineComponent({
         .y1((d) => this._yScale!(Math.min(maxVm, d.vmHigh)))
         .curve(d3.curveBasis)
 
-      const hPct = sigmaUncPct(this.cellStore.healthy.radius)
-      const tPct = sigmaUncPct(this.cellStore.target.radius)
+      // Vm bands: post-fit covariance when a calibration exists (Jacobian-propagated); literature radius-based prior otherwise. computeUncBand decides per-cell.
+      const hCov = this.cellStore.healthyCalibrationCovariance
+      const tCov = this.cellStore.targetCalibrationCovariance
 
       const activeGroup = g.select<SVGGElement>('.curves-active')
       activeGroup.selectAll('path').remove()
 
-      // σ_i uncertainty bands
       activeGroup.append('path')
-        .datum(computeUncBand(this.cellStore.healthy, this.cellStore.fieldIntensity, sigma_e, cosTheta, hPct))
+        .datum(computeUncBand(this.cellStore.effectiveHealthy, this.cellStore.fieldIntensity, sigma_e, cosTheta, hCov))
         .attr('fill', C.primary).attr('fill-opacity', 0.10).attr('stroke', 'none')
         .attr('d', areaGen)
 
       activeGroup.append('path')
-        .datum(computeUncBand(this.cellStore.target, this.cellStore.fieldIntensity, sigma_e, cosTheta, tPct))
+        .datum(computeUncBand(this.cellStore.effectiveTarget, this.cellStore.fieldIntensity, sigma_e, cosTheta, tCov))
         .attr('fill', C.danger).attr('fill-opacity', 0.10).attr('stroke', 'none')
         .attr('d', areaGen)
 
@@ -469,14 +469,14 @@ export default defineComponent({
 
       if (this.cellStore.healthy.nuclearRadius) {
         nucGroup.append('path')
-          .datum(computeNuclearVmCurve(this.cellStore.healthy, this.cellStore.fieldIntensity, sigma_e, cosTheta))
+          .datum(computeNuclearVmCurve(this.cellStore.effectiveHealthy, this.cellStore.fieldIntensity, sigma_e, cosTheta))
           .attr('fill', 'none').attr('stroke', C.primary)
           .attr('stroke-width', 1.5).attr('stroke-opacity', 0.45)
           .attr('stroke-dasharray', '5,4').attr('d', lineGen)
       }
       if (this.cellStore.target.nuclearRadius) {
         nucGroup.append('path')
-          .datum(computeNuclearVmCurve(this.cellStore.target, this.cellStore.fieldIntensity, sigma_e, cosTheta))
+          .datum(computeNuclearVmCurve(this.cellStore.effectiveTarget, this.cellStore.fieldIntensity, sigma_e, cosTheta))
           .attr('fill', 'none').attr('stroke', C.danger)
           .attr('stroke-width', 1.5).attr('stroke-opacity', 0.45)
           .attr('stroke-dasharray', '5,4').attr('d', lineGen)
@@ -504,15 +504,15 @@ export default defineComponent({
 
     // ── Schwan: fc markers ────────────────────────────────────────────────
     updateFcMarkers(g: d3.Selection<SVGGElement, unknown, null, undefined>, sigma_e: number) {
-      const tauHNs = computeTau(this.cellStore.healthy, sigma_e) * 1e9
-      const tauTNs = computeTau(this.cellStore.target,  sigma_e) * 1e9
+      const tauHNs = computeTau(this.cellStore.effectiveHealthy, sigma_e) * 1e9
+      const tauTNs = computeTau(this.cellStore.effectiveTarget,  sigma_e) * 1e9
 
       drawFcMarkers(
         g.select<SVGGElement>('.fc-markers'),
         this._xScale!, this._chartH,
         [
-          { fc: computeFc(this.cellStore.healthy, sigma_e), color: C.primary, label: this.$t('chart.fcH'), tauNs: tauHNs },
-          { fc: computeFc(this.cellStore.target,  sigma_e), color: C.danger,  label: this.$t('chart.fcT'), tauNs: tauTNs },
+          { fc: computeFc(this.cellStore.effectiveHealthy, sigma_e), color: C.primary, label: this.$t('chart.fcH'), tauNs: tauHNs },
+          { fc: computeFc(this.cellStore.effectiveTarget,  sigma_e), color: C.danger,  label: this.$t('chart.fcT'), tauNs: tauTNs },
         ],
       )
     },
@@ -580,8 +580,8 @@ export default defineComponent({
       const hz = this._xScale.invert(mx)
       this._tooltipData = buildHoverTooltip({
         mx, chartW: this._chartW, hz,
-        healthy: this.cellStore.healthy,
-        target: this.cellStore.target,
+        healthy: this.cellStore.effectiveHealthy,
+        target: this.cellStore.effectiveTarget,
         fieldIntensity: this.cellStore.fieldIntensity,
         effectiveSigmaE: this.cellStore.effectiveSigmaE,
         cosThetaFactor: this.cellStore.cosThetaFactor,

@@ -152,10 +152,11 @@ export default defineComponent({
 
     isHealthy(): boolean { return this.type === CELL_TYPE.HEALTHY },
 
-    sigmaCalibration(): { label: string; tip: string; state: 'calibrated' | 'clamped' | 'collecting' | 'unknown' } | null {
+    sigmaCalibration(): { label: string; tip: string; state: 'calibrated' | 'clamped' | 'unidentifiable' | 'collecting' | 'unknown' } | null {
       const id = this.cellData?.id
       if (!id) return null
-      const s = this.cellCalibrationStore.statusFor(id)
+      // Cell card always shows the Schwan-mode calibration. Resonance-mode calibration is surfaced separately in the resonance UI.
+      const s = this.cellCalibrationStore.statusFor(id, 'schwan')
       if (s.state === 'unknown')    return null
       if (s.state === 'collecting') {
         return {
@@ -164,11 +165,12 @@ export default defineComponent({
           tip:   this.$t('ai.sigmaCalibTip') as string,
         }
       }
-      const mult = s.sigmaMultiplier.toFixed(2)
-      const std  = s.uncertaintyStd.toFixed(2)
+      const m1 = s.param1Mult.toFixed(2)
+      const m2 = s.param2Mult.toFixed(2)
+      const std = s.residualStd.toFixed(2)
       return {
-        state: s.state === 'clamped' ? 'clamped' : 'calibrated',
-        label: `σᵢ ×${mult} ±${std} · ${s.nSamples} runs`,
+        state: s.state === 'clamped' || s.state === 'unidentifiable' ? s.state : 'calibrated',
+        label: `σᵢ ×${m1} · Vₜₕ ×${m2} · res ${std} · ${s.nSamples} runs`,
         tip:   this.$t('ai.sigmaCalibTip') as string,
       }
     },

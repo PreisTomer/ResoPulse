@@ -78,11 +78,11 @@ export default defineComponent({
     cosTheta(): number  { return this.cellStore.cosThetaFactor },
 
     targetTauUs(): number {
-      const s = computeTau(this.cellStore.target, this.cellStore.effectiveSigmaE)
+      const s = computeTau(this.cellStore.effectiveTarget, this.cellStore.effectiveSigmaE)
       return s * 1e6
     },
     healthyTauUs(): number {
-      const s = computeTau(this.cellStore.healthy, this.cellStore.effectiveSigmaE)
+      const s = computeTau(this.cellStore.effectiveHealthy, this.cellStore.effectiveSigmaE)
       return s * 1e6
     },
 

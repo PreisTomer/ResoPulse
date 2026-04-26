@@ -66,6 +66,25 @@
             parameter. It is not personal data; do not paste personal or clinical identifiers
             into the citation note.
           </dd>
+          <dt>Per-lab cell calibration (derived)</dt>
+          <dd>
+            When you trigger σ_i calibration from the AI optimiser, we fit a scalar
+            intracellular-conductivity correction for each (lab, cell preset) pair from your
+            measured outcomes and store the result (multiplier, residual standard deviation,
+            and sample count). Calibration rows are scoped to your lab workspace and never
+            shared across organisations. They are derived from your own measurements and
+            contain no personal data.
+          </dd>
+          <dt>Model retraining metrics (audit log)</dt>
+          <dd>
+            Each retrain attempt of the on-premise XGBoost model records a server-side audit
+            row containing the model version, training and holdout sample counts, holdout
+            error metrics (RMSE/MAE for target lysis, healthy lysis, and rating predictions),
+            and whether the new bundle was promoted to active. These metrics drive the
+            promotion gate that prevents a worse-fitting model from replacing the active one
+            and let the Reports view trend model error over time. Retrain audit rows contain
+            no per-user or per-experiment data.
+          </dd>
           <dt>Local storage</dt>
           <dd>
             We write the following keys to your browser's local storage:

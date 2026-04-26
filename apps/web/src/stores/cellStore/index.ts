@@ -11,7 +11,7 @@ import { useExperimentStore } from '@/stores/experimentStore'
 import { useUserPresetsStore } from '@/stores/userPresetsStore'
 import { useCellCalibrationStore } from '@/stores/cellCalibrationStore'
 
-import { computeSchwan, computeSAR, computeIntracellularDebyeSAR, computeSteadyStateTemp, computeFc, computeTau, computeNuclearTau, computeResonantDisruption, computeNuclearVm, computeSkinDepthMm, computeDepCmReal, computeDepCrossoverKHz, computeDepSecondCrossoverKHz, computePopulationLysisFraction, safeRatio, tempCorrectedVth, computePulseEnvelope, computeLysisField, computeSigmaUncertaintyFactor, getHFireMultiplier, isResonanceTargetActive } from '@/utils/physics'
+import { computeSchwan, computeSAR, computeIntracellularDebyeSAR, computeSteadyStateTemp, computeFc, computeTau, computeNuclearTau, computeResonantDisruption, computeNuclearVm, computeSkinDepthMm, computeDepCmReal, computeDepCrossoverKHz, computeDepSecondCrossoverKHz, computePopulationLysisFraction, safeRatio, tempCorrectedVth, computePulseEnvelope, computeLysisField, computeSigmaUncertaintyFactor, getHFireMultiplier, isResonanceTargetActive, jacobianSchwanDR, jacobianResonantDR, computeResonantDR, propagatedTiVariance, propagateScalarVariance, type CalibrationCovariance, type ForwardDrInput } from '@/utils/physics'
 
 import { cellConfigs } from '@/constants/defaultCells'
 import { CELL_PRESETS } from '@/constants/cellLibrary'
@@ -151,32 +151,87 @@ export const useCellStore = defineStore('cell', {
       return sigma_T * (1 - phi) / (1 + phi / 2)
     },
 
-    // Calibrated σ_i per preset: sigma_i_corrected = sigma_i_base × multiplier. Falls through to
-    // 1.0 when no calibration row exists (guest session, untested preset, or pre-fit collecting state).
-    healthyCalibrationMultiplier: (state): number =>
-      useCellCalibrationStore().multiplierFor(state.healthy.id),
+    // Healthy is always Schwan (mammalian reference, no capsid acoustic params).
+    healthyParam1Multiplier: (state): number => useCellCalibrationStore().param1MultiplierFor(state.healthy.id, 'schwan'),
+    healthyParam2Multiplier: (state): number => useCellCalibrationStore().param2MultiplierFor(state.healthy.id, 'schwan'),
+    healthyCalibrationCovariance: (state) => useCellCalibrationStore().covarianceFor(state.healthy.id, 'schwan'),
 
-    targetCalibrationMultiplier: (state): number =>
-      useCellCalibrationStore().multiplierFor(state.target.id),
-
-    // Residual-ratio std from the sigma-multiplier fit. 0 when no fit exists — callers then fall
-    // back to the static literature σ_i uncertainty (computeSigmaUncertaintyFactor by radius).
-    healthyCalibrationUncertainty: (state): number =>
-      useCellCalibrationStore().uncertaintyFor(state.healthy.id),
-
-    targetCalibrationUncertainty: (state): number =>
-      useCellCalibrationStore().uncertaintyFor(state.target.id),
-
-    // Cell configs with σ_i scaled by the per-preset calibration multiplier. Used as the base for
-    // every physics getter on the Schwan/EP path so DR, TI, PEF, and Vm all reflect the digital twin.
-    effectiveHealthy(): CellConfig {
-      const state = this as CellStoreState
-      return { ...state.healthy, conductivity: state.healthy.conductivity * this.healthyCalibrationMultiplier }
+    // Target mode: inlined so Pinia getter type inference reaches it without a forward reference to isResonanceTarget (defined further down).
+    targetCalibrationMode: (state): 'schwan' | 'resonance' => {
+      if (state.chartMode !== CHART_MODE.RESONANCE) return 'schwan'
+      const t = state.target as CellConfig & { resonantFreqGHz?: number; resonantThresholdVcm?: number }
+      const cat = state.target.radius < THRESHOLDS.RADIUS_VIRUS_MAX ? CELL_CATEGORY.VIRUS
+                : state.target.radius < THRESHOLDS.RADIUS_BACTERIA_MAX ? CELL_CATEGORY.BACTERIA
+                : CELL_CATEGORY.MAMMALIAN
+      if (cat !== CELL_CATEGORY.VIRUS && cat !== CELL_CATEGORY.BACTERIA) return 'schwan'
+      if (!t.resonantFreqGHz || !t.resonantThresholdVcm) return 'schwan'
+      return 'resonance'
+    },
+    targetParam1Multiplier: (state): number => {
+      const mode: 'schwan' | 'resonance' = (() => {
+        if (state.chartMode !== CHART_MODE.RESONANCE) return 'schwan'
+        const t = state.target as CellConfig & { resonantFreqGHz?: number; resonantThresholdVcm?: number }
+        if (state.target.radius >= THRESHOLDS.RADIUS_BACTERIA_MAX) return 'schwan'
+        if (!t.resonantFreqGHz || !t.resonantThresholdVcm) return 'schwan'
+        return 'resonance'
+      })()
+      return useCellCalibrationStore().param1MultiplierFor(state.target.id, mode)
+    },
+    targetParam2Multiplier: (state): number => {
+      const mode: 'schwan' | 'resonance' = (() => {
+        if (state.chartMode !== CHART_MODE.RESONANCE) return 'schwan'
+        const t = state.target as CellConfig & { resonantFreqGHz?: number; resonantThresholdVcm?: number }
+        if (state.target.radius >= THRESHOLDS.RADIUS_BACTERIA_MAX) return 'schwan'
+        if (!t.resonantFreqGHz || !t.resonantThresholdVcm) return 'schwan'
+        return 'resonance'
+      })()
+      return useCellCalibrationStore().param2MultiplierFor(state.target.id, mode)
+    },
+    targetCalibrationCovariance: (state) => {
+      const mode: 'schwan' | 'resonance' = (() => {
+        if (state.chartMode !== CHART_MODE.RESONANCE) return 'schwan'
+        const t = state.target as CellConfig & { resonantFreqGHz?: number; resonantThresholdVcm?: number }
+        if (state.target.radius >= THRESHOLDS.RADIUS_BACTERIA_MAX) return 'schwan'
+        if (!t.resonantFreqGHz || !t.resonantThresholdVcm) return 'schwan'
+        return 'resonance'
+      })()
+      return useCellCalibrationStore().covarianceFor(state.target.id, mode)
     },
 
+    // Legacy aliases retained for read-side compat with the previous σ_i-only field.
+    healthyCalibrationMultiplier(): number  { return this.healthyParam1Multiplier },
+    targetCalibrationMultiplier(): number   { return this.targetCalibrationMode === 'schwan' ? this.targetParam1Multiplier : 1.0 },
+    healthyCalibrationUncertainty(): number { return Math.sqrt(Math.max(0, this.healthyCalibrationCovariance.cov11)) },
+    targetCalibrationUncertainty(): number  { return Math.sqrt(Math.max(0, this.targetCalibrationCovariance.cov11)) },
+
+    // Cell configs with σ_i AND V_th (Schwan) scaled by the calibration multipliers. The Schwan/EP path picks these up via every getter that takes a CellConfig — DR, Vm, τ, fc, DEP all see the digital twin.
+    effectiveHealthy(): CellConfig {
+      const state = this as CellStoreState
+      return {
+        ...state.healthy,
+        conductivity:     state.healthy.conductivity     * this.healthyParam1Multiplier,
+        thresholdVoltage: state.healthy.thresholdVoltage * this.healthyParam2Multiplier,
+      }
+    },
+
+    // Target effective config. Schwan path scales (σ_i, V_th); resonance path scales (capsidQ, resonantThresholdVcm) instead, leaving σ_i / V_th at baseline since acoustic disruption is mechanical and bypasses the EP membrane-charging knobs.
     effectiveTarget(): CellConfig {
       const state = this as CellStoreState
-      return { ...state.target, conductivity: state.target.conductivity * this.targetCalibrationMultiplier }
+      const mode  = this.targetCalibrationMode
+      const m1    = this.targetParam1Multiplier
+      const m2    = this.targetParam2Multiplier
+      if (mode === 'resonance') {
+        const t = state.target as CellConfig & { capsidQ?: number; resonantThresholdVcm?: number }
+        const out: CellConfig & { capsidQ?: number; resonantThresholdVcm?: number } = { ...state.target }
+        if (typeof t.capsidQ === 'number')              out.capsidQ              = t.capsidQ              * m1
+        if (typeof t.resonantThresholdVcm === 'number') out.resonantThresholdVcm = t.resonantThresholdVcm * m2
+        return out
+      }
+      return {
+        ...state.target,
+        conductivity:     state.target.conductivity     * m1,
+        thresholdVoltage: state.target.thresholdVoltage * m2,
+      }
     },
 
     lysisDelayMs: (state): number => {
@@ -249,56 +304,57 @@ export const useCellStore = defineStore('cell', {
     healthyDisruptionRatio(): number {
       const state = this as CellStoreState
       const hfireMult = this.hFireMultiplier
-      const vthEff = tempCorrectedVth(state.healthy.thresholdVoltage, state.healthyTemp, this.effectivePulseCount)
+      // Use effectiveHealthy.thresholdVoltage so the Schwan calibration's V_th multiplier propagates into the live DR. Vm already reads effectiveHealthy via targetVm/healthyVm getters.
+      const vthEff = tempCorrectedVth(this.effectiveHealthy.thresholdVoltage, state.healthyTemp, this.effectivePulseCount)
       return (this.healthyVm * this.pulseEnvelopeFactorHealthy) / (vthEff * hfireMult)
     },
 
     targetDisruptionRatio(): number {
       const state = this as CellStoreState
       const cat = this.targetCellCategory
-      const t = state.target as CellConfig & { resonantFreqGHz?: number; capsidQ?: number; resonantThresholdVcm?: number }
+      // Resonance-path knobs (Q, V_thr_res) are calibrated via effectiveTarget — read from there, not from raw state.target. H-FIRE / electrosensitization do not apply on the resonance path (mechanical).
+      const eT = this.effectiveTarget as CellConfig & { resonantFreqGHz?: number; capsidQ?: number; resonantThresholdVcm?: number; resonantFreqGHz2?: number; capsidQ2?: number; resonantMode2Amplitude?: number }
       const hfireMult = this.hFireMultiplier
       if (
         this.isResonanceMode &&
         (cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) &&
-        t.resonantFreqGHz && t.resonantThresholdVcm
+        eT.resonantFreqGHz && eT.resonantThresholdVcm
       ) {
-        // H-FIRE bipolar charge cancellation is an EP membrane-charging mechanism only.
-        // Acoustic resonance disruption is mechanical — hfireMult and electrosensitization do NOT apply here.
-        const effThreshold = tempCorrectedVth(t.resonantThresholdVcm, state.targetTemp)
+        const effThreshold = tempCorrectedVth(eT.resonantThresholdVcm, state.targetTemp)
         return computeResonantDisruption(
-          t.resonantFreqGHz,
-          t.capsidQ ?? DEFAULT_CAPSID_Q,
+          eT.resonantFreqGHz,
+          eT.capsidQ ?? DEFAULT_CAPSID_Q,
           effThreshold,
           state.currentBroadcastFrequency * KHZ_TO_HZ,  // kHz → Hz
           state.fieldIntensity,
-          t.resonantFreqGHz2, t.capsidQ2, t.resonantMode2Amplitude,
+          eT.resonantFreqGHz2, eT.capsidQ2, eT.resonantMode2Amplitude,
         )
       }
-      const vthEff = tempCorrectedVth(state.target.thresholdVoltage, state.targetTemp, this.effectivePulseCount)
+      // Schwan path: V_th calibration multiplier reaches the live DR through effectiveTarget.thresholdVoltage.
+      const vthEff = tempCorrectedVth(this.effectiveTarget.thresholdVoltage, state.targetTemp, this.effectivePulseCount)
       return (this.targetVm * this.pulseEnvelopeFactorTarget) / (vthEff * hfireMult)
     },
 
     healthySAR(): number {
       const state = this as CellStoreState
       const wf = state.waveform === WAVEFORM.CW ? WF_CW : WF_PULSED
-      if (this.isResonanceMode) return computeIntracellularDebyeSAR(state.healthy, state.fieldIntensity, state.currentBroadcastFrequency, wf)
-      return computeSAR(state.healthy, state.fieldIntensity, this.effectiveSigmaE, wf)
+      if (this.isResonanceMode) return computeIntracellularDebyeSAR(this.effectiveHealthy, state.fieldIntensity, state.currentBroadcastFrequency, wf)
+      return computeSAR(this.effectiveHealthy, state.fieldIntensity, this.effectiveSigmaE, wf)
     },
 
     targetSAR(): number {
       const state = this as CellStoreState
       const wf = state.waveform === WAVEFORM.CW ? WF_CW : WF_PULSED
-      if (this.isResonanceMode) return computeIntracellularDebyeSAR(state.target, state.fieldIntensity, state.currentBroadcastFrequency, wf)
-      return computeSAR(state.target, state.fieldIntensity, this.effectiveSigmaE, wf)
+      if (this.isResonanceMode) return computeIntracellularDebyeSAR(this.effectiveTarget, state.fieldIntensity, state.currentBroadcastFrequency, wf)
+      return computeSAR(this.effectiveTarget, state.fieldIntensity, this.effectiveSigmaE, wf)
     },
 
     healthyFc(): number {
-      return computeFc((this as CellStoreState).healthy, this.effectiveSigmaE)
+      return computeFc(this.effectiveHealthy, this.effectiveSigmaE)
     },
 
     targetFc(): number {
-      return computeFc((this as CellStoreState).target, this.effectiveSigmaE)
+      return computeFc(this.effectiveTarget, this.effectiveSigmaE)
     },
 
     selectivityRatio(): number {
@@ -309,75 +365,99 @@ export const useCellStore = defineStore('cell', {
       return safeRatio(this.targetDisruptionRatio, this.healthyDisruptionRatio, THRESHOLDS.TI_DISPLAY_CAP, NEAR_ZERO_DR)
     },
 
-    // TI bounds from σ_i uncertainty (mammalian ±20%, bacteria ±35%, virus ±45%) or Q_min/Q_max in resonance mode
+    // 68% TI band — Jacobian-propagated when a calibration fit exists, else literature σ_i prior. The fit's 2x2 covariance feeds first-order error propagation: σ²_TI = (J_T/DR_H)·Σ_T·... + (-DR_T/DR_H²·J_H)·Σ_H·.... Resonance-mode targets sweep (Q_min,Q_max) × f_res jitter as a structured prior.
     tiUncertaintyRange(): { low: number; high: number } {
       const state = this as CellStoreState
       const nominal = this.therapeuticIndex
+
       if (this.isResonanceMode) {
         const cat = this.targetCellCategory
-        const t = state.target as CellConfig & {
+        // Read resonance knobs from effectiveTarget so the calibration multiplier (Q × Q_mult, V_thr × V_thr_mult) applies. Q_min / Q_max literature bounds are width-preserving relative to baseline Q, so we scale them by the same multiplier as the central Q to keep the structural envelope coherent with the calibrated mean.
+        const eT = this.effectiveTarget as CellConfig & {
           resonantFreqGHz?: number; capsidQ?: number
           capsidQMin?: number; capsidQMax?: number; resonantThresholdVcm?: number
-          resonantFreqUncertaintyPct?: number
+          resonantFreqUncertaintyPct?: number; resonantFreqGHz2?: number; capsidQ2?: number; resonantMode2Amplitude?: number
         }
+        const rawT = state.target as CellConfig & { capsidQMin?: number; capsidQMax?: number; capsidQ?: number }
+        const qMult = (eT.capsidQ && rawT.capsidQ && rawT.capsidQ > 0) ? eT.capsidQ / rawT.capsidQ : 1.0
         if (
           (cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) &&
-          t.resonantFreqGHz && t.resonantThresholdVcm &&
-          t.capsidQMin !== undefined && t.capsidQMax !== undefined
+          eT.resonantFreqGHz && eT.resonantThresholdVcm &&
+          rawT.capsidQMin !== undefined && rawT.capsidQMax !== undefined
         ) {
-          // Acoustic resonance threshold: temperature correction only — hfireMult does not apply
-          const effThr    = tempCorrectedVth(t.resonantThresholdVcm, state.targetTemp)
+          const effThr    = tempCorrectedVth(eT.resonantThresholdVcm, state.targetTemp)
           const hDr      = this.healthyDisruptionRatio
           const freqHz   = state.currentBroadcastFrequency * KHZ_TO_HZ
-          // Sweep (Q_min,Q_max) × (f_res × (1±pct/100)); f_res jitter catches off-peak broadcasts.
-          const fresPct  = t.resonantFreqUncertaintyPct ?? 0
-          const fresLo   = t.resonantFreqGHz * (1 - fresPct / 100)
-          const fresHi   = t.resonantFreqGHz * (1 + fresPct / 100)
-          const qGrid    = [t.capsidQMin, t.capsidQMax]
-          const fresGrid = fresPct > 0 ? [fresLo, t.resonantFreqGHz, fresHi] : [t.resonantFreqGHz]
+          const fresPct  = eT.resonantFreqUncertaintyPct ?? 0
+          const fresLo   = eT.resonantFreqGHz * (1 - fresPct / 100)
+          const fresHi   = eT.resonantFreqGHz * (1 + fresPct / 100)
+          const qGrid    = [rawT.capsidQMin * qMult, rawT.capsidQMax * qMult]
+          const fresGrid = fresPct > 0 ? [fresLo, eT.resonantFreqGHz, fresHi] : [eT.resonantFreqGHz]
           let drTMin = Infinity, drTMax = -Infinity
           for (const q of qGrid) {
             for (const fres of fresGrid) {
-              const dr = computeResonantDisruption(fres, q, effThr, freqHz, state.fieldIntensity, t.resonantFreqGHz2, t.capsidQ2, t.resonantMode2Amplitude)
+              const dr = computeResonantDisruption(fres, q, effThr, freqHz, state.fieldIntensity, eT.resonantFreqGHz2, eT.capsidQ2, eT.resonantMode2Amplitude)
               if (dr < drTMin) drTMin = dr
               if (dr > drTMax) drTMax = dr
             }
           }
-          const tiFromDr = (dr: number) =>
-            safeRatio(dr, hDr, THRESHOLDS.TI_DISPLAY_CAP, NEAR_ZERO_DR)
+          const targetCov = this.targetCalibrationCovariance
+          if (targetCov.cov11 > 0 || targetCov.cov22 > 0) {
+            const fwdInput: ForwardDrInput = {
+              cell: this.effectiveTarget, freqKHz: state.currentBroadcastFrequency, fieldVcm: state.fieldIntensity,
+              sigma_e: this.effectiveSigmaE, cosTheta: this.cosThetaFactor, tempC: state.targetTemp,
+              pulseWidthNs: state.pulseWidthNs, isPulsed: false, hfireMult: 1.0, effectivePulseCount: 1,
+            }
+            const jacT = jacobianResonantDR(fwdInput)
+            const drT  = computeResonantDR(fwdInput)
+            const sigmaDrT = Math.sqrt(propagateScalarVariance(jacT, targetCov))
+            drTMin = Math.min(drTMin, drT - sigmaDrT)
+            drTMax = Math.max(drTMax, drT + sigmaDrT)
+          }
+          const tiFromDr = (dr: number) => safeRatio(Math.max(0, dr), hDr, THRESHOLDS.TI_DISPLAY_CAP, NEAR_ZERO_DR)
           return { low: tiFromDr(drTMin), high: tiFromDr(drTMax) }
         }
         return { low: nominal, high: nominal }
       }
-      const sigma_e = this.effectiveSigmaE
-      const field   = state.fieldIntensity
-      const freq    = state.currentBroadcastFrequency
-      const cosT    = this.cosThetaFactor
-      // Band: calibration residual if fit exists, else literature σ_i prior. Residual propagates as σ_i ± (first-order).
-      const calH    = this.healthyCalibrationUncertainty
-      const calT    = this.targetCalibrationUncertainty
-      const uncH    = calH > 0 ? calH : computeSigmaUncertaintyFactor(state.healthy.radius)
-      const uncT    = calT > 0 ? calT : computeSigmaUncertaintyFactor(state.target.radius)
-      const baseH   = this.effectiveHealthy
-      const baseT   = this.effectiveTarget
-      // TI_low: weakest target + strongest healthy coupling
-      const vmTLow  = computeSchwan({ ...baseT, conductivity: baseT.conductivity * (1 - uncT) }, freq, field, sigma_e, cosT)
-      const vmHHigh = computeSchwan({ ...baseH, conductivity: baseH.conductivity * (1 + uncH) }, freq, field, sigma_e, cosT)
-      const pefT    = this.pulseEnvelopeFactorTarget
-      const pefH    = this.pulseEnvelopeFactorHealthy
-      // Apply same temperature + electrosensitization correction + H-FIRE multiplier as the live DR getters
-      const hfireMult = this.hFireMultiplier
-      const vthT = tempCorrectedVth(state.target.thresholdVoltage, state.targetTemp, this.effectivePulseCount)
-      const vthH = tempCorrectedVth(state.healthy.thresholdVoltage, state.healthyTemp, this.effectivePulseCount)
-      const drTLow  = (vmTLow  * pefT) / (vthT * hfireMult)
-      const drHHigh = (vmHHigh * pefH) / (vthH * hfireMult)
-      const tiLow   = Math.max(0, safeRatio(drTLow, drHHigh, THRESHOLDS.TI_DISPLAY_CAP, NEAR_ZERO_DR))
-      // TI_high: strongest target + weakest healthy coupling
-      const vmTHigh = computeSchwan({ ...baseT, conductivity: baseT.conductivity * (1 + uncT) }, freq, field, sigma_e, cosT)
-      const vmHLow  = computeSchwan({ ...baseH, conductivity: baseH.conductivity * (1 - uncH) }, freq, field, sigma_e, cosT)
-      const drTHigh = (vmTHigh * pefT) / (vthT * hfireMult)
-      const drHLow  = (vmHLow  * pefH) / (vthH * hfireMult)
-      const tiHigh  = safeRatio(drTHigh, drHLow, THRESHOLDS.TI_DISPLAY_CAP, NEAR_ZERO_DR)
+
+      // Schwan path: full Jacobian propagation across (σ_i, V_th) on both cells.
+      const drT  = this.targetDisruptionRatio
+      const drH  = this.healthyDisruptionRatio
+      if (drH <= NEAR_ZERO_DR) return { low: nominal, high: nominal }
+
+      const targetCov  = this.targetCalibrationCovariance
+      const healthyCov = this.healthyCalibrationCovariance
+      const hasCov     = targetCov.cov11 > 0 || targetCov.cov22 > 0 || healthyCov.cov11 > 0 || healthyCov.cov22 > 0
+
+      const tInput: ForwardDrInput = {
+        cell: this.effectiveTarget, freqKHz: state.currentBroadcastFrequency, fieldVcm: state.fieldIntensity,
+        sigma_e: this.effectiveSigmaE, cosTheta: this.cosThetaFactor, tempC: state.targetTemp,
+        pulseWidthNs: state.pulseWidthNs, isPulsed: state.waveform !== WAVEFORM.CW,
+        hfireMult: this.hFireMultiplier, effectivePulseCount: this.effectivePulseCount,
+      }
+      const hInput: ForwardDrInput = {
+        cell: this.effectiveHealthy, freqKHz: state.currentBroadcastFrequency, fieldVcm: state.fieldIntensity,
+        sigma_e: this.effectiveSigmaE, cosTheta: this.cosThetaFactor, tempC: state.healthyTemp,
+        pulseWidthNs: state.pulseWidthNs, isPulsed: state.waveform !== WAVEFORM.CW,
+        hfireMult: this.hFireMultiplier, effectivePulseCount: this.effectivePulseCount,
+      }
+      const jacT = jacobianSchwanDR(tInput)
+      const jacH = jacobianSchwanDR(hInput)
+
+      let sigmaTi: number
+      if (hasCov) {
+        sigmaTi = Math.sqrt(propagatedTiVariance(drT, drH, jacT, jacH, targetCov, healthyCov))
+      } else {
+        // Fall back to the literature radius-based σ_i prior — propagate it as the σ on a σ_i_multiplier (cov_11 = unc²; V_th covariance stays 0).
+        const uncH = computeSigmaUncertaintyFactor(state.healthy.radius)
+        const uncT = computeSigmaUncertaintyFactor(state.target.radius)
+        const priorT: CalibrationCovariance = { cov11: uncT * uncT, cov12: 0, cov22: 0 }
+        const priorH: CalibrationCovariance = { cov11: uncH * uncH, cov12: 0, cov22: 0 }
+        sigmaTi = Math.sqrt(propagatedTiVariance(drT, drH, jacT, jacH, priorT, priorH))
+      }
+
+      const tiLow  = Math.max(0,                       nominal - sigmaTi)
+      const tiHigh = Math.min(THRESHOLDS.TI_DISPLAY_CAP, nominal + sigmaTi)
       return { low: tiLow, high: tiHigh }
     },
 
@@ -401,8 +481,8 @@ export const useCellStore = defineStore('cell', {
       const state   = this as CellStoreState
       if (!state.healthy.nuclearRadius) return 0
       const sigma_e = this.effectiveSigmaE
-      const tauOut  = computeTau(state.healthy, sigma_e)
-      const tauNe   = computeNuclearTau(state.healthy, sigma_e)
+      const tauOut  = computeTau(this.effectiveHealthy, sigma_e)
+      const tauNe   = computeNuclearTau(this.effectiveHealthy, sigma_e)
       if (tauOut <= 0 || tauNe <= 0) return 0
       return 1 / (TWO_PI * Math.sqrt(tauOut * tauNe) * 1e3)
     },
@@ -411,8 +491,8 @@ export const useCellStore = defineStore('cell', {
       const state   = this as CellStoreState
       if (!state.target.nuclearRadius) return 0
       const sigma_e = this.effectiveSigmaE
-      const tauOut  = computeTau(state.target, sigma_e)
-      const tauNe   = computeNuclearTau(state.target, sigma_e)
+      const tauOut  = computeTau(this.effectiveTarget, sigma_e)
+      const tauNe   = computeNuclearTau(this.effectiveTarget, sigma_e)
       if (tauOut <= 0 || tauNe <= 0) return 0
       return 1 / (TWO_PI * Math.sqrt(tauOut * tauNe) * 1e3)
     },
@@ -439,13 +519,13 @@ export const useCellStore = defineStore('cell', {
     targetLysisField(): number {
       const state     = this as CellStoreState
       const hfireMult = this.hFireMultiplier
-      return computeLysisField(state.target, state.currentBroadcastFrequency, this.effectiveSigmaE, this.cosThetaFactor, this.pulseEnvelopeFactorTarget, hfireMult, state.targetTemp, this.effectivePulseCount)
+      return computeLysisField(this.effectiveTarget, state.currentBroadcastFrequency, this.effectiveSigmaE, this.cosThetaFactor, this.pulseEnvelopeFactorTarget, hfireMult, state.targetTemp, this.effectivePulseCount)
     },
 
     healthyLysisField(): number {
       const state     = this as CellStoreState
       const hfireMult = this.hFireMultiplier
-      return computeLysisField(state.healthy, state.currentBroadcastFrequency, this.effectiveSigmaE, this.cosThetaFactor, this.pulseEnvelopeFactorHealthy, hfireMult, state.healthyTemp, this.effectivePulseCount)
+      return computeLysisField(this.effectiveHealthy, state.currentBroadcastFrequency, this.effectiveSigmaE, this.cosThetaFactor, this.pulseEnvelopeFactorHealthy, hfireMult, state.healthyTemp, this.effectivePulseCount)
     },
 
     healthySteadyStateTemp(): number {
@@ -495,37 +575,37 @@ export const useCellStore = defineStore('cell', {
     depHealthyCmReal(): number {
       const state = this as CellStoreState
       const eps_r = MEDIA[state.medium].permittivity
-      return computeDepCmReal(state.healthy, state.currentBroadcastFrequency, this.effectiveSigmaE, eps_r)
+      return computeDepCmReal(this.effectiveHealthy, state.currentBroadcastFrequency, this.effectiveSigmaE, eps_r)
     },
 
     depTargetCmReal(): number {
       const state = this as CellStoreState
       const eps_r = MEDIA[state.medium].permittivity
-      return computeDepCmReal(state.target, state.currentBroadcastFrequency, this.effectiveSigmaE, eps_r)
+      return computeDepCmReal(this.effectiveTarget, state.currentBroadcastFrequency, this.effectiveSigmaE, eps_r)
     },
 
     depHealthyCrossoverKHz(): number {
       const state = this as CellStoreState
       const eps_r = MEDIA[state.medium].permittivity
-      return computeDepCrossoverKHz(state.healthy, this.effectiveSigmaE, eps_r)
+      return computeDepCrossoverKHz(this.effectiveHealthy, this.effectiveSigmaE, eps_r)
     },
 
     depTargetCrossoverKHz(): number {
       const state = this as CellStoreState
       const eps_r = MEDIA[state.medium].permittivity
-      return computeDepCrossoverKHz(state.target, this.effectiveSigmaE, eps_r)
+      return computeDepCrossoverKHz(this.effectiveTarget, this.effectiveSigmaE, eps_r)
     },
 
     depHealthySecondCrossoverKHz(): number {
       const state = this as CellStoreState
       const eps_r = MEDIA[state.medium].permittivity
-      return computeDepSecondCrossoverKHz(state.healthy, this.effectiveSigmaE, eps_r)
+      return computeDepSecondCrossoverKHz(this.effectiveHealthy, this.effectiveSigmaE, eps_r)
     },
 
     depTargetSecondCrossoverKHz(): number {
       const state = this as CellStoreState
       const eps_r = MEDIA[state.medium].permittivity
-      return computeDepSecondCrossoverKHz(state.target, this.effectiveSigmaE, eps_r)
+      return computeDepSecondCrossoverKHz(this.effectiveTarget, this.effectiveSigmaE, eps_r)
     },
 
     // ── Reversible EP resealing time estimate ────────────────────────────────
@@ -566,44 +646,45 @@ export const useCellStore = defineStore('cell', {
     },
 
     optimalFreqResult(): { khz: number; sel: number } {
-      const state  = this as CellStoreState
-      const target = state.target as CellConfig & { resonantFreqGHz?: number; resonantThresholdVcm?: number; capsidQ?: number }
+      const state    = this as CellStoreState
+      // Read all calibratable knobs from effectives so the optimum reflects the closed-loop fit. Resonance path uses (Q, V_thr_res); Schwan path uses (σ_i, V_th).
+      const eT = this.effectiveTarget as CellConfig & { resonantFreqGHz?: number; resonantThresholdVcm?: number; capsidQ?: number; resonantFreqGHz2?: number; capsidQ2?: number; resonantMode2Amplitude?: number }
+      const eH = this.effectiveHealthy
       const cat    = this.targetCellCategory
 
       if (
         this.isResonanceMode &&
         (cat === CELL_CATEGORY.VIRUS || cat === CELL_CATEGORY.BACTERIA) &&
-        target.resonantFreqGHz && target.resonantThresholdVcm
+        eT.resonantFreqGHz && eT.resonantThresholdVcm
       ) {
-        const effThr    = tempCorrectedVth(target.resonantThresholdVcm, state.targetTemp)
+        const effThr    = tempCorrectedVth(eT.resonantThresholdVcm, state.targetTemp)
         const sigma_e   = this.effectiveSigmaE
         const hfireMult = this.hFireMultiplier
-        const hThr      = tempCorrectedVth(state.healthy.thresholdVoltage, state.healthyTemp, this.effectivePulseCount) * hfireMult
+        const hThr      = tempCorrectedVth(eH.thresholdVoltage, state.healthyTemp, this.effectivePulseCount) * hfireMult
         // Pick best peak between mode 1 / mode 2; higher-f mode wins when healthy Schwan rolls off past fc.
         const selAt = (fresGHz: number): { khz: number; sel: number } => {
           const khz = fresGHz * 1e6
           const drT = computeResonantDisruption(
-            target.resonantFreqGHz!, target.capsidQ ?? DEFAULT_CAPSID_Q, effThr,
+            eT.resonantFreqGHz!, eT.capsidQ ?? DEFAULT_CAPSID_Q, effThr,
             khz * KHZ_TO_HZ, state.fieldIntensity,
-            target.resonantFreqGHz2, target.capsidQ2, target.resonantMode2Amplitude,
+            eT.resonantFreqGHz2, eT.capsidQ2, eT.resonantMode2Amplitude,
           )
-          const hVm = computeSchwan(state.healthy, khz, state.fieldIntensity, sigma_e, this.cosThetaFactor)
+          const hVm = computeSchwan(eH, khz, state.fieldIntensity, sigma_e, this.cosThetaFactor)
           const drH = (hVm * this.pulseEnvelopeFactorHealthy) / hThr
           return { khz, sel: safeRatio(drT, drH, THRESHOLDS.TI_DISPLAY_CAP, NEAR_ZERO_DR) }
         }
-        const candidates = [selAt(target.resonantFreqGHz)]
-        if (target.resonantFreqGHz2) candidates.push(selAt(target.resonantFreqGHz2))
+        const candidates = [selAt(eT.resonantFreqGHz)]
+        if (eT.resonantFreqGHz2) candidates.push(selAt(eT.resonantFreqGHz2))
         return candidates.reduce((best, c) => c.sel > best.sel ? c : best)
       }
 
-      // Build cache key from all inputs that affect the scan. Round temps to 0.1 °C to
-      // avoid cache misses from floating-point noise in the Euler integration.
+      // Cache key includes calibrated σ_i AND V_th so a calibration update (either knob) busts the scan. Without V_th here, a Vₜₕ-only fit would silently leave a stale optimum.
       const sigma_e = this.effectiveSigmaE
       const cacheKey = [
         state.healthy.id, state.healthy.radius, state.healthy.membraneThickness,
-        state.healthy.dielectricConstant, state.healthy.conductivity, state.healthy.thresholdVoltage,
+        state.healthy.dielectricConstant, eH.conductivity, eH.thresholdVoltage,
         state.target.id, state.target.radius, state.target.membraneThickness,
-        state.target.dielectricConstant, state.target.conductivity, state.target.thresholdVoltage,
+        state.target.dielectricConstant, eT.conductivity, eT.thresholdVoltage,
         state.waveform, state.dutyCycle, state.pulseWidthNs, state.chartMode,
         this.effectivePulseCount,
         Math.round(sigma_e * 1e6),  // µS/m precision — avoids misses from tiny temp-driven σ_e drift
@@ -613,18 +694,17 @@ export const useCellStore = defineStore('cell', {
       if (_optFreqCache?.key === cacheKey) return _optFreqCache.result
 
       const hfireMult = this.hFireMultiplier
-      const hThr = tempCorrectedVth(state.healthy.thresholdVoltage, state.healthyTemp, this.effectivePulseCount) * hfireMult
-      const tThr = tempCorrectedVth(state.target.thresholdVoltage,  state.targetTemp,  this.effectivePulseCount) * hfireMult
+      const hThr = tempCorrectedVth(eH.thresholdVoltage, state.healthyTemp, this.effectivePulseCount) * hfireMult
+      const tThr = tempCorrectedVth(eT.thresholdVoltage, state.targetTemp,  this.effectivePulseCount) * hfireMult
       const pefH = this.pulseEnvelopeFactorHealthy
       const pefT = this.pulseEnvelopeFactorTarget
-      // cosTheta and field cancel in the tDr/hDr ratio — use unit field to avoid a reactive
-      // dependency on fieldIntensity that would bust the cache on every field slider move.
+      // cosTheta and field cancel in the tDr/hDr ratio — use unit field to avoid a reactive dependency on fieldIntensity that would bust the cache on every field slider move.
       const UNIT_FIELD = 1.0
       const logMin = Math.log10(10), logMax = Math.log10(500_000)
       const { khz: optKhz, sel: maxSel } = Array.from({ length: 300 }, (_, i) => {
         const khz = Math.pow(10, logMin + (logMax - logMin) * i / 299)
-        const hDr = (computeSchwan(state.healthy, khz, UNIT_FIELD, sigma_e) * pefH) / hThr
-        const tDr = (computeSchwan(state.target,  khz, UNIT_FIELD, sigma_e) * pefT) / tThr
+        const hDr = (computeSchwan(eH, khz, UNIT_FIELD, sigma_e) * pefH) / hThr
+        const tDr = (computeSchwan(eT, khz, UNIT_FIELD, sigma_e) * pefT) / tThr
         return { khz, sel: hDr > 0 ? tDr / hDr : 0 }
       }).reduce((best, pt) => pt.sel > best.sel ? pt : best, { khz: 10, sel: -Infinity })
 
@@ -688,16 +768,18 @@ export const useCellStore = defineStore('cell', {
       return (state.target.radius * vthH) / (state.healthy.radius * vthT)
     },
 
-    // High-f TI limit (R_T·τ_H·Vth_H)/(R_H·τ_T·Vth_T); sub-unity when target rolls off faster. Schwan/IRE only.
+    // High-f TI asymptote (R_T·τ_H·Vth_H)/(R_H·τ_T·Vth_T); sub-unity when target rolls off faster. Schwan/IRE only. All four factors come from the calibrated effectives so the limit honours the closed-loop fit.
     tiHighFreqLimit(): number {
       const state = this as CellStoreState
       const sigma_e = this.effectiveSigmaE
-      const tauT = computeTau(state.target,  sigma_e)
-      const tauH = computeTau(state.healthy, sigma_e)
-      const vthT = tempCorrectedVth(state.target.thresholdVoltage,  state.targetTemp,  this.effectivePulseCount)
-      const vthH = tempCorrectedVth(state.healthy.thresholdVoltage, state.healthyTemp, this.effectivePulseCount)
+      const eT      = this.effectiveTarget
+      const eH      = this.effectiveHealthy
+      const tauT = computeTau(eT, sigma_e)
+      const tauH = computeTau(eH, sigma_e)
+      const vthT = tempCorrectedVth(eT.thresholdVoltage, state.targetTemp,  this.effectivePulseCount)
+      const vthH = tempCorrectedVth(eH.thresholdVoltage, state.healthyTemp, this.effectivePulseCount)
       if (tauT <= 0 || vthT <= 0) return 0
-      return (state.target.radius * tauH * vthH) / (state.healthy.radius * tauT * vthT)
+      return (eT.radius * tauH * vthH) / (eH.radius * tauT * vthT)
     },
 
     sliderRanges(): SliderRange {

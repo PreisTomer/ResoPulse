@@ -171,8 +171,10 @@
 
           <ApplyCalibrationModal
             :is-open="calibPreviewOpen"
-            :healthy-multiplier="healthyCalibStatus.sigmaMultiplier"
-            :target-multiplier="targetCalibStatus.sigmaMultiplier"
+            :healthy-multiplier="healthyCalibStatus.param1Mult"
+            :target-multiplier="targetCalibStatus.param1Mult"
+            :healthy-vth-multiplier="healthyCalibStatus.param2Mult"
+            :target-vth-multiplier="targetCalibStatus.param2Mult"
             @close="closeCalibrationPreview"
           />
 
@@ -362,11 +364,12 @@ export default defineComponent({
     SIGMA_MIN_SAMPLES() { return THRESHOLDS.SIGMA_CALIB_MIN_SAMPLES },
     ...mapStores(useAiStore, useAuthStore, useCellStore, useCellCalibrationStore, useExperimentStore, useTokenStore, useUiStore),
 
+    // Cell card always reflects the Schwan-mode fit; resonance fit (if any) is summarised in the resonance UI.
     healthyCalibStatus(): CalibrationStatus {
-      return this.cellCalibrationStore.statusFor(this.cellStore.healthy.id)
+      return this.cellCalibrationStore.statusFor(this.cellStore.healthy.id, 'schwan')
     },
     targetCalibStatus(): CalibrationStatus {
-      return this.cellCalibrationStore.statusFor(this.cellStore.target.id)
+      return this.cellCalibrationStore.statusFor(this.cellStore.target.id, this.cellStore.targetCalibrationMode)
     },
     sigmaCalibVisible(): boolean {
       return this.authStore.isSignedIn && this.authStore.hasOrg
@@ -379,8 +382,9 @@ export default defineComponent({
     hasActionableMultiplier(): boolean {
       const h = this.healthyCalibStatus
       const t = this.targetCalibStatus
-      const meaningful = (s: { state: string; sigmaMultiplier: number }) =>
-        (s.state === 'calibrated' || s.state === 'clamped') && Math.abs(s.sigmaMultiplier - 1.0) > 1e-3
+      const meaningful = (s: CalibrationStatus) =>
+        (s.state === 'calibrated' || s.state === 'clamped' || s.state === 'unidentifiable') &&
+        (Math.abs(s.param1Mult - 1.0) > 1e-3 || Math.abs(s.param2Mult - 1.0) > 1e-3)
       return meaningful(h) || meaningful(t)
     },
 
@@ -506,12 +510,19 @@ export default defineComponent({
           this.retrainMessage  = this.$t('ai.retrainNoData')
           this.retrainMsgClass = 'ai-tab__retrain-msg--warn'
         }
-        // Refit σ_i for the active cells in parallel with the global retrain — server-side
-        // compute is org-scoped, so skip silently for guests and no-org users.
+        // Refit calibration for active cells in parallel with the global retrain. Server-side compute is org-scoped, so guests and no-org users skip silently. Healthy is Schwan-only; target follows targetCalibrationMode.
         if (this.sigmaCalibVisible) {
+          const healthyParams = this.buildCellParamsFor(this.cellStore.healthy)
+          const targetParams  = this.buildCellParamsFor(this.cellStore.target)
           await Promise.all([
-            this.cellCalibrationStore.compute(this.cellStore.healthy.id),
-            this.cellCalibrationStore.compute(this.cellStore.target.id),
+            this.cellCalibrationStore.compute({
+              cellPresetId: this.cellStore.healthy.id, mode: 'schwan',
+              category: 'mammalian', cellParams: healthyParams,
+            }),
+            this.cellCalibrationStore.compute({
+              cellPresetId: this.cellStore.target.id, mode: this.cellStore.targetCalibrationMode,
+              category: this.cellStore.targetCellCategory, cellParams: targetParams,
+            }),
           ])
         }
       } catch {
@@ -530,16 +541,38 @@ export default defineComponent({
           need: THRESHOLDS.SIGMA_CALIB_MIN_SAMPLES,
         })
         case 'clamped': return this.$t('ai.sigmaCalibClamped', {
-          m:   status.sigmaMultiplier.toFixed(2),
+          m:   status.param1Mult.toFixed(2),
           min: this.SIGMA_MIN,
           max: this.SIGMA_MAX,
         }) + this.errorDeltaSuffix(status)
+        case 'unidentifiable': return this.$t('ai.sigmaCalibUnidentifiable', {
+          m1: status.param1Mult.toFixed(2),
+          m2: status.param2Mult.toFixed(2),
+          n:  status.nSamples,
+        })
         case 'calibrated': return this.$t('ai.sigmaCalibCalibrated', {
-          m:   status.sigmaMultiplier.toFixed(2),
-          std: status.uncertaintyStd.toFixed(2),
+          m:   status.param1Mult.toFixed(2),
+          std: status.residualStd.toFixed(2),
           n:   status.nSamples,
         }) + this.errorDeltaSuffix(status)
         default: return this.$t('ai.sigmaCalibUnknown')
+      }
+    },
+
+    // Builds an AiCalibrationCellParams payload from an active cell preset; resonance baselines are forwarded only when the cell exposes them.
+    buildCellParamsFor(cell: import('@/types/cell').CellConfig): import('@resopulse/shared-types').AiCalibrationCellParams {
+      return {
+        radiusUm:                     cell.radius,
+        memThicknessNm:               cell.membraneThickness,
+        dielectricConst:              cell.dielectricConstant,
+        sigmaIBaseline:               cell.conductivity,
+        vthBaseline:                  cell.thresholdVoltage,
+        resonantFreqGhz:              cell.resonantFreqGHz,
+        capsidQBaseline:              cell.capsidQ,
+        resonantThresholdVcmBaseline: cell.resonantThresholdVcm,
+        resonantFreqGhz2:             cell.resonantFreqGHz2,
+        capsidQ2:                     cell.capsidQ2,
+        resonantMode2Amp:             cell.resonantMode2Amplitude,
       }
     },
 
@@ -559,7 +592,22 @@ export default defineComponent({
       const canProceed = await this.tokenStore.consumeOperation('AI_SUGGEST', { allowGuest: true })
       if (!canProceed) return
       this.showGuestNote = false
-      this.exploreSuggestions = suggestNextProtocols(this.experimentStore.entries, this.cellStore.sliderRanges)
+
+      // D-optimal expected information gain when the active calibration has a real fit (cov_11 or cov_22 > 0). Maximin space-filling otherwise — honest "explore" mode for uncalibrated cells. The active learning module dispatches off the optional physicsContext.
+      const cs   = this.cellStore
+      const cov  = cs.targetCalibrationCovariance
+      const ctx  = (cov.cov11 > 0 || cov.cov22 > 0) ? {
+        mode:                cs.targetCalibrationMode,
+        cell:                cs.effectiveTarget,
+        sigma_e:             cs.effectiveSigmaE,
+        cosTheta:            cs.cosThetaFactor,
+        tempC:               cs.targetTemp,
+        pulseWidthNs:        cs.pulseWidthNs,
+        hfireMult:           cs.hFireMultiplier,
+        effectivePulseCount: cs.effectivePulseCount,
+        waveform:            cs.waveform as 'cw' | 'pulsed' | 'hfire',
+      } : undefined
+      this.exploreSuggestions = suggestNextProtocols(this.experimentStore.entries, this.cellStore.sliderRanges, undefined, ctx)
     },
 
     applyExploreSuggestion(s: SuggestedProtocol): void {
@@ -567,7 +615,7 @@ export default defineComponent({
       this.cellStore.setFieldIntensity(s.fieldVcm)
       this.cellStore.setDutyCycle(s.dutyCycle)
       this.experimentStore.markAiSuggestionApplied({
-        source:    'space-filling',
+        source:    s.strategy === 'd-optimal' ? 'optimizer' : 'space-filling',
         freqKHz:   s.freqKHz,
         fieldVcm:  s.fieldVcm,
         dutyCycle: s.dutyCycle,
@@ -585,13 +633,18 @@ export default defineComponent({
     },
 
     exploreStrategyLabelFor(s: SuggestedProtocol): string {
-      return s.strategy === 'cold-start'
-        ? this.$t('ai.exploreStrategyColdStart')
-        : this.$t('ai.exploreStrategySpaceFilling')
+      if (s.strategy === 'cold-start')   return this.$t('ai.exploreStrategyColdStart')
+      if (s.strategy === 'd-optimal')    return this.$t('ai.exploreStrategyDOptimal')
+      return this.$t('ai.exploreStrategySpaceFilling')
     },
 
     exploreRationaleFor(s: SuggestedProtocol): string {
       if (s.strategy === 'cold-start') return this.$t('ai.exploreRationaleColdStart')
+      if (s.strategy === 'd-optimal') {
+        const score = (s.infoGainScore ?? 0).toFixed(2)
+        const key = s.measuredCount === 1 ? 'ai.exploreRationaleDOptimalOne' : 'ai.exploreRationaleDOptimalMany'
+        return this.$t(key, { n: s.measuredCount, score })
+      }
       const key = s.measuredCount === 1 ? 'ai.exploreRationaleSpaceFillingOne' : 'ai.exploreRationaleSpaceFillingMany'
       return this.$t(key, { n: s.measuredCount })
     },

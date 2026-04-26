@@ -382,8 +382,7 @@ export function computeSigmaUncertaintyFactor(radius: number): number {
   return THRESHOLDS.UNCERTAINTY_MAMMALIAN
 }
 
-// Steady-state temperature [°C] via Newton cooling + Pennes perfusion. Pennes 1948.
-// sar [W/kg], dc [0-1], specificHeat [J/(kg·K)], perfusionRate [mL/(g·min)].
+// Steady-state temperature [°C] via lumped 0-D thermal balance with Pennes-style perfusion sink. Honest scope: this is a 0-D well-mixed-cuvette approximation, not the full Pennes PDE. sar [W/kg], dc [0-1], specificHeat [J/(kg·K)], perfusionRate [mL/(g·min)].
 export function computeSteadyStateTemp(
   sar:              number,
   dc:               number,
@@ -397,6 +396,154 @@ export function computeSteadyStateTemp(
     ambientC + sarEff / ((NEWTON_COOLING_LAMBDA + lambdaPerf) * specificHeat),
     THRESHOLDS.TEMP_CAP,
   )
+}
+
+// Cuvette wall cooling rate λ [1/s] derived from geometry and overall heat-transfer coefficient. Lets the user override the built-in NEWTON_COOLING_LAMBDA when their cuvette differs from the BTX 1mm default. Energy balance: ρ·V·cp·dT/dt = SAR_eff·ρ·V − U·A·(T − T_amb), so λ = U·A / (ρ·V·cp).
+export function newtonCoolingLambda(
+  wallAreaCm2:    number,
+  cuvetteVolumeMl: number,
+  wallU_W_m2K:    number,
+  density_kg_m3:  number,
+  cp_J_kgK:       number,
+): number {
+  const A = wallAreaCm2 * 1e-4         // cm² → m²
+  const V = cuvetteVolumeMl * 1e-6     // mL → m³
+  const denom = density_kg_m3 * V * cp_J_kgK
+  if (denom <= 0 || A <= 0) return NEWTON_COOLING_LAMBDA
+  return (wallU_W_m2K * A) / denom
+}
+
+// Transient temperature ramp T(t) [°C]. Closed-form solution to the lumped energy balance under constant time-averaged SAR_eff = SAR·dc: T(t) = T_amb + (T_ss − T_amb)·(1 − e^(−λ·t)) + (T₀ − T_amb)·e^(−λ·t). Returns sampled (t [s], T [°C]) over [0, durationS]. Honest scope: pulse-train micro-structure averaged out; valid as a thermal envelope, not for sub-pulse resolution.
+export interface ThermalRampPoint { t: number; tempC: number }
+
+export function computeTemperatureRamp(
+  sar:               number,
+  dc:                number,
+  specificHeat:      number,
+  perfusionRate:     number,
+  durationS:         number,
+  initialTempC:      number = BODY_TEMP_C,
+  ambientC:          number = BODY_TEMP_C,
+  nSamples:          number = 100,
+  customLambda:      number | null = null,
+): ThermalRampPoint[] {
+  const sarEff     = sar * dc
+  const lambdaPerf = perfusionRate * PENNES_BLOOD_COEFF / specificHeat
+  const lambda     = (customLambda ?? NEWTON_COOLING_LAMBDA) + lambdaPerf
+  const tSs        = ambientC + sarEff / (lambda * specificHeat)
+  const tSsCapped  = Math.min(tSs, THRESHOLDS.TEMP_CAP)
+  const out: ThermalRampPoint[] = []
+  for (let i = 0; i <= nSamples; i++) {
+    const t = (durationS * i) / nSamples
+    const decay = Math.exp(-lambda * t)
+    const tempC = Math.min(THRESHOLDS.TEMP_CAP, ambientC + (tSsCapped - ambientC) * (1 - decay) + (initialTempC - ambientC) * decay)
+    out.push({ t, tempC })
+  }
+  return out
+}
+
+// ── Forward DR + Jacobian propagation (closed-loop uncertainty) ─────────────
+
+export interface ForwardDrInput {
+  cell:                 CellConfig
+  freqKHz:              number
+  fieldVcm:             number
+  sigma_e:              number
+  cosTheta:             number
+  tempC:                number
+  pulseWidthNs:         number
+  isPulsed:             boolean
+  hfireMult:            number
+  effectivePulseCount:  number
+}
+
+// Schwan/IRE forward DR. Reads σ_i from cell.conductivity and V_th from cell.thresholdVoltage so a multiplier-perturbed CellConfig flows through cleanly.
+export function computeSchwanDR(i: ForwardDrInput): number {
+  const tau    = computeTau(i.cell, i.sigma_e)
+  const vm     = computeSchwan(i.cell, i.freqKHz, i.fieldVcm, i.sigma_e, i.cosTheta)
+  const pef    = pulseEnvelopeClamped(tau, i.pulseWidthNs, i.isPulsed)
+  const vthEff = tempCorrectedVth(i.cell.thresholdVoltage, i.tempC, i.effectivePulseCount)
+  if (vthEff <= 0 || i.hfireMult <= 0) return 0
+  return (vm * pef) / (vthEff * i.hfireMult)
+}
+
+// Resonance forward DR. Reads Q from cell.capsidQ and V_thr from cell.resonantThresholdVcm; H-FIRE / electrosensitization do not apply (acoustic disruption is mechanical).
+export function computeResonantDR(i: ForwardDrInput): number {
+  const t = i.cell as CellConfig & { resonantFreqGHz?: number; capsidQ?: number; resonantThresholdVcm?: number; resonantFreqGHz2?: number; capsidQ2?: number; resonantMode2Amplitude?: number }
+  if (!t.resonantFreqGHz || !t.capsidQ || !t.resonantThresholdVcm) return 0
+  const effThr = tempCorrectedVth(t.resonantThresholdVcm, i.tempC)
+  return computeResonantDisruption(t.resonantFreqGHz, t.capsidQ, effThr,
+    i.freqKHz * KHZ_TO_HZ, i.fieldVcm,
+    t.resonantFreqGHz2, t.capsidQ2, t.resonantMode2Amplitude)
+}
+
+// 2-element Jacobian on the multiplier scale. p1 = ∂DR/∂(σ_i_mult or Q_mult); p2 = ∂DR/∂(V_th_mult or V_thr_res_mult). Cell is the *calibrated* cell (multipliers already applied) — we perturb its baseline parameters by a relative step and back out d/d(mult) via the chain rule.
+export interface JacobianTwoParam { p1: number; p2: number }
+
+const JAC_REL_STEP = 1e-3
+
+function _perturbedCell(cell: CellConfig, sigmaScale: number, vthScale: number): CellConfig {
+  return { ...cell, conductivity: cell.conductivity * sigmaScale, thresholdVoltage: cell.thresholdVoltage * vthScale }
+}
+
+function _perturbedResonantCell(cell: CellConfig, qScale: number, vthrScale: number): CellConfig {
+  const t = cell as CellConfig & { capsidQ?: number; resonantThresholdVcm?: number }
+  const out: CellConfig & { capsidQ?: number; resonantThresholdVcm?: number } = { ...cell }
+  if (typeof t.capsidQ === 'number')              out.capsidQ              = t.capsidQ              * qScale
+  if (typeof t.resonantThresholdVcm === 'number') out.resonantThresholdVcm = t.resonantThresholdVcm * vthrScale
+  return out
+}
+
+// Schwan: numerical ∂DR/∂(σ_i_mult, V_th_mult) via central differences. The cell already has the calibrated multipliers baked in, so perturbing by (1±h) about 1.0 gives the local sensitivity at the operating point.
+export function jacobianSchwanDR(i: ForwardDrInput): JacobianTwoParam {
+  const h = JAC_REL_STEP
+  const drSp = computeSchwanDR({ ...i, cell: _perturbedCell(i.cell, 1 + h, 1) })
+  const drSm = computeSchwanDR({ ...i, cell: _perturbedCell(i.cell, 1 - h, 1) })
+  const drVp = computeSchwanDR({ ...i, cell: _perturbedCell(i.cell, 1, 1 + h) })
+  const drVm = computeSchwanDR({ ...i, cell: _perturbedCell(i.cell, 1, 1 - h) })
+  return { p1: (drSp - drSm) / (2 * h), p2: (drVp - drVm) / (2 * h) }
+}
+
+// Resonance: numerical ∂DR/∂(Q_mult, V_thr_mult). Same recipe with the resonance-side perturbation of the cell.
+export function jacobianResonantDR(i: ForwardDrInput): JacobianTwoParam {
+  const h = JAC_REL_STEP
+  const drQp = computeResonantDR({ ...i, cell: _perturbedResonantCell(i.cell, 1 + h, 1) })
+  const drQm = computeResonantDR({ ...i, cell: _perturbedResonantCell(i.cell, 1 - h, 1) })
+  const drVp = computeResonantDR({ ...i, cell: _perturbedResonantCell(i.cell, 1, 1 + h) })
+  const drVm = computeResonantDR({ ...i, cell: _perturbedResonantCell(i.cell, 1, 1 - h) })
+  return { p1: (drQp - drQm) / (2 * h), p2: (drVp - drVm) / (2 * h) }
+}
+
+// Vm depends only on σ_i (Schwan path), so ∂Vm/∂V_th = 0. Returns the 2-element Jacobian shape for compositional symmetry with the DR variants.
+export function jacobianSchwanVm(cell: CellConfig, freqKHz: number, fieldVcm: number, sigma_e: number, cosTheta: number): JacobianTwoParam {
+  const h = JAC_REL_STEP
+  const vmP = computeSchwan(_perturbedCell(cell, 1 + h, 1), freqKHz, fieldVcm, sigma_e, cosTheta)
+  const vmM = computeSchwan(_perturbedCell(cell, 1 - h, 1), freqKHz, fieldVcm, sigma_e, cosTheta)
+  return { p1: (vmP - vmM) / (2 * h), p2: 0 }
+}
+
+export interface CalibrationCovariance { cov11: number; cov12: number; cov22: number }
+
+// σ²Y = J·Σ·Jᵀ for a scalar quantity Y with a 2-element Jacobian against (param1_mult, param2_mult). Standard first-order error propagation.
+export function propagateScalarVariance(j: JacobianTwoParam, cov: CalibrationCovariance): number {
+  const variance = j.p1 * j.p1 * cov.cov11
+                 + 2 * j.p1 * j.p2 * cov.cov12
+                 + j.p2 * j.p2 * cov.cov22
+  return Math.max(0, variance)
+}
+
+// σ²TI = (J_T/DR_H)·Σ_T·(J_T/DR_H)ᵀ + (-DR_T/DR_H²·J_H)·Σ_H·(-DR_T/DR_H²·J_H)ᵀ. Healthy and target are independent fits so the full 4-parameter covariance is block-diagonal — the formula reduces to a sum of two 2-element propagations.
+export function propagatedTiVariance(
+  drT: number, drH: number,
+  jacDrT: JacobianTwoParam, jacDrH: JacobianTwoParam,
+  covT: CalibrationCovariance, covH: CalibrationCovariance,
+): number {
+  if (drH <= 0) return 0
+  const inv = 1 / drH
+  const jt: JacobianTwoParam = { p1: jacDrT.p1 * inv, p2: jacDrT.p2 * inv }
+  const dh = -drT / (drH * drH)
+  const jh: JacobianTwoParam = { p1: jacDrH.p1 * dh, p2: jacDrH.p2 * dh }
+  return propagateScalarVariance(jt, covT) + propagateScalarVariance(jh, covH)
 }
 
 // Lysis-threshold field [V/cm] from flat cell params (for AI payload builder); clamped to [10, 100 000] V/cm.

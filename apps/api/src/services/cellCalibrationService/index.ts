@@ -1,26 +1,22 @@
 // Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
 
-// Cell calibration service.
-// Collects measured-vs-predicted rows for one (org, cellPresetId), proxies to
-// the Python AI service for the scalar sigma_i multiplier fit, and upserts
-// the result into the cell_calibrations table.
-//
-// cellPresetId is a plain string — it matches either a built-in cellLibrary id
-// (e.g. "adenocarcinoma") or a UserCellPreset.id. Calibration is uniform
-// across preset sources because the physics model is uniform.
+// Two-parameter physics-inversion calibration per (org, cellPresetId, mode). Schwan fits (σ_i, V_th); Resonance fits (Q, V_thr). Loads org-scoped outcomes for the target preset, builds per-row protocol context, proxies to /ai/calibrate, upserts (params, covariance, flags).
 
-import type { AiCalibrationRequest, AiCalibrationResult, AiCalibrationSample } from '@resopulse/shared-types'
+import type {
+  AiCalibrationCellParams,
+  AiCalibrationRequest,
+  AiCalibrationResult,
+  AiCalibrationSample,
+  CalibrationMode,
+  CellCategory,
+} from '@resopulse/shared-types'
 
 import { prisma } from '../../prisma'
 
 const AI_SERVICE_URL      = (process.env.AI_SERVICE_URL ?? 'http://localhost:8000').replace(/\/$/, '')
 const AI_SERVICE_TIMEOUT  = 10_000
 
-// ── Data collection ──────────────────────────────────────────────────────────
-// The predicted ratio is the simulator's targetRatio at the time of the run;
-// the measured ratio is bench-measured target lysis pct / 100. We only use
-// rows where both columns are populated — pure-prediction rows are ignored.
-
+// AI service recomputes its own forward DR from per-row protocol — the simulator's pre-run targetRatio is no longer fed in, so the fit reaches the actual physics inverse rather than a derived ratio.
 async function loadCalibrationSamples(orgId: string, cellPresetId: string): Promise<AiCalibrationSample[]> {
   const rows = await prisma.outcome.findMany({
     where: {
@@ -29,19 +25,54 @@ async function loadCalibrationSamples(orgId: string, cellPresetId: string): Prom
       measuredTargetLysisPct: { not: null },
     },
     select: {
-      targetRatio:            true,
+      freqKhz:                true,
+      fieldVcm:               true,
+      sigmaE:                 true,
+      targetTemp:             true,
+      lysisNPulses:           true,
+      pulseWidthNs:           true,
+      dutyCycle:              true,
+      waveform:               true,
+      orientationDeg:         true,
       measuredTargetLysisPct: true,
+      measuredFieldVcm:       true,
     },
   })
-  return rows
-    .map(r => ({
-      predictedRatio: r.targetRatio,
-      measuredRatio:  (r.measuredTargetLysisPct ?? 0) / 100,
-    }))
-    .filter(s => Number.isFinite(s.predictedRatio) && Number.isFinite(s.measuredRatio))
-}
 
-// ── AI service proxy ─────────────────────────────────────────────────────────
+  return rows
+    .map(r => {
+      const measuredRatio = (r.measuredTargetLysisPct ?? 0) / 100
+      // Prefer measuredFieldVcm: captures voltage-divider losses the slider value misses.
+      const fieldVcm = (r.measuredFieldVcm && r.measuredFieldVcm > 0)
+        ? r.measuredFieldVcm
+        : r.fieldVcm
+      const waveform = (r.waveform === 'cw' || r.waveform === 'pulsed' || r.waveform === 'hfire')
+        ? r.waveform
+        : 'pulsed'
+      return {
+        measuredRatio,
+        protocol: {
+          freqKhz:        r.freqKhz,
+          fieldVcm,
+          sigmaE:         r.sigmaE,
+          tempC:          r.targetTemp,
+          nPulses:        Math.max(1, r.lysisNPulses),
+          pulseWidthNs:   r.pulseWidthNs,
+          dutyCycle:      r.dutyCycle,
+          waveform,
+          orientationDeg: r.orientationDeg,
+        },
+      } satisfies AiCalibrationSample
+    })
+    .filter(s =>
+      Number.isFinite(s.measuredRatio) &&
+      Number.isFinite(s.protocol.freqKhz) &&
+      Number.isFinite(s.protocol.fieldVcm) &&
+      Number.isFinite(s.protocol.sigmaE) &&
+      s.protocol.fieldVcm > 0 &&
+      s.protocol.sigmaE > 0,
+    )
+}
 
 async function callAiCalibrate(request: AiCalibrationRequest): Promise<AiCalibrationResult> {
   const upstream = await fetch(`${AI_SERVICE_URL}/ai/calibrate`, {
@@ -56,41 +87,61 @@ async function callAiCalibrate(request: AiCalibrationRequest): Promise<AiCalibra
   return await upstream.json() as AiCalibrationResult
 }
 
-// ── Public API ───────────────────────────────────────────────────────────────
-
-export interface CalibrationComputeResult {
-  sigmaMultiplier: number
-  uncertaintyStd:  number
-  nSamples:        number
-  collecting:      boolean
-  clamped:         boolean
-  outliersRemoved: number
-  rmseBefore:      number
-  rmseAfter:       number
-  cellPresetId:    string
+export interface CalibrationComputeResult extends AiCalibrationResult {
+  cellPresetId: string
 }
 
-export async function computeCalibration(orgId: string, cellPresetId: string): Promise<CalibrationComputeResult> {
-  const samples = await loadCalibrationSamples(orgId, cellPresetId)
-  const fit     = await callAiCalibrate({ orgId, cellPresetId, samples })
+export interface ComputeCalibrationArgs {
+  orgId:        string
+  cellPresetId: string
+  mode:         CalibrationMode
+  category:     CellCategory
+  cellParams:   AiCalibrationCellParams
+}
 
-  // Upsert — don't persist a placeholder 1.0 multiplier in the "collecting"
-  // state; instead keep the DB empty until we have a real fit. The frontend
-  // falls back to multiplier=1.0 when no record exists.
+export async function computeCalibration(args: ComputeCalibrationArgs): Promise<CalibrationComputeResult> {
+  const { orgId, cellPresetId, mode, category, cellParams } = args
+  const samples = await loadCalibrationSamples(orgId, cellPresetId)
+  const fit = await callAiCalibrate({ orgId, cellPresetId, mode, category, cellParams, samples })
+
+  // Skip persistence past the collecting gate: absence-of-row is the same state as a 1.0 placeholder.
   if (!fit.collecting) {
     await prisma.cellCalibration.upsert({
-      where:  { orgId_cellPresetId: { orgId, cellPresetId } },
+      where:  { orgId_cellPresetId_mode: { orgId, cellPresetId, mode } },
       create: {
         orgId,
         cellPresetId,
-        sigmaMultiplier: fit.sigmaMultiplier,
-        uncertaintyStd:  fit.uncertaintyStd,
-        nSamples:        fit.nSamples,
+        mode,
+        category,
+        param1Mult:    fit.param1Mult,
+        param2Mult:    fit.param2Mult,
+        cov11:         fit.cov11,
+        cov12:         fit.cov12,
+        cov22:         fit.cov22,
+        residualStd:   fit.residualStd,
+        param1Clamped: fit.clampedParam1,
+        param2Clamped: fit.clampedParam2,
+        param1Unident: fit.param1Unidentifiable,
+        param2Unident: fit.param2Unidentifiable,
+        nSamples:      fit.nSamples,
+        sigmaMultiplier: mode === 'schwan' ? fit.param1Mult : 1.0,
+        uncertaintyStd:  fit.residualStd,
       },
       update: {
-        sigmaMultiplier: fit.sigmaMultiplier,
-        uncertaintyStd:  fit.uncertaintyStd,
-        nSamples:        fit.nSamples,
+        category,
+        param1Mult:    fit.param1Mult,
+        param2Mult:    fit.param2Mult,
+        cov11:         fit.cov11,
+        cov12:         fit.cov12,
+        cov22:         fit.cov22,
+        residualStd:   fit.residualStd,
+        param1Clamped: fit.clampedParam1,
+        param2Clamped: fit.clampedParam2,
+        param1Unident: fit.param1Unidentifiable,
+        param2Unident: fit.param2Unidentifiable,
+        nSamples:      fit.nSamples,
+        sigmaMultiplier: mode === 'schwan' ? fit.param1Mult : 1.0,
+        uncertaintyStd:  fit.residualStd,
       },
     })
   }

@@ -3,7 +3,7 @@
     "eyebrow": "Reference Database",
     "title": "Cell &amp; Pathogen Data Sets",
     "subtitle": "All tabulated parameters are derived from first-principles electrostatics and corroborated by peer-reviewed biophysics literature. Membrane capacitance C<sub>m</sub> = ε<sub>r</sub>ε₀/d and the RC time constant τ = R·C<sub>m</sub>·(2σ<sub>e</sub>+σ<sub>i</sub>)/(2σ<sub>e</sub>·σ<sub>i</sub>) follow the corrected single-shell Schwan model; the double-shell nuclear extension gives a bandpass V<sub>m,nuc</sub> that peaks at f<sub>peak</sub> = 1/(2π√(τ<sub>out</sub>·τ<sub>ne</sub>)) rather than at DC. DEP crossover frequencies are computed from the single-shell Clausius-Mossotti factor K(ω); acoustic resonance frequencies use f<sub>res</sub> ≈ v<sub>wall</sub>/(2R) with viscoelastic Q-correction for bacteria. Medium conductivity σ<sub>e</sub> shifts τ and f<sub>c</sub> but leaves quasi-DC V<sub>m</sub> unchanged, a key invariance exploited for medium-independent lysis-field calibration. Joule heating, VSWR, and Maxwell-Garnett dense-suspension corrections are available in the Instrument panel.",
-    "subtitleNote": "Computed at σ<sub>e</sub> = 1.5 S/m (physiological saline, 25 °C) · Kotnik &amp; Miklavcic (2000, 2006) · Gascoyne &amp; Vykoukal (2002) · Weaver &amp; Chizmadzhev (1996) · Tsen et al. (2007) · Dykeman &amp; Sankey (2010) · Pennes bioheat (1948)",
+    "subtitleNote": "Computed at σ<sub>e</sub> = 1.5 S/m (physiological saline, 25 °C) · Kotnik &amp; Miklavcic (2000, 2006) · Gascoyne &amp; Vykoukal (2002) · Weaver &amp; Chizmadzhev (1996) · Tsen et al. (2007) · Dykeman &amp; Sankey (2010) · Pennes-style lumped thermal (1948)",
     "cellLib": {
       "sectionTitle": "Cell Library",
       "sectionTag": "{n} presets",
@@ -215,7 +215,7 @@
       "assumption4": "Linear membrane response, below pore-formation threshold",
       "assumption5": "Isotropic, homogeneous cytoplasm and extracellular medium",
       "assumption6": "Temperature-corrected medium conductivity σ<sub>e</sub>(T) = σ<sub>e0</sub>·(1 + α·(T−37°C)); α = 2%/°C (saline), 1.7% (blood), 1.5% (tissue), 2.8% (water)",
-      "assumption7": "Blood perfusion cooling: λ<sub>perf</sub> = ω<sub>b</sub> × 63.9 / c<sub>p</sub> added to Newton cooling λ = 0.02 s⁻¹ in Pennes bioheat (Advanced panel: ω<sub>b</sub> = 0 for in vitro)",
+      "assumption7": "Lumped thermal balance with Pennes-style perfusion sink: λ<sub>perf</sub> = ω<sub>b</sub> × 63.9 / c<sub>p</sub> added to cuvette-wall cooling λ<sub>Newton</sub> = U·A/(ρ·V·c<sub>p</sub>) (default 0.02 s⁻¹ for BTX 1mm). Advanced panel: ω<sub>b</sub> = 0 for in-vitro. Full Pennes PDE out of scope for in-vitro work.",
       "assumption8": "Dense suspension: Maxwell-Garnett correction σ<sub>e,eff</sub> = σ<sub>e</sub>·(1−φ)/(1+φ/2); φ = 0 (isolated cell) to 0.64 (random close-packing). Set via Cell Packing slider (Advanced panel)",
       "correctionsLabel": "Quantitative corrections"
     },

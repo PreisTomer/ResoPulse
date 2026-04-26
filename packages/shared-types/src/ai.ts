@@ -125,38 +125,95 @@ export interface OutcomeEntry {
   measured?:           MeasuredOutcome
 }
 
-// ── Calibration (Stage D: per-lab sigma_i correction) ────────────────────────
-// CalibrationSample carries one (predicted, measured) ratio pair feeding the
-// scalar sigma_i multiplier fit. The Node API derives these from Outcome rows
-// that have both a simulator prediction and a bench-measured lysis fraction.
+// ── Calibration (Stage D: per-lab two-parameter physics-inversion fit) ──────
+// Two modes:
+//   Schwan / IRE   — fits (σ_i_mult, V_th_mult) by inverting the Schwan + RC
+//                    pulse envelope + temperature/electrosensitization model.
+//   Resonance      — fits (Q_mult, V_thr_res_mult) by inverting the Lorentzian
+//                    capsid response. Applies only to virus / bacteria targets
+//                    in chartMode='resonance' with capsid params populated.
+//
+// One active calibration row per (orgId, cellPresetId, mode). The covariance
+// (cov11, cov12, cov22) is on the multiplier scale and feeds the frontend's
+// Jacobian-propagated uncertainty bands.
+
+export type CalibrationMode = 'schwan' | 'resonance'
+export type CellCategory    = 'mammalian' | 'bacteria' | 'virus'
+
+export interface AiCalibrationCellParams {
+  radiusUm:                     number
+  memThicknessNm:               number
+  dielectricConst:              number
+  sigmaIBaseline:               number
+  vthBaseline:                  number
+  resonantFreqGhz?:             number
+  capsidQBaseline?:             number
+  resonantThresholdVcmBaseline?: number
+  resonantFreqGhz2?:            number
+  capsidQ2?:                    number
+  resonantMode2Amp?:            number
+}
+
+export interface AiCalibrationProtocol {
+  freqKhz:        number
+  fieldVcm:       number
+  sigmaE:         number
+  tempC:          number
+  nPulses:        number
+  pulseWidthNs:   number
+  dutyCycle:      number
+  waveform:       'cw' | 'pulsed' | 'hfire'
+  orientationDeg: number
+}
 
 export interface AiCalibrationSample {
-  predictedRatio: number    // 0-1, simulator-predicted disruption ratio
-  measuredRatio:  number    // 0-1, bench-measured lysis fraction (lysisPct / 100)
+  measuredRatio: number    // 0-1, bench-measured lysis fraction
+  protocol:      AiCalibrationProtocol
 }
 
 export interface AiCalibrationRequest {
   orgId:        string
   cellPresetId: string
+  mode:         CalibrationMode
+  category:     CellCategory
+  cellParams:   AiCalibrationCellParams
   samples:      AiCalibrationSample[]
 }
 
 export interface AiCalibrationResult {
-  sigmaMultiplier: number   // sigma_i_corrected = sigma_i_base * sigmaMultiplier
-  uncertaintyStd:  number   // residual std after fit; drives sigma_i band half-width
-  nSamples:        number   // rows used in fit (after outlier rejection)
-  collecting:      boolean  // true when nSamples < CALIBRATION_MIN_SAMPLES
-  clamped:         boolean  // true when fit hit [0.3, 3.0] biological-plausibility bounds
-  outliersRemoved: number   // rows dropped by 3-sigma residual clipping pre-fit
-  rmseBefore:      number   // DR-ratio RMSE with multiplier=1 (no correction)
-  rmseAfter:       number   // DR-ratio RMSE with fitted multiplier applied
+  mode:                CalibrationMode
+  param1Mult:          number      // Schwan: σ_i; Resonance: Q
+  param2Mult:          number      // Schwan: V_th; Resonance: V_thr_res
+  cov11:               number      // Var(param1Mult) on multiplier scale
+  cov12:               number      // Cov(param1Mult, param2Mult)
+  cov22:               number      // Var(param2Mult) on multiplier scale
+  residualStd:         number      // σ of residuals on DR scale (informational)
+  nSamples:            number
+  collecting:          boolean     // n < CALIBRATION_MIN_SAMPLES
+  clampedParam1:       boolean     // hit physiological bound
+  clampedParam2:       boolean
+  param1Unidentifiable: boolean    // pinned at 1.0; data does not constrain
+  param2Unidentifiable: boolean
+  outliersRemoved:     number
+  rmseBefore:          number      // baseline RMSE (no correction) on DR scale
+  rmseAfter:           number      // post-fit RMSE on DR scale
 }
 
 export interface CellCalibrationRecord {
   orgId:           string
   cellPresetId:    string
-  sigmaMultiplier: number
-  uncertaintyStd:  number
+  mode:            CalibrationMode
+  category:        CellCategory
+  param1Mult:      number
+  param2Mult:      number
+  cov11:           number
+  cov12:           number
+  cov22:           number
+  residualStd:     number
+  param1Clamped:   boolean
+  param2Clamped:   boolean
+  param1Unident:   boolean
+  param2Unident:   boolean
   nSamples:        number
   updatedAt:       string   // ISO timestamp
 }

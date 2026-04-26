@@ -112,3 +112,62 @@ describe('suggestNextProtocols — top-N batch', () => {
     expect(picks[0]!.strategy).toBe('cold-start')
   })
 })
+
+describe('suggestNextProtocols — D-optimal info gain', () => {
+  // A representative mammalian Schwan cell + protocol. The D-optimal score depends on
+  // forward DR / Jacobian at each candidate, which depend on these context fields.
+  const SCHWAN_CTX = {
+    mode:                'schwan' as const,
+    cell: {
+      id:                  'mcf-7',
+      type:                'target' as const,
+      label:               'MCF-7',
+      radius:              7.5, membraneThickness: 5, dielectricConstant: 5,
+      conductivity:        0.5, density: 1050, thresholdVoltage: 1.0,
+      naturalFrequency:    0.5, specificHeatCapacity: 3600, amplitude: 0.8,
+    },
+    sigma_e:             0.14,
+    cosTheta:            1.0,
+    tempC:               37,
+    pulseWidthNs:        100,
+    hfireMult:           1.0,
+    effectivePulseCount: 8,
+    waveform:            'pulsed' as const,
+  }
+
+  it('emits d-optimal strategy and reports an info-gain score when physics context is supplied', () => {
+    const entries = [makeEntry(1, 100, 500), makeEntry(2, 1000, 800)]
+    const picks = suggestNextProtocols(entries, BOUNDS, 3, SCHWAN_CTX)
+    expect(picks.length).toBeGreaterThan(0)
+    const dOptPicks = picks.filter(p => p.strategy === 'd-optimal')
+    expect(dOptPicks.length).toBeGreaterThan(0)
+    for (const p of dOptPicks) {
+      expect(typeof p.infoGainScore).toBe('number')
+      expect(p.infoGainScore!).toBeGreaterThanOrEqual(0)
+    }
+  })
+
+  it('first pick differs from prior measurements (information gain selects unsampled regions)', () => {
+    const entries = [makeEntry(1, 100, 500)]
+    const picks = suggestNextProtocols(entries, BOUNDS, 1, SCHWAN_CTX)
+    const p = picks[0]!
+    const sameAsPrior = p.freqKHz === 100 && p.fieldVcm === 500
+    expect(sameAsPrior).toBe(false)
+  })
+
+  it('sequential picks decrease in information gain (each subsequent pick adds less)', () => {
+    const entries = [makeEntry(1, 100, 500)]
+    const picks = suggestNextProtocols(entries, BOUNDS, 3, SCHWAN_CTX)
+    const scored = picks.filter(p => p.strategy === 'd-optimal' && typeof p.infoGainScore === 'number')
+    // The greedy / monotone-submodular property of log det.
+    for (let i = 1; i < scored.length; i++) {
+      expect(scored[i]!.infoGainScore!).toBeLessThanOrEqual(scored[i - 1]!.infoGainScore! + 1e-6)
+    }
+  })
+
+  it('falls through to space-filling when no physics context is supplied (back-compat)', () => {
+    const entries = [makeEntry(1, 100, 500), makeEntry(2, 1000, 800)]
+    const picks = suggestNextProtocols(entries, BOUNDS, 3)
+    expect(picks.every(p => p.strategy === 'space-filling')).toBe(true)
+  })
+})

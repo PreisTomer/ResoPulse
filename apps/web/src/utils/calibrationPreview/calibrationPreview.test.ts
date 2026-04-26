@@ -59,4 +59,23 @@ describe('computeCalibrationPreview', () => {
     expect(r.ti).toBeGreaterThanOrEqual(0)
     expect(r.ti).toBeLessThanOrEqual(100)
   })
+
+  it('V_th multiplier scales DR inversely on both cells', () => {
+    // DR = Vm·pef / (V_th·hfire). Doubling V_th must halve DR; the ratio TI is unchanged when both are scaled identically.
+    const base = computeCalibrationPreview(baseInput())
+    const doubledVth = computeCalibrationPreview(baseInput({
+      healthyVthMultiplier: 2.0,
+      targetVthMultiplier:  2.0,
+    }))
+    expect(doubledVth.targetDr).toBeCloseTo(base.targetDr * 0.5, 5)
+    expect(doubledVth.healthyDr).toBeCloseTo(base.healthyDr * 0.5, 5)
+    expect(doubledVth.ti).toBeCloseTo(base.ti, 5)
+  })
+
+  it('V_th multiplier defaults to 1.0 when omitted (back-compat)', () => {
+    const withDefault = computeCalibrationPreview(baseInput())
+    const explicit    = computeCalibrationPreview(baseInput({ healthyVthMultiplier: 1.0, targetVthMultiplier: 1.0 }))
+    expect(withDefault.targetDr).toBeCloseTo(explicit.targetDr, 9)
+    expect(withDefault.ti).toBeCloseTo(explicit.ti, 9)
+  })
 })

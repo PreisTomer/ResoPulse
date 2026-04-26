@@ -5,6 +5,7 @@ FastAPI service for the ResoPulse AI protocol optimizer.
 Endpoints:
     GET  /health          — service status, model readiness, sample count
     POST /ai/optimize     — return optimized protocol recommendation
+    POST /ai/calibrate    — physics-inversion calibration fit (Schwan or Resonance)
     POST /ai/retrain      — retrain XGBoost model from SQLite outcomes
 
 Node.js calls this service via HTTP (AI_SERVICE_URL env var, default localhost:8000).
@@ -23,7 +24,7 @@ from .ai_models import (
     OptimizeRequest,
     OptimizeResponse,
 )
-from .calibration import CalibrationRow, fit_sigma_multiplier
+from .calibration import CalibrationSample, fit_calibration
 from .constants import (
     AI_SERVICE_DESCRIPTION,
     AI_SERVICE_NAME,
@@ -33,6 +34,7 @@ from .constants import (
     DEMO_SEED_TRUTHY_VALUES,
 )
 from .optimizer import run_optimizer
+from .physics import CellParams, ProtocolConditions
 from .service_state import get_model_bundle, set_model_bundle
 from .train import load_model, retrain_model, ModelBundle
 
@@ -114,29 +116,68 @@ async def optimize(request: OptimizeRequest) -> OptimizeResponse:
 @app.post("/ai/calibrate", response_model=CalibrationResponse)
 async def calibrate(request: CalibrationRequest) -> CalibrationResponse:
     """
-    Fit a scalar sigma_i multiplier against (predicted, measured) ratio pairs
-    for one (org, cellPresetId). Below CALIBRATION_MIN_SAMPLES the response
-    carries collecting=True and multiplier=1.0 so the UI can show progress.
+    Two-parameter physics-inversion fit per (org, cellPresetId, mode).
 
-    This endpoint is stateless — persistence (upsert into cell_calibrations)
-    is handled by the Node API after receiving the response. Keeping it
-    stateless lets us reuse the fit for what-if previews without writing.
+    Schwan path:    fits (σ_i_mult, V_th_mult) by inverting the Schwan + RC
+                    pulse envelope + temperature/electrosensitization-corrected
+                    threshold over the supplied bench rows.
+    Resonance path: fits (Q_mult, V_thr_mult) by inverting the Lorentzian
+                    capsid response. The resonant frequency itself is not
+                    fittable (it is a structural property of the capsid).
+
+    Below CALIBRATION_MIN_SAMPLES the response carries collecting=True and
+    multipliers=1.0 so the UI can show progress. Stateless — persistence
+    happens in the Node API after the response is received.
     """
     try:
-        rows = [
-            CalibrationRow(predicted_ratio=s.predictedRatio, measured_ratio=s.measuredRatio)
+        cell = CellParams(
+            radius_um               = request.cellParams.radiusUm,
+            membrane_thickness_nm   = request.cellParams.memThicknessNm,
+            dielectric_constant     = request.cellParams.dielectricConst,
+            sigma_i_baseline        = request.cellParams.sigmaIBaseline,
+            vth_baseline            = request.cellParams.vthBaseline,
+            resonant_freq_ghz       = request.cellParams.resonantFreqGhz,
+            capsid_q                = request.cellParams.capsidQBaseline,
+            resonant_threshold_vcm  = request.cellParams.resonantThresholdVcmBaseline,
+            resonant_freq_ghz_2     = request.cellParams.resonantFreqGhz2,
+            capsid_q_2              = request.cellParams.capsidQ2,
+            resonant_mode2_amp      = request.cellParams.resonantMode2Amp,
+        )
+        samples = [
+            CalibrationSample(
+                measured_ratio = s.measuredRatio,
+                protocol = ProtocolConditions(
+                    freq_khz        = s.protocol.freqKhz,
+                    field_vcm       = s.protocol.fieldVcm,
+                    sigma_e         = s.protocol.sigmaE,
+                    temp_c          = s.protocol.tempC,
+                    n_pulses        = s.protocol.nPulses,
+                    pulse_width_ns  = s.protocol.pulseWidthNs,
+                    duty_cycle      = s.protocol.dutyCycle,
+                    waveform        = s.protocol.waveform,
+                    orientation_deg = s.protocol.orientationDeg,
+                ),
+            )
             for s in request.samples
         ]
-        fit = fit_sigma_multiplier(rows)
+        fit = fit_calibration(request.mode, request.category, cell, samples)
         return CalibrationResponse(
-            sigmaMultiplier=fit.sigma_multiplier,
-            uncertaintyStd=fit.uncertainty_std,
-            nSamples=fit.n_samples,
-            collecting=fit.collecting,
-            clamped=fit.clamped,
-            outliersRemoved=fit.outliers_removed,
-            rmseBefore=fit.rmse_before,
-            rmseAfter=fit.rmse_after,
+            mode             = fit.mode,
+            param1Mult       = fit.param1_mult,
+            param2Mult       = fit.param2_mult,
+            cov11            = fit.cov_11,
+            cov12            = fit.cov_12,
+            cov22            = fit.cov_22,
+            residualStd      = fit.residual_std,
+            nSamples         = fit.n_samples,
+            collecting       = fit.collecting,
+            clampedParam1    = fit.clamped_param1,
+            clampedParam2    = fit.clamped_param2,
+            param1Unidentifiable = fit.param1_unidentifiable,
+            param2Unidentifiable = fit.param2_unidentifiable,
+            outliersRemoved  = fit.outliers_removed,
+            rmseBefore       = fit.rmse_before,
+            rmseAfter        = fit.rmse_after,
         )
     except Exception as exc:
         logger.error("[AI Service] Calibration failed: %s", exc, exc_info=True)

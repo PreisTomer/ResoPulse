@@ -178,20 +178,44 @@ model UserCellPreset {
 }
 
 // ── CellCalibration ──────────────────────────────────────────────────────────
-// Per-lab (org) scalar correction applied to a cell preset's conductivity.
-// Fitted server-side via scipy least-squares against measured outcome rows for
-// that (org, cellPresetId) pair. Applied at simulation time as:
-//   sigma_i_corrected = sigma_i_base * sigmaMultiplier
-// uncertaintyStd drives the existing sigma_i band visualisation on TI + hero.
+// Per-lab (org) two-parameter physics-inversion fit per cell preset and physics
+// mode. Fitted server-side via scipy LM against bench-measured outcome rows;
+// the AI service inverts the actual forward physics.
 //
-// cellPresetId is a plain string so it matches both built-in cellLibrary ids
-// ("adenocarcinoma") and UserCellPreset.id values — calibration is uniform
-// across preset sources. One active row per (orgId, cellPresetId).
+// Schwan path:    param1Mult → σ_i multiplier
+//                 param2Mult → V_th multiplier
+// Resonance path: param1Mult → Q (capsid quality factor) multiplier
+//                 param2Mult → V_thr (acoustic threshold) multiplier
+//
+// cov11 / cov12 / cov22 are the post-fit 2x2 parameter covariance on the
+// multiplier scale — used by the frontend Jacobian propagation to render
+// honest TI / Vm / population uncertainty bands.
+//
+// param1Unident / param2Unident flag the case where (JᵀJ) was ill-conditioned
+// (e.g. all measurements at low frequency leave σ_i unidentifiable); the
+// pinned multiplier is 1.0 and that direction's covariance is zeroed.
+//
+// One active row per (orgId, cellPresetId, mode). Legacy fields sigmaMultiplier
+// / uncertaintyStd are kept for one release of read-side compatibility.
 
 model CellCalibration {
   id              String   @id @default(cuid())
   orgId           String
   cellPresetId    String   // built-in cellLibrary id or UserCellPreset.id
+  mode            String   @default("schwan")    @db.VarChar(12)   // "schwan" | "resonance"
+  category        String   @default("mammalian") @db.VarChar(12)   // "mammalian" | "bacteria" | "virus"
+  // Two-parameter physics-inversion fit
+  param1Mult      Float    @default(1.0)
+  param2Mult      Float    @default(1.0)
+  cov11           Float    @default(0.0)
+  cov12           Float    @default(0.0)
+  cov22           Float    @default(0.0)
+  residualStd     Float    @default(0.0)
+  param1Clamped   Boolean  @default(false)
+  param2Clamped   Boolean  @default(false)
+  param1Unident   Boolean  @default(false)
+  param2Unident   Boolean  @default(false)
+  // Legacy scalar fit (read-side compat)
   sigmaMultiplier Float    @default(1.0)
   uncertaintyStd  Float    @default(0.0)
   nSamples        Int      @default(0)
@@ -200,7 +224,7 @@ model CellCalibration {
 
   org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
 
-  @@unique([orgId, cellPresetId])
+  @@unique([orgId, cellPresetId, mode])
   @@index([orgId])
   @@map("cell_calibrations")
 }

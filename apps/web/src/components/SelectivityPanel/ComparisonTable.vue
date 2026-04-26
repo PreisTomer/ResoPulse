@@ -71,11 +71,11 @@ export default defineComponent({
       const cat = this.cellStore.targetCellCategory
       const relevantGroup = cat === CELL_CATEGORY.MAMMALIAN ? CELL_GROUP.CANCER : cat
 
-      // PEF for the healthy reference cell (frequency-independent, computed once).
-      // Use healthyTemp for threshold correction — healthy cell is the live simulated reference.
-      const pefH  = pulseEnvelopeClamped(computeTau(this.cellStore.healthy, sigma_e), pwNs, isPulsed)
-      const hVm   = computeSchwan(this.cellStore.healthy, freq, field, sigma_e, cosT)
-      const hVthE = tempCorrectedVth(this.cellStore.healthy.thresholdVoltage, this.cellStore.healthyTemp, this.cellStore.effectivePulseCount)
+      // PEF / Vm / Vth for the healthy reference cell, frequency-independent and computed once. effectiveHealthy carries both σ_i and V_th calibration multipliers; reading thresholdVoltage off it (instead of raw state.healthy) keeps the closed-loop fit live in this what-if grid. Library comparison presets in the row loop below stay uncalibrated by design — their values reflect literature parameters.
+      const calHealthy = this.cellStore.effectiveHealthy
+      const pefH  = pulseEnvelopeClamped(computeTau(calHealthy, sigma_e), pwNs, isPulsed)
+      const hVm   = computeSchwan(calHealthy, freq, field, sigma_e, cosT)
+      const hVthE = tempCorrectedVth(calHealthy.thresholdVoltage, this.cellStore.healthyTemp, this.cellStore.effectivePulseCount)
       const hDr   = (hVm * pefH) / (hVthE * hfireMult)
 
       return CELL_PRESETS
@@ -86,26 +86,28 @@ export default defineComponent({
           let sel: number, tVmMv: string
 
           if (hasRes) {
-            // Acoustic capsid: no hfireMult (EP mechanism only). Active preset uses live targetTemp; others stay at BODY_TEMP_C.
-            const resTemp      = p.presetId === this.cellStore.target.id ? this.cellStore.targetTemp : BODY_TEMP_C
-            const effThreshold = tempCorrectedVth(pr.resonantThresholdVcm!, resTemp)
-            const ratio = computeResonantDisruption(
-              pr.resonantFreqGHz!,
-              pr.capsidQ ?? DEFAULT_CAPSID_Q,
-              effThreshold,
-              freq * 1e3,
-              field,
-              pr.resonantFreqGHz2, pr.capsidQ2, pr.resonantMode2Amplitude,
-            )
+            // Acoustic capsid: no hfireMult (EP mechanism only). Active preset uses live targetTemp; library rows stay at BODY_TEMP_C. Active preset's resonance knobs (Q, V_thr_res) come from effectiveTarget so the resonance calibration multiplier reaches this what-if cell.
+            const isActive = p.presetId === this.cellStore.target.id
+            const resTemp  = isActive ? this.cellStore.targetTemp : BODY_TEMP_C
+            const eT       = this.cellStore.effectiveTarget as typeof p & { resonantFreqGHz?: number; capsidQ?: number; resonantThresholdVcm?: number; resonantFreqGHz2?: number; capsidQ2?: number; resonantMode2Amplitude?: number }
+            const fres     = isActive ? (eT.resonantFreqGHz       ?? pr.resonantFreqGHz!)       : pr.resonantFreqGHz!
+            const q        = isActive ? (eT.capsidQ               ?? pr.capsidQ              ?? DEFAULT_CAPSID_Q) : (pr.capsidQ ?? DEFAULT_CAPSID_Q)
+            const vthrCm   = isActive ? (eT.resonantThresholdVcm  ?? pr.resonantThresholdVcm!) : pr.resonantThresholdVcm!
+            const fres2    = isActive ? eT.resonantFreqGHz2     : pr.resonantFreqGHz2
+            const q2       = isActive ? eT.capsidQ2             : pr.capsidQ2
+            const amp2     = isActive ? eT.resonantMode2Amplitude : pr.resonantMode2Amplitude
+            const effThreshold = tempCorrectedVth(vthrCm, resTemp)
+            const ratio = computeResonantDisruption(fres, q, effThreshold, freq * 1e3, field, fres2, q2, amp2)
             sel = safeRatio(ratio, hDr, THRESHOLDS.TI_DISPLAY_CAP, NEAR_ZERO_DR)
             tVmMv = `D:${(ratio * 100).toFixed(0)}%`
           } else {
-            // Active preset uses live targetTemp; others use BODY_TEMP_C (not live-simulated).
-            const schTemp = p.presetId === this.cellStore.target.id ? this.cellStore.targetTemp : BODY_TEMP_C
-            const pefT    = pulseEnvelopeClamped(computeTau(p, sigma_e), pwNs, isPulsed)
-            const tVm     = computeSchwan(p, freq, field, sigma_e, cosT)
-            // Active preset uses live N; library comparison presets also get N — same protocol, different cell
-            const tVthE   = tempCorrectedVth(p.thresholdVoltage, schTemp, this.cellStore.effectivePulseCount)
+            // Active preset uses live targetTemp + calibrated effectiveTarget (σ_i AND V_th); library rows stay uncalibrated and at BODY_TEMP_C.
+            const isActive = p.presetId === this.cellStore.target.id
+            const schTemp = isActive ? this.cellStore.targetTemp : BODY_TEMP_C
+            const cellForCompute = isActive ? this.cellStore.effectiveTarget : p
+            const pefT    = pulseEnvelopeClamped(computeTau(cellForCompute, sigma_e), pwNs, isPulsed)
+            const tVm     = computeSchwan(cellForCompute, freq, field, sigma_e, cosT)
+            const tVthE   = tempCorrectedVth(cellForCompute.thresholdVoltage, schTemp, this.cellStore.effectivePulseCount)
             const tDr   = (tVm * pefT) / (tVthE * hfireMult)
             sel = hDr > NEAR_ZERO_DR ? Math.min(THRESHOLDS.TI_DISPLAY_CAP, tDr / hDr) : 0
             tVmMv = (tVm * 1000).toFixed(1)

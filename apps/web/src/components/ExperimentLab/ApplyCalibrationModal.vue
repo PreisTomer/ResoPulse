@@ -23,17 +23,17 @@
             </div>
           </section>
 
-          <!-- Applied multipliers -->
+          <!-- Applied multipliers — σ_i and V_th from the two-parameter physics-inversion fit -->
           <section class="acm__section">
             <h3 class="acm__section-title">{{ $t('ai.applyCalibMultipliersTitle') }}</h3>
             <div class="acm__mults">
               <div class="acm__mult">
                 <span class="acm__mult-label">{{ cellStore.healthy.label }}</span>
-                <span class="acm__mult-value">×{{ healthyMultiplier.toFixed(2) }}</span>
+                <span class="acm__mult-value">σᵢ ×{{ healthyMultiplier.toFixed(2) }} · Vₜₕ ×{{ healthyVthMultiplier.toFixed(2) }}</span>
               </div>
               <div class="acm__mult">
                 <span class="acm__mult-label">{{ cellStore.target.label }}</span>
-                <span class="acm__mult-value">×{{ targetMultiplier.toFixed(2) }}</span>
+                <span class="acm__mult-value">σᵢ ×{{ targetMultiplier.toFixed(2) }} · Vₜₕ ×{{ targetVthMultiplier.toFixed(2) }}</span>
               </div>
             </div>
           </section>
@@ -103,9 +103,11 @@ export default defineComponent({
   name: 'ApplyCalibrationModal',
 
   props: {
-    isOpen:             { type: Boolean, required: true },
-    healthyMultiplier:  { type: Number,  required: true },
-    targetMultiplier:   { type: Number,  required: true },
+    isOpen:               { type: Boolean, required: true },
+    healthyMultiplier:    { type: Number,  required: true },
+    targetMultiplier:     { type: Number,  required: true },
+    healthyVthMultiplier: { type: Number,  default:  1.0  },
+    targetVthMultiplier:  { type: Number,  default:  1.0  },
   },
 
   emits: ['close'],
@@ -126,8 +128,10 @@ export default defineComponent({
     correctedResult(): CalibrationPreviewOutput {
       return computeCalibrationPreview({
         ...this.previewBase,
-        healthyMultiplier: this.healthyMultiplier,
-        targetMultiplier:  this.targetMultiplier,
+        healthyMultiplier:    this.healthyMultiplier,
+        targetMultiplier:     this.targetMultiplier,
+        healthyVthMultiplier: this.healthyVthMultiplier,
+        targetVthMultiplier:  this.targetVthMultiplier,
       })
     },
 
