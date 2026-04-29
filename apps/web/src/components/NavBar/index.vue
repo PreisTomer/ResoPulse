@@ -27,19 +27,18 @@
         >{{ $t(link.labelKey) }}</RouterLink>
         <button class="nav-bar__link nav-bar__contact-mobile" @click="openContact">{{ ICON.MAIL }} {{ $t('nav.contact') }}</button>
         <template v-if="!isSignedIn">
-          <RouterLink :to="ROUTE.SIGN_UP" class="nav-bar__link nav-bar__start-free-mobile" @click="mobileOpen = false">{{ $t('nav.startFree') }} →</RouterLink>
+          <RouterLink :to="ROUTE.SIGN_UP" class="nav-bar__link nav-bar__signup-mobile" @click="mobileOpen = false">{{ $t('nav.signUp') }}</RouterLink>
         </template>
       </nav>
 
       <ContactModal v-if="isContactOpen" @close="isContactOpen = false" />
-      <UpgradeModal v-if="isUpgradeOpen" @close="isUpgradeOpen = false" />
 
       <div class="nav-bar__right">
         <button class="nav-bar__contact-btn" @click="openContact">{{ ICON.MAIL }} {{ $t('nav.contact') }}</button>
 
-        <NavUserArea  v-if="isSignedIn"          @open-upgrade="isUpgradeOpen = true" />
+        <NavUserArea  v-if="isSignedIn" />
         <NavGuestArea v-else-if="showNavGuestArea" />
-        <RouterLink   v-else-if="showStartFreeBtn" :to="ROUTE.SIGN_UP" class="nav-bar__start-free-btn">{{ $t('nav.startFree') }} →</RouterLink>
+        <RouterLink   v-else-if="showSignUpBtn" :to="ROUTE.SIGN_UP" class="nav-bar__signup-btn">{{ $t('nav.signUp') }}</RouterLink>
 
         <button
           class="nav-bar__hamburger"
@@ -69,7 +68,6 @@ import { guestSessionActive } from '@/services/socket'
 import NavUserArea from './NavUserArea.vue'
 import NavGuestArea from './NavGuestArea.vue'
 import ContactModal from '@/components/ContactModal/index.vue'
-import UpgradeModal from '@/components/UpgradeModal/index.vue'
 
 // App nav — shown to authenticated users in the lab.
 const APP_NAV_LINKS = [
@@ -82,22 +80,24 @@ const APP_NAV_LINKS = [
 
 // Marketing nav — shown to visitors on the public landing pages.
 const MARKETING_NAV_LINKS = [
-  { to: ROUTE.HOME,    labelKey: 'nav.home',     exact: true  },
-  { to: ROUTE.PRICING, labelKey: 'nav.pricing',  exact: false },
+  { to: ROUTE.HOME,     labelKey: 'nav.home',     exact: true  },
   { to: ROUTE.PROTOCOL, labelKey: 'nav.protocol', exact: false },
 ]
 
-// Guest-in-lab nav — shown once a guest has entered the lab. Mirrors the app nav
-// but excludes pages still gated behind sign-in (Datasets, Instrument).
+// Guest-in-lab nav — shown once a guest has entered the lab. Same surface as
+// the signed-in nav: every feature is open. Sign-up is offered for persistence,
+// not for unlocking features.
 const GUEST_NAV_LINKS = [
   { to: ROUTE.EXPERIMENT, labelKey: 'nav.experiment', exact: false },
   { to: ROUTE.PROTOCOL,   labelKey: 'nav.protocol',   exact: false },
+  { to: ROUTE.DATASETS,   labelKey: 'nav.dataSets',   exact: false },
   { to: ROUTE.REPORTS,    labelKey: 'nav.reports',    exact: false },
+  { to: ROUTE.INSTRUMENT, labelKey: 'nav.instrument', exact: false },
 ]
 
 export default defineComponent({
   name: 'NavBar',
-  components: { NavUserArea, NavGuestArea, ContactModal, UpgradeModal },
+  components: { NavUserArea, NavGuestArea, ContactModal },
 
   setup() {
     const { isSignedIn } = useUser()
@@ -105,7 +105,7 @@ export default defineComponent({
   },
 
   data() {
-    return { mobileOpen: false, isContactOpen: false, isUpgradeOpen: false }
+    return { mobileOpen: false, isContactOpen: false }
   },
 
   computed: {
@@ -119,12 +119,12 @@ export default defineComponent({
       return MARKETING_NAV_LINKS
     },
 
-    // Guest avatar hidden on home (marketing landing must keep "Start Free" CTA visible).
+    // Guest avatar hidden on home so the home page keeps a sign-up affordance for new visitors.
     showNavGuestArea(): boolean {
       return !this.isSignedIn && this.guestSessionActive && this.$route.path !== ROUTE.HOME
     },
 
-    showStartFreeBtn(): boolean {
+    showSignUpBtn(): boolean {
       return !this.isSignedIn && !this.showNavGuestArea
     },
   },
@@ -251,7 +251,7 @@ export default defineComponent({
     justify-self: end;
   }
 
-  &__start-free-btn {
+  &__signup-btn {
     @include mono-upper(var(--fs-xxs), 0.06em);
     padding: 0.25rem 0.85rem;
     border: 1px solid var(--color-primary-border);
@@ -265,7 +265,7 @@ export default defineComponent({
     &:hover { background: color-mix(in srgb, var(--color-primary) 85%, white); box-shadow: var(--glow-sm); text-decoration: none; }
   }
 
-  &__start-free-mobile { display: none; }
+  &__signup-mobile { display: none; }
 
   /* ── Hamburger ──────────────────────────────────────────────────── */
   &__hamburger {
@@ -344,7 +344,7 @@ export default defineComponent({
   .nav-bar__hamburger { display: flex; }
   .nav-bar__contact-btn { display: none; }
   .nav-bar__contact-mobile { display: flex; }
-  .nav-bar__start-free-mobile { display: flex; }
-  .nav-bar__start-free-btn { display: none; }
+  .nav-bar__signup-mobile { display: flex; }
+  .nav-bar__signup-btn { display: none; }
 }
 </style>

@@ -6,7 +6,6 @@ import { createI18n } from 'vue-i18n'
 import nav              from '../locales/nav.en.json'
 import auth             from '../locales/auth.en.json'
 import account          from '../locales/account.en.json'
-import billing          from '../locales/billing.en.json'
 import cells            from '../locales/cells.en.json'
 import slider           from '../locales/slider.en.json'
 import experiment       from '../locales/experiment.en.json'
@@ -41,7 +40,6 @@ export const i18n = createI18n({
       ...nav,
       ...auth,
       ...account,
-      ...billing,
       ...cells,
       ...slider,
       ...experiment,

@@ -32,9 +32,7 @@
     "tipSchwan":       "<strong>Schwan EP Model</strong>\nComputes transmembrane voltage Vm(f) using the Schwan equation for spherical cells.\nPeak Vm of 1.5 V is achievable at DC or sub-fc frequencies for typical mammalian cells.",
     "tipCalibration":  "<strong>Per-cell σᵢ calibration</strong>\nA scalar multiplier fit to your measured bench data corrects the simulator's internal conductivity assumption per cell line. Clamped to a plausibility band; the chart shows mean residual tightening over time.",
     "tipActiveLearn":  "<strong>Active-learning suggestions</strong>\nThe Suggest Next button picks the (frequency, field) point farthest from your logged conditions in log-space, so the next bench run samples a region your data has not yet covered.",
-    "tipAiOptimizer":  "<strong>AI Protocol Optimizer</strong>\nXGBoost trained on your rated outcomes recommends a full protocol (frequency, field, duty cycle, pulse width, waveform). Falls back to the Schwan physics baseline when fewer than 20 rated outcomes are on file.",
-    "freeTierText": "500 tokens/month, no credit card required",
-    "freeTierPricingLink": "View plans"
+    "tipAiOptimizer":  "<strong>AI Protocol Optimizer</strong>\nXGBoost trained on your rated outcomes recommends a full protocol (frequency, field, duty cycle, pulse width, waveform). Falls back to the Schwan physics baseline when fewer than 20 rated outcomes are on file."
   },
   "signUp": {
     "eyebrow": "New Account",

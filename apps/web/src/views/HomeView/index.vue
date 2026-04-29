@@ -81,7 +81,7 @@
             <!-- Tier 2: Account CTAs (half-width each) -->
             <div v-if="!isSignedIn" class="home__actions-row">
               <RouterLink :to="ROUTE.SIGN_UP" class="home__btn home__btn--primary">
-                {{ $t('home.btnStartFree') }}
+                {{ $t('home.btnSignUp') }}
                 <span class="home__btn-arrow" aria-hidden="true">
                   <svg class="home__arrow-svg" viewBox="0 0 24 12" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <line class="home__arrow-shaft" x1="0" y1="6" x2="16" y2="6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
@@ -102,10 +102,6 @@
 
             <!-- Tier 3: Passive navigation links -->
             <div class="home__text-links">
-              <RouterLink :to="ROUTE.PRICING" class="home__text-link home__text-link--pricing">
-                {{ $t('home.btnViewPricing') }}
-              </RouterLink>
-              <span class="home__text-link-sep" aria-hidden="true">·</span>
               <RouterLink :to="ROUTE.PROTOCOL" class="home__text-link">
                 {{ $t('home.btnGhost') }}
               </RouterLink>
@@ -195,8 +191,6 @@
                 <span class="home__fc-title">{{ $t(`home.${card.titleKey}`) }}</span>
                 <span class="home__fc-tag">{{ $t(`home.${card.tagKey}`) }}</span>
               </div>
-              <span v-if="card.plan === 'free'" class="home__fc-plan-badge home__fc-plan-badge--free">{{ $t('home.planFree') }}</span>
-              <span v-else-if="card.plan === 'pro'" class="home__fc-plan-badge home__fc-plan-badge--pro">{{ $t('home.planPro') }}</span>
             </div>
             <span class="home__fc-desc">{{ $t(`home.${card.descKey}`) }}</span>
           </RouterLink>
@@ -376,12 +370,12 @@ export default defineComponent({
 
       featureCards: [
         // Row 1 — core science workflow
-        { to: ROUTE.SIGN_UP,  icon: ICON.FLASK,   titleKey: 'card1Title', descKey: 'card1Desc', tagKey: 'card1Tag', primary: true,  plan: 'free' },
-        { to: ROUTE.SIGN_UP,  icon: ICON.GRID,    titleKey: 'card4Title', descKey: 'card4Desc', tagKey: 'card4Tag', primary: false, plan: 'free' },
-        { to: ROUTE.PROTOCOL, icon: ICON.SECTION, titleKey: 'card5Title', descKey: 'card5Desc', tagKey: 'card5Tag', primary: false, plan: null   },
+        { to: ROUTE.SIGN_UP,  icon: ICON.FLASK,   titleKey: 'card1Title', descKey: 'card1Desc', tagKey: 'card1Tag', primary: true  },
+        { to: ROUTE.SIGN_UP,  icon: ICON.GRID,    titleKey: 'card4Title', descKey: 'card4Desc', tagKey: 'card4Tag', primary: false },
+        { to: ROUTE.PROTOCOL, icon: ICON.SECTION, titleKey: 'card5Title', descKey: 'card5Desc', tagKey: 'card5Tag', primary: false },
         // Row 2 — tooling & output
-        { to: ROUTE.SIGN_UP,  icon: ICON.PLUG,    titleKey: 'card2Title', descKey: 'card2Desc', tagKey: 'card2Tag', primary: false, plan: 'pro'  },
-        { to: ROUTE.SIGN_UP,  icon: ICON.CELL,    titleKey: 'card3Title', descKey: 'card3Desc', tagKey: 'card3Tag', primary: false, plan: 'free' },
+        { to: ROUTE.SIGN_UP,  icon: ICON.PLUG,    titleKey: 'card2Title', descKey: 'card2Desc', tagKey: 'card2Tag', primary: false },
+        { to: ROUTE.SIGN_UP,  icon: ICON.CELL,    titleKey: 'card3Title', descKey: 'card3Desc', tagKey: 'card3Tag', primary: false },
       ],
 
       scopeTags: [
@@ -447,7 +441,7 @@ export default defineComponent({
       return this.authStore.isSignedIn
     },
 
-    resolvedFeatureCards(): { to: string; icon: string; titleKey: string; descKey: string; tagKey: string; primary: boolean; plan: string | null }[] {
+    resolvedFeatureCards(): { to: string; icon: string; titleKey: string; descKey: string; tagKey: string; primary: boolean }[] {
       if (!this.isSignedIn) return this.featureCards
       // Map sign-up destinations to real routes for signed-in users
       const destMap: Record<string, string> = {

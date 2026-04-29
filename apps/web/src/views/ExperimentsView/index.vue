@@ -215,8 +215,6 @@
           spellcheck="false"
         ></textarea>
 
-        <p class="experiments__modal-cost">{{ $t('experiments.saveModalCostNote', { n: SAVE_TOKEN_COST }) }}</p>
-
         <p v-if="saveError" class="experiments__modal-error">{{ saveError }}</p>
 
         <div class="experiments__modal-actions">
@@ -246,7 +244,6 @@ import { mapStores } from 'pinia'
 import { useSavedExperimentsStore } from '@/stores/savedExperimentsStore'
 import { useCellStore } from '@/stores/cellStore'
 import { useExperimentStore } from '@/stores/experimentStore'
-import { useTokenStore } from '@/stores/tokenStore'
 
 import PageHeader from '@/components/PageHeader/index.vue'
 
@@ -256,8 +253,6 @@ import { ROUTE } from '@/constants/routes'
 import type { SavedExperimentItem, ExperimentSnapshot } from '@/types/savedExperiment'
 
 // ── Module-level constants ────────────────────────────────────────────────────
-// Mirrors backend COST_MAP.SAVE_EXPERIMENT — update both if the cost changes.
-const SAVE_TOKEN_COST = 2
 const DEBOUNCE_MS     = 300
 const FLASH_MS        = 2500
 
@@ -306,11 +301,10 @@ export default defineComponent({
   },
 
   computed: {
-    ...mapStores(useSavedExperimentsStore, useCellStore, useExperimentStore, useTokenStore),
+    ...mapStores(useSavedExperimentsStore, useCellStore, useExperimentStore),
 
     ICON():            typeof ICON  { return ICON },
     ROUTE():           typeof ROUTE { return ROUTE },
-    SAVE_TOKEN_COST(): number       { return SAVE_TOKEN_COST },
 
     experiments(): SavedExperimentItem[] {
       return this.savedExperimentsStore.experiments
@@ -403,12 +397,6 @@ export default defineComponent({
 
     async handleSave(): Promise<void> {
       if (this.isSaveDisabled) return
-
-      const canProceed = await this.tokenStore.consumeOperation('SAVE_EXPERIMENT')
-      if (!canProceed) {
-        this.saveError = this.$t('experiments.errorInsufficientTokens')
-        return
-      }
 
       this.isSaving  = true
       this.saveError = ''
@@ -807,14 +795,6 @@ export default defineComponent({
   }
 
   &__modal-textarea { resize: vertical; min-height: 52px; }
-
-  &__modal-cost {
-    font-family: var(--font-mono);
-    font-size: var(--fs-xxs);
-    opacity: var(--op-muted);
-    margin: 0;
-    letter-spacing: 0.04em;
-  }
 
   &__modal-error {
     font-size: var(--fs-sm);

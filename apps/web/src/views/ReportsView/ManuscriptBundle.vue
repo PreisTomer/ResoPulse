@@ -81,7 +81,6 @@
       </button>
     </div>
 
-    <p class="bundle__note">{{ paidScopes.includes(scopeKey) ? $t('reports.manuscriptUnlocked') : $t('reports.manuscriptCostNote') }}</p>
     <p class="bundle__entry-link">{{ $t('reports.manuscriptPerEntryNote') }}</p>
   </section>
 </template>
@@ -130,10 +129,6 @@ export default defineComponent({
     },
 
     busy(): boolean { return this.busyKey !== null },
-
-    scopeKey(): string { return `${this.scope}::${this.sessionName}` },
-
-    paidScopes(): string[] { return this.experimentStore.paidManuscriptBundles },
   },
 
   methods: {

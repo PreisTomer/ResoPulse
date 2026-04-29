@@ -52,12 +52,6 @@
       </div>
     </div>
 
-    <!-- Guest export note -->
-    <div v-if="showGuestExportNote" class="exp-log__guest-note">
-      {{ $t('log.guestExportNote') }}
-      <RouterLink :to="ROUTE.SIGN_UP" class="exp-log__guest-signup">{{ $t('nav.guestSignUpCta') }} →</RouterLink>
-    </div>
-
     <!-- Table -->
     <div class="exp-log__table-wrap">
       <table class="exp-log__table">
@@ -186,7 +180,6 @@ import { useExperimentStore } from '@/stores/experimentStore'
 import { useCellStore } from '@/stores/cellStore'
 import { useAiStore } from '@/stores/aiStore'
 import { useAuthStore } from '@/stores/authStore'
-import { useTokenStore } from '@/stores/tokenStore'
 
 import { broadcastLogEntry, broadcastLogOutcome, broadcastLogMeasuredOutcome } from '@/services/socket'
 
@@ -212,7 +205,6 @@ import { CHART_MODE, LOG_EVENT, NULL_DISPLAY } from '@/constants/strings'
 import type { ChartMode } from '@/constants/strings'
 import type { LogEntry, MeasuredOutcome } from '@/types/experiment'
 import { ICON } from '@/constants/icons'
-import { ROUTE } from '@/constants/routes'
 import { THRESHOLDS } from '@/constants/physics'
 import { UNIT } from '@/constants/units'
 
@@ -221,17 +213,15 @@ export default defineComponent({
 
   data() {
     return {
-      showGuestExportNote: false,
       measuredModalEntryId: null as number | null,
     }
   },
 
   computed: {
-    ...mapStores(useExperimentStore, useCellStore, useAiStore, useAuthStore, useTokenStore),
+    ...mapStores(useExperimentStore, useCellStore, useAiStore, useAuthStore),
     LOG_EVENT()    { return LOG_EVENT },
     NULL_DISPLAY() { return NULL_DISPLAY },
     ICON()         { return ICON },
-    ROUTE()        { return ROUTE },
     THRESHOLDS()   { return THRESHOLDS },
 
     sessionName: {
@@ -291,10 +281,7 @@ export default defineComponent({
     depKDisplay(k: number | undefined): string { return depKDisplay(k) },
     depKDisplayFull(k: number | undefined): string { return depKDisplayFull(k) },
 
-    async exportLastEntryMethods() {
-      const canProceed = await this.tokenStore.consumeOperation('EXPERIMENT_REPORT', { allowGuest: true })
-      if (!canProceed) return
-      this.showGuestExportNote = false
+    exportLastEntryMethods() {
       const last = this.experimentStore.entries[this.experimentStore.entries.length - 1]
       if (last) this.experimentStore.exportEntryMethods(last)
     },
@@ -305,10 +292,7 @@ export default defineComponent({
       if (last) broadcastLogEntry(last)
     },
 
-    async exportCSV() {
-      const canProceed = await this.tokenStore.consumeOperation('EXPERIMENT_REPORT', { allowGuest: true })
-      if (!canProceed) return
-      this.showGuestExportNote = false
+    exportCSV() {
       this.experimentStore.exportCSV()
     },
     clearLog()   { this.experimentStore.clearLog() },
@@ -335,10 +319,7 @@ export default defineComponent({
         ? this.$t('log.tipCellLysis')
         : this.$t('log.tipCellManual')
     },
-    async submitRating(entryId: number, rating: number) {
-      const canProceed = await this.tokenStore.consumeOperation('LOG_OUTCOME', { allowGuest: true })
-      if (!canProceed) return
-      this.showGuestExportNote = false
+    submitRating(entryId: number, rating: number) {
       const aiApplied = this.aiStore.suggestionApplied
       const entry = this.experimentStore.logOutcome(entryId, rating, aiApplied)
       if (entry) broadcastLogOutcome(entry, rating, aiApplied)
@@ -379,15 +360,9 @@ export default defineComponent({
     closeMeasuredModal() {
       this.measuredModalEntryId = null
     },
-    async saveMeasuredOutcome(measured: Omit<MeasuredOutcome, 'measuredAt'>) {
+    saveMeasuredOutcome(measured: Omit<MeasuredOutcome, 'measuredAt'>) {
       const entryId = this.measuredModalEntryId
       if (entryId === null) return
-      const canProceed = await this.tokenStore.consumeOperation('LOG_MEASURED', { allowGuest: true })
-      if (!canProceed) {
-        this.closeMeasuredModal()
-        return
-      }
-      this.showGuestExportNote = false
       const entry = this.experimentStore.logMeasuredOutcome(entryId, measured)
       if (entry?.measured && this.experimentStore.aiConsentGiven && entry.sessionName) {
         broadcastLogMeasuredOutcome(entry.sessionName, entry.timestamp, entry.measured)
@@ -729,23 +704,5 @@ export default defineComponent({
     &--bad  { @include color-variant(danger, 35%, 10%); }
   }
 
-  &__guest-note {
-    @include flex-col(0.35rem);
-    margin: 0.5rem 0.75rem;
-    font-size: var(--fs-sm);
-    color: var(--color-primary);
-    padding: 0.5rem 0.65rem;
-    background: color-mix(in srgb, var(--color-primary) 7%, transparent);
-    border: 1px solid var(--color-primary-border);
-    border-radius: var(--radius);
-  }
-
-  &__guest-signup {
-    @include mono-upper(var(--fs-xxs), 0.05em);
-    color: var(--color-primary);
-    text-decoration: none;
-
-    &:hover { text-decoration: underline; }
-  }
 }
 </style>

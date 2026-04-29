@@ -2,7 +2,6 @@
 
 // Experiment session REST API.
 // All routes except GET /experiments/share/:token require auth + an active org.
-// Token consumption (SAVE_EXPERIMENT) is applied on create and version-save.
 
 import { Router } from 'express'
 import type { Request, Response } from 'express'
@@ -23,7 +22,6 @@ import {
   disableSharing,
   getVersionHistory,
 } from '../../services/experimentService'
-import { consumeTokens, refundTokens, createTokenAccount, COST_MAP } from '../../services/tokenService'
 
 const router = Router()
 
@@ -32,9 +30,6 @@ const router = Router()
 
 router.get('/', requireAuth, requireOrg, async (req: Request, res: Response) => {
   const { orgId } = getRequestAuth(req)
-
-  // Auto-provision a free-tier account for orgs that predate this feature launch.
-  await createTokenAccount(orgId!)
 
   const page    = Math.max(1, parseInt((req.query.page    as string) ?? '1',  10))
   const limit   = Math.min(100, Math.max(1, parseInt((req.query.limit as string) ?? '20', 10)))
@@ -96,7 +91,6 @@ router.get('/:id', requireAuth, requireOrg, async (req: Request, res: Response) 
 // ── Create experiment ─────────────────────────────────────────────────────────
 // POST /experiments
 // Body: { title, description?, snapshot }
-// Costs SAVE_EXPERIMENT tokens.
 
 router.post('/', requireAuth, requireOrg, async (req: Request, res: Response) => {
   const { orgId, userId } = getRequestAuth(req)
@@ -115,24 +109,8 @@ router.post('/', requireAuth, requireOrg, async (req: Request, res: Response) =>
     return
   }
 
-  const tokenResult = await consumeTokens(orgId!, userId, COST_MAP.SAVE_EXPERIMENT, 'SAVE_EXPERIMENT')
-  if (!tokenResult.ok) {
-    res.status(402).json({
-      error:   'Insufficient tokens.',
-      balance: tokenResult.balance,
-      quota:   tokenResult.quota,
-      plan:    tokenResult.plan,
-    })
-    return
-  }
-
-  try {
-    const experiment = await createExperiment(orgId!, userId, title, description ?? null, snapshot)
-    res.status(201).json({ experiment, tokenBalance: tokenResult.balance })
-  } catch (err) {
-    await refundTokens(orgId!, userId, COST_MAP.SAVE_EXPERIMENT, 'SAVE_EXPERIMENT_REFUND', { reason: 'db_error' })
-    throw err
-  }
+  const experiment = await createExperiment(orgId!, userId, title, description ?? null, snapshot)
+  res.status(201).json({ experiment })
 })
 
 // ── Update experiment ─────────────────────────────────────────────────────────
@@ -158,7 +136,6 @@ router.put('/:id', requireAuth, requireOrg, async (req: Request, res: Response) 
 // ── Save as new version ───────────────────────────────────────────────────────
 // POST /experiments/:id/versions
 // Body: { title, snapshot }
-// Costs SAVE_EXPERIMENT tokens.
 
 router.post('/:id/versions', requireAuth, requireOrg, async (req: Request, res: Response) => {
   const { orgId, userId } = getRequestAuth(req)
@@ -173,32 +150,12 @@ router.post('/:id/versions', requireAuth, requireOrg, async (req: Request, res: 
     return
   }
 
-  const tokenResult = await consumeTokens(orgId!, userId, COST_MAP.SAVE_EXPERIMENT, 'SAVE_EXPERIMENT', {
-    action:   'new_version',
-    parentId: req.params.id,
-  })
-  if (!tokenResult.ok) {
-    res.status(402).json({
-      error:   'Insufficient tokens.',
-      balance: tokenResult.balance,
-      quota:   tokenResult.quota,
-      plan:    tokenResult.plan,
-    })
+  const version = await saveNewVersion(req.params.id, orgId!, userId, title, snapshot)
+  if (!version) {
+    res.status(404).json({ error: 'Parent experiment not found.' })
     return
   }
-
-  try {
-    const version = await saveNewVersion(req.params.id, orgId!, userId, title, snapshot)
-    if (!version) {
-      await refundTokens(orgId!, userId, COST_MAP.SAVE_EXPERIMENT, 'SAVE_EXPERIMENT_REFUND', { reason: 'parent_not_found' })
-      res.status(404).json({ error: 'Parent experiment not found.' })
-      return
-    }
-    res.status(201).json({ experiment: version, tokenBalance: tokenResult.balance })
-  } catch (err) {
-    await refundTokens(orgId!, userId, COST_MAP.SAVE_EXPERIMENT, 'SAVE_EXPERIMENT_REFUND', { reason: 'db_error' })
-    throw err
-  }
+  res.status(201).json({ experiment: version })
 })
 
 // ── Version history ───────────────────────────────────────────────────────────

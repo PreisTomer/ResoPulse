@@ -4,7 +4,6 @@ import { defineStore } from 'pinia'
 
 import { useCellStore } from '@/stores/cellStore'
 import { useCellCalibrationStore } from '@/stores/cellCalibrationStore'
-import { useTokenStore } from '@/stores/tokenStore'
 
 import { downloadText, buildEntryMethodsText, buildCsvText } from '@/utils/experimentExport'
 import { downloadManuscriptMarkdown, downloadManuscriptJson, downloadResidualsCsv, type ManuscriptScope, type ManuscriptInput } from '@/utils/manuscriptExport'
@@ -73,8 +72,6 @@ interface ExperimentState {
   // One-shot tag: set when an AI/space-filling suggestion is applied to sliders, consumed by
   // the very next logReading() so the resulting LogEntry can later report a measured-vs-suggested delta.
   pendingAiSuggestion: AppliedAiSuggestion | null
-  // (scope::sessionName) keys for which the user has already paid the MANUSCRIPT_BUNDLE token cost. One debit unlocks all three formats (md/json/csv) for that bundle scope; cleared on session reset.
-  paidManuscriptBundles: string[]
 }
 
 // Extended snapshot pulled from cellStore - avoids circular import
@@ -136,7 +133,6 @@ function defaultState(): ExperimentState {
     sampleDescription: '', sessionNotes: '', cumulativeDoseJkg: 0,
     sessionStartMs: Date.now(), aiConsentGiven: false,
     pendingAiSuggestion: null,
-    paidManuscriptBundles: [],
   }
 }
 
@@ -151,7 +147,6 @@ function loadState(): ExperimentState {
       sessionStartMs:    parsed.sessionStartMs    ?? Date.now(),
       aiConsentGiven:    parsed.aiConsentGiven    ?? false,
       pendingAiSuggestion: null,
-      paidManuscriptBundles: parsed.paidManuscriptBundles ?? [],
     }
   })
 }
@@ -495,16 +490,6 @@ export const useExperimentStore = defineStore('experiment', {
       downloadText(text, filename)
     },
 
-    // Manuscript bundle: one MANUSCRIPT_BUNDLE token debit unlocks all three formats (md/json/csv) for a (scope, sessionName) tuple. Guests pass through the gate without paying. Returns true on success (download triggered), false when token consumption was blocked for a signed-in user.
-    async _ensureManuscriptBundlePaid(scope: ManuscriptScope): Promise<boolean> {
-      const key = `${scope.type}::${scope.sessionName}`
-      if (this.paidManuscriptBundles.includes(key)) return true
-      const ok = await useTokenStore().consumeOperation('MANUSCRIPT_BUNDLE', { allowGuest: true })
-      if (!ok) return false
-      this.paidManuscriptBundles.push(key)
-      return true
-    },
-
     _buildManuscriptInput(scope: ManuscriptScope): ManuscriptInput {
       const cell = useCellStore()
       const calStore = useCellCalibrationStore()
@@ -540,34 +525,21 @@ export const useExperimentStore = defineStore('experiment', {
       }
     },
 
-    async exportManuscriptMarkdown(scope: ManuscriptScope): Promise<boolean> {
-      if (!await this._ensureManuscriptBundlePaid(scope)) return false
+    exportManuscriptMarkdown(scope: ManuscriptScope): void {
       downloadManuscriptMarkdown(this._buildManuscriptInput(scope))
-      return true
     },
 
-    async exportManuscriptJson(scope: ManuscriptScope): Promise<boolean> {
-      if (!await this._ensureManuscriptBundlePaid(scope)) return false
+    exportManuscriptJson(scope: ManuscriptScope): void {
       downloadManuscriptJson(this._buildManuscriptInput(scope))
-      return true
     },
 
-    async exportManuscriptResidualsCsv(scope: ManuscriptScope): Promise<boolean> {
-      if (!await this._ensureManuscriptBundlePaid(scope)) return false
+    exportManuscriptResidualsCsv(scope: ManuscriptScope): void {
       downloadResidualsCsv(this._buildManuscriptInput(scope))
-      return true
     },
 
-    // Opentrons protocol export. Charges OPENTRONS_EXPORT once per session-snapshot tuple (target preset id × frequency × field × waveform); guests pass through. Re-downloading the same protocol after the user nudges sliders is treated as a new charge — the `wetLab` form lives in the modal and isn't part of the snapshot key.
-    async exportOpentronsScript(wetLab: OpentronsWetLabParams): Promise<boolean> {
+    exportOpentronsScript(wetLab: OpentronsWetLabParams): void {
       const cell = useCellStore()
       const calStore = useCellCalibrationStore()
-      const snapshotKey = `opentrons::${this.sessionName}::${cell.target.id}::${cell.currentBroadcastFrequency}::${cell.fieldIntensity}::${cell.waveform}`
-      if (!this.paidManuscriptBundles.includes(snapshotKey)) {
-        const ok = await useTokenStore().consumeOperation('OPENTRONS_EXPORT', { allowGuest: true })
-        if (!ok) return false
-        this.paidManuscriptBundles.push(snapshotKey)
-      }
       const input: OpentronsExportInput = {
         cellPair: { healthy: cell.healthy, target: cell.target },
         protocol: {
@@ -601,7 +573,6 @@ export const useExperimentStore = defineStore('experiment', {
           })),
       }
       downloadOpentronsScript(input)
-      return true
     },
 
     exportCSV() {

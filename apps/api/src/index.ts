@@ -10,7 +10,6 @@ import { persistTrainerMetrics, type RetrainUpstreamResponse } from './services/
 import { createRetrainCooldownGate } from './utils/retrainCooldown'
 import webhookRouter         from './routes/webhooks'
 import experimentsRouter     from './routes/experiments'
-import tokensRouter          from './routes/tokens'
 import cellPresetsRouter     from './routes/cellPresets'
 import cellCalibrationRouter from './routes/cellCalibration'
 
@@ -80,9 +79,8 @@ app.get('/ai/training-data', requireAuth, async (req, res) => {
   res.json(await fetchTrainingRows())
 })
 
-// ── Experiments and token routes (require auth via requireOrg inside routers) ──
+// ── Experiments and cell routes (require auth via requireOrg inside routers) ──
 app.use('/experiments',      experimentsRouter)
-app.use('/tokens',           tokensRouter)
 app.use('/cell-presets',     cellPresetsRouter)
 app.use('/cell-calibration', cellCalibrationRouter)
 

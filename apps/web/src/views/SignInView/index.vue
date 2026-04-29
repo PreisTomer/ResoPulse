@@ -34,12 +34,6 @@
           </li>
         </ul>
 
-        <div class="auth-page__free-tier">
-          <span class="auth-page__free-tier-badge">Free</span>
-          <span class="auth-page__free-tier-text">{{ $t('signIn.freeTierText') }}</span>
-          <RouterLink :to="ROUTE.PRICING" class="auth-page__free-tier-link">{{ $t('signIn.freeTierPricingLink') }} →</RouterLink>
-        </div>
-
         <p class="auth-page__footnote">
           Kotnik &amp; Miklavcic 2000 · Weaver &amp; Chizmadzhev 1996 · Pennes 1948
         </p>
@@ -780,48 +774,6 @@ export default defineComponent({
     }
   }
 
-  /* ── Science footnote ────────────────────────────────────────────── */
-  &__free-tier {
-    position: relative;
-    z-index: 1;
-    @include flex-row(0.6rem);
-    flex-wrap: wrap;
-    align-items: center;
-    padding: 0.5rem 0.8rem;
-    border-radius: var(--radius);
-    border: 1px solid var(--color-purple-border);
-    background: color-mix(in srgb, var(--color-purple) 5%, var(--color-surface));
-    max-width: 380px;
-
-    @media (max-width: 900px) { max-width: 100%; }
-
-    &-badge {
-      @include badge-pill(0.1rem 0.5rem, 10px);
-      background: var(--color-purple);
-      color: var(--color-bg);
-      border-color: var(--color-purple);
-      font-size: 0.55rem;
-    }
-
-    &-text {
-      font-size: var(--fs-xs);
-      color: var(--color-text-muted);
-      flex: 1;
-      min-width: 0;
-    }
-
-    &-link {
-      font-family: var(--font-mono);
-      font-size: var(--fs-xxs);
-      color: var(--color-purple);
-      text-decoration: none;
-      white-space: nowrap;
-      opacity: var(--op-dim);
-      transition: opacity var(--tr-fast);
-
-      &:hover { opacity: 1; text-decoration: underline; }
-    }
-  }
 
   &__footnote {
     position: relative;

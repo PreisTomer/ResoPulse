@@ -117,8 +117,6 @@
     "manuscriptCsvSub":           "Predicted-vs-measured table only. Drops cleanly into Excel / Pandas / Prism.",
     "manuscriptCsvTip":           "<strong>Residuals CSV</strong>\nOne row per measured entry with predicted DR_T, measured target-lysis %, residual (pp), the same triple for healthy, plus measured field, viability, and qPCR fold-change when present.",
     "manuscriptCsvDisabledTip":   "No measured outcomes in scope. Log a measured result first to enable the residuals CSV.",
-    "manuscriptCostNote":         "One token unlocks all three formats for this scope. Re-downloading after the unlock is free until you reload.",
-    "manuscriptUnlocked":         "All three formats unlocked for this scope — re-download anything for free.",
     "manuscriptPerEntryNote":     "Per-entry methods text (.txt) for spot-checking a single run remains in the log table below.",
     "mappingPresetLabel":         "Format preset",
     "mappingPresetApply":         "Load defaults",

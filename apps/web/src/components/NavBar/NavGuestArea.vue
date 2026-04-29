@@ -62,9 +62,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
-import { mapStores } from 'pinia'
 
-import { useTokenStore } from '@/stores/tokenStore'
 import { useThemeStore } from '@/stores/themeStore'
 
 import { ROUTE } from '@/constants/routes'
@@ -77,18 +75,7 @@ export default defineComponent({
     return { menuOpen: false }
   },
 
-  watch: {
-    // Open the dropdown automatically when a guest tries a premium operation.
-    'tokenStore.pendingGuestSignUp'(val: boolean): void {
-      if (!val) return
-      this.tokenStore.pendingGuestSignUp = false
-      this.menuOpen = true
-    },
-  },
-
   computed: {
-    ...mapStores(useTokenStore),
-
     ICON()  { return ICON  },
     ROUTE() { return ROUTE },
 

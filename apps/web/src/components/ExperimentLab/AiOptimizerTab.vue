@@ -216,12 +216,6 @@
             {{ ICON.WARNING }} {{ $t('ai.errorNote') }}
           </div>
 
-          <!-- Guest note: shown when a guest tries to run the optimizer -->
-          <div v-if="showGuestNote" class="ai-tab__guest-note">
-            {{ $t('ai.guestNote') }}
-            <RouterLink :to="ROUTE.SIGN_UP" class="ai-tab__guest-signup">{{ $t('nav.guestSignUpCta') }} →</RouterLink>
-          </div>
-
           <!-- Low-confidence warning -->
           <div v-if="showLowConfidenceWarning" class="ai-tab__warn-note">
             {{ ICON.WARNING }} {{ $t('ai.lowConfidenceWarning', { conf: (aiStore.confidence * 100).toFixed(0) + '%' }) }}
@@ -297,7 +291,6 @@ import { useAuthStore } from '@/stores/authStore'
 import { useCellStore } from '@/stores/cellStore'
 import { useCellCalibrationStore } from '@/stores/cellCalibrationStore'
 import { useExperimentStore } from '@/stores/experimentStore'
-import { useTokenStore } from '@/stores/tokenStore'
 import { useUiStore } from '@/stores/uiStore'
 
 import { requestAiOptimization, broadcastStateSync } from '@/services/socket'
@@ -325,7 +318,6 @@ export default defineComponent({
   data() {
     return {
       showOfflineNote:      false,
-      showGuestNote:        false,
       isRetraining:         false,
       retrainMessage:       '' as string,
       retrainMsgClass:      '' as string,
@@ -362,7 +354,7 @@ export default defineComponent({
     SIGMA_MIN() { return THRESHOLDS.SIGMA_CALIB_MULT_MIN.toFixed(1) },
     SIGMA_MAX() { return THRESHOLDS.SIGMA_CALIB_MULT_MAX.toFixed(1) },
     SIGMA_MIN_SAMPLES() { return THRESHOLDS.SIGMA_CALIB_MIN_SAMPLES },
-    ...mapStores(useAiStore, useAuthStore, useCellStore, useCellCalibrationStore, useExperimentStore, useTokenStore, useUiStore),
+    ...mapStores(useAiStore, useAuthStore, useCellStore, useCellCalibrationStore, useExperimentStore, useUiStore),
 
     // Cell card always reflects the Schwan-mode fit; resonance fit (if any) is summarised in the resonance UI.
     healthyCalibStatus(): CalibrationStatus {
@@ -444,11 +436,7 @@ export default defineComponent({
       this.uiStore.setAiPanelOpen(false)
     },
 
-    async runOptimize() {
-      const canProceed = await this.tokenStore.consumeOperation('AI_OPTIMIZE', { allowGuest: true })
-      if (!canProceed) return
-      this.showGuestNote = false
-
+    runOptimize() {
       this.showOfflineNote = false
       const requestId = this.aiStore.startRequest()
       if (this._optimizeTimeoutTimer) clearTimeout(this._optimizeTimeoutTimer)
@@ -469,7 +457,6 @@ export default defineComponent({
     },
 
     applyAndBroadcast() {
-      this.tokenStore.consumeOperationLenient('AI_RETRAIN')
       this.aiStore.applySuggestion()
       broadcastStateSync()
     },
@@ -491,7 +478,6 @@ export default defineComponent({
     async triggerRetrain() {
       this.isRetraining   = true
       this.retrainMessage = ''
-      this.tokenStore.consumeOperationLenient('AI_RETRAIN')
       try {
         const backendUrl = (import.meta.env.VITE_BACKEND_URL ?? 'http://localhost:3001').replace(/\/$/, '')
         const res  = await fetch(`${backendUrl}/ai/retrain`, {
@@ -588,11 +574,7 @@ export default defineComponent({
       return `ai-tab__sigma-calib-row--${status.state}`
     },
 
-    async suggestExploreNext(): Promise<void> {
-      const canProceed = await this.tokenStore.consumeOperation('AI_SUGGEST', { allowGuest: true })
-      if (!canProceed) return
-      this.showGuestNote = false
-
+    suggestExploreNext(): void {
       // D-optimal expected information gain when the active calibration has a real fit (cov_11 or cov_22 > 0). Maximin space-filling otherwise — honest "explore" mode for uncalibrated cells. The active learning module dispatches off the optional physicsContext.
       const cs   = this.cellStore
       const cov  = cs.targetCalibrationCovariance
@@ -1036,24 +1018,6 @@ export default defineComponent({
     background: color-mix(in srgb, var(--color-amber) 8%, transparent);
     border: 1px solid color-mix(in srgb, var(--color-amber) 28%, transparent);
     border-radius: var(--radius);
-  }
-
-  &__guest-note {
-    @include flex-col(0.4rem);
-    font-size: var(--fs-sm);
-    color: var(--color-primary);
-    padding: 0.5rem 0.65rem;
-    background: color-mix(in srgb, var(--color-primary) 7%, transparent);
-    border: 1px solid var(--color-primary-border);
-    border-radius: var(--radius);
-  }
-
-  &__guest-signup {
-    @include mono-upper(var(--fs-xxs), 0.05em);
-    color: var(--color-primary);
-    text-decoration: none;
-
-    &:hover { text-decoration: underline; }
   }
 
   &__warn-note {

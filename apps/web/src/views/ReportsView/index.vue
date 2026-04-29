@@ -286,7 +286,6 @@ import { broadcastLogMeasuredOutcome } from '@/services/socket'
 import type { LogEntry } from '@/stores/experimentStore'
 import { useCellStore } from '@/stores/cellStore'
 import { useExperimentStore } from '@/stores/experimentStore'
-import { useTokenStore } from '@/stores/tokenStore'
 import { useCsvMappingStore } from '@/stores/csvMappingStore'
 import { useUiStore } from '@/stores/uiStore'
 
@@ -320,7 +319,6 @@ export default defineComponent({
   setup() {
     const store      = useExperimentStore()
     const cellStore  = useCellStore()
-    const tokenStore = useTokenStore()
     const { t } = useI18n()
     const selectedEntry = ref<LogEntry | null>(null)
 
@@ -436,7 +434,6 @@ export default defineComponent({
 
     return {
       store,
-      tokenStore,
       csvMappingStore,
       csvMappingOpen,
       selectedEntry,
@@ -519,13 +516,8 @@ export default defineComponent({
     downloadSelectedMethods() {
       if (this.selectedEntry) this.store.exportEntryMethods(this.selectedEntry)
     },
-    async handleExportCSV() {
+    handleExportCSV() {
       this.isExporting = true
-      const canProceed = await this.tokenStore.consumeOperation('EXPERIMENT_REPORT', { allowGuest: true })
-      if (!canProceed) {
-        this.isExporting = false
-        return
-      }
       this.store.exportCSV()
       this.isExporting = false
     },
@@ -548,11 +540,6 @@ export default defineComponent({
       if (!file) return
 
       this.isImporting = true
-      const canProceed = await this.tokenStore.consumeOperation('IMPORT_MEASURED', { allowGuest: true })
-      if (!canProceed) {
-        this.isImporting = false
-        return
-      }
 
       try {
         const text   = await file.text()

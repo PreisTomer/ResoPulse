@@ -15,14 +15,6 @@
             class="user-panel__avatar"
           />
           <span v-else class="user-panel__initials">{{ userInitials }}</span>
-          <span
-            v-if="tokenStore.isLoaded"
-            class="user-panel__status-dot"
-            :class="{
-              'user-panel__status-dot--low':      tokenStore.isLowBalance,
-              'user-panel__status-dot--exhausted': tokenStore.isExhausted,
-            }"
-          ></span>
         </template>
       </div>
     </div>
@@ -45,39 +37,6 @@
           <span class="user-panel__id-name">{{ userName }}</span>
           <span v-if="orgName" class="user-panel__id-org">{{ orgName }}</span>
         </div>
-      </div>
-
-      <!-- Token credits section -->
-      <div v-if="tokenStore.isLoaded" class="user-panel__credits">
-        <div class="user-panel__credits-header">
-          <span class="user-panel__credits-label">
-            <svg class="user-panel__credits-icon" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-              <path d="M8 1L2 8h5l-1 5 6-7H7L8 1z" fill="currentColor"/>
-            </svg>
-            {{ $t('tokens.creditsLabel') }}
-          </span>
-          <span class="user-panel__credits-plan">{{ planLabel }}</span>
-        </div>
-
-        <div class="user-panel__credits-bar">
-          <div
-            class="user-panel__credits-fill"
-            :class="barClass"
-            :style="{ width: Math.max(2, tokenStore.balancePct) + '%' }"
-          ></div>
-        </div>
-
-        <div v-if="hasBalanceWarning" class="user-panel__credits-warn">
-          {{ tokenStore.isExhausted ? $t('tokens.balanceExhausted') : $t('tokens.balanceLow') }}
-        </div>
-
-        <div class="user-panel__credits-meta">
-          {{ $t('tokens.resetsLabel') }} {{ tokenStore.resetDateLabel }}
-        </div>
-
-        <button class="user-panel__upgrade-cta" @click="navigateToPricing">
-          {{ $t('tokens.upgradeBtn') }} {{ ICON.ARROW_SHORT }}
-        </button>
       </div>
 
       <div class="user-panel__divider"></div>
@@ -130,22 +89,16 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { useUser, useOrganization, useClerk } from '@clerk/vue'
-import { mapStores } from 'pinia'
 
-import { useTokenStore } from '@/stores/tokenStore'
 import { useThemeStore } from '@/stores/themeStore'
 
 import { disconnectSocket } from '@/services/socket'
 
 import { ROUTE } from '@/constants/routes'
 import { ICON } from '@/constants/icons'
-import { PLAN_LABEL } from '@/types/token'
-import type { TokenPlan } from '@/types/token'
 
 export default defineComponent({
   name: 'NavUserArea',
-
-  emits: ['openUpgrade'],
 
   setup() {
     const { user }         = useUser()
@@ -158,17 +111,7 @@ export default defineComponent({
     return { menuOpen: false, isSigningOut: false }
   },
 
-  watch: {
-    'tokenStore.pendingUpgrade'(val: boolean): void {
-      if (!val) return
-      this.tokenStore.pendingUpgrade = false
-      this.$router.push(ROUTE.PRICING)
-    },
-  },
-
   computed: {
-    ...mapStores(useTokenStore),
-
     ICON()  { return ICON  },
     ROUTE() { return ROUTE },
 
@@ -194,21 +137,6 @@ export default defineComponent({
       const first = u?.firstName?.[0] ?? ''
       const last  = u?.lastName?.[0]  ?? ''
       return (first + last).toUpperCase() || '?'
-    },
-
-    planLabel(): string {
-      return PLAN_LABEL[this.tokenStore.plan as TokenPlan] ?? this.tokenStore.plan.toUpperCase()
-    },
-
-    barClass(): string {
-      if (this.tokenStore.isExhausted)    return 'user-panel__credits-fill--exhausted'
-      if (this.tokenStore.isLowBalance)   return 'user-panel__credits-fill--low'
-      if (this.tokenStore.balancePct < 50) return 'user-panel__credits-fill--mid'
-      return ''
-    },
-
-    hasBalanceWarning(): boolean {
-      return this.tokenStore.isLowBalance || this.tokenStore.isExhausted
     },
   },
 
@@ -243,16 +171,6 @@ export default defineComponent({
       this.$router.push(ROUTE.ACCOUNT)
     },
 
-    openUpgrade(): void {
-      this.closeMenu()
-      this.$emit('openUpgrade')
-    },
-
-    navigateToPricing(): void {
-      this.closeMenu()
-      this.$router.push(ROUTE.PRICING)
-    },
-
     setTheme(theme: 'dark' | 'oled'): void {
       this.themeStore.theme = theme
     },
@@ -260,7 +178,6 @@ export default defineComponent({
     doSignOut(): void {
       this.isSigningOut = true
       this.closeMenu()
-      this.tokenStore.stopPolling()
       disconnectSocket()
       ;(this.clerk as { signOut?(opts?: { redirectUrl?: string }): Promise<void> })
         ?.signOut?.({ redirectUrl: ROUTE.SIGN_IN })
@@ -315,23 +232,6 @@ export default defineComponent({
     letter-spacing: 0.04em;
     color: var(--color-primary);
     background: color-mix(in srgb, var(--color-primary) 14%, transparent);
-  }
-
-  &__status-dot {
-    position: absolute;
-    bottom: -1px;
-    right: -1px;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    border: 1.5px solid var(--color-bg);
-    background: var(--color-primary);
-
-    &--low      { background: var(--color-amber); }
-    &--exhausted {
-      background: var(--color-amber);
-      animation: token-pulse 1.8s ease-in-out infinite;
-    }
   }
 
   &__trigger {
@@ -431,94 +331,6 @@ export default defineComponent({
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-  }
-
-  /* ── Credits section ────────────────────────────────────────────── */
-  &__credits {
-    @include flex-col(0.4rem);
-    margin: 0 0.1rem;
-    padding: 0.65rem 0.75rem;
-    background: color-mix(in srgb, var(--color-primary) 5%, var(--color-surface-2));
-    border: 1px solid color-mix(in srgb, var(--color-primary) 15%, var(--color-border));
-    border-radius: var(--radius);
-
-    &-header {
-      @include flex-between();
-    }
-
-    &-label {
-      @include flex-row(0.3rem);
-      font-family: var(--font-mono);
-      font-size: var(--fs-xxs);
-      text-transform: uppercase;
-      letter-spacing: 0.07em;
-      color: var(--color-text-muted);
-    }
-
-    &-icon {
-      width: 12px;
-      height: 12px;
-      color: var(--color-primary);
-      flex-shrink: 0;
-    }
-
-    &-plan {
-      @include mono-upper(0.6rem, 0.08em);
-      padding: 0.1rem 0.4rem;
-      border: 1px solid var(--color-primary-border);
-      border-radius: 3px;
-      color: var(--color-primary);
-      background: var(--color-primary-surface);
-    }
-
-    &-bar {
-      height: 4px;
-      background: var(--color-border);
-      border-radius: 2px;
-      overflow: hidden;
-      margin-top: 0.15rem;
-    }
-
-    &-fill {
-      height: 100%;
-      border-radius: 2px;
-      background: var(--color-primary);
-      transition: width 0.4s ease, background var(--tr-normal); // intentional: slower fill animation for token bar
-
-      &--mid      { background: color-mix(in srgb, var(--color-amber) 50%, var(--color-primary)); }
-      &--low      { background: var(--color-amber); }
-      &--exhausted { background: var(--color-amber); }
-    }
-
-    &-warn {
-      font-family: var(--font-mono);
-      font-size: var(--fs-xxs);
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      color: var(--color-amber);
-    }
-
-    &-meta {
-      font-family: var(--font-mono);
-      font-size: var(--fs-xxs);
-      color: var(--color-text-muted);
-      opacity: var(--op-muted);
-    }
-  }
-
-  &__upgrade-cta {
-    align-self: flex-start;
-    @include mono-upper(var(--fs-xxs), 0.05em);
-    padding: 0.25rem 0.6rem;
-    border: 1px solid var(--color-primary-border);
-    border-radius: 3px;
-    background: var(--color-primary-surface);
-    color: var(--color-primary);
-    cursor: pointer;
-    transition: background var(--tr-fast), box-shadow var(--tr-fast);
-    margin-top: 0.15rem;
-
-    &:hover { background: var(--color-primary-dim); box-shadow: var(--glow-sm); }
   }
 
   /* ── Divider ────────────────────────────────────────────────────── */

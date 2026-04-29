@@ -28,7 +28,6 @@
     "consentToggleLabel": "Enable outcome logging",
     "consentRequired": "Enable outcome logging above to use the AI optimizer.",
     "errorNote": "Optimizer unavailable. Ensure the Python AI service is running.",
-    "guestNote": "AI optimization requires an account. Create one to run the optimizer and save your results.",
     "explanationLabel": "Reasoning",
     "rateOutcomeTitle": "Rate this reading",
     "rateOutcomePrompt": "How successful was this protocol? (1 = failed, 5 = excellent)",

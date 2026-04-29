@@ -273,12 +273,6 @@
     padding-top: 0.15rem;
   }
 
-  &__text-link-sep {
-    color: var(--color-text-muted);
-    opacity: var(--op-ghost);
-    font-size: var(--fs-md);
-  }
-
   &__text-link {
     font-size: var(--fs-sm);
     font-family: var(--font-mono);
@@ -727,28 +721,6 @@
       margin-top: auto;
 
       .home__feature-card:hover & { opacity: var(--op-dim); }
-    }
-  }
-
-  /* ── Plan tier badge ───────────────────────────────────────── */
-  &__fc-plan-badge {
-    @include mono-upper(0.55rem, 0.07em);
-    padding: 0.1rem 0.4rem;
-    border-radius: 3px;
-    border: 1px solid;
-    flex-shrink: 0;
-    align-self: flex-start;
-
-    &--free {
-      color: var(--color-primary);
-      border-color: var(--color-primary-border);
-      background: var(--color-primary-surface);
-    }
-
-    &--pro {
-      color: var(--color-purple);
-      border-color: var(--color-purple-border);
-      background: color-mix(in srgb, var(--color-purple) 8%, transparent);
     }
   }
 

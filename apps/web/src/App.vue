@@ -18,7 +18,6 @@
         <RouterLink :to="ROUTE.TERMS" class="app-footer__link">{{ $t('nav.footerTerms') }}</RouterLink>
         <RouterLink :to="ROUTE.PRIVACY" class="app-footer__link">{{ $t('nav.footerPrivacy') }}</RouterLink>
       </div>
-      <p class="app-footer__ip">{{ $t('nav.footerIp') }}</p>
     </footer>
   </div>
 </template>
@@ -36,7 +35,6 @@ import ProtocolGuidePanel from './components/ExperimentLab/ProtocolGuidePanel.vu
 
 import { useThemeStore } from './stores/themeStore'
 import { useAuthStore } from './stores/authStore'
-import { useTokenStore } from './stores/tokenStore'
 import { useUserPresetsStore } from './stores/userPresetsStore'
 import { useCellCalibrationStore } from './stores/cellCalibrationStore'
 
@@ -48,7 +46,6 @@ export default defineComponent({
 
   setup() {
     const authStore              = useAuthStore()
-    const tokenStore             = useTokenStore()
     const userPresetsStore       = useUserPresetsStore()
     const calibrationStore       = useCellCalibrationStore()
     const { isLoaded, isSignedIn, orgId } = useAuth()
@@ -61,17 +58,11 @@ export default defineComponent({
         authStore.syncFromClerk(!!signedIn, !!oid)
         if (authStore.isClerkLoading) authStore.setClerkLoaded()
 
-        // Fetch token balance and cell library as soon as auth state resolves.
-        // startPolling() and fetchAll() are idempotent — safe on every state change.
         if (signedIn && oid) {
-          tokenStore.fetchBalance()
-          tokenStore.startPolling()
           userPresetsStore.fetchAll()
           calibrationStore.fetchAll()
         } else {
-          tokenStore.reset()
           calibrationStore.reset()
-          // Load guest presets from localStorage if not signed in
           userPresetsStore.fetchAll()
         }
       },
@@ -172,18 +163,5 @@ main {
     &:hover { opacity: 1; }
   }
 
-  &__ip {
-    font-family: var(--font-mono);
-    font-size: 0.6rem; // deliberate sub-scale micro-size for legal notice
-    letter-spacing: 0.04em;
-    color: var(--color-text-muted);
-    opacity: var(--op-ghost);
-    text-align: center;
-    width: 100%;
-    margin: 0;
-    line-height: 1.5;
-    padding: 0 1rem;
-    box-sizing: border-box;
-  }
 }
 </style>

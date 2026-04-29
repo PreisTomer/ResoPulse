@@ -43,7 +43,6 @@ Every top-level namespace lives in exactly one file. Add new keys to the file th
 | `locales/nav.en.json` | `nav` | NavBar, contact modal, guest session, theme toggle |
 | `locales/auth.en.json` | `termsGate`, `signIn`, `signUp`, `onboarding` | Auth flow, lab entry gate |
 | `locales/account.en.json` | `account` | Account settings |
-| `locales/billing.en.json` | `tokens`, `upgrade`, `pricing` | Token balance, upgrade modal, pricing |
 | `locales/cells.en.json` | `cells`, `lmb`, `cellHeader`, `labels`, `biostim` | Cell card, compact strip, states |
 | `locales/slider.en.json` | `slider` | Field control panel |
 | `locales/experiment.en.json` | `exp`, `live`, `guide`, `drChart`, `litStrip` | Experiment lab workspace |
