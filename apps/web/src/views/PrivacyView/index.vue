@@ -5,9 +5,7 @@
 
       <div class="privacy__eyebrow">Legal</div>
       <h1 class="privacy__title">Privacy Policy</h1>
-      <p class="privacy__meta">Last Updated: April 22, 2026 &nbsp;·&nbsp; ResoPulse &nbsp;·&nbsp;
-        <a href="https://www.resopulse-virtual-lab.com/" class="privacy__link" target="_blank" rel="noopener">resopulse-virtual-lab.com</a>
-      </p>
+      <p class="privacy__meta">Last Updated: April 29, 2026 &nbsp;·&nbsp; ResoPulse</p>
 
       <p class="privacy__intro">
         This Privacy Policy describes how Tomer Preis ("we", "our", or "us") collects, uses, and
@@ -108,7 +106,7 @@
         <h2 class="privacy__h2">3. What We Do Not Collect</h2>
         <ul class="privacy__ul">
           <li>We do not use advertising trackers or analytics SDKs (no Google Analytics, Mixpanel, Meta Pixel, or similar).</li>
-          <li>We do not collect payment card data — any future billing is handled entirely by our payment processor.</li>
+          <li>We do not process payments and do not collect payment card data. ResoPulse is free and open source.</li>
           <li>We do not collect health information, medical records, or any data relating to real patients or clinical subjects.</li>
           <li>We do not sell, rent, or share your personal data with third parties for their own marketing purposes.</li>
         </ul>
@@ -241,7 +239,7 @@
       <div class="privacy__footer">
         <RouterLink :to="ROUTE.HOME" class="privacy__back">← Back to ResoPulse</RouterLink>
         <RouterLink :to="ROUTE.TERMS" class="privacy__terms-link">Terms</RouterLink>
-        <span class="privacy__copy">© 2026 Tomer Preis. All rights reserved.</span>
+        <span class="privacy__copy">© 2026 Tomer Preis · MIT License</span>
       </div>
 
     </div>

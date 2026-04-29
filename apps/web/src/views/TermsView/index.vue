@@ -5,29 +5,20 @@
 
       <div class="terms__eyebrow">Legal</div>
       <h1 class="terms__title">Terms of Use</h1>
-      <p class="terms__meta">Last Updated: April 16, 2026 &nbsp;·&nbsp; ResoPulse &nbsp;·&nbsp;
-        <a href="https://www.resopulse-virtual-lab.com/" class="terms__link" target="_blank" rel="noopener">resopulse-virtual-lab.com</a>
-      </p>
+      <p class="terms__meta">Last Updated: April 29, 2026 &nbsp;·&nbsp; ResoPulse</p>
 
       <p class="terms__intro">
-        By accessing or using <a href="https://www.resopulse-virtual-lab.com/" class="terms__link" target="_blank" rel="noopener">https://www.resopulse-virtual-lab.com/</a>
-        (the "Service"), you agree to be bound by these Terms of Use. If you do not agree, do not use the Service.
+        ResoPulse (the "Service") is a free, open-source research and portfolio project. By using the Service you agree to these Terms.
       </p>
 
       <section class="terms__section">
-        <h2 class="terms__h2">1. Intellectual Property Ownership</h2>
-        <dl class="terms__dl">
-          <dt>Proprietary Logic</dt>
-          <dd>ResoPulse implements established biophysics models from the scientific literature (Schwan single-shell, Kotnik-Miklavcic double-shell, Pennes bioheat) under standard academic conventions. The exclusive intellectual property of Tomer Preis consists of the novel elements built upon these foundations: the real-time closed-loop impedance feedback system, the population-lysis Gaussian integration model, the Window of Selectivity optimisation framework, the dual-population Therapeutic Index scoring methodology, and the instrument-bridge integration architecture. These novel methods, and their specific combination in a unified simulation workspace, are proprietary.</dd>
-          <dt>IP Protection</dt>
-          <dd>The novel methods listed above are the subject of ongoing intellectual property filings. Any reproduction, implementation, or commercialisation of these methods without prior written authorisation from Tomer Preis is strictly prohibited.</dd>
-          <dt>Codebase</dt>
-          <dd>The Vue 3, TypeScript, and Node.js source code, along with all custom physics modules (Pennes bioheat, nsEP pulse envelopes, Kotnik double-shell model, population lysis integration, DEP Clausius-Mossotti solver), are protected by copyright law. Copyright &copy; 2026 Tomer Preis. All rights reserved.</dd>
-          <dt>Protocol Documentation</dt>
-          <dd>The ResoPulse Protocol Documentation (accessible at /protocol) constitutes a proprietary scientific work authored by Tomer Preis and is protected by copyright. Access to this documentation does not grant any right to reproduce it, incorporate it into a competing product, or use it as a design basis for commercial instrumentation.</dd>
-          <dt>No License</dt>
-          <dd>Use of the website does not grant any license to download, clone, scrape, or reproduce any part of the platform, its algorithms, its cell-parameter library, or its documentation for any purpose beyond your own personal scientific use of the Service.</dd>
-        </dl>
+        <h2 class="terms__h2">1. License</h2>
+        <p class="terms__p">
+          The ResoPulse source code is released under the
+          <a href="https://opensource.org/licenses/MIT" class="terms__link" target="_blank" rel="noopener">MIT License</a>.
+          You are free to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the
+          software, subject to the conditions of that license. Copyright &copy; 2026 Tomer Preis.
+        </p>
       </section>
 
       <section class="terms__section">
@@ -43,134 +34,66 @@
       </section>
 
       <section class="terms__section">
-        <h2 class="terms__h2">3. User Restrictions</h2>
-        <p class="terms__p">Individual academic researchers using the Service solely for non-commercial scientific research, peer-reviewed publication, or teaching are not subject to the prohibitions below, provided they are not acting on behalf of or for the financial benefit of a commercial entity.</p>
-        <p class="terms__p">All other users strictly agree <strong>NOT</strong> to:</p>
-        <ul class="terms__ul">
-          <li>Attempt to decompile, disassemble, or reverse engineer any part of the Closed-Loop Electroporation Digital Twin, its algorithms, or its physics modules.</li>
-          <li>Use the Cell Library parameters, Experiment Lab logic, or any simulation outputs to design, develop, train, or commercialise a competing computational biophysics platform, electroporation simulation tool, or cell-engineering software product.</li>
-          <li>Use the ResoPulse Protocol Documentation, in whole or in part, as a design specification, technical blueprint, or competitive analysis basis for developing commercial electroporation or cell-transfection instruments, regardless of whether those instruments are marketed to overlapping customer segments.</li>
-          <li>Train, fine-tune, or prompt any machine-learning model, large language model, generative AI system, or automated analysis pipeline using the platform's protocol text, cell library entries, simulation outputs, or biophysical model implementations for any commercial or competitive purpose.</li>
-          <li>Use automated scripts, web crawlers, bots, or scraping tools to systematically extract cell library parameters, biophysical model configurations, selectivity scores, or protocol content from any part of the Service.</li>
-          <li>Reproduce, adapt, sublicense, or redistribute the Window of Selectivity methodology, the dual-population Therapeutic Index framework, or any other novel analytical method described in the platform's documentation or codebase, in any medium or format, without prior written permission.</li>
-          <li>Bypass, circumvent, or disable any security measures, authentication layers, rate limits, or access controls provided by Vercel, Neon, Clerk, or any other component of the platform infrastructure.</li>
-          <li>Access or use the Service in any manner intended to build a dataset, benchmark, or competitive intelligence report for the benefit of any third party engaged in the design or sale of electroporation, acoustic resonance, or cellular bioelectromagnetics equipment or software.</li>
-        </ul>
+        <h2 class="terms__h2">3. Your Simulation Data</h2>
         <p class="terms__p">
-          These restrictions apply to all users, including employees, contractors, and agents of commercial life-science instrument manufacturers, contract research organisations, and academic technology-transfer offices acting on behalf of commercial partners.
+          Experiment results, CSV exports, and protocol configurations you generate using the Service are your own data.
+          Anonymised, aggregated outcome ratings you choose to log may be used to retrain the on-premise optimisation
+          model; no personally identifiable information is used in that process.
         </p>
       </section>
 
       <section class="terms__section">
-        <h2 class="terms__h2">4. Simulation Data Ownership</h2>
-        <dl class="terms__dl">
-          <dt>Your outputs</dt>
-          <dd>Experiment results, CSV exports, and protocol configurations you generate using the Service are your own data. You retain ownership of those outputs.</dd>
-          <dt>The engine</dt>
-          <dd>The algorithms, biophysical models, and source code that produce those outputs remain the exclusive property of Tomer Preis. Ownership of outputs does not grant any license to the underlying logic.</dd>
-          <dt>Model training</dt>
-          <dd>Anonymised, aggregated outcome ratings you provide may be used to retrain the on-premise optimisation model. No personally identifiable information is used in this process.</dd>
-        </dl>
-      </section>
-
-      <section class="terms__section">
-        <h2 class="terms__h2">5. Limitation of Liability</h2>
+        <h2 class="terms__h2">4. Disclaimer of Warranty and Liability</h2>
         <p class="terms__p">
-          Tomer Preis assumes no liability for experimental outcomes, laboratory decisions, or hardware damage resulting
-          from the use of these simulations. The Service is provided <strong>"As-Is."</strong>
+          The Service is provided <strong>"AS IS"</strong>, without warranty of any kind, express or implied, including
+          but not limited to the warranties of merchantability, fitness for a particular purpose, and non-infringement.
+          In no event shall the authors or copyright holders be liable for any claim, damages, or other liability,
+          whether in an action of contract, tort, or otherwise, arising from, out of, or in connection with the Service
+          or the use or other dealings in the Service.
         </p>
       </section>
 
       <section class="terms__section">
-        <h2 class="terms__h2">6. Model Versioning and Result Reproducibility</h2>
+        <h2 class="terms__h2">5. Model Versioning and Reproducibility</h2>
         <p class="terms__p">
           The biophysical models in ResoPulse may be updated between software versions to improve accuracy or incorporate
-          new literature findings. Simulation results obtained from different versions of the Service may not be directly
-          comparable. We recommend noting the software version when citing results in research documentation.
+          new literature findings. Simulation results obtained from different versions may not be directly comparable.
+          Note the software version when citing results in research documentation.
         </p>
       </section>
 
       <section class="terms__section">
-        <h2 class="terms__h2">7. Academic Use and Attribution</h2>
+        <h2 class="terms__h2">6. Academic Attribution (Suggested)</h2>
         <p class="terms__p">
-          If you use ResoPulse simulation outputs to inform published research, conference presentations, or technical
-          reports, we ask (but do not require) that you acknowledge the tool. A suggested attribution:
+          If you use ResoPulse simulation outputs in published research, conference presentations, or technical reports,
+          a citation is appreciated but not required. A suggested attribution:
         </p>
         <blockquote class="terms__quote">
-          Simulation performed using ResoPulse Closed-Loop Electroporation Digital Twin (resopulse-virtual-lab.com, 2026). Biophysical
+          Simulation performed using ResoPulse Closed-Loop Electroporation Digital Twin (2026). Biophysical
           models based on Kotnik &amp; Miklavcic (2000), Weaver &amp; Chizmadzhev (1996), and Pennes (1948).
         </blockquote>
       </section>
 
       <section class="terms__section">
-        <h2 class="terms__h2">8. Trade Secrets and Confidential Information</h2>
+        <h2 class="terms__h2">7. Contact</h2>
         <p class="terms__p">
-          Certain features and components of the ResoPulse platform constitute confidential information
-          and trade secrets of Tomer Preis. These include, without limitation:
-        </p>
-        <ul class="terms__ul">
-          <li>The AI-driven protocol optimiser and its trained model parameters.</li>
-          <li>The instrument-bridge calibration logic and hardware-abstraction layer.</li>
-          <li>The population-lysis Gaussian integration algorithm and its parameterisation.</li>
-          <li>The proprietary cell parameter database values not derivable from published literature alone.</li>
-          <li>The impedance feedback model and conductivity-drift correction methodology.</li>
-        </ul>
-        <p class="terms__p">
-          By accessing any feature of the Service beyond the public home page, you acknowledge that
-          you may be exposed to confidential technical information. You agree: (a) not to disclose,
-          reproduce, or exploit such information outside of your personal scientific use of the
-          Service; (b) not to use such information to develop or assist in developing any competing
-          product or service; and (c) that these confidentiality obligations survive termination or
-          expiry of your account.
+          Questions, bug reports, or correspondence:
+          <a href="mailto:preis.tomer@gmail.com" class="terms__link">preis.tomer@gmail.com</a>.
         </p>
       </section>
 
       <section class="terms__section">
-        <h2 class="terms__h2">9. Governing Law and Jurisdiction</h2>
+        <h2 class="terms__h2">8. Changes to These Terms</h2>
         <p class="terms__p">
-          These Terms of Use and any dispute, claim, or controversy arising out of or relating to
-          your use of the Service shall be governed by and construed in accordance with the laws
-          of the State of Israel, without regard to its conflict-of-law provisions.
-        </p>
-        <p class="terms__p">
-          You irrevocably consent to the exclusive jurisdiction of the competent courts located in
-          Israel for the resolution of any dispute arising under or in connection with these Terms.
-          If you are located outside Israel, you may also have rights under the mandatory laws of
-          your own jurisdiction; nothing in this clause limits those statutory rights.
-        </p>
-      </section>
-
-      <section class="terms__section">
-        <h2 class="terms__h2">10. Legal Notices and IP Claims</h2>
-        <p class="terms__p">
-          All formal legal notices, intellectual property infringement claims, trade-secret
-          misappropriation allegations, or other legal correspondence must be sent to:
-        </p>
-        <p class="terms__p">
-          <strong>Tomer Preis</strong><br>
-          Rishon LeZion, Israel<br>
-          <a href="mailto:preis.tomer@gmail.com" class="terms__link">preis.tomer@gmail.com</a><br>
-          Subject line: <em>Legal Notice &ndash; ResoPulse</em>
-        </p>
-        <p class="terms__p">
-          We will acknowledge receipt within 5 business days. Failure to use the correct subject
-          line may delay routing and does not constitute a waiver of any right.
-        </p>
-      </section>
-
-      <section class="terms__section">
-        <h2 class="terms__h2">11. Changes to These Terms</h2>
-        <p class="terms__p">
-          We may update these Terms of Use as the Service evolves. Material changes will be communicated by updating
-          the "Last Updated" date above. Continued use of the Service after the effective date constitutes acceptance
-          of the revised terms.
+          These Terms may be updated as the project evolves. Material changes will be communicated by updating the
+          "Last Updated" date above.
         </p>
       </section>
 
       <div class="terms__footer">
         <RouterLink :to="ROUTE.HOME" class="terms__back">← Back to ResoPulse</RouterLink>
         <RouterLink :to="ROUTE.PRIVACY" class="terms__privacy-link">Privacy</RouterLink>
-        <span class="terms__copy">© 2026 Tomer Preis. All rights reserved.</span>
+        <span class="terms__copy">© 2026 Tomer Preis · MIT License</span>
       </div>
 
     </div>

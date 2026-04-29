@@ -6,7 +6,7 @@ Any of the following requires updating `PrivacyView.vue` **before** the task is 
 
 | Change | What to update |
 |---|---|
-| New third-party SaaS npm package (analytics, payments, email, CDN, monitoring) | Section 6 (Third-Party Providers) with what data it processes |
+| New third-party SaaS npm package (analytics, email, CDN, monitoring) | Section 6 (Third-Party Providers) with what data it processes |
 | Removing/replacing a third-party SaaS | Update or remove its Section 6 entry |
 | New/removed `localStorage` or `sessionStorage` key | Section 9 (Cookies and Local Storage) |
 | New cookie or auth/session provider change | Section 9 |

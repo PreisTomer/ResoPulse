@@ -46,10 +46,9 @@
     "guestLabel": "Guest Session",
     "guestSignUpCta": "Create account",
     "guestSignInCta": "Sign in",
-    "guestDropdownNote": "You are browsing as a guest. Create an account to save experiments and access all lab features.",
-    "footerCopy": "© 2026 Tomer Preis. All rights reserved.",
+    "guestDropdownNote": "You are browsing as a guest. Create an account to save your experiments across sessions.",
+    "footerCopy": "© 2026 Tomer Preis · MIT License",
     "footerTerms": "Terms",
-    "footerPrivacy": "Privacy",
-    "footerIp": "Proprietary Technology: The ResoPulse biophysics simulation engine and UI architecture are protected by copyright. Unauthorized replication of functional logic or interface design is strictly prohibited. For licensing inquiries, contact preis.tomer{'@'}gmail.com."
+    "footerPrivacy": "Privacy"
   }
 }
