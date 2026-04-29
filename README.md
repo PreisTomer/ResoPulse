@@ -74,9 +74,14 @@ Schwan equation derivation, SAR model, pulse-envelope factor (Weaver & Chizmadzh
 ### Frontend + Backend
 
 ```bash
-npm run install:all
-npm run frontend    # Vite dev server  →  http://localhost:5173
-npm run backend     # ts-node-dev      →  http://localhost:3001
+npm run install:all                  # installs npm + Python (uv) workspaces
+
+npm run dev                          # starts backend + frontend + AI service together
+# or run them individually:
+npm run frontend                     # Vite dev server  →  http://localhost:5173
+npm run backend                      # ts-node-dev      →  http://localhost:3001
+npm run ai                           # FastAPI + XGBoost AI service (optional)
+npm run dev:no-ai                    # backend + frontend only, skip AI
 ```
 
 ### Instrument Bridge (Python)
@@ -184,15 +189,15 @@ Or set `DEMO_SEED=true` in the environment before starting `resopulse-ai serve` 
 
 ## Testing
 
-Tests live in `apps/web/src/**/*.test.ts` and run via Vitest.
+Tests live next to the code (`**/*.test.ts`) and run via Vitest.
 
 ```bash
-npm test                         # frontend + backend
-npm -w @resopulse/web run test:watch     # frontend watch mode
-npm -w @resopulse/web run test:coverage  # frontend coverage report
+npm test                                  # frontend + backend
+npm -w @resopulse/web run test:watch      # frontend watch mode
+npm -w @resopulse/web run test:coverage   # frontend coverage report
 ```
 
-127 tests across three files: physics unit tests (`physics.test.ts`, `physicsAdvanced.test.ts`) and store integration tests (`cellStore.test.ts`).
+The suite covers physics utilities, every Pinia store, calibration / active-learning logic, CSV import/export round-trips, and the backend's Express routes.
 
 ### CI / CD gates
 
@@ -210,6 +215,19 @@ git config core.hooksPath .githooks
 
 ---
 
-## Legal Notice & Disclaimer
+## Contributing & Issues
 
-ResoPulse is a computational simulation tool intended for **in-vitro laboratory research only**. It is not a medical device. All biophysical parameters are approximations derived from the bioelectromagnetics literature. The developer assumes no liability for experimental outcomes or laboratory decisions based on these simulations.
+Bug reports and small fixes are welcome via GitHub issues and pull requests.
+For larger changes, open an issue first to discuss direction before sending a patch.
+
+The project follows the conventions in [`CLAUDE.md`](./CLAUDE.md) and the rules under [`.claude/rules/`](./.claude/rules/) — please read those before submitting structural changes.
+
+For anything else: <preis.tomer@gmail.com>.
+
+---
+
+## License & Disclaimer
+
+ResoPulse is released under the [MIT License](./LICENSE). Copyright © 2026 Tomer Preis.
+
+It is a computational simulation tool intended for **in-vitro laboratory research only** and is not a medical device. All biophysical parameters are approximations derived from the bioelectromagnetics literature. The software is provided "AS IS" without warranty of any kind; see the LICENSE for full terms.
