@@ -1,4 +1,4 @@
-// Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
+// Copyright © 2026 Tomer Preis. Licensed under the MIT License.
 
 // Tests the Jacobian propagation helpers used by the closed-loop uncertainty bands and the lumped transient thermal solver.
 

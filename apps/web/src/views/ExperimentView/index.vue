@@ -1,4 +1,4 @@
-<!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
+<!-- Copyright © 2026 Tomer Preis. Licensed under the MIT License. -->
 <template>
   <div class="experiment" @click.self="closeAllPickers">
 
@@ -96,6 +96,14 @@
 
       <PopulationPanel id="hl-population-panel" @open-change="populationPanelOpen = $event" />
 
+      <ReversibleEpPanel id="hl-reversible-ep-panel" />
+
+      <FermenterPanel id="hl-fermenter-panel" />
+
+      <TtFieldsPanel id="hl-ttfields-panel" />
+
+      <ViralRfSafetyPanel id="hl-viralrf-panel" />
+
       <!-- Notes bar — session metadata attached to log artefact -->
       <div class="experiment__notes-bar">
         <button
@@ -169,6 +177,10 @@ import SelectivityPanel from '@/components/SelectivityPanel/index.vue'
 import TherapeuticHeatmap from '@/components/TherapeuticHeatmap/index.vue'
 import SweepPanel from '@/components/SweepPanel/index.vue'
 import PopulationPanel from '@/components/PopulationPanel/index.vue'
+import ReversibleEpPanel from '@/components/ReversibleEpPanel/index.vue'
+import FermenterPanel from '@/components/FermenterPanel/index.vue'
+import TtFieldsPanel from '@/components/TtFieldsPanel/index.vue'
+import ViralRfSafetyPanel from '@/components/ViralRfSafetyPanel/index.vue'
 import ExperimentLog from '@/components/ExperimentLab/ExperimentLog.vue'
 import ExperimentHeader from '@/components/ExperimentLab/ExperimentHeader.vue'
 import SnapBar from '@/components/ExperimentLab/SnapBar.vue'
@@ -204,6 +216,10 @@ export default defineComponent({
     TherapeuticHeatmap,
     SweepPanel,
     PopulationPanel,
+    ReversibleEpPanel,
+    FermenterPanel,
+    TtFieldsPanel,
+    ViralRfSafetyPanel,
     ExperimentLog,
     ExperimentHeader,
     SnapBar,

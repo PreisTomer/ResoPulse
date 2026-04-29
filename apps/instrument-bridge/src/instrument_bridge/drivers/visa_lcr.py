@@ -1,4 +1,4 @@
-# Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
+# Copyright © 2026 Tomer Preis. Licensed under the MIT License.
 """
 VISA LCR meter driver — Keysight E4980A, Hioki IM3533, Agilent 4284A,
 and any SCPI-compliant impedance analyser reachable via GPIB, USB, or LAN.

@@ -1,4 +1,4 @@
-// Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
+// Copyright © 2026 Tomer Preis. Licensed under the MIT License.
 
 // Pure export utilities for user cell presets. No store or Vue imports.
 // JSON export preserves full fidelity; CSV is a flat table for spreadsheet use.

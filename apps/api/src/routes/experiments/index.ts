@@ -1,4 +1,4 @@
-// Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
+// Copyright © 2026 Tomer Preis. Licensed under the MIT License.
 
 // Experiment session REST API.
 // All routes except GET /experiments/share/:token require auth + an active org.

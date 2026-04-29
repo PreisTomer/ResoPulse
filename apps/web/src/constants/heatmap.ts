@@ -1,5 +1,4 @@
-// Copyright © 2026 Tomer Preis. All rights reserved.
-// Unauthorized copying or distribution is prohibited.
+// Copyright © 2026 Tomer Preis. Licensed under the MIT License.
 
 // Heatmap grid constants, zone definitions, and colour palette.
 // 2D sweep: RF frequency (X, log-scale) × field intensity (Y, linear).

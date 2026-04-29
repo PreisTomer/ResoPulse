@@ -6,16 +6,18 @@ Every diff is reviewed by **OpenAI Codex** and **GitHub Copilot**. Assume an adv
 
 ## Copyright Header
 
+ResoPulse is MIT-licensed. See `LICENSE` at the repo root for the full text.
+
 Every source file (`.vue`, `.ts`, `.tsx`, `.js`) begins with:
 
 ```
-// Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
+// Copyright © 2026 Tomer Preis. Licensed under the MIT License.
 ```
 
 `.vue` files use the HTML comment form on line 1, before `<template>`:
 
 ```vue
-<!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
+<!-- Copyright © 2026 Tomer Preis. Licensed under the MIT License. -->
 <template>
 ```
 

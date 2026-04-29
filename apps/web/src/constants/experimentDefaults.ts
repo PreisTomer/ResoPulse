@@ -1,5 +1,4 @@
-// Copyright © 2026 Tomer Preis. All rights reserved.
-// Unauthorized copying or distribution is prohibited.
+// Copyright © 2026 Tomer Preis. Licensed under the MIT License.
 
 // Defaults start at DR < 8% (STABLE) at θ=60° so researchers slide up from a zero-effect baseline.
 export { WF_CW as CW_WAVEFORM_FACTOR, WF_PULSED as PULSED_WAVEFORM_FACTOR } from '@/constants/physics'

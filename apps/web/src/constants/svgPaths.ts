@@ -1,4 +1,4 @@
-// Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
+// Copyright © 2026 Tomer Preis. Licensed under the MIT License.
 
 // SVG path data for decorative waveform backgrounds. Each path is 2x viewBox width for seamless scroll.
 export const OSC_PATH = {

@@ -1,4 +1,4 @@
-// Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
+// Copyright © 2026 Tomer Preis. Licensed under the MIT License.
 
 // Experiment session persistence service.
 // All database access for ExperimentSession goes through this module.

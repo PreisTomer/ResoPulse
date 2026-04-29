@@ -1,4 +1,4 @@
-// Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
+// Copyright © 2026 Tomer Preis. Licensed under the MIT License.
 
 // Covers computeFc, tempCorrectedVth, lysis probability, DEP crossover, impedance/reflection scalar vs complex.
 

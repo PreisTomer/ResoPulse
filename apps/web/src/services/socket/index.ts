@@ -1,4 +1,4 @@
-// Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
+// Copyright © 2026 Tomer Preis. Licensed under the MIT License.
 
 // Socket service — connects to ResoPulse backend. Falls back to local store state when unreachable.
 import { ref } from 'vue'

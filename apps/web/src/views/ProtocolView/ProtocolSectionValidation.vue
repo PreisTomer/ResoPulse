@@ -1,4 +1,4 @@
-<!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
+<!-- Copyright © 2026 Tomer Preis. Licensed under the MIT License. -->
 <template>
   <section id="validation" class="protocol__section protocol-validate">
     <h2 class="protocol__section-title" v-html="$t('protocol.validation.title')"></h2>

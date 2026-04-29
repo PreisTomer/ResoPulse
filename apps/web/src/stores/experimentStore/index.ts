@@ -1,10 +1,14 @@
-// Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
+// Copyright © 2026 Tomer Preis. Licensed under the MIT License.
 
 import { defineStore } from 'pinia'
 
 import { useCellStore } from '@/stores/cellStore'
+import { useCellCalibrationStore } from '@/stores/cellCalibrationStore'
+import { useTokenStore } from '@/stores/tokenStore'
 
 import { downloadText, buildEntryMethodsText, buildCsvText } from '@/utils/experimentExport'
+import { downloadManuscriptMarkdown, downloadManuscriptJson, downloadResidualsCsv, type ManuscriptScope, type ManuscriptInput } from '@/utils/manuscriptExport'
+import { downloadOpentronsScript, type OpentronsExportInput, type OpentronsWetLabParams } from '@/utils/opentronsExport'
 
 import { nowHMS, round } from '@/utils/format'
 import { loadFromStorage } from '@/utils/storageClient'
@@ -69,6 +73,8 @@ interface ExperimentState {
   // One-shot tag: set when an AI/space-filling suggestion is applied to sliders, consumed by
   // the very next logReading() so the resulting LogEntry can later report a measured-vs-suggested delta.
   pendingAiSuggestion: AppliedAiSuggestion | null
+  // (scope::sessionName) keys for which the user has already paid the MANUSCRIPT_BUNDLE token cost. One debit unlocks all three formats (md/json/csv) for that bundle scope; cleared on session reset.
+  paidManuscriptBundles: string[]
 }
 
 // Extended snapshot pulled from cellStore - avoids circular import
@@ -130,6 +136,7 @@ function defaultState(): ExperimentState {
     sampleDescription: '', sessionNotes: '', cumulativeDoseJkg: 0,
     sessionStartMs: Date.now(), aiConsentGiven: false,
     pendingAiSuggestion: null,
+    paidManuscriptBundles: [],
   }
 }
 
@@ -144,6 +151,7 @@ function loadState(): ExperimentState {
       sessionStartMs:    parsed.sessionStartMs    ?? Date.now(),
       aiConsentGiven:    parsed.aiConsentGiven    ?? false,
       pendingAiSuggestion: null,
+      paidManuscriptBundles: parsed.paidManuscriptBundles ?? [],
     }
   })
 }
@@ -485,6 +493,115 @@ export const useExperimentStore = defineStore('experiment', {
     exportEntryMethods(entry: LogEntry) {
       const { text, filename } = buildEntryMethodsText(entry, this.sessionName, this.sampleDescription)
       downloadText(text, filename)
+    },
+
+    // Manuscript bundle: one MANUSCRIPT_BUNDLE token debit unlocks all three formats (md/json/csv) for a (scope, sessionName) tuple. Guests pass through the gate without paying. Returns true on success (download triggered), false when token consumption was blocked for a signed-in user.
+    async _ensureManuscriptBundlePaid(scope: ManuscriptScope): Promise<boolean> {
+      const key = `${scope.type}::${scope.sessionName}`
+      if (this.paidManuscriptBundles.includes(key)) return true
+      const ok = await useTokenStore().consumeOperation('MANUSCRIPT_BUNDLE', { allowGuest: true })
+      if (!ok) return false
+      this.paidManuscriptBundles.push(key)
+      return true
+    },
+
+    _buildManuscriptInput(scope: ManuscriptScope): ManuscriptInput {
+      const cell = useCellStore()
+      const calStore = useCellCalibrationStore()
+      const summary = this.calibrationSummary as CalibrationSummary
+      return {
+        entries:   this.entries,
+        residuals: this.measuredResiduals as EntryResidual[],
+        scope,
+        cell: {
+          healthy:                   cell.healthy,
+          target:                    cell.target,
+          medium:                    cell.medium,
+          effectiveSigmaE:           cell.effectiveSigmaE,
+          fieldIntensity:            cell.fieldIntensity,
+          currentBroadcastFrequency: cell.currentBroadcastFrequency,
+          waveform:                  cell.waveform,
+          dutyCycle:                 cell.dutyCycle,
+          pulseWidthNs:              cell.pulseWidthNs,
+          orientationDeg:            cell.orientationDeg,
+          chartMode:                 cell.chartMode,
+        },
+        calibration: {
+          summary: {
+            tier:                   summary.tier,
+            sampleCount:            summary.sampleCount,
+            rmseResidualPct:        summary.rmseResidualPct,
+            meanTargetResidualPct:  summary.meanTargetResidualPct,
+            meanHealthyResidualPct: summary.meanHealthyResidualPct,
+            meanFieldResidualVcm:   summary.meanFieldResidualVcm,
+          },
+          calibrations: calStore.calibrations,
+        },
+      }
+    },
+
+    async exportManuscriptMarkdown(scope: ManuscriptScope): Promise<boolean> {
+      if (!await this._ensureManuscriptBundlePaid(scope)) return false
+      downloadManuscriptMarkdown(this._buildManuscriptInput(scope))
+      return true
+    },
+
+    async exportManuscriptJson(scope: ManuscriptScope): Promise<boolean> {
+      if (!await this._ensureManuscriptBundlePaid(scope)) return false
+      downloadManuscriptJson(this._buildManuscriptInput(scope))
+      return true
+    },
+
+    async exportManuscriptResidualsCsv(scope: ManuscriptScope): Promise<boolean> {
+      if (!await this._ensureManuscriptBundlePaid(scope)) return false
+      downloadResidualsCsv(this._buildManuscriptInput(scope))
+      return true
+    },
+
+    // Opentrons protocol export. Charges OPENTRONS_EXPORT once per session-snapshot tuple (target preset id × frequency × field × waveform); guests pass through. Re-downloading the same protocol after the user nudges sliders is treated as a new charge — the `wetLab` form lives in the modal and isn't part of the snapshot key.
+    async exportOpentronsScript(wetLab: OpentronsWetLabParams): Promise<boolean> {
+      const cell = useCellStore()
+      const calStore = useCellCalibrationStore()
+      const snapshotKey = `opentrons::${this.sessionName}::${cell.target.id}::${cell.currentBroadcastFrequency}::${cell.fieldIntensity}::${cell.waveform}`
+      if (!this.paidManuscriptBundles.includes(snapshotKey)) {
+        const ok = await useTokenStore().consumeOperation('OPENTRONS_EXPORT', { allowGuest: true })
+        if (!ok) return false
+        this.paidManuscriptBundles.push(snapshotKey)
+      }
+      const input: OpentronsExportInput = {
+        cellPair: { healthy: cell.healthy, target: cell.target },
+        protocol: {
+          freqKHz:           cell.currentBroadcastFrequency,
+          fieldVcm:          cell.fieldIntensity,
+          waveform:          cell.waveform as 'cw' | 'pulsed' | 'hfire',
+          dutyCycle:         cell.dutyCycle,
+          pulseWidthNs:      cell.pulseWidthNs,
+          lysisNPulses:      cell.lysisNPulses,
+          medium:            cell.medium,
+          effectiveSigmaE:   cell.effectiveSigmaE,
+          chartMode:         cell.chartMode,
+          predictedTargetDr:  cell.targetDisruptionRatio,
+          predictedHealthyDr: cell.healthyDisruptionRatio,
+          predictedTi:        cell.therapeuticIndex,
+        },
+        wetLab,
+        // Limit calibration rows to the cell pair to keep the script tight.
+        calibrations: calStore.calibrations
+          .filter(c => c.cellPresetId === cell.healthy.id || c.cellPresetId === cell.target.id)
+          .map(c => ({
+            cellPresetId: c.cellPresetId,
+            cellLabel:    c.cellPresetId === cell.healthy.id ? cell.healthy.label : cell.target.label,
+            mode:         c.mode,
+            param1Mult:   c.param1Mult,
+            param2Mult:   c.param2Mult,
+            residualStd:  c.residualStd,
+            nSamples:     c.nSamples,
+            param1Unident: c.param1Unident,
+            param2Unident: c.param2Unident,
+          })),
+      }
+      downloadOpentronsScript(input)
+      return true
     },
 
     exportCSV() {

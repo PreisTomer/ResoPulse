@@ -1,4 +1,4 @@
-<!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
+<!-- Copyright © 2026 Tomer Preis. Licensed under the MIT License. -->
 <template>
   <div v-if="hasCollateralDamage" class="pop-note">
     <span class="pop-note__warn">{{ $t('population.warnIcon') }}</span>

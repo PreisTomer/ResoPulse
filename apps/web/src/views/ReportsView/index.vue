@@ -1,4 +1,4 @@
-<!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
+<!-- Copyright © 2026 Tomer Preis. Licensed under the MIT License. -->
 <template>
   <div class="reports">
     <div class="reports__inner">
@@ -12,6 +12,9 @@
       <div v-if="importSummary" class="reports__import-banner" :class="importBannerVariantClass">
         <div class="reports__import-banner-body">
           <span class="reports__import-banner-title">{{ $t('reports.importSummaryHeading') }}</span>
+          <span v-if="importSummary.detectedPresetLabel" class="reports__import-banner-line">
+            {{ $t('reports.importSummaryAutoDetect', { label: importSummary.detectedPresetLabel }) }}
+          </span>
           <span v-if="importSummary.matched > 0" class="reports__import-banner-line">
             {{ $t('reports.importSummaryMatched', { n: importSummary.matched }) }}
           </span>
@@ -129,6 +132,8 @@
               </button>
             </div>
           </div>
+
+          <ManuscriptBundle />
         </template>
 
         <div v-else class="reports__loop-hero-empty">
@@ -291,6 +296,7 @@ import CalibrationBadge from '@/components/CalibrationBadge/index.vue'
 
 import { formatFreqKHz, formatFieldVcm, formatRange } from '@/utils/format'
 import { parseMeasuredCsv } from '@/utils/experimentImport'
+import { detectFormat, getPresetById, DEFAULT_PRESET_ID } from '@/utils/csvFormatPresets'
 import { downloadSampleMeasuredCsv } from '@/utils/sampleMeasuredCsv'
 
 import { LOG_EVENT, NULL_DISPLAY } from '@/constants/strings'
@@ -303,12 +309,13 @@ import ReportsMethodsBar from './ReportsMethodsBar.vue'
 import ReportsLogTable from './ReportsLogTable.vue'
 import ReportsLogLegend from './ReportsLogLegend.vue'
 import ReportsCalibrationTrend from './ReportsCalibrationTrend.vue'
+import ManuscriptBundle from './ManuscriptBundle.vue'
 import CsvMappingModal from './CsvMappingModal.vue'
 
 export default defineComponent({
   name: 'ReportsView',
 
-  components: { StatCard, PageHeader, CalibrationBadge, ReportsLogEmpty, ReportsMethodsBar, ReportsLogTable, ReportsLogLegend, ReportsCalibrationTrend, CsvMappingModal },
+  components: { StatCard, PageHeader, CalibrationBadge, ReportsLogEmpty, ReportsMethodsBar, ReportsLogTable, ReportsLogLegend, ReportsCalibrationTrend, ManuscriptBundle, CsvMappingModal },
 
   setup() {
     const store      = useExperimentStore()
@@ -421,7 +428,7 @@ export default defineComponent({
 
     const isExporting = ref(false)
     const isImporting = ref(false)
-    const importSummary = ref<{ matched: number; ignored: number; duplicateIds: number[] } | null>(null)
+    const importSummary = ref<{ matched: number; ignored: number; duplicateIds: number[]; detectedPresetLabel: string | null } | null>(null)
     const importError   = ref<string | null>(null)
     const recentlyImportedIds = ref<number[]>([])
     const csvMappingStore = useCsvMappingStore()
@@ -549,7 +556,20 @@ export default defineComponent({
 
       try {
         const text   = await file.text()
-        const report = parseMeasuredCsv(text, this.csvMappingStore.mapping)
+
+        // Pick the effective mapping. If the user already saved one, use it. Otherwise auto-detect from the file's first 50 lines and apply the highest-confidence preset (>= 0.30 confidence). Default falls through to ResoPulse-native behaviour.
+        const userMapping = this.csvMappingStore.mapping
+        let effectiveMapping = userMapping
+        let detectedPresetId: string | null = null
+        if (!this.csvMappingStore.hasMapping) {
+          const det = detectFormat(text)
+          if (det.confidence >= 0.30 && det.preset.id !== DEFAULT_PRESET_ID) {
+            effectiveMapping = det.preset.mapping
+            detectedPresetId = det.preset.id
+          }
+        }
+
+        const report = parseMeasuredCsv(text, effectiveMapping)
         const knownIds = new Set(this.store.entries.map((e) => e.id))
         const matchedIds: number[] = []
         let ignored = report.ignoredRows.length
@@ -565,6 +585,7 @@ export default defineComponent({
           matched:      matchedIds.length,
           ignored,
           duplicateIds: report.duplicateIds,
+          detectedPresetLabel: detectedPresetId ? (getPresetById(detectedPresetId)?.label ?? null) : null,
         }
         this.flashRecentlyImported(matchedIds)
       } catch {

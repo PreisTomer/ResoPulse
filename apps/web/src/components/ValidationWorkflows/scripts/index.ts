@@ -1,4 +1,4 @@
-// Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
+// Copyright © 2026 Tomer Preis. Licensed under the MIT License.
 
 // Central registry of all validation workflow script factories.
 // Adding a new workflow: create a ScriptFactory in its own file, import here, add to the array.

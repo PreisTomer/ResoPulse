@@ -1,0 +1,26 @@
+{
+  "fermenter": {
+    "title":               "Fermenter Scale-Up (Preview)",
+    "subtitleOff":         "Disabled — operating in cuvette mode",
+    "subtitleOn":          "Predicted population exposure: {pct}%",
+    "caveat":              "PREVIEW — first-order CSTR extrapolation from the in-vitro cuvette regime. Models the fermenter as one stirred-tank reactor with an electrode-pair active zone (4 cm² × 5 mm = 2 mL) and an inactive bulk volume. Ignores spatial field non-uniformity within the active zone, partial-pass kinetics, and any flow patterns beyond uniform mixing. Useful for ballpark scale-up estimates only, not for engineering a real fermenter protocol.",
+    "modeLabel":           "Fermenter mode",
+    "modeOn":              "Enabled",
+    "modeOff":             "Disabled",
+    "volumeLabel":         "Total fermenter volume",
+    "mixingLabel":         "Mixing rate",
+    "durationLabel":       "Field-on duration",
+    "activeFractionLabel": "Active zone",
+    "activeFractionSub":   "Electrode-pair / total volume",
+    "activeFractionTip":   "<strong>Active zone fraction</strong>\nFraction of the fermenter volume that sits between the electrode pair at any instant. Pilot electrodes are modelled as 4 cm² × 5 mm gap (2 mL active volume); larger fermenter volumes mean a smaller active fraction and less of the population sees the field per pass.",
+    "exposureLabel":       "Population exposure",
+    "exposureSubLow":      "Most cells never see the field",
+    "exposureSubMid":      "Partial coverage",
+    "exposureSubHigh":     "Near-complete coverage",
+    "exposureTip":         "<strong>Population exposure probability</strong>\nFraction of cells that pass through the electrode-pair active zone at least once during the field-on window, modelled as a single CSTR with exponential residence-time distribution. Increases with mixing rate and field-on duration; decreases with total volume.",
+    "effectiveTargetDrLabel": "Effective DR_T (population)",
+    "effectiveTargetDrSub":   "Cuvette regime: {raw}%",
+    "effectiveTargetDrTip":   "<strong>Effective target DR for the fermenter population</strong>\nProduct of the cuvette-regime predicted DR and the population exposure probability. Cells that never reached the active zone count as DR=0 in the population mean.",
+    "hint":                "Increase mixing or field-on duration to raise exposure; decrease total volume to raise the active fraction. Real fermenters often need multiple electrode pairs or recirculation loops to hit uniform per-cell dosing across pilot scales (>10 L)."
+  }
+}

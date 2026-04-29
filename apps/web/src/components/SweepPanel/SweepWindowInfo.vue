@@ -1,4 +1,4 @@
-<!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
+<!-- Copyright © 2026 Tomer Preis. Licensed under the MIT License. -->
 <template>
   <div v-if="windowRange" class="sweep-window" v-tip="tipWindow">
     <span class="sweep-window__label">{{ $t('sweep.windowLabel') }}</span>

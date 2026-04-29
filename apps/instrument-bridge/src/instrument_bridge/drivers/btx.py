@@ -1,4 +1,4 @@
-# Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
+# Copyright © 2026 Tomer Preis. Licensed under the MIT License.
 """
 BTX ECM 830 / ECM 2001 electroporator bridge — RS-232 serial.
 

@@ -1,4 +1,4 @@
-# Copyright (C) 2026 Tomer Preis. All rights reserved.
+# Copyright (C) 2026 Tomer Preis. Licensed under the MIT License.
 
 """Promotion-gate logic: when does a freshly-trained bundle replace the active one?"""
 

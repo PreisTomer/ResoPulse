@@ -1,4 +1,4 @@
-<!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
+<!-- Copyright © 2026 Tomer Preis. Licensed under the MIT License. -->
 <template>
   <!-- Snap to corner-frequency buttons (non-resonance only).
        The ⭐ Snap to Optimal CTA lives in the OutcomeStrip at the top of the page. -->

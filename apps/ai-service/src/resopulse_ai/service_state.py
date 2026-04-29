@@ -1,4 +1,4 @@
-# Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
+# Copyright © 2026 Tomer Preis. Licensed under the MIT License.
 """In-memory service state for the AI FastAPI process."""
 
 from .train import ModelBundle

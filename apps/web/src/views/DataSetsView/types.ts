@@ -1,4 +1,4 @@
-// Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
+// Copyright © 2026 Tomer Preis. Licensed under the MIT License.
 
 import type { CellGroup } from '@/constants/cellLibrary'
 import type { UserCellPreset } from '@/stores/userPresetsStore'

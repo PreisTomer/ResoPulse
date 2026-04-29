@@ -1,4 +1,4 @@
-// Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
+// Copyright © 2026 Tomer Preis. Licensed under the MIT License.
 
 // Two-parameter physics-inversion calibration per (org, cellPresetId, mode). Schwan fits (σ_i, V_th); Resonance fits (Q, V_thr). Loads org-scoped outcomes for the target preset, builds per-row protocol context, proxies to /ai/calibrate, upserts (params, covariance, flags).
 

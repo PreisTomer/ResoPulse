@@ -1,4 +1,4 @@
-// Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
+// Copyright © 2026 Tomer Preis. Licensed under the MIT License.
 
 // Unit tests: Schwan Vm/τ, H-FIRE threshold, PEF, lysis field, DR field independence,
 //             tempCorrectedVth electrosensitization, slider bounds

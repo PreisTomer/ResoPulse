@@ -1,4 +1,4 @@
-// Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
+// Copyright © 2026 Tomer Preis. Licensed under the MIT License.
 
 export const BACKEND_URL = (import.meta.env.VITE_BACKEND_URL as string ?? 'http://localhost:3001').replace(/\/$/, '')
 

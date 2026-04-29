@@ -1,4 +1,4 @@
-// Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
+// Copyright © 2026 Tomer Preis. Licensed under the MIT License.
 
 // Two strategies, picked by the caller depending on calibration state:
 //   1. Space-filling (maximin distance) — geometry-only, used when no calibration covariance exists. Honest "explore" mode for the uncalibrated case.

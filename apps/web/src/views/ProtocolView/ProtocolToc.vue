@@ -1,4 +1,4 @@
-<!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
+<!-- Copyright © 2026 Tomer Preis. Licensed under the MIT License. -->
 <template>
   <nav class="protocol__toc" :class="{ 'protocol__toc--mobile-open': isMobileOpen }" aria-label="Table of contents">
     <div class="protocol__toc-title" v-html="$t('protocol.toc.title')"></div>

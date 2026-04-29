@@ -1,4 +1,4 @@
-// Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
+// Copyright © 2026 Tomer Preis. Licensed under the MIT License.
 
 export interface SchwanParamRow   { sym: string; param: string; unit: string; note: string }
 export interface ResonanceRow     { target: string; fres: string; fresClass: string; q: string; ethr: string; ethrClass: string; basis: string }

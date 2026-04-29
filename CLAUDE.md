@@ -7,6 +7,7 @@ The full ruleset is split across topic files under `.claude/rules/` and imported
 ## Core framing — read first
 
 @.claude/rules/honesty.md
+@.claude/rules/critique.md
 @.claude/rules/lab-context.md
 
 ## Code style

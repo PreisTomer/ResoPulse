@@ -1,4 +1,4 @@
-<!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
+<!-- Copyright © 2026 Tomer Preis. Licensed under the MIT License. -->
 <template>
   <div class="hmap__stats" v-tip="tipStats" :style="{ '--op-zone-color': opZoneColor }">
     <span class="hmap__stats-label">{{ $t('heatmap.statsLabel') }}</span>

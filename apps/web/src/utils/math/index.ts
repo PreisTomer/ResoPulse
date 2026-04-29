@@ -1,4 +1,4 @@
-// Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
+// Copyright © 2026 Tomer Preis. Licensed under the MIT License.
 
 // N logarithmically-spaced points between min and max (inclusive).
 export function logspace(min: number, max: number, n: number): number[] {

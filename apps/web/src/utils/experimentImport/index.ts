@@ -1,4 +1,4 @@
-// Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
+// Copyright © 2026 Tomer Preis. Licensed under the MIT License.
 
 // Mirror of experimentExport.buildCsvText: parses CSV back into measured outcomes keyed by log-entry id.
 
@@ -86,6 +86,29 @@ function toAssayOrU(raw: string | undefined): ViabilityAssay | undefined {
   return match
 }
 
+// Returns a function (cell → id | null). Without a regex it's just numeric parsing of the trimmed cell. With a regex, the first capture group is the id (or the full match when the regex has none); a malformed regex degrades to numeric parsing rather than throwing.
+function compileIdExtractor(idRegex: string | undefined): (raw: string) => number | null {
+  const numericFallback = (raw: string): number | null => {
+    const n = Number(raw.trim())
+    return Number.isFinite(n) && n > 0 ? n : null
+  }
+  if (!idRegex || idRegex.trim() === '') return numericFallback
+  let re: RegExp
+  try {
+    re = new RegExp(idRegex)
+  } catch {
+    return numericFallback
+  }
+  return (raw: string): number | null => {
+    const m = re.exec(raw)
+    if (!m) return null
+    const captured = m.length > 1 ? m[1] : m[0]
+    if (captured === undefined) return null
+    const n = Number(captured.trim())
+    return Number.isFinite(n) && n > 0 ? n : null
+  }
+}
+
 export function parseMeasuredCsv(text: string, userMapping: CsvColumnMapping = {}): ImportReport {
   const report: ImportReport = {
     rowsSeen:             0,
@@ -96,17 +119,24 @@ export function parseMeasuredCsv(text: string, userMapping: CsvColumnMapping = {
   }
   if (!text) return report
 
-  // Metadata lines start with "# " (hash + space) in ResoPulse exports.
-  // The header row also starts with "#" (the id column) so match only the space form.
-  const lines = text.split(/\r?\n/).filter(l => l.length > 0 && !l.startsWith('# '))
+  // ResoPulse exports prefix metadata lines with "# " (hash + space). Plate readers don't follow that convention; the user can instead specify `headerSkip` to drop the first N lines unconditionally.
+  let lines = text.split(/\r?\n/).filter(l => l.length > 0 && !l.startsWith('# '))
+  const headerSkip = Math.max(0, Math.floor(userMapping.headerSkip ?? 0))
+  if (headerSkip > 0) lines = lines.slice(headerSkip)
   if (lines.length < 2) return report
 
   const headers = splitCsvLine(lines[0]!)
-  const idCol   = findColumn(headers, ID_HEADERS)
+
+  // ID column resolution: explicit user-supplied column name first; fall back to the built-in heuristic ('id' / '#' / 'entry'). When the user supplies an idRegex, it'll be applied to each cell value to extract a numeric id (e.g. "Run #3 MCF-7" → 3).
+  const idCol = userMapping.idColumn
+    ? findColumn(headers, [userMapping.idColumn])
+    : findColumn(headers, ID_HEADERS)
   if (idCol === -1) {
-    report.ignoredRows.push({ row: 0, reason: 'no id / # column' })
+    const wanted = userMapping.idColumn ?? ID_HEADERS.join(' / ')
+    report.ignoredRows.push({ row: 0, reason: `id column not found (looked for: ${wanted})` })
     return report
   }
+  const idExtractor = compileIdExtractor(userMapping.idRegex)
 
   const aliasesFor = (field: CsvMappingField, builtIn: string[]): string[] => {
     const user = userMapping[field]
@@ -127,8 +157,8 @@ export function parseMeasuredCsv(text: string, userMapping: CsvColumnMapping = {
     const cells = splitCsvLine(lines[i]!)
     report.rowsSeen++
     const idRaw = cells[idCol]?.trim() ?? ''
-    const id    = Number(idRaw)
-    if (!Number.isFinite(id) || id <= 0) {
+    const id    = idExtractor(idRaw)
+    if (id === null) {
       report.ignoredRows.push({ row: i, reason: `non-numeric id: "${idRaw}"` })
       continue
     }

@@ -1,4 +1,4 @@
-<!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
+<!-- Copyright © 2026 Tomer Preis. Licensed under the MIT License. -->
 <template>
   <Transition name="csvmap">
     <div v-if="isOpen" class="csvmap" role="dialog" aria-modal="true" @click.self="onClose">
@@ -11,6 +11,47 @@
 
         <div class="csvmap__body">
           <p class="csvmap__hint">{{ $t('reports.mappingModalHint') }}</p>
+
+          <div class="csvmap__preset-row">
+            <label class="csvmap__preset-label">{{ $t('reports.mappingPresetLabel') }}</label>
+            <select class="csvmap__preset-select" :value="draft.formatPresetId ?? 'resopulse'" @change="onPresetChange">
+              <option v-for="p in PRESETS" :key="p.id" :value="p.id">{{ p.label }}</option>
+            </select>
+            <button type="button" class="csvmap__preset-apply" @click="applyPresetDefaults">{{ $t('reports.mappingPresetApply') }}</button>
+          </div>
+          <p class="csvmap__preset-desc">{{ activePresetDescription }}</p>
+
+          <h3 class="csvmap__section-title">{{ $t('reports.mappingSectionRowId') }}</h3>
+          <div class="csvmap__grid">
+            <label class="csvmap__label">{{ $t('reports.mappingFieldHeaderSkip') }}</label>
+            <input
+              class="csvmap__input"
+              type="number"
+              min="0"
+              max="50"
+              step="1"
+              :value="draft.headerSkip ?? 0"
+              @input="onHeaderSkipInput"
+            />
+            <label class="csvmap__label">{{ $t('reports.mappingFieldIdColumn') }}</label>
+            <input
+              class="csvmap__input"
+              type="text"
+              :placeholder="$t('reports.mappingFieldIdColumnPlaceholder')"
+              :value="draft.idColumn ?? ''"
+              @input="onExtraInput('idColumn', $event)"
+            />
+            <label class="csvmap__label">{{ $t('reports.mappingFieldIdRegex') }}</label>
+            <input
+              class="csvmap__input"
+              type="text"
+              :placeholder="$t('reports.mappingFieldIdRegexPlaceholder')"
+              :value="draft.idRegex ?? ''"
+              @input="onExtraInput('idRegex', $event)"
+            />
+          </div>
+
+          <h3 class="csvmap__section-title">{{ $t('reports.mappingSectionMeasured') }}</h3>
           <div class="csvmap__grid">
             <template v-for="field in MAPPABLE_FIELDS" :key="field.key">
               <label class="csvmap__label">{{ $t(field.labelKey) }}</label>
@@ -39,7 +80,8 @@
 import { defineComponent } from 'vue'
 import { mapStores } from 'pinia'
 
-import { useCsvMappingStore, type CsvColumnMapping, type CsvMappingField } from '@/stores/csvMappingStore'
+import { useCsvMappingStore, type CsvColumnMapping, type CsvMappingField, type CsvMappingExtras } from '@/stores/csvMappingStore'
+import { CSV_FORMAT_PRESETS, getPresetById, DEFAULT_PRESET_ID } from '@/utils/csvFormatPresets'
 
 interface MappableField {
   key:            CsvMappingField
@@ -81,7 +123,13 @@ export default defineComponent({
 
   computed: {
     MAPPABLE_FIELDS() { return MAPPABLE_FIELDS },
+    PRESETS() { return CSV_FORMAT_PRESETS },
     ...mapStores(useCsvMappingStore),
+
+    activePresetDescription(): string {
+      const p = getPresetById(this.draft.formatPresetId ?? DEFAULT_PRESET_ID)
+      return p?.description ?? ''
+    },
   },
 
   watch: {
@@ -99,6 +147,31 @@ export default defineComponent({
       } else {
         this.draft[key] = trimmed
       }
+    },
+
+    onExtraInput(key: keyof CsvMappingExtras, evt: Event): void {
+      const value = (evt.target as HTMLInputElement).value.trim()
+      if (value.length === 0) delete this.draft[key]
+      else                    (this.draft[key] as string) = value
+    },
+
+    onHeaderSkipInput(evt: Event): void {
+      const raw = (evt.target as HTMLInputElement).value
+      const n = Math.max(0, Math.floor(Number(raw)))
+      if (Number.isFinite(n) && n > 0) this.draft.headerSkip = n
+      else delete this.draft.headerSkip
+    },
+
+    onPresetChange(evt: Event): void {
+      const id = (evt.target as HTMLSelectElement).value
+      this.draft.formatPresetId = id
+    },
+
+    // Replaces every field with the preset's prefill values. User-edited fields are overwritten — that's the point of "Apply preset".
+    applyPresetDefaults(): void {
+      const preset = getPresetById(this.draft.formatPresetId ?? DEFAULT_PRESET_ID)
+      if (!preset) return
+      this.draft = { ...preset.mapping }
     },
 
     onSave(): void {
@@ -167,6 +240,65 @@ export default defineComponent({
     font-size: var(--fs-sm);
     color: var(--color-text-muted);
     line-height: 1.5;
+  }
+
+  &__preset-row {
+    display: grid;
+    grid-template-columns: minmax(140px, 1fr) 2fr auto;
+    gap: 0.5rem;
+    align-items: center;
+    margin-bottom: 0.4rem;
+  }
+
+  &__preset-label {
+    @include mono-upper(var(--fs-xxs), 0.05em);
+    color: var(--color-primary);
+  }
+
+  &__preset-select {
+    width: 100%;
+    padding: 0.35rem 0.55rem;
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    color: var(--color-text);
+    background: color-mix(in srgb, var(--color-primary) 6%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-primary) 35%, transparent);
+    border-radius: var(--radius);
+    outline: none;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+
+    &:focus { border-color: var(--color-primary); }
+  }
+
+  &__preset-apply {
+    @include mono-upper(var(--fs-xxs), 0.06em);
+    padding: 0.35rem 0.7rem;
+    color: var(--color-primary);
+    background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-primary) 35%, transparent);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background var(--tr-fast);
+
+    &:hover { background: color-mix(in srgb, var(--color-primary) 22%, transparent); }
+  }
+
+  &__preset-desc {
+    margin: 0 0 0.9rem;
+    font-size: var(--fs-xs);
+    color: var(--color-text-muted);
+    opacity: var(--op-dim);
+    line-height: 1.5;
+  }
+
+  &__section-title {
+    @include mono-upper(var(--fs-xxs), 0.08em);
+    margin: 0.9rem 0 0.4rem;
+    color: var(--color-text-muted);
+    border-top: 1px dashed color-mix(in srgb, var(--color-text) 18%, transparent);
+    padding-top: 0.7rem;
   }
 
   &__grid {

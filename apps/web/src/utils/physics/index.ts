@@ -1,4 +1,4 @@
-// Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
+// Copyright © 2026 Tomer Preis. Licensed under the MIT License.
 
 // Biophysics utilities - Schwan single-shell model, SAR, nsEP, acoustic resonance, EM skin depth
 import { SCHWAN_SPHERE_FACTOR, WF_CW, EPSILON_R_CYTOPLASM, SIGMA_MEMBRANE_SI, TWO_PI, POP_LYSIS_GAUSS_N, POP_LYSIS_GAUSS_Z_MAX, BODY_TEMP_C, TEMP_EP_COEFF, TEMP_EP_CLAMP_MIN, ELECTROSENSITIZATION_EXPONENT, ELECTROSENSITIZATION_CLAMP_MIN, EPSILON_0, MU_0, MIN_COS_THETA, LYSIS_FIELD_SENTINEL, MIN_PULSE_ENVELOPE, THRESHOLDS, NEWTON_COOLING_LAMBDA, PENNES_BLOOD_COEFF, DEBYE_TAU_AQUEOUS_S, EPS_INF_AQUEOUS, H_FIRE_THRESHOLD_MULTIPLIER } from '@/constants/physics'
@@ -396,6 +396,172 @@ export function computeSteadyStateTemp(
     ambientC + sarEff / ((NEWTON_COOLING_LAMBDA + lambdaPerf) * specificHeat),
     THRESHOLDS.TEMP_CAP,
   )
+}
+
+// ── Reversible-EP cargo uptake ─────────────────────────────────────────────
+
+// Bell-shape window efficiency: zero at DR=0.50 and DR=0.85, peaks at DR=0.675. Captures the empirical observation that uptake is highest in the middle of the reversible-EP window — too low and pores don't form, too high and the cell lyses.
+function _uptakeWindowEfficiency(dr: number): number {
+  if (dr <= 0.50 || dr >= 0.85) return 0
+  const r = (dr - 0.50) / (0.85 - 0.50)
+  return 4 * r * (1 - r)
+}
+
+// Log-sigmoid cargo-size dependence. Small molecules (<1 kDa, PI dye) → factor ≈ 1; plasmids (~3 MDa) → factor ≈ 0.1. Half-point at 50 kDa.
+function _uptakeSizeFactor(cargoMolecularWeightDa: number, halfDa = 50_000, slope = 1.0): number {
+  if (cargoMolecularWeightDa <= 0) return 0
+  const logMW   = Math.log10(cargoMolecularWeightDa)
+  const logHalf = Math.log10(halfDa)
+  return 1 / (1 + Math.pow(10, (logMW - logHalf) / slope))
+}
+
+// Pulse-count saturation: each pulse adds a permeabilization opportunity. Saturates around N ≈ 15 (3 e-foldings at τ=5).
+function _uptakePulseFactor(nPulses: number, tau = 5): number {
+  if (nPulses <= 0) return 0
+  return 1 - Math.exp(-nPulses / tau)
+}
+
+// Productive cargo-uptake fraction at a given DR / cargo MW / pulse count. Returns a number in [0, 1] that the caller multiplies by the population fraction reaching reversible EP. Sub-threshold (DR < 0.50) and lysis (DR ≥ 0.85) both return 0; non-positive cargo MW or pulse count also return 0.
+export function computeUptakeFraction(
+  dr:                    number,
+  cargoMolecularWeightDa: number,
+  nPulses:               number,
+): number {
+  if (nPulses <= 0) return 0
+  const win = _uptakeWindowEfficiency(dr)
+  if (win <= 0) return 0
+  return win * _uptakeSizeFactor(cargoMolecularWeightDa) * _uptakePulseFactor(nPulses)
+}
+
+// ── Fermenter scale-up (first-order CSTR) ─────────────────────────────────
+
+// Active-zone fraction = electrode-pair "cuvette-equivalent" volume divided by total fermenter volume. Caps at 1.0 (cuvette regime: zone == total).
+export function computeFermenterActiveFraction(
+  electrodeAreaCm2: number,
+  electrodeGapMm:   number,
+  fermenterVolumeMl: number,
+): number {
+  if (fermenterVolumeMl <= 0) return 0
+  // V_active in mL: cm² × cm = mL.
+  const vActiveMl = electrodeAreaCm2 * (electrodeGapMm / 10)
+  return Math.min(1, Math.max(0, vActiveMl / fermenterVolumeMl))
+}
+
+// Cumulative exposure probability over a treatment, modelling the fermenter as a single CSTR. Cells circulate; probability of having passed through the active zone at least once is 1 − exp(−n·f), where n = passes per cell during the treatment and f = active-zone fraction. CSTR-style exponential RTD.
+export function computeFermenterExposureProbability(
+  mixingRpm:        number,
+  treatmentSeconds: number,
+  activeFraction:   number,
+): number {
+  if (mixingRpm <= 0 || treatmentSeconds <= 0) return 0
+  if (activeFraction <= 0) return 0
+  // Each revolution moves a cell through one "circulation" of the tank; passes ≈ rpm·minutes.
+  const passes = (mixingRpm * treatmentSeconds) / 60
+  const p = 1 - Math.exp(-passes * activeFraction)
+  return Math.min(1, Math.max(0, p))
+}
+
+// Effective DR for the fermenter population: raw cuvette-regime DR scaled by the fraction of cells that actually saw the field during the treatment. First-order: assumes pulse-train delivers the same per-cell dose as a single cuvette pass once the cell is in the active zone. Honest scope: ignores within-zone field gradients and partial-pass kinetics.
+export function computeFermenterEffectiveDR(
+  rawDR:                   number,
+  exposureProbability:     number,
+): number {
+  if (rawDR <= 0) return 0
+  return rawDR * Math.min(1, Math.max(0, exposureProbability))
+}
+
+// DR sweep curve over the [0.40, 0.90] window — useful for the ReversibleEpPanel chart.
+export function computeUptakeWindowCurve(
+  cargoMolecularWeightDa: number,
+  nPulses:               number,
+  steps = 60,
+): Array<{ dr: number; uptake: number }> {
+  const out: Array<{ dr: number; uptake: number }> = []
+  for (let i = 0; i <= steps; i++) {
+    const dr = 0.40 + (0.50) * (i / steps)   // 0.40 → 0.90
+    out.push({ dr, uptake: computeUptakeFraction(dr, cargoMolecularWeightDa, nPulses) })
+  }
+  return out
+}
+
+// ── TTFields-style sub-threshold DEP (PREVIEW) ────────────────────────────
+
+// DEP force on a single sphere in a non-uniform field, time-averaged: F = 2π·R³·ε_m·Re[K]·∇|E|². Returns Newtons. Pohl 1978; Pethig 2010. ∇|E|² in (V/m)²/m. Sign tracks Re[K]: positive DEP attracts toward |E|² maximum, negative DEP repels.
+export function computeDepForceN(
+  reK:               number,
+  radiusUm:          number,
+  epsilonRMedium:    number,
+  gradESqVm3:        number,
+): number {
+  if (radiusUm <= 0) return 0
+  const R   = radiusUm * UM_TO_M
+  const eps = epsilonRMedium * EPSILON_0
+  return 2 * Math.PI * R ** 3 * eps * reK * gradESqVm3
+}
+
+// Sub-threshold safety check: predicted Schwan |Vm| < V_th gives "true" (sub-EP regime). At low frequencies (~100-300 kHz), Schwan still applies and lets us reject protocols that would silently cross into reversible-EP territory.
+export function isSubThresholdField(
+  cell:     CellConfig,
+  freqKHz:  number,
+  fieldVcm: number,
+  sigma_e:  number,
+): boolean {
+  const vm = computeSchwan(cell, freqKHz, fieldVcm, sigma_e, 1.0)
+  return Math.abs(vm) < cell.thresholdVoltage
+}
+
+// Mitotic exposure index = |F_DEP| × duration / reference-product. SIMULATOR CONSTRUCT, not from cited works. A dimensionless score ≥ 1 means the protocol delivers at least the reference dose (10 pN over 10 hr), useful for ranking sub-threshold protocols against each other; not a predictor of any specific biological endpoint.
+export function computeMitoticExposureIndex(
+  depForceN:  number,
+  durationHr: number,
+  refPnHr:    number,
+): number {
+  if (durationHr <= 0 || refPnHr <= 0) return 0
+  const forcePn = Math.abs(depForceN) * 1e12   // N → pN
+  return (forcePn * durationHr) / refPnHr
+}
+
+// ── GHz viral-safety bench reference (PREVIEW) ────────────────────────────
+
+// Bulk-medium SAR at GHz [W/kg]: SAR = σ_eff·E²/ρ with σ_eff(ω) = σ_e + ω·ε₀·ε″_medium (Gabriel 1996 Debye dispersion). Membrane is transparent at GHz so cells absorb at ≈ medium SAR. UNVALIDATED AT THIS REGIME — uses an aqueous Debye fit; non-aqueous EP buffers may differ.
+export function computeMediumDebyeSAR(
+  sigma_e:        number,
+  freqGHz:        number,
+  epsilon_r:      number,
+  fieldVcm:       number,
+  density_kg_m3:  number,
+): number {
+  if (sigma_e <= 0 || density_kg_m3 <= 0 || freqGHz <= 0) return 0
+  const E_si    = fieldVcm * VCM_TO_VM
+  const omega   = TWO_PI * freqGHz * 1e9
+  const wt      = omega * DEBYE_TAU_AQUEOUS_S
+  const epsLoss = (epsilon_r - EPS_INF_AQUEOUS) * wt / (1 + wt * wt)
+  const sigmaEff = sigma_e + omega * EPSILON_0 * epsLoss
+  return (sigmaEff * E_si * E_si) / density_kg_m3
+}
+
+// Predicted resonant DR for a viral capsid at the chosen GHz field. Wraps computeResonantDisruption with the virus's resonant params; returns 0 if the cell has no resonance metadata. UNVALIDATED AT THIS REGIME.
+export function computeViralRfPredictedDR(
+  virus:    CellConfig,
+  freqGHz:  number,
+  fieldVcm: number,
+): number {
+  const v = virus as CellConfig & { resonantFreqGHz?: number; capsidQ?: number; resonantThresholdVcm?: number; resonantFreqGHz2?: number; capsidQ2?: number; resonantMode2Amplitude?: number }
+  if (!v.resonantFreqGHz || !v.capsidQ || !v.resonantThresholdVcm) return 0
+  if (freqGHz <= 0) return 0
+  const freqHz = freqGHz * 1e9
+  return computeResonantDisruption(
+    v.resonantFreqGHz, v.capsidQ, v.resonantThresholdVcm,
+    freqHz, fieldVcm,
+    v.resonantFreqGHz2, v.capsidQ2, v.resonantMode2Amplitude,
+  )
+}
+
+// Fractional headroom below a benchmark limit: 1 − value/limit, lower-clamped at −1 (≥2× over) and upper-clamped at 1 (zero exposure). Positive = under, negative = over.
+export function viralRfMarginFraction(value: number, limit: number): number {
+  if (limit <= 0) return 0
+  const m = 1 - value / limit
+  return Math.max(-1, Math.min(1, m))
 }
 
 // Cuvette wall cooling rate λ [1/s] derived from geometry and overall heat-transfer coefficient. Lets the user override the built-in NEWTON_COOLING_LAMBDA when their cuvette differs from the BTX 1mm default. Energy balance: ρ·V·cp·dT/dt = SAR_eff·ρ·V − U·A·(T − T_amb), so λ = U·A / (ρ·V·cp).

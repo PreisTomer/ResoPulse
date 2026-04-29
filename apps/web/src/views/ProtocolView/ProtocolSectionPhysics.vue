@@ -1,4 +1,4 @@
-<!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
+<!-- Copyright © 2026 Tomer Preis. Licensed under the MIT License. -->
 <template>
   <section id="physics" class="protocol__section">
     <h2 class="protocol__section-title" v-html="$t('protocol.physics.title')"></h2>

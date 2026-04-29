@@ -1,4 +1,4 @@
-// Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
+// Copyright © 2026 Tomer Preis. Licensed under the MIT License.
 
 // Anand 2019 (RSC Adv., 10.1039/C9RA07428G) MCF-7 vs MCF-10A; 620 V/cm, 10 kHz pulsed IRE, θ=0°, TI=1.13.
 

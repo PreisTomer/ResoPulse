@@ -1,5 +1,4 @@
-// Copyright © 2026 Tomer Preis. All rights reserved.
-// Unauthorized copying or distribution is prohibited.
+// Copyright © 2026 Tomer Preis. Licensed under the MIT License.
 
 import { defineStore } from 'pinia'
 
@@ -11,7 +10,7 @@ import { useExperimentStore } from '@/stores/experimentStore'
 import { useUserPresetsStore } from '@/stores/userPresetsStore'
 import { useCellCalibrationStore } from '@/stores/cellCalibrationStore'
 
-import { computeSchwan, computeSAR, computeIntracellularDebyeSAR, computeSteadyStateTemp, computeFc, computeTau, computeNuclearTau, computeResonantDisruption, computeNuclearVm, computeSkinDepthMm, computeDepCmReal, computeDepCrossoverKHz, computeDepSecondCrossoverKHz, computePopulationLysisFraction, safeRatio, tempCorrectedVth, computePulseEnvelope, computeLysisField, computeSigmaUncertaintyFactor, getHFireMultiplier, isResonanceTargetActive, jacobianSchwanDR, jacobianResonantDR, computeResonantDR, propagatedTiVariance, propagateScalarVariance, type CalibrationCovariance, type ForwardDrInput } from '@/utils/physics'
+import { computeSchwan, computeSAR, computeIntracellularDebyeSAR, computeSteadyStateTemp, computeFc, computeTau, computeNuclearTau, computeResonantDisruption, computeNuclearVm, computeSkinDepthMm, computeDepCmReal, computeDepCrossoverKHz, computeDepSecondCrossoverKHz, computePopulationLysisFraction, safeRatio, tempCorrectedVth, computePulseEnvelope, computeLysisField, computeSigmaUncertaintyFactor, getHFireMultiplier, isResonanceTargetActive, jacobianSchwanDR, jacobianResonantDR, computeResonantDR, propagatedTiVariance, propagateScalarVariance, computeUptakeFraction, computeUptakeWindowCurve, computeFermenterActiveFraction, computeFermenterExposureProbability, computeFermenterEffectiveDR, computeDepForceN, computeMitoticExposureIndex, isSubThresholdField, computeMediumDebyeSAR, computeViralRfPredictedDR, viralRfMarginFraction, type CalibrationCovariance, type ForwardDrInput } from '@/utils/physics'
 
 import { cellConfigs } from '@/constants/defaultCells'
 import { CELL_PRESETS } from '@/constants/cellLibrary'
@@ -60,6 +59,29 @@ import {
   DEBYE_TAU_AQUEOUS_S,
   EPS_INF_AQUEOUS,
   EPSILON_0,
+  EPSILON_R_MEDIUM_WATER,
+  TTF_FREQ_DEFAULT_KHZ,
+  TTF_FREQ_MIN_KHZ,
+  TTF_FREQ_MAX_KHZ,
+  TTF_FIELD_DEFAULT_VCM,
+  TTF_FIELD_MIN_VCM,
+  TTF_FIELD_MAX_VCM,
+  TTF_DURATION_DEFAULT_HR,
+  TTF_DURATION_MIN_HR,
+  TTF_DURATION_MAX_HR,
+  TTF_GRADIENT_LENGTH_M,
+  TTF_INDEX_REF_PN_HR,
+  VIRAL_RF_FREQ_DEFAULT_GHZ,
+  VIRAL_RF_FREQ_MIN_GHZ,
+  VIRAL_RF_FREQ_MAX_GHZ,
+  VIRAL_RF_FIELD_DEFAULT_VCM,
+  VIRAL_RF_FIELD_MIN_VCM,
+  VIRAL_RF_FIELD_MAX_VCM,
+  VIRAL_RF_DURATION_DEFAULT_S,
+  VIRAL_RF_DURATION_MIN_S,
+  VIRAL_RF_DURATION_MAX_S,
+  IEEE_PUBLIC_SAR_LIMIT_W_KG,
+  IEEE_OCCUPATIONAL_SAR_LIMIT_W_KG,
 } from '@/constants/physics'
 
 import type { CellConfig, CellState } from '@/types/cell'
@@ -103,6 +125,22 @@ interface CellStoreState {
   healthyCellState: CellState
   targetCellState: CellState
   bulkMediumTemp: number          // bath/medium T [°C]; cells cool toward this, not BODY_TEMP_C
+  cargoMolecularWeightDa: number  // [Da]; reversible-EP cargo MW for uptake-fraction scoring (1 kDa default = small dye)
+  // Fermenter scale-up preview (first-order CSTR extrapolation).
+  fermenterModeEnabled: boolean
+  fermenterVolumeMl:    number
+  fermenterMixingRpm:   number
+  fermenterDurationS:   number
+  // TTFields-style sub-threshold DEP preview.
+  ttfModeEnabled:  boolean
+  ttfFreqKHz:      number
+  ttfFieldVcm:     number
+  ttfDurationHr:   number
+  // GHz viral-vector safety preview.
+  viralRfModeEnabled: boolean
+  viralRfFreqGHz:     number
+  viralRfFieldVcm:    number
+  viralRfDurationS:   number
 }
 
 export const useCellStore = defineStore('cell', {
@@ -128,6 +166,19 @@ export const useCellStore = defineStore('cell', {
     healthyCellState: 'stable' as CellState,
     targetCellState:  'stable' as CellState,
     bulkMediumTemp:   BODY_TEMP_C,
+    cargoMolecularWeightDa: 1000,    // 1 kDa default — small dye / peptide; user adjusts in ReversibleEpPanel
+    fermenterModeEnabled: false,
+    fermenterVolumeMl:    100,       // 100 mL bench fermenter default
+    fermenterMixingRpm:   300,
+    fermenterDurationS:   60,        // 1-minute exposure default
+    ttfModeEnabled: false,
+    ttfFreqKHz:    TTF_FREQ_DEFAULT_KHZ,
+    ttfFieldVcm:   TTF_FIELD_DEFAULT_VCM,
+    ttfDurationHr: TTF_DURATION_DEFAULT_HR,
+    viralRfModeEnabled: false,
+    viralRfFreqGHz:     VIRAL_RF_FREQ_DEFAULT_GHZ,
+    viralRfFieldVcm:    VIRAL_RF_FIELD_DEFAULT_VCM,
+    viralRfDurationS:   VIRAL_RF_DURATION_DEFAULT_S,
   }),
 
   getters: {
@@ -624,6 +675,129 @@ export const useCellStore = defineStore('cell', {
       return Math.max(RESEAL_TIME_MIN_S, Math.min(RESEAL_TIME_MAX_S, raw))
     },
 
+    // ── Reversible-EP cargo uptake (drug / gene delivery) ─────────────────────
+
+    // Productive uptake fraction at the live target DR for the active cargo MW + pulse count. Returns [0, 1]: 0 below DR=0.50 (sub-threshold) and at/above DR=0.85 (lysis), peaks near DR=0.675.
+    targetUptakeFraction(): number {
+      return computeUptakeFraction(this.targetDisruptionRatio, (this as CellStoreState).cargoMolecularWeightDa, this.effectivePulseCount)
+    },
+
+    healthyUptakeFraction(): number {
+      return computeUptakeFraction(this.healthyDisruptionRatio, (this as CellStoreState).cargoMolecularWeightDa, this.effectivePulseCount)
+    },
+
+    // DR sweep [0.40, 0.90] for the ReversibleEpPanel — shows where the live operating point sits on the bell curve.
+    uptakeWindowCurve(): Array<{ dr: number; uptake: number }> {
+      return computeUptakeWindowCurve((this as CellStoreState).cargoMolecularWeightDa, this.effectivePulseCount, 60)
+    },
+
+    // ── Fermenter scale-up preview (first-order CSTR; in-vitro extrapolation only) ──
+
+    // Active-zone volume fraction inside the fermenter. We model the electrode pair as the cuvette-equivalent active volume; everything outside is dead bulk. Honest scope: ignores spatial field non-uniformity within the electrode gap and any flow-pattern artefacts. PILOT_ELECTRODE_AREA_CM2 / PILOT_ELECTRODE_GAP_MM are conservative pilot-scale defaults.
+    fermenterActiveFraction(): number {
+      const state = this as CellStoreState
+      const PILOT_AREA_CM2 = 4.0   // cm² electrode pair area
+      const PILOT_GAP_MM   = 5.0   // mm electrode gap
+      return computeFermenterActiveFraction(PILOT_AREA_CM2, PILOT_GAP_MM, state.fermenterVolumeMl)
+    },
+
+    // CSTR exposure probability: fraction of the population that has passed through the active zone at least once during the treatment.
+    fermenterExposureProbability(): number {
+      const state = this as CellStoreState
+      return computeFermenterExposureProbability(state.fermenterMixingRpm, state.fermenterDurationS, this.fermenterActiveFraction)
+    },
+
+    // Effective DR for the population in fermenter mode = raw cuvette DR × CSTR exposure probability.
+    fermenterEffectiveTargetDR(): number {
+      return computeFermenterEffectiveDR(this.targetDisruptionRatio, this.fermenterExposureProbability)
+    },
+
+    fermenterEffectiveHealthyDR(): number {
+      return computeFermenterEffectiveDR(this.healthyDisruptionRatio, this.fermenterExposureProbability)
+    },
+
+    // ── TTFields-style sub-threshold DEP preview ────────────────────────────
+    // Models in-vitro DEP coupling on dividing cells under a sub-EP-threshold alternating field. The mitotic-exposure index is a SIMULATOR CONSTRUCT, not from cited works (per honesty.md rule 4); it ranks protocols against a 10 pN × 10 hr reference, NOT a clinical TTFields outcome.
+
+    // ∇|E|² ≈ |E|² / L_grad with L_grad = 1 mm characteristic edge-of-electrode gradient. Returns (V/m)²/m.
+    ttfGradESqVm3(): number {
+      const eVm = (this as CellStoreState).ttfFieldVcm * V_CM_TO_V_M
+      return (eVm * eVm) / TTF_GRADIENT_LENGTH_M
+    },
+
+    ttfTargetReK(): number {
+      const state = this as CellStoreState
+      return computeDepCmReal(state.target, state.ttfFreqKHz, this.effectiveSigmaE, EPSILON_R_MEDIUM_WATER)
+    },
+
+    ttfHealthyReK(): number {
+      const state = this as CellStoreState
+      return computeDepCmReal(state.healthy, state.ttfFreqKHz, this.effectiveSigmaE, EPSILON_R_MEDIUM_WATER)
+    },
+
+    ttfTargetForceN(): number {
+      const state = this as CellStoreState
+      return computeDepForceN(this.ttfTargetReK, state.target.radius, EPSILON_R_MEDIUM_WATER, this.ttfGradESqVm3)
+    },
+
+    ttfHealthyForceN(): number {
+      const state = this as CellStoreState
+      return computeDepForceN(this.ttfHealthyReK, state.healthy.radius, EPSILON_R_MEDIUM_WATER, this.ttfGradESqVm3)
+    },
+
+    ttfTargetIndex(): number {
+      return computeMitoticExposureIndex(this.ttfTargetForceN, (this as CellStoreState).ttfDurationHr, TTF_INDEX_REF_PN_HR)
+    },
+
+    ttfHealthyIndex(): number {
+      return computeMitoticExposureIndex(this.ttfHealthyForceN, (this as CellStoreState).ttfDurationHr, TTF_INDEX_REF_PN_HR)
+    },
+
+    // True if both target and healthy stay sub-EP-threshold at the chosen TTFields-style settings.
+    ttfIsSubThreshold(): boolean {
+      const state = this as CellStoreState
+      const okT = isSubThresholdField(state.target,  state.ttfFreqKHz, state.ttfFieldVcm, this.effectiveSigmaE)
+      const okH = isSubThresholdField(state.healthy, state.ttfFreqKHz, state.ttfFieldVcm, this.effectiveSigmaE)
+      return okT && okH
+    },
+
+    // ── GHz viral-vector safety preview ─────────────────────────────────────
+    // UNVALIDATED AT THIS REGIME (per honesty.md). Bench-side prediction of whether a chosen GHz RF dose would inactivate a viral vector in dish, scored against IEEE C95.1-2019 SAR benchmarks (reference only — not regulatory pass/fail).
+
+    // True only when the target preset carries the resonance metadata needed for a meaningful prediction.
+    viralRfHasResonanceMetadata(): boolean {
+      const t = (this as CellStoreState).target as CellConfig & { resonantFreqGHz?: number; capsidQ?: number; resonantThresholdVcm?: number }
+      return !!(t.resonantFreqGHz && t.capsidQ && t.resonantThresholdVcm)
+    },
+
+    viralRfPredictedDR(): number {
+      const state = this as CellStoreState
+      return computeViralRfPredictedDR(this.effectiveTarget, state.viralRfFreqGHz, state.viralRfFieldVcm)
+    },
+
+    viralRfMediumSAR(): number {
+      const state = this as CellStoreState
+      return computeMediumDebyeSAR(this.effectiveSigmaE, state.viralRfFreqGHz, EPSILON_R_MEDIUM_WATER, state.viralRfFieldVcm, RHO_AQUEOUS_KG_M3)
+    },
+
+    viralRfPublicMargin(): number {
+      return viralRfMarginFraction(this.viralRfMediumSAR, IEEE_PUBLIC_SAR_LIMIT_W_KG)
+    },
+
+    viralRfOccupationalMargin(): number {
+      return viralRfMarginFraction(this.viralRfMediumSAR, IEEE_OCCUPATIONAL_SAR_LIMIT_W_KG)
+    },
+
+    // SAFE: under public SAR benchmark AND predicted DR < 0.10. BORDERLINE: SAR ok but DR 0.10-0.50. UNSAFE: SAR over public benchmark OR DR ≥ 0.50.
+    viralRfVerdict(): 'safe' | 'borderline' | 'unsafe' {
+      const sarOk = this.viralRfMediumSAR <= IEEE_PUBLIC_SAR_LIMIT_W_KG
+      const dr    = this.viralRfPredictedDR
+      if (!sarOk)         return 'unsafe'
+      if (dr >= 0.50)     return 'unsafe'
+      if (dr >= 0.10)     return 'borderline'
+      return 'safe'
+    },
+
     // ── Sub-threshold healthy-cell biomodulation ──────────────────────────────
 
     healthyStimIndex(): number {
@@ -865,6 +1039,54 @@ export const useCellStore = defineStore('cell', {
 
     setHealthyCellState(s: CellState) { this.healthyCellState = s },
     setTargetCellState(s: CellState)  { this.targetCellState  = s },
+
+    // Cargo molecular weight [Da] for the reversible-EP uptake panel. Clamped to a physiologically meaningful range: 100 Da (small ions) to 10 MDa (large plasmids / antibody complexes).
+    setCargoMolecularWeightDa(da: number): void {
+      if (!Number.isFinite(da)) return
+      this.cargoMolecularWeightDa = Math.max(100, Math.min(1e7, da))
+    },
+
+    setFermenterModeEnabled(on: boolean): void { this.fermenterModeEnabled = on },
+    setFermenterVolumeMl(ml: number): void {
+      if (!Number.isFinite(ml)) return
+      this.fermenterVolumeMl = Math.max(1, Math.min(100_000, ml))
+    },
+    setFermenterMixingRpm(rpm: number): void {
+      if (!Number.isFinite(rpm)) return
+      this.fermenterMixingRpm = Math.max(50, Math.min(1500, rpm))
+    },
+    setFermenterDurationS(s: number): void {
+      if (!Number.isFinite(s)) return
+      this.fermenterDurationS = Math.max(1, Math.min(3600, s))
+    },
+
+    setTtfModeEnabled(on: boolean): void { this.ttfModeEnabled = on },
+    setTtfFreqKHz(k: number): void {
+      if (!Number.isFinite(k)) return
+      this.ttfFreqKHz = Math.max(TTF_FREQ_MIN_KHZ, Math.min(TTF_FREQ_MAX_KHZ, k))
+    },
+    setTtfFieldVcm(v: number): void {
+      if (!Number.isFinite(v)) return
+      this.ttfFieldVcm = Math.max(TTF_FIELD_MIN_VCM, Math.min(TTF_FIELD_MAX_VCM, v))
+    },
+    setTtfDurationHr(h: number): void {
+      if (!Number.isFinite(h)) return
+      this.ttfDurationHr = Math.max(TTF_DURATION_MIN_HR, Math.min(TTF_DURATION_MAX_HR, h))
+    },
+
+    setViralRfModeEnabled(on: boolean): void { this.viralRfModeEnabled = on },
+    setViralRfFreqGHz(g: number): void {
+      if (!Number.isFinite(g)) return
+      this.viralRfFreqGHz = Math.max(VIRAL_RF_FREQ_MIN_GHZ, Math.min(VIRAL_RF_FREQ_MAX_GHZ, g))
+    },
+    setViralRfFieldVcm(v: number): void {
+      if (!Number.isFinite(v)) return
+      this.viralRfFieldVcm = Math.max(VIRAL_RF_FIELD_MIN_VCM, Math.min(VIRAL_RF_FIELD_MAX_VCM, v))
+    },
+    setViralRfDurationS(s: number): void {
+      if (!Number.isFinite(s)) return
+      this.viralRfDurationS = Math.max(VIRAL_RF_DURATION_MIN_S, Math.min(VIRAL_RF_DURATION_MAX_S, s))
+    },
 
     handleResonancePacket(packet: FieldPacket) {
       this.currentBroadcastFrequency = packet.activeFrequencyKHz

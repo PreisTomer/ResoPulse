@@ -1,4 +1,4 @@
-// Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
+// Copyright © 2026 Tomer Preis. Licensed under the MIT License.
 import { Server } from 'socket.io'
 import type { Server as HttpServer } from 'http'
 import { verifyToken } from '@clerk/express'

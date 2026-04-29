@@ -1,4 +1,4 @@
-<!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
+<!-- Copyright © 2026 Tomer Preis. Licensed under the MIT License. -->
 <template>
   <div class="hmap__legend" v-tip="tipCanvas">
     <div v-for="(color, zone) in ZONE_COLORS" :key="zone" class="hmap__legend-item">

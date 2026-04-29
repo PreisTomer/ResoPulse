@@ -1,5 +1,4 @@
-// Copyright © 2026 Tomer Preis. All rights reserved.
-// Unauthorized copying or distribution is prohibited.
+// Copyright © 2026 Tomer Preis. Licensed under the MIT License.
 
 // Biologically realistic cell/pathogen presets. All Schwan parameters from bioelectromagnetics literature.
 import { GROUP_COLORS as _GROUP_COLORS } from '@/theme/colors'

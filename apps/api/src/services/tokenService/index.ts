@@ -1,4 +1,4 @@
-// Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
+// Copyright © 2026 Tomer Preis. Licensed under the MIT License.
 
 // Token consumption service — all balance mutations go through this module.
 // consumeTokens() is the sole write path and runs inside a Prisma $transaction
@@ -26,6 +26,8 @@ export const COST_MAP = {
   SELECTIVITY_SWEEP:  12,  // full selectivity sweep (~100 frequency points)
   IMPEDANCE_SESSION:  25,  // live impedance session + Maxwell-Garnett + drift
   EXPERIMENT_REPORT:  15,  // full report + CSV + Materials and Methods export
+  MANUSCRIPT_BUNDLE:  15,  // paper-ready bundle (Markdown + JSON + residuals CSV); one debit unlocks all three formats for a (session, scope) tuple
+  OPENTRONS_EXPORT:   15,  // executable Python protocol for OT-2 / Flex (wet-lab pipetting + manual EP pause); one debit per (session, snapshot) tuple
   ACOUSTIC_RESONANCE: 40,  // acoustic resonance full scan (virus/bacteria mode)
   HEATMAP_LYSIS:      8,   // therapeutic heatmap / population lysis fraction
   AI_OPTIMIZE:        5,   // AI optimizer request

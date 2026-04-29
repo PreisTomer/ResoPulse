@@ -1,4 +1,4 @@
-<!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
+<!-- Copyright © 2026 Tomer Preis. Licensed under the MIT License. -->
 <template>
   <div class="pop-stat-cards">
     <div class="pop-stat-cards__stat pop-stat-cards__stat--target" v-tip="tipTargetCard">

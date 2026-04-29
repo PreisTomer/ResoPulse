@@ -1,4 +1,4 @@
-# Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
+# Copyright © 2026 Tomer Preis. Licensed under the MIT License.
 """Public utility helpers shared across instrument bridge modules."""
 
 from instrument_bridge.utils.serial_helpers import list_serial_ports, open_serial_port, read_line_async

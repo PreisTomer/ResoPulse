@@ -63,6 +63,10 @@ Every top-level namespace lives in exactly one file. Add new keys to the file th
 | `locales/home.en.json` | `home` | Home / landing |
 | `locales/userPresets.en.json` | `userPresets` | User-created presets |
 | `locales/validate.en.json` | `validate` | Validation workflow modal |
+| `locales/reversibleEp.en.json` | `revEp` | Reversible-EP / cargo-delivery panel |
+| `locales/fermenter.en.json` | `fermenter` | Bacterial fermenter scale-up panel (preview) |
+| `locales/ttFields.en.json` | `ttFields` | Sub-threshold DEP / TTFields-style panel (preview) |
+| `locales/viralRf.en.json` | `viralRf` | GHz viral-vector safety panel (preview) |
 
 When adding a new domain, create `<domain>.en.json` and register it in `plugins/i18n.ts` with a spread (`...import`). `protocol` uses a nested spread and must remain as-is. Update this table after creating a file.
 

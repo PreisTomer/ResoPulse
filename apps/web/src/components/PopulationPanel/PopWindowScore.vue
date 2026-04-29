@@ -1,4 +1,4 @@
-<!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
+<!-- Copyright © 2026 Tomer Preis. Licensed under the MIT License. -->
 <template>
   <div class="pop-window-score" :class="scoreClass" v-tip="tipText">
     <span class="pop-window-score__label">{{ $t('population.windowScoreLabel') }}</span>

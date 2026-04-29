@@ -1,4 +1,4 @@
-// Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
+// Copyright © 2026 Tomer Preis. Licensed under the MIT License.
 
 import { describe, it, expect } from 'vitest'
 
@@ -21,8 +21,69 @@ describe('parseMeasuredCsv', () => {
   it('flags missing id column', () => {
     const text = 'foo,bar\n1,2\n'
     const report = parseMeasuredCsv(text)
-    expect(report.ignoredRows).toContainEqual({ row: 0, reason: 'no id / # column' })
+    expect(report.ignoredRows).toHaveLength(1)
+    expect(report.ignoredRows[0]!.row).toBe(0)
+    expect(report.ignoredRows[0]!.reason).toMatch(/id column not found/i)
     expect(report.matchable).toEqual([])
+  })
+
+  it('honors the user-supplied idColumn override', () => {
+    const text  = 'Sample,T-Lysis measured (%)\n3,57\n7,82\n'
+    const report = parseMeasuredCsv(text, { idColumn: 'Sample' })
+    expect(report.matchable.map(r => r.id)).toEqual([3, 7])
+    expect(report.matchable[0]!.measured.targetLysisPct).toBe(57)
+  })
+
+  it('honors headerSkip to drop leading metadata rows', () => {
+    const text = [
+      'Plate ID: P-2026-04-26',
+      'Date: 2026-04-26 14:30',
+      'Operator: tomer',
+      '#,T-Lysis measured (%)',
+      '3,55',
+      '5,72',
+    ].join('\n')
+    const report = parseMeasuredCsv(text, { headerSkip: 3 })
+    expect(report.matchable).toHaveLength(2)
+    expect(report.matchable[0]!.id).toBe(3)
+    expect(report.matchable[1]!.id).toBe(5)
+  })
+
+  it('extracts numeric id via idRegex from a free-text Sample column', () => {
+    const text = 'Sample,T-Lysis measured (%)\nRun #3 MCF-7,57\nRun #5 RBC,12\n'
+    const report = parseMeasuredCsv(text, {
+      idColumn: 'Sample',
+      idRegex:  '#\\s*(\\d+)',
+    })
+    expect(report.matchable.map(r => r.id)).toEqual([3, 5])
+    expect(report.matchable[0]!.measured.targetLysisPct).toBe(57)
+  })
+
+  it('idRegex falls back to numeric parsing when the regex is malformed', () => {
+    const text = '#,T-Lysis measured (%)\n3,57\n'
+    // "[" is an invalid regex — parser must not throw and must still parse the numeric id.
+    const report = parseMeasuredCsv(text, { idRegex: '[' })
+    expect(report.matchable[0]!.id).toBe(3)
+  })
+
+  it('headerSkip + idRegex combine for a typical plate-reader long-format CSV', () => {
+    const text = [
+      'Plate ID: P-1',
+      'Reading mode: Absorbance',
+      'Sample,Well,Target Lysis %,Healthy Lysis %',
+      'Run #2 MCF-7,A1,40,12',
+      'Run #4 RBC,B1,68,18',
+    ].join('\n')
+    const report = parseMeasuredCsv(text, {
+      headerSkip: 2,
+      idColumn:   'Sample',
+      idRegex:    '#\\s*(\\d+)',
+      targetLysisPct:  'Target Lysis %',
+      healthyLysisPct: 'Healthy Lysis %',
+    })
+    expect(report.matchable.map(r => r.id)).toEqual([2, 4])
+    expect(report.matchable[0]!.measured.targetLysisPct).toBe(40)
+    expect(report.matchable[1]!.measured.healthyLysisPct).toBe(18)
   })
 
   it('strips comment (#-prefixed) meta lines before parsing', () => {

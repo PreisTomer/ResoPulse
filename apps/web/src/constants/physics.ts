@@ -1,4 +1,4 @@
-// Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
+// Copyright © 2026 Tomer Preis. Licensed under the MIT License.
 
 // Physics and thermal constants. Single source of truth for cellStore, physics utils, and SweepPanel.
 
@@ -186,6 +186,55 @@ export const RESEAL_TEMP_COEFF = 0.06
 export const RESEAL_PULSE_EXPONENT = 0.3  // sublinear pulse-count scaling exponent
 export const RESEAL_TIME_MIN_S = 0.5      // min resealing time display clamp [s]
 export const RESEAL_TIME_MAX_S = 60.0     // max resealing time display clamp [s]
+
+// ── Reversible-EP cargo uptake ─────────────────────────────────────────────
+// Empirical bell-shaped DR → uptake-efficiency curve, peaks at the reversible-EP midpoint (DR = 0.675), zero at the reversible-EP boundaries (0.50 and 0.85). Calibrated against Rols & Teissié 1990, Pakhomov 2010, Yarmush 2014. Cargo MW dependence: small molecules (<1 kDa, e.g. PI 668 Da) flow through any pore; large cargo (>50 kDa, plasmids, antibodies) needs sustained permeabilization. Pulse-count saturation captures multiple-permeabilization-event averaging.
+export const UPTAKE_DR_LO        = 0.50    // sub-threshold below this — no uptake
+export const UPTAKE_DR_HI        = 0.85    // lysis above this — productive uptake collapses
+export const UPTAKE_PULSE_TAU    = 5       // pulse-count e-folding constant for uptake saturation
+export const UPTAKE_MW_HALF_DA   = 50_000  // log-sigmoid half-point for cargo size dependence (50 kDa, plasmid scale)
+export const UPTAKE_MW_SLOPE     = 1.0     // log10-MW slope of the size sigmoid (lower = sharper cutoff)
+
+// ── Fermenter scale-up (PREVIEW, first-order CSTR extrapolation) ──────────
+// Models a stirred-tank reactor as a single CSTR with an active high-field zone (electrode pair) and an inactive bulk volume. Honesty caveat: this is a first-order extrapolation from the in-vitro cuvette regime — no CFD, no spatial field distribution, no mixing inhomogeneity beyond the bulk-vs-active partition. Useful for ballpark scale-up estimates, NOT for engineering a real fermenter.
+export const FERMENTER_VOLUME_MIN_ML       = 1
+export const FERMENTER_VOLUME_MAX_ML       = 100_000   // 100 L pilot scale
+export const FERMENTER_MIXING_MIN_RPM      = 50
+export const FERMENTER_MIXING_MAX_RPM      = 1500
+export const FERMENTER_DEFAULT_VOLUME_ML   = 100       // 100 mL bench fermenter
+export const FERMENTER_DEFAULT_MIXING_RPM  = 300
+// Default field-on duration for fermenter mode [s]; user-settable in panel.
+export const FERMENTER_DEFAULT_DURATION_S  = 60
+
+// ── TTFields-style sub-threshold DEP (PREVIEW) ────────────────────────────
+// Models in-vitro DEP-coupling on dividing cells under sub-EP-threshold alternating fields (TTFields-style regime, ~100-300 kHz, ~1-3 V/cm). HONESTY: the "mitotic exposure index" is a simulator construct, not from cited works — it scales DEP-force × dwell time relative to a reference (10 pN × 10 hr) so a scientist can compare protocols, not predict clinical TTFields outcomes.
+export const TTF_FREQ_MIN_KHZ        = 50
+export const TTF_FREQ_MAX_KHZ        = 500
+export const TTF_FREQ_DEFAULT_KHZ    = 200
+export const TTF_FIELD_MIN_VCM       = 0.5
+export const TTF_FIELD_MAX_VCM       = 3.0
+export const TTF_FIELD_DEFAULT_VCM   = 2.0
+export const TTF_DURATION_MIN_HR     = 1
+export const TTF_DURATION_MAX_HR     = 168
+export const TTF_DURATION_DEFAULT_HR = 24
+// Characteristic field-gradient length [m]: DEP force scales with ∇|E|², which the simulator approximates as |E|²/L_grad. 1 mm chosen to match a typical in-dish electrode-edge gradient. Simulator construct; expose as fixed reference.
+export const TTF_GRADIENT_LENGTH_M   = 1e-3
+// Mitotic exposure index reference [pN·hr]: 10 pN × 10 hr. Simulator construct, not from cited works.
+export const TTF_INDEX_REF_PN_HR     = 100
+
+// ── GHz viral-safety bench reference (PREVIEW) ────────────────────────────
+// Quotes IEEE C95.1-2019 SAR limits as bench reference benchmarks for in-vitro RF-dose comparison. HONESTY: these limits are EM-exposure regulations for human bodies in air; here we use them only to anchor the bench-side SAR scale of the viral-resonance panel. NOT a clinical or human-exposure prediction.
+export const IEEE_PUBLIC_SAR_LIMIT_W_KG       = 1.6   // 1.6 W/kg whole-body (general public)
+export const IEEE_OCCUPATIONAL_SAR_LIMIT_W_KG = 8.0   // 8.0 W/kg whole-body (occupational)
+export const VIRAL_RF_FREQ_MIN_GHZ            = 1
+export const VIRAL_RF_FREQ_MAX_GHZ            = 20
+export const VIRAL_RF_FREQ_DEFAULT_GHZ        = 8.4    // SARS-CoV-2 capsid-resonance literature midpoint (Saviteer 2014, Yang 2015)
+export const VIRAL_RF_FIELD_MIN_VCM           = 1
+export const VIRAL_RF_FIELD_MAX_VCM           = 200
+export const VIRAL_RF_FIELD_DEFAULT_VCM       = 30
+export const VIRAL_RF_DURATION_MIN_S          = 1
+export const VIRAL_RF_DURATION_MAX_S          = 600
+export const VIRAL_RF_DURATION_DEFAULT_S      = 30
 
 // Default capsid Q=3 (peptidoglycan lower bound; rigid virus capsids ~30). Every preset sets this explicitly.
 export const DEFAULT_CAPSID_Q = 3

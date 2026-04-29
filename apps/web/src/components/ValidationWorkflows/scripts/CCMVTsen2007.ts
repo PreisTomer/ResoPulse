@@ -1,4 +1,4 @@
-// Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
+// Copyright © 2026 Tomer Preis. Licensed under the MIT License.
 
 // Tsen 2007 (Biophys. J. 93:1340) CCMV f_res=7.7 GHz; at this f hepatocyte Vm≈0 so TI display caps at 99.9.
 

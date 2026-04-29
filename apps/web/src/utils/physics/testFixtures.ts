@@ -1,4 +1,4 @@
-// Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
+// Copyright © 2026 Tomer Preis. Licensed under the MIT License.
 // Shared fixtures for physics/store unit tests. Representative IRE EP buffer assay values.
 
 import { CELL_TYPE } from '@/constants/strings'

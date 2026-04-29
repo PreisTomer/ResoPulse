@@ -1,4 +1,4 @@
-<!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
+<!-- Copyright © 2026 Tomer Preis. Licensed under the MIT License. -->
 <template>
   <div class="cm-overlay" @click.self="$emit(EMIT.CLOSE)">
     <div class="cm" role="dialog" aria-modal="true" aria-labelledby="cm-title">

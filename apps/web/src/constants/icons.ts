@@ -1,4 +1,4 @@
-// Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
+// Copyright © 2026 Tomer Preis. Licensed under the MIT License.
 
 export const ICON = {
   STAR:      '⭐',
@@ -54,6 +54,7 @@ export const ICON = {
   FOLDER:      '⊡',  // experiments list / workspace folder
   SEARCH:      '⌕',  // search / filter input
   EDIT:        '✎',  // edit / pencil button
+  VIRUS:       '⊛',  // viral capsid / GHz resonance panel
 } as const
 
 export type Icon = typeof ICON[keyof typeof ICON]

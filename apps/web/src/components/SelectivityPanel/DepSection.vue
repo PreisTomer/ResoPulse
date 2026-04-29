@@ -1,4 +1,4 @@
-<!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
+<!-- Copyright © 2026 Tomer Preis. Licensed under the MIT License. -->
 <template>
   <div class="dep-section" v-tip="$t('selectivity.tipDep')">
     <div class="dep-section__title">{{ $t('selectivity.depTitle') }}</div>

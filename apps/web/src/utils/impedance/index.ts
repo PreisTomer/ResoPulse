@@ -1,4 +1,4 @@
-// Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
+// Copyright © 2026 Tomer Preis. Licensed under the MIT License.
 
 // Impedance feedback: conductivity change on lysis (Maxwell-Garnett), cuvette impedance,
 // VSWR/RF matching, Joule heating, and corrected-field voltage-divider compensation.

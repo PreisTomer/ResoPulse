@@ -1,4 +1,4 @@
-<!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
+<!-- Copyright © 2026 Tomer Preis. Licensed under the MIT License. -->
 <template>
   <div class="experiments">
     <div class="experiments__inner">
@@ -239,7 +239,7 @@
 </template>
 
 <script lang="ts">
-// Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
+// Copyright © 2026 Tomer Preis. Licensed under the MIT License.
 import { defineComponent } from 'vue'
 import { mapStores } from 'pinia'
 

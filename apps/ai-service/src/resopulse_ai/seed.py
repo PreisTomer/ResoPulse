@@ -1,4 +1,4 @@
-# Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
+# Copyright © 2026 Tomer Preis. Licensed under the MIT License.
 """
 Demo seed: inserts 40 physically realistic synthetic outcomes for the default
 hepatocyte-vs-adenocarcinoma cell pair, then retrains the XGBoost model.

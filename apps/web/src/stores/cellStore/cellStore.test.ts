@@ -1,4 +1,4 @@
-// Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
+// Copyright © 2026 Tomer Preis. Licensed under the MIT License.
 // @vitest-environment jsdom
 
 // Store getter integration tests. Wiring of physics/constants/state only; equations covered in physics.test.ts.

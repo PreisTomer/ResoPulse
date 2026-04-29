@@ -1,4 +1,4 @@
-<!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
+<!-- Copyright © 2026 Tomer Preis. Licensed under the MIT License. -->
 <template>
   <div id="hl-setup-bar" class="experiment__header">
 
@@ -23,7 +23,20 @@
         <span>{{ ICON.LINK }}</span>
         {{ shareCopied ? $t('exp.copyLinkDone') : $t('exp.copyLink') }}
       </button>
+      <button
+        class="experiment__share-btn experiment__share-btn--opentrons"
+        v-tip="$t('exp.opentronsExportTip')"
+        @click="opentronsModalOpen = true"
+      >
+        <span>{{ ICON.FLASK }}</span>
+        {{ $t('exp.opentronsExportBtn') }}
+      </button>
     </div>
+
+    <OpentronsExportModal
+      :is-open="opentronsModalOpen"
+      @close="opentronsModalOpen = false"
+    />
 
     <!-- Far right: connection status -->
     <div class="experiment__header-right">
@@ -72,14 +85,19 @@ import { buildShareUrl } from '@/utils/shareUrl'
 import { ICON } from '@/constants/icons'
 import { ROUTE } from '@/constants/routes'
 
+import OpentronsExportModal from './OpentronsExportModal.vue'
+
 export default defineComponent({
   name: 'ExperimentHeader',
+
+  components: { OpentronsExportModal },
 
   data() {
     return {
       socketConnected,
       shareCopied: false,
       shareCopiedTimer: null as ReturnType<typeof setTimeout> | null,
+      opentronsModalOpen: false,
     }
   },
 

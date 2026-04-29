@@ -1,4 +1,4 @@
-// Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
+// Copyright © 2026 Tomer Preis. Licensed under the MIT License.
 
 // Types for the token / usage system.
 
@@ -27,6 +27,8 @@ export interface CostMap {
   SELECTIVITY_SWEEP:  number
   IMPEDANCE_SESSION:  number
   EXPERIMENT_REPORT:  number
+  MANUSCRIPT_BUNDLE:  number
+  OPENTRONS_EXPORT:   number
   ACOUSTIC_RESONANCE: number
   HEATMAP_LYSIS:      number
   AI_OPTIMIZE:        number

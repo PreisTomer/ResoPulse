@@ -1,4 +1,4 @@
-# Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
+# Copyright © 2026 Tomer Preis. Licensed under the MIT License.
 """Public package surface for the ResoPulse AI optimizer."""
 
 from .calibration import CalibrationResult, CalibrationRow, fit_sigma_multiplier

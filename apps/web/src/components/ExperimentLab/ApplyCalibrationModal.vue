@@ -1,4 +1,4 @@
-<!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
+<!-- Copyright © 2026 Tomer Preis. Licensed under the MIT License. -->
 <template>
   <Transition name="acm">
     <div v-if="isOpen" class="acm" role="dialog" aria-modal="true" @click.self="onClose">

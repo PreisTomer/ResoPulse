@@ -1,4 +1,4 @@
-// Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
+// Copyright © 2026 Tomer Preis. Licensed under the MIT License.
 // @vitest-environment jsdom
 
 // cellStore integration: resonance/Schwan path isolation, waveforms×media, packing+medium, temp→DR, TI limits, population lysis.

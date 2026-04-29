@@ -1,4 +1,4 @@
-<!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
+<!-- Copyright © 2026 Tomer Preis. Licensed under the MIT License. -->
 <template>
   <div id="hl-medium-row" class="field-panel__row field-panel__row--medium">
     <span class="field-panel__row-label" v-tip="tipMediumLabel">{{ $t('slider.medium') }}</span>

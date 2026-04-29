@@ -1,4 +1,4 @@
-// Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
+// Copyright © 2026 Tomer Preis. Licensed under the MIT License.
 
 // Postgres persistence layer for AI training data via Prisma.
 // Outcomes are stored in the `outcomes` table on Neon — survives redeploys.

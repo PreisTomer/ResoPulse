@@ -1,4 +1,4 @@
-# Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
+# Copyright © 2026 Tomer Preis. Licensed under the MIT License.
 """Shared constants for utility modules."""
 
 DEFAULT_SERIAL_OPEN_TIMEOUT_S = 2.0

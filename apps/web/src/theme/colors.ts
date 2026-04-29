@@ -1,5 +1,4 @@
-// Copyright © 2026 Tomer Preis. All rights reserved.
-// Unauthorized copying or distribution is prohibited.
+// Copyright © 2026 Tomer Preis. Licensed under the MIT License.
 
 // Design-token color constants; CSS mirrors live in style.css as --color-*. Import via `@/theme` barrel.
 

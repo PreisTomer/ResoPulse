@@ -1,4 +1,4 @@
-// Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
+// Copyright © 2026 Tomer Preis. Licensed under the MIT License.
 
 // Prisma 7 configuration — connection URL is declared here instead of schema.prisma.
 // Supports any standard PostgreSQL provider (Supabase, Neon, Railway, etc.).

@@ -8,7 +8,7 @@
 import { readFileSync } from 'node:fs'
 import { relative, sep } from 'node:path'
 
-const COPYRIGHT = 'Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.'
+const COPYRIGHT = 'Copyright © 2026 Tomer Preis. Licensed under the MIT License.'
 
 // ── payload parsing ───────────────────────────────────────────────────────
 

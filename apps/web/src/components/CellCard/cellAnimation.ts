@@ -1,4 +1,4 @@
-// Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
+// Copyright © 2026 Tomer Preis. Licensed under the MIT License.
 
 // Pure D3 animation helpers for CellCard. setup*() takes a DOM element + getFrame() that reads Vue reactive state.
 import * as d3 from 'd3'

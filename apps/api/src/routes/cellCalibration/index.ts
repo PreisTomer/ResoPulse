@@ -1,4 +1,4 @@
-// Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
+// Copyright © 2026 Tomer Preis. Licensed under the MIT License.
 
 // REST API for two-parameter physics-inversion calibration. GET / lists all calibrations for the caller's org; POST /compute runs the fit for one (cellPresetId, mode) and upserts the result.
 

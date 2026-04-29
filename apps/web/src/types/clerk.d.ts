@@ -1,4 +1,4 @@
-// Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
+// Copyright © 2026 Tomer Preis. Licensed under the MIT License.
 
 // Ambient type declaration for the Clerk global set by @clerk/vue's clerkPlugin.
 // Only the properties we access in router guards are declared here.

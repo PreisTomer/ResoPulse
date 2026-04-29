@@ -1,4 +1,4 @@
-// Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
+// Copyright © 2026 Tomer Preis. Licensed under the MIT License.
 
 // Sample CSV mirroring the parseMeasuredCsv-accepted headers, downloaded by ReportsView so first-time users see the schema before exporting from their plate reader.
 

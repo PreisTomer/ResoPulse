@@ -1,4 +1,4 @@
-// Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
+// Copyright © 2026 Tomer Preis. Licensed under the MIT License.
 
 // Prisma 7 client singleton using the @prisma/adapter-pg driver adapter.
 // Instantiation is lazy — the pool is only created on first access so a missing

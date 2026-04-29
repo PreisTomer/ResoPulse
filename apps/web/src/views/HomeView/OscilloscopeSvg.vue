@@ -1,4 +1,4 @@
-<!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
+<!-- Copyright © 2026 Tomer Preis. Licensed under the MIT License. -->
 <template>
   <div class="home__feat-osc" aria-hidden="true">
     <!-- preserveAspectRatio="none" stretches SVG to fill container width exactly,

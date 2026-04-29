@@ -1,4 +1,4 @@
-<!-- Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited. -->
+<!-- Copyright © 2026 Tomer Preis. Licensed under the MIT License. -->
 <template>
   <div class="home__hero-bg" aria-hidden="true">
     <svg class="home__hero-bg-svg" viewBox="0 0 900 900" overflow="visible" fill="none" xmlns="http://www.w3.org/2000/svg">

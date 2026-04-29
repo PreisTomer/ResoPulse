@@ -1,4 +1,4 @@
-// Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
+// Copyright © 2026 Tomer Preis. Licensed under the MIT License.
 
 // Re-export wire types from the shared package so both web and api stay in sync.
 // Add only backend-specific types (e.g. the validated LogEntry below) in this file.

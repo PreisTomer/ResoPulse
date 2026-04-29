@@ -1,4 +1,4 @@
-// Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
+// Copyright © 2026 Tomer Preis. Licensed under the MIT License.
 
 // Advanced physics tests: nuclear Vm, acoustic resonance, skin depth, population lysis, DEP CM
 

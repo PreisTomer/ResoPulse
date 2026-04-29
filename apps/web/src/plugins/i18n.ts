@@ -1,4 +1,4 @@
-// Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
+// Copyright © 2026 Tomer Preis. Licensed under the MIT License.
 
 import { createI18n } from 'vue-i18n'
 
@@ -26,6 +26,10 @@ import reports          from '../locales/reports.en.json'
 import home             from '../locales/home.en.json'
 import userPresets      from '../locales/userPresets.en.json'
 import validate         from '../locales/validate.en.json'
+import reversibleEp     from '../locales/reversibleEp.en.json'
+import fermenter        from '../locales/fermenter.en.json'
+import ttFields         from '../locales/ttFields.en.json'
+import viralRf          from '../locales/viralRf.en.json'
 
 export const i18n = createI18n({
   legacy: false,
@@ -57,6 +61,10 @@ export const i18n = createI18n({
       ...home,
       ...userPresets,
       ...validate,
+      ...reversibleEp,
+      ...fermenter,
+      ...ttFields,
+      ...viralRf,
     },
   },
 })

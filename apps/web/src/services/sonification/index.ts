@@ -1,4 +1,4 @@
-// Copyright © 2026 Tomer Preis. All rights reserved. Unauthorized copying or distribution is prohibited.
+// Copyright © 2026 Tomer Preis. Licensed under the MIT License.
 
 // Sonification: maps impedance drift to pitch, DR to gain, rev-ep to tremolo (Web Audio API).
 // Sounds are NOT experimental RF signals — they are an abstract auditory display (Kramer 1999).
