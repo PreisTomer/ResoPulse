@@ -2,8 +2,8 @@
 <template>
   <section id="overview" class="protocol__section">
     <h2 class="protocol__section-title" v-html="$t('protocol.overview.title')"></h2>
-    <p class="protocol__body-text" v-html="$t('protocol.overview.p1')"></p>
-    <p class="protocol__body-text" v-html="$t('protocol.overview.p2')"></p>
+
+    <p class="protocol__lead" v-html="$t('protocol.overview.lead')"></p>
 
     <div class="protocol__cap-grid">
       <div class="protocol__cap-grid-title">{{ $t('protocol.overview.capGridTitle') }}</div>
@@ -14,6 +14,15 @@
         </div>
       </div>
     </div>
+
+    <ProtocolSubsection
+      anchor-id="overview-details"
+      :title-html="$t('protocol.overview.detailsTitle')"
+      :summary="$t('protocol.overview.detailsSummary')"
+    >
+      <p class="protocol__body-text" v-html="$t('protocol.overview.p1')"></p>
+      <p class="protocol__body-text" v-html="$t('protocol.overview.p2')"></p>
+    </ProtocolSubsection>
 
     <div class="protocol__info-box">
       <span class="protocol__info-icon">{{ ICON.INFO }}</span>
@@ -29,6 +38,8 @@ import { defineComponent } from 'vue'
 import { useUiStore } from '@/stores/uiStore'
 
 import { scrollAndHighlight } from '@/utils/highlight'
+
+import ProtocolSubsection from './ProtocolSubsection.vue'
 
 import { ICON } from '@/constants/icons'
 import { ROUTE } from '@/constants/routes'
@@ -46,6 +57,8 @@ const CAP_GRID_LINKS: { target: string; route: string }[] = [
 
 export default defineComponent({
   name: 'ProtocolSectionOverview',
+
+  components: { ProtocolSubsection },
 
   computed: {
     ICON() { return ICON },
@@ -76,6 +89,15 @@ export default defineComponent({
 
 @include proto.protocol-section();
 @include proto.protocol-utils();
+
+.protocol__lead {
+  font-size: 1.05rem;
+  line-height: 1.7;
+  color: var(--color-text);
+  border-left: 2px solid var(--color-primary);
+  padding-left: 1rem;
+  margin: 0;
+}
 
 .protocol__cap-feature {
   background: none;
