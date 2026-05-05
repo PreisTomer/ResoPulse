@@ -35,7 +35,8 @@ export const CELL_PRESETS: CellPreset[] = [
     type: 'healthy',
     label: 'Healthy Hepatocyte',
     shortLabel: 'Hepatocyte',
-    notes: 'Liver epithelial cell · baseline reference',
+    notes: 'Liver epithelial cell · baseline reference · R = 10 µm · fc ≈ 0.45 MHz at EP buffer',
+    techNotes: 'Single-shell Schwan baseline for adult human hepatocyte; used as the mammalian healthy reference, including in the Tsen 2007 CCMV resonance validation workflow.\nR = 10 µm: typical adult hepatocyte cell radius (cell diameter ~20 µm; Lautt 2009, Hepatic Circulation).\nσ_i = 0.50 S/m: representative parenchymal cytoplasm conductivity within the mammalian range 0.3-0.7 S/m (Foster & Schwan 1989 review).\nCm = 6.32 mF/m² = 0.63 µF/cm² (low end of mammalian range; ε_r = 5.0 at d = 7 nm; lipid bilayer baseline per Kotnik & Miklavcic 2000).\nVth = 1.1 V: hepatocyte EP onset slightly above the generic 1.0 V baseline. Limited line-specific literature; conservative estimate within the 0.7-1.5 V mammalian range. Replace with a measured value if calibrating to a specific protocol.\nCharacteristic fc ≈ 0.45 MHz at EP buffer (σ_e = 0.14 S/m), τ ≈ 350 ns; ≈ 1 MHz at saline (σ_e = 1.5 S/m), τ ≈ 150 ns.\nNuclear envelope (double-shell model): R_nuc = 5 µm, d_ne = 15 nm, ε_r,ne = 10, σ_np = 0.9 S/m, V_th,ne = 0.50 V (Kotnik & Miklavcic 2006 capacitive-limit double-shell defaults).\nAt 7.7 GHz: ωτ ≈ 17,000 at EP buffer, Schwan Vm collapses to a tiny fraction of V_th — basis for the CCMV resonance selectivity claim.\nRef: Foster & Schwan (1989) CRC Handbook of Biological Effects of EM Fields; Lautt (2009) Hepatic Circulation; Kotnik & Miklavcic (2000) Bioelectromagnetics 21:385; Kotnik & Miklavcic (2006) Biophys. J. 90:480.',
     radius: 10,
     membraneThickness: 7,
     naturalFrequency: 440,
@@ -45,7 +46,6 @@ export const CELL_PRESETS: CellPreset[] = [
     density: 1050,
     specificHeatCapacity: 3500,
     amplitude: 0.8,
-    // Nuclear envelope (double-shell model): capacitive-limit formula used (σ_ne → 0 assumption)
     nuclearRadius: 5.0, nuclearMembraneThickness: 15, nuclearMembraneEps: 10,
     nucleoplasmConductivity: 0.9, nuclearThresholdVoltage: 0.50,
   },
@@ -120,7 +120,7 @@ export const CELL_PRESETS: CellPreset[] = [
     label: 'Glioblastoma',
     shortLabel: 'GBM',
     notes: 'GBM (WHO grade IV) · R = 12 µm · highest σ_i · fc ≈ 500 kHz',
-    techNotes: 'Single-shell Schwan model for GBM (WHO grade IV glioma, IDH-wildtype).\nσ_i = 0.85 S/m: highest of all cancer presets — GBM overexpresses voltage-gated Nav1.5, TRPM7, and BK channels, substantially elevating cytoplasm conductivity vs normal astrocytes (~0.45 S/m).\nCm = 17.7 mF/m² = 1.77 µF/cm² (highest of cancer presets; severely disrupted lipid raft structure raises effective ε_r to 14.0 at d = 7 nm).\nCharacteristic fc ≈ 500 kHz in saline · τ ≈ 320 ns.\nVth = 0.65 V: ~35% lower than astrocyte reference; highly fluid, cholesterol-poor membrane.\nLarge nucleus and irregular nuclear envelope (R_nuc = 7.0 µm) reflects chromosomal instability hallmarks of GBM.\n⚠ GBM cells in culture form near-spherical aggregates; actual in-vitro morphology is heterogeneous. Single-shell approximation overestimates Vm for cells with prominent cytoplasmic projections.\nRef: Liu et al. (2019) Glia 67:1074 (ion channel overexpression); Bhatt et al. (2021) Biophys. J. 120:2647.',
+    techNotes: 'Single-shell Schwan model for GBM (WHO grade IV glioma, IDH-wildtype).\nσ_i = 0.85 S/m: highest of all cancer presets — GBM overexpresses voltage-gated Nav1.5, TRPM7, and BK channels, substantially elevating cytoplasm conductivity vs normal astrocytes (~0.45 S/m).\n⚠ ESTIMATE — biologically motivated from ion-channel overexpression literature; no direct GBM σ_i measurement was used. Treat as order-of-magnitude.\nCm = 17.7 mF/m² = 1.77 µF/cm² (highest of cancer presets; severely disrupted lipid raft structure raises effective ε_r to 14.0 at d = 7 nm).\nCharacteristic fc ≈ 500 kHz in saline · τ ≈ 320 ns.\nVth = 0.65 V: ~35% lower than astrocyte reference; highly fluid, cholesterol-poor membrane. ⚠ ESTIMATE — no GBM-specific EP threshold measurement.\nLarge nucleus and irregular nuclear envelope (R_nuc = 7.0 µm) reflects chromosomal instability hallmarks of GBM.\n⚠ GBM cells in culture form near-spherical aggregates; actual in-vitro morphology is heterogeneous. Single-shell approximation overestimates Vm for cells with prominent cytoplasmic projections.\nRef: Liu et al. (2019) Glia 67:1074 (ion channel overexpression); Bhatt et al. (2021) Biophys. J. 120:2647.',
     radius: 12,
     membraneThickness: 7,
     naturalFrequency: 450,
@@ -206,7 +206,7 @@ export const CELL_PRESETS: CellPreset[] = [
     label: 'PANC-1',
     shortLabel: 'PANC-1',
     notes: 'PDAC · R = 13 µm · extreme N/C ratio · Cm = 1.45 µF/cm² · fc ≈ 480 kHz',
-    techNotes: 'Single-shell Schwan model for PANC-1 (pancreatic ductal adenocarcinoma cell line).\nσ_i = 0.70 S/m: elevated cytoplasm conductivity consistent with PDAC metabolic reprogramming and altered KCNK5/BKCa channel expression in pancreatic CA lines.\nCm = 14.5 mF/m² = 1.45 µF/cm² (highly fluid membrane in PDAC; reduced cholesterol and altered sphingomyelin content raise effective ε_r to 11.5 at d = 7 nm).\nCharacteristic fc ≈ 480 kHz in saline · τ ≈ 332 ns.\nVth = 0.65 V: PDAC cells show high membrane fluidity and reduced membrane tension, lowering EP threshold significantly vs normal pancreatic ductal cells.\nExtreme N/C ratio (R_nuc = 7.5 / R_cell = 13.0 µm) is a pathological hallmark of PDAC per WHO 2010 classification.\n⚠ PANC-1 is adherent in culture; spherical approximation used for in-vitro suspension protocol modelling. PDAC cells display irregular morphology and strong cell-cell contacts in primary culture.\nRef: Bosman et al. (2010) WHO Classification of Tumours of the Digestive System; Pethig (2010) Biomicrofluidics 4:022811.',
+    techNotes: 'Single-shell Schwan model for PANC-1 (pancreatic ductal adenocarcinoma cell line).\nσ_i = 0.70 S/m: elevated cytoplasm conductivity consistent with PDAC metabolic reprogramming and altered KCNK5/BKCa channel expression in pancreatic CA lines.\n⚠ ESTIMATE — biologically motivated; no direct PANC-1 σ_i measurement was used. Replace with measured value for quantitative protocol design.\nCm = 14.5 mF/m² = 1.45 µF/cm² (highly fluid membrane in PDAC; reduced cholesterol and altered sphingomyelin content raise effective ε_r to 11.5 at d = 7 nm).\nCharacteristic fc ≈ 480 kHz in saline · τ ≈ 332 ns.\nVth = 0.65 V: PDAC cells show high membrane fluidity and reduced membrane tension, lowering EP threshold significantly vs normal pancreatic ductal cells. ⚠ ESTIMATE — no PANC-1-specific EP threshold measurement.\nExtreme N/C ratio (R_nuc = 7.5 / R_cell = 13.0 µm) is a pathological hallmark of PDAC per WHO 2010 classification.\n⚠ PANC-1 is adherent in culture; spherical approximation used for in-vitro suspension protocol modelling. PDAC cells display irregular morphology and strong cell-cell contacts in primary culture.\nRef: Bosman et al. (2010) WHO Classification of Tumours of the Digestive System; Pethig (2010) Biomicrofluidics 4:022811.',
     radius: 13,
     membraneThickness: 7,
     naturalFrequency: 390,
@@ -250,7 +250,7 @@ export const CELL_PRESETS: CellPreset[] = [
     label: 'LNCaP Prostate',
     shortLabel: 'LNCaP',
     notes: 'Androgen-sensitive prostate CA · R = 9 µm · moderate σ_i · fc ≈ 790 kHz',
-    techNotes: 'Single-shell Schwan model for LNCaP (androgen-sensitive prostate carcinoma, PSA-secreting, PTEN-null).\nσ_i = 0.55 S/m: LNCaP is a slow-growing, non-invasive line with relatively moderate ion channel overexpression; σ_i is only slightly above normal prostate epithelium (~0.40-0.45 S/m). Androgen receptor signalling partially maintains cholesterol homeostasis.\nCm = 10.4 mF/m² = 1.04 µF/cm² (mildly elevated; androgen-driven lipid regulation moderates membrane remodelling; effective ε_r = 8.2 at d = 7 nm; exact: ε_r·ε₀/d = 10.37 mF/m²).\nCharacteristic fc ≈ 790 kHz in saline · τ ≈ 201 ns.\nVth = 0.78 V: highest of the cancer presets — reflects more ordered membrane due to partial cholesterol maintenance under androgen signalling.\nN/C ratio (R_nuc = 5.0 / R_cell = 9.0 µm) reflects moderate nuclear enlargement.\n⚠ SELECTIVITY NOTE: LNCaP has the highest Vth of all cancer presets (0.78 V). When paired with a small healthy reference cell (e.g. lymphocyte R = 6 µm, σ_i = 0.40 S/m), τ_H < τ_T despite R_H < R_T, so the high-frequency Vm selectivity limit is R_T·τ_H/(R_H·τ_T) = 0.80 (below 1). The Vth asymmetry (1.0/0.78 = 1.28) rescues net DR selectivity to ~1.03 at high f, but TI falls monotonically from 1.92 (quasi-DC) toward 1.03 with increasing frequency. No frequency above fc,T = 792 kHz improves selectivity for this pair; operate as low as possible.\n⚠ LNCaP forms loose aggregates in suspension culture; spherical single-cell approximation is used. At androgen withdrawal, membrane properties are expected to shift toward a CRPC phenotype with lower Vth and higher σ_i.\nRef: Gascoyne & Vykoukal (2002) Electrophoresis 23:1973; Titus et al. (2010) Cancer Res. 70:8 (androgen-cholesterol link).',
+    techNotes: 'Single-shell Schwan model for LNCaP (androgen-sensitive prostate carcinoma, PSA-secreting, PTEN-null).\nσ_i = 0.55 S/m: LNCaP is a slow-growing, non-invasive line with relatively moderate ion channel overexpression; σ_i is only slightly above normal prostate epithelium (~0.40-0.45 S/m). Androgen receptor signalling partially maintains cholesterol homeostasis.\nCm = 10.4 mF/m² = 1.04 µF/cm² (mildly elevated; androgen-driven lipid regulation moderates membrane remodelling; effective ε_r = 8.2 at d = 7 nm; exact: ε_r·ε₀/d = 10.37 mF/m²).\nCharacteristic fc ≈ 790 kHz in saline · τ ≈ 201 ns.\nVth = 0.78 V: highest of the cancer presets. Rationale: more ordered membrane from partial cholesterol maintenance under androgen signalling. ⚠ UNSOURCED — no published LNCaP EP threshold measurement was used; this is a model estimate. Replace with a measured value for quantitative protocol design.\nN/C ratio (R_nuc = 5.0 / R_cell = 9.0 µm) reflects moderate nuclear enlargement.\n⚠ SELECTIVITY NOTE: LNCaP has the highest Vth of all cancer presets (0.78 V). When paired with a small healthy reference cell (e.g. lymphocyte R = 6 µm, σ_i = 0.40 S/m), τ_H < τ_T despite R_H < R_T, so the high-frequency Vm selectivity limit is R_T·τ_H/(R_H·τ_T) = 0.80 (below 1). The Vth asymmetry (1.0/0.78 = 1.28) rescues net DR selectivity to ~1.03 at high f, but TI falls monotonically from 1.92 (quasi-DC) toward 1.03 with increasing frequency. No frequency above fc,T = 792 kHz improves selectivity for this pair; operate as low as possible.\n⚠ LNCaP forms loose aggregates in suspension culture; spherical single-cell approximation is used. At androgen withdrawal, membrane properties are expected to shift toward a CRPC phenotype with lower Vth and higher σ_i.\nRef: Gascoyne & Vykoukal (2002) Electrophoresis 23:1973; Titus et al. (2010) Cancer Res. 70:8 (androgen-cholesterol link).',
     radius: 9,
     membraneThickness: 7,
     naturalFrequency: 430,
@@ -274,6 +274,7 @@ export const CELL_PRESETS: CellPreset[] = [
     label: 'Astrocyte',
     shortLabel: 'Astrocyte',
     notes: 'Brain glial cell · soma R = 10 µm · CNS reference',
+    techNotes: 'Single-shell Schwan model for a protoplasmic astrocyte soma. All parameters are baseline estimates; no astrocyte-specific electroporation literature was used.\nR = 10 µm: typical soma diameter 10–20 µm (Oberheim et al. 2009); spherical soma approximation (actual morphology is highly branched).\nσ_i = 0.45 S/m: lower than GBM (0.85) and fibroblast (0.40); consistent with normal CNS glial cytoplasm range 0.35–0.55 S/m (Foster & Schwan 1989). Unsourced for astrocytes specifically.\nVth = 1.0 V: generic mammalian baseline. No astrocyte EP threshold measurement found.\nCm = 6.96 mF/m² (εr = 5.5, d = 7 nm). No astrocyte-specific Cm measurement.\n⚠ Use as a qualitative CNS healthy reference only. Do not calibrate protocols against this preset without replacing σ_i and Vth with cell-line-specific measurements.',
     radius: 10,
     membraneThickness: 7,
     naturalFrequency: 440,
@@ -294,6 +295,7 @@ export const CELL_PRESETS: CellPreset[] = [
     label: 'Fibroblast',
     shortLabel: 'Fibroblast',
     notes: 'Connective tissue stromal cell · R = 12 µm (soma) · spherical approx',
+    techNotes: 'Single-shell Schwan model for a generic fibroblast (e.g. 3T3, WI-38, or primary dermal). All parameters are baseline estimates.\nR = 12 µm: mean soma size for adherent fibroblasts in suspension EP buffer; range 8–18 µm depending on passage and cell line.\nσ_i = 0.40 S/m: near the generic mammalian stromal baseline. No fibroblast-specific electroporation conductivity measurement was used (Gascoyne 2002 reports stromal cells ~0.30–0.50 S/m by electrorotation).\nVth = 1.05 V: generic healthy-cell baseline, slightly above hepatocyte (1.1 V). No fibroblast-specific EP threshold measurement.\n⚠ Fibroblasts are adherent; spherical approximation systematically underestimates Vm for elongated cell geometries. Use as a qualitative stromal reference only.',
     radius: 12,
     membraneThickness: 7,
     naturalFrequency: 440,
@@ -314,6 +316,7 @@ export const CELL_PRESETS: CellPreset[] = [
     label: 'Blood Lymphocyte',
     shortLabel: 'Lymphocyte',
     notes: 'Resting peripheral blood lymphocyte · R = 6 µm · suspension',
+    techNotes: 'Single-shell Schwan model for a resting peripheral blood lymphocyte (T or B cell, undifferentiated). All parameters are baseline estimates.\nR = 6 µm: resting lymphocyte diameter 6–12 µm; 6 µm represents a small resting T cell (e.g. Wang et al. 2006 flow cytometry); R = 6 µm is the lower bound of the normal range.\nσ_i = 0.40 S/m: mammalian baseline. Lymphocytes are known to have lower σ_i than most cancer lines (~0.3–0.45 S/m); no electroporation-specific measurement used.\nVth = 1.0 V: generic mammalian baseline. No lymphocyte-specific EP threshold measurement.\n⚠ Small lymphocyte radius means E_lys (DC limit) ≈ Vth / (1.5 × 6 µm × 100) ≈ 1111 V/cm — substantially higher than typical cancer targets. When used as a co-culture healthy reference against cancer cells with R > 8 µm, quasi-DC field can achieve selectivity if cancer-cell Vth is low enough. Verify TI is > 1 before designing a protocol with this as the healthy reference.',
     radius: 6,
     membraneThickness: 7,
     naturalFrequency: 440,
@@ -381,7 +384,7 @@ export const CELL_PRESETS: CellPreset[] = [
     amplitude: 0.5,
   },
 
-  // CCMV: rigid T=3 icosahedral capsid (R=14 nm); Tsen 2007 measured f_res=7.7 GHz, Q~10-15 via ISRS — benchmark for acoustic capsid resonance.
+  // CCMV: rigid T=3 icosahedral capsid (R=14 nm); f_res=7.7 GHz from atomistic normal-mode model (Dykeman & Sankey, Phys. Rev. E 81:021918, 2010).
   {
     presetId: 'ccmv',
     group: 'virus',
@@ -389,21 +392,21 @@ export const CELL_PRESETS: CellPreset[] = [
     type: 'target',
     label: 'CCMV (Plant Virus Capsid)',
     shortLabel: 'CCMV',
-    notes: 'Non-enveloped icosahedral · R = 14 nm · f_res = 7.7 GHz · Q ≈ 12 (Tsen 2007)',
-    techNotes: 'CCMV (Cowpea Chlorotic Mottle Virus) — T=3 icosahedral protein capsid, diameter 28 nm, R = 14 nm.\nRigid protein shell ~2.5 nm thick (X-ray crystallography, Speir et al. 1995).\nσ_i = 0.02 S/m (viral interior: RNA genome + viral proteins; low ionic conductivity).\nf_res = 7.7 GHz: measured by Tsen et al. (2007) using ISRS coherent vibrational spectroscopy.\nQ = 12 (nominal): derived from Lorentzian peak linewidth in Tsen 2007 Fig. 3. Range: Q = 8-20.\nE_thr = 500 V/cm: acoustic field equivalent required for irreversible capsid disruption.\nResoPulse acoustic resonance model at f = 7.7 GHz, E = 500 V/cm → DR > 1 (disrupting).\nMammalian cells at 7.7 GHz: Schwan Vm → 0 (fc ≈ 100-800 kHz, far below 7.7 GHz) → DR ≈ 0.\nThis is the experimental basis for the CCMV validation workflow.\nRef: Tsen et al. (2007) Biophys J 93:1340. Dykeman & Sankey (2010) J Phys: Cond Matter 22:423202.',
-    radius: 0.014,          // µm = 14 nm — outer radius from X-ray crystallography
+    notes: 'Non-enveloped icosahedral · R = 14 nm · f_res = 7.7 GHz · Q ≈ 12 (model, Dykeman 2010)',
+    techNotes: 'CCMV (Cowpea Chlorotic Mottle Virus) — T=3 icosahedral protein capsid, diameter 28 nm, R = 14 nm.\nRigid protein shell ~2.5 nm thick (X-ray crystallography, Speir et al. 1995).\nσ_i = 0.02 S/m (viral interior: RNA genome + viral proteins; low ionic conductivity).\nf_res = 7.7 GHz: lowest acoustic mode from atomistic normal-mode calculation (Dykeman & Sankey, Phys. Rev. E 81:021918, 2010), which specifically models CCMV, poliovirus, and hepatitis B capsids. This is a model prediction — direct experimental measurement of CCMV at 7.7 GHz by ISRS or other spectroscopy is not available in the literature.\nQ = 12 (nominal): estimated range 8-20 for a rigid icosahedral capsid from elastic shell theory. No direct Q measurement for CCMV at 7.7 GHz has been confirmed.\nE_thr = 500 V/cm: model parameter — no direct experimental disruption-threshold measurement for CCMV at 7.7 GHz. Treat as an order-of-magnitude estimate.\nResoPulse acoustic resonance model at f = 7.7 GHz, E = 500 V/cm → DR ≈ 1 (at the model disruption threshold).\nMammalian cells at 7.7 GHz: Schwan Vm → 0 (mammalian fc ≈ 0.3-1 MHz across standard buffers, far below 7.7 GHz) → DR ≈ 0. This Schwan-collapse selectivity mechanism is physically rigorous regardless of the exact f_res value.\nRef: Dykeman & Sankey (2010) Phys. Rev. E 81:021918 (CCMV atomistic model). Speir et al. (1995) Structure 3:63 (X-ray crystallography). Tsen et al. (2007) demonstrated femtosecond laser inactivation of viruses via resonant mechanisms generally.',
+    radius: 0.014,          // µm = 14 nm — outer radius from X-ray crystallography (Speir 1995)
     membraneThickness: 2.5, // nm — protein capsid shell (Speir et al. 1995 crystallography)
     naturalFrequency: 200,
     thresholdVoltage: 0.05, // V — EP model threshold; not used in resonance mode (R too small)
     dielectricConstant: 4.0,  // ε_r ≈ 4 for protein (intermediate between protein 2-5 range)
     conductivity: 0.02,       // S/m — low; RNA+protein interior, minimal free ions
-    resonantFreqGHz: 7.7,     // GHz — measured, Tsen et al. (2007)
-    capsidQ: 12,              // nominal Q from linewidth; rigid icosahedral protein capsid
-    resonantThresholdVcm: 500,// V/cm — acoustic disruption threshold (Tsen 2007)
+    resonantFreqGHz: 7.7,     // GHz — atomistic model (Dykeman & Sankey 2010), not directly measured
+    capsidQ: 12,              // estimated Q for rigid icosahedral capsid; no direct measurement
+    resonantThresholdVcm: 500,// V/cm — model parameter; no direct experimental measurement available
     resonantFreqUncertaintyPct: 15,
     capsidQMin: 8,
     capsidQMax: 20,
-    experimentalBasis: 'laser-validated',  // f_res and Q measured by ISRS laser spectroscopy (Tsen 2007)
+    experimentalBasis: 'speculative',  // f_res from atomistic model (Dykeman 2010); no direct measurement confirmed
     density: 1350,
     specificHeatCapacity: 4100,
     amplitude: 0.4,

@@ -59,7 +59,8 @@ Modelled via Specific Absorption Rate (SAR):
   α = 3σ_e/(2σ_e+σ_i)  (internal field factor, sphere in medium)
   w_f = 0.5 (CW sinusoidal, E²_rms = E²_peak/2) | 1.0 (pulsed bipolar square wave, E²_rms = E²_peak)
 
-Pennes bioheat: T_ss = 37 + SAR × dc / ((λ_Newton + λ_perf) × cp)
+Pennes-style lumped 0-D thermal balance (well-mixed cuvette approximation; not the full Pennes PDE):
+  T_ss = 37 + SAR × dc / ((λ_Newton + λ_perf) × cp)
   λ_Newton = 0.02 /s (surface/diffusion cooling)
   λ_perf   = ω_b × 63.9 / cp  (blood perfusion, Advanced → Blood Perfusion ω_b)
 Thresholds: 42°C hyperthermic · 60°C denaturing · 100°C vaporizing${warnLine}`

@@ -603,7 +603,7 @@
       {
         "body": "Shaw-Wei D. Tsen, Wuyang Chapa, Juliann G. Kiang, Kwok-tung Tsen. <em>Selective inactivation of human immunodeficiency virus with subpicosecond near-infrared laser pulses.</em> Biophysical Journal. 2007;93(8):1325-1329.",
         "doi": "10.1529/biophysj.107.108977",
-        "note": "Peer-reviewed source for the Viral Capsid Resonance validation workflow. Reports CCMV (Cowpea Chlorotic Mottle Virus) capsid resonant frequency f<sub>res</sub> = 7.7 GHz measured by impulsive stimulated Raman scattering (ISRS), Q = 12 (range 8-20), disruption threshold E<sub>thr</sub> = 500 V/cm. Co-incubated mammalian cells are unaffected, consistent with Schwan V<sub>m</sub> collapse at f/f<sub>c</sub> >> 1 (f/f<sub>c</sub> ≈ 22,000 for hepatocytes at 7.7 GHz)."
+        "note": "Tsen et al. demonstrated femtosecond laser inactivation of viruses via resonant acoustic mechanisms. Note: the CCMV validation workflow in ResoPulse uses f<sub>res</sub> = 7.7 GHz from the atomistic normal-mode model of Dykeman & Sankey (Phys. Rev. E 81:021918, 2010), which specifically models CCMV. Q = 12 and E<sub>thr</sub> = 500 V/cm are model parameters. The Schwan V<sub>m</sub> collapse mechanism (f/f<sub>c</sub> > 7,000 for mammalian cells at 7.7 GHz) is the physically rigorous selectivity claim and is independent of the exact f<sub>res</sub> value."
       },
       {
         "body": "Sofia A. Polevaya, Ilana Ermolina, Menachem Schlesinger, Ben-Zion Ginzburg, Yuri Feldman. <em>Time domain dielectric spectroscopy study of human cells.</em> Biochimica et Biophysica Acta. 1999;1419(2):257-271.",

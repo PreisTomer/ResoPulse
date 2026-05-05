@@ -56,30 +56,30 @@
     "ccmv": {
       "category": "Resonance",
       "title": "Viral Capsid Resonance",
-      "authors": "Tsen et al., Biophysical Journal, 2007",
-      "doi": "10.1529/biophysj.107.108977",
+      "authors": "Dykeman & Sankey, Phys. Rev. E, 2010; Tsen et al. 2007",
+      "doi": "10.1103/PhysRevE.81.021918",
       "cardMetric": "f_res = 7.7 GHz",
-      "cardSummary": "CCMV capsid selectively disrupted at f_res = 7.7 GHz (ISRS laser, Tsen 2007). Co-incubated mammalian cells unaffected: Schwan Vm collapses at GHz (f/fc = 22,000). TI greater than 99.",
-      "publishedResult": "CCMV plant virus capsid (R = 14 nm) selectively disrupted using coherent acoustic excitation at f_res = 7.7 GHz. No damage to co-incubated mammalian cells (Tsen 2007). Resonant frequency measured by impulsive stimulated Raman scattering. Selectivity arises because mammalian cell plasma membranes cannot charge at GHz frequencies: Schwan Vm collapses above fc.",
-      "publishedMetric": "CCMV f_res = 7.7 GHz (laser-measured, Tsen 2007)",
+      "cardSummary": "CCMV capsid lowest acoustic mode at f_res = 7.7 GHz (atomistic model, Dykeman & Sankey 2010). Co-incubated mammalian cells unaffected: Schwan Vm collapses at GHz (f/fc > 7,000 in any standard buffer). TI greater than 99.",
+      "publishedResult": "CCMV plant virus capsid (R = 14 nm) has a predicted lowest acoustic mode at f_res = 7.7 GHz from atomistic normal-mode calculation (Dykeman & Sankey, Phys. Rev. E 81:021918, 2010), which specifically models CCMV, poliovirus, and hepatitis B. Tsen et al. (2007) demonstrated that femtosecond laser pulses tuned to capsid resonance frequencies can selectively inactivate viruses without damaging co-incubated mammalian cells. Selectivity arises because mammalian cell plasma membranes cannot charge at GHz frequencies: Schwan Vm collapses above fc. Note: f_res and E_thr are model parameters; direct ISRS measurement of CCMV at 7.7 GHz is not available in the cited literature — treat this scenario as a demonstration of the resonance selectivity mechanism, not a reproduction of a single specific experiment.",
+      "publishedMetric": "CCMV f_res = 7.7 GHz (atomistic model, Dykeman & Sankey 2010); selectivity via Schwan Vm collapse",
       "modalParamTable": [
-        { "source": "Tsen et al. 2007 (ISRS laser)", "value": "f_res = 7.7 GHz, Q = 12 (range 8 to 20), E_thr = 500 V/cm" },
+        { "source": "Dykeman & Sankey 2010 (atomistic model)", "value": "f_res = 7.7 GHz, Q = 12 (range 8 to 20) — model parameters, not directly measured" },
         { "source": "Speir et al. 1995 (X-ray)", "value": "CCMV R = 14 nm, capsid shell = 2.5 nm" },
-        { "source": "Hepatocyte reference", "value": "R = 10 µm, σ_i = 0.50 S/m, fc ≈ 350 kHz" },
-        { "source": "Selectivity mechanism", "value": "At 7.7 GHz, f / fc ≈ 22,000, Schwan Vm → 0 for mammalian cells" },
+        { "source": "Hepatocyte reference", "value": "R = 10 µm, σ_i = 0.50 S/m, fc ≈ 0.45 MHz at EP buffer (≈ 1 MHz at saline)" },
+        { "source": "Selectivity mechanism (Schwan physics)", "value": "At 7.7 GHz, f / fc > 7,000 in any standard buffer (≈ 17,000 at EP buffer), Schwan Vm → 0 for mammalian cells" },
         { "source": "Validation conditions", "value": "7.7 GHz (7,700,000 kHz), 500 V/cm, resonance chart mode" }
       ],
       "step0": "Resetting lab to safe baseline before loading experiment cells",
       "step1": "Loading reference cell: hepatocyte (mammalian, R = 10 µm)",
-      "step1r": "Hepatocyte radius: R = 10 µm. fc ≈ 350 kHz. At 7.7 GHz (22,000x above fc), Schwan Vm approaches zero.",
+      "step1r": "Hepatocyte radius: R = 10 µm. fc ≈ 0.45 MHz at EP buffer (≈ 1 MHz at saline). At 7.7 GHz (>17,000x above fc at EP buffer), Schwan Vm approaches zero.",
       "step2": "Loading target cell: CCMV plant virus capsid (R = 14 nm)",
-      "step2f": "CCMV resonant frequency: f_res = 7.7 GHz, measured by Tsen (2007) ISRS laser spectroscopy",
+      "step2f": "CCMV resonant frequency: f_res = 7.7 GHz (atomistic normal-mode model, Dykeman & Sankey Phys. Rev. E 2010). This is a model prediction, not a direct experimental measurement.",
       "step2q": "CCMV quality factor: Q = 12. Rigid icosahedral protein capsid gives a sharp Lorentzian resonance.",
       "step3": "Switching to resonance chart mode",
-      "step4": "Setting frequency: 7.7 GHz (7,700,000 kHz), the CCMV capsid resonant frequency",
-      "step5": "Setting field: 500 V/cm (acoustic disruption threshold, Tsen 2007)",
-      "step6": "Resonance chart: CCMV DR > 1 (capsid disrupting), hepatocyte DR near zero (Vm collapsed)",
-      "resultAgreement": "The acoustic resonance model confirms selective CCMV capsid disruption at f_res = 7.7 GHz (Tsen 2007, laser-measured). At this frequency, hepatocyte Schwan Vm collapses to near zero (f/fc > 22,000), producing TI > 99. This matches Tsen et al. (2007)'s observation of complete viral inactivation with zero damage to co-incubated mammalian cells."
+      "step4": "Setting frequency: 7.7 GHz (7,700,000 kHz), the predicted CCMV capsid resonant frequency",
+      "step5": "Setting field: 500 V/cm (model acoustic disruption threshold parameter)",
+      "step6": "Resonance chart: CCMV DR ≥ 1 (capsid at the disruption threshold), hepatocyte DR near zero (Vm collapsed)",
+      "resultAgreement": "The acoustic resonance model shows selective CCMV capsid disruption at f_res = 7.7 GHz (Dykeman & Sankey 2010 atomistic model). At this frequency, hepatocyte Schwan Vm collapses to near zero (f/fc > 7,000 in any standard buffer; ≈ 17,000 at EP buffer), producing TI > 99. The selectivity mechanism — Schwan Vm collapse for large cells at GHz — is the physically rigorous result. The specific f_res and E_thr values are model predictions; treat this scenario as a demonstration of resonance selectivity rather than a reproduction of a single experimental dataset."
     }
   }
 }

@@ -53,7 +53,7 @@ export const LYSIS_FIELD_SENTINEL = 1e6
 // Minimum pulse envelope factor to prevent division artefacts (t_p→0 limit)
 export const MIN_PULSE_ENVELOPE = 1e-4
 
-// EP Vth temp coeff [1/°C], ~−0.3%/°C — linearised Q₁₀≈1.3 pore nucleation (Weaver & Chizmadzhev 1996) over 37-60°C.
+// EP Vth temp coeff [1/°C], ~−0.3%/°C — empirical linearisation of pore-nucleation Arrhenius slope over 37-60°C (Weaver & Chizmadzhev 1996).
 export const TEMP_EP_COEFF = 0.003
 
 // Lower clamp for Vth temperature correction — prevents unphysical zero/negative threshold.
@@ -90,13 +90,13 @@ export const SIGMA_MEMBRANE_SI = 1e-7
 // R/d < 50 → thin-shell γ deviates >6%; triggers UI caveat for viruses (Kotnik & Miklavcic 2000).
 export const THIN_SHELL_RATIO_WARN = 50
 
-// ── Debye dielectric relaxation of aqueous media (Kaatze 1989; Debye 1929) ─── f_D ≈ 19 GHz @ 37 °C.
+// ── Debye dielectric relaxation of aqueous media (Kaatze 1989; Debye 1929) ─── f_D(25°C) ≈ 19 GHz; (37°C) ≈ 25 GHz.
 
 // Water infinite-frequency (optical) relative permittivity — Kaatze 1989.
 export const EPS_INF_AQUEOUS = 5
 
-// Debye relaxation time of pure water at 37 °C [s] — Kaatze 1989 (τ_D ≈ 8.3 ps).
-export const DEBYE_TAU_AQUEOUS_S = 8.3e-12
+// Debye relaxation time of pure water at 37°C [s] — Kaatze 1989 τ_D(37°C) ≈ 6.4 ps. Updated from prior 8.3 ps (25°C bioEM convention) to the cell-culture temperature. Effect is negligible at kHz EP (ωτ_D < 1e-7) but shifts DEP CM and GHz SAR dispersive corrections by ~20%.
+export const DEBYE_TAU_AQUEOUS_S = 6.4e-12
 
 // ── Biophysical model thresholds ─────────────────────────────────────────────
 
@@ -169,11 +169,13 @@ export const THRESHOLDS = {
 export type ThresholdKey = keyof typeof THRESHOLDS
 
 // ── Population size distribution (log-normal cell radius CV) ─────────────────
-// Ref: Tzur et al. (2009) Science 325:167; Altschuler & Wu (2010) Cell 141:559
+// Mammalian: Tzur et al. (2009) Science 325:167; Altschuler & Wu (2010) Cell 141:559
+// Bacteria: flow-cytometry convention for log-phase cultures (~10-15%); Koch (1966) J. Gen. Microbiol.
+// Virus: icosahedral capsid precision (~5-10%); Speir et al. (1995) and structural biology conventions
 
-export const POP_CV_MAMMALIAN = 0.25  // radius CV ~20-30%; nominal 25%
-export const POP_CV_BACTERIA  = 0.12  // radius CV ~10-12% for log-phase cultures; nominal 12% (Tzur et al. 2009)
-export const POP_CV_VIRUS     = 0.08  // capsid radius CV ~5-10%; icosahedral; nominal 8%
+export const POP_CV_MAMMALIAN = 0.25  // radius CV ~20-30%; nominal 25% (Tzur 2009)
+export const POP_CV_BACTERIA  = 0.12  // radius CV ~10-12% for log-phase cultures; nominal 12% (Koch 1966 convention)
+export const POP_CV_VIRUS     = 0.08  // capsid radius CV ~5-10%; icosahedral precision; nominal 8%
 
 // ── Reversible EP membrane resealing model ───────────────────────────────────
 
