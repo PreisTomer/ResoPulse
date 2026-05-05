@@ -59,6 +59,9 @@ export const MIN_PULSE_ENVELOPE = 1e-4
 // EP Vth temp coeff [1/°C], ~−0.3%/°C — empirical linearisation of pore-nucleation Arrhenius slope over 37-60°C (Weaver & Chizmadzhev 1996).
 export const TEMP_EP_COEFF = 0.003
 
+// Cytoplasm σ_i temperature coefficient [1/°C]: ~+2%/°C from ion mobility (same as aqueous electrolytes). Foster & Schwan 1989; Kotnik 2000.
+export const SIGMA_I_TEMP_COEFF = 0.02
+
 // Lower clamp for Vth temperature correction — prevents unphysical zero/negative threshold.
 export const TEMP_EP_CLAMP_MIN = 0.70
 

@@ -25,7 +25,7 @@
     "keyLysis": "Target lysis (100%)",
 
     "subWindowFound": "window {lo}–{hi} {unit} · best TI ×{ti}",
-    "subNoWindow": "no window · max TI ×{ti}",
+    "subNoWindow": "no selectivity window in sweep range · peak TI ×{ti}",
 
     "cursorCurrent": "current",
     "hoverTarget": "Target DR",

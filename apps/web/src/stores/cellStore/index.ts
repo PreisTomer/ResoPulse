@@ -82,6 +82,7 @@ import {
   VIRAL_RF_DURATION_MAX_S,
   IEEE_PUBLIC_SAR_LIMIT_W_KG,
   IEEE_OCCUPATIONAL_SAR_LIMIT_W_KG,
+  SIGMA_I_TEMP_COEFF,
 } from '@/constants/physics'
 
 import type { CellConfig, CellState } from '@/types/cell'
@@ -256,16 +257,19 @@ export const useCellStore = defineStore('cell', {
     targetCalibrationUncertainty(): number  { return Math.sqrt(Math.max(0, this.targetCalibrationCovariance.cov11)) },
 
     // Cell configs with σ_i AND V_th (Schwan) scaled by the calibration multipliers. The Schwan/EP path picks these up via every getter that takes a CellConfig — DR, Vm, τ, fc, DEP all see the digital twin.
+    // σ_i is additionally temperature-corrected: σ_i(T) = σ_i_ref × (1 + SIGMA_I_TEMP_COEFF × (T_exp − T_ref)) where T_ref = conductivityMeasurementTempC ?? 37°C.
     effectiveHealthy(): CellConfig {
-      const state = this as CellStoreState
+      const state  = this as CellStoreState
+      const T_ref  = state.healthy.conductivityMeasurementTempC ?? BODY_TEMP_C
+      const tempFactor = 1 + SIGMA_I_TEMP_COEFF * (state.healthyTemp - T_ref)
       return {
         ...state.healthy,
-        conductivity:     state.healthy.conductivity     * this.healthyParam1Multiplier,
+        conductivity:     state.healthy.conductivity     * Math.max(0.1, tempFactor) * this.healthyParam1Multiplier,
         thresholdVoltage: state.healthy.thresholdVoltage * this.healthyParam2Multiplier,
       }
     },
 
-    // Target effective config. Schwan path scales (σ_i, V_th); resonance path scales (capsidQ, resonantThresholdVcm) instead, leaving σ_i / V_th at baseline since acoustic disruption is mechanical and bypasses the EP membrane-charging knobs.
+    // Target effective config. Schwan path scales (σ_i, V_th) + temperature correction; resonance path scales (capsidQ, resonantThresholdVcm) instead — acoustic disruption is mechanical and bypasses the EP membrane-charging knobs.
     effectiveTarget(): CellConfig {
       const state = this as CellStoreState
       const mode  = this.targetCalibrationMode
@@ -278,11 +282,30 @@ export const useCellStore = defineStore('cell', {
         if (typeof t.resonantThresholdVcm === 'number') out.resonantThresholdVcm = t.resonantThresholdVcm * m2
         return out
       }
+      const T_ref      = state.target.conductivityMeasurementTempC ?? BODY_TEMP_C
+      const tempFactor = 1 + SIGMA_I_TEMP_COEFF * (state.targetTemp - T_ref)
       return {
         ...state.target,
-        conductivity:     state.target.conductivity     * m1,
+        conductivity:     state.target.conductivity     * Math.max(0.1, tempFactor) * m1,
         thresholdVoltage: state.target.thresholdVoltage * m2,
       }
+    },
+
+    // True when the cell's σ_i was measured in a different medium than the current experiment (ratio > 5× in either direction).
+    // A large medium mismatch means the measured σ_i may not be representative (depolarisation artefact in low-conductivity DEP buffer).
+    healthySigmaMismatch(): boolean {
+      const state = this as CellStoreState
+      const refSigmaE = state.healthy.conductivityMeasurementSigmaE
+      if (refSigmaE == null || refSigmaE <= 0) return false
+      const ratio = this.effectiveSigmaE / refSigmaE
+      return ratio > 5 || ratio < 0.2
+    },
+    targetSigmaMismatch(): boolean {
+      const state = this as CellStoreState
+      const refSigmaE = state.target.conductivityMeasurementSigmaE
+      if (refSigmaE == null || refSigmaE <= 0) return false
+      const ratio = this.effectiveSigmaE / refSigmaE
+      return ratio > 5 || ratio < 0.2
     },
 
     lysisDelayMs: (state): number => {
@@ -500,8 +523,8 @@ export const useCellStore = defineStore('cell', {
         sigmaTi = Math.sqrt(propagatedTiVariance(drT, drH, jacT, jacH, targetCov, healthyCov))
       } else {
         // Fall back to the literature radius-based σ_i prior — propagate it as the σ on a σ_i_multiplier (cov_11 = unc²; V_th covariance stays 0).
-        const uncH = computeSigmaUncertaintyFactor(state.healthy.radius)
-        const uncT = computeSigmaUncertaintyFactor(state.target.radius)
+        const uncH = computeSigmaUncertaintyFactor(state.healthy)
+        const uncT = computeSigmaUncertaintyFactor(state.target)
         const priorT: CalibrationCovariance = { cov11: uncT * uncT, cov12: 0, cov22: 0 }
         const priorH: CalibrationCovariance = { cov11: uncH * uncH, cov12: 0, cov22: 0 }
         sigmaTi = Math.sqrt(propagatedTiVariance(drT, drH, jacT, jacH, priorT, priorH))

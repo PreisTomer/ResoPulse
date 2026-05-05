@@ -99,7 +99,7 @@ type SigmaSource         = 'literature' | 'measured' | 'electrorotation' | 'impe
 type TipKey =
   | 'radius' | 'memThick' | 'epsR' | 'sigmaI' | 'sigmaMem' | 'vmThr' | 'density' | 'cp'
   | 'derivedFc' | 'cellType'
-  | 'sigmaUncertaintyPct' | 'sigmaSource' | 'sigmaCitation'
+  | 'sigmaUncertaintyPct' | 'sigmaSource' | 'sigmaCitation' | 'conductivityMeasurementTempC'
   | 'resFreq' | 'capsidQ' | 'resThr' | 'resFreqUnc' | 'capsidQMin' | 'capsidQMax'
   | 'resFreq2' | 'capsidQ2' | 'resMode2Amp'
   | 'nuclearRadius' | 'nuclearMemThick' | 'nuclearEps' | 'nucleoplasmSigma' | 'nuclearVmThr'
@@ -172,9 +172,11 @@ const DEFAULT_FORM = () => ({
   shortLabel:           '',
   notes:                '',
   parameterConfidence:  'literature' as ParameterConfidence,
-  sigmaUncertaintyPct:  null as number | null,
-  sigmaSource:          '' as SigmaSource | '',
-  sigmaCitation:        '',
+  sigmaUncertaintyPct:              null as number | null,
+  sigmaSource:                      '' as SigmaSource | '',
+  sigmaCitation:                    '',
+  conductivityMeasurementTempC:     null as number | null,
+  conductivityMeasurementSigmaE:    null as number | null,
   ...TYPE_DEFAULTS.mammalian,
 })
 
@@ -303,10 +305,12 @@ export default defineComponent({
           shortLabel:                 p.shortLabel,
           notes:                      p.notes,
           parameterConfidence:        (p.parameterConfidence as ParameterConfidence) ?? 'literature',
-          sigmaUncertaintyPct:        p.sigmaUncertaintyPct        ?? null,
-          sigmaSource:                (p.sigmaSource as SigmaSource | undefined) ?? '',
-          sigmaCitation:              p.sigmaCitation              ?? '',
-          radius:                     p.radius,
+          sigmaUncertaintyPct:              p.sigmaUncertaintyPct              ?? null,
+          sigmaSource:                      (p.sigmaSource as SigmaSource | undefined) ?? '',
+          sigmaCitation:                    p.sigmaCitation                    ?? '',
+          conductivityMeasurementTempC:     p.conductivityMeasurementTempC     ?? null,
+          conductivityMeasurementSigmaE:    p.conductivityMeasurementSigmaE    ?? null,
+          radius:                           p.radius,
           membraneThickness:          p.membraneThickness,
           dielectricConstant:         p.dielectricConstant,
           conductivity:               p.conductivity,
@@ -384,9 +388,11 @@ export default defineComponent({
         density:              this.form.density,
         specificHeatCapacity: this.form.specificHeatCapacity,
         ...(this.form.membraneConductivity != null && { membraneConductivity: this.form.membraneConductivity }),
-        ...(this.form.sigmaUncertaintyPct != null && { sigmaUncertaintyPct: this.form.sigmaUncertaintyPct }),
-        ...(this.form.sigmaSource         !== '' && { sigmaSource: this.form.sigmaSource as SigmaSource }),
-        ...(this.form.sigmaCitation.trim() !== '' && { sigmaCitation: this.form.sigmaCitation.trim() }),
+        ...(this.form.sigmaUncertaintyPct             != null && { sigmaUncertaintyPct:             this.form.sigmaUncertaintyPct }),
+        ...(this.form.sigmaSource                     !== '' && { sigmaSource: this.form.sigmaSource as SigmaSource }),
+        ...(this.form.sigmaCitation.trim()            !== '' && { sigmaCitation:                    this.form.sigmaCitation.trim() }),
+        ...(this.form.conductivityMeasurementTempC  != null && { conductivityMeasurementTempC:  this.form.conductivityMeasurementTempC }),
+        ...(this.form.conductivityMeasurementSigmaE != null && { conductivityMeasurementSigmaE: this.form.conductivityMeasurementSigmaE }),
         ...(isMammalian && this.form.nuclearRadius              != null && { nuclearRadius:              this.form.nuclearRadius }),
         ...(isMammalian && this.form.nuclearMembraneThickness   != null && { nuclearMembraneThickness:   this.form.nuclearMembraneThickness }),
         ...(isMammalian && this.form.nuclearMembraneEps         != null && { nuclearMembraneEps:         this.form.nuclearMembraneEps }),

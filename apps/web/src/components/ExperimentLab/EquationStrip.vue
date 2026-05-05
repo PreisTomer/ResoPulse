@@ -20,13 +20,13 @@
         <span class="equation-strip__badge equation-strip__badge--target">{{ labelTarget }}</span>
         <span class="equation-strip__eq">{{ targetSubstituted }}</span>
         <span class="equation-strip__equals">=</span>
-        <span class="equation-strip__result">{{ targetResult }}</span>
+        <span class="equation-strip__result equation-strip__result--target">{{ targetResult }}</span>
       </div>
       <div class="equation-strip__line equation-strip__line--healthy">
         <span class="equation-strip__badge equation-strip__badge--healthy">{{ labelHealthy }}</span>
         <span class="equation-strip__eq">{{ healthySubstituted }}</span>
         <span class="equation-strip__equals">=</span>
-        <span class="equation-strip__result">{{ healthyResult }}</span>
+        <span class="equation-strip__result equation-strip__result--healthy">{{ healthyResult }}</span>
       </div>
     </div>
 
@@ -251,8 +251,10 @@ export default defineComponent({
   &__result {
     font-size: var(--fs-md);
     font-weight: 700;
-    color: var(--color-primary);
     flex-shrink: 0;
+
+    &--target  { color: var(--color-danger); }
+    &--healthy { color: var(--color-primary); }
   }
 
   @media (max-width: 900px) {

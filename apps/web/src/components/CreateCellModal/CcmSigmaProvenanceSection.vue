@@ -10,6 +10,25 @@
 
       <div class="ccm-sigma-prov__field">
         <label class="ccm-sigma-prov__label">
+          {{ $t('userPresets.fieldSigmaMeasurementTemp') }}
+          <span class="ccm-sigma-prov__unit">{{ UNIT.DEG_C }}</span>
+          <button class="ccm-sigma-prov__tip-btn" @click="$emit(EMIT.SHOW_TIP, 'conductivityMeasurementTempC')">?</button>
+        </label>
+        <input
+          :value="form.conductivityMeasurementTempC ?? ''"
+          class="ccm-sigma-prov__input"
+          type="number"
+          step="1"
+          min="4"
+          max="42"
+          :placeholder="$t('userPresets.sigmaMeasurementTempPlaceholder')"
+          @input="onNumericOrNullInput('conductivityMeasurementTempC', $event, 4, 42)"
+        />
+        <span class="ccm-sigma-prov__sub-hint">{{ $t('userPresets.fieldSigmaMeasurementTempSub') }}</span>
+      </div>
+
+      <div class="ccm-sigma-prov__field">
+        <label class="ccm-sigma-prov__label">
           {{ $t('userPresets.fieldSigmaUncertaintyPct') }}
           <span class="ccm-sigma-prov__unit">{{ UNIT.PERCENT }}</span>
           <button class="ccm-sigma-prov__tip-btn" @click="$emit(EMIT.SHOW_TIP, 'sigmaUncertaintyPct')">?</button>
@@ -88,12 +107,12 @@ export default defineComponent({
   },
 
   methods: {
-    onNumericOrNullInput(key: string, event: Event) {
+    onNumericOrNullInput(key: string, event: Event, min = 0, max = 100) {
       const raw    = (event.target as HTMLInputElement).value
       if (raw === '') { this.$emit(EMIT.FIELD_CHANGE, { key, value: null }); return }
       const parsed = parseFloat(raw)
       if (!Number.isFinite(parsed)) return
-      const clamped = Math.max(0, Math.min(100, parsed))
+      const clamped = Math.max(min, Math.min(max, parsed))
       this.$emit(EMIT.FIELD_CHANGE, { key, value: clamped })
     },
 

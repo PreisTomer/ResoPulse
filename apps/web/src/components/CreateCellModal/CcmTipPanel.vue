@@ -20,7 +20,7 @@ import { EMIT } from '@/constants/emitEvents'
 type TipKey =
   | 'radius' | 'memThick' | 'epsR' | 'sigmaI' | 'sigmaMem' | 'vmThr' | 'density' | 'cp'
   | 'derivedFc' | 'cellType'
-  | 'sigmaUncertaintyPct' | 'sigmaSource' | 'sigmaCitation'
+  | 'conductivityMeasurementTempC' | 'sigmaUncertaintyPct' | 'sigmaSource' | 'sigmaCitation'
   | 'resFreq' | 'capsidQ' | 'resThr' | 'resFreqUnc' | 'capsidQMin' | 'capsidQMax'
   | 'resFreq2' | 'capsidQ2' | 'resMode2Amp'
   | 'nuclearRadius' | 'nuclearMemThick' | 'nuclearEps' | 'nucleoplasmSigma' | 'nuclearVmThr'
@@ -36,9 +36,10 @@ const TIP_I18N_MAP: Record<TipKey, string> = {
   cp:                  'userPresets.tipCp',
   derivedFc:           'userPresets.tipDerivedFc',
   cellType:            'userPresets.tipCellType',
-  sigmaUncertaintyPct: 'userPresets.tipSigmaUncertaintyPct',
-  sigmaSource:         'userPresets.tipSigmaSource',
-  sigmaCitation:       'userPresets.tipSigmaCitation',
+  conductivityMeasurementTempC: 'userPresets.tipSigmaMeasurementTemp',
+  sigmaUncertaintyPct:          'userPresets.tipSigmaUncertaintyPct',
+  sigmaSource:                  'userPresets.tipSigmaSource',
+  sigmaCitation:                'userPresets.tipSigmaCitation',
   resFreq:             'userPresets.tipResFreq',
   capsidQ:             'userPresets.tipCapsidQ',
   resThr:              'userPresets.tipResThr',

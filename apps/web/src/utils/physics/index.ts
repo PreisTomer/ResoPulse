@@ -375,10 +375,11 @@ export function computeLysisField(
     (SCHWAN_SPHERE_FACTOR * cell.radius * UM_TO_M * cosTheta * VCM_TO_VM * Math.max(MIN_PULSE_ENVELOPE, pef))
 }
 
-// σ_i uncertainty factor by cell category: virus 45%, bacteria 35%, mammalian 20%.
-export function computeSigmaUncertaintyFactor(radius: number): number {
-  if (radius < THRESHOLDS.RADIUS_VIRUS_MAX)    return THRESHOLDS.UNCERTAINTY_VIRUS
-  if (radius < THRESHOLDS.RADIUS_BACTERIA_MAX) return THRESHOLDS.UNCERTAINTY_BACTERIA
+// σ_i uncertainty factor: uses per-cell value when provided, otherwise falls back to category default (virus 45%, bacteria 35%, mammalian 20%).
+export function computeSigmaUncertaintyFactor(cell: { radius: number; sigmaUncertaintyPct?: number }): number {
+  if (cell.sigmaUncertaintyPct != null && cell.sigmaUncertaintyPct > 0) return cell.sigmaUncertaintyPct / 100
+  if (cell.radius < THRESHOLDS.RADIUS_VIRUS_MAX)    return THRESHOLDS.UNCERTAINTY_VIRUS
+  if (cell.radius < THRESHOLDS.RADIUS_BACTERIA_MAX) return THRESHOLDS.UNCERTAINTY_BACTERIA
   return THRESHOLDS.UNCERTAINTY_MAMMALIAN
 }
 

@@ -41,6 +41,9 @@ export interface UserCellPreset {
   sigmaUncertaintyPct?: number
   sigmaSource?:         SigmaSource
   sigmaCitation?:       string
+  // σ_i measurement conditions — used for temperature correction and medium mismatch detection
+  conductivityMeasurementTempC?:  number  // °C at which σ_i was measured; absent → assume 37°C
+  conductivityMeasurementSigmaE?: number  // medium σ_e [S/m] during σ_i measurement; absent → no mismatch check
   // Nuclear envelope (mammalian only; Kotnik & Miklavcic 2006)
   nuclearRadius?:              number
   nuclearMembraneThickness?:   number
@@ -91,6 +94,8 @@ interface BackendPreset {
   sigmaUncertaintyPct: number | null
   sigmaSource:         string | null
   sigmaCitation:       string | null
+  conductivityMeasurementTempC:  number | null
+  conductivityMeasurementSigmaE: number | null
   nuclearRadius: number | null
   nuclearMembraneThickness: number | null
   nuclearMembraneEps: number | null
@@ -123,10 +128,12 @@ function fromBackend(p: BackendPreset): UserCellPreset {
     density:              p.density,
     specificHeatCapacity: p.specificHeatCapacity,
     ...(p.membraneConductivity       != null && { membraneConductivity:       p.membraneConductivity }),
-    ...(p.sigmaUncertaintyPct        != null && { sigmaUncertaintyPct:        p.sigmaUncertaintyPct }),
-    ...(p.sigmaSource                != null && p.sigmaSource !== '' && { sigmaSource: p.sigmaSource as SigmaSource }),
-    ...(p.sigmaCitation              != null && p.sigmaCitation !== '' && { sigmaCitation: p.sigmaCitation }),
-    ...(p.nuclearRadius              != null && { nuclearRadius:              p.nuclearRadius }),
+    ...(p.sigmaUncertaintyPct           != null && { sigmaUncertaintyPct:           p.sigmaUncertaintyPct }),
+    ...(p.sigmaSource                   != null && p.sigmaSource !== '' && { sigmaSource: p.sigmaSource as SigmaSource }),
+    ...(p.sigmaCitation                 != null && p.sigmaCitation !== '' && { sigmaCitation: p.sigmaCitation }),
+    ...(p.conductivityMeasurementTempC  != null && { conductivityMeasurementTempC:  p.conductivityMeasurementTempC }),
+    ...(p.conductivityMeasurementSigmaE != null && { conductivityMeasurementSigmaE: p.conductivityMeasurementSigmaE }),
+    ...(p.nuclearRadius                 != null && { nuclearRadius:                 p.nuclearRadius }),
     ...(p.nuclearMembraneThickness   != null && { nuclearMembraneThickness:   p.nuclearMembraneThickness }),
     ...(p.nuclearMembraneEps         != null && { nuclearMembraneEps:         p.nuclearMembraneEps }),
     ...(p.nucleoplasmConductivity    != null && { nucleoplasmConductivity:    p.nucleoplasmConductivity }),
@@ -253,8 +260,11 @@ export const useUserPresetsStore = defineStore('userPresets', {
         density:              preset.density,
         specificHeatCapacity: preset.specificHeatCapacity,
         amplitude:            0.5,
-        ...(preset.membraneConductivity       != null && { membraneConductivity:       preset.membraneConductivity }),
-        ...(preset.nuclearRadius              != null && { nuclearRadius:              preset.nuclearRadius }),
+        ...(preset.membraneConductivity           != null && { membraneConductivity:           preset.membraneConductivity }),
+        ...(preset.conductivityMeasurementTempC  != null && { conductivityMeasurementTempC:  preset.conductivityMeasurementTempC }),
+        ...(preset.conductivityMeasurementSigmaE != null && { conductivityMeasurementSigmaE: preset.conductivityMeasurementSigmaE }),
+        ...(preset.sigmaUncertaintyPct           != null && { sigmaUncertaintyPct:           preset.sigmaUncertaintyPct }),
+        ...(preset.nuclearRadius                 != null && { nuclearRadius:                 preset.nuclearRadius }),
         ...(preset.nuclearMembraneThickness   != null && { nuclearMembraneThickness:   preset.nuclearMembraneThickness }),
         ...(preset.nuclearMembraneEps         != null && { nuclearMembraneEps:         preset.nuclearMembraneEps }),
         ...(preset.nucleoplasmConductivity    != null && { nucleoplasmConductivity:    preset.nucleoplasmConductivity }),

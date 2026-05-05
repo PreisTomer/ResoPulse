@@ -73,43 +73,45 @@
         </p>
 
         <div class="ttf__readouts">
+          <span class="ttf__readouts-col-header ttf__readouts-col-header--target">{{ $t('ttFields.colHeaderTarget') }}</span>
+          <span class="ttf__readouts-col-header ttf__readouts-col-header--ref">{{ $t('ttFields.colHeaderRef') }}</span>
           <StatCard
-            :label="$t('ttFields.reKSubT') + ' Re[K]'"
+            :label="$t('ttFields.reKLabelT')"
             :value="formatRek(cellStore.ttfTargetReK)"
             :sub="reKSign(cellStore.ttfTargetReK)"
             :variant="reKVariant(cellStore.ttfTargetReK)"
             :tooltip="$t('ttFields.reKTip')"
           />
           <StatCard
-            :label="$t('ttFields.reKSubH') + ' Re[K]'"
+            :label="$t('ttFields.reKLabelH')"
             :value="formatRek(cellStore.ttfHealthyReK)"
             :sub="reKSign(cellStore.ttfHealthyReK)"
             :variant="reKVariant(cellStore.ttfHealthyReK)"
             :tooltip="$t('ttFields.reKTip')"
           />
           <StatCard
-            :label="$t('ttFields.reKSubT') + ' DEP'"
+            :label="$t('ttFields.depLabelT')"
             :value="formatPN(cellStore.ttfTargetForceN)"
             :sub="$t('ttFields.forceLabel')"
             variant="info"
             :tooltip="$t('ttFields.forceTip')"
           />
           <StatCard
-            :label="$t('ttFields.reKSubH') + ' DEP'"
+            :label="$t('ttFields.depLabelH')"
             :value="formatPN(cellStore.ttfHealthyForceN)"
             :sub="$t('ttFields.forceLabel')"
             variant="info"
             :tooltip="$t('ttFields.forceTip')"
           />
           <StatCard
-            :label="$t('ttFields.reKSubT') + ' MEI'"
+            :label="$t('ttFields.meiLabelT')"
             :value="formatIndex(cellStore.ttfTargetIndex)"
             :sub="$t('ttFields.indexSub')"
             :variant="indexVariant(cellStore.ttfTargetIndex)"
             :tooltip="$t('ttFields.indexTip')"
           />
           <StatCard
-            :label="$t('ttFields.reKSubH') + ' MEI'"
+            :label="$t('ttFields.meiLabelH')"
             :value="formatIndex(cellStore.ttfHealthyIndex)"
             :sub="$t('ttFields.indexSub')"
             :variant="indexVariant(cellStore.ttfHealthyIndex)"
@@ -308,10 +310,17 @@ export default defineComponent({
 
   &__readouts {
     display: grid;
-    grid-template-columns: 1fr;
-    gap: 0.55rem;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.35rem 0.55rem;
+  }
 
-    @media (min-width: 720px) { grid-template-columns: repeat(3, 1fr); }
+  &__readouts-col-header {
+    @include mono-upper(var(--fs-xxs), 0.08em);
+    color: var(--color-text-muted);
+    padding: 0 0.25rem 0.1rem;
+
+    &--target { color: var(--color-danger); opacity: var(--op-partial); }
+    &--ref    { color: var(--color-primary); opacity: var(--op-partial); }
   }
 
   &__hint {

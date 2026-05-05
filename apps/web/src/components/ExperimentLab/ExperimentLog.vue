@@ -612,10 +612,10 @@ export default defineComponent({
   &__td-mono { }
   &__td-target     { color: var(--color-danger); }
   &__td-healthy    { color: var(--color-primary); }
-  &__td-healthy-dr { color: var(--color-primary); opacity: var(--op-dim); }
+  &__td-healthy-dr { color: var(--color-primary); opacity: var(--op-partial); }
   &__td-sel        { color: var(--color-text-heading); font-weight: 600; }
   &__td-dep        { opacity: 0.85; } // intentional: slightly faded non-primary column
-  &__td-bms        { color: var(--color-primary); opacity: var(--op-dim); font-size: var(--fs-xs); }
+  &__td-bms        { color: var(--color-primary); opacity: var(--op-partial); font-size: var(--fs-xs); }
   &__td-pdep       { color: var(--color-lime); }
   &__td-ndep       { color: var(--color-amber); }
   &__td-event      { }
@@ -640,7 +640,7 @@ export default defineComponent({
     cursor: default;
 
     &--filled { color: var(--color-amber); }
-    &--empty  { color: var(--color-border); opacity: var(--op-dim); }
+    &--empty  { color: color-mix(in srgb, var(--color-text) 22%, transparent); }
 
     &--btn {
       cursor: pointer;

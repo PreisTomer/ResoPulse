@@ -4,7 +4,7 @@
 
 import { describe, it, expect } from 'vitest'
 
-import { H_FIRE_THRESHOLD_MULTIPLIER, BODY_TEMP_C } from '@/constants/physics'
+import { H_FIRE_THRESHOLD_MULTIPLIER, BODY_TEMP_C, SIGMA_I_TEMP_COEFF } from '@/constants/physics'
 import { WAVEFORM, CELL_CATEGORY } from '@/constants/strings'
 
 import {
@@ -32,6 +32,7 @@ import {
   jacobianSchwanDR,
   propagateScalarVariance,
   computeSchwanDR,
+  computeSigmaUncertaintyFactor,
 } from '@/utils/physics'
 
 import type { CellConfig } from '@/types/cell'
@@ -453,5 +454,55 @@ describe('Cross-mode invariant: SAR field-squared scaling', () => {
     const sarCw     = computeSAR(TARGET_CELL, FIELD, SIGMA_E, 0.5)
     const sarPulsed = computeSAR(TARGET_CELL, FIELD, SIGMA_E, 1.0)
     expect(sarPulsed / sarCw).toBeCloseTo(2.0, 9)
+  })
+})
+
+describe('σ_i uncertainty factor: per-cell override vs category default', () => {
+  it('mammalian radius with no override returns UNCERTAINTY_MAMMALIAN (0.20)', () => {
+    expect(computeSigmaUncertaintyFactor({ radius: 10 })).toBeCloseTo(0.20, 9)
+  })
+
+  it('virus radius with no override returns UNCERTAINTY_VIRUS (0.45)', () => {
+    expect(computeSigmaUncertaintyFactor({ radius: 0.014 })).toBeCloseTo(0.45, 9)
+  })
+
+  it('bacteria radius with no override returns UNCERTAINTY_BACTERIA (0.35)', () => {
+    expect(computeSigmaUncertaintyFactor({ radius: 1.0 })).toBeCloseTo(0.35, 9)
+  })
+
+  it('per-cell sigmaUncertaintyPct overrides category default regardless of radius', () => {
+    expect(computeSigmaUncertaintyFactor({ radius: 10, sigmaUncertaintyPct: 30 })).toBeCloseTo(0.30, 9)
+    expect(computeSigmaUncertaintyFactor({ radius: 0.014, sigmaUncertaintyPct: 10 })).toBeCloseTo(0.10, 9)
+  })
+
+  it('sigmaUncertaintyPct = 0 falls through to category default (zero is treated as absent)', () => {
+    expect(computeSigmaUncertaintyFactor({ radius: 10, sigmaUncertaintyPct: 0 })).toBeCloseTo(0.20, 9)
+  })
+})
+
+describe('σ_i temperature correction coefficient', () => {
+  it('SIGMA_I_TEMP_COEFF is 0.02 (2%/°C from Foster & Schwan 1989)', () => {
+    expect(SIGMA_I_TEMP_COEFF).toBeCloseTo(0.02, 9)
+  })
+
+  it('correction factor = 1 + 0.02 × (T_exp - T_ref)', () => {
+    const T_ref = 22
+    const T_exp = 37
+    const factor = 1 + SIGMA_I_TEMP_COEFF * (T_exp - T_ref)
+    expect(factor).toBeCloseTo(1.30, 9)
+  })
+
+  it('correction is identity when T_exp = T_ref', () => {
+    const T_ref = 37
+    const T_exp = 37
+    const factor = 1 + SIGMA_I_TEMP_COEFF * (T_exp - T_ref)
+    expect(factor).toBe(1.0)
+  })
+
+  it('correction decreases σ_i when experiment is colder than measurement', () => {
+    const T_ref = 37
+    const T_exp = 22
+    const factor = 1 + SIGMA_I_TEMP_COEFF * (T_exp - T_ref)
+    expect(factor).toBeCloseTo(0.70, 9)
   })
 })

@@ -1,6 +1,6 @@
 <!-- Copyright © 2026 Tomer Preis. Licensed under the MIT License. -->
 <template>
-  <div id="hl-heatmap" class="hmap" v-if="cellStore.targetCellCategory === CELL_CATEGORY.MAMMALIAN">
+  <div id="hl-heatmap" class="hmap" v-if="isMammalian">
     <AccordionPanel
       :icon="ICON.WAVE"
       :title="$t('heatmap.title')"
@@ -25,6 +25,11 @@
 
       </div>
     </AccordionPanel>
+  </div>
+
+  <div v-else id="hl-heatmap" class="hmap hmap--unavailable">
+    <span class="hmap__unavailable-icon">{{ ICON.WAVE }}</span>
+    <p class="hmap__unavailable-text">{{ $t('heatmap.notAvailable') }}</p>
   </div>
 </template>
 
@@ -54,6 +59,10 @@ export default defineComponent({
     ICON() { return ICON },
     CELL_CATEGORY() { return CELL_CATEGORY },
     ...mapStores(useCellStore),
+
+    isMammalian(): boolean {
+      return this.cellStore.targetCellCategory === CELL_CATEGORY.MAMMALIAN
+    },
 
     subtitle(): string {
       const sel = this.cellStore.selectivityRatio
@@ -90,6 +99,26 @@ export default defineComponent({
     flex-direction: column;
     gap: 0.75rem;
     padding: 0 0.75rem 0.75rem;
+  }
+
+  &--unavailable {
+    @include flex-row(0.6rem);
+    align-items: center;
+    padding: 0.65rem 1rem;
+  }
+
+  &__unavailable-icon {
+    font-size: var(--fs-xl);
+    color: var(--color-text-muted);
+    opacity: var(--op-muted);
+    flex-shrink: 0;
+  }
+
+  &__unavailable-text {
+    margin: 0;
+    font-size: var(--fs-xs);
+    color: var(--color-text-muted);
+    line-height: 1.4;
   }
 }
 </style>

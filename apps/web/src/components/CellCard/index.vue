@@ -329,6 +329,16 @@ export default defineComponent({
         tip:   this.$t('cells.derivedParams.thinShellTip'),
         warn:  true,
       }] : []
+      const hasMismatch = this.type === CELL_TYPE.HEALTHY
+        ? this.cellStore.healthySigmaMismatch
+        : this.cellStore.targetSigmaMismatch
+      const mismatchRow = hasMismatch ? [{
+        label: this.$t('cells.derivedParams.sigmaMediumMismatch'),
+        value: '',
+        unit:  '',
+        tip:   this.$t('cells.derivedParams.sigmaMediumMismatchTip'),
+        warn:  true,
+      }] : []
 
       if (this.isAcousticTarget) {
         const acousticCell = cell as CellConfig & { resonantFreqGHz?: number; capsidQ?: number }
@@ -351,6 +361,7 @@ export default defineComponent({
         { label: this.$t('cells.derivedParams.tau'), value: tauNs.toFixed(1), unit: UNIT.NS         },
         { label: this.$t('cells.derivedParams.fc'),  value: fcParts.value,    unit: fcParts.unit    },
         ...thinShellRow,
+        ...mismatchRow,
       ]
     },
 

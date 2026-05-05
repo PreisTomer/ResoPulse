@@ -39,6 +39,10 @@ export interface CellConfig {
   nuclearThresholdVoltage?: number     // V  , Vm_nuc required for nuclear envelope disruption (lower than plasma membrane)
   // σ_mem [S/m] for DEP CM. Default 10⁻⁷ (mammalian); Gram-neg ~10⁻⁵; omit for Gram-pos/enveloped virus (Markx 1999).
   membraneConductivity?: number
+  // σ_i measurement provenance — used to correct conductivity to experiment temperature and warn on medium mismatch.
+  conductivityMeasurementTempC?: number   // °C at which σ_i was measured; absent → assume 37°C (no correction applied)
+  conductivityMeasurementSigmaE?: number  // medium σ_e [S/m] used during σ_i measurement; absent → no mismatch check
+  sigmaUncertaintyPct?: number            // per-cell ±% uncertainty on σ_i; overrides the category-default prior
   // σ_ne (nuclear membrane) is unused: Kotnik 2006 double-shell in computeNuclearVm runs in the σ_ne→0 capacitive limit.
   // Thermal - added defaults (not in user spec)
   density: number              // kg/m³

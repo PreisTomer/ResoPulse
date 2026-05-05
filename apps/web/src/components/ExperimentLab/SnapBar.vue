@@ -7,7 +7,10 @@
       {{ sweepWindow.param === 'field' ? $t('sweep.fieldUnit') : $t('sweep.freqUnit') }}
     </span>
     <span class="experiment__snap-bar-affects">{{ sweepWindow.param === 'field' ? $t('exp.snapBarSubField') : $t('exp.snapBarSubFreq') }} {{ Math.round((sweepWindow.lo + sweepWindow.hi) / 2) }} {{ sweepWindow.param === 'field' ? $t('sweep.fieldUnit') : $t('sweep.freqUnit') }}</span>
-    <span v-if="snapConfirming" class="experiment__snap-bar-lysis-warn">{{ $t('exp.snapBarLysisWarn', { cellLabel: snapLysisCellLabel }) }}</span>
+    <span
+      class="experiment__snap-bar-lysis-warn"
+      :class="{ 'experiment__snap-bar-lysis-warn--active': snapConfirming }"
+    >{{ $t('exp.snapBarLysisWarn', { cellLabel: snapLysisCellLabel }) }}</span>
     <div class="experiment__snap-confirm-row">
       <template v-if="isSnapIdle">
         <button class="experiment__snap-bar-btn" @click="snapToWindow">
@@ -156,8 +159,11 @@ export default defineComponent({
       font-size: var(--fs-xxs);
       font-family: var(--font-mono);
       color: var(--color-danger);
-      opacity: var(--op-partial);
+      opacity: var(--op-muted);
       white-space: nowrap;
+      transition: opacity var(--tr-fast);
+
+      &--active { opacity: 1; }
     }
 
     &-btn {

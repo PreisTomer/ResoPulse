@@ -35,6 +35,7 @@
     "outcomeSubThreshold":  "Sub-threshold",
     "outcomeHTempElevated": "H-Temp {temp} {unit}, elevated",
     "axisFreq":  "RF Frequency (log)",
-    "axisField": "Field Intensity"
+    "axisField": "Field Intensity",
+    "notAvailable": "Selectivity Window Planner applies to mammalian cell protocols only. Switch the target to a mammalian preset to enable."
   }
 }

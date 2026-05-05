@@ -190,6 +190,7 @@ export const CELL_PRESETS: CellPreset[] = [
     thresholdVoltage: 0.85,
     dielectricConstant: 7.5,    // ⚠ ESTIMATE — Cm not updated (see techNotes); Zheng 2013 value unit-ambiguous
     conductivity: 0.76,         // Zheng et al. 2013 microfluidic impedance, n=3398 HL-60 cells
+    conductivityMeasurementTempC: 22,  // Zheng 2013: room temperature measurement
     density: 1080,
     specificHeatCapacity: 3300,
     amplitude: 0.5,
@@ -213,6 +214,7 @@ export const CELL_PRESETS: CellPreset[] = [
     thresholdVoltage: 0.65,
     dielectricConstant: 16.0,   // back-computed from Cm = 20.2 mF/m² (Lannin 2016) at d = 7 nm
     conductivity: 0.476,        // direct electrorotation measurement at 37°C — Lannin et al. 2016
+    conductivityMeasurementTempC: 37, conductivityMeasurementSigmaE: 0.07,  // Lannin 2016: DEP buffer, σ_e = 70 mS/m
     density: 1080,
     specificHeatCapacity: 3200,
     amplitude: 0.5,
@@ -235,6 +237,7 @@ export const CELL_PRESETS: CellPreset[] = [
     thresholdVoltage: 0.70,
     dielectricConstant: 19.4,   // back-computed from Cm = 24.5 mF/m² = 2.45 µF/cm² (Wang et al. 2017) at d = 7 nm
     conductivity: 0.99,         // Wang et al. 2017 constriction-channel impedance, n=442 A549 cells, 25°C
+    conductivityMeasurementTempC: 25,  // Wang 2017: 25°C measurement temperature
     density: 1070,
     specificHeatCapacity: 3200,
     amplitude: 0.5,

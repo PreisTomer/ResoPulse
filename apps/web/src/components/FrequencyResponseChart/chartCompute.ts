@@ -31,9 +31,9 @@ export function formatTooltipFreq(hz: number): string {
   return `${(hz / 1e3).toFixed(1)} ${UNIT.KHZ}`
 }
 
-// σ_i uncertainty [%] by category — wraps the canonical physics factor × 100.
-export function sigmaUncPct(radius: number): number {
-  return computeSigmaUncertaintyFactor(radius) * 100
+// σ_i uncertainty [%] — uses per-cell value if set, else category default.
+export function sigmaUncPct(cell: { radius: number; sigmaUncertaintyPct?: number }): number {
+  return computeSigmaUncertaintyFactor(cell) * 100
 }
 
 // ── Curve computers ───────────────────────────────────────────────────────────
@@ -124,7 +124,7 @@ export function computeUncBand(
 ): { hz: number; vmLow: number; vmHigh: number }[] {
   const effectiveCov: CalibrationCovariance = cov && cov.cov11 > 0
     ? cov
-    : { cov11: computeSigmaUncertaintyFactor(cell.radius) ** 2, cov12: 0, cov22: 0 }
+    : { cov11: computeSigmaUncertaintyFactor(cell) ** 2, cov12: 0, cov22: 0 }
   return F_POINTS_HZ.map((hz) => {
     const khz   = hz / 1000
     const vm    = computeSchwan(cell, khz, field, sigma_e, cosTheta) * 1000
