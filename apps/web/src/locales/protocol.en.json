@@ -587,6 +587,16 @@
         "note": "Primary source for PANC-1 biophysical parameters used in the cell library. Automated electrorotation at 37°C (σ_e = 70 mS/m) directly measured: σ_i = 0.476 S/m, cytoplasmic ε_r = 90, membrane specific capacitance Cm = 20.2 mF/m² (2.02 µF/cm²), radius = 12.1 µm, DEP crossover = 64 kHz. PANC-1 σ_i and Cm values in this model are taken directly from these measurements, removing the prior estimate. Also reports BxPC3: σ_i = 0.453 S/m, Cm = 22.5 mF/m²."
       },
       {
+        "body": "Yi Zheng, Ehsan Shojaei-Baghini, Chen Wang, Yu Sun. <em>Microfluidic characterization of specific membrane capacitance and cytoplasm conductivity of single cells.</em> Biosensors and Bioelectronics. 2013;42:496-502.",
+        "doi": "10.1016/j.bios.2012.10.081",
+        "note": "Primary source for HL-60 cytoplasmic conductivity. Single-cell microfluidic constriction-channel impedance spectroscopy (7 frequencies, 1-400 kHz; n = 3398 HL-60 cells). Reports σ_i = 0.76 ± 0.12 S/m for HL-60 and 0.62 ± 0.10 S/m for AML-2. Measurements at room temperature; 37°C values estimated 10-20% higher. Used directly for the HL-60 preset σ_i in this model."
+      },
+      {
+        "body": "Ke Wang, Yang Zhao, Deyong Chen, Beiyuan Fan, Yulan Lu, Lianhong Chen, Rong Long, Junbo Wang, Jian Chen. <em>Specific membrane capacitance, cytoplasm conductivity and instantaneous Young's modulus of single tumour cells.</em> Scientific Data. 2017;4:170015.",
+        "doi": "10.1038/sdata.2017.15",
+        "note": "Primary source for A549 cytoplasmic conductivity and membrane capacitance. Single-cell microfluidic constriction-channel impedance at 25°C (n = 442 A549 cells). Reports σ_i = 0.99 ± 0.18 S/m and Cm = 2.45 ± 0.57 µF/cm² for A549. Also covers H460 (σ_i = 0.91 S/m), H446 (0.83 S/m), 95D (1.07 S/m). A549 σ_i and Cm used directly in the cell library preset, replacing prior estimates."
+      },
+      {
         "body": "Christopher B. Arena, Michael B. Sano, John H. Rossmeisl Jr, Jeffrey L. Caldwell, Paulo A. Garcia, Marissa N. Rylander, Rafael V. Davalos. <em>High-frequency irreversible electroporation (H-FIRE) for non-thermal ablation without muscle contraction.</em> Biomedical Engineering Online. 2011;10:102.",
         "doi": "10.1186/1475-925X-10-102",
         "note": "Foundational H-FIRE paper establishing that bipolar burst delivery at carrier frequencies &gt;1 kHz produces an effective threshold elevation of ×1.5-2× relative to monopolar IRE, due to membrane capacitance redistribution between polarity reversals. Quantifies the physics basis for the ×1.75 threshold multiplier used in the H-FIRE waveform mode (§2.4)."
