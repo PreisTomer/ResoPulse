@@ -270,6 +270,52 @@ $_cell-states: (
   }
 }
 
+// ── Panel enable toggle (pill switch) ─────────────────────────────────────────
+@mixin panel-toggle() {
+  @include flex-row(0.6rem);
+  align-items: center;
+  cursor: pointer;
+  color: var(--color-text);
+  font-size: var(--fs-sm);
+
+  input[type="checkbox"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 2.4rem;
+    height: 1.3rem;
+    background: color-mix(in srgb, var(--color-text) 18%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-text) 28%, transparent);
+    border-radius: 0.65rem;
+    position: relative;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background var(--tr-fast), border-color var(--tr-fast);
+
+    &::after {
+      content: '';
+      position: absolute;
+      width: 0.88rem;
+      height: 0.88rem;
+      border-radius: 50%;
+      background: color-mix(in srgb, var(--color-text) 55%, transparent);
+      top: 50%;
+      left: 0.16rem;
+      transform: translateY(-50%);
+      transition: left var(--tr-fast), background var(--tr-fast);
+    }
+
+    &:checked {
+      background: color-mix(in srgb, var(--color-primary) 22%, transparent);
+      border-color: var(--color-primary-border);
+
+      &::after {
+        left: calc(100% - 1.04rem);
+        background: var(--color-primary);
+      }
+    }
+  }
+}
+
 // ── Readout inline input ────────────────────────────────────────────────────
 @mixin readout-inline-input() {
   font-size: 1rem;

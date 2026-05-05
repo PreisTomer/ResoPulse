@@ -10,7 +10,9 @@
 
         <div class="ferm__caveat" role="alert">
           <span class="ferm__caveat-icon" aria-hidden="true">{{ ICON.WARNING }}</span>
-          <p class="ferm__caveat-text">{{ $t('fermenter.caveat') }}</p>
+          <p class="ferm__caveat-text">
+            <strong class="ferm__caveat-lead">{{ $t('fermenter.caveatLead') }}</strong>{{ $t('fermenter.caveatBody') }}
+          </p>
         </div>
 
         <div class="ferm__row">
@@ -158,9 +160,13 @@ export default defineComponent({
 
 <style lang="scss" scoped>
 .ferm {
+  @include surface-card(var(--radius-lg));
+  overflow: hidden;
+
   &__body {
     @include flex-col(0.85rem);
     padding: 0.85rem 1rem 1rem;
+    border-top: 1px solid var(--color-border);
   }
 
   &__caveat {
@@ -171,12 +177,19 @@ export default defineComponent({
     border-radius: var(--radius);
   }
 
-  &__caveat-icon { font-size: var(--fs-md); margin-top: 0.05rem; }
+  &__caveat-icon { font-size: var(--fs-md); margin-top: 0.05rem; flex-shrink: 0; }
 
   &__caveat-text {
     margin: 0;
     font-size: var(--fs-xs);
-    line-height: 1.45;
+    line-height: 1.5;
+  }
+
+  &__caveat-lead {
+    display: block;
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    margin-bottom: 0.25rem;
   }
 
   &__row {
@@ -189,15 +202,7 @@ export default defineComponent({
     color: var(--color-text-muted);
   }
 
-  &__toggle {
-    @include flex-row(0.4rem);
-    align-items: center;
-    cursor: pointer;
-    color: var(--color-text);
-    font-size: var(--fs-xs);
-
-    input[type="checkbox"] { accent-color: var(--color-primary); }
-  }
+  &__toggle { @include panel-toggle(); }
 
   &__inputs {
     border: none;
@@ -248,9 +253,8 @@ export default defineComponent({
 
   &__hint {
     margin: 0;
-    font-size: var(--fs-xxs);
+    font-size: var(--fs-xs);
     color: var(--color-text-muted);
-    opacity: var(--op-dim);
     line-height: 1.5;
   }
 }

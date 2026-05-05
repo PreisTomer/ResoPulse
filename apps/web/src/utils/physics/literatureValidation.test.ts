@@ -1,6 +1,6 @@
 // Copyright © 2026 Tomer Preis. Licensed under the MIT License.
 
-// Regression locks for in-app validation workflows in locales/validate.en.json — drift here is a credibility-grade regression. Anand 2019 (DOI 10.1039/C9RA07428G) MCF-7 vs MCF-10A E_lys 589 vs 667 V/cm, TI 1.13. CCMV resonance scenario: f_res=7.7 GHz from Dykeman & Sankey 2010 atomistic model (DOI 10.1103/PhysRevE.81.021918); the Schwan Vm collapse at GHz for mammalian cells is the rigorous selectivity claim.
+// Regression locks for in-app validation workflows in locales/validate.en.json — drift here is a credibility-grade regression. Anand 2019 (DOI 10.1039/C9RA07428G) MCF-7 vs MCF-10A E_lys 589 vs 667 V/cm, TI 1.13. CCMV resonance scenario: f_res ≈ 21 GHz lowest H mode from Dykeman & Sankey 2010 Table V (DOI 10.1103/PhysRevE.81.021918); the Schwan Vm collapse at GHz for mammalian cells is the rigorous selectivity claim.
 
 import { describe, it, expect } from 'vitest'
 
@@ -85,21 +85,21 @@ describe('Anand 2019 — MCF-7 vs MCF-10A lysis-field selectivity (regression lo
   })
 })
 
-// CCMV resonance scenario conditions from validate.en.json: resonance chart mode, 7.7 GHz (Dykeman & Sankey 2010 model), 500 V/cm, CCMV target, hepatocyte reference, 37°C, single pulse.
-const TSEN_FREQ_GHZ          = 7.7
-const TSEN_FIELD_VCM         = 500
-const TSEN_FREQ_HZ           = TSEN_FREQ_GHZ * 1e9
-const TSEN_FREQ_KHZ          = TSEN_FREQ_GHZ * 1e6
-const TSEN_HEPATOCYTE_SIGMA  = 0.14
+// CCMV resonance scenario conditions from validate.en.json: resonance chart mode, 21 GHz (Dykeman & Sankey 2010 lowest H mode), 500 V/cm, CCMV target, hepatocyte reference, 37°C, single pulse.
+const CCMV_FRES_GHZ      = 21
+const CCMV_FIELD_VCM     = 500
+const CCMV_FRES_HZ       = CCMV_FRES_GHZ * 1e9
+const CCMV_FRES_KHZ      = CCMV_FRES_GHZ * 1e6
+const HEPATOCYTE_SIGMA_E = 0.14
 
-describe('CCMV resonance at 7.7 GHz — Dykeman & Sankey 2010 model (regression lock)', () => {
+describe('CCMV resonance at ≈ 21 GHz — Dykeman & Sankey 2010 lowest H mode (regression lock)', () => {
   const ccmv       = findPreset('ccmv')
   const hepatocyte = findPreset('hepatocyte')
 
-  it('CCMV preset carries Dykeman 2010 model params and Speir 1995 geometry verbatim', () => {
+  it('CCMV preset carries Dykeman 2010 atomistic-model params and Speir 1995 geometry verbatim', () => {
     expect(ccmv.radius).toBe(0.014)
-    expect(ccmv.resonantFreqGHz).toBe(7.7)
-    expect(ccmv.capsidQ).toBe(12)
+    expect(ccmv.resonantFreqGHz).toBe(21)
+    expect(ccmv.capsidQ).toBe(4)
     expect(ccmv.resonantThresholdVcm).toBe(500)
   })
 
@@ -109,42 +109,42 @@ describe('CCMV resonance at 7.7 GHz — Dykeman & Sankey 2010 model (regression 
 
     const dr = computeResonantDisruption(
       ccmv.resonantFreqGHz!, ccmv.capsidQ!, effThr,
-      TSEN_FREQ_HZ, TSEN_FIELD_VCM,
+      CCMV_FRES_HZ, CCMV_FIELD_VCM,
     )
     expect(dr).toBeCloseTo(1.0, 3)
   })
 
   it('Lorentzian DR is linear in field amplitude at exact resonance', () => {
-    const drAtThr  = computeResonantDisruption(7.7, 12, 500, TSEN_FREQ_HZ, 500)
-    const drAt2x   = computeResonantDisruption(7.7, 12, 500, TSEN_FREQ_HZ, 1000)
-    const drAt0p5x = computeResonantDisruption(7.7, 12, 500, TSEN_FREQ_HZ, 250)
+    const drAtThr  = computeResonantDisruption(21, 4, 500, CCMV_FRES_HZ, 500)
+    const drAt2x   = computeResonantDisruption(21, 4, 500, CCMV_FRES_HZ, 1000)
+    const drAt0p5x = computeResonantDisruption(21, 4, 500, CCMV_FRES_HZ, 250)
     expect(drAt2x).toBeCloseTo(2 * drAtThr, 6)
     expect(drAt0p5x).toBeCloseTo(0.5 * drAtThr, 6)
   })
 
-  it('Lorentzian collapses far off-resonance (Q = 12 sharp peak)', () => {
-    const drOnRes  = computeResonantDisruption(7.7, 12, 500, TSEN_FREQ_HZ, 500)
-    const drFarOff = computeResonantDisruption(7.7, 12, 500, 1.0e9, 500)
+  it('Lorentzian falls off significantly far from resonance (Q = 4 broader peak in solvent)', () => {
+    const drOnRes  = computeResonantDisruption(21, 4, 500, CCMV_FRES_HZ, 500)
+    const drFarOff = computeResonantDisruption(21, 4, 500, 1.0e9, 500)
     expect(drFarOff / drOnRes).toBeLessThan(0.02)
   })
 
-  it('hepatocyte Schwan Vm collapses at 7.7 GHz (mammalian charge-up cannot follow)', () => {
-    const vm = computeSchwan(hepatocyte, TSEN_FREQ_KHZ, TSEN_FIELD_VCM, TSEN_HEPATOCYTE_SIGMA, 1.0)
+  it('hepatocyte Schwan Vm collapses at 21 GHz (mammalian charge-up cannot follow)', () => {
+    const vm = computeSchwan(hepatocyte, CCMV_FRES_KHZ, CCMV_FIELD_VCM, HEPATOCYTE_SIGMA_E, 1.0)
     expect(vm).toBeLessThan(hepatocyte.thresholdVoltage / 1000)
   })
 
-  it('hepatocyte fc ≪ 7.7 GHz so f / fc > 10000 (Schwan collapse is the rigorous selectivity claim)', () => {
-    const fcKhz = computeFc(hepatocyte, TSEN_HEPATOCYTE_SIGMA)
-    const ratio = TSEN_FREQ_KHZ / fcKhz
-    expect(ratio).toBeGreaterThan(10000)
+  it('hepatocyte fc ≪ 21 GHz so f / fc > 30000 (Schwan collapse is the rigorous selectivity claim)', () => {
+    const fcKhz = computeFc(hepatocyte, HEPATOCYTE_SIGMA_E)
+    const ratio = CCMV_FRES_KHZ / fcKhz
+    expect(ratio).toBeGreaterThan(30000)
   })
 
-  it('selectivity at 7.7 GHz: CCMV DR ≈ 1, hepatocyte EP DR ≈ 0 (TI in the thousands)', () => {
+  it('selectivity at 21 GHz: CCMV DR ≈ 1, hepatocyte EP DR ≈ 0 (TI in the thousands)', () => {
     const drCcmv = computeResonantDisruption(
       ccmv.resonantFreqGHz!, ccmv.capsidQ!, ccmv.resonantThresholdVcm!,
-      TSEN_FREQ_HZ, TSEN_FIELD_VCM,
+      CCMV_FRES_HZ, CCMV_FIELD_VCM,
     )
-    const vmHep = computeSchwan(hepatocyte, TSEN_FREQ_KHZ, TSEN_FIELD_VCM, TSEN_HEPATOCYTE_SIGMA, 1.0)
+    const vmHep = computeSchwan(hepatocyte, CCMV_FRES_KHZ, CCMV_FIELD_VCM, HEPATOCYTE_SIGMA_E, 1.0)
     const drHepEp = vmHep / hepatocyte.thresholdVoltage
     const ti = drCcmv / Math.max(drHepEp, 1e-9)
     expect(ti).toBeGreaterThan(1000)

@@ -9,7 +9,7 @@
     "legendLibrary": "Preset library",
     "legendThreshold": "≥1.0 Disruption threshold",
     "noteTitle": "Resonance mode",
-    "noteBody": "Acoustic/mechanical capsid & cell-wall disruption. f_res ≈ v_protein/(2R): viral capsids ~10-12 GHz, bacterial walls ~0.5-1.5 GHz. Mammalian cells (R ≈ 10 µm) have no GHz resonance, frequency-selective disruption. Ref: Tsen et al. (2007); Dykeman & Sankey (2010)",
+    "noteBody": "Acoustic/mechanical capsid & cell-wall disruption. f_res ≈ v_protein/(2R): rigid icosahedral viral capsids ~15-40 GHz (Dykeman & Sankey 2010 atomistic; CCMV lowest H mode ≈ 21 GHz); enveloped viruses lower (~4-8 GHz, Thakur 2015 H3N2; Sci. Rep. 2022 SARS-CoV-2); bacterial walls ~0.5-1.5 GHz. Mammalian cells (R ≈ 10 µm) have no GHz resonance, hence frequency-selective disruption. Ref: Dykeman & Sankey (2010); Murray & Saviot (2007); Thakur et al. (2015)",
     "noResonance": "No resonance parameters for this cell",
     "tipFieldTitle": "Applied Field Intensity (Resonance Mode)",
     "tipFieldFormula": "Disruption ratio = (E / E_threshold) × L(f, f_res, Q)",

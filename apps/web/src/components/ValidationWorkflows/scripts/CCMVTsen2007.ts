@@ -1,6 +1,6 @@
 // Copyright © 2026 Tomer Preis. Licensed under the MIT License.
 
-// Tsen 2007 (Biophys. J. 93:1340) CCMV f_res=7.7 GHz; at this f hepatocyte Vm≈0 so TI display caps at 99.9.
+// Dykeman & Sankey 2010 (Phys. Rev. E 81:021918) CCMV lowest H mode ≈ 21 GHz; at this f hepatocyte Vm≈0 so TI display caps at 99.9.
 
 import { useCellStore } from '@/stores/cellStore'
 import { useUiStore } from '@/stores/uiStore'
@@ -14,11 +14,11 @@ import { animateTo } from './replayUtils'
 const HEPATOCYTE_PRESET = CELL_PRESETS.find(p => p.presetId === 'hepatocyte')!
 const CCMV_PRESET       = CELL_PRESETS.find(p => p.presetId === 'ccmv')!
 
-// CCMV capsid resonant frequency (Tsen 2007 ISRS laser measurement)
-const CCMV_RESONANT_FREQ_GHZ = 7.7   // GHz
-const CCMV_RESONANT_FREQ_KHZ = 7_700_000   // kHz = 7.7 GHz
-const CCMV_CAPSID_Q          = 12    // nominal Q from linewidth (rigid icosahedral capsid)
-const CCMV_FIELD_VCM         = 500   // V/cm — Tsen 2007 disruption threshold
+// CCMV lowest acoustic mode (Dykeman & Sankey 2010 Table V; lowest H mode at 0.71 cm⁻¹)
+const CCMV_RESONANT_FREQ_GHZ = 21   // GHz — atomistic lowest H mode (range 17–36 GHz across modes/methods)
+const CCMV_RESONANT_FREQ_KHZ = 21_000_000   // kHz = 21 GHz
+const CCMV_CAPSID_Q          = 4    // Q with solvent damping (Murray & Saviot 2007 lifetime in water)
+const CCMV_FIELD_VCM         = 500   // V/cm — model acoustic disruption threshold (unsourced)
 
 // Animation durations — same convention as MCF7Breast.ts
 const PARAM_ANIM_MS  = 1000  // sweep duration for each param
@@ -48,7 +48,7 @@ export const createCCMVTsen2007Script: ScriptFactory = () => {
       const ti  = cellStore.therapeuticIndex
       const tiStr = ti >= 99 ? '>99' : ti.toFixed(1)
       const hDrStr = hDR < 0.001 ? '~0' : hDR.toFixed(4)
-      return `CCMV DR ${tDR.toFixed(2)} (disrupting) | Hepatocyte DR ${hDrStr} (Vm collapsed at 7.7 GHz) | TI ${tiStr}`
+      return `CCMV DR ${tDR.toFixed(2)} (disrupting) | Hepatocyte DR ${hDrStr} (Vm collapsed at 21 GHz) | TI ${tiStr}`
     },
 
     steps: [
@@ -101,11 +101,11 @@ export const createCCMVTsen2007Script: ScriptFactory = () => {
             resonantFreqGHz: 0.5,
             capsidQ:         1,
           })
-          // Keep pulsed (dc=1e-6, Tsen 2007 ~100 fs ISRS): CW at 7.7 GHz would vaporise hepatocyte via water Debye loss.
+          // Keep pulsed (dc=1e-6 ~100 fs effective): CW at 21 GHz would vaporise hepatocyte via water Debye loss.
         },
       },
 
-      // ── Animate f_res from 0.5 → 7.7 GHz (ISRS laser measurement, Tsen 2007) ─
+      // ── Animate f_res from 0.5 → 21 GHz (Dykeman & Sankey 2010 atomistic lowest H mode) ─
       {
         highlightId: 'hl-target-resonantFreqGHz',
         labelKey:    'validate.ccmv.step2f',
@@ -118,7 +118,7 @@ export const createCCMVTsen2007Script: ScriptFactory = () => {
         ),
       },
 
-      // ── Animate Q from 1 → 12 (rigid icosahedral capsid, Tsen 2007) ─────────
+      // ── Animate Q from 1 → 4 (slightly underdamped capsid in water, Murray & Saviot 2007) ─
       {
         highlightId: 'hl-target-capsidQ',
         labelKey:    'validate.ccmv.step2q',
@@ -139,7 +139,7 @@ export const createCCMVTsen2007Script: ScriptFactory = () => {
         action:      () => cellStore.setChartMode('resonance'),
       },
 
-      // ── Animate frequency from default → 7.7 GHz ─────────────────────────────
+      // ── Animate frequency from default → 21 GHz ─────────────────────────────
       {
         highlightId: 'hl-freq-row',
         labelKey:    'validate.ccmv.step4',
@@ -152,7 +152,7 @@ export const createCCMVTsen2007Script: ScriptFactory = () => {
         ),
       },
 
-      // ── Animate field from 1 → 500 V/cm (Tsen 2007 threshold) ────────────────
+      // ── Animate field from 1 → 500 V/cm (model disruption threshold parameter) ──
       {
         highlightId: 'hl-field-row',
         labelKey:    'validate.ccmv.step5',

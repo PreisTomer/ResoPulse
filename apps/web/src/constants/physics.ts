@@ -32,7 +32,10 @@ export const NEAR_ZERO_VM = 1e-12
 // SAR waveform factor for pulsed bipolar square wave: E²_rms = E²_peak
 export const WF_PULSED = 1.0
 
-// H-FIRE bipolar charge cancellation raises Vth ~1.5-2× vs unipolar IRE (Arena 2011, Sano 2015); 1.75 = midpoint.
+// H-FIRE bipolar burst raises Vth vs monopolar IRE: 1.51× (2 μs, 3D model) to 2.14× (1 μs, 3D model) per
+// Sano et al. Sci. Rep. 5:14999 (2015), Fig. 2A + Discussion ("only 2.1× higher"). Sano et al. Sci. Rep.
+// 7:40747 (2017) confirms 1.5× and 2.2× for 2 μs and 1 μs in 3D tumour model. 1.75 is the midpoint of
+// the 1.5–2.1× in-vitro 3D-model range — not a directly cited value; simulator construct.
 export const H_FIRE_THRESHOLD_MULTIPLIER = 1.75
 
 // Mild thermal activation peak temperature [°C] — bell peak in 37-42°C biomodulation window

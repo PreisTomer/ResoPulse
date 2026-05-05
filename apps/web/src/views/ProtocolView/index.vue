@@ -232,9 +232,11 @@ export default defineComponent({
         note: item.note,
         url: item.doi  ? `https://doi.org/${item.doi}`
            : item.pmid ? `https://pubmed.ncbi.nlm.nih.gov/${item.pmid}/`
+           : item.url  ? item.url
            : undefined,
         urlLabel: item.doi  ? `doi:${item.doi}`
                : item.pmid ? `PubMed:${item.pmid}`
+               : item.url  ? (item.urlLabel ?? 'link')
                : undefined,
       }))
     },

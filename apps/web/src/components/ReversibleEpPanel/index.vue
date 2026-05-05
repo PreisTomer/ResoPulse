@@ -88,7 +88,9 @@
           </svg>
         </div>
 
-        <p class="rev-ep__caveat">{{ $t('revEp.caveat') }}</p>
+        <p class="rev-ep__caveat">
+          <strong class="rev-ep__caveat-lead">{{ $t('revEp.caveatLead') }}</strong>{{ $t('revEp.caveatBody') }}
+        </p>
       </div>
     </AccordionPanel>
   </div>
@@ -230,9 +232,13 @@ export default defineComponent({
 
 <style lang="scss" scoped>
 .rev-ep {
+  @include surface-card(var(--radius-lg));
+  overflow: hidden;
+
   &__body {
     @include flex-col(0.85rem);
     padding: 0.85rem 1rem 1rem;
+    border-top: 1px solid var(--color-border);
   }
 
   &__hint {
@@ -319,6 +325,7 @@ export default defineComponent({
 
   &__chart-wrap {
     width: 100%;
+    max-width: 480px;
     aspect-ratio: 320 / 110;
     background: color-mix(in srgb, var(--color-text) 4%, transparent);
     border: 1px solid var(--color-border);
@@ -380,10 +387,17 @@ export default defineComponent({
 
   &__caveat {
     margin: 0;
-    font-size: var(--fs-xxs);
+    font-size: var(--fs-xs);
     color: var(--color-text-muted);
-    opacity: var(--op-dim);
     line-height: 1.5;
+  }
+
+  &__caveat-lead {
+    display: block;
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    color: var(--color-text);
+    margin-bottom: 0.25rem;
   }
 }
 </style>

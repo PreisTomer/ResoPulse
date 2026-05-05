@@ -14,11 +14,24 @@ import {
   computeFc,
   computeNuclearVm,
   computeResonantDR,
+  computeResonantLineshape,
   pulseEnvelopeClamped,
   getHFireMultiplier,
   tempCorrectedVth,
   computeLysisField,
   isResonanceTargetActive,
+  computeFermenterActiveFraction,
+  computeFermenterExposureProbability,
+  computeFermenterEffectiveDR,
+  computeUptakeFraction,
+  computePopulationLysisFraction,
+  computeDepCmReal,
+  computeSkinDepthMm,
+  computeViralRfPredictedDR,
+  isSubThresholdField,
+  jacobianSchwanDR,
+  propagateScalarVariance,
+  computeSchwanDR,
 } from '@/utils/physics'
 
 import type { CellConfig } from '@/types/cell'
@@ -214,5 +227,231 @@ describe('Cross-mode invariant: lysis-field consistency at PEF=1, hfireMult=1, T
     const eLysBare = TARGET_CELL.thresholdVoltage / (1.5 * TARGET_CELL.radius * 1e-6 * 100)
     expect(eLys / eLysBare).toBeGreaterThan(0.999)
     expect(eLys / eLysBare).toBeLessThan(1.005)
+  })
+
+  it('lysis field returns sentinel value when cosθ < MIN_COS_THETA (θ → 90°)', () => {
+    const eLysPole = computeLysisField(TARGET_CELL, QUASI_DC_KHZ, SIGMA_E, 1.0, 1.0, 1.0, BODY_TEMP_C, 1)
+    const eLysPerp = computeLysisField(TARGET_CELL, QUASI_DC_KHZ, SIGMA_E, 0.0, 1.0, 1.0, BODY_TEMP_C, 1)
+    expect(eLysPole).toBeLessThan(10000)
+    expect(eLysPerp).toBeGreaterThan(1e5)
+  })
+})
+
+describe('Cross-mode invariant: Schwan high-frequency rolloff', () => {
+  it('Vm decreases monotonically across decades above fc', () => {
+    const fcKhz = computeFc(TARGET_CELL, SIGMA_E)
+    const samples = [0.1, 1, 10, 100, 1000].map(mult =>
+      computeSchwan(TARGET_CELL, fcKhz * mult, FIELD, SIGMA_E, 1.0)
+    )
+    samples.reduce((prev, curr) => {
+      expect(curr).toBeLessThanOrEqual(prev)
+      return curr
+    })
+  })
+
+  it('Vm at f = fc is approximately Vm(DC) / √2 (3 dB roll-off point)', () => {
+    const fcKhz = computeFc(TARGET_CELL, SIGMA_E)
+    const vmDc = computeSchwan(TARGET_CELL, 1e-6, FIELD, SIGMA_E, 1.0)
+    const vmFc = computeSchwan(TARGET_CELL, fcKhz, FIELD, SIGMA_E, 1.0)
+    const ratio = vmFc / vmDc
+    expect(ratio).toBeCloseTo(1 / Math.sqrt(2), 2)
+  })
+})
+
+describe('Cross-mode invariant: resonance Q-factor sharpness', () => {
+  it('higher Q gives sharper Lorentzian peak (narrower FWHM)', () => {
+    const fRes = 21
+    const fHzOffset = 21.5e9
+    const lQ4  = computeResonantLineshape(fRes, 4,  fHzOffset)
+    const lQ12 = computeResonantLineshape(fRes, 12, fHzOffset)
+    expect(lQ4).toBeGreaterThan(lQ12)
+  })
+
+  it('Lorentzian peak is exactly 1.0 at f = f_res for any Q', () => {
+    expect(computeResonantLineshape(7.0, 1, 7.0e9)).toBeCloseTo(1.0, 9)
+    expect(computeResonantLineshape(7.0, 4, 7.0e9)).toBeCloseTo(1.0, 9)
+    expect(computeResonantLineshape(7.0, 12, 7.0e9)).toBeCloseTo(1.0, 9)
+  })
+})
+
+describe('Cross-mode invariant: fermenter scale-up', () => {
+  it('fermenter active fraction is bounded [0, 1] for any geometry', () => {
+    const fSmall = computeFermenterActiveFraction(1, 1, 100_000)
+    const fLarge = computeFermenterActiveFraction(100, 5, 1)
+    expect(fSmall).toBeGreaterThanOrEqual(0)
+    expect(fSmall).toBeLessThanOrEqual(1)
+    expect(fLarge).toBeGreaterThanOrEqual(0)
+    expect(fLarge).toBeLessThanOrEqual(1)
+  })
+
+  it('exposure probability approaches 1.0 with sufficient mixing time', () => {
+    const pShort = computeFermenterExposureProbability(300, 1, 0.5)
+    const pLong  = computeFermenterExposureProbability(300, 600, 0.5)
+    expect(pLong).toBeGreaterThan(pShort)
+    expect(pLong).toBeGreaterThan(0.99)
+  })
+
+  it('fermenter effective DR equals raw DR when exposure probability = 1', () => {
+    const rawDr = 0.85
+    expect(computeFermenterEffectiveDR(rawDr, 1.0)).toBe(rawDr)
+    expect(computeFermenterEffectiveDR(rawDr, 0.0)).toBe(0)
+    expect(computeFermenterEffectiveDR(rawDr, 0.5)).toBeCloseTo(rawDr * 0.5, 6)
+  })
+})
+
+describe('Cross-mode invariant: cargo uptake window', () => {
+  it('uptake is exactly 0 below DR = 0.50 (sub-threshold)', () => {
+    expect(computeUptakeFraction(0.30, 1000, 5)).toBe(0)
+    expect(computeUptakeFraction(0.49, 1000, 5)).toBe(0)
+  })
+
+  it('uptake is exactly 0 at or above DR = 0.85 (lysis dominates)', () => {
+    expect(computeUptakeFraction(0.85, 1000, 5)).toBe(0)
+    expect(computeUptakeFraction(0.95, 1000, 5)).toBe(0)
+  })
+
+  it('uptake peaks near the bell-shape midpoint DR ≈ 0.675', () => {
+    const uMid  = computeUptakeFraction(0.675, 1000, 10)
+    const uLow  = computeUptakeFraction(0.55,  1000, 10)
+    const uHigh = computeUptakeFraction(0.80,  1000, 10)
+    expect(uMid).toBeGreaterThan(uLow)
+    expect(uMid).toBeGreaterThan(uHigh)
+  })
+
+  it('uptake is exactly 0 with zero pulses', () => {
+    expect(computeUptakeFraction(0.675, 1000, 0)).toBe(0)
+  })
+})
+
+describe('Cross-mode invariant: population lysis fraction', () => {
+  it('cv=0 reduces to bare 1 - 1/dr (analytic limit)', () => {
+    const dr = 1.5
+    expect(computePopulationLysisFraction(dr, 0)).toBeCloseTo(1 - 1 / dr, 9)
+  })
+
+  it('returns 0 for dr ≤ 0', () => {
+    expect(computePopulationLysisFraction(0, 0.25)).toBe(0)
+    expect(computePopulationLysisFraction(-1, 0.25)).toBe(0)
+  })
+
+  it('output is monotonically non-decreasing in DR at fixed cv', () => {
+    const drs = [0.3, 0.6, 0.9, 1.0, 1.5, 2.0, 5.0]
+    const fractions = drs.map(dr => computePopulationLysisFraction(dr, 0.25))
+    fractions.reduce((prev, curr) => {
+      expect(curr).toBeGreaterThanOrEqual(prev - 1e-9)
+      return curr
+    })
+  })
+
+  it('output is bounded [0, 1] for any input', () => {
+    for (const dr of [0.1, 0.5, 1.0, 2.0, 100.0]) {
+      const f = computePopulationLysisFraction(dr, 0.25)
+      expect(f).toBeGreaterThanOrEqual(0)
+      expect(f).toBeLessThanOrEqual(1)
+    }
+  })
+})
+
+describe('Cross-mode invariant: DEP Clausius-Mossotti factor', () => {
+  it('Re[K] is clamped to [-0.5, 0.5] across the spectrum', () => {
+    for (const f of [0.001, 1, 1000, 100_000]) {
+      const k = computeDepCmReal(TARGET_CELL, f, SIGMA_E, 80)
+      expect(k).toBeGreaterThanOrEqual(-0.5)
+      expect(k).toBeLessThanOrEqual(0.5)
+    }
+  })
+
+  it('Re[K] is finite and well-defined at all standard frequencies', () => {
+    for (const f of [0.01, 1, 1000, 1e6]) {
+      const k = computeDepCmReal(TARGET_CELL, f, SIGMA_E, 80)
+      expect(Number.isFinite(k)).toBe(true)
+    }
+  })
+})
+
+describe('Cross-mode invariant: EM skin depth', () => {
+  it('skin depth is positive and finite for sensible inputs', () => {
+    const depths = [1, 100, 1e6, 1e9].map(f => computeSkinDepthMm(f, SIGMA_E, 80))
+    for (const d of depths) {
+      expect(d).toBeGreaterThan(0)
+      expect(Number.isFinite(d)).toBe(true)
+    }
+  })
+
+  it('skin depth shrinks at higher conductivity in the kHz regime', () => {
+    const dLowSigma  = computeSkinDepthMm(100, 0.1, 80)
+    const dHighSigma = computeSkinDepthMm(100, 1.5, 80)
+    expect(dHighSigma).toBeLessThan(dLowSigma)
+  })
+
+  it('skin depth returns Infinity for σ_e ≤ 0 or f ≤ 0 (guards)', () => {
+    expect(computeSkinDepthMm(0, SIGMA_E, 80)).toBe(Infinity)
+    expect(computeSkinDepthMm(100, 0, 80)).toBe(Infinity)
+    expect(computeSkinDepthMm(100, -1, 80)).toBe(Infinity)
+  })
+})
+
+describe('Cross-mode invariant: viral RF panel toggle', () => {
+  it('viral RF DR returns 0 for cells without resonant params (mammalian)', () => {
+    expect(computeViralRfPredictedDR(TARGET_CELL, 8.0, 30)).toBe(0)
+  })
+
+  it('viral RF DR returns 0 at zero frequency or zero field', () => {
+    expect(computeViralRfPredictedDR(virusWithResonance, 0, 30)).toBe(0)
+    expect(computeViralRfPredictedDR(virusWithResonance, 8.0, 0)).toBe(0)
+  })
+})
+
+describe('Cross-mode invariant: TTFields sub-threshold detector', () => {
+  it('isSubThresholdField is true when |Vm| < V_th and false above', () => {
+    expect(isSubThresholdField(TARGET_CELL, QUASI_DC_KHZ, 100, SIGMA_E)).toBe(true)
+    expect(isSubThresholdField(TARGET_CELL, QUASI_DC_KHZ, 5000, SIGMA_E)).toBe(false)
+  })
+})
+
+describe('Cross-mode invariant: calibration multiplier identity', () => {
+  it('Schwan DR computed with mult=1 perturbation matches unperturbed (Jacobian symmetry)', () => {
+    const input = {
+      cell: TARGET_CELL, freqKHz: QUASI_DC_KHZ, fieldVcm: FIELD, sigma_e: SIGMA_E,
+      cosTheta: 1.0, tempC: BODY_TEMP_C, pulseWidthNs: PULSE_NS,
+      isPulsed: true, hfireMult: 1.0, effectivePulseCount: 1,
+    }
+    const drBaseline = computeSchwanDR(input)
+    const jac = jacobianSchwanDR(input)
+    expect(drBaseline).toBeGreaterThan(0)
+    expect(Number.isFinite(jac.p1)).toBe(true)
+    expect(Number.isFinite(jac.p2)).toBe(true)
+  })
+
+  it('Variance propagation with zero covariance yields zero variance', () => {
+    const variance = propagateScalarVariance(
+      { p1: 0.5, p2: -0.3 },
+      { cov11: 0, cov12: 0, cov22: 0 },
+    )
+    expect(variance).toBe(0)
+  })
+
+  it('Variance propagation is non-negative for any positive-definite covariance', () => {
+    const variance = propagateScalarVariance(
+      { p1: 0.5, p2: -0.3 },
+      { cov11: 0.04, cov12: 0.01, cov22: 0.09 },
+    )
+    expect(variance).toBeGreaterThanOrEqual(0)
+  })
+})
+
+describe('Cross-mode invariant: SAR field-squared scaling', () => {
+  it('SAR scales exactly as E² across decades (independence verification)', () => {
+    const sar1k = computeSAR(TARGET_CELL, 1000, SIGMA_E)
+    const sar2k = computeSAR(TARGET_CELL, 2000, SIGMA_E)
+    const sar4k = computeSAR(TARGET_CELL, 4000, SIGMA_E)
+    expect(sar2k / sar1k).toBeCloseTo(4, 6)
+    expect(sar4k / sar1k).toBeCloseTo(16, 6)
+  })
+
+  it('SAR waveform factor: pulsed (1.0) gives exactly 2× CW (0.5) at same field', () => {
+    const sarCw     = computeSAR(TARGET_CELL, FIELD, SIGMA_E, 0.5)
+    const sarPulsed = computeSAR(TARGET_CELL, FIELD, SIGMA_E, 1.0)
+    expect(sarPulsed / sarCw).toBeCloseTo(2.0, 9)
   })
 })

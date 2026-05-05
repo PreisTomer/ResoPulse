@@ -205,18 +205,18 @@ export const CELL_PRESETS: CellPreset[] = [
     type: 'target',
     label: 'PANC-1',
     shortLabel: 'PANC-1',
-    notes: 'PDAC · R = 13 µm · extreme N/C ratio · Cm = 1.45 µF/cm² · fc ≈ 480 kHz',
-    techNotes: 'Single-shell Schwan model for PANC-1 (pancreatic ductal adenocarcinoma cell line).\nσ_i = 0.70 S/m: elevated cytoplasm conductivity consistent with PDAC metabolic reprogramming and altered KCNK5/BKCa channel expression in pancreatic CA lines.\n⚠ ESTIMATE — biologically motivated; no direct PANC-1 σ_i measurement was used. Replace with measured value for quantitative protocol design.\nCm = 14.5 mF/m² = 1.45 µF/cm² (highly fluid membrane in PDAC; reduced cholesterol and altered sphingomyelin content raise effective ε_r to 11.5 at d = 7 nm).\nCharacteristic fc ≈ 480 kHz in saline · τ ≈ 332 ns.\nVth = 0.65 V: PDAC cells show high membrane fluidity and reduced membrane tension, lowering EP threshold significantly vs normal pancreatic ductal cells. ⚠ ESTIMATE — no PANC-1-specific EP threshold measurement.\nExtreme N/C ratio (R_nuc = 7.5 / R_cell = 13.0 µm) is a pathological hallmark of PDAC per WHO 2010 classification.\n⚠ PANC-1 is adherent in culture; spherical approximation used for in-vitro suspension protocol modelling. PDAC cells display irregular morphology and strong cell-cell contacts in primary culture.\nRef: Bosman et al. (2010) WHO Classification of Tumours of the Digestive System; Pethig (2010) Biomicrofluidics 4:022811.',
-    radius: 13,
+    notes: 'PDAC · R = 12 µm · extreme N/C ratio · Cm = 2.02 µF/cm² · fc ≈ 270 kHz',
+    techNotes: 'Single-shell Schwan model for PANC-1 (pancreatic ductal adenocarcinoma cell line).\nσ_i = 0.476 S/m: direct automated electrorotation measurement at 37°C in DEP buffer (σ_e = 70 mS/m). Lannin et al. (2016) Biomicrofluidics 10:064109, doi:10.1063/1.4964929 (PMC5135715). Predicted DEP crossover ~70 kHz (at σ_e = 70 mS/m) matches their measured 64 kHz for PANC-1.\nCm = 20.2 mF/m² = 2.02 µF/cm² (Lannin 2016 electrorotation). Consistent with elevated membrane fluidity in PDAC. ε_r = 16.0 back-computed at d = 7 nm.\nCharacteristic fc ≈ 270 kHz in saline (σ_e = 1.5 S/m) · τ ≈ 591 ns.\nRadius = 12 µm: median from Lannin 2016 automated electrorotation of PANC-1 in suspension (12.1 µm reported).\nVth = 0.65 V: PDAC cells show high membrane fluidity and reduced membrane tension, lowering EP threshold vs normal pancreatic ductal cells. ⚠ ESTIMATE — no PANC-1-specific EP threshold measurement.\nExtreme N/C ratio (R_nuc = 7.5 / R_cell = 12.0 µm) is a pathological hallmark of PDAC per WHO 2010 classification.\n⚠ PANC-1 is adherent in culture; spherical approximation used for in-vitro suspension protocol modelling.\nRef: Lannin et al. (2016) Biomicrofluidics 10:064109; Bosman et al. (2010) WHO Classification of Tumours of the Digestive System; Pethig (2010) Biomicrofluidics 4:022811.',
+    radius: 12,
     membraneThickness: 7,
     naturalFrequency: 390,
     thresholdVoltage: 0.65,
-    dielectricConstant: 11.5,   // scaled from 8.2 at d=5 nm to preserve Cm = 14.5 mF/m² at d=7 nm
-    conductivity: 0.70,
+    dielectricConstant: 16.0,   // back-computed from Cm = 20.2 mF/m² (Lannin 2016) at d = 7 nm
+    conductivity: 0.476,        // direct electrorotation measurement at 37°C — Lannin et al. 2016
     density: 1080,
     specificHeatCapacity: 3200,
     amplitude: 0.5,
-    // Extreme N/C ratio hallmark of PDAC; thinner, leakier NE → lower nuclear threshold
+    // Extreme N/C ratio hallmark of PDAC; R_nuc/R_cell = 7.5/12 — thinner, leakier NE → lower nuclear threshold
     nuclearRadius: 7.5, nuclearMembraneThickness: 11, nuclearMembraneEps: 12,
     nucleoplasmConductivity: 1.1, nuclearThresholdVoltage: 0.35,
   },
@@ -384,7 +384,7 @@ export const CELL_PRESETS: CellPreset[] = [
     amplitude: 0.5,
   },
 
-  // CCMV: rigid T=3 icosahedral capsid (R=14 nm); f_res=7.7 GHz from atomistic normal-mode model (Dykeman & Sankey, Phys. Rev. E 81:021918, 2010).
+  // CCMV: rigid T=3 icosahedral capsid (R=14 nm); f_res=21 GHz lowest H mode (l=2, quadrupolar), Q≈4 in water — Dykeman & Sankey, Phys. Rev. E 81:021918 (2010), Tables V & VI.
   {
     presetId: 'ccmv',
     group: 'virus',
@@ -392,21 +392,21 @@ export const CELL_PRESETS: CellPreset[] = [
     type: 'target',
     label: 'CCMV (Plant Virus Capsid)',
     shortLabel: 'CCMV',
-    notes: 'Non-enveloped icosahedral · R = 14 nm · f_res = 7.7 GHz · Q ≈ 12 (model, Dykeman 2010)',
-    techNotes: 'CCMV (Cowpea Chlorotic Mottle Virus) — T=3 icosahedral protein capsid, diameter 28 nm, R = 14 nm.\nRigid protein shell ~2.5 nm thick (X-ray crystallography, Speir et al. 1995).\nσ_i = 0.02 S/m (viral interior: RNA genome + viral proteins; low ionic conductivity).\nf_res = 7.7 GHz: lowest acoustic mode from atomistic normal-mode calculation (Dykeman & Sankey, Phys. Rev. E 81:021918, 2010), which specifically models CCMV, poliovirus, and hepatitis B capsids. This is a model prediction — direct experimental measurement of CCMV at 7.7 GHz by ISRS or other spectroscopy is not available in the literature.\nQ = 12 (nominal): estimated range 8-20 for a rigid icosahedral capsid from elastic shell theory. No direct Q measurement for CCMV at 7.7 GHz has been confirmed.\nE_thr = 500 V/cm: model parameter — no direct experimental disruption-threshold measurement for CCMV at 7.7 GHz. Treat as an order-of-magnitude estimate.\nResoPulse acoustic resonance model at f = 7.7 GHz, E = 500 V/cm → DR ≈ 1 (at the model disruption threshold).\nMammalian cells at 7.7 GHz: Schwan Vm → 0 (mammalian fc ≈ 0.3-1 MHz across standard buffers, far below 7.7 GHz) → DR ≈ 0. This Schwan-collapse selectivity mechanism is physically rigorous regardless of the exact f_res value.\nRef: Dykeman & Sankey (2010) Phys. Rev. E 81:021918 (CCMV atomistic model). Speir et al. (1995) Structure 3:63 (X-ray crystallography). Tsen et al. (2007) demonstrated femtosecond laser inactivation of viruses via resonant mechanisms generally.',
+    notes: 'Non-enveloped icosahedral · R = 14 nm · f_res = 21 GHz · Q ≈ 4 (atomistic model, Dykeman 2010)',
+    techNotes: 'CCMV (Cowpea Chlorotic Mottle Virus) — T=3 icosahedral protein capsid, diameter 28 nm, R = 14 nm.\nRigid protein shell ~2.5 nm thick (X-ray crystallography, Speir et al. 1995).\nσ_i = 0.02 S/m (viral interior: RNA genome + viral proteins; low ionic conductivity).\nf_res = 21.3 GHz (≈ 0.71 cm⁻¹): the LOWEST mechanical mode of CCMV from atomistic normal-mode calculation (Dykeman & Sankey, Phys. Rev. E 81:021918, 2010, Table V), an l=2 quadrupolar H-symmetry mode. Continuum elastic theory (Murray & Saviot 2007, ibid. Table VI) gives 0.56 cm⁻¹ ≈ 16.8 GHz for the same mode. The breathing mode (A symmetry, l=0) is higher at 1.19 cm⁻¹ ≈ 35.7 GHz. Rounded to 21 GHz as the most-likely-coupling lowest mode. Range: 17–36 GHz across modes and methods.\nQ ≈ 4 (range 2–8): derived from Murray & Saviot 2007 lifetime τ ≈ 65.5 ps for the H mode in water (Dykeman 2010 Table VI), giving Q = πfτ ≈ 4 — a slightly underdamped resonance due to viscous solvent coupling. The capsid is overdamped to slightly underdamped; near-zero-damping Q values from elastic shell theory in vacuum do not apply in aqueous EP buffer.\nE_thr = 500 V/cm: model parameter — no direct experimental disruption-threshold measurement for CCMV. Order-of-magnitude estimate; the actual disruption threshold likely depends on solvent, capsid integrity, and protocol.\n⚠ HISTORICAL NOTE: prior versions of this preset used f_res = 7.7 GHz with Q = 12, attributed to Tsen 2007 ISRS measurement. That attribution was incorrect — the cited Tsen 2007 papers are about M13 phage and HIV, not CCMV, and 7.7 GHz does not match Dykeman & Sankey 2010 calculations for CCMV (lowest mode 17–21 GHz). Corrected 2026-05-05.\nMammalian cells at 21 GHz: Schwan Vm → 0 (mammalian fc ≈ 0.3-1 MHz across standard buffers, far below 21 GHz) → DR ≈ 0. The Schwan-collapse selectivity mechanism is physically rigorous regardless of the exact f_res value (f/fc > 20,000 at any sensible mammalian fc).\nRef: Dykeman & Sankey (2010) Phys. Rev. E 81:021918 (CCMV atomistic model). Murray & Saviot (2007) J. Phys.: Conf. Ser. 92:012036 (continuum elastic damping in water). Speir et al. (1995) Structure 3:63 (X-ray crystallography).',
     radius: 0.014,          // µm = 14 nm — outer radius from X-ray crystallography (Speir 1995)
     membraneThickness: 2.5, // nm — protein capsid shell (Speir et al. 1995 crystallography)
     naturalFrequency: 200,
     thresholdVoltage: 0.05, // V — EP model threshold; not used in resonance mode (R too small)
     dielectricConstant: 4.0,  // ε_r ≈ 4 for protein (intermediate between protein 2-5 range)
     conductivity: 0.02,       // S/m — low; RNA+protein interior, minimal free ions
-    resonantFreqGHz: 7.7,     // GHz — atomistic model (Dykeman & Sankey 2010), not directly measured
-    capsidQ: 12,              // estimated Q for rigid icosahedral capsid; no direct measurement
+    resonantFreqGHz: 21,      // GHz — Dykeman & Sankey 2010 lowest H mode (l=2 quadrupolar); 17 GHz continuum, 21 GHz atomistic
+    capsidQ: 4,               // Q in water from Murray & Saviot 2007 lifetime; range 2-8, slightly underdamped
     resonantThresholdVcm: 500,// V/cm — model parameter; no direct experimental measurement available
-    resonantFreqUncertaintyPct: 15,
-    capsidQMin: 8,
-    capsidQMax: 20,
-    experimentalBasis: 'speculative',  // f_res from atomistic model (Dykeman 2010); no direct measurement confirmed
+    resonantFreqUncertaintyPct: 30,
+    capsidQMin: 2,
+    capsidQMax: 8,
+    experimentalBasis: 'speculative',  // f_res from atomistic model (Dykeman 2010); E_thr is unsourced
     density: 1350,
     specificHeatCapacity: 4100,
     amplitude: 0.4,

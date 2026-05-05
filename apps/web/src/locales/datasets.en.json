@@ -55,7 +55,7 @@
       "fEq3": "f_c = 1 / (2π · τ)",
       "fLabel4": "Reference",
       "fEq4": "σ_e = 1.5 S/m (saline) · Kotnik & Miklavcic (2000)",
-      "fNote4": "f_res / Q / E_thr: acoustic resonance (bacteria/virus) · Tsen et al. (2007); Dykeman & Sankey (2010)"
+      "fNote4": "f_res / Q / E_thr: acoustic resonance · Dykeman & Sankey (2010) atomistic CCMV / poliovirus / hepatitis B; Thakur (2015) and Sci. Rep. (2022) for measured H3N2 / SARS-CoV-2 microwave resonance; Tsen et al. (2007) demonstrated femtosecond-laser inactivation of M13 phage"
     },
     "media": {
       "sectionTitle": "Propagation Media",
@@ -195,7 +195,7 @@
       "selRatioLabel": "Theoretical selectivity at f<sub>res</sub>, healthy Schwan Vm → 0 at GHz",
       "selLorentzian": "Lorentzian",
       "selLorentzianLabel": "Disruption = (E / E<sub>thr</sub>) × L(f, f<sub>res</sub>, Q)<br>L peaks at 1.0 at f<sub>res</sub>",
-      "selRef": "Ref: Tsen et al. (2007, 2012) · Dykeman &amp; Sankey (2010)",
+      "selRef": "Ref: Dykeman &amp; Sankey (2010) atomistic CCMV / poliovirus / hepatitis B; Murray &amp; Saviot (2007) continuum elastic with solvent damping; Thakur (2015) microwave H3N2; Tsen et al. (2007) femtosecond-laser inactivation of M13",
       "fLabel1": "Resonance frequency",
       "fEq1": "f_res ≈ v_wall / (2R)",
       "fNote1": "v_wall ≈ 1000-1500 m/s (protein/peptidoglycan capsid)",
@@ -332,7 +332,7 @@
       "colEr": "Effective ε_r for the membrane shell. Physical lipid bilayer ε_r ≈ 2-5; elevated effective values (5-20) reflect contributions from nuclear pore complexes, glycoprotein channels, and membrane roughness. Only ε_r affects Cm; it does not appear in the Schwan Vm formula directly, only through τ.",
       "colSigI": "Cytoplasmic conductivity: sets the RC asymmetry ratio (2σ_e+σ_i)/(2σ_e·σ_i). Higher σ_i relative to σ_e shortens τ and raises f_c. For bacteria σ_i ≈ 0.3-0.5 S/m; for mammalian cells 0.3-0.7 S/m. Uncertainty in σ_i is a primary source of model uncertainty for individual cells.",
       "colRho": "Cell density: used in the SAR heating model: SAR = σ_i·α²·E²·wf/ρ (wf = 0.5 CW, 1.0 pulsed) where α = 3σ_e/(2σ_e+σ_i). Denser cells (bacteria, virions) have higher volumetric thermal inertia. For in-vitro assays the dominant thermal mass is the medium, not individual cells.",
-      "colFres": "Acoustic resonance frequency f_res ≈ v_wall/(2R), where v_wall is the effective elastic wave speed through the cell wall/capsid (~1000-1500 m/s). Values are literature-derived from femtosecond-laser Raman spectroscopy experiments (Tsen et al. 2007), not from RF hardware measurements.",
+      "colFres": "Acoustic resonance frequency f_res ≈ v_wall/(2R), where v_wall is the effective elastic wave speed through the cell wall/capsid (~1000-1500 m/s). Viral capsid values come from atomistic normal-mode calculations (Dykeman & Sankey 2010 for CCMV/polio/HBV), microwave absorption spectroscopy (Thakur 2015 for H3N2; Sci. Rep. 2022 for SARS-CoV-2), or model extrapolation. They are not measured by RF hardware on individual cells.",
       "colQ": "Mechanical quality factor Q = f_res / FWHM. Sets the sharpness of the resonance peak and the frequency tolerance required: at Q = 4, the −3 dB bandwidth is f_res/4. Bacteria Q ≈ 3-4 (viscoelastic peptidoglycan); viral capsids Q ≈ 25-30 (rigid icosahedral protein shell).",
       "colEthr": "Theoretical field amplitude for capsid disruption at resonance. These values are extrapolated from femtosecond-laser irradiance experiments, the energy coupling mechanism for RF continuous-wave fields is fundamentally different (near-field ohmic vs photon absorption). Treat as an order-of-magnitude reference only.",
       "nucColRnuc": "Nuclear radius. Together with R (cell radius), determines the N/C volume ratio φ_nuc = (R_nuc/R)³. Cancer cells typically have φ_nuc > 0.5, elevated N/C ratio is a defining histopathological feature of neoplasia (nuclear atypia) and directly raises the double-shell f_peak into a more accessible frequency range.",

@@ -30,6 +30,7 @@
     "resealTip":         "<strong>Predicted membrane reseal time</strong>\nTime for the EP-formed pores to close after the pulse train. Drives the cargo-loading window: cargo present in the medium during this interval gets in. Modelled per Rols & Teissié 1990 with temperature and pulse-count corrections.",
     "chartTip":          "<strong>Uptake-vs-DR curve</strong>\nBell-shape efficiency across the reversible-EP window. Solid red dot is your target operating point; smaller blue dot is the healthy off-target. Move sliders in the lab to walk along the curve.",
     "chartLysis":        "lysis",
-    "caveat":            "Predictions calibrated against bulk uptake studies (Rols 1990, Pakhomov 2010, Yarmush 2014) and represent a population-averaged efficiency. Per-cell uptake is bimodal in real assays — this model reports the mean. Resealing time is empirical with ~30% inter-lab variability."
+    "caveatLead":        "Predictions calibrated against bulk uptake studies (Rols 1990, Pakhomov 2010, Yarmush 2014) and represent a population-averaged efficiency.",
+    "caveatBody":        "Per-cell uptake is bimodal in real assays (this model reports the mean). Resealing time is empirical with ~30% inter-lab variability."
   }
 }
