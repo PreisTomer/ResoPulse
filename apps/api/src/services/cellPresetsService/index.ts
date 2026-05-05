@@ -18,12 +18,14 @@ export interface CellPresetInput {
   thresholdVoltage:     number
   density:              number
   specificHeatCapacity: number
-  sigmaUncertaintyPct?: number | null
-  sigmaSource?:         string | null
-  sigmaCitation?:       string | null
-  resonantFreqGHz?:     number | null
-  capsidQ?:             number | null
-  resonantThresholdVcm?: number | null
+  sigmaUncertaintyPct?:            number | null
+  sigmaSource?:                    string | null
+  sigmaCitation?:                  string | null
+  conductivityMeasurementTempC?:   number | null
+  conductivityMeasurementSigmaE?:  number | null
+  resonantFreqGHz?:                number | null
+  capsidQ?:                        number | null
+  resonantThresholdVcm?:           number | null
 }
 
 // ── Queries ───────────────────────────────────────────────────────────────────
@@ -59,12 +61,14 @@ export async function createCellPreset(orgId: string, createdBy: string, input: 
       thresholdVoltage:     input.thresholdVoltage,
       density:              input.density,
       specificHeatCapacity: input.specificHeatCapacity,
-      sigmaUncertaintyPct:  input.sigmaUncertaintyPct ?? null,
-      sigmaSource:          input.sigmaSource         ?? null,
-      sigmaCitation:        input.sigmaCitation?.trim() || null,
-      resonantFreqGHz:      input.resonantFreqGHz  ?? null,
-      capsidQ:              input.capsidQ           ?? null,
-      resonantThresholdVcm: input.resonantThresholdVcm ?? null,
+      sigmaUncertaintyPct:            input.sigmaUncertaintyPct           ?? null,
+      sigmaSource:                    input.sigmaSource                   ?? null,
+      sigmaCitation:                  input.sigmaCitation?.trim()         || null,
+      conductivityMeasurementTempC:   input.conductivityMeasurementTempC  ?? null,
+      conductivityMeasurementSigmaE:  input.conductivityMeasurementSigmaE ?? null,
+      resonantFreqGHz:                input.resonantFreqGHz               ?? null,
+      capsidQ:                        input.capsidQ                       ?? null,
+      resonantThresholdVcm:           input.resonantThresholdVcm          ?? null,
     },
   })
 }
@@ -91,12 +95,14 @@ export async function updateCellPreset(id: string, orgId: string, input: Partial
       ...(input.density              != null && { density:              input.density }),
       ...(input.specificHeatCapacity != null && { specificHeatCapacity: input.specificHeatCapacity }),
       // Explicit null allowed to clear optional provenance / resonance fields
-      sigmaUncertaintyPct:  input.sigmaUncertaintyPct  !== undefined ? (input.sigmaUncertaintyPct  ?? null) : undefined,
-      sigmaSource:          input.sigmaSource          !== undefined ? (input.sigmaSource          ?? null) : undefined,
-      sigmaCitation:        input.sigmaCitation        !== undefined ? (input.sigmaCitation?.trim() || null) : undefined,
-      resonantFreqGHz:      input.resonantFreqGHz      !== undefined ? (input.resonantFreqGHz      ?? null) : undefined,
-      capsidQ:              input.capsidQ               !== undefined ? (input.capsidQ               ?? null) : undefined,
-      resonantThresholdVcm: input.resonantThresholdVcm  !== undefined ? (input.resonantThresholdVcm  ?? null) : undefined,
+      sigmaUncertaintyPct:           input.sigmaUncertaintyPct           !== undefined ? (input.sigmaUncertaintyPct           ?? null) : undefined,
+      sigmaSource:                   input.sigmaSource                   !== undefined ? (input.sigmaSource                   ?? null) : undefined,
+      sigmaCitation:                 input.sigmaCitation                 !== undefined ? (input.sigmaCitation?.trim()         || null) : undefined,
+      conductivityMeasurementTempC:  input.conductivityMeasurementTempC  !== undefined ? (input.conductivityMeasurementTempC  ?? null) : undefined,
+      conductivityMeasurementSigmaE: input.conductivityMeasurementSigmaE !== undefined ? (input.conductivityMeasurementSigmaE ?? null) : undefined,
+      resonantFreqGHz:               input.resonantFreqGHz               !== undefined ? (input.resonantFreqGHz               ?? null) : undefined,
+      capsidQ:                       input.capsidQ                       !== undefined ? (input.capsidQ                       ?? null) : undefined,
+      resonantThresholdVcm:          input.resonantThresholdVcm          !== undefined ? (input.resonantThresholdVcm          ?? null) : undefined,
     },
   })
 }

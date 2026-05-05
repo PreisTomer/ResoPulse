@@ -325,7 +325,8 @@ export default defineComponent({
 
   &__chart-wrap {
     width: 100%;
-    max-width: 480px;
+    max-width: 580px;
+    margin: 0 auto;
     aspect-ratio: 320 / 110;
     background: color-mix(in srgb, var(--color-text) 4%, transparent);
     border: 1px solid var(--color-border);

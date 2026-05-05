@@ -2,24 +2,6 @@
 <template>
   <div :id="`hl-${type}-card`" :class="['cell-card', `cell-card--${type}`, `cell-card--${cellState}`, { 'cell-card--compact': compact }]">
 
-    <!-- Inline picker as the card's identity — replaces the static header label -->
-    <HealthyCellPicker
-      v-if="!compact && isHealthy"
-      class="cell-card__picker"
-      ref="picker"
-      @opened="$emit(EMIT.PICKER_OPENED)"
-      @select="onSelectPreset"
-      @selectUser="onSelectUserPreset"
-    />
-    <TargetCellPicker
-      v-if="!compact && !isHealthy"
-      class="cell-card__picker"
-      ref="picker"
-      @opened="$emit(EMIT.PICKER_OPENED)"
-      @select="onSelectPreset"
-      @selectUser="onSelectUserPreset"
-    />
-
     <CellHeader
       v-if="!compact"
       :type="type"
@@ -57,6 +39,24 @@
       :derived-tip="derivedSectionTip"
       @param-change="onParamChange"
       @reset-to-preset="resetToPreset"
+    />
+
+    <!-- Picker sits above the cell visual — selecting a cell directly drives what the animation shows -->
+    <HealthyCellPicker
+      v-if="!compact && isHealthy"
+      class="cell-card__picker"
+      ref="picker"
+      @opened="$emit(EMIT.PICKER_OPENED)"
+      @select="onSelectPreset"
+      @selectUser="onSelectUserPreset"
+    />
+    <TargetCellPicker
+      v-if="!compact && !isHealthy"
+      class="cell-card__picker"
+      ref="picker"
+      @opened="$emit(EMIT.PICKER_OPENED)"
+      @select="onSelectPreset"
+      @selectUser="onSelectUserPreset"
     />
 
     <CellVisual
@@ -488,7 +488,7 @@ export default defineComponent({
   background-color: var(--color-surface-2);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  padding: 0 1.5rem 1.5rem;
+  padding: 1rem 1.5rem 1.5rem;
   @include flex-col(1rem);
   transition: border-color var(--tr-normal), box-shadow var(--tr-slow);
   min-width: 0;
@@ -496,37 +496,15 @@ export default defineComponent({
   overflow: visible;
   position: relative;
 
-  /* ── Embedded cell picker — the card's identity header ─────────────── */
+  /* ── Embedded cell picker — centered identity row above the visual ─── */
   &__picker {
     @include flex-row(0);
     justify-content: center;
-    margin: 0 -1.5rem;
-    padding: 0.8rem 1.25rem;
-    border-bottom: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
-    background: color-mix(in srgb, var(--color-surface) 55%, transparent);
+    padding: 0.25rem 0;
 
-    /* let the picker keep its natural pill width, just upsize the type slightly */
     :deep(.experiment__cell-badge-row)      { padding: 0.5rem 0.9rem; }
     :deep(.experiment__cell-badge-selected) { font-size: var(--fs-lg); font-weight: 700; }
     :deep(.experiment__cell-badge-type)     { font-size: var(--fs-xxs); letter-spacing: 0.12em; }
-  }
-
-  &--healthy &__picker {
-    background: linear-gradient(
-      90deg,
-      color-mix(in srgb, var(--color-primary) 10%, transparent) 0%,
-      color-mix(in srgb, var(--color-primary)  2%, transparent) 100%
-    );
-    border-bottom-color: color-mix(in srgb, var(--color-primary) 30%, transparent);
-  }
-
-  &--target &__picker {
-    background: linear-gradient(
-      90deg,
-      color-mix(in srgb, var(--color-danger) 10%, transparent) 0%,
-      color-mix(in srgb, var(--color-danger)  2%, transparent) 100%
-    );
-    border-bottom-color: color-mix(in srgb, var(--color-danger) 30%, transparent);
   }
 
   /* ── Compact modifier ──────────────────────────────────────────────── */

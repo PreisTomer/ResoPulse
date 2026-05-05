@@ -99,7 +99,7 @@ type SigmaSource         = 'literature' | 'measured' | 'electrorotation' | 'impe
 type TipKey =
   | 'radius' | 'memThick' | 'epsR' | 'sigmaI' | 'sigmaMem' | 'vmThr' | 'density' | 'cp'
   | 'derivedFc' | 'cellType'
-  | 'sigmaUncertaintyPct' | 'sigmaSource' | 'sigmaCitation' | 'conductivityMeasurementTempC'
+  | 'sigmaUncertaintyPct' | 'sigmaSource' | 'sigmaCitation' | 'conductivityMeasurementTempC' | 'conductivityMeasurementSigmaE'
   | 'resFreq' | 'capsidQ' | 'resThr' | 'resFreqUnc' | 'capsidQMin' | 'capsidQMax'
   | 'resFreq2' | 'capsidQ2' | 'resMode2Amp'
   | 'nuclearRadius' | 'nuclearMemThick' | 'nuclearEps' | 'nucleoplasmSigma' | 'nuclearVmThr'

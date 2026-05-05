@@ -116,9 +116,11 @@ model UserCellPreset {
   specificHeatCapacity Float
   // ── σ_i provenance (optional — most uncertain Schwan parameter) ───────────
   // sigmaSource: "literature" | "measured" | "electrorotation" | "impedance" | "estimated"
-  sigmaUncertaintyPct  Float?
-  sigmaSource          String?  @db.VarChar(16)
-  sigmaCitation        String?  @db.VarChar(500)
+  sigmaUncertaintyPct          Float?
+  sigmaSource                  String?  @db.VarChar(16)
+  sigmaCitation                String?  @db.VarChar(500)
+  conductivityMeasurementTempC  Float?   // °C at which σ_i was measured; null → assume 37°C
+  conductivityMeasurementSigmaE Float?  // medium σ_e [S/m] during σ_i measurement; null → no mismatch check
   // ── Acoustic / mechanical resonance (bacteria / virus only) ───────────────
   resonantFreqGHz      Float?
   capsidQ              Float?

@@ -20,7 +20,7 @@ import { EMIT } from '@/constants/emitEvents'
 type TipKey =
   | 'radius' | 'memThick' | 'epsR' | 'sigmaI' | 'sigmaMem' | 'vmThr' | 'density' | 'cp'
   | 'derivedFc' | 'cellType'
-  | 'conductivityMeasurementTempC' | 'sigmaUncertaintyPct' | 'sigmaSource' | 'sigmaCitation'
+  | 'conductivityMeasurementTempC' | 'conductivityMeasurementSigmaE' | 'sigmaUncertaintyPct' | 'sigmaSource' | 'sigmaCitation'
   | 'resFreq' | 'capsidQ' | 'resThr' | 'resFreqUnc' | 'capsidQMin' | 'capsidQMax'
   | 'resFreq2' | 'capsidQ2' | 'resMode2Amp'
   | 'nuclearRadius' | 'nuclearMemThick' | 'nuclearEps' | 'nucleoplasmSigma' | 'nuclearVmThr'
@@ -36,8 +36,9 @@ const TIP_I18N_MAP: Record<TipKey, string> = {
   cp:                  'userPresets.tipCp',
   derivedFc:           'userPresets.tipDerivedFc',
   cellType:            'userPresets.tipCellType',
-  conductivityMeasurementTempC: 'userPresets.tipSigmaMeasurementTemp',
-  sigmaUncertaintyPct:          'userPresets.tipSigmaUncertaintyPct',
+  conductivityMeasurementTempC:  'userPresets.tipSigmaMeasurementTemp',
+  conductivityMeasurementSigmaE: 'userPresets.tipSigmaMeasurementSigmaE',
+  sigmaUncertaintyPct:           'userPresets.tipSigmaUncertaintyPct',
   sigmaSource:                  'userPresets.tipSigmaSource',
   sigmaCitation:                'userPresets.tipSigmaCitation',
   resFreq:             'userPresets.tipResFreq',

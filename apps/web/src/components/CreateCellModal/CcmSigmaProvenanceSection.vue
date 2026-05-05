@@ -29,6 +29,25 @@
 
       <div class="ccm-sigma-prov__field">
         <label class="ccm-sigma-prov__label">
+          {{ $t('userPresets.fieldSigmaMeasurementSigmaE') }}
+          <span class="ccm-sigma-prov__unit">{{ UNIT.S_PER_M }}</span>
+          <button class="ccm-sigma-prov__tip-btn" @click="$emit(EMIT.SHOW_TIP, 'conductivityMeasurementSigmaE')">?</button>
+        </label>
+        <input
+          :value="form.conductivityMeasurementSigmaE ?? ''"
+          class="ccm-sigma-prov__input"
+          type="number"
+          step="0.01"
+          min="0.001"
+          max="10"
+          :placeholder="$t('userPresets.sigmaMeasurementSigmaEPlaceholder')"
+          @input="onNumericOrNullInput('conductivityMeasurementSigmaE', $event, 0.001, 10)"
+        />
+        <span class="ccm-sigma-prov__sub-hint">{{ $t('userPresets.fieldSigmaMeasurementSigmaESub') }}</span>
+      </div>
+
+      <div class="ccm-sigma-prov__field">
+        <label class="ccm-sigma-prov__label">
           {{ $t('userPresets.fieldSigmaUncertaintyPct') }}
           <span class="ccm-sigma-prov__unit">{{ UNIT.PERCENT }}</span>
           <button class="ccm-sigma-prov__tip-btn" @click="$emit(EMIT.SHOW_TIP, 'sigmaUncertaintyPct')">?</button>
