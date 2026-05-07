@@ -114,14 +114,20 @@ import { ROUTE } from '@/constants/routes'
 import { ICON } from '@/constants/icons'
 
 import { makeClerkAppearance } from '@/utils/clerkAppearance'
+import { buildParticles, stepParticles, renderParticles, traceHex, startCanvasLoop, patchClerkAutocomplete } from '@/utils/authCanvas'
+import type { Particle, ParticleConfig } from '@/utils/authCanvas'
 
 import ContactModal from '@/components/ContactModal/index.vue'
 
-const PARTICLE_COUNT   = 55
-const PARTICLE_SPEED   = 0.18
-const PARTICLE_RADIUS  = 1.4
-const PARTICLE_OPACITY = 0.45
-const CONNECTION_DIST  = 130
+const PARTICLE_CONFIG: ParticleConfig = {
+  count:           55,
+  speed:           0.18,
+  radius:          1.4,
+  opacity:         0.45,
+  connectionDist:  130,
+  connectionAlpha: 0.22,
+  rgb:             '0, 212, 255',
+}
 
 const HEX_RADIUS       = 28
 const HEX_OPEN_SPEED   = 0.010
@@ -129,7 +135,6 @@ const HEX_FADE_SPEED   = 0.003
 const HEX_IDLE_MAX     = 3400
 const HEX_BORDER_ALPHA = 0.013
 
-interface Particle { x: number; y: number; vx: number; vy: number }
 interface HexCell  { cx: number; cy: number; phase: 'idle' | 'opening' | 'fading'; progress: number; idleTick: number; idleTarget: number }
 
 const FEATURES = [
@@ -168,13 +173,13 @@ export default defineComponent({
 
   data() {
     return {
-      animFrameId:    null as ReturnType<typeof requestAnimationFrame> | null,
-      hexFrameId:     null as ReturnType<typeof requestAnimationFrame> | null,
-      particles:      [] as Particle[],
-      hexCells:       markRaw([] as HexCell[]),
-      displayMetrics: [] as string[],
-      features:       markRaw(FEATURES),
-      isContactOpen:  false,
+      cancelParticleLoop: null as (() => void) | null,
+      cancelHexLoop:      null as (() => void) | null,
+      particles:          [] as Particle[],
+      hexCells:           markRaw([] as HexCell[]),
+      displayMetrics:     [] as string[],
+      features:           markRaw(FEATURES),
+      isContactOpen:      false,
     }
   },
 
@@ -199,8 +204,8 @@ export default defineComponent({
   },
 
   beforeUnmount() {
-    if (this.animFrameId !== null) cancelAnimationFrame(this.animFrameId)
-    if (this.hexFrameId  !== null) cancelAnimationFrame(this.hexFrameId)
+    this.cancelParticleLoop?.()
+    this.cancelHexLoop?.()
   },
 
   methods: {
@@ -228,21 +233,7 @@ export default defineComponent({
     startHexLoop(): void {
       const canvas = this.hexCanvas
       if (!canvas) return
-      const ctx = canvas.getContext('2d')
-      if (!ctx) return
-      const tick = () => {
-        const w = canvas.offsetWidth
-        const h = canvas.offsetHeight
-        if (canvas.width !== w || canvas.height !== h) {
-          canvas.width  = w
-          canvas.height = h
-          this.buildHexGrid()
-        }
-        ctx.clearRect(0, 0, w, h)
-        this.drawHexFrame(ctx)
-        this.hexFrameId = requestAnimationFrame(tick)
-      }
-      this.hexFrameId = requestAnimationFrame(tick)
+      this.cancelHexLoop = startCanvasLoop(canvas, () => this.buildHexGrid(), (ctx) => this.drawHexFrame(ctx))
     },
 
     drawHexFrame(ctx: CanvasRenderingContext2D): void {
@@ -271,36 +262,14 @@ export default defineComponent({
 
     drawHexCell(ctx: CanvasRenderingContext2D, cell: HexCell): void {
       const alpha = cell.progress * HEX_BORDER_ALPHA
-      ctx.beginPath()
-      this.traceHex(ctx, cell.cx, cell.cy, HEX_RADIUS)
+      traceHex(ctx, cell.cx, cell.cy, HEX_RADIUS)
       ctx.strokeStyle = `rgba(180, 100, 255, ${alpha})`
       ctx.lineWidth   = 1
       ctx.stroke()
     },
 
-    traceHex(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number): void {
-      for (let i = 0; i < 6; i++) {
-        const angle = (Math.PI / 3) * i - Math.PI / 6
-        const x = cx + r * Math.cos(angle)
-        const y = cy + r * Math.sin(angle)
-        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y)
-      }
-      ctx.closePath()
-    },
-
     patchClerkAutocomplete(): void {
-      // Clerk renders password inputs without autocomplete attributes, causing a browser warning.
-      // We observe the card subtree and patch any password input Clerk adds after it mounts.
-      const cardWrap = this.$el?.querySelector('.auth-page__card')
-      if (!cardWrap) return
-      const observer = new MutationObserver(() => {
-        const passwordInput = cardWrap.querySelector('input[type="password"]') as HTMLInputElement | null
-        if (passwordInput && !passwordInput.getAttribute('autocomplete')) {
-          passwordInput.setAttribute('autocomplete', 'current-password')
-          observer.disconnect()
-        }
-      })
-      observer.observe(cardWrap, { childList: true, subtree: true })
+      patchClerkAutocomplete(this.$el?.querySelector('.auth-page__card'), 'current-password')
     },
 
     animateCounters(): void {
@@ -331,78 +300,22 @@ export default defineComponent({
     initParticles(): void {
       const canvas = this.particleCanvas
       if (!canvas) return
-      const w = canvas.width  = canvas.offsetWidth
-      const h = canvas.height = canvas.offsetHeight
-      this.particles = Array.from({ length: PARTICLE_COUNT }, () => ({
-        x:  Math.random() * w,
-        y:  Math.random() * h,
-        vx: (Math.random() - 0.5) * PARTICLE_SPEED * 2,
-        vy: (Math.random() - 0.5) * PARTICLE_SPEED * 2,
-      }))
+      canvas.width  = canvas.offsetWidth
+      canvas.height = canvas.offsetHeight
+      this.particles = buildParticles(canvas, PARTICLE_CONFIG.count, PARTICLE_CONFIG.speed)
     },
 
     startParticleLoop(): void {
       const canvas = this.particleCanvas
       if (!canvas) return
-      const ctx = canvas.getContext('2d')
-      if (!ctx) return
-
-      const tick = () => {
-        const w = canvas.offsetWidth
-        const h = canvas.offsetHeight
-        if (canvas.width !== w || canvas.height !== h) {
-          canvas.width  = w
-          canvas.height = h
-          this.initParticles()
-        }
-
-        ctx.clearRect(0, 0, w, h)
-        this.updateParticles(w, h)
-        this.drawParticles(ctx)
-        this.animFrameId = requestAnimationFrame(tick)
-      }
-
-      this.animFrameId = requestAnimationFrame(tick)
-    },
-
-    updateParticles(w: number, h: number): void {
-      for (const p of this.particles) {
-        p.x += p.vx
-        p.y += p.vy
-        if (p.x < 0 || p.x > w) p.vx *= -1
-        if (p.y < 0 || p.y > h) p.vy *= -1
-      }
-    },
-
-    drawParticles(ctx: CanvasRenderingContext2D): void {
-      // Draw connection lines between nearby particles
-      for (let i = 0; i < this.particles.length; i++) {
-        for (let j = i + 1; j < this.particles.length; j++) {
-          const a    = this.particles[i]
-          const b    = this.particles[j]
-          if (!a || !b) continue
-          const dx   = a.x - b.x
-          const dy   = a.y - b.y
-          const dist = Math.sqrt(dx * dx + dy * dy)
-          if (dist < CONNECTION_DIST) {
-            const alpha = (1 - dist / CONNECTION_DIST) * 0.22
-            ctx.beginPath()
-            ctx.moveTo(a.x, a.y)
-            ctx.lineTo(b.x, b.y)
-            ctx.strokeStyle = `rgba(0, 212, 255, ${alpha})`
-            ctx.lineWidth   = 0.6
-            ctx.stroke()
-          }
-        }
-      }
-
-      // Draw particle dots
-      for (const p of this.particles) {
-        ctx.beginPath()
-        ctx.arc(p.x, p.y, PARTICLE_RADIUS, 0, Math.PI * 2)
-        ctx.fillStyle = `rgba(0, 212, 255, ${PARTICLE_OPACITY})`
-        ctx.fill()
-      }
+      this.cancelParticleLoop = startCanvasLoop(
+        canvas,
+        () => this.initParticles(),
+        (ctx, w, h) => {
+          stepParticles(this.particles, w, h)
+          renderParticles(ctx, this.particles, PARTICLE_CONFIG)
+        },
+      )
     },
   },
 })

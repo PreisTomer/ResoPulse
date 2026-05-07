@@ -77,13 +77,19 @@ import { SignUp } from '@clerk/vue'
 import { ROUTE } from '@/constants/routes'
 
 import { makeClerkAppearance } from '@/utils/clerkAppearance'
+import { buildParticles, stepParticles, renderParticles, traceHex, startCanvasLoop, patchClerkAutocomplete } from '@/utils/authCanvas'
+import type { Particle, ParticleConfig } from '@/utils/authCanvas'
 
 // ── Particle config ────────────────────────────────────────────────────────
-const PARTICLE_COUNT   = 40
-const PARTICLE_SPEED   = 0.16
-const PARTICLE_RADIUS  = 1.3
-const PARTICLE_OPACITY = 0.30
-const CONNECTION_DIST  = 110
+const PARTICLE_CONFIG: ParticleConfig = {
+  count:           40,
+  speed:           0.16,
+  radius:          1.3,
+  opacity:         0.30,
+  connectionDist:  110,
+  connectionAlpha: 0.12,
+  rgb:             '167,139,250',
+}
 
 // ── Hex grid config ────────────────────────────────────────────────────────
 const HEX_CIRCUMRADIUS = 22
@@ -94,8 +100,6 @@ const HEX_IDLE_MIN     = 200
 const HEX_IDLE_MAX     = 1200
 const HEX_GLOW_DUR_MIN = 60
 const HEX_GLOW_DUR_MAX = 120
-
-interface Particle { x: number; y: number; vx: number; vy: number }
 
 interface HexCell {
   x:     number
@@ -133,10 +137,10 @@ export default defineComponent({
 
   data() {
     return {
-      hexFrameId:      null as ReturnType<typeof requestAnimationFrame> | null,
-      particleFrameId: null as ReturnType<typeof requestAnimationFrame> | null,
-      hexCells:        [] as HexCell[],
-      particles:       [] as Particle[],
+      cancelHexLoop:      null as (() => void) | null,
+      cancelParticleLoop: null as (() => void) | null,
+      hexCells:           [] as HexCell[],
+      particles:          [] as Particle[],
     }
   },
 
@@ -162,25 +166,14 @@ export default defineComponent({
   },
 
   beforeUnmount() {
-    if (this.hexFrameId      !== null) cancelAnimationFrame(this.hexFrameId)
-    if (this.particleFrameId !== null) cancelAnimationFrame(this.particleFrameId)
+    this.cancelHexLoop?.()
+    this.cancelParticleLoop?.()
   },
 
   methods: {
 
     patchClerkAutocomplete(): void {
-      // Clerk renders password inputs without autocomplete attributes, causing a browser warning.
-      // We observe the card subtree and patch any password input Clerk adds after it mounts.
-      const cardWrap = this.$el?.querySelector('.auth-page__card')
-      if (!cardWrap) return
-      const observer = new MutationObserver(() => {
-        const passwordInput = cardWrap.querySelector('input[type="password"]') as HTMLInputElement | null
-        if (passwordInput && !passwordInput.getAttribute('autocomplete')) {
-          passwordInput.setAttribute('autocomplete', 'new-password')
-          observer.disconnect()
-        }
-      })
-      observer.observe(cardWrap, { childList: true, subtree: true })
+      patchClerkAutocomplete(this.$el?.querySelector('.signup-page__card'), 'new-password')
     },
 
     // ── Hex grid ─────────────────────────────────────────────────────
@@ -213,23 +206,7 @@ export default defineComponent({
     startHexLoop(): void {
       const canvas = this.hexCanvas
       if (!canvas) return
-      const ctx = canvas.getContext('2d')
-      if (!ctx) return
-
-      const tick = () => {
-        const w = canvas.offsetWidth
-        const h = canvas.offsetHeight
-        if (canvas.width !== w || canvas.height !== h) {
-          canvas.width  = w
-          canvas.height = h
-          this.buildHexGrid()
-        }
-        ctx.clearRect(0, 0, w, h)
-        this.drawHexFrame(ctx)
-        this.hexFrameId = requestAnimationFrame(tick)
-      }
-
-      this.hexFrameId = requestAnimationFrame(tick)
+      this.cancelHexLoop = startCanvasLoop(canvas, () => this.buildHexGrid(), (ctx) => this.drawHexFrame(ctx))
     },
 
     drawHexFrame(ctx: CanvasRenderingContext2D): void {
@@ -263,31 +240,26 @@ export default defineComponent({
       }
     },
 
-    /** Draw one hexagonal cell — border always visible, glow only when active. */
     drawCell(ctx: CanvasRenderingContext2D, cell: HexCell): void {
       const r = HEX_CIRCUMRADIUS
       const g = cell.glow
 
-      // Always-on border — very subtle so grid reads as texture not pattern
-      this.traceHex(ctx, cell.x, cell.y, r - 1)
+      traceHex(ctx, cell.x, cell.y, r - 1)
       ctx.strokeStyle = `rgba(167,139,250,${0.030 + g * 0.10})`
       ctx.lineWidth   = 0.7
       ctx.stroke()
 
       if (g <= 0) return
 
-      // Inner fill
-      this.traceHex(ctx, cell.x, cell.y, r * HEX_INNER_RATIO)
+      traceHex(ctx, cell.x, cell.y, r * HEX_INNER_RATIO)
       ctx.fillStyle = `rgba(167,139,250,${g * 0.06})`
       ctx.fill()
 
-      // Pore dot — the central electroporation event
       ctx.beginPath()
       ctx.arc(cell.x, cell.y, 2.2 * g, 0, Math.PI * 2)
       ctx.fillStyle = `rgba(210,190,255,${g * 0.70})`
       ctx.fill()
 
-      // Pore glow ring expanding outward
       ctx.beginPath()
       ctx.arc(cell.x, cell.y, r * 0.32 + g * 4, 0, Math.PI * 2)
       ctx.strokeStyle = `rgba(167,139,250,${g * 0.18})`
@@ -295,93 +267,27 @@ export default defineComponent({
       ctx.stroke()
     },
 
-    /**
-     * Traces a regular hexagon centred at (cx, cy) with circumradius r.
-     * Flat-top orientation (first vertex at -30 degrees).
-     */
-    traceHex(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number): void {
-      ctx.beginPath()
-      for (let i = 0; i < 6; i++) {
-        const a  = (Math.PI / 3) * i - Math.PI / 6
-        const px = cx + r * Math.cos(a)
-        const py = cy + r * Math.sin(a)
-        i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py)
-      }
-      ctx.closePath()
-    },
-
     // ── Particles ────────────────────────────────────────────────────
 
     initParticles(): void {
       const canvas = this.particleCanvas
       if (!canvas) return
-      const w = canvas.width  = canvas.offsetWidth
-      const h = canvas.height = canvas.offsetHeight
-      this.particles = Array.from({ length: PARTICLE_COUNT }, () => ({
-        x:  Math.random() * w,
-        y:  Math.random() * h,
-        vx: (Math.random() - 0.5) * PARTICLE_SPEED * 2,
-        vy: (Math.random() - 0.5) * PARTICLE_SPEED * 2,
-      }))
+      canvas.width  = canvas.offsetWidth
+      canvas.height = canvas.offsetHeight
+      this.particles = buildParticles(canvas, PARTICLE_CONFIG.count, PARTICLE_CONFIG.speed)
     },
 
     startParticleLoop(): void {
       const canvas = this.particleCanvas
       if (!canvas) return
-      const ctx = canvas.getContext('2d')
-      if (!ctx) return
-
-      const tick = () => {
-        const w = canvas.offsetWidth
-        const h = canvas.offsetHeight
-        if (canvas.width !== w || canvas.height !== h) {
-          canvas.width  = w
-          canvas.height = h
-          this.initParticles()
-        }
-        ctx.clearRect(0, 0, w, h)
-        this.updateParticles(w, h)
-        this.drawParticles(ctx)
-        this.particleFrameId = requestAnimationFrame(tick)
-      }
-
-      this.particleFrameId = requestAnimationFrame(tick)
-    },
-
-    updateParticles(w: number, h: number): void {
-      for (const p of this.particles) {
-        p.x += p.vx
-        p.y += p.vy
-        if (p.x < 0 || p.x > w) p.vx *= -1
-        if (p.y < 0 || p.y > h) p.vy *= -1
-      }
-    },
-
-    drawParticles(ctx: CanvasRenderingContext2D): void {
-      for (let i = 0; i < this.particles.length; i++) {
-        for (let j = i + 1; j < this.particles.length; j++) {
-          const a = this.particles[i]
-          const b = this.particles[j]
-          if (!a || !b) continue
-          const dx   = a.x - b.x
-          const dy   = a.y - b.y
-          const dist = Math.sqrt(dx * dx + dy * dy)
-          if (dist < CONNECTION_DIST) {
-            ctx.beginPath()
-            ctx.moveTo(a.x, a.y)
-            ctx.lineTo(b.x, b.y)
-            ctx.strokeStyle = `rgba(167,139,250,${(1 - dist / CONNECTION_DIST) * 0.12})`
-            ctx.lineWidth   = 0.6
-            ctx.stroke()
-          }
-        }
-      }
-      for (const p of this.particles) {
-        ctx.beginPath()
-        ctx.arc(p.x, p.y, PARTICLE_RADIUS, 0, Math.PI * 2)
-        ctx.fillStyle = `rgba(167,139,250,${PARTICLE_OPACITY})`
-        ctx.fill()
-      }
+      this.cancelParticleLoop = startCanvasLoop(
+        canvas,
+        () => this.initParticles(),
+        (ctx, w, h) => {
+          stepParticles(this.particles, w, h)
+          renderParticles(ctx, this.particles, PARTICLE_CONFIG)
+        },
+      )
     },
   },
 })
