@@ -1,6 +1,6 @@
 <!-- Copyright © 2026 Tomer Preis. Licensed under the MIT License. -->
 <template>
-  <div class="experiment__cell-slot">
+  <div class="experiment__cell-slot" v-bind="$attrs">
 
     <!-- Badge button -->
     <button
@@ -121,6 +121,8 @@ export default defineComponent({
   name: 'TargetCellPicker',
 
   components: { CreateCellModal },
+
+  inheritAttrs: false,
 
   emits: ['select', 'selectUser', 'opened'],
 
