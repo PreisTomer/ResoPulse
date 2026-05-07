@@ -101,6 +101,9 @@ export function tipMediumKeys(): Record<string, string> {
     rpmi:   'RPMI 1640, suspension / haematological cell lines · slightly lower ionic strength',
     mhb:      'Mueller-Hinton Broth: CLSI/EUCAST bacteriology standard · τ ~12% longer than saline',
     epbuffer: 'Low-conductivity EP buffer (σ_e = 0.14 S/m) · τ ~2.5× longer than saline · fc ~2.5× lower · Joule heating ~11× lower · standard for in-vitro electroporation cuvette protocols',
+    sfm:      'Serum-free suspension medium (SFM) · σ_e ~15% lower than DMEM due to absence of serum proteins and reduced NaCl · typical for HyClone SFM4 / CD FortiCHO suspension bases · <span class="tip-note">σ_e is an ionic-composition estimate; no primary measurement source</span>',
+    cdavian:  'Chemically defined avian medium · DMEM/F12-based formulation for avian embryonic stem cell suspension culture (EB66 / DuckCelt class) · conductivity matches RPMI 1640 · <span class="tip-note">σ_e is an ionic-composition estimate; no primary measurement source</span>',
+    hds:      'High-density suspension medium (conditioned) · base SFM + metabolite load (lactate up to ~40 mM, NH₄⁺) at >5×10⁶ cells/mL raises ionic strength ~10–15% above fresh medium · higher tempCoeff (0.022) reflects elevated dissolved ion species · Maxwell-Garnett cell-packing correction (φ slider) handles crowding separately · <span class="tip-note">σ_e is an ionic-composition estimate; no primary measurement source</span>',
   }
   const out: Record<string, string> = {}
   for (const key of Object.keys(MEDIA)) {

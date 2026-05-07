@@ -235,6 +235,9 @@ export default defineComponent({
       { id: 'rpmi',      sigma: MEDIA.rpmi.conductivity.toFixed(3),      epsilonR: MEDIA.rpmi.permittivity,      alphaT: (MEDIA.rpmi.tempCoeff      * 100).toFixed(1), keyClass: '' },
       { id: 'mhb',       sigma: MEDIA.mhb.conductivity.toFixed(3),       epsilonR: MEDIA.mhb.permittivity,       alphaT: (MEDIA.mhb.tempCoeff       * 100).toFixed(1), keyClass: '' },
       { id: 'epbuffer',  sigma: MEDIA.epbuffer.conductivity.toFixed(3),  epsilonR: MEDIA.epbuffer.permittivity,  alphaT: (MEDIA.epbuffer.tempCoeff  * 100).toFixed(1), keyClass: 'datasets__dep-val' },
+      { id: 'sfm',       sigma: MEDIA.sfm.conductivity.toFixed(3),       epsilonR: MEDIA.sfm.permittivity,       alphaT: (MEDIA.sfm.tempCoeff       * 100).toFixed(1), keyClass: '' },
+      { id: 'cdavian',   sigma: MEDIA.cdavian.conductivity.toFixed(3),   epsilonR: MEDIA.cdavian.permittivity,   alphaT: (MEDIA.cdavian.tempCoeff   * 100).toFixed(1), keyClass: '' },
+      { id: 'hds',       sigma: MEDIA.hds.conductivity.toFixed(3),       epsilonR: MEDIA.hds.permittivity,       alphaT: (MEDIA.hds.tempCoeff       * 100).toFixed(1), keyClass: '' },
     ]
 
     return { builtinPresets, mediaRows }

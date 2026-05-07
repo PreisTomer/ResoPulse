@@ -194,8 +194,8 @@ describe('medium switching × DR', () => {
     expect(fcSaline).toBeGreaterThan(fcEP)
   })
 
-  it('all 9 built-in media produce positive finite DR', () => {
-    const media = ['saline', 'blood', 'tissue', 'water', 'dmem', 'pbs', 'rpmi', 'mhb', 'epbuffer']
+  it('all 12 built-in media produce positive finite DR', () => {
+    const media = ['saline', 'blood', 'tissue', 'water', 'dmem', 'pbs', 'rpmi', 'mhb', 'epbuffer', 'sfm', 'cdavian', 'hds']
     for (const medium of media) {
       const store = freshStore()
       store.setMedium(medium as Parameters<typeof store.setMedium>[0])

@@ -27,6 +27,11 @@
       <optgroup :label="$t('slider.mediumGroupRef')">
         <option value="water">{{ $t('slider.mediums.water') }}</option>
       </optgroup>
+      <optgroup :label="$t('slider.mediumGroupBioprocess')">
+        <option value="sfm">{{ $t('slider.mediums.sfm') }}</option>
+        <option value="cdavian">{{ $t('slider.mediums.cdavian') }}</option>
+        <option value="hds">{{ $t('slider.mediums.hds') }}</option>
+      </optgroup>
     </select>
     <span class="field-panel__row-meta" v-tip="tipSigmaELabel">σ_e {{ MEDIA[currentMedium].conductivity }} S/m</span>
   </div>

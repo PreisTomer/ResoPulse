@@ -3,6 +3,7 @@
 import type { MediaEntry, MediumKey } from '@/types/media'
 
 // ε_r at ~1 MHz, tempCoeff [1/°C]: σ_e(T)=σ_e0·(1+tempCoeff·(T−37)). Refs: Gabriel 1996, Foster & Schwan 1989, Zimmermann 1982.
+// Bioprocessing entries (sfm, cdavian, hds): σ_e estimated from ionic composition analysis; no primary measurement source. Labelled as estimates in tooltips.
 export const MEDIA: Record<MediumKey, MediaEntry> = {
   saline:   { name: 'Physiological Saline (0.9%)', conductivity: 1.5,   permittivity: 80, tempCoeff: 0.020 },
   blood:    { name: 'Whole Blood',                  conductivity: 0.7,   permittivity: 64, tempCoeff: 0.017 },
@@ -13,4 +14,7 @@ export const MEDIA: Record<MediumKey, MediaEntry> = {
   rpmi:     { name: 'RPMI 1640',                     conductivity: 1.3,   permittivity: 79, tempCoeff: 0.020 },
   mhb:      { name: 'Mueller-Hinton Broth',          conductivity: 0.8,   permittivity: 78, tempCoeff: 0.019 },
   epbuffer: { name: 'EP Buffer (low-conductivity)',  conductivity: 0.14,  permittivity: 78, tempCoeff: 0.020 },
+  sfm:      { name: 'Serum-Free Suspension (SFM)',   conductivity: 1.2,   permittivity: 79, tempCoeff: 0.020 },
+  cdavian:  { name: 'CD-Avian (Chemically Defined)', conductivity: 1.3,   permittivity: 79, tempCoeff: 0.020 },
+  hds:      { name: 'High-Density Suspension (HDS)', conductivity: 1.45,  permittivity: 79, tempCoeff: 0.022 },
 }

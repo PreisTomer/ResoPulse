@@ -43,13 +43,17 @@
       "pbs": "PBS (pH 7.4)",
       "rpmi": "RPMI 1640",
       "mhb": "Mueller-Hinton Broth",
-      "epbuffer": "EP Buffer (low-conductivity)"
+      "epbuffer": "EP Buffer (low-conductivity)",
+      "sfm": "Serum-Free Suspension (SFM)",
+      "cdavian": "CD-Avian (Chemically Defined)",
+      "hds": "High-Density Suspension (HDS)"
     },
     "mediumGroupPhysio": "Physiological",
     "mediumGroupCulture": "Cell Culture",
     "mediumGroupMicro": "Microbiology",
     "mediumGroupRef": "Reference",
     "mediumGroupEp": "Electroporation",
+    "mediumGroupBioprocess": "Bioprocessing",
     "doubleShell": "Shell Model",
     "doubleShellSingle": "Single-Shell",
     "doubleShellDouble": "+ Nuclear Envelope",
