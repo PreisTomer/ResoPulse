@@ -66,7 +66,7 @@ export default defineComponent({
   width: 100%;
   height: 100%;
   display: block;
-  opacity: 0.10;
+  opacity: 0.10; // intentional: whole SVG is ambient decoration, nearly invisible base layer
   transform-origin: center center;
 }
 

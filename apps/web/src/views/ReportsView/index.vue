@@ -636,7 +636,7 @@ export default defineComponent({
     transition: all var(--tr-fast);
     background: transparent;
 
-    &:disabled { opacity: 0.3; cursor: not-allowed; }
+    &:disabled { opacity: 0.3; cursor: not-allowed; } // intentional: heavily faded disabled, below --op-ghost
 
     &-spinner {
       display: inline-block;

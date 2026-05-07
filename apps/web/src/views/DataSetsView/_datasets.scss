@@ -111,7 +111,7 @@
   .datasets__formula-label {
     @include mono-upper(var(--fs-xs), 0.08em);
     color: var(--color-primary);
-    opacity: 0.75;
+    opacity: 0.75; // intentional: between --op-dim and --op-partial for formula label
 
 
     .datasets__formula-strip--nuc & { color: var(--color-purple); }

@@ -233,7 +233,7 @@ export default defineComponent({
     &--pulse {
       stroke: var(--color-primary);
       stroke-width: 1.5;
-      opacity: 0.08;
+      opacity: 0.08; // intentional: near-invisible ambient pulse stroke
       stroke-dasharray: none;
       animation: loop-pulse 3s ease-out infinite;
     }
@@ -244,13 +244,13 @@ export default defineComponent({
     stroke: url(#loopStroke);
     stroke-width: 2;
     stroke-linecap: round;
-    opacity: 0.85;
+    opacity: 0.85; // intentional: arc slightly dimmer than full, between --op-strong and --op-partial
     filter: url(#loopGlow);
   }
 
   &__arrow {
     fill: var(--color-primary);
-    opacity: 0.9;
+    opacity: var(--op-strong);
   }
 
   &__orbit {
@@ -262,7 +262,7 @@ export default defineComponent({
     stroke-dashoffset: 0;
     animation: loop-orbit 7s linear infinite;
     filter: url(#loopGlow);
-    opacity: 0.8;
+    opacity: var(--op-partial);
   }
 
   &__node {

@@ -358,6 +358,6 @@ export default defineComponent({
   }
 }
 
-.csvmap-enter-active, .csvmap-leave-active { transition: opacity 0.2s ease; }
+.csvmap-enter-active, .csvmap-leave-active { transition: opacity var(--tr-normal); }
 .csvmap-enter-from,   .csvmap-leave-to     { opacity: 0; }
 </style>

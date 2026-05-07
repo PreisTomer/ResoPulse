@@ -157,7 +157,7 @@ $_cell-states: (
     border: 2px solid var(--color-surface);
     box-shadow: 0 0 5px $shadow;
     cursor: pointer;
-    transition: box-shadow 0.15s;
+    transition: box-shadow var(--tr-fast);
     &:hover { box-shadow: 0 0 9px color-mix(in srgb, white 45%, transparent); }
   }
   &::-moz-range-thumb {
@@ -332,4 +332,46 @@ $_cell-states: (
   padding: 0;
   width: 5rem;
   @include number-input-reset();
+}
+
+// ── CreateCellModal shared form input ────────────────────────────────────────
+// Shared base for &__input (and &__select) inside all CCM section components.
+// Call @include number-input-reset() separately on &__input — not inside this
+// mixin, so it doesn't bleed onto &__select when used in a combined selector.
+@mixin ccm-form-input() {
+  background:    var(--color-bg);
+  border:        1px solid var(--color-border);
+  border-radius: 5px;
+  color:         var(--color-text);
+  font-size:     0.88rem; // intentional: form input, between --fs-lg and --fs-xl
+  padding:       0.38rem 0.6rem;
+  width:         100%;
+  box-sizing:    border-box;
+  outline:       none;
+  transition:    border-color var(--tr-fast);
+
+  &:focus { border-color: var(--color-primary); }
+}
+
+// ── CreateCellModal tip button ────────────────────────────────────────────────
+// Small circular "?" help button used in every CCM section header.
+@mixin ccm-tip-btn() {
+  @include inline-flex-center();
+  width:         14px;
+  height:        14px;
+  border-radius: 50%;
+  border:        1px solid color-mix(in srgb, var(--color-text-muted) 45%, transparent);
+  background:    transparent;
+  color:         color-mix(in srgb, var(--color-text-muted) 75%, transparent);
+  font-size:     0.6rem; // intentional: micro help button, smaller than any --fs-* token
+  font-weight:   700;
+  cursor:        pointer;
+  padding:       0;
+  line-height:   1;
+  flex-shrink:   0;
+
+  &:hover {
+    border-color: var(--color-primary);
+    color:        var(--color-primary);
+  }
 }

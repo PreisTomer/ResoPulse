@@ -108,11 +108,12 @@
 <script lang="ts">
 import { defineComponent, ref, markRaw } from 'vue'
 import { SignIn } from '@clerk/vue'
-import { dark } from '@clerk/themes'
 
 import { ROUTE } from '@/constants/routes'
 
 import { ICON } from '@/constants/icons'
+
+import { makeClerkAppearance } from '@/utils/clerkAppearance'
 
 import ContactModal from '@/components/ContactModal/index.vue'
 
@@ -139,59 +140,21 @@ const FEATURES = [
   { icon: ICON.AI,          labelKey: 'signIn.featAiOptimizer', metric: 'XGB',  suffix: '',     unit: 'XGBoost',        tipKey: 'signIn.tipAiOptimizer' },
 ]
 
-const CLERK_APPEARANCE = {
-  baseTheme: dark,
-  variables: {
-    colorBackground:      '#0d1826',
-    colorInputBackground: '#0a1520',
-    colorInputText:       '#c8d8e8',
-    colorText:            '#c8d8e8',
-    colorTextSecondary:   '#8ab8cc',
-    colorTextOnPrimaryBackground: '#060e1a',
-    colorPrimary:         '#00d4ff',
-    colorSuccess:         '#4ade80',
-    colorDanger:          '#ff4d6d',
-    colorNeutral:         '#1e3a5f',
-    colorShimmer:         'color-mix(in srgb, #00d4ff 4%, transparent)',
-    borderRadius:         '8px',
-    fontFamily:           "'Inter', system-ui, sans-serif",
-    fontFamilyButtons:    "'Inter', system-ui, sans-serif",
-    fontSize:             '0.875rem',
-    spacingUnit:          '0.9rem',
-  },
-  elements: {
-    rootBox:                 { width: '100%', maxWidth: '100%', minWidth: '0' },
-    cardBox:                 { width: '100%', maxWidth: '100%', padding: '0.5rem' },
-    card:                    { background: 'transparent', boxShadow: 'none', border: 'none', padding: '0', gap: '1.1rem', width: '100%' },
-    main:                    { padding: '0 2px' },
-    'signIn-start':          { padding: '0 0.25rem' },
-    headerTitle:             { display: 'none' },
-    headerSubtitle:          { display: 'none' },
-    header:                  { display: 'none' },
-    socialButtonsBlockButton: {
-      border:      '1px solid #1e3a5f',
-      background:  '#0a1520',
-      color:       '#c8d8e8',
-      borderRadius: '8px',
-      padding:     '0.65rem 1rem',
-      transition:  'border-color 0.15s, background 0.15s',
-    },
-    socialButtonsBlockButtonText: { fontWeight: '500' },
-    dividerLine:             { background: '#1e3a5f' },
-    dividerText:             { color: '#3a5a7a', fontSize: '0.72rem', letterSpacing: '0.06em', textTransform: 'uppercase' },
-    formFieldLabel:          { color: '#7a9ab8', fontSize: '0.75rem', letterSpacing: '0.03em', textTransform: 'capitalize', paddingLeft: '2px' },
-    formFieldInput:          { background: '#0a1520', border: '1px solid #1e3a5f', color: '#c8d8e8', borderRadius: '8px', caretColor: '#00d4ff' },
-    formFieldInputPlaceholder: { color: '#6a9ab8' },
-    formButtonPrimary:       { background: 'color-mix(in srgb, #00d4ff 8%, transparent)', color: '#00d4ff', border: '1px solid color-mix(in srgb, #00d4ff 30%, transparent)', fontFamily: "'Inter', system-ui, sans-serif", letterSpacing: '0.04em', textTransform: 'uppercase', fontWeight: '600', borderRadius: '8px', boxShadow: 'none' },
-    buttonArrowIcon:         { display: 'none' },
-    footerActionLink:        { color: '#00d4ff' },
-    footerAction:            { display: 'none' },
-    identityPreviewText:     { color: '#c8d8e8' },
-    identityPreviewEditButton: { color: '#00d4ff' },
-    alternativeMethodsBlockButton: { border: '1px solid #1e3a5f', background: '#0a1520', color: '#c8d8e8', borderRadius: '8px' },
-    otpCodeFieldInput:       { background: '#0a1520', border: '1px solid #1e3a5f', color: '#00d4ff', borderRadius: '8px' },
-  },
-}
+const CLERK_APPEARANCE = makeClerkAppearance({
+  primary:       '#00d4ff',
+  neutral:       '#1e3a5f',
+  bg:            '#0d1826',
+  inputBg:       '#0a1520',
+  text:          '#c8d8e8',
+  textSecondary: '#8ab8cc',
+  textOnPrimary: '#060e1a',
+  shimmerPct:    4,
+  placeholder:   '#6a9ab8',
+  dividerText:   '#3a5a7a',
+  fieldLabel:    '#7a9ab8',
+  btnBgPct:      8,
+  btnBorderPct:  30,
+}, 'signIn-start')
 
 export default defineComponent({
   name: 'SignInView',

@@ -522,7 +522,7 @@ export default defineComponent({
     white-space: nowrap;
 
     &:hover:not(:disabled) { border-color: var(--color-primary); color: var(--color-primary); }
-    &:disabled { opacity: 0.3; cursor: not-allowed; }
+    &:disabled { opacity: 0.3; cursor: not-allowed; } // intentional: heavily faded disabled, below --op-ghost
 
     &--primary {
       border-color: var(--color-primary);
@@ -635,7 +635,7 @@ export default defineComponent({
   &__rating-inline { @include flex-row(0.05rem); }
 
   &__star {
-    font-size: 0.7rem;
+    font-size: var(--fs-xs);
     line-height: 1;
     cursor: default;
 

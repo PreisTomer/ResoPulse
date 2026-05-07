@@ -73,9 +73,10 @@
 <script lang="ts">
 import { defineComponent, ref, markRaw } from 'vue'
 import { SignUp } from '@clerk/vue'
-import { dark } from '@clerk/themes'
 
 import { ROUTE } from '@/constants/routes'
+
+import { makeClerkAppearance } from '@/utils/clerkAppearance'
 
 // ── Particle config ────────────────────────────────────────────────────────
 const PARTICLE_COUNT   = 40
@@ -104,52 +105,21 @@ interface HexCell {
   timer: number
 }
 
-const CLERK_APPEARANCE = {
-  baseTheme: dark,
-  variables: {
-    colorBackground:              '#0d0e1f',
-    colorInputBackground:         '#0a0b1a',
-    colorInputText:               '#d4cef8',
-    colorText:                    '#d4cef8',
-    colorTextSecondary:           '#7a72b0',
-    colorTextOnPrimaryBackground: '#0d0e1f',
-    colorPrimary:                 '#a78bfa',
-    colorSuccess:                 '#4ade80',
-    colorDanger:                  '#ff4d6d',
-    colorNeutral:                 '#2a1f5f',
-    colorShimmer:                 'color-mix(in srgb, #a78bfa 4%, transparent)',
-    borderRadius:                 '8px',
-    fontFamily:                   "'Inter', system-ui, sans-serif",
-    fontFamilyButtons:            "'Inter', system-ui, sans-serif",
-    fontSize:                     '0.875rem',
-    spacingUnit:                  '0.9rem',
-  },
-  elements: {
-    rootBox:                      { width: '100%', maxWidth: '100%', minWidth: '0' },
-    cardBox:                      { width: '100%', maxWidth: '100%', padding: '0.5rem' },
-    card:                         { background: 'transparent', boxShadow: 'none', border: 'none', padding: '0', gap: '1.1rem', width: '100%' },
-    main:                         { padding: '0 2px' },
-    'signUp-start':               { padding: '0 0.25rem' },
-    headerTitle:                  { display: 'none' },
-    headerSubtitle:               { display: 'none' },
-    header:                       { display: 'none' },
-    socialButtonsBlockButton:     { border: '1px solid #2a1f5f', background: '#0a0b1a', color: '#d4cef8', borderRadius: '8px', padding: '0.65rem 1rem', transition: 'border-color 0.15s, background 0.15s' },
-    socialButtonsBlockButtonText: { fontWeight: '500' },
-    dividerLine:                  { background: '#2a1f5f' },
-    dividerText:                  { color: '#4a3a7a', fontSize: '0.72rem', letterSpacing: '0.06em', textTransform: 'uppercase' },
-    formFieldLabel:               { color: '#7a72b0', fontSize: '0.75rem', letterSpacing: '0.03em', textTransform: 'capitalize', paddingLeft: '2px' },
-    formFieldInput:               { background: '#0a0b1a', border: '1px solid #2a1f5f', color: '#d4cef8', borderRadius: '8px', caretColor: '#a78bfa' },
-    formFieldInputPlaceholder:    { color: '#7a6aaa' },
-    formButtonPrimary:            { background: 'color-mix(in srgb, #a78bfa 10%, transparent)', color: '#a78bfa', border: '1px solid color-mix(in srgb, #a78bfa 35%, transparent)', fontFamily: "'Inter', system-ui, sans-serif", letterSpacing: '0.04em', textTransform: 'uppercase', fontWeight: '600', borderRadius: '8px', boxShadow: 'none' },
-    buttonArrowIcon:              { display: 'none' },
-    footerActionLink:             { color: '#a78bfa' },
-    footerAction:                 { display: 'none' },
-    identityPreviewText:          { color: '#d4cef8' },
-    identityPreviewEditButton:    { color: '#a78bfa' },
-    alternativeMethodsBlockButton: { border: '1px solid #2a1f5f', background: '#0a0b1a', color: '#d4cef8', borderRadius: '8px' },
-    otpCodeFieldInput:            { background: '#0a0b1a', border: '1px solid #2a1f5f', color: '#a78bfa', borderRadius: '8px' },
-  },
-}
+const CLERK_APPEARANCE = makeClerkAppearance({
+  primary:       '#a78bfa',
+  neutral:       '#2a1f5f',
+  bg:            '#0d0e1f',
+  inputBg:       '#0a0b1a',
+  text:          '#d4cef8',
+  textSecondary: '#7a72b0',
+  textOnPrimary: '#0d0e1f',
+  shimmerPct:    4,
+  placeholder:   '#7a6aaa',
+  dividerText:   '#4a3a7a',
+  fieldLabel:    '#7a72b0',
+  btnBgPct:      10,
+  btnBorderPct:  35,
+}, 'signUp-start')
 
 export default defineComponent({
   name: 'SignUpView',
@@ -456,7 +426,7 @@ export default defineComponent({
       inset: 0;
       width: 100%;
       height: 100%;
-      opacity: 0.7;
+      opacity: var(--op-dim);
     }
   }
 

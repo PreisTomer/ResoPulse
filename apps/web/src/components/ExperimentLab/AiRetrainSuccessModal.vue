@@ -336,6 +336,6 @@ export default defineComponent({
   }
 }
 
-.arsm-enter-active, .arsm-leave-active { transition: opacity 0.2s ease; }
+.arsm-enter-active, .arsm-leave-active { transition: opacity var(--tr-normal); }
 .arsm-enter-from,   .arsm-leave-to     { opacity: 0; }
 </style>

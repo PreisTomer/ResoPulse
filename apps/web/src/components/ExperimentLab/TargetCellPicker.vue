@@ -426,7 +426,7 @@ export default defineComponent({
       cursor:      pointer;
       padding:     0.15rem 0.2rem;
       line-height: 1;
-      opacity:     0.5;
+      opacity:     0.5; // intentional: idle dim state, between --op-ghost and --op-muted
       transition:  opacity var(--tr-fast), color var(--tr-fast);
     }
 

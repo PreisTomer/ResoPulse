@@ -75,7 +75,7 @@ export default defineComponent({
     animation-play-state: paused;
 
     &--echo {
-      opacity: 0.45;
+      opacity: 0.45; // intentional: echo pulse is dimmer than main bar, between --op-ghost and --op-muted
       animation-delay: 0.55s;
     }
   }
@@ -89,7 +89,7 @@ export default defineComponent({
       animation: none;
       left: 0;
       width: 100%;
-      opacity: 0.7;
+      opacity: var(--op-dim);
 
       &--echo { display: none; }
     }

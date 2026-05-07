@@ -377,7 +377,7 @@ export default defineComponent({
 
     &-sub {
       font-size: var(--fs-xxs); font-family: var(--font-mono); color: var(--color-text-muted);
-      white-space: nowrap; opacity: 0.75;
+      white-space: nowrap; opacity: 0.75; // intentional: between --op-dim and --op-partial
 
       &--es-floor { @include color-variant(amber); opacity: var(--op-partial); }
     }

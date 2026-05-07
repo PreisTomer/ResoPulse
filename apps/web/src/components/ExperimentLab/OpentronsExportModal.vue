@@ -361,6 +361,6 @@ export default defineComponent({
 
 @keyframes ote-spin { to { transform: rotate(360deg); } }
 
-.ote-enter-active, .ote-leave-active { transition: opacity 0.2s ease; }
+.ote-enter-active, .ote-leave-active { transition: opacity var(--tr-normal); }
 .ote-enter-from,   .ote-leave-to     { opacity: 0; }
 </style>

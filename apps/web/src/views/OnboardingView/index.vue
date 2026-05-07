@@ -717,7 +717,7 @@ export default defineComponent({
       text-transform: none;
       letter-spacing: 0;
       opacity: var(--op-ghost);
-      font-size: 0.65rem;
+      font-size: var(--fs-xxs);
     }
 
     &-input {
@@ -899,7 +899,7 @@ export default defineComponent({
     fill: color-mix(in srgb, var(--color-primary) 70%, transparent);
     letter-spacing: 0.04em;
 
-    &--sel { fill: var(--color-purple); opacity: 0.7; }
+    &--sel { fill: var(--color-purple); opacity: var(--op-dim); }
   }
 
   /* ── Success state ───────────────────────────────────────────────── */

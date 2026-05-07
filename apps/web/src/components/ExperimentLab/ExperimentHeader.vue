@@ -228,7 +228,7 @@ export default defineComponent({
   }
 
   &__session-name-edit {
-    font-size: 0.7rem;
+    font-size: var(--fs-xs);
     color: var(--color-primary);
     opacity: var(--op-ghost);
     transition: opacity var(--tr-fast);

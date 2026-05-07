@@ -914,7 +914,7 @@ export default defineComponent({
 
   &__action-btn {
     font-family: var(--font-mono);
-    font-size: 0.65rem; // deliberate micro-size — action row is dense
+    font-size: var(--fs-xxs);
     letter-spacing: 0.04em;
     padding: 0.22rem 0.55rem;
     border: 1px solid var(--color-border);
@@ -964,7 +964,7 @@ export default defineComponent({
 
   &__share-mode-btn {
     font-family: var(--font-mono);
-    font-size: 0.65rem;
+    font-size: var(--fs-xxs);
     letter-spacing: 0.04em;
     padding: 0.2rem 0.5rem;
     border: 1px solid var(--color-border);
@@ -988,7 +988,7 @@ export default defineComponent({
   &__share-copy-btn,
   &__share-revoke-btn {
     font-family: var(--font-mono);
-    font-size: 0.65rem;
+    font-size: var(--fs-xxs);
     letter-spacing: 0.04em;
     padding: 0.2rem 0.5rem;
     border: 1px solid var(--color-border);
@@ -1027,7 +1027,7 @@ export default defineComponent({
 
     &-btn {
       font-family: var(--font-mono);
-      font-size: 0.65rem;
+      font-size: var(--fs-xxs);
       letter-spacing: 0.04em;
       padding: 0.22rem 0.6rem;
       border: 1px solid var(--color-border);

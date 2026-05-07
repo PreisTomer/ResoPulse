@@ -81,25 +81,6 @@ export default defineComponent({
     &--highlight { color: var(--color-primary); }
   }
 
-  &__tip-btn {
-    @include inline-flex-center();
-    width:         14px;
-    height:        14px;
-    border-radius: 50%;
-    border:        1px solid color-mix(in srgb, var(--color-text-muted) 45%, transparent);
-    background:    transparent;
-    color:         color-mix(in srgb, var(--color-text-muted) 75%, transparent);
-    font-size:     0.6rem;
-    font-weight:   700;
-    cursor:        pointer;
-    padding:       0;
-    line-height:   1;
-    flex-shrink:   0;
-
-    &:hover {
-      border-color: var(--color-primary);
-      color:        var(--color-primary);
-    }
-  }
+  &__tip-btn { @include ccm-tip-btn(); }
 }
 </style>

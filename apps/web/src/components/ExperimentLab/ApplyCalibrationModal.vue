@@ -338,6 +338,6 @@ export default defineComponent({
   }
 }
 
-.acm-enter-active, .acm-leave-active { transition: opacity 0.2s ease; }
+.acm-enter-active, .acm-leave-active { transition: opacity var(--tr-normal); }
 .acm-enter-from, .acm-leave-to       { opacity: 0; }
 </style>

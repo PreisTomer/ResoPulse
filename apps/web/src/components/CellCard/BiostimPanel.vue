@@ -171,7 +171,7 @@ export default defineComponent({
     font-weight: 700;
     transition: color var(--tr-slow);
 
-    &--low    { color: var(--color-accent); opacity: 0.40; }
+    &--low    { color: var(--color-accent); opacity: 0.40; } // intentional: low biomod level, between --op-ghost and --op-muted
     &--medium { color: var(--color-accent); opacity: 0.75; } // intentional: mid-level biomod state
     &--high   { color: var(--color-lime); }
     &--active { animation: nourish-text-pulse 2.2s ease-in-out infinite; }

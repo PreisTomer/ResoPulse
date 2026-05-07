@@ -945,7 +945,7 @@ export default defineComponent({
     background: var(--color-surface-2);
     border: 1px solid var(--color-border);
     color: var(--color-text-muted);
-    font-size: 0.7rem;
+    font-size: var(--fs-xs);
     cursor: pointer;
     display: flex;
     align-items: center;

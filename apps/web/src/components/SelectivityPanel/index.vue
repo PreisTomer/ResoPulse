@@ -418,8 +418,7 @@ export default defineComponent({
   /* ── Separator ─────────────────────────────────────────────── */
   &__sep {
     height: 1px;
-    background: var(--color-border);
-    opacity: 0.5;
+    background: color-mix(in srgb, var(--color-border) 50%, transparent);
 
     margin: 0.1rem 0;
     flex-shrink: 0;

@@ -66,8 +66,7 @@
 
   .protocol__eq-divider {
     height: 1px;
-    background: var(--color-border);
-    opacity: 0.5;
+    background: color-mix(in srgb, var(--color-border) 50%, transparent);
 
     margin: 0.2rem 0;
   }
@@ -86,7 +85,7 @@
 // ── Utility classes ──────────────────────────────────────────────────────────
 @mixin protocol-utils() {
   .protocol__mono       { font-family: var(--font-mono); font-size: var(--fs-md); }
-  .protocol__muted      { color: var(--color-text-muted); opacity: 0.6; }
+  .protocol__muted      { color: var(--color-text-muted); opacity: 0.6; } // intentional: between --op-muted and --op-dim for soft de-emphasis
   .protocol__cancer-val { color: var(--color-danger); }
   .protocol__warn-val   { color: var(--color-amber); }
   .protocol__primary-val { color: var(--color-primary); }
@@ -105,7 +104,7 @@
       position: absolute;
       left: 0;
       color: var(--color-primary);
-      opacity: 0.5;
+      opacity: 0.5; // intentional: decorative bullet marker, between --op-ghost and --op-muted
 
     }
 

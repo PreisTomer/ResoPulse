@@ -30,7 +30,7 @@
     height: 100%;
     pointer-events: none;
     z-index: 0;
-    opacity: 0.55;
+    opacity: var(--op-muted);
   }
 
   &__bg-hex {
@@ -703,7 +703,7 @@
     }
 
     &-lock {
-      font-size: 0.7rem;
+      font-size: var(--fs-xs);
       opacity: var(--op-ghost);
       margin-left: auto;
       flex-shrink: 0;
@@ -751,7 +751,7 @@
       border-top-color: color-mix(in srgb, var(--color-primary) 70%, transparent);
       box-shadow: 0 6px 28px color-mix(in srgb, var(--color-primary) 14%, transparent);
 
-      &::before { opacity: 0.8; }
+      &::before { opacity: var(--op-partial); }
     }
 
     &-win {
@@ -973,7 +973,7 @@
   &__disclaimer {
     @include mono-upper(var(--fs-xxs), 0.06em);
     color: var(--color-text-muted);
-    opacity: 0.65;
+    opacity: 0.65; // intentional: disclaimer is deliberately subdued, between --op-muted and --op-dim
     margin: 0;
   }
 
@@ -1058,7 +1058,7 @@
     &__wf-arrow {
       transform: rotate(90deg);
       margin-top: 0;
-      opacity: 0.25;
+      opacity: 0.25; // intentional: ghost-level decorative arrow, below --op-ghost
     }
 
     &__feature-cards {

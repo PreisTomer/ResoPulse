@@ -189,18 +189,8 @@ export default defineComponent({
   }
 
   &__input {
-    background:    var(--color-bg);
-    border:        1px solid var(--color-border);
-    border-radius: 5px;
-    color:         var(--color-text);
-    font-size:     0.88rem;
-    padding:       0.38rem 0.6rem;
-    width:         100%;
-    box-sizing:    border-box;
-    outline:       none;
-    transition:    border-color var(--tr-fast);
+    @include ccm-form-input();
 
-    &:focus { border-color: var(--color-primary); }
     &::placeholder { color: color-mix(in srgb, var(--color-text-muted) 45%, transparent); }
 
     &--source {
@@ -217,26 +207,7 @@ export default defineComponent({
     line-height: 1.4;
   }
 
-  &__tip-btn {
-    @include inline-flex-center();
-    width:         14px;
-    height:        14px;
-    border-radius: 50%;
-    border:        1px solid color-mix(in srgb, var(--color-text-muted) 45%, transparent);
-    background:    transparent;
-    color:         color-mix(in srgb, var(--color-text-muted) 75%, transparent);
-    font-size:     0.6rem;
-    font-weight:   700;
-    cursor:        pointer;
-    padding:       0;
-    line-height:   1;
-    flex-shrink:   0;
-
-    &:hover {
-      border-color: var(--color-primary);
-      color:        var(--color-primary);
-    }
-  }
+  &__tip-btn { @include ccm-tip-btn(); }
 
   &__role-pills {
     display: grid;
