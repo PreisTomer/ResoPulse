@@ -4,7 +4,7 @@
 import { GROUP_COLORS as _GROUP_COLORS } from '@/theme/colors'
 
 import type { CellConfig } from '@/types/cell'
-export type CellGroup = 'reference' | 'cancer' | 'bacteria' | 'virus'
+export type CellGroup = 'reference' | 'cancer' | 'bacteria' | 'virus' | 'stem'
 
 export interface CellPreset extends CellConfig {
   presetId: string
@@ -22,6 +22,7 @@ export const GROUP_LABELS: Record<CellGroup, string> = {
   cancer:    'Cancer',
   bacteria:  'Bacteria',
   virus:     'Virus',
+  stem:      'Stem / Progenitor',
 }
 
 // ─── Presets ──────────────────────────────────────────────────────────────────
@@ -334,6 +335,51 @@ export const CELL_PRESETS: CellPreset[] = [
     amplitude: 0.8,
     nuclearRadius: 4.0, nuclearMembraneThickness: 15, nuclearMembraneEps: 10,
     nucleoplasmConductivity: 0.85, nuclearThresholdVoltage: 0.48,
+  },
+
+  // ── Stem / Progenitor cells (cultivated meat bioprocessing) ──────────────────
+  // All biophysical parameters are estimates; no primary EP measurement source for avian ESC or myosatellite cells.
+  {
+    presetId: 'eb66-aesc',
+    group: 'stem',
+    id: 'eb66-aesc',
+    type: 'target',
+    label: 'EB66 Avian ESC',
+    shortLabel: 'EB66 ESC',
+    notes: 'Avian ESC (EB66, duck origin) · R = 7 µm · suspension · fc ≈ 0.80 MHz · all params estimated',
+    techNotes: 'EB66 cell line: continuous suspension avian ESC derived from Anas platyrhynchos (Muscovy duck) embryos, developed by Vivalis (now Valneva) for vaccine and cultivated-food applications (Lebertrois et al. 2010, Vaccine 28:5380).\nR = 7 µm: estimated from reported suspension-culture diameter 12-15 µm. Spherical approximation valid for suspension cells.\nσ_i = 0.40 S/m: ESTIMATE. No direct EP conductivity measurement for EB66 or any avian ESC in literature. Derived from mammalian pluripotent ESC range (0.30-0.45 S/m); avian ESC are metabolically robust, supporting slightly higher σ_i than quiescent mammalian ESC (0.30 S/m).\nCm = 10.0 mF/m² (ε_r = 7.9 at d = 7 nm): ESTIMATE. Avian ESC membrane lipid composition is similar to mammalian (cholesterol:phospholipid ~1:2) but less differentiated membranes have slightly lower effective capacitance than differentiated cells.\nVth = 0.90 V: ESTIMATE. No EB66-specific EP threshold measurement. Consistent with mammalian ESC range (0.8-1.0 V). Transfection protocols for EB66 (250-350 V, 4 mm cuvette = 625-875 V/cm) give Vm_DC = 1.5 × 750 × 7e-4 ≈ 0.79 V at R = 7 µm, consistent with reversible EP below Vth = 0.90 V.\nfc ≈ 0.80 MHz in saline (σ_e = 1.5 S/m) · τ ≈ 198 ns. In CD-Avian medium (σ_e = 1.3 S/m): τ ≈ 206 ns, fc ≈ 773 kHz.\n⚠ ALL PARAMETERS ARE ESTIMATES. Calibrate against measured transfection-vs-field data for quantitative protocol design.\nRef: Lebertrois et al. (2010) Vaccine 28:5380 (EB66 characterisation); Valbuena et al. (2018) J. Biotechnol. 278:36 (EB66 scale-up); Foster & Schwan (1989) for mammalian baseline.',
+    radius: 7,
+    membraneThickness: 7,
+    naturalFrequency: 440,
+    thresholdVoltage: 0.90,
+    dielectricConstant: 7.9,
+    conductivity: 0.40,
+    density: 1050,
+    specificHeatCapacity: 3500,
+    amplitude: 0.7,
+    nuclearRadius: 4.0, nuclearMembraneThickness: 15, nuclearMembraneEps: 10,
+    nucleoplasmConductivity: 0.80, nuclearThresholdVoltage: 0.45,
+  },
+  {
+    presetId: 'avian-myosatellite',
+    group: 'stem',
+    id: 'avian-myosatellite',
+    type: 'target',
+    label: 'Avian Myosatellite',
+    shortLabel: 'Avian Myo',
+    notes: 'Avian muscle progenitor (G. gallus class) · R = 8 µm · fc ≈ 0.61 MHz · all params estimated',
+    techNotes: 'Avian myosatellite cell (activated muscle satellite cell, Gallus gallus class): the direct precursor to skeletal muscle fibres used in cultivated meat production. Parameters are estimates; no avian myosatellite EP biophysics literature was found.\nR = 8 µm: ESTIMATE. Activated avian satellite cells are reported at 15-18 µm diameter in suspension culture (Datar & Betti 2010, Compr. Rev. Food Sci.); R = 8 µm models a freshly activated progenitor at onset of proliferation. Quiescent satellite cells are smaller (R ~4-6 µm).\nσ_i = 0.45 S/m: ESTIMATE. Myogenic progenitors express more ion channels than ESC (voltage-gated Na+ and K+ channels upregulate during myogenic activation), placing σ_i between ESC (0.40 S/m) and differentiated muscle (0.55-0.70 S/m).\nCm = 12.65 mF/m² (ε_r = 10.0 at d = 7 nm): ESTIMATE. Activated satellite cells increase effective membrane capacitance via lamellipodia and filopodia during migration. Consistent with mammalian myoblast Cm range 10-15 mF/m².\nVth = 0.85 V: ESTIMATE. Myogenic progenitors are slightly more sensitive to EP than pluripotent ESC due to reduced membrane tension during activation. No published avian myosatellite EP threshold.\nfc ≈ 0.61 MHz in saline (σ_e = 1.5 S/m) · τ ≈ 259 ns. In CD-Avian medium (σ_e = 1.3 S/m): τ ≈ 269 ns, fc ≈ 591 kHz.\n⚠ ALL PARAMETERS ARE ESTIMATES. Replace with measured values from impedance spectroscopy or electrorotation for quantitative protocol design.\nRef: Datar & Betti (2010) Compr. Rev. Food Sci. Food Safety 9:464 (avian satellite cell review); Boonen et al. (2010) Biomaterials 31:2393 (satellite cell isolation); Foster & Schwan (1989) for mammalian baseline.',
+    radius: 8,
+    membraneThickness: 7,
+    naturalFrequency: 440,
+    thresholdVoltage: 0.85,
+    dielectricConstant: 10.0,
+    conductivity: 0.45,
+    density: 1050,
+    specificHeatCapacity: 3500,
+    amplitude: 0.7,
+    nuclearRadius: 4.5, nuclearMembraneThickness: 15, nuclearMembraneEps: 10,
+    nucleoplasmConductivity: 0.85, nuclearThresholdVoltage: 0.43,
   },
 
   // ── Bacteria (spherical-shell approximation) ────────────────────────────────

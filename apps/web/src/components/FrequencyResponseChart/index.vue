@@ -607,6 +607,7 @@ export default defineComponent({
   --group-cancer:    var(--color-group-cancer);
   --group-bacteria:  var(--color-group-bacteria);
   --group-virus:     var(--color-group-virus);
+  --group-stem:      var(--color-group-stem);
 
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);

@@ -52,10 +52,15 @@ export default defineComponent({
       return tipCmpTitle(this.presetCompTitleDynamic, this.$t('selectivity.presetCompTip'))
     },
 
+    targetPresetGroup(): string | undefined {
+      return CELL_PRESETS.find(p => p.presetId === this.cellStore.target.id)?.group
+    },
+
     presetCompTitleDynamic(): string {
       const cat = this.cellStore.targetCellCategory
-      if (cat === CELL_CATEGORY.BACTERIA) return this.$t('selectivity.compAltBacteria')
-      if (cat === CELL_CATEGORY.VIRUS)    return this.$t('selectivity.compAltViruses')
+      if (cat === CELL_CATEGORY.BACTERIA)                return this.$t('selectivity.compAltBacteria')
+      if (cat === CELL_CATEGORY.VIRUS)                   return this.$t('selectivity.compAltViruses')
+      if (this.targetPresetGroup === CELL_GROUP.STEM)    return this.$t('selectivity.compAltStem')
       return this.$t('selectivity.compAltCancer')
     },
 
@@ -69,7 +74,9 @@ export default defineComponent({
       const hfireMult = this.cellStore.hFireMultiplier
 
       const cat = this.cellStore.targetCellCategory
-      const relevantGroup = cat === CELL_CATEGORY.MAMMALIAN ? CELL_GROUP.CANCER : cat
+      const relevantGroup = this.targetPresetGroup === CELL_GROUP.STEM ? CELL_GROUP.STEM
+                          : cat === CELL_CATEGORY.MAMMALIAN             ? CELL_GROUP.CANCER
+                          : cat
 
       // PEF / Vm / Vth for the healthy reference cell, frequency-independent and computed once. effectiveHealthy carries both σ_i and V_th calibration multipliers; reading thresholdVoltage off it (instead of raw state.healthy) keeps the closed-loop fit live in this what-if grid. Library comparison presets in the row loop below stay uncalibrated by design — their values reflect literature parameters.
       const calHealthy = this.cellStore.effectiveHealthy

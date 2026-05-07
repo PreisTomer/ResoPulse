@@ -93,6 +93,7 @@ const EPS_R_SALINE = MEDIA.saline.permittivity
 const ALL_GROUPS: CellGroup[] = [
   CELL_GROUP.REFERENCE,
   CELL_GROUP.CANCER,
+  CELL_GROUP.STEM,
   CELL_GROUP.BACTERIA,
   CELL_GROUP.VIRUS,
 ] as CellGroup[]

@@ -63,6 +63,7 @@ const GROUP_TIP_KEYS: Record<CellGroup, string> = {
   cancer:    'chart.tipCancer',
   bacteria:  'chart.tipBacteria',
   virus:     'chart.tipVirus',
+  stem:      'chart.tipStem',
 }
 
 const GROUP_LABEL_KEYS: Record<CellGroup, string> = {
@@ -70,6 +71,7 @@ const GROUP_LABEL_KEYS: Record<CellGroup, string> = {
   cancer:    'chart.legendCancer',
   bacteria:  'chart.legendBacteria',
   virus:     'chart.legendVirus',
+  stem:      'chart.legendStem',
 }
 
 export default defineComponent({
@@ -78,7 +80,7 @@ export default defineComponent({
     GROUP_COLORS() { return GROUP_COLORS },
 
     groups(): CellGroup[] {
-      return ['reference', 'cancer', 'bacteria', 'virus']
+      return ['reference', 'cancer', 'bacteria', 'virus', 'stem']
     },
   },
 

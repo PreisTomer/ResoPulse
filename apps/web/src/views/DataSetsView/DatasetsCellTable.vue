@@ -81,7 +81,7 @@
             <td class="datasets__mono" :class="p.fcross2Display !== nullDisplay ? 'datasets__dep-val' : 'datasets__muted'">{{ p.fcross2Display }}</td>
             <td
               class="datasets__mono"
-              :class="p.group === cellGroupReference ? 'datasets__ref-val' : 'datasets__cancer-val'"
+              :class="thresholdClass(p.group)"
             >{{ p.thresholdVoltage.toFixed(2) }}</td>
             <td class="datasets__mono" :class="p.hasNuclear ? 'datasets__nuc-val' : 'datasets__muted'">{{ p.nucRDisplay }}</td>
             <td class="datasets__mono datasets__muted">{{ p.density }}</td>
@@ -157,6 +157,12 @@ export default defineComponent({
   },
 
   methods: {
+    thresholdClass(group: string): string {
+      if (group === CELL_GROUP.REFERENCE) return 'datasets__ref-val'
+      if (group === CELL_GROUP.STEM)      return 'datasets__stem-val'
+      return 'datasets__cancer-val'
+    },
+
     triggerImport(): void {
       (this.$refs.importInput as HTMLInputElement | undefined)?.click()
     },

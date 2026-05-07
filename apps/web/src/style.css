@@ -49,6 +49,7 @@
   --color-group-cancer:    var(--color-danger);
   --color-group-bacteria:  var(--color-amber);
   --color-group-virus:     var(--color-purple);
+  --color-group-stem:      var(--color-ok);
 
   /* ── Typography ──────────────────────────────────────────────────────── */
   --color-text: #c8d8e8;

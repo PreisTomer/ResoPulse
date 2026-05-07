@@ -141,7 +141,7 @@ export default defineComponent({
     ...mapStores(useCellStore, useUserPresetsStore),
 
     targetCategories(): CellGroup[] {
-      return [CELL_GROUP.CANCER, CELL_GROUP.BACTERIA, CELL_GROUP.VIRUS] as CellGroup[]
+      return [CELL_GROUP.CANCER, CELL_GROUP.STEM, CELL_GROUP.BACTERIA, CELL_GROUP.VIRUS] as CellGroup[]
     },
 
     presetsForCategory(): CellPreset[] {

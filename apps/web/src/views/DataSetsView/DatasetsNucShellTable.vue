@@ -35,7 +35,7 @@
             <td class="datasets__mono">{{ p.nucleoplasmConductivity ?? nucleoplasmCondDefault }}</td>
             <td
               class="datasets__mono"
-              :class="p.group === cellGroupReference ? 'datasets__ref-val' : 'datasets__cancer-val'"
+              :class="thresholdClass(p.group)"
             >{{ p.nuclearThresholdVoltage ?? nuclearVmDefault }}</td>
             <td class="datasets__mono datasets__nuc-val">{{ p.nucFpeakDisplay }}</td>
           </tr>
@@ -82,20 +82,18 @@ export default defineComponent({
   },
 
   computed: {
-    cellGroupReference(): string {
-      return CELL_GROUP.REFERENCE
-    },
-    nuclearMembThicknessDefault(): number {
-      return THRESHOLDS.NUCLEAR_MEMBRANE_THICKNESS_NM
-    },
-    nuclearMembEpsDefault(): number {
-      return THRESHOLDS.NUCLEAR_MEMBRANE_EPS
-    },
-    nucleoplasmCondDefault(): number {
-      return THRESHOLDS.NUCLEOPLASM_CONDUCTIVITY
-    },
-    nuclearVmDefault(): number {
-      return THRESHOLDS.NUCLEAR_VM_DEFAULT
+    cellGroupReference(): string { return CELL_GROUP.REFERENCE },
+    nuclearMembThicknessDefault(): number { return THRESHOLDS.NUCLEAR_MEMBRANE_THICKNESS_NM },
+    nuclearMembEpsDefault(): number { return THRESHOLDS.NUCLEAR_MEMBRANE_EPS },
+    nucleoplasmCondDefault(): number { return THRESHOLDS.NUCLEOPLASM_CONDUCTIVITY },
+    nuclearVmDefault(): number { return THRESHOLDS.NUCLEAR_VM_DEFAULT },
+  },
+
+  methods: {
+    thresholdClass(group: string): string {
+      if (group === CELL_GROUP.REFERENCE) return 'datasets__ref-val'
+      if (group === CELL_GROUP.STEM)      return 'datasets__stem-val'
+      return 'datasets__cancer-val'
     },
   },
 })

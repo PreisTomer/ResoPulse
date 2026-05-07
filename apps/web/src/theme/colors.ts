@@ -89,6 +89,7 @@ export const GROUP_COLORS = {
   cancer:    C.danger,
   bacteria:  C.amber,
   virus:     C.purple,
+  stem:      C.ok,
 } as const
 
 // ── Per-type cell appearance (canvas / D3 drawing code) ───────────────────────

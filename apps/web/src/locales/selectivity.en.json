@@ -63,6 +63,7 @@
     "compAltCancer": "Alternative Cancer Targets",
     "compAltBacteria": "Alternative Bacteria",
     "compAltViruses": "Alternative Viruses",
+    "compAltStem": "Alternative Stem / Progenitor Cells",
 
     "neSelectivity": "NE Selectivity",
     "anucleateHealthyNote": "Healthy reference is enucleate (no nuclear membrane). NE selectivity is not meaningful as a differential metric.",

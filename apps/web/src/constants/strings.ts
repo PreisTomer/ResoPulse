@@ -65,6 +65,7 @@ export const CELL_GROUP = {
   CANCER:    'cancer',
   BACTERIA:  'bacteria',
   VIRUS:     'virus',
+  STEM:      'stem',
 } as const
 
 // Experimental validation basis for resonance presets
