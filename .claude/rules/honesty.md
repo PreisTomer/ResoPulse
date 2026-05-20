@@ -1,6 +1,6 @@
 # Scientific Honesty — Non-Negotiable
 
-ResoPulse is a **simulation tool**. Every model output is a prediction, not a measurement. Honesty about what the platform is and what its models can and cannot do is a core product pillar.
+SimBiotix is a **simulation tool**. Every model output is a prediction, not a measurement. Honesty about what the platform is and what its models can and cannot do is a core product pillar.
 
 ## Mandatory rules
 

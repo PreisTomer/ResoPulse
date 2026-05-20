@@ -172,7 +172,7 @@ describe('buildOpentronsScript', () => {
 describe('opentronsFilename', () => {
   it('embeds the target cell label and a timestamp', () => {
     const fn = opentronsFilename(input())
-    expect(fn).toMatch(/^resopulse_MCF-7_opentrons_/)
+    expect(fn).toMatch(/^simbiotix_MCF-7_opentrons_/)
     expect(fn).toMatch(/\.py$/)
   })
 

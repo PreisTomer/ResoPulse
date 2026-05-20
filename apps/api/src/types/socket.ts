@@ -15,7 +15,7 @@ export type {
   OutcomeEntry,
   MeasuredOutcome,
   MeasuredOutcomeEntry,
-} from '@resopulse/shared-types'
+} from '@simbiotix/shared-types'
 
 // Backend-specific: validated wire form of a log entry. The frontend's LogEntry
 // is a richer UI-facing superset; these are intentionally different shapes.

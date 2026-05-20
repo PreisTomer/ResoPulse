@@ -1,5 +1,5 @@
 {
-  "buildCommand": "npm run test -w @resopulse/web && npm run build -w @resopulse/web",
+  "buildCommand": "npm run test -w @simbiotix/web && npm run build -w @simbiotix/web",
   "outputDirectory": "apps/web/dist",
   "installCommand": "npm install",
   "rewrites": [{ "source": "/((?!assets/).*)", "destination": "/index.html" }]

@@ -1,0 +1,28 @@
+{
+  "instrumentHub": {
+    "viewTitle": "Instrument Hub",
+    "viewSubtitle": "Connect your lab equipment so the platform can pull live process data and compare it against predictions in real time.",
+    "statusConnected": "Connected",
+    "statusDisconnected": "Not connected",
+    "statusComingSoon": "Coming soon",
+    "connectBtn": "Connect",
+    "notifyBtn": "Notify me",
+    "feedsLabel": "Feeds",
+    "instruments": {
+      "pulseGenerator": "Pulse Generator",
+      "pulseGeneratorDesc": "Electroporation pulse generators (BTX, Lonza, MaxCyte) for transfection protocol execution in Module 1.",
+      "bioreactor": "Bioreactor Controller",
+      "bioreactorDesc": "Stirred-tank and benchtop bioreactors (Eppendorf DASGIP, Sartorius Ambr, Applikon) for live upstream monitoring.",
+      "chromatography": "Chromatography Skid",
+      "chromatographyDesc": "Preparative chromatography systems (Cytiva AKTA) for live downstream yield tracking.",
+      "hplc": "HPLC / Analytics",
+      "hplcDesc": "Analytical HPLC and product-quality instruments for in-process titer and purity measurement.",
+      "cellCounter": "Cell Counter",
+      "cellCounterDesc": "Automated cell counters (Vi-CELL, NucleoCounter) for viability and density readings."
+    },
+    "feedModule1": "Module 1 transfection",
+    "feedModule2": "Module 2 upstream",
+    "feedModule3": "Module 3 downstream",
+    "feedQuality": "Product quality"
+  }
+}

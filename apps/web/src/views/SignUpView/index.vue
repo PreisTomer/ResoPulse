@@ -15,10 +15,10 @@
         <div class="signup-page__brand-identity">
           <RouterLink to="/" class="signup-page__logo-link">
             <div class="signup-page__logo-img">
-              <img src="/logo.png" alt="ResoPulse" />
+              <img src="/logo.png" alt="SimBiotix" />
             </div>
             <div class="signup-page__logo-text">
-              <span class="signup-page__logo-name">Reso<span class="signup-page__logo-pulse">Pulse</span></span>
+              <span class="signup-page__logo-name">Sim<span class="signup-page__logo-pulse">Biotix</span></span>
               <span class="signup-page__logo-tag">{{ $t('nav.researchPlatform') }}</span>
             </div>
           </RouterLink>

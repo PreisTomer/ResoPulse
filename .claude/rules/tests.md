@@ -4,7 +4,7 @@ After every change, from the repo root:
 
 ```bash
 npm run build:frontend
-npm -w @resopulse/web run test
+npm -w @simbiotix/web run test
 ```
 
 Zero TS errors **and** zero failing tests. Vercel runs `npm run test` in deploy — a green build alone is not sufficient.
@@ -39,6 +39,6 @@ Zero TS errors **and** zero failing tests. Vercel runs `npm run test` in deploy 
 ## Before handing back
 
 1. `npm run build:frontend` → green
-2. `npm -w @resopulse/web run test` → every test passes, no `.skip`/`.only`
+2. `npm -w @simbiotix/web run test` → every test passes, no `.skip`/`.only`
 3. After adding/renaming a locale key, physics constant, or exported symbol, re-run both — stale imports can pass one and fail the next
 4. If either fails, fix it or flag the failure explicitly with output. Never hand back a red pipeline

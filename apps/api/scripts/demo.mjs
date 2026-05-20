@@ -1,5 +1,5 @@
 /**
- * ResoPulse demo launcher.
+ * SimBiotix demo launcher.
  * Starts the backend dev server and opens an ngrok tunnel,
  * then prints the shareable URL to give to demo participants.
  *
@@ -14,7 +14,7 @@
  *        PowerShell:    $env:VERCEL_URL="https://your-app.vercel.app"
  *
  * Usage:
- *   npm -w @resopulse/api run demo
+ *   npm -w @simbiotix/api run demo
  */
 
 import ngrok from '@ngrok/ngrok'
@@ -40,7 +40,7 @@ if (!process.env.NGROK_AUTHTOKEN) {
 }
 
 // ── Start backend dev server ──────────────────────────────────────────────────
-console.log('[demo] Starting ResoPulse backend on port', PORT, '...')
+console.log('[demo] Starting SimBiotix backend on port', PORT, '...')
 
 const server = spawn('npm', ['run', 'dev'], {
   cwd:   backendDir,

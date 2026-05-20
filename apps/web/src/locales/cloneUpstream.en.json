@@ -1,0 +1,101 @@
+{
+  "cloneUp": {
+    "viewTitle": "Clone & Upstream",
+    "viewSubtitle": "Model your bioreactor process. Tune seeding, temperature shift, and feed strategy to project viable cell density and product titer over the run.",
+    "predictionBadge": "Prediction",
+    "predictionBadgeHelp": "Growth uses a logistic VCD model with a biphasic temperature shift. Titer accumulates from specific productivity. A teaching model, not a validated bioreactor twin. Validate against your runs.",
+
+    "chartTitle": "Growth and titer projection",
+    "vcdAxis": "VCD (10^6 cells/mL)",
+    "titerAxis": "Titer (g/L)",
+    "dayAxis": "Culture day",
+    "vcdLegend": "Viable cell density",
+    "titerLegend": "Product titer",
+
+    "params": {
+      "title": "Bioreactor parameters",
+      "seeding": "Seeding density",
+      "seedingUnit": "x10^5 /mL",
+      "maxVcd": "Carrying capacity",
+      "maxVcdUnit": "x10^6 /mL",
+      "growthRate": "Growth rate",
+      "growthRateUnit": "/day",
+      "tempShift": "Temperature shift day",
+      "tempShiftUnit": "day",
+      "duration": "Culture duration",
+      "durationUnit": "days",
+      "qP": "Specific productivity",
+      "qPUnit": "pg/cell/day"
+    },
+
+    "results": {
+      "peakVcd": "Peak VCD",
+      "peakVcdDay": "Peak on day",
+      "finalTiter": "Projected final titer",
+      "vcdUnit": "x10^6 /mL",
+      "titerUnit": "g/L"
+    },
+
+    "tab": {
+      "screening": "Clone Screening",
+      "media": "Media & Feed",
+      "bioreactor": "Bioreactor Design"
+    },
+
+    "screening": {
+      "title": "Clone Screening",
+      "subtitle": "Enter early screening data for your candidate clones. The platform ranks them and projects long-term productivity, so you can cut weak clones before months of scale-up.",
+      "needCampaign": "Set an active campaign first to screen clones.",
+      "addClone": "+ Add clone",
+      "loadDemo": "Load example clones",
+      "emptyTitle": "No clones yet",
+      "emptyText": "Add candidate clones or load an example set to see ranking and performance predictions.",
+      "rankLabel": "Rank",
+      "cloneLabel": "Clone",
+      "titerDay3": "Titer d3",
+      "titerDay7": "Titer d7",
+      "titerDay14": "Titer d14",
+      "peakVcd": "Peak VCD",
+      "viability": "Viability",
+      "stability": "Stability",
+      "aggregate": "Aggregate",
+      "scoreLabel": "Score",
+      "predictedLongTerm": "Projected long-term titer",
+      "riskLabel": "Stability risk",
+      "remove": "Remove",
+      "stabilityStable": "Stable",
+      "stabilityModerate": "Moderate",
+      "stabilityUnstable": "Unstable",
+      "riskLow": "Low",
+      "riskMedium": "Medium",
+      "riskHigh": "High",
+      "topPick": "Top pick",
+      "winnerTitle": "Recommended clone",
+      "winnerSubtitle": "Highest composite score across productivity, stability, growth, and quality.",
+      "breakdownProductivity": "Productivity",
+      "breakdownStability": "Stability",
+      "breakdownGrowth": "Growth",
+      "breakdownQuality": "Quality",
+      "gLUnit": "g/L",
+      "pctUnit": "%",
+      "vcdUnit": "x10^6"
+    },
+
+    "media": {
+      "title": "Media & Feed Optimization",
+      "subtitle": "Tune basal medium richness and feed strategy. The model projects how nutrient supply and feed timing shift peak VCD and final titer.",
+      "basalRichness": "Basal medium richness",
+      "basalRichnessHelp": "Relative nutrient density of the basal medium (1 = standard, higher = enriched).",
+      "feedStartDay": "Feed start day",
+      "feedRatePct": "Daily feed rate",
+      "feedRateUnit": "% culture vol/day",
+      "glucoseSetpoint": "Glucose setpoint",
+      "glucoseUnit": "g/L",
+      "projectedPeakVcd": "Projected peak VCD",
+      "projectedTiter": "Projected final titer",
+      "integralVcd": "Integral viable cell density",
+      "ivcdUnit": "10^6 cell-days/mL",
+      "note": "Feed extends the production phase and raises integral VCD, the main driver of titer. Over-feeding accumulates lactate and is modeled as diminishing returns."
+    }
+  }
+}

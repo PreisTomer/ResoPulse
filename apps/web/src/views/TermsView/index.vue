@@ -5,16 +5,16 @@
 
       <div class="terms__eyebrow">Legal</div>
       <h1 class="terms__title">Terms of Use</h1>
-      <p class="terms__meta">Last Updated: April 29, 2026 &nbsp;·&nbsp; ResoPulse</p>
+      <p class="terms__meta">Last Updated: May 20, 2026 &nbsp;·&nbsp; SimBiotix</p>
 
       <p class="terms__intro">
-        ResoPulse (the "Service") is a free, open-source research and portfolio project. By using the Service you agree to these Terms.
+        SimBiotix (the "Service") is an AI-guided bioproduction prediction platform offered as a free, open-source research and portfolio project. By using the Service you agree to these Terms.
       </p>
 
       <section class="terms__section">
         <h2 class="terms__h2">1. License</h2>
         <p class="terms__p">
-          The ResoPulse source code is released under the
+          The SimBiotix source code is released under the
           <a href="https://opensource.org/licenses/MIT" class="terms__link" target="_blank" rel="noopener">MIT License</a>.
           You are free to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the
           software, subject to the conditions of that license. Copyright &copy; 2026 Tomer Preis.
@@ -24,21 +24,22 @@
       <section class="terms__section">
         <h2 class="terms__h2">2. Research Use &amp; Scientific Disclaimer</h2>
         <dl class="terms__dl">
-          <dt>In-Vitro Only</dt>
-          <dd>ResoPulse is a computational simulation tool intended for in-vitro laboratory research only.</dd>
+          <dt>Process Development Only</dt>
+          <dd>SimBiotix is a computational prediction tool intended for bioprocess research and process development use only.</dd>
           <dt>Not a Medical Device</dt>
-          <dd>This software is not a medical device and should not be used for clinical diagnostics or human treatment.</dd>
-          <dt>Approximations</dt>
-          <dd>All biophysical parameters are approximations derived from bioelectromagnetics literature; real-world results may vary.</dd>
+          <dd>This software is not a medical device and should not be used for clinical diagnostics or human treatment. It does not predict clinical efficacy or safety in patients.</dd>
+          <dt>Predictions, Not Measurements</dt>
+          <dd>Every predicted yield, recommended cell line, transfection window, and downstream parameter is a model output derived from literature-sourced data. Real-world bench results may vary, sometimes substantially. Validate predictions in your own lab before committing to manufacturing decisions.</dd>
+          <dt>Not GMP-Validated</dt>
+          <dd>SimBiotix supports process design and prediction; it is not GMP-compliant manufacturing execution software. Your organization is responsible for all validation, qualification, and regulatory work.</dd>
         </dl>
       </section>
 
       <section class="terms__section">
-        <h2 class="terms__h2">3. Your Simulation Data</h2>
+        <h2 class="terms__h2">3. Your Campaign Data</h2>
         <p class="terms__p">
-          Experiment results, CSV exports, and protocol configurations you generate using the Service are your own data.
-          Anonymised, aggregated outcome ratings you choose to log may be used to retrain the on-premise optimisation
-          model; no personally identifiable information is used in that process.
+          Campaigns, lab runs, predicted outputs, observed outcomes, CSV exports, and protocol configurations you create using the Service are your own data.
+          Anonymised, aggregated outcome data you choose to log may be used to improve the prediction models; no personally identifiable information is used in that process.
         </p>
       </section>
 
@@ -56,7 +57,7 @@
       <section class="terms__section">
         <h2 class="terms__h2">5. Model Versioning and Reproducibility</h2>
         <p class="terms__p">
-          The biophysical models in ResoPulse may be updated between software versions to improve accuracy or incorporate
+          The biophysical models in SimBiotix may be updated between software versions to improve accuracy or incorporate
           new literature findings. Simulation results obtained from different versions may not be directly comparable.
           Note the software version when citing results in research documentation.
         </p>
@@ -65,12 +66,11 @@
       <section class="terms__section">
         <h2 class="terms__h2">6. Academic Attribution (Suggested)</h2>
         <p class="terms__p">
-          If you use ResoPulse simulation outputs in published research, conference presentations, or technical reports,
+          If you use SimBiotix simulation outputs in published research, conference presentations, or technical reports,
           a citation is appreciated but not required. A suggested attribution:
         </p>
         <blockquote class="terms__quote">
-          Simulation performed using ResoPulse Closed-Loop Electroporation Digital Twin (2026). Biophysical
-          models based on Kotnik &amp; Miklavcic (2000), Weaver &amp; Chizmadzhev (1996), and Pennes (1948).
+          Predictions generated using SimBiotix AI-Guided Bioproduction Platform (2026). Cell line ranking and downstream yield models derived from published bioprocess literature; transfection window modeling based on Schwan (1957) and Kotnik &amp; Miklavcic (2000).
         </blockquote>
       </section>
 
@@ -91,7 +91,7 @@
       </section>
 
       <div class="terms__footer">
-        <RouterLink :to="ROUTE.HOME" class="terms__back">← Back to ResoPulse</RouterLink>
+        <RouterLink :to="ROUTE.HOME" class="terms__back">← Back to SimBiotix</RouterLink>
         <RouterLink :to="ROUTE.PRIVACY" class="terms__privacy-link">Privacy</RouterLink>
         <span class="terms__copy">© 2026 Tomer Preis · MIT License</span>
       </div>

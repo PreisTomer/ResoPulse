@@ -7,7 +7,7 @@ import { setActivePinia, createPinia } from 'pinia'
 import { useAiStore }   from '@/stores/aiStore'
 import { useCellStore } from '@/stores/cellStore'
 import type { AiOptimizeResult } from '@/services/socket'
-import type { TrainingCompletePayload } from '@resopulse/shared-types'
+import type { TrainingCompletePayload } from '@simbiotix/shared-types'
 
 function freshStores() {
   setActivePinia(createPinia())

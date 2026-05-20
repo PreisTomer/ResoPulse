@@ -1,5 +1,5 @@
 {
-  "name": "resopulse",
+  "name": "simbiotix",
   "version": "0.1.0",
   "private": true,
   "workspaces": [
@@ -8,17 +8,17 @@
     "packages/*"
   ],
   "scripts": {
-    "frontend":         "npm -w @resopulse/web run dev",
-    "backend":          "npm -w @resopulse/api run dev",
-    "ai":               "cd apps/ai-service && DEMO_SEED=1 uv run resopulse-ai serve",
+    "frontend":         "npm -w @simbiotix/web run dev",
+    "backend":          "npm -w @simbiotix/api run dev",
+    "ai":               "cd apps/ai-service && DEMO_SEED=1 uv run simbiotix-ai serve",
     "dev":              "concurrently --names \"BACKEND,FRONTEND,AI\" --prefix-colors \"cyan,green,magenta\" \"npm run backend\" \"npm run frontend\" \"npm run ai\"",
     "dev:no-ai":        "concurrently --names \"BACKEND,FRONTEND\" --prefix-colors \"cyan,green\" \"npm run backend\" \"npm run frontend\"",
     "install:all":      "npm install && cd apps/instrument-bridge && uv sync && cd ../ai-service && uv sync",
-    "build:frontend":   "npm -w @resopulse/web run build",
-    "build:backend":    "npm -w @resopulse/api run build",
+    "build:frontend":   "npm -w @simbiotix/web run build",
+    "build:backend":    "npm -w @simbiotix/api run build",
     "build:all":        "npm run build:frontend && npm run build:backend",
-    "test":             "npm -w @resopulse/web run test && npm -w @resopulse/api run test",
-    "typecheck:shared": "npm -w @resopulse/shared-types run typecheck"
+    "test":             "npm -w @simbiotix/web run test && npm -w @simbiotix/api run test",
+    "typecheck:shared": "npm -w @simbiotix/shared-types run typecheck"
   },
   "devDependencies": {
     "concurrently": "^9.2.1"

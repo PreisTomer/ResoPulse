@@ -1,4 +1,4 @@
-# ResoPulse — Claude Code Instructions
+# SimBiotix — Claude Code Instructions
 
 These rules apply to **every** code change. Non-negotiable unless a section states otherwise.
 
@@ -38,7 +38,7 @@ The full ruleset is split across topic files under `.claude/rules/` and imported
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **ResoPulse** (8488 symbols, 13513 relationships, 300 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **ResoPulse** (5635 symbols, 8944 relationships, 246 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > If any GitNexus tool warns the index is stale, run `npx gitnexus analyze` in terminal first.
 

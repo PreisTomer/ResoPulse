@@ -4,7 +4,7 @@ import { defineStore } from 'pinia'
 
 import { cloneDeep } from 'lodash'
 
-import type { StatePacket } from '@resopulse/shared-types'
+import type { StatePacket } from '@simbiotix/shared-types'
 
 import { useExperimentStore } from '@/stores/experimentStore'
 import { useUserPresetsStore } from '@/stores/userPresetsStore'

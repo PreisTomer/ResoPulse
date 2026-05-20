@@ -6,7 +6,7 @@ Every diff is reviewed by **OpenAI Codex** and **GitHub Copilot**. Assume an adv
 
 ## Copyright Header
 
-ResoPulse is MIT-licensed. See `LICENSE` at the repo root for the full text.
+SimBiotix is MIT-licensed. See `LICENSE` at the repo root for the full text.
 
 Every source file (`.vue`, `.ts`, `.tsx`, `.js`) begins with:
 

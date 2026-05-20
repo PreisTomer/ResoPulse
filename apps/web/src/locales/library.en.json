@@ -1,0 +1,82 @@
+{
+  "library": {
+    "viewTitle": "Reference Library",
+    "viewSubtitle": "Curated bioprocess reference data. Cell lines, downstream steps, vectors, buffers, and target molecules, all backed by literature.",
+    "searchPlaceholder": "Search the library...",
+    "sectionsLabel": "Sections",
+    "itemCount": "{count} entries",
+    "noResults": "No entries match your search.",
+
+    "section": {
+      "cellLines": "Cell Lines",
+      "processSteps": "Process Steps",
+      "vectors": "Expression Vectors",
+      "buffers": "Buffers",
+      "molecules": "Target Molecules",
+      "references": "Scientific References"
+    },
+
+    "reference": {
+      "intro": "Peer-reviewed sources behind the platform's quantitative models. The transfection optimizer implements the electroporation equations below directly. The upstream culture models are simplified phenomenological approximations of the established relationships cited, not reproductions of those studies. The downstream yield model, developability score, and clone score are simulator constructs and carry no external citation by design; per-row catalog data (cell lines, vectors, steps, buffers) carries its own references in each section above.",
+      "categoryEp": "Electroporation & transfection biophysics",
+      "categoryUpstream": "Upstream culture kinetics",
+      "sourceLink": "View source"
+    },
+
+    "cellLine": {
+      "hostSpecies": "Host species",
+      "doublingTime": "Doubling time",
+      "expressionMode": "Expression",
+      "glycosylation": "Glycosylation",
+      "approvedProducts": "Approved products",
+      "challenges": "Common challenges",
+      "vendors": "Vendor sources",
+      "references": "References",
+      "hours": "h"
+    },
+
+    "processStep": {
+      "category": "Category",
+      "yieldRange": "Typical yield",
+      "hcpClearance": "HCP clearance",
+      "dnaClearance": "DNA clearance",
+      "parameters": "Key parameters",
+      "challenges": "Common challenges",
+      "logUnit": "log"
+    },
+
+    "vector": {
+      "promoter": "Promoter",
+      "selectionMarker": "Selection marker",
+      "geneOfInterest": "Gene of interest",
+      "terminator": "polyA / Terminator",
+      "origin": "Origin (ori)",
+      "featuresLegend": "Plasmid features",
+      "secretionSignal": "Secretion signal",
+      "size": "Size",
+      "hostCells": "Compatible hosts",
+      "expressionModes": "Expression",
+      "none": "none (intracellular)"
+    },
+
+    "buffer": {
+      "composition": "Composition",
+      "phRange": "pH range",
+      "conductivity": "Conductivity",
+      "typicalUses": "Typical uses",
+      "concUnit": "mM"
+    },
+
+    "molecule": {
+      "category": "Category",
+      "typicalSize": "Typical size",
+      "secretion": "Secretion",
+      "complexity": "Process complexity",
+      "endToEndYield": "Typical end-to-end yield",
+      "commonHosts": "Common host cells",
+      "exampleProducts": "Example products",
+      "challenges": "Common challenges",
+      "kDaUnit": "kDa"
+    }
+  }
+}

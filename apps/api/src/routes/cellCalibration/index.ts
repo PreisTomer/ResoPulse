@@ -5,7 +5,7 @@
 import { Router } from 'express'
 import type { Request, Response } from 'express'
 
-import type { AiCalibrationCellParams, CalibrationMode, CellCategory } from '@resopulse/shared-types'
+import type { AiCalibrationCellParams, CalibrationMode, CellCategory } from '@simbiotix/shared-types'
 
 import { requireAuth, requireOrg, getRequestAuth } from '../../middleware/clerkAuth'
 import { computeCalibration, listCalibrations } from '../../services/cellCalibrationService'

@@ -7,7 +7,7 @@ import type {
   OutcomeEntry, MeasuredOutcome, MeasuredOutcomeEntry,
   AiOptimizeRequest, AiOptimizeResult,
 } from '../types/socket'
-import type { ViabilityAssay } from '@resopulse/shared-types'
+import type { ViabilityAssay } from '@simbiotix/shared-types'
 import { insertOutcome, attachMeasuredOutcome } from '../db'
 
 // Domain constants

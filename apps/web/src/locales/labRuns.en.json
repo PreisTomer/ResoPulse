@@ -1,0 +1,48 @@
+{
+  "labRuns": {
+    "viewTitle": "Lab Runs",
+    "viewSubtitle": "Log what actually happened at the bench against what the platform predicted. Every logged outcome sharpens future predictions for your lab.",
+    "emptyTitle": "No lab runs yet",
+    "emptyText": "Start a lab run from an active campaign to record actual outcomes and compare them with predictions.",
+    "newRun": "+ New lab run",
+    "needCampaign": "Set an active campaign first to start a lab run.",
+
+    "card": {
+      "status": "Status",
+      "created": "Created",
+      "accuracy": "Prediction accuracy",
+      "notLogged": "Outcomes not logged yet",
+      "view": "View"
+    },
+
+    "status": {
+      "planned": "Planned",
+      "inProgress": "In progress",
+      "complete": "Complete"
+    },
+
+    "detail": {
+      "back": "Back to lab runs",
+      "predictedVsActual": "Predicted vs actual",
+      "predicted": "Predicted",
+      "actual": "Actual",
+      "metric": "Metric",
+      "delta": "Delta",
+      "transfectionEfficiency": "Transfection efficiency",
+      "viability": "Cell viability",
+      "titer": "Titer",
+      "downstreamYield": "Downstream yield",
+      "finalProduct": "Final product",
+      "notes": "Run notes",
+      "notesPlaceholder": "Observations, deviations, lot numbers...",
+      "markComplete": "Mark complete",
+      "reopen": "Reopen",
+      "deleteRun": "Delete run",
+      "enterActual": "Enter measured value",
+      "pctUnit": "%",
+      "gLUnit": "g/L",
+      "gUnit": "g",
+      "noPrediction": "No prediction available yet for this metric. Complete the relevant module first."
+    }
+  }
+}

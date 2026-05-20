@@ -2,7 +2,7 @@
 
 ## Brand Identity — Logo Tagline
 
-The ResoPulse logo tagline is always **"Electroporation Digital Twin"** — never "Virtual Cell Lab" or any other variant. Lives in `locales/nav.en.json` as `nav.researchPlatform`; always reference via `$t('nav.researchPlatform')`.
+The SimBiotix logo tagline is always **"Electroporation Digital Twin"** — never "Virtual Cell Lab" or any other variant. Lives in `locales/nav.en.json` as `nav.researchPlatform`; always reference via `$t('nav.researchPlatform')`.
 
 Styling: `text-transform: capitalize` (never `uppercase`), `font-family: var(--font-mono)`, `font-size: 0.6rem`, `letter-spacing: 0.02em`.
 
@@ -38,36 +38,34 @@ icon: ICON.STAR
 
 Every top-level namespace lives in exactly one file. Add new keys to the file that owns that domain; never create a catch-all file.
 
+The EP-era locale files were deleted during the bioproduction pivot once their components were removed (2026-05-20). The live set:
+
+#### Live locale files
+
 | File | Namespaces | Feature area |
 |---|---|---|
-| `locales/nav.en.json` | `nav` | NavBar, contact modal, guest session, theme toggle |
-| `locales/auth.en.json` | `termsGate`, `signIn`, `signUp`, `onboarding` | Auth flow, lab entry gate |
+| `locales/campaign.en.json` | `campaign` | Campaigns view, campaign card, wizard, switcher |
+| `locales/cellEngineering.en.json` | `cellEng` | Module 1 — cell line selector, genetic strategy, transfection optimizer, developability score |
+| `locales/nav.en.json` | `nav` | AppShell sidebar groups (Workspaces / Knowledge / Setup), marketing NavBar, contact modal, brand tagline |
+| `locales/auth.en.json` | `termsGate`, `signIn`, `signUp`, `onboarding` | Auth flow; onboarding (molecule-type + challenge picker) |
 | `locales/account.en.json` | `account` | Account settings |
-| `locales/cells.en.json` | `cells`, `lmb`, `cellHeader`, `labels`, `biostim` | Cell card, compact strip, states |
-| `locales/slider.en.json` | `slider` | Field control panel |
-| `locales/experiment.en.json` | `exp`, `live`, `guide`, `drChart`, `litStrip` | Experiment lab workspace |
-| `locales/savedExperiments.en.json` | `experiments` | Saved experiments |
-| `locales/ai.en.json` | `ai` | AI protocol optimizer |
-| `locales/resonance.en.json` | `resonance` | Acoustic resonance |
-| `locales/chart.en.json` | `chart` | Schwan frequency response chart |
-| `locales/heatmap.en.json` | `heatmap` | Heatmap / lysis canvas |
-| `locales/sweep.en.json` | `sweep` | Selectivity sweep panel |
-| `locales/selectivity.en.json` | `selectivity` | Selectivity panel, DEP, comparison table |
-| `locales/population.en.json` | `population` | Population distribution |
-| `locales/log.en.json` | `log` | Experiment log table |
-| `locales/instrument.en.json` | `instrument` | Instrument panel |
-| `locales/protocol.en.json` | `header`, `feedback`, `toc`, `validation`, `validateAside`, `overview`, `physics`, `followInLab`, `protocol`, `safety`, `refs` | Protocol documentation |
+| `locales/home.en.json` | `home` | Home / landing — bioproduction positioning, module cards, pain-point strip |
+| `locales/ai.en.json` | `ai` | AI engine + CalibrationBadge |
+| `locales/log.en.json` | `log` | Log/outcome table (ReportsView, future Lab Runs) |
 | `locales/reports.en.json` | `reports` | Reports view |
-| `locales/datasets.en.json` | `datasets` | Data sets view |
-| `locales/home.en.json` | `home` | Home / landing |
-| `locales/userPresets.en.json` | `userPresets` | User-created presets |
-| `locales/validate.en.json` | `validate` | Validation workflow modal |
-| `locales/reversibleEp.en.json` | `revEp` | Reversible-EP / cargo-delivery panel |
-| `locales/fermenter.en.json` | `fermenter` | Bacterial fermenter scale-up panel (preview) |
-| `locales/ttFields.en.json` | `ttFields` | Sub-threshold DEP / TTFields-style panel (preview) |
-| `locales/viralRf.en.json` | `viralRf` | GHz viral-vector safety panel (preview) |
 
-When adding a new domain, create `<domain>.en.json` and register it in `plugins/i18n.ts` with a spread (`...import`). `protocol` uses a nested spread and must remain as-is. Update this table after creating a file.
+#### Locale files to create in later phases
+
+| File | Namespace | Phase |
+|---|---|---|
+| `locales/downstream.en.json` | `downstream` | Phase 2 — Module 3 (step sequencer, yield waterfall, bottleneck) |
+| `locales/library.en.json` | `library` | Phase 3 — Reference Library |
+| `locales/methods.en.json` | `methods` | Phase 4 — Methods Library |
+| `locales/modelDocs.en.json` | `modelDocs` | Phase 4 — Model Documentation |
+| `locales/labRuns.en.json` | `labRuns` | Phase 5 — Lab Runs |
+| `locales/instrumentHub.en.json` | `instrumentHub` | Phase 7 — Instrument Hub |
+
+When adding a new domain, create `<domain>.en.json` and register it in `plugins/i18n.ts` with a spread (`...import`). Update this table after creating a file.
 
 ### Tooltip strings — forbidden patterns
 

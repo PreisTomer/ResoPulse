@@ -33,7 +33,7 @@ describe('parseUserPresetsJson', () => {
     const text   = userPresetsToJson([BASE])
     const report = parseUserPresetsJson(text)
     expect(report.ok).toBe(true)
-    expect(report.schema).toBe('resopulse-user-presets@1')
+    expect(report.schema).toBe('simbiotix-user-presets@1')
     expect(report.accepted).toHaveLength(1)
     const p = report.accepted[0]!
     expect(p.role).toBe('target')
@@ -47,7 +47,7 @@ describe('parseUserPresetsJson', () => {
     expect(p.resonantFreqGHz).toBe(0)
   })
 
-  it('rejects payloads without the resopulse schema prefix', () => {
+  it('rejects payloads without the simbiotix schema prefix', () => {
     const report = parseUserPresetsJson(JSON.stringify({ schema: 'other@1', presets: [] }))
     expect(report.ok).toBe(false)
     expect(report.error).toMatch(/schema/i)
@@ -84,7 +84,7 @@ describe('parseUserPresetsJson', () => {
 
   it('drops non-finite optional numbers rather than rejecting the row', () => {
     const text   = JSON.stringify({
-      schema:  'resopulse-user-presets@1',
+      schema:  'simbiotix-user-presets@1',
       presets: [{ ...BASE, capsidQ: 'not a number' }],
     })
     const report = parseUserPresetsJson(text)

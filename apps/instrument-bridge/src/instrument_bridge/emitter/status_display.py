@@ -54,7 +54,7 @@ class BridgeStatusDisplay:
 
         return Panel(
             table,
-            title="[bold]ResoPulse Instrument Bridge[/bold]",
+            title="[bold]SimBiotix Instrument Bridge[/bold]",
             border_style="blue",
         )
 

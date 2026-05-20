@@ -1,7 +1,7 @@
 // Copyright © 2026 Tomer Preis. Licensed under the MIT License.
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-import type { AiCalibrationCellParams } from '@resopulse/shared-types'
+import type { AiCalibrationCellParams } from '@simbiotix/shared-types'
 
 const mockPrisma = vi.hoisted(() => ({
   outcome: {

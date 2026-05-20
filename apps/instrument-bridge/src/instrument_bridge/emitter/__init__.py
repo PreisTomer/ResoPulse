@@ -40,7 +40,7 @@ def _backoff_seconds(attempt: int) -> float:
 
 class BridgeEmitter:
     """
-    Connects to the ResoPulse backend and the instrument driver, then
+    Connects to the SimBiotix backend and the instrument driver, then
     polls the driver at poll_interval_s and emits each reading.
     """
 

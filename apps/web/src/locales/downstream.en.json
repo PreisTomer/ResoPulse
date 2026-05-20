@@ -1,0 +1,74 @@
+{
+  "downstream": {
+    "viewTitle": "Downstream Processing",
+    "viewSubtitle": "Build your purification train and predict recovery at every step. Find the bottleneck before you run a single column.",
+    "noCampaign": "No active campaign. Open one from Campaigns to design a downstream process.",
+    "openCampaigns": "Open Campaigns",
+    "predictionBadge": "Prediction",
+    "predictionBadgeHelp": "Per-step yields come from published process characterization ranges. Parameter changes shift the estimate within the literature band. Validate against your bench data.",
+
+    "chart": {
+      "title": "Yield waterfall",
+      "target": "Target",
+      "stepYield": "Step yield",
+      "range": "Lit. range",
+      "cumulative": "Cumulative",
+      "emptyState": "Add steps to see the yield waterfall"
+    },
+
+    "sequencer": {
+      "title": "Process train",
+      "addStep": "+ Add step",
+      "loadTemplate": "Load default train",
+      "emptyTitle": "No steps yet",
+      "emptyText": "Add purification steps or load the default train for your molecule type.",
+      "dragHint": "Drag to reorder",
+      "duplicate": "Duplicate",
+      "remove": "Remove",
+      "moveUp": "Move up",
+      "moveDown": "Move down"
+    },
+
+    "stepPicker": {
+      "title": "Add a process step",
+      "close": "Close",
+      "typicalYield": "Typical yield"
+    },
+
+    "detail": {
+      "title": "Step parameters",
+      "noSelection": "Select a step to view and tune its parameters.",
+      "predictedYield": "Predicted yield",
+      "litRange": "Literature range",
+      "hcpClearance": "HCP clearance",
+      "dnaClearance": "DNA clearance",
+      "logReductionUnit": "log",
+      "sourcesLabel": "Sources",
+      "challengesLabel": "Common challenges"
+    },
+
+    "summary": {
+      "startingTiter": "Starting titer",
+      "volume": "Harvest volume",
+      "startingMass": "Starting mass",
+      "finalProduct": "Final product",
+      "overallYield": "Overall yield",
+      "totalHcp": "Total HCP clearance",
+      "totalDna": "Total DNA clearance",
+      "titerUnit": "g/L",
+      "volumeUnit": "L",
+      "massUnit": "g",
+      "bottleneckAlert": "Bottleneck detected"
+    },
+
+    "bottleneck": {
+      "title": "Bottleneck analysis",
+      "limitingStep": "Limiting step",
+      "whyTitle": "Why this step limits yield",
+      "suggestionsTitle": "Suggestions to improve recovery",
+      "noBottleneck": "No single step is dragging the process down. Yield is balanced across the train.",
+      "close": "Close",
+      "openAnalysisBtn": "Analyze bottleneck"
+    }
+  }
+}

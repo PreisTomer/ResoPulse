@@ -1,5 +1,5 @@
 """
-Smoke test for the ResoPulse instrument bridge.
+Smoke test for the SimBiotix instrument bridge.
 
 Spins up a minimal Socket.IO server in-process, runs the demo driver
 against it, captures 5 readings, validates each packet against the
@@ -227,7 +227,7 @@ def print_report(run: TestRun) -> None:
     console.print(
         Panel(
             table,
-            title="[bold]ResoPulse Bridge Smoke Test[/bold]",
+            title="[bold]SimBiotix Bridge Smoke Test[/bold]",
             subtitle=summary,
             border_style=summary_color,
         )
@@ -248,7 +248,7 @@ if __name__ == "__main__":
         Panel(
             "Running demo driver against a local mock Socket.IO server.\n"
             "No hardware and no running backend required.",
-            title="[bold]ResoPulse Bridge Smoke Test[/bold]",
+            title="[bold]SimBiotix Bridge Smoke Test[/bold]",
             border_style="blue",
         )
     )

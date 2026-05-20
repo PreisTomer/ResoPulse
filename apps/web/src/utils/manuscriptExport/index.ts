@@ -12,7 +12,7 @@ import type { CellConfig } from '@/types/cell'
 import type { LogEntry } from '@/types/experiment'
 
 const SCHEMA_VERSION = '1.0.0'
-const APP_NAME       = 'ResoPulse'
+const APP_NAME       = 'SimBiotix'
 
 // ── Public types ────────────────────────────────────────────────────────────
 
@@ -80,7 +80,7 @@ function safe(s: string): string { return s.replace(/\s+/g, '_').replace(/[^A-Za
 export function manuscriptFilename(scope: ManuscriptScope, ext: 'md' | 'json' | 'csv'): string {
   const tag = scope.type === 'all' ? 'all-sessions' : safe(scope.sessionName || 'session')
   const stamp = new Date().toISOString().replace(/[:.]/g, '-').replace(/T/, '_').replace(/Z$/, 'Z')
-  return `resopulse_${tag}_${stamp}.${ext}`
+  return `simbiotix_${tag}_${stamp}.${ext}`
 }
 
 // ── Markdown builder ────────────────────────────────────────────────────────
@@ -252,7 +252,7 @@ export function buildManuscriptMarkdown(input: ManuscriptInput): string {
 
 function buildMethodsNarrative(cell: ManuscriptCellContext, anyCalibration: boolean): string {
   const lines: string[] = []
-  lines.push('Predictions in this bundle were computed by the ResoPulse simulator using the following peer-reviewed forward physics:')
+  lines.push('Predictions in this bundle were computed by the SimBiotix simulator using the following peer-reviewed forward physics:')
   lines.push('')
   lines.push('- Transmembrane potential V_m(f) was computed via the Schwan single-shell model (Kotnik & Miklavčič 2000) with τ = R·C_m·(2σ_e + σ_i)/(2σ_e·σ_i) and C_m = ε_r·ε₀/d.')
   lines.push('- The disruption ratio DR = V_m·pef / (V_th_eff·hfire_mult), with pef the single-pulse RC envelope (1 − exp(−t_p/τ)), V_th_eff temperature-corrected and electrosensitization-discounted (N^(−0.20); Weaver & Chizmadzhev 1996, Pakhomov 2007).')

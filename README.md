@@ -1,17 +1,17 @@
-# ResoPulse — Closed-Loop Electroporation Digital Twin
+# SimBiotix — Closed-Loop Electroporation Digital Twin
 
 ### *Precision Simulation for Selective Electroporation & Bioelectric Field Research*
 
 **Open Source · MIT License** *This repository is published as an open-source research and portfolio project.*
 
-> **License:** ResoPulse is released under the [MIT License](./LICENSE).
+> **License:** SimBiotix is released under the [MIT License](./LICENSE).
 > Copyright © 2026 Tomer Preis.
 
 ---
 
 ## Executive Summary
 
-**ResoPulse** is a high-fidelity **virtual in-vitro laboratory** — a digital twin of a cuvette or well-plate electroporation experiment on single cells or cell suspensions. By simulating the full physics in a reactive virtual environment, researchers can identify the exact field parameters that lyse a target cell while leaving healthy cells below threshold, before touching any physical equipment.
+**SimBiotix** is a high-fidelity **virtual in-vitro laboratory** — a digital twin of a cuvette or well-plate electroporation experiment on single cells or cell suspensions. By simulating the full physics in a reactive virtual environment, researchers can identify the exact field parameters that lyse a target cell while leaving healthy cells below threshold, before touching any physical equipment.
 
 The platform computes the transmembrane potential, SAR thermal budget, pulse-width membrane charging, and acoustic capsid disruption ratio in real time, and maps the selectivity window across the full frequency spectrum. A hardware bridge streams live impedance readings from a bench instrument directly into the UI, and an AI optimizer learns from accumulated experiment outcomes to refine protocol suggestions beyond the physics baseline.
 
@@ -104,7 +104,7 @@ Run with a synthetic demo driver (no hardware required):
 uv run instrument-bridge run --driver demo
 ```
 
-Then open the ResoPulse UI, go to the Experiment view, enable Hardware Mode in the Load Monitor panel, and watch live impedance readings appear.
+Then open the SimBiotix UI, go to the Experiment view, enable Hardware Mode in the Load Monitor panel, and watch live impedance readings appear.
 
 ---
 
@@ -160,9 +160,9 @@ The service blends two sources:
 ```bash
 cd apps/ai-service
 uv sync
-uv run resopulse-ai serve                               # localhost:8000
-uv run resopulse-ai serve --host 0.0.0.0 --port 8000    # expose on LAN
-uv run resopulse-ai serve --reload                      # dev mode with auto-reload
+uv run simbiotix-ai serve                               # localhost:8000
+uv run simbiotix-ai serve --host 0.0.0.0 --port 8000    # expose on LAN
+uv run simbiotix-ai serve --reload                      # dev mode with auto-reload
 ```
 
 Set `AI_SERVICE_URL=http://localhost:8000` in the Node.js backend environment.
@@ -180,10 +180,10 @@ Set `AI_SERVICE_URL=http://localhost:8000` in the Node.js backend environment.
 To pre-populate the outcomes database with synthetic training data so the ML model activates immediately:
 
 ```bash
-uv run resopulse-ai seed-demo
+uv run simbiotix-ai seed-demo
 ```
 
-Or set `DEMO_SEED=true` in the environment before starting `resopulse-ai serve` for automatic seeding on first launch.
+Or set `DEMO_SEED=true` in the environment before starting `simbiotix-ai serve` for automatic seeding on first launch.
 
 ---
 
@@ -193,8 +193,8 @@ Tests live next to the code (`**/*.test.ts`) and run via Vitest.
 
 ```bash
 npm test                                  # frontend + backend
-npm -w @resopulse/web run test:watch      # frontend watch mode
-npm -w @resopulse/web run test:coverage   # frontend coverage report
+npm -w @simbiotix/web run test:watch      # frontend watch mode
+npm -w @simbiotix/web run test:coverage   # frontend coverage report
 ```
 
 The suite covers physics utilities, every Pinia store, calibration / active-learning logic, CSV import/export round-trips, and the backend's Express routes.
@@ -228,6 +228,6 @@ For anything else: <preis.tomer@gmail.com>.
 
 ## License & Disclaimer
 
-ResoPulse is released under the [MIT License](./LICENSE). Copyright © 2026 Tomer Preis.
+SimBiotix is released under the [MIT License](./LICENSE). Copyright © 2026 Tomer Preis.
 
 It is a computational simulation tool intended for **in-vitro laboratory research only** and is not a medical device. All biophysical parameters are approximations derived from the bioelectromagnetics literature. The software is provided "AS IS" without warranty of any kind; see the LICENSE for full terms.

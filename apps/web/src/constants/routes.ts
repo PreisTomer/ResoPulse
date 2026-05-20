@@ -2,18 +2,37 @@
 
 // Named route paths — use these everywhere instead of hardcoded path strings.
 export const ROUTE = {
-  HOME:        '/',
-  EXPERIMENT:  '/experiment',
-  EXPERIMENTS: '/experiments',
-  DATASETS:    '/datasets',
-  REPORTS:     '/reports',
-  PROTOCOL:    '/protocol',
-  INSTRUMENT:  '/instrument',
-  TERMS:       '/terms',
-  PRIVACY:     '/privacy',
-  SIGN_IN:     '/sign-in',
-  SIGN_UP:     '/sign-up',
-  ONBOARDING:  '/onboarding',
-  ACCOUNT:     '/account',
-  PROFILE:     '/profile',
+  // Marketing / public
+  HOME:    '/',
+  TERMS:   '/terms',
+  PRIVACY: '/privacy',
+
+  // Auth
+  SIGN_IN:    '/sign-in',
+  SIGN_UP:    '/sign-up',
+  ONBOARDING: '/onboarding',
+  ACCOUNT:    '/account',
+  PROFILE:    '/profile',
+
+  // Workspaces — where the user does design work
+  CAMPAIGNS:        '/campaigns',
+  CELL_ENGINEERING: '/cell-engineering',
+  CLONE_UPSTREAM:   '/clone-upstream',
+  DOWNSTREAM:       '/downstream',
+  LAB_RUNS:         '/lab-runs',
+
+  // Knowledge — where the user references and learns
+  LIBRARY: '/library',
+  METHODS: '/methods',
+  REPORTS: '/reports',
+
+  // Setup
+  INSTRUMENT_HUB: '/instrument-hub',
+
+  // Legacy EP route keys — alias to new bioproduction paths during pivot transition; remove once all consumers migrated
+  EXPERIMENT:  '/cell-engineering',
+  EXPERIMENTS: '/campaigns',
+  DATASETS:    '/library',
+  PROTOCOL:    '/methods',
+  INSTRUMENT:  '/instrument-hub',
 } as const

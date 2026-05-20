@@ -1,0 +1,16 @@
+{
+  "methods": {
+    "viewTitle": "Methods Library",
+    "viewSubtitle": "Proven workflow templates for common bioproduction programs. Clone one to start a new campaign with the cell line and downstream train pre-configured.",
+    "useTemplate": "Use this template",
+    "expectedYield": "Expected overall yield",
+    "complexity": "Complexity",
+    "stepCount": "{count} downstream steps",
+    "cellLineLabel": "Host cell line",
+    "downstreamLabel": "Downstream train",
+    "complexityStandard": "Standard",
+    "complexityModerate": "Moderate",
+    "complexityAdvanced": "Advanced",
+    "clonedToast": "Campaign created from template"
+  }
+}

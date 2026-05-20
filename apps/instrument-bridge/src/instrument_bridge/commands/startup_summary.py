@@ -52,9 +52,9 @@ def print_startup_summary(settings: Settings) -> None:
             table.add_row("TCP timeout", f"{pulse_biosciences.tcp_timeout_s:.1f} s")
 
     console.print(
-        Panel(table, title="[bold]ResoPulse Instrument Bridge — Starting[/bold]", border_style="blue")
+        Panel(table, title="[bold]SimBiotix Instrument Bridge — Starting[/bold]", border_style="blue")
     )
     console.print(
-        "[dim]Open the ResoPulse UI → Experiment view → Load Monitor → enable Hardware Mode.[/dim]\n"
+        "[dim]Open the SimBiotix UI → Experiment view → Load Monitor → enable Hardware Mode.[/dim]\n"
         "[dim]Press Ctrl-C to stop the bridge cleanly.[/dim]\n"
     )

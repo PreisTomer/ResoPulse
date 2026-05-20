@@ -1,5 +1,5 @@
 # Copyright © 2026 Tomer Preis. Licensed under the MIT License.
-"""Command-line interface entry point for the ResoPulse instrument bridge."""
+"""Command-line interface entry point for the SimBiotix instrument bridge."""
 
 import sys
 
@@ -32,9 +32,9 @@ def _configure_logging(level: str) -> None:
 @click.group()
 def main():
     """
-    ResoPulse instrument bridge.
+    SimBiotix instrument bridge.
 
-    Reads impedance from a lab instrument and streams it to the ResoPulse
+    Reads impedance from a lab instrument and streams it to the SimBiotix
     backend so the UI displays live cuvette load data during experiments.
 
     Quick start (no hardware needed):
@@ -45,7 +45,7 @@ def main():
         cp .env.example .env
         uv run instrument-bridge run --driver demo
 
-    Then open the ResoPulse UI, go to the Experiment view, enable Hardware Mode
+    Then open the SimBiotix UI, go to the Experiment view, enable Hardware Mode
     in the Load Monitor panel and watch live impedance readings appear.
     """
 

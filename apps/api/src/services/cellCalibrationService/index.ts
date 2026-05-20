@@ -9,7 +9,7 @@ import type {
   AiCalibrationSample,
   CalibrationMode,
   CellCategory,
-} from '@resopulse/shared-types'
+} from '@simbiotix/shared-types'
 
 import { prisma } from '../../prisma'
 

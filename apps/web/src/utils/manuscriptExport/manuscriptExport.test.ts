@@ -155,13 +155,13 @@ describe('filterResidualsByScope', () => {
 describe('manuscriptFilename', () => {
   it('embeds the session name when scope is session', () => {
     const fn = manuscriptFilename(SCOPE_SESSION, 'md')
-    expect(fn).toMatch(/^resopulse_Session-A_/)
+    expect(fn).toMatch(/^simbiotix_Session-A_/)
     expect(fn).toMatch(/\.md$/)
   })
 
   it('embeds "all-sessions" when scope is all', () => {
     const fn = manuscriptFilename(SCOPE_ALL, 'json')
-    expect(fn).toMatch(/^resopulse_all-sessions_/)
+    expect(fn).toMatch(/^simbiotix_all-sessions_/)
     expect(fn).toMatch(/\.json$/)
   })
 })
@@ -171,7 +171,7 @@ describe('manuscriptFilename', () => {
 describe('buildManuscriptMarkdown', () => {
   it('includes the headline and scope marker', () => {
     const md = buildManuscriptMarkdown(input())
-    expect(md).toContain('# ResoPulse Manuscript Bundle')
+    expect(md).toContain('# SimBiotix Manuscript Bundle')
     expect(md).toContain('Session-A')
     expect(md).toContain('Schema')
   })
@@ -245,7 +245,7 @@ describe('buildManuscriptJson', () => {
   it('is JSON-serialisable and round-trips', () => {
     const obj = buildManuscriptJson(input())
     const round = JSON.parse(JSON.stringify(obj))
-    expect(round.app).toBe('ResoPulse')
+    expect(round.app).toBe('SimBiotix')
     expect(round.schema).toBe('1.0.0')
   })
 

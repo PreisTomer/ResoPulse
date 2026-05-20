@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// ResoPulse CLAUDE.md rule enforcer. PreToolUse hook on Edit/Write/MultiEdit.
+// SimBiotix CLAUDE.md rule enforcer. PreToolUse hook on Edit/Write/MultiEdit.
 // Reconstructs the post-edit file from the payload, runs mechanical checks,
 // and blocks the write (exit 2) when the edit introduces net-new violations.
 // Pre-existing violations are reported but not blocked — they don't belong

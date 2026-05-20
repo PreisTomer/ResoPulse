@@ -1,0 +1,72 @@
+{
+  "campaign": {
+    "viewTitle": "Campaigns",
+    "viewSubtitle": "Every production campaign starts here. Pick one to continue or create a new one.",
+
+    "emptyTitle": "No campaigns yet",
+    "emptyDescription": "A campaign tracks one target molecule from cell line selection through downstream yield prediction. Start one to begin.",
+    "emptyCta": "Start your first campaign",
+
+    "newButton": "+ New Campaign",
+
+    "finish": {
+      "title": "Finish campaign",
+      "subtitle": "Record what actually happened at the bench. Measured results calibrate future predictions to your lab, and are optional.",
+      "predictedLabel": "Predicted",
+      "actualLabel": "Measured (actual)",
+      "titerLabel": "Upstream titer",
+      "yieldLabel": "Downstream yield",
+      "viabilityLabel": "Peak viability",
+      "titerUnit": "g/L",
+      "pctUnit": "%",
+      "noActualsNote": "Leave blank if you have not run this at the bench yet. The campaign is marked complete as predictions only and will not contribute to calibration.",
+      "cancelBtn": "Cancel",
+      "confirmBtn": "Finish and record results"
+    },
+
+    "card": {
+      "moduleProgress": "Module progress",
+      "lastModified": "Last modified",
+      "predictedYield": "Predicted yield",
+      "continue": "Continue",
+      "archive": "Archive",
+      "delete": "Delete",
+      "noMoleculeYet": "No molecule selected",
+      "draft": "Draft",
+      "inProgress": "In progress",
+      "complete": "Complete",
+      "archived": "Archived"
+    },
+
+    "wizard": {
+      "title": "Start a New Campaign",
+      "subtitle": "Three short questions. You can edit any of this later.",
+      "step1Heading": "What are you producing?",
+      "step1Help": "Pick the target molecule type. This drives cell line recommendations and downstream defaults.",
+      "step2Heading": "Name your campaign",
+      "step2Help": "A short identifier you will recognize when you have many campaigns.",
+      "step2Placeholder": "e.g. Anti-CD20 mAb v2, AAV9-GFP pilot",
+      "step3Heading": "Where do you want to start?",
+      "step3Help": "Most teams start with Cell Engineering. Pick whatever matches where you are in your process.",
+      "moduleStartCellEng": "Cell Engineering",
+      "moduleStartCellEngDesc": "Choose a host cell, design a transfection strategy. Recommended for new campaigns.",
+      "moduleStartDownstream": "Downstream",
+      "moduleStartDownstreamDesc": "Already have a producing clone? Jump straight to purification design.",
+      "moduleStartCloneUpstream": "Clone & Upstream",
+      "moduleStartCloneUpstreamDesc": "Coming soon. Returns to module selection.",
+
+      "back": "Back",
+      "next": "Next",
+      "create": "Create campaign",
+      "cancel": "Cancel"
+    },
+
+    "switcher": {
+      "title": "Switch campaign",
+      "recent": "Recent",
+      "viewAll": "View all campaigns",
+      "newCampaign": "New campaign",
+      "noCampaigns": "No campaigns yet"
+    }
+  }
+}

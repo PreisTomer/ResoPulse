@@ -1,14 +1,14 @@
-# ResoPulse — Instrument Bridge Setup Guide
+# SimBiotix — Instrument Bridge Setup Guide
 
 This guide is for the person in the lab who will connect a physical impedance
-instrument to the ResoPulse software.  No programming knowledge is required.
+instrument to the SimBiotix software.  No programming knowledge is required.
 
 ---
 
 ## What this does
 
 The bridge is a small program that runs on the lab computer.  It reads the
-cuvette impedance from your instrument and sends the data to the ResoPulse
+cuvette impedance from your instrument and sends the data to the SimBiotix
 software in real time.  You will see live values update in the **Instrument**
 page of the app: Z_real, Z_imag, the derived medium conductivity, and
 corrections to the delivered field as cells lyse and change the load.
@@ -31,7 +31,7 @@ including "Add to PATH".
 
 ### 1b. Install the bridge dependencies
 
-Navigate to the `instrument-bridge` folder (inside the ResoPulse project) and run:
+Navigate to the `instrument-bridge` folder (inside the SimBiotix project) and run:
 
 ```
 cd path\to\BioResonance\instrument-bridge
@@ -120,7 +120,7 @@ strings (e.g. GPIB0::17::INSTR).  Copy the correct value into your `.env` file.
 
 ### Verify with demo mode first (no instrument needed)
 
-Start the ResoPulse backend (if it is not already running):
+Start the SimBiotix backend (if it is not already running):
 ```
 cd ../..
 npm run backend
@@ -132,7 +132,7 @@ cd apps/instrument-bridge
 uv run instrument-bridge run --driver demo
 ```
 
-Open the ResoPulse app in your browser, go to the **Instrument** page, and
+Open the SimBiotix app in your browser, go to the **Instrument** page, and
 look at the **Hardware Input** section.  Click **Live** to enable hardware
 mode.  You should see the status dot turn green and impedance values updating
 every second.
@@ -166,7 +166,7 @@ Press `Ctrl-C` at any time to stop the bridge cleanly.
 
 ## Step 4 — During the experiment
 
-1. Start the backend and the bridge before opening the ResoPulse UI.
+1. Start the backend and the bridge before opening the SimBiotix UI.
 2. In the app, go to **Instrument** page, click **Live** in the Hardware Input section.
 3. Confirm the status dot is green and the age label shows "0.X s ago".
 4. Set the cuvette geometry in the **Cuvette Setup** card to match your physical
@@ -204,7 +204,7 @@ cuvette.  The conductivity derivation depends on the correct gap and electrode
 area.
 
 **"Backend connection failed" at startup**
-The ResoPulse backend is not running.  Start it from the repo root with `npm run backend`.
+The SimBiotix backend is not running.  Start it from the repo root with `npm run backend`.
 The bridge will automatically retry every few seconds once the backend is up.
 
 **App shows stale data (yellow status) after instrument was unplugged**

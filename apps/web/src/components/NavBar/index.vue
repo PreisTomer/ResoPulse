@@ -9,7 +9,7 @@
             <img src="/logo.png" :alt="$t('nav.logoAlt')" />
           </div>
           <div class="nav-bar__brand-text">
-            <span class="nav-bar__brand-name">Reso<span class="nav-bar__brand-pulse">Pulse</span></span>
+            <span class="nav-bar__brand-name">Sim<span class="nav-bar__brand-pulse">Biotix</span></span>
             <span class="nav-bar__brand-tag">{{ $t('nav.researchPlatform') }}</span>
           </div>
         </RouterLink>
@@ -65,34 +65,14 @@ import { ICON } from '@/constants/icons'
 
 import { guestSessionActive } from '@/services/socket'
 
-import NavUserArea from './NavUserArea.vue'
+import NavUserArea from '@/components/NavUserArea/index.vue'
 import NavGuestArea from './NavGuestArea.vue'
 import ContactModal from '@/components/ContactModal/index.vue'
 
-// App nav — shown to authenticated users in the lab.
-const APP_NAV_LINKS = [
-  { to: ROUTE.EXPERIMENT, labelKey: 'nav.experiment', exact: false },
-  { to: ROUTE.PROTOCOL,   labelKey: 'nav.protocol',   exact: false },
-  { to: ROUTE.DATASETS,   labelKey: 'nav.dataSets',   exact: false },
-  { to: ROUTE.REPORTS,    labelKey: 'nav.reports',    exact: false },
-  { to: ROUTE.INSTRUMENT, labelKey: 'nav.instrument', exact: false },
-]
-
-// Marketing nav — shown to visitors on the public landing pages.
+// Marketing nav — shown on public landing pages only. Authenticated app navigation lives in AppShell.
 const MARKETING_NAV_LINKS = [
-  { to: ROUTE.HOME,     labelKey: 'nav.home',     exact: true  },
-  { to: ROUTE.PROTOCOL, labelKey: 'nav.protocol', exact: false },
-]
-
-// Guest-in-lab nav — shown once a guest has entered the lab. Same surface as
-// the signed-in nav: every feature is open. Sign-up is offered for persistence,
-// not for unlocking features.
-const GUEST_NAV_LINKS = [
-  { to: ROUTE.EXPERIMENT, labelKey: 'nav.experiment', exact: false },
-  { to: ROUTE.PROTOCOL,   labelKey: 'nav.protocol',   exact: false },
-  { to: ROUTE.DATASETS,   labelKey: 'nav.dataSets',   exact: false },
-  { to: ROUTE.REPORTS,    labelKey: 'nav.reports',    exact: false },
-  { to: ROUTE.INSTRUMENT, labelKey: 'nav.instrument', exact: false },
+  { to: ROUTE.HOME,    labelKey: 'nav.home',    exact: true  },
+  { to: ROUTE.LIBRARY, labelKey: 'nav.library', exact: false },
 ]
 
 export default defineComponent({
@@ -114,8 +94,6 @@ export default defineComponent({
     themeStore() { return useThemeStore() },
 
     activeNavLinks() {
-      if (this.isSignedIn) return APP_NAV_LINKS
-      if (this.guestSessionActive) return GUEST_NAV_LINKS
       return MARKETING_NAV_LINKS
     },
 

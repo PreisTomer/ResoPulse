@@ -100,8 +100,8 @@ export function parseUserPresetsJson(text: string): PresetImportReport {
     return report
   }
 
-  if (typeof envelope.schema !== 'string' || !envelope.schema.startsWith('resopulse-user-presets@')) {
-    report.error = 'Not a ResoPulse preset export (missing or invalid "schema" field).'
+  if (typeof envelope.schema !== 'string' || !envelope.schema.startsWith('simbiotix-user-presets@')) {
+    report.error = 'Not a SimBiotix preset export (missing or invalid "schema" field).'
     return report
   }
   report.schema = envelope.schema

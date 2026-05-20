@@ -32,7 +32,7 @@ Changes rarely live in a single file. Ask: *"What else knows about this?"*
 |---|---|
 | `views/ProtocolView.vue` | Formulas, step descriptions, literature refs, warn-boxes |
 | `utils/cellAnimation.ts` | Does the new state/parameter need a visual representation? |
-| `services/socket.ts` + `apps/api/src/socket.ts` | Socket packet fields synchronised on both sides. Wire types live in `packages/shared-types`, imported as `@resopulse/shared-types` |
+| `services/socket.ts` + `apps/api/src/socket.ts` | Socket packet fields synchronised on both sides. Wire types live in `packages/shared-types`, imported as `@simbiotix/shared-types` |
 | `stores/experimentStore.ts` + `components/ExperimentLog.vue` | CSV columns and log table labels/order/units match the display |
 | `views/ReportsView.vue` | Summary stats and full log table mirror the log |
 | `views/DataSetsView.vue` | Cell library, media, therapeutic window values and notes |

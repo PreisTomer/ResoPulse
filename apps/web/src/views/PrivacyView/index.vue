@@ -5,11 +5,11 @@
 
       <div class="privacy__eyebrow">Legal</div>
       <h1 class="privacy__title">Privacy Policy</h1>
-      <p class="privacy__meta">Last Updated: April 29, 2026 &nbsp;·&nbsp; ResoPulse</p>
+      <p class="privacy__meta">Last Updated: April 29, 2026 &nbsp;·&nbsp; SimBiotix</p>
 
       <p class="privacy__intro">
         This Privacy Policy describes how Tomer Preis ("we", "our", or "us") collects, uses, and
-        protects information when you use ResoPulse ("the Service"). By creating an account or using
+        protects information when you use SimBiotix ("the Service"). By creating an account or using
         the Service you agree to this policy.
       </p>
 
@@ -17,7 +17,7 @@
         <h2 class="privacy__h2">1. Data Controller</h2>
         <p class="privacy__p">
           The data controller responsible for your personal data is Tomer Preis, the developer and
-          operator of ResoPulse. For all privacy inquiries contact:
+          operator of SimBiotix. For all privacy inquiries contact:
           <a href="mailto:preis.tomer@gmail.com" class="privacy__link">preis.tomer@gmail.com</a>
         </p>
       </section>
@@ -83,14 +83,28 @@
             and let the Reports view trend model error over time. Retrain audit rows contain
             no per-user or per-experiment data.
           </dd>
+          <dt>Production campaigns and lab runs</dt>
+          <dd>
+            When you create a campaign or log a lab run, we store the campaign configuration
+            (target molecule type, selected cell line, downstream process steps and parameters,
+            campaign notes), per-module predicted outputs (predicted titer, predicted yield,
+            developability score), and any actual outcomes you enter against a campaign (observed
+            titer, observed downstream yield, viability measurements, free-form notes). Campaign
+            data is associated with your account and your team workspace; predicted-vs-actual
+            deltas feed the per-lab calibration loop. Do not paste personal or clinical patient
+            data into campaign names, notes, or outcome fields.
+          </dd>
           <dt>Local storage</dt>
           <dd>
             We write the following keys to your browser's local storage:
             <br><code>rp_terms_v1</code> — records that you have accepted these terms.
             <br><code>br-experiment</code> — persists your current session log (entries, session name, sample description, notes) so the log survives a page reload.
             <br><code>br-theme</code> — stores your UI theme preference (dark or OLED).
-            <br><code>resopulse_user_presets_v1</code> — stores any custom cell presets you have saved.
-            <br><code>rp_csv_column_mapping_v1</code> — remembers the CSV header names you have mapped to ResoPulse outcome fields, so your plate reader or flow cytometer exports import cleanly each time.
+            <br><code>simbiotix_user_presets_v2</code> — stores any custom cell presets you have saved.
+            <br><code>rp_csv_column_mapping_v1</code> — remembers the CSV header names you have mapped to SimBiotix outcome fields, so your plate reader or flow cytometer exports import cleanly each time.
+            <br><code>rp_campaigns_v1</code> — persists your production campaigns (target molecule, modules, predicted outputs, notes) so campaign work survives a page reload.
+            <br><code>rp_active_campaign_id_v1</code> — remembers which campaign you were last viewing.
+            <br><code>simbiotix:appShell:sidebarCollapsed</code> — stores your sidebar collapsed preference.
             None of these keys contain authentication credentials or health information.
           </dd>
           <dt>Technical data</dt>
@@ -106,7 +120,7 @@
         <h2 class="privacy__h2">3. What We Do Not Collect</h2>
         <ul class="privacy__ul">
           <li>We do not use advertising trackers or analytics SDKs (no Google Analytics, Mixpanel, Meta Pixel, or similar).</li>
-          <li>We do not process payments and do not collect payment card data. ResoPulse is free and open source.</li>
+          <li>We do not process payments and do not collect payment card data. SimBiotix is free and open source.</li>
           <li>We do not collect health information, medical records, or any data relating to real patients or clinical subjects.</li>
           <li>We do not sell, rent, or share your personal data with third parties for their own marketing purposes.</li>
         </ul>
@@ -116,7 +130,7 @@
         <h2 class="privacy__h2">4. How We Use Your Data</h2>
         <dl class="privacy__dl">
           <dt>Providing the Service</dt>
-          <dd>Account data and experiment data are used solely to operate ResoPulse: authenticating your session, storing your simulation results, and powering the AI optimisation features.</dd>
+          <dd>Account data and experiment data are used solely to operate SimBiotix: authenticating your session, storing your simulation results, and powering the AI optimisation features.</dd>
           <dt>Improving the simulation models</dt>
           <dd>Anonymised, aggregated experiment outcomes may be used to retrain the on-premise XGBoost model. No individual user data is transmitted to any third-party AI service.</dd>
           <dt>Security and abuse prevention</dt>
@@ -192,7 +206,7 @@
       <section class="privacy__section">
         <h2 class="privacy__h2">9. Cookies and Local Storage</h2>
         <p class="privacy__p">
-          ResoPulse does not use advertising or tracking cookies. We use:
+          SimBiotix does not use advertising or tracking cookies. We use:
         </p>
         <ul class="privacy__ul">
           <li><strong>Authentication session cookies</strong> — set by Clerk to maintain your logged-in session. These are strictly necessary and cannot be opted out of without logging out.</li>
@@ -203,7 +217,7 @@
       <section class="privacy__section">
         <h2 class="privacy__h2">10. Children's Privacy</h2>
         <p class="privacy__p">
-          ResoPulse is a scientific research tool intended for adults. We do not knowingly collect
+          SimBiotix is a scientific research tool intended for adults. We do not knowingly collect
           personal data from children under 16. If you believe a child has provided us with personal
           data, contact us at <a href="mailto:preis.tomer@gmail.com" class="privacy__link">preis.tomer@gmail.com</a>
           and we will delete it promptly.
@@ -213,7 +227,7 @@
       <section class="privacy__section">
         <h2 class="privacy__h2">11. Responsible Disclosure</h2>
         <p class="privacy__p">
-          If you discover a security vulnerability in ResoPulse, please report it to us privately before
+          If you discover a security vulnerability in SimBiotix, please report it to us privately before
           disclosing it publicly. Email a description of the issue, the steps to reproduce it, and any
           relevant context to:
           <a href="mailto:preis.tomer@gmail.com" class="privacy__link">preis.tomer@gmail.com</a>
@@ -237,7 +251,7 @@
       </section>
 
       <div class="privacy__footer">
-        <RouterLink :to="ROUTE.HOME" class="privacy__back">← Back to ResoPulse</RouterLink>
+        <RouterLink :to="ROUTE.HOME" class="privacy__back">← Back to SimBiotix</RouterLink>
         <RouterLink :to="ROUTE.TERMS" class="privacy__terms-link">Terms</RouterLink>
         <span class="privacy__copy">© 2026 Tomer Preis · MIT License</span>
       </div>

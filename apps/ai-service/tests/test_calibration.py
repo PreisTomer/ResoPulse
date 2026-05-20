@@ -16,17 +16,17 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from resopulse_ai.calibration import (
+from simbiotix_ai.calibration import (
     CalibrationRow,
     CalibrationSample,
     fit_calibration,
     fit_sigma_multiplier,
 )
-from resopulse_ai.constants import (
+from simbiotix_ai.constants import (
     CALIBRATION_BOUNDS,
     CALIBRATION_MIN_SAMPLES,
 )
-from resopulse_ai.physics import (
+from simbiotix_ai.physics import (
     CellParams,
     ProtocolConditions,
     compute_resonant_dr,

@@ -1,6 +1,6 @@
 // Copyright © 2026 Tomer Preis. Licensed under the MIT License.
 
-// Socket service — connects to ResoPulse backend. Falls back to local store state when unreachable.
+// Socket service — connects to SimBiotix backend. Falls back to local store state when unreachable.
 import { ref } from 'vue'
 
 import { io } from 'socket.io-client'
@@ -14,7 +14,7 @@ import type {
   MeasuredOutcome,
   MeasuredOutcomeEntry,
   TrainingCompletePayload,
-} from '@resopulse/shared-types'
+} from '@simbiotix/shared-types'
 
 import { useCellStore } from '@/stores/cellStore'
 import { useExperimentStore } from '@/stores/experimentStore'
@@ -113,7 +113,7 @@ export async function connectSocket(): Promise<void> {
 
   socket.on(SOCKET_EVENTS.CONNECT, () => {
     socketConnected.value = true
-    console.info('[Socket] Connected to ResoPulse backend')
+    console.info('[Socket] Connected to SimBiotix backend')
   })
 
   socket.on(SOCKET_EVENTS.DISCONNECT, () => {
@@ -232,7 +232,7 @@ export function broadcastLogMeasuredOutcome(sessionName: string, timestamp: stri
   socket.emit(SOCKET_EVENTS.LOG_MEASURED_OUTCOME, { sessionName, timestamp, measured })
 }
 
-// AI Optimizer wire types live in @resopulse/shared-types — re-exported for callers.
+// AI Optimizer wire types live in @simbiotix/shared-types — re-exported for callers.
 export type { AiParamSuggestion, AiOptimizeResult, TrainingCompletePayload }
 
 type AiResultCallback = (result: AiOptimizeResult) => void

@@ -1,0 +1,15 @@
+{
+  "advisor": {
+    "title": "Campaign Advisor",
+    "subtitle": "Cross-module analysis of your campaign. Recommendations are derived from your configuration against bioprocess best practices.",
+    "badge": "Analysis",
+    "severityCritical": "Critical",
+    "severityWarning": "Review",
+    "severitySuggestion": "Suggestion",
+    "severityPositive": "All clear",
+    "moduleCellEngineering": "Cell Engineering",
+    "moduleCloneUpstream": "Clone & Upstream",
+    "moduleDownstream": "Downstream",
+    "moduleLabRuns": "Lab Runs"
+  }
+}

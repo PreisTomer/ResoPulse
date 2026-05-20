@@ -1,17 +1,17 @@
 services:
   # ── Node.js backend (Express + Socket.IO) ────────────────────────────────────
   - type: web
-    name: resopulse-backend
+    name: simbiotix-backend
     runtime: node
-    buildCommand: npm install && npm run build -w @resopulse/api
+    buildCommand: npm install && npm run build -w @simbiotix/api
     startCommand: cd apps/api && npm run migrate:deploy && npm start
     envVars:
       - key: NODE_ENV
         value: production
       - key: FRONTEND_URL
-        sync: false   # set in dashboard: your Vercel URL, e.g. https://resopulse.vercel.app
+        sync: false   # set in dashboard: your Vercel URL, e.g. https://simbiotix.vercel.app
       - key: AI_SERVICE_URL
-        sync: false   # set in dashboard: https://resopulse-ai.onrender.com
+        sync: false   # set in dashboard: https://simbiotix-ai.onrender.com
       - key: TRAINING_DATA_SECRET
         sync: false   # shared secret between backend and AI service; set the same value in both
     healthCheckPath: /health
@@ -22,16 +22,16 @@ services:
   # The model lives in-memory and resets on restart — retrain rebuilds it instantly
   # from the Postgres outcomes stored in the backend.
   - type: web
-    name: resopulse-ai
+    name: simbiotix-ai
     runtime: python
     buildCommand: cd apps/ai-service && pip install uv && uv sync
-    startCommand: cd apps/ai-service && uv run resopulse-ai serve --host 0.0.0.0 --port $PORT
+    startCommand: cd apps/ai-service && uv run simbiotix-ai serve --host 0.0.0.0 --port $PORT
     envVars:
       - key: NODE_API_URL
-        sync: false   # set in dashboard: https://resopulse-backend.onrender.com
+        sync: false   # set in dashboard: https://simbiotix-backend.onrender.com
                       # the AI service fetches training data from this URL on retrain
       - key: TRAINING_DATA_SECRET
-        sync: false   # same value as in resopulse-backend
+        sync: false   # same value as in simbiotix-backend
       - key: DEMO_SEED
         value: "0"    # never auto-inject synthetic data in production
     healthCheckPath: /health

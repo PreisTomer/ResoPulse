@@ -1,5 +1,13 @@
 // Copyright © 2026 Tomer Preis. Licensed under the MIT License.
 
+// Bioproduction catalogs (new)
+export * from './bufferCatalog'
+export * from './cellLineCatalog'
+export * from './moleculeTypes'
+export * from './processStepCatalog'
+export * from './vectorCatalog'
+
+// Existing constants
 export * from './cellCard'
 export * from './cellLibrary'
 export * from './cuvette'

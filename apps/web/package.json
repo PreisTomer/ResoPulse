@@ -1,5 +1,5 @@
 {
-  "name": "@resopulse/web",
+  "name": "@simbiotix/web",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -16,7 +16,7 @@
   "dependencies": {
     "@clerk/themes": "^2.4.57",
     "@clerk/vue": "^2.0.11",
-    "@resopulse/shared-types": "*",
+    "@simbiotix/shared-types": "*",
     "@types/lodash": "^4.17.23",
     "d3": "^7.9.0",
     "lodash": "^4.17.23",

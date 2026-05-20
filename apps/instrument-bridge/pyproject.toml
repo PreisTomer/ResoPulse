@@ -1,7 +1,7 @@
 [project]
 name = "instrument-bridge"
 version = "0.1.0"
-description = "Hardware instrument bridge for ResoPulse — streams impedance readings to the Socket.IO backend."
+description = "Hardware instrument bridge for SimBiotix — streams impedance readings to the Socket.IO backend."
 requires-python = ">=3.11"
 dependencies = [
     "python-socketio[asyncio_client]>=5.11",

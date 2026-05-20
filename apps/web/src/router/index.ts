@@ -11,18 +11,35 @@ const router = createRouter({
   history: createWebHistory(),
   scrollBehavior: () => ({ top: 0 }),
   routes: [
-    { path: ROUTE.HOME,        component: () => import('../views/HomeView/index.vue') },
-    { path: ROUTE.EXPERIMENT,  component: () => import('@/views/ExperimentView/index.vue') },
-    { path: ROUTE.EXPERIMENTS, component: () => import('../views/ExperimentsView/index.vue') },
-    { path: ROUTE.DATASETS,    component: () => import('../views/DataSetsView/index.vue') },
-    { path: ROUTE.REPORTS,     component: () => import('../views/ReportsView/index.vue') },
-    { path: ROUTE.PROTOCOL,    component: () => import('../views/ProtocolView/index.vue') },
-    { path: ROUTE.INSTRUMENT,  component: () => import('@/views/InstrumentView/index.vue') },
-    { path: ROUTE.TERMS,       component: () => import('@/views/TermsView/index.vue') },
-    { path: ROUTE.PRIVACY,     component: () => import('@/views/PrivacyView/index.vue') },
+    // Marketing / public
+    { path: ROUTE.HOME,    component: () => import('../views/HomeView/index.vue') },
+    { path: ROUTE.TERMS,   component: () => import('@/views/TermsView/index.vue') },
+    { path: ROUTE.PRIVACY, component: () => import('@/views/PrivacyView/index.vue') },
+
+    // Workspaces — where users design
+    { path: ROUTE.CAMPAIGNS,        component: () => import('@/views/CampaignsView/index.vue') },
+    { path: ROUTE.CELL_ENGINEERING, component: () => import('@/views/CellEngineeringView/index.vue') },
+    { path: ROUTE.CLONE_UPSTREAM,   component: () => import('@/views/CloneUpstreamView/index.vue') },
+    { path: ROUTE.DOWNSTREAM,       component: () => import('@/views/DownstreamView/index.vue') },
+    { path: ROUTE.LAB_RUNS,         component: () => import('@/views/LabRunsView/index.vue') },
+
+    // Knowledge — where users reference and learn
+    { path: ROUTE.LIBRARY, component: () => import('@/views/LibraryView/index.vue') },
+    { path: ROUTE.METHODS, component: () => import('@/views/MethodsView/index.vue') },
+    { path: ROUTE.REPORTS, component: () => import('../views/ReportsView/index.vue') },
+
+    // Setup
+    { path: ROUTE.INSTRUMENT_HUB, component: () => import('@/views/InstrumentHubView/index.vue') },
+
+    // Legacy EP routes — redirect to new bioproduction equivalents
+    { path: '/experiment',  redirect: ROUTE.CELL_ENGINEERING },
+    { path: '/experiments', redirect: ROUTE.CAMPAIGNS },
+    { path: '/datasets',    redirect: ROUTE.LIBRARY },
+    { path: '/protocol',    redirect: ROUTE.METHODS },
+    { path: '/instrument',  redirect: ROUTE.INSTRUMENT_HUB },
+
+    // Auth — Clerk needs sub-paths for OAuth, MFA, email verification
     { path: ROUTE.SIGN_IN,                         component: () => import('../views/SignInView/index.vue'),  meta: { guestOnly: true } },
-    // Sub-paths Clerk needs for OAuth callbacks, MFA, and email verification.
-    // No guestOnly — the user may already be partially authenticated at these points.
     { path: '/sign-in/sso-callback',              component: () => import('../views/SignInView/index.vue') },
     { path: '/sign-in/factor-one',                component: () => import('../views/SignInView/index.vue') },
     { path: '/sign-in/factor-two',                component: () => import('../views/SignInView/index.vue') },
@@ -34,7 +51,7 @@ const router = createRouter({
     { path: '/sign-up/tasks/choose-organization', component: () => import('../views/SignUpView/index.vue') },
     { path: ROUTE.ONBOARDING,  component: () => import('../views/OnboardingView/index.vue'),   meta: { requiresAuth: true } },
     { path: ROUTE.ACCOUNT,     component: () => import('../views/AccountView/index.vue'),      meta: { requiresAuth: true } },
-    // Clerk's hosted profile page is at /profile — we just redirect to User.profile in Clerk
+    // Clerk hosted profile lives in Clerk UI; redirect to home
     { path: ROUTE.PROFILE,     redirect: ROUTE.HOME },
   ],
 })
@@ -87,9 +104,9 @@ router.beforeEach(async (to, from) => {
     return { path: ROUTE.SIGN_IN, query: redirectQuery }
   }
 
-  // Signed-in user who has completed onboarding trying to access it again → lab.
+  // Signed-in user who has completed onboarding trying to access it again → campaigns.
   if (to.path === ROUTE.ONBOARDING && isSignedIn && authStore.hasCompletedOnboarding) {
-    return { path: ROUTE.EXPERIMENT }
+    return { path: ROUTE.CAMPAIGNS }
   }
 })
 

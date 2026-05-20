@@ -2,33 +2,21 @@
 
 import { createI18n } from 'vue-i18n'
 
-// ── Domain locale files ────────────────────────────────────────────────────────
+import campaign         from '../locales/campaign.en.json'
+import cellEngineering  from '../locales/cellEngineering.en.json'
+import downstream       from '../locales/downstream.en.json'
+import library          from '../locales/library.en.json'
+import methods          from '../locales/methods.en.json'
+import labRuns          from '../locales/labRuns.en.json'
+import instrumentHub    from '../locales/instrumentHub.en.json'
+import cloneUpstream    from '../locales/cloneUpstream.en.json'
+import advisor          from '../locales/advisor.en.json'
 import nav              from '../locales/nav.en.json'
 import auth             from '../locales/auth.en.json'
 import account          from '../locales/account.en.json'
-import cells            from '../locales/cells.en.json'
-import slider           from '../locales/slider.en.json'
-import experiment       from '../locales/experiment.en.json'
-import savedExperiments from '../locales/savedExperiments.en.json'
-import ai               from '../locales/ai.en.json'
-import resonance        from '../locales/resonance.en.json'
-import chart            from '../locales/chart.en.json'
-import heatmap          from '../locales/heatmap.en.json'
-import sweep            from '../locales/sweep.en.json'
-import selectivity      from '../locales/selectivity.en.json'
-import population       from '../locales/population.en.json'
 import log              from '../locales/log.en.json'
-import instrument       from '../locales/instrument.en.json'
-import protocol         from '../locales/protocol.en.json'
-import datasets         from '../locales/datasets.en.json'
 import reports          from '../locales/reports.en.json'
 import home             from '../locales/home.en.json'
-import userPresets      from '../locales/userPresets.en.json'
-import validate         from '../locales/validate.en.json'
-import reversibleEp     from '../locales/reversibleEp.en.json'
-import fermenter        from '../locales/fermenter.en.json'
-import ttFields         from '../locales/ttFields.en.json'
-import viralRf          from '../locales/viralRf.en.json'
 
 export const i18n = createI18n({
   legacy: false,
@@ -37,32 +25,21 @@ export const i18n = createI18n({
   warnHtmlMessage: false,
   messages: {
     en: {
+      ...campaign,
+      ...cellEngineering,
+      ...downstream,
+      ...library,
+      ...methods,
+      ...labRuns,
+      ...instrumentHub,
+      ...cloneUpstream,
+      ...advisor,
       ...nav,
       ...auth,
       ...account,
-      ...cells,
-      ...slider,
-      ...experiment,
-      ...savedExperiments,
-      ...ai,
-      ...resonance,
-      ...chart,
-      ...heatmap,
-      ...sweep,
-      ...selectivity,
-      ...population,
       ...log,
-      ...instrument,
-      protocol,
-      ...datasets,
       ...reports,
       ...home,
-      ...userPresets,
-      ...validate,
-      ...reversibleEp,
-      ...fermenter,
-      ...ttFields,
-      ...viralRf,
     },
   },
 })

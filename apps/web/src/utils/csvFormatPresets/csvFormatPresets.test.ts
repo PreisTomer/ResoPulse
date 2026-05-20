@@ -5,9 +5,9 @@ import { describe, it, expect } from 'vitest'
 import { CSV_FORMAT_PRESETS, getPresetById, detectFormat, DEFAULT_PRESET_ID } from './index'
 
 describe('CSV_FORMAT_PRESETS registry', () => {
-  it('exposes resopulse, plate-reader-long, plate-reader-wide presets', () => {
+  it('exposes simbiotix, plate-reader-long, plate-reader-wide presets', () => {
     const ids = CSV_FORMAT_PRESETS.map(p => p.id)
-    expect(ids).toContain('resopulse')
+    expect(ids).toContain('simbiotix')
     expect(ids).toContain('plate-reader-long')
     expect(ids).toContain('plate-reader-wide')
   })
@@ -25,14 +25,14 @@ describe('CSV_FORMAT_PRESETS registry', () => {
     }
   })
 
-  it('default preset is resopulse', () => {
-    expect(DEFAULT_PRESET_ID).toBe('resopulse')
+  it('default preset is simbiotix', () => {
+    expect(DEFAULT_PRESET_ID).toBe('simbiotix')
   })
 })
 
 describe('getPresetById', () => {
   it('returns the preset by id', () => {
-    expect(getPresetById('resopulse')?.id).toBe('resopulse')
+    expect(getPresetById('simbiotix')?.id).toBe('simbiotix')
     expect(getPresetById('plate-reader-long')?.id).toBe('plate-reader-long')
   })
 
@@ -43,10 +43,10 @@ describe('getPresetById', () => {
 })
 
 describe('detectFormat', () => {
-  it('detects ResoPulse-native exports by the # / T-Lysis header signature', () => {
+  it('detects SimBiotix-native exports by the # / T-Lysis header signature', () => {
     const text = '#,Time,T-Lysis measured (%),H-Lysis measured (%)\n3,10:00,57,32\n'
     const det = detectFormat(text)
-    expect(det.preset.id).toBe('resopulse')
+    expect(det.preset.id).toBe('simbiotix')
     expect(det.confidence).toBeGreaterThan(0.5)
   })
 
@@ -79,7 +79,7 @@ describe('detectFormat', () => {
     expect(det.confidence).toBeGreaterThanOrEqual(0.30)
   })
 
-  it('returns the resopulse preset with low confidence on unrecognisable input', () => {
+  it('returns the simbiotix preset with low confidence on unrecognisable input', () => {
     const det = detectFormat('foo,bar\n1,2\n')
     expect(det.confidence).toBeLessThan(0.30)
   })

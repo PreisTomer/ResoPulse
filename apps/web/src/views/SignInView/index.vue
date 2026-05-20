@@ -62,11 +62,11 @@
               </svg>
             </div>
             <div class="auth-page__logo-img">
-              <img src="/logo.png" alt="ResoPulse" />
+              <img src="/logo.png" alt="SimBiotix" />
             </div>
           </div>
           <div class="auth-page__logo-text">
-            <span class="auth-page__logo-name">Reso<span class="auth-page__logo-pulse">Pulse</span></span>
+            <span class="auth-page__logo-name">Sim<span class="auth-page__logo-pulse">Biotix</span></span>
             <span class="auth-page__logo-tag">{{ $t('nav.researchPlatform') }}</span>
           </div>
         </RouterLink>

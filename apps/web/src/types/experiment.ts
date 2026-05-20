@@ -1,6 +1,6 @@
 // Copyright © 2026 Tomer Preis. Licensed under the MIT License.
 
-import type { MeasuredOutcome } from '@resopulse/shared-types'
+import type { MeasuredOutcome } from '@simbiotix/shared-types'
 
 import type { LogEventType } from '@/constants/strings'
 

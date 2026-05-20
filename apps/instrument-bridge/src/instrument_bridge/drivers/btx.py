@@ -5,7 +5,7 @@ BTX ECM 830 / ECM 2001 electroporator bridge — RS-232 serial.
 The BTX ECM 830 is a square-wave pulse generator, not an impedance analyser.
 After each pulse it reports the measured cuvette resistance via its RS-232
 port.  This driver polls that resistance readback to provide live cuvette load
-monitoring in the ResoPulse UI.
+monitoring in the SimBiotix UI.
 
 NOTE ON PROTOCOL ACCURACY
 --------------------------

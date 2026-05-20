@@ -49,7 +49,7 @@ app.get('/health', async (_req, res) => {
   const outcomeCount = await countOutcomes()
   res.json({
     status:       'ok',
-    service:      'resopulse-api',
+    service:      'simbiotix-api',
     dbOutcomes:   outcomeCount,
     dbPersistent: outcomeCount >= 0,
   })
@@ -127,5 +127,5 @@ app.post('/ai/retrain', async (_req, res) => {
 })
 
 httpServer.listen(PORT, () => {
-  console.log(`ResoPulse API + Socket running on http://localhost:${PORT}`)
+  console.log(`SimBiotix API + Socket running on http://localhost:${PORT}`)
 })

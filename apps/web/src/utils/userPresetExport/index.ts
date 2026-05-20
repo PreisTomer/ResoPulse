@@ -40,7 +40,7 @@ export function userPresetsToCsv(presets: UserCellPreset[]): string {
 }
 
 export function userPresetsToJson(presets: UserCellPreset[]): string {
-  return JSON.stringify({ schema: 'resopulse-user-presets@1', exportedAt: Date.now(), presets }, null, 2)
+  return JSON.stringify({ schema: 'simbiotix-user-presets@1', exportedAt: Date.now(), presets }, null, 2)
 }
 
 export function downloadBlob(content: string, filename: string, mimeType: string): void {
@@ -59,9 +59,9 @@ function timestampForFilename(now: Date = new Date()): string {
 }
 
 export function downloadUserPresetsJson(presets: UserCellPreset[]): void {
-  downloadBlob(userPresetsToJson(presets), `resopulse-presets-${timestampForFilename()}.json`, 'application/json')
+  downloadBlob(userPresetsToJson(presets), `simbiotix-presets-${timestampForFilename()}.json`, 'application/json')
 }
 
 export function downloadUserPresetsCsv(presets: UserCellPreset[]): void {
-  downloadBlob(userPresetsToCsv(presets), `resopulse-presets-${timestampForFilename()}.csv`, 'text/csv;charset=utf-8')
+  downloadBlob(userPresetsToCsv(presets), `simbiotix-presets-${timestampForFilename()}.csv`, 'text/csv;charset=utf-8')
 }

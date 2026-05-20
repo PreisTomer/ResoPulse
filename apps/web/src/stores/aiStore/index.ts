@@ -6,7 +6,7 @@ import { useCellStore } from '@/stores/cellStore'
 import { useExperimentStore } from '@/stores/experimentStore'
 
 import type { AiOptimizeResult, AiParamSuggestion, TrainingCompletePayload } from '@/services/socket'
-import type { TrainerOutcomeMetrics } from '@resopulse/shared-types'
+import type { TrainerOutcomeMetrics } from '@simbiotix/shared-types'
 interface AiState {
   isLoading: boolean
   pendingRequestId: string | null  // in-flight requestId for response matching

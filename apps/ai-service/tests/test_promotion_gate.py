@@ -4,7 +4,7 @@
 
 import math
 
-from resopulse_ai.train import (
+from simbiotix_ai.train import (
     PROMOTION_MIN_REL_IMPROVEMENT,
     PROMOTION_MIN_HOLDOUT_SAMPLES,
     _should_promote,

@@ -37,7 +37,7 @@ def register_run_command(main: click.Group, configure_logging: Callable[[str], N
         Start the instrument bridge.
 
         Connects to the instrument, then continuously reads impedance and
-        emits readings to the ResoPulse backend via Socket.IO.
+        emits readings to the SimBiotix backend via Socket.IO.
 
         Press Ctrl-C to stop cleanly.
 

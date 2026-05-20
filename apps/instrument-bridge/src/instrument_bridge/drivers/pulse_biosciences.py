@@ -11,7 +11,7 @@ Two driver classes ship in this module:
 
 Both instruments communicate over a TCP socket on the instrument's Ethernet
 interface.  This driver queries the cuvette load impedance reported after each
-pulse delivery and maps it to an ImpedanceReading for the ResoPulse UI.
+pulse delivery and maps it to an ImpedanceReading for the SimBiotix UI.
 
 NOTE ON PROTOCOL ACCURACY
 --------------------------

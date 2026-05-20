@@ -4,7 +4,7 @@
 
 import { defineStore } from 'pinia'
 
-import type { HardwareImpedancePacket } from '@resopulse/shared-types'
+import type { HardwareImpedancePacket } from '@simbiotix/shared-types'
 
 import { useCellStore } from '@/stores/cellStore'
 

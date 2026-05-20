@@ -101,7 +101,7 @@ export default defineComponent({
   methods: {
     send(): void {
       const { name, message } = this.form
-      const subject = encodeURIComponent('ResoPulse — Message from visitor')
+      const subject = encodeURIComponent('SimBiotix: Message from visitor')
       const lines = [
         name    ? `From: ${name}` : '',
         `\n${message}`,

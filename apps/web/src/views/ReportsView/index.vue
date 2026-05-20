@@ -1,1182 +1,288 @@
 <!-- Copyright © 2026 Tomer Preis. Licensed under the MIT License. -->
 <template>
-  <div class="reports">
-    <div class="reports__inner">
+  <div class="report">
+    <header class="report__toolbar">
+      <div>
+        <h1 class="report__title">{{ $t('reports.viewTitle') }}</h1>
+        <p class="report__subtitle">{{ $t('reports.viewSubtitle') }}</p>
+      </div>
+      <button v-if="campaign" class="report__print-btn" @click="print">{{ ICON.MAIL }} {{ $t('reports.printBtn') }}</button>
+    </header>
 
-      <!-- Page header -->
-      <PageHeader :eyebrow="$t('reports.eyebrow')" :title="$t('reports.title')">
-        <p class="reports__subtitle">{{ $t('reports.subtitle') }}</p>
-      </PageHeader>
+    <div v-if="!campaign" class="report__no-campaign">
+      <p class="report__no-campaign-text">{{ $t('reports.noCampaign') }}</p>
+      <RouterLink :to="ROUTE.CAMPAIGNS" class="report__no-campaign-btn">{{ $t('reports.openCampaigns') }} {{ ICON.ARROW_SHORT }}</RouterLink>
+    </div>
 
-      <!-- Import summary banner (dismissable) -->
-      <div v-if="importSummary" class="reports__import-banner" :class="importBannerVariantClass">
-        <div class="reports__import-banner-body">
-          <span class="reports__import-banner-title">{{ $t('reports.importSummaryHeading') }}</span>
-          <span v-if="importSummary.detectedPresetLabel" class="reports__import-banner-line">
-            {{ $t('reports.importSummaryAutoDetect', { label: importSummary.detectedPresetLabel }) }}
-          </span>
-          <span v-if="importSummary.matched > 0" class="reports__import-banner-line">
-            {{ $t('reports.importSummaryMatched', { n: importSummary.matched }) }}
-          </span>
-          <span v-if="importSummary.ignored > 0" class="reports__import-banner-line">
-            {{ $t('reports.importSummaryIgnored', { n: importSummary.ignored }) }}
-          </span>
-          <span v-if="isImportSummaryEmpty" class="reports__import-banner-line">
-            {{ $t('reports.importSummaryNoneApplied') }}
-          </span>
-          <span v-if="hasDuplicateImportIds" class="reports__import-banner-line reports__import-banner-line--warn">
-            {{ $t('reports.importSummaryDuplicates', { ids: importSummary.duplicateIds.join(', ') }) }}
-          </span>
+    <article v-else class="report__sheet">
+      <div class="report__sheet-head">
+        <div class="report__sheet-molecule">
+          <TargetProteinVisual :molecule-type="campaign.moleculeType" :size="64" />
         </div>
-        <button class="reports__import-banner-dismiss" @click="dismissImportSummary()">
-          {{ $t('reports.importSummaryDismiss') }}
-        </button>
+        <div>
+          <h2 class="report__sheet-name">{{ campaign.name }}</h2>
+          <span class="report__sheet-molecule-label">{{ moleculeLabel }}</span>
+        </div>
       </div>
 
-      <div v-if="importError" class="reports__import-banner reports__import-banner--error">
-        <div class="reports__import-banner-body">
-          <span class="reports__import-banner-title">{{ importError }}</span>
+      <section class="report__section">
+        <h3 class="report__section-title">{{ $t('reports.section.overview') }}</h3>
+        <dl class="report__facts">
+          <div><dt>{{ $t('reports.overview.molecule') }}</dt><dd>{{ moleculeLabel }}</dd></div>
+          <div><dt>{{ $t('reports.overview.created') }}</dt><dd>{{ dateOf(campaign.createdAt) }}</dd></div>
+          <div><dt>{{ $t('reports.overview.status') }}</dt><dd>{{ campaign.status }}</dd></div>
+          <div><dt>{{ $t('reports.overview.modulesComplete') }}</dt><dd>{{ modulesComplete }} / 3</dd></div>
+        </dl>
+      </section>
+
+      <section class="report__section">
+        <h3 class="report__section-title">{{ $t('reports.section.cellEngineering') }}</h3>
+        <div v-if="cellLine" class="report__cellline">
+          <HostCellVisual :host-species="cellLine.hostSpecies" :size="64" />
+          <dl class="report__facts">
+            <div><dt>{{ $t('reports.cellEng.selectedCellLine') }}</dt><dd>{{ cellLine.name }}</dd></div>
+            <div><dt>{{ $t('reports.cellEng.hostSpecies') }}</dt><dd>{{ cellLine.hostSpecies }}</dd></div>
+            <div v-if="predictedTiter !== null"><dt>{{ $t('reports.cellEng.predictedTiter') }}</dt><dd>{{ predictedTiter }} g/L</dd></div>
+          </dl>
         </div>
-        <button class="reports__import-banner-dismiss" @click="importError = null">
-          {{ $t('reports.importSummaryDismiss') }}
-        </button>
-      </div>
+        <p v-else class="report__empty-note">{{ $t('reports.cellEng.noneSelected') }}</p>
+      </section>
 
-      <!-- ── Closed-Loop Hero: calibration insights front and centre ────── -->
-      <section class="reports__loop-hero">
-        <header class="reports__loop-hero-header">
-          <span class="reports__loop-hero-eyebrow">{{ $t('reports.loopHeroEyebrow') }}</span>
-          <h2 class="reports__loop-hero-title">{{ $t('reports.loopHeroTitle') }}</h2>
-          <p class="reports__loop-hero-subtitle">{{ $t('reports.loopHeroSubtitle') }}</p>
-        </header>
-
-        <CalibrationBadge class="reports__loop-hero-badge" :clickable="false" />
-
-        <div v-if="showPresetDriftBanner" class="reports__preset-banner" role="alert">
-          <span class="reports__preset-banner-icon" aria-hidden="true">{{ ICON.INFO }}</span>
-          <div class="reports__preset-banner-body">
-            <span class="reports__preset-banner-title">{{ $t('reports.presetDriftTitle') }}</span>
-            <p class="reports__preset-banner-text">{{ $t('reports.presetDriftBody', { n: presetDriftCount }) }}</p>
-          </div>
-          <button
-            class="reports__preset-banner-btn"
-            v-tip="$t('reports.clearMeasuredTip')"
-            @click="confirmClearMeasured"
-          >{{ $t('reports.clearMeasured') }}</button>
-        </div>
-
-        <div v-if="isDriftTier" class="reports__drift-banner" role="alert">
-          <div class="reports__drift-banner-body">
-            <span class="reports__drift-banner-title">
-              <span class="reports__drift-banner-icon" aria-hidden="true">{{ ICON.WARNING }}</span>
-              {{ $t('reports.loopHeroDriftBannerTitle') }}
-            </span>
-            <p class="reports__drift-banner-text">
-              {{ $t('reports.loopHeroDriftBannerBody', { pp: calibrationSummary.worstResidualPct?.toFixed(1) ?? NULL_DISPLAY, n: calibrationSummary.sampleCount }) }}
-            </p>
-          </div>
-          <div class="reports__drift-banner-actions">
-            <RouterLink
-              :to="ROUTE.EXPERIMENT"
-              class="reports__drift-banner-btn reports__drift-banner-btn--primary"
-              @click="requestRetrain"
-            >
-              {{ $t('reports.loopHeroDriftBannerRetrain') }}
-            </RouterLink>
-            <RouterLink
-              :to="ROUTE.EXPERIMENT"
-              class="reports__drift-banner-btn reports__drift-banner-btn--secondary"
-            >
-              {{ $t('reports.loopHeroDriftBannerLab') }} {{ ICON.ARROW_SHORT }}
-            </RouterLink>
-          </div>
-        </div>
-
-        <template v-if="hasMeasuredResiduals">
-          <ReportsCalibrationTrend :residuals="calibrationResiduals" />
-
-          <div class="reports__loop-hero-residuals">
-            <div class="reports__loop-hero-residuals-hdr">
-              <span class="reports__loop-hero-residuals-title">{{ $t('reports.loopHeroResidualsTitle') }}</span>
-              <span class="reports__loop-hero-residuals-hint">{{ $t('reports.loopHeroResidualsHint') }}</span>
-            </div>
-            <div class="reports__loop-hero-residuals-grid">
-              <StatCard
-                v-for="card in residualCards"
-                :key="card.label"
-                :label="card.label"
-                :value="card.value"
-                :sub="card.sub"
-                :variant="card.variant"
-                :tooltip="card.tooltip"
-              />
-            </div>
-          </div>
-
-          <div class="reports__loop-hero-actions">
-            <span class="reports__loop-hero-actions-title">{{ $t('reports.loopHeroActionsTitle') }}</span>
-            <div class="reports__loop-hero-actions-row">
-              <RouterLink
-                :to="ROUTE.EXPERIMENT"
-                class="reports__loop-hero-action reports__loop-hero-action--primary"
-                v-tip="$t('reports.loopHeroActionLabTip')"
-              >
-                {{ $t('reports.loopHeroActionLabRun') }} {{ ICON.ARROW_SHORT }}
-              </RouterLink>
-              <button
-                class="reports__loop-hero-action reports__loop-hero-action--secondary"
-                :disabled="totalReadings === 0 || isImporting"
-                @click="triggerImportPicker()"
-              >
-                {{ $t('reports.loopHeroActionImport') }}
-              </button>
-            </div>
-          </div>
-
-          <ManuscriptBundle />
+      <section class="report__section">
+        <h3 class="report__section-title">{{ $t('reports.section.downstream') }}</h3>
+        <template v-if="hasDownstream">
+          <YieldWaterfallChart :steps="downstreamPrediction.steps" :target-yield-pct="0" />
+          <dl class="report__facts">
+            <div><dt>{{ $t('reports.downstream.stepCount') }}</dt><dd>{{ downstreamPrediction.steps.length }}</dd></div>
+            <div><dt>{{ $t('reports.downstream.startingTiter') }}</dt><dd>{{ train.startingTiterGL }} g/L</dd></div>
+            <div><dt>{{ $t('reports.downstream.overallYield') }}</dt><dd>{{ downstreamPrediction.cumulativeYieldPct.toFixed(1) }}%</dd></div>
+            <div><dt>{{ $t('reports.downstream.finalProduct') }}</dt><dd>{{ downstreamPrediction.finalMassG.toFixed(2) }} g</dd></div>
+          </dl>
         </template>
+        <p v-else class="report__empty-note">{{ $t('reports.downstream.noSteps') }}</p>
+      </section>
 
-        <div v-else class="reports__loop-hero-empty">
-          <h3 class="reports__loop-hero-empty-title">{{ $t('reports.loopHeroEmptyTitle') }}</h3>
-          <p class="reports__loop-hero-empty-desc">{{ $t('reports.loopHeroEmptyDesc') }}</p>
-          <div class="reports__loop-hero-empty-actions">
-            <button
-              class="reports__loop-hero-action reports__loop-hero-action--primary"
-              :disabled="totalReadings === 0 || isImporting"
-              @click="triggerImportPicker()"
-            >
-              {{ $t('reports.loopHeroCtaImport') }}
-            </button>
-            <RouterLink :to="ROUTE.EXPERIMENT" class="reports__loop-hero-action reports__loop-hero-action--secondary">
-              {{ $t('reports.loopHeroCtaLab') }} {{ ICON.ARROW_SHORT }}
-            </RouterLink>
-          </div>
-          <button
-            class="reports__loop-hero-sample"
-            v-tip="$t('reports.sampleCsvTip')"
-            @click="downloadSampleCsv()"
-          >{{ $t('reports.sampleCsvCta') }}</button>
+      <section v-if="hasDownstream" class="report__section report__section--highlight">
+        <h3 class="report__section-title">{{ $t('reports.endToEnd.title') }}</h3>
+        <p class="report__e2e">
+          {{ $t('reports.endToEnd.fromTiter', { titer: train.startingTiterGL, volume: train.volumeL }) }}
+          {{ $t('reports.endToEnd.toProduct', { product: downstreamPrediction.finalMassG.toFixed(2) }) }}
+          {{ $t('reports.endToEnd.atYield', { yield: downstreamPrediction.cumulativeYieldPct.toFixed(1) }) }}
+        </p>
+        <div v-if="yieldCalibration.sampleCount > 0" class="report__calibrated">
+          <span class="report__calibrated-title">{{ ICON.AI }} {{ $t('reports.endToEnd.calibratedTitle') }}
+            <span class="report__calibrated-conf">{{ $t('reports.endToEnd.calibrationConfidence', { confidence: Math.round(yieldCalibration.confidence * 100) }) }}</span>
+          </span>
+          <p class="report__calibrated-note">
+            {{ $t('reports.endToEnd.calibratedNote', { count: yieldCalibration.sampleCount, yield: calibratedYield.toFixed(1), product: calibratedProduct.toFixed(2) }) }}
+          </p>
         </div>
       </section>
 
-      <!-- ── Session stats (compact inline pills) ───────────────────────── -->
-      <div class="reports__session-stats" :aria-label="$t('reports.sessionStatsLabel')">
-        <span class="reports__session-stats-label">{{ $t('reports.sessionStatsLabel') }}</span>
-        <div class="reports__session-stats-row">
-          <span
-            v-for="pill in sessionStatsPills"
-            :key="pill.label"
-            class="reports__session-stat-pill"
-            :class="pill.variant ? `reports__session-stat-pill--${pill.variant}` : undefined"
-            v-tip="pill.tooltip"
-          >
-            <span class="reports__session-stat-pill-label">{{ pill.label }}</span>
-            <span class="reports__session-stat-pill-val">{{ pill.value }}</span>
-          </span>
-        </div>
-        <span v-if="sampleDescription" class="reports__session-stats-note">
-          {{ $t('reports.sampleDescLabel') }} {{ sampleDescription }}
-        </span>
-        <span v-if="sessionNotes" class="reports__session-stats-note">
-          {{ $t('reports.sessionNotesLabel') }} {{ sessionNotes }}
-        </span>
-      </div>
+      <section class="report__section">
+        <h3 class="report__section-title">{{ $t('reports.section.labRuns') }}</h3>
+        <p class="report__empty-note">
+          {{ campaignLabRuns.length > 0 ? $t('reports.labRuns.count', { count: campaignLabRuns.length }) : $t('reports.labRuns.none') }}
+        </p>
+      </section>
 
-      <!-- Log card -->
-      <div class="reports__log-card">
-        <div class="reports__log-card-hdr">
-          <div class="reports__log-card-hdr-title">
-            <span class="reports__log-title">{{ $t('reports.logTitle') }}</span>
-            <span class="reports__log-count">{{ totalReadings }} {{ countLabel }}</span>
-          </div>
-          <div id="hl-reports-export" class="reports__log-card-actions" :aria-label="$t('reports.toolbarLabel')">
-            <button
-              class="reports__btn reports__btn--export"
-              :disabled="totalReadings === 0 || isExporting"
-              @click="handleExportCSV()"
-            >
-              <span v-if="isExporting" class="reports__btn-spinner"></span>
-              <template v-else>{{ $t('reports.exportCsv') }}</template>
-            </button>
+      <footer class="report__disclaimer">{{ ICON.INFO }} {{ $t('reports.predictionDisclaimer') }}</footer>
+    </article>
 
-            <div class="reports__import-group">
-              <button
-                class="reports__btn reports__btn--import reports__btn--import-grouped"
-                :disabled="totalReadings === 0 || isImporting"
-                v-tip="$t('reports.importCsvTitle')"
-                @click="triggerImportPicker()"
-              >
-                <span v-if="isImporting" class="reports__btn-spinner"></span>
-                <template v-else>{{ $t('reports.importCsv') }}</template>
-              </button>
-              <button
-                class="reports__btn-mapping"
-                :disabled="totalReadings === 0"
-                v-tip="$t('reports.mappingBtnTip')"
-                @click="csvMappingOpen = true"
-              >
-                <span class="reports__btn-mapping-icon" aria-hidden="true">{{ ICON.PLUG }}</span>
-                {{ csvMappingStore.hasMapping ? $t('reports.mappingBtnEdit') : $t('reports.mappingBtnEmpty') }}
-              </button>
-              <button
-                class="reports__btn-mapping reports__btn-sample"
-                v-tip="$t('reports.sampleCsvTip')"
-                @click="downloadSampleCsv()"
-              >{{ $t('reports.sampleCsvBtn') }}</button>
-            </div>
-
-            <button
-              class="reports__btn reports__btn--clear-measured"
-              :disabled="measuredEntryCount === 0"
-              v-tip="$t('reports.clearMeasuredTip')"
-              @click="confirmClearMeasured"
-            >
-              {{ $t('reports.clearMeasured') }}
-            </button>
-            <button
-              class="reports__btn reports__btn--clear"
-              :disabled="totalReadings === 0"
-              @click="store.clearLog()"
-            >
-              {{ $t('reports.clearLog') }}
-            </button>
-            <input
-              ref="importFileInput"
-              type="file"
-              accept=".csv,text/csv"
-              class="reports__file-input"
-              @change="onImportFileChosen($event)"
-            />
-          </div>
-        </div>
-
-        <ReportsLogEmpty v-if="totalReadings === 0" />
-
-        <ReportsMethodsBar
-          v-if="totalReadings > 0"
-          :entry="selectedEntry"
-          @download="downloadSelectedMethods"
-          @dismiss="dismissSelection"
-        />
-
-        <ReportsLogTable
-          v-if="totalReadings > 0"
-          :entries="reversedEntries"
-          :selected-entry="selectedEntry"
-          :recently-imported-ids="recentlyImportedIds"
-          @select="selectEntry"
-          @delete="deleteEntry"
-        />
-
-        <ReportsLogLegend v-if="totalReadings > 0" />
-      </div>
-
-    </div>
-
-    <CsvMappingModal :is-open="csvMappingOpen" @close="csvMappingOpen = false" />
+    <CampaignAdvisorPanel v-if="campaign" class="report__advisor" :advice-list="adviceList" />
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, computed, ref } from 'vue'
-import { useI18n } from 'vue-i18n'
+import { defineComponent } from 'vue'
+import { mapStores } from 'pinia'
 
-import { broadcastLogMeasuredOutcome } from '@/services/socket'
-
-import type { LogEntry } from '@/stores/experimentStore'
-import { useCellStore } from '@/stores/cellStore'
-import { useExperimentStore } from '@/stores/experimentStore'
-import { useCsvMappingStore } from '@/stores/csvMappingStore'
-import { useUiStore } from '@/stores/uiStore'
-
-import StatCard from '@/components/StatCard/index.vue'
-import PageHeader from '@/components/PageHeader/index.vue'
-import CalibrationBadge from '@/components/CalibrationBadge/index.vue'
-
-import { formatFreqKHz, formatFieldVcm, formatRange } from '@/utils/format'
-import { parseMeasuredCsv } from '@/utils/experimentImport'
-import { detectFormat, getPresetById, DEFAULT_PRESET_ID } from '@/utils/csvFormatPresets'
-import { downloadSampleMeasuredCsv } from '@/utils/sampleMeasuredCsv'
-
-import { LOG_EVENT, NULL_DISPLAY } from '@/constants/strings'
-import { ICON } from '@/constants/icons'
 import { ROUTE } from '@/constants/routes'
-import { THRESHOLDS } from '@/constants/physics'
+import { ICON } from '@/constants/icons'
+import { MOLECULE_TYPE_META } from '@/constants/moleculeTypes'
+import { getCellLineById, getProductivityFor } from '@/constants/cellLineCatalog'
 
-import ReportsLogEmpty from './ReportsLogEmpty.vue'
-import ReportsMethodsBar from './ReportsMethodsBar.vue'
-import ReportsLogTable from './ReportsLogTable.vue'
-import ReportsLogLegend from './ReportsLogLegend.vue'
-import ReportsCalibrationTrend from './ReportsCalibrationTrend.vue'
-import ManuscriptBundle from './ManuscriptBundle.vue'
-import CsvMappingModal from './CsvMappingModal.vue'
+import { useProductionCampaignStore } from '@/stores/productionCampaignStore'
+import { useDownstreamStore } from '@/stores/downstreamStore'
+import { useLabRunsStore } from '@/stores/labRunsStore'
+import { useCalibrationStore } from '@/stores/calibrationStore'
+
+import { MODULE_STATUS } from '@/types/campaign'
+
+import { adviseCampaign, type Advice } from '@/utils/advisor/campaignAdvisor'
+
+import TargetProteinVisual from '@/components/TargetProteinVisual/index.vue'
+import HostCellVisual from '@/components/HostCellVisual/index.vue'
+import YieldWaterfallChart from '@/components/YieldWaterfallChart/index.vue'
+import CampaignAdvisorPanel from '@/components/CampaignAdvisorPanel/index.vue'
 
 export default defineComponent({
   name: 'ReportsView',
-
-  components: { StatCard, PageHeader, CalibrationBadge, ReportsLogEmpty, ReportsMethodsBar, ReportsLogTable, ReportsLogLegend, ReportsCalibrationTrend, ManuscriptBundle, CsvMappingModal },
-
-  setup() {
-    const store      = useExperimentStore()
-    const cellStore  = useCellStore()
-    const { t } = useI18n()
-    const selectedEntry = ref<LogEntry | null>(null)
-
-    // ── Helper: returns fn() result or null when there are no entries ──────────
-    function withEntries<T>(fn: () => T): T | null {
-      return store.entries.length ? fn() : null
-    }
-
-    const totalReadings        = computed(() => store.entries.length)
-    const reversedEntries      = computed(() => [...store.entries].reverse())
-    const distinctSessionCount = computed(() => new Set(store.entries.map((e) => e.sessionName ?? store.sessionName)).size)
-    const lysisEvents          = computed(() => store.entries.filter((e) => e.event === LOG_EVENT.LYSIS).length)
-    const manualReadings       = computed(() => store.entries.filter((e) => e.event === LOG_EVENT.MANUAL).length)
-    const countLabel           = computed(() => totalReadings.value === 1 ? t('reports.countSingular') : t('reports.countPlural'))
-
-    const avgSelectivity  = computed(() => withEntries(() => {
-      const sum = store.entries.reduce((acc, e) => acc + e.selectivity, 0)
-      return (sum / store.entries.length).toFixed(3)
-    }))
-    const peakSelectivity = computed(() => withEntries(() =>
-      Math.max(...store.entries.map((e) => e.selectivity)).toFixed(3)
-    ))
-    const freqRange       = computed(() => withEntries(() =>
-      formatRange(store.entries.map((e) => e.freqKHz), formatFreqKHz)
-    ))
-    const fieldRange      = computed(() => withEntries(() =>
-      formatRange(store.entries.map((e) => e.fieldVcm), formatFieldVcm)
-    ))
-    const peakTargetRatio = computed(() => withEntries(() =>
-      (Math.max(...store.entries.map((e) => e.targetRatio)) * 100).toFixed(1) + '%'
-    ))
-
-    // Calibration summary is computed in the store — reuse it so the stats row
-    // and the AI-tab badge always agree on n, mean residual, and tier.
-    const calibration = computed(() => store.calibrationSummary)
-
-    function formatSignedPct(delta: number | null): string {
-      if (delta === null) return NULL_DISPLAY
-      const sign = delta >= 0 ? '+' : ''
-      return `${sign}${delta.toFixed(1)}%`
-    }
-    function formatSignedVcm(delta: number | null): string {
-      if (delta === null) return NULL_DISPLAY
-      const sign = delta >= 0 ? '+' : ''
-      return `${sign}${delta.toFixed(0)} V/cm`
-    }
-
-    const sessionStatsPills = computed(() => [
-      { label: t('reports.totalReadings'),   value: String(totalReadings.value),                        variant: totalReadings.value === 0 ? 'muted' : undefined, tooltip: t('reports.totalReadingsTitle') },
-      { label: t('reports.lysisEvents'),     value: String(lysisEvents.value),                          variant: 'danger',                                        tooltip: t('reports.lysisEventsTitle') },
-      { label: t('reports.manualReadings'),  value: String(manualReadings.value),                       variant: undefined,                                       tooltip: t('reports.manualReadingsTitle') },
-      { label: t('reports.avgSelectivity'),  value: avgSelectivity.value  ?? NULL_DISPLAY,              variant: 'primary',                                       tooltip: t('reports.avgSelectivityTitle') },
-      { label: t('reports.peakSelectivity'), value: peakSelectivity.value ?? NULL_DISPLAY,              variant: 'ok',                                            tooltip: t('reports.peakSelectivityTitle') },
-      { label: t('reports.peakTargetRatio'), value: peakTargetRatio.value ?? NULL_DISPLAY,              variant: 'danger',                                        tooltip: t('reports.peakTargetRatioTitle') },
-      { label: t('reports.freqRange'),       value: freqRange.value  ?? NULL_DISPLAY,                   variant: undefined,                                       tooltip: t('reports.freqRangeTitle')  },
-      { label: t('reports.fieldRange'),      value: fieldRange.value ?? NULL_DISPLAY,                   variant: undefined,                                       tooltip: t('reports.fieldRangeTitle') },
-    ])
-
-    function pctDescriptor(delta: number | null): { variant: string; sub: string } {
-      if (delta === null) return { variant: 'muted',   sub: '' }
-      const a = Math.abs(delta)
-      if (a < 5)  return { variant: 'ok',      sub: t('reports.resDescStrong') }
-      if (a < 15) return { variant: 'primary', sub: t('reports.resDescModerate') }
-      return {
-        variant: 'danger',
-        sub: delta < 0 ? t('reports.resDescDriftOver') : t('reports.resDescDriftUnder'),
-      }
-    }
-
-    function vcmDescriptor(delta: number | null): { variant: string; sub: string } {
-      if (delta === null) return { variant: 'muted', sub: '' }
-      const a = Math.abs(delta)
-      if (a < 200)  return { variant: 'ok',      sub: t('reports.resDescFieldStrong') }
-      if (a < 1000) return { variant: 'primary', sub: t('reports.resDescField')       }
-      return           { variant: 'danger',  sub: t('reports.resDescFieldDrift')  }
-    }
-
-    const residualCards = computed(() => {
-      const c = calibration.value
-      if (c.sampleCount === 0) return []
-      const tDesc = pctDescriptor(c.meanTargetResidualPct)
-      const hDesc = pctDescriptor(c.meanHealthyResidualPct)
-      const fDesc = vcmDescriptor(c.meanFieldResidualVcm)
-      return [
-        { label: t('reports.measuredRows'),     value: String(c.sampleCount),                            variant: 'primary',      sub: '',         tooltip: t('reports.measuredRowsTitle') },
-        { label: t('reports.meanTargetDelta'),  value: formatSignedPct(c.meanTargetResidualPct),         variant: tDesc.variant,  sub: tDesc.sub,  tooltip: t('reports.meanTargetDeltaTitle') },
-        { label: t('reports.meanHealthyDelta'), value: formatSignedPct(c.meanHealthyResidualPct),        variant: hDesc.variant,  sub: hDesc.sub,  tooltip: t('reports.meanHealthyDeltaTitle') },
-        { label: t('reports.meanFieldDelta'),   value: formatSignedVcm(c.meanFieldResidualVcm),          variant: fDesc.variant,  sub: fDesc.sub,  tooltip: t('reports.meanFieldDeltaTitle') },
-      ]
-    })
-
-    const isDriftTier = computed(() => calibration.value.tier === 'drift')
-
-    const presetDriftCount = computed(() => {
-      const currentTarget = cellStore.target.id
-      return store.allMeasuredEntries.filter(e => e.targetPreset && e.targetPreset !== currentTarget).length
-    })
-    const showPresetDriftBanner = computed(() => presetDriftCount.value > 0)
-
-    function selClass(sel: number): string {
-      if (sel >= THRESHOLDS.SEL_STRONG)   return 'reports__green-val'
-      if (sel >= THRESHOLDS.SEL_MARGINAL) return 'reports__warn-val'
-      return 'reports__cancer-val'
-    }
-
-    const isExporting = ref(false)
-    const isImporting = ref(false)
-    const importSummary = ref<{ matched: number; ignored: number; duplicateIds: number[]; detectedPresetLabel: string | null } | null>(null)
-    const importError   = ref<string | null>(null)
-    const recentlyImportedIds = ref<number[]>([])
-    const csvMappingStore = useCsvMappingStore()
-    const csvMappingOpen  = ref(false)
-
-    return {
-      store,
-      csvMappingStore,
-      csvMappingOpen,
-      selectedEntry,
-      isExporting,
-      isImporting,
-      importSummary,
-      importError,
-      recentlyImportedIds,
-      totalReadings,
-      reversedEntries,
-      distinctSessionCount,
-      lysisEvents,
-      manualReadings,
-      countLabel,
-      sampleDescription: computed(() => store.sampleDescription),
-      sessionNotes: computed(() => store.sessionNotes),
-      sessionStatsPills,
-      residualCards,
-      selClass,
-      calibrationResiduals: computed(() => store.measuredResiduals),
-      hasMeasuredResiduals: computed(() => store.measuredResiduals.some(r => r.targetResidualPct !== null)),
-      calibrationSummary:   calibration,
-      isDriftTier,
-      measuredEntryCount:   computed(() => store.allMeasuredEntries.length),
-      presetDriftCount,
-      showPresetDriftBanner,
-      NULL_DISPLAY,
-    }
-  },
-
-  data() {
-    return {
-      flashTimer: null as ReturnType<typeof setTimeout> | null,
-    }
-  },
-
-  beforeUnmount() {
-    if (this.flashTimer !== null) clearTimeout(this.flashTimer)
-  },
-
+  components: { TargetProteinVisual, HostCellVisual, YieldWaterfallChart, CampaignAdvisorPanel },
   computed: {
-    ICON() { return ICON },
+    ...mapStores(useProductionCampaignStore, useDownstreamStore, useLabRunsStore, useCalibrationStore),
     ROUTE() { return ROUTE },
-    importBannerVariantClass(): Record<string, boolean> {
-      const s = this.importSummary
-      if (!s) return {}
-      return {
-        'reports__import-banner--ok':   s.matched > 0,
-        'reports__import-banner--warn': s.matched === 0,
-      }
+    ICON()  { return ICON },
+
+    yieldCalibration() {
+      return this.calibrationStore.yieldCalibration
     },
-    isImportSummaryEmpty(): boolean {
-      const s = this.importSummary
-      return s !== null && s.matched === 0 && s.ignored === 0
+
+    calibratedYield(): number {
+      return this.calibrationStore.calibrateYield(this.downstreamPrediction.cumulativeYieldPct)
     },
-    hasDuplicateImportIds(): boolean {
-      return (this.importSummary?.duplicateIds.length ?? 0) > 0
+
+    calibratedProduct(): number {
+      const factor = this.downstreamPrediction.cumulativeYieldPct > 0
+        ? this.calibratedYield / this.downstreamPrediction.cumulativeYieldPct
+        : 1
+      return this.downstreamPrediction.finalMassG * factor
+    },
+
+    campaign() { return this.productionCampaignStore.activeCampaign },
+
+    moleculeLabel(): string {
+      return this.campaign ? MOLECULE_TYPE_META[this.campaign.moleculeType].label : ''
+    },
+
+    modulesComplete(): number {
+      if (!this.campaign) return 0
+      return Object.values(this.campaign.modules).filter(m => m.status === MODULE_STATUS.COMPLETE).length
+    },
+
+    cellLine() {
+      const id = this.campaign?.selectedCellLineId
+      return id ? getCellLineById(id) : undefined
+    },
+
+    predictedTiter(): number | null {
+      if (!this.campaign || !this.cellLine) return null
+      const prof = getProductivityFor(this.cellLine, this.campaign.moleculeType)
+      return prof ? Number(((prof.titerRange[0] + prof.titerRange[1]) / 2).toFixed(2)) : null
+    },
+
+    train() {
+      return this.downstreamStore.trainFor(this.campaign?.id ?? '')
+    },
+
+    downstreamPrediction() {
+      return this.downstreamStore.prediction(this.campaign?.id ?? '')
+    },
+
+    hasDownstream(): boolean {
+      return this.downstreamPrediction.steps.length > 0
+    },
+
+    campaignLabRuns() {
+      return this.campaign ? this.labRunsStore.runsForCampaign(this.campaign.id) : []
+    },
+
+    adviceList(): Advice[] {
+      if (!this.campaign) return []
+      return adviseCampaign({
+        campaign:             this.campaign,
+        downstreamSteps:      this.train.steps,
+        downstreamPrediction: this.downstreamPrediction,
+        labRunCount:          this.campaignLabRuns.length,
+      })
     },
   },
-
   methods: {
-    requestRetrain() {
-      useUiStore().setAiPanelOpen(true)
+    dateOf(ts: number): string {
+      return new Date(ts).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
     },
-
-    confirmClearMeasured() {
-      const n = this.measuredEntryCount
-      if (n === 0) return
-      const msg = this.$t('reports.clearMeasuredConfirm', { n }) as string
-      if (!window.confirm(msg)) return
-      this.store.clearAllMeasuredOutcomes()
-    },
-
-    selectEntry(e: LogEntry) {
-      this.selectedEntry = this.selectedEntry?.id === e.id ? null : e
-    },
-    dismissSelection() {
-      this.selectedEntry = null
-    },
-    downloadSelectedMethods() {
-      if (this.selectedEntry) this.store.exportEntryMethods(this.selectedEntry)
-    },
-    handleExportCSV() {
-      this.isExporting = true
-      this.store.exportCSV()
-      this.isExporting = false
-    },
-
-    triggerImportPicker() {
-      this.importError   = null
-      this.importSummary = null
-      const input = this.$refs.importFileInput as HTMLInputElement | undefined
-      if (input) input.click()
-    },
-
-    downloadSampleCsv() {
-      downloadSampleMeasuredCsv()
-    },
-
-    async onImportFileChosen(evt: Event) {
-      const input = evt.target as HTMLInputElement
-      const file  = input.files?.[0]
-      input.value = ''   // allow re-selecting the same file later
-      if (!file) return
-
-      this.isImporting = true
-
-      try {
-        const text   = await file.text()
-
-        // Pick the effective mapping. If the user already saved one, use it. Otherwise auto-detect from the file's first 50 lines and apply the highest-confidence preset (>= 0.30 confidence). Default falls through to ResoPulse-native behaviour.
-        const userMapping = this.csvMappingStore.mapping
-        let effectiveMapping = userMapping
-        let detectedPresetId: string | null = null
-        if (!this.csvMappingStore.hasMapping) {
-          const det = detectFormat(text)
-          if (det.confidence >= 0.30 && det.preset.id !== DEFAULT_PRESET_ID) {
-            effectiveMapping = det.preset.mapping
-            detectedPresetId = det.preset.id
-          }
-        }
-
-        const report = parseMeasuredCsv(text, effectiveMapping)
-        const knownIds = new Set(this.store.entries.map((e) => e.id))
-        const matchedIds: number[] = []
-        let ignored = report.ignoredRows.length
-        for (const row of report.matchable) {
-          if (!knownIds.has(row.id)) { ignored++; continue }
-          const entry = this.store.logMeasuredOutcome(row.id, row.measured, 'merge')
-          if (entry?.measured && this.store.aiConsentGiven && entry.sessionName) {
-            broadcastLogMeasuredOutcome(entry.sessionName, entry.timestamp, entry.measured)
-          }
-          matchedIds.push(row.id)
-        }
-        this.importSummary = {
-          matched:      matchedIds.length,
-          ignored,
-          duplicateIds: report.duplicateIds,
-          detectedPresetLabel: detectedPresetId ? (getPresetById(detectedPresetId)?.label ?? null) : null,
-        }
-        this.flashRecentlyImported(matchedIds)
-      } catch {
-        this.importError = this.$t('reports.importError')
-      } finally {
-        this.isImporting = false
-      }
-    },
-
-    flashRecentlyImported(ids: number[]) {
-      if (this.flashTimer !== null) clearTimeout(this.flashTimer)
-      this.recentlyImportedIds = ids
-      this.flashTimer = setTimeout(() => {
-        this.recentlyImportedIds = []
-        this.flashTimer = null
-      }, 1900)
-    },
-
-    dismissImportSummary() {
-      this.importSummary = null
-    },
-
-    deleteEntry(entryId: number) {
-      if (this.selectedEntry?.id === entryId) this.selectedEntry = null
-      this.store.deleteEntry(entryId)
+    print() {
+      window.print()
     },
   },
 })
 </script>
 
 <style lang="scss" scoped>
+.report {
+  padding: 2rem 2.5rem;
+  max-width: 900px;
+  margin: 0 auto;
 
-/* ── Page shell ───────────────────────────────────────────────────────────── */
-.reports {
-  flex: 1;
-  overflow-y: auto;
-  background-color: var(--color-bg);
+  @media (max-width: 768px) { padding: 1.25rem 1rem; }
 
-  &__inner {
-    max-width: 1600px;
-    margin: 0 auto;
-    padding: 2rem 2rem 4rem;
-    @include flex-col(1.5rem);
-  }
+  &__toolbar { @include flex-between(1rem); align-items: flex-end; margin-bottom: 1.5rem; }
+  &__title { margin: 0 0 0.35rem; font-size: 1.6rem; font-weight: 600; color: var(--color-text-heading); }
+  &__subtitle { margin: 0; font-size: var(--fs-md); opacity: var(--op-partial); max-width: 42rem; line-height: 1.5; }
 
-  &__subtitle {
-    font-size: var(--fs-lg);
-    color: var(--color-text-muted);
-    margin: 0;
-    font-family: var(--font-mono);
-  }
-
-  &__btn {
-    padding: 0.5rem 1.1rem;
-    border-radius: var(--radius);
-    font-size: var(--fs-md);
-    font-family: var(--font-mono);
-    font-weight: 600;
-    border: 1px solid;
-    cursor: pointer;
-    transition: all var(--tr-fast);
-    background: transparent;
-
-    &:disabled { opacity: 0.3; cursor: not-allowed; } // intentional: heavily faded disabled, below --op-ghost
-
-    &-spinner {
-      display: inline-block;
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      border: 2px solid currentColor;
-      border-top-color: transparent;
-      animation: onboard-spin 0.6s linear infinite;
-    }
-
-    &--export {
-      color: var(--color-primary);
-      border-color: color-mix(in srgb, var(--color-primary) 35%, transparent);
-      background: var(--color-primary-dim);
-
-      &:hover:not(:disabled) {
-        background: color-mix(in srgb, var(--color-primary) 20%, transparent);
-        border-color: var(--color-primary);
-      }
-    }
-
-    &--clear {
-      color: var(--color-danger);
-      border-color: color-mix(in srgb, var(--color-danger) 35%, transparent);
-
-      &:hover:not(:disabled) {
-        background: color-mix(in srgb, var(--color-danger) 10%, transparent);
-      }
-    }
-
-    &--clear-measured {
-      color: var(--color-text-muted);
-      border-color: var(--color-border);
-
-      &:hover:not(:disabled) {
-        color: var(--color-text);
-        border-color: color-mix(in srgb, var(--color-amber) 45%, transparent);
-        background: color-mix(in srgb, var(--color-amber) 8%, transparent);
-      }
-    }
-
-    &--import {
-      color: var(--color-amber);
-      border-color: color-mix(in srgb, var(--color-amber) 35%, transparent);
-      background: color-mix(in srgb, var(--color-amber) 8%, transparent);
-
-      &:hover:not(:disabled) {
-        background: color-mix(in srgb, var(--color-amber) 16%, transparent);
-        border-color: var(--color-amber);
-      }
-    }
-  }
-
-  &__file-input {
-    display: none;
-  }
-
-  /* ── Import summary banner ────────────────────────────────────────────────── */
-  &__import-banner {
-    @include flex-between(1rem);
-    padding: 0.85rem 1.1rem;
-    border-radius: var(--radius);
-    border: 1px solid var(--color-border);
-    background: var(--color-surface);
-    font-family: var(--font-mono);
-    font-size: var(--fs-md);
-    color: var(--color-text);
-
-    &--ok    { @include tinted-surface(primary); }
-    &--warn  { @include tinted-surface(amber); }
-    &--error { @include tinted-surface(danger); }
-  }
-
-  &__import-banner-body {
-    @include flex-col(0.2rem);
-    flex: 1;
-    min-width: 0;
-  }
-
-  &__import-banner-title {
-    @include mono-upper(var(--fs-xs), 0.08em);
-    color: var(--color-text-heading);
-  }
-
-  &__import-banner-line {
-    font-size: var(--fs-md);
-    color: var(--color-text);
-  }
-
-  &__import-banner-dismiss {
-    @include mono-upper(var(--fs-xxs), 0.06em);
-    padding: 0.3rem 0.75rem;
-    border-radius: var(--radius);
-    border: 1px solid var(--color-border);
-    background: transparent;
-    color: var(--color-text-muted);
-    cursor: pointer;
-    transition: color var(--tr-fast), border-color var(--tr-fast);
-
-    &:hover { color: var(--color-text); border-color: var(--color-text-muted); }
-  }
-
-  /* ── Closed-Loop Hero ─────────────────────────────────────────────────────── */
-  &__loop-hero {
-    @include flex-col(1.1rem);
-    padding: 1.4rem 1.6rem 1.6rem;
-    border: 1px solid color-mix(in srgb, var(--color-primary) 30%, transparent);
-    border-radius: var(--radius-lg);
-    background:
-      linear-gradient(180deg,
-        color-mix(in srgb, var(--color-primary) 10%, transparent),
-        color-mix(in srgb, var(--color-primary) 2%, transparent)
-      );
-    position: relative;
-    overflow: hidden;
-  }
-
-  &__loop-hero-header {
-    @include flex-col(0.35rem);
-    max-width: 860px;
-  }
-
-  &__loop-hero-eyebrow {
-    @include mono-upper(var(--fs-xxs), 0.14em);
-    color: var(--color-primary);
-    align-self: flex-start;
-    padding: 0.2rem 0.7rem;
-    border: 1px solid color-mix(in srgb, var(--color-primary) 45%, transparent);
-    border-radius: 999px;
-    background: color-mix(in srgb, var(--color-primary) 10%, transparent);
-  }
-
-  &__loop-hero-title {
-    margin: 0;
-    font-size: clamp(1.4rem, 2.4vw, 1.8rem);
-    font-weight: 600;
-    color: var(--color-text);
-    line-height: 1.25;
-  }
-
-  &__loop-hero-subtitle {
-    margin: 0;
-    font-size: var(--fs-md);
-    color: var(--color-text-muted);
-    line-height: 1.55;
-  }
-
-  &__loop-hero-badge {
-    max-width: 560px;
-  }
-
-  /* ── Preset-drift (informational) banner ─────────────────────────────────── */
-  &__preset-banner {
-    @include flex-row(0.75rem);
-    align-items: center;
-    padding: 0.7rem 1rem;
-    border: 1px solid color-mix(in srgb, var(--color-amber) 40%, transparent);
-    border-radius: var(--radius);
-    background: color-mix(in srgb, var(--color-amber)  8%, transparent);
-    flex-wrap: wrap;
-  }
-
-  &__preset-banner-icon {
-    font-size: var(--fs-lg);
-    color: var(--color-amber);
-    flex-shrink: 0;
-  }
-
-  &__preset-banner-body {
-    @include flex-col(0.2rem);
-    flex: 1 1 auto;
-    min-width: 0;
-  }
-
-  &__preset-banner-title {
-    @include mono-upper(var(--fs-xs), 0.08em);
-    color: var(--color-amber);
-    font-weight: 700;
-  }
-
-  &__preset-banner-text {
-    margin: 0;
-    font-size: var(--fs-xs);
-    color: var(--color-text);
-    line-height: 1.5;
-  }
-
-  &__preset-banner-btn {
-    @include mono-upper(var(--fs-xxs), 0.06em);
-    padding: 0.45rem 0.85rem;
-    border-radius: var(--radius);
-    border: 1px solid color-mix(in srgb, var(--color-amber) 55%, transparent);
-    background: color-mix(in srgb, var(--color-amber) 20%, transparent);
-    color: var(--color-amber);
-    cursor: pointer;
+  &__print-btn {
+    @include mono-upper(var(--fs-sm)); background: var(--color-primary); color: var(--color-bg); border: none;
+    padding: 0.7rem 1.2rem; border-radius: var(--radius); cursor: pointer; flex-shrink: 0;
     transition: background var(--tr-fast);
-    flex-shrink: 0;
-
-    &:hover { background: color-mix(in srgb, var(--color-amber) 34%, transparent); }
+    &:hover { background: color-mix(in srgb, var(--color-primary) 90%, white); }
   }
 
-  /* ── Drift alert banner ───────────────────────────────────────────────────── */
-  &__drift-banner {
-    @include flex-col(0.7rem);
-    padding: 0.85rem 1.05rem;
-    border-radius: var(--radius);
-    border: 1px solid color-mix(in srgb, var(--color-danger) 45%, transparent);
-    background: color-mix(in srgb, var(--color-danger) 10%, transparent);
-
-    @media (min-width: 900px) {
-      @include flex-row(1rem);
-      align-items: center;
-    }
+  &__no-campaign {
+    @include flex-col(1rem); align-items: center; text-align: center; padding: 4rem 1.5rem;
+    background: var(--color-surface); border: 1px dashed var(--color-border); border-radius: var(--radius-lg);
+  }
+  &__no-campaign-text { margin: 0; opacity: var(--op-partial); font-size: var(--fs-lg); }
+  &__no-campaign-btn {
+    @include mono-upper(var(--fs-sm)); background: var(--color-primary); color: var(--color-bg);
+    padding: 0.7rem 1.2rem; border-radius: var(--radius); text-decoration: none;
+    &:hover { background: color-mix(in srgb, var(--color-primary) 90%, white); }
   }
 
-  &__drift-banner-body {
-    @include flex-col(0.25rem);
-    flex: 1 1 auto;
-    min-width: 0;
+  &__sheet {
+    @include flex-col(1.75rem); padding: 2rem;
+    background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg);
   }
 
-  &__drift-banner-title {
-    @include flex-row(0.45rem);
-    @include mono-upper(var(--fs-xs), 0.08em);
-    color: var(--color-danger);
-    font-weight: 700;
+  &__sheet-head { @include flex-row(1rem); align-items: center; padding-bottom: 1.25rem; border-bottom: 1px solid var(--color-border); }
+  &__sheet-molecule { width: 64px; height: 64px; flex-shrink: 0; }
+  &__sheet-name { margin: 0 0 0.2rem; font-size: 1.4rem; font-weight: 600; color: var(--color-text-heading); }
+  &__sheet-molecule-label { @include mono-upper(var(--fs-xxs)); color: var(--color-primary); }
+
+  &__section { @include flex-col(0.75rem); }
+  &__section--highlight {
+    padding: 1.1rem 1.25rem; background: color-mix(in srgb, var(--color-ok) 7%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-ok) 25%, transparent); border-radius: var(--radius);
+  }
+  &__section-title { margin: 0; @include mono-upper(var(--fs-xs)); color: var(--color-primary); opacity: var(--op-partial); }
+
+  &__facts {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.75rem; margin: 0;
+    div { @include flex-col(0.15rem); }
+    dt { @include mono-upper(0.55rem); opacity: var(--op-muted); margin: 0; }
+    dd { font-family: var(--font-mono); font-size: var(--fs-sm); color: var(--color-text); margin: 0; }
   }
 
-  &__drift-banner-icon {
-    font-size: var(--fs-md);
+  &__cellline { @include flex-row(1rem); align-items: center; }
+
+  &__empty-note { margin: 0; font-size: var(--fs-sm); opacity: var(--op-muted); font-style: italic; }
+
+  &__e2e { margin: 0; font-size: var(--fs-lg); line-height: 1.6; color: var(--color-text); }
+
+  &__disclaimer {
+    @include mono-upper(var(--fs-xxs)); opacity: var(--op-muted); line-height: 1.5;
+    padding-top: 1.25rem; border-top: 1px solid var(--color-border);
   }
+}
 
-  &__drift-banner-text {
-    margin: 0;
-    font-size: var(--fs-sm);
-    color: var(--color-text);
-    line-height: 1.5;
-  }
+.report__calibrated {
+  margin-top: 1rem;
+  padding: 0.9rem 1.1rem;
+  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 30%, transparent);
+  border-radius: var(--radius);
+}
+.report__calibrated-title {
+  @include flex-between(0.5rem);
+  @include mono-upper(var(--fs-xxs));
+  color: var(--color-primary);
+}
+.report__calibrated-conf { opacity: var(--op-muted); }
+.report__calibrated-note { margin: 0.4rem 0 0; font-size: var(--fs-sm); line-height: 1.5; color: var(--color-text); }
 
-  &__drift-banner-actions {
-    @include flex-row(0.6rem);
-    flex-wrap: wrap;
-    flex-shrink: 0;
-  }
+.report__advisor { margin-top: 1.5rem; }
 
-  &__drift-banner-btn {
-    @include mono-upper(var(--fs-xs), 0.06em);
-    padding: 0.5rem 0.95rem;
-    border-radius: var(--radius);
-    border: 1px solid;
-    text-decoration: none;
-    cursor: pointer;
-    transition: background var(--tr-fast), border-color var(--tr-fast);
-
-    &--primary {
-      color: var(--color-danger);
-      border-color: color-mix(in srgb, var(--color-danger) 60%, transparent);
-      background: color-mix(in srgb, var(--color-danger) 22%, transparent);
-
-      &:hover { background: color-mix(in srgb, var(--color-danger) 34%, transparent); }
-    }
-
-    &--secondary {
-      color: var(--color-text);
-      border-color: var(--color-border);
-      background: transparent;
-
-      &:hover { border-color: var(--color-text-muted); background: color-mix(in srgb, white 4%, transparent); }
-    }
-  }
-
-  &__loop-hero-residuals {
-    @include flex-col(0.6rem);
-  }
-
-  &__loop-hero-residuals-hdr {
-    @include flex-col(0.2rem);
-  }
-
-  &__loop-hero-residuals-title {
-    @include mono-upper(var(--fs-xs), 0.1em);
-    color: var(--color-primary);
-  }
-
-  &__loop-hero-residuals-hint {
-    font-size: var(--fs-xs);
-    color: var(--color-text-muted);
-    opacity: var(--op-dim);
-    line-height: 1.5;
-  }
-
-  &__loop-hero-residuals-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 0.75rem;
-
-    @media (max-width: 900px) { grid-template-columns: repeat(2, 1fr); }
-  }
-
-  &__loop-hero-actions {
-    @include flex-col(0.45rem);
-    padding-top: 0.4rem;
-    border-top: 1px dashed color-mix(in srgb, var(--color-primary) 25%, transparent);
-  }
-
-  &__loop-hero-actions-title {
-    @include mono-upper(var(--fs-xxs), 0.12em);
-    color: var(--color-primary);
-    opacity: var(--op-partial);
-  }
-
-  &__loop-hero-actions-row {
-    @include flex-row(0.6rem);
-    flex-wrap: wrap;
-  }
-
-  &__loop-hero-action {
-    @include mono-upper(var(--fs-xs), 0.06em);
-    padding: 0.55rem 1rem;
-    border-radius: var(--radius);
-    border: 1px solid;
-    text-decoration: none;
-    cursor: pointer;
-    transition: background var(--tr-fast), border-color var(--tr-fast);
-
-    &--primary {
-      color: var(--color-primary);
-      border-color: color-mix(in srgb, var(--color-primary) 55%, transparent);
-      background: color-mix(in srgb, var(--color-primary) 18%, transparent);
-
-      &:hover { background: color-mix(in srgb, var(--color-primary) 30%, transparent); }
-    }
-
-    &--secondary {
-      color: var(--color-text-muted);
-      border-color: var(--color-border);
-      background: transparent;
-
-      &:hover { color: var(--color-text); border-color: var(--color-text-muted); }
-    }
-
-    &:disabled { opacity: var(--op-muted); cursor: not-allowed; }
-  }
-
-  &__loop-hero-empty {
-    @include flex-col(0.6rem);
-    padding: 1rem 1.1rem 1.2rem;
-    border: 1px dashed color-mix(in srgb, var(--color-primary) 30%, transparent);
-    border-radius: var(--radius);
-    background: color-mix(in srgb, var(--color-primary) 4%, transparent);
-  }
-
-  &__loop-hero-empty-title {
-    margin: 0;
-    font-size: var(--fs-lg);
-    font-weight: 600;
-    color: var(--color-text);
-  }
-
-  &__loop-hero-empty-desc {
-    margin: 0;
-    font-size: var(--fs-sm);
-    color: var(--color-text-muted);
-    line-height: 1.55;
-    max-width: 720px;
-  }
-
-  &__loop-hero-empty-actions {
-    @include flex-row(0.6rem);
-    flex-wrap: wrap;
-    margin-top: 0.3rem;
-  }
-
-  &__loop-hero-sample {
-    margin-top: 0.6rem;
-    align-self: flex-start;
-    padding: 0.25rem 0;
-    background: transparent;
-    border: 0;
-    color: var(--color-text-muted);
-    font-family: var(--font-mono);
-    font-size: var(--fs-xs);
-    text-decoration: underline;
-    cursor: pointer;
-    transition: color var(--tr-fast);
-    &:hover { color: var(--color-text); }
-  }
-
-  /* ── Session stats pill row ───────────────────────────────────────────────── */
-  &__session-stats {
-    @include flex-col(0.5rem);
-    padding: 0.6rem 0.9rem;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius);
-    background: color-mix(in srgb, white 1.5%, transparent);
-  }
-
-  &__session-stats-label {
-    @include mono-upper(var(--fs-xxs), 0.12em);
-    color: var(--color-text-muted);
-    opacity: var(--op-muted);
-  }
-
-  &__session-stats-row {
-    @include flex-row(0.5rem);
-    flex-wrap: wrap;
-  }
-
-  &__session-stat-pill {
-    @include flex-row(0.4rem);
-    align-items: baseline;
-    padding: 0.3rem 0.6rem;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius);
-    background: color-mix(in srgb, white 2%, transparent);
-    font-family: var(--font-mono);
-
-    &--muted   { opacity: var(--op-muted); }
-    &--primary { border-color: color-mix(in srgb, var(--color-primary) 40%, transparent); }
-    &--ok      { border-color: color-mix(in srgb, var(--color-lime)    40%, transparent); }
-    &--danger  { border-color: color-mix(in srgb, var(--color-danger)  40%, transparent); }
-  }
-
-  &__session-stat-pill-label {
-    @include mono-upper(var(--fs-xxs), 0.06em);
-    color: var(--color-text-muted);
-  }
-
-  &__session-stat-pill-val {
-    font-size: var(--fs-sm);
-    color: var(--color-text);
-    font-variant-numeric: tabular-nums;
-  }
-
-  &__session-stats-note {
-    font-size: var(--fs-xs);
-    font-family: var(--font-mono);
-    color: var(--color-text-muted);
-    opacity: var(--op-dim);
-  }
-
-  /* ── Mobile layout ────────────────────────────────────────────────────────── */
-  @media (max-width: 700px) {
-    &__inner { padding: 1rem 0.85rem 3rem; }
-  }
-
-  /* ── Log card ─────────────────────────────────────────────────────────────── */
-  &__log-card {
-    @include surface-card(var(--radius-lg));
-    overflow: hidden;
-  }
-
-  &__log-card-hdr {
-    @include flex-between(1rem);
-    align-items: center;
-    padding: 0.9rem 1.5rem;
-    border-bottom: 1px solid var(--color-border);
-    flex-wrap: wrap;
-
-    @media (max-width: 700px) {
-      flex-direction: column;
-      align-items: stretch;
-    }
-  }
-
-  &__log-card-hdr-title {
-    @include flex-row(0.75rem);
-    align-items: center;
-    flex-wrap: wrap;
-  }
-
-  &__log-card-actions {
-    @include flex-row(0.6rem);
-    align-items: center;
-    flex-shrink: 0;
-    flex-wrap: wrap;
-
-    @media (max-width: 700px) {
-      width: 100%;
-
-      .reports__btn { flex: 1 1 auto; }
-    }
-  }
-
-  /* ── Import cluster (button + customise-columns attached) ─────────────────── */
-  &__import-group {
-    @include flex-row(0);
-    align-items: stretch;
-    border-radius: var(--radius);
-  }
-
-  &__btn--import-grouped {
-    border-top-right-radius: 0;
-    border-bottom-right-radius: 0;
-    border-right: 0;
-  }
-
-  &__btn-mapping {
-    @include mono-upper(var(--fs-xxs), 0.08em);
-    @include flex-row(0.3rem);
-    align-items: center;
-    padding: 0 0.7rem;
-    background: color-mix(in srgb, var(--color-amber) 8%, transparent);
-    border: 1px solid color-mix(in srgb, var(--color-amber) 35%, transparent);
-    border-left: 1px dashed color-mix(in srgb, var(--color-amber) 45%, transparent);
-    border-top-right-radius: var(--radius);
-    border-bottom-right-radius: var(--radius);
-    color: color-mix(in srgb, var(--color-amber) 90%, transparent);
-    cursor: pointer;
-    transition: background var(--tr-fast), border-color var(--tr-fast), color var(--tr-fast);
-
-    &:hover:not(:disabled) {
-      background: color-mix(in srgb, var(--color-amber) 16%, transparent);
-      border-color: var(--color-amber);
-      color: var(--color-amber);
-    }
-
-    &:disabled { opacity: var(--op-muted); cursor: not-allowed; }
-  }
-
-  &__btn-mapping-icon {
-    font-size: var(--fs-sm);
-    line-height: 1;
-  }
-
-  &__log-title {
-    font-size: var(--fs-xl);
-    font-weight: 600;
-    color: var(--color-text-heading);
-  }
-
-  &__log-count {
-    font-size: var(--fs-xs);
-    font-family: var(--font-mono);
-    color: var(--color-text-muted);
-    background: color-mix(in srgb, white 4%, transparent);
-    border: 1px solid var(--color-border);
-    border-radius: 4px;
-    padding: 0.15rem 0.5rem;
-  }
+@media print {
+  .report__toolbar, .report__print-btn { display: none; }
+  .report__sheet { border: none; }
 }
 </style>

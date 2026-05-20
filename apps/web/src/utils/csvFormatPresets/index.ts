@@ -1,6 +1,6 @@
 // Copyright © 2026 Tomer Preis. Licensed under the MIT License.
 
-// Format presets for the measured-outcome CSV importer. Each preset prefills CsvColumnMapping with sensible defaults for a class of CSV — ResoPulse's own export, generic plate-reader long-format (well-row), and generic plate-reader wide-format (matrix layout with leading metadata block). User can still override any field in CsvMappingModal.
+// Format presets for the measured-outcome CSV importer. Each preset prefills CsvColumnMapping with sensible defaults for a class of CSV — SimBiotix's own export, generic plate-reader long-format (well-row), and generic plate-reader wide-format (matrix layout with leading metadata block). User can still override any field in CsvMappingModal.
 
 import type { CsvColumnMapping } from '@/stores/csvMappingStore'
 
@@ -10,16 +10,16 @@ export interface CsvFormatPreset {
   description: string
   // Mapping prefill applied when the user picks this preset. Existing user overrides are preserved unless explicitly replaced.
   mapping:     CsvColumnMapping
-  // Heuristic that scans the first ~50 raw lines (already trimmed of empty rows) and returns a confidence score [0, 1]. Highest-scoring preset wins; ties favor RESOPULSE_NATIVE.
+  // Heuristic that scans the first ~50 raw lines (already trimmed of empty rows) and returns a confidence score [0, 1]. Highest-scoring preset wins; ties favor SIMBIOTIX_NATIVE.
   detect:      (firstLines: string[]) => number
 }
 
-const RESOPULSE_NATIVE: CsvFormatPreset = {
-  id:          'resopulse',
-  label:       'ResoPulse export',
-  description: 'CSV produced by ResoPulse itself (header row starts with "#" or "id"). Default — covers any round-trip from this app.',
+const SIMBIOTIX_NATIVE: CsvFormatPreset = {
+  id:          'simbiotix',
+  label:       'SimBiotix export',
+  description: 'CSV produced by SimBiotix itself (header row starts with "#" or "id"). Default — covers any round-trip from this app.',
   mapping: {
-    formatPresetId: 'resopulse',
+    formatPresetId: 'simbiotix',
     headerSkip:     0,
   },
   detect: (lines) => {
@@ -27,7 +27,7 @@ const RESOPULSE_NATIVE: CsvFormatPreset = {
     const firstNonComment = lines.find(l => !l.startsWith('# '))
     if (!firstNonComment) return 0
     const lower = firstNonComment.toLowerCase()
-    // ResoPulse exports always start the header row with `#` (the id column) and include the verbose "T-Lysis measured (%)" / "H-Lysis measured (%)" headers.
+    // SimBiotix exports always start the header row with `#` (the id column) and include the verbose "T-Lysis measured (%)" / "H-Lysis measured (%)" headers.
     if (lower.startsWith('#') && lower.includes('t-lysis')) return 0.95
     if (lower.startsWith('#'))                              return 0.55
     if (lower.startsWith('id,') || lower.startsWith('id\t')) return 0.40
@@ -38,7 +38,7 @@ const RESOPULSE_NATIVE: CsvFormatPreset = {
 const PLATE_READER_LONG: CsvFormatPreset = {
   id:          'plate-reader-long',
   label:       'Plate reader (long format with Sample column)',
-  description: 'One row per well/sample. Sample names contain the ResoPulse entry id (e.g. "Run #3 MCF-7"); the importer extracts the digits. Common for Tecan SparkControl, BioTek Gen5 long export.',
+  description: 'One row per well/sample. Sample names contain the SimBiotix entry id (e.g. "Run #3 MCF-7"); the importer extracts the digits. Common for Tecan SparkControl, BioTek Gen5 long export.',
   mapping: {
     formatPresetId: 'plate-reader-long',
     headerSkip:     0,
@@ -92,7 +92,7 @@ const PLATE_READER_WIDE: CsvFormatPreset = {
 }
 
 export const CSV_FORMAT_PRESETS: ReadonlyArray<CsvFormatPreset> = [
-  RESOPULSE_NATIVE,
+  SIMBIOTIX_NATIVE,
   PLATE_READER_LONG,
   PLATE_READER_WIDE,
 ]
@@ -101,7 +101,7 @@ export function getPresetById(id: string | undefined): CsvFormatPreset | undefin
   return id ? CSV_FORMAT_PRESETS.find(p => p.id === id) : undefined
 }
 
-export const DEFAULT_PRESET_ID = RESOPULSE_NATIVE.id
+export const DEFAULT_PRESET_ID = SIMBIOTIX_NATIVE.id
 
 // Looks at the first 50 raw lines and returns the highest-confidence preset, plus the raw scores for all presets so the UI can show a "this looked most like X" hint. Confidence < 0.30 is treated as "no clear match" — caller should fall back to the user-saved mapping or default.
 export interface DetectResult {

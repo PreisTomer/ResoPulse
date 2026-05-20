@@ -73,7 +73,7 @@ describe('userPresetsToCsv', () => {
 describe('userPresetsToJson', () => {
   it('wraps presets in a schema-versioned envelope', () => {
     const parsed = JSON.parse(userPresetsToJson([BASE])) as { schema: string; presets: UserCellPreset[] }
-    expect(parsed.schema).toBe('resopulse-user-presets@1')
+    expect(parsed.schema).toBe('simbiotix-user-presets@1')
     expect(parsed.presets).toHaveLength(1)
     expect(parsed.presets[0]?.id).toBe('p-1')
   })
